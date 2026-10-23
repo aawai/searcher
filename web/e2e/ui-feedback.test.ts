@@ -213,6 +213,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 await refresh.getByText("刷新中…").waitFor({
                     state: "visible",
                 });
+                // The loading spinner is essential motion: reduced motion keeps it rotating.
                 const animation = await refresh.locator(".animate-spin")
                     .evaluate(
                         (spinner) => {
@@ -220,11 +221,15 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                             return {
                                 iterations: style.animationIterationCount,
                                 duration: parseFloat(style.animationDuration),
+                                running: spinner.getAnimations().some((
+                                    running,
+                                ) => running.playState === "running"),
                             };
                         },
                     );
-                assertEquals(animation.iterations, "1");
-                assertEquals(animation.duration <= 0.00001, true);
+                assertEquals(animation.iterations, "infinite");
+                assertEquals(animation.duration > 0.1, true);
+                assertEquals(animation.running, true);
                 const afterMotion = await page.request.get(
                     origin + "/api/preferences",
                 );
@@ -241,13 +246,17 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
     );
 
     await t.step(
-        "Account: 当前设备退出 / 其他设备退出 dialog contracts (Cancel/Escape no mutation, Confirm 1 mutation, pending disabled, focus recovery)",
+        "Account: 单个 / 其他所有 / 当前设备退出 dialog contracts (Cancel/Escape no mutation, Confirm 1 mutation, pending disabled, focus recovery)",
         async () => {
-            // Seed a secondary session device
+            // Seed two secondary session devices
             await auth.createSession(user.id, user.authVersion, {
                 userAgent:
                     "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
                 ip: "192.168.1.100",
+            });
+            await auth.createSession(user.id, user.authVersion, {
+                userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)",
+                ip: "192.168.1.101",
             });
 
             const { page, context } = await createTestPage();
@@ -258,7 +267,100 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             const deviceList = page.locator(".account-device-list");
             await deviceList.waitFor({ state: "visible" });
 
-            // 1. Other devices logout
+            // 0. Every device row offers the same action: one name, one danger style
+            const rowActions = deviceList.getByRole("button", {
+                name: "退出",
+                exact: true,
+            });
+            // Earlier steps also left sessions behind: current + 2 seeded at least
+            const deviceRows = await deviceList.locator(".account-device-item")
+                .count();
+            assertEquals(deviceRows >= 3, true);
+            assertEquals(await rowActions.count(), deviceRows);
+            const rowActionStyles = await rowActions.evaluateAll((buttons) =>
+                buttons.map((button) => {
+                    const style = getComputedStyle(button);
+                    return [
+                        style.color,
+                        style.backgroundColor,
+                        style.height,
+                    ];
+                })
+            );
+            assertEquals(
+                new Set(rowActionStyles.map((style) => style.join(" | "))).size,
+                1,
+                "device row actions share one style",
+            );
+            const danger = await page.evaluate(() => {
+                const probe = document.createElement("span");
+                probe.style.color = "var(--danger)";
+                document.body.append(probe);
+                const color = getComputedStyle(probe).color;
+                probe.remove();
+                return color;
+            });
+            assertEquals(rowActionStyles[0][0], danger);
+
+            // 1. Signing out a single other device is confirmed like the other actions
+            const otherRow = deviceList.locator(".account-device-item", {
+                hasText: "192.168.1.100",
+            });
+            const otherAction = otherRow.getByRole("button", {
+                name: "退出",
+                exact: true,
+            });
+            let revokeDeviceRequests = 0;
+            const revokeDeviceGate = Promise.withResolvers<void>();
+            await page.route(
+                /\/api\/auth\/devices\/[0-9a-f]{16}$/,
+                async (route) => {
+                    revokeDeviceRequests++;
+                    await revokeDeviceGate.promise;
+                    await route.continue();
+                },
+            );
+            const revokeDeviceDialog = page.locator(
+                '[role="alertdialog"]:has-text("退出该设备")',
+            );
+
+            // Escape closes dialog with 0 mutations
+            await otherAction.click();
+            await revokeDeviceDialog.waitFor({ state: "visible" });
+            await page.keyboard.press("Escape");
+            await revokeDeviceDialog.waitFor({ state: "hidden" });
+            assertEquals(revokeDeviceRequests, 0);
+
+            // Cancel button closes dialog with 0 mutations
+            await otherAction.click();
+            await revokeDeviceDialog.waitFor({ state: "visible" });
+            const cancelDeviceBtn = revokeDeviceDialog.getByRole("button", {
+                name: "取消",
+            });
+            await cancelDeviceBtn.click();
+            await revokeDeviceDialog.waitFor({ state: "hidden" });
+            assertEquals(revokeDeviceRequests, 0);
+
+            // Confirm sends 1 mutation with pending disabled
+            await otherAction.click();
+            await revokeDeviceDialog.waitFor({ state: "visible" });
+            await revokeDeviceDialog.getByRole("button", { name: "确认退出" })
+                .click();
+            const pendingDeviceBtn = revokeDeviceDialog.getByRole("button", {
+                name: "处理中…",
+            });
+            await pendingDeviceBtn.waitFor({ state: "visible" });
+            assertEquals(await pendingDeviceBtn.isDisabled(), true);
+            assertEquals(await cancelDeviceBtn.isDisabled(), true);
+
+            // Release deterministic gate: the device leaves the list
+            revokeDeviceGate.resolve();
+            await page.locator(".status-banner:has-text('已退出该设备')")
+                .waitFor({ state: "visible" });
+            await otherRow.waitFor({ state: "detached" });
+            assertEquals(revokeDeviceRequests, 1);
+
+            // 2. All other devices logout
             const revokeOthersBtn = page.getByRole("button", {
                 name: "退出其他所有设备",
             });
@@ -319,13 +421,14 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             );
             await successBanner.waitFor({ state: "visible" });
 
-            // 2. Current device logout
+            // 3. Current device logout
             const currentDeviceRow = page.locator(
                 ".account-device-item:has-text('当前设备')",
             );
             await currentDeviceRow.waitFor({ state: "visible" });
             const logoutCurrentBtn = currentDeviceRow.getByRole("button", {
-                name: "退出此设备",
+                name: "退出",
+                exact: true,
             });
 
             let logoutRequests = 0;
@@ -1252,6 +1355,162 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             assertEquals(convRestored, true);
             await convUndoToast.waitFor({ state: "hidden" });
             await convItem.waitFor({ state: "visible" });
+        },
+    );
+
+    await t.step(
+        "UndoToast: exit retains inert visible content, reopening survives stale completion, and closing detaches",
+        async () => {
+            const conversations = [
+                { id: "presence-exit-a", title: "Presence Exit A" },
+                { id: "presence-exit-b", title: "Presence Exit B" },
+            ];
+            const now = Date.now();
+            await store.run((db) =>
+                db.insert(aiConversations).values(
+                    conversations.map((conversation) => ({
+                        ...conversation,
+                        userId: user.id,
+                        historyEnabled: true,
+                        createdAt: now,
+                        updatedAt: now,
+                    })),
+                )
+            );
+            const { page, context } = await createTestPage();
+            await authenticateContext(context);
+            await page.emulateMedia({ reducedMotion: "no-preference" });
+            await visit("/ask", page);
+            const toast = page.locator(".undo-toast");
+
+            async function deleteConversation(title: string) {
+                const item = page.locator(".ask-sidebar__item").filter({
+                    hasText: title,
+                });
+                await item.locator('button[aria-label*="操作"]').click();
+                await page.getByRole("menuitem", {
+                    name: "删除",
+                    exact: true,
+                }).click();
+                await item.waitFor({ state: "detached" });
+                await page.getByRole("menu").waitFor({ state: "detached" });
+                await toast.getByText(`已删除对话 “${title}”`, { exact: true })
+                    .waitFor({ state: "visible" });
+            }
+
+            async function holdNextExit() {
+                return await toast.evaluateHandle((element) => {
+                    const observed = Promise.withResolvers<void>();
+                    const animations: Animation[] = [];
+                    const finished: Promise<Animation>[] = [];
+                    const observer = new MutationObserver(() => {
+                        if (!element.hasAttribute("data-ending-style")) return;
+                        observer.disconnect();
+                        for (const animation of element.getAnimations()) {
+                            const endTime = Number(
+                                animation.effect?.getComputedTiming().endTime,
+                            );
+                            if (!Number.isFinite(endTime)) continue;
+                            finished.push(animation.finished);
+                            animation.pause();
+                            animation.currentTime = endTime / 2;
+                            animations.push(animation);
+                        }
+                        observed.resolve();
+                    });
+                    observer.observe(element, {
+                        attributes: true,
+                        attributeFilter: ["data-ending-style"],
+                    });
+                    return {
+                        element,
+                        animations,
+                        finished,
+                        observed: observed.promise,
+                    };
+                });
+            }
+
+            await deleteConversation(conversations[0].title);
+            await toast.evaluate((element) => {
+                for (const animation of element.getAnimations()) {
+                    animation.finish();
+                }
+            });
+            const closing = await holdNextExit();
+            await toast.getByRole("button", { name: "关闭撤销提示" }).click();
+            await closing.evaluate((state) => state.observed);
+            assertEquals(
+                await closing.evaluate((state) => {
+                    const opacity = Number(
+                        getComputedStyle(state.element).opacity,
+                    );
+                    return {
+                        mounted: state.element.isConnected,
+                        inert: state.element.hasAttribute("inert"),
+                        fading: opacity > 0 && opacity < 1,
+                        messageRetained: state.element.textContent?.includes(
+                            "Presence Exit A",
+                        ),
+                    };
+                }),
+                {
+                    mounted: true,
+                    inert: true,
+                    fading: true,
+                    messageRetained: true,
+                },
+            );
+
+            await deleteConversation(conversations[1].title);
+            await closing.evaluate(async (state) => {
+                for (const animation of state.animations) {
+                    if (animation.playState !== "idle") animation.finish();
+                }
+                await Promise.allSettled(state.finished);
+                const frame = Promise.withResolvers<void>();
+                requestAnimationFrame(() =>
+                    requestAnimationFrame(() => frame.resolve())
+                );
+                await frame.promise;
+            });
+            assertEquals(
+                await closing.evaluate((state) => ({
+                    sameToast:
+                        state.element === document.querySelector(".undo-toast"),
+                    mounted: state.element.isConnected,
+                    inert: state.element.hasAttribute("inert"),
+                    ending: state.element.hasAttribute("data-ending-style"),
+                })),
+                { sameToast: true, mounted: true, inert: false, ending: false },
+            );
+            await toast.evaluate((element) => {
+                for (const animation of element.getAnimations()) {
+                    animation.finish();
+                }
+            });
+            const ending = await holdNextExit();
+            await toast.getByRole("button", { name: "关闭撤销提示" }).click();
+            await ending.evaluate((state) => state.observed);
+            assertEquals(
+                await ending.evaluate((state) => {
+                    const opacity = Number(
+                        getComputedStyle(state.element).opacity,
+                    );
+                    return state.element.isConnected &&
+                        state.element.hasAttribute("inert") &&
+                        opacity > 0 && opacity < 1;
+                }),
+                true,
+            );
+            await ending.evaluate(async (state) => {
+                for (const animation of state.animations) animation.finish();
+                await Promise.allSettled(state.finished);
+            });
+            await toast.waitFor({ state: "detached" });
+            await closing.dispose();
+            await ending.dispose();
+            await page.close();
         },
     );
 

@@ -1,11 +1,5 @@
-/* Auth: one narrow column. The page title is the only heading; fields share one rhythm. */
-
-.auth-form {
-    width: 100%;
-    max-width: var(--layout-auth-max);
-    min-width: 0;
-    margin-inline: auto;
-}
+/* Auth: fields share one rhythm inside the narrow-form column (narrow-form.css).
+   The page title is the only heading. */
 
 .auth-body {
     display: flex;
@@ -61,16 +55,10 @@
 }
 
 .auth-footer a {
-    color: var(--foreground);
+    color: var(--accent);
     font-weight: var(--font-label-weight);
 }
 
 .auth-footer a:hover {
     text-decoration: underline;
-}
-
-@media (min-width: 768px) {
-    .auth-form {
-        padding-block-start: clamp(var(--space-5), 10dvh, var(--space-10));
-    }
 }

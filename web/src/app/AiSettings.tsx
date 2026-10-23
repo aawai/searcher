@@ -879,16 +879,20 @@ export function AiSettings() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            {status && (
-                <StatusBanner tone="success" presentation="floating">
-                    {status}
-                </StatusBanner>
-            )}
-            {error && !isModalOpen && (
-                <StatusBanner tone="error" className="ai-error">
-                    {error}
-                </StatusBanner>
-            )}
+            <StatusBanner
+                tone="success"
+                presentation="floating"
+                open={status !== ""}
+            >
+                {status}
+            </StatusBanner>
+            <StatusBanner
+                open={Boolean(error) && !isModalOpen}
+                tone="error"
+                className="ai-error"
+            >
+                {error}
+            </StatusBanner>
         </>
     );
 }

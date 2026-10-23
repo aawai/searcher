@@ -469,9 +469,3 @@
         min-height: var(--control-touch-target);
     }
 }
-@media (prefers-reduced-motion: reduce) {
-    .app-upload-dropzone,
-    .app-ai-candidate-card {
-        transition: none;
-    }
-}

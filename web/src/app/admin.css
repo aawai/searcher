@@ -137,12 +137,6 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .admin-row-reset {
-        transition: none;
-    }
-}
-
 .admin-cell-actions {
     width: 1%;
     white-space: nowrap;

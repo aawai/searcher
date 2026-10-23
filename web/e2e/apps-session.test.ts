@@ -313,7 +313,7 @@ Deno.test("dirty Apps blocks SearchHome's programmatic Ask navigation", async ()
     try {
         await openZenAppsForm(page, draft);
         await page.getByRole("button", { name: /当前搜索引擎/ }).click();
-        await page.getByRole("menuitem", {
+        await page.getByRole("menuitemradio", {
             name: "AI 问答",
             exact: true,
         }).click();
@@ -398,6 +398,7 @@ Deno.test("dirty Apps drafts block browser Back and Forward until confirmed", as
         }).click();
         await page.waitForURL(origin + "/settings");
         await confirmedBack;
+        await leaveDialog.waitFor({ state: "detached" });
         assertEquals(await page.getByRole("alertdialog").count(), 0);
 
         await page.goForward();
@@ -435,6 +436,7 @@ Deno.test("dirty Apps drafts block browser Back and Forward until confirmed", as
         }).click();
         await page.waitForURL(origin + "/settings");
         await confirmedForward;
+        await leaveDialog.waitFor({ state: "detached" });
         assertEquals(await page.getByRole("alertdialog").count(), 0);
     } finally {
         await fixture.close();

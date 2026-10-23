@@ -216,6 +216,13 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
     }
 
     async function readStableGeometry() {
+        await page.waitForFunction(() => {
+            const dock = document.querySelector(".zen-edge-trigger");
+            return dock !== null &&
+                !dock.hasAttribute("data-ending-style") &&
+                getComputedStyle(dock).opacity === "1" &&
+                dock.getAnimations({ subtree: true }).length === 0;
+        });
         return await page.evaluate(() => {
             const rect = (element: Element | null) => {
                 if (!element) return null;
@@ -511,6 +518,38 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         0,
         "No visible pagination or management controls",
     );
+    async function assertBodyAlignment(id: string) {
+        const alignment = await page.evaluate(() => {
+            const region = document.querySelector(".zen-inline-notes")!;
+            const body = region.querySelector<HTMLElement>(
+                ".zen-inline-note-body",
+            )!;
+            const center = (element: Element) => {
+                const box = element.getBoundingClientRect();
+                return box.x + box.width / 2;
+            };
+            return {
+                structured: body.hasAttribute("data-structured"),
+                textAlign: getComputedStyle(body).textAlign,
+                offset: Math.abs(center(body) - center(region)),
+            };
+        });
+        assertEquals(
+            alignment.structured,
+            id === noteC.id,
+            "Only the Markdown list/code note is structured",
+        );
+        assertEquals(
+            alignment.textAlign,
+            alignment.structured ? "start" : "center",
+        );
+        if (alignment.structured) {
+            assert(
+                alignment.offset <= 1,
+                `Structured body stays on the shared axis (${alignment.offset})`,
+            );
+        }
+    }
     const initialGeometry = await readStableGeometry();
     assertEquals(initialGeometry.preview !== null, true);
 
@@ -553,6 +592,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
     assertEquals(await previous.count(), 1);
     await next.evaluate((button) => (button as HTMLButtonElement).click());
     await waitForCurrent(expectedOrder[2].id);
+    await assertBodyAlignment(expectedOrder[2].id);
     await notesRegion.locator(".zen-inline-note").focus();
     await page.keyboard.press("ArrowRight");
     assertEquals(
@@ -562,6 +602,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
     );
     await previous.evaluate((button) => (button as HTMLButtonElement).click());
     await waitForCurrent(expectedOrder[1].id);
+    await assertBodyAlignment(expectedOrder[1].id);
     await notesRegion.locator(".zen-inline-note").focus();
     await page.keyboard.press("ArrowLeft");
     await waitForCurrent(expectedOrder[0].id);
@@ -614,7 +655,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         name: "收起工作区",
         exact: true,
     }).click();
-    await editor.waitFor({ state: "hidden" });
+    await sheet.waitFor({ state: "detached" });
     await page.waitForFunction(
         (id) => document.activeElement?.getAttribute("data-note-id") === id,
         noteA.id,
@@ -688,7 +729,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         name: "收起工作区",
         exact: true,
     }).click();
-    await notesWorkspace.waitFor({ state: "hidden" });
+    await notesWorkspace.waitFor({ state: "detached" });
     const accountAExtra1 = await createNote(
         "Account A exclusive first",
         "A account-only first body.",
@@ -1095,7 +1136,7 @@ Deno.test("production Zen inline notes mobile behavior E2E (#191)", async () => 
         name: "收起工作区",
         exact: true,
     }).click();
-    await responsiveEditor.waitFor({ state: "hidden" });
+    await responsiveSheet.waitFor({ state: "detached" });
     // The mobile opener was unmounted at 768px. Shared Host semantics restore
     // its workspace entry rather than focusing a detached or replacement node.
     await page.waitForFunction(

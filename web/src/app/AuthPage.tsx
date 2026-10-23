@@ -20,6 +20,7 @@ import { api, json } from "../lib/api.ts";
 import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { authDestination, routes } from "./routes.ts";
+import "./narrow-form.css";
 import "./auth.css";
 
 type RegistrationAvailability = "checking" | "open" | "closed" | "unknown";
@@ -79,7 +80,10 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
 
     useEffect(() => {
         if (ready && user) {
-            navigate(authDestination(location.search), { replace: true });
+            navigate(authDestination(location.search), {
+                replace: true,
+                viewTransition: true,
+            });
         }
     }, [ready, user, location.search, navigate]);
 
@@ -132,7 +136,10 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                 json("POST", body),
             );
             login(result.user);
-            navigate(authDestination(location.search), { replace: true });
+            navigate(authDestination(location.search), {
+                replace: true,
+                viewTransition: true,
+            });
         } catch (err) {
             setError(errorMessage(err));
         } finally {
@@ -148,7 +155,7 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
 
     return (
         <PageShell archetype="utility">
-            <div className="auth-form">
+            <div className="narrow-form">
                 <PageHeader title={kind === "login" ? "登录" : "创建账户"} />
                 <div className="auth-body">
                     {registrationAvailability !== "open" && (
@@ -297,12 +304,20 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                     {kind === "register"
                         ? (
                             <p className="auth-footer">
-                                已有账户？<Link to={toggleToLogin}>登录</Link>
+                                已有账户？<Link
+                                    to={toggleToLogin}
+                                    viewTransition
+                                >
+                                    登录
+                                </Link>
                             </p>
                         )
                         : registrationAvailability === "open" && (
                             <p className="auth-footer">
-                                没有账户？<Link to={toggleToRegister}>
+                                没有账户？<Link
+                                    to={toggleToRegister}
+                                    viewTransition
+                                >
                                     注册
                                 </Link>
                             </p>

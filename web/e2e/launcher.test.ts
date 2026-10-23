@@ -96,8 +96,29 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
         );
     }
 
+    async function settlePresentation(targetPage: Page = page) {
+        await targetPage.evaluate(async () => {
+            await document.fonts.ready;
+            await Promise.all(
+                document.getAnimations().filter((animation) =>
+                    Number.isFinite(
+                        animation.effect?.getComputedTiming().endTime,
+                    )
+                ).map((animation) => animation.finished),
+            );
+            for (let frame = 0; frame < 2; frame++) {
+                const { promise, resolve } = Promise.withResolvers<number>();
+                requestAnimationFrame(resolve);
+                await promise;
+            }
+        });
+    }
+
     // Helper to calculate a blank coordinate below the last grid row, inside the panel body
     async function getSurfaceBlankCoordinate(targetPage: Page = page) {
+        // Visibility includes the first translated frame of the mobile Sheet.
+        // Coordinates must describe its final interactive surface.
+        await settlePresentation(targetPage);
         return await targetPage.evaluate(() => {
             const panelEl = document.querySelector(
                 ".workspace-panel--mobile, aside.workspace-panel, .workspace-panel",
@@ -1447,6 +1468,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                         ).first().click();
                         await grid.waitFor({ state: "visible" });
                     }
+                    await settlePresentation(touchPage);
                 };
                 await ensureMobileAppsSheetOpen();
                 const cdp = await touchContext.newCDPSession(touchPage);
@@ -1522,6 +1544,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 const target = panel.locator(
                     '[data-tile-id="folder:' + folder.id + '"]',
                 ).first();
+                await settlePresentation(touchPage);
                 const a = (await source.boundingBox())!;
                 const b = (await target.boundingBox())!;
                 assertEquals([a.width, a.height], [68, 68]);
@@ -1591,6 +1614,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                     name: "完成整理",
                     exact: true,
                 }).click();
+                await settlePresentation(touchPage);
                 for (
                     const selector of [
                         ".launcher-app",
@@ -1629,6 +1653,7 @@ Deno.test("production launcher contracts - Issue #47", async (t) => {
                 // A short viewport creates real overflow; a swipe on the blank
                 // surface must move the body, not merely avoid opening a menu.
                 await touchPage.setViewportSize({ width: 390, height: 400 });
+                await settlePresentation(touchPage);
                 const body = panel.locator(".workspace-body");
                 await body.evaluate((el) => {
                     el.scrollTop = el.scrollHeight;

@@ -269,7 +269,7 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
                         `Direct visit to ${path} status`,
                     );
                     await page.locator(".topbar").waitFor();
-                    await page.locator("main, [data-archetype], .auth-form")
+                    await page.locator("main, [data-archetype], .narrow-form")
                         .first().waitFor();
                     const hasError = await page.locator(
                         '[data-testid="route-error-boundary"]',

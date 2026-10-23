@@ -3,6 +3,7 @@ import {
     type KeyboardEvent,
     lazy,
     Suspense,
+    useContext,
     useEffect,
     useId,
     useLayoutEffect,
@@ -56,6 +57,7 @@ import {
 import type { Selection } from "@milkdown/prose/state";
 import type { NoteItem } from "./NoteCard.tsx";
 import type { MarkdownEditorHandle } from "../../features/markdown-editor/types.ts";
+import { WorkspaceActivity } from "../../features/workspace/WorkspaceActivity.ts";
 
 const NoteLivePreviewEditor = lazy(() => import("./NoteLivePreviewEditor.tsx"));
 
@@ -81,6 +83,7 @@ export function NoteEditor(
     },
 ) {
     const { authSession } = useAppState();
+    const active = useContext(WorkspaceActivity);
     const userId = authSession.userId;
     const editorId = useId();
     const sourceBodyId = `note-body-source-${editorId}`;
@@ -279,7 +282,8 @@ export function NoteEditor(
         };
     }, [authSession, note.id]);
 
-    // Close, Escape, and note switches must persist the debounce-window draft.
+    // Logical close flushes before focus leaves, even while exit visuals retain
+    // this editor. Note switches and actual unmount use the same boundary.
     const flushOnUnmountRef = useRef<() => void>(() => {});
     flushOnUnmountRef.current = () => {
         capturePendingLiveBody();
@@ -294,14 +298,15 @@ export function NoteEditor(
         void save(undefined, "autosave");
     };
     useLayoutEffect(() => {
-        disposedRef.current = false;
+        disposedRef.current = !active;
+        if (!active) return;
         return () => {
             disposedRef.current = true;
             clearTimeout(blurTimer.current);
             clearTimeout(timer.current);
             flushOnUnmountRef.current();
         };
-    }, []);
+    }, [active]);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     function persistLocalDraft(data: Draft) {
         if (!userId || !isCurrent()) return;
@@ -366,6 +371,7 @@ export function NoteEditor(
     }
 
     function editingBlur(event: FocusEvent<HTMLElement>) {
+        if (disposedRef.current) return;
         const editor = event.currentTarget;
         const region = "[data-note-edit-focus], [data-note-mode-switch]";
         const ownedMenuSelector = `[data-note-editor-owner="${

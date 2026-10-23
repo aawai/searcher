@@ -66,15 +66,16 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
         await target.locator("main").waitFor({ state: "visible" });
     }
 
+    // Open (non-exiting) workspace surface; an exiting one is `data-ending-style` + inert.
     function getNotesWorkspace(p: Page = page) {
         return p.locator(
-            ".workspace-panel--mobile, aside.workspace-panel, .workspace-panel",
+            ".workspace-panel--mobile:not([data-ending-style]), aside.workspace-panel:not([data-ending-style])",
         );
     }
 
     async function openNotesRoot(p: Page = page) {
         const trigger = p.locator(
-            '.zen-edge-btn[data-workspace="notes"], button[aria-label="便签工作区"]',
+            '.zen-edge-trigger:not([data-ending-style]) .zen-edge-btn[data-workspace="notes"], button[aria-label="便签工作区"]',
         ).first();
         await trigger.waitFor({ state: "visible" });
         await trigger.click();
@@ -1624,7 +1625,9 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                         );
                         if (await closeBtn.isVisible()) {
                             await closeBtn.click();
-                            await currentPanel.waitFor({ state: "detached" });
+                            await page.locator(
+                                ".workspace-panel--mobile, aside.workspace-panel",
+                            ).waitFor({ state: "detached" });
                         }
                     }
                 }
@@ -1664,7 +1667,7 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
 
             // Open workspace from Zen edge trigger
             const zenNotesBtn = page.locator(
-                '.zen-edge-trigger button[data-workspace="notes"], .zen-edge-btn[data-workspace="notes"]',
+                '.zen-edge-trigger:not([data-ending-style]) .zen-edge-btn[data-workspace="notes"]',
             );
             await zenNotesBtn.waitFor({ state: "visible" });
             await zenNotesBtn.click();

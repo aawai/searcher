@@ -172,7 +172,7 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
         await page.locator("#auth-password").fill(
             "Auth-recovery-password-199!",
         );
-        await page.locator(".auth-form form").evaluate((form) => {
+        await page.locator(".narrow-form form").evaluate((form) => {
             (form as HTMLFormElement).requestSubmit();
         });
         const blockedSubmission = page.getByRole("alert");
@@ -189,7 +189,7 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
         });
         await closedMessage.waitFor({ state: "visible" });
         assertEquals(await submit.isDisabled(), true);
-        await page.locator(".auth-form form").evaluate((form) => {
+        await page.locator(".narrow-form form").evaluate((form) => {
             (form as HTMLFormElement).requestSubmit();
         });
         await blockedSubmission.waitFor({ state: "visible" });
@@ -201,7 +201,7 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
         await page.getByRole("button", { name: "重新检查" }).click();
         await page.waitForFunction(() => {
             const button = document.querySelector<HTMLButtonElement>(
-                '.auth-form form button[type="submit"]',
+                '.narrow-form form button[type="submit"]',
             );
             return button !== null && !button.disabled;
         });

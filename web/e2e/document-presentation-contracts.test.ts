@@ -772,6 +772,11 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
 
     const beforeResize = afterPaper;
     await page.setViewportSize({ width: 390, height: 844 });
+    // Changing presentation remounts the editor into the Sheet portal. Wait for
+    // its real pagination initialization before collecting animations or frames.
+    await page.locator('.workspace-panel[data-presentation="sheet"]').waitFor();
+    await waitForPaginationMode(page, "page");
+    await page.locator(".document-editor-scroll-area .ProseMirror").waitFor();
     await finishFiniteAnimations(page);
     const narrowSamples = await captureLayoutFrames(
         page,
@@ -788,6 +793,9 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     );
     const beforeWideResize = narrowLayout;
     await page.setViewportSize({ width: 1440, height: 900 });
+    await page.locator('.workspace-panel[data-presentation="panel"]').waitFor();
+    await waitForPaginationMode(page, "page");
+    await page.locator(".document-editor-scroll-area .ProseMirror").waitFor();
     await finishFiniteAnimations(page);
     const wideSamples = await captureLayoutFrames(
         page,

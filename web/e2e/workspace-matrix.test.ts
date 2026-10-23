@@ -125,14 +125,14 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
         await trigger.waitFor({ state: "visible" });
         await trigger.click();
         const win = target.locator(
-            ".workspace-panel--mobile, aside.workspace-panel",
+            ".workspace-panel--mobile:not([data-ending-style]), aside.workspace-panel:not([data-ending-style])",
         ).first();
         await win.waitFor({ state: "visible" });
     }
 
     async function closeWorkspace(target: Page = page) {
         const win = target.locator(
-            ".workspace-panel--mobile, aside.workspace-panel",
+            ".workspace-panel--mobile:not([data-ending-style]), aside.workspace-panel:not([data-ending-style])",
         ).first();
         if (await win.isVisible()) {
             const closeBtn = win.locator(
@@ -140,7 +140,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             ).first();
             await closeBtn.waitFor({ state: "visible" });
             await closeBtn.click();
-            await win.waitFor({ state: "hidden" });
+            await target.locator(
+                ".workspace-panel--mobile, aside.workspace-panel",
+            ).waitFor({ state: "detached" });
         }
     }
 

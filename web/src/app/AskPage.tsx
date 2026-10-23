@@ -555,22 +555,23 @@ export function AskPage() {
                 />
             </div>
 
-            {error && (
-                <StatusBanner tone="error" className="ask-page-banner">
-                    {error}
-                </StatusBanner>
-            )}
+            <StatusBanner
+                open={Boolean(error)}
+                tone="error"
+                className="ask-page-banner"
+            >
+                {error}
+            </StatusBanner>
 
-            {undoConversation && (
-                <UndoToast
-                    message={`已删除对话 “${undoConversation.title}”`}
-                    onUndo={() => void undoDelete()}
-                    onClose={() => {
-                        clearTimeout(undoConversation.timer);
-                        setUndoConversation(null);
-                    }}
-                />
-            )}
+            <UndoToast
+                open={undoConversation !== null}
+                message={`已删除对话 “${undoConversation?.title ?? ""}”`}
+                onUndo={() => void undoDelete()}
+                onClose={() => {
+                    if (undoConversation) clearTimeout(undoConversation.timer);
+                    setUndoConversation(null);
+                }}
+            />
         </PageShell>
     );
 }

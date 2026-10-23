@@ -1,8 +1,10 @@
-import { PageShell } from "../components/searcher/PageShell.tsx";
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "../components/ui/button.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
+import { PageShell } from "../components/searcher/PageShell.tsx";
+import { ActionGroup } from "../components/searcher/semantic.tsx";
+import { Button } from "../components/ui/button.tsx";
 import { routes } from "./routes.ts";
+import "./narrow-form.css";
 
 export function NotFoundPage(
     { parent }: { parent?: { label: string; to: string } },
@@ -18,27 +20,28 @@ export function NotFoundPage(
             : undefined);
     return (
         <PageShell archetype="utility">
-            <PageHeader
-                title="页面不存在"
-                actions={
-                    <>
+            <div className="narrow-form">
+                <PageHeader
+                    title="页面不存在"
+                    description="链接可能有误，或页面已被移除。"
+                />
+                <ActionGroup>
+                    <Button
+                        variant="default"
+                        render={<Link to={routes.home} viewTransition />}
+                    >
+                        返回首页
+                    </Button>
+                    {workspace && (
                         <Button
-                            variant="default"
-                            render={<Link to={routes.home} />}
+                            variant="outline"
+                            render={<Link to={workspace.to} viewTransition />}
                         >
-                            返回首页
+                            返回{workspace.label}
                         </Button>
-                        {workspace && (
-                            <Button
-                                variant="outline"
-                                render={<Link to={workspace.to} />}
-                            >
-                                返回{workspace.label}
-                            </Button>
-                        )}
-                    </>
-                }
-            />
+                    )}
+                </ActionGroup>
+            </div>
         </PageShell>
     );
 }

@@ -1,6 +1,7 @@
 import {
     type ComponentProps,
     type ReactNode,
+    type Ref,
     useLayoutEffect,
     useRef,
     useState,
@@ -11,6 +12,7 @@ import { Card } from "../ui/card.tsx";
 import { Button } from "../ui/button.tsx";
 import { X } from "lucide-react";
 import { Table, TableCaption } from "../ui/table.tsx";
+import { usePresence } from "../ui/presence.ts";
 import { cn } from "../../lib/utils.ts";
 
 type SectionProps = ComponentProps<"section"> & {
@@ -162,21 +164,42 @@ export function EmptyState(
         </div>
     );
 }
+/**
+ * Transient feedback (floating banner, undo toast) is shown and hidden by its
+ * owner. `open` lets it play its exit motion: while closing, the props of the
+ * last open render stay on screen, inert, until the CSS exit settles.
+ */
+function useTransientPresence<P extends object>(open: boolean, props: P) {
+    const presence = usePresence<HTMLDivElement>(open);
+    const lastOpenProps = useRef(props);
+    useLayoutEffect(() => {
+        if (open) lastOpenProps.current = props;
+    });
+    return { ...presence, props: open ? props : lastOpenProps.current };
+}
+/**
+ * `open={false}` removes the banner; a floating banner fades out first, so
+ * owners keep it mounted and toggle `open` instead of rendering it conditionally.
+ */
 export function StatusBanner(
-    {
-        tone = "info",
-        presentation = "inline",
-        density = "default",
-        className,
-        ...props
-    }:
+    { open = true, ...props }:
         & ComponentProps<"div">
         & {
+            open?: boolean;
             tone?: "info" | "error" | "success" | "warning";
             presentation?: "inline" | "floating";
             density?: "default" | "compact";
         },
 ) {
+    const presence = useTransientPresence(open, props);
+    if (!presence.mounted) return null;
+    const {
+        tone = "info",
+        presentation = "inline",
+        density = "default",
+        className,
+        ...rest
+    } = presence.props;
     return (
         <div
             role={tone === "error" ? "alert" : "status"}
@@ -184,7 +207,10 @@ export function StatusBanner(
             data-tone={tone}
             data-presentation={presentation}
             data-density={density}
-            {...props}
+            {...rest}
+            ref={presence.ref}
+            data-ending-style={presence.ending ? "" : undefined}
+            inert={presence.ending}
         />
     );
 }
@@ -212,8 +238,37 @@ export function LoadingState(
         </div>
     );
 }
-export function UndoToast(
+type UndoToastProps = ComponentProps<"div"> & {
+    /**
+     * Owners keep the toast mounted and toggle `open`: closing fades a floating
+     * toast out before it unmounts. Defaults to open for conditional rendering.
+     */
+    open?: boolean;
+    message: ReactNode;
+    onUndo: () => void;
+    onClose?: () => void;
+    placement?: "floating" | "inline";
+    host?: HTMLElement | null;
+    undoLabel?: string;
+    undoDisabled?: boolean;
+    actions?: ReactNode;
+    onPauseChange?: (paused: boolean) => void;
+};
+export function UndoToast({ open = true, ...props }: UndoToastProps) {
+    const presence = useTransientPresence(open, props);
+    if (!presence.mounted) return null;
+    return (
+        <UndoToastLayer
+            {...presence.props}
+            ending={presence.ending}
+            layerRef={presence.ref}
+        />
+    );
+}
+function UndoToastLayer(
     {
+        ending,
+        layerRef,
         message,
         onUndo,
         onClose,
@@ -225,16 +280,9 @@ export function UndoToast(
         actions,
         onPauseChange,
         ...props
-    }: ComponentProps<"div"> & {
-        message: ReactNode;
-        onUndo: () => void;
-        onClose?: () => void;
-        placement?: "floating" | "inline";
-        host?: HTMLElement | null;
-        undoLabel?: string;
-        undoDisabled?: boolean;
-        actions?: ReactNode;
-        onPauseChange?: (paused: boolean) => void;
+    }: Omit<UndoToastProps, "open"> & {
+        ending: boolean;
+        layerRef: Ref<HTMLDivElement>;
     },
 ) {
     const pointerInside = useRef(false);
@@ -260,8 +308,11 @@ export function UndoToast(
     const content = (
         <div
             {...props}
+            ref={layerRef}
             className={cn("undo-toast", className)}
             data-placement={placement}
+            data-ending-style={ending ? "" : undefined}
+            inert={ending}
             role="status"
             aria-live="polite"
             onPointerEnter={(event) => {

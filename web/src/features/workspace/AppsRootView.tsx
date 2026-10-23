@@ -405,6 +405,7 @@ export function AppsRootView({
                                     groups={groups}
                                     showFolders
                                     showFolderHeader={false}
+                                    emptyMessage="还没有应用"
                                     managing={isArranging}
                                     activeFolderId={activeFolderId}
                                     onFolderChange={onFolderChange}

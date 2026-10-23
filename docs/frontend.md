@@ -86,7 +86,7 @@ deno task check:ui --update
 - 同步失败使用持久、礼貌的状态容器，图标与文字链接并存；连接错误与偏好同步错误分开建模，不互相覆盖。
 - 主题切换按钮的可访问名称与 `title` 使用中文，说明当前与下一个主题。
 - `prefers-reduced-motion`
-  下缩短过渡并停止非必要动画；系统偏好不改写用户已保存的设置。
+  下位移、缩放与旋转改为纯透明度变化，页面切换不做过渡，加载指示保持旋转；系统偏好不改写用户已保存的设置。
 
 ## 路由
 
@@ -96,7 +96,10 @@ deno task check:ui --update
   404。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。
 - Settings/Admin 内部 Tab replace 当前 history entry，外部进入具体 Tab 保留正常
-  entry；二级页面 breadcrumb 提供稳定的上层与首页目标。
+  entry；二级页面 breadcrumb 提供稳定的上层与首页目标。登录用户的设置导航首项为
+  “账户与安全”（`/account`），按设置内部 Tab 处理。
+- 顶层页面之间的导航（顶栏、用户菜单、404 返回等）启用 React Router
+  `viewTransition`；设置、管理内部 Tab 与工作区不使用。
 
 服务端路由回退规则见 [部署细节](deployment.md#请求路由)。
 

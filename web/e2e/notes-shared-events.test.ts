@@ -179,6 +179,7 @@ Deno.test("note editor opens share events and preserve conflict drafts", async (
         copy: localMarkdown,
     });
     await page.getByRole("button", { name: "收起工作区", exact: true }).click();
+    await page.locator(".workspace-panel").waitFor({ state: "detached" });
     await page.waitForFunction(() =>
         globalThis.__noteStreams.every((stream) =>
             stream.readyState === EventSource.CLOSED

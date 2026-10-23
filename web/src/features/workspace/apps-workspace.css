@@ -75,13 +75,6 @@
     text-overflow: ellipsis;
 }
 
-/* Motion preferences */
-@media (prefers-reduced-motion: reduce) {
-    .apps-workspace-group-card {
-        transition: none !important;
-    }
-}
-
 .apps-search-results {
     display: flex;
     flex-direction: column;

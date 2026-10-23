@@ -2,9 +2,8 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import {
     createBrowserRouter,
     Link,
-    Route,
+    Outlet,
     RouterProvider,
-    Routes,
     useLocation,
     useNavigate,
 } from "react-router-dom";
@@ -86,8 +85,10 @@ function Layout() {
     const location = useLocation();
     const isHomePage = location.pathname === routes.home;
     const isAskPage = location.pathname === routes.ask;
+    // The account page shares the settings shell, so it keeps the icon active.
     const isSettingsPage = location.pathname === routes.settings() ||
-        location.pathname.startsWith(`${routes.settings()}/`);
+        location.pathname.startsWith(`${routes.settings()}/`) ||
+        location.pathname === routes.account;
     const {
         user,
         authSession,
@@ -168,6 +169,7 @@ function Layout() {
                 <Link
                     className="wordmark-small"
                     to={routes.home}
+                    viewTransition
                     aria-label="Searcher 首页"
                 >
                     s.
@@ -175,6 +177,7 @@ function Layout() {
                 <nav className="top-actions" aria-label="账户与设置">
                     <Link
                         to={routes.ask}
+                        viewTransition
                         className={isAskPage
                             ? "topbar-link topbar-link--active"
                             : "topbar-link"}
@@ -197,6 +200,7 @@ function Layout() {
                     </button>
                     <Link
                         to={routes.settings()}
+                        viewTransition
                         className={isSettingsPage
                             ? "topbar-link topbar-link--active"
                             : "topbar-link"}
@@ -209,6 +213,7 @@ function Layout() {
                         {syncFailed && (
                             <Link
                                 to={routes.settings("data")}
+                                viewTransition
                                 className="sync-failed-badge"
                                 aria-label="偏好设置同步失败"
                             >
@@ -241,7 +246,10 @@ function Layout() {
                                     </div>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
-                                        onClick={() => navigate(routes.account)}
+                                        onClick={() =>
+                                            navigate(routes.account, {
+                                                viewTransition: true,
+                                            })}
                                     >
                                         <UserRound
                                             size="1em"
@@ -251,7 +259,9 @@ function Layout() {
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            navigate(routes.settings())}
+                                            navigate(routes.settings(), {
+                                                viewTransition: true,
+                                            })}
                                     >
                                         <Settings
                                             size="1em"
@@ -262,7 +272,9 @@ function Layout() {
                                     {user.role === "admin" && (
                                         <DropdownMenuItem
                                             onClick={() =>
-                                                navigate(routes.admin())}
+                                                navigate(routes.admin(), {
+                                                    viewTransition: true,
+                                                })}
                                         >
                                             <Shield
                                                 size="1em"
@@ -291,6 +303,7 @@ function Layout() {
                             location.pathname !== routes.register) && (
                             <Link
                                 to={authPath("login", location)}
+                                viewTransition
                                 className="user-link"
                                 aria-label="登录"
                             >
@@ -357,53 +370,7 @@ function Layout() {
                 : (
                     <RouteErrorBoundary locationKey={location.pathname}>
                         <Suspense fallback={<RouteLoadingFallback />}>
-                            <Routes>
-                                <Route
-                                    path={routes.home}
-                                    element={<SearchHome />}
-                                />
-                                <Route
-                                    path={routes.designLab}
-                                    element={<DesignLab />}
-                                />
-                                <Route
-                                    path={routes.login}
-                                    element={<AuthPage kind="login" />}
-                                />
-                                <Route
-                                    path={routes.register}
-                                    element={<AuthPage kind="register" />}
-                                />
-                                <Route
-                                    path={`${routes.settings()}/*`}
-                                    element={<SettingsPage />}
-                                />
-                                <Route
-                                    path={routes.ask}
-                                    element={<AskPage />}
-                                />
-                                <Route
-                                    path={routes.account}
-                                    element={<AccountPage />}
-                                />
-                                <Route
-                                    path={`${routes.admin()}/*`}
-                                    element={<AdminPage />}
-                                />
-                                <Route
-                                    path={routes.trash}
-                                    element={<TrashPage />}
-                                />
-                                <Route path="*" element={<NotFoundPage />} />
-                                <Route
-                                    path="/design-lab/markdown-editor"
-                                    element={<MarkdownEditorSpike />}
-                                />
-                                <Route
-                                    path="/design-lab/editable-pagination"
-                                    element={<EditablePaginationSpike />}
-                                />
-                            </Routes>
+                            <Outlet />
                         </Suspense>
                     </RouteErrorBoundary>
                 )}
@@ -414,12 +381,40 @@ export function App() {
     const [router] = useState(() =>
         createBrowserRouter([
             {
-                path: "*",
+                path: routes.home,
                 element: (
                     <AppState>
                         <Layout />
                     </AppState>
                 ),
+                // Page links need the data router's navigation options, including
+                // viewTransition; descendant <Routes> would discard them.
+                children: [
+                    { index: true, element: <SearchHome /> },
+                    { path: routes.designLab, element: <DesignLab /> },
+                    { path: routes.login, element: <AuthPage kind="login" /> },
+                    {
+                        path: routes.register,
+                        element: <AuthPage kind="register" />,
+                    },
+                    {
+                        path: `${routes.settings()}/*`,
+                        element: <SettingsPage />,
+                    },
+                    { path: routes.ask, element: <AskPage /> },
+                    { path: routes.account, element: <AccountPage /> },
+                    { path: `${routes.admin()}/*`, element: <AdminPage /> },
+                    { path: routes.trash, element: <TrashPage /> },
+                    {
+                        path: "/design-lab/markdown-editor",
+                        element: <MarkdownEditorSpike />,
+                    },
+                    {
+                        path: "/design-lab/editable-pagination",
+                        element: <EditablePaginationSpike />,
+                    },
+                    { path: "*", element: <NotFoundPage /> },
+                ],
             },
         ])
     );

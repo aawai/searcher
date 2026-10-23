@@ -18,7 +18,28 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-l3);
     color: var(--foreground);
-    animation: workspace-enter var(--motion-panel) var(--ease-out-expo);
+}
+/* Desktop panel: opacity and translate transition both ways. The enter starts
+   from @starting-style, the exit from [data-ending-style], so closing or
+   reopening mid-motion reverses from the current frame. Reduced motion keeps
+   the opacity change and drops the travel. The mobile Sheet keeps the
+   primitive's slide below. */
+.workspace-panel[data-presentation="panel"] {
+    --workspace-travel: var(--space-2);
+    transition: opacity var(--motion-panel) var(--ease-out-expo),
+        translate var(--motion-panel) var(--ease-out-expo);
+}
+@starting-style {
+    .workspace-panel[data-presentation="panel"] {
+        opacity: 0;
+        translate: var(--workspace-travel) 0;
+    }
+}
+.workspace-panel[data-presentation="panel"][data-ending-style] {
+    opacity: 0;
+    translate: var(--workspace-travel) 0;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--ease-standard);
 }
 .workspace-panel[data-workspace-expanded="true"] {
     width: min(var(--workspace-editor-expanded-width), calc(100vw - 2 *
@@ -111,6 +132,10 @@
 .workspace-header > :not(.workspace-title) {
     flex-shrink: 0;
 }
+/* Root views hide the title; keep the actions at the inline end. */
+.workspace-switcher {
+    margin-inline-end: auto;
+}
 .workspace-body[data-layout="app-form"] .app-dialog-body {
     padding: var(--space-4);
 }
@@ -167,6 +192,7 @@
     --workspace-visible-height: 100dvh;
     --workspace-visible-bottom: 0px;
     inset: auto 0 var(--workspace-visible-bottom, 0);
+    /* The primitive centres with translateX(-50%); this sheet spans the width. */
     transform: none;
     width: 100%;
     height: min(88dvh, var(--workspace-mobile-height),
@@ -174,6 +200,10 @@
     max-height: calc(var(--workspace-visible-height, 100dvh) - var(--space-4));
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     z-index: var(--elevation-sheet);
+}
+.workspace-panel--mobile.sheet[data-starting-style],
+.workspace-panel--mobile.sheet[data-ending-style] {
+    transform: translateY(100%);
 }
 .workspace-panel--mobile .workspace-header {
     padding-top: var(--space-6);
@@ -192,27 +222,17 @@
     border-radius: var(--control-radius);
     background: var(--muted);
 }
-@keyframes workspace-enter {
-    from {
-        opacity: 0;
-        translate: var(--space-2) 0;
-    }
-    to {
-        opacity: 1;
-        translate: 0 0;
-    }
-}
 @media (prefers-reduced-motion: reduce) {
-    .workspace-panel {
-        animation-name: workspace-fade;
+    .workspace-panel[data-presentation="panel"] {
+        --workspace-travel: 0;
     }
-}
-@keyframes workspace-fade {
-    from {
+    .workspace-panel--mobile.sheet {
+        transition-property: opacity;
+    }
+    .workspace-panel--mobile.sheet[data-starting-style],
+    .workspace-panel--mobile.sheet[data-ending-style] {
+        transform: none;
         opacity: 0;
-    }
-    to {
-        opacity: 1;
     }
 }
 @media (any-pointer: coarse) {

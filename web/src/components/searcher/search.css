@@ -173,11 +173,23 @@
     width: 100%;
     max-height: 360px;
     overflow-y: auto;
+    scrollbar-width: thin;
     padding: var(--space-1);
     background: var(--surface-l3);
     border-radius: var(--radius);
     box-shadow: var(--shadow-l2);
     z-index: var(--elevation-suggestions);
+    transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+@starting-style {
+    .search-suggestions {
+        opacity: 0;
+    }
+}
+
+.search-suggestions[data-ending-style] {
+    opacity: 0;
 }
 
 .suggestion-item {
@@ -259,6 +271,11 @@
 
 .status-dot.online {
     background: var(--success);
+}
+
+/* The current-engine check follows the dot at the row end. */
+.status-dot + .menu-item-indicator {
+    margin-inline-start: 0;
 }
 
 @media (max-width: 700px) {

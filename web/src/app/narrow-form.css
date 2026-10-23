@@ -1,0 +1,15 @@
+/* Narrow form (login, register, 404): one centered column at --layout-auth-max.
+   Contract: docs/design/VISUAL_LANGUAGE.md */
+
+.narrow-form {
+    width: 100%;
+    max-width: var(--layout-auth-max);
+    min-width: 0;
+    margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+    .narrow-form {
+        padding-block-start: clamp(var(--space-5), 10dvh, var(--space-10));
+    }
+}

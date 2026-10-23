@@ -29,6 +29,7 @@
     border-radius: var(--radius);
     background: transparent;
     color: var(--foreground);
+    transition: background var(--motion-fast) var(--ease-standard);
 }
 .webapp-icon:hover {
     background: color-mix(in srgb, var(--foreground) 8%, transparent);
@@ -43,8 +44,8 @@
     width: var(--launcher-icon);
     height: var(--launcher-icon);
     border-radius: var(--radius-launcher-icon);
-    background: var(--accent-subtle);
-    color: var(--accent);
+    background: var(--surface-soft);
+    color: var(--foreground);
     font-size: var(--font-launcher-glyph);
     font-weight: var(--font-title-weight);
     overflow: hidden;
@@ -340,13 +341,19 @@
         var(--launcher-pad-b) - var(--launcher-icon) - 2px));
 }
 .launcher-folder-item:hover .launcher-folder-surface {
-    background: var(--accent-soft);
+    background: color-mix(in srgb, var(--foreground) 8%, var(--surface-soft));
 }
 .launcher-tile.is-folder-drop-target .launcher-folder-surface {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
     background: var(--accent-subtle);
     transform: scale(1.02);
+}
+/* Reduced motion: a drop target keeps its outline and fill without the 2% grow. */
+@media (prefers-reduced-motion: reduce) {
+    .launcher-tile.is-folder-drop-target .launcher-folder-surface {
+        transform: none;
+    }
 }
 .launcher-folder-background {
     position: absolute;
@@ -435,7 +442,7 @@
     border: 0;
     padding: 0;
     background: transparent;
-    color: var(--accent);
+    color: var(--foreground);
     pointer-events: auto;
 }
 .launcher-folder-item--small .launcher-folder-mini {
@@ -504,7 +511,7 @@
 }
 .launcher-folder-inline {
     width: 100%;
-    animation: fadeIn var(--motion-fast) var(--ease-standard);
+    animation: launcher-folder-enter var(--motion-fast) var(--ease-standard);
 }
 /* Folder breadcrumb: spacing, not a rule, separates it from the grid. */
 .launcher-folder-inline-header {
@@ -531,7 +538,7 @@
     color: var(--muted);
     font-size: var(--font-metadata-size);
 }
-@keyframes fadeIn {
+@keyframes launcher-folder-enter {
     from {
         opacity: 0;
         transform: translateY(var(--space-1));
@@ -539,6 +546,20 @@
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+@keyframes launcher-folder-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+/* Reduced motion: the opened folder fades in without rising. */
+@media (prefers-reduced-motion: reduce) {
+    .launcher-folder-inline {
+        animation-name: launcher-folder-fade;
     }
 }
 .launcher-folder-contents {

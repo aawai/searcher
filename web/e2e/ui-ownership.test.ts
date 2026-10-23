@@ -379,8 +379,9 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             await passwordDialog.getByRole("button", { name: "取消" }).click();
             await passwordDialog.waitFor({ state: "hidden" });
 
-            // Trigger logout confirmation AlertDialog
-            await page.getByRole("button", { name: "退出此设备" }).click();
+            // Trigger logout confirmation AlertDialog from the current-device row
+            await page.locator(".account-device-item", { hasText: "当前设备" })
+                .getByRole("button", { name: "退出", exact: true }).click();
             const dialog = page.getByRole("alertdialog");
             await dialog.waitFor({ state: "visible" });
             await dialog.getByRole("heading", { name: "退出当前设备" }).waitFor(

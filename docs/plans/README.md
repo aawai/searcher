@@ -10,5 +10,6 @@ API、安全与持久化约束以实现和契约为准。
 | [WORKSPACE_LAYOUT_REDESIGN_PLAN.md](WORKSPACE_LAYOUT_REDESIGN_PLAN.md) | 未标注；被 WORKSPACE_FINAL_REFACTOR_PLAN 列为历史背景                              |
 | [UI_UX_AUDIT_FIX_PLAN.md](UI_UX_AUDIT_FIX_PLAN.md)                     | 实施计划，文档声明“不表示任何修复已完成”；Design System 列为既有设计资料           |
 | [ZEN_MOBILE_NOTES_PLAN.md](ZEN_MOBILE_NOTES_PLAN.md)                   | 已实现并完成验收（Issue #191）                                                     |
+| [UI_MOTION_CONSISTENCY_PLAN.md](UI_MOTION_CONSISTENCY_PLAN.md)         | 已实施：动效、视觉一致性与页面原型修正                                             |
 
 新增计划放在本目录，并在文首写明状态。

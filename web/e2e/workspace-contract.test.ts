@@ -78,8 +78,15 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
     async function openWorkspace(type: "apps" | "notes") {
         const target = getWorkspace(type);
-        if (!(await target.isVisible())) {
-            const openPanel = page.locator(".workspace-panel:visible");
+        const openTarget = page.locator(
+            `aside.workspace-panel:not([data-ending-style])[aria-label="${
+                type === "apps" ? "应用工作区" : "便签工作区"
+            }"]`,
+        );
+        if ((await openTarget.count()) === 0) {
+            const openPanel = page.locator(
+                "aside.workspace-panel:not([data-ending-style])",
+            );
             if (await openPanel.count() > 0) {
                 // The Dock is hidden while a panel is open; switch via header tabs.
                 await openPanel.getByRole("tab", {

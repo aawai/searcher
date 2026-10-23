@@ -22,6 +22,12 @@ async function sourceEditor(page: Page) {
     return source;
 }
 
+async function homeSettled(page: Page) {
+    await page.waitForFunction(() =>
+        document.querySelector(".home")?.getAnimations().length === 0
+    );
+}
+
 Deno.test("production workspace contracts", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const files = await Deno.makeTempDir({ prefix: "searcher_workspace_" });
@@ -707,7 +713,7 @@ Deno.test("production workspace contracts", async (t) => {
                     await page.emulateMedia({ colorScheme: scheme });
 
                     const currentPanel = page.locator(
-                        ".workspace-panel--mobile, aside.workspace-panel",
+                        ".workspace-panel--mobile:not([data-ending-style]), aside.workspace-panel:not([data-ending-style])",
                     );
                     if (!(await currentPanel.isVisible())) {
                         const notesTrigger = page.locator(
@@ -835,7 +841,7 @@ Deno.test("production workspace contracts", async (t) => {
 
             // Ensure workspace is closed
             const finalPanel = page.locator(
-                ".workspace-panel--mobile, aside.workspace-panel",
+                ".workspace-panel--mobile:not([data-ending-style]), aside.workspace-panel:not([data-ending-style])",
             );
             if (await finalPanel.isVisible()) {
                 const closeBtn = finalPanel.locator(
@@ -853,6 +859,7 @@ Deno.test("production workspace contracts", async (t) => {
             const floatingNote = page.locator(".pinned-area .note-position")
                 .first();
             await floatingNote.waitFor({ state: "visible" });
+            await homeSettled(page);
             const floatingBoxBefore = await floatingNote.boundingBox();
             const floatingCompactBefore = await floatingNote.locator(
                 ".note-card--compact",
@@ -884,6 +891,7 @@ Deno.test("production workspace contracts", async (t) => {
             // Close workspace
             await page.keyboard.press("Escape");
             await zenPanel.waitFor({ state: "detached" });
+            await homeSettled(page);
 
             // Verify Zen floating note position and mode are completely isolated and unchanged
             const floatingBoxAfter = await floatingNote.boundingBox();
@@ -1000,23 +1008,25 @@ Deno.test("production workspace contracts", async (t) => {
                 '.pinned-area .launcher-grid[data-presentation="default"]',
             );
             await zenGrid.waitFor();
-            const zenBefore = await zenGrid.evaluate((el) => ({
-                alignment: getComputedStyle(el).justifyContent,
-                width: el.getBoundingClientRect().width,
-            }));
+            const zenAlignment = await zenGrid.evaluate((el) =>
+                getComputedStyle(el).justifyContent
+            );
             await page.locator(
                 '.zen-edge-trigger button[data-workspace="apps"]',
             ).click();
             await page.locator(".apps-workspace .launcher-grid--workspace")
                 .waitFor();
+            await homeSettled(page);
             assertEquals(
-                await zenGrid.evaluate((el) => ({
-                    alignment: getComputedStyle(el).justifyContent,
-                    width: el.getBoundingClientRect().width,
-                })),
-                zenBefore,
+                await zenGrid.evaluate((el) =>
+                    getComputedStyle(el).justifyContent
+                ),
+                zenAlignment,
             );
             await page.keyboard.press("Escape");
+            await page.locator("aside.workspace-panel").waitFor({
+                state: "detached",
+            });
             const zenEdge = page.locator(".zen-edge-trigger");
             await zenEdge.waitFor();
             assertEquals(
@@ -1034,7 +1044,8 @@ Deno.test("production workspace contracts", async (t) => {
             const floatingNote = page.locator(".note-position").first();
             await floatingNote.waitFor();
 
-            // Record layout positions before opening workspace
+            // Record layout positions before opening workspace (home eased back)
+            await homeSettled(page);
             const heroBoxBefore = await page.locator(".hero").boundingBox();
             const noteBoxBefore = await floatingNote.boundingBox();
 
@@ -1066,11 +1077,29 @@ Deno.test("production workspace contracts", async (t) => {
                 true,
             );
 
-            // Layout preserved: hero and floating note position have no layout shift
+            // Layout: hero keeps its vertical box, the home yields to the panel
+            // horizontally, and the floating note (viewport canvas) does not move.
+            await homeSettled(page);
             const heroBoxAfter = await page.locator(".hero").boundingBox();
             const noteBoxAfter = await floatingNote.boundingBox();
-            assertEquals(heroBoxAfter?.x, heroBoxBefore?.x);
             assertEquals(heroBoxAfter?.y, heroBoxBefore?.y);
+            assertEquals(heroBoxAfter?.height, heroBoxBefore?.height);
+            await panel.evaluate((element) =>
+                Promise.all(element.getAnimations().map((a) => a.finished))
+            );
+            const panelBox = await panel.boundingBox();
+            const searchBox = await page.locator(".search-form").boundingBox();
+            if (!panelBox || !searchBox) throw new Error("Missing boxes");
+            if (heroBoxAfter && heroBoxBefore) {
+                assertEquals(
+                    Math.abs(
+                        searchBox.x + searchBox.width / 2 - panelBox.x / 2,
+                    ) <= 1,
+                    true,
+                    "search is centred in the full remaining panel-free column",
+                );
+                assertEquals(heroBoxAfter.width, panelBox.x);
+            }
             assertEquals(noteBoxAfter?.x, noteBoxBefore?.x);
             assertEquals(noteBoxAfter?.y, noteBoxBefore?.y);
 
