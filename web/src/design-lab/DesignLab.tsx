@@ -138,6 +138,31 @@ export function DesignLab() {
         <PageShell archetype="workbench" className="design-lab-page">
             <PageHeader title="设计实验室" />
 
+            <Section title="首页构图：31% / 38%">
+                <p>
+                    真实首页，1440×900
+                    画布；仅在此预览覆盖纵向锚点，不保存偏好。
+                </p>
+                {[31, 38].map((anchor) => (
+                    <div className="design-lab-composition" key={anchor}>
+                        <p>搜索框中心 {anchor}%</p>
+                        <div className="design-lab-composition-viewport">
+                            <iframe
+                                title={`首页锚点 ${anchor}%`}
+                                src="/"
+                                onLoad={(event) => {
+                                    event.currentTarget.contentDocument
+                                        ?.documentElement.style.setProperty(
+                                            "--home-hero-inset",
+                                            `calc(${anchor}dvh - 84px)`,
+                                        );
+                                }}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </Section>
+
             <Section title="颜色">
                 <div className="design-lab-swatches">
                     {COLOR_ROLES.map(([label, token]) => (

@@ -27,6 +27,7 @@ export function WebAppGlyph({ app, className = "" }: {
         <span
             className={`webapp-glyph ${className}`}
             style={effective ? undefined : iconFallback(app.url)}
+            aria-hidden="true"
         >
             {effective
                 ? (

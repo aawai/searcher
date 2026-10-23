@@ -54,9 +54,11 @@
     /* Light catching the top of the glass: peak white at the top edge, fading out by 55% of the height. Scaled by the tier. */
     --glass-sheen-peak: 60%;
     /* Default canvas (no wallpaper): accent blobs plus this secondary tint give the glass something to refract. */
-    --canvas-mesh-secondary: #FFC9A8;
-    --canvas-mesh-accent-mix: 36%;
-    --canvas-mesh-secondary-mix: 95%;
+    --canvas-mesh-base: #E3E3EA;
+    --canvas-mesh-floor: #D9DEE8;
+    --canvas-mesh-secondary: #EDC9B5;
+    --canvas-mesh-accent-mix: 24%;
+    --canvas-mesh-secondary-mix: 50%;
 
     /* Paper: opaque home note sheet. Stuck at the top, its bottom edge lifts: hover lifts further, dragging lifts it fully. */
     --paper-white: #FFFCF4;
@@ -240,7 +242,8 @@
     --layout-form-max: 560px;
     --layout-search-max: 640px;
     --layout-home-content-max: 640px;
-    --home-hero-inset: clamp(80px, 22dvh, 220px);
+    /* 38% viewport centre minus topbar (56px) and half search height (28px). */
+    --home-hero-inset: max(80px, calc(38dvh - 84px));
     --layout-sheet-max: 960px;
     --sheet-width: min(65vw, var(--layout-sheet-max));
     --workspace-width: 400px;
@@ -293,9 +296,11 @@
     --glass-edge-ring: rgb(255 255 255 / 0.12);
     --glass-edge-bottom: rgb(0 0 0 / 0.35);
     --glass-sheen-peak: 6%;
-    --canvas-mesh-secondary: #4B3A8F;
-    --canvas-mesh-accent-mix: 44%;
-    --canvas-mesh-secondary-mix: 80%;
+    --canvas-mesh-base: #2B2C34;
+    --canvas-mesh-floor: #30313C;
+    --canvas-mesh-secondary: #61557A;
+    --canvas-mesh-accent-mix: 24%;
+    --canvas-mesh-secondary-mix: 40%;
 }
 
 /* Each palette owns both themes; color-scheme selects the light-dark pair. */
@@ -457,6 +462,13 @@
         --glass-thick-dark: 100%;
         --glass-sheen-scale: 0;
         --material-filter: none;
+    }
+}
+
+/* Keep flow-based tablet notes at their existing vertical positions. */
+@media (min-width: 768px) and (max-width: 1023px) {
+    :root {
+        --home-hero-inset: clamp(80px, 22dvh, 220px);
     }
 }
 

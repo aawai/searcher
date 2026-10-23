@@ -72,14 +72,14 @@ a {
         color-mix(in srgb, var(--canvas-mesh-secondary)
         var(--canvas-mesh-secondary-mix), transparent),
         transparent),
-        radial-gradient(75% 60% at 62% 100%,
+        radial-gradient(90% 75% at 38% 100%,
         color-mix(in srgb, var(--accent) var(--canvas-mesh-accent-mix),
         transparent),
         transparent),
         linear-gradient(155deg,
-        var(--surface-soft),
-        var(--background) 52%,
-        var(--surface-soft));
+        var(--canvas-mesh-base),
+        var(--canvas-mesh-base) 52%,
+        var(--canvas-mesh-floor));
 }
 .wallpaper-surface--embedded {
     position: absolute;

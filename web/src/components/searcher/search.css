@@ -11,7 +11,7 @@
     align-items: center;
     width: 100%;
     height: 56px;
-    gap: var(--space-1);
+    gap: 0;
     padding: var(--space-search-inset-block) var(--space-search-inset-inline);
     background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
@@ -73,7 +73,7 @@
     outline: none;
     background: transparent;
     color: var(--foreground);
-    padding: 0 var(--space-2);
+    padding: 0 var(--space-2) 0 0;
     font-size: var(--font-search-input-size);
     line-height: var(--font-title-line-height);
 }
@@ -82,15 +82,9 @@
     color: var(--muted);
 }
 
-/* Shortcut hint: plain muted text, hidden where there is no keyboard. */
-.search-hint {
+.search-submit-tooltip {
+    display: inline-flex;
     flex-shrink: 0;
-    padding: 0 var(--space-2);
-    color: var(--muted);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    pointer-events: none;
-    user-select: none;
 }
 
 .search-submit {
@@ -200,6 +194,21 @@
     cursor: pointer;
 }
 
+.suggestion-section-start {
+    margin-top: var(--space-2);
+    border-top: 1px solid var(--border);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.suggestion-app-icon {
+    --launcher-icon: var(--icon-lg);
+    --space-launcher-glyph-padding: var(--space-1);
+    border-radius: var(--control-radius);
+    font-size: var(--font-metadata-size);
+    flex-shrink: 0;
+}
+
 /* Same highlight as menu items; hover moves the selection. */
 .suggestion-item.active,
 .suggestion-item[aria-selected="true"] {
@@ -281,19 +290,9 @@
     }
 }
 
-@media (max-width: 639px) {
-    .search-hint {
-        display: none;
-    }
-}
-
-@media (pointer: coarse) {
+@media (any-pointer: coarse) {
     .search-frame {
         padding-block: 0;
-    }
-
-    .search-hint {
-        display: none;
     }
 
     .search-engine,
