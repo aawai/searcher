@@ -203,7 +203,7 @@ Deno.test("Zen floating notes expand/collapse persistence E2E (#122)", async (t)
     );
 
     await t.step(
-        "Zen code block native scrollbar remains draggable (#138)",
+        "Zen code block hides its scrollbar and scrolls horizontally (#138)",
         async () => {
             await clearAllNotes();
             await createNote({
@@ -232,25 +232,17 @@ Deno.test("Zen floating notes expand/collapse persistence E2E (#122)", async (t)
                     ),
                 );
             });
-            const scrollbar = await pre.evaluate((element) => {
-                const rect = element.getBoundingClientRect();
-                return {
-                    x: rect.x,
-                    y: rect.bottom -
-                        (rect.height - element.clientHeight) / 2,
-                    width: element.clientWidth,
-                    scrollWidth: element.scrollWidth,
-                };
-            });
+            const scrollbar = await pre.evaluate((element) => ({
+                width: element.clientWidth,
+                scrollWidth: element.scrollWidth,
+                scrollbarWidth: getComputedStyle(element).scrollbarWidth,
+                gutter: element.getBoundingClientRect().height -
+                    element.clientHeight,
+            }));
             assertEquals(scrollbar.scrollWidth > scrollbar.width, true);
-            await page.mouse.move(scrollbar.x + 25, scrollbar.y);
-            await page.mouse.down();
-            await page.mouse.move(
-                scrollbar.x + scrollbar.width * 0.7,
-                scrollbar.y,
-                { steps: 15 },
-            );
-            await page.mouse.up();
+            assertEquals(scrollbar.scrollbarWidth, "none");
+            assertEquals(scrollbar.gutter, 0);
+            await page.mouse.wheel(400, 0);
             await page.waitForFunction(
                 () =>
                     document.querySelector(

@@ -376,7 +376,7 @@ export function FloatingNotes(
         const note = notes[index];
         const current = currentPoint(note, index);
 
-        const cardWidth = 250;
+        const cardWidth = event.active.rect.current.initial?.width ?? 0;
         const maxX = typeof globalThis.window !== "undefined"
             ? Math.max(0, currentViewportWidth - cardWidth)
             : 1000;

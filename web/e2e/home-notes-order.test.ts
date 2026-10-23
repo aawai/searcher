@@ -265,6 +265,8 @@ Deno.test("production home Zen code scrolling E2E (#155)", async (t) => {
                             ?.scrollLeft > 0
                     );
                     if (width === 1440 && theme === "light") {
+                        // Home paper hides scrollbars: code stays reachable by
+                        // horizontal wheel without moving the card or its body.
                         // Stacked cards expose their titles; hovering the
                         // covered code center first can raise its neighbor.
                         await page.getByRole("button", {
@@ -272,7 +274,7 @@ Deno.test("production home Zen code scrolling E2E (#155)", async (t) => {
                             exact: true,
                         }).hover();
                         await long.hover();
-                        const scrollbar = await long.evaluate(
+                        const start = await long.evaluate(
                             async (pre) => {
                                 await Promise.all(
                                     pre.closest(".note-card")!
@@ -281,33 +283,27 @@ Deno.test("production home Zen code scrolling E2E (#155)", async (t) => {
                                         ),
                                 );
                                 pre.scrollLeft = 0;
-                                const rect = pre.getBoundingClientRect();
                                 const card = pre.closest(".note-card")!
                                     .getBoundingClientRect();
                                 return {
-                                    x: rect.x,
-                                    y: rect.bottom -
-                                        (rect.height - pre.clientHeight) /
-                                            2,
-                                    width: pre.clientWidth,
+                                    scrollbarWidth: getComputedStyle(pre)
+                                        .scrollbarWidth,
+                                    gutter: pre.getBoundingClientRect()
+                                        .height - pre.clientHeight,
                                     card: { x: card.x, y: card.y },
                                 };
                             },
                         );
-                        await page.mouse.move(
-                            scrollbar.x + 25,
-                            scrollbar.y,
+                        assertEquals(start.scrollbarWidth, "none");
+                        assertEquals(start.gutter, 0);
+                        await page.waitForFunction(
+                            (pre) =>
+                                !pre!.hasAttribute("data-fade-start") &&
+                                pre!.hasAttribute("data-fade-end"),
+                            await long.elementHandle(),
+                            { timeout: 3000 },
                         );
-                        await page.mouse.down();
-                        await page.mouse.move(
-                            scrollbar.x + scrollbar.width * 0.7,
-                            scrollbar.y,
-                            { steps: 15 },
-                        );
-                        await page.screenshot({
-                            path: `${durableScreenshotDir}/code-zen-active.png`,
-                        });
-                        await page.mouse.up();
+                        await page.mouse.wheel(400, 0);
                         await page.waitForFunction(
                             (pre) => pre!.scrollLeft > 100,
                             await long.elementHandle(),
@@ -322,8 +318,18 @@ Deno.test("production home Zen code scrolling E2E (#155)", async (t) => {
                                     .scrollLeft,
                             };
                         });
-                        assertEquals(after.card, scrollbar.card);
+                        assertEquals(after.card, start.card);
                         assertEquals(after.outer, 0);
+                        await long.evaluate((pre) => {
+                            pre.scrollLeft = pre.scrollWidth;
+                        });
+                        await page.waitForFunction(
+                            (pre) =>
+                                pre!.hasAttribute("data-fade-start") &&
+                                !pre!.hasAttribute("data-fade-end"),
+                            await long.elementHandle(),
+                            { timeout: 3000 },
+                        );
                     }
                     await page.screenshot({
                         path:

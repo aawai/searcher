@@ -456,9 +456,14 @@ Deno.test("production notes workspace contracts (#44 & #43)", async (t) => {
                 .first();
             await firstCard.waitFor({ state: "visible" });
 
-            // 1. Click drag grip -> must NOT navigate to editor
-            await firstCard.hover();
-            const dragGrip = firstCard.locator(".note-drag");
+            // 1. Click drag grip -> must NOT navigate to editor.
+            // Only sortable rows ("其他便签") render a drag grip.
+            const sortableCard = panel.locator(
+                ".notes-workspace-list .note-card:has(.note-drag)",
+            ).first();
+            await sortableCard.waitFor({ state: "visible" });
+            await sortableCard.hover();
+            const dragGrip = sortableCard.locator(".note-drag");
             await dragGrip.click();
             assertEquals(
                 await panel.locator(

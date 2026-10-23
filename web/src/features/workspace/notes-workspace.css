@@ -14,11 +14,13 @@
 .notes-workspace-list .note-card {
     width: 100%;
     max-width: 100%;
-    padding: var(--space-3) 0;
-    border-radius: 0;
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--control-radius);
     background: transparent;
+    transition: background var(--motion-fast) var(--ease-standard);
 }
-.notes-workspace-list .note-card:hover {
+.notes-workspace-list .note-card:hover,
+.notes-workspace-list .note-card:focus-within {
     background: var(--surface-soft);
 }
 .notes-workspace .note-preview {
