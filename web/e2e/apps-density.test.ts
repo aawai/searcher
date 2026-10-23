@@ -1,6 +1,7 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import {
+    type Browser,
     type BrowserContext,
     type CDPSession,
     chromium,
@@ -9,25 +10,22 @@ import {
 } from "playwright";
 import { startProductionApp } from "./helpers/production-app.ts";
 
+// Issue #244: the home page is the application library. These regressions pin
+// the density contract of its grid (docs/apps.md 首页应用库): fixed glyphs,
+// square cells, 2x2 large folders, row-major alignment, bottom clearance and
+// 44px touch targets, on touch (mobile/tablet) and fine-pointer desktop.
+
 type Theme = "light" | "dark";
 type Viewport = { width: number; height: number };
 type Box = { x: number; y: number; width: number; height: number };
-type TouchTargetMeasurement = {
-    width: number;
-    height: number;
-    hit: boolean;
-    point: { x: number; y: number };
-    hitElement: string | null;
-};
+type Geometry = { cell: number; gap: number; glyph: number };
 
-type DensityMetrics = {
-    viewport: Viewport;
+type Metrics = {
     availableWidth: number;
-    contentBounds: { left: number; right: number };
-    grid: Box & { scrollWidth: number; clientWidth: number };
+    grid: Box & { scrollWidth: number; clientWidth: number; bottom: number };
     columns: number;
     formulaColumns: number;
-    cellWidth: number;
+    cell: number;
     rowHeight: number;
     columnGap: number;
     rowGap: number;
@@ -37,25 +35,23 @@ type DensityMetrics = {
     tiles: Array<{ id: string | null; kind: string; box: Box }>;
     overlaps: string[];
     outOfBounds: string[];
-    horizontalOverflow: boolean;
     folders: Array<{
         id: string;
         size: "small" | "large";
         box: Box;
-        previewClass: string;
         previewCount: number;
         previewButtonCount: number;
-        moreText: string;
-        moreLabel: string;
+        remainderLabel: string;
+        remainderCount: number;
     }>;
+    moreLabel: string | null;
 };
 
-type AppFixtures = {
-    a9AppId: string;
+type Fixtures = {
     smallGroupId: string;
     largeGroupId: string;
+    /** Root tiles: loose apps plus the two folders. */
     rootTileCount: number;
-    looseAppCount: number;
     smallFolderAppCount: number;
     largeFolderAppCount: number;
 };
@@ -69,7 +65,8 @@ const TOUCH_VIEWPORTS: Viewport[] = [
     { width: 768, height: 1024 },
 ];
 const THEMES: Theme[] = ["light", "dark"];
-const GRID_SELECTOR = ".apps-workspace-root .launcher-grid--workspace";
+const HOME = ".launcher-library .launcher-grid--home";
+const BOTTOM_CLEARANCE = 48;
 
 function assertNear(
     actual: number,
@@ -83,23 +80,42 @@ function assertNear(
     );
 }
 
-async function setPreferences(page: Page, theme: Theme) {
-    const response = await page.evaluate(async (theme) => {
+/** Documented tracks: standard 84/12 desktop, 64/6 mobile; touch 88/12, 68/4. */
+function expectedGeometry(viewport: Viewport, coarse: boolean): Geometry {
+    const wide = viewport.width >= 768;
+    if (coarse) {
+        return wide
+            ? { cell: 88, gap: 12, glyph: 48 }
+            : { cell: 68, gap: 4, glyph: 44 };
+    }
+    return wide
+        ? { cell: 84, gap: 12, glyph: 48 }
+        : { cell: 64, gap: 6, glyph: 44 };
+}
+
+async function setTheme(page: Page, theme: Theme) {
+    const ok = await page.evaluate(async (theme) => {
         const result = await fetch("/api/preferences", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ theme }),
         });
-        return { ok: result.ok, status: result.status };
+        return result.ok;
     }, theme);
-    assertEquals(
-        response.ok,
-        true,
-        `Could not set ${theme} preferences`,
-    );
+    assertEquals(ok, true, `Could not set ${theme} preferences`);
 }
 
-async function seedApps(page: Page): Promise<AppFixtures> {
+async function register(page: Page, origin: string, username: string) {
+    await page.goto(origin + "/register");
+    await page.locator("#auth-username").fill(username);
+    await page.locator("#auth-display-name").fill("Apps density tester");
+    await page.locator("#auth-password").fill("Apps-density-password-149!");
+    await page.locator('form button[type="submit"]').click();
+    await page.waitForURL(origin + "/");
+    await page.locator("main").waitFor({ state: "visible" });
+}
+
+async function seedFixtures(page: Page): Promise<Fixtures> {
     return await page.evaluate(async () => {
         async function post<T>(path: string, body: unknown): Promise<T> {
             const response = await fetch(path, {
@@ -115,23 +131,11 @@ async function seedApps(page: Page): Promise<AppFixtures> {
             }
             return (JSON.parse(text) as { data: T }).data;
         }
-
-        const smallGroup = await post<{ id: string }>("/api/webapp-groups", {
-            name: "Small Sparse Folder",
-            sortOrder: 3,
-            folderSize: "small",
-        });
-        const largeGroup = await post<{ id: string }>("/api/webapp-groups", {
-            name: "Large Full Folder",
-            sortOrder: 8,
-            folderSize: "large",
-        });
         const createApp = (params: {
             name: string;
             url: string;
             sortOrder: number;
             groupId?: string;
-            isPinned?: boolean;
         }) =>
             post<{ id: string }>("/api/webapps", {
                 ...params,
@@ -140,25 +144,26 @@ async function seedApps(page: Page): Promise<AppFixtures> {
                 openMode: "global",
             });
 
-        const looseNames = [
-            "A9 Search",
-            "Home Geometry",
-            ...Array.from(
-                { length: 18 },
-                (_, index) => `Loose App ${String(index + 3).padStart(2, "0")}`,
-            ),
-        ];
-        let a9AppId = "";
-        for (const [index, name] of looseNames.entries()) {
-            const app = await createApp({
-                name,
+        // Folders lead the canonical order so both stay on the first rows of
+        // every viewport; the loose apps overflow into 更多（N）.
+        const smallGroup = await post<{ id: string }>("/api/webapp-groups", {
+            name: "Small Sparse Folder",
+            sortOrder: 0,
+            folderSize: "small",
+        });
+        const largeGroup = await post<{ id: string }>("/api/webapp-groups", {
+            name: "Large Full Folder",
+            sortOrder: 1,
+            folderSize: "large",
+        });
+        const looseCount = 20;
+        for (let index = 0; index < looseCount; index++) {
+            await createApp({
+                name: `Loose App ${String(index + 1).padStart(2, "0")}`,
                 url: `https://loose-${index + 1}.example/`,
-                sortOrder: index,
-                isPinned: index < 2,
+                sortOrder: index + 2,
             });
-            if (index === 0) a9AppId = app.id;
         }
-
         for (let index = 0; index < 2; index++) {
             await createApp({
                 name: `Sparse ${index + 1}`,
@@ -175,31 +180,14 @@ async function seedApps(page: Page): Promise<AppFixtures> {
                 sortOrder: index,
             });
         }
-
         return {
-            a9AppId,
             smallGroupId: smallGroup.id,
             largeGroupId: largeGroup.id,
-            rootTileCount: looseNames.length + 2,
-            looseAppCount: looseNames.length,
+            rootTileCount: looseCount + 2,
             smallFolderAppCount: 2,
             largeFolderAppCount: 10,
         };
     });
-}
-
-async function registerAndSeed(
-    page: Page,
-    origin: string,
-): Promise<AppFixtures> {
-    await page.goto(origin + "/register");
-    await page.locator("#auth-username").fill("apps_density_149");
-    await page.locator("#auth-display-name").fill("Apps density tester");
-    await page.locator("#auth-password").fill("Apps-density-password-149!");
-    await page.locator('form button[type="submit"]').click();
-    await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor({ state: "visible" });
-    return await seedApps(page);
 }
 
 async function settlePresentation(page: Page) {
@@ -218,365 +206,307 @@ async function settlePresentation(page: Page) {
     });
 }
 
-async function openAppsWorkspace(page: Page) {
-    await page.waitForLoadState("domcontentloaded");
-    if (await page.locator(GRID_SELECTOR).isVisible()) {
-        await settlePresentation(page);
-        return;
-    }
-    const triggers = page.locator(
-        '.zen-edge-trigger button[data-workspace="apps"], .zen-edge-btn[data-workspace="apps"], button[aria-label="应用工作区"]',
-    );
-    let opened = false;
-    for (let index = 0; index < await triggers.count(); index++) {
-        const trigger = triggers.nth(index);
-        if (!(await trigger.isVisible())) continue;
-        await trigger.scrollIntoViewIfNeeded();
-        if (
-            await trigger.evaluate((button) => {
-                const r = button.getBoundingClientRect();
-                if (button.closest("[inert]")) return false;
-                const hit = document.elementFromPoint(
-                    r.x + r.width / 2,
-                    r.y + r.height / 2,
-                );
-                return hit === button || Boolean(hit && button.contains(hit));
-            })
-        ) {
-            await trigger.click();
-            opened = true;
-            break;
+/**
+ * Wait for the grid to be settled at the current viewport: columns follow the
+ * measured parent width (ResizeObserver), tiles are laid out and the viewport
+ * has the requested width.
+ */
+async function waitForHome(page: Page, width: number, theme?: Theme) {
+    await page.locator(HOME).waitFor({ state: "visible" });
+    await page.waitForFunction(({ selector, width, theme }) => {
+        if (innerWidth !== width) return false;
+        if (theme && document.documentElement.dataset.theme !== theme) {
+            return false;
         }
-    }
-    if (!opened) {
-        const evidence = await createEvidenceDirectory("apps-navigation");
-        await page.screenshot({ path: `${evidence}/unreachable.png` });
-        console.error({
-            evidence,
-            navigation: await triggers.evaluateAll((buttons) =>
-                buttons.map((button) => {
-                    const rect = button.getBoundingClientRect();
-                    return {
-                        label: button.getAttribute("aria-label"),
-                        rect: rect.toJSON(),
-                        hit: document.elementFromPoint(
-                            rect.x + rect.width / 2,
-                            rect.y + rect.height / 2,
-                        )?.outerHTML.slice(0, 240),
-                    };
-                })
-            ),
-        });
-    }
-    assert(opened, "No visible Apps workspace navigation control was found");
-    await page.locator(".apps-workspace-root").waitFor({ state: "visible" });
-    await page.locator(GRID_SELECTOR).waitFor({ state: "visible" });
-    await page.waitForFunction((selector) => {
         const grid = document.querySelector<HTMLElement>(selector);
-        return grid?.dataset.columns !== undefined;
-    }, GRID_SELECTOR);
+        const parent = grid?.parentElement;
+        if (!grid || !parent) return false;
+        const style = getComputedStyle(grid);
+        const cell = Number.parseFloat(
+            style.getPropertyValue("--launcher-col-w"),
+        );
+        const gap = Number.parseFloat(style.columnGap);
+        const available = parent.clientWidth;
+        if (!(cell > 0) || !(available > 0)) return false;
+        const expected = Math.max(
+            2,
+            Math.floor((available + gap) / (cell + gap)),
+        );
+        return Number(grid.dataset.columns) === expected &&
+            grid.querySelector(":scope > .launcher-tile[data-tile-id]") !==
+                null;
+    }, { selector: HOME, width, theme });
     await settlePresentation(page);
 }
 
-async function collectDensityMetrics(
+async function collectMetrics(
     page: Page,
-    fixtures: AppFixtures,
-): Promise<DensityMetrics> {
-    return await page.evaluate((fixture) => {
-        const grid = document.querySelector<HTMLElement>(
-            ".apps-workspace-root .launcher-grid--workspace",
-        );
-        if (!grid?.parentElement) {
-            throw new Error("Workspace app grid is missing");
-        }
+    fixtures: Fixtures,
+    selector = HOME,
+): Promise<Metrics> {
+    return await page.evaluate(({ fixture, selector }) => {
+        const grid = document.querySelector<HTMLElement>(selector);
+        if (!grid?.parentElement) throw new Error(`${selector} is missing`);
         const container = grid.parentElement;
         const gridStyle = getComputedStyle(grid);
         const containerStyle = getComputedStyle(container);
         const gridRect = grid.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
-        const parsePx = (value: string) => Number.parseFloat(value) || 0;
-        const contentLeft = containerRect.left +
-            parsePx(containerStyle.borderLeftWidth) +
-            parsePx(containerStyle.paddingLeft);
-        const contentRight = containerRect.right -
-            parsePx(containerStyle.borderRightWidth) -
-            parsePx(containerStyle.paddingRight);
-        const availableWidth = Math.max(0, contentRight - contentLeft);
-        const cellWidth = parsePx(
-            gridStyle.getPropertyValue("--launcher-col-w"),
+        const px = (value: string) => Number.parseFloat(value) || 0;
+        const availableWidth = Math.max(
+            0,
+            containerRect.width - px(containerStyle.borderLeftWidth) -
+                px(containerStyle.borderRightWidth) -
+                px(containerStyle.paddingLeft) -
+                px(containerStyle.paddingRight),
         );
-        const rowHeight = parsePx(
-            gridStyle.getPropertyValue("--launcher-row-h"),
-        );
-        const columnGap = parsePx(gridStyle.columnGap);
-        const rowGap = parsePx(gridStyle.rowGap);
-        const formulaColumns = Math.max(
-            2,
-            Math.floor((availableWidth + columnGap) / (cellWidth + columnGap)),
-        );
+        const cell = px(gridStyle.getPropertyValue("--launcher-col-w"));
+        const columnGap = px(gridStyle.columnGap);
+        const box = (rect: DOMRect) => ({
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+        });
         const tiles = Array.from(
             grid.querySelectorAll<HTMLElement>(":scope > .launcher-tile"),
-        ).map((tile) => {
-            const rect = tile.getBoundingClientRect();
-            return {
-                id: tile.dataset.tileId ?? null,
-                kind: tile.querySelector(".launcher-folder-item--large")
-                    ? "large-folder"
-                    : tile.querySelector(".launcher-folder-item--small")
-                    ? "small-folder"
-                    : "app",
-                box: {
-                    x: rect.x,
-                    y: rect.y,
-                    width: rect.width,
-                    height: rect.height,
-                },
-            };
-        });
+        ).map((tile) => ({
+            id: tile.dataset.tileId ?? null,
+            kind: tile.querySelector(".launcher-folder-item--large")
+                ? "large-folder"
+                : tile.querySelector(".launcher-folder-item--small")
+                ? "small-folder"
+                : "app",
+            box: box(tile.getBoundingClientRect()),
+        }));
         const overlaps: string[] = [];
         for (let left = 0; left < tiles.length; left++) {
-            const a = tiles[left];
             for (let right = left + 1; right < tiles.length; right++) {
-                const b = tiles[right];
-                const overlapWidth = Math.min(
-                    a.box.x + a.box.width,
-                    b.box.x + b.box.width,
-                ) - Math.max(a.box.x, b.box.x);
-                const overlapHeight = Math.min(
-                    a.box.y + a.box.height,
-                    b.box.y + b.box.height,
-                ) - Math.max(a.box.y, b.box.y);
-                if (overlapWidth > 0.75 && overlapHeight > 0.75) {
-                    overlaps.push(`${a.id} overlaps ${b.id}`);
+                const a = tiles[left].box;
+                const b = tiles[right].box;
+                const width = Math.min(a.x + a.width, b.x + b.width) -
+                    Math.max(a.x, b.x);
+                const height = Math.min(a.y + a.height, b.y + b.height) -
+                    Math.max(a.y, b.y);
+                if (width > 0.75 && height > 0.75) {
+                    overlaps.push(`${left} overlaps ${right}`);
                 }
             }
         }
-        const outOfBounds = tiles.flatMap((tile) => {
+        const outOfBounds = tiles.flatMap((tile, index) => {
             const result: string[] = [];
-            if (tile.box.x < gridRect.left - 1) {
-                result.push(`${tile.id} left of grid`);
-            }
+            if (tile.box.x < gridRect.left - 1) result.push(`${index} left`);
             if (tile.box.x + tile.box.width > gridRect.right + 1) {
-                result.push(`${tile.id} right of grid`);
+                result.push(`${index} right`);
             }
-            if (tile.box.y < gridRect.top - 1) {
-                result.push(`${tile.id} above grid`);
+            if (tile.box.y < gridRect.top - 1) result.push(`${index} above`);
+            if (tile.box.y + tile.box.height > gridRect.bottom + 1) {
+                result.push(`${index} below`);
             }
             return result;
         });
         const folders = [fixture.smallGroupId, fixture.largeGroupId].flatMap(
             (id) => {
                 const tile = grid.querySelector<HTMLElement>(
-                    `[data-folder-id="${id}"]`,
+                    `:scope > .launcher-tile[data-folder-id="${id}"]`,
                 );
                 if (!tile) return [];
-                const rect = tile.getBoundingClientRect();
                 const preview = tile.querySelector<HTMLElement>(
                     ".launcher-folder-preview",
                 );
-                const kind = tile.querySelector(
-                        ".launcher-folder-item--large",
-                    )
-                    ? "large" as const
-                    : "small" as const;
+                const remainder = tile.querySelector<HTMLElement>(
+                    ".launcher-folder-remainder",
+                );
                 return [{
                     id,
-                    size: kind,
-                    box: {
-                        x: rect.x,
-                        y: rect.y,
-                        width: rect.width,
-                        height: rect.height,
-                    },
-                    previewClass: preview?.className ?? "",
+                    size: tile.querySelector(".launcher-folder-item--large")
+                        ? "large" as const
+                        : "small" as const,
+                    box: box(tile.getBoundingClientRect()),
                     previewCount: preview?.querySelectorAll(
                         ".launcher-folder-mini",
                     ).length ?? 0,
                     previewButtonCount: preview?.querySelectorAll(
                         "button.launcher-folder-mini",
                     ).length ?? 0,
-                    moreText: tile.querySelector(".launcher-folder-more")
-                        ?.textContent?.trim() ?? "",
-                    moreLabel: tile.querySelector(".launcher-folder-more")
-                        ?.getAttribute("aria-label") ?? "",
+                    remainderLabel: remainder?.getAttribute("aria-label") ?? "",
+                    remainderCount: remainder?.querySelectorAll(
+                        ".webapp-glyph",
+                    ).length ?? 0,
                 }];
             },
         );
         const glyph = grid.querySelector<HTMLElement>(
             ".launcher-tile:not([data-folder-id]) .webapp-glyph",
-        );
-        const glyphRect = glyph?.getBoundingClientRect();
-
+        )?.getBoundingClientRect();
         return {
-            viewport: { width: innerWidth, height: innerHeight },
             availableWidth,
-            contentBounds: { left: contentLeft, right: contentRight },
             grid: {
-                x: gridRect.x,
-                y: gridRect.y,
-                width: gridRect.width,
-                height: gridRect.height,
+                ...box(gridRect),
                 scrollWidth: grid.scrollWidth,
                 clientWidth: grid.clientWidth,
+                bottom: gridRect.bottom,
             },
             columns: Number(grid.dataset.columns),
-            formulaColumns,
-            cellWidth,
-            rowHeight,
+            formulaColumns: Math.max(
+                2,
+                Math.floor((availableWidth + columnGap) / (cell + columnGap)),
+            ),
+            cell,
+            rowHeight: px(gridStyle.getPropertyValue("--launcher-row-h")),
             columnGap,
-            rowGap,
-            glyph: glyphRect
-                ? {
-                    x: glyphRect.x,
-                    y: glyphRect.y,
-                    width: glyphRect.width,
-                    height: glyphRect.height,
-                }
-                : null,
-            tiles,
-            overlaps,
-            outOfBounds,
-            horizontalOverflow: grid.scrollWidth > grid.clientWidth + 1,
+            rowGap: px(gridStyle.rowGap),
             columnTracks: gridStyle.gridTemplateColumns.split(" ").map(
                 Number.parseFloat,
             ),
             rowTracks: gridStyle.gridTemplateRows.split(" ").map(
                 Number.parseFloat,
             ),
+            glyph: glyph ? box(glyph) : null,
+            tiles,
+            overlaps,
+            outOfBounds,
             folders,
+            moreLabel: grid.querySelector("[data-library-cell='more']")
+                ?.getAttribute("aria-label") ?? null,
         };
-    }, fixtures);
+    }, { fixture: fixtures, selector });
 }
 
-function assertDensityMetrics(
-    metrics: DensityMetrics,
+function assertDensity(
+    metrics: Metrics,
     viewport: Viewport,
-    glyphSize = viewport.width >= 768 ? 48 : 44,
+    coarse: boolean,
+    rootTileCount: number,
 ) {
-    assertNear(metrics.cellWidth, 68, "Workspace column track");
-    assertNear(metrics.rowHeight, 68, "Workspace row track");
-    assertNear(metrics.columnGap, 4, "Workspace column gap");
-    assertNear(metrics.rowGap, 4, "Workspace row gap");
-    assertEquals(
-        metrics.columnTracks,
-        Array(metrics.columns).fill(68),
-        "Computed CSS column tracks",
-    );
-    assert(
-        metrics.rowTracks.every((track) => track === 68),
-        "Computed CSS row tracks",
-    );
-    assert(
-        metrics.availableWidth > 0,
-        "Measured workspace content width must be positive",
-    );
+    const expected = expectedGeometry(viewport, coarse);
+    const { cell, gap, glyph } = expected;
+    assertNear(metrics.cell, cell, "Home column track");
+    assertNear(metrics.rowHeight, cell, "Home row track is square");
+    assertNear(metrics.columnGap, gap, "Home column gap");
+    assertNear(metrics.rowGap, gap, "Home row gap equals column gap");
+    assert(metrics.availableWidth > 0, "Home content width must be positive");
     assertEquals(
         metrics.columns,
         metrics.formulaColumns,
-        `Grid columns must use measured content width ${metrics.availableWidth}px`,
-    );
-    if (viewport.width === 390) {
-        assertEquals(
-            metrics.columns,
-            5,
-            `390px viewport should yield five columns from ${metrics.availableWidth}px of app-grid content`,
-        );
-    }
-    assertEquals(metrics.tiles.length, 22, "Mixed root app/folder tile count");
-    assertEquals(metrics.overlaps, [], "Workspace tiles must not overlap");
-    assertEquals(
-        metrics.outOfBounds,
-        [],
-        "Workspace tiles must remain within the grid",
+        `Grid columns must derive from the measured width ${metrics.availableWidth}px`,
     );
     assertEquals(
-        metrics.horizontalOverflow,
-        false,
-        "Workspace grid must not overflow horizontally",
+        metrics.columnTracks,
+        Array(metrics.columns).fill(cell),
+        "Computed CSS column tracks",
+    );
+    assert(
+        metrics.rowTracks.length >= 1 && metrics.rowTracks.length <= 4,
+        `Home shows at most four rows: ${metrics.rowTracks.length}`,
+    );
+    assert(
+        metrics.rowTracks.every((track) => Math.abs(track - cell) <= 0.75),
+        "Computed CSS row tracks",
+    );
+    assertEquals(metrics.overlaps, [], "Home tiles must not overlap");
+    assertEquals(metrics.outOfBounds, [], "Home tiles stay inside the grid");
+    assert(
+        metrics.grid.scrollWidth <= metrics.grid.clientWidth + 1,
+        "Home grid must not overflow horizontally",
     );
     const firstRowY = Math.min(...metrics.tiles.map((tile) => tile.box.y));
-    assertNear(
-        firstRowY,
-        metrics.grid.y,
-        "Grid starts at its first row without top whitespace",
-    );
-    const pitch = metrics.rowHeight + metrics.rowGap;
+    assertNear(firstRowY, metrics.grid.y, "Grid starts at its first row");
+    const pitch = cell + gap;
     for (const tile of metrics.tiles) {
         const row = Math.round((tile.box.y - firstRowY) / pitch);
         assertNear(tile.box.y, firstRowY + row * pitch, "Measured row pitch");
-        if (tile.kind !== "large-folder") {
-            assertNear(tile.box.width, 68, "Ordinary tile actual width");
-            assertNear(tile.box.height, 68, "Ordinary tile actual height");
+        if (tile.kind === "large-folder") {
+            assertNear(tile.box.width, 2 * cell + gap, "Large folder width");
+            assertNear(tile.box.height, 2 * cell + gap, "Large folder height");
+        } else {
+            assertNear(tile.box.width, cell, "Ordinary tile width");
+            assertNear(tile.box.height, cell, "Ordinary tile height");
         }
     }
-    assert(metrics.glyph !== null, "Workspace must render an app glyph");
-    assertNear(metrics.glyph.width, glyphSize, "Workspace app glyph width");
-    assertNear(metrics.glyph.height, glyphSize, "Workspace app glyph height");
+    assert(metrics.glyph !== null, "Home must render an app glyph");
+    assertNear(metrics.glyph.width, glyph, "Home app glyph width");
+    assertNear(metrics.glyph.height, glyph, "Home app glyph height");
 
-    const small = metrics.folders.find((folder) => folder.size === "small");
-    const large = metrics.folders.find((folder) => folder.size === "large");
-    assert(small, "Sparse small folder should be present in the mixed layout");
-    assert(large, "Full large folder should be present in the mixed layout");
-    assertNear(small.box.width, 68, "Small folder track width");
-    assertNear(small.box.height, 68, "Small folder track height");
-    assertNear(large.box.width, 140, "Large folder two-column span");
-    assertNear(large.box.height, 140, "Large folder two-row span");
+    // The tiles cover every row the viewport can hold: either four rows, or
+    // one more row (counted by its pitch: row plus gap) would break the 48px
+    // bottom clearance.
+    const viewportHeight = viewport.height;
+    assert(
+        metrics.grid.bottom <= viewportHeight - BOTTOM_CLEARANCE + 0.75,
+        `Grid bottom ${metrics.grid.bottom} must keep ${BOTTOM_CLEARANCE}px clear of the ${viewportHeight}px viewport`,
+    );
+    if (metrics.rowTracks.length < 4) {
+        assert(
+            metrics.grid.bottom + pitch + gap >
+                viewportHeight - BOTTOM_CLEARANCE - 0.75,
+            `Another row would still fit: bottom ${metrics.grid.bottom}, viewport ${viewportHeight}`,
+        );
+    }
+
+    // Every root tile is either on the grid or counted by 更多（N）.
+    const visible = metrics.tiles.filter((tile) => tile.id !== null).length;
+    const hidden = metrics.moreLabel === null
+        ? 0
+        : Number(/^更多（([1-9]\d*)）$/.exec(metrics.moreLabel)?.[1]);
+    assert(
+        Number.isInteger(hidden),
+        `Malformed 更多 label: ${metrics.moreLabel}`,
+    );
+    assertEquals(
+        visible + hidden,
+        rootTileCount,
+        "Visible tiles plus the 更多（N） count equal the root tile count",
+    );
 }
 
-function assertFolderPreviewMetrics(metrics: DensityMetrics, coarse: boolean) {
+function assertFolderPreviews(metrics: Metrics, coarse: boolean) {
     const small = metrics.folders.find((folder) => folder.size === "small");
     const large = metrics.folders.find((folder) => folder.size === "large");
-    assert(
-        small && large,
-        "Both small and large folder previews must be rendered",
-    );
-    assertEquals(small.previewCount, 2, "Small folder sparse preview count");
+    assert(small && large, "Both folders must be rendered on the home grid");
+    assertEquals(small.previewCount, 2, "Small folder 2x2 preview count");
     assertEquals(
         small.previewButtonCount,
         0,
-        "Small preview glyphs must be noninteractive",
+        "Small folder preview glyphs are not interactive",
     );
-
-    const expectedLargePreviewCount = coarse ? 4 : 9;
+    // 10 members: touch previews 3 clickable + remainder, fine pointers 8 + remainder.
+    const clickable = coarse ? 3 : 8;
     assertEquals(
         large.previewCount,
-        expectedLargePreviewCount,
-        "Large folder preview must expose four touch actions or nine fine-pointer previews",
+        clickable + 1,
+        "Large folder preview cells",
     );
-    assertEquals(large.previewButtonCount, expectedLargePreviewCount);
+    assertEquals(large.previewButtonCount, clickable + 1);
     assertEquals(
-        large.moreText,
-        `+${10 - expectedLargePreviewCount}`,
-        "Remaining full-folder apps must be represented by a count",
+        large.remainderLabel,
+        `打开文件夹 Large Full Folder，另有 ${10 - clickable} 个应用`,
     );
     assertEquals(
-        large.moreLabel,
-        `另有 ${10 - expectedLargePreviewCount} 个应用`,
+        large.remainderCount,
+        Math.min(4, 10 - clickable),
+        "Remainder cell previews the first remaining apps",
     );
 }
 
 async function assertTouchTarget(
     locator: Locator,
     label: string,
-    anchor: "center" | "bottom-center" = "center",
-): Promise<TouchTargetMeasurement> {
+    anchor: "center" | "bottom-edge" = "center",
+) {
     await locator.scrollIntoViewIfNeeded();
     const measurement = await locator.evaluate((node, position) => {
         const element = node as HTMLElement;
         const rect = element.getBoundingClientRect();
         const point = {
             x: rect.left + rect.width / 2,
-            y: position === "bottom-center"
-                ? rect.bottom - 22
+            y: position === "bottom-edge"
+                ? rect.bottom - 6
                 : rect.top + rect.height / 2,
         };
-        const offsets = position === "bottom-center"
-            ? [[0, 0], [-21, -21], [21, -21], [-21, 21], [21, 21]]
-            : [[0, 0]];
-        const hits = offsets.map(([x, y]) =>
-            document.elementFromPoint(point.x + x, point.y + y)
-        );
-        const hit = hits[0];
+        // Large folders are mostly covered by their preview buttons: the
+        // opener is reachable along the bottom edge of the surface.
+        const hits = [document.elementFromPoint(point.x, point.y)];
         return {
             width: rect.width,
             height: rect.height,
@@ -584,12 +514,7 @@ async function assertTouchTarget(
                 hit === element || Boolean(hit && element.contains(hit))
             ),
             point,
-            hitElement: hit?.tagName.toLowerCase() ?? null,
-            owner: element.closest(".launcher-grid")?.className,
-            coarse: matchMedia("(pointer: coarse)").matches,
-            noHover: matchMedia("(hover: none)").matches,
-            minWidth: getComputedStyle(element).minWidth,
-            parentPosition: getComputedStyle(element.parentElement!).position,
+            hitElement: hits[0]?.tagName.toLowerCase() ?? null,
         };
     }, anchor);
     assert(
@@ -603,151 +528,119 @@ async function assertTouchTarget(
         true,
         `${label} hit test at (${measurement.point.x}, ${measurement.point.y}) must land on the target, got ${measurement.hitElement}`,
     );
-    return measurement;
 }
 
-async function assertWorkspaceHitTargets(
-    page: Page,
-    coarse: boolean,
-): Promise<Record<string, unknown>> {
-    const root = page.locator(".apps-workspace-root");
-    const measurements: Record<string, unknown> = {};
-    measurements.app = await assertTouchTarget(
-        root.locator(".launcher-grid--workspace .webapp-icon").first(),
-        "Workspace app",
+async function assertHomeHitTargets(page: Page) {
+    const grid = page.locator(HOME);
+    await assertTouchTarget(
+        grid.locator(".launcher-tile:not([data-folder-id]) .webapp-icon")
+            .first(),
+        "Home app",
     );
-    measurements.smallFolder = await assertTouchTarget(
-        root.locator(
-            ".launcher-grid--workspace .launcher-folder-item--small .launcher-folder-background",
+    await assertTouchTarget(
+        grid.locator(
+            ".launcher-folder-item--small .launcher-folder-background",
         ),
         "Small folder opener",
     );
-    const largeBackground = root.locator(
-        ".launcher-grid--workspace .launcher-folder-item--large .launcher-folder-background",
-    );
-    measurements.largeFolder = await assertTouchTarget(
-        largeBackground,
+    await assertTouchTarget(
+        grid.locator(
+            ".launcher-folder-item--large .launcher-folder-background",
+        ),
         "Large folder opener strip",
-        "bottom-center",
+        "bottom-edge",
     );
-    const previewButtons = root.locator(
-        ".launcher-grid--workspace .launcher-folder-item--large button.launcher-folder-mini",
+    const previews = grid.locator(
+        ".launcher-folder-item--large button.launcher-folder-mini",
     );
-    const expectedCount = coarse ? 4 : 9;
-    assertEquals(await previewButtons.count(), expectedCount);
-    if (coarse) {
-        measurements.largeFolderPreviewButtons = [];
-        for (let index = 0; index < expectedCount; index++) {
-            (measurements.largeFolderPreviewButtons as TouchTargetMeasurement[])
-                .push(
-                    await assertTouchTarget(
-                        previewButtons.nth(index),
-                        `Large folder preview app ${index + 1}`,
-                    ),
-                );
-        }
+    for (let index = 0; index < await previews.count(); index++) {
+        await assertTouchTarget(
+            previews.nth(index),
+            `Large folder preview ${index + 1}`,
+        );
     }
-    return measurements;
+    // Over capacity the last cell is 更多（N）; otherwise the add cell is shown.
+    const overflowCell = grid.locator(
+        "[data-library-cell='more'], [data-library-cell='add']",
+    );
+    assertEquals(await overflowCell.count(), 1, "One trailing library cell");
+    await assertTouchTarget(overflowCell, "Trailing library cell");
+}
+
+/** Open an app context menu: a real right-click, as on the other home specs. */
+async function openAppMenu(page: Page) {
+    await page.locator(HOME).locator(
+        ".launcher-tile:not([data-folder-id]) .webapp-icon",
+    ).first().click({ button: "right" });
 }
 
 async function runTouchInteractions(
     page: Page,
     cdp: CDPSession,
-    fixtures: AppFixtures,
+    fixtures: Fixtures,
     theme: Theme,
-    report: {
-        evidenceDirectory: string;
-        screenshots: string[];
-        interactions: Record<string, unknown>[];
-    },
+    evidence: string,
 ) {
-    const root = page.locator(".apps-workspace-root");
-    const search = root.getByRole("searchbox", {
-        name: "搜索应用",
-        exact: true,
-    });
-    await search.fill("A9");
-    const a9Rows = root.locator(
-        `.apps-search-row[data-app-id="${fixtures.a9AppId}"]`,
+    const grid = page.locator(HOME);
+    const apps = grid.locator(
+        ".launcher-tile:not([data-folder-id]) .webapp-icon",
     );
-    await a9Rows.waitFor({ state: "visible" });
-    assertEquals(
-        await root.locator(".apps-search-row").count(),
-        1,
-        "A9 search result count",
-    );
-    assertEquals(
-        await a9Rows.count(),
-        1,
-        "A9 app must remain searchable by its real API-seeded name",
-    );
-    await search.fill("");
 
-    const more = root.getByRole("button", {
-        name: "应用更多操作",
-        exact: true,
-    });
-    const management = await assertTouchTarget(
-        more,
-        "Apps management menu control",
-    );
-    await more.click();
-    const menu = page.getByRole("menu", { name: "应用更多操作", exact: true });
-    await menu.waitFor({ state: "visible" });
-    await settlePresentation(page);
-    const createFolderItem = menu.getByRole("menuitem", {
-        name: "新建文件夹",
-        exact: true,
-    });
-    const arrangeItem = menu.getByRole("menuitem", {
+    // Arrange via the app context menu; menu targets stay touch sized.
+    await openAppMenu(page);
+    const arrangeItem = page.getByRole("menuitem", {
         name: "整理布局",
         exact: true,
     });
-    const menuTargets = [
-        await assertTouchTarget(
-            createFolderItem,
-            "Create-folder management action",
-        ),
-        await assertTouchTarget(
-            arrangeItem,
-            "Arrange-layout management action",
-        ),
-    ];
+    await arrangeItem.waitFor({ state: "visible" });
+    await settlePresentation(page);
+    await assertTouchTarget(arrangeItem, "Arrange-layout menu item");
     await arrangeItem.click();
+    await page.waitForFunction(
+        (selector) => {
+            const tiles = document.querySelectorAll(
+                `${selector} > .launcher-tile[data-tile-id]`,
+            );
+            return tiles.length > 0 &&
+                document.querySelectorAll(
+                        `${selector} > .launcher-tile.is-managing`,
+                    ).length === tiles.length;
+        },
+        HOME,
+    );
     assertEquals(
-        await root.locator(".launcher-tile.is-managing").count(),
-        fixtures.rootTileCount,
-        "Arrange mode should expose every mixed root tile",
+        await grid.locator("[data-library-cell='add']").count(),
+        0,
+        "Arranging hides the add cell",
     );
-    const arrangingApp = await assertTouchTarget(
-        root.locator(".launcher-grid--workspace .webapp-icon").first(),
-        "App target while arranging",
-    );
+    await assertTouchTarget(apps.first(), "App target while arranging");
     await assertTouchTarget(
-        root.locator(
-            ".launcher-grid--workspace .launcher-folder-item--small .launcher-folder-background",
+        grid.locator(
+            ".launcher-folder-item--small .launcher-folder-background",
         ),
         "Small folder target while arranging",
     );
     await assertTouchTarget(
-        root.locator(
-            ".launcher-grid--workspace .launcher-folder-item--large .launcher-folder-background",
+        grid.locator(
+            ".launcher-folder-item--large .launcher-folder-background",
         ),
         "Large folder target while arranging",
-        "bottom-center",
+        "bottom-edge",
     );
-    const largeOpener = root.locator(
+
+    // The portaled drag preview of a large folder keeps its 2x2 footprint and
+    // follows the pointer from the source tile.
+    const largeOpener = grid.locator(
         ".launcher-folder-item--large .launcher-folder-background",
     );
     await largeOpener.scrollIntoViewIfNeeded();
     const largeBox = (await largeOpener.boundingBox())!;
-    // DragOverlay follows the sortable tile, not its expanded hit target.
-    const sourceBox = (await root.locator(
-        `.launcher-tile[data-folder-id="${fixtures.largeGroupId}"]`,
+    const sourceBox = (await grid.locator(
+        `:scope > .launcher-tile[data-folder-id="${fixtures.largeGroupId}"]`,
     ).boundingBox())!;
     const start = {
         x: largeBox.x + largeBox.width / 2,
-        y: largeBox.y + largeBox.height - 22,
+        y: largeBox.y + largeBox.height - 6,
         id: 1,
     };
     await cdp.send("Input.dispatchTouchEvent", {
@@ -770,44 +663,34 @@ async function runTouchInteractions(
         return r && Math.abs(r.x - x) < 1 && Math.abs(r.y - y) < 1;
     }, { x: sourceBox.x + 24, y: sourceBox.y - 24 });
     const overlayBox = (await overlay.boundingBox())!;
-    assertNear(overlayBox.width, 140, "Large-folder touch overlay width");
-    assertNear(overlayBox.height, 140, "Large-folder touch overlay height");
-    assertNear(
-        overlayBox.x,
-        sourceBox.x + 24,
-        "Large-folder overlay horizontal alignment",
-    );
-    assertNear(
-        overlayBox.y,
-        sourceBox.y - 24,
-        "Large-folder overlay vertical alignment",
-    );
+    assertNear(overlayBox.width, 2 * 68 + 4, "Large-folder overlay width");
+    assertNear(overlayBox.height, 2 * 68 + 4, "Large-folder overlay height");
+    assertNear(overlayBox.x, sourceBox.x + 24, "Overlay horizontal alignment");
+    assertNear(overlayBox.y, sourceBox.y - 24, "Overlay vertical alignment");
     await settlePresentation(page);
-    const arrangeScreenshot =
-        `${report.evidenceDirectory}/arrange-${theme}-390x844.png`;
-    await page.screenshot({ path: arrangeScreenshot });
-    report.screenshots.push(arrangeScreenshot);
+    await page.screenshot({ path: `${evidence}/arrange-${theme}-390x844.png` });
     await cdp.send("Input.dispatchTouchEvent", {
         type: "touchCancel",
         touchPoints: [],
     });
     await overlay.waitFor({ state: "detached" });
-    await more.click();
+
+    await openAppMenu(page);
     const finishItem = page.getByRole("menuitem", {
         name: "完成整理",
         exact: true,
     });
     await finishItem.waitFor({ state: "visible" });
     await settlePresentation(page);
-    const finishTarget = await assertTouchTarget(
-        finishItem,
-        "Finish-arranging management action",
-    );
+    await assertTouchTarget(finishItem, "Finish-arranging menu item");
     await finishItem.click();
-    assertEquals(await root.locator(".launcher-tile.is-managing").count(), 0);
+    await page.waitForFunction(
+        (selector) =>
+            document.querySelectorAll(`${selector} .is-managing`).length === 0,
+        HOME,
+    );
 
-    const folderDetails: Record<string, number> = {};
-    const screenshots: string[] = [];
+    // Folders open in a popup whose grid shares the home tracks and glyphs.
     for (
         const folder of [
             {
@@ -822,495 +705,234 @@ async function runTouchInteractions(
             },
         ]
     ) {
-        const background = root.locator(
-            `.launcher-tile[data-folder-id="${folder.id}"] .launcher-folder-background`,
+        const background = grid.locator(
+            `:scope > .launcher-tile[data-folder-id="${folder.id}"] .launcher-folder-background`,
         );
-        await background.scrollIntoViewIfNeeded();
         if (folder.name === "large") {
-            const box = await background.boundingBox();
-            assert(box, "Large folder opener should have a measurable box");
+            const box = (await background.boundingBox())!;
             await background.click({
                 position: { x: box.width / 2, y: box.height - 5 },
             });
         } else {
             await background.click();
         }
-        const detail = root.locator(".launcher-folder-inline");
-        await detail.waitFor({ state: "visible" });
-        const appButtons = detail.locator(
-            ".launcher-folder-contents .webapp-icon",
-        );
+        const popup = page.locator(".launcher-popup");
+        await popup.waitFor({ state: "visible" });
         await settlePresentation(page);
-        const detailGeometry = await detail.locator(".launcher-folder-contents")
-            .evaluate((grid) => {
-                const style = getComputedStyle(grid);
-                const glyph = grid.querySelector(".webapp-glyph")!
-                    .getBoundingClientRect();
-                return {
-                    track: parseFloat(style.gridAutoRows),
-                    gapX: parseFloat(style.columnGap),
-                    gapY: parseFloat(style.rowGap),
-                    glyph: [glyph.width, glyph.height],
-                    overflow: grid.scrollWidth > grid.clientWidth + 1,
-                };
-            });
-        assertEquals(detailGeometry, {
-            track: 68,
+        const popupGrid = popup.locator(".launcher-grid--popup");
+        const geometry = await popupGrid.evaluate((node) => {
+            const style = getComputedStyle(node);
+            const glyph = node.querySelector(".webapp-glyph")!
+                .getBoundingClientRect();
+            return {
+                cell: parseFloat(style.getPropertyValue("--launcher-col-w")),
+                gapX: parseFloat(style.columnGap),
+                gapY: parseFloat(style.rowGap),
+                glyph: [glyph.width, glyph.height],
+                overflow: node.scrollWidth > node.clientWidth + 1,
+            };
+        });
+        assertEquals(geometry, {
+            cell: 68,
             gapX: 4,
             gapY: 4,
             glyph: [44, 44],
             overflow: false,
         });
+        const members = popupGrid.locator(".webapp-icon");
         assertEquals(
-            await appButtons.count(),
+            await members.count(),
             folder.expectedApps,
-            `${folder.name} folder detail app count`,
+            `${folder.name} folder popup app count`,
         );
-        const detailTargets: TouchTargetMeasurement[] = [];
         for (let index = 0; index < folder.expectedApps; index++) {
-            detailTargets.push(
-                await assertTouchTarget(
-                    appButtons.nth(index),
-                    `${folder.name} folder detail app ${index + 1}`,
-                ),
+            await assertTouchTarget(
+                members.nth(index),
+                `${folder.name} folder popup app ${index + 1}`,
             );
         }
-        folderDetails[folder.name] = await appButtons.count();
-        const screenshot =
-            `${report.evidenceDirectory}/detail-${theme}-${folder.name}-folder.png`;
-        await page.screenshot({ path: screenshot });
-        report.screenshots.push(screenshot);
-        screenshots.push(screenshot);
-        await root.getByRole("button", { name: "返回应用列表", exact: true })
-            .click();
-        await page.locator(GRID_SELECTOR).waitFor({ state: "visible" });
+        await page.screenshot({
+            path: `${evidence}/popup-${theme}-${folder.name}-folder.png`,
+        });
+        await page.keyboard.press("Escape");
+        await popup.waitFor({ state: "detached" });
     }
 
-    const managementScreenshot =
-        `${report.evidenceDirectory}/management-${theme}-390x844.png`;
-    await page.screenshot({ path: managementScreenshot });
-    report.screenshots.push(managementScreenshot);
-    report.interactions.push({
-        viewport: { width: 390, height: 844 },
-        theme,
-        a9SearchResults: await root.locator(".apps-search-row").count(),
-        management,
-        menuTargets,
-        arrangingApp,
-        finishTarget,
-        folderDetails,
-        detailTargetsPerFolder: fixtures.largeFolderAppCount,
-        screenshots,
-        managementScreenshot,
-    });
+    // 更多（N） opens every tile that did not fit, plus the add entry.
+    const more = grid.locator("[data-library-cell='more']");
+    const moreCount = Number(
+        /（(\d+)）/.exec((await more.getAttribute("aria-label"))!)![1],
+    );
+    await more.click();
+    const morePopup = page.locator(".launcher-popup");
+    await morePopup.waitFor({ state: "visible" });
+    await settlePresentation(page);
+    assertEquals(
+        await morePopup.locator(
+            ".launcher-grid--popup > .launcher-tile[data-tile-id]",
+        )
+            .count(),
+        moreCount,
+        "更多 popup shows exactly the tiles that did not fit",
+    );
+    await assertTouchTarget(
+        morePopup.locator("[data-library-cell='add']"),
+        "Add cell inside 更多",
+    );
+    await page.keyboard.press("Escape");
+    await morePopup.waitFor({ state: "detached" });
 }
 
-async function collectHomeGeometry(page: Page, selector: string) {
-    return await page.evaluate((selector) => {
-        const grid = document.querySelector<HTMLElement>(selector);
-        if (!grid) throw new Error(`Expected home launcher ${selector}`);
-        const style = getComputedStyle(grid);
-        const rect = grid.getBoundingClientRect();
-        const boxes = (nodes: NodeListOf<Element>) =>
-            Array.from(nodes, (node) => {
-                const r = node.getBoundingClientRect();
-                return {
-                    x: r.x,
-                    y: r.y,
-                    width: r.width,
-                    height: r.height,
-                };
-            });
-        return {
-            selector,
-            presentation: grid.dataset.presentation ?? "default",
-            cellWidth:
-                Number.parseFloat(style.getPropertyValue("--launcher-col-w")) ||
-                0,
-            rowHeight:
-                Number.parseFloat(style.getPropertyValue("--launcher-row-h")) ||
-                0,
-            columnGap: Number.parseFloat(style.columnGap) || 0,
-            rowGap: Number.parseFloat(style.rowGap) || 0,
-            grid: {
-                x: rect.x,
-                y: rect.y,
-                width: rect.width,
-                height: rect.height,
-            },
-            tiles: boxes(grid.querySelectorAll(":scope > .launcher-tile")),
-            glyphs: boxes(grid.querySelectorAll(".webapp-glyph")),
-        };
-    }, selector);
-}
-
-async function runDesktopMatrix(
-    page: Page,
-    fixtures: AppFixtures,
-    report: {
-        evidenceDirectory: string;
-        screenshots: string[];
-        desktop: Record<string, unknown>[];
-        homeLauncher: Record<string, unknown>[];
-    },
+async function runTouchMatrix(
+    browser: Browser,
+    origin: string,
+    evidence: string,
 ) {
-    for (const theme of THEMES) {
-        await page.setViewportSize({ width: 1440, height: 900 });
-        await setPreferences(page, theme);
-        await page.reload();
-        await page.locator("main").waitFor({ state: "visible" });
-        await page.waitForFunction(
-            (theme) =>
-                document.documentElement.dataset.theme === theme &&
-                document.querySelector("main.home") !== null,
-            theme,
-        );
-        const media = await page.evaluate(() => ({
-            fine: matchMedia("(pointer: fine)").matches,
-            hover: matchMedia("(hover: hover)").matches,
-            theme: document.documentElement.getAttribute("data-theme"),
-        }));
-        assertEquals(
-            media.fine,
-            true,
-            "Desktop must emulate a fine pointer",
-        );
-        assertEquals(
-            media.hover,
-            true,
-            "Desktop must emulate hover support",
-        );
-        assertEquals(media.theme, theme);
-
-        const homeSelector = ".pinned-area .launcher-grid--home";
-        const homeGrid = page.locator(homeSelector).first();
-        await homeGrid.waitFor({ state: "visible" });
-        const homeBefore = await collectHomeGeometry(page, homeSelector);
-        assertNear(
-            homeBefore.cellWidth,
-            84,
-            "Home track width",
-        );
-        assertNear(
-            homeBefore.rowHeight,
-            84,
-            "Home row height",
-        );
-        assertNear(
-            homeBefore.columnGap,
-            12,
-            "Home column gap",
-        );
-        assertNear(
-            homeBefore.rowGap,
-            12,
-            "Home row gap",
-        );
-
-        await openAppsWorkspace(page);
-        const metrics = await collectDensityMetrics(page, fixtures);
-        const screenshot =
-            `${report.evidenceDirectory}/desktop-${theme}-1440x900.png`;
-        await page.screenshot({ path: screenshot });
-        report.screenshots.push(screenshot);
-        report.desktop.push({
-            theme,
-            pointer: media,
-            metrics,
-            screenshot,
-        });
-        assertDensityMetrics(metrics, { width: 1440, height: 900 });
-        assertFolderPreviewMetrics(metrics, false);
-        await page.waitForFunction(() =>
-            document.querySelector(".home")?.getAnimations().length === 0
-        );
-        const homeAfter = await collectHomeGeometry(page, homeSelector);
-        // The panel reserves its full 412px column. Home stays centered in the
-        // remaining space without changing grid tracks, gaps or vertical geometry.
-        const clientWidth = await page.evaluate(() =>
-            document.documentElement.clientWidth
-        );
-        const reserve = 412;
-        const dx = homeAfter.grid.x - homeBefore.grid.x;
-        assertNear(
-            dx,
-            -reserve / 2,
-            "Home content shift while the panel is open",
-        );
-        assertNear(
-            homeAfter.grid.x + homeAfter.grid.width / 2,
-            (clientWidth - reserve) / 2,
-            "Home grid centers in the full remaining space",
-        );
-        const round = (value: number) => Math.round(value * 100) / 100;
-        const withoutX = (
-            geometry: typeof homeBefore,
-            shift: number,
-        ) => ({
-            ...geometry,
-            grid: { ...geometry.grid, x: round(geometry.grid.x - shift) },
-            tiles: geometry.tiles.map((tile) => ({
-                ...tile,
-                x: round(tile.x - shift),
-            })),
-            glyphs: geometry.glyphs.map((glyph) => ({
-                ...glyph,
-                x: round(glyph.x - shift),
-            })),
-        });
-        assertEquals(
-            withoutX(homeAfter, dx),
-            withoutX(homeBefore, 0),
-            "Home geometry must only shift horizontally when the Apps workspace opens",
-        );
-        const searchClearance = await page.evaluate(() => {
-            const search = document.querySelector(".home .search-form-wrap") ??
-                document.querySelector(".home .search-form");
-            const panel = document.querySelector(
-                "aside.workspace-panel:not([data-ending-style])",
-            );
-            if (!search || !panel) return null;
-            return panel.getBoundingClientRect().left -
-                search.getBoundingClientRect().right;
-        });
-        assert(
-            searchClearance !== null && searchClearance >= 16 - 1,
-            `Search must stay at least 16px clear of the Apps panel: ${searchClearance}`,
-        );
-        report.homeLauncher.push({
-            theme,
-            before: homeBefore,
-            after: homeAfter,
-        });
-    }
-}
-
-Deno.test("apps workspace touch density geometry and hit targets #149", async () => {
-    const EVIDENCE_DIR = await createEvidenceDirectory("apps-density");
-    const app = await startProductionApp();
-    const browser = await chromium.launch({
-        handleSIGTERM: false,
-        args: ["--no-sandbox"],
+    const context = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        deviceScaleFactor: 1,
+        isMobile: true,
+        hasTouch: true,
+        colorScheme: "light",
     });
-    const report: {
-        issue: number;
-        evidenceDirectory: string;
-        completed: boolean;
-        error?: string;
-        fixture?: AppFixtures;
-        finishedAt?: string;
-        screenshots: string[];
-        touchMatrix: Record<string, unknown>[];
-        desktop: Record<string, unknown>[];
-        homeLauncher: Record<string, unknown>[];
-        interactions: Record<string, unknown>[];
-    } = {
-        issue: 149,
-        evidenceDirectory: EVIDENCE_DIR,
-        completed: false,
-        screenshots: [],
-        touchMatrix: [],
-        desktop: [],
-        homeLauncher: [],
-        interactions: [],
-    };
-    let touchContext: BrowserContext | undefined;
-    let desktopContext: BrowserContext | undefined;
-
     try {
-        touchContext = await browser.newContext({
-            viewport: { width: 390, height: 844 },
-            deviceScaleFactor: 1,
-            isMobile: true,
-            hasTouch: true,
-            colorScheme: "light",
-        });
-        const touchPage = await touchContext.newPage();
-        const fixtures = await registerAndSeed(touchPage, app.origin);
-        const cdp = await touchContext.newCDPSession(touchPage);
-        report.fixture = fixtures;
-
+        const page = await context.newPage();
+        await register(page, origin, "apps_density_touch");
+        const fixtures = await seedFixtures(page);
+        const cdp = await context.newCDPSession(page);
         for (const theme of THEMES) {
-            await setPreferences(touchPage, theme);
+            await setTheme(page, theme);
             for (const viewport of TOUCH_VIEWPORTS) {
-                await touchPage.setViewportSize(viewport);
-                await touchPage.reload();
-                await touchPage.locator("main").waitFor({
-                    state: "visible",
-                });
-                await touchPage.waitForFunction(
-                    (theme) =>
-                        document.documentElement.dataset.theme === theme &&
-                        document.querySelector("main.home") !== null,
-                    theme,
+                await page.setViewportSize(viewport);
+                await page.reload();
+                await waitForHome(page, viewport.width, theme);
+                assertEquals(
+                    await page.evaluate(() => ({
+                        coarse: matchMedia("(pointer: coarse)").matches,
+                        noHover: matchMedia("(hover: none)").matches,
+                    })),
+                    { coarse: true, noHover: true },
+                    "Touch matrix requires a coarse, hover-less pointer",
                 );
-                const media = await touchPage.evaluate(() => ({
-                    coarse: matchMedia("(pointer: coarse)").matches,
-                    noHover: matchMedia("(hover: none)").matches,
-                    theme: document.documentElement.getAttribute(
-                        "data-theme",
+                const metrics = await collectMetrics(page, fixtures);
+                assertDensity(metrics, viewport, true, fixtures.rootTileCount);
+                assertEquals(
+                    metrics.tiles.filter((tile) => tile.id !== null).length >=
+                        1,
+                    true,
+                );
+                assertFolderPreviews(metrics, true);
+                await assertHomeHitTargets(page);
+                assertEquals(
+                    await page.evaluate(() =>
+                        document.documentElement.scrollWidth > innerWidth
                     ),
-                }));
-                assertEquals(
-                    media.coarse,
-                    true,
-                    "Touch matrix requires a coarse pointer",
+                    false,
+                    "Home must not scroll horizontally",
                 );
-                assertEquals(
-                    media.noHover,
-                    true,
-                    "Touch matrix requires no-hover media",
-                );
-                assertEquals(media.theme, theme);
-                const homeSelector = ".pinned-area .launcher-grid--home";
-                await touchPage.locator(homeSelector).first().waitFor();
-                const home = await collectHomeGeometry(
-                    touchPage,
-                    homeSelector,
-                );
-                const compactHome = viewport.width < 768;
-                assertNear(
-                    home.cellWidth,
-                    compactHome ? 68 : 88,
-                    "Mobile Home presenters share compact touch tracks",
-                );
-                assertNear(
-                    home.rowHeight,
-                    compactHome ? 68 : 88,
-                    "Home touch row geometry",
-                );
-                assertNear(
-                    home.columnGap,
-                    compactHome ? 4 : 12,
-                    "Mobile Home presenters share compact gaps",
-                );
-                assertNear(
-                    home.rowGap,
-                    compactHome ? 4 : 12,
-                    "Home touch row gaps",
-                );
-                await openAppsWorkspace(touchPage);
-                const metrics = await collectDensityMetrics(
-                    touchPage,
-                    fixtures,
-                );
-                const screenshot =
-                    `${EVIDENCE_DIR}/touch-${theme}-${viewport.width}x${viewport.height}.png`;
-                await touchPage.screenshot({
-                    path: screenshot,
+                await page.screenshot({
+                    path:
+                        `${evidence}/touch-${theme}-${viewport.width}x${viewport.height}.png`,
                 });
-                report.screenshots.push(screenshot);
-                report.touchMatrix.push({
-                    theme,
-                    pointer: media,
-                    metrics,
-                    screenshot,
-                });
-
-                assertDensityMetrics(metrics, viewport);
-                assertFolderPreviewMetrics(metrics, true);
-                const targets = await assertWorkspaceHitTargets(
-                    touchPage,
-                    true,
-                );
-                const entry = report.touchMatrix[report.touchMatrix.length - 1];
-                entry.targets = targets;
-                entry.home = home;
-                if (viewport.width === 390 && viewport.height === 640) {
-                    const scroll = await touchPage.locator(
-                        ".workspace-body",
-                    ).evaluate((body) => {
-                        body.scrollTop = body.scrollHeight;
-                        const result = {
-                            height: body.clientHeight,
-                            contentHeight: body.scrollHeight,
-                            moved: body.scrollTop,
-                        };
-                        body.scrollTop = 0;
-                        return result;
-                    });
-                    assert(
-                        scroll.contentHeight > scroll.height &&
-                            scroll.moved > 0,
-                        "Short-screen content must genuinely scroll",
-                    );
-                    entry.scroll = scroll;
-                }
-
                 if (viewport.width === 390 && viewport.height === 844) {
                     await runTouchInteractions(
-                        touchPage,
+                        page,
                         cdp,
                         fixtures,
                         theme,
-                        report,
+                        evidence,
                     );
                 }
             }
         }
-        const orderBeforeResize =
-            (await collectDensityMetrics(touchPage, fixtures)).tiles.map((
-                tile,
-            ) => tile.id);
-        for (const width of [390, 375, 430, 767, 768]) {
-            await touchPage.setViewportSize({ width, height: 844 });
-            // Require the destination Host, not a self-consistent outgoing grid.
-            // A constrained window can still report seven columns after shrinking.
-            await touchPage.waitForFunction((width) => {
-                const grids = Array.from(
-                    document.querySelectorAll<HTMLElement>(
-                        ".apps-workspace-root .launcher-grid--workspace",
-                    ),
-                ).filter((grid) => grid.isConnected);
-                if (grids.length !== 1) return false;
-                const host = grids[0].closest<HTMLElement>(
-                    width < 768
-                        ? ".workspace-panel--mobile:not([data-ending-style])"
-                        : 'aside.workspace-panel[data-presentation="panel"]:not([data-ending-style])',
-                );
-                if (innerWidth !== width || !host) return false;
-                const bounds = host.getBoundingClientRect();
-                if (bounds.left < -0.75 || bounds.right > width + 0.75) {
-                    return false;
-                }
-                const parent = grids[0].parentElement;
-                if (!parent) return false;
-                const parentStyle = getComputedStyle(parent);
-                const available = parent.clientWidth -
-                    Number.parseFloat(parentStyle.paddingLeft) -
-                    Number.parseFloat(parentStyle.paddingRight);
-                const gap = Number.parseFloat(
-                    getComputedStyle(grids[0]).columnGap,
-                );
-                return Number(grids[0].dataset.columns) ===
-                    Math.floor((available + gap) / (68 + gap));
-            }, width);
-            await settlePresentation(touchPage);
-            const metrics = await collectDensityMetrics(touchPage, fixtures);
-            assertDensityMetrics(metrics, { width, height: 844 });
-            assertEquals(
-                metrics.tiles.map((tile) => tile.id),
-                orderBeforeResize,
-                "Responsive reflow must preserve mixed order without a reload",
-            );
-            report.interactions.push({ resize: width, metrics });
-        }
 
-        const storageState = await touchContext.storageState();
-        desktopContext = await browser.newContext({
-            storageState,
-            viewport: { width: 1440, height: 900 },
-            deviceScaleFactor: 1,
-            isMobile: false,
-            hasTouch: false,
-            colorScheme: "light",
-        });
-        const desktopPage = await desktopContext.newPage();
-        await desktopPage.goto(app.origin + "/");
-        await desktopPage.locator("main").waitFor({ state: "visible" });
-        await runDesktopMatrix(desktopPage, fixtures, report);
-        await touchPage.setViewportSize({ width: 390, height: 844 });
-        const variants = await touchPage.evaluate(async () => {
+        // Resizing reflows the live grid without a reload.
+        for (const width of [390, 375, 430, 767, 768]) {
+            await page.setViewportSize({ width, height: 844 });
+            await waitForHome(page, width);
+            assertDensity(
+                await collectMetrics(page, fixtures),
+                { width, height: 844 },
+                true,
+                fixtures.rootTileCount,
+            );
+        }
+    } finally {
+        await context.close();
+    }
+}
+
+async function runDesktopMatrix(
+    browser: Browser,
+    origin: string,
+    evidence: string,
+) {
+    const context: BrowserContext = await browser.newContext({
+        viewport: { width: 1440, height: 900 },
+        deviceScaleFactor: 1,
+        colorScheme: "light",
+    });
+    try {
+        const page = await context.newPage();
+        await register(page, origin, "apps_density_desktop");
+        const fixtures = await seedFixtures(page);
+        for (const theme of THEMES) {
+            await setTheme(page, theme);
+            for (
+                const viewport of [
+                    { width: 1440, height: 900 },
+                    { width: 1366, height: 768 },
+                ]
+            ) {
+                await page.setViewportSize(viewport);
+                await page.reload();
+                await waitForHome(page, viewport.width, theme);
+                assertEquals(
+                    await page.evaluate(() => ({
+                        fine: matchMedia("(pointer: fine)").matches,
+                        hover: matchMedia("(hover: hover)").matches,
+                    })),
+                    { fine: true, hover: true },
+                    "Desktop must emulate a fine, hovering pointer",
+                );
+                const metrics = await collectMetrics(page, fixtures);
+                assertDensity(metrics, viewport, false, fixtures.rootTileCount);
+                assertFolderPreviews(metrics, false);
+                if (viewport.height === 768) {
+                    assert(
+                        metrics.rowTracks.length <= 3,
+                        `Short desktop viewports show three rows or fewer: ${metrics.rowTracks.length}`,
+                    );
+                }
+                await page.screenshot({
+                    path:
+                        `${evidence}/desktop-${theme}-${viewport.width}x${viewport.height}.png`,
+                });
+            }
+        }
+    } finally {
+        await context.close();
+    }
+}
+
+// Large folders with 1, 2 and 4 members keep their previews inside the surface
+// and clear of the title, with touch-sized buttons.
+async function runSparseLargePreviews(
+    browser: Browser,
+    origin: string,
+    evidence: string,
+) {
+    const context = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        deviceScaleFactor: 1,
+        isMobile: true,
+        hasTouch: true,
+        colorScheme: "light",
+    });
+    try {
+        const page = await context.newPage();
+        await register(page, origin, "apps_density_sparse");
+        const variants = await page.evaluate(async () => {
             const ids: Array<{ id: string; count: number }> = [];
             for (const count of [1, 2, 4]) {
                 const response = await fetch("/api/webapp-groups", {
@@ -1319,7 +941,7 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
                     body: JSON.stringify({
                         name: `预览 ${count} 个应用的长名称文件夹`,
                         folderSize: "large",
-                        sortOrder: -count,
+                        sortOrder: count,
                     }),
                 });
                 if (!response.ok) throw Error(await response.text());
@@ -1340,19 +962,18 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
             }
             return ids;
         });
-        await touchPage.reload();
-        await touchPage.locator("main.home").waitFor();
-        await openAppsWorkspace(touchPage);
+        await page.reload();
+        await waitForHome(page, 390);
         for (const { id, count } of variants) {
-            const tile = touchPage.locator(
-                `.launcher-tile[data-folder-id="${id}"]`,
+            const tile = page.locator(
+                `${HOME} > .launcher-tile[data-folder-id="${id}"]`,
             );
             const buttons = tile.locator("button.launcher-folder-mini");
             assertEquals(await buttons.count(), count);
             await assertTouchTarget(
                 tile.locator(".launcher-folder-background"),
                 "Sparse large folder opener",
-                "bottom-center",
+                "bottom-edge",
             );
             for (let index = 0; index < count; index++) {
                 await assertTouchTarget(
@@ -1360,7 +981,7 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
                     "Sparse large folder preview",
                 );
             }
-            const geometry = await tile.evaluate((tile) => {
+            const inside = await tile.evaluate((tile) => {
                 const surface = tile.querySelector(".launcher-folder-surface")!
                     .getBoundingClientRect();
                 const title = tile.querySelector(".launcher-folder-name")!
@@ -1377,31 +998,31 @@ Deno.test("apps workspace touch density geometry and hit targets #149", async ()
                 );
             });
             assertEquals(
-                geometry,
+                inside,
                 Array(count).fill(true),
                 "Sparse preview glyphs stay inside the surface and clear of the title",
             );
         }
-        await touchPage.screenshot({
-            path: `${EVIDENCE_DIR}/large-preview-variants-390.png`,
+        await page.screenshot({
+            path: `${evidence}/large-preview-variants-390.png`,
         });
-        report.screenshots.push(
-            `${EVIDENCE_DIR}/large-preview-variants-390.png`,
-        );
-        report.completed = true;
-    } catch (error) {
-        report.error = error instanceof Error
-            ? `${error.name}: ${error.message}`
-            : String(error);
-        throw error;
     } finally {
-        report.finishedAt = new Date().toISOString();
-        await Deno.writeTextFile(
-            `${EVIDENCE_DIR}/report.json`,
-            JSON.stringify(report, null, 2),
-        );
-        await desktopContext?.close();
-        await touchContext?.close();
+        await context.close();
+    }
+}
+
+Deno.test("home library density geometry and hit targets #149 #244", async () => {
+    const evidence = await createEvidenceDirectory("apps-density");
+    const app = await startProductionApp();
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        args: ["--no-sandbox"],
+    });
+    try {
+        await runTouchMatrix(browser, app.origin, evidence);
+        await runDesktopMatrix(browser, app.origin, evidence);
+        await runSparseLargePreviews(browser, app.origin, evidence);
+    } finally {
         await browser.close();
         await app.close();
     }

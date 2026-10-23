@@ -62,7 +62,7 @@ Deno.test("production workspace contracts", async (t) => {
     await visit("/");
 
     await t.step(
-        "nested AppForm dirty Back/Close protection and save",
+        "home AppForm dialog dirty Cancel/Escape protection and save",
         async () => {
             // This contract saves forms, not third-party website metadata.
             await page.route(
@@ -77,60 +77,31 @@ Deno.test("production workspace contracts", async (t) => {
                         }),
                     }),
             );
-            await page.locator(
-                '.zen-edge-trigger button[data-workspace="apps"]',
-            ).click();
-            const appsWindow = page.locator(
-                ".workspace-panel--mobile, aside.workspace-panel",
-            ).first();
-            await appsWindow.waitFor();
-
-            // Root view has primary action "添加应用"
-            const createBtn = appsWindow.locator(
-                ".workspace-header .workspace-primary",
+            const addCell = page.locator(
+                '.launcher-grid--home [data-library-cell="add"]',
             );
+            await addCell.click();
+            const dialog = page.locator(".app-form-dialog");
+            await dialog.waitFor();
             assertEquals(
-                await createBtn.getAttribute("aria-label"),
-                "添加应用",
-            );
-            await createBtn.click();
-
-            // Enters nested AppForm view (apps/create)
-            assertEquals(
-                await appsWindow.locator(".workspace-title")
-                    .textContent(),
+                await dialog.locator(".app-form-dialog-title").textContent(),
                 "添加应用",
             );
 
-            // Header has Back button
-            const backBtn = appsWindow.locator(
-                'button[aria-label="返回上一级"]',
-            );
-            await backBtn.waitFor();
-
-            // Clean form: Back navigation returns immediately without confirmation
-            await backBtn.click();
-            await appsWindow.locator(".apps-workspace").waitFor();
-            assertEquals(
-                await appsWindow.locator(".workspace-title")
-                    .textContent(),
-                "应用",
-            );
+            // Clean form: Cancel closes immediately without confirmation
+            await dialog.getByRole("button", { name: "取消", exact: true })
+                .click();
+            await dialog.waitFor({ state: "detached" });
             assertEquals(await page.locator('[role="alertdialog"]').count(), 0);
 
-            // Re-enter AppForm
-            await appsWindow.locator(
-                ".workspace-header .workspace-primary",
-            )
-                .click();
-            await page.locator("#app-url-input").waitFor();
-
             // Dirty form: Enter URL and Name
+            await addCell.click();
             await page.locator("#app-url-input").fill("https://example.org");
             await page.locator("#app-name-input").fill("Example Site");
 
-            // Dirty Back navigation triggers confirmation alert dialog
-            await backBtn.click();
+            // Dirty Cancel triggers confirmation alert dialog
+            await dialog.getByRole("button", { name: "取消", exact: true })
+                .click();
             const alert = page.locator('[role="alertdialog"]');
             await alert.waitFor();
             assertStringIncludes(
@@ -150,31 +121,15 @@ Deno.test("production workspace contracts", async (t) => {
                 "Example Site",
             );
 
-            // Dirty Close navigation triggers confirmation alert dialog
-            const closeBtn = appsWindow.locator(
-                'button[aria-label="收起工作区"]',
-            );
-            await closeBtn.click();
+            // Dirty Escape triggers confirmation; confirming discards the form
+            await page.keyboard.press("Escape");
             await alert.waitFor();
-
-            // Confirming discard closes the window
             await alert.getByRole("button", { name: "放弃修改" }).click();
             await alert.waitFor({ state: "detached" });
-            await appsWindow.waitFor({ state: "detached" });
+            await dialog.waitFor({ state: "detached" });
 
-            // Re-open Apps workspace and successfully create and save an app
-            await page.locator(
-                '.zen-edge-trigger button[data-workspace="apps"]',
-            ).click();
-            await appsWindow.waitFor();
-            await appsWindow.getByRole("status").filter({ hasText: "正在加载" })
-                .waitFor({ state: "detached" });
-            await appsWindow.locator(
-                ".workspace-header .workspace-primary",
-            )
-                .click();
-            await page.locator("#app-url-input").waitFor();
-
+            // Reopen and successfully create and save an app
+            await addCell.click();
             await page.locator("#app-url-input").fill(
                 "https://news.ycombinator.com",
             );
@@ -187,9 +142,9 @@ Deno.test("production workspace contracts", async (t) => {
                 .click();
             const savedResponse = await saved;
             assertEquals(savedResponse.ok(), true, await savedResponse.text());
-            await appsWindow.locator(".apps-workspace").waitFor();
-            // A saved loose app is immediately browsable at Unified Launcher root.
-            await page.locator(".apps-workspace").getByRole("button", {
+            await dialog.waitFor({ state: "detached" });
+            // A saved loose app is immediately visible on the home library.
+            await page.locator(".launcher-grid--home").getByRole("button", {
                 name: "打开 Hacker News",
                 exact: true,
             }).waitFor();
@@ -204,79 +159,8 @@ Deno.test("production workspace contracts", async (t) => {
                 serverApps.some((a) => a.name === "Hacker News"),
                 true,
             );
-
-            // Close apps window
-            await appsWindow.locator(
-                'button[aria-label="收起工作区"]',
-            ).click();
-            await appsWindow.waitFor({ state: "detached" });
         },
     );
-
-    await t.step(
-        "Home pinned Quick Apps order and context menu",
-        async () => {
-            for (const name of ["Order Alpha", "Order Beta"]) {
-                const status = await page.evaluate(async (name) => {
-                    const response = await fetch("/api/webapps", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            name,
-                            url: "https://" +
-                                name.replace(" ", "-").toLowerCase() +
-                                ".example",
-                            isPinned: true,
-                            sortOrder: name === "Order Alpha" ? 1 : 2,
-                            pinnedSortOrder: name === "Order Alpha" ? 2 : 1,
-                        }),
-                    });
-                    return response.status;
-                }, name);
-                assertEquals(status, 200);
-            }
-            await visit("/");
-            const expectedPins = await page.evaluate(async () => {
-                const { data } = await (await fetch("/api/webapps")).json();
-                return data.filter((app: { isPinned: boolean }) => app.isPinned)
-                    .sort((
-                        a: { pinnedSortOrder?: number },
-                        b: { pinnedSortOrder?: number },
-                    ) => (a.pinnedSortOrder ?? 0) - (b.pinnedSortOrder ?? 0))
-                    .map((app: { name: string }) => "打开 " + app.name);
-            });
-            const pinned = page.locator(
-                ".pinned-area .launcher-grid .webapp-icon",
-            );
-            await pinned.first().waitFor();
-            assertEquals(
-                await pinned.evaluateAll((els) =>
-                    els.map((el) => el.getAttribute("aria-label"))
-                ),
-                expectedPins,
-            );
-            await pinned.first().click({ button: "right" });
-            const menuItems = await page.getByRole("menuitem")
-                .allTextContents();
-            assertEquals(menuItems[0], "打开");
-            await page.keyboard.press("Escape");
-            await page.locator(
-                '.zen-edge-trigger button[data-workspace="apps"]',
-            ).click();
-            assertEquals(
-                await page.locator(".workspace-header .workspace-primary")
-                    .getAttribute("aria-label"),
-                "添加应用",
-            );
-            await page.locator(
-                '.workspace-header button[aria-label="收起工作区"]',
-            ).click();
-            await page.locator(
-                ".workspace-panel--mobile, aside.workspace-panel",
-            ).first().waitFor({ state: "detached" });
-        },
-    );
-
     await t.step(
         "Mobile focustrap/swipe/escape and focus return",
         async () => {
@@ -284,10 +168,10 @@ Deno.test("production workspace contracts", async (t) => {
             await page.setViewportSize({ width: 375, height: 667 });
 
             // Open workspace from mobile navigation
-            const mobileAppsBtn = page.locator(
-                'button.zen-edge-btn[data-workspace="apps"]',
+            const mobileDocsBtn = page.locator(
+                'button.zen-edge-btn[data-workspace="documents"]',
             );
-            await mobileAppsBtn.first().click();
+            await mobileDocsBtn.first().click();
 
             // Mobile panel is presented inside modal Sheet
             const sheet = page.locator(".workspace-panel--mobile");
@@ -301,17 +185,17 @@ Deno.test("production workspace contracts", async (t) => {
             await sheet.waitFor({ state: "detached" });
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("data-workspace") ===
-                    "apps"
+                    "documents"
             );
             assertEquals(
                 await page.evaluate(() =>
                     document.activeElement?.getAttribute("data-workspace")
                 ),
-                "apps",
+                "documents",
             );
 
             // Reopen sheet for swipe down test
-            await mobileAppsBtn.first().click();
+            await mobileDocsBtn.first().click();
             await sheet.waitFor();
 
             // Mobile grip handle is visible in header
@@ -360,13 +244,13 @@ Deno.test("production workspace contracts", async (t) => {
             // Focus returns to dock opener
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("data-workspace") ===
-                    "apps"
+                    "documents"
             );
             assertEquals(
                 await page.evaluate(() =>
                     document.activeElement?.getAttribute("data-workspace")
                 ),
-                "apps",
+                "documents",
             );
         },
     );

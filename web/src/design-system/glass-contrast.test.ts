@@ -143,3 +143,48 @@ for (const theme of ["light", "dark"] as const) {
         for (const fill of fills) assert(fill.thick >= fill.regular);
     });
 }
+
+for (const theme of ["light", "dark"] as const) {
+    for (const tier of TIERS) {
+        Deno.test(`glass ${theme}/${tier}: folder label, empty-folder icon and mini icons hold contrast on the folder Material`, () => {
+            const tokens = cascade(theme, tier);
+            const alpha = fillPercent(tokens, `--glass-regular-${theme}`) / 100;
+            const base = hex(resolve(tokens, "--material-solid"));
+            const sheen = fillPercent(tokens, "--glass-sheen-peak") / 100 *
+                Number(resolve(tokens, "--glass-sheen-scale")) *
+                (1 - 0.25 / 0.55);
+            const worstOnFolder = (color: Rgb) =>
+                Math.min(
+                    ...BACKDROPS.map((backdrop) =>
+                        contrast(
+                            color,
+                            over(
+                                [255, 255, 255],
+                                sheen,
+                                over(base, alpha, backdrop),
+                            ),
+                        )
+                    ),
+                );
+            // Folder name chip (photo wallpapers): --foreground text on the same Material.
+            const label = worstOnFolder(hex(resolve(tokens, "--foreground")));
+            assert(label >= WCAG_AA_TEXT, `folder label ${label.toFixed(2)}:1`);
+            // The empty-folder glyph is a graphic: 3:1 against the folder.
+            const empty = worstOnFolder(hex(resolve(tokens, "--muted")));
+            assert(
+                empty >= SECONDARY_TEXT,
+                `empty folder icon ${empty.toFixed(2)}:1`,
+            );
+            // Mini icon tiles are opaque --surface-solid: their fallback letter is
+            // --foreground on that plate, independent of the glass tier.
+            const letter = contrast(
+                hex(resolve(tokens, "--foreground")),
+                hex(resolve(tokens, "--surface-solid")),
+            );
+            assert(
+                letter >= WCAG_AA_TEXT,
+                `mini icon letter ${letter.toFixed(2)}:1`,
+            );
+        });
+    }
+}

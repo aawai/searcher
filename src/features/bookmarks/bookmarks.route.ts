@@ -147,19 +147,16 @@ export function registerBookmarksRoutes(
     routes.get(
         "/api/webapps",
         validator({
-            pinned: query(v.optional(v.string())),
             groupId: query(v.optional(v.string())),
         }),
         async (c, data) => {
             const user = c.get("user");
-            const pinnedOnly = data.pinned === "true" || data.pinned === "1";
             const groupId = data.groupId !== undefined
                 ? (data.groupId === "null" || data.groupId === ""
                     ? null
                     : data.groupId)
                 : undefined;
             const apps = await service.listWebApps(user.id, {
-                pinnedOnly,
                 groupId,
             });
             return c.success(apps);
@@ -182,9 +179,7 @@ export function registerBookmarksRoutes(
             groupId: json(v.optional(v.nullable(v.string()))),
             iconAssetId: json(v.optional(v.nullable(v.string()))),
             iconSource: json(v.optional(IconSourceSchema, "website")),
-            isPinned: json(v.optional(v.boolean(), false)),
             sortOrder: json(v.optional(IntegerSchema, 0)),
-            pinnedSortOrder: json(v.optional(IntegerSchema, 0)),
             openMode: json(v.optional(OpenModeSchema, "global")),
         }),
         async (c, data) => {
@@ -195,9 +190,7 @@ export function registerBookmarksRoutes(
                 groupId: data.groupId,
                 iconAssetId: data.iconAssetId,
                 iconSource: data.iconSource,
-                isPinned: data.isPinned,
                 sortOrder: data.sortOrder,
-                pinnedSortOrder: data.pinnedSortOrder,
                 openMode: data.openMode,
             });
             return c.success(app);
@@ -213,7 +206,6 @@ export function registerBookmarksRoutes(
                     v.object({
                         id: IdParamSchema,
                         sortOrder: v.optional(IntegerSchema),
-                        pinnedSortOrder: v.optional(IntegerSchema),
                     }),
                 ),
             ),
@@ -314,9 +306,7 @@ export function registerBookmarksRoutes(
             groupId: json(v.optional(v.nullable(v.string()))),
             iconAssetId: json(v.optional(v.nullable(v.string()))),
             iconSource: json(v.optional(IconSourceSchema)),
-            isPinned: json(v.optional(v.boolean())),
             sortOrder: json(v.optional(IntegerSchema)),
-            pinnedSortOrder: json(v.optional(IntegerSchema)),
             openMode: json(v.optional(OpenModeSchema)),
         }),
         async (c, data) => {
@@ -328,9 +318,7 @@ export function registerBookmarksRoutes(
                     groupId: data.groupId,
                     iconAssetId: data.iconAssetId,
                     iconSource: data.iconSource,
-                    isPinned: data.isPinned,
                     sortOrder: data.sortOrder,
-                    pinnedSortOrder: data.pinnedSortOrder,
                     openMode: data.openMode,
                 });
                 return c.success(app);

@@ -10,10 +10,8 @@ export interface AppMenuActions {
     onEdit: (app: LauncherApp) => void;
     onChangeIcon?: (app: LauncherApp) => void;
     onMove: (app: LauncherApp, groupId: string | null) => void;
-    onPin: (app: LauncherApp) => void;
     onDelete: (app: LauncherApp) => void;
     onToggleManaging?: () => void;
-    onResetLayout?: () => void;
 }
 
 export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
@@ -37,14 +35,6 @@ export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
                     {managing ? "完成整理" : "整理布局"}
                 </Item>
             )}
-            {managing && actions.onResetLayout && (
-                <Item onClick={actions.onResetLayout}>
-                    恢复默认布局
-                </Item>
-            )}
-            <Item onClick={() => actions.onPin(app)}>
-                {app.isPinned ? "取消固定" : "固定到首页"}
-            </Item>
             <Item onClick={() => actions.onEdit(app)}>
                 编辑
             </Item>

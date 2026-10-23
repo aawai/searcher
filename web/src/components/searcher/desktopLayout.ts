@@ -16,10 +16,15 @@ export interface DesktopPlacement {
 export function calculateDesktopLayout(
     items: readonly DesktopFootprint[],
     columnCount: number,
+    reserved: ReadonlyArray<{ col: number; row: number }> = [],
 ): DesktopPlacement[] {
     const columns = Math.max(2, Math.floor(columnCount));
     const occupied: boolean[][] = [];
     const result: DesktopPlacement[] = [];
+    for (const cell of reserved) {
+        occupied[cell.row] ??= [];
+        occupied[cell.row][cell.col] = true;
+    }
     for (const item of items) {
         let row = 0;
         let col = 0;

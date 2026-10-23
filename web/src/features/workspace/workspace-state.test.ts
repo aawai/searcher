@@ -1,130 +1,27 @@
 import { assertEquals } from "@std/assert";
 import {
-    type AppsRoute,
     areWorkspaceRoutesEqual,
     type DocumentsWorkspaceState,
     domainWorkspaceReducer,
-    type DomainWorkspaceState,
-    initialAppsWorkspaceState,
     initialDocumentsWorkspaceState,
     parentWorkspaceRoute,
 } from "./workspace-state.ts";
 
-Deno.test("Workspace: independent domains maintain routes, stacks and queries separately across both domains", () => {
-    // Apps domain navigation & query
-    let appsState: DomainWorkspaceState<AppsRoute> = initialAppsWorkspaceState;
-    appsState = domainWorkspaceReducer(appsState, {
-        type: "query",
-        value: "work",
-    });
-    appsState = domainWorkspaceReducer(appsState, {
-        type: "navigate",
-        route: { view: "apps/create", groupId: "folder-1" },
-    });
-    assertEquals(appsState.route, {
-        view: "apps/create",
-        groupId: "folder-1",
-    });
-    assertEquals(appsState.query, "work");
-    assertEquals(appsState.stack.length, 1);
-
-    // Documents domain navigation, query, and scope - does not affect apps
-    let docsState: DocumentsWorkspaceState = {
-        ...initialDocumentsWorkspaceState,
-        scope: { type: "recent" },
-    };
-    docsState = domainWorkspaceReducer(docsState, {
-        type: "query",
-        value: "specs",
-    }) as DocumentsWorkspaceState;
-    docsState = domainWorkspaceReducer(docsState, {
-        type: "navigate",
-        route: { view: "documents/edit", id: "doc-101" },
-    }) as DocumentsWorkspaceState;
-    assertEquals(docsState.route, { view: "documents/edit", id: "doc-101" });
-    assertEquals(docsState.query, "specs");
-    assertEquals(docsState.scope, { type: "recent" });
-    assertEquals(docsState.stack.length, 1);
-
-    // Verify apps remain completely unaffected
-    assertEquals(appsState.route, {
-        view: "apps/create",
-        groupId: "folder-1",
-    });
-    assertEquals(appsState.query, "work");
-
-    // Back in documents returns to documents/root while retaining query and scope
-    docsState = domainWorkspaceReducer(docsState, {
-        type: "back",
-    }) as DocumentsWorkspaceState;
-    assertEquals(docsState.route, { view: "documents/root" });
-    assertEquals(docsState.stack, []);
-    assertEquals(docsState.query, "specs");
-    assertEquals(docsState.scope, { type: "recent" });
-
-    // Back in apps returns to apps/root
-    appsState = domainWorkspaceReducer(appsState, { type: "back" });
-    assertEquals(appsState.route, { view: "apps/root" });
-    assertEquals(appsState.stack, []);
-    assertEquals(appsState.query, "work");
-
-    // Docs is still at root with its scope & query preserved
-    assertEquals(docsState.route, { view: "documents/root" });
-    assertEquals(docsState.query, "specs");
-    assertEquals(docsState.scope, { type: "recent" });
-});
-
-Deno.test("Workspace: apps/create returns to apps/root on Back", () => {
-    // Without groupId
-    {
-        let state: DomainWorkspaceState<AppsRoute> = initialAppsWorkspaceState;
-        state = domainWorkspaceReducer(state, {
-            type: "navigate",
-            route: { view: "apps/create" },
-        });
-        assertEquals(state.route, { view: "apps/create" });
-        state = domainWorkspaceReducer(state, { type: "back" });
-        assertEquals(state.route, { view: "apps/root" });
-    }
-
-    // With groupId
-    {
-        let state: DomainWorkspaceState<AppsRoute> = initialAppsWorkspaceState;
-        state = domainWorkspaceReducer(state, {
-            type: "navigate",
-            route: { view: "apps/create", groupId: "folder-dev" },
-        });
-        assertEquals(state.route, {
-            view: "apps/create",
-            groupId: "folder-dev",
-        });
-        state = domainWorkspaceReducer(state, { type: "back" });
-        assertEquals(state.route, { view: "apps/root" });
-    }
-});
-
-Deno.test("Workspace: apps/edit returns to apps/root on Back", () => {
-    let state: DomainWorkspaceState<AppsRoute> = initialAppsWorkspaceState;
-    state = domainWorkspaceReducer(state, {
-        type: "navigate",
-        route: { view: "apps/edit", id: "app-123" },
-    });
-    assertEquals(state.route, { view: "apps/edit", id: "app-123" });
-    state = domainWorkspaceReducer(state, { type: "back" });
-    assertEquals(state.route, { view: "apps/root" });
-});
+function reduce(
+    state: DocumentsWorkspaceState,
+    action: Parameters<typeof domainWorkspaceReducer>[1],
+): DocumentsWorkspaceState {
+    return domainWorkspaceReducer(state, action) as DocumentsWorkspaceState;
+}
 
 Deno.test("Workspace: documents/create returns to documents/root on Back", () => {
-    let state: DocumentsWorkspaceState = initialDocumentsWorkspaceState;
-    state = domainWorkspaceReducer(state, {
+    let state = reduce(initialDocumentsWorkspaceState, {
         type: "navigate",
         route: { view: "documents/create" },
-    }) as DocumentsWorkspaceState;
+    });
     assertEquals(state.route, { view: "documents/create" });
     assertEquals(state.stack.length, 1);
-    state = domainWorkspaceReducer(state, {
-        type: "back",
-    }) as DocumentsWorkspaceState;
+    state = reduce(state, { type: "back" });
     assertEquals(state.route, { view: "documents/root" });
     assertEquals(state.stack, []);
     assertEquals(state.scope, { type: "all" });
@@ -135,129 +32,70 @@ Deno.test("Workspace: documents/edit returns to documents/root on Back while pre
         ...initialDocumentsWorkspaceState,
         scope: { type: "notebook", notebookId: "nb-7" },
     };
-    state = domainWorkspaceReducer(state, {
+    state = reduce(state, {
         type: "navigate",
         route: { view: "documents/edit", id: "doc-999" },
-    }) as DocumentsWorkspaceState;
+    });
     assertEquals(state.route, { view: "documents/edit", id: "doc-999" });
     assertEquals(state.stack.length, 1);
-    state = domainWorkspaceReducer(state, {
-        type: "back",
-    }) as DocumentsWorkspaceState;
+    state = reduce(state, { type: "back" });
     assertEquals(state.route, { view: "documents/root" });
     assertEquals(state.stack, []);
     assertEquals(state.scope, { type: "notebook", notebookId: "nb-7" });
 });
 
-Deno.test("Workspace: parentWorkspaceRoute safe fallback provides correct defaults across both domains", () => {
-    // Apps routes fallback to apps/root
-    assertEquals(parentWorkspaceRoute({ view: "apps/create" }), {
-        view: "apps/root",
-    });
-    assertEquals(
-        parentWorkspaceRoute({ view: "apps/create", groupId: "work" }),
-        {
-            view: "apps/root",
-        },
-    );
-    assertEquals(parentWorkspaceRoute({ view: "apps/edit", id: "app-1" }), {
-        view: "apps/root",
-    });
-    assertEquals(parentWorkspaceRoute({ view: "apps/root" }), {
-        view: "apps/root",
-    });
-
-    // Documents routes fallback to documents/root
-    assertEquals(parentWorkspaceRoute({ view: "documents/create" }), {
-        view: "documents/root",
-    });
-    assertEquals(
-        parentWorkspaceRoute({ view: "documents/edit", id: "doc-1" }),
-        {
-            view: "documents/root",
-        },
-    );
-    assertEquals(parentWorkspaceRoute({ view: "documents/root" }), {
-        view: "documents/root",
-    });
+Deno.test("Workspace: every documents route falls back to documents/root", () => {
+    for (
+        const route of [
+            { view: "documents/create" },
+            { view: "documents/edit", id: "doc-1" },
+            { view: "documents/root" },
+        ] as const
+    ) {
+        assertEquals(parentWorkspaceRoute(route), { view: "documents/root" });
+    }
 });
 
-Deno.test("Workspace: navigating to domain root clears navigation stack while retaining query and scope", () => {
-    // Apps domain
-    let appsState: DomainWorkspaceState<AppsRoute> = initialAppsWorkspaceState;
-    appsState = domainWorkspaceReducer(appsState, {
-        type: "query",
-        value: "search-apps",
-    });
-    appsState = domainWorkspaceReducer(appsState, {
-        type: "navigate",
-        route: { view: "apps/create", groupId: "folder-1" },
-    });
-    assertEquals(appsState.stack.length, 1);
-    appsState = domainWorkspaceReducer(appsState, {
-        type: "navigate",
-        route: { view: "apps/root" },
-    });
-    assertEquals(appsState.route, { view: "apps/root" });
-    assertEquals(appsState.stack, []);
-    assertEquals(appsState.query, "search-apps");
-
-    // Documents domain with custom scope
-    let docsState: DocumentsWorkspaceState = {
+Deno.test("Workspace: navigating to the root clears the stack while retaining query and scope", () => {
+    let docs: DocumentsWorkspaceState = {
         ...initialDocumentsWorkspaceState,
         scope: { type: "favorite" },
     };
-    docsState = domainWorkspaceReducer(docsState, {
-        type: "query",
-        value: "search-docs",
-    }) as DocumentsWorkspaceState;
-    docsState = domainWorkspaceReducer(docsState, {
+    docs = reduce(docs, { type: "query", value: "search-docs" });
+    docs = reduce(docs, {
         type: "navigate",
         route: { view: "documents/edit", id: "doc-favorite-1" },
-    }) as DocumentsWorkspaceState;
-    assertEquals(docsState.stack.length, 1);
-    docsState = domainWorkspaceReducer(docsState, {
+    });
+    assertEquals(docs.stack.length, 1);
+    docs = reduce(docs, {
         type: "navigate",
         route: { view: "documents/root" },
-    }) as DocumentsWorkspaceState;
-    assertEquals(docsState.route, { view: "documents/root" });
-    assertEquals(docsState.stack, []);
-    assertEquals(docsState.query, "search-docs");
-    assertEquals(docsState.scope, { type: "favorite" });
+    });
+    assertEquals(docs.route, { view: "documents/root" });
+    assertEquals(docs.stack, []);
+    assertEquals(docs.query, "search-docs");
+    assertEquals(docs.scope, { type: "favorite" });
 });
 
-Deno.test("Workspace: navigating to an existing stack route safely unwinds the stack", () => {
-    let state: DomainWorkspaceState<AppsRoute> = initialAppsWorkspaceState;
-    state = domainWorkspaceReducer(state, {
+Deno.test("Workspace: navigating to an existing stack route unwinds the stack", () => {
+    let state = reduce(initialDocumentsWorkspaceState, {
         type: "navigate",
-        route: { view: "apps/create", groupId: "folder-1" },
+        route: { view: "documents/create" },
     });
+    state = reduce(state, {
+        type: "navigate",
+        route: { view: "documents/edit", id: "d1" },
+    });
+    assertEquals(state.stack.length, 2);
+    state = reduce(state, {
+        type: "navigate",
+        route: { view: "documents/create" },
+    });
+    assertEquals(state.route, { view: "documents/create" });
     assertEquals(state.stack.length, 1);
-
-    // Unwinds back to root
-    state = domainWorkspaceReducer(state, {
-        type: "navigate",
-        route: { view: "apps/root" },
-    });
-    assertEquals(state.route, { view: "apps/root" });
-    assertEquals(state.stack, []);
 });
-Deno.test("Workspace: areWorkspaceRoutesEqual discriminates routes accurately across domains", () => {
-    // Documents routes
-    assertEquals(
-        areWorkspaceRoutesEqual(
-            { view: "documents/root" },
-            { view: "documents/root" },
-        ),
-        true,
-    );
-    assertEquals(
-        areWorkspaceRoutesEqual(
-            { view: "documents/create" },
-            { view: "documents/create" },
-        ),
-        true,
-    );
+
+Deno.test("Workspace: areWorkspaceRoutesEqual discriminates documents routes", () => {
     assertEquals(
         areWorkspaceRoutesEqual(
             { view: "documents/edit", id: "doc-1" },
@@ -279,13 +117,6 @@ Deno.test("Workspace: areWorkspaceRoutesEqual discriminates routes accurately ac
         ),
         false,
     );
-    assertEquals(
-        areWorkspaceRoutesEqual(
-            { view: "documents/root" },
-            { view: "apps/root" },
-        ),
-        false,
-    );
 });
 
 Deno.test("Workspace: documents scope is preserved across query, navigate, and back operations", () => {
@@ -293,75 +124,31 @@ Deno.test("Workspace: documents scope is preserved across query, navigate, and b
         ...initialDocumentsWorkspaceState,
         scope: { type: "notebook", notebookId: "nb-42" },
     };
-
-    // Query change preserves scope
-    docs = domainWorkspaceReducer(docs, {
-        type: "query",
-        value: "my-query",
-    }) as DocumentsWorkspaceState;
-    assertEquals(docs.scope, { type: "notebook", notebookId: "nb-42" });
-    assertEquals(docs.query, "my-query");
-
-    // Navigate preserves scope
-    docs = domainWorkspaceReducer(docs, {
+    docs = reduce(docs, { type: "query", value: "my-query" });
+    docs = reduce(docs, {
         type: "navigate",
         route: { view: "documents/create" },
-    }) as DocumentsWorkspaceState;
-    assertEquals(docs.scope, { type: "notebook", notebookId: "nb-42" });
-    assertEquals(docs.route, { view: "documents/create" });
-
-    // Further navigate preserves scope
-    docs = domainWorkspaceReducer(docs, {
+    });
+    docs = reduce(docs, {
         type: "navigate",
         route: { view: "documents/edit", id: "d-1" },
-    }) as DocumentsWorkspaceState;
-    assertEquals(docs.scope, { type: "notebook", notebookId: "nb-42" });
-    assertEquals(docs.route, { view: "documents/edit", id: "d-1" });
-
-    // Back preserves scope
-    docs = domainWorkspaceReducer(docs, {
-        type: "back",
-    }) as DocumentsWorkspaceState;
+    });
+    docs = reduce(docs, { type: "back" });
     assertEquals(docs.scope, { type: "notebook", notebookId: "nb-42" });
     assertEquals(docs.route, { view: "documents/create" });
     assertEquals(docs.query, "my-query");
 });
 
-Deno.test("Workspace: independent reset resets only the target domain to initial state across both domains", () => {
-    let apps: DomainWorkspaceState<AppsRoute> = initialAppsWorkspaceState;
-    apps = domainWorkspaceReducer(apps, { type: "query", value: "apps-query" });
-    apps = domainWorkspaceReducer(apps, {
-        type: "navigate",
-        route: { view: "apps/edit", id: "a1" },
-    });
-
+Deno.test("Workspace: reset returns the documents domain to its initial state", () => {
     let docs: DocumentsWorkspaceState = {
         ...initialDocumentsWorkspaceState,
         scope: { type: "favorite" },
     };
-    docs = domainWorkspaceReducer(docs, {
-        type: "query",
-        value: "docs-query",
-    }) as DocumentsWorkspaceState;
-    docs = domainWorkspaceReducer(docs, {
+    docs = reduce(docs, { type: "query", value: "docs-query" });
+    docs = reduce(docs, {
         type: "navigate",
         route: { view: "documents/edit", id: "d1" },
-    }) as DocumentsWorkspaceState;
-
-    // Reset documents only
-    docs = domainWorkspaceReducer(docs, {
-        type: "reset",
-    }) as DocumentsWorkspaceState;
-    assertEquals(docs, initialDocumentsWorkspaceState);
-    assertEquals(docs.scope, { type: "all" });
-
-    // Apps remain completely untouched
-    assertEquals(apps.route, { view: "apps/edit", id: "a1" });
-    assertEquals(apps.query, "apps-query");
-    assertEquals(apps.stack.length, 1);
-
-    // Reset apps only
-    apps = domainWorkspaceReducer(apps, { type: "reset" });
-    assertEquals(apps, initialAppsWorkspaceState);
+    });
+    docs = reduce(docs, { type: "reset" });
     assertEquals(docs, initialDocumentsWorkspaceState);
 });

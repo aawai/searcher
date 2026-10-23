@@ -91,14 +91,6 @@ Deno.test("home color hierarchy keeps avatar, engine and primary icons neutral",
                 els,
             ) => els.map((el) => el.getAttribute("stroke-width")))
         ) assertEquals(stroke, "2");
-        await page.locator('.zen-edge-btn[data-workspace="apps"]').click();
-        await page.locator(".workspace-primary").waitFor();
-        assertEquals(
-            await page.locator(".workspace-primary").evaluate((el) =>
-                getComputedStyle(el).backgroundColor
-            ),
-            "rgba(0, 0, 0, 0)",
-        );
     } finally {
         await browser.close();
         await app.close();

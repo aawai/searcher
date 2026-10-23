@@ -8,7 +8,6 @@ export interface LauncherGroup {
 }
 
 export interface LauncherApp extends WebAppItem {
-    pinnedSortOrder?: number;
     sortOrder?: number;
 }
 

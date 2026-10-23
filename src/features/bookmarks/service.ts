@@ -13,9 +13,7 @@ export interface WebAppDto {
     groupId: string | null;
     iconAssetId: string | null;
     iconSource: WebAppIconSource;
-    isPinned: boolean;
     sortOrder: number;
-    pinnedSortOrder: number;
     openMode: WebAppOpenMode;
     deletedAt?: number | null;
     createdAt: number;
@@ -40,9 +38,7 @@ export interface CreateWebAppInput {
     groupId?: string | null;
     iconAssetId?: string | null;
     iconSource?: WebAppIconSource;
-    isPinned?: boolean;
     sortOrder?: number;
-    pinnedSortOrder?: number;
     openMode?: WebAppOpenMode;
 }
 
@@ -52,9 +48,7 @@ export interface UpdateWebAppInput {
     groupId?: string | null;
     iconAssetId?: string | null;
     iconSource?: WebAppIconSource;
-    isPinned?: boolean;
     sortOrder?: number;
-    pinnedSortOrder?: number;
     openMode?: WebAppOpenMode;
 }
 
@@ -118,9 +112,7 @@ export class BookmarksService {
             groupId: row.groupId,
             iconAssetId: row.iconAssetId,
             iconSource: row.iconSource as WebAppIconSource,
-            isPinned: Boolean(row.isPinned),
             sortOrder: row.sortOrder,
-            pinnedSortOrder: row.pinnedSortOrder,
             openMode: row.openMode as WebAppOpenMode,
             deletedAt: row.deletedAt,
             createdAt: row.createdAt,
@@ -132,7 +124,6 @@ export class BookmarksService {
         userId: string,
         options: {
             includeDeleted?: boolean;
-            pinnedOnly?: boolean;
             groupId?: string | null;
         } = {},
     ): Promise<WebAppDto[]> {
@@ -140,9 +131,6 @@ export class BookmarksService {
             const conditions = [eq(webapps.userId, userId)];
             if (!options.includeDeleted) {
                 conditions.push(isNull(webapps.deletedAt));
-            }
-            if (options.pinnedOnly) {
-                conditions.push(eq(webapps.isPinned, true));
             }
             if (options.groupId !== undefined) {
                 if (options.groupId === null) {
@@ -157,8 +145,6 @@ export class BookmarksService {
                 .from(webapps)
                 .where(and(...conditions))
                 .orderBy(
-                    desc(webapps.isPinned),
-                    desc(webapps.pinnedSortOrder),
                     desc(webapps.sortOrder),
                     desc(webapps.createdAt),
                 )
@@ -209,9 +195,7 @@ export class BookmarksService {
                 groupId: input.groupId ?? null,
                 iconAssetId: input.iconAssetId ?? null,
                 iconSource: input.iconSource ?? "website",
-                isPinned: input.isPinned ?? false,
                 sortOrder: input.sortOrder ?? 0,
-                pinnedSortOrder: input.pinnedSortOrder ?? 0,
                 openMode: input.openMode ?? "global",
                 deletedAt: null,
                 createdAt: currentTime,
@@ -265,9 +249,6 @@ export class BookmarksService {
             const nextIconSource = input.iconSource !== undefined
                 ? input.iconSource
                 : current.iconSource;
-            const nextIsPinned = input.isPinned !== undefined
-                ? input.isPinned
-                : current.isPinned;
             let nextSortOrder = input.sortOrder !== undefined
                 ? input.sortOrder
                 : current.sortOrder;
@@ -289,9 +270,6 @@ export class BookmarksService {
                     .all();
                 nextSortOrder = (maxRow[0]?.maxOrder ?? -1) + 1;
             }
-            const nextPinnedSortOrder = input.pinnedSortOrder !== undefined
-                ? input.pinnedSortOrder
-                : current.pinnedSortOrder;
             const nextOpenMode = input.openMode !== undefined
                 ? input.openMode
                 : current.openMode;
@@ -303,9 +281,7 @@ export class BookmarksService {
                     groupId: nextGroupId,
                     iconAssetId: nextIconAssetId,
                     iconSource: nextIconSource,
-                    isPinned: nextIsPinned,
                     sortOrder: nextSortOrder,
-                    pinnedSortOrder: nextPinnedSortOrder,
                     openMode: nextOpenMode,
                     updatedAt: currentTime,
                 })
@@ -319,9 +295,7 @@ export class BookmarksService {
                 groupId: nextGroupId,
                 iconAssetId: nextIconAssetId,
                 iconSource: nextIconSource,
-                isPinned: nextIsPinned,
                 sortOrder: nextSortOrder,
-                pinnedSortOrder: nextPinnedSortOrder,
                 openMode: nextOpenMode,
                 updatedAt: currentTime,
             });
@@ -439,7 +413,7 @@ export class BookmarksService {
     async reorderWebApps(
         userId: string,
         items: Array<
-            { id: string; sortOrder?: number; pinnedSortOrder?: number }
+            { id: string; sortOrder?: number }
         >,
         groups: Array<{ id: string; sortOrder: number }> = [],
     ): Promise<void> {
@@ -449,15 +423,10 @@ export class BookmarksService {
                 for (const item of items) {
                     const updateFields: {
                         sortOrder?: number;
-                        pinnedSortOrder?: number;
                         updatedAt: number;
                     } = { updatedAt: currentTime };
                     if (item.sortOrder !== undefined) {
                         updateFields.sortOrder = item.sortOrder;
-                    }
-                    if (item.pinnedSortOrder !== undefined) {
-                        updateFields
-                            .pinnedSortOrder = item.pinnedSortOrder;
                     }
                     const updated = await tx.update(webapps).set(updateFields)
                         .where(and(

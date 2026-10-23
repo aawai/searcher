@@ -44,7 +44,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   16px；触屏常规控件使用 44px 点击目标。不要把不同用途的尺寸合并成同一个 Token。
 - 稳定布局使用语义 class 或 Tailwind 标准 utility；壁纸、拖拽变换等 runtime
   值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何由组件维护。
-- 样式调整后构建前端，实页检查首页、设置、登录和应用面板的浅深色与壁纸组合。
+- 样式调整后构建前端，实页检查首页、设置、登录和笔记面板的浅深色与壁纸组合。
 
 ## UI 门禁
 

@@ -47,7 +47,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 searchShape: "pill",
                 glassIntensity: "clear",
                 defaultEngine: "google",
-                webAppHomeLimit: 16,
+                showHomeApps: false,
                 showAppLabels: false,
             }),
         });
@@ -56,7 +56,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.accent, "violet");
         assertEquals(saved.data?.searchShape, "pill");
         assertEquals(saved.data?.glassIntensity, "clear");
-        assertEquals(saved.data?.webAppHomeLimit, 16);
+        assertEquals(saved.data?.showHomeApps, false);
         assertEquals("webAppIconSize" in (saved.data ?? {}), false);
         assertEquals(saved.data?.showAppLabels, false);
         const partial = await app.request("/api/preferences", {
@@ -74,10 +74,25 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         const changed = await partial.json() as Envelope<PreferencesDto>;
         assertEquals(changed.data?.accent, "rose");
         assertEquals(changed.data?.defaultEngine, "google");
-        assertEquals(changed.data?.webAppHomeLimit, 16);
+        assertEquals(changed.data?.showHomeApps, false);
         assertEquals(changed.data?.searchShape, "pill");
         assertEquals(changed.data?.glassIntensity, "clear");
         assertEquals(changed.data?.showAppLabels, false);
+        const toggleBack = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: first,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ showHomeApps: true }),
+        });
+        assertEquals(toggleBack.status, 200);
+        assertEquals(
+            (await toggleBack.json() as Envelope<PreferencesDto>).data
+                ?.showHomeApps,
+            true,
+        );
         const updateEmerald = await app.request("/api/preferences", {
             method: "PATCH",
             headers: {
@@ -109,7 +124,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         });
         const isolated = await other.json() as Envelope<PreferencesDto>;
         assertEquals(isolated.data?.defaultEngine, "bing");
-        assertEquals(isolated.data?.webAppHomeLimit, 12);
+        assertEquals(isolated.data?.showHomeApps, true);
         assertEquals(isolated.data?.searchShape, "rounded");
         assertEquals(isolated.data?.glassIntensity, "regular");
         assertEquals(isolated.data?.showAppLabels, true);
@@ -150,7 +165,8 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                     },
                 },
                 { backgroundImage: "https://user:pass@example.com/a.png" },
-                { webAppHomeLimit: 15 },
+                { showHomeApps: "yes" },
+                { showHomeApps: 1 },
                 { searchShape: "square" },
                 { glassIntensity: "ultra" },
                 { glassIntensity: 0.5 },
@@ -251,7 +267,7 @@ Deno.test("preferences: first partial PATCH with accent-only seeds full canonica
         assertEquals(patchBody.data?.defaultEngine, "duckduckgo");
         assertEquals(patchBody.data?.theme, "dark");
         assertEquals(patchBody.data?.searchTarget, "new");
-        assertEquals(patchBody.data?.webAppHomeLimit, 12);
+        assertEquals(patchBody.data?.showHomeApps, true);
 
         // Verify subsequent GET confirms DB persistence
         const getRes = await app.request("/api/preferences", {

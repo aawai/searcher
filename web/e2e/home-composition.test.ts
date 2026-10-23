@@ -27,17 +27,11 @@ Deno.test("Home anchor is shared by guests and accounts and reserves four grid r
                     body: JSON.stringify({
                         name: `App ${index + 1}`,
                         url: `https://app-${index}.example/`,
-                        isPinned: true,
                         sortOrder: index,
                     }),
                 });
                 if (!response.ok) throw new Error(await response.text());
             }
-            const response = await fetch("/api/preferences", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ webAppHomeLimit: "all" }),
-            });
             for (const [index, x] of [32, 1100].entries()) {
                 const created = await fetch("/api/documents", {
                     method: "POST",
@@ -65,7 +59,6 @@ Deno.test("Home anchor is shared by guests and accounts and reserves four grid r
                 );
                 if (!layout.ok) throw new Error(await layout.text());
             }
-            if (!response.ok) throw new Error(await response.text());
         });
         await page.reload();
         await page.locator(".launcher-grid--home .launcher-tile").first()

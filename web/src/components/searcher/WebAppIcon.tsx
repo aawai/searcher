@@ -10,7 +10,6 @@ export interface WebAppItem {
     iconUrl?: string | null;
     iconAssetId?: string | null;
     iconSource?: "website" | "upload" | "url" | "ai" | "default";
-    isPinned?: boolean;
     groupId?: string | null;
     openMode?: "global" | "current" | "new_tab";
 }

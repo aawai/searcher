@@ -16,16 +16,16 @@ deno run -A npm:playwright@1.56.1 install chromium
 
 ## 常用入口
 
-| 命令                       | 覆盖                                                              |
-| -------------------------- | ----------------------------------------------------------------- |
-| `deno task test`           | 后端与前端契约测试                                                |
-| `deno task test:routing`   | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航 |
-| `deno task test:workspace` | Workspace 完整回归（见下文）                                      |
-| `deno task test:documents` | 笔记响应式矩阵与长笔记验收（见下文）                              |
-| `deno task test:wallpaper` | 壁纸链路（见下文）                                                |
-| `deno task test:e2e:full`  | 只构建一次，执行所有 E2E 文件的去重并集                           |
-| `deno task check:e2e`      | 检查新增 E2E 文件是否登记                                         |
-| `deno task check:ui`       | UI 门禁（见 [前端开发](frontend.md#ui-门禁)）                     |
+| 命令                       | 覆盖                                                                                    |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| `deno task test`           | 后端与前端契约测试                                                                      |
+| `deno task test:routing`   | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航                       |
+| `deno task test:workspace` | Workspace 完整回归（见下文）                                                            |
+| `deno task test:documents` | 笔记响应式矩阵与长笔记验收（见下文）                                                    |
+| `deno task test:wallpaper` | 壁纸链路（见下文）                                                                      |
+| `deno task test:e2e:full`  | 只构建一次，串行执行所有 E2E 文件的去重并集；首次失败停止，可显式 `--parallel` 诊断并发 |
+| `deno task check:e2e`      | 检查新增 E2E 文件是否登记                                                               |
+| `deno task check:ui`       | UI 门禁（见 [前端开发](frontend.md#ui-门禁)）                                           |
 
 模块入口（如 `test:workspace:apps`）仅作局部开发辅助，不替代完整 Workspace
 回归。

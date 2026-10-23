@@ -52,9 +52,10 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
                     },
                 }),
         );
-        await page.locator('[data-workspace="apps"]').click();
-        await page.getByRole("button", { name: "添加应用", exact: true })
-            .click();
+        const addCell = page.locator('[data-library-cell="add"]');
+        const dialog = page.locator(".app-form-dialog");
+        await addCell.click();
+        await dialog.waitFor();
         await page.locator("#app-name-input").fill("AI 会话草稿");
         await page.getByRole("button", { name: "更换图标", exact: true })
             .click();
@@ -152,11 +153,13 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         );
         await page.getByRole("tab", { name: "AI 生成", exact: true }).click();
         await candidate.waitFor();
-        await page.getByRole("button", { name: "取消", exact: true }).click();
+        await dialog.getByRole("button", { name: "取消", exact: true })
+            .click();
         await page.getByRole("button", { name: "放弃修改", exact: true })
             .click();
-        await page.getByRole("button", { name: "添加应用", exact: true })
-            .click();
+        await dialog.waitFor({ state: "detached" });
+        await addCell.click();
+        await dialog.waitFor();
         await page.getByRole("button", { name: "更换图标", exact: true })
             .click();
         await page.getByRole("tab", { name: "AI 生成", exact: true }).click();

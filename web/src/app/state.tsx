@@ -50,8 +50,9 @@ export type Appearance = {
     target: "current" | "new_tab";
     wallpaper: string;
     wallpaperPresentations: Record<string, WallpaperPresentation>;
-    webAppHomeLimit: 8 | 12 | 16 | "all";
     showAppLabels: boolean;
+    /** 登录用户的跨设备偏好：首页是否显示应用库。 */
+    showHomeApps: boolean;
 };
 
 const initial: Appearance = {
@@ -63,8 +64,8 @@ const initial: Appearance = {
     target: "current",
     wallpaper: "",
     wallpaperPresentations: {},
-    webAppHomeLimit: 12,
     showAppLabels: true,
+    showHomeApps: true,
 };
 
 /** 旧设备缓存和旧 API 响应缺少字段时，仍生成有效的背景参数。 */
@@ -118,12 +119,11 @@ export function normalizeAppearance(raw: unknown): Appearance {
                 | undefined,
         },
     );
-    if (
-        saved.webAppHomeLimit === 8 || saved.webAppHomeLimit === 12 ||
-        saved.webAppHomeLimit === 16 || saved.webAppHomeLimit === "all"
-    ) result.webAppHomeLimit = saved.webAppHomeLimit;
     if (typeof saved.showAppLabels === "boolean") {
         result.showAppLabels = saved.showAppLabels;
+    }
+    if (typeof saved.showHomeApps === "boolean") {
+        result.showHomeApps = saved.showHomeApps;
     }
     return result;
 }
@@ -324,8 +324,8 @@ export function AppState({ children }: { children: ReactNode }) {
                         : "current",
                     wallpaper: prefs.backgroundImage ?? "",
                     wallpaperPresentations: prefs.wallpaperPresentations,
-                    webAppHomeLimit: prefs.webAppHomeLimit,
                     showAppLabels: prefs.showAppLabels,
+                    showHomeApps: prefs.showHomeApps,
                 })
             );
         }
@@ -418,11 +418,11 @@ export function AppState({ children }: { children: ReactNode }) {
             if (next.wallpaperPresentations !== undefined) {
                 updates.wallpaperPresentations = next.wallpaperPresentations;
             }
-            if (next.webAppHomeLimit !== undefined) {
-                updates.webAppHomeLimit = next.webAppHomeLimit;
-            }
             if (next.showAppLabels !== undefined) {
                 updates.showAppLabels = next.showAppLabels;
+            }
+            if (next.showHomeApps !== undefined) {
+                updates.showHomeApps = next.showHomeApps;
             }
             if (Object.keys(updates).length === 0) return Promise.resolve();
             const owner = user.id;

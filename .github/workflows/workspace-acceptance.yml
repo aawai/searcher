@@ -31,7 +31,7 @@ jobs:
             - name: Verify modified UI and E2E source formatting
               run: >-
                   deno fmt --check
-                  web/src/components/searcher/WebAppLauncher.tsx
+                  web/src/features/app-library/
                   web/src/components/searcher/launcher.css
                   web/e2e/apps-density.test.ts
                   web/e2e/home-launcher-density.test.ts

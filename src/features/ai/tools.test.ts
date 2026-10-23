@@ -24,8 +24,8 @@ function createInMemoryStore(): DatabaseStore {
         `CREATE TABLE webapps (
             id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             group_id TEXT, name TEXT NOT NULL, url TEXT NOT NULL, icon_asset_id TEXT,
-            icon_source TEXT DEFAULT 'manifest', is_pinned INTEGER NOT NULL DEFAULT 0,
-            sort_order INTEGER NOT NULL DEFAULT 0, pinned_sort_order INTEGER,
+            icon_source TEXT DEFAULT 'manifest',
+            sort_order INTEGER NOT NULL DEFAULT 0,
             open_mode TEXT NOT NULL DEFAULT 'same_tab', deleted_at INTEGER,
             created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
         );`,

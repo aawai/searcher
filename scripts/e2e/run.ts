@@ -20,9 +20,10 @@ if (
     );
 }
 const suite = name as Suite;
-// Only Workspace defaults to parallel; other suites stay serial unless requested.
+// Only Workspace defaults to parallel; full retains the conservative serial mode.
 const parallel = mode === "--parallel" ||
     (mode === undefined && suite === "workspace");
+const failFast = suite === "full";
 const jobs = Deno.env.get("DENO_JOBS") ?? "2";
 const reportDir = Deno.env.get("E2E_REPORT_DIR") ??
     `artifacts/e2e/${suite}-${Date.now()}-${crypto.randomUUID()}`;
@@ -36,6 +37,7 @@ const started = performance.now();
 const timings: Record<string, number | string | boolean | string[]> = {
     suite,
     parallel,
+    failFast,
     jobs: parallel ? jobs : "serial",
     files: suiteFiles(suite),
 };
@@ -81,6 +83,7 @@ try {
             "test",
             "-A",
             ...(parallel ? ["--parallel"] : []),
+            ...(failFast ? ["--fail-fast"] : []),
             `--junit-path=${junit}`,
             ...suiteFiles(suite),
         ]);

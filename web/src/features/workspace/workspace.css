@@ -75,12 +75,6 @@
 .workspace-body:has(> [data-workspace-editor]) {
     overflow: hidden;
 }
-.workspace-body[data-layout="app-form"] {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 0;
-}
 .workspace-root {
     display: flex;
     flex-direction: column;
@@ -135,16 +129,6 @@
 /* Root views hide the title; keep the actions at the inline end. */
 .workspace-switcher {
     margin-inline-end: auto;
-}
-.workspace-body[data-layout="app-form"] .app-dialog-body {
-    padding: var(--space-4);
-}
-.workspace-root[data-domain="apps"] .workspace-section-header {
-    flex-wrap: nowrap;
-}
-.workspace-root[data-domain="apps"] .workspace-section-header > .button,
-.workspace-root[data-domain="apps"] .workspace-section-header > .action-group {
-    flex-shrink: 0;
 }
 
 /* Workspace Search */

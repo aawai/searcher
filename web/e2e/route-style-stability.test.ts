@@ -14,8 +14,6 @@ async function spaNavigate(page: Page, path: string) {
         globalThis.history.pushState({}, "", targetPath);
         globalThis.dispatchEvent(new PopStateEvent("popstate"));
     }, path);
-    // Allow React Router to render the new route
-    await page.waitForTimeout(400);
     const timeAfter = await page.evaluate(() => performance.timeOrigin);
     assertEquals(
         timeAfter,
@@ -511,14 +509,15 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
 
             // 5. Drawer can open and close
             await drawerBtn.click();
-            await page.waitForTimeout(300);
-            const drawerOpened = await page.locator(".ask-history-sheet")
-                .isVisible();
-            assertEquals(drawerOpened, true, "Drawer must open upon click");
+            await drawerContent.waitFor({ state: "visible" });
+            await page.waitForFunction(() =>
+                document.querySelector(".ask-history-sheet")
+                    ?.contains(document.activeElement)
+            );
 
             // Close drawer
             await page.keyboard.press("Escape");
-            await page.waitForTimeout(300);
+            await drawerContent.waitFor({ state: "hidden" });
 
             // 6. Composer width and send button touch target
             const composerSurface = page.locator(".ask-composer-surface")

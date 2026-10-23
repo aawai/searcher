@@ -18,9 +18,14 @@ Deno.test("apps ignores obsolete fetches and retains failed saves", async () => 
         await page.locator("#auth-password").fill("Apps-race-password-141!");
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
-        await page.locator('[data-workspace="apps"]').click();
-        await page.getByRole("button", { name: "添加应用", exact: true })
-            .click();
+        const addCell = page.locator('[data-library-cell="add"]');
+        const dialog = page.locator(".app-form-dialog");
+        const submit = dialog.getByRole("button", {
+            name: "添加应用",
+            exact: true,
+        });
+        await addCell.click();
+        await dialog.waitFor();
         const release = Promise.withResolvers<void>();
         let fetches = 0;
         await page.route("**/api/webapp-icons/fetch", async (route) => {
@@ -78,11 +83,13 @@ Deno.test("apps ignores obsolete fetches and retains failed saves", async () => 
         await page.locator("#app-url-input").fill("https://abandoned.invalid/");
         await page.locator("#app-name-input").focus();
         await oldRequest;
-        await page.getByRole("button", { name: "取消", exact: true }).click();
+        await dialog.getByRole("button", { name: "取消", exact: true })
+            .click();
         await page.getByRole("button", { name: "放弃修改", exact: true })
             .click();
-        await page.getByRole("button", { name: "添加应用", exact: true })
-            .click();
+        await dialog.waitFor({ state: "detached" });
+        await addCell.click();
+        await dialog.waitFor();
         await page.locator("#app-name-input").fill("新会话");
         late.resolve();
         await lateDone.promise;
@@ -103,8 +110,7 @@ Deno.test("apps ignores obsolete fetches and retains failed saves", async () => 
                     json: { status: false, message: "保存服务暂时不可用" },
                 }),
         );
-        await page.getByRole("button", { name: "添加应用", exact: true })
-            .click();
+        await submit.click();
         await page.getByText(/保存失败/).waitFor();
         await page.setViewportSize({ width: 1440, height: 900 });
         assertEquals(
@@ -148,7 +154,8 @@ Deno.test("apps ignores obsolete fetches and retains failed saves", async () => 
         await page.getByRole("button", { name: "保存中…", exact: true })
             .waitFor();
         saveRelease.resolve();
-        await page.locator(".apps-workspace-root").waitFor();
+        await dialog.waitFor({ state: "detached" });
+        await page.locator('.launcher-app:has-text("intranet")').waitFor();
         assertEquals(saves, 1);
         assertEquals(intranetFetches, 0);
         const saved = await page.request.get(app.origin + "/api/webapps");

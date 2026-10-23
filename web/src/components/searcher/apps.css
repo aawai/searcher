@@ -456,3 +456,17 @@
         min-height: var(--control-touch-target);
     }
 }
+
+/* Home add / edit dialog: a title, then the form's own scrolling body and footer. */
+.dialog-panel.app-form-dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(calc(100vw - var(--space-6)), 560px);
+    height: min(720px, calc(100dvh - var(--space-7)));
+    padding: 0;
+    overflow: hidden;
+}
+.app-form-dialog-title {
+    flex: none;
+    padding: var(--space-4) var(--space-5) var(--space-2);
+}

@@ -72,9 +72,9 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
         .waitFor({ state: "visible" });
 
     for (let index = 0; index < 60; index++) {
-        await request("/api/webapps", "POST", {
-            name: `Inset App ${String(index).padStart(2, "0")}`,
-            url: `https://example.org/chrome-inset-${index}`,
+        await request("/api/documents", "POST", {
+            title: `Inset Note ${String(index).padStart(2, "0")}`,
+            body: `Chrome inset note ${index}`,
         });
     }
     await page.reload();
@@ -117,7 +117,7 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await userMenu.waitFor({ state: "visible" });
     await banner.waitFor({ state: "visible" });
     const trigger = page.locator(
-        '.zen-edge-trigger button[data-workspace="apps"]',
+        '.zen-edge-trigger button[data-workspace="documents"]',
     );
     await trigger.waitFor({ state: "visible" });
 
@@ -136,7 +136,11 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await page.keyboard.press("Tab");
     const search = panel.locator("input[data-workspace-search]");
     assertEquals(
-        await search.evaluate((element) => element === document.activeElement),
+        await panel.evaluate((element) =>
+            element.querySelector(".workspace-body")?.contains(
+                document.activeElement,
+            ) ?? false
+        ),
         true,
         "opening the panel should place keyboard focus inside its content",
     );
@@ -218,7 +222,7 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     }));
     assert(
         bodyMetrics.scrollHeight > bodyMetrics.clientHeight + 1,
-        `Apps panel should have internal overflow: ${
+        `Documents panel should have internal overflow: ${
             JSON.stringify(bodyMetrics)
         }`,
     );
@@ -290,6 +294,6 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await page.keyboard.press("Enter");
     await panel.waitFor({ state: "hidden" });
     await page.waitForFunction(() =>
-        document.activeElement?.getAttribute("data-workspace") === "apps"
+        document.activeElement?.getAttribute("data-workspace") === "documents"
     );
 });

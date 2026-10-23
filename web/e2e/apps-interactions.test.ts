@@ -1,32 +1,34 @@
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { Buffer } from "node:buffer";
 import { chromium, type Page } from "playwright";
 import { startProductionApp } from "./helpers/production-app.ts";
 
+/** The dialog footer stays inside the dialog and the viewport at every size. */
 async function footerVisible(page: Page) {
     const geometry = await page.locator(".app-dialog-footer").evaluate(
         (footer) => {
             const r = footer.getBoundingClientRect();
-            const panel = footer.closest(".workspace-panel")!
+            const dialog = footer.closest(".app-form-dialog")!
                 .getBoundingClientRect();
-            const body = footer.closest(".workspace-body")!;
             return {
                 top: r.top,
                 bottom: r.bottom,
-                panelBottom: panel.bottom,
-                bodyScroll: body.scrollTop,
                 height: r.height,
+                dialogTop: dialog.top,
+                dialogBottom: dialog.bottom,
+                viewportHeight: innerHeight,
             };
         },
     );
     assert(
-        geometry.height > 0 && geometry.top >= 0 &&
-            geometry.bottom <= geometry.panelBottom + 1,
+        geometry.height > 0 && geometry.top >= geometry.dialogTop &&
+            geometry.bottom <= geometry.dialogBottom + 1 &&
+            geometry.bottom <= geometry.viewportHeight + 1,
+        JSON.stringify(geometry),
     );
-    assertEquals(geometry.bodyScroll, 0);
 }
 
-Deno.test("apps session, modal undo and visible management contracts #141", async (t) => {
+Deno.test("app form dialog session and icon contracts on home #141 #244", async (t) => {
     const app = await startProductionApp();
     const browser = await chromium.launch({
         handleSIGTERM: false,
@@ -46,149 +48,49 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
         );
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
-        await page.locator('[data-workspace="apps"]').click();
-        const root = page.locator(".apps-workspace-root");
-        const search = page.getByRole("searchbox", {
-            name: "搜索应用",
-            exact: true,
-        });
         const folderName =
-            "长文件夹名称用于检查标题换行与计数只展示一次以及更多操作入口始终可达";
+            "长文件夹名称用于检查标题换行与计数只展示一次以及添加入口始终可达";
+        const appName = "同名应用——长名称展示及编辑会话验证";
+        const created = await page.request.post(
+            app.origin + "/api/webapp-groups",
+            {
+                headers: { Origin: app.origin },
+                data: { name: folderName, sortOrder: 0 },
+            },
+        );
+        assertEquals(created.status(), 200);
+        await page.reload();
+        const dialog = page.locator(".app-form-dialog");
+        const popup = page.locator(".launcher-popup");
 
         if (
             !await t.step(
-                "visible folder creation, arranging exit and layered Escape",
+                "folder add opens the form in the folder; draft fields, icon input and real upload survive resizes",
                 async () => {
                     await page.getByRole("button", {
-                        name: "应用更多操作",
-                        exact: true,
-                    }).click();
-                    await page.getByRole("menuitem", {
-                        name: "新建文件夹",
-                        exact: true,
-                    }).click();
-                    await page.locator("#folder-name-input").fill(folderName);
-                    await page.getByRole("button", {
-                        name: "创建",
-                        exact: true,
-                    }).click();
-                    await root.getByRole("button", {
                         name: new RegExp(`打开文件夹 ${folderName}`),
                     }).click();
-                    assertEquals(
-                        await root.getByRole("heading", {
-                            name: folderName,
-                            exact: true,
-                        }).count(),
-                        1,
-                    );
-                    await search.fill("IME 草稿");
-                    await search.dispatchEvent("keydown", {
-                        key: "Escape",
-                        isComposing: true,
-                        bubbles: true,
-                    });
-                    assertEquals(await search.inputValue(), "IME 草稿");
-                    await search.fill(" ");
-                    await search.press("Escape");
-                    assertEquals(await search.inputValue(), "");
-                    assertEquals(
-                        await root.getByRole("heading", {
-                            name: folderName,
-                            exact: true,
-                        }).count(),
-                        1,
-                    );
-                    await page.getByRole("button", {
-                        name: "应用更多操作",
-                        exact: true,
-                    }).click();
-                    await page.getByRole("menu", {
-                        name: "应用更多操作",
+                    await popup.getByRole("heading", {
+                        name: folderName,
                         exact: true,
                     }).waitFor();
-                    await page.keyboard.press("Escape");
-                    await page.locator('[data-slot="dropdown-menu-content"]')
-                        .waitFor({ state: "detached" });
-                    assertEquals(
-                        await root.getByRole("heading", {
-                            name: folderName,
-                            exact: true,
-                        }).count(),
-                        1,
-                    );
-                    await search.press("Escape");
-                    await root.getByRole("heading", {
-                        name: "全部应用",
-                        exact: true,
-                    }).waitFor();
-                    await page.waitForFunction(
-                        (name) =>
-                            document.activeElement?.getAttribute("aria-label")
-                                ?.includes(name),
-                        folderName,
-                    );
-                    assertStringIncludes(
-                        await page.evaluate(() =>
-                            document.activeElement?.getAttribute(
-                                "aria-label",
-                            ) ?? ""
-                        ),
-                        folderName,
-                    );
-                    await page.getByRole("button", {
-                        name: "应用更多操作",
+                    await popup.getByRole("button", {
+                        name: `添加应用到 ${folderName}`,
                         exact: true,
                     }).click();
-                    await page.getByRole("menuitem", {
-                        name: "整理布局",
-                        exact: true,
-                    }).click();
-                    assertEquals(await search.isDisabled(), true);
-                    await page.getByRole("button", {
-                        name: "完成整理",
-                        exact: true,
-                    }).click();
-                    assertEquals(await search.isDisabled(), false);
-                    await page.setViewportSize({ width: 390, height: 844 });
-                    await page.locator(".workspace-panel--mobile").waitFor();
-                    await page.getByRole("button", {
-                        name: "应用更多操作",
-                        exact: true,
-                    }).click();
-                    await page.getByRole("menu").waitFor();
-                    await page.keyboard.press("Escape");
-                    await page.getByRole("menu").waitFor({ state: "detached" });
-                    assertEquals(
-                        await page.locator(".workspace-panel--mobile").count(),
-                        1,
-                    );
-                    await page.setViewportSize({ width: 1440, height: 900 });
-                },
-            )
-        ) return;
-
-        if (
-            !await t.step(
-                "all draft fields, icon input and real upload survive host replacement",
-                async () => {
-                    await root.getByRole("button", {
-                        name: new RegExp(`打开文件夹 ${folderName}`),
-                    }).click();
-                    await page.getByRole("button", {
+                    await dialog.getByRole("heading", {
                         name: "添加应用",
                         exact: true,
-                    }).click();
+                    }).waitFor();
+                    assertEquals(
+                        await page.locator("#app-group-select option:checked")
+                            .textContent(),
+                        folderName,
+                    );
                     await page.locator("#app-url-input").fill(
                         "https://draft.invalid/",
                     );
-                    await page.locator("#app-name-input").fill(
-                        "同名应用——长名称展示及编辑会话验证",
-                    );
-                    await page.getByRole("switch", {
-                        name: "固定到首页",
-                        exact: true,
-                    }).click();
+                    await page.locator("#app-name-input").fill(appName);
                     await page.getByRole("tab", {
                         name: "新标签页",
                         exact: true,
@@ -232,19 +134,12 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                         );
                         assertEquals(
                             await page.locator("#app-name-input").inputValue(),
-                            "同名应用——长名称展示及编辑会话验证",
+                            appName,
                         );
                         assertEquals(
                             await page.locator("#app-group-select")
                                 .inputValue(),
                             group,
-                        );
-                        assertEquals(
-                            await page.getByRole("switch", {
-                                name: "固定到首页",
-                                exact: true,
-                            }).getAttribute("aria-checked"),
-                            "true",
                         );
                         assertEquals(
                             await page.getByRole("tab", {
@@ -323,7 +218,7 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                         request.url().endsWith("/api/webapps") &&
                         request.method() === "POST"
                     );
-                    await page.getByRole("button", {
+                    await dialog.getByRole("button", {
                         name: "添加应用",
                         exact: true,
                     }).click();
@@ -334,269 +229,117 @@ Deno.test("apps session, modal undo and visible management contracts #141", asyn
                         exact: true,
                     }).waitFor();
                     save.resolve();
-                    await root.waitFor();
+                    await dialog.waitFor({ state: "detached" });
                     assertEquals(saves, 1);
                     await page.unroute("**/api/webapps");
-                    await root.getByRole("heading", {
+                    // Saving returns to the folder popup that opened the form.
+                    await popup.getByRole("heading", {
                         name: folderName,
                         exact: true,
                     }).waitFor();
-                },
-            )
-        ) return;
-
-        if (
-            !await t.step(
-                "cross-folder search context and icon shortcut versus normal edit",
-                async () => {
-                    await search.fill("同名应用");
-                    const row = root.locator(".apps-search-row");
-                    assertStringIncludes(
-                        await row.innerText(),
-                        "draft.invalid",
-                    );
-                    assertStringIncludes(await row.innerText(), folderName);
-                    await context.route(
-                        "https://draft.invalid/",
-                        (route) =>
-                            route.fulfill({
-                                contentType: "text/html",
-                                body: "<title>Opened application</title>",
-                            }),
-                    );
-                    const opened = context.waitForEvent("page");
-                    await row.getByRole("button", { name: /^打开 / }).click();
-                    const destination = await opened;
-                    await destination.waitForURL("https://draft.invalid/");
-                    assertEquals(destination.url(), "https://draft.invalid/");
-                    await destination.close();
-                    await context.unroute("https://draft.invalid/");
-                    await row.getByRole("button", { name: /的更多操作/ })
-                        .click();
-                    await page.getByRole("menuitem", {
-                        name: "更换图标",
-                        exact: true,
-                    }).click();
-                    await page.getByRole("button", {
-                        name: "收起图标设置",
+                    await popup.getByRole("button", {
+                        name: `打开 ${appName}`,
                         exact: true,
                     }).waitFor();
-                    await page.getByRole("button", {
-                        name: "取消",
-                        exact: true,
-                    }).click();
-                    await row.getByRole("button", { name: /的更多操作/ })
-                        .click();
-                    await page.getByRole("menuitem", {
-                        name: "编辑",
-                        exact: true,
-                    }).click();
-                    await page.getByRole("button", {
-                        name: "更换图标",
-                        exact: true,
-                    }).waitFor();
-                    await page.locator("#app-name-input").fill(
-                        "编辑中的未保存草稿",
-                    );
-                    await page.setViewportSize({ width: 390, height: 844 });
-                    const mobileName = page.locator(
-                        ".workspace-panel--mobile #app-name-input",
-                    );
-                    await mobileName.waitFor({ state: "visible" });
-                    assertEquals(
-                        await mobileName.inputValue(),
-                        "编辑中的未保存草稿",
-                    );
-                    await mobileName.press("Escape");
-                    await page.getByRole("alertdialog").waitFor();
-                    // The dialog can mount before Base UI hands it focus; wait so Escape targets it.
-                    await page.waitForFunction(() =>
-                        document.querySelector('[role="alertdialog"]')
-                            ?.contains(
-                                document.activeElement,
-                            ) === true
-                    );
-                    await page.keyboard.press("Escape");
-                    await page.getByRole("alertdialog").waitFor({
-                        state: "detached",
-                    });
-                    assertEquals(
-                        await page.locator("#app-name-input").inputValue(),
-                        "编辑中的未保存草稿",
-                    );
-                    await page.getByRole("button", {
-                        name: "取消",
-                        exact: true,
-                    }).click();
-                    await page.getByRole("button", {
-                        name: "放弃修改",
-                        exact: true,
-                    }).click();
-                    await row.waitFor();
                 },
             )
         ) return;
 
         await t.step(
-            "mobile modal undo is a visible, hittable normal layout row",
+            "icon shortcut versus normal edit, and dirty-edit Escape layering",
             async () => {
-                for (const height of [640, 844]) {
-                    await page.setViewportSize({ width: 390, height });
-                    await root.locator(".apps-search-row").getByRole("button", {
-                        name: /的更多操作/,
-                    }).click();
-                    await page.getByRole("menuitem", {
-                        name: "移至回收站",
-                        exact: true,
-                    }).click();
-                    const undo = page.locator(
-                        ".workspace-panel--mobile .undo-toast",
-                    ).getByRole("button", { name: "撤销", exact: true });
-                    await undo.waitFor({ state: "visible" });
-                    assertEquals(await page.locator(".undo-toast").count(), 1);
-                    assertEquals(
-                        await undo.evaluate((button) => {
-                            const r = button.getBoundingClientRect();
-                            return button.contains(
-                                document.elementFromPoint(
-                                    r.x + r.width / 2,
-                                    r.y + r.height / 2,
-                                ),
-                            );
+                const tile = popup.locator(".launcher-app", {
+                    hasText: appName,
+                });
+                await context.route(
+                    "https://draft.invalid/",
+                    (route) =>
+                        route.fulfill({
+                            contentType: "text/html",
+                            body: "<title>Opened application</title>",
                         }),
-                        true,
-                    );
-                    if (height === 640) await undo.click();
-                    else {
-                        await undo.focus();
-                        await undo.press("Space");
-                    }
-                    await root.locator(".apps-search-row").waitFor();
-                }
-            },
-        );
-        await t.step(
-            "moving undo between modal and global hosts preserves its deadline",
-            async () => {
-                const clockStart = new Date("2030-01-01T00:00:00Z");
-                await page.clock.install({ time: clockStart });
-                await page.clock.pauseAt(
-                    new Date(clockStart.getTime() + 1000),
                 );
-                await root.locator(".apps-search-row").getByRole("button", {
-                    name: /的更多操作/,
+                const opened = context.waitForEvent("page");
+                await popup.getByRole("button", {
+                    name: `打开 ${appName}`,
+                    exact: true,
                 }).click();
-                await page.clock.runFor(300);
+                const destination = await opened;
+                await destination.waitForURL("https://draft.invalid/");
+                assertEquals(destination.url(), "https://draft.invalid/");
+                await destination.close();
+                await context.unroute("https://draft.invalid/");
+
+                await tile.click({ button: "right" });
                 await page.getByRole("menuitem", {
-                    name: "移至回收站",
+                    name: "更换图标",
                     exact: true,
                 }).click();
-                const toast = page.locator(".undo-toast");
-                await toast.waitFor();
-                const liveRegion = await toast.elementHandle();
-                // The menu action can leave the pointer over the new toast.
-                // Consume the first three seconds without pausing its deadline.
-                await page.mouse.move(1, 1);
-                await page.clock.fastForward(3000);
                 await page.getByRole("button", {
-                    name: "收起工作区",
+                    name: "收起图标设置",
+                    exact: true,
+                }).waitFor();
+                // A clean form closes without asking.
+                await dialog.getByRole("button", {
+                    name: "取消",
                     exact: true,
                 }).click();
-                await page.clock.runFor(300);
-                await page.locator(".workspace-panel--mobile").waitFor({
+                await dialog.waitFor({ state: "detached" });
+                assertEquals(await page.getByRole("alertdialog").count(), 0);
+
+                await tile.click({ button: "right" });
+                await page.getByRole("menuitem", {
+                    name: "编辑",
+                    exact: true,
+                }).click();
+                await dialog.getByRole("heading", {
+                    name: "编辑应用",
+                    exact: true,
+                }).waitFor();
+                await page.getByRole("button", {
+                    name: "更换图标",
+                    exact: true,
+                }).waitFor();
+                await page.locator("#app-name-input").fill(
+                    "编辑中的未保存草稿",
+                );
+                await page.setViewportSize({ width: 390, height: 844 });
+                await page.locator("#app-name-input").waitFor({
+                    state: "visible",
+                });
+                assertEquals(
+                    await page.locator("#app-name-input").inputValue(),
+                    "编辑中的未保存草稿",
+                );
+                await page.locator("#app-name-input").press("Escape");
+                await page.getByRole("alertdialog").waitFor();
+                // The dialog can mount before Base UI hands it focus; wait so Escape targets it.
+                await page.waitForFunction(() =>
+                    document.querySelector('[role="alertdialog"]')
+                        ?.contains(document.activeElement) === true
+                );
+                await page.keyboard.press("Escape");
+                await page.getByRole("alertdialog").waitFor({
                     state: "detached",
                 });
                 assertEquals(
-                    await toast.evaluate(
-                        (element, original) => element === original,
-                        liveRegion,
-                    ),
-                    true,
+                    await page.locator("#app-name-input").inputValue(),
+                    "编辑中的未保存草稿",
                 );
-                await page.locator('#root [data-workspace="apps"]:visible')
-                    .click();
-                await page.clock.runFor(300);
-                await page.locator(".workspace-panel--mobile .undo-toast")
-                    .waitFor();
+                await dialog.getByRole("button", {
+                    name: "取消",
+                    exact: true,
+                }).click();
+                await page.getByRole("button", {
+                    name: "放弃修改",
+                    exact: true,
+                }).click();
+                await dialog.waitFor({ state: "detached" });
+                await tile.waitFor();
                 assertEquals(
-                    await toast.evaluate(
-                        (element, original) => element === original,
-                        liveRegion,
-                    ),
-                    true,
+                    await tile.locator(".webapp-name").textContent(),
+                    appName,
                 );
-                // Rest the pointer off the toast: hovering pauses the undo deadline.
-                await page.mouse.move(1, 1);
-                await page.clock.runFor(6_700);
-                await toast.waitFor({ state: "detached" });
-                await liveRegion?.dispose();
-            },
-        );
-        await t.step(
-            "restore failure remains inside the active modal and never restores falsely",
-            async () => {
-                await page.clock.resume();
-                const created = await page.request.post(
-                    app.origin + "/api/webapps",
-                    {
-                        headers: { Origin: app.origin },
-                        data: {
-                            name: "恢复错误检查",
-                            url: "https://restore-error.invalid/",
-                        },
-                    },
-                );
-                assertEquals(created.status(), 200);
-                await page.reload();
-                await page.locator('#root [data-workspace="apps"]:visible')
-                    .click();
-                await search.fill("恢复错误检查");
-                await root.locator(".apps-search-row").getByRole("button", {
-                    name: /的更多操作/,
-                }).click();
-                await page.getByRole("menuitem", {
-                    name: "移至回收站",
-                    exact: true,
-                }).click();
-                let restoreAttempts = 0;
-                await page.route(
-                    "**/api/webapps/*/restore",
-                    (route) => {
-                        restoreAttempts++;
-                        if (restoreAttempts === 1) {
-                            return route.fulfill({
-                                status: 503,
-                                json: {
-                                    success: false,
-                                    error: "恢复服务暂时不可用",
-                                },
-                            });
-                        }
-                        return route.continue();
-                    },
-                );
-                const toast = page.locator(
-                    ".workspace-panel--mobile .undo-toast",
-                );
-                const undo = toast.getByRole("button", {
-                    name: "撤销",
-                    exact: true,
-                });
-                await undo.focus();
-                await undo.press("Space");
-                await toast.getByText(/恢复.*失败/).waitFor();
-                assertEquals(await root.locator(".apps-search-row").count(), 0);
-                assertEquals(await page.locator(".undo-toast").count(), 1);
-                assertEquals(restoreAttempts, 1);
-                await toast.getByRole("button", {
-                    name: "重试撤销",
-                    exact: true,
-                }).click();
-                await root.locator(".apps-search-row").waitFor({
-                    state: "visible",
-                });
-                await toast.waitFor({ state: "detached" });
-                assertEquals(restoreAttempts, 2);
             },
         );
     } finally {

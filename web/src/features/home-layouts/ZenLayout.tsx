@@ -1,13 +1,26 @@
-import { AppWindow, NotebookPen } from "lucide-react";
-import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
+import { NotebookPen } from "lucide-react";
+import {
+    lazy,
+    Suspense,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import type { SafeRect } from "./home-viewport.ts";
 import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
-import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
-import { Button } from "../../components/ui/button.tsx";
+import {
+    HomeAppLibrary,
+    type HomeAppLibraryHandle,
+} from "../app-library/HomeAppLibrary.tsx";
+import { exclusionFromRects } from "../../components/searcher/defaultNotePlacement.ts";
 import { usePresence } from "../../components/ui/presence.ts";
 import { useZenPaperSelection } from "./useZenPaperSelection.ts";
 import { GUEST_AI_UNAVAILABLE_MESSAGE } from "../../components/searcher/GuestAiUnavailable.tsx";
+
+const APPS_QUICK_ENTRIES = [{ id: "apps", label: "应用" }];
+const NO_QUICK_ENTRIES: typeof APPS_QUICK_ENTRIES = [];
 
 const HomePapers = lazy(() =>
     import("./HomePapers.tsx").then((module) => ({
@@ -39,7 +52,6 @@ export function ZenLayout(
         onCheckConnections,
         search,
         apps,
-        pinned,
         groups,
         appsStatus,
         appsError,
@@ -48,11 +60,9 @@ export function ZenLayout(
         isManagingApps,
         setIsManagingApps,
         openApp,
-        openEditModal,
-        reorderPinned,
-        togglePinApp,
+        openEditApp,
+        openCreateApp,
         softDeleteApp,
-        moveAppGroup,
         openPaper,
         deletePaper,
         updatePaper,
@@ -61,8 +71,10 @@ export function ZenLayout(
         workspaceOpen,
         panelDocked,
         showAppLabels,
+        showHomeApps,
     } = props;
     const heroRef = useRef<HTMLElement>(null);
+    const [gridElement, setGridElement] = useState<HTMLElement | null>(null);
     const [exclusionRect, setExclusionRect] = useState<SafeRect | null>(null);
     const mobile = props.viewportWidth < 768;
     // The Dock hides while a workspace is open: it fades out and stays inert
@@ -80,27 +92,33 @@ export function ZenLayout(
         const hero = heroRef.current;
         const search = hero?.querySelector(".search-form-wrap");
         if (!hero || !search) return;
+        // Default notes avoid the search box and, while the home grid is on,
+        // the measured app region (large folders and 更多 included).
+        const obstacles = [
+            search,
+            ...(showHomeApps && gridElement ? [gridElement] : []),
+        ];
         let active = true;
         let stop: (() => void) | undefined;
         const measure = () => {
             if (!active) return;
-            const { x, y, width, height } = search.getBoundingClientRect();
-            // Keep the normal-flow anchor reserved while scrolling. Releasing
-            // it would remove overflow papers, shrink the page, and reset scroll.
-            const top = Math.min(y, y + scrollY);
-            const reservedHeight = height + Math.abs(scrollY);
+            const next = exclusionFromRects(
+                obstacles.map((element) => element.getBoundingClientRect()),
+                scrollY,
+            );
+            if (!next) return;
             setExclusionRect((previous) =>
-                previous?.x === x && previous.y === top &&
-                    previous.width === width &&
-                    previous.height === reservedHeight
+                previous?.x === next.x && previous.y === next.y &&
+                    previous.width === next.width &&
+                    previous.height === next.height
                     ? previous
-                    : { x, y: top, width, height: reservedHeight }
+                    : next
             );
         };
         const start = () => {
             const observer = new ResizeObserver(measure);
             observer.observe(hero);
-            observer.observe(search);
+            for (const element of obstacles) observer.observe(element);
             measure();
             void document.fonts.ready.then(measure);
             addEventListener("scroll", measure, true);
@@ -124,13 +142,67 @@ export function ZenLayout(
             active = false;
             stop?.();
         };
-    }, [props.availableRect, mode, mobile, panelDocked]);
+    }, [
+        props.availableRect,
+        mode,
+        mobile,
+        panelDocked,
+        showHomeApps,
+        gridElement,
+    ]);
 
-    const resetPinnedLayout = () =>
-        void reorderPinned(
-            [...pinned].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-                .map((app) => app.id),
-        );
+    const libraryRef = useRef<HomeAppLibraryHandle>(null);
+    const webFolders = useMemo(
+        () => groups.map((group) => ({ id: group.id, name: group.name })),
+        [groups],
+    );
+    // With the home grid off, the focused empty search box offers 应用, which
+    // opens the same popup as 更多 so apps stay manageable.
+    const quickEntries = useMemo(
+        () => user && !showHomeApps ? APPS_QUICK_ENTRIES : NO_QUICK_ENTRIES,
+        [user, showHomeApps],
+    );
+    const libraryView = user && (
+        <HomeAppLibrary
+            ref={libraryRef}
+            apps={apps}
+            groups={groups}
+            status={appsStatus}
+            error={appsError}
+            onRetry={onReloadApps}
+            showGrid={showHomeApps}
+            showAppLabels={showAppLabels}
+            managing={isManagingApps}
+            onManagingChange={setIsManagingApps}
+            library={props.library}
+            onOpenApp={openApp}
+            onEditApp={openEditApp}
+            onCreateApp={openCreateApp}
+            onDeleteApp={(app) => void softDeleteApp(app)}
+            onGridElement={setGridElement}
+        />
+    );
+    const papersBlock = !mobile && papers.length > 0 && (
+        <Suspense fallback={null}>
+            <HomePapers
+                papers={papers}
+                exclusionRect={exclusionRect}
+                availableRect={props.availableRect}
+                viewportWidth={props.viewportWidth}
+                onOpen={openPaper}
+                onUpdateLayout={(paper, layout) =>
+                    void updatePaperLayout(paper, layout)}
+                onToggleHomeFixed={(paper) =>
+                    void updatePaper(paper, {
+                        isHomeFixed: false,
+                    })}
+                onChangeColor={(paper, color) =>
+                    void updatePaper(paper, { color })}
+                onChangeBody={(paper, body) => updatePaper(paper, { body })}
+                onDelete={(paper) => void deletePaper(paper)}
+            />
+        </Suspense>
+    );
 
     return (
         <>
@@ -152,111 +224,32 @@ export function ZenLayout(
                     onCheck={onCheckConnections}
                     isChecking={isCheckingConnections}
                     webApps={apps}
+                    webFolders={webFolders}
                     onOpenApp={openApp}
+                    onOpenFolder={(id) => libraryRef.current?.openFolder(id)}
+                    quickEntries={quickEntries}
+                    onQuickEntry={() => libraryRef.current?.openAll()}
                 />
             </section>
 
-            {user && (
-                appsStatus === "loading" ||
-                appsStatus === "error" ||
-                (appsStatus === "offline" && pinned.length > 0) ||
-                pinned.length > 0 ||
-                (!mobile && papers.length > 0)
-            ) && (
-                <section className="pinned-area" aria-label="固定的个人内容">
-                    {appsStatus === "loading" && (
-                        <p role="status" className="launcher-empty">
-                            正在加载常用应用…
-                        </p>
-                    )}
-                    {appsStatus === "error" && (
-                        <div role="alert" className="launcher-empty">
-                            应用加载失败：{appsError}{" "}
-                            <Button
-                                variant="outline"
-                                onClick={onReloadApps}
-                            >
-                                重试
-                            </Button>
-                        </div>
-                    )}
-                    {appsStatus === "offline" && (
-                        <p role="status" className="launcher-notice">
-                            离线中，显示上次保存的应用
-                        </p>
-                    )}
-                    {(appsStatus === "ready" || appsStatus === "offline") &&
-                        pinned.length > 0 && (
-                        <>
-                            {isManagingApps && (
-                                <div
-                                    className="home-managing-bar"
-                                    role="status"
-                                    aria-live="polite"
-                                >
-                                    <span className="home-managing-text">
-                                        整理中
-                                    </span>
-                                    {pinned.length > 1 && (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={resetPinnedLayout}
-                                        >
-                                            重置
-                                        </Button>
-                                    )}
-                                    <Button
-                                        size="sm"
-                                        variant="default"
-                                        onClick={() => setIsManagingApps(false)}
-                                    >
-                                        完成
-                                    </Button>
-                                </div>
-                            )}
-                            <WebAppLauncher
-                                apps={pinned}
-                                groups={groups}
-                                showFolders={false}
-                                showAppLabels={showAppLabels}
-                                managing={isManagingApps}
-                                onToggleManaging={() =>
-                                    setIsManagingApps((value) => !value)}
-                                onResetLayout={resetPinnedLayout}
-                                onOpen={openApp}
-                                onEdit={openEditModal}
-                                onMove={(app, groupId) =>
-                                    void moveAppGroup(app, groupId)}
-                                onPin={(app) => void togglePinApp(app)}
-                                onDelete={(app) => void softDeleteApp(app)}
-                                onReorder={(ids) => void reorderPinned(ids)}
-                            />
-                        </>
-                    )}
-                    {!mobile && papers.length > 0 && (
-                        <Suspense fallback={null}>
-                            <HomePapers
-                                papers={papers}
-                                exclusionRect={exclusionRect}
-                                availableRect={props.availableRect}
-                                viewportWidth={props.viewportWidth}
-                                onOpen={openPaper}
-                                onUpdateLayout={(paper, layout) =>
-                                    void updatePaperLayout(paper, layout)}
-                                onToggleHomeFixed={(paper) =>
-                                    void updatePaper(paper, {
-                                        isHomeFixed: false,
-                                    })}
-                                onChangeColor={(paper, color) =>
-                                    void updatePaper(paper, { color })}
-                                onChangeBody={(paper, body) =>
-                                    updatePaper(paper, { body })}
-                                onDelete={(paper) => void deletePaper(paper)}
-                            />
-                        </Suspense>
-                    )}
+            {user && showHomeApps && (
+                <section className="pinned-area" aria-label="应用库与固定内容">
+                    {libraryView}
+                    {papersBlock}
                 </section>
+            )}
+            {user && !showHomeApps && (
+                <>
+                    {libraryView}
+                    {papersBlock && (
+                        <section
+                            className="pinned-area"
+                            aria-label="固定的个人内容"
+                        >
+                            {papersBlock}
+                        </section>
+                    )}
+                </>
             )}
 
             {user && !props.papersLoading && (
@@ -278,15 +271,6 @@ export function ZenLayout(
                     data-ending-style={dock.ending || undefined}
                     inert={dock.ending || undefined}
                 >
-                    <button
-                        type="button"
-                        className="zen-edge-btn"
-                        data-workspace="apps"
-                        onClick={() => openWorkspace("apps")}
-                    >
-                        <AppWindow size="1em" className="icon-md" />
-                        <span>应用</span>
-                    </button>
                     <button
                         type="button"
                         className="zen-edge-btn"

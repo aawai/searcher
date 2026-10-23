@@ -4,20 +4,20 @@
 检查，使用真实 HTTP 服务、内存数据库和 Chromium。没有公共 no-build
 入口；不复用未知来源的构建。
 
-| Task                      | 覆盖范围                                                                                         |
-| ------------------------- | ------------------------------------------------------------------------------------------------ |
-| `test:workspace`          | 原 Workspace 完整集合，默认原生文件级并行；见 `suites.ts` 的 `workspace`                         |
-| `test:workspace:serial`   | 相同完整集合，明确不传 `--parallel`                                                              |
-| `test:workspace:parallel` | 相同完整集合，原生文件级 `--parallel`；用 `DENO_JOBS` 控制并发                                   |
-| `test:workspace:apps`     | Workspace 中 `apps-*`、`launcher`、`home-launcher-*`                                             |
-| `test:workspace:layout`   | Workspace 中 `workspace*`、`home-launcher-*`                                                     |
-| `test:routing`            | `navigation`、`auth`、`guest-ai-auth`：导航、认证规则/注册可用性、游客 AI 登录回跳               |
-| `test:documents`          | 统一笔记入口：`documents-*` 与 `document-*` 文件；完整列表见清单                                 |
-| `test:wallpaper`          | `wallpaper`                                                                                      |
-| `test:bundle`             | `bundle-loading`、`route-style-stability`                                                        |
-| `test:home-papers`        | `home-papers-*`：首页纸张的排序、持久化、颜色、直接勾选与移动端预览                              |
-| `test:e2e:full`           | 清单内所有集合与 supplemental 的去重并集；只 build 一次，每个文件只运行一次                      |
-| `check:e2e`               | 校验清单与磁盘 `.test.ts` 文件一一覆盖，遗漏、陈旧路径或集合内重复时报错；不 build、不启动浏览器 |
+| Task                      | 覆盖范围                                                                                            |
+| ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `test:workspace`          | 原 Workspace 完整集合，默认原生文件级并行；见 `suites.ts` 的 `workspace`                            |
+| `test:workspace:serial`   | 相同完整集合，明确不传 `--parallel`                                                                 |
+| `test:workspace:parallel` | 相同完整集合，原生文件级 `--parallel`；用 `DENO_JOBS` 控制并发                                      |
+| `test:workspace:apps`     | Workspace 中 `apps-*`、`launcher`、`home-launcher-*`                                                |
+| `test:workspace:layout`   | Workspace 中 `workspace*`、`home-launcher-*`                                                        |
+| `test:routing`            | `navigation`、`auth`、`guest-ai-auth`：导航、认证规则/注册可用性、游客 AI 登录回跳                  |
+| `test:documents`          | 统一笔记入口：`documents-*` 与 `document-*` 文件；完整列表见清单                                    |
+| `test:wallpaper`          | `wallpaper`                                                                                         |
+| `test:bundle`             | `bundle-loading`、`route-style-stability`                                                           |
+| `test:home-papers`        | `home-papers-*`：首页纸张的排序、持久化、颜色、直接勾选与移动端预览                                 |
+| `test:e2e:full`           | 清单内所有集合与 supplemental 的去重并集；默认串行、首次失败停止，只 build 一次，每个文件只运行一次 |
+| `check:e2e`               | 校验清单与磁盘 `.test.ts` 文件一一覆盖，遗漏、陈旧路径或集合内重复时报错；不 build、不启动浏览器    |
 
 `suites.ts` 是唯一权威清单。目前 supplemental 包含 UI
 ownership/feedback、设置/搜索/笔记/Ask 快捷键及 Markdown editor/pagination
@@ -32,12 +32,16 @@ Quick，不使用 `--filter`、`--changed` 或 `--related`
 DENO_JOBS=2 deno task test:workspace:parallel
 deno task test:workspace:serial
 deno task test:e2e:full
+DENO_JOBS=2 deno task test:e2e:full --parallel
 ```
 
 调度完全委托给 Deno `--parallel` / `DENO_JOBS`，不拆分单文件内有状态的测试或
 `t.step`，不共享 Browser、Context、数据库或 session。未设置 `DENO_JOBS`
-时采用保守值 2；CI 固定该值。默认 Workspace 与 CI 均为并行，显式 serial 会移除
-`--parallel`（而不是只把并发数设为 1）作为回退。禁止用全局 retry 隐藏失败。
+时采用保守值 2；CI 固定该值。默认 Workspace 与 Workspace CI 均为并行，显式 `--serial` 会移除
+`--parallel`（而不是只把并发数设为 1）作为回退。full 与其他集合保持串行默认，显式 `--parallel` 可用于并发诊断；并发独有失败须单独隔离，不把单文件复查通过写成完整并发门禁通过。
+单独设置 `DENO_JOBS` 不会启用并行；以报告中的 `parallel` 与 `jobs` 为准。禁止用全局 retry 隐藏失败。
+
+full 启用 Deno `--fail-fast`：首次失败后停止调度后续文件，不自动重跑；已启动的 worker 按 Deno 行为收尾。失败轮只代表已执行范围，未运行的文件不计为通过；修复后仍需完整绿色门禁。`timings.json` 记录 `failFast`、并发模式与计划文件清单，实际执行范围以 JUnit 为准。
 
 默认报告位于唯一的 `artifacts/e2e/<suite>-<timestamp>-<uuid>/`，包含原生
 `junit.xml` 与外层独立计量的 `timings.json`（build/test/wall
@@ -64,6 +68,8 @@ concurrency、其他 Workflow 及其覆盖范围保持不变。
 
 - 先看终端或 `stdout.log` 的首个失败与堆栈，再看 JUnit
   名称、状态和耗时；不启用自动重试。
+- 局部失败先依据已有构建定向运行相应文件，修复并确认后才运行完整门禁；不要为调试一处失败反复构建和跑 full。
+- 分页稳定性测试的 5s 初始采样与 2s / 9s 空闲观测是回归契约，不以缩短观测窗口换取加速；保留原 fixture 与有状态步骤的边界。
 - 对服务/编辑器做专项检查可直接使用
   `NODE_ENV=test deno test -A --trace-leaks --sanitize-resources --sanitize-ops <file>`；需先合法生产
   build。`--trace-leaks` 不能替代 Chromium
