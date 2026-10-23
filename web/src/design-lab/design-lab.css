@@ -206,3 +206,18 @@
         width: 100%;
     }
 }
+
+/* Fixed source viewport makes anchor comparisons independent of lab width. */
+.design-lab-composition-viewport {
+    width: 576px;
+    height: 360px;
+    overflow: hidden;
+}
+.design-lab-composition-viewport iframe {
+    width: 1440px;
+    height: 900px;
+    border: 0;
+    transform: scale(0.4);
+    transform-origin: top left;
+    pointer-events: none;
+}

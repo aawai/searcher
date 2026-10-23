@@ -9,6 +9,7 @@ export const suites = {
         "launcher",
         "apps-density",
         "home-launcher-density",
+        "home-composition",
         "apps-session",
         "apps-interactions",
         "apps-races",
@@ -75,7 +76,7 @@ export function suiteFiles(suite: Suite): string[] {
         );
     } else if (suite === "layout") {
         names = suites.workspace.filter((name) =>
-            /^(workspace|home-launcher-)/.test(name)
+            /^(workspace|home-launcher-|home-composition$)/.test(name)
         );
     } else {
         names = suites[suite];
