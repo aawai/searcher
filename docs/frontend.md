@@ -10,7 +10,8 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
 - 业务组合组件位于 `web/src/components/searcher/`；页面复用
   `PageShell`、`PageHeader` 和 Searcher semantic components。
 - `/design-lab`
-  用于检查正式组件、交互状态、主题与响应式预览，不替代真实业务页面验收；设置中的入口仅对管理员显示。
+  用于检查正式组件、交互状态、主题与响应式预览，不替代真实业务页面验收；设置中的入口仅对管理员显示。`/design-lab/*`
+  是 [实验通道](design/VISUAL_LANGUAGE.md#实验通道)：原型进入生产前须经对应契约子任务。
 - `/design-lab/markdown-editor` 是 M0A
   编辑技术验证入口，仅本地演示，不保存或替换便签。验证结论、bundle 口径和 #110
   输入约束见 [M0A 报告](editor/MARKDOWN_EDITOR_M0A.md)。
@@ -73,7 +74,7 @@ deno task check:ui --update
 ## 可访问性契约
 
 对比度、焦点环与触控目标的数值底线见
-[Visual Language](design/VISUAL_LANGUAGE.md#可访问性底线)。以下为代码必须保持的行为：
+[Visual Language](design/VISUAL_LANGUAGE.md#一底线)。以下为代码必须保持的行为：
 
 - Escape 由 `components/ui/escape-layer-stack.tsx`
   统一裁决，每次只消费最上层的菜单、弹窗或工作区；输入法合成中不分发；注销层不得穿透到
