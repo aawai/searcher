@@ -3,7 +3,12 @@
    ========================================================================== */
 
 :root {
-    --app-dialog-preview-icon-size: var(--space-8);
+    --app-dialog-preview-icon-size: 44px;
+}
+@media (min-width: 768px) {
+    :root {
+        --app-dialog-preview-icon-size: 48px;
+    }
 }
 
 /* App Form 内容：由 Workspace 承担标题与关闭导航 */
@@ -129,26 +134,8 @@
 }
 
 .app-dialog-preview-icon {
-    width: var(--app-dialog-preview-icon-size);
-    height: var(--app-dialog-preview-icon-size);
-    border-radius: var(--radius);
-    background: var(--surface);
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    overflow: hidden;
-}
-
-.app-dialog-preview-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.app-dialog-preview-fallback {
-    font-size: var(--font-title-size);
-    font-weight: var(--font-title-weight);
-    color: var(--foreground);
+    --launcher-icon: var(--app-dialog-preview-icon-size);
+    --radius-launcher-icon: calc(var(--launcher-icon) * var(--radius-launcher-ratio));
 }
 
 .app-dialog-preview-meta {

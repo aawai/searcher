@@ -328,6 +328,43 @@ export class BookmarksService {
         });
     }
 
+    async applyFetchedIcon(
+        userId: string,
+        snapshot: WebAppDto,
+        iconAssetId: string,
+    ): Promise<WebAppDto> {
+        return await this.store.run(async (db) => {
+            const rows = await db.select().from(webapps).where(and(
+                eq(webapps.id, snapshot.id),
+                eq(webapps.userId, userId),
+                isNull(webapps.deletedAt),
+            )).limit(1).all();
+            const current = rows[0];
+            if (!current) throw new WebAppNotFoundError();
+            // Compare the icon and URL after the external request, within the queue.
+            if (
+                current.url !== snapshot.url ||
+                current.iconAssetId !== snapshot.iconAssetId ||
+                current.iconSource !== snapshot.iconSource
+            ) return this.toWebAppDto(current);
+            const updatedAt = this.now();
+            await db.update(webapps).set({
+                iconAssetId,
+                iconSource: "website",
+                updatedAt,
+            }).where(and(
+                eq(webapps.id, snapshot.id),
+                eq(webapps.userId, userId),
+            )).run();
+            return this.toWebAppDto({
+                ...current,
+                iconAssetId,
+                iconSource: "website",
+                updatedAt,
+            });
+        });
+    }
+
     async softDeleteWebApp(userId: string, id: string): Promise<void> {
         return await this.store.run(async (db) => {
             const existing = await db

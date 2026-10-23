@@ -90,7 +90,6 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         // Persist an appearance change and reload so assertions read the
         // layout the user will actually see.
         const setHomeVisuals = async (values: {
-            webAppIconSize?: "compact" | "default" | "large";
             showAppLabels?: boolean;
         }) => {
             const status = await page.evaluate(async (body) => {
@@ -106,8 +105,8 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             await grid.waitFor({ state: "visible" });
         };
 
-        // Touch Home resizes tracks, glyphs and labels together. Columns follow
-        // the measured parent width, so the expected count is derived from it.
+        // Fixed glyphs retain standard tracks and columns derived from the
+        // measured parent width, independently of label visibility.
         const assertTouchGeometry = async (
             track: number,
             glyph: number,
@@ -557,7 +556,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         });
         assertEquals(previewGeometry.width, 68);
         assertEquals(previewGeometry.height, 68);
-        assertEquals(previewGeometry.glyphWidth, 42);
+        assertEquals(previewGeometry.glyphWidth, 44);
         assertEquals(previewGeometry.cell, 68);
         assertEquals(previewGeometry.gap, 4);
 
@@ -610,7 +609,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             assertEquals(relative.tile.tileHeight, 68);
             assertEquals(relative.preview.tileHeight, 68);
         };
-        await assertPreviewAlignment(42);
+        await assertPreviewAlignment(44);
 
         const saved = page.waitForResponse((response) =>
             new URL(response.url()).pathname === "/api/webapps/reorder" &&
@@ -702,7 +701,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             touchPoints: [{ ...hiddenStart, x: hiddenStart.x + 20 }],
         });
         await overlay.waitFor({ state: "visible" });
-        await assertPreviewAlignment(42);
+        await assertPreviewAlignment(44);
         await cdp.send("Input.dispatchTouchEvent", {
             type: "touchCancel",
             touchPoints: [],
@@ -711,26 +710,12 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         await setHomeVisuals({ showAppLabels: true });
         await waitForHomeColumns(5);
 
-        // Touch Home resizes tracks, glyphs and labels per icon size. Each size
-        // is checked with and without labels, then restored to the default.
-        const touchTiers = [
-            { size: "compact", track: 60, glyph: 36 },
-            { size: "default", track: 68, glyph: 42 },
-            { size: "large", track: 76, glyph: 48 },
-        ] as const;
-        for (const { size, track, glyph } of touchTiers) {
-            for (const showLabels of [true, false]) {
-                await setHomeVisuals({
-                    webAppIconSize: size,
-                    showAppLabels: showLabels,
-                });
-                await assertTouchGeometry(track, glyph, showLabels);
-            }
+        // Label visibility never changes fixed icon or standard cell geometry.
+        for (const showLabels of [true, false]) {
+            await setHomeVisuals({ showAppLabels: showLabels });
+            await assertTouchGeometry(68, 44, showLabels);
         }
-        await setHomeVisuals({
-            webAppIconSize: "default",
-            showAppLabels: true,
-        });
+        await setHomeVisuals({ showAppLabels: true });
         await waitForHomeColumns(5);
 
         // Fine-pointer Home keeps the pre-existing 64px / 6px layout.
@@ -750,10 +735,24 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 return {
                     cell: parseFloat(css.getPropertyValue("--launcher-col-w")),
                     gap: parseFloat(css.columnGap),
+                    glyph: node.querySelector(".webapp-glyph")!
+                        .getBoundingClientRect().width,
                 };
             });
             assertEquals(fineMetrics.cell, 64);
             assertEquals(fineMetrics.gap, 6);
+            assertEquals(fineMetrics.glyph, 44);
+            await finePage.setViewportSize({ width: 1440, height: 900 });
+            await finePage.waitForFunction(() => {
+                const home = document.querySelector<HTMLElement>(
+                    ".pinned-area .launcher-grid--home",
+                );
+                return !!home &&
+                    getComputedStyle(home).getPropertyValue("--launcher-col-w")
+                            .trim() === "84px" &&
+                    home.querySelector(".webapp-glyph")!
+                            .getBoundingClientRect().width === 48;
+            });
         } finally {
             await fineContext.close();
         }

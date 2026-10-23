@@ -48,7 +48,6 @@ export type Appearance = {
     wallpaper: string;
     wallpaperPresentations: Record<string, WallpaperPresentation>;
     webAppHomeLimit: 8 | 12 | 16 | "all";
-    webAppIconSize: "compact" | "default" | "large";
     showAppLabels: boolean;
 };
 
@@ -62,7 +61,6 @@ const initial: Appearance = {
     wallpaper: "",
     wallpaperPresentations: {},
     webAppHomeLimit: 12,
-    webAppIconSize: "default",
     showAppLabels: true,
 };
 
@@ -121,10 +119,6 @@ export function normalizeAppearance(raw: unknown): Appearance {
         saved.webAppHomeLimit === 8 || saved.webAppHomeLimit === 12 ||
         saved.webAppHomeLimit === 16 || saved.webAppHomeLimit === "all"
     ) result.webAppHomeLimit = saved.webAppHomeLimit;
-    if (
-        saved.webAppIconSize === "compact" ||
-        saved.webAppIconSize === "default" || saved.webAppIconSize === "large"
-    ) result.webAppIconSize = saved.webAppIconSize;
     if (typeof saved.showAppLabels === "boolean") {
         result.showAppLabels = saved.showAppLabels;
     }
@@ -327,7 +321,6 @@ export function AppState({ children }: { children: ReactNode }) {
                     wallpaper: prefs.backgroundImage ?? "",
                     wallpaperPresentations: prefs.wallpaperPresentations,
                     webAppHomeLimit: prefs.webAppHomeLimit,
-                    webAppIconSize: prefs.webAppIconSize,
                     showAppLabels: prefs.showAppLabels,
                 })
             );
@@ -423,9 +416,6 @@ export function AppState({ children }: { children: ReactNode }) {
             }
             if (next.webAppHomeLimit !== undefined) {
                 updates.webAppHomeLimit = next.webAppHomeLimit;
-            }
-            if (next.webAppIconSize !== undefined) {
-                updates.webAppIconSize = next.webAppIconSize;
             }
             if (next.showAppLabels !== undefined) {
                 updates.showAppLabels = next.showAppLabels;

@@ -91,6 +91,19 @@ Deno.test("Appearance: device caches keep a valid glass tier and fall back for s
     );
 });
 
+Deno.test("Appearance: legacy icon size fields are ignored without losing valid preferences", () => {
+    for (const webAppIconSize of ["compact", "default", "large", "unknown"]) {
+        const result = normalizeAppearance({
+            webAppIconSize,
+            showAppLabels: false,
+            webAppHomeLimit: 16,
+        });
+        assertEquals(result.showAppLabels, false);
+        assertEquals(result.webAppHomeLimit, 16);
+        assertEquals("webAppIconSize" in result, false);
+    }
+});
+
 Deno.test("Appearance: switching cached wallpapers restores their own presentation and composition", () => {
     const first = "https://example.com/left.png";
     const second = "https://example.com/right.png";

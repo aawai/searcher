@@ -1,5 +1,6 @@
 import { GripVertical } from "lucide-react";
 import { useState } from "react";
+import { iconFallback } from "./iconFallback.ts";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
 export interface WebAppItem {
@@ -12,6 +13,33 @@ export interface WebAppItem {
     isPinned?: boolean;
     groupId?: string | null;
     openMode?: "global" | "current" | "new_tab";
+}
+
+export function WebAppGlyph({ app, className = "" }: {
+    app: Pick<WebAppItem, "name" | "url" | "iconUrl" | "iconAssetId">;
+    className?: string;
+}) {
+    const source = app.iconUrl ||
+        (app.iconAssetId ? `/api/webapp-icons/${app.iconAssetId}` : null);
+    const [failedSource, setFailedSource] = useState<string | null>(null);
+    const effective = source !== failedSource ? source : null;
+    return (
+        <span
+            className={`webapp-glyph ${className}`}
+            style={effective ? undefined : iconFallback(app.url)}
+        >
+            {effective
+                ? (
+                    <img
+                        src={effective}
+                        alt=""
+                        loading="lazy"
+                        onError={() => setFailedSource(source)}
+                    />
+                )
+                : <span>{Array.from(app.name.trim())[0] || "W"}</span>}
+        </span>
+    );
 }
 
 export function WebAppIcon({
@@ -31,21 +59,12 @@ export function WebAppIcon({
     isDragging?: boolean;
     showLabel?: boolean;
 }) {
-    const [imageError, setImageError] = useState(false);
-
     let hostname: string;
     try {
         hostname = new URL(app.url).hostname;
     } catch {
         hostname = app.url;
     }
-
-    const effectiveIconUrl = !imageError && (
-        app.iconUrl ||
-        (app.iconAssetId ? `/api/webapp-icons/${app.iconAssetId}` : null)
-    );
-
-    const firstChar = app.name.trim().slice(0, 1).toUpperCase() || "W";
 
     return (
         <Tooltip
@@ -68,18 +87,7 @@ export function WebAppIcon({
                             ? `编辑 ${app.name}；拖动或按方向键排序`
                             : `打开 ${app.name}`}
                     >
-                        <span className="webapp-glyph">
-                            {effectiveIconUrl
-                                ? (
-                                    <img
-                                        src={effectiveIconUrl}
-                                        alt=""
-                                        loading="lazy"
-                                        onError={() => setImageError(true)}
-                                    />
-                                )
-                                : <span>{firstChar}</span>}
-                        </span>
+                        <WebAppGlyph app={app} />
                         {movable && (
                             <span
                                 className="launcher-drag-cue"

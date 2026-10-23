@@ -1,24 +1,19 @@
 import { assertEquals } from "@std/assert";
 import { WebAppIconService } from "./service.ts";
+import sharp from "sharp";
 
 Deno.test("WebAppIconService saves icon with SHA-256 deduplication and serves it", async () => {
     const tempDir = await Deno.makeTempDir({ prefix: "icon-test-" });
     try {
         const service = new WebAppIconService(tempDir);
-        const pngBytes = new Uint8Array([
-            0x89,
-            0x50,
-            0x4e,
-            0x47,
-            0x0d,
-            0x0a,
-            0x1a,
-            0x0a,
-            0x00,
-            0x00,
-            0x00,
-            0x0d,
-        ]);
+        const pngBytes = await sharp({
+            create: {
+                width: 180,
+                height: 180,
+                channels: 4,
+                background: "#dc1e28",
+            },
+        }).png().toBuffer();
 
         const record1 = await service.saveIcon("user-1", pngBytes);
         assertEquals(record1.contentType, "image/png");
@@ -27,7 +22,7 @@ Deno.test("WebAppIconService saves icon with SHA-256 deduplication and serves it
         // Fetch it back
         const fetched = await service.getIcon(record1.id);
         assertEquals(fetched !== null, true);
-        assertEquals(fetched?.bytes, pngBytes);
+        assertEquals((await sharp(fetched!.bytes).metadata()).width, 256);
 
         // Deduplication: saving same bytes returns same SHA-256 asset
         const record2 = await service.saveIcon("user-2", pngBytes);

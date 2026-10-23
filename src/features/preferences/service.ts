@@ -54,7 +54,6 @@ const defaults: PreferencesDto = {
     searchTarget: "same",
     searchHistoryEnabled: false,
     webAppHomeLimit: 12,
-    webAppIconSize: "default",
     showAppLabels: true,
     aiGenerationDefaults: {
         models: {},
@@ -193,7 +192,6 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
         webAppHomeLimit: row.webAppHomeLimit === "all"
             ? "all"
             : Number(row.webAppHomeLimit) as 8 | 12 | 16,
-        webAppIconSize: row.webAppIconSize,
         showAppLabels: row.showAppLabels ?? true,
         aiGenerationDefaults: parseAiGenerationDefaults(
             row.aiGenerationDefaults,
@@ -465,7 +463,6 @@ export class PreferencesService {
                     | "12"
                     | "16"
                     | "all",
-                webAppIconSize: canonicalDefaults.webAppIconSize,
                 showAppLabels: canonicalDefaults.showAppLabels,
                 aiGenerationDefaults: JSON.stringify(
                     canonicalDefaults.aiGenerationDefaults ?? { models: {} },

@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
     ActionGroup,
     LoadingState,
@@ -17,6 +17,11 @@ import type {
     LauncherTile,
 } from "../../components/searcher/launcherTiles.ts";
 import "./apps-workspace.css";
+
+function needsWebsiteIcon(app: ExtendedWebApp): boolean {
+    return app.iconSource === "default" ||
+        (!app.iconAssetId && (!app.iconSource || app.iconSource === "website"));
+}
 
 export interface AppsWorkspaceProps {
     state: AppsRoute;
@@ -70,6 +75,93 @@ export function AppsWorkspace({
     onFolderChange,
 }: AppsWorkspaceProps) {
     const [actionError, setActionError] = useState("");
+    const [iconProgress, setIconProgress] = useState("");
+    const iconQueue = useRef({
+        apps,
+        mounted: false,
+        running: false,
+        attempted: new Set<string>(),
+        controller: null as AbortController | null,
+    });
+    iconQueue.current.apps = apps;
+
+    async function backfillIcons() {
+        const queue = iconQueue.current;
+        if (!queue.mounted || queue.running || status !== "ready") return;
+        queue.running = true;
+        let completed = 0;
+        let failed = 0;
+        try {
+            while (queue.mounted) {
+                const candidate = queue.apps.find((app) =>
+                    !queue.attempted.has(app.id) && needsWebsiteIcon(app)
+                );
+                if (!candidate) break;
+                queue.attempted.add(candidate.id);
+                const controller = new AbortController();
+                queue.controller = controller;
+                setIconProgress(`正在补全图标：${candidate.name}`);
+                try {
+                    const updated = await api<ExtendedWebApp>(
+                        `/api/webapps/${candidate.id}/fetch-icon`,
+                        { method: "POST", signal: controller.signal },
+                    );
+                    if (!queue.mounted) break;
+                    setApps((current) =>
+                        current.map((app) =>
+                            app.id === updated.id &&
+                                app.url === candidate.url &&
+                                app.iconAssetId === candidate.iconAssetId &&
+                                app.iconSource === candidate.iconSource
+                                ? {
+                                    ...app,
+                                    iconAssetId: updated.iconAssetId,
+                                    iconSource: updated.iconSource,
+                                    iconUrl: updated.iconAssetId
+                                        ? `/api/webapp-icons/${updated.iconAssetId}`
+                                        : null,
+                                }
+                                : app
+                        )
+                    );
+                    completed++;
+                } catch {
+                    if (!queue.mounted || controller.signal.aborted) {
+                        queue.attempted.delete(candidate.id);
+                        break;
+                    }
+                    failed++;
+                }
+            }
+        } finally {
+            queue.running = false;
+            queue.controller = null;
+            if (queue.mounted) {
+                setIconProgress(
+                    completed || failed
+                        ? `图标补全完成：${completed} 个已处理，${failed} 个失败`
+                        : "",
+                );
+                if (
+                    queue.apps.some((app) =>
+                        !queue.attempted.has(app.id) && needsWebsiteIcon(app)
+                    )
+                ) void backfillIcons();
+            }
+        }
+    }
+
+    useEffect(() => {
+        const queue = iconQueue.current;
+        queue.mounted = true;
+        return () => {
+            queue.mounted = false;
+            queue.controller?.abort();
+        };
+    }, []);
+    useEffect(() => {
+        void backfillIcons();
+    }, [apps, status]);
 
     // Folder CRUD Operations with optimistic updates & rollback
     const handleCreateGroup = async (name: string) => {
@@ -410,6 +502,22 @@ export function AppsWorkspace({
                         </ActionGroup>
                     </div>
                 </StatusBanner>
+            )}
+            {state.view === "apps/root" && status === "ready" && (
+                <ActionGroup>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={iconQueue.current.running}
+                        onClick={() => {
+                            iconQueue.current.attempted.clear();
+                            void backfillIcons();
+                        }}
+                    >
+                        补全图标
+                    </Button>
+                    <span role="status">{iconProgress}</span>
+                </ActionGroup>
             )}
 
             {viewContent}

@@ -39,15 +39,13 @@ import {
     type LauncherTile,
     launcherTiles,
 } from "./launcherTiles.ts";
-import { WebAppIcon } from "./WebAppIcon.tsx";
+import { WebAppGlyph, WebAppIcon } from "./WebAppIcon.tsx";
 import {
     FolderDeleteDialog,
     FolderNameDialog,
 } from "../../features/workspace/FolderNameDialog.tsx";
 
 import { AppMenuItems } from "./AppMenuItems.tsx";
-
-export type WebAppIconSize = "compact" | "default" | "large";
 
 interface Actions {
     onOpen: (app: LauncherApp) => void;
@@ -249,21 +247,10 @@ function FolderView({
                         )}
                         {preview.map((app) => {
                             const icon = (
-                                <span className="launcher-folder-mini-glyph">
-                                    {app.name.trim().slice(0, 1)
-                                        .toUpperCase() || "W"}
-                                    {(app.iconUrl || app.iconAssetId) && (
-                                        <img
-                                            src={app.iconUrl ||
-                                                `/api/webapp-icons/${app.iconAssetId}`}
-                                            alt=""
-                                            onError={(event) => {
-                                                event.currentTarget.hidden =
-                                                    true;
-                                            }}
-                                        />
-                                    )}
-                                </span>
+                                <WebAppGlyph
+                                    app={app}
+                                    className="launcher-folder-mini-glyph"
+                                />
                             );
                             return large
                                 ? (
@@ -464,14 +451,12 @@ function SortableTile({
 /** Observe the actual desktop container, not the window or the sheet height. */
 function useDesktopColumns(
     hasLargeFolder: boolean,
-    iconSize: WebAppIconSize,
     presentation?: "default" | "workspace",
 ) {
     const gridRef = useRef<HTMLDivElement>(null);
     const [columns, setColumns] = useState(
         presentation === "workspace" ? 4 : 6,
     );
-    // Cell width follows the icon-size tier; re-measure when it changes.
     useEffect(() => {
         const grid = gridRef.current;
         if (!grid) return;
@@ -493,7 +478,7 @@ function useDesktopColumns(
         });
         observer.observe(target);
         return () => observer.disconnect();
-    }, [hasLargeFolder, presentation, iconSize]);
+    }, [hasLargeFolder, presentation]);
     return { gridRef, columns };
 }
 
@@ -540,7 +525,6 @@ export interface WebAppLauncherProps {
     activeFolderId?: string | null;
     onFolderChange?: (folderId: string | null) => void;
     presentation?: "default" | "workspace";
-    iconSize?: WebAppIconSize;
     showAppLabels?: boolean;
     onRenameFolder?: (group: LauncherGroup, name: string) => Promise<void>;
     onDeleteFolder?: (group: LauncherGroup) => Promise<void>;
@@ -575,7 +559,6 @@ export function WebAppLauncher({
     activeFolderId,
     onFolderChange,
     presentation = "default",
-    iconSize = "default",
     showAppLabels = true,
     onRenameFolder,
     onDeleteFolder,
@@ -597,7 +580,6 @@ export function WebAppLauncher({
         : 0;
     const { gridRef, columns } = useDesktopColumns(
         largeFolderCount > 0,
-        iconSize,
         presentation,
     );
     const effectiveColumns = useMemo(
@@ -897,9 +879,7 @@ export function WebAppLauncher({
                     ref={gridRef}
                     aria-label="应用启动器"
                     className={`launcher-grid${
-                        showFolders
-                            ? ""
-                            : ` launcher-grid--home launcher-grid--icon-${iconSize}`
+                        showFolders ? "" : " launcher-grid--home"
                     }${
                         presentation === "workspace"
                             ? " launcher-grid--workspace"
@@ -968,7 +948,7 @@ export function WebAppLauncher({
                                     presentation === "workspace"
                                         ? " launcher-grid--workspace"
                                         : !showFolders
-                                        ? ` launcher-overlay--home launcher-grid--icon-${iconSize}`
+                                        ? " launcher-overlay--home"
                                         : ""
                                 }${
                                     active.group?.folderSize === "large"

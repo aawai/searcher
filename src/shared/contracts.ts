@@ -186,7 +186,6 @@ export interface PreferencesDto {
     searchTarget: SearchTarget;
     searchHistoryEnabled?: boolean;
     webAppHomeLimit: 8 | 12 | 16 | "all";
-    webAppIconSize: "compact" | "default" | "large";
     showAppLabels: boolean;
     aiGenerationDefaults?: AiGenerationDefaultsDto;
 }

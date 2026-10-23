@@ -1,15 +1,11 @@
 :root {
     --launcher-justify: center;
-    /* App icons are squircles: the corner radius is a fixed share of the edge. */
-    --radius-launcher-ratio: .23;
     --radius-launcher-mini: calc(14px * var(--radius-launcher-ratio));
     /* Initial inside the 14px folder preview tiles; registered in Visual Language. */
     --font-launcher-micro: 9px;
     --launcher-folder-empty-icon-size: 22px;
     --launcher-folder-empty-icon-size-large: 38px;
     --space-launcher-icon-gap: 2px;
-    --space-launcher-glyph-padding: 9px;
-    --space-launcher-mini-padding: 6px;
     --space-launcher-badge-padding: 1px var(--space-1);
     /* Labels sit on the bare wallpaper: a soft halo in the surface colour keeps them legible. */
     --launcher-label-halo: 0 0 var(--space-2) color-mix(in srgb, var(--surface-solid) 90%, transparent),
@@ -45,18 +41,15 @@
     background: var(--surface-soft);
     color: var(--foreground);
     font-size: var(--font-title-size);
-    font-weight: var(--font-title-weight);
+    font-weight: 400;
     overflow: hidden;
 }
-/* Real icons keep a neutral tile so brand colours read true. */
-.webapp-glyph:has(> img) {
-    background: var(--surface-solid);
-}
+/* Server-normalized images own their canvas and proportional inset. */
 .webapp-glyph img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    padding: var(--space-launcher-glyph-padding);
+    padding: 0;
 }
 .webapp-name {
     display: block;
@@ -117,7 +110,7 @@
     --launcher-gap-y: var(--launcher-gap-x);
     --space-launcher-gap-x: var(--launcher-gap-x);
     --space-launcher-gap-y: var(--launcher-gap-y);
-    --launcher-icon: 38px;
+    --launcher-icon: 44px;
     --radius-launcher-icon: calc(var(--launcher-icon) * var(--radius-launcher-ratio));
     --launcher-pad-t: 4px;
     --launcher-pad-b: 4px;
@@ -155,25 +148,13 @@
     margin: 0;
     justify-content: center;
 }
-/* Home icon sizes: cell and glyph move together and the cell stays square.
-   Drag previews carry the same classes, so one table serves grid and overlay. */
+/* Home keeps its standard square cells; drag previews share the same metrics. */
 :is(.launcher-grid--home, .launcher-overlay--home) {
+    --launcher-col-w: 64px;
     --launcher-pad-t: 0px;
     --launcher-pad-b: 0px;
     --space-launcher-pad-t: var(--launcher-pad-t);
     --space-launcher-pad-b: var(--launcher-pad-b);
-}
-:is(.launcher-grid--home, .launcher-overlay--home).launcher-grid--icon-compact {
-    --launcher-col-w: 56px;
-    --launcher-icon: 36px;
-}
-:is(.launcher-grid--home, .launcher-overlay--home).launcher-grid--icon-default {
-    --launcher-col-w: 64px;
-    --launcher-icon: 42px;
-}
-:is(.launcher-grid--home, .launcher-overlay--home).launcher-grid--icon-large {
-    --launcher-col-w: 72px;
-    --launcher-icon: 48px;
 }
 .launcher-grid--home .webapp-icon,
 .launcher-overlay--home .webapp-icon {
@@ -184,17 +165,13 @@
     :is(.pinned-area .launcher-grid--home, .launcher-overlay--home) {
         --launcher-gap-x: var(--space-3);
     }
-    :is(.launcher-grid--home, .launcher-overlay--home).launcher-grid--icon-compact {
-        --launcher-col-w: 72px;
-        --launcher-icon: 44px;
-    }
-    :is(.launcher-grid--home, .launcher-overlay--home).launcher-grid--icon-default {
+    :is(.launcher-grid--home, .launcher-overlay--home) {
         --launcher-col-w: 84px;
-        --launcher-icon: 52px;
     }
-    :is(.launcher-grid--home, .launcher-overlay--home).launcher-grid--icon-large {
-        --launcher-col-w: 96px;
-        --launcher-icon: 60px;
+    .launcher-grid,
+    .launcher-folder-contents,
+    .launcher-overlay {
+        --launcher-icon: 48px;
     }
 }
 @media (max-width: 767px) {
@@ -452,11 +429,12 @@
     display: grid;
     place-items: center;
     width: min(100%, 19px);
+    height: auto;
     aspect-ratio: 1;
     border-radius: var(--radius-launcher-mini);
     background: var(--surface-solid);
     font-size: var(--font-metadata-size);
-    font-weight: var(--font-title-weight);
+    font-weight: 400;
     overflow: hidden;
 }
 .launcher-folder-item--large .launcher-folder-mini-glyph {
@@ -470,12 +448,6 @@
     --radius-launcher-mini: calc(56px * var(--radius-launcher-ratio));
     border-radius: var(--radius-launcher-mini);
     font-size: var(--font-page-title-size);
-}
-.launcher-folder-item--large .launcher-folder-mini-glyph img {
-    padding: var(--space-launcher-mini-padding);
-}
-.launcher-folder-item--large .launcher-folder-preview--single .launcher-folder-mini-glyph img {
-    padding: var(--space-launcher-glyph-padding);
 }
 .launcher-folder-mini-glyph img {
     position: absolute;
@@ -696,7 +668,6 @@
     :is(.launcher-grid, .launcher-folder-contents, .launcher-overlay).launcher-grid--workspace {
         --launcher-col-w: 68px;
         --launcher-gap-x: var(--space-1);
-        --launcher-icon: 40px;
     }
     .launcher-grid--workspace .launcher-folder-item--large .launcher-folder-surface {
         overflow: visible;
@@ -721,22 +692,13 @@
     }
 }
 
-/* Narrow touch Home: cells stay at least 60px so labelled icons remain easy to hit. */
+/* Narrow touch Home retains its standard cell width and spacing. */
 @media (max-width: 767px) and (pointer: coarse),
     (max-width: 767px) and (hover: none) {
     :is(.pinned-area .launcher-grid--home, .launcher-overlay--home) {
         --launcher-gap-x: var(--space-1);
     }
-    :is(.launcher-grid--home, .launcher-overlay--home).launcher-grid--icon-compact {
-        --launcher-col-w: 60px;
-        --launcher-icon: 36px;
-    }
-    :is(.launcher-grid--home, .launcher-overlay--home).launcher-grid--icon-default {
+    :is(.launcher-grid--home, .launcher-overlay--home) {
         --launcher-col-w: 68px;
-        --launcher-icon: 42px;
-    }
-    :is(.launcher-grid--home, .launcher-overlay--home).launcher-grid--icon-large {
-        --launcher-col-w: 76px;
-        --launcher-icon: 48px;
     }
 }

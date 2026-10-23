@@ -759,3 +759,80 @@ Deno.test("Apps route leave is refused while the new-app save is pending", async
         await fixture.close();
     }
 });
+
+Deno.test("apps creation returns before icon fetch and missing icons can be retried", async () => {
+    const fixture = await startZenAppsFixture("apps_icon_backfill");
+    const { page } = fixture;
+    let attempts = 0;
+    let created: Record<string, unknown> = {};
+    const gate = Promise.withResolvers<void>();
+    try {
+        await page.route(
+            "**/api/webapp-icons/real-icon",
+            (route) =>
+                route.fulfill({
+                    contentType: "image/svg+xml",
+                    body:
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="14"/></svg>',
+                }),
+        );
+        await page.route("**/api/webapps", async (route) => {
+            const response = await route.fetch();
+            if (route.request().method() === "POST") {
+                created = (await response.json()).data;
+            }
+            await route.fulfill({ response });
+        });
+        await page.route(
+            "**/api/webapp-icons/fetch",
+            (route) =>
+                route.fulfill({
+                    status: 400,
+                    json: { status: false, message: "Unavailable" },
+                }),
+        );
+        await page.route("**/api/webapps/*/fetch-icon", async (route) => {
+            attempts++;
+            if (attempts === 1) {
+                await gate.promise;
+                await route.fulfill({
+                    status: 400,
+                    json: { status: false, message: "Unavailable" },
+                });
+                return;
+            }
+            await route.fulfill({
+                json: {
+                    status: true,
+                    data: {
+                        ...created,
+                        iconAssetId: "real-icon",
+                        iconSource: "website",
+                    },
+                },
+            });
+        });
+        await openZenAppsForm(page, {
+            url: "https://icons.invalid",
+            name: "自动图标契约",
+        });
+        await page.locator('.app-dialog-form button[type="submit"]').click();
+        await page.locator(".apps-workspace-root").waitFor({
+            state: "visible",
+        });
+        await page.getByRole("status").filter({ hasText: "正在补全图标" })
+            .waitFor();
+        assertEquals(attempts, 1);
+        gate.resolve();
+        await page.getByRole("status").filter({ hasText: "1 个失败" })
+            .waitFor();
+        await page.getByRole("button", { name: "补全图标", exact: true })
+            .click();
+        await page.locator('img[src="/api/webapp-icons/real-icon"]').first()
+            .waitFor({ state: "attached" });
+        assertEquals(attempts, 2);
+    } finally {
+        gate.resolve();
+        await fixture.close();
+    }
+});
