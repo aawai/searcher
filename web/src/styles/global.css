@@ -279,3 +279,44 @@ a {
         mix-blend-mode: normal;
     }
 }
+
+/* Shared-element transition (runSharedElementTransition): only the one named
+   object is captured, so unrelated page content never animates geometry. The
+   rules apply solely while a transition runs and leave route transitions alone. */
+:root.shared-element-transition {
+    view-transition-name: none;
+}
+:root.shared-element-transition::view-transition-group(*) {
+    animation-duration: var(--motion-panel);
+    animation-timing-function: var(--ease-out-expo);
+}
+:root.shared-element-transition::view-transition-old(*) {
+    animation: shared-element-out var(--motion-panel) var(--ease-out-expo) both;
+}
+:root.shared-element-transition::view-transition-new(*) {
+    animation: shared-element-in var(--motion-panel) var(--ease-out-expo) both;
+}
+@keyframes shared-element-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+@keyframes shared-element-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    /* The UA group animation morphs width, height and transform. Disable it and
+       the image-pair animation: only old/new opacity may animate. */
+    :root.shared-element-transition::view-transition-group(*),
+    :root.shared-element-transition::view-transition-image-pair(*) {
+        animation: none;
+    }
+}
