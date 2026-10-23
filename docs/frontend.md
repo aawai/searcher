@@ -61,6 +61,11 @@ deno task check:ui --update
   同样失败。
 - runtime geometry 与 domain-specific value 例外只限明确的 owner 和表达式，见
   `scripts/ui-guard/exceptions.ts`。
+- 语义规则读取 [Visual Language](design/VISUAL_LANGUAGE.md) 的登记表（解析见
+  `scripts/ui-guard/registry.ts`）：`font-size` / `border-radius` 只能引用已登记
+  Token，`--font-*` / 圆角 Token 的定义必须已登记，`var(--accent)` 作为
+  background / fill 必须在已登记的文件与选择器中。登记表缺失或格式错误时门禁失败。
+  新增 Token 或强调色填充先改 Visual Language，再改实现。
 - `--update` 不接受新增或数量增加的违规；CI 运行检查和门禁回归测试。
 - baseline 通过不表示历史样式债务、focus
   语义或所有业务流程已清零。390/768/1440、light/dark 与真实页面交互证据按
