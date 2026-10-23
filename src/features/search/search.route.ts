@@ -27,6 +27,20 @@ const SuggestionQuerySchema = v.pipe(
     v.maxLength(200, "查询关键词最多200字符"),
 );
 
+const SuggestionLanguageSchema = v.pipe(
+    v.string("联想语言必须为字符串"),
+    v.minLength(1, "联想语言不能为空"),
+    v.maxLength(64, "联想语言最多64字符"),
+    v.check((language) => {
+        try {
+            return Intl.getCanonicalLocales(language).length === 1;
+        } catch {
+            return false;
+        }
+    }, "联想语言必须为有效的 BCP 47 语言标签"),
+    v.transform((language) => Intl.getCanonicalLocales(language)[0]),
+);
+
 const PersonalQuerySchema = v.pipe(
     v.string("查询关键词必须为字符串"),
     v.trim(),
@@ -77,6 +91,7 @@ export function registerSearchRoutes(
         validator({
             q: query(SuggestionQuerySchema),
             engine: query(v.optional(EngineSchema)),
+            language: query(v.optional(SuggestionLanguageSchema, "zh-CN")),
         }),
         async (c, data) => {
             const user = c.get("user");
@@ -88,6 +103,8 @@ export function registerSearchRoutes(
                 data.q,
                 engine as EngineId,
                 user?.id,
+                undefined,
+                data.language,
             );
             return c.success(suggestions);
         },
