@@ -142,7 +142,7 @@ route。
 
 ### 4.1 Desktop / Tablet
 
-> =768 固定为右侧非模态 Panel：
+≥768 固定为右侧非模态 Panel：
 
 - semantic：`aside` 或等价 complementary region；
 - 默认宽度：`--workspace-width: 400px`；
@@ -287,7 +287,7 @@ Reducer/action 至少包含：
 
 ### 7.2 Resize
 
-> =1024 支持 8 个边/角 resize zone。
+≥1024 支持 8 个边/角 resize zone。
 
 - resize hit area 允许大于可见边界，但不得出现粗重 handle；
 - 每个 window kind 定义正式 minWidth/minHeight；
@@ -311,7 +311,7 @@ DesktopDock 是唯一 desktop-level workspace/task navigation。
 - Apps
 - Notes
 
-> =1024 可出现 transient running items：
+≥1024 可出现 transient running items：
 
 - open Note windows
 
