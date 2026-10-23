@@ -1,5 +1,15 @@
 # Wiki Update Log
 
+## 2026-10-23
+
+- **observe**: {"relevance":"critical","slug":"obs-2026-10-23-issue-236-0-pr-245-246-247-main","title":"Issue 236 阶段 0 经 PR 245/246/247 合并 main 并关闭"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-23-superseded-obs-2026-09-28-ui-3","title":"Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-23-","title":"玻璃效果档位与对比度下限的取舍"}
+
+## 2026-10-22
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-22-searcher","title":"Searcher 工作区避让以视觉平衡为优先"}
+
 ## 2026-10-19
 
 - **observe**: {"relevance":"high","slug":"obs-2026-10-19-issues-196-199-pr-219-main","title":"Issues 196/199 经 PR 219 合并 main"}

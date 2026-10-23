@@ -413,3 +413,15 @@
 ## [2026-10-19T10:31:24.998Z] observe
 - slug: "obs-2026-10-19-issues-196-199-pr-219-main", title: "Issues 196/199 经 PR 219 合并 main", relevance: "high"
 
+## [2026-10-22T14:28:18.393Z] observe
+- slug: "obs-2026-10-22-searcher", title: "Searcher 工作区避让以视觉平衡为优先", relevance: "high"
+
+## [2026-10-23T03:53:02.895Z] observe
+- slug: "obs-2026-10-23-", title: "玻璃效果档位与对比度下限的取舍", relevance: "high"
+
+## [2026-10-23T06:41:30.126Z] observe
+- slug: "obs-2026-10-23-superseded-obs-2026-09-28-ui-3", title: "Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法", relevance: "high"
+
+## [2026-10-23T07:13:14.047Z] observe
+- slug: "obs-2026-10-23-issue-236-0-pr-245-246-247-main", title: "Issue 236 阶段 0 经 PR 245/246/247 合并 main 并关闭", relevance: "critical"
+
