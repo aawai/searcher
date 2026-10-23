@@ -197,7 +197,7 @@ export function WorkspaceShell(
                                 render={
                                     <Button
                                         className="workspace-primary"
-                                        variant="default"
+                                        variant="ghost"
                                         size="icon"
                                         aria-label={createLabel}
                                         onClick={workspace === "apps" &&

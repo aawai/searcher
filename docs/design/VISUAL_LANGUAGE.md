@@ -141,6 +141,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 - **空状态**：一句话 + 至多一个操作，居中，不加插图与卡片。
 - **Toast / 撤销**：底部居中材质胶囊；破坏性操作用 AlertDialog 二次确认，软删除给撤销。
 - **菜单**：`⋯` 触发；危险项置底、红色、前有分隔线。互斥选择（如搜索引擎）用单选项，当前项显示勾号。
+- **首页颜色层级**：头像使用 `--surface-soft` 底与 `--foreground`，保留姓名首字母原大小写；搜索框与建议中的引擎标记使用中性单色，品牌色仅出现在引擎菜单。搜索提交按钮空闲 / 输入时始终为相同形状的 ghost 图标按钮；工作区根视图“+”同样用 ghost，不以强调色填充争夺搜索焦点。“跟随系统”用 `SunMoon`，顶栏图标沿用 Lucide 默认描边。
 - **应用图标**：无可用图标时显示首字母，使用中性色（`--surface-soft` 底 + 前景色），不使用强调色。
 
 ### 页面原型
@@ -198,7 +199,6 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 | 规则                                                  | 现状                                                                                        | 收敛                                 |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------ |
-| 不用全大写（见 [字号](#字号)）                        | `global.css` 的 `.user-avatar-badge` 设置 `text-transform: uppercase`                       | #243 X1 移除头像全大写               |
 | 纸张是实物纸张，不是 UI 表面（见 [纸张](#纸张paper)） | 暗色主题 `--paper-white` 取 `var(--surface-soft)`，即 UI 表面色（token 层事实，未实页验证） | #243 X6 为深色默认纸色改用独立 Token |
 
 ## 三、风格方向
@@ -250,16 +250,15 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 ### 强调色用途
 
-强调色（`--accent` 及 `--accent-hover`、`--accent-active`、`--accent-foreground`，以及由它派生的 `--accent-soft`、`--accent-subtle`、`--accent-border` 着色）表达两类语义，除此之外不使用。对比度与“选中不只靠颜色”属于底线，不因用途登记而放宽。
+强调色（`--accent` 及 `--accent-hover`、`--accent-active`、`--accent-foreground`，以及由它派生的 `--accent-soft`、`--accent-subtle`、`--accent-border` 着色）表达交互语义与个性化画布，除此之外不使用。对比度与“选中不只靠颜色”属于底线，不因用途登记而放宽。
 
 1. **交互语义**
    - primary：primary 按钮、默认 Badge；每个区域最多一个 primary 按钮。
    - 选中 / 激活 / 高亮：开关、复选框、单选点、滑块已选段、菜单与建议列表的高亮项、活动状态点。
    - 焦点环、链接。
    - 拖放反馈：整理模式下可拖拽提示、拖入文件夹的目标提示。
-2. **用户身份与个性化画布**
-   - 用户身份：头像徽标。
-   - 个性化画布：无壁纸时的默认画布 mesh 渐变，强调色只占 `--canvas-mesh-accent-mix` 的色斑。
+2. **个性化画布**
+   - 无壁纸时的默认画布 mesh 渐变，强调色只占 `--canvas-mesh-accent-mix` 的色斑。
    - 色样：强调色选择与设计实验室中展示强调色本身的色块。
 
 **禁止项**：
@@ -287,7 +286,6 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 | 选中 / 激活 | `web/src/features/ask/ask-workspace.css`   | `.ask-composer__active-dot`                                                |
 | 拖放反馈    | `web/src/components/searcher/launcher.css` | `.launcher-drag-cue`                                                       |
 | 拖放反馈    | `web/src/components/searcher/launcher.css` | `.launcher-folder-drop-badge`                                              |
-| 用户身份    | `web/src/styles/global.css`                | `.user-avatar-badge`                                                       |
 | 个性化画布  | `web/src/styles/global.css`                | `.wallpaper-surface`                                                       |
 | 色样        | `web/src/app/settings.css`                 | `.settings-swatch-color`                                                   |
 | 色样        | `web/src/design-lab/design-lab.css`        | `.design-lab-swatch-chip[data-token="--accent"]`                           |
