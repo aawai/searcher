@@ -2,26 +2,32 @@
 import type { EngineId } from "@shared/engines.ts";
 
 export interface SuggestionAdapter {
-    fetchSuggestions(query: string, signal?: AbortSignal): Promise<string[]>;
+    fetchSuggestions(
+        query: string,
+        signal?: AbortSignal,
+        language?: string,
+    ): Promise<string[]>;
 }
 
 export class GoogleSuggestionAdapter implements SuggestionAdapter {
     async fetchSuggestions(
         query: string,
         signal?: AbortSignal,
+        language = "zh-CN",
     ): Promise<string[]> {
         if (!query.trim()) return [];
         try {
             const url =
                 `https://suggestqueries.google.com/complete/search?client=firefox&q=${
                     encodeURIComponent(query)
-                }`;
+                }&hl=${encodeURIComponent(language)}`;
             const response = await fetch(url, {
                 signal,
                 headers: {
                     "User-Agent":
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                     "Accept": "application/json, text/javascript, */*",
+                    "Accept-Language": language,
                 },
             });
             if (!response.ok) return [];
@@ -42,18 +48,20 @@ export class BingSuggestionAdapter implements SuggestionAdapter {
     async fetchSuggestions(
         query: string,
         signal?: AbortSignal,
+        language = "zh-CN",
     ): Promise<string[]> {
         if (!query.trim()) return [];
         try {
             const url = `https://api.bing.com/osjson.aspx?query=${
                 encodeURIComponent(query)
-            }`;
+            }&mkt=${encodeURIComponent(language)}`;
             const response = await fetch(url, {
                 signal,
                 headers: {
                     "User-Agent":
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                     "Accept": "application/json, text/javascript, */*",
+                    "Accept-Language": language,
                 },
             });
             if (!response.ok) return [];

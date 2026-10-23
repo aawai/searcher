@@ -4,25 +4,21 @@ import type { DatabaseStore } from "../../db/database.ts";
 import { preferences, searchHistory } from "../../db/schema.ts";
 import type { EngineId } from "@shared/engines.ts";
 import type { SearchHistoryItem, SuggestionItem } from "./types.ts";
-import { BingSuggestionAdapter, GoogleSuggestionAdapter } from "./adapters.ts";
+import {
+    BingSuggestionAdapter,
+    GoogleSuggestionAdapter,
+    type SuggestionAdapter,
+} from "./adapters.ts";
 
 export interface SearchServiceOptions {
-    googleAdapter?: {
-        fetchSuggestions(q: string, signal?: AbortSignal): Promise<string[]>;
-    };
-    bingAdapter?: {
-        fetchSuggestions(q: string, signal?: AbortSignal): Promise<string[]>;
-    };
+    googleAdapter?: SuggestionAdapter;
+    bingAdapter?: SuggestionAdapter;
     now?: () => number;
 }
 
 export class SearchService {
-    private googleAdapter: {
-        fetchSuggestions(q: string, signal?: AbortSignal): Promise<string[]>;
-    };
-    private bingAdapter: {
-        fetchSuggestions(q: string, signal?: AbortSignal): Promise<string[]>;
-    };
+    private googleAdapter: SuggestionAdapter;
+    private bingAdapter: SuggestionAdapter;
     private now: () => number;
 
     constructor(
@@ -40,6 +36,7 @@ export class SearchService {
         engine: EngineId,
         userId?: string,
         signal?: AbortSignal,
+        language = "zh-CN",
     ): Promise<SuggestionItem[]> {
         const trimmed = query.trim();
         if (!trimmed) return [];
@@ -78,17 +75,20 @@ export class SearchService {
                 engineWords = await this.googleAdapter.fetchSuggestions(
                     trimmed,
                     signal,
+                    language,
                 );
             } else if (engine === "bing") {
                 engineWords = await this.bingAdapter.fetchSuggestions(
                     trimmed,
                     signal,
+                    language,
                 );
             } else {
                 // For baidu/duckduckgo fallback to bing or google, or attempt both silently
                 engineWords = await this.bingAdapter.fetchSuggestions(
                     trimmed,
                     signal,
+                    language,
                 );
             }
         } catch {

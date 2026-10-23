@@ -92,7 +92,11 @@ Deno.test("search history: opt-in default off for authenticated user, only recor
             }).run();
         });
 
-        const service = new SearchService(store);
+        const service = new SearchService(store, {
+            googleAdapter: {
+                fetchSuggestions: () => Promise.resolve([]),
+            },
+        });
 
         // 1. By default, searchHistoryEnabled is false. Recording should do nothing and return null.
         const res1 = await service.recordHistory(
