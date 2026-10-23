@@ -41,6 +41,39 @@ Deno.test("production search shortcuts respect editable focus and submit command
     await search.waitFor();
 
     await t.step(
+        "web suggestions are limited to six and search has one trailing control",
+        async () => {
+            await page.route(
+                /\/api\/search\/suggestions\?/,
+                (route) =>
+                    route.fulfill({
+                        contentType: "application/json",
+                        body: JSON.stringify({
+                            status: true,
+                            data: Array.from({ length: 10 }, (_, index) => ({
+                                text: `bounded query ${index}`,
+                                source: "engine",
+                            })),
+                        }),
+                    }),
+            );
+            try {
+                await search.fill("bounded query");
+                await page.getByRole("option").first().waitFor();
+                assertEquals(await page.getByRole("option").count(), 6);
+                assertEquals(
+                    await search.getAttribute("placeholder"),
+                    "搜索或输入网址",
+                );
+                assertEquals(await page.locator(".search-hint").count(), 0);
+            } finally {
+                await page.unroute(/\/api\/search\/suggestions\?/);
+                await search.fill("");
+            }
+        },
+    );
+
+    await t.step(
         "global focus yields to input textarea select contenteditable and textbox descendants",
         async () => {
             for (
@@ -377,6 +410,82 @@ Deno.test("production search shortcuts respect editable focus and submit command
             );
             assertEquals(new URL(page.url()).origin, origin);
             await popup.close();
+        },
+    );
+    await t.step(
+        "app matches use their own icon and remain separated from web suggestions",
+        async () => {
+            const uploaded = await page.request.post(
+                origin + "/api/webapp-icons/upload",
+                {
+                    headers: { Origin: origin },
+                    multipart: {
+                        icon: {
+                            name: "figma.png",
+                            mimeType: "image/png",
+                            buffer: await page.locator(".search-engine")
+                                .screenshot(),
+                        },
+                    },
+                },
+            );
+            assert(uploaded.ok(), await uploaded.text());
+            const { data: icon } = await uploaded.json();
+            const response = await page.request.post(origin + "/api/webapps", {
+                headers: { Origin: origin },
+                data: {
+                    name: "Figma",
+                    url: "https://figma.example.test",
+                    iconAssetId: icon.id,
+                    iconSource: "upload",
+                    isPinned: true,
+                },
+            });
+            assert(response.ok(), await response.text());
+            await page.route(
+                /\/api\/search\/suggestions\?/,
+                (route) =>
+                    route.fulfill({
+                        contentType: "application/json",
+                        body: JSON.stringify({
+                            status: true,
+                            data: [{
+                                text: "Figma tutorial",
+                                source: "engine",
+                            }],
+                        }),
+                    }),
+            );
+            try {
+                await page.reload();
+                await page.getByRole("button", {
+                    name: "打开 Figma",
+                    exact: true,
+                })
+                    .waitFor();
+                await search.fill("Figma");
+                const options = page.getByRole("option");
+                await options.nth(1).waitFor();
+                assertEquals(
+                    await options.first().locator("img").getAttribute("src"),
+                    icon.url,
+                );
+                assertEquals(
+                    await options.nth(1).evaluate((element) =>
+                        getComputedStyle(element).borderTopStyle
+                    ),
+                    "solid",
+                );
+                await search.press("ArrowDown");
+                await search.press("ArrowDown");
+                assertEquals(
+                    await search.getAttribute("aria-activedescendant"),
+                    await options.nth(1).getAttribute("id"),
+                );
+            } finally {
+                await page.unroute(/\/api\/search\/suggestions\?/);
+                await search.fill("");
+            }
         },
     );
     await t.step(
