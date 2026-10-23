@@ -537,7 +537,9 @@
   "sources/obs-2026-09-28-": [],
   "sources/obs-2026-09-28-css": [],
   "sources/obs-2026-09-28-observation-ask": [],
-  "sources/obs-2026-09-28-ui-3": [],
+  "sources/obs-2026-09-28-ui-3": [
+    "sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3"
+  ],
   "sources/obs-2026-09-30-widgets": [],
   "sources/obs-2026-09-30-widgets-spatial-desktop-bento-and-controllednotes-determinis": [],
   "sources/obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve": [],
@@ -584,6 +586,10 @@
   "sources/obs-2026-10-17-issue-179-zen-chrome-inset-pr-186": [],
   "sources/obs-2026-10-18-zen-remark": [],
   "sources/obs-2026-10-19-issues-196-199-pr-219-main": [],
+  "sources/obs-2026-10-22-searcher": [],
+  "sources/obs-2026-10-23-": [],
+  "sources/obs-2026-10-23-issue-236-0-pr-245-246-247-main": [],
+  "sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

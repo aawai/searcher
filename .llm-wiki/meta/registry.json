@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-19T10:31:25.030Z",
+  "last_updated": "2026-10-23T07:13:14.083Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -1691,6 +1691,80 @@
       "source_context": "实现游客AI登录引导与注册规则/开关失败处理并合并main",
       "created": "2026-10-19",
       "updated": "2026-10-19"
+    },
+    "sources/obs-2026-10-22-searcher": {
+      "type": "source",
+      "title": "Observation: Searcher 工作区避让以视觉平衡为优先",
+      "tags": [
+        "searcher",
+        "ui",
+        "design",
+        "motion",
+        "workspace"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-22-searcher",
+      "relevance": "high",
+      "observed_at": "2026-10-22T14:28:18.390Z",
+      "source_context": "按审查反馈编写实施计划并修正",
+      "created": "2026-10-22",
+      "updated": "2026-10-22"
+    },
+    "sources/obs-2026-10-23-": {
+      "type": "source",
+      "title": "Observation: 玻璃效果档位与对比度下限的取舍",
+      "tags": [
+        "glass",
+        "material",
+        "tokens",
+        "contrast",
+        "check-ui"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-23-",
+      "relevance": "high",
+      "observed_at": "2026-10-23T03:53:02.891Z",
+      "source_context": "UI 玻璃材质可感知度修复",
+      "created": "2026-10-23",
+      "updated": "2026-10-23"
+    },
+    "sources/obs-2026-10-23-issue-236-0-pr-245-246-247-main": {
+      "type": "source",
+      "title": "Observation: Issue 236 阶段 0 经 PR 245/246/247 合并 main 并关闭",
+      "tags": [
+        "issue-236",
+        "pr-245",
+        "pr-246",
+        "pr-247",
+        "ui-guard",
+        "visual-language",
+        "merged"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-23-issue-236-0-pr-245-246-247-main",
+      "relevance": "critical",
+      "observed_at": "2026-10-23T07:13:14.044Z",
+      "source_context": "完成 issue 236 的 worktree 实施、PR 创建与合并交付",
+      "created": "2026-10-23",
+      "updated": "2026-10-23"
+    },
+    "sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3": {
+      "type": "source",
+      "title": "Observation: Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法",
+      "tags": [
+        "superseded",
+        "terminology",
+        "dock",
+        "apps",
+        "issue-236"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-23-superseded-obs-2026-09-28-ui-3",
+      "relevance": "high",
+      "observed_at": "2026-10-23T06:41:30.125Z",
+      "source_context": "Issue 236 A 文档修复：统一叫法",
+      "created": "2026-10-23",
+      "updated": "2026-10-23"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

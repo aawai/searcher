@@ -1082,6 +1082,38 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-10-22-searcher.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-22-searcher.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-22-searcher",
+      "contentHash": "8b25d6e18ffaa444548bd27927620a26e7f36a3304af774386e26b54b0b9834a",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-23-.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-23-.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-23-",
+      "contentHash": "7465750ed141f3c53234d35481aee140965d94f5add5be73279c7e33b892e719",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-23-issue-236-0-pr-245-246-247-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-23-issue-236-0-pr-245-246-247-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-23-issue-236-0-pr-245-246-247-main",
+      "contentHash": "f61ee6f397b9a1185deb80b819cc39a8d95cbfd0e77fd2e0feae645245523b6a",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3",
+      "contentHash": "343a2ce61569f6b22a9b6def82be6fa3764d6e761649e78ae9f0c8d566668b7a",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/sqlite-table-recreation-migration-zero-loss.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/sqlite-table-recreation-migration-zero-loss.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",

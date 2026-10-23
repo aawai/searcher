@@ -109,4 +109,8 @@
 - [Observation: Issue 179 Zen chrome inset 经 PR 186 合并关闭](obs-2026-10-17-issue-179-zen-chrome-inset-pr-186.md)
 - [Observation: Zen 便签预览避免 remark 根入口拉入编辑器包](obs-2026-10-18-zen-remark.md)
 - [Observation: Issues 196/199 经 PR 219 合并 main](obs-2026-10-19-issues-196-199-pr-219-main.md)
+- [Observation: Searcher 工作区避让以视觉平衡为优先](obs-2026-10-22-searcher.md)
+- [Observation: 玻璃效果档位与对比度下限的取舍](obs-2026-10-23-.md)
+- [Observation: Issue 236 阶段 0 经 PR 245/246/247 合并 main 并关闭](obs-2026-10-23-issue-236-0-pr-245-246-247-main.md)
+- [Observation: Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法](obs-2026-10-23-superseded-obs-2026-09-28-ui-3.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

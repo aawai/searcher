@@ -97,6 +97,10 @@
 - [[sources/obs-2026-10-17-issue-179-zen-chrome-inset-pr-186]] — Observation: Issue 179 Zen chrome inset 经 PR 186 合并关闭 *(created: 2026-10-17)*
 - [[sources/obs-2026-10-18-zen-remark]] — Observation: Zen 便签预览避免 remark 根入口拉入编辑器包 *(created: 2026-10-18)*
 - [[sources/obs-2026-10-19-issues-196-199-pr-219-main]] — Observation: Issues 196/199 经 PR 219 合并 main *(created: 2026-10-19)*
+- [[sources/obs-2026-10-22-searcher]] — Observation: Searcher 工作区避让以视觉平衡为优先 *(created: 2026-10-22)*
+- [[sources/obs-2026-10-23-]] — Observation: 玻璃效果档位与对比度下限的取舍 *(created: 2026-10-23)*
+- [[sources/obs-2026-10-23-issue-236-0-pr-245-246-247-main]] — Observation: Issue 236 阶段 0 经 PR 245/246/247 合并 main 并关闭 *(created: 2026-10-23)*
+- [[sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3]] — Observation: Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法 *(created: 2026-10-23)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -153,4 +157,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-19T10:31:25.030Z* | *Total pages: 138*
+*Last updated: 2026-10-23T07:13:14.083Z* | *Total pages: 142*
