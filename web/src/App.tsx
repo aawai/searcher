@@ -342,7 +342,7 @@ function Layout() {
                 }}
             >
                 <DialogContent aria-label="退出登录确认">
-                    <DialogTitle>有未同步的便签草稿</DialogTitle>
+                    <DialogTitle>有未同步的笔记草稿</DialogTitle>
                     <DialogDescription>
                         退出后草稿仍保留在此浏览器，重新登录可继续同步。
                     </DialogDescription>

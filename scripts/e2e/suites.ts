@@ -9,24 +9,13 @@ export const suites = {
         "launcher",
         "apps-density",
         "home-launcher-density",
+        "icon-presentation",
         "home-composition",
         "apps-session",
         "apps-interactions",
         "apps-races",
         "apps-ordering",
         "apps-ai-session",
-        "notes-workspace",
-        "notes-live-preview",
-        "notes-live-editing",
-        "notes-shared-events",
-        "notes-focus",
-        "notes-ux",
-        "notes-history",
-        "notes-drafts",
-        "notes-menu",
-        "notes-color",
-        "home-notes-order",
-        "zen-inline-notes",
         "workspace-contract",
         "workspace-matrix",
         "accent-contrast",
@@ -35,6 +24,14 @@ export const suites = {
     routing: ["navigation", "auth", "guest-ai-auth"],
     documents: [
         "documents",
+        "documents-library",
+        "documents-events",
+        "documents-live-preview",
+        "documents-history",
+        "documents-focus",
+        "documents-live-editing",
+        "documents-ux",
+        "documents-drafts",
         "document-vertical-layout",
         "document-zen-pagination-stability",
         "document-host-boundaries",
@@ -42,15 +39,18 @@ export const suites = {
     ],
     wallpaper: ["wallpaper"],
     bundle: ["bundle-loading", "route-style-stability"],
-    "home-notes": [
-        "home-notes-order",
-        "home-notes-persistence",
-        "zen-inline-notes",
+    "home-papers": [
+        "home-papers-color",
+        "home-papers-order",
+        "home-papers-persistence",
+        "home-papers-tasks",
+        "home-papers-inline",
+        "home-papers-document",
     ],
     supplemental: [
         "ui-ownership",
         "settings-shortcuts",
-        "shortcuts-notes-ask",
+        "shortcuts-documents-ask",
         "shortcuts-search",
         "ask-accessibility-retry",
         "ui-feedback",
@@ -60,7 +60,7 @@ export const suites = {
     ],
 } as const;
 
-export type Suite = keyof typeof suites | "full" | "apps" | "notes" | "layout";
+export type Suite = keyof typeof suites | "full" | "apps" | "layout";
 
 export function suiteFiles(suite: Suite): string[] {
     let names: readonly string[];
@@ -69,10 +69,6 @@ export function suiteFiles(suite: Suite): string[] {
     } else if (suite === "apps") {
         names = suites.workspace.filter((name) =>
             /^(apps-|launcher$|home-launcher-)/.test(name)
-        );
-    } else if (suite === "notes") {
-        names = suites.workspace.filter((name) =>
-            /^(notes-|home-notes-)/.test(name)
         );
     } else if (suite === "layout") {
         names = suites.workspace.filter((name) =>

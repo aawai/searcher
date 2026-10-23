@@ -26,7 +26,6 @@ interface BundleBudget {
     maxEntryChunkGzipBytes?: number;
     minGzipReductionRatio: number;
     maxSharedEditorGzipBytes: number;
-    maxNotesEditorGzipBytes: number;
 }
 
 interface FileMetric {
@@ -198,7 +197,7 @@ export function checkBundle(rootDir = Deno.cwd()): {
         "markdown-renderer-vendor",
         "editor-vendor",
         "src/features/markdown-editor/runtime",
-        "NoteLivePreviewEditor",
+        "src/features/documents/DocumentEditor",
     ];
 
     for (const key of initialGraphKeys) {
@@ -319,7 +318,7 @@ export function checkBundle(rootDir = Deno.cwd()): {
         }
     }
 
-    // Notes consumes the same lazy foundation as Documents, never its presentation/runtime.
+    // Home papers use a lightweight read-only renderer, never the editor runtime or Documents presentation.
     const buildReport = JSON.parse(
         readFileSync(resolve(distDir, "bundle-report.json"), "utf-8"),
     ) as Record<string, {
@@ -341,27 +340,25 @@ export function checkBundle(rootDir = Deno.cwd()): {
         return files;
     };
     const sharedFiles = staticFiles("src/features/markdown-editor/runtime.ts");
-    const notesFiles = staticFiles(
-        "src/components/searcher/NoteLivePreviewEditor.tsx",
-    );
+    const paperFiles = new Set<string>();
+    for (
+        const entry of [
+            "src/features/home-layouts/HomePapers.tsx",
+            "src/features/home-layouts/ZenInlinePapers.tsx",
+        ]
+    ) {
+        for (const file of staticFiles(entry)) paperFiles.add(file);
+    }
     const sharedMetrics = [...sharedFiles].filter((file) =>
         !initialFilesSet.has(file)
     ).map((file) => getFileMetric(distDir, file));
-    const notesMetrics = [...notesFiles].filter((file) =>
-        !initialFilesSet.has(file) && !sharedFiles.has(file)
-    ).map((file) => getFileMetric(distDir, file));
-    console.log("\n--- Notes Live Preview Budget (#108) ---");
+    console.log("\n--- Editor Runtime Budget (#108) ---");
     for (
         const [label, metrics, maximum] of [
             [
                 "Shared editor async runtime",
                 sharedMetrics,
                 budget.maxSharedEditorGzipBytes,
-            ],
-            [
-                "Notes-only editor increment",
-                notesMetrics,
-                budget.maxNotesEditorGzipBytes,
             ],
         ] as const
     ) {
@@ -403,10 +400,19 @@ export function checkBundle(rootDir = Deno.cwd()): {
                     );
                 }
             }
-            if (notesFiles.has(file) && documentsOnly.test(module.id)) {
+            if (
+                paperFiles.has(file) &&
+                (framework || documentsOnly.test(module.id))
+            ) {
                 errors.push(
-                    "Documents-only runtime in Notes graph: " + module.id,
+                    "Editor runtime in Home paper graph: " + module.id,
                 );
+            }
+            if (
+                paperFiles.has(file) && sharedFiles.has(file) &&
+                /editor-vendor|\/runtime-/.test(file)
+            ) {
+                errors.push("Editor chunk in Home paper graph: " + file);
             }
         }
     }

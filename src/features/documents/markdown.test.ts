@@ -9,6 +9,11 @@ import {
 Deno.test("documentDisplayTitle preserves explicit title precedence and first-block fallback boundary", () => {
     assertEquals(documentDisplayTitle(" Explicit ", "# Heading"), "Explicit");
     assertEquals(
+        documentDisplayTitle(null, "# Nullable title"),
+        "Nullable title",
+    );
+    assertEquals(documentDisplayTitle(null, ""), "无标题笔记");
+    assertEquals(
         documentDisplayTitle("", "First **paragraph**.\n\nSecond paragraph."),
         "First paragraph.",
     );

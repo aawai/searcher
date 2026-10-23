@@ -1,10 +1,11 @@
 import { type ComponentType, useEffect, useState } from "react";
+import type { NoteMarkdownProps } from "./NoteMarkdown.tsx";
 
-let cachedNoteMarkdown: ComponentType<{ body?: string | null }> | null = null;
+type NoteMarkdownComponent = ComponentType<NoteMarkdownProps>;
 
-export function preloadNoteMarkdown(): Promise<
-    ComponentType<{ body?: string | null }>
-> {
+let cachedNoteMarkdown: NoteMarkdownComponent | null = null;
+
+export function preloadNoteMarkdown(): Promise<NoteMarkdownComponent> {
     if (cachedNoteMarkdown) {
         return Promise.resolve(cachedNoteMarkdown);
     }
@@ -14,10 +15,12 @@ export function preloadNoteMarkdown(): Promise<
     });
 }
 
-export function NoteMarkdownView({ body }: { body?: string | null }) {
-    const [Comp, setComp] = useState<
-        ComponentType<{ body?: string | null }> | null
-    >(() => cachedNoteMarkdown);
+export function NoteMarkdownView(
+    { body, onToggleTask }: NoteMarkdownProps,
+) {
+    const [Comp, setComp] = useState<NoteMarkdownComponent | null>(
+        () => cachedNoteMarkdown,
+    );
 
     useEffect(() => {
         if (!Comp) {
@@ -28,7 +31,7 @@ export function NoteMarkdownView({ body }: { body?: string | null }) {
     }, [Comp]);
 
     if (Comp) {
-        return <Comp body={body} />;
+        return <Comp body={body} onToggleTask={onToggleTask} />;
     }
     return (
         <span className="note-preview-loading" aria-busy="true">

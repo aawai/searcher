@@ -175,9 +175,9 @@ Deno.test("tsx-scanner - allows valid tokens, semantic classes, and runtime exce
     assertEquals(unrelViolations.length, 2);
 });
 
-Deno.test("tsx-scanner - NotesWorkspace does not exempt static visuals or other coordinates", () => {
+Deno.test("tsx-scanner - DocumentsWorkspace does not exempt static visuals or other coordinates", () => {
     const code = `
-        export function InvalidNotes() {
+        export function InvalidDocuments() {
             return <div style={{
                 width: 240,
                 height: 320,
@@ -195,7 +195,7 @@ Deno.test("tsx-scanner - NotesWorkspace does not exempt static visuals or other 
         }
     `;
     assertEquals(
-        scanTsxCode("web/src/features/workspace/NotesWorkspace.tsx", code)
+        scanTsxCode("web/src/features/workspace/DocumentsWorkspace.tsx", code)
             .map((violation) => [violation.property, violation.rule]),
         [
             ["width", "inline-visual-style"],

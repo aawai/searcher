@@ -37,6 +37,9 @@ function createMockDoc(overrides: Partial<DocumentDto> = {}): DocumentDto {
         snippet: "Initial snippet",
         notebookId: null,
         isFavorite: false,
+        color: "paper",
+        isHomeFixed: false,
+        homeSortOrder: 0,
         createdAt: 1000,
         updatedAt: 1000,
         body: "Initial body content",
@@ -1613,4 +1616,100 @@ Deno.test("destroy() clears listeners immediately, flushes or safely persists to
         "Conflict draft pending teardown",
     );
     assertEquals(preservedConflictDraft.version, 3);
+});
+
+Deno.test("Untitled documents load with an empty title and clearing the title saves null", async () => {
+    const patches: PatchPayload[] = [];
+    let currentDoc = createMockDoc({
+        title: null,
+        displayTitle: "Initial body",
+    });
+    const session = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-1",
+        drafts: new MemoryDraftStorage(),
+        request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+            if (init?.method === "PATCH") {
+                patches.push(JSON.parse(init.body as string));
+                currentDoc = { ...currentDoc, version: currentDoc.version + 1 };
+            }
+            return Promise.resolve(currentDoc as unknown as T);
+        },
+    });
+
+    await session.load();
+    assertEquals(session.getSnapshot().title, "");
+
+    session.edit({ title: "   " });
+    session.edit({ body: "changed" });
+    assert(await session.save("manual"));
+    assertEquals(patches[0].title, null);
+});
+
+Deno.test("updatePresentation patches color and home pinning against the current version", async () => {
+    const patches: Record<string, unknown>[] = [];
+    let currentDoc = createMockDoc({ version: 3 });
+    const session = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-1",
+        drafts: new MemoryDraftStorage(),
+        request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+            if (init?.method === "PATCH") {
+                const body = JSON.parse(init.body as string);
+                patches.push(body);
+                currentDoc = {
+                    ...currentDoc,
+                    ...body,
+                    version: currentDoc.version + 1,
+                };
+            }
+            return Promise.resolve(currentDoc as unknown as T);
+        },
+    });
+
+    await session.load();
+    assert(
+        await session.updatePresentation({ color: "sage", isHomeFixed: true }),
+    );
+    assertEquals(patches, [{ version: 3, color: "sage", isHomeFixed: true }]);
+    assertEquals(session.getSnapshot().document?.color, "sage");
+    assertEquals(session.getSnapshot().document?.isHomeFixed, true);
+    assertEquals(session.getSnapshot().document?.version, 4);
+});
+
+Deno.test("Realtime update refreshes a clean session and turns unsaved edits into a conflict", async () => {
+    let remote = createMockDoc({ version: 1, body: "first" });
+    const handlers = new Set<(version: number) => void>();
+    const events = {
+        subscribe: (_id: string, handler: (version: number) => void) => {
+            handlers.add(handler);
+            return () => handlers.delete(handler);
+        },
+        subscribeAll: () => () => {},
+        dispose: () => {},
+    };
+    const session = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-1",
+        drafts: new MemoryDraftStorage(),
+        events,
+        request: <T>(): Promise<T> => Promise.resolve(remote as unknown as T),
+    });
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    await session.load();
+    remote = createMockDoc({ version: 2, body: "second" });
+    for (const handler of handlers) handler(2);
+    await settle();
+    assertEquals(session.getSnapshot().body, "second");
+    assertEquals(session.getSnapshot().document?.version, 2);
+
+    session.edit({ body: "local unsaved" });
+    remote = createMockDoc({ version: 3, body: "third" });
+    for (const handler of handlers) handler(3);
+    await settle();
+    assertEquals(session.getSnapshot().saveStatus, "conflict");
+    assertEquals(session.getSnapshot().body, "local unsaved");
+    assertEquals(session.getSnapshot().conflict?.body, "third");
+    await session.destroy();
 });

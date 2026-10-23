@@ -3,10 +3,6 @@ export type AppsRoute =
     | { view: "apps/create"; groupId?: string }
     | { view: "apps/edit"; id: string; expandIcon?: boolean };
 
-export type NotesRoute =
-    | { view: "notes/root" }
-    | { view: "notes/edit"; id: string };
-
 export type DocumentsRoute =
     | { view: "documents/root" }
     | { view: "documents/create" }
@@ -14,20 +10,15 @@ export type DocumentsRoute =
 
 export type DocumentsScope =
     | { type: "all" }
+    | { type: "home" }
     | { type: "recent" }
     | { type: "favorite" }
     | { type: "notebook"; notebookId: string };
 
-export type WorkspaceRoute = AppsRoute | NotesRoute | DocumentsRoute;
+export type WorkspaceRoute = AppsRoute | DocumentsRoute;
 
 export function isAppsWorkspaceView(state: WorkspaceRoute): state is AppsRoute {
     return state.view.startsWith("apps/");
-}
-
-export function isNotesWorkspaceView(
-    state: WorkspaceRoute,
-): state is NotesRoute {
-    return state.view.startsWith("notes/");
 }
 
 export function isDocumentsWorkspaceView(
@@ -36,7 +27,7 @@ export function isDocumentsWorkspaceView(
     return state.view.startsWith("documents/");
 }
 
-export type WorkspaceKind = "apps" | "notes" | "documents";
+export type WorkspaceKind = "apps" | "documents";
 
 export interface DomainWorkspaceState<Route = WorkspaceRoute> {
     route: Route;
@@ -51,18 +42,11 @@ export interface DocumentsWorkspaceState
 
 export interface WorkspaceCoreState {
     apps: DomainWorkspaceState<AppsRoute>;
-    notes: DomainWorkspaceState<NotesRoute>;
     documents: DocumentsWorkspaceState;
 }
 
 export const initialAppsWorkspaceState: DomainWorkspaceState<AppsRoute> = {
     route: { view: "apps/root" },
-    stack: [],
-    query: "",
-};
-
-export const initialNotesWorkspaceState: DomainWorkspaceState<NotesRoute> = {
-    route: { view: "notes/root" },
     stack: [],
     query: "",
 };
@@ -76,7 +60,6 @@ export const initialDocumentsWorkspaceState: DocumentsWorkspaceState = {
 
 export const initialWorkspaceCoreState: WorkspaceCoreState = {
     apps: initialAppsWorkspaceState,
-    notes: initialNotesWorkspaceState,
     documents: initialDocumentsWorkspaceState,
 };
 
@@ -85,6 +68,7 @@ export type DomainWorkspaceAction<Route = WorkspaceRoute> =
     | { type: "query"; value: string }
     | { type: "back" }
     | { type: "reset" };
+
 export function areWorkspaceRoutesEqual(
     a: WorkspaceRoute,
     b: WorkspaceRoute,
@@ -96,9 +80,6 @@ export function areWorkspaceRoutesEqual(
     if (a.view === "apps/edit" && b.view === "apps/edit") {
         return a.id === b.id;
     }
-    if (a.view === "notes/edit" && b.view === "notes/edit") {
-        return a.id === b.id;
-    }
     if (a.view === "documents/edit" && b.view === "documents/edit") {
         return a.id === b.id;
     }
@@ -107,7 +88,6 @@ export function areWorkspaceRoutesEqual(
 
 export function parentWorkspaceRoute(route: WorkspaceRoute): WorkspaceRoute {
     if (isAppsWorkspaceView(route)) return { view: "apps/root" };
-    if (isNotesWorkspaceView(route)) return { view: "notes/root" };
     return { view: "documents/root" };
 }
 
@@ -119,8 +99,6 @@ export function domainWorkspaceReducer<Route extends WorkspaceRoute>(
         case "reset": {
             const initial = isAppsWorkspaceView(state.route)
                 ? initialAppsWorkspaceState
-                : isNotesWorkspaceView(state.route)
-                ? initialNotesWorkspaceState
                 : initialDocumentsWorkspaceState;
             return initial as DomainWorkspaceState<Route>;
         }
@@ -148,7 +126,6 @@ export function domainWorkspaceReducer<Route extends WorkspaceRoute>(
             }
             if (
                 nextRoute.view === "apps/root" ||
-                nextRoute.view === "notes/root" ||
                 nextRoute.view === "documents/root"
             ) {
                 return { ...state, route: nextRoute, stack: [] };

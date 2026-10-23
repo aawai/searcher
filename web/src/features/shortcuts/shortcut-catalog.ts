@@ -1,6 +1,6 @@
 import type { EngineId } from "@shared/engines.ts";
 
-export type ShortcutScope = "global" | "search" | "ask" | "notes";
+export type ShortcutScope = "global" | "search" | "ask" | "documents";
 export type ShortcutPlatform = "mac" | "other";
 export type ShortcutBinding = {
     modifiers?: readonly ("mod" | "shift" | "alt")[];
@@ -32,7 +32,7 @@ export const SHORTCUTS = {
         section: "global",
         action: "聚焦主搜索框",
         context: "首页非可编辑区域",
-        description: "便签正文中由插入链接优先处理；其他输入控件内不抢占焦点。",
+        description: "笔记正文中由插入链接优先处理；其他输入控件内不抢占焦点。",
         binding: { key: "k", modifiers: ["mod"] },
     },
     searchNewTab: {
@@ -55,42 +55,42 @@ export const SHORTCUTS = {
     noteSave: {
         id: "note-save",
         kind: "keyboard",
-        section: "notes",
+        section: "documents",
         action: "手动保存",
-        context: "便签正文编辑器",
+        context: "笔记正文编辑器",
         binding: { key: "s", modifiers: ["mod"] },
     },
     noteBold: {
         id: "note-bold",
         kind: "keyboard",
-        section: "notes",
+        section: "documents",
         action: "粗体",
-        context: "便签正文编辑器",
+        context: "笔记正文编辑器",
         binding: { key: "b", modifiers: ["mod"] },
     },
     noteItalic: {
         id: "note-italic",
         kind: "keyboard",
-        section: "notes",
+        section: "documents",
         action: "斜体",
-        context: "便签正文编辑器",
+        context: "笔记正文编辑器",
         binding: { key: "i", modifiers: ["mod"] },
     },
     noteLink: {
         id: "note-link",
         kind: "keyboard",
-        section: "notes",
+        section: "documents",
         action: "插入链接",
-        context: "便签正文编辑器",
+        context: "笔记正文编辑器",
         description: "本地编辑操作优先，不会聚焦主搜索框。",
         binding: { key: "k", modifiers: ["mod"] },
     },
     noteStrike: {
         id: "note-strike",
         kind: "keyboard",
-        section: "notes",
+        section: "documents",
         action: "删除线",
-        context: "便签正文编辑器",
+        context: "笔记正文编辑器",
         binding: { key: "x", modifiers: ["mod", "shift"] },
     },
 } as const satisfies Record<string, KeyboardShortcutDefinition>;

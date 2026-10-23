@@ -40,6 +40,7 @@ import {
     Files,
     Folder,
     FolderInput,
+    Home,
     MoreHorizontal,
     Pencil,
     Plus,
@@ -347,6 +348,17 @@ export function DocumentNotebookNavigation({
                 >
                     <Clock className="icon-md" />
                     <span>最近笔记</span>
+                </Button>
+                <Button
+                    type="button"
+                    variant={scope.type === "home" ? "outline" : "ghost"}
+                    className="documents-notebook-scope-btn"
+                    data-active={scope.type === "home"}
+                    aria-pressed={scope.type === "home"}
+                    onClick={() => onScopeChange({ type: "home" })}
+                >
+                    <Home className="icon-md" />
+                    <span>首页</span>
                 </Button>
                 <Button
                     type="button"

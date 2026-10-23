@@ -147,7 +147,6 @@ export function SearcherComposer({
     };
 
     const activeTools = [
-        supportsTools && toolsConfig.notes ? "搜索便签" : undefined,
         supportsTools && toolsConfig.documents &&
             capabilities?.tools.documents !== false
             ? "搜索笔记"
@@ -296,29 +295,10 @@ export function SearcherComposer({
                                             className="ask-composer__tools-unavailable"
                                             role="status"
                                         >
-                                            当前模型不支持工具调用。切换到支持工具的模型后，可使用搜索便签、搜索笔记、搜索应用和联网搜索。
+                                            当前模型不支持工具调用。切换到支持工具的模型后，可使用搜索笔记、搜索应用和联网搜索。
                                         </p>
                                     )}
                                     <div className="ask-composer__tool-options">
-                                        <div className="ask-composer__tool-option">
-                                            <label htmlFor="tool-notes">
-                                                搜索便签
-                                            </label>
-                                            <Switch
-                                                id="tool-notes"
-                                                aria-label="搜索便签"
-                                                size="sm"
-                                                disabled={!supportsTools}
-                                                checked={Boolean(
-                                                    toolsConfig.notes,
-                                                )}
-                                                onCheckedChange={(checked) =>
-                                                    onChangeToolsConfig({
-                                                        ...toolsConfig,
-                                                        notes: checked,
-                                                    })}
-                                            />
-                                        </div>
                                         <div className="ask-composer__tool-option">
                                             <div className="ask-composer__tool-label">
                                                 <label htmlFor="tool-documents">

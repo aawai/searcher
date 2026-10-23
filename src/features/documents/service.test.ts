@@ -13,6 +13,11 @@ import {
     DOCUMENT_PAGE_MAX_LIMIT,
     DOCUMENT_TITLE_MAX_LENGTH,
 } from "../../shared/documents.ts";
+import type {
+    DocumentColor,
+    DocumentUpdatedEvent,
+} from "../../shared/documents.ts";
+import { DocumentLayoutsService } from "./layouts.ts";
 import {
     DocumentConflictError,
     DocumentNotFoundError,
@@ -803,6 +808,8 @@ Deno.test("DocumentsService - search: FTS matches title & body, excludes trash, 
 
 Deno.test("DocumentsService - rollback invariant: multi-mutation operations roll back completely on failure", async () => {
     const { store, service } = await setupTestContext();
+    const events: DocumentUpdatedEvent[] = [];
+    service.events.on("user-1", (event) => events.push(event));
 
     // 1. Rollback on create: if documentVersions insertion fails, document record must roll back
     await store.run(async (db) => {
@@ -824,6 +831,7 @@ Deno.test("DocumentsService - rollback invariant: multi-mutation operations roll
             }),
         Error,
     );
+    assertEquals(events, []);
 
     const createdDocs = await store.run(async (db) => {
         return await db.select().from(documents).where(
@@ -867,6 +875,7 @@ Deno.test("DocumentsService - rollback invariant: multi-mutation operations roll
             }),
         Error,
     );
+    assertEquals(events.map((event) => event.version), [1]);
 
     const docAfterFailedUpdate = await service.get("user-1", stableDoc.id);
     assertEquals(docAfterFailedUpdate.version, 1);
@@ -897,9 +906,290 @@ Deno.test("DocumentsService - rollback invariant: multi-mutation operations roll
         () => service.restoreVersion("user-1", stableDoc.id, 1, 2),
         Error,
     );
+    assertEquals(events.map((event) => event.version), [1, 2]);
 
     const docAfterFailedRestore = await service.get("user-1", stableDoc.id);
     assertEquals(docAfterFailedRestore.version, 2);
     assertEquals(docAfterFailedRestore.title, "Version 2 Doc");
     assertEquals(docAfterFailedRestore.body, "Version 2 Body");
+});
+
+Deno.test("Documents preserve nullable canonical titles across summaries, snapshots and restore", async () => {
+    const { service, store } = await setupTestContext();
+    try {
+        const body = "```\n" + "skip\n".repeat(100) +
+            "```\n\n# Readable fallback";
+        const doc = await service.create("user-1", { title: null, body });
+        assertEquals(doc.title, null);
+        assertEquals(doc.displayTitle, "Readable fallback");
+        assertEquals((await service.create("user-1", {})).title, null);
+        assertEquals((await service.versions("user-1", doc.id))[0].title, null);
+        for (
+            const page of [
+                await service.list("user-1"),
+                await service.search("user-1", "Readable"),
+            ]
+        ) {
+            const summary = page.items.find((item) => item.id === doc.id);
+            assertEquals(summary?.title, null);
+            assertEquals(summary?.displayTitle, "Readable fallback");
+        }
+        const named = await service.update("user-1", doc.id, {
+            version: 1,
+            title: "Named",
+            origin: "manual",
+        });
+        const untitled = await service.update("user-1", doc.id, {
+            version: named.version,
+            title: null,
+            origin: "manual",
+        });
+        assertEquals(untitled.title, null);
+        const restored = await service.restoreVersion(
+            "user-1",
+            doc.id,
+            1,
+            untitled.version,
+        );
+        assertEquals(restored.title, null);
+        await service.softDelete("user-1", doc.id, restored.version);
+        const trash = await service.listTrash("user-1");
+        assertEquals(trash.items[0].title, null);
+        assertEquals(trash.items[0].displayTitle, "Readable fallback");
+    } finally {
+        store.close();
+    }
+});
+
+Deno.test("Documents colors, favorites and home ordering persist with scope-bound keyset cursors", async () => {
+    const { service, store, advanceTime } = await setupTestContext();
+    try {
+        const colors: DocumentColor[] = [
+            "paper",
+            "amber",
+            "rose",
+            "sage",
+            "sky",
+        ];
+        const created = [];
+        for (const [index, color] of colors.entries()) {
+            advanceTime(1);
+            created.push(
+                await service.create("user-1", {
+                    color,
+                    isHomeFixed: true,
+                    homeSortOrder: index === 0 ? 5 : 1,
+                    isFavorite: index === 0,
+                    body: "Searchable color",
+                }),
+            );
+        }
+        const ordinary = await service.create("user-1", {});
+        assertEquals([
+            ordinary.color,
+            ordinary.isHomeFixed,
+            ordinary.homeSortOrder,
+            ordinary.isFavorite,
+        ], ["paper", false, 0, false]);
+        await service.create("user-2", {
+            isHomeFixed: true,
+            homeSortOrder: -1,
+        });
+        const expected = [...created].sort((a, b) =>
+            a.homeSortOrder - b.homeSortOrder || b.id.localeCompare(a.id)
+        );
+        const actual = [];
+        let cursor: string | undefined;
+        do {
+            const page = await service.list("user-1", {
+                scope: { type: "home" },
+                limit: 2,
+                cursor,
+            });
+            actual.push(...page.items);
+            cursor = page.nextCursor ?? undefined;
+        } while (cursor);
+        assertEquals(
+            actual.map((item) => item.id),
+            expected.map((item) => item.id),
+        );
+        for (const doc of created) {
+            assertEquals(
+                actual.find((item) => item.id === doc.id)?.color,
+                doc.color,
+            );
+        }
+        const first = await service.list("user-1", {
+            scope: { type: "home" },
+            limit: 1,
+        });
+        await assertRejects(() =>
+            service.list("user-1", {
+                scope: { type: "recent" },
+                cursor: first.nextCursor!,
+            }), DocumentValidationError);
+        await assertRejects(() =>
+            service.list("user-2", {
+                scope: { type: "home" },
+                cursor: first.nextCursor!,
+            }), DocumentValidationError);
+        assertEquals(
+            (await service.list("user-1", { scope: { type: "favorite" } }))
+                .items.map((item) => item.id),
+            [created[0].id],
+        );
+        const updated = await service.update("user-1", created[0].id, {
+            version: 1,
+            color: "sky",
+            isHomeFixed: false,
+            homeSortOrder: -5,
+            isFavorite: false,
+        });
+        assertEquals([
+            updated.color,
+            updated.isHomeFixed,
+            updated.homeSortOrder,
+            updated.isFavorite,
+        ], ["sky", false, -5, false]);
+        await assertRejects(() =>
+            service.update("user-1", updated.id, {
+                version: 1,
+                color: "amber",
+            }), DocumentConflictError);
+        assertEquals(
+            (await service.search("user-1", "Searchable")).items.find((item) =>
+                item.id === updated.id
+            )?.color,
+            "sky",
+        );
+        assertEquals((await service.versions("user-1", updated.id)).length, 1);
+    } finally {
+        store.close();
+    }
+});
+
+Deno.test("Document layouts isolate owners and devices, preserve partial fields and never version content", async () => {
+    const { service, store, now, advanceTime } = await setupTestContext();
+    const layouts = new DocumentLayoutsService(store, now);
+    try {
+        const doc = await service.create("user-1", {});
+        assertEquals(await layouts.getLayout("user-1", doc.id), null);
+        await assertRejects(
+            () => layouts.getLayout("user-2", doc.id),
+            DocumentNotFoundError,
+        );
+        await assertRejects(
+            () => layouts.updateLayout("user-2", doc.id, { x: 50 }),
+            DocumentNotFoundError,
+        );
+        const desktop = await layouts.updateLayout("user-1", doc.id, {
+            x: 10,
+            y: 20,
+            width: 220,
+            zIndex: 5,
+            expanded: true,
+            sortOrder: 3,
+        });
+        assertEquals(await layouts.getLayout("user-1", doc.id), desktop);
+        advanceTime(1);
+        const changed = await layouts.updateLayout("user-1", doc.id, {
+            x: null,
+            expanded: false,
+        });
+        assertEquals(changed, {
+            ...desktop,
+            x: null,
+            expanded: false,
+            updatedAt: now(),
+        });
+        const mobile = await layouts.updateLayout("user-1", doc.id, {
+            deviceClass: "mobile",
+            sortOrder: 2,
+        });
+        assertEquals(mobile.x, null);
+        assertEquals(
+            await layouts.getLayout("user-1", doc.id, "mobile"),
+            mobile,
+        );
+        assertEquals(await layouts.getLayout("user-1", doc.id), changed);
+        assertEquals(await layouts.getLayout("user-1", doc.id, "tablet"), null);
+        assertEquals(await service.get("user-1", doc.id), doc);
+        await service.softDelete("user-1", doc.id, doc.version);
+        await assertRejects(
+            () => layouts.getLayout("user-1", doc.id),
+            DocumentNotFoundError,
+        );
+        await assertRejects(
+            () => layouts.updateLayout("user-1", doc.id, { y: 90 }),
+            DocumentNotFoundError,
+        );
+        await service.restore("user-1", doc.id);
+        assertEquals(await layouts.getLayout("user-1", doc.id), changed);
+    } finally {
+        store.close();
+    }
+});
+
+Deno.test("Document events isolate users and service instances and publish committed lifecycle versions", async () => {
+    const { service, store, now, advanceTime } = await setupTestContext();
+    try {
+        const events: DocumentUpdatedEvent[] = [];
+        const otherUser: DocumentUpdatedEvent[] = [];
+        const otherInstance: DocumentUpdatedEvent[] = [];
+        const reads: Promise<unknown>[] = [];
+        const unsubscribe = service.events.on("user-1", (event) => {
+            events.push(event);
+            reads.push(
+                service.get("user-1", event.documentId).then(
+                    (doc) => doc.version,
+                    () => null,
+                ),
+            );
+        });
+        service.events.on("user-2", (event) => otherUser.push(event));
+        new DocumentsService(store, now).events.on(
+            "user-1",
+            (event) => otherInstance.push(event),
+        );
+        service.events.on("user-1", () => {
+            throw new Error("Disconnected subscriber");
+        });
+        const doc = await service.create("user-1", { body: "Original" });
+        advanceTime(1);
+        await service.update("user-1", doc.id, {
+            version: 1,
+            body: "Saved",
+            origin: "manual",
+        });
+        await assertRejects(
+            () =>
+                service.update("user-1", doc.id, { version: 1, body: "Stale" }),
+            DocumentConflictError,
+        );
+        advanceTime(1);
+        await service.restoreVersion("user-1", doc.id, 1, 2);
+        advanceTime(1);
+        await service.softDelete("user-1", doc.id, 3);
+        advanceTime(1);
+        const restored = await service.restore("user-1", doc.id);
+        advanceTime(1);
+        await service.permanentDelete("user-1", doc.id, restored.version);
+        assertEquals(
+            events,
+            [1, 2, 3, 4, 5, 6].map((version) => ({
+                documentId: doc.id,
+                version,
+                updatedAt: 1_000_000 + version - 1,
+            })),
+        );
+        assertEquals(await Promise.all(reads), [1, 2, 3, 4, 5, null]);
+        assertEquals(otherUser, []);
+        assertEquals(otherInstance, []);
+        unsubscribe();
+        unsubscribe();
+        await service.create("user-1", {});
+        assertEquals(events.length, 6);
+    } finally {
+        store.close();
+    }
 });

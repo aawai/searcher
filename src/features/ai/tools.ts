@@ -1,5 +1,4 @@
 import type { DatabaseStore } from "../../db/database.ts";
-import { NotesService } from "../notes/service.ts";
 import { BookmarksService } from "../bookmarks/service.ts";
 import { DocumentsService } from "../documents/service.ts";
 import type {
@@ -45,7 +44,6 @@ export function isWebSearchEnabled(): boolean {
 export function getAiCapabilities(): AiCapabilitiesDto {
     return {
         tools: {
-            notes: true,
             documents: true,
             apps: true,
             webSearch: isWebSearchEnabled(),
@@ -68,41 +66,20 @@ export function buildToolDefinitions(
 
     const defs: ToolDefinition[] = [];
 
-    if (tools.notes) {
-        defs.push({
-            type: "function",
-            function: {
-                name: "lookup_notes",
-                description:
-                    "Search the user's short sticky notes, not long-form documents (use lookup_documents for those; read-only)",
-                parameters: {
-                    type: "object",
-                    properties: {
-                        query: {
-                            type: "string",
-                            description:
-                                "Search keywords to find relevant notes",
-                        },
-                    },
-                    required: ["query"],
-                },
-            },
-        });
-    }
     if (tools.documents) {
         defs.push({
             type: "function",
             function: {
                 name: "lookup_documents",
                 description:
-                    "Search and read the user's long-form documents, not short sticky notes (use lookup_notes for those). Read-only; searches only the current user's undeleted documents.",
+                    "Search and read all the user's notes, including short home-fixed papers and long-form documents. Read-only; searches only the current user's undeleted notes.",
                 parameters: {
                     type: "object",
                     properties: {
                         query: {
                             type: "string",
                             description:
-                                "Search query for the user's long-form documents",
+                                "Search keywords for any of the user's notes",
                         },
                     },
                     required: ["query"],
@@ -165,7 +142,7 @@ export interface ToolExecutionContext {
 }
 
 export interface ToolExecutionResult {
-    toolName: "notes" | "documents" | "apps" | "webSearch";
+    toolName: "documents" | "apps" | "webSearch";
     result: unknown;
     sources?: SourceCitation[];
     error?: string;
@@ -176,12 +153,8 @@ export async function executeToolCall(
     args: Record<string, unknown>,
     ctx: ToolExecutionContext,
 ): Promise<ToolExecutionResult> {
-    let canonicalName: "notes" | "documents" | "apps" | "webSearch";
-    if (callName === "lookup_notes" || callName === "notes") {
-        canonicalName = "notes";
-    } else if (
-        callName === "lookup_documents" || callName === "documents"
-    ) {
+    let canonicalName: "documents" | "apps" | "webSearch";
+    if (callName === "lookup_documents" || callName === "documents") {
         canonicalName = "documents";
     } else if (callName === "lookup_apps" || callName === "apps") {
         canonicalName = "apps";
@@ -189,7 +162,7 @@ export async function executeToolCall(
         canonicalName = "webSearch";
     } else {
         return {
-            toolName: "notes",
+            toolName: "documents",
             result: null,
             error: `不支持或未知的工具调用: ${callName}`,
         };
@@ -204,9 +177,7 @@ export async function executeToolCall(
             };
         }
     } else if (ctx.allowedTools) {
-        const isOptedIn = canonicalName === "notes"
-            ? Boolean(ctx.allowedTools.notes)
-            : canonicalName === "apps"
+        const isOptedIn = canonicalName === "apps"
             ? Boolean(ctx.allowedTools.apps)
             : Boolean(ctx.allowedTools.webSearch);
         if (!isOptedIn) {
@@ -218,33 +189,6 @@ export async function executeToolCall(
         }
     }
     try {
-        if (canonicalName === "notes") {
-            const notesService = new NotesService(ctx.store);
-            const query = typeof args.query === "string"
-                ? args.query.trim()
-                : "";
-            if (!query) {
-                const list = await notesService.list(ctx.userId, {
-                    includeDeleted: false,
-                });
-                const summary = list.slice(0, 10).map((n) => ({
-                    id: n.id,
-                    title: n.title ?? "Untitled",
-                    snippet: n.body.slice(0, 300),
-                    updatedAt: n.updatedAt,
-                }));
-                return { toolName: "notes", result: summary };
-            }
-
-            const searchResults = await notesService.search(ctx.userId, query);
-            const summary = searchResults.slice(0, 10).map((r) => ({
-                id: r.id,
-                title: r.title ?? "Untitled",
-                snippet: r.snippet,
-            }));
-            return { toolName: "notes", result: summary };
-        }
-
         if (canonicalName === "documents") {
             const documentsService = new DocumentsService(ctx.store);
             const query = typeof args.query === "string"

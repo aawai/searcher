@@ -245,6 +245,7 @@ export function registerSystemRoutes(
         return c.success({
             valid: true,
             manifest: check.manifest,
+            warnings: check.warnings ?? [],
         });
     });
 

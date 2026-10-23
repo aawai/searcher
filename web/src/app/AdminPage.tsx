@@ -1238,7 +1238,7 @@ export function AdminPage() {
                         <AlertDialogTitle>删除用户</AlertDialogTitle>
                         <AlertDialogDescription>
                             删除 @{deleteUsername}{" "}
-                            后，其会话将被立即终止，便签、应用和偏好将无法访问。此操作不可撤销。
+                            后，其会话将被立即终止，笔记、应用和偏好将无法访问。此操作不可撤销。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <form className="admin-form" onSubmit={handleDeleteSubmit}>

@@ -127,6 +127,7 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
         >;
         assertEquals(overviewBody.status, true);
         assertEquals(overviewBody.data?.totalUsers, 2);
+        assertEquals(overviewBody.data?.totalDocuments, 0);
         assertEquals(overviewBody.data?.settings.auditRetentionDays, 90);
 
         // 3. Settings GET & PATCH
@@ -252,11 +253,12 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
         );
         assertEquals(validateRes.status, STATUS_CODE.OK);
         const validateBody = await validateRes.json() as Envelope<
-            { valid: boolean; manifest: BackupManifest }
+            { valid: boolean; manifest: BackupManifest; warnings: string[] }
         >;
         assertEquals(validateBody.data?.valid, true);
         assertEquals(validateBody.data?.manifest.appName, "Searcher");
         assertEquals(validateBody.data?.manifest.counts.users, 2);
+        assertEquals(validateBody.data?.warnings, []);
 
         const malicious = fflate.zipSync({
             ...fflate.unzipSync(backupBytes),
@@ -292,9 +294,14 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
         });
         assertEquals(restoreRes.status, STATUS_CODE.OK);
         const restoreBody = await restoreRes.json() as Envelope<
-            { manifest: BackupManifest; snapshotCreated: boolean }
+            {
+                manifest: BackupManifest;
+                snapshotCreated: boolean;
+                warnings: string[];
+            }
         >;
         assertEquals(restoreBody.data?.snapshotCreated, true);
+        assertEquals(restoreBody.data?.warnings, []);
         assertEquals(
             await Deno.readFile(
                 `${ctx.wallpaperDir}/${originalWallpaper.id}.bin`,

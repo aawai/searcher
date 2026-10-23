@@ -25,11 +25,14 @@ import {
     useRef,
     useState,
 } from "react";
-import { hasUnsyncedNoteDrafts } from "../features/notes/local-drafts.ts";
 import {
-    createNoteEventSubscriptions,
-    type NoteEventSubscriptions,
-} from "../features/notes/note-event-subscriptions.ts";
+    cleanupLegacyNoteDrafts,
+    hasUnsyncedDocumentDrafts,
+} from "../features/documents/local-drafts.ts";
+import {
+    createDocumentEventSubscriptions,
+    type DocumentEventSubscriptions,
+} from "../features/documents/document-event-subscriptions.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
 import {
@@ -127,7 +130,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
 type AuthSession = {
     userId: string | null;
     isCurrent: () => boolean;
-    noteEvents: NoteEventSubscriptions;
+    documentEvents: DocumentEventSubscriptions;
 };
 
 type State = {
@@ -168,7 +171,7 @@ export function AppState({ children }: { children: ReactNode }) {
         const session: AuthSession = {
             userId: null,
             isCurrent: () => sessionRef.current === session,
-            noteEvents: createNoteEventSubscriptions(),
+            documentEvents: createDocumentEventSubscriptions(),
         };
         sessionRef.current = session;
     }
@@ -179,19 +182,20 @@ export function AppState({ children }: { children: ReactNode }) {
             setValue(initial);
         }
         if (renew || userRef.current?.id !== next?.id) {
-            sessionRef.current!.noteEvents.dispose();
+            sessionRef.current!.documentEvents.dispose();
             const session: AuthSession = {
                 userId: next?.id ?? null,
                 isCurrent: () => sessionRef.current === session,
-                noteEvents: createNoteEventSubscriptions(),
+                documentEvents: createDocumentEventSubscriptions(),
             };
             sessionRef.current = session;
         }
         userRef.current = next;
         setUser(next);
     }, []);
-    useEffect(() => () => {
-        sessionRef.current!.noteEvents.dispose();
+    useEffect(() => {
+        void cleanupLegacyNoteDrafts().catch(() => undefined);
+        return () => sessionRef.current!.documentEvents.dispose();
     }, []);
     const sync = useRef<AppearanceSyncQueue>({
         owner: null,
@@ -448,7 +452,7 @@ export function AppState({ children }: { children: ReactNode }) {
         if (!session.userId) return true;
         if (!options?.force) {
             try {
-                const hasDrafts = await hasUnsyncedNoteDrafts(
+                const hasDrafts = await hasUnsyncedDocumentDrafts(
                     session.userId,
                     session.isCurrent,
                 );
@@ -457,7 +461,7 @@ export function AppState({ children }: { children: ReactNode }) {
             } catch {
                 if (!session.isCurrent()) return true;
                 throw new Error(
-                    "未能检查本地便签草稿，尚未退出登录；请重试退出。",
+                    "未能检查本地笔记草稿，尚未退出登录；请重试退出。",
                 );
             }
         }

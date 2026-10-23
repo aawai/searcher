@@ -4,7 +4,7 @@ import { openDatabase } from "../../db/database.ts";
 
 Deno.test({
     name:
-        "migration 0005: preserves pre-existing user, session, preference, bookmark, and note data with zero loss",
+        "migration 0005: preserves pre-existing user, session, preference and bookmark data",
     async fn() {
         const testDbPath = await Deno.makeTempFile({ suffix: ".sqlite" });
         try {
@@ -47,9 +47,6 @@ Deno.test({
 
                 INSERT INTO bookmarks (id, user_id, title, url, created_at, updated_at)
                 VALUES ('bm_legacy_1', 'u_test_legacy', 'My Old Bookmark', 'https://example.com/test', 1000, 1000);
-
-                INSERT INTO notes (id, user_id, content, pinned, color, version, created_at, updated_at)
-                VALUES ('note_legacy_1', 'u_test_legacy', 'Legacy Note Body Content', 1, 'amber', 5, 1000, 1000);
             `);
 
             // 3. Apply 0005 via DatabaseStore.migrate
@@ -108,42 +105,6 @@ Deno.test({
                 assertEquals(webappRows.length, 1);
                 assertEquals(webappRows[0].name, "My Old Bookmark");
                 assertEquals(webappRows[0].url, "https://example.com/test");
-
-                // 6. Notes preserved and backfilled
-                type NoteRow = {
-                    current_body: string;
-                    current_version: number;
-                    is_pinned: number;
-                    color: string;
-                };
-                const noteRows = verifyNative.prepare(
-                    "SELECT current_body, current_version, is_pinned, color FROM notes WHERE id = 'note_legacy_1'",
-                ).all() as unknown as NoteRow[];
-                assertEquals(noteRows.length, 1);
-                assertEquals(
-                    noteRows[0].current_body,
-                    "Legacy Note Body Content",
-                );
-                assertEquals(noteRows[0].current_version, 5);
-                assertEquals(noteRows[0].is_pinned, 1);
-                assertEquals(noteRows[0].color, "amber");
-
-                // 7. Initial snapshot created in note_versions
-                type VersionRow = { version: number; body: string };
-                const versionRows = verifyNative.prepare(
-                    "SELECT version, body FROM note_versions WHERE note_id = 'note_legacy_1'",
-                ).all() as unknown as VersionRow[];
-                assertEquals(versionRows.length, 1);
-                assertEquals(versionRows[0].version, 5);
-                assertEquals(versionRows[0].body, "Legacy Note Body Content");
-
-                // 8. FTS virtual table populated
-                type FtsRow = { body: string };
-                const ftsRows = verifyNative.prepare(
-                    "SELECT body FROM notes_fts WHERE note_id = 'note_legacy_1'",
-                ).all() as unknown as FtsRow[];
-                assertEquals(ftsRows.length, 1);
-                assertEquals(ftsRows[0].body, "Legacy Note Body Content");
             } finally {
                 verifyNative.close();
             }

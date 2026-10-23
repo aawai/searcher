@@ -11,7 +11,7 @@ if (name === "check" && !mode) {
 if (
     !name ||
     !(Object.hasOwn(suites, name) ||
-        ["full", "apps", "notes", "layout"].includes(name)) ||
+        ["full", "apps", "layout"].includes(name)) ||
     (mode !== undefined && mode !== "--serial" && mode !== "--parallel") ||
     Deno.args.length > 2
 ) {

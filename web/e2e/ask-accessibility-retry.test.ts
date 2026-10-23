@@ -339,19 +339,13 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
         assertEquals(toolbarFits, true, "390px composer controls must fit");
 
         await page.getByRole("button", { name: "更多设置" }).click();
-        await page.getByRole("switch", { name: "搜索便签" }).click();
         await page.getByRole("button", { name: "选择 AI 模型" }).click();
         await page.getByRole("menuitem", { name: /无工具模型/ }).click();
         await page.getByRole("button", { name: "更多设置" }).click();
         await page.getByText(
-            "当前模型不支持工具调用。切换到支持工具的模型后，可使用搜索便签、搜索笔记、搜索应用和联网搜索。",
+            "当前模型不支持工具调用。切换到支持工具的模型后，可使用搜索笔记、搜索应用和联网搜索。",
             { exact: true },
         ).waitFor({ state: "visible" });
-        assertEquals(
-            await page.getByRole("switch", { name: "搜索便签" })
-                .isDisabled(),
-            true,
-        );
         assertEquals(
             await page.getByRole("switch", { name: "搜索笔记" })
                 .isDisabled(),
@@ -365,12 +359,9 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
         await page.getByRole("button", { name: "选择 AI 模型" }).click();
         await page.getByRole("menuitem", { name: /标准稳定模型/ }).click();
         await page.getByRole("button", { name: "更多设置" }).click();
-        const noteSwitch = page.getByRole("switch", { name: "搜索便签" });
         const documentSwitch = page.getByRole("switch", { name: "搜索笔记" });
         const appsSwitch = page.getByRole("switch", { name: "搜索应用" });
-        await noteSwitch.click();
         await documentSwitch.click();
-        assertEquals(await noteSwitch.getAttribute("aria-checked"), "true");
         assertEquals(
             await documentSwitch.getAttribute("aria-checked"),
             "true",
@@ -469,7 +460,6 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
         assertEquals(requests[1].message, "解释数据可视化");
         assertEquals(requests[1].regenerateMessageId, "ask-assistant-1");
         assertEquals(requests[0].tools, {
-            notes: true,
             documents: true,
             apps: true,
             webSearch: false,
@@ -512,11 +502,6 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
             true,
         );
         assertEquals(
-            await page.getByRole("switch", { name: "搜索便签" })
-                .isDisabled(),
-            false,
-        );
-        assertEquals(
             await page.getByRole("switch", { name: "搜索应用" })
                 .isDisabled(),
             false,
@@ -548,7 +533,6 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
         assertEquals(requests[3].message, "停下来后继续");
         assertEquals(requests[3].regenerateMessageId, "ask-assistant-3");
         assertEquals(requests[2].tools, {
-            notes: false,
             documents: false,
             apps: false,
             webSearch: false,

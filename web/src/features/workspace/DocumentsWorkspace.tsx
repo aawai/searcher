@@ -20,6 +20,7 @@ import {
     DocumentLibraryActions,
 } from "./DocumentLibraryActions.tsx";
 
+import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
 const DocumentEditor = lazy(() => import("../documents/DocumentEditor.tsx"));
 export interface DocumentsWorkspaceProps {
     state: DocumentsRoute;
@@ -30,6 +31,7 @@ export interface DocumentsWorkspaceProps {
     onScopeChange: (scope: DocumentsScope) => void;
     onOpenDocument: (id: string) => void;
     onDirtyChange?: (dirty: boolean) => void;
+    eventSubscriptions?: DocumentEventSubscriptions;
 }
 
 function DocumentSummaryRow(
@@ -68,6 +70,11 @@ function DocumentSummaryRow(
                             onOpenDocument(item.id)}
                         aria-label={`打开笔记：${displayTitle}`}
                     >
+                        <span
+                            className="documents-color-dot"
+                            data-color={item.color}
+                            aria-hidden="true"
+                        />
                         <span className="documents-summary-title-text">
                             {displayTitle}
                         </span>
@@ -118,6 +125,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                     userId={props.userId}
                     onOpenDocument={props.onOpenDocument}
                     onDirtyChange={props.onDirtyChange}
+                    eventSubscriptions={props.eventSubscriptions}
                 />
             </Suspense>
         );

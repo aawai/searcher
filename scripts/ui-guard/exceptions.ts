@@ -39,7 +39,7 @@ function isDragOwner(file: string): boolean {
     return (
         p.endsWith("SearchHome.tsx") ||
         p.endsWith("WebAppLauncher.tsx") ||
-        p.endsWith("FloatingNotes.tsx") ||
+        p.endsWith("HomePapers.tsx") ||
         p.includes("/fixtures/drag/")
     );
 }
@@ -160,14 +160,14 @@ function isRuntimeLayoutOwner(file: string): boolean {
     return (
         p.endsWith("SearchHome.tsx") ||
         p.endsWith("WebAppLauncher.tsx") ||
-        p.endsWith("FloatingNotes.tsx") ||
+        p.endsWith("HomePapers.tsx") ||
         p.includes("/fixtures/layout/")
     );
 }
 
 /**
  * Runtime layout geometry exception:
- * Launcher grid placement and floating-note coordinates computed at runtime,
+ * Launcher grid placement and home-paper coordinates computed at runtime,
  * scoped to their layout owners and to explicit layout expressions.
  */
 export function isRuntimeLayoutGeometryException(
@@ -201,11 +201,8 @@ export function isDomainValueException(
     const norm = value.trim();
     const p = normalizePath(file);
 
-    // Floating note domain coordinates and tilt (scoped to FloatingNotes)
-    if (p.endsWith("FloatingNotes.tsx") || p.includes("/fixtures/notes/")) {
-        if (prop === "--note-tilt") {
-            return true;
-        }
+    // Home paper domain coordinates (scoped to HomePapers)
+    if (p.endsWith("HomePapers.tsx") || p.includes("/fixtures/papers/")) {
         if ((prop === "left" || prop === "top") && norm.includes("point.")) {
             return true;
         }

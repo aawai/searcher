@@ -1,4 +1,4 @@
-import { AppWindow, NotebookPen, StickyNote } from "lucide-react";
+import { AppWindow, NotebookPen } from "lucide-react";
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from "react";
 import type { SafeRect } from "./home-viewport.ts";
 import type { HomeLayoutProps } from "./types.ts";
@@ -6,17 +6,17 @@ import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInp
 import { WebAppLauncher } from "../../components/searcher/WebAppLauncher.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { usePresence } from "../../components/ui/presence.ts";
-import { useZenNoteSelection } from "./useZenNoteSelection.ts";
+import { useZenPaperSelection } from "./useZenPaperSelection.ts";
 import { GUEST_AI_UNAVAILABLE_MESSAGE } from "../../components/searcher/GuestAiUnavailable.tsx";
 
-const FloatingNotes = lazy(() =>
-    import("../../components/searcher/FloatingNotes.tsx").then((module) => ({
-        default: module.FloatingNotes,
+const HomePapers = lazy(() =>
+    import("./HomePapers.tsx").then((module) => ({
+        default: module.HomePapers,
     }))
 );
-const ZenInlineNotes = lazy(() =>
-    import("./ZenInlineNotes.tsx").then((module) => ({
-        default: module.ZenInlineNotes,
+const ZenInlinePapers = lazy(() =>
+    import("./ZenInlinePapers.tsx").then((module) => ({
+        default: module.ZenInlinePapers,
     }))
 );
 
@@ -44,7 +44,7 @@ export function ZenLayout(
         appsStatus,
         appsError,
         onReloadApps,
-        fixedNotes,
+        papers,
         isManagingApps,
         setIsManagingApps,
         openApp,
@@ -53,10 +53,10 @@ export function ZenLayout(
         togglePinApp,
         softDeleteApp,
         moveAppGroup,
-        editNote,
-        deleteNote,
-        updateNote,
-        updateNoteLayout,
+        openPaper,
+        deletePaper,
+        updatePaper,
+        updatePaperLayout,
         openWorkspace,
         workspaceOpen,
         panelDocked,
@@ -73,7 +73,7 @@ export function ZenLayout(
     if (workspaceOpen && !workspaceWasOpen) setWorkspaceWasOpen(true);
 
     useLayoutEffect(() => {
-        // While the docked panel moves the search aside, default-placed notes
+        // While the docked panel moves the search aside, default-placed papers
         // keep the exclusion measured before it opened instead of re-placing
         // every frame.
         if (mobile || panelDocked) return;
@@ -86,7 +86,7 @@ export function ZenLayout(
             if (!active) return;
             const { x, y, width, height } = search.getBoundingClientRect();
             // Keep the normal-flow anchor reserved while scrolling. Releasing
-            // it would remove overflow notes, shrink the page, and reset scroll.
+            // it would remove overflow papers, shrink the page, and reset scroll.
             const top = Math.min(y, y + scrollY);
             const reservedHeight = height + Math.abs(scrollY);
             setExclusionRect((previous) =>
@@ -161,7 +161,7 @@ export function ZenLayout(
                 appsStatus === "error" ||
                 (appsStatus === "offline" && pinned.length > 0) ||
                 pinned.length > 0 ||
-                (!mobile && fixedNotes.length > 0)
+                (!mobile && papers.length > 0)
             ) && (
                 <section className="pinned-area" aria-label="固定的个人内容">
                     {appsStatus === "loading" && (
@@ -234,41 +234,38 @@ export function ZenLayout(
                             />
                         </>
                     )}
-                    {!mobile && fixedNotes.length > 0 && (
+                    {!mobile && papers.length > 0 && (
                         <Suspense fallback={null}>
-                            <FloatingNotes
-                                notes={fixedNotes}
+                            <HomePapers
+                                papers={papers}
                                 exclusionRect={exclusionRect}
                                 availableRect={props.availableRect}
                                 viewportWidth={props.viewportWidth}
-                                onOpen={editNote}
-                                onUpdateLayout={(n, layout) =>
-                                    void updateNoteLayout(n, layout)}
-                                onTogglePin={(n) =>
-                                    void updateNote(n, {
-                                        isPinned: !n.isPinned,
+                                onOpen={openPaper}
+                                onUpdateLayout={(paper, layout) =>
+                                    void updatePaperLayout(paper, layout)}
+                                onToggleHomeFixed={(paper) =>
+                                    void updatePaper(paper, {
+                                        isHomeFixed: false,
                                     })}
-                                onToggleHomeFixed={(n) =>
-                                    void updateNote(n, {
-                                        isHomeFixed: !n.isHomeFixed,
-                                    })}
-                                onChangeColor={(n, color) =>
-                                    void updateNote(n, { color })}
-                                onDelete={(n) =>
-                                    void deleteNote(n)}
+                                onChangeColor={(paper, color) =>
+                                    void updatePaper(paper, { color })}
+                                onChangeBody={(paper, body) =>
+                                    updatePaper(paper, { body })}
+                                onDelete={(paper) => void deletePaper(paper)}
                             />
                         </Suspense>
                     )}
                 </section>
             )}
 
-            {user && !props.notesLoading && (
-                <ZenHomeNotes
+            {user && !props.papersLoading && (
+                <ZenHomePapers
                     key={user.id}
                     userId={user.id}
-                    notes={fixedNotes}
+                    papers={papers}
                     mobile={mobile}
-                    onOpen={editNote}
+                    onOpen={openPaper}
                 />
             )}
 
@@ -293,15 +290,6 @@ export function ZenLayout(
                     <button
                         type="button"
                         className="zen-edge-btn"
-                        data-workspace="notes"
-                        onClick={() => openWorkspace("notes")}
-                    >
-                        <StickyNote size="1em" className="icon-md" />
-                        <span>便签</span>
-                    </button>
-                    <button
-                        type="button"
-                        className="zen-edge-btn"
                         data-workspace="documents"
                         onClick={() => openWorkspace("documents")}
                     >
@@ -315,17 +303,17 @@ export function ZenLayout(
 }
 
 /** Keep device selection alive even when no preview or mobile surface exists. */
-function ZenHomeNotes({ userId, notes, mobile, onOpen }: {
+function ZenHomePapers({ userId, papers, mobile, onOpen }: {
     userId: string;
-    notes: HomeLayoutProps["fixedNotes"];
+    papers: HomeLayoutProps["papers"];
     mobile: boolean;
-    onOpen: HomeLayoutProps["editNote"];
+    onOpen: HomeLayoutProps["openPaper"];
 }) {
-    const selection = useZenNoteSelection(userId, notes);
+    const selection = useZenPaperSelection(userId, papers);
     if (!mobile || !selection.current) return null;
     return (
         <Suspense fallback={null}>
-            <ZenInlineNotes selection={selection} onOpen={onOpen} />
+            <ZenInlinePapers selection={selection} onOpen={onOpen} />
         </Suspense>
     );
 }

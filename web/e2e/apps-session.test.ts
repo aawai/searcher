@@ -178,9 +178,9 @@ Deno.test("apps edit keeps fields and confirmation across hosts and window modes
         await page.keyboard.press("Escape");
         await page.getByRole("alertdialog").waitFor({ state: "detached" });
         // The Dock is hidden while a panel is open; switch with the header tabs.
-        await page.getByRole("tab", { name: "便签工作区", exact: true })
+        await page.getByRole("tab", { name: "笔记工作区", exact: true })
             .click();
-        await page.locator('.workspace-panel[aria-label="便签工作区"]')
+        await page.locator('.workspace-panel[aria-label="笔记工作区"]')
             .waitFor({ state: "visible" });
         assertEquals(await page.getByRole("alertdialog").count(), 0);
         await page.getByRole("tab", { name: "应用工作区", exact: true })
@@ -472,9 +472,9 @@ Deno.test("Zen Apps draft survives presenter and edge workspace switches; close 
         );
 
         // The Dock is hidden while a panel is open; switch with the header tabs.
-        await page.getByRole("tab", { name: "便签工作区", exact: true })
+        await page.getByRole("tab", { name: "笔记工作区", exact: true })
             .click();
-        await page.locator('.workspace-panel[aria-label="便签工作区"]')
+        await page.locator('.workspace-panel[aria-label="笔记工作区"]')
             .waitFor({ state: "visible" });
         assertEquals(await page.getByRole("alertdialog").count(), 0);
 

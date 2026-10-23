@@ -169,6 +169,13 @@
       "when": 1792739994954,
       "tag": "0023_mute_terror",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1792742597438,
+      "tag": "0024_modern_human_robot",
+      "breakpoints": true
     }
   ]
 }

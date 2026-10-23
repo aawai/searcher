@@ -301,6 +301,9 @@ Deno.test("regression - runtime exception safety: wallpaper, drag, domain values
         await Deno.mkdir(`${targetDir}/components/searcher`, {
             recursive: true,
         });
+        await Deno.mkdir(`${targetDir}/features/home-layouts`, {
+            recursive: true,
+        });
 
         await Deno.mkdir(`${targetDir}/components/wallpaper`, {
             recursive: true,
@@ -336,16 +339,15 @@ Deno.test("regression - runtime exception safety: wallpaper, drag, domain values
             }`,
         );
 
-        // 3. Floating notes domain values in FloatingNotes.tsx
+        // 3. Home paper domain values in HomePapers.tsx
         await Deno.writeTextFile(
-            `${targetDir}/components/searcher/FloatingNotes.tsx`,
-            `export function FloatingNotes({ point, noteId }: { point: { x: number; y: number; z: number }; noteId: string }) {
+            `${targetDir}/features/home-layouts/HomePapers.tsx`,
+            `export function HomePapers({ point }: { point: { x: number; y: number; z: number } }) {
                 return (
                     <div style={{
                         left: point.x + "px",
                         top: point.y + "px",
                         zIndex: point.z,
-                        "--note-tilt": getNoteTilt(noteId),
                     } as React.CSSProperties} />
                 );
             }`,

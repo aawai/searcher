@@ -23,12 +23,24 @@ import {
 import { X } from "lucide-react";
 import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
 import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
-import { mergeNoteOrder } from "../features/home-layouts/noteOrder.ts";
+import type {
+    DocumentDto,
+    DocumentLayoutDto,
+    UpdateDocumentInput,
+} from "@shared/documents.ts";
 import {
-    getNoteDisplayTitle,
-    type NoteItem,
-    type NoteLayoutDto,
-} from "../components/searcher/NoteCard.tsx";
+    needsPaperRefresh,
+    type PaperItem,
+    setPaper,
+} from "../features/home-layouts/home-papers.ts";
+import {
+    fetchHomePapers,
+    fetchPaper,
+    patchPaper,
+    patchPaperLayout,
+    restorePaper,
+    trashPaper,
+} from "../features/home-layouts/home-papers-api.ts";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import type { WebAppItem } from "../components/searcher/WebAppIcon.tsx";
 import { Button } from "../components/ui/button.tsx";
@@ -49,7 +61,6 @@ import { errorMessage, useAppState } from "./state.tsx";
 import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
 import { AppsWorkspace } from "../features/workspace/AppsWorkspace.tsx";
 import { useAppsLayoutPersistence } from "../features/workspace/useAppsLayoutPersistence.ts";
-import { NotesWorkspace } from "../features/workspace/NotesWorkspace.tsx";
 import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx";
 import "../features/workspace/documents-workspace.css";
 import {
@@ -57,8 +68,6 @@ import {
     type DocumentsRoute,
     type DomainWorkspaceAction,
     isAppsWorkspaceView,
-    isNotesWorkspaceView,
-    type NotesRoute,
     type WorkspaceKind,
     type WorkspaceRoute,
 } from "../features/workspace/workspace-state.ts";
@@ -106,27 +115,26 @@ type AppUndoRecord = UndoRecordBase & {
     item: ExtendedWebApp;
 };
 
-type NoteUndoRecord = UndoRecordBase & {
-    kind: "note";
-    item: NoteItem;
+type PaperUndoRecord = UndoRecordBase & {
+    kind: "paper";
+    item: PaperItem;
 };
 
-type DeletionUndoRecord = AppUndoRecord | NoteUndoRecord;
+type DeletionUndoRecord = AppUndoRecord | PaperUndoRecord;
 
 type UndoRestoreResult =
     | { id: string; kind: "app"; restored: ExtendedWebApp }
-    | { id: string; kind: "note"; restored: NoteItem }
+    | { id: string; kind: "paper"; restored: PaperItem | null }
     | { id: string; error: string };
 
 const UNDO_DURATION_MS = 10_000;
 
 const EMPTY_APPS: ExtendedWebApp[] = [];
 const EMPTY_GROUPS: WebAppGroup[] = [];
-const EMPTY_NOTES: NoteItem[] = [];
+const EMPTY_PAPERS: PaperItem[] = [];
 
 type WorkspaceAction =
     | DomainWorkspaceAction<AppsRoute>
-    | DomainWorkspaceAction<NotesRoute>
     | DomainWorkspaceAction<DocumentsRoute>
     | { type: "close" };
 
@@ -135,7 +143,7 @@ type PendingAction =
     | { kind: "route"; intent: AppSessionRouteIntent };
 
 export function SearchHome() {
-    const { user, appearance } = useAppState();
+    const { user, appearance, authSession } = useAppState();
     const overlayActive = useEscapeLayerActive("overlay");
     const currentUserIdRef = useRef<string | null>(user?.id ?? null);
     currentUserIdRef.current = user?.id ?? null;
@@ -153,21 +161,23 @@ export function SearchHome() {
         string | null
     >(null);
     const openDocumentRef = useRef<(id: string) => void>(() => {});
-    const updatingNotesRef = useRef<Set<string>>(new Set());
-    const noteLayoutLatestGenRef = useRef<Map<string, number>>(new Map());
-    const noteLayoutQueuesRef = useRef<Map<string, Promise<void>>>(new Map());
-    const noteLayoutPrevCanonicalRef = useRef<Map<string, NoteItem["layout"]>>(
-        new Map(),
-    );
+    const updatingPapersRef = useRef<Set<string>>(new Set());
+    const paperLayoutLatestGenRef = useRef<Map<string, number>>(new Map());
+    const paperLayoutQueuesRef = useRef<Map<string, Promise<void>>>(new Map());
+    const paperLayoutPrevCanonicalRef = useRef<
+        Map<string, DocumentLayoutDto>
+    >(new Map());
     const [engine, setEngine] = useState<EngineId>(appearance.engine);
     const [mode, setMode] = useState<"search" | "ai">("search");
     const [reachability, setReachability] = useState<Reachability>({});
     const [isCheckingConnections, setIsCheckingConnections] = useState(false);
     const [apps, setApps] = useState<ExtendedWebApp[]>([]);
     const [groups, setGroups] = useState<WebAppGroup[]>([]);
-    const [notes, setNotes] = useState<NoteItem[]>([]);
-    const [notesLoading, setNotesLoading] = useState(true);
-    const [notesError, setNotesError] = useState("");
+    const [papers, setPapers] = useState<PaperItem[]>([]);
+    const papersRef = useRef(papers);
+    papersRef.current = papers;
+    const [papersLoading, setPapersLoading] = useState(true);
+    const [papersError, setPapersError] = useState("");
     const [appsStatus, setAppsStatus] = useState<
         "loading" | "ready" | "offline" | "error"
     >("loading");
@@ -178,11 +188,10 @@ export function SearchHome() {
     const ownsCurrentUserData = Boolean(user && appsOwnerId === user.id);
     const currentApps = ownsCurrentUserData ? apps : EMPTY_APPS;
     const currentGroups = ownsCurrentUserData ? groups : EMPTY_GROUPS;
-    const currentNotes = ownsCurrentUserData ? notes : EMPTY_NOTES;
+    const currentPapers = ownsCurrentUserData ? papers : EMPTY_PAPERS;
     const currentAppsStatus = ownsCurrentUserData ? appsStatus : "loading";
     const currentAppsError = ownsCurrentUserData ? appsError : "";
-    const currentNotesLoading = !ownsCurrentUserData || notesLoading;
-    const currentNotesError = ownsCurrentUserData ? notesError : "";
+    const currentPapersLoading = !ownsCurrentUserData || papersLoading;
     const appLayout = useAppsLayoutPersistence(user?.id, setApps, setGroups);
     const appSession = useRef<AppSessionNavigation | null>(null);
     const [host, dispatchHost] = useReducer(
@@ -271,7 +280,6 @@ export function SearchHome() {
         kind: WorkspaceKind,
         action:
             | DomainWorkspaceAction<AppsRoute>
-            | DomainWorkspaceAction<NotesRoute>
             | DomainWorkspaceAction<DocumentsRoute>
             | { type: "close" },
     ) {
@@ -296,7 +304,7 @@ export function SearchHome() {
         }
         resumeWorkspace(kind);
         if (kind === "apps") setAppsArranging(false);
-        for (const other of ["apps", "notes", "documents"] as const) {
+        for (const other of ["apps", "documents"] as const) {
             if (other !== kind && host.open[other]) {
                 dispatchHost({ type: "close", kind: other });
             }
@@ -306,12 +314,6 @@ export function SearchHome() {
                 type: "domain",
                 kind: "apps",
                 action: action as DomainWorkspaceAction<AppsRoute>,
-            });
-        } else if (kind === "notes") {
-            dispatchHost({
-                type: "domain",
-                kind: "notes",
-                action: action as DomainWorkspaceAction<NotesRoute>,
             });
         } else {
             dispatchHost({
@@ -352,8 +354,6 @@ export function SearchHome() {
     function navigateWorkspace(route: WorkspaceRoute) {
         if (isAppsWorkspaceView(route)) {
             requestWorkspace("apps", { type: "navigate", route });
-        } else if (isNotesWorkspaceView(route)) {
-            requestWorkspace("notes", { type: "navigate", route });
         } else requestWorkspace("documents", { type: "navigate", route });
     }
     function openDocument(id: string) {
@@ -441,8 +441,8 @@ export function SearchHome() {
         setAppsArranging(false);
         setActiveFolderId(null);
         setIsManagingApps(false);
-        setNotes([]);
-        setNotesError("");
+        setPapers([]);
+        setPapersError("");
         setError("");
         setUndoQueue([]);
         undoQueueRef.current = [];
@@ -570,13 +570,13 @@ export function SearchHome() {
     useEffect(() => {
         setApps([]);
         setGroups([]);
-        setNotes([]);
+        setPapers([]);
         setLoadedUserId(null);
         setAppsOwnerId(user?.id ?? null);
         setAppsStatus("loading");
         setAppsError("");
-        setNotesLoading(Boolean(user));
-        setNotesError("");
+        setPapersLoading(Boolean(user));
+        setPapersError("");
     }, [user?.id]);
 
     useEffect(() => {
@@ -620,21 +620,21 @@ export function SearchHome() {
                 setAppsStatus("error");
             }
         });
-        setNotesLoading(true);
-        setNotesError("");
-        api<NoteItem[]>("/api/notes").then((items) => {
+        setPapersLoading(true);
+        setPapersError("");
+        fetchHomePapers().then((items) => {
             if (!active) return;
-            setNotes(items);
+            setPapers(items);
         }).catch(async (cause: unknown) => {
             if (!active) return;
             try {
-                const cached = await getLocal<NoteItem[]>("notes:" + userId);
+                const cached = await getLocal<PaperItem[]>("papers:" + userId);
                 if (!active) return;
-                if (cached && Array.isArray(cached)) setNotes(cached);
+                if (cached && Array.isArray(cached)) setPapers(cached);
             } catch { /* local cache unavailable */ }
-            if (active) setNotesError(errorMessage(cause));
+            if (active) setPapersError(errorMessage(cause));
         }).finally(() => {
-            if (active) setNotesLoading(false);
+            if (active) setPapersLoading(false);
         });
         return () => {
             active = false;
@@ -660,17 +660,25 @@ export function SearchHome() {
     ]);
     useEffect(() => {
         if (
-            user && ownsCurrentUserData && !notesLoading && !notesError
+            user && ownsCurrentUserData && !papersLoading && !papersError
         ) {
-            void setLocal("notes:" + user.id, notes).catch(() => {});
+            void setLocal("papers:" + user.id, papers).catch(() => {});
         }
-    }, [
-        user?.id,
-        ownsCurrentUserData,
-        notes,
-        notesLoading,
-        notesError,
-    ]);
+    }, [user?.id, ownsCurrentUserData, papers, papersLoading, papersError]);
+    useEffect(() => {
+        if (!user) return;
+        const userId = user.id;
+        return authSession.documentEvents.subscribeAll((event) => {
+            const current = papersRef.current.find((paper) =>
+                paper.id === event.documentId
+            );
+            if (!needsPaperRefresh(current, event.version)) return;
+            fetchPaper(event.documentId).then((paper) => {
+                if (currentUserIdRef.current !== userId) return;
+                setPapers((items) => setPaper(items, event.documentId, paper));
+            }).catch(() => {});
+        });
+    }, [authSession, user?.id]);
 
     async function checkConnections() {
         setIsCheckingConnections(true);
@@ -793,10 +801,6 @@ export function SearchHome() {
             setError(errorMessage(cause));
         }
     }
-    const fixedNotes = useMemo(
-        () => currentNotes.filter((note) => note.isHomeFixed),
-        [currentNotes],
-    );
     function openEditModal(app: ExtendedWebApp) {
         navigateWorkspace({ view: "apps/edit", id: app.id });
     }
@@ -905,13 +909,8 @@ export function SearchHome() {
                         }
                         return {
                             id: record.id,
-                            kind: "note",
-                            restored: await api<NoteItem>(
-                                "/api/notes/" +
-                                    encodeURIComponent(record.item.id) +
-                                    "/restore",
-                                json("POST", {}),
-                            ),
+                            kind: "paper",
+                            restored: await restorePaper(record.item.id),
                         };
                     } catch (cause) {
                         return {
@@ -927,7 +926,7 @@ export function SearchHome() {
             ) return;
 
             const restoredApps: ExtendedWebApp[] = [];
-            const restoredNotes: NoteItem[] = [];
+            const restoredPapers: PaperItem[] = [];
             const failures = new Map<string, string>();
             for (const result of results) {
                 if ("error" in result) {
@@ -935,14 +934,19 @@ export function SearchHome() {
                 } else if (result.kind === "app") {
                     restoredApps.push(result.restored);
                 } else {
-                    restoredNotes.push(result.restored);
+                    if (result.restored) restoredPapers.push(result.restored);
                 }
             }
             if (restoredApps.length > 0) {
                 setApps((items) => [...items, ...restoredApps]);
             }
-            if (restoredNotes.length > 0) {
-                setNotes((items) => [...restoredNotes, ...items]);
+            if (restoredPapers.length > 0) {
+                setPapers((items) =>
+                    restoredPapers.reduce(
+                        (next, paper) => setPaper(next, paper.id, paper),
+                        items,
+                    )
+                );
             }
             setUndoQueue((records) =>
                 records.flatMap((record) => {
@@ -967,150 +971,129 @@ export function SearchHome() {
             }
         }
     }
-    // Note actions
-    function openNote(noteId: string) {
-        navigateWorkspace({ view: "notes/edit", id: noteId });
+    // Paper actions
+    function openPaper(paper: PaperItem) {
+        openDocument(paper.id);
     }
 
-    async function createNote() {
+    async function updatePaper(
+        paper: PaperItem,
+        patch: Omit<UpdateDocumentInput, "version">,
+    ) {
+        const lockKey = `${paper.id}:${JSON.stringify(patch)}`;
+        if (updatingPapersRef.current.has(lockKey)) return;
+        updatingPapersRef.current.add(lockKey);
         setError("");
+        // A document that left home drops out of the paper list.
+        const apply = (document: DocumentDto) =>
+            setPapers((items) =>
+                setPaper(
+                    items,
+                    document.id,
+                    document.isHomeFixed
+                        ? { ...document, layout: paper.layout }
+                        : null,
+                )
+            );
         try {
-            const note = await api<NoteItem>(
-                "/api/notes",
-                json("POST", { title: null, body: "", isHomeFixed: false }),
-            );
-            setNotes((items) => [note, ...items]);
-            openNote(note.id);
-        } catch (e) {
-            setError(errorMessage(e));
-        }
-    }
-
-    function editNote(note: NoteItem) {
-        openNote(note.id);
-    }
-    async function updateNote(note: NoteItem, patch: Record<string, unknown>) {
-        const lockKey = `${note.id}:${JSON.stringify(patch)}`;
-        if (updatingNotesRef.current.has(lockKey)) return;
-        updatingNotesRef.current.add(lockKey);
-        setError("");
-        try {
-            const updated = await api<NoteItem>(
-                "/api/notes/" + encodeURIComponent(note.id),
-                json("PATCH", { ...patch, version: note.version }),
-            );
-            setNotes((items) =>
-                items.map((item) => (item.id === note.id ? updated : item))
-            );
+            apply(await patchPaper(paper, patch));
         } catch (e) {
             if (e instanceof ApiError && e.code === 409 && e.data) {
-                const latest = e.data as NoteItem;
-                setNotes((items) =>
-                    items.map((item) => (item.id === note.id ? latest : item))
-                );
+                apply(e.data as DocumentDto);
             }
             setError(errorMessage(e));
         } finally {
-            updatingNotesRef.current.delete(lockKey);
+            updatingPapersRef.current.delete(lockKey);
         }
     }
-    async function updateNoteLayout(
-        note: NoteItem,
-        layout: NonNullable<NoteItem["layout"]>,
+    async function updatePaperLayout(
+        paper: PaperItem,
+        layout: DocumentLayoutDto,
     ) {
-        const noteId = note.id;
-        const nextGen = (noteLayoutLatestGenRef.current.get(noteId) ?? 0) + 1;
-        noteLayoutLatestGenRef.current.set(noteId, nextGen);
+        const paperId = paper.id;
+        const nextGen = (paperLayoutLatestGenRef.current.get(paperId) ?? 0) + 1;
+        paperLayoutLatestGenRef.current.set(paperId, nextGen);
 
-        if (!noteLayoutPrevCanonicalRef.current.has(noteId)) {
-            noteLayoutPrevCanonicalRef.current.set(noteId, note.layout);
+        if (!paperLayoutPrevCanonicalRef.current.has(paperId)) {
+            paperLayoutPrevCanonicalRef.current.set(paperId, paper.layout);
         }
 
-        setNotes((items) =>
-            items.map((item) => item.id === noteId ? { ...item, layout } : item)
+        setPapers((items) =>
+            items.map((item) =>
+                item.id === paperId ? { ...item, layout } : item
+            )
         );
 
-        const currentPromise = noteLayoutQueuesRef.current.get(noteId) ??
+        const currentPromise = paperLayoutQueuesRef.current.get(paperId) ??
             Promise.resolve();
 
         const runTask = async () => {
             try {
-                const persistedLayout = await api<NoteLayoutDto>(
-                    "/api/notes/" + encodeURIComponent(noteId) + "/layout",
-                    json("PUT", {
-                        deviceClass: layout.deviceClass || "desktop",
-                        x: layout.x,
-                        y: layout.y,
-                        width: layout.width,
-                        zIndex: layout.zIndex,
-                        expanded: layout.expanded,
-                        sortOrder: layout.sortOrder,
-                    }),
+                const persistedLayout = await patchPaperLayout(paperId, layout);
+                paperLayoutPrevCanonicalRef.current.set(
+                    paperId,
+                    persistedLayout,
                 );
-                noteLayoutPrevCanonicalRef.current.set(noteId, persistedLayout);
-                if (noteLayoutLatestGenRef.current.get(noteId) === nextGen) {
-                    setNotes((items) =>
+                if (paperLayoutLatestGenRef.current.get(paperId) === nextGen) {
+                    setPapers((items) =>
                         items.map((item) =>
-                            item.id === noteId
+                            item.id === paperId
                                 ? { ...item, layout: persistedLayout }
                                 : item
                         )
                     );
-                    noteLayoutPrevCanonicalRef.current.delete(noteId);
+                    paperLayoutPrevCanonicalRef.current.delete(paperId);
                 }
             } catch (e) {
                 setError(errorMessage(e));
-                if (noteLayoutLatestGenRef.current.get(noteId) === nextGen) {
-                    const rollbackLayout = noteLayoutPrevCanonicalRef.current
-                        .get(noteId);
-                    setNotes((items) =>
+                if (paperLayoutLatestGenRef.current.get(paperId) === nextGen) {
+                    const rollbackLayout =
+                        paperLayoutPrevCanonicalRef.current.get(paperId) ??
+                            paper.layout;
+                    setPapers((items) =>
                         items.map((item) =>
-                            item.id === noteId
+                            item.id === paperId
                                 ? { ...item, layout: rollbackLayout }
                                 : item
                         )
                     );
-                    noteLayoutPrevCanonicalRef.current.delete(noteId);
+                    paperLayoutPrevCanonicalRef.current.delete(paperId);
                 }
             }
         };
 
         const taskPromise = currentPromise.then(runTask, runTask);
-        noteLayoutQueuesRef.current.set(noteId, taskPromise);
+        paperLayoutQueuesRef.current.set(paperId, taskPromise);
 
         taskPromise.finally(() => {
-            if (noteLayoutQueuesRef.current.get(noteId) === taskPromise) {
-                noteLayoutQueuesRef.current.delete(noteId);
+            if (paperLayoutQueuesRef.current.get(paperId) === taskPromise) {
+                paperLayoutQueuesRef.current.delete(paperId);
             }
         });
 
         await taskPromise;
     }
-    async function deleteNote(note: NoteItem) {
+    async function deletePaper(paper: PaperItem) {
         const ownerId = currentUserIdRef.current;
         if (!ownerId) return;
         setError("");
         try {
-            await api(
-                "/api/notes/" + encodeURIComponent(note.id) + "?version=" +
-                    note.version,
-                { method: "DELETE" },
-            );
+            await trashPaper(paper);
             if (
                 !componentMountedRef.current ||
                 currentUserIdRef.current !== ownerId
             ) return;
-            setNotes((items) => items.filter((item) => item.id !== note.id));
+            setPapers((items) => items.filter((item) => item.id !== paper.id));
             if (undoQueueRef.current.length === 0 && undoPausedRef.current) {
                 undoPausedRef.current = false;
                 setUndoPaused(false);
             }
             const remainingMs = UNDO_DURATION_MS;
-            const record: NoteUndoRecord = {
+            const record: PaperUndoRecord = {
                 id: `${ownerId}:${++undoIdRef.current}`,
                 userId: ownerId,
-                kind: "note",
-                item: note,
+                kind: "paper",
+                item: paper,
                 expiresAt: undoPausedRef.current
                     ? null
                     : Date.now() + remainingMs,
@@ -1123,33 +1106,6 @@ export function SearchHome() {
                 componentMountedRef.current &&
                 currentUserIdRef.current === ownerId
             ) setError(errorMessage(cause));
-        }
-    }
-
-    async function reorderNotes(ordered: NoteItem[]) {
-        ordered = mergeNoteOrder(notes, ordered);
-        const snapshot = notes;
-        const orders = new Map(ordered.map((note, index) => [note.id, index]));
-        setNotes((items) =>
-            items.map((note) => ({
-                ...note,
-                sortOrder: orders.get(note.id) ?? note.sortOrder,
-            }))
-        );
-        try {
-            for (const [index, note] of ordered.entries()) {
-                if (note.sortOrder === index) continue;
-                const updated = await api<NoteItem>(
-                    "/api/notes/" + encodeURIComponent(note.id),
-                    json("PATCH", { sortOrder: index, version: note.version }),
-                );
-                setNotes((items) =>
-                    items.map((item) => item.id === updated.id ? updated : item)
-                );
-            }
-        } catch (cause) {
-            setNotes(snapshot);
-            setError(errorMessage(cause));
         }
     }
     const layoutProps: HomeLayoutProps = {
@@ -1168,8 +1124,8 @@ export function SearchHome() {
         appsStatus: currentAppsStatus,
         appsError: currentAppsError,
         onReloadApps: () => setReloadApps((count) => count + 1),
-        fixedNotes,
-        notesLoading: currentNotesLoading,
+        papers: currentPapers,
+        papersLoading: currentPapersLoading,
         isManagingApps,
         setIsManagingApps,
         openApp,
@@ -1178,10 +1134,10 @@ export function SearchHome() {
         togglePinApp,
         softDeleteApp,
         moveAppGroup,
-        editNote,
-        deleteNote,
-        updateNote,
-        updateNoteLayout,
+        openPaper,
+        deletePaper,
+        updatePaper,
+        updatePaperLayout,
         openWorkspace,
         workspaceOpen: Boolean(host.activeKind),
         showAppLabels: appearance.showAppLabels,
@@ -1194,21 +1150,9 @@ export function SearchHome() {
         ? "添加应用"
         : currentRoute.view === "apps/edit"
         ? "编辑应用"
-        : currentRoute.view === "notes/edit"
-        ? "编辑便签"
         : isApps
         ? "应用"
-        : currentWorkspace === "documents"
-        ? "笔记"
-        : "便签";
-    function createWorkspaceItem(kind: "apps" | "notes") {
-        if (kind === "apps") {
-            navigateWorkspace({
-                view: "apps/create",
-                groupId: activeFolderId ?? undefined,
-            });
-        } else void createNote();
-    }
+        : "笔记";
     function renderWorkspaceContent(kind: WorkspaceKind) {
         if (!user) return null;
         if (kind === "apps") {
@@ -1247,60 +1191,31 @@ export function SearchHome() {
                 />
             );
         }
-        if (kind === "documents") {
-            const model = host.models.documents;
-            return (
-                <DocumentsWorkspace
-                    key={user.id}
-                    userId={user.id}
-                    state={model.route}
-                    onDirtyChange={(dirty) => {
-                        dirtyForm.current = dirty;
-                    }}
-                    onOpenDocument={openDocument}
-                    scope={model.scope}
-                    onScopeChange={(scope) =>
-                        dispatchHost({
-                            type: "domain",
-                            kind: "documents",
-                            action: { type: "scope", scope },
-                        })}
-                    query={model.query}
-                    onQueryChange={(value) =>
-                        dispatchHost({
-                            type: "domain",
-                            kind: "documents",
-                            action: { type: "query", value },
-                        })}
-                />
-            );
-        }
-        const model = host.models.notes;
+        const model = host.models.documents;
         return (
-            <NotesWorkspace
-                state={model.route}
-                notes={currentNotes}
+            <DocumentsWorkspace
+                key={user.id}
                 userId={user.id}
+                eventSubscriptions={authSession.documentEvents}
+                state={model.route}
+                onDirtyChange={(dirty) => {
+                    dirtyForm.current = dirty;
+                }}
+                onOpenDocument={openDocument}
+                scope={model.scope}
+                onScopeChange={(scope) =>
+                    dispatchHost({
+                        type: "domain",
+                        kind: "documents",
+                        action: { type: "scope", scope },
+                    })}
                 query={model.query}
                 onQueryChange={(value) =>
                     dispatchHost({
                         type: "domain",
-                        kind: "notes",
+                        kind: "documents",
                         action: { type: "query", value },
                     })}
-                onSaved={(next) =>
-                    setNotes((items) =>
-                        items.some((item) => item.id === next.id)
-                            ? items.map((item) =>
-                                item.id === next.id ? next : item
-                            )
-                            : [next, ...items]
-                    )}
-                onReorder={reorderNotes}
-                actions={layoutProps}
-                loading={currentNotesLoading}
-                error={currentNotesError}
-                onRetry={layoutProps.onReloadApps}
             />
         );
     }
@@ -1309,9 +1224,7 @@ export function SearchHome() {
         record.userId === user?.id
     );
     const undoItemNames = currentUndoQueue.map((record) =>
-        record.kind === "app"
-            ? record.item.name
-            : getNoteDisplayTitle(record.item.title, record.item.body)
+        record.kind === "app" ? record.item.name : record.item.displayTitle
     );
     const undoMessage = currentUndoQueue.length === 1
         ? `已将“${undoItemNames[0]}”移至回收站`
@@ -1322,7 +1235,7 @@ export function SearchHome() {
         if (!record.error) return [];
         const name = record.kind === "app"
             ? record.item.name
-            : getNoteDisplayTitle(record.item.title, record.item.body);
+            : record.item.displayTitle;
         return [`恢复“${name}”失败：${record.error}，可以重试。`];
     }).join(" ");
     const undoableRecords = currentUndoQueue.filter((record) =>
@@ -1340,10 +1253,7 @@ export function SearchHome() {
             {currentUndoQueue.length > 1 && currentUndoQueue.map((record) => {
                 const name = record.kind === "app"
                     ? record.item.name
-                    : getNoteDisplayTitle(
-                        record.item.title,
-                        record.item.body,
-                    );
+                    : record.item.displayTitle;
                 return (
                     <Button
                         key={record.id}
@@ -1460,12 +1370,12 @@ export function SearchHome() {
                             </>
                         }
                         onFeedbackHost={setFeedbackHost}
-                        onCreate={host.activeKind &&
-                                host.activeKind !== "documents"
+                        onCreate={host.activeKind === "apps"
                             ? () =>
-                                createWorkspaceItem(
-                                    host.activeKind as "apps" | "notes",
-                                )
+                                navigateWorkspace({
+                                    view: "apps/create",
+                                    groupId: activeFolderId ?? undefined,
+                                })
                             : undefined}
                     >
                         {host.activeKind &&

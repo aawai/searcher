@@ -13,7 +13,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   用于检查正式组件、交互状态、主题与响应式预览，不替代真实业务页面验收；设置中的入口仅对管理员显示。`/design-lab/*`
   是 [实验通道](design/VISUAL_LANGUAGE.md#实验通道)：原型进入生产前须经对应契约子任务。
 - `/design-lab/markdown-editor` 是 M0A
-  编辑技术验证入口，仅本地演示，不保存或替换便签。验证结论、bundle 口径和 #110
+  编辑技术验证入口，仅本地演示，不保存或替换笔记。验证结论、bundle 口径和 #110
   输入约束见 [M0A 报告](editor/MARKDOWN_EDITOR_M0A.md)。
 - 页面语义由 `components/searcher/` 拥有：`PageShell` / `PageHeader`
   管理页面骨架与唯一标题；`semantic.tsx` 提供 `Section`、`SettingsCard` /
@@ -23,10 +23,9 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   `h3`；Tab 内的 `LoadingState` / `EmptyState` 使用 `headingLevel={3}`。Ask
   登录态的会话标题是唯一 H1。
 - 图标使用 Lucide，`size` 只允许 14、16、20（`check:ui` 强制）。语义映射：应用
-  `AppWindow`、便签 `StickyNote`、笔记 `NotebookPen`、总览 `LayoutGrid`、文件夹
+  `AppWindow`、笔记 `NotebookPen`、总览 `LayoutGrid`、文件夹
   `Folder`。
-- 用户可见文案（应用 / 网站 / 网址、便签 /
-  笔记、删除与恢复动词、版本冲突选项）以 Visual Language 文案为准；代码与 API
+- 用户可见文案（应用 / 网站 / 网址、笔记 / 首页纸张、删除与恢复动词、版本冲突选项）以 Visual Language 文案为准；代码与 API
   保持 canonical 英文命名。
 
 ## 样式

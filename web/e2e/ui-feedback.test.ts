@@ -7,7 +7,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
-import { notes, users, webapps } from "../../src/db/schema.ts";
+import { documents, users, webapps } from "../../src/db/schema.ts";
 import { aiConversations, aiProviders } from "../../src/db/ai-schema.ts";
 
 // Focused regression test suite for UI Feedback, Confirmation Dialogs, UndoToasts, and Loading/Error/Empty States
@@ -495,7 +495,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                     createdAt: now,
                     updatedAt: now,
                 });
-                await db.insert(notes).values({
+                await db.insert(documents).values({
                     id: "trash-note-1",
                     userId: user.id,
                     title: "Trash Test Note",
@@ -595,8 +595,8 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await authenticateContext(mobileContext);
             await visit("/trash", mobilePage);
 
-            // Switch to notes tab on mobile
-            const notesTab = mobilePage.getByRole("tab", { name: /便签/ });
+            // Switch to documents tab on mobile
+            const notesTab = mobilePage.getByRole("tab", { name: /^笔记/ });
             await notesTab.click();
 
             // Mobile stacked card list is visible, desktop table is hidden
@@ -611,7 +611,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             let permNoteRequests = 0;
             const permNoteGate = Promise.withResolvers<void>();
             await mobilePage.route(
-                "**/api/notes/trash-note-1/permanent",
+                "**/api/documents/trash-note-1/permanent",
                 async (route) => {
                     permNoteRequests++;
                     await permNoteGate.promise;
@@ -659,11 +659,11 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             assertEquals(permNoteRequests, 1);
 
             const noteSuccessBanner = mobilePage.locator(
-                ".status-banner:has-text('便签已彻底删除')",
+                ".status-banner:has-text('笔记已彻底删除')",
             );
             await noteSuccessBanner.waitFor({ state: "visible" });
             const noteEmptyState = mobilePage.locator(
-                ".empty-state:has-text('没有已删除的便签')",
+                ".empty-state:has-text('没有已删除的笔记')",
             );
             await noteEmptyState.waitFor({ state: "visible" });
         },
@@ -1006,10 +1006,9 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
         },
     );
     await t.step(
-        "UndoToast: Home app/note 删除撤销恢复与 Ask conversation 删除撤销恢复无需真实模型",
+        "UndoToast: Home app 删除撤销恢复与 Ask conversation 删除撤销恢复无需真实模型",
         async () => {
             const undoAppId = "app-undo-test-1";
-            const undoNoteId = "note-undo-test-1";
             const undoConvId = "conv-undo-test-1";
             const undoBatchApps = [
                 {
@@ -1050,15 +1049,6 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                         updatedAt: now,
                     })),
                 );
-                await db.insert(notes).values({
-                    id: undoNoteId,
-                    userId: user.id,
-                    title: "Undo Target Note",
-                    currentBody: "Note text to be restored via UndoToast",
-                    color: "sky",
-                    createdAt: now,
-                    updatedAt: now,
-                });
                 await db.insert(aiConversations).values({
                     id: undoConvId,
                     userId: user.id,
@@ -1254,58 +1244,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await expiryToast.waitFor({ state: "hidden" });
             await page.clock.resume();
 
-            // 2. Home / Notes workspace: Note delete and UndoToast restoration
-            // The apps panel is open here (Dock is hidden while a panel is open).
-            await page.getByRole("tab", { name: "便签工作区", exact: true })
-                .click();
-
-            const notesAside = page.locator(
-                ".workspace-panel--mobile, aside.workspace-panel",
-            );
-            await notesAside.waitFor({ state: "visible" });
-
-            const noteCard = notesAside.locator(
-                ".note-card:has-text('Undo Target Note')",
-            );
-            await noteCard.waitFor({ state: "visible" });
-
-            let noteRestored = false;
-            await page.route("**/api/notes/*/restore", async (route) => {
-                noteRestored = true;
-                await route.continue();
-            });
-
-            // Open note more options and delete
-            const noteMoreBtn = noteCard.locator(
-                "button[aria-label='更多操作']",
-            );
-            await noteCard.hover();
-            await noteMoreBtn.waitFor({ state: "visible" });
-            await noteMoreBtn.click();
-            const deleteNoteItem = page.locator(
-                '[role="menuitem"]:has-text("移至回收站")',
-            );
-            await deleteNoteItem.waitFor({ state: "visible" });
-            await deleteNoteItem.click();
-
-            // UndoToast appears
-            const noteUndoToast = page.locator(
-                ".undo-toast:has-text('Undo Target Note')",
-            );
-            await noteUndoToast.waitFor({ state: "visible" });
-            await noteCard.waitFor({ state: "hidden" });
-
-            // Click 撤销
-            const undoNoteBtn = noteUndoToast.getByRole("button", {
-                name: "撤销",
-                exact: true,
-            });
-            await undoNoteBtn.click();
-            assertEquals(noteRestored, true);
-            await noteUndoToast.waitFor({ state: "hidden" });
-            await noteCard.waitFor({ state: "visible" });
-
-            // 3. Ask workspace: Conversation delete and UndoToast restoration (no real AI model needed)
+            // 2. Ask workspace: Conversation delete and UndoToast restoration (no real AI model needed)
             const { page: askPage, context: askContext } = await createTestPage(
                 { width: 1280, height: 800 },
             );
@@ -1515,9 +1454,9 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
     );
 
     await t.step(
-        "Workspace: Apps/Notes initial loading, error, empty (首次空结果不闪空态) 及可读 warning",
+        "Workspace: Apps/Documents initial loading, error, empty (首次空结果不闪空态) 及可读 warning",
         async () => {
-            // Register a fresh clean user without apps or notes
+            // Register a fresh clean user without apps or documents
             const emptyUsername = "empty_state_user_79";
             const emptyPassword = "Empty-Password-79!";
             const { page: emptyRegPage, context: _emptyContext } =
@@ -1532,8 +1471,8 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await emptyRegPage.waitForURL(origin + "/");
             await emptyRegPage.locator("main").waitFor({ state: "visible" });
 
-            // 1. Notes: initial loading gate -> ensure empty state does NOT flicker during load
-            const { page: notesTestPage, context: notesContext } =
+            // 1. Documents: initial loading gate -> ensure empty state does NOT flicker during load
+            const { page: documentsTestPage, context: documentsContext } =
                 await createTestPage({ width: 1280, height: 800 });
             const emptyUserRecord =
                 (await store.run((db) => db.select().from(users).all())).find(
@@ -1544,7 +1483,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 emptyUserRecord!.id,
                 emptyUserRecord!.authVersion,
             );
-            await notesContext.addCookies([{
+            await documentsContext.addCookies([{
                 name: "searcher_session",
                 value: emptyToken,
                 domain: "127.0.0.1",
@@ -1553,70 +1492,76 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 sameSite: "Lax",
             }]);
 
-            const notesGate = Promise.withResolvers<void>();
-            await notesTestPage.route("**/api/notes", async (route) => {
-                if (route.request().method() === "GET") {
-                    await notesGate.promise;
-                }
-                await route.continue();
-            });
-
-            await visit("/", notesTestPage);
-            const notesBtn = notesTestPage.locator(
-                'button.zen-edge-btn[data-workspace="notes"]',
+            const documentsGate = Promise.withResolvers<void>();
+            await documentsTestPage.route(
+                (url) => url.pathname === "/api/documents",
+                async (route) => {
+                    if (route.request().method() === "GET") {
+                        await documentsGate.promise;
+                    }
+                    await route.continue();
+                },
             );
-            await notesBtn.first().waitFor({ state: "visible" });
-            await notesBtn.first().click();
 
-            const notesAside = notesTestPage.locator(
+            await visit("/", documentsTestPage);
+            const documentsBtn = documentsTestPage.locator(
+                'button[data-workspace="documents"]',
+            );
+            await documentsBtn.first().waitFor({ state: "visible" });
+            await documentsBtn.first().click();
+
+            const documentsAside = documentsTestPage.locator(
                 ".workspace-panel--mobile, aside.workspace-panel",
             );
-            await notesAside.waitFor({ state: "visible" });
+            await documentsAside.waitFor({ state: "visible" });
 
             // While in flight: LoadingState is visible, EmptyState is NOT visible (no flicker!)
-            const notesLoading = notesAside.locator(".loading-state");
-            await notesLoading.waitFor({ state: "visible" });
+            const documentsLoading = documentsAside.locator(".loading-state");
+            await documentsLoading.waitFor({ state: "visible" });
 
-            const notesEmpty = notesAside.locator(
-                ".empty-state:has-text('还没有便签')",
+            const documentsEmpty = documentsAside.locator(
+                ".empty-state:has-text('还没有笔记')",
             );
-            assertEquals(await notesEmpty.isVisible(), false);
+            assertEquals(await documentsEmpty.isVisible(), false);
 
             // Release gate: LoadingState hides, EmptyState becomes visible
-            notesGate.resolve();
-            await notesLoading.waitFor({ state: "hidden" });
-            await notesEmpty.waitFor({ state: "visible" });
+            documentsGate.resolve();
+            await documentsLoading.waitFor({ state: "hidden" });
+            await documentsEmpty.waitFor({ state: "visible" });
 
-            // Notes error state and readable warning
-            await notesTestPage.route("**/api/notes", (route) => {
-                if (route.request().method() === "GET") {
-                    route.fulfill({
-                        status: 500,
-                        contentType: "application/json",
-                        body: JSON.stringify({
-                            message: "便签服务发生内部异常",
-                        }),
-                    });
-                } else {
-                    route.continue();
-                }
-            });
+            // Documents error state and readable warning
+            await documentsTestPage.route(
+                (url) => url.pathname === "/api/documents",
+                (route) => {
+                    if (route.request().method() === "GET") {
+                        route.fulfill({
+                            status: 500,
+                            contentType: "application/json",
+                            body: JSON.stringify({
+                                message: "笔记服务发生内部异常",
+                            }),
+                        });
+                    } else {
+                        route.continue();
+                    }
+                },
+            );
 
             // Reload page with 500 error route active
-            await notesTestPage.reload();
-            const notesReopenBtn = notesTestPage.locator(
-                'button.zen-edge-btn[data-workspace="notes"]',
+            await documentsTestPage.reload();
+            const documentsReopenBtn = documentsTestPage.locator(
+                'button[data-workspace="documents"]',
             );
-            await notesReopenBtn.first().waitFor({ state: "visible" });
-            await notesReopenBtn.first().click();
-            const notesErrorBanner = notesAside.locator(
-                ".status-banner:has-text('便签服务发生内部异常')",
+            await documentsReopenBtn.first().waitFor({ state: "visible" });
+            await documentsReopenBtn.first().click();
+            const documentsErrorBanner = documentsAside.locator(
+                ".status-banner:has-text('笔记服务发生内部异常')",
             );
-            await notesErrorBanner.waitFor({ state: "visible" });
-            const notesRetryBtn = notesErrorBanner.getByRole("button", {
+            await documentsErrorBanner.waitFor({ state: "visible" });
+            const documentsRetryBtn = documentsErrorBanner.getByRole("button", {
                 name: "重试",
             });
-            assertEquals(await notesRetryBtn.isVisible(), true);
+            assertEquals(await documentsRetryBtn.isVisible(), true);
 
             // 2. Apps: initial loading and error states
             const { page: appsTestPage, context: appsContext } =

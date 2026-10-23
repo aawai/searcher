@@ -6,9 +6,13 @@ import rehypeSanitize from "rehype-sanitize";
 
 export interface NoteMarkdownProps {
     body?: string | null;
+    /** Makes task checkboxes interactive; index is the task's position in the body. */
+    onToggleTask?: (index: number, checked: boolean) => void;
 }
 
-export function NoteMarkdown({ body }: NoteMarkdownProps): ReactNode {
+export function NoteMarkdown(
+    { body, onToggleTask }: NoteMarkdownProps,
+): ReactNode {
     const content = body ?? "";
     if (!content) {
         return null;
@@ -73,6 +77,40 @@ export function NoteMarkdown({ body }: NoteMarkdownProps): ReactNode {
                         ...props
                     }: ComponentPropsWithoutRef<"input"> & { node?: unknown },
                 ) => {
+                    if (type === "checkbox" && onToggleTask) {
+                        return (
+                            <input
+                                {...props}
+                                type="checkbox"
+                                checked={checked}
+                                aria-label={checked
+                                    ? "已完成任务，点击标记为未完成"
+                                    : "未完成任务，点击标记为已完成"}
+                                onChange={(e) => {
+                                    const boxes = e.currentTarget.closest(
+                                        ".markdown",
+                                    )?.querySelectorAll<HTMLInputElement>(
+                                        'input[type="checkbox"]',
+                                    );
+                                    const index = boxes
+                                        ? Array.from(boxes).indexOf(
+                                            e.currentTarget,
+                                        )
+                                        : -1;
+                                    if (index >= 0) {
+                                        onToggleTask(
+                                            index,
+                                            e.currentTarget.checked,
+                                        );
+                                    }
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onClick?.(e);
+                                }}
+                            />
+                        );
+                    }
                     if (type === "checkbox") {
                         return (
                             <input

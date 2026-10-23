@@ -77,7 +77,7 @@ Deno.test("Documents HTTP: title/body boundaries and exact 8 MiB create/update i
             }),
         );
         assertEquals(document.body, body);
-        assertEquals(document.title.length, 200);
+        assertEquals(document.title?.length, 200);
         for (
             const input of [{ title: "t".repeat(201) }, { body: body + "x" }]
         ) {
@@ -136,12 +136,6 @@ Deno.test("Documents HTTP: title/body boundaries and exact 8 MiB create/update i
                 413,
             );
         }
-        assertEquals(
-            (await env.request("/api/notes", "POST", {
-                body: "x".repeat(70_000),
-            })).status,
-            413,
-        );
         assertEquals(
             (await env.request(
                 `/api/documents/${document.id}/settings`,
@@ -466,6 +460,117 @@ Deno.test("Documents HTTP: assets bind owner/document, deny referenced deletion 
             404,
         );
     } finally {
+        await env.store.close();
+    }
+});
+
+Deno.test("Documents HTTP: home papers share nullable titles, metadata, layouts and account-isolated events", async () => {
+    const env = await setup();
+    const ownerStream = await env.request("/api/documents/events");
+    const otherStream = await env.request(
+        "/api/documents/events",
+        "GET",
+        undefined,
+        1,
+    );
+    const owner = ownerStream.body!.getReader();
+    const other = otherStream.body!.getReader();
+    const decoder = new TextDecoder();
+    try {
+        assertEquals(
+            ownerStream.headers.get("content-type"),
+            "text/event-stream; charset=utf-8",
+        );
+        assertEquals(
+            decoder.decode((await owner.read()).value),
+            'event: ready\ndata: {"ok":true}\n\n',
+        );
+        await other.read();
+        const document = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", {
+                title: null,
+                body: "A single unified note",
+                color: "sage",
+                isHomeFixed: true,
+                homeSortOrder: 12,
+                isFavorite: true,
+            }),
+        );
+        assertEquals(document.title, null);
+        assertEquals(document.displayTitle, "A single unified note");
+        assertEquals(document.color, "sage");
+        assertEquals(document.isHomeFixed, true);
+        assertEquals(document.homeSortOrder, 12);
+        assertEquals(document.isFavorite, true);
+        const home = await data<DocumentPageDto>(
+            await env.request("/api/documents?scope=home"),
+        );
+        assertEquals(home.items.map((item) => item.id), [document.id]);
+        const updated = await data<DocumentDto>(
+            await env.request(`/api/documents/${document.id}`, "PATCH", {
+                version: document.version,
+                body: "Updated across views",
+                color: "rose",
+            }),
+        );
+        // Creation may also be observable; consume until the committed update.
+        let event = "";
+        while (!event.includes(`"version":${updated.version}`)) {
+            event = decoder.decode((await owner.read()).value);
+        }
+        assert(event.startsWith("event: document.updated\n"));
+        assert(event.includes(`"documentId":"${document.id}"`));
+        assertEquals(
+            (await env.request(
+                `/api/documents/${document.id}/layout`,
+                "PATCH",
+                {
+                    x: 30,
+                    y: 40,
+                    width: 220,
+                    expanded: true,
+                },
+                1,
+            )).status,
+            404,
+        );
+        const layout = await data<{ x: number; expanded: boolean }>(
+            await env.request(`/api/documents/${document.id}/layout`, "PATCH", {
+                x: 30,
+                y: 40,
+                width: 220,
+                expanded: true,
+            }),
+        );
+        assertEquals(layout.x, 30);
+        assertEquals(layout.expanded, true);
+        const tablet = await env.request(
+            `/api/documents/${document.id}/layout?deviceClass=tablet`,
+        );
+        assertEquals((await tablet.json()).data, null);
+        assertEquals(
+            (await env.request("/api/documents", "POST", { color: "invalid" }))
+                .status,
+            400,
+        );
+        const ownOther = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", {
+                body: "Other account",
+            }, 1),
+        );
+        await env.request(`/api/documents/${ownOther.id}`, "PATCH", {
+            version: ownOther.version,
+            body: "Other account updated",
+        }, 1);
+        let otherEvent = "";
+        while (!otherEvent.includes('"version":2')) {
+            otherEvent = decoder.decode((await other.read()).value);
+        }
+        assert(otherEvent.includes(`"documentId":"${ownOther.id}"`));
+        assert(!otherEvent.includes(document.id));
+    } finally {
+        await owner.cancel();
+        await other.cancel();
         await env.store.close();
     }
 });

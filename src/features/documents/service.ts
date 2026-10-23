@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, or, sql } from "drizzle-orm";
 import type { DatabaseStore } from "../../db/database.ts";
 import {
     documentNotebooks,
@@ -13,6 +13,7 @@ import {
     DOCUMENT_SNAPSHOT_INTERVAL_MS,
     DOCUMENT_SNAPSHOT_RETENTION,
     DOCUMENT_TITLE_MAX_LENGTH,
+    type DocumentColor,
     type DocumentDto,
     type DocumentListInput,
     type DocumentPageDto,
@@ -28,6 +29,7 @@ import {
     DocumentValidationError,
 } from "./errors.ts";
 import { documentDisplayTitle, documentSnippet } from "./markdown.ts";
+import { DocumentsEvents } from "./events.ts";
 
 // SQLite trim defaults to ASCII space; match ECMAScript String.trim for titles.
 const TITLE_WHITESPACE =
@@ -38,6 +40,7 @@ interface ListCursorPayload {
     readonly s: string;
     readonly v: {
         readonly fav?: number;
+        readonly home?: number;
         readonly upd: number;
         readonly id: string;
     };
@@ -97,13 +100,15 @@ function sanitizeFtsQuery(raw: string): string {
 }
 
 export class DocumentsService {
+    readonly events = new DocumentsEvents();
+
     constructor(
         private readonly store: DatabaseStore,
         private readonly now: () => number = Date.now,
     ) {}
 
-    private validateTitle(title: string | undefined): void {
-        if (title !== undefined) {
+    private validateTitle(title: string | null | undefined): void {
+        if (title !== undefined && title !== null) {
             if (typeof title !== "string") {
                 throw new DocumentValidationError("标题必须是字符串");
             }
@@ -147,10 +152,13 @@ export class DocumentsService {
 
     private toSummaryDto(row: {
         id: string;
-        title: string;
+        title: string | null;
         notebookId: string | null;
         notebookName?: string | null;
         isFavorite: boolean;
+        color: DocumentColor;
+        isHomeFixed: boolean;
+        homeSortOrder: number;
         createdAt: number;
         updatedAt: number;
         bodyPreview: string;
@@ -163,6 +171,9 @@ export class DocumentsService {
             notebookId: row.notebookId,
             ...(row.notebookName ? { notebookName: row.notebookName } : {}),
             isFavorite: Boolean(row.isFavorite),
+            color: row.color,
+            isHomeFixed: Boolean(row.isHomeFixed),
+            homeSortOrder: row.homeSortOrder,
             createdAt: row.createdAt,
             updatedAt: row.updatedAt,
         };
@@ -182,6 +193,9 @@ export class DocumentsService {
             notebookId: doc.notebookId,
             ...(notebookName ? { notebookName } : {}),
             isFavorite: Boolean(doc.isFavorite),
+            color: doc.color,
+            isHomeFixed: Boolean(doc.isHomeFixed),
+            homeSortOrder: doc.homeSortOrder,
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,
         };
@@ -225,10 +239,10 @@ export class DocumentsService {
         const currentTime = this.now();
         const documentId = crypto.randomUUID();
         const versionId = crypto.randomUUID();
-        const initialTitle = input.title ?? "";
+        const initialTitle = input.title ?? null;
         const initialBody = input.body ?? "";
 
-        return await this.store.run(async (db) => {
+        const result = await this.store.run(async (db) => {
             return await db.transaction(async (tx) => {
                 let notebookName: string | null = null;
                 if (
@@ -259,7 +273,10 @@ export class DocumentsService {
                     title: initialTitle,
                     currentBody: initialBody,
                     currentVersion: 1,
-                    isFavorite: false,
+                    isFavorite: input.isFavorite ?? false,
+                    color: input.color ?? "paper",
+                    isHomeFixed: input.isHomeFixed ?? false,
+                    homeSortOrder: input.homeSortOrder ?? 0,
                     deletedAt: null,
                     createdAt: currentTime,
                     updatedAt: currentTime,
@@ -286,7 +303,10 @@ export class DocumentsService {
                         title: initialTitle,
                         currentBody: initialBody,
                         currentVersion: 1,
-                        isFavorite: false,
+                        isFavorite: input.isFavorite ?? false,
+                        color: input.color ?? "paper",
+                        isHomeFixed: input.isHomeFixed ?? false,
+                        homeSortOrder: input.homeSortOrder ?? 0,
                         deletedAt: null,
                         createdAt: currentTime,
                         updatedAt: currentTime,
@@ -295,6 +315,12 @@ export class DocumentsService {
                 );
             });
         });
+        this.events.emit(userId, {
+            documentId: result.id,
+            version: result.version,
+            updatedAt: result.updatedAt,
+        });
+        return result;
     }
 
     async update(
@@ -312,7 +338,7 @@ export class DocumentsService {
         this.validateTitle(input.title);
         this.validateBody(input.body);
 
-        return await this.store.run(async (db) => {
+        const result = await this.store.run(async (db) => {
             return await db.transaction(async (tx) => {
                 const existingRows = await tx
                     .select({
@@ -393,6 +419,10 @@ export class DocumentsService {
                         currentBody: updatedBody,
                         notebookId: nextNotebookId,
                         isFavorite: updatedIsFavorite,
+                        color: input.color ?? current.color,
+                        isHomeFixed: input.isHomeFixed ?? current.isHomeFixed,
+                        homeSortOrder: input.homeSortOrder ??
+                            current.homeSortOrder,
                         currentVersion: nextVersion,
                         updatedAt: currentTime,
                     })
@@ -473,6 +503,10 @@ export class DocumentsService {
                         currentBody: updatedBody,
                         notebookId: nextNotebookId,
                         isFavorite: updatedIsFavorite,
+                        color: input.color ?? current.color,
+                        isHomeFixed: input.isHomeFixed ?? current.isHomeFixed,
+                        homeSortOrder: input.homeSortOrder ??
+                            current.homeSortOrder,
                         currentVersion: nextVersion,
                         updatedAt: currentTime,
                     },
@@ -480,6 +514,12 @@ export class DocumentsService {
                 );
             });
         });
+        this.events.emit(userId, {
+            documentId: id,
+            version: result.version,
+            updatedAt: result.updatedAt,
+        });
+        return result;
     }
 
     async softDelete(
@@ -495,8 +535,8 @@ export class DocumentsService {
             throw new DocumentValidationError("版本号必须是正整数");
         }
 
-        await this.store.run(async (db) => {
-            await db.transaction(async (tx) => {
+        const event = await this.store.run(async (db) => {
+            return await db.transaction(async (tx) => {
                 const existingRows = await tx
                     .select({
                         doc: documents,
@@ -533,7 +573,11 @@ export class DocumentsService {
                 const currentTime = this.now();
                 await tx
                     .update(documents)
-                    .set({ deletedAt: currentTime })
+                    .set({
+                        deletedAt: currentTime,
+                        currentVersion: current.currentVersion + 1,
+                        updatedAt: currentTime,
+                    })
                     .where(
                         and(
                             eq(documents.id, id),
@@ -543,12 +587,18 @@ export class DocumentsService {
                         ),
                     )
                     .run();
+                return {
+                    documentId: id,
+                    version: current.currentVersion + 1,
+                    updatedAt: currentTime,
+                };
             });
         });
+        this.events.emit(userId, event);
     }
 
     async restore(userId: string, id: string): Promise<DocumentDto> {
-        return await this.store.run(async (db) => {
+        const result = await this.store.run(async (db) => {
             return await db.transaction(async (tx) => {
                 const existingRows = await tx
                     .select({
@@ -602,6 +652,7 @@ export class DocumentsService {
                         deletedAt: null,
                         notebookId: finalNotebookId,
                         updatedAt: currentTime,
+                        currentVersion: current.currentVersion + 1,
                     })
                     .where(
                         and(
@@ -617,11 +668,18 @@ export class DocumentsService {
                         deletedAt: null,
                         notebookId: finalNotebookId,
                         updatedAt: currentTime,
+                        currentVersion: current.currentVersion + 1,
                     },
                     finalNotebookName,
                 );
             });
         });
+        this.events.emit(userId, {
+            documentId: id,
+            version: result.version,
+            updatedAt: result.updatedAt,
+        });
+        return result;
     }
 
     async permanentDelete(
@@ -639,8 +697,8 @@ export class DocumentsService {
             }
         }
 
-        await this.store.run(async (db) => {
-            await db.transaction(async (tx) => {
+        const event = await this.store.run(async (db) => {
+            return await db.transaction(async (tx) => {
                 const existingRows = await tx
                     .select({
                         doc: documents,
@@ -684,8 +742,14 @@ export class DocumentsService {
                         ),
                     )
                     .run();
+                return {
+                    documentId: id,
+                    version: current.currentVersion + 1,
+                    updatedAt: this.now(),
+                };
             });
         });
+        this.events.emit(userId, event);
     }
 
     async versions(userId: string, id: string): Promise<DocumentVersionDto[]> {
@@ -749,7 +813,7 @@ export class DocumentsService {
             throw new DocumentValidationError("目标版本号必须是正整数");
         }
 
-        return await this.store.run(async (db) => {
+        const result = await this.store.run(async (db) => {
             return await db.transaction(async (tx) => {
                 const existingRows = await tx
                     .select({
@@ -843,6 +907,12 @@ export class DocumentsService {
                 );
             });
         });
+        this.events.emit(userId, {
+            documentId: id,
+            version: result.version,
+            updatedAt: result.updatedAt,
+        });
+        return result;
     }
 
     async list(
@@ -873,12 +943,21 @@ export class DocumentsService {
             ) {
                 throw new DocumentValidationError("无效的游标");
             }
+            if (
+                scope.type === "home" &&
+                typeof cursorPayload.v.home !== "number"
+            ) {
+                throw new DocumentValidationError("无效的游标");
+            }
         }
 
         return await this.store.run(async (db) => {
             const baseWhere = and(
                 eq(documents.userId, userId),
                 sql`${documents.deletedAt} IS NULL`,
+                scope.type === "home"
+                    ? eq(documents.isHomeFixed, true)
+                    : undefined,
                 scope.type === "favorite"
                     ? eq(documents.isFavorite, true)
                     : scope.type === "notebook"
@@ -888,8 +967,16 @@ export class DocumentsService {
 
             let cursorCondition = undefined;
             if (cursorPayload) {
-                const { fav, upd, id } = cursorPayload.v;
-                if (scope.type === "all" && fav !== undefined) {
+                const { fav, home, upd, id } = cursorPayload.v;
+                if (scope.type === "home" && home !== undefined) {
+                    cursorCondition = or(
+                        gt(documents.homeSortOrder, home),
+                        and(
+                            eq(documents.homeSortOrder, home),
+                            lt(documents.id, id),
+                        ),
+                    );
+                } else if (scope.type === "all" && fav !== undefined) {
                     cursorCondition = or(
                         lt(
                             sql<number>`CASE WHEN ${documents.isFavorite} THEN 1 ELSE 0 END`,
@@ -929,11 +1016,14 @@ export class DocumentsService {
                     notebookId: documents.notebookId,
                     notebookName: documentNotebooks.name,
                     isFavorite: documents.isFavorite,
+                    color: documents.color,
+                    isHomeFixed: documents.isHomeFixed,
+                    homeSortOrder: documents.homeSortOrder,
                     createdAt: documents.createdAt,
                     updatedAt: documents.updatedAt,
                     bodyPreview: sql<
                         string
-                    >`CASE WHEN length(trim(${documents.title}, ${TITLE_WHITESPACE})) = 0 THEN ${documents.currentBody} ELSE substr(${documents.currentBody}, 1, 300) END`
+                    >`CASE WHEN length(trim(coalesce(${documents.title}, ''), ${TITLE_WHITESPACE})) = 0 THEN ${documents.currentBody} ELSE substr(${documents.currentBody}, 1, 300) END`
                         .as(
                             "body_preview",
                         ),
@@ -945,16 +1035,16 @@ export class DocumentsService {
                 )
                 .where(and(baseWhere, cursorCondition));
 
-            const orderedQuery = scope.type === "all"
-                ? query.orderBy(
-                    desc(documents.isFavorite),
+            const order = scope.type === "home"
+                ? [asc(documents.homeSortOrder), desc(documents.id)]
+                : [
+                    ...(scope.type === "all"
+                        ? [desc(documents.isFavorite)]
+                        : []),
                     desc(documents.updatedAt),
                     desc(documents.id),
-                )
-                : query.orderBy(
-                    desc(documents.updatedAt),
-                    desc(documents.id),
-                );
+                ];
+            const orderedQuery = query.orderBy(...order);
 
             const rows = await orderedQuery.limit(limit + 1);
 
@@ -970,6 +1060,9 @@ export class DocumentsService {
                     v: {
                         ...(scope.type === "all"
                             ? { fav: last.isFavorite ? 1 : 0 }
+                            : {}),
+                        ...(scope.type === "home"
+                            ? { home: last.homeSortOrder }
                             : {}),
                         upd: last.updatedAt,
                         id: last.id,
@@ -1033,11 +1126,14 @@ export class DocumentsService {
                     notebookId: documents.notebookId,
                     notebookName: documentNotebooks.name,
                     isFavorite: documents.isFavorite,
+                    color: documents.color,
+                    isHomeFixed: documents.isHomeFixed,
+                    homeSortOrder: documents.homeSortOrder,
                     createdAt: documents.createdAt,
                     updatedAt: documents.updatedAt,
                     bodyPreview: sql<
                         string
-                    >`CASE WHEN length(trim(${documents.title}, ${TITLE_WHITESPACE})) = 0 THEN ${documents.currentBody} ELSE substr(${documents.currentBody}, 1, 300) END`
+                    >`CASE WHEN length(trim(coalesce(${documents.title}, ''), ${TITLE_WHITESPACE})) = 0 THEN ${documents.currentBody} ELSE substr(${documents.currentBody}, 1, 300) END`
                         .as(
                             "body_preview",
                         ),
@@ -1123,9 +1219,12 @@ export class DocumentsService {
                     d.title,
                     d.notebook_id,
                     d.is_favorite,
+                    d.color,
+                    d.is_home_fixed,
+                    d.home_sort_order,
                     d.created_at,
                     d.updated_at,
-                    CASE WHEN length(trim(d.title, ${TITLE_WHITESPACE})) = 0 THEN d.current_body ELSE substr(d.current_body, 1, 300) END AS body_preview,
+                    CASE WHEN length(trim(coalesce(d.title, ''), ${TITLE_WHITESPACE})) = 0 THEN d.current_body ELSE substr(d.current_body, 1, 300) END AS body_preview,
                     nb.name AS notebook_name,
                     documents_fts.rank AS rank
                 FROM documents_fts
@@ -1141,8 +1240,11 @@ export class DocumentsService {
 
             type RawRow = [
                 string,
-                string,
                 string | null,
+                string | null,
+                number,
+                DocumentColor,
+                number,
                 number,
                 number,
                 number,
@@ -1154,14 +1256,17 @@ export class DocumentsService {
             const rawRows = await db.all<RawRow>(querySql);
             const rows = rawRows.map((r) => ({
                 id: String(r[0]),
-                title: String(r[1]),
+                title: r[1] === null ? null : String(r[1]),
                 notebookId: r[2] ? String(r[2]) : null,
                 isFavorite: Boolean(r[3]),
-                createdAt: Number(r[4]),
-                updatedAt: Number(r[5]),
-                bodyPreview: String(r[6] ?? ""),
-                notebookName: r[7] ? String(r[7]) : null,
-                rank: Number(r[8]),
+                color: r[4],
+                isHomeFixed: Boolean(r[5]),
+                homeSortOrder: Number(r[6]),
+                createdAt: Number(r[7]),
+                updatedAt: Number(r[8]),
+                bodyPreview: String(r[9] ?? ""),
+                notebookName: r[10] ? String(r[10]) : null,
+                rank: Number(r[11]),
             }));
 
             const hasNextPage = rows.length > limit;

@@ -39,22 +39,31 @@ Deno.test("Home anchor is shared by guests and accounts and reserves four grid r
                 body: JSON.stringify({ webAppHomeLimit: "all" }),
             });
             for (const [index, x] of [32, 1100].entries()) {
-                const response = await fetch("/api/notes", {
+                const created = await fetch("/api/documents", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         title: index === 0 ? "今日计划" : "灵感",
-                        content: "保留纸张尺寸与材质。\n\n- 搜索\n- 整理",
+                        body: "保留纸张尺寸与材质。\n\n- 搜索\n- 整理",
                         isHomeFixed: true,
-                        layout: {
+                    }),
+                });
+                if (!created.ok) throw new Error(await created.text());
+                const { data: document } = await created.json();
+                const layout = await fetch(
+                    `/api/documents/${document.id}/layout`,
+                    {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
                             deviceClass: "desktop",
                             x,
                             y: 100,
                             expanded: true,
-                        },
-                    }),
-                });
-                if (!response.ok) throw new Error(await response.text());
+                        }),
+                    },
+                );
+                if (!layout.ok) throw new Error(await layout.text());
             }
             if (!response.ok) throw new Error(await response.text());
         });

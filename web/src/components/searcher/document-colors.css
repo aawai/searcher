@@ -1,0 +1,60 @@
+/* Note colours are domain values, not interface accent colours. */
+:where(.note-card, .note-quick-dot, .documents-color-dot) {
+    --note-paper: var(--surface);
+    --note-amber: #FFF4D6;
+    --note-rose: #FBE7EC;
+    --note-sage: #E6F0E3;
+    --note-sky: #E3EFFA;
+    --note-color: var(--note-paper);
+    --note-dot-amber: #D9A334;
+    --note-dot-rose: #D8839D;
+    --note-dot-sage: #7EAA76;
+    --note-dot-sky: #72A5CF;
+}
+[data-theme="dark"] :where(.note-card, .note-quick-dot, .documents-color-dot) {
+    --note-amber: #3D3420;
+    --note-rose: #3F2730;
+    --note-sage: #263528;
+    --note-sky: #22303F;
+}
+:where(.note-card)[data-color="amber"] {
+    --note-color: var(--note-amber);
+}
+:where(.note-card)[data-color="rose"] {
+    --note-color: var(--note-rose);
+}
+:where(.note-card)[data-color="sage"] {
+    --note-color: var(--note-sage);
+}
+:where(.note-card)[data-color="sky"] {
+    --note-color: var(--note-sky);
+}
+.note-quick-dot,
+.documents-color-dot {
+    flex: none;
+    display: block;
+    width: var(--space-3);
+    height: var(--space-3);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-note-color-swatch);
+}
+.note-quick-dot--paper,
+.documents-color-dot[data-color="paper"] {
+    background: var(--surface-soft);
+}
+.note-quick-dot--amber,
+.documents-color-dot[data-color="amber"] {
+    background: var(--note-dot-amber);
+}
+.note-quick-dot--rose,
+.documents-color-dot[data-color="rose"] {
+    background: var(--note-dot-rose);
+}
+.note-quick-dot--sage,
+.documents-color-dot[data-color="sage"] {
+    background: var(--note-dot-sage);
+}
+.note-quick-dot--sky,
+.documents-color-dot[data-color="sky"] {
+    background: var(--note-dot-sky);
+}

@@ -194,9 +194,9 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
         },
     );
 
-    // Notes summaries may load vendor code, but do not instantiate the runtime.
+    // Document summaries may load vendor code, but do not instantiate the runtime.
     await t.step(
-        "Scenario 2: Home/Apps stay vendor-cold; Notes root stays runtime-cold; Live loads on demand and Source does not reload",
+        "Scenario 2: Home/Apps stay vendor-cold; Documents root stays runtime-cold; Live loads on demand and Source does not reload",
         async () => {
             const { page, close } = await createIsolatedPage();
             try {
@@ -242,49 +242,63 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                     "Auth/Home/Apps must not request editor runtime",
                 );
 
-                // 3. Switch to Notes workspace via panel switcher
-                const notesSwitcher = page.locator(
-                    '.workspace-panel button[data-workspace="notes"]',
+                // 3. Seed a document, then open it from the documents workspace
+                await page.evaluate(async () => {
+                    const response = await fetch("/api/documents", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title: "加载隔离笔记",
+                            body:
+                                "测试笔记内容，用于验证 Source 编辑与加载隔离。",
+                        }),
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                });
+                const documentsSwitcher = page.locator(
+                    '.workspace-panel button[data-workspace="documents"]',
                 ).first();
-                await notesSwitcher.waitFor({ state: "visible" });
-                await notesSwitcher.click();
-                await page.locator(".workspace-panel [data-workspace-search]")
-                    .waitFor({ state: "visible" });
+                await documentsSwitcher.waitFor({ state: "visible" });
+                await documentsSwitcher.click();
+                const documentItem = page.locator(
+                    ".workspace-panel [data-document-id] h4 button",
+                ).filter({ hasText: "加载隔离笔记" }).first();
+                await documentItem.waitFor({ state: "visible" });
                 assert(
                     !requestedJs.includes(runtimeChunk) &&
                         !requestedJs.includes(sharedRuntimeChunk),
-                    "Notes root must not load either spike or shared editor runtime",
+                    "Documents root must not load either spike or shared editor runtime",
                 );
 
-                const newNoteBtn = page.locator(
-                    '.workspace-panel button[aria-label="新建便签"]',
-                ).first();
                 const runtimeRequest = page.waitForRequest((request) =>
                     request.url() === `${origin}/${sharedRuntimeChunk}`
                 );
-                await newNoteBtn.click();
+                await documentItem.click();
                 const live = page.locator(
-                    '.note-live-editor [contenteditable="true"]',
+                    ".document-editor-scroll-area .ProseMirror",
                 );
                 await live.waitFor({ state: "visible" });
                 await runtimeRequest;
                 assert(requestedJs.includes(editorVendorChunk));
                 assert(
                     !requestedJs.includes(runtimeChunk),
-                    "The production Notes editor must not request the spike runtime",
+                    "The production documents editor must not request the spike runtime",
                 );
                 const editorLoads = requestedJs.filter((file) =>
                     file === editorVendorChunk || file === sharedRuntimeChunk
                 );
-                await page.getByRole("tab", { name: "源码", exact: true })
-                    .click();
-                const source = page.locator("textarea.note-body-textarea");
+                await page.getByRole("button", {
+                    name: "Markdown 源码",
+                    exact: true,
+                }).click();
+                const source = page.getByRole("textbox", {
+                    name: "Markdown 源码正文",
+                    exact: true,
+                });
                 await source.waitFor({ state: "visible" });
                 await source.fill(
-                    "测试便签内容，用于验证 Source 编辑与加载隔离。",
+                    "测试笔记内容，用于验证 Source 编辑与加载隔离。",
                 );
-                await page.locator(".note-markdown-toolbar")
-                    .waitFor({ state: "visible" });
                 assertEquals(
                     requestedJs.filter((file) =>
                         file === editorVendorChunk ||

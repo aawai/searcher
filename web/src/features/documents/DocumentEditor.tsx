@@ -2,6 +2,8 @@ import {
     type ChangeEvent,
     type FocusEvent,
     type KeyboardEvent,
+    lazy,
+    Suspense,
     useCallback,
     useEffect,
     useId,
@@ -15,10 +17,8 @@ import type {
     DocumentSettingsDto,
 } from "@shared/documents.ts";
 import { documentDisplayTitle } from "../../../../src/features/documents/markdown.ts";
-import {
-    createDocumentPagination,
-    type DocumentPagination,
-} from "./document-pagination.ts";
+import type { DocumentPagination } from "./document-pagination.ts";
+import type { DocumentEventSubscriptions } from "./document-event-subscriptions.ts";
 import { DocumentPaperSettingsDialog } from "./DocumentPaperSettingsDialog.tsx";
 import { prepareDocumentPrint } from "./document-print.ts";
 import { api, ApiError } from "../../lib/api.ts";
@@ -27,9 +27,11 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import { Input } from "../../components/ui/input.tsx";
+import { Textarea } from "../../components/ui/textarea.tsx";
 import { type EditorState, TextSelection } from "@milkdown/prose/state";
 import type { Node as ProseMirrorNode } from "@milkdown/prose/model";
 import {
@@ -66,9 +68,15 @@ import {
 } from "./editor-extensions.ts";
 import { analyzeDocumentMarkdown } from "./editor-content.ts";
 import { DocumentToolbar } from "./DocumentToolbar.tsx";
-import { DocumentOutline } from "./DocumentOutline.tsx";
+// Outline UI is loaded only when requested; it must not inflate the editor's initial chunk.
+const DocumentOutline = lazy(() =>
+    import("./DocumentOutline.tsx").then((module) => ({
+        default: module.DocumentOutline,
+    }))
+);
 import { DocumentHistoryDialog } from "./DocumentHistoryDialog.tsx";
 import { ConflictDialog } from "../../components/searcher/ConflictDialog.tsx";
+import { DocumentColorItems } from "../../components/searcher/DocumentColorMenu.tsx";
 
 // Exception (Bundler-only asset):
 // CSS module import is bundled by Vite for browsers but not supported in Deno test runner.
@@ -207,6 +215,7 @@ export interface DocumentEditorProps {
     onOpenDocument?: (id: string) => void;
     onChanged?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
+    eventSubscriptions?: DocumentEventSubscriptions;
 }
 
 export function DocumentEditor({
@@ -215,12 +224,17 @@ export function DocumentEditor({
     onOpenDocument,
     onChanged,
     onDirtyChange,
+    eventSubscriptions,
 }: DocumentEditorProps) {
     // 1. Session Setup & useSyncExternalStore
     const documentEditorOwner = useId();
     const session = useMemo(() => {
-        return createDocumentSession({ userId, documentId });
-    }, [userId, documentId]);
+        return createDocumentSession({
+            userId,
+            documentId,
+            events: eventSubscriptions,
+        });
+    }, [userId, documentId, eventSubscriptions]);
 
     const snapshot = useSyncExternalStore(
         session.subscribe,
@@ -283,6 +297,12 @@ export function DocumentEditor({
     const [initKey, setInitKey] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
     const [conflictDismissed, setConflictDismissed] = useState(false);
+    const [mergeBody, setMergeBody] = useState("");
+    const conflictVersion = snapshot.conflict?.version;
+    useEffect(() => {
+        // The merge box starts from the local draft; the cloud version is shown beside it and never pasted in.
+        if (conflictVersion !== undefined) setMergeBody(snapshot.body);
+    }, [conflictVersion]);
     const saveStatusLabel = {
         saved: "已保存",
         dirty: "未保存",
@@ -321,9 +341,11 @@ export function DocumentEditor({
             );
         }
     }, [documentId]);
+    const needsPagination = viewMode === "page" || printRequested ||
+        snapshot.body.includes("<!-- pagebreak -->");
     useEffect(() => {
-        void loadPaper();
-    }, [loadPaper]);
+        if (needsPagination || paperOpen) void loadPaper();
+    }, [loadPaper, needsPagination, paperOpen]);
 
     // 4. Refs for editor DOM and instances
     const editorRootRef = useRef<HTMLDivElement>(null);
@@ -549,7 +571,7 @@ export function DocumentEditor({
     // 7. Dynamic import and mount of Milkdown (#110 createMarkdownEditor) in continuous mode
     // Gated on isDocumentReady so it reliably mounts after initial loading finishes
     const isDocumentReady = !snapshot.loading && Boolean(snapshot.document) &&
-        Boolean(paperSettings);
+        (!needsPagination || Boolean(paperSettings));
 
     useEffect(() => {
         if (
@@ -583,6 +605,14 @@ export function DocumentEditor({
                 });
                 const paper = paperSettingsRef.current;
                 if (paper && paginationViewportRef.current) {
+                    // Pagination is an optional editor capability, not an initial editor dependency.
+                    const { createDocumentPagination } = await import(
+                        "./document-pagination.ts"
+                    );
+                    if (
+                        !isMounted || !editorRootRef.current ||
+                        !paginationViewportRef.current
+                    ) return;
                     const pagination = createDocumentPagination(
                         editorRootRef.current,
                         paginationViewportRef.current,
@@ -656,6 +686,7 @@ export function DocumentEditor({
         session,
         richMode,
         initKey,
+        needsPagination,
     ]);
 
     // 8. Programmatic synchronization into rich editor (draft apply, restore, source switch)
@@ -1068,7 +1099,7 @@ export function DocumentEditor({
                             aria-label="分页"
                             title="分页"
                             aria-pressed={viewMode === "page"}
-                            disabled={!paperSettings}
+                            disabled={snapshot.loading}
                             onClick={() => handleViewChange("page")}
                         >
                             分页
@@ -1139,7 +1170,12 @@ export function DocumentEditor({
                             size="icon"
                             aria-label="历史"
                             title="历史"
-                            onClick={() => setHistoryOpen(true)}
+                            onClick={async () => {
+                                if (snapshot.saveStatus === "dirty") {
+                                    await session.save("manual");
+                                }
+                                setHistoryOpen(true);
+                            }}
                         >
                             <History size="1em" className="icon-sm" />
                         </Button>
@@ -1167,7 +1203,35 @@ export function DocumentEditor({
                                 data-document-editor-owner={documentEditorOwner}
                             >
                                 <DropdownMenuItem
-                                    disabled={!paperSettings}
+                                    onClick={() => {
+                                        void session.updatePresentation({
+                                            isHomeFixed: !snapshot.document
+                                                ?.isHomeFixed,
+                                        })
+                                            .then((saved) => {
+                                                if (saved) onChanged?.();
+                                            });
+                                    }}
+                                >
+                                    {snapshot.document?.isHomeFixed
+                                        ? "取消固定到首页"
+                                        : "固定到首页"}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DocumentColorItems
+                                    color={snapshot.document?.color ?? "paper"}
+                                    onChange={(color) => {
+                                        void session.updatePresentation({
+                                            color,
+                                        })
+                                            .then((saved) => {
+                                                if (saved) onChanged?.();
+                                            });
+                                    }}
+                                />
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    disabled={snapshot.loading}
                                     onClick={() => setPaperOpen(true)}
                                 >
                                     <Settings
@@ -1177,7 +1241,7 @@ export function DocumentEditor({
                                     <span>纸张设置</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    disabled={!paperSettings}
+                                    disabled={snapshot.loading}
                                     onClick={() => {
                                         if (!richMode) {
                                             handleViewChange("continuous");
@@ -1241,8 +1305,11 @@ export function DocumentEditor({
                         value={snapshot.title}
                         onChange={(e) =>
                             session.edit({ title: e.target.value })}
+                        onCompositionStart={() => session.setComposing(true)}
+                        onCompositionEnd={() => session.setComposing(false)}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
+                                if (e.nativeEvent.isComposing) return;
                                 e.preventDefault();
                                 if (richMode) editorHandleRef.current?.focus();
                             }
@@ -1320,11 +1387,19 @@ export function DocumentEditor({
 
                 {/* Outline Panel */}
                 {showOutline && richMode && (
-                    <DocumentOutline
-                        outline={analysis.outline}
-                        onSelectHeading={handleOutlineSelectHeading}
-                        onClose={() => setShowOutline(false)}
-                    />
+                    <Suspense
+                        fallback={
+                            <LoadingState density="compact">
+                                正在加载大纲…
+                            </LoadingState>
+                        }
+                    >
+                        <DocumentOutline
+                            outline={analysis.outline}
+                            onSelectHeading={handleOutlineSelectHeading}
+                            onClose={() => setShowOutline(false)}
+                        />
+                    </Suspense>
                 )}
             </div>
 
@@ -1394,6 +1469,26 @@ export function DocumentEditor({
                 localBody={snapshot.body}
                 onResolve={handleResolveConflict}
                 onDismiss={() => setConflictDismissed(true)}
+                onCopyDraft={async () => {
+                    const copyId = await session.resolveConflict("new");
+                    if (copyId === null) {
+                        throw new Error(
+                            session.getSnapshot().error ?? "复制草稿失败",
+                        );
+                    }
+                    onChanged?.();
+                }}
+                mergeContent={
+                    <Textarea
+                        aria-label="合并内容"
+                        value={mergeBody}
+                        onChange={(event) => setMergeBody(event.target.value)}
+                    />
+                }
+                onMerge={async () => {
+                    session.edit({ body: mergeBody });
+                    await handleResolveConflict("local");
+                }}
             />
         </div>
     );

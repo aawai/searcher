@@ -49,14 +49,10 @@ interface TrashWebApp {
     updatedAt: number;
 }
 
-interface TrashNote {
+interface TrashDocument {
     id: string;
-    userId: string;
-    title: string | null;
-    body: string;
-    color: string;
-    deletedAt?: number | null;
-    createdAt: number;
+    displayTitle: string;
+    snippet: string;
     updatedAt: number;
 }
 
@@ -191,9 +187,9 @@ function TrashSection(
 export function TrashPage() {
     const { user } = useAppState();
     const location = useLocation();
-    const [tab, setTab] = useState<"webapps" | "notes">("webapps");
+    const [tab, setTab] = useState<"webapps" | "documents">("webapps");
     const [webapps, setWebapps] = useState<TrashWebApp[]>([]);
-    const [notes, setNotes] = useState<TrashNote[]>([]);
+    const [documents, setDocuments] = useState<TrashDocument[]>([]);
     const [loading, setLoading] = useState(false);
     const [initialized, setInitialized] = useState(false);
     const [error, setError] = useState("");
@@ -202,7 +198,7 @@ export function TrashPage() {
 
     const [deleteTarget, setDeleteTarget] = useState<
         | { type: "webapp"; id: string; name: string }
-        | { type: "note"; id: string; title: string }
+        | { type: "document"; id: string; title: string }
         | null
     >(null);
     const [deleting, setDeleting] = useState(false);
@@ -212,12 +208,12 @@ export function TrashPage() {
         setLoading(true);
         setError("");
         try {
-            const [waList, nList] = await Promise.all([
+            const [waList, docPage] = await Promise.all([
                 api<TrashWebApp[]>("/api/webapps/trash"),
-                api<TrashNote[]>("/api/notes/trash"),
+                api<{ items: TrashDocument[] }>("/api/documents/trash"),
             ]);
             setWebapps(waList);
-            setNotes(nList);
+            setDocuments(docPage.items);
         } catch (e) {
             setError(errorMessage(e));
         } finally {
@@ -269,15 +265,15 @@ export function TrashPage() {
                 );
             } else {
                 await api(
-                    `/api/notes/${
+                    `/api/documents/${
                         encodeURIComponent(deleteTarget.id)
                     }/permanent`,
                     {
                         method: "DELETE",
                     },
                 );
-                setStatus("便签已彻底删除");
-                setNotes((prev) =>
+                setStatus("笔记已彻底删除");
+                setDocuments((prev) =>
                     prev.filter((item) => item.id !== deleteTarget.id)
                 );
             }
@@ -290,16 +286,16 @@ export function TrashPage() {
             setActionId(null);
         }
     }
-    async function restoreNote(id: string) {
+    async function restoreDocument(id: string) {
         setActionId(id);
         setError("");
         setStatus("");
         try {
-            await api(`/api/notes/${encodeURIComponent(id)}/restore`, {
+            await api(`/api/documents/${encodeURIComponent(id)}/restore`, {
                 method: "POST",
             });
-            setStatus("便签已恢复");
-            setNotes((prev) => prev.filter((item) => item.id !== id));
+            setStatus("笔记已恢复");
+            setDocuments((prev) => prev.filter((item) => item.id !== id));
         } catch (e) {
             setError(errorMessage(e));
         } finally {
@@ -340,19 +336,20 @@ export function TrashPage() {
                 name: item.name,
             }),
     }));
-    const noteRows: TrashRowData[] = notes.map((note) => {
-        const title = note.title?.trim() || "无标题便签";
-        return {
-            id: note.id,
-            title,
-            detail: note.body.slice(0, 80) || "（空便签）",
-            deletedAt: note.deletedAt,
-            disabled: actionId === note.id || deleting,
-            onRestore: () => void restoreNote(note.id),
-            onPurge: () =>
-                setDeleteTarget({ type: "note", id: note.id, title }),
-        };
-    });
+    const documentRows: TrashRowData[] = documents.map((document) => ({
+        id: document.id,
+        title: document.displayTitle,
+        detail: document.snippet,
+        deletedAt: document.updatedAt,
+        disabled: actionId === document.id || deleting,
+        onRestore: () => void restoreDocument(document.id),
+        onPurge: () =>
+            setDeleteTarget({
+                type: "document",
+                id: document.id,
+                title: document.displayTitle,
+            }),
+    }));
     const pending = !initialized || loading;
 
     return (
@@ -380,15 +377,15 @@ export function TrashPage() {
             />
             <Tabs
                 value={tab}
-                onValueChange={(val) => setTab(val as "webapps" | "notes")}
+                onValueChange={(val) => setTab(val as "webapps" | "documents")}
                 className="trash-tabs"
             >
                 <TabsList>
                     <TabsTrigger value="webapps">
                         应用 ({webapps.length})
                     </TabsTrigger>
-                    <TabsTrigger value="notes">
-                        便签 ({notes.length})
+                    <TabsTrigger value="documents">
+                        笔记 ({documents.length})
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
@@ -414,10 +411,10 @@ export function TrashPage() {
                 )
                 : (
                     <TrashSection
-                        label="已删除的便签"
-                        emptyTitle="没有已删除的便签"
+                        label="已删除的笔记"
+                        emptyTitle="没有已删除的笔记"
                         columnTitle="标题 / 内容摘要"
-                        rows={noteRows}
+                        rows={documentRows}
                         loading={pending}
                     />
                 )}
@@ -434,7 +431,7 @@ export function TrashPage() {
                         <AlertDialogDescription>
                             {deleteTarget?.type === "webapp"
                                 ? `确定彻底删除应用“${deleteTarget.name}”吗？彻底删除后无法恢复。`
-                                : `确定彻底删除便签“${deleteTarget?.title}”吗？彻底删除后无法恢复。`}
+                                : `确定彻底删除笔记“${deleteTarget?.title}”吗？彻底删除后无法恢复。`}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

@@ -417,6 +417,24 @@ export function AppsWorkspace({
                 onRenameFolder={handleRenameGroup}
                 onDeleteFolder={handleDeleteGroup}
                 onFolderSizeChange={handleChangeGroupSize}
+                iconAction={status === "ready"
+                    ? (
+                        <ActionGroup>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={iconQueue.current.running}
+                                onClick={() => {
+                                    iconQueue.current.attempted.clear();
+                                    void backfillIcons();
+                                }}
+                            >
+                                补全图标
+                            </Button>
+                            <span role="status">{iconProgress}</span>
+                        </ActionGroup>
+                    )
+                    : undefined}
             />
         );
     } else {
@@ -502,22 +520,6 @@ export function AppsWorkspace({
                         </ActionGroup>
                     </div>
                 </StatusBanner>
-            )}
-            {state.view === "apps/root" && status === "ready" && (
-                <ActionGroup>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={iconQueue.current.running}
-                        onClick={() => {
-                            iconQueue.current.attempted.clear();
-                            void backfillIcons();
-                        }}
-                    >
-                        补全图标
-                    </Button>
-                    <span role="status">{iconProgress}</span>
-                </ActionGroup>
             )}
 
             {viewContent}

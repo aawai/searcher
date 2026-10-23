@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DocumentVersionDto } from "@shared/documents.ts";
 import {
     Dialog,
@@ -45,22 +45,33 @@ export function DocumentHistoryDialog({
         DocumentVersionDto | null
     >(null);
     const [restoring, setRestoring] = useState(false);
+    const onLoadVersionsRef = useRef(onLoadVersions);
+    onLoadVersionsRef.current = onLoadVersions;
 
     useEffect(() => {
-        if (!open) return;
+        if (!open) {
+            setSelectedVersion(null);
+            return;
+        }
         let cancelled = false;
         setLoading(true);
         setError(null);
-        setSelectedVersion(null);
 
-        onLoadVersions()
+        onLoadVersionsRef.current()
             .then((list) => {
                 if (cancelled) return;
                 const sorted = [...list].sort((a, b) => b.version - a.version);
                 setVersions(sorted);
-                if (sorted.length > 0) {
-                    setSelectedVersion(sorted[0]);
-                }
+                setSelectedVersion((prev) => {
+                    if (prev) {
+                        const existing = sorted.find(
+                            (v) =>
+                                v.id === prev.id || v.version === prev.version,
+                        );
+                        if (existing) return existing;
+                    }
+                    return sorted[0] ?? null;
+                });
             })
             .catch((err) => {
                 if (cancelled) return;
@@ -75,7 +86,7 @@ export function DocumentHistoryDialog({
         return () => {
             cancelled = true;
         };
-    }, [open, onLoadVersions]);
+    }, [open]);
 
     const handleRestore = async (version: DocumentVersionDto) => {
         try {

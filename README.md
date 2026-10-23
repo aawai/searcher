@@ -8,13 +8,13 @@
 单进程、同源部署的搜索主页，基于 Deno + Hono、React + Vite、Drizzle + SQLite。
 
 - 访客可使用搜索与外观设置；匿名外观偏好只保存在当前设备，不上传服务器。
-- 登录后可管理应用、便签、笔记、AI 问答、壁纸和跨设备偏好。
+- 登录后可管理应用、笔记（可固定到首页成为纸张）、AI 问答、壁纸和跨设备偏好。
 - 管理员只能通过交互式 CLI 创建，不存在默认管理员或首个注册者提权。
 
 ## 产品原则
 
 1. **Search First**：搜索框始终是首页第一视觉焦点。
-2. **Personal, not Dashboard**：应用、便签、笔记和个性化功能围绕搜索存在，管理操作下沉至工作区。
+2. **Personal, not Dashboard**：应用与笔记围绕搜索存在，管理操作下沉至工作区。
 3. **Local-first Deployment**：核心功能只依赖 Deno + SQLite + 本地文件系统；AI Provider 与 SearXNG 为可选外部服务。
 4. **Explicit AI**：AI 是显式进入的问答模式，不自动介入普通搜索；工具检索须由用户逐项启用。
 5. **No Silent Data Loss**：草稿、冲突、同步失败、会话失效和版本恢复都不能静默导致数据丢失。
@@ -24,10 +24,9 @@
 | 功能 | 概要 | 详细说明 |
 | --- | --- | --- |
 | 搜索 | 多搜索引擎、搜索联想与快捷命令；访客即可使用 | [docs/workspace.md](docs/workspace.md#搜索框) |
-| 首页与工作区 | 单一 Zen（极简）首页：搜索框为主操作，应用、便签与笔记在非模态右侧 Panel 中打开，移动端使用底部 Sheet | [docs/workspace.md](docs/workspace.md) |
+| 首页与工作区 | 单一 Zen（极简）首页：搜索框为主操作，固定应用与固定到首页的笔记（纸张）；应用与笔记在非模态右侧 Panel 中打开，移动端使用底部 Sheet | [docs/workspace.md](docs/workspace.md) |
 | 应用 | 网址快捷方式与文件夹，首页固定、拖拽整理，可用 AI 生成图标 | [docs/apps.md](docs/apps.md) |
-| 便签 | 短 Markdown 便签，Live Preview / 源码模式，自动保存、实时同步、冲突处理与版本历史 | [docs/notes.md](docs/notes.md) |
-| 笔记 | 长篇 Markdown 文档，笔记本、图片、分页与打印、回收站与版本历史 | [docs/documents.md](docs/documents.md) |
+| 笔记 | Markdown 笔记，Live Preview / 源码模式，固定到首页的纸张形态、颜色、笔记本、图片、分页与打印、收藏、回收站、自动保存、实时同步、冲突处理与版本历史 | [docs/documents.md](docs/documents.md) |
 | AI 问答 | `/ask` 多模型对话、分支历史、附件、只读工具与 SearXNG 联网搜索；Provider 使用 OpenAI-compatible API | [docs/ai.md](docs/ai.md) |
 | 外观与壁纸 | 主题与强调色、搜索引擎与打开方式、壁纸来源与构图、可读性遮罩与上传历史、AI 生成默认参数 | [docs/appearance.md](docs/appearance.md) |
 

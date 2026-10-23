@@ -42,7 +42,7 @@
 
 ## 项目概述
 
-Searcher 是单进程、同源部署的搜索主页，使用 Deno + Hono、React + Vite、Drizzle + SQLite。访客只展示搜索与设置，匿名外观偏好仅在当前设备持久化、不上传服务器，且与账号缓存隔离；应用、便签及跨设备偏好必须登录。管理员仅通过交互式 CLI 创建，不提供默认管理员或首个注册者提权。
+Searcher 是单进程、同源部署的搜索主页，使用 Deno + Hono、React + Vite、Drizzle + SQLite。访客只展示搜索与设置，匿名外观偏好仅在当前设备持久化、不上传服务器，且与账号缓存隔离；应用、笔记及跨设备偏好必须登录。管理员仅通过交互式 CLI 创建，不提供默认管理员或首个注册者提权。
 
 ## 2. 前端技术与 UI 约束
 
@@ -73,7 +73,7 @@ shadcn/ui 不直接负责的能力可以使用独立库：
 
 - 启动：`src/main.ts` 校验环境 → 打开数据库并执行迁移 → 创建 `AuthService` → `createApp` 注册路由 → `Deno.serve`。依赖通过 `AppDeps` 显式传入。
 - 请求：React feature → `apiFetch` → `/api/*` 请求体限制与 Origin 检查 → 路由会话鉴权、字段校验 → feature service → `DatabaseStore.run` → SQLite。响应统一 JSON envelope；前端解包为 DTO，401 清除登录态。
-- 存储：users、sessions、preferences、bookmarks、notes 存于数据库；壁纸文件存于数据库旁的 `wallpapers/`。仅支持单进程和持久本地磁盘，备份须包含数据库与壁纸目录。
+- 存储：users、sessions、preferences、bookmarks、documents 存于数据库；壁纸文件存于数据库旁的 `wallpapers/`。仅支持单进程和持久本地磁盘，备份须包含数据库与壁纸目录。
 - 部署：同一服务提供 API 与 `web/dist`；API 和 `/assets/*` 先处理，其余 GET/HEAD 返回 React shell，由 React Router 决定页面、canonical redirect 或客户端 404。不维护第二份前端页面白名单；未知 API 保持 JSON 404，缺失 assets 保持静态 404，非 GET/HEAD 不回退 HTML。生产必须设置精确 `APP_ORIGIN` 并先构建；非回环 origin 必须 HTTPS，TLS 由部署环境终止。
 
 ## 目录与关键文件
@@ -83,7 +83,7 @@ shadcn/ui 不直接负责的能力可以使用独立库：
 - `src/db/{schema,database,migrate}.ts`、`drizzle/`：表结构、串行数据库访问、迁移入口与提交的 SQL 迁移。
 - `src/shared/{contracts,engines}.ts`：前后端共享 DTO、响应契约与搜索引擎常量；`src/commands/admin.ts`：管理员 CLI。
 - `web/src/App.tsx`、`web/src/app/SearchHome.tsx`：前端路由与首页 / 工作台组装；`features/`：业务 UI；`contexts/`：认证与主题；`lib/api.ts`：请求封装；`styles/global.css`：全局样式。
-- `README.md`：入口概览与部署操作；`docs/`：按 feature 记录用户可观察契约（workspace、apps、notes、documents、ai、appearance），以及 frontend、testing、deployment 细节；`docs/design/` 为 UI Contract（Visual Language 与 UI 验收清单），`docs/editor/` 为共享 Markdown 编辑器契约，`docs/plans/` 为历史实施计划。行为变化时更新对应文档，不在 README 重复。
+- `README.md`：入口概览与部署操作；`docs/`：按 feature 记录用户可观察契约（workspace、apps、documents、ai、appearance），以及 frontend、testing、deployment 细节；`docs/design/` 为 UI Contract（Visual Language 与 UI 验收清单），`docs/editor/` 为共享 Markdown 编辑器契约，`docs/plans/` 为历史实施计划。行为变化时更新对应文档，不在 README 重复。
 - `deno.jsonc`、`deno.lock`：依赖与 task 的唯一事实来源；`web/vite.config.ts`：构建与开发代理；`.env.example`：环境变量示例。
 
 ## 开发命令

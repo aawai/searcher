@@ -501,7 +501,7 @@ Deno.test("AskWorkspace Phase 4: Token usage, system instruction, search, and ex
 });
 
 Deno.test("AskWorkspace Phase 5: Multi-round tools execution and sources persistence", async () => {
-    const store = createTestStore();
+    const store = await createMigratedAiTestStore();
     try {
         let completionsCallCount = 0;
 
@@ -520,7 +520,7 @@ Deno.test("AskWorkspace Phase 5: Multi-round tools execution and sources persist
             if (url.endsWith("/chat/completions")) {
                 completionsCallCount++;
                 if (completionsCallCount === 1) {
-                    // Round 1: Model requests a tool call to lookup_notes
+                    // Round 1: Model requests the unified document search
                     const toolChunk = {
                         choices: [
                             {
@@ -528,10 +528,10 @@ Deno.test("AskWorkspace Phase 5: Multi-round tools execution and sources persist
                                     tool_calls: [
                                         {
                                             index: 0,
-                                            id: "call_notes_1",
+                                            id: "call_documents_1",
                                             function: {
-                                                name: "lookup_notes",
-                                                arguments: '{"query":""}',
+                                                name: "lookup_documents",
+                                                arguments: '{"query":"Apollo"}',
                                             },
                                         },
                                     ],
@@ -600,26 +600,10 @@ Deno.test("AskWorkspace Phase 5: Multi-round tools execution and sources persist
             scope: "user",
         }, false);
 
-        // Prepopulate a note in store
-        await store.run(async (db) => {
-            await db.run(
-                `CREATE TABLE IF NOT EXISTS notes (
-                    id TEXT PRIMARY KEY, user_id TEXT, title TEXT, current_body TEXT, content TEXT,
-                    current_version INTEGER DEFAULT 1, color TEXT DEFAULT 'paper', is_pinned INTEGER DEFAULT 0,
-                    is_home_fixed INTEGER DEFAULT 0, sort_order INTEGER DEFAULT 0, deleted_at INTEGER,
-                    created_at INTEGER, updated_at INTEGER
-                );`,
-            );
-            await db.run(
-                `CREATE TABLE IF NOT EXISTS note_layouts (
-                    id TEXT PRIMARY KEY, note_id TEXT, user_id TEXT, device_class TEXT,
-                    x REAL, y REAL, width REAL, z_index INTEGER DEFAULT 0, expanded INTEGER DEFAULT 1,
-                    sort_order INTEGER, updated_at INTEGER
-                );`,
-            );
-            await db.run(
-                `INSERT INTO notes (id, user_id, title, current_body, content, created_at, updated_at) VALUES ('n1', 'u1', 'Secret Project', 'Project Apollo plans', 'Project Apollo plans', 100, 100);`,
-            );
+        await new DocumentsService(store).create("u1", {
+            title: null,
+            body: "Project Apollo plans",
+            isHomeFixed: true,
         });
 
         const eventsReceived: Array<{ event: string; data: unknown }> = [];
@@ -631,7 +615,7 @@ Deno.test("AskWorkspace Phase 5: Multi-round tools execution and sources persist
                 providerId: provider.id,
                 modelId: "tool-model",
                 message: "What is my secret project?",
-                tools: { notes: true },
+                tools: { documents: true },
             })
         ) {
             eventsReceived.push(ev);
@@ -651,7 +635,7 @@ Deno.test("AskWorkspace Phase 5: Multi-round tools execution and sources persist
         assertExists(toolCallEv);
         assertEquals(
             (toolCallEv.data as { toolName: string }).toolName,
-            "notes",
+            "documents",
         );
 
         const toolResultEv = eventsReceived.find((e) =>
@@ -660,7 +644,7 @@ Deno.test("AskWorkspace Phase 5: Multi-round tools execution and sources persist
         assertExists(toolResultEv);
         assertEquals(
             (toolResultEv.data as { toolName: string }).toolName,
-            "notes",
+            "documents",
         );
 
         // Verify usage was summed across rounds: 30+25 = 55 prompt, 10+15 = 25 completion
@@ -1028,11 +1012,11 @@ Deno.test("AskWorkspace: Tool call security rejects unknown names and disabled t
         });
         assertEquals(unkRes.error?.includes("不支持或未知的工具调用"), true);
 
-        // 2. Disabled tool (notes disabled in allowedTools)
-        const disRes = await executeToolCall("lookup_notes", {}, {
+        // 2. Disabled tool
+        const disRes = await executeToolCall("lookup_documents", {}, {
             userId: "u1",
             store,
-            allowedTools: { notes: false },
+            allowedTools: { documents: false },
         });
         assertEquals(disRes.error?.includes("未在当前会话中启用"), true);
     } finally {

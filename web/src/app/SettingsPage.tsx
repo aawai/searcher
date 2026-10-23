@@ -1094,8 +1094,8 @@ export function SettingsPage() {
                         <SettingsGroup
                             title="同步"
                             footer={user
-                                ? "偏好设置、应用与便签会在你的账户中双向同步。"
-                                : "登录后，偏好设置、应用与便签会同步到你的账户。"}
+                                ? "偏好设置、应用与笔记会在你的账户中双向同步。"
+                                : "登录后，偏好设置、应用与笔记会同步到你的账户。"}
                         >
                             <SettingsRow title="账户">
                                 {user ? user.displayName : "本地访客模式"}
@@ -1109,7 +1109,7 @@ export function SettingsPage() {
                         {user && (
                             <SettingsGroup
                                 title="数据管理"
-                                footer="已删除的应用和便签保留在回收站，可恢复或彻底删除。"
+                                footer="已删除的应用和笔记保留在回收站，可恢复或彻底删除。"
                             >
                                 <SettingsRow title="回收站">
                                     <Button

@@ -27,7 +27,7 @@ const SHORTCUT_SECTIONS: readonly ShortcutSectionConfig[] = [
     { id: "global", title: "全局" },
     { id: "search", title: "搜索" },
     { id: "ask", title: "AI 问答" },
-    { id: "notes", title: "便签编辑" },
+    { id: "documents", title: "笔记编辑" },
 ];
 
 function ShortcutRow({

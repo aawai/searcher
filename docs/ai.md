@@ -121,14 +121,13 @@ UI
 ## 工具与联网搜索
 
 工具均只读，必须由用户在会话配置中显式启用：
-`tools: { notes: boolean, documents: boolean, apps: boolean, webSearch: boolean }`。
+`tools: { documents: boolean, apps: boolean, webSearch: boolean }`。
 
-| 工具               | 检索范围                                                         |
-| ------------------ | ---------------------------------------------------------------- |
-| `lookup_notes`     | 当前用户的便签                                                   |
-| `lookup_documents` | 当前用户未删除的笔记；结果以“笔记”来源展示，点击在笔记工作区打开 |
-| `lookup_apps`      | 当前用户的应用                                                   |
-| `web_search`       | `SEARXNG_URL` 指定的 SearXNG 实例                                |
+| 工具               | 检索范围                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| `lookup_documents` | 当前用户未删除的全部笔记（含固定到首页的笔记）；结果以“笔记”来源展示，点击在笔记工作区打开 |
+| `lookup_apps`      | 当前用户的应用                                                                             |
+| `web_search`       | `SEARXNG_URL` 指定的 SearXNG 实例                                                          |
 
 - 模型不支持工具调用时工具不可用；服务端能力通过 `AiCapabilitiesDto.tools`
   协商。
@@ -163,6 +162,6 @@ SDK；SDK 类型不进入 `AiService`、共享 DTO 或前端的 `meta/token/done
 - 客户端断开时，响应 `ReadableStream.cancel()` 中止上游 Provider
   请求并保留已输出内容；正常完成与异常结束在流的返回路径关闭响应。不依赖 Deno
   成功响应后触发 `request.signal` abort 的 legacy 行为，不需要 unstable 配置。
-  便签 SSE 使用相同机制注销当前用户的事件监听。
+  笔记事件流（`/api/documents/events`）使用相同机制注销当前用户的事件监听。
 
 `AiServiceDeps.fetchFn` 支持注入 custom fetch，用于独立验证 Provider contract。

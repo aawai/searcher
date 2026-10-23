@@ -1,6 +1,8 @@
 import { assertEquals, assertMatch, assertRejects } from "@std/assert";
 import * as fflate from "fflate";
-import { openDatabase } from "../../db/database.ts";
+import { DatabaseSync } from "node:sqlite";
+import { readMigrationFiles } from "drizzle-orm/migrator";
+import { DatabaseStore, openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
 import { preferences, users } from "../../db/schema.ts";
 import { SystemService } from "./service.ts";
@@ -754,6 +756,7 @@ Deno.test("backup smoke: roundtrip full backup and restore preserves wallpaper f
         );
         assertEquals(restoreResult.snapshotCreated, true);
         assertEquals(restoreResult.manifest.appName, "Searcher");
+        assertEquals(restoreResult.warnings, []);
 
         // 5. Verify restored state: wallpaper file is back and readable
         const restoredWallpaper = await wallpaperService.getWallpaper(
@@ -987,6 +990,159 @@ Deno.test("backup concurrency: concurrent backup and delete produces consistent 
         const paths = Object.keys(unzipped);
         assertEquals(paths.some((p) => p.includes(".deleting")), false);
         assertEquals(paths.some((p) => p.includes(".tmp")), false);
+    } finally {
+        await store.close();
+        await Deno.remove(dir, { recursive: true });
+    }
+});
+
+Deno.test("legacy backup: accepts old tables, preserves documents and ignores sticky data with warnings", async () => {
+    const dir = await Deno.makeTempDir({ prefix: "searcher_legacy_backup_" });
+    const store = openDatabase(":memory:");
+    const legacyPath = `${dir}/legacy.sqlite`;
+    const legacyNative = new DatabaseSync(legacyPath);
+    const legacyStore = new DatabaseStore(legacyNative);
+    try {
+        await migrateDatabase(store);
+        // The last pre-unification release ends at migration 0023.
+        const migrations = readMigrationFiles({ migrationsFolder: "./drizzle" })
+            .slice(0, 24);
+        legacyNative.exec(
+            "CREATE TABLE __drizzle_migrations (id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT NOT NULL, created_at NUMERIC)",
+        );
+        for (const migration of migrations) {
+            legacyStore.migrate(migration.sql);
+            legacyNative.prepare(
+                "INSERT INTO __drizzle_migrations (hash, created_at) VALUES (?, ?)",
+            ).run(migration.hash, migration.folderMillis);
+        }
+        legacyNative.exec(`
+            INSERT INTO users (id, username, display_name, password_hash, created_at, updated_at)
+                VALUES ('owner', 'owner', 'Owner', 'hash', 1, 1);
+            INSERT INTO documents (id, user_id, title, current_body, created_at, updated_at)
+                VALUES ('kept', 'owner', 'Preserved document', 'quartz reference', 1, 1);
+            INSERT INTO document_versions (id, document_id, user_id, version, title, body, reason, created_at)
+                VALUES ('version', 'kept', 'owner', 1, 'Preserved document', 'quartz reference', 'snapshot', 1);
+            INSERT INTO notes (id, user_id, title, current_body, content, created_at, updated_at)
+                VALUES ('discarded', 'owner', 'Legacy paper', 'must not migrate', 'must not migrate', 1, 1);
+            INSERT INTO note_versions (id, note_id, user_id, version, body, created_at)
+                VALUES ('legacy-version', 'discarded', 'owner', 1, 'must not migrate', 1);
+            INSERT INTO note_layouts (id, note_id, user_id, device_class, x, y, updated_at)
+                VALUES ('legacy-layout', 'discarded', 'owner', 'desktop', 10, 20, 1);
+        `);
+        const service = new SystemService({
+            store,
+            settingsStore: new SystemSettingsStore(`${dir}/settings.json`),
+        });
+        const files = fflate.unzipSync(await service.createFullBackupZip());
+        files["database.sqlite"] = await Deno.readFile(legacyPath);
+        files["manifest.json"] = new TextEncoder().encode(JSON.stringify({
+            version: "1.0.0",
+            createdAt: 1,
+            appName: "Searcher",
+            counts: {
+                users: 1,
+                webapps: 0,
+                notes: 1,
+                auditLogs: 0,
+                aiProviders: 0,
+                aiModels: 0,
+            },
+            assets: { wallpapersCount: 0, iconsCount: 0 },
+        }));
+        const zip = fflate.zipSync(files);
+        const validation = await service.validateBackupZip(zip);
+        assertEquals(validation.valid, true);
+        assertEquals(validation.manifest?.counts.documents, 1);
+        assertEquals(validation.warnings?.length, 1);
+        assertMatch(validation.warnings?.[0] ?? "", /便签.*已忽略.*不会恢复/);
+        legacyNative.exec(
+            "UPDATE __drizzle_migrations SET hash='unknown-release' WHERE id=(SELECT max(id) FROM __drizzle_migrations)",
+        );
+        const incompatible = fflate.zipSync({
+            ...files,
+            "database.sqlite": await Deno.readFile(legacyPath),
+        });
+        const rejected = await service.validateBackupZip(incompatible);
+        assertEquals(rejected.valid, false);
+        assertMatch(rejected.error ?? "", /迁移版本.*不兼容/);
+        await assertRejects(
+            () => service.restoreFromBackupZip(incompatible),
+            Error,
+            "迁移版本与当前服务不兼容",
+        );
+        assertEquals((await service.getOverview()).totalDocuments, 0);
+        const restored = await service.restoreFromBackupZip(zip);
+        assertEquals(restored.warnings, validation.warnings);
+        const document = await new DocumentsService(store).get("owner", "kept");
+        assertEquals(document.body, "quartz reference");
+        assertEquals(document.displayTitle, "Preserved document");
+        assertEquals((await service.getOverview()).totalDocuments, 1);
+        await store.exclusiveNative((native) => {
+            assertEquals(
+                native.prepare(
+                    "SELECT name FROM sqlite_master WHERE name IN ('notes', 'note_versions', 'note_layouts', 'notes_fts')",
+                ).all(),
+                [],
+            );
+            assertEquals(
+                native.prepare("SELECT id FROM documents").all(),
+                [{ id: "kept" }],
+            );
+            assertEquals(
+                native.prepare("SELECT body FROM document_versions").all(),
+                [{ body: "quartz reference" }],
+            );
+            return Promise.resolve();
+        });
+    } finally {
+        await legacyStore.close();
+        await store.close();
+        await Deno.remove(dir, { recursive: true });
+    }
+});
+
+Deno.test("system overview and backup count only unified documents", async () => {
+    const dir = await Deno.makeTempDir({ prefix: "searcher_document_stats_" });
+    const store = openDatabase(":memory:");
+    try {
+        await migrateDatabase(store);
+        await store.run(async (db) => {
+            await db.insert(users).values({
+                id: "owner",
+                username: "owner",
+                displayName: "Owner",
+                passwordHash: "hash",
+                createdAt: 1,
+                updatedAt: 1,
+            });
+        });
+        const documents = new DocumentsService(store);
+        await documents.create("owner", {
+            title: null,
+            body: "Home paper",
+            isHomeFixed: true,
+        });
+        await documents.create("owner", {
+            title: "Library document",
+            body: "",
+        });
+        const deleted = await documents.create("owner", {
+            title: "Deleted",
+            body: "",
+        });
+        await documents.softDelete("owner", deleted.id, deleted.version);
+        const service = new SystemService({
+            store,
+            settingsStore: new SystemSettingsStore(`${dir}/settings.json`),
+        });
+        assertEquals((await service.getOverview()).totalDocuments, 2);
+        const validation = await service.validateBackupZip(
+            await service.createFullBackupZip(),
+        );
+        assertEquals(validation.valid, true);
+        assertEquals(validation.manifest?.counts.documents, 3);
+        assertEquals(validation.warnings, []);
     } finally {
         await store.close();
         await Deno.remove(dir, { recursive: true });

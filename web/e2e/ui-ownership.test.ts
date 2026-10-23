@@ -416,9 +416,9 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             await page.getByRole("heading", { name: "没有已删除的应用" })
                 .waitFor({ state: "visible" });
 
-            // Switch to notes tab
-            await page.getByRole("tab", { name: /^便签/ }).click();
-            await page.getByRole("heading", { name: "没有已删除的便签" })
+            // Switch to documents tab
+            await page.getByRole("tab", { name: /^笔记/ }).click();
+            await page.getByRole("heading", { name: "没有已删除的笔记" })
                 .waitFor({ state: "visible" });
 
             // 3. Admin user management table canonical rendering

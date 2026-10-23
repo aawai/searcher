@@ -13,7 +13,7 @@ function markScrollEdges(element: HTMLElement): void {
 /**
  * Ref callback for a Home paper body. Marks the body and each code block in it
  * with `data-fade-start` / `data-fade-end` while content is hidden beyond that
- * edge; `notes.css` fades those edges. Other note surfaces keep native scrollbars.
+ * edge; `home-papers.css` fades those edges. Other note surfaces keep native scrollbars.
  */
 export function observeScrollFade(
     root: HTMLElement | null,

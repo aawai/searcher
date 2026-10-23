@@ -71,16 +71,16 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
     await visit("/");
 
-    function getWorkspace(type: "apps" | "notes") {
-        const label = type === "apps" ? "应用工作区" : "便签工作区";
+    function getWorkspace(type: "apps" | "documents") {
+        const label = type === "apps" ? "应用工作区" : "笔记工作区";
         return page.locator(`aside.workspace-panel[aria-label="${label}"]`);
     }
 
-    async function openWorkspace(type: "apps" | "notes") {
+    async function openWorkspace(type: "apps" | "documents") {
         const target = getWorkspace(type);
         const openTarget = page.locator(
             `aside.workspace-panel:not([data-ending-style])[aria-label="${
-                type === "apps" ? "应用工作区" : "便签工作区"
+                type === "apps" ? "应用工作区" : "笔记工作区"
             }"]`,
         );
         if ((await openTarget.count()) === 0) {
@@ -90,7 +90,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             if (await openPanel.count() > 0) {
                 // The Dock is hidden while a panel is open; switch via header tabs.
                 await openPanel.getByRole("tab", {
-                    name: type === "apps" ? "应用工作区" : "便签工作区",
+                    name: type === "apps" ? "应用工作区" : "笔记工作区",
                     exact: true,
                 }).click();
             } else {
@@ -148,31 +148,31 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                 true,
             );
 
-            // Open Notes Workspace
-            await openWorkspace("notes");
-            const notesPanel = getWorkspace("notes");
-            await notesPanel.waitFor({ state: "visible" });
+            // Open Documents Workspace
+            await openWorkspace("documents");
+            const documentsPanel = getWorkspace("documents");
+            await documentsPanel.waitFor({ state: "visible" });
 
-            const notesTitle = notesPanel.locator(
+            const documentsTitle = documentsPanel.locator(
                 ".workspace-title, h2",
             );
-            await notesTitle.first().waitFor({ state: "visible" });
-            assertEquals(await notesTitle.first().textContent(), "便签");
+            await documentsTitle.first().waitFor({ state: "visible" });
+            assertEquals(await documentsTitle.first().textContent(), "笔记");
 
-            const notesSubH3 = notesPanel.getByRole("heading", {
-                name: "全部便签",
+            const documentsSubH3 = documentsPanel.getByRole("heading", {
+                name: "全部笔记",
                 level: 3,
             });
-            await notesSubH3.waitFor({ state: "visible" });
-            assertEquals(await notesSubH3.textContent(), "全部便签");
+            await documentsSubH3.waitFor({ state: "visible" });
+            assertEquals(await documentsSubH3.textContent(), "全部笔记");
 
-            const notesRegion = notesPanel.getByRole("region", {
-                name: "全部便签",
+            const documentsRegion = documentsPanel.getByRole("region", {
+                name: "全部笔记",
             });
-            await notesRegion.waitFor({ state: "visible" });
+            await documentsRegion.waitFor({ state: "visible" });
 
-            // Verify strict heading levels in notes panel
-            const notesHeadings = await notesPanel.evaluate((el) =>
+            // Verify strict heading levels in documents panel
+            const documentsHeadings = await documentsPanel.evaluate((el) =>
                 Array.from(el.querySelectorAll("h1, h2, h3, h4, h5, h6")).map((
                     h,
                 ) => ({
@@ -181,30 +181,30 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                     level: Number(h.tagName.substring(1)),
                 }))
             );
-            assertEquals(notesHeadings.some((h) => h.tag === "h1"), false);
-            assertEquals(notesHeadings.some((h) => h.tag === "h4"), false);
-            assertEquals(notesHeadings.some((h) => h.tag === "h5"), false);
+            assertEquals(documentsHeadings.some((h) => h.tag === "h1"), false);
+            assertEquals(documentsHeadings.some((h) => h.tag === "h4"), false);
+            assertEquals(documentsHeadings.some((h) => h.tag === "h5"), false);
             assertEquals(
-                notesHeadings.filter((h) => h.tag === "h3").length >= 1,
+                documentsHeadings.filter((h) => h.tag === "h3").length >= 1,
                 true,
             );
         },
     );
 
-    // 2. Computed typography & spacing parity between Apps and Notes
+    // 2. Computed typography & spacing parity between Apps and Documents
     await t.step(
-        "Typography & spacing contract: Apps and Notes section titles computed styles parity",
+        "Typography & spacing contract: Apps and Documents section titles computed styles parity",
         async () => {
-            // Measure Notes workspace h3 & header
-            await openWorkspace("notes");
-            const notesPanel = getWorkspace("notes");
-            await notesPanel.getByRole("heading", {
-                name: "全部便签",
+            // Measure Documents workspace h3 & header
+            await openWorkspace("documents");
+            const documentsPanel = getWorkspace("documents");
+            await documentsPanel.getByRole("heading", {
+                name: "全部笔记",
                 level: 3,
             })
                 .waitFor({ state: "visible" });
 
-            const notesStyles = await notesPanel.evaluate((el) => {
+            const documentsStyles = await documentsPanel.evaluate((el) => {
                 const title = el.querySelector(".workspace-section-title");
                 if (!title) return null;
                 const cs = globalThis.getComputedStyle(title);
@@ -256,22 +256,28 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                 };
             });
 
-            assertEquals(Boolean(notesStyles), true);
+            assertEquals(Boolean(documentsStyles), true);
             assertEquals(Boolean(appsStyles), true);
 
             // Assert exact parity for typography & spacing
-            assertEquals(appsStyles?.fontSize, notesStyles?.fontSize);
-            assertEquals(appsStyles?.lineHeight, notesStyles?.lineHeight);
-            assertEquals(appsStyles?.fontWeight, notesStyles?.fontWeight);
-            assertEquals(appsStyles?.marginTop, notesStyles?.marginTop);
-            assertEquals(appsStyles?.marginBottom, notesStyles?.marginBottom);
-            assertEquals(appsStyles?.headerDisplay, notesStyles?.headerDisplay);
-            assertEquals(appsStyles?.headerGap, notesStyles?.headerGap);
+            assertEquals(appsStyles?.fontSize, documentsStyles?.fontSize);
+            assertEquals(appsStyles?.lineHeight, documentsStyles?.lineHeight);
+            assertEquals(appsStyles?.fontWeight, documentsStyles?.fontWeight);
+            assertEquals(appsStyles?.marginTop, documentsStyles?.marginTop);
+            assertEquals(
+                appsStyles?.marginBottom,
+                documentsStyles?.marginBottom,
+            );
+            assertEquals(
+                appsStyles?.headerDisplay,
+                documentsStyles?.headerDisplay,
+            );
+            assertEquals(appsStyles?.headerGap, documentsStyles?.headerGap);
             assertEquals(
                 appsStyles?.sectionDisplay,
-                notesStyles?.sectionDisplay,
+                documentsStyles?.sectionDisplay,
             );
-            assertEquals(appsStyles?.sectionGap, notesStyles?.sectionGap);
+            assertEquals(appsStyles?.sectionGap, documentsStyles?.sectionGap);
         },
     );
     // 2.5. Apps root and empty folder canonical EmptyState contract
@@ -377,7 +383,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
     // 3. Section count and search results contract
     await t.step(
-        "Section count and search results contract: visible count and '搜索结果' region in Apps and Notes",
+        "Section count and search results contract: visible count and '搜索结果' region in Apps and Documents",
         async () => {
             // Seed 2 webapps
             await page.evaluate(async () => {
@@ -399,24 +405,22 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                 });
             });
 
-            // Seed 2 notes (1 fixed, 1 regular)
+            // Seed 2 documents
             await page.evaluate(async () => {
-                await fetch("/api/notes", {
+                await fetch("/api/documents", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        title: "Alpha Fixed Note",
-                        content: "Pinned content",
-                        isHomeFixed: true,
-                        isPinned: true,
+                        title: "Alpha Document",
+                        body: "Alpha content",
                     }),
                 });
-                await fetch("/api/notes", {
+                await fetch("/api/documents", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        title: "Beta Regular Note",
-                        content: "Regular content",
+                        title: "Beta Document",
+                        body: "Beta content",
                     }),
                 });
             });
@@ -481,62 +485,56 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await appsRegion.waitFor({ state: "visible" });
             assertEquals(await appsCount.textContent(), "2");
 
-            // B. Test Notes Workspace: section count & search
-            await openWorkspace("notes");
-            const notesPanel = getWorkspace("notes");
-            await notesPanel.waitFor({ state: "visible" });
-            const fixedRegion = notesPanel.getByRole("region", {
-                name: "已固定",
+            // B. Documents Workspace: section count & search
+            await openWorkspace("documents");
+            const documentsPanel = getWorkspace("documents");
+            await documentsPanel.waitFor({ state: "visible" });
+            const documentsRegion = documentsPanel.getByRole("region", {
+                name: "全部笔记",
             });
-            const otherRegion = notesPanel.getByRole("region", {
-                name: "其他便签",
-            });
-            await fixedRegion.waitFor({ state: "visible" });
-            await otherRegion.waitFor({ state: "visible" });
+            await documentsRegion.waitFor({ state: "visible" });
 
-            // Check counts
-            const fixedCount = fixedRegion.locator(".workspace-section-count");
-            const otherCount = otherRegion.locator(".workspace-section-count");
-            assertEquals(await fixedCount.textContent(), "1");
-            assertEquals(await otherCount.textContent(), "1");
+            // Section count shows the two seeded documents
+            const documentsCount = documentsRegion.locator(
+                ".workspace-section-count",
+            );
+            await documentsCount.waitFor({ state: "visible" });
+            assertEquals(await documentsCount.textContent(), "2");
 
-            // Perform search in Notes
-            const notesSearchInput = notesPanel.locator(
+            // Perform search in Documents
+            const documentsSearchInput = documentsPanel.locator(
                 "input[data-workspace-search]",
             );
-            await notesSearchInput.fill("Beta");
+            await documentsSearchInput.fill("Beta");
 
-            // Fixed and other regions hide, "搜索结果" region appears
-            const notesSearchRegion = notesPanel.getByRole("region", {
+            // "全部笔记" region transforms into "搜索结果"
+            const documentsSearchRegion = documentsPanel.getByRole("region", {
                 name: "搜索结果",
             });
-            await notesSearchRegion.waitFor({ state: "visible" });
+            await documentsSearchRegion.waitFor({ state: "visible" });
             assertEquals(
-                await notesPanel.getByRole("region", { name: "已固定" })
-                    .count(),
-                0,
-            );
-            assertEquals(
-                await notesPanel.getByRole("region", { name: "其他便签" })
+                await documentsPanel.getByRole("region", { name: "全部笔记" })
                     .count(),
                 0,
             );
 
             // Section count shows 1
-            const notesSearchCount = notesSearchRegion.locator(
+            const documentsSearchCount = documentsSearchRegion.locator(
                 ".workspace-section-count",
             );
-            await notesSearchCount.waitFor({ state: "visible" });
-            assertEquals(await notesSearchCount.textContent(), "1");
+            await documentsSearchCount.waitFor({ state: "visible" });
+            assertEquals(await documentsSearchCount.textContent(), "1");
             assertStringIncludes(
-                await notesSearchRegion.textContent() ?? "",
-                "Beta Regular Note",
+                await documentsSearchRegion.textContent() ?? "",
+                "Beta Document",
             );
 
-            // Clear search restores fixed and other sections
-            await notesSearchInput.fill("");
-            await fixedRegion.waitFor({ state: "visible" });
-            await otherRegion.waitFor({ state: "visible" });
+            // Clear search restores the full list
+            await documentsSearchInput.fill("");
+            await documentsRegion.waitFor({ state: "visible" });
+            await documentsRegion.locator(".workspace-section-count").filter({
+                hasText: /^2$/,
+            }).waitFor({ state: "visible" });
         },
     );
 
@@ -636,14 +634,16 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                 state: "visible",
             });
 
-            // B. Loading state with status live role in Notes
-            const notesGate = Promise.withResolvers<void>();
-            let notesUnrouted = false;
-            await page.route("**/api/notes", async (route) => {
+            // B. Loading state with status live role in Documents
+            const documentsGate = Promise.withResolvers<void>();
+            let documentsUnrouted = false;
+            const documentsListUrl = (url: URL) =>
+                url.pathname === "/api/documents";
+            await page.route(documentsListUrl, async (route) => {
                 if (route.request().method() === "GET") {
-                    await notesGate.promise;
+                    await documentsGate.promise;
                 }
-                if (!notesUnrouted) {
+                if (!documentsUnrouted) {
                     try {
                         await route.continue();
                     } catch {
@@ -654,28 +654,26 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
             // Trigger refetch by reloading
             await page.reload();
-            await openWorkspace("notes");
-            const notesPanel = getWorkspace("notes");
-            await notesPanel.waitFor({ state: "visible" });
+            await openWorkspace("documents");
+            const documentsPanel = getWorkspace("documents");
+            await documentsPanel.waitFor({ state: "visible" });
 
-            const loadingState = notesPanel.locator(
+            const loadingState = documentsPanel.locator(
                 '.loading-state[role="status"][data-density="compact"]',
             );
             await loadingState.waitFor({ state: "visible" });
             assertStringIncludes(
                 await loadingState.textContent() ?? "",
-                "正在加载便签",
+                "正在加载笔记",
             );
 
             // Release gate and wait for loading state to finish before unrouting
-            notesGate.resolve();
+            documentsGate.resolve();
             await loadingState.waitFor({ state: "hidden" });
-            notesUnrouted = true;
-            await page.unroute("**/api/notes");
-            await notesPanel.getByRole("region", { name: "已固定" })
-                .waitFor(
-                    { state: "visible" },
-                );
+            documentsUnrouted = true;
+            await page.unroute(documentsListUrl);
+            await documentsPanel.getByRole("region", { name: "全部笔记" })
+                .waitFor({ state: "visible" });
         },
     );
 

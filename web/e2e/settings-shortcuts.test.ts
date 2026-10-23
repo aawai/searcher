@@ -67,7 +67,7 @@ Deno.test("production settings shortcuts contracts", async (t) => {
                     "全局",
                     "搜索",
                     "AI 问答",
-                    "便签编辑",
+                    "笔记编辑",
                     "快捷命令",
                 ],
             );
@@ -177,15 +177,15 @@ Deno.test("production settings shortcuts contracts", async (t) => {
             );
             assertStringIncludes(
                 await globalSection.innerText(),
-                "便签正文中由插入链接优先处理",
+                "笔记正文中由插入链接优先处理",
             );
 
             const notesSection = linuxPage.locator(".settings-group").filter({
-                hasText: "便签编辑",
+                hasText: "笔记编辑",
             });
             assertStringIncludes(
                 await notesSection.innerText(),
-                "便签正文编辑器",
+                "笔记正文编辑器",
             );
             assertStringIncludes(
                 await notesSection.innerText(),

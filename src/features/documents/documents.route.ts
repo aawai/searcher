@@ -20,6 +20,7 @@ import {
 import { DocumentNotebooksService } from "./notebooks.ts";
 import { DocumentsService } from "./service.ts";
 import { DocumentSettingsService } from "./settings.ts";
+import { DocumentLayoutsService } from "./layouts.ts";
 
 const Id = v.pipe(v.string(), v.trim(), v.minLength(1, "ID 不能为空"));
 const Version = v.pipe(
@@ -34,7 +35,13 @@ const NumericQuery = v.pipe(
     v.transform(Number),
     Version,
 );
-const Title = v.pipe(v.string(), v.maxLength(DOCUMENT_TITLE_MAX_LENGTH));
+const Title = v.nullable(
+    v.pipe(v.string(), v.maxLength(DOCUMENT_TITLE_MAX_LENGTH)),
+);
+const Color = v.picklist(["paper", "amber", "rose", "sage", "sky"]);
+const Integer = v.pipe(v.number(), v.integer(), v.safeInteger());
+const DeviceClass = v.picklist(["desktop", "tablet", "mobile"]);
+const Coordinate = v.nullable(v.pipe(v.number(), v.finite()));
 const Body = v.pipe(v.string(), v.maxLength(DOCUMENT_BODY_MAX_LENGTH));
 const Name = v.pipe(v.string(), v.trim(), v.minLength(1, "笔记本名称不能为空"));
 const Limit = v.optional(
@@ -76,6 +83,37 @@ export function registerDocumentsRoutes(
     const notebooks = new DocumentNotebooksService(deps.store, deps.now);
     const assets = new DocumentAssetsService(deps.store, deps.now);
     const settings = new DocumentSettingsService(deps.store, deps.now);
+    const layouts = new DocumentLayoutsService(deps.store, deps.now);
+
+    routes.get("/api/documents/events", (c) => {
+        const encoder = new TextEncoder();
+        let off: (() => void) | undefined;
+        const stream = new ReadableStream<Uint8Array>({
+            start(controller) {
+                const send = (event: string, data: unknown) => {
+                    controller.enqueue(encoder.encode(
+                        `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
+                    ));
+                };
+                send("ready", { ok: true });
+                off = documents.events.on(c.get("user").id, (event) => {
+                    send("document.updated", event);
+                });
+            },
+            cancel() {
+                off?.();
+                off = undefined;
+            },
+        });
+        return new Response(stream, {
+            headers: {
+                "Content-Type": "text/event-stream; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        });
+    });
 
     routes.get(
         "/api/documents",
@@ -83,7 +121,13 @@ export function registerDocumentsRoutes(
             ...pageQuery,
             scope: query(
                 v.optional(
-                    v.picklist(["all", "recent", "favorite", "notebook"]),
+                    v.picklist([
+                        "all",
+                        "recent",
+                        "favorite",
+                        "home",
+                        "notebook",
+                    ]),
                     "all",
                 ),
             ),
@@ -136,6 +180,10 @@ export function registerDocumentsRoutes(
             title: json(v.optional(Title)),
             body: json(v.optional(Body)),
             notebookId: json(v.optional(v.nullable(Id))),
+            color: json(v.optional(Color)),
+            isHomeFixed: json(v.optional(v.boolean())),
+            homeSortOrder: json(v.optional(Integer)),
+            isFavorite: json(v.optional(v.boolean())),
         }),
         (c, data) =>
             documentResponse(
@@ -163,6 +211,9 @@ export function registerDocumentsRoutes(
             body: json(v.optional(Body)),
             notebookId: json(v.optional(v.nullable(Id))),
             isFavorite: json(v.optional(v.boolean())),
+            color: json(v.optional(Color)),
+            isHomeFixed: json(v.optional(v.boolean())),
+            homeSortOrder: json(v.optional(Integer)),
             origin: json(
                 v.optional(
                     v.picklist([
@@ -248,6 +299,51 @@ export function registerDocumentsRoutes(
                         data.version,
                     ),
                 )),
+    );
+
+    routes.get(
+        "/api/documents/:id/layout",
+        validator({
+            ...entityParam,
+            deviceClass: query(v.optional(DeviceClass, "desktop")),
+        }),
+        (c, data) =>
+            documentResponse(
+                c,
+                async () =>
+                    c.success(
+                        await layouts.getLayout(
+                            c.get("user").id,
+                            data.id,
+                            data.deviceClass,
+                        ),
+                    ),
+            ),
+    );
+    routes.patch(
+        "/api/documents/:id/layout",
+        validator({
+            ...entityParam,
+            deviceClass: json(v.optional(DeviceClass, "desktop")),
+            x: json(v.optional(Coordinate)),
+            y: json(v.optional(Coordinate)),
+            width: json(v.optional(Coordinate)),
+            zIndex: json(v.optional(Integer)),
+            expanded: json(v.optional(v.boolean())),
+            sortOrder: json(v.optional(v.nullable(Integer))),
+        }),
+        (c, data) =>
+            documentResponse(
+                c,
+                async () =>
+                    c.success(
+                        await layouts.updateLayout(
+                            c.get("user").id,
+                            data.id,
+                            data,
+                        ),
+                    ),
+            ),
     );
 
     routes.get(
