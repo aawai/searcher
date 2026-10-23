@@ -210,13 +210,12 @@ a {
     width: 28px;
     height: 28px;
     border-radius: var(--radius-pill);
-    background: var(--accent);
-    color: var(--accent-foreground);
+    background: var(--surface-soft);
+    color: var(--foreground);
     font-weight: var(--font-title-weight);
     font-size: var(--font-metadata-size);
     display: grid;
     place-items: center;
-    text-transform: uppercase;
     line-height: 1;
 }
 .user-menu-identity {

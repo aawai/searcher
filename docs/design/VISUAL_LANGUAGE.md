@@ -142,6 +142,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 - **Toast / 撤销**：底部居中材质胶囊；破坏性操作用 AlertDialog 二次确认，软删除给撤销。
 - **菜单**：`⋯` 触发；危险项置底、红色、前有分隔线。互斥选择（如搜索引擎）用单选项，当前项显示勾号。
 - **应用图标**：桌面 48px、移动 44px，格宽与间距不随图标变化。服务端将满版不透明正方形铺满 256px 画布；透明或半透明边缘的图形保留白底与每侧约 20% 内边距。`WebAppGlyph` 是非交互呈现 owner，`WebAppIcon` 只添加启动/排序交互。无可用图标时使用按 hostname 派生的稳定色相浅底（HSL 45% / 90%）与固定深墨色 `#1d1d1f`，字重 400；这是域名身份色而非强调色，明暗主题保持同一对比度。`iconFallback.ts` 拥有运行时颜色，`presentation.ts` 拥有图像画布；对比度与满版/透明/半透明测试分别保护这两个边界。
+- **首页颜色层级**：头像使用 `--surface-soft` 底与 `--foreground`，保留姓名首字母原大小写；搜索框与建议中的引擎标记使用中性单色，品牌色仅出现在引擎菜单。搜索提交按钮空闲 / 输入时始终为相同形状的 ghost 图标按钮；工作区根视图“+”同样用 ghost，不以强调色填充争夺搜索焦点。“跟随系统”用 `SunMoon`，顶栏图标沿用 Lucide 默认描边。
 
 ### 页面原型
 
@@ -198,7 +199,6 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 | 规则                                                  | 现状                                                                                        | 收敛                                 |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------ |
-| 不用全大写（见 [字号](#字号)）                        | `global.css` 的 `.user-avatar-badge` 设置 `text-transform: uppercase`                       | #243 X1 移除头像全大写               |
 | 纸张是实物纸张，不是 UI 表面（见 [纸张](#纸张paper)） | 暗色主题 `--paper-white` 取 `var(--surface-soft)`，即 UI 表面色（token 层事实，未实页验证） | #243 X6 为深色默认纸色改用独立 Token |
 
 ## 三、风格方向
@@ -250,16 +250,15 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 ### 强调色用途
 
-强调色（`--accent` 及 `--accent-hover`、`--accent-active`、`--accent-foreground`，以及由它派生的 `--accent-soft`、`--accent-subtle`、`--accent-border` 着色）表达两类语义，除此之外不使用。对比度与“选中不只靠颜色”属于底线，不因用途登记而放宽。
+强调色（`--accent` 及 `--accent-hover`、`--accent-active`、`--accent-foreground`，以及由它派生的 `--accent-soft`、`--accent-subtle`、`--accent-border` 着色）表达交互语义与个性化画布，除此之外不使用。对比度与“选中不只靠颜色”属于底线，不因用途登记而放宽。
 
 1. **交互语义**
    - primary：primary 按钮、默认 Badge；每个区域最多一个 primary 按钮。
    - 选中 / 激活 / 高亮：开关、复选框、单选点、滑块已选段、菜单与建议列表的高亮项、活动状态点。
    - 焦点环、链接。
    - 拖放反馈：整理模式下可拖拽提示、拖入文件夹的目标提示。
-2. **用户身份与个性化画布**
-   - 用户身份：头像徽标。
-   - 个性化画布：无壁纸时的默认画布 mesh 渐变，强调色只占 `--canvas-mesh-accent-mix` 的色斑。
+2. **个性化画布**
+   - 无壁纸时的默认画布 mesh 渐变，强调色只占 `--canvas-mesh-accent-mix` 的色斑。
    - 色样：强调色选择与设计实验室中展示强调色本身的色块。
 
 **禁止项**：
@@ -287,7 +286,6 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 | 选中 / 激活 | `web/src/features/ask/ask-workspace.css`   | `.ask-composer__active-dot`                                                |
 | 拖放反馈    | `web/src/components/searcher/launcher.css` | `.launcher-drag-cue`                                                       |
 | 拖放反馈    | `web/src/components/searcher/launcher.css` | `.launcher-folder-drop-badge`                                              |
-| 用户身份    | `web/src/styles/global.css`                | `.user-avatar-badge`                                                       |
 | 个性化画布  | `web/src/styles/global.css`                | `.wallpaper-surface`                                                       |
 | 色样        | `web/src/app/settings.css`                 | `.settings-swatch-color`                                                   |
 | 色样        | `web/src/design-lab/design-lab.css`        | `.design-lab-swatch-chip[data-token="--accent"]`                           |
