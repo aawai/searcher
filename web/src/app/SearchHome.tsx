@@ -1,8 +1,4 @@
 import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
-import {
-    GUEST_AI_UNAVAILABLE_MESSAGE,
-    GuestAiUnavailable,
-} from "../components/searcher/GuestAiUnavailable.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -79,7 +75,8 @@ import {
     type AppSessionRouteIntent,
 } from "../components/searcher/AppSessionProvider.tsx";
 import type { AppSessionOptions } from "../components/searcher/useAppSession.ts";
-import { useAiAvailability } from "../features/omnibox/useAiAvailability.ts";
+import { useInlineAnswer } from "../features/inline-ai/useInlineAnswer.ts";
+import { useAppOutletContext } from "./outlet-context.ts";
 import type { SearchQuickCommand } from "../features/shortcuts/shortcut-catalog.ts";
 import {
     undoErrorMessage,
@@ -160,7 +157,9 @@ type PendingAction =
 
 export function SearchHome() {
     const { user, appearance, authSession, setAppearance } = useAppState();
-    const aiAvailable = useAiAvailability(Boolean(user));
+    const { aiModels } = useAppOutletContext();
+    const aiAvailable = aiModels.length > 0;
+    const inlineAnswer = useInlineAnswer({ user, models: aiModels });
     const overlayActive = useEscapeLayerActive("overlay");
     const currentUserIdRef = useRef<string | null>(user?.id ?? null);
     currentUserIdRef.current = user?.id ?? null;
@@ -185,7 +184,6 @@ export function SearchHome() {
         Map<string, DocumentLayoutDto>
     >(new Map());
     const [engine, setEngine] = useState<EngineId>(appearance.engine);
-    const [mode, setMode] = useState<"search" | "ai">("search");
     const [reachability, setReachability] = useState<Reachability>({});
     const [isCheckingConnections, setIsCheckingConnections] = useState(false);
     const [apps, setApps] = useState<ExtendedWebApp[]>([]);
@@ -654,21 +652,11 @@ export function SearchHome() {
     function search(
         query: string,
         newTab: boolean,
-        override?: { engine?: EngineId; mode?: "search" | "ai" },
+        override?: { engine?: EngineId },
     ) {
         const trimmed = query.trim();
         if (!trimmed) return;
-        const effMode = override?.mode ?? mode;
         const effEngine = override?.engine ?? engine;
-        if (effMode === "ai") {
-            if (!user) {
-                // 访客拦截：留首页显示提示，不跳转、不发起 Provider 请求
-                setError(GUEST_AI_UNAVAILABLE_MESSAGE);
-                return;
-            }
-            navigate(routes.ask + "?" + new URLSearchParams({ q: trimmed }));
-            return;
-        }
         const url = buildSearchUrl(effEngine, trimmed);
         if (!url) return;
         if (user) {
@@ -1099,8 +1087,6 @@ export function SearchHome() {
         user,
         engine,
         setEngine,
-        mode,
-        setMode,
         reachability,
         isCheckingConnections,
         onCheckConnections: checkConnections,
@@ -1126,6 +1112,7 @@ export function SearchHome() {
         openWorkspace,
         openDocument,
         aiAvailable,
+        inlineAnswer,
         onSearchCommand: runSearchCommand,
         onCapture: captureNote,
         workspaceOpen: Boolean(host.activeKind),
@@ -1264,9 +1251,7 @@ export function SearchHome() {
                     presentation="floating"
                     open={Boolean(error) && !mobileFeedback}
                 >
-                    {error === GUEST_AI_UNAVAILABLE_MESSAGE
-                        ? <GuestAiUnavailable />
-                        : <span>{error}</span>}
+                    <span>{error}</span>
                     <Button
                         variant="ghost"
                         size="icon"

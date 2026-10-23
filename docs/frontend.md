@@ -97,6 +97,9 @@ deno task check:ui --update
 
 前端路径统一由 `web/src/app/routes.ts` 维护。
 
+- `/ask` 是对话工作区（空状态），`/ask/:id` 是会话深链；同一路由元素承载两者，在 `/ask`
+  发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push。首页不是 Ask
+  的入口：顶栏 AI 链接只在登录且有可用模型时出现，访客与无模型用户在首页没有任何 AI 入口。
 - `/settings/search` replace 到 `/settings`；未知 Settings/Admin 子路径显示
   404。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。
@@ -104,7 +107,10 @@ deno task check:ui --update
   entry；二级页面 breadcrumb 提供稳定的上层与首页目标。登录用户的设置导航首项为
   “账户与安全”（`/account`），按设置内部 Tab 处理。
 - 顶层页面之间的导航（顶栏、用户菜单、404 返回等）启用 React Router
-  `viewTransition`；设置、管理内部 Tab 与工作区不使用。
+  `viewTransition`；设置、管理内部 Tab 与工作区不使用。首页回答卡片展开为 `/ask/:id`
+  使用共享元素过渡（`web/src/lib/shared-element.ts`），不经过 React Router 的
+  `viewTransition`。
+- 从 `/ask/:id` 离开到首页时（任意方式），首页挂载后把焦点放回搜索框。
 
 服务端路由回退规则见 [部署细节](deployment.md#请求路由)。
 

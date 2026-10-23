@@ -1,9 +1,9 @@
-import { ArrowUpRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { EngineSelector } from "./EngineSelector.tsx";
-import { type ModelOption, ModelSelector } from "./ModelSelector.tsx";
 import {
     type FormEvent,
     type KeyboardEvent as ReactKeyboardEvent,
+    type RefObject,
     useEffect,
     useId,
     useLayoutEffect,
@@ -49,7 +49,6 @@ export type Reachability = Record<
 >;
 
 const EMPTY_REACHABILITY: Reachability = {};
-const EMPTY_MODELS: ModelOption[] = [];
 const EMPTY_APPS: OmniboxApp[] = [];
 const EMPTY_FOLDERS: OmniboxFolder[] = [];
 const EMPTY_QUICK_ENTRIES: OmniboxQuickEntry[] = [];
@@ -58,16 +57,11 @@ export function SearcherSearchInput(
     {
         engine,
         onEngineChange,
-        mode,
-        onModeChange,
         onSubmit,
+        onAskAi,
         reachability = EMPTY_REACHABILITY,
         onCheck,
         isChecking = false,
-        modelLabel = "未配置模型",
-        models = EMPTY_MODELS,
-        selectedModel = null,
-        onModelChange,
         disabled = false,
         signedIn = false,
         aiAvailable = false,
@@ -80,23 +74,20 @@ export function SearcherSearchInput(
         onCapture,
         quickEntries = EMPTY_QUICK_ENTRIES,
         onQuickEntry,
+        inputRef,
     }: {
         engine: EngineId;
         onEngineChange: (id: EngineId) => void;
-        mode: "search" | "ai";
-        onModeChange: (mode: "search" | "ai") => void;
         onSubmit: (
             query: string,
             newTab: boolean,
-            override?: { engine?: EngineId; mode?: "search" | "ai" },
+            override?: { engine?: EngineId },
         ) => void;
+        /** 问 AI row, Alt+Enter and `/ai`: hands the question to the inline answer. */
+        onAskAi?: (text: string) => void;
         reachability?: Reachability;
         onCheck?: () => void;
         isChecking?: boolean;
-        modelLabel?: string;
-        models?: ModelOption[];
-        selectedModel?: string | null;
-        onModelChange?: (id: string) => void;
         disabled?: boolean;
         /** Personal groups (我的, 应用) and account commands need a signed-in user. */
         signedIn?: boolean;
@@ -121,6 +112,8 @@ export function SearcherSearchInput(
         /** Shown while the focused box is empty (e.g. 应用 with the home grid off). */
         quickEntries?: OmniboxQuickEntry[];
         onQuickEntry?: (entryId: string) => void;
+        /** Lets the host return focus here, e.g. when the answer card closes. */
+        inputRef?: RefObject<HTMLInputElement | null>;
     },
 ) {
     const [query, setQuery] = useState("");
@@ -128,12 +121,13 @@ export function SearcherSearchInput(
     const [dismissed, setDismissed] = useState(false);
     const [selectedKey, setSelectedKey] = useState<string | null>(null);
     const listboxId = useId();
-    const field = useRef<HTMLInputElement>(null);
+    const ownField = useRef<HTMLInputElement>(null);
+    const field = inputRef ?? ownField;
     // IME 组合态：组合期间的方向键、Enter 属于输入法候选操作，不能驱动联想或提交。
     const composingRef = useRef(false);
     const capturingRef = useRef(false);
 
-    const canAskAi = aiAvailable && signedIn;
+    const canAskAi = aiAvailable && signedIn && Boolean(onAskAi);
     const context = useMemo(
         () => ({ aiAvailable: canAskAi, signedIn }),
         [canAskAi, signedIn],
@@ -143,11 +137,10 @@ export function SearcherSearchInput(
             resolveOmniboxQuery({
                 raw: query,
                 engine,
-                mode,
                 context,
                 hasQuickEntries: quickEntries.length > 0,
             }),
-        [query, engine, mode, context, quickEntries.length],
+        [query, engine, context, quickEntries.length],
     );
     const sources = useOmniboxSources(resolved, { signedIn });
     const groups = useMemo(
@@ -237,7 +230,7 @@ export function SearcherSearchInput(
             case "ask-ai":
                 finish();
                 saveToLocalHistory(action.text);
-                onSubmit(action.text, false, { mode: "ai" });
+                onAskAi?.(action.text);
                 return;
             case "open-document":
                 finish();
@@ -281,7 +274,7 @@ export function SearcherSearchInput(
         run(
             selected
                 ? itemAction(selected, resolved, newTab)
-                : defaultSubmitAction(query, newTab),
+                : defaultSubmitAction(query, newTab, canAskAi),
         );
     }
 
@@ -386,24 +379,13 @@ export function SearcherSearchInput(
                 <div className="search-frame">
                     <EngineSelector
                         engine={engine}
-                        mode={mode}
                         onEngineChange={onEngineChange}
-                        onModeChange={onModeChange}
                         reachability={reachability}
                         onCheck={onCheck}
                         isChecking={isChecking}
                     />
-                    {mode === "ai" && (onModelChange
-                        ? (
-                            <ModelSelector
-                                models={models}
-                                selected={selectedModel}
-                                onChange={onModelChange}
-                            />
-                        )
-                        : <span className="model-pill">{modelLabel}</span>)}
                     <label className="sr-only" htmlFor="search-query">
-                        {mode === "ai" ? "输入问题" : "输入搜索词"}
+                        输入搜索词
                     </label>
                     <input
                         ref={field}
@@ -436,9 +418,7 @@ export function SearcherSearchInput(
                             setFocused(false);
                             setSelectedKey(null);
                         }}
-                        placeholder={mode === "ai"
-                            ? "输入问题，开始对话"
-                            : "搜索或输入网址"}
+                        placeholder="搜索或输入网址"
                         disabled={disabled}
                     />
                     <Tooltip>
@@ -450,16 +430,9 @@ export function SearcherSearchInput(
                                 variant="ghost"
                                 type="submit"
                                 disabled={disabled || !query.trim()}
-                                aria-label={mode === "ai" ? "发送问题" : "搜索"}
+                                aria-label="搜索"
                             >
-                                {mode === "ai"
-                                    ? (
-                                        <ArrowUpRight
-                                            size="1em"
-                                            className="icon-lg"
-                                        />
-                                    )
-                                    : <Search size="1em" className="icon-lg" />}
+                                <Search size="1em" className="icon-lg" />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>

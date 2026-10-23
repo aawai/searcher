@@ -54,6 +54,7 @@ export const suites = {
         "shortcuts-documents-ask",
         "shortcuts-search",
         "omnibox-unified",
+        "inline-ai-answer",
         "ask-accessibility-retry",
         "ui-feedback",
         "editable-pagination-spike",

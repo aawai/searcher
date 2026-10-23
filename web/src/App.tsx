@@ -27,7 +27,9 @@ import {
     wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
-import { authPath, routes } from "./app/routes.ts";
+import { askConversationId, authPath, routes } from "./app/routes.ts";
+import type { AppOutletContext } from "./app/outlet-context.ts";
+import { useAiModels } from "./features/omnibox/useAiModels.ts";
 import {
     RouteErrorBoundary,
     RouteLoadingFallback,
@@ -90,7 +92,8 @@ function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
     const isHomePage = location.pathname === routes.home;
-    const isAskPage = location.pathname === routes.ask;
+    const isAskPage = location.pathname === routes.ask ||
+        askConversationId(location.pathname) !== null;
     // The account page shares the settings shell, so it keeps the icon active.
     const isSettingsPage = location.pathname === routes.settings() ||
         location.pathname.startsWith(`${routes.settings()}/`) ||
@@ -106,6 +109,13 @@ function Layout() {
         connectionError,
         retryConnection,
     } = useAppState();
+    // Re-read when the user moves between sections, e.g. after configuring a model.
+    const aiModels = useAiModels(
+        Boolean(user) && location.pathname !== routes.login &&
+            location.pathname !== routes.register,
+        location.pathname.split("/")[1],
+    );
+    const outletContext: AppOutletContext = { aiModels };
     const [error, setError] = useState("");
     const [logoutSession, setLogoutSession] = useState<
         typeof authSession | null
@@ -181,17 +191,19 @@ function Layout() {
                     s.
                 </Link>
                 <nav className="top-actions" aria-label="账户与设置">
-                    <Link
-                        to={routes.ask}
-                        viewTransition
-                        className={isAskPage
-                            ? "topbar-link topbar-link--active"
-                            : "topbar-link"}
-                        aria-label="AI 问答"
-                        title="AI 问答"
-                    >
-                        <Sparkles size="1em" className="icon-lg" />
-                    </Link>
+                    {aiModels.length > 0 && (
+                        <Link
+                            to={routes.ask}
+                            viewTransition
+                            className={isAskPage
+                                ? "topbar-link topbar-link--active"
+                                : "topbar-link"}
+                            aria-label="AI 问答"
+                            title="AI 问答"
+                        >
+                            <Sparkles size="1em" className="icon-lg" />
+                        </Link>
+                    )}
                     <button
                         type="button"
                         onClick={() => void setAppearance({ theme: nextTheme })}
@@ -376,7 +388,7 @@ function Layout() {
                 : (
                     <RouteErrorBoundary locationKey={location.pathname}>
                         <Suspense fallback={<RouteLoadingFallback />}>
-                            <Outlet />
+                            <Outlet context={outletContext} />
                         </Suspense>
                     </RouteErrorBoundary>
                 )}
@@ -408,7 +420,9 @@ export function App() {
                         path: `${routes.settings()}/*`,
                         element: <SettingsPage />,
                     },
-                    { path: routes.ask, element: <AskPage /> },
+                    // One route for /ask and /ask/:id keeps the page mounted when
+                    // a started conversation gets its own URL.
+                    { path: `${routes.ask}/:id?`, element: <AskPage /> },
                     { path: routes.account, element: <AccountPage /> },
                     { path: `${routes.admin()}/*`, element: <AdminPage /> },
                     { path: routes.trash, element: <TrashPage /> },

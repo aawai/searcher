@@ -212,7 +212,11 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
                 });
 
                 // Click topbar Ask link
-                await page.getByRole("link", { name: /^AI 问答/ }).click();
+                // Guests have no AI link: navigate client-side like a router link would.
+                await page.evaluate(() => {
+                    globalThis.history.pushState({}, "", "/ask");
+                    globalThis.dispatchEvent(new PopStateEvent("popstate"));
+                });
 
                 // During delay: topbar and App Shell must remain visible
                 const topbarVisible = await page.locator(".topbar").isVisible();
@@ -300,7 +304,11 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
                 });
 
                 // Navigate to /ask
-                await page.getByRole("link", { name: /^AI 问答/ }).click();
+                // Guests have no AI link: navigate client-side like a router link would.
+                await page.evaluate(() => {
+                    globalThis.history.pushState({}, "", "/ask");
+                    globalThis.dispatchEvent(new PopStateEvent("popstate"));
+                });
 
                 // Error boundary UI must appear
                 await page.locator('[data-testid="route-error-boundary"]')

@@ -1,0 +1,90 @@
+/* Assistant answer body and code blocks; shared by the Ask thread and the home answer card. */
+.ask-assistant-body {
+    min-width: 0;
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    overflow-wrap: anywhere;
+}
+
+.ask-assistant-body.markdown p {
+    margin: 0 0 var(--space-3) 0;
+}
+
+.ask-assistant-body.markdown > :last-child {
+    margin-bottom: 0;
+}
+
+.ask-table-scroll {
+    overflow-x: auto;
+}
+
+.ask-assistant-body.markdown .ask-table-scroll table {
+    display: table;
+    overflow: visible;
+}
+
+.ask-assistant-body.markdown pre {
+    max-width: 100%;
+    margin-inline: 0;
+}
+
+.ask-table-scroll:focus-visible,
+.ask-codeblock__pre:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+
+.ask-markdown-link {
+    overflow-wrap: anywhere;
+}
+
+.ask-inline-code {
+    overflow-wrap: anywhere;
+}
+
+/* Code block: one soft surface, header row, scrollable body. */
+.ask-codeblock {
+    margin: var(--space-3) 0;
+    border-radius: var(--radius);
+    background: var(--surface-soft);
+    overflow: hidden;
+}
+
+.ask-codeblock__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-1) 0 var(--space-3);
+}
+
+.ask-codeblock__lang {
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+[data-slot="button"].ask-codeblock__copy-btn {
+    color: var(--muted);
+}
+
+[data-slot="button"].ask-codeblock__copy-btn:hover {
+    color: var(--foreground);
+}
+
+.ask-codeblock__error {
+    margin: 0;
+    padding: 0 var(--space-3) var(--space-1);
+    color: var(--danger);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.ask-codeblock .ask-codeblock__pre {
+    margin: 0;
+    padding: var(--space-1) var(--space-3) var(--space-3);
+    border-radius: 0;
+    background: transparent;
+    overflow-x: auto;
+}

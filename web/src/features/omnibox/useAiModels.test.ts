@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
-import { hasUsableModel } from "./useAiAvailability.ts";
+import { hasUsableModel, usableModels } from "./useAiModels.ts";
 
 const model = (patch: Partial<AiModelDto>) => ({
     id: "m",
@@ -16,5 +16,17 @@ Deno.test("AI entry points need an enabled, text-capable model", () => {
     assertEquals(
         hasUsableModel([model({ enabled: false }), model({})]),
         true,
+    );
+});
+
+Deno.test("only usable models can be asked", () => {
+    const usable = model({ id: "ok" });
+    assertEquals(
+        usableModels([
+            model({ id: "off", enabled: false }),
+            usable,
+            model({ id: "image", supportsText: false }),
+        ]),
+        [usable],
     );
 });

@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { startProductionApp } from "./helpers/production-app.ts";
 
-Deno.test("guest AI entry links to login and returns home #196", async () => {
+Deno.test("guests see no AI entry on home; a conversation link signs in and returns to it #196 #237", async () => {
     const app = await startProductionApp();
     const credentials = await app.seedAskFixtureUser({
         username: "guest_ai_entry",
@@ -16,72 +16,50 @@ Deno.test("guest AI entry links to login and returns home #196", async () => {
         const page = await browser.newPage({
             viewport: { width: 1440, height: 900 },
         });
-        const home = app.origin + "/?source=guest-ai";
-        await page.goto(home);
-        await page.locator("main.home").waitFor({
-            state: "visible",
-        });
-        await page.locator("#search-query").waitFor({
-            state: "visible",
-        });
-        await page.getByRole("link", { name: "AI 问答", exact: true }).waitFor({
-            state: "visible",
-        });
-        assertEquals(await page.getByText("登录后可用").count(), 0);
-
-        await page.locator(".search-engine").click();
-        const aiItem = page.getByRole("menuitemradio", {
-            name: "AI 问答",
-            exact: true,
-        });
-        await aiItem.waitFor({ state: "visible" });
-        await aiItem.click();
-
-        let loginLink = page.getByRole("link", {
-            name: "去登录",
-            exact: true,
-        });
-        await loginLink.waitFor({ state: "visible" });
+        await page.goto(app.origin + "/?source=guest-ai");
+        await page.locator("main.home").waitFor({ state: "visible" });
+        await page.locator("#search-query").waitFor({ state: "visible" });
         assertEquals(
-            await loginLink.getAttribute("href"),
-            "/login?next=%2F%3Fsource%3Dguest-ai",
+            await page.getByRole("link", { name: "AI 问答", exact: true })
+                .count(),
+            0,
+            "no top-bar AI link for guests",
         );
-
-        await page.getByRole("button", { name: "关闭错误提示" }).click();
+        await page.locator(".search-engine").click();
+        await page.getByRole("menuitemradio").first().waitFor();
+        assertEquals(
+            await page.getByRole("menuitemradio", { name: "AI 问答" }).count(),
+            0,
+            "no AI target in the engine menu",
+        );
+        await page.keyboard.press("Escape");
         const search = page.locator("#search-query");
         await search.fill("/ai guest submit contract");
-        await search.press("Enter");
-        loginLink = page.getByRole("link", {
-            name: "去登录",
-            exact: true,
-        });
-        await loginLink.waitFor({ state: "visible" });
+        await search.press("Alt+Enter");
+        assertEquals(await page.getByText("问 AI：").count(), 0);
         assertEquals(
-            await loginLink.getAttribute("href"),
-            "/login?next=%2F%3Fsource%3Dguest-ai",
+            await page.getByRole("region", { name: "AI 回答" }).count(),
+            0,
         );
+        assertEquals(new URL(page.url()).pathname, "/");
 
-        await page.setViewportSize({ width: 390, height: 844 });
-        const readableMessage = await page.getByText(
-            "登录后使用 AI 问答",
-            { exact: true },
-        ).evaluate((element) => {
-            const rect = element.getBoundingClientRect();
-            const lineHeight = parseFloat(getComputedStyle(element).lineHeight);
-            return rect.left >= 0 && rect.right <= innerWidth &&
-                rect.height <= lineHeight * 2;
-        });
-        assertEquals(readableMessage, true, "移动错误提示不应被挤成逐字换行");
-
-        await page.getByRole("link", {
-            name: "去登录",
-            exact: true,
-        }).click();
+        // A conversation deep link still asks a guest to sign in, then returns to it.
+        const conversation = `/ask/${credentials.conversationId}`;
+        await page.goto(app.origin + conversation);
+        const login = page.getByRole("link", { name: "登录后提问" });
+        await login.waitFor({ state: "visible" });
+        assertEquals(
+            await login.getAttribute("href"),
+            `/login?next=${encodeURIComponent(conversation)}`,
+        );
+        await login.click();
         await page.locator("#auth-username").fill(credentials.username);
         await page.locator("#auth-password").fill(credentials.password);
         await page.locator('form button[type="submit"]').click();
-        await page.waitForURL(home);
-        await page.locator("#search-query").waitFor({ state: "visible" });
+        await page.waitForURL(app.origin + conversation);
+        await page.locator(".ask-assistant-body").first().waitFor({
+            state: "visible",
+        });
     } finally {
         await browser.close();
         await app.close();

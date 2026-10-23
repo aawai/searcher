@@ -81,16 +81,14 @@ export type ResolvedQuery =
     };
 
 export function resolveOmniboxQuery(
-    { raw, engine, mode, context, hasQuickEntries }: {
+    { raw, engine, context, hasQuickEntries }: {
         raw: string;
         engine: EngineId;
-        mode: "search" | "ai";
         context: SearchCommandContext;
         hasQuickEntries: boolean;
     },
 ): ResolvedQuery {
     const text = raw.trim();
-    if (mode === "ai") return { kind: "idle" };
     if (!text) return hasQuickEntries ? { kind: "entries" } : { kind: "idle" };
     const commands = matchSearchCommands(raw, context);
     if (commands.length > 0) return { kind: "commands", commands };
@@ -247,17 +245,22 @@ export type OmniboxAction =
 
 /**
  * Enter with nothing selected: always a default-engine search of the input.
- * Only an explicit `/g query`-style prefix with a query redirects it.
+ * Only an explicit `/g query`-style prefix with a query redirects it, and `/ai
+ * query` only where AI exists; without it the input is just text.
  */
 export function defaultSubmitAction(
     raw: string,
     newTab: boolean,
+    aiAvailable = false,
 ): OmniboxAction | null {
     const text = raw.trim();
     if (!text) return null;
     const prefix = parseCommandPrefix(raw);
     if (prefix?.hasSpace && prefix.rest) {
-        if (prefix.isAi) return { type: "ask-ai", text: prefix.rest };
+        if (prefix.isAi) {
+            if (aiAvailable) return { type: "ask-ai", text: prefix.rest };
+            return { type: "search", text, newTab };
+        }
         if (prefix.targetEngine) {
             return {
                 type: "search",

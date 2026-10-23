@@ -2,6 +2,7 @@ import { NotebookPen } from "lucide-react";
 import {
     lazy,
     Suspense,
+    useEffect,
     useLayoutEffect,
     useMemo,
     useRef,
@@ -17,7 +18,8 @@ import {
 import { exclusionFromRects } from "../../components/searcher/defaultNotePlacement.ts";
 import { usePresence } from "../../components/ui/presence.ts";
 import { useZenPaperSelection } from "./useZenPaperSelection.ts";
-import { GUEST_AI_UNAVAILABLE_MESSAGE } from "../../components/searcher/GuestAiUnavailable.tsx";
+import { InlineAnswerCard } from "../inline-ai/InlineAnswerCard.tsx";
+import { consumeSearchFocusRequest } from "../inline-ai/search-focus.ts";
 
 const APPS_QUICK_ENTRIES = [{ id: "apps", label: "应用" }];
 const NO_QUICK_ENTRIES: typeof APPS_QUICK_ENTRIES = [];
@@ -45,8 +47,6 @@ export function ZenLayout(
         user,
         engine,
         setEngine,
-        mode,
-        setMode,
         reachability,
         isCheckingConnections,
         onCheckConnections,
@@ -74,6 +74,21 @@ export function ZenLayout(
         showHomeApps,
     } = props;
     const heroRef = useRef<HTMLElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const { inlineAnswer } = props;
+    // Back from the expanded conversation: focus returns to the search box.
+    // Taken in an effect: a render React discards must not consume the request.
+    useEffect(() => {
+        if (consumeSearchFocusRequest()) searchInputRef.current?.focus();
+    }, []);
+    // Closing the card, by button or Escape, returns focus to the search box.
+    const answerWasOpen = useRef(false);
+    useEffect(() => {
+        if (answerWasOpen.current && !inlineAnswer.open) {
+            searchInputRef.current?.focus();
+        }
+        answerWasOpen.current = inlineAnswer.open;
+    }, [inlineAnswer.open]);
     const [gridElement, setGridElement] = useState<HTMLElement | null>(null);
     const [exclusionRect, setExclusionRect] = useState<SafeRect | null>(null);
     const mobile = props.viewportWidth < 768;
@@ -144,7 +159,6 @@ export function ZenLayout(
         };
     }, [
         props.availableRect,
-        mode,
         mobile,
         panelDocked,
         showHomeApps,
@@ -210,15 +224,9 @@ export function ZenLayout(
                 <SearcherSearchInput
                     engine={engine}
                     onEngineChange={setEngine}
-                    mode={mode}
-                    onModeChange={(next) => {
-                        if (next === "ai" && !user) {
-                            props.setError(GUEST_AI_UNAVAILABLE_MESSAGE);
-                            return;
-                        }
-                        setMode(next);
-                    }}
+                    inputRef={searchInputRef}
                     onSubmit={search}
+                    onAskAi={(text) => void inlineAnswer.ask(text)}
                     disabled={isManagingApps}
                     reachability={reachability}
                     onCheck={onCheckConnections}
@@ -238,6 +246,12 @@ export function ZenLayout(
                     onCapture={user ? props.onCapture : undefined}
                     quickEntries={quickEntries}
                     onQuickEntry={() => libraryRef.current?.openAll()}
+                />
+                <InlineAnswerCard
+                    view={inlineAnswer.view}
+                    conversation={inlineAnswer.conversation}
+                    onClose={inlineAnswer.close}
+                    onOpenDocument={props.openDocument}
                 />
             </section>
 
