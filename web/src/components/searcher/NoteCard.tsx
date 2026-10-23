@@ -8,6 +8,7 @@ import {
     Trash2,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { observeScrollFade } from "./scrollFade.ts";
 import {
     NoteMarkdownView,
     preloadNoteMarkdown,
@@ -84,6 +85,7 @@ export function NoteCard(
         onDelete,
         titleContent,
         summary,
+        showColorDot = false,
     }: {
         note: NoteItem;
         onOpen?: () => void;
@@ -96,6 +98,7 @@ export function NoteCard(
         onDelete?: () => void;
         titleContent?: ReactNode;
         summary?: ReactNode;
+        showColorDot?: boolean;
     },
 ) {
     const isCompact = isNoteCompact(mode, note.layout?.expanded);
@@ -108,6 +111,12 @@ export function NoteCard(
         >
             <header className="note-head">
                 <div className="note-head-left">
+                    {showColorDot && note.color && note.color !== "paper" && (
+                        <span
+                            aria-hidden="true"
+                            className={`note-quick-dot note-quick-dot--${note.color}`}
+                        />
+                    )}
                     <Button
                         type="button"
                         variant="ghost"
@@ -270,7 +279,10 @@ export function NoteCard(
 
             {isCompact && summary}
             {!isCompact && note.body?.trim() && (
-                <div className="note-preview markdown">
+                <div
+                    ref={observeScrollFade}
+                    className="note-preview markdown"
+                >
                     <NoteMarkdownView body={note.body} />
                 </div>
             )}

@@ -70,8 +70,6 @@ type WorkspaceNoteProps = {
 function WorkspaceNoteContent({
     note,
     actions,
-    sortable = false,
-    disabled = false,
     expanded = false,
     onToggleExpand,
     onDelete,
@@ -80,7 +78,6 @@ function WorkspaceNoteContent({
     query = "",
     dragHandle,
 }: WorkspaceNoteProps & { dragHandle?: ReactNode }) {
-    const isInteractive = sortable && !disabled;
     const displayTitle = getNoteDisplayTitle(note.title, note.body);
     const titleMatches = displayTitle.toLowerCase().includes(
         query.trim().toLowerCase(),
@@ -99,6 +96,7 @@ function WorkspaceNoteContent({
         <>
             <NoteCard
                 note={note}
+                showColorDot
                 mode={expanded ? "full" : "compact"}
                 onToggleMode={onToggleExpand}
                 onOpen={() => actions.editNote(note)}
@@ -136,26 +134,7 @@ function WorkspaceNoteContent({
                         )}
                     </div>
                 )}
-                dragHandle={dragHandle ??
-                    (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={(isInteractive
-                                ? "排序 "
-                                : "不可排序 ") +
-                                getNoteDisplayTitle(note.title, note.body)}
-                            aria-disabled={!isInteractive ? "true" : undefined}
-                            tabIndex={isInteractive ? 0 : -1}
-                            onClick={(event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                            }}
-                        >
-                            <GripVertical size="1em" className="icon-sm" />
-                        </Button>
-                    )}
+                dragHandle={dragHandle}
                 onTogglePin={() =>
                     void actions.updateNote(note, { isPinned: !note.isPinned })}
                 onToggleHomeFixed={() => void actions.updateNote(note, {
@@ -196,28 +175,25 @@ function WorkspaceNote(props: WorkspaceNoteProps) {
         >
             <WorkspaceNoteContent
                 {...props}
-                dragHandle={
+                dragHandle={interactive && (
                     <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        aria-label={(interactive ? "排序 " : "不可排序 ") +
-                            getNoteDisplayTitle(
-                                props.note.title,
-                                props.note.body,
-                            )}
-                        aria-disabled={!interactive ? "true" : undefined}
-                        tabIndex={interactive ? 0 : -1}
+                        aria-label={"排序 " + getNoteDisplayTitle(
+                            props.note.title,
+                            props.note.body,
+                        )}
                         onClick={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
                         }}
-                        {...(interactive ? attributes : {})}
-                        {...(interactive ? listeners : {})}
+                        {...attributes}
+                        {...listeners}
                     >
                         <GripVertical size="1em" className="icon-sm" />
                     </Button>
-                }
+                )}
             />
         </div>
     );

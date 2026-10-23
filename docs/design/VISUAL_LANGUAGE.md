@@ -20,8 +20,8 @@ Searcher
 4. **交互就地可发现，不写使用说明。** 次要操作在 hover / focus / 长按 / 右键 /
    `⋯` 中出现； 快捷键写在 tooltip、菜单项右侧与
    `/settings/shortcuts`，不写常驻段落。
-5. **材质只出现在壁纸之上。**
-   搜索框、Dock、首页便签使用材质（搜索框不透明度由用户设定）；设置、账户等页面使用实色。
+5. **材质与纸张只出现在壁纸之上。** 搜索框、Dock
+   使用材质（搜索框不透明度由用户设定）；首页便签使用纸张；设置、账户等页面使用实色。
 6. **动效回应操作。** 打开、展开、确认时用短过渡说明变化；不做无操作的循环动画。
 
 ## Token
@@ -77,18 +77,40 @@ SC），数字用 `font-variant-numeric: tabular-nums`。Markdown 正文标题�
 
 ### 层级与材质
 
-| 层       | 背景                        | 阴影          | 示例                    |
-| -------- | --------------------------- | ------------- | ----------------------- |
-| Canvas   | `--background` / 壁纸       | 无            | 页面、首页              |
-| Content  | `--surface`                 | 无            | 分组列表、笔记纸张      |
-| Material | `--material-regular` + blur | `--shadow-l2` | 搜索框、Dock、首页便签  |
-| Floating | `--surface-l3`              | `--shadow-l2` | 菜单、Popover、建议列表 |
-| Overlay  | `--surface-l3`              | `--shadow-l3` | 对话框、面板、Sheet     |
+| 层       | 背景                        | 阴影                 | 示例                    |
+| -------- | --------------------------- | -------------------- | ----------------------- |
+| Canvas   | `--background` / 壁纸       | 无                   | 页面、首页              |
+| Content  | `--surface`                 | 无                   | 分组列表、笔记纸张      |
+| Material | `--material-regular` + blur | `--shadow-l2`        | 搜索框、Dock            |
+| Paper    | `--note-color`（不透明）    | `--shadow-note-card` | 首页便签                |
+| Floating | `--surface-l3`              | `--shadow-l2`        | 菜单、Popover、建议列表 |
+| Overlay  | `--surface-l3`              | `--shadow-l3`        | 对话框、面板、Sheet     |
 
 `--material-regular` = surface 72% 透明混合 +
 `backdrop-filter: blur(24px) saturate(1.6)`； 不支持 `backdrop-filter` 或
 `prefers-reduced-transparency: reduce` 时回退为实色 surface。 叠放顺序只由
 `--elevation-*` 表达，不授权更强阴影。
+
+### 纸张（Paper）
+
+首页便签是实物纸张，不是 UI 表面：不透明、无 blur，不使用
+`--shadow-l2`。固定在壁纸上的方式是“粘性”，不画图钉或磁铁。
+
+- **阴影不对称**：顶部紧贴，底边略翘。静止 `--shadow-note-card`，hover
+  `--shadow-note-card-hover`（只加深阴影，不位移），拖动
+  `--shadow-note-drag`（整张抬起，`scale(--paper-note-lift-scale)`，`prefers-reduced-motion`
+  下无缩放）。
+- **纸面**：`--note-color` 加
+  `--paper-shade`（底部压暗）、`--paper-edge-highlight`（1px 底边亮线）与
+  `--paper-grain`（纸纹），圆角 `--radius-note-card`，不倾斜、不折角。默认纸色为
+  `--paper-white`。
+- **统一尺寸**：每种状态一个固定尺寸：展开 `--paper-note-width` ×
+  `--paper-note-height-full`，折叠（仅标题）高度为
+  `--paper-note-height-compact`。上下内边距同为 `--paper-note-padding-block`。
+- **滚动**：正文在纸内独立裁切并隐藏滚动条（滚轮、触摸与键盘照常滚动）。有内容被隐藏的一侧在内边距之内渐隐
+  `--paper-note-fade`，滚到尽头即消失；代码块横向同理。完整内容在工作区编辑器中阅读。
+- 范围仅限首页浮动便签；工作区列表行、编辑器与冲突对话框属于
+  Content，只沿用便签色值。
 
 ### 动效
 

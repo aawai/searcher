@@ -8,6 +8,10 @@
     --note-sage: #E6F0E3;
     --note-sky: #E3EFFA;
     --note-color: var(--note-paper);
+    --note-dot-amber: #D9A334;
+    --note-dot-rose: #D8839D;
+    --note-dot-sage: #7EAA76;
+    --note-dot-sky: #72A5CF;
 }
 [data-theme="dark"] :where(.note-card, .note-editor, .note-quick-dot) {
     --note-amber: #3D3420;
@@ -39,22 +43,34 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    width: 250px;
+    width: var(--paper-note-width);
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-note-card);
     background: var(--surface);
     color: var(--foreground);
 }
+/* Home notes are Paper (VISUAL_LANGUAGE.md): opaque, one fixed size per state, no blur. */
 .floating-notes .note-card {
-    background: color-mix(in srgb, var(--note-color) 72%, transparent);
-    backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-l2);
-    transition: box-shadow var(--motion-fast) var(--ease-standard);
+    height: var(--paper-note-height-full);
+    padding: var(--space-paper-note-block) var(--space-paper-note-inline);
+    /* A 1px edge highlight, a shade that darkens the lifting bottom edge and grain sit over the paper colour. */
+    background:
+        linear-gradient(to top, var(--paper-edge-highlight) 1px, transparent
+        1px),
+        var(--paper-shade),
+        var(--paper-grain),
+        var(--note-color);
+    box-shadow: var(--shadow-note-card);
+    transition: box-shadow var(--motion-fast) var(--ease-standard), transform
+        var(--motion-fast) var(--ease-standard);
+}
+.floating-notes .note-card--compact {
+    height: var(--paper-note-height-compact);
 }
 .floating-notes .note-card[data-color="paper"] {
-    background: var(--material-regular);
+    --note-color: var(--paper-white);
 }
-/* Home notes lift on hover (shadow only, no movement); dragging overrides it below. */
+/* Hovering lifts the bottom edge further (shadow only, no movement); dragging lifts the sheet fully. */
 .floating-notes .note-card:hover {
     box-shadow: var(--shadow-note-card-hover);
 }
@@ -189,7 +205,45 @@
     width: max-content;
     min-width: 100%;
 }
+/* Home paper has a fixed height: the body fills the remaining space and scrolls without scrollbars.
+   Edges that hide more content fade out inside the paper padding (data-fade-* is set by scrollFade.ts). */
+.floating-notes .note-preview {
+    --note-fade-top: 0px;
+    --note-fade-bottom: 0px;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to bottom, transparent 0, #000
+        var(--note-fade-top), #000 calc(100% - var(--note-fade-bottom)),
+        transparent 100%);
+}
+.floating-notes .note-preview[data-fade-start] {
+    --note-fade-top: var(--paper-note-fade);
+}
+.floating-notes .note-preview[data-fade-end] {
+    --note-fade-bottom: var(--paper-note-fade);
+}
+.floating-notes .note-preview.markdown pre {
+    --note-fade-left: 0px;
+    --note-fade-right: 0px;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, transparent 0, #000
+        var(--note-fade-left), #000 calc(100% - var(--note-fade-right)),
+        transparent 100%);
+}
+.floating-notes .note-preview.markdown pre[data-fade-start] {
+    --note-fade-left: var(--paper-note-fade);
+}
+.floating-notes .note-preview.markdown pre[data-fade-end] {
+    --note-fade-right: var(--paper-note-fade);
+}
+.floating-notes .note-preview::-webkit-scrollbar,
+.floating-notes .note-preview.markdown pre::-webkit-scrollbar {
+    display: none;
+}
 .note-quick-dot {
+    flex: none;
     display: block;
     width: var(--space-3);
     height: var(--space-3);
@@ -200,16 +254,16 @@
     background: var(--surface-soft);
 }
 .note-quick-dot--amber {
-    background: #D9A334;
+    background: var(--note-dot-amber);
 }
 .note-quick-dot--rose {
-    background: #D8839D;
+    background: var(--note-dot-rose);
 }
 .note-quick-dot--sage {
-    background: #7EAA76;
+    background: var(--note-dot-sage);
 }
 .note-quick-dot--sky {
-    background: #72A5CF;
+    background: var(--note-dot-sky);
 }
 .note-dropdown-content {
     min-width: 160px;
@@ -220,6 +274,11 @@
 }
 .note-position[data-dragging="true"] .note-card {
     box-shadow: var(--shadow-note-drag);
+}
+@media (prefers-reduced-motion: no-preference) {
+    .note-position[data-dragging="true"] .note-card {
+        transform: scale(var(--paper-note-lift-scale));
+    }
 }
 .floating-notes--canvas[data-placement-ready="false"] .note-measurement {
     position: absolute;
@@ -483,18 +542,5 @@
     }
     .conflict-actions > button:first-child {
         grid-column: 1 / -1;
-    }
-}
-@media (prefers-reduced-transparency: reduce) {
-    .floating-notes .note-card,
-    .floating-notes .note-card[data-color="paper"] {
-        background: var(--note-color);
-        backdrop-filter: none;
-    }
-}
-@supports not (backdrop-filter: blur(1px)) {
-    .floating-notes .note-card,
-    .floating-notes .note-card[data-color="paper"] {
-        background: var(--note-color);
     }
 }
