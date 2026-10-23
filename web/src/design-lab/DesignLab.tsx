@@ -138,7 +138,10 @@ export function DesignLab() {
     return (
         <PageShell archetype="workbench" className="design-lab-page">
             <PageHeader title="设计实验室" />
-            <Link to="/design-lab/motion">共享元素动效实验</Link>
+            <Section title="交互原型">
+                <Link to="/design-lab/omnibox">统一输入框</Link>
+                <Link to="/design-lab/motion">共享元素动效实验</Link>
+            </Section>
 
             <Section title="首页构图：31% / 38%">
                 <p>

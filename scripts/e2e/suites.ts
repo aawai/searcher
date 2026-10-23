@@ -39,7 +39,7 @@ export const suites = {
         "document-presentation-contracts",
     ],
     wallpaper: ["wallpaper"],
-    bundle: ["bundle-loading", "route-style-stability"],
+    bundle: ["bundle-loading", "route-style-stability", "omnibox-lab"],
     "home-papers": [
         "home-papers-color",
         "home-papers-order",

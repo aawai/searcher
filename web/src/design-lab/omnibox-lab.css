@@ -1,0 +1,90 @@
+.omnibox-lab-page {
+    max-width: var(--layout-search-max);
+    gap: var(--space-4);
+}
+.omnibox-lab-caption,
+.omnibox-lab-detail {
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+}
+.omnibox-lab-search {
+    width: 100%;
+    align-self: center;
+    max-width: var(--layout-search-max);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+.omnibox-lab-input-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+}
+.omnibox-lab-input-row > svg {
+    flex-shrink: 0;
+    color: var(--muted);
+}
+.omnibox-lab-input-row input {
+    min-width: 0;
+    width: 100%;
+}
+.omnibox-lab-results {
+    max-height: min(50dvh, calc(100dvh - var(--space-10)));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-2);
+    border-top: 1px solid var(--border);
+}
+.omnibox-lab-group {
+    font-size: var(--font-body-size);
+    font-weight: 600;
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+}
+.omnibox-lab-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--row-min-height);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--control-radius);
+    cursor: pointer;
+}
+.omnibox-lab-option[aria-selected="true"],
+.omnibox-lab-option:hover {
+    background: var(--surface-soft);
+}
+.omnibox-lab-entry {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    overflow-wrap: anywhere;
+}
+.omnibox-lab-output h2 {
+    font-size: var(--font-body-size);
+    font-weight: 600;
+}
+.omnibox-lab-output p,
+.omnibox-lab-output li {
+    overflow-wrap: anywhere;
+}
+.omnibox-lab-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--control-touch-target);
+    min-height: var(--control-touch-target);
+    cursor: pointer;
+}
+@media (any-pointer: coarse) {
+    .omnibox-lab-page > a {
+        display: inline-flex;
+        align-items: center;
+        min-height: var(--control-touch-target);
+    }
+    .omnibox-lab-input-row input {
+        min-height: var(--control-touch-target);
+    }
+}

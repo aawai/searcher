@@ -52,6 +52,11 @@ import {
 const DesignLab = lazy(() =>
     import("./design-lab/DesignLab.tsx").then((m) => ({ default: m.DesignLab }))
 );
+const OmniboxLab = lazy(() =>
+    import("./design-lab/OmniboxLab.tsx").then((m) => ({
+        default: m.OmniboxLab,
+    }))
+);
 const MotionLab = lazy(() => import("./design-lab/MotionLab.tsx"));
 const MarkdownEditorSpike = lazy(() =>
     import("./spikes/markdown-editor/MarkdownEditorSpike.tsx")
@@ -407,6 +412,10 @@ export function App() {
                     { path: routes.account, element: <AccountPage /> },
                     { path: `${routes.admin()}/*`, element: <AdminPage /> },
                     { path: routes.trash, element: <TrashPage /> },
+                    {
+                        path: "/design-lab/omnibox",
+                        element: <OmniboxLab />,
+                    },
                     {
                         path: "/design-lab/markdown-editor",
                         element: <MarkdownEditorSpike />,
