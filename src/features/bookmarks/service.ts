@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, max } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, max, sql } from "drizzle-orm";
 import type { DatabaseStore } from "../../db/database.ts";
 import { webappGroups, webapps } from "../../db/schema.ts";
 
@@ -151,6 +151,50 @@ export class BookmarksService {
                 .all();
 
             return rows.map((r) => this.toWebAppDto(r));
+        });
+    }
+
+    /**
+     * Live apps whose name or URL contains every whitespace-separated term (case-insensitive,
+     * literal substrings, no wildcard syntax). Ranked: name starts with the whole query, then name
+     * contains every term, then URL-only matches; ties keep home order (sort_order, created_at, id).
+     */
+    async searchWebApps(
+        userId: string,
+        query: string,
+        limit: number,
+    ): Promise<WebAppDto[]> {
+        const terms = query.split(/\s+/).filter((term) => term.length > 0);
+        if (terms.length === 0) return [];
+        const nameHas = (term: string) =>
+            sql`instr(lower(${webapps.name}), lower(${term})) > 0`;
+        const urlHas = (term: string) =>
+            sql`instr(lower(${webapps.url}), lower(${term})) > 0`;
+        const whole = terms.join(" ");
+        return await this.store.run(async (db) => {
+            const rows = await db
+                .select()
+                .from(webapps)
+                .where(and(
+                    eq(webapps.userId, userId),
+                    isNull(webapps.deletedAt),
+                    ...terms.map((term) =>
+                        sql`(${nameHas(term)} OR ${urlHas(term)})`
+                    ),
+                ))
+                .orderBy(
+                    sql`CASE
+                        WHEN instr(lower(${webapps.name}), lower(${whole})) = 1 THEN 0
+                        WHEN ${sql.join(terms.map(nameHas), sql` AND `)} THEN 1
+                        ELSE 2
+                    END`,
+                    asc(webapps.sortOrder),
+                    asc(webapps.createdAt),
+                    asc(webapps.id),
+                )
+                .limit(limit)
+                .all();
+            return rows.map((row) => this.toWebAppDto(row));
         });
     }
 

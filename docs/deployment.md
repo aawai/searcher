@@ -124,3 +124,13 @@ Provider Key。不要将备份 ZIP、密钥或 `data/` 提交到 Git。
 - 浏览器中残留的便签草稿（`note:draft:*`）不读取、不迁移，升级后被清理。
 
 首页纸张与笔记的数据模型见 [笔记 · 首页纸张](documents.md#首页纸张)。
+
+### 升级：笔记全文索引改为 trigram
+
+迁移 `0026_documents_fts_trigram` 用 FTS5 `trigram` 分词器重建 `documents_fts`（派生索引，`documents` 不变），使连续中文与英文片段可按子串命中。索引体积约为原来的数倍，笔记很多时迁移耗时与笔记总字数成正比；迁移在同步原生事务中执行，失败回滚。
+
+回退到升级前的版本时，先停止服务，再恢复旧分词器的索引，然后部署旧版本：
+
+```bash
+sqlite3 data/searcher.sqlite < drizzle/rollback/0026_documents_fts_trigram.sql
+```
