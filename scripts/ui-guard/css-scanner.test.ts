@@ -6,6 +6,22 @@ function scanCssCode(file: string, css: string) {
     return scanCssWithRegistry(file, css, FIXTURE_REGISTRY);
 }
 
+Deno.test("css-scanner - media widths use registered paired boundaries", () => {
+    const css = `
+        @media (max-width: 639px), (min-width: 640px) { .a { display: block; } }
+        @media (min-width: 768px) and (max-width: 1023px) { .b { display: block; } }
+        @media (any-pointer: coarse) { .c { display: block; } }
+        @media (max-width: 640px) { .d { display: block; } }
+        @media (min-width: 641px) { .e { display: block; } }
+        @media (max-width: 900px) { .f { display: block; } }
+        @media (width < 700px) { .g { display: block; } }
+    `;
+    assertEquals(
+        scanCssCode("web/src/features/layout.css", css).map((v) => v.rule),
+        Array(4).fill("unregistered-breakpoint"),
+    );
+});
+
 Deno.test("css-scanner - detects raw box-shadow", () => {
     const css = `
         .card {

@@ -6,6 +6,20 @@ function scanTsxCode(file: string, code: string) {
     return scanTsxWithRegistry(file, code, FIXTURE_REGISTRY);
 }
 
+Deno.test("tsx-scanner - numeric width queries belong only to the shared module", () => {
+    const code = `matchMedia("(max-width: 767px)");
+        const query = "(width < 640px)";
+        matchMedia(MEDIA_QUERIES.belowMedium);`;
+    assertEquals(
+        scanTsxCode("web/src/app/Shell.tsx", code).map((v) => v.rule),
+        ["scattered-media-query", "scattered-media-query"],
+    );
+    assertEquals(
+        scanTsxCode("web/src/design-system/breakpoints.ts", code),
+        [],
+    );
+});
+
 Deno.test("tsx-scanner - detects raw box-shadow in style and className", () => {
     const code = `
         export function BadBoxShadow() {

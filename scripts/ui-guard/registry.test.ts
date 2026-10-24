@@ -8,7 +8,7 @@ import {
 } from "./registry.ts";
 import { FIXTURE_MARKDOWN, FIXTURE_REGISTRY } from "./test-registry.ts";
 
-Deno.test("registry - parses the three tables of Visual Language", () => {
+Deno.test("registry - parses the Visual Language tables", () => {
     assertEquals(
         [...FIXTURE_REGISTRY.fontTokens],
         ["--font-body-size", "--font-page-title-size"],
@@ -27,6 +27,7 @@ Deno.test("registry - parses the three tables of Visual Language", () => {
             ],
         ],
     );
+    assertEquals([...FIXTURE_REGISTRY.breakpoints], [0, 640, 768, 1024]);
 });
 
 Deno.test("registry - fails closed on a missing, empty or malformed table", () => {
@@ -49,6 +50,19 @@ Deno.test("registry - fails closed on a missing, empty or malformed table", () =
             ),
         Error,
         "valid Token",
+    );
+});
+
+Deno.test("registry - breakpoint table fails closed on malformed or unordered boundaries", () => {
+    for (const replacement of ["`641px`", "`0`", "`639.5`"]) {
+        assertThrows(() =>
+            parseVisualRegistry(FIXTURE_MARKDOWN.replace("`640`", replacement))
+        );
+    }
+    assertThrows(() =>
+        parseVisualRegistry(
+            FIXTURE_MARKDOWN.replace("**断点登记。**", "**未登记。**"),
+        )
     );
 });
 

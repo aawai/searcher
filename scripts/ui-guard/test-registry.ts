@@ -2,6 +2,15 @@ import { parseVisualRegistry } from "./registry.ts";
 
 /** A small registry in the exact table format of docs/design/VISUAL_LANGUAGE.md. */
 export const FIXTURE_MARKDOWN = `
+**断点登记。**
+
+| 下界（px） | 档位 | 用途 | owner |
+| --- | --- | --- | --- |
+| \`0\` | 窄 | 单列 | 页面 |
+| \`640\` | 小 | 表单 | 表单 |
+| \`768\` | 中 | 侧栏 | Shell |
+| \`1024\` | 宽 | 画布 | 首页 |
+
 **字号阶梯登记。** 说明文字。
 
 | Token                    | 尺寸 | 用途 |
