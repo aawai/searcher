@@ -21,24 +21,70 @@ async function openHome(page: Page, origin: string) {
     await page.locator("#search-query").waitFor({ state: "visible" });
 }
 
+/** The device-cached appearance value of `field` (IndexedDB), or null when absent. */
+async function storedAppearance(field: string): Promise<boolean | null> {
+    const request = <T>(target: IDBRequest<T>) => {
+        const { promise, resolve, reject } = Promise.withResolvers<T>();
+        target.onsuccess = () => resolve(target.result);
+        target.onerror = () => reject(target.error);
+        return promise;
+    };
+    const open = indexedDB.open("searcher-client", 1);
+    open.onupgradeneeded = () => open.result.createObjectStore("state");
+    const db = await request(open);
+    try {
+        const state = () => db.transaction("state").objectStore("state");
+        const keys = (await request(state().getAllKeys())).map(String)
+            .filter((key) => key.startsWith("appearance:"));
+        // A signed-in page reads its account cache, not the anonymous one.
+        const key = keys.find((k) => k !== "appearance:anonymous") ?? keys[0];
+        if (!key) return null;
+        const saved: unknown = await request(state().get(key));
+        if (!saved || typeof saved !== "object" || !(field in saved)) {
+            return null;
+        }
+        const value = (saved as Record<string, unknown>)[field];
+        return typeof value === "boolean" ? value : null;
+    } finally {
+        db.close();
+    }
+}
+
+const switchIs = ([label, value]: readonly [string, string]) =>
+    document.querySelector(`[role="switch"][aria-label="${label}"]`)
+        ?.getAttribute("aria-checked") === value;
+
+/**
+ * The settings page first renders built-in defaults, then applies the device
+ * cache, and writes a change back to it asynchronously. Wait for the cached
+ * value before deciding to click, and for the write before navigating away;
+ * otherwise a fast test skips a needed click or loses the change.
+ */
 async function setSwitch(
     page: Page,
     origin: string,
     name: string,
+    field: string,
     checked: boolean,
 ) {
     await page.goto(origin + "/settings/appearance");
+    const stored = await page.evaluate(storedAppearance, field);
     const control = page.getByRole("switch", { name, exact: true });
     await control.waitFor();
+    if (stored !== null) {
+        await page.waitForFunction(switchIs, [name, String(stored)] as const);
+    }
     if ((await control.getAttribute("aria-checked") === "true") !== checked) {
         await control.click();
     }
-    await page.waitForFunction(
-        ([label, value]) =>
-            document.querySelector(`[role="switch"][aria-label="${label}"]`)
-                ?.getAttribute("aria-checked") === value,
-        [name, String(checked)] as const,
-    );
+    await page.waitForFunction(switchIs, [name, String(checked)] as const);
+    const deadline = Date.now() + 5_000;
+    while (await page.evaluate(storedAppearance, field) !== checked) {
+        if (Date.now() > deadline) {
+            throw new Error(`${field} was not written to the device cache`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
+    }
 }
 
 async function newPage(browser: Browser, time: string) {
@@ -115,7 +161,13 @@ Deno.test("home calm layer: date, optional time, 继续 and the time-of-day canv
                 try {
                     await openHome(page, app.origin);
                     const top = await searchTop(page);
-                    await setSwitch(page, app.origin, "显示时间", true);
+                    await setSwitch(
+                        page,
+                        app.origin,
+                        "显示时间",
+                        "showHomeTime",
+                        true,
+                    );
                     await openHome(page, app.origin);
                     assertEquals(await searchTop(page), top, "time on");
                     const seen: string[] = [];
@@ -143,13 +195,25 @@ Deno.test("home calm layer: date, optional time, 继续 and the time-of-day canv
                         "2026-10-24T10:14",
                     );
 
-                    await setSwitch(page, app.origin, "显示日期", false);
-                    await setSwitch(page, app.origin, "显示时间", false);
-                    await openHome(page, app.origin);
-                    assertEquals(
-                        await page.getByTestId("home-calm-clock").count(),
-                        0,
+                    await setSwitch(
+                        page,
+                        app.origin,
+                        "显示日期",
+                        "showHomeDate",
+                        false,
                     );
+                    await setSwitch(
+                        page,
+                        app.origin,
+                        "显示时间",
+                        "showHomeTime",
+                        false,
+                    );
+                    await openHome(page, app.origin);
+                    // The home first renders defaults, then the device cache hides the line.
+                    await page.getByTestId("home-calm-clock").waitFor({
+                        state: "detached",
+                    });
                     assertEquals(
                         await searchTop(page),
                         top,
@@ -276,7 +340,13 @@ Deno.test("home calm layer: date, optional time, 继续 and the time-of-day canv
                     await openHome(page, app.origin);
                     await continueNav.waitFor();
                     const top = await searchTop(page);
-                    await setSwitch(page, app.origin, "显示“继续”", false);
+                    await setSwitch(
+                        page,
+                        app.origin,
+                        "显示“继续”",
+                        "showHomeContinue",
+                        false,
+                    );
                     await openHome(page, app.origin);
                     await page.getByTestId("home-calm-clock").waitFor();
                     assertEquals(await continueNav.count(), 0);
