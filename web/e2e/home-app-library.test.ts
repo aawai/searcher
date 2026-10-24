@@ -912,12 +912,9 @@ Deno.test("home app library (#244)", async (t) => {
                         a.left < b.right && b.left < a.right &&
                         a.top < b.bottom && b.top < a.bottom;
                     const placed = async () => {
-                        await page.locator(
-                            '.floating-notes--canvas[data-placement-ready="true"]',
-                        ).waitFor();
+                        await page.locator(".home-notes--grid").waitFor();
                         await page.waitForFunction(() =>
-                            document.querySelectorAll(".note-position")
-                                .length > 0
+                            document.querySelectorAll(".home-note").length > 0
                         );
                         return await page.evaluate(() => {
                             const box = (element: Element): Box => {
@@ -935,9 +932,7 @@ Deno.test("home app library (#244)", async (t) => {
                             return {
                                 library: library ? box(library) : null,
                                 notes: Array.from(
-                                    document.querySelectorAll(
-                                        ".note-position .note-card",
-                                    ),
+                                    document.querySelectorAll(".home-note"),
                                 ).map(box),
                             };
                         });

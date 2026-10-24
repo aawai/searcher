@@ -26,18 +26,18 @@ import type {
     UpdateDocumentInput,
 } from "@shared/documents.ts";
 import {
-    needsPaperRefresh,
-    type PaperItem,
-    setPaper,
-} from "../features/home-layouts/home-papers.ts";
+    type HomeNoteItem,
+    needsNoteRefresh,
+    setNote,
+} from "../features/home-layouts/home-notes.ts";
 import {
-    fetchHomePapers,
-    fetchPaper,
-    patchPaper,
-    patchPaperLayout,
-    restorePaper,
-    trashPaper,
-} from "../features/home-layouts/home-papers-api.ts";
+    fetchHomeNote,
+    fetchHomeNotes,
+    patchNote,
+    patchNoteLayout,
+    restoreNote,
+    trashNote,
+} from "../features/home-layouts/home-notes-api.ts";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { useEscapeLayerActive } from "../components/ui/escape-layer-stack.tsx";
@@ -78,9 +78,9 @@ import {
 } from "../features/library/library-request.ts";
 import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
 import type {
-    PaperTaskSaver,
-    PaperTaskSaverDeps,
-} from "../features/home-layouts/paper-task-saver.ts";
+    HomeNoteTaskSaver,
+    HomeNoteTaskSaverDeps,
+} from "../features/home-layouts/home-note-task-saver.ts";
 
 import {
     type AppSessionNavigation,
@@ -124,9 +124,9 @@ type AppUndoRecord = UndoRecordBase & {
     item: ExtendedWebApp;
 };
 
-type PaperUndoRecord = UndoRecordBase & {
+type HomeNoteUndoRecord = UndoRecordBase & {
     kind: "paper";
-    item: PaperItem;
+    item: HomeNoteItem;
 };
 
 /** A quick capture (Shift+Enter): undo trashes the new note; it can be pinned to home. */
@@ -137,11 +137,11 @@ type CaptureUndoRecord = UndoRecordBase & {
     isPinning: boolean;
 };
 
-type UndoRecord = AppUndoRecord | PaperUndoRecord | CaptureUndoRecord;
+type UndoRecord = AppUndoRecord | HomeNoteUndoRecord | CaptureUndoRecord;
 
 type UndoRestoreResult =
     | { id: string; kind: "app"; restored: ExtendedWebApp }
-    | { id: string; kind: "paper"; restored: PaperItem | null }
+    | { id: string; kind: "paper"; restored: HomeNoteItem | null }
     | { id: string; kind: "capture"; trashedId: string }
     | { id: string; error: string };
 
@@ -162,7 +162,7 @@ const UNDO_DURATION_MS = 10_000;
 
 const EMPTY_APPS: ExtendedWebApp[] = [];
 const EMPTY_GROUPS: WebAppGroup[] = [];
-const EMPTY_PAPERS: PaperItem[] = [];
+const EMPTY_HOME_NOTES: HomeNoteItem[] = [];
 
 type PendingAction =
     | { kind: "library"; action: LibraryAction }
@@ -204,7 +204,7 @@ export function SearchHome() {
         string | null
     >(null);
     const openDocumentRef = useRef<(id: string) => void>(() => {});
-    const updatingPapersRef = useRef<Set<string>>(new Set());
+    const updatingNotesRef = useRef<Set<string>>(new Set());
     const paperLayoutLatestGenRef = useRef<Map<string, number>>(new Map());
     const paperLayoutQueuesRef = useRef<Map<string, Promise<void>>>(new Map());
     const paperLayoutPrevCanonicalRef = useRef<
@@ -215,11 +215,11 @@ export function SearchHome() {
     const [isCheckingConnections, setIsCheckingConnections] = useState(false);
     const [apps, setApps] = useState<ExtendedWebApp[]>([]);
     const [groups, setGroups] = useState<WebAppGroup[]>([]);
-    const [papers, setPapers] = useState<PaperItem[]>([]);
-    const papersRef = useRef(papers);
-    papersRef.current = papers;
-    const [papersLoading, setPapersLoading] = useState(true);
-    const [papersError, setPapersError] = useState("");
+    const [homeNotes, setHomeNotes] = useState<HomeNoteItem[]>([]);
+    const notesRef = useRef(homeNotes);
+    notesRef.current = homeNotes;
+    const [notesLoading, setHomeNotesLoading] = useState(true);
+    const [notesError, setHomeNotesError] = useState("");
     const [appsStatus, setAppsStatus] = useState<
         "loading" | "ready" | "offline" | "error"
     >("loading");
@@ -230,10 +230,10 @@ export function SearchHome() {
     const ownsCurrentUserData = Boolean(user && appsOwnerId === user.id);
     const currentApps = ownsCurrentUserData ? apps : EMPTY_APPS;
     const currentGroups = ownsCurrentUserData ? groups : EMPTY_GROUPS;
-    const currentPapers = ownsCurrentUserData ? papers : EMPTY_PAPERS;
+    const currentNotes = ownsCurrentUserData ? homeNotes : EMPTY_HOME_NOTES;
     const currentAppsStatus = ownsCurrentUserData ? appsStatus : "loading";
     const currentAppsError = ownsCurrentUserData ? appsError : "";
-    const currentPapersLoading = !ownsCurrentUserData || papersLoading;
+    const currentNotesLoading = !ownsCurrentUserData || notesLoading;
     const appLayout = useAppsLayoutPersistence(user?.id, setApps, setGroups);
     const library = useAppLibraryActions({
         apps: currentApps,
@@ -476,8 +476,8 @@ export function SearchHome() {
         cancelPendingAction();
         setAppForm(null);
         setIsManagingApps(false);
-        setPapers([]);
-        setPapersError("");
+        setHomeNotes([]);
+        setHomeNotesError("");
         setError("");
         setUndoQueue([]);
         undoQueueRef.current = [];
@@ -491,12 +491,12 @@ export function SearchHome() {
     const [taskConflictId, setTaskConflictId] = useState<string | null>(null);
     // Home card checkboxes: optimistic, coalesced per note, rebased on conflict.
     const [taskSaver] = useState(() => {
-        const deps: PaperTaskSaverDeps = {
-            save: (paper, body) => patchPaper(paper, { body }),
+        const deps: HomeNoteTaskSaverDeps = {
+            save: (paper, body) => patchNote(paper, { body }),
             render: (paper) =>
-                setPapers((items) => {
+                setHomeNotes((items) => {
                     const current = items.find((item) => item.id === paper.id);
-                    return setPaper(
+                    return setNote(
                         items,
                         paper.id,
                         paper.isHomeFixed && current
@@ -505,7 +505,7 @@ export function SearchHome() {
                     );
                 }),
             show: (id, body) =>
-                setPapers((items) =>
+                setHomeNotes((items) =>
                     items.map((item) =>
                         item.id === id ? { ...item, body } : item
                     )
@@ -517,15 +517,15 @@ export function SearchHome() {
                 return () => globalThis.clearTimeout(timer);
             },
         };
-        let loading: Promise<PaperTaskSaver> | undefined;
+        let loading: Promise<HomeNoteTaskSaver> | undefined;
         return {
             toggle(paper: DocumentDto, index: number, checked: boolean) {
                 // Keep the task parser out of the initial home dependency graph.
                 loading ??= import(
-                    "../features/home-layouts/paper-task-saver.ts"
+                    "../features/home-layouts/home-note-task-saver.ts"
                 )
-                    .then(({ createPaperTaskSaver }) =>
-                        createPaperTaskSaver(deps)
+                    .then(({ createHomeNoteTaskSaver }) =>
+                        createHomeNoteTaskSaver(deps)
                     );
                 void loading.then((saver) =>
                     saver.toggle(paper, index, checked)
@@ -647,13 +647,13 @@ export function SearchHome() {
     useEffect(() => {
         setApps([]);
         setGroups([]);
-        setPapers([]);
+        setHomeNotes([]);
         setLoadedUserId(null);
         setAppsOwnerId(user?.id ?? null);
         setAppsStatus("loading");
         setAppsError("");
-        setPapersLoading(Boolean(user));
-        setPapersError("");
+        setHomeNotesLoading(Boolean(user));
+        setHomeNotesError("");
     }, [user?.id]);
 
     useEffect(() => {
@@ -697,21 +697,23 @@ export function SearchHome() {
                 setAppsStatus("error");
             }
         });
-        setPapersLoading(true);
-        setPapersError("");
-        fetchHomePapers().then((items) => {
+        setHomeNotesLoading(true);
+        setHomeNotesError("");
+        fetchHomeNotes().then((items) => {
             if (!active) return;
-            setPapers(items);
+            setHomeNotes(items);
         }).catch(async (cause: unknown) => {
             if (!active) return;
             try {
-                const cached = await getLocal<PaperItem[]>("papers:" + userId);
+                const cached = await getLocal<HomeNoteItem[]>(
+                    "home-notes:" + userId,
+                );
                 if (!active) return;
-                if (cached && Array.isArray(cached)) setPapers(cached);
+                if (cached && Array.isArray(cached)) setHomeNotes(cached);
             } catch { /* local cache unavailable */ }
-            if (active) setPapersError(errorMessage(cause));
+            if (active) setHomeNotesError(errorMessage(cause));
         }).finally(() => {
-            if (active) setPapersLoading(false);
+            if (active) setHomeNotesLoading(false);
         });
         return () => {
             active = false;
@@ -737,22 +739,24 @@ export function SearchHome() {
     ]);
     useEffect(() => {
         if (
-            user && ownsCurrentUserData && !papersLoading && !papersError
+            user && ownsCurrentUserData && !notesLoading && !notesError
         ) {
-            void setLocal("papers:" + user.id, papers).catch(() => {});
+            void setLocal("home-notes:" + user.id, homeNotes).catch(() => {});
         }
-    }, [user?.id, ownsCurrentUserData, papers, papersLoading, papersError]);
+    }, [user?.id, ownsCurrentUserData, homeNotes, notesLoading, notesError]);
     useEffect(() => {
         if (!user) return;
         const userId = user.id;
         return authSession.documentEvents.subscribeAll((event) => {
-            const current = papersRef.current.find((paper) =>
+            const current = notesRef.current.find((paper) =>
                 paper.id === event.documentId
             );
-            if (!needsPaperRefresh(current, event.version)) return;
-            fetchPaper(event.documentId).then((paper) => {
+            if (!needsNoteRefresh(current, event.version)) return;
+            fetchHomeNote(event.documentId).then((paper) => {
                 if (currentUserIdRef.current !== userId) return;
-                setPapers((items) => setPaper(items, event.documentId, paper));
+                setHomeNotes((items) =>
+                    setNote(items, event.documentId, paper)
+                );
             }).catch(() => {});
         });
     }, [authSession, user?.id]);
@@ -913,7 +917,7 @@ export function SearchHome() {
                             };
                         }
                         if (record.kind === "capture") {
-                            await trashPaper(record.item);
+                            await trashNote(record.item);
                             return {
                                 id: record.id,
                                 kind: "capture",
@@ -923,7 +927,7 @@ export function SearchHome() {
                         return {
                             id: record.id,
                             kind: "paper",
-                            restored: await restorePaper(record.item.id),
+                            restored: await restoreNote(record.item.id),
                         };
                     } catch (cause) {
                         return {
@@ -939,7 +943,7 @@ export function SearchHome() {
             ) return;
 
             const restoredApps: ExtendedWebApp[] = [];
-            const restoredPapers: PaperItem[] = [];
+            const restoredNotes: HomeNoteItem[] = [];
             const failures = new Map<string, string>();
             const trashedCaptureIds = new Set<string>();
             for (const result of results) {
@@ -950,21 +954,21 @@ export function SearchHome() {
                 } else if (result.kind === "capture") {
                     trashedCaptureIds.add(result.trashedId);
                 } else {
-                    if (result.restored) restoredPapers.push(result.restored);
+                    if (result.restored) restoredNotes.push(result.restored);
                 }
             }
             if (trashedCaptureIds.size > 0) {
-                setPapers((items) =>
+                setHomeNotes((items) =>
                     items.filter((item) => !trashedCaptureIds.has(item.id))
                 );
             }
             if (restoredApps.length > 0) {
                 setApps((items) => [...items, ...restoredApps]);
             }
-            if (restoredPapers.length > 0) {
-                setPapers((items) =>
-                    restoredPapers.reduce(
-                        (next, paper) => setPaper(next, paper.id, paper),
+            if (restoredNotes.length > 0) {
+                setHomeNotes((items) =>
+                    restoredNotes.reduce(
+                        (next, paper) => setNote(next, paper.id, paper),
                         items,
                     )
                 );
@@ -993,22 +997,22 @@ export function SearchHome() {
         }
     }
     // Paper actions
-    function openPaper(paper: PaperItem) {
+    function openNote(paper: HomeNoteItem) {
         openDocument(paper.id);
     }
 
-    async function updatePaper(
-        paper: PaperItem,
+    async function updateNote(
+        paper: HomeNoteItem,
         patch: Omit<UpdateDocumentInput, "version">,
     ) {
         const lockKey = `${paper.id}:${JSON.stringify(patch)}`;
-        if (updatingPapersRef.current.has(lockKey)) return;
-        updatingPapersRef.current.add(lockKey);
+        if (updatingNotesRef.current.has(lockKey)) return;
+        updatingNotesRef.current.add(lockKey);
         setError("");
         // A document that left home drops out of the paper list.
         const apply = (document: DocumentDto) =>
-            setPapers((items) =>
-                setPaper(
+            setHomeNotes((items) =>
+                setNote(
                     items,
                     document.id,
                     document.isHomeFixed
@@ -1017,18 +1021,18 @@ export function SearchHome() {
                 )
             );
         try {
-            apply(await patchPaper(paper, patch));
+            apply(await patchNote(paper, patch));
         } catch (e) {
             if (e instanceof ApiError && e.code === 409 && e.data) {
                 apply(e.data as DocumentDto);
             }
             setError(errorMessage(e));
         } finally {
-            updatingPapersRef.current.delete(lockKey);
+            updatingNotesRef.current.delete(lockKey);
         }
     }
-    async function updatePaperLayout(
-        paper: PaperItem,
+    async function updateNoteLayout(
+        paper: HomeNoteItem,
         layout: DocumentLayoutDto,
     ) {
         const paperId = paper.id;
@@ -1039,7 +1043,7 @@ export function SearchHome() {
             paperLayoutPrevCanonicalRef.current.set(paperId, paper.layout);
         }
 
-        setPapers((items) =>
+        setHomeNotes((items) =>
             items.map((item) =>
                 item.id === paperId ? { ...item, layout } : item
             )
@@ -1050,13 +1054,13 @@ export function SearchHome() {
 
         const runTask = async () => {
             try {
-                const persistedLayout = await patchPaperLayout(paperId, layout);
+                const persistedLayout = await patchNoteLayout(paperId, layout);
                 paperLayoutPrevCanonicalRef.current.set(
                     paperId,
                     persistedLayout,
                 );
                 if (paperLayoutLatestGenRef.current.get(paperId) === nextGen) {
-                    setPapers((items) =>
+                    setHomeNotes((items) =>
                         items.map((item) =>
                             item.id === paperId
                                 ? { ...item, layout: persistedLayout }
@@ -1071,7 +1075,7 @@ export function SearchHome() {
                     const rollbackLayout =
                         paperLayoutPrevCanonicalRef.current.get(paperId) ??
                             paper.layout;
-                    setPapers((items) =>
+                    setHomeNotes((items) =>
                         items.map((item) =>
                             item.id === paperId
                                 ? { ...item, layout: rollbackLayout }
@@ -1094,23 +1098,25 @@ export function SearchHome() {
 
         await taskPromise;
     }
-    async function deletePaper(paper: PaperItem) {
+    async function deleteNote(paper: HomeNoteItem) {
         const ownerId = currentUserIdRef.current;
         if (!ownerId) return;
         setError("");
         try {
-            await trashPaper(paper);
+            await trashNote(paper);
             if (
                 !componentMountedRef.current ||
                 currentUserIdRef.current !== ownerId
             ) return;
-            setPapers((items) => items.filter((item) => item.id !== paper.id));
+            setHomeNotes((items) =>
+                items.filter((item) => item.id !== paper.id)
+            );
             if (undoQueueRef.current.length === 0 && undoPausedRef.current) {
                 undoPausedRef.current = false;
                 setUndoPaused(false);
             }
             const remainingMs = UNDO_DURATION_MS;
-            const record: PaperUndoRecord = {
+            const record: HomeNoteUndoRecord = {
                 id: `${ownerId}:${++undoIdRef.current}`,
                 userId: ownerId,
                 kind: "paper",
@@ -1201,16 +1207,16 @@ export function SearchHome() {
             );
         update({ isPinning: true });
         try {
-            const pinned = await patchPaper(record.item, {
+            const pinned = await patchNote(record.item, {
                 isHomeFixed: true,
             });
-            const paper = await fetchPaper(pinned.id);
+            const paper = await fetchHomeNote(pinned.id);
             if (
                 !componentMountedRef.current ||
                 currentUserIdRef.current !== ownerId
             ) return;
             if (paper) {
-                setPapers((items) => setPaper(items, paper.id, paper));
+                setHomeNotes((items) => setNote(items, paper.id, paper));
             }
             update({ item: pinned, pinned: true, isPinning: false });
         } catch (cause) {
@@ -1244,20 +1250,20 @@ export function SearchHome() {
         appsError: currentAppsError,
         onReloadApps: () => setReloadApps((count) => count + 1),
         library,
-        papers: currentPapers,
-        papersLoading: currentPapersLoading,
+        homeNotes: currentNotes,
+        notesLoading: currentNotesLoading,
         isManagingApps,
         setIsManagingApps,
         openApp,
         openEditApp,
         openCreateApp,
         softDeleteApp,
-        openPaper,
-        deletePaper,
-        updatePaper,
-        updatePaperLayout,
+        openNote,
+        deleteNote,
+        updateNote,
+        updateNoteLayout,
         toggleTask: taskSaver.toggle,
-        editingPaperId: libraryState.documents.route.view === "documents/edit"
+        editingNoteId: libraryState.documents.route.view === "documents/edit"
             ? libraryState.documents.route.id
             : null,
         openLibrary: requestLibraryEntry,
@@ -1510,7 +1516,6 @@ export function SearchHome() {
                 </StatusBanner>
                 <ZenLayout
                     {...layoutProps}
-                    availableRect={home.availableRect}
                     viewportWidth={home.viewportWidth}
                 />
                 {user && (

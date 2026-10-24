@@ -1,40 +1,35 @@
-import {
-    Bookmark,
-    ExternalLink,
-    Maximize2,
-    Minimize2,
-    MoreHorizontal,
-    Trash2,
-} from "lucide-react";
-import type { ReactNode } from "react";
-import type { DocumentColor } from "@shared/documents.ts";
+import { Bookmark, ExternalLink, MoreHorizontal, Trash2 } from "lucide-react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
+import type { DocumentColor, DocumentNoteSize } from "@shared/documents.ts";
 import { DocumentColorItems } from "../../components/searcher/DocumentColorMenu.tsx";
 import { NoteMarkdownView } from "../../components/searcher/NoteMarkdownLoader.tsx";
-import { observeScrollFade } from "../../components/searcher/scrollFade.ts";
 import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
-import type { PaperItem } from "./home-papers.ts";
+import type { HomeNoteItem } from "./home-notes.ts";
 
-export function isPaperCompact(
-    mode?: "full" | "compact",
-    expanded?: boolean,
-): boolean {
-    return mode === "compact" || (mode === undefined && expanded === false);
-}
+const SIZE_LABEL: Record<DocumentNoteSize, string> = {
+    s: "小",
+    w: "宽",
+};
 
-export function HomePaper(
+/**
+ * One Material home note. `titleContent` lets the desk preview reuse the card;
+ * everything else matches the home surface at every breakpoint.
+ */
+export function HomeNoteCard(
     {
-        paper,
+        note,
         onOpen,
         dragHandle,
-        mode,
-        onToggleMode,
+        onResize,
         onToggleHomeFixed,
         onChangeColor,
         onToggleTask,
@@ -42,13 +37,12 @@ export function HomePaper(
         onDelete,
         titleContent,
         summary,
-        showColorDot = false,
+        showColorDot = true,
     }: {
-        paper: PaperItem;
+        note: HomeNoteItem;
         onOpen?: () => void;
         dragHandle?: ReactNode;
-        mode?: "full" | "compact";
-        onToggleMode?: () => void;
+        onResize?: (size: DocumentNoteSize) => void;
         onToggleHomeFixed?: () => void;
         onChangeColor?: (color: DocumentColor) => void;
         /** Flips one task row of the note body; the owner saves and coalesces it. */
@@ -61,65 +55,65 @@ export function HomePaper(
         showColorDot?: boolean;
     },
 ) {
-    const isCompact = isPaperCompact(mode, paper.layout.expanded);
+    const body = useRef<HTMLDivElement>(null);
+    const [overflowing, setOverflowing] = useState(false);
+
+    // Whole-line truncation: only fade when the body really extends past its
+    // fixed line count, so a fitting note stays crisp.
+    useLayoutEffect(() => {
+        const element = body.current;
+        if (!element) return;
+        const update = () =>
+            setOverflowing(element.scrollHeight > element.clientHeight + 1);
+        update();
+        const observer = new ResizeObserver(update);
+        observer.observe(element);
+        const content = element.firstElementChild;
+        if (content) observer.observe(content);
+        return () => observer.disconnect();
+    }, [note.body, note.layout.size]);
+
+    const hasBody = note.body.trim().length > 0;
     return (
         <article
-            className={"note-card" +
-                (isCompact ? " note-card--compact" : "")}
-            data-color={paper.color}
+            className="home-note-card"
+            data-color={note.color}
+            data-size={note.layout.size}
         >
-            <header className="note-head">
-                <div className="note-head-left">
-                    {showColorDot && paper.color !== "paper" && (
+            <header className="home-note-head">
+                <div className="home-note-head-left">
+                    {showColorDot && (
                         <span
                             aria-hidden="true"
-                            className={`note-quick-dot note-quick-dot--${paper.color}`}
+                            className={`note-quick-dot note-quick-dot--${note.color}`}
                         />
                     )}
                     <Button
                         type="button"
                         variant="ghost"
-                        className="note-title"
-                        title={paper.title ?? undefined}
-                        aria-label={paper.displayTitle}
+                        className="home-note-title"
+                        title={note.title ?? undefined}
+                        aria-label={note.displayTitle}
                         onClick={onOpen}
                     >
-                        {titleContent ?? paper.title}
+                        {titleContent ?? note.displayTitle}
                     </Button>
                 </div>
 
                 <div
-                    className="note-card-actions"
+                    className="home-note-actions"
                     role="toolbar"
-                    aria-label="便签操作"
+                    aria-label="笔记操作"
                 >
                     {dragHandle && (
-                        <span className="note-drag">{dragHandle}</span>
-                    )}
-                    {onToggleMode && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="note-action-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onToggleMode();
-                            }}
-                            aria-label={isCompact ? "展开" : "折叠"}
-                            title={isCompact ? "展开" : "折叠"}
-                        >
-                            {isCompact
-                                ? <Maximize2 size="1em" className="icon-sm" />
-                                : <Minimize2 size="1em" className="icon-sm" />}
-                        </Button>
+                        <span className="home-note-drag">{dragHandle}</span>
                     )}
 
-                    {(onToggleHomeFixed || onOpen || onChangeColor ||
-                        onDelete) && (
+                    {(onResize || onToggleHomeFixed || onOpen ||
+                        onChangeColor || onDelete) && (
                         <DropdownMenu>
                             <DropdownMenuTrigger
-                                className="note-action-btn"
+                                className="home-note-action-btn"
                                 aria-label="更多操作"
                                 title="更多选项"
                             >
@@ -130,13 +124,42 @@ export function HomePaper(
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                                 sideOffset={8}
-                                className="note-dropdown-content"
+                                className="home-note-dropdown"
                                 onKeyDown={(event) => {
                                     if (event.key === "Escape") {
                                         event.stopPropagation();
                                     }
                                 }}
                             >
+                                {onResize && (
+                                    <>
+                                        <DropdownMenuRadioGroup
+                                            value={note.layout.size}
+                                            onValueChange={(value) => {
+                                                if (
+                                                    value === "s" ||
+                                                    value === "w"
+                                                ) {
+                                                    onResize(value);
+                                                }
+                                            }}
+                                            aria-label="笔记尺寸"
+                                        >
+                                            {(["s", "w"] as const).map(
+                                                (size) => (
+                                                    <DropdownMenuRadioItem
+                                                        key={size}
+                                                        value={size}
+                                                        closeOnClick
+                                                    >
+                                                        {SIZE_LABEL[size]}
+                                                    </DropdownMenuRadioItem>
+                                                ),
+                                            )}
+                                        </DropdownMenuRadioGroup>
+                                        <DropdownMenuSeparator />
+                                    </>
+                                )}
                                 {onToggleHomeFixed && (
                                     <DropdownMenuItem
                                         onClick={(e) => {
@@ -147,13 +170,13 @@ export function HomePaper(
                                         <Bookmark
                                             size="1em"
                                             className={`icon-sm ${
-                                                paper.isHomeFixed
+                                                note.isHomeFixed
                                                     ? "fill-current"
                                                     : ""
                                             }`}
                                         />
                                         <span>
-                                            {paper.isHomeFixed
+                                            {note.isHomeFixed
                                                 ? "移出首页"
                                                 : "固定到首页"}
                                         </span>
@@ -170,12 +193,12 @@ export function HomePaper(
                                             size="1em"
                                             className="icon-sm"
                                         />
-                                        <span>编辑便签</span>
+                                        <span>编辑笔记</span>
                                     </DropdownMenuItem>
                                 )}
                                 {onChangeColor && (
                                     <DocumentColorItems
-                                        color={paper.color}
+                                        color={note.color}
                                         onChange={onChangeColor}
                                     />
                                 )}
@@ -201,14 +224,15 @@ export function HomePaper(
                 </div>
             </header>
 
-            {isCompact && summary}
-            {!isCompact && paper.body.trim() && (
+            {summary}
+            {summary === undefined && hasBody && (
                 <div
-                    ref={observeScrollFade}
-                    className="note-preview markdown"
+                    ref={body}
+                    className="home-note-body markdown"
+                    data-overflow={overflowing || undefined}
                 >
                     <NoteMarkdownView
-                        body={paper.body}
+                        body={note.body}
                         onToggleTask={onToggleTask}
                         taskLockedTitle={taskLockedTitle}
                     />

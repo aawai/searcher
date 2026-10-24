@@ -7,10 +7,9 @@ import {
     type UpdateDocumentInput,
 } from "@shared/documents.ts";
 import { api, ApiError, json } from "../../lib/api.ts";
-import { defaultPaperLayout, type PaperItem } from "./home-papers.ts";
+import { defaultNoteLayout, type HomeNoteItem } from "./home-notes.ts";
 
 const DOCUMENTS = "/api/documents";
-const DESKTOP = "desktop";
 
 function documentPath(id: string, suffix = ""): string {
     return `${DOCUMENTS}/${encodeURIComponent(id)}${suffix}`;
@@ -33,67 +32,63 @@ async function fetchHomeSummaries(): Promise<DocumentSummaryDto[]> {
 }
 
 /** Returns null when the document is gone or no longer pinned to home. */
-export async function fetchPaper(id: string): Promise<PaperItem | null> {
+export async function fetchHomeNote(id: string): Promise<HomeNoteItem | null> {
     try {
         const document = await api<DocumentDto>(documentPath(id));
         if (!document.isHomeFixed) return null;
         const layout = await api<DocumentLayoutDto | null>(
-            `${documentPath(id, "/layout")}?deviceClass=${DESKTOP}`,
+            documentPath(id, "/layout"),
         );
-        return { ...document, layout: layout ?? defaultPaperLayout() };
+        return { ...document, layout: layout ?? defaultNoteLayout() };
     } catch (cause) {
         if (cause instanceof ApiError && cause.code === 404) return null;
         throw cause;
     }
 }
 
-export async function fetchHomePapers(): Promise<PaperItem[]> {
+export async function fetchHomeNotes(): Promise<HomeNoteItem[]> {
     const summaries = await fetchHomeSummaries();
-    const papers = await Promise.all(
-        summaries.map((summary) => fetchPaper(summary.id)),
+    const notes = await Promise.all(
+        summaries.map((summary) => fetchHomeNote(summary.id)),
     );
-    return papers.filter((paper): paper is PaperItem => paper !== null);
+    return notes.filter((note): note is HomeNoteItem => note !== null);
 }
 
-export function patchPaper(
-    paper: Pick<DocumentDto, "id" | "version">,
+export function patchNote(
+    note: Pick<DocumentDto, "id" | "version">,
     patch: Omit<UpdateDocumentInput, "version">,
 ): Promise<DocumentDto> {
     return api<DocumentDto>(
-        documentPath(paper.id),
-        json("PATCH", { ...patch, version: paper.version }),
+        documentPath(note.id),
+        json("PATCH", { ...patch, version: note.version }),
     );
 }
 
-export function patchPaperLayout(
+export function patchNoteLayout(
     id: string,
     layout: DocumentLayoutDto,
 ): Promise<DocumentLayoutDto> {
     return api<DocumentLayoutDto>(
         documentPath(id, "/layout"),
         json("PATCH", {
-            deviceClass: DESKTOP,
-            x: layout.x,
-            y: layout.y,
-            width: layout.width,
-            zIndex: layout.zIndex,
-            expanded: layout.expanded,
-            sortOrder: layout.sortOrder,
+            col: layout.col,
+            row: layout.row,
+            size: layout.size,
         }),
     );
 }
 
-export async function trashPaper(
-    paper: Pick<DocumentDto, "id" | "version">,
+export async function trashNote(
+    note: Pick<DocumentDto, "id" | "version">,
 ): Promise<void> {
     await api(
-        `${documentPath(paper.id)}?version=${paper.version}`,
+        `${documentPath(note.id)}?version=${note.version}`,
         { method: "DELETE" },
     );
 }
 
 /** Restores a trashed document; null when it is no longer pinned to home. */
-export async function restorePaper(id: string): Promise<PaperItem | null> {
+export async function restoreNote(id: string): Promise<HomeNoteItem | null> {
     await api(documentPath(id, "/restore"), { method: "POST" });
-    return fetchPaper(id);
+    return fetchHomeNote(id);
 }

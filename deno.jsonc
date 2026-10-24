@@ -25,7 +25,7 @@
         "test:documents": "deno run -A scripts/e2e/run.ts documents",
         "test:wallpaper": "deno run -A scripts/e2e/run.ts wallpaper",
         "test:bundle": "deno run -A scripts/e2e/run.ts bundle",
-        "test:home-papers": "deno run -A scripts/e2e/run.ts home-papers",
+        "test:home-notes": "deno run -A scripts/e2e/run.ts home-notes",
         "check:ui": "deno run -A scripts/check-ui.ts",
         "check:bundle": "deno task build && deno run --allow-read --allow-env scripts/check-bundle.ts"
     },

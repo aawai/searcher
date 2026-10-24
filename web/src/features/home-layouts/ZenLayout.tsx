@@ -1,22 +1,10 @@
-import { BREAKPOINTS } from "../../design-system/breakpoints.ts";
-import {
-    lazy,
-    Suspense,
-    useEffect,
-    useLayoutEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
-import type { SafeRect } from "./home-viewport.ts";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import {
     HomeAppLibrary,
     type HomeAppLibraryHandle,
 } from "../app-library/HomeAppLibrary.tsx";
-import { exclusionFromRects } from "../../components/searcher/defaultNotePlacement.ts";
-import { useZenPaperSelection } from "./useZenPaperSelection.ts";
 import { InlineAnswerCard } from "../inline-ai/InlineAnswerCard.tsx";
 import { consumeSearchFocusRequest } from "../inline-ai/search-focus.ts";
 import { HomeCalm } from "../home-calm/HomeCalm.tsx";
@@ -32,22 +20,14 @@ const LIBRARY_AND_APPS_QUICK_ENTRIES = [
 ];
 const NO_QUICK_ENTRIES: typeof LIBRARY_QUICK_ENTRIES = [];
 
-const HomePapers = lazy(() =>
-    import("./HomePapers.tsx").then((module) => ({
-        default: module.HomePapers,
-    }))
-);
-const ZenInlinePapers = lazy(() =>
-    import("./ZenInlinePapers.tsx").then((module) => ({
-        default: module.ZenInlinePapers,
+const HomeNotes = lazy(() =>
+    import("./HomeNotes.tsx").then((module) => ({
+        default: module.HomeNotes,
     }))
 );
 
 export function ZenLayout(
-    props: HomeLayoutProps & {
-        availableRect: SafeRect;
-        viewportWidth: number;
-    },
+    props: HomeLayoutProps & { viewportWidth: number },
 ) {
     const {
         user,
@@ -62,17 +42,18 @@ export function ZenLayout(
         appsStatus,
         appsError,
         onReloadApps,
-        papers,
+        homeNotes,
+        notesLoading,
         isManagingApps,
         setIsManagingApps,
         openApp,
         openEditApp,
         openCreateApp,
         softDeleteApp,
-        openPaper,
-        deletePaper,
-        updatePaper,
-        updatePaperLayout,
+        openNote,
+        deleteNote,
+        updateNote,
+        updateNoteLayout,
         openLibrary,
         showAppLabels,
         showHomeApps,
@@ -94,64 +75,6 @@ export function ZenLayout(
         answerWasOpen.current = inlineAnswer.open;
     }, [inlineAnswer.open]);
     const [gridElement, setGridElement] = useState<HTMLElement | null>(null);
-    const [exclusionRect, setExclusionRect] = useState<SafeRect | null>(null);
-    const mobile = props.viewportWidth < BREAKPOINTS.medium;
-
-    const calmShown = props.calm.showDate || props.calm.showTime ||
-        props.calm.showContinue;
-    useLayoutEffect(() => {
-        if (mobile) return;
-        const hero = heroRef.current;
-        const search = hero?.querySelector(".search-form-wrap");
-        if (!hero || !search) return;
-        // Default notes avoid the search box, the calm layer above it and,
-        // while the home grid is on, the measured app region (large folders
-        // and 更多 included).
-        const calm = hero.querySelector(".home-calm");
-        // The visible app region is the plate, not its inner grid: notes must
-        // clear the plate padding too.
-        const appSurface = showHomeApps && gridElement
-            ? gridElement.closest(".launcher-plate") ?? gridElement
-            : null;
-        const obstacles = [
-            search,
-            ...(calm ? [calm] : []),
-            ...(appSurface ? [appSurface] : []),
-        ];
-        let active = true;
-        const measure = () => {
-            if (!active) return;
-            const next = exclusionFromRects(
-                obstacles.map((element) => element.getBoundingClientRect()),
-                scrollY,
-            );
-            if (!next) return;
-            setExclusionRect((previous) =>
-                previous?.x === next.x && previous.y === next.y &&
-                    previous.width === next.width &&
-                    previous.height === next.height
-                    ? previous
-                    : next
-            );
-        };
-        const observer = new ResizeObserver(measure);
-        observer.observe(hero);
-        for (const element of obstacles) observer.observe(element);
-        measure();
-        void document.fonts.ready.then(measure);
-        addEventListener("scroll", measure, true);
-        return () => {
-            active = false;
-            observer.disconnect();
-            removeEventListener("scroll", measure, true);
-        };
-    }, [
-        props.availableRect,
-        mobile,
-        showHomeApps,
-        gridElement,
-        calmShown,
-    ]);
 
     const libraryRef = useRef<HomeAppLibraryHandle>(null);
     const webFolders = useMemo(
@@ -186,25 +109,24 @@ export function ZenLayout(
             onOpenLibraryApps={() => openLibrary("apps")}
         />
     );
-    const papersBlock = !mobile && papers.length > 0 && (
+    const notesBlock = user && !notesLoading && homeNotes.length > 0 && (
         <Suspense fallback={null}>
-            <HomePapers
-                papers={papers}
-                exclusionRect={exclusionRect}
-                availableRect={props.availableRect}
+            <HomeNotes
+                notes={homeNotes}
                 viewportWidth={props.viewportWidth}
-                onOpen={openPaper}
-                onUpdateLayout={(paper, layout) =>
-                    void updatePaperLayout(paper, layout)}
-                onToggleHomeFixed={(paper) =>
-                    void updatePaper(paper, {
-                        isHomeFixed: false,
-                    })}
-                onChangeColor={(paper, color) =>
-                    void updatePaper(paper, { color })}
+                heroRef={heroRef}
+                gridElement={gridElement}
+                onOpen={openNote}
+                onUpdateLayout={(note, layout) =>
+                    void updateNoteLayout(note, layout)}
+                onToggleHomeFixed={(note) =>
+                    void updateNote(note, { isHomeFixed: false })}
+                onChangeColor={(note, color) =>
+                    void updateNote(note, { color })}
                 onToggleTask={props.toggleTask}
-                editingPaperId={props.editingPaperId}
-                onDelete={(paper) => void deletePaper(paper)}
+                editingNoteId={props.editingNoteId}
+                onDelete={(note) => void deleteNote(note)}
+                onOpenLibrary={() => openLibrary("notes")}
             />
         </Suspense>
     );
@@ -234,8 +156,9 @@ export function ZenLayout(
                     onOpenFolder={(id) => libraryRef.current?.openFolder(id)}
                     onOpenDocument={props.openDocument}
                     onCommand={(command) => {
-                        if (command.target.type === "apps") openLibrary("apps");
-                        else props.onSearchCommand(command);
+                        if (command.target.type === "apps") {
+                            openLibrary("apps");
+                        } else props.onSearchCommand(command);
                     }}
                     onCapture={user ? props.onCapture : undefined}
                     quickEntries={quickEntries}
@@ -256,64 +179,10 @@ export function ZenLayout(
             {user && showHomeApps && (
                 <section className="pinned-area" aria-label="应用库与固定内容">
                     {libraryView}
-                    {papersBlock}
                 </section>
             )}
-            {user && !showHomeApps && (
-                <>
-                    {libraryView}
-                    {papersBlock && (
-                        <section
-                            className="pinned-area"
-                            aria-label="固定的个人内容"
-                        >
-                            {papersBlock}
-                        </section>
-                    )}
-                </>
-            )}
-
-            {user && !props.papersLoading && (
-                <ZenHomePapers
-                    key={user.id}
-                    userId={user.id}
-                    papers={papers}
-                    mobile={mobile}
-                    onOpen={openPaper}
-                    toggleTask={props.toggleTask}
-                    editingPaperId={props.editingPaperId}
-                />
-            )}
+            {user && !showHomeApps && libraryView}
+            {notesBlock}
         </>
-    );
-}
-
-/** Keep device selection alive even when no preview or mobile surface exists. */
-function ZenHomePapers({
-    userId,
-    papers,
-    mobile,
-    onOpen,
-    toggleTask,
-    editingPaperId,
-}: {
-    userId: string;
-    papers: HomeLayoutProps["papers"];
-    mobile: boolean;
-    onOpen: HomeLayoutProps["openPaper"];
-    toggleTask: HomeLayoutProps["toggleTask"];
-    editingPaperId: HomeLayoutProps["editingPaperId"];
-}) {
-    const selection = useZenPaperSelection(userId, papers);
-    if (!mobile || !selection.current) return null;
-    return (
-        <Suspense fallback={null}>
-            <ZenInlinePapers
-                selection={selection}
-                onOpen={onOpen}
-                onToggleTask={toggleTask}
-                editingPaperId={editingPaperId}
-            />
-        </Suspense>
     );
 }

@@ -4,12 +4,12 @@ import {
     replayTaskToggles,
     taskRowText,
     type TaskToggle,
-} from "./paper-tasks.ts";
+} from "./note-tasks.ts";
 
 /** Checkbox changes on one note inside this window are saved as one PATCH. */
 export const TASK_SAVE_DEBOUNCE_MS = 1500;
 
-export interface PaperTaskSaverDeps {
+export interface HomeNoteTaskSaverDeps {
     /** Rejects with ApiError; a 409 carries the latest DocumentDto in `data`. */
     save(paper: DocumentDto, body: string): Promise<DocumentDto>;
     /** Replaces the card with a server state: success, conflict or rollback. */
@@ -21,7 +21,7 @@ export interface PaperTaskSaverDeps {
     schedule(run: () => void, delayMs: number): () => void;
 }
 
-export interface PaperTaskSaver {
+export interface HomeNoteTaskSaver {
     /** Returns false when `index` is not a task of the card's current body. */
     toggle(paper: DocumentDto, index: number, checked: boolean): boolean;
 }
@@ -39,7 +39,7 @@ interface NoteState {
     cancelTimer: (() => void) | null;
 }
 
-function conflictPaper(error: unknown): DocumentDto | null {
+function conflictNote(error: unknown): DocumentDto | null {
     if (!(error instanceof ApiError) || error.code !== 409 || !error.data) {
         return null;
     }
@@ -50,7 +50,9 @@ function conflictPaper(error: unknown): DocumentDto | null {
  * Optimistic, coalesced saver for checkbox toggles on home cards. State is held
  * per note inside the returned saver, so each home surface owns its own queue.
  */
-export function createPaperTaskSaver(deps: PaperTaskSaverDeps): PaperTaskSaver {
+export function createHomeNoteTaskSaver(
+    deps: HomeNoteTaskSaverDeps,
+): HomeNoteTaskSaver {
     const notes = new Map<string, NoteState>();
 
     function forget(note: NoteState) {
@@ -90,7 +92,7 @@ export function createPaperTaskSaver(deps: PaperTaskSaverDeps): PaperTaskSaver {
 
     function failed(note: NoteState, error: unknown) {
         note.sent = 0;
-        const latest = conflictPaper(error);
+        const latest = conflictNote(error);
         if (latest === null) {
             rollback(note, note.base);
             deps.failed(error);

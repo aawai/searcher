@@ -15,7 +15,7 @@
 | `test:documents`          | 统一笔记入口：`documents-*` 与 `document-*` 文件；完整列表见清单                                                            |
 | `test:wallpaper`          | `wallpaper`                                                                                                                 |
 | `test:bundle`             | `bundle-loading`、`route-style-stability`、`omnibox-lab`、`pwa`（安装、离线外壳、版本更新）                                 |
-| `test:home-papers`        | `home-papers-*`：首页纸张的排序、持久化、颜色、直接勾选与移动端预览                                                         |
+| `test:home-notes`         | `home-notes-*`：首页笔记的吸附、键盘、缩放、容量、排序、持久化、颜色、直接勾选与跨断点呈现                                  |
 | `test:e2e:full`           | 清单内所有集合与 supplemental 的去重并集；默认串行、首次失败停止，只 build 一次，每个文件只运行一次                         |
 | `test:e2e:affected`       | 按 Git 改动选择集合；未知/共享路径回退 full，空差异明确跳过；仅供局部诊断                                                   |
 | `check:e2e`               | 校验清单与磁盘覆盖、集合内重复、affected 前缀唯一/目标集合有效/所有集合可达，以及统一 Chromium 入口；不 build、不启动浏览器 |
@@ -66,7 +66,7 @@ DENO_JOBS=2 deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast 
 路径以 NUL 分隔读取，空格、制表符、换行不作为分隔符。Git/ref 错误直接失败，不假装空差异。
 
 映射与清单共同维护在 `suites.ts`。library 覆盖 workspace、documents、routing、
-bundle、home-papers 和 supplemental；documents/editor 等映射包含共享入口的消费者。
+bundle、home-notes 和 supplemental；documents/editor 等映射包含共享入口的消费者。
 直接修改已登记 E2E 文件会选择其所属的完整集合（不是只跑该文件）。
 共享 helper、基础设施、配置、未识别的新 E2E 或其他任一未映射路径令整次选择回退 full；
 不会因为其他路径可映射而忽略未知路径。集合按清单顺序、文件按集合顺序去重。
