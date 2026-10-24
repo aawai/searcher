@@ -87,9 +87,7 @@ function ItemIcon({ item }: { item: OmniboxItem }) {
         case "history":
             return <History size="1em" className="icon-md suggestion-icon" />;
         case "online":
-            return item.engine
-                ? <EngineIcon id={item.engine} className="icon-md" />
-                : <Search size="1em" className="icon-md suggestion-icon" />;
+            return <Search size="1em" className="icon-md suggestion-icon" />;
         case "command":
             return <CommandIcon command={item.command} />;
         case "entry": {
