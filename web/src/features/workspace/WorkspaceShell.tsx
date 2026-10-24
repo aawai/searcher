@@ -172,8 +172,11 @@ function focusOpener(active: Element | null): HTMLElement | null {
         active.closest(".workspace-panel")
     ) return null;
     const menu = active.closest<HTMLElement>('[role="menu"]');
-    if (!menu?.id) return active;
+    if (!menu) return active;
+    // A closed menu drops its trigger's aria-controls and stays hidden, so its
+    // item is never a usable opener; only the trigger linked while open is.
+    if (!menu.id) return null;
     return document.querySelector<HTMLElement>(
         `[aria-controls="${CSS.escape(menu.id)}"]`,
-    ) ?? active;
+    );
 }
