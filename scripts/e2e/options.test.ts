@@ -49,6 +49,42 @@ Deno.test("triage timeout comes from --timeout, else E2E_TIMEOUT_MS", () => {
     );
 });
 
+Deno.test("affected accepts base/list and existing execution options", () => {
+    assertEquals(parseRunOptions(["affected"]), {
+        kind: "run",
+        suite: "affected",
+        parallel: false,
+        failFast: true,
+        timeoutMs: null,
+        base: "origin/main",
+        list: false,
+    });
+    assertEquals(
+        parseRunOptions([
+            "affected",
+            "--",
+            "--base",
+            "HEAD~2",
+            "--list",
+            "--parallel",
+            "--no-fail-fast",
+            "--timeout",
+            "5000",
+        ]),
+        {
+            kind: "run",
+            suite: "affected",
+            parallel: true,
+            failFast: false,
+            timeoutMs: 5000,
+            base: "HEAD~2",
+            list: true,
+        },
+    );
+    const options = parseRunOptions(["affected", "--base=HEAD", "--serial"]);
+    assertEquals(options.kind === "run" && options.base, "HEAD");
+});
+
 Deno.test("conflicting, unknown or malformed options are rejected", () => {
     for (
         const args of [
@@ -67,6 +103,14 @@ Deno.test("conflicting, unknown or malformed options are rejected", () => {
             ["full", "--timeout", "9007199254740992"],
             ["full", "--parallel=false"],
             ["check", "--parallel"],
+            ["full", "--base", "HEAD"],
+            ["documents", "--list"],
+            ["affected", "--base"],
+            ["affected", "--base="],
+            ["affected", "--base", "--list"],
+            ["affected", "--base=-bad"],
+            ["affected", "--base", "HEAD", "--base", "main"],
+            ["affected", "--list=false"],
         ]
     ) {
         assertThrows(

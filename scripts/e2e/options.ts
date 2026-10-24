@@ -2,13 +2,15 @@ import { parseArgs } from "@std/cli/parse-args";
 import { type Suite, suites } from "./suites.ts";
 
 export const USAGE =
-    "Usage: deno run -A scripts/e2e/run.ts <suite|check> [--serial|--parallel] [--no-fail-fast] [--timeout <ms>]";
+    "Usage: deno run -A scripts/e2e/run.ts <suite|affected|check> [--serial|--parallel] [--no-fail-fast] [--timeout <ms>] [affected only: --base <git-ref> --list]";
 
 export type RunOptions =
     | { kind: "check" }
     | {
         kind: "run";
-        suite: Suite;
+        suite: Suite | "affected";
+        base?: string;
+        list?: boolean;
         parallel: boolean;
         failFast: boolean;
         /** Implicit Playwright timeout for local triage; null keeps 30s. */
@@ -47,23 +49,28 @@ export function parseRunOptions(
                 "--fail-fast",
                 "--no-fail-fast",
                 "--timeout",
+                "--base",
+                "--list",
             ].includes(flag)
         ) {
             fail(`Unknown option: ${arg}`);
         }
         if (flags.has(flag)) fail(`Repeated option: ${flag}`);
         flags.add(flag);
-        if (flag !== "--timeout" && arg.includes("=")) {
+        if (!["--timeout", "--base"].includes(flag) && arg.includes("=")) {
             fail(`Unexpected value: ${arg}`);
         }
-        if (arg === "--timeout") index++;
+        if (arg === "--timeout" || arg === "--base") {
+            const value = normalized[++index];
+            if (!value || value.startsWith("--")) fail(`Missing value: ${arg}`);
+        }
     }
     if (flags.has("--fail-fast") && flags.has("--no-fail-fast")) {
         fail("--fail-fast and --no-fail-fast are exclusive");
     }
     const parsed = parseArgs(normalized, {
-        boolean: ["serial", "parallel", "fail-fast"],
-        string: ["timeout"],
+        boolean: ["serial", "parallel", "fail-fast", "list"],
+        string: ["timeout", "base"],
         negatable: ["fail-fast"],
         default: { "fail-fast": true },
     });
@@ -76,13 +83,19 @@ export function parseRunOptions(
         if (args.length > 1) fail("check takes no options");
         return { kind: "check" };
     }
-    if (!isSuite(name)) fail(`Unknown suite: ${name}`);
-    const suite = name as Suite;
+    if (!isSuite(name) && name !== "affected") fail(`Unknown suite: ${name}`);
+    const suite = name as Suite | "affected";
+    if (suite !== "affected" && (flags.has("--base") || flags.has("--list"))) {
+        fail("--base and --list only apply to affected");
+    }
+    if (flags.has("--base") && (!parsed.base || parsed.base.startsWith("-"))) {
+        fail("--base must be a nonempty git ref, not an option");
+    }
     if (parsed.serial && parsed.parallel) {
         fail("--serial and --parallel are exclusive");
     }
-    if (failFastFlag && suite !== "full") {
-        fail("--fail-fast and --no-fail-fast only apply to full");
+    if (failFastFlag && suite !== "full" && suite !== "affected") {
+        fail("--fail-fast and --no-fail-fast only apply to full or affected");
     }
     let timeoutMs: number | null = null;
     const timeout = parsed.timeout ?? envTimeout;
@@ -97,7 +110,11 @@ export function parseRunOptions(
         suite,
         parallel: parsed.parallel ||
             (!parsed.serial && suite === "workspace"),
-        failFast: suite === "full" && parsed["fail-fast"],
+        failFast: (suite === "full" || suite === "affected") &&
+            parsed["fail-fast"],
+        ...(suite === "affected"
+            ? { base: parsed.base ?? "origin/main", list: parsed.list }
+            : {}),
         timeoutMs,
     };
 }

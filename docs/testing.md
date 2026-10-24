@@ -1,8 +1,8 @@
 # 测试
 
 单元与契约测试使用 `Deno.test`，与源码并置；浏览器回归使用固定的 Playwright
-1.56.1 与 Chromium，所有 E2E 入口先构建生产前端，启动隔离的真实 Hono
-服务、内存数据库与临时资源目录，不连接开发实例或真实账户。
+1.56.1 与 Chromium，实际执行测试的 E2E 入口先构建生产前端，启动隔离的真实 Hono
+服务、内存数据库与临时资源目录，不连接开发实例或真实账户；affected 的空差异与 `--list` 不执行测试。
 
 E2E 入口清单、并行/串行回退、JUnit 与资源报告、证据目录和排障约定见
 [Production E2E](../scripts/e2e/README.md)；`scripts/e2e/suites.ts`
@@ -16,21 +16,42 @@ deno run -A npm:playwright@1.56.1 install chromium
 
 ## 常用入口
 
-| 命令                       | 覆盖                                                                                    |
-| -------------------------- | --------------------------------------------------------------------------------------- |
-| `deno task test`           | 后端与前端契约测试                                                                      |
-| `deno task test:routing`   | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航                       |
-| `deno task test:workspace` | Workspace 完整回归（见下文）                                                            |
-| `deno task test:documents` | 笔记响应式矩阵与长笔记验收（见下文）                                                    |
-| `deno task test:wallpaper` | 壁纸链路（见下文）                                                                      |
-| `deno task test:e2e:full`  | 只构建一次，串行执行所有 E2E 文件的去重并集；首次失败停止，可显式 `--parallel` 诊断并发 |
-| `deno task check:e2e`      | 检查新增 E2E 文件是否登记                                                               |
-| `deno task check:ui`       | UI 门禁（见 [前端开发](frontend.md#ui-门禁)）                                           |
+| 命令                          | 覆盖                                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------------- |
+| `deno task test`              | 后端与前端契约测试                                                                      |
+| `deno task test:routing`      | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航                       |
+| `deno task test:workspace`    | Workspace 完整回归（见下文）                                                            |
+| `deno task test:documents`    | 笔记响应式矩阵与长笔记验收（见下文）                                                    |
+| `deno task test:wallpaper`    | 壁纸链路（见下文）                                                                      |
+| `deno task test:e2e:full`     | 只构建一次，串行执行所有 E2E 文件的去重并集；首次失败停止，可显式 `--parallel` 诊断并发 |
+| `deno task test:e2e:affected` | 基于 Git 路径映射选择集合；任一未知路径回退 full，仅供局部诊断                          |
+| `deno task check:e2e`         | 检查新增 E2E 文件是否登记                                                               |
+| `deno task check:ui`          | UI 门禁（见 [前端开发](frontend.md#ui-门禁)）                                           |
 
 模块入口（如 `test:workspace:apps`）仅作局部开发辅助，不替代完整 Workspace
 回归。
 
 本地摸底可用 `DENO_JOBS=2 deno task test:e2e:full --parallel --no-fail-fast --timeout 5000`，一次收集失败并缩短隐式等待。`--timeout` / `E2E_TIMEOUT_MS` 仅用于诊断，正常验收与 CI 保持默认超时；参数、优先级与报告字段见 [Production E2E](../scripts/e2e/README.md#本地快速超时)。
+
+### Affected 局部诊断
+
+```sh
+deno task test:e2e:affected --base origin/main --list
+DENO_JOBS=2 deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast --timeout 5000
+```
+
+基线默认 `origin/main`，`--base <git-ref>` 仅 affected 可用；不存在时先 fetch 或指定正确 ref。
+选择范围是 `merge-base(base, HEAD)` 到当前工作树的净差异（含暂存/未暂存），加上未忽略的
+untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` 同时维护映射与集合：
+desk 至少覆盖 workspace + documents，并包含 routing/bundle/home-papers/supplemental 消费者；
+直接修改 E2E 文件选择所属完整集合。共享基础设施/helper/config 及任何未知路径令整个选择
+回退 full。手工映射不是依赖图，新增跨域依赖必须更新映射；局部通过不替代完整 Workspace
+回归与交付前 full 门禁。
+
+没有改动时明确跳过 build/browser，不能记为测试通过。`--list` 仅 affected 可用，
+打印基线、原因、路径、集合与去重文件，便于临时 Git fixture 的 CLI smoke；不 build、
+不启动浏览器。空差异/list 仍校验清单并写 `timings.json`（含路径、基线、选中集合和 skipped），
+不生成 JUnit。正常执行至多 build 一次；完整细节见 [Production E2E](../scripts/e2e/README.md#affected保守的局部选择)。
 
 ### 手工视觉验收数据
 
