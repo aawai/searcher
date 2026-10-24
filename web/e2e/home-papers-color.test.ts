@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 Deno.test("Home paper colour lives in the more menu with keyboard selection that persists", async () => {

@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { chromium, type Route } from "playwright";
+import { type Route } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 Deno.test("apps concurrent optimistic sorting converges to confirmed server order #141", async () => {

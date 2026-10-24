@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer";
 import { assert, assertAlmostEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 Deno.test("Home anchor is shared by guests and accounts and reserves four grid rows", async () => {

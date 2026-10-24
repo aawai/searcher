@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import type { Page, Route } from "playwright";
 import type {
     DocumentDto,

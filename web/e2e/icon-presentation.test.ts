@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import sharp from "sharp";
 import { startProductionApp } from "./helpers/production-app.ts";
 

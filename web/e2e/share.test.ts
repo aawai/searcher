@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
-import { type Browser, chromium, type Page } from "playwright";
+import { type Browser, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { documents } from "../../src/db/schema.ts";
 import {
     loginAndVisit,

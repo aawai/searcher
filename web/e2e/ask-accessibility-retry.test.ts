@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { type Browser, chromium } from "playwright";
+import { type Browser } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { aiModels } from "../../src/db/ai-schema.ts";
 import type {
     AiMessageDto,

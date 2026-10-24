@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import type { Locator } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";

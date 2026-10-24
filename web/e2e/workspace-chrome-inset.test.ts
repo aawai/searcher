@@ -5,7 +5,7 @@ import {
     openNotesByKeyboard,
 } from "./helpers/desk.ts";
 import { assert, assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
 import { migrateDatabase } from "../../src/db/migrate.ts";

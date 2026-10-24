@@ -4,10 +4,10 @@ import {
     type Browser,
     type BrowserContext,
     type CDPSession,
-    chromium,
     type Locator,
     type Page,
 } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 // Issue #244: the home page is the application library. These regressions pin

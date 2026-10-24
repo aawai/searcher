@@ -1,5 +1,6 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { type BrowserContext, chromium, type Page } from "playwright";
+import { type BrowserContext, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
 import { migrateDatabase } from "../../src/db/migrate.ts";
