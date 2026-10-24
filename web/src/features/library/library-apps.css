@@ -11,18 +11,19 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding-inline: var(--space-4);
 }
 .library-apps-controls > :first-child {
     flex: 1;
     min-width: 0;
 }
+/* The workspace body already insets content; the header, search row and grid
+   share that content box. */
 .library-apps-scroll {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 0 var(--space-4) var(--space-5);
+    padding-bottom: var(--space-5);
 }
 .library-apps-section-heading {
     display: flex;

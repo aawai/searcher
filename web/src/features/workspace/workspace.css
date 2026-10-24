@@ -7,7 +7,7 @@
         var(--workspace-chrome-bottom)
     );
     right: var(--workspace-inset);
-    width: min(var(--workspace-width), calc(100vw - 2 *
+    width: min(var(--workspace-panel-width), calc(100vw - 2 *
         var(--workspace-inset)));
     z-index: var(--elevation-workspace);
     display: flex;

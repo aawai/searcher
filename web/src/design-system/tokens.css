@@ -266,6 +266,7 @@
     --layout-sheet-max: 960px;
     --sheet-width: min(65vw, var(--layout-sheet-max));
     --workspace-width: 400px;
+    --workspace-panel-width: clamp(440px, 32vw, 560px);
     --workspace-editor-expanded-width: 900px;
     --editor-readable-width: 720px;
     --document-outline-width: 260px;

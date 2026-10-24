@@ -64,6 +64,9 @@ export function LibraryAppsView({
     showAppLabels,
 }: LibraryAppsViewProps) {
     const [query, setQuery] = useState("");
+    // Hover feedback waits for real pointer movement so a tile that lands
+    // under a still pointer when the view swaps does not look selected.
+    const [pointerActive, setPointerActive] = useState(false);
     const [folderId, setFolderId] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
     const [renaming, setRenaming] = useState<LauncherGroup | null>(null);
@@ -163,6 +166,7 @@ export function LibraryAppsView({
             <div
                 className="launcher-grid launcher-grid--library"
                 data-library-apps-grid
+                data-pointer-active={pointerActive || undefined}
             >
                 {tiles.map((tile) =>
                     tile.type === "folder"
@@ -197,6 +201,9 @@ export function LibraryAppsView({
             className="library-apps"
             data-library-view="apps"
             data-library-apps
+            onPointerMove={() => {
+                if (!pointerActive) setPointerActive(true);
+            }}
             onKeyDown={(event) => {
                 if (
                     event.defaultPrevented || creating || renaming || deleting

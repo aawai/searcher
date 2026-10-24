@@ -22,11 +22,19 @@
     color: var(--foreground);
     transition: background var(--motion-fast) var(--ease-standard);
 }
-.webapp-icon:hover {
+/* Hover is a fine-pointer affordance: touch taps and coarse pointers must not
+   leave a sticky fill that reads as a selection. Keyboard focus paints the
+   same fill because the tile body is the only visible hit area. */
+.webapp-icon:focus-visible {
     background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
-.webapp-icon:active {
-    background: color-mix(in srgb, var(--foreground) 14%, transparent);
+@media (hover: hover) and (pointer: fine) {
+    .webapp-icon:hover {
+        background: color-mix(in srgb, var(--foreground) 8%, transparent);
+    }
+    .webapp-icon:active {
+        background: color-mix(in srgb, var(--foreground) 14%, transparent);
+    }
 }
 .webapp-glyph {
     position: relative;
@@ -329,9 +337,16 @@
     padding: 0 var(--space-2);
     transform: translateX(-50%);
 }
-.launcher-folder-item:hover .launcher-folder-surface {
-    background: var(--glass-sheen), color-mix(in srgb, var(--foreground) 8%,
-        var(--material-regular));
+@media (hover: hover) and (pointer: fine) {
+    .launcher-folder-item:hover .launcher-folder-surface {
+        background: var(--glass-sheen), color-mix(in srgb,
+            var(--foreground) 8%, var(--material-regular));
+    }
+    /* Solid library panel: hover mixes into the soft fill, not the glass. */
+    .launcher-grid--library .launcher-folder-item:hover .launcher-folder-surface {
+        background: color-mix(in srgb, var(--foreground) 8%,
+            var(--surface-soft));
+    }
 }
 .launcher-tile.is-folder-drop-target .launcher-folder-surface {
     outline: 2px solid var(--accent);
@@ -666,11 +681,16 @@
 /* Library management reuses the home cell and folder geometry; only the
    placement flow is library-specific (canonical order, no drag sorting).
    Names are hidden by not rendering them, so no label display rule belongs here.
-   The grid sits on Material, not a wallpaper, so labels drop the wallpaper halo. */
+   The grid sits on the solid Overlay surface, not a wallpaper: labels drop the
+   wallpaper halo and columns centre in the content box with equal gutters. */
 .launcher-grid--library {
     grid-template-columns: repeat(auto-fill, var(--launcher-col-w));
     grid-auto-flow: row dense;
-    justify-content: start;
+    justify-content: center;
+    /* Symmetric inline gutter: auto-fill measures one column fewer on the
+       narrow Sheet (390 ≈ 4 columns) while the centered tracks keep equal
+       gutters against the header and search content box. */
+    padding-inline: var(--space-2);
 }
 .launcher-grid--library > .launcher-folder-item--large {
     grid-column: span 2;
@@ -678,4 +698,21 @@
 }
 .launcher-grid--library :is(.webapp-name, .launcher-folder-name) {
     text-shadow: none;
+}
+/* On the solid panel the Material fill and its white rim disappear; the folder
+   takes the icon block's soft fill and drops the blur, so the surface and its
+   white mini glyphs keep an edge in both themes. */
+.launcher-grid--library .launcher-folder-surface {
+    background: var(--surface-soft);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+/* A view swap can leave a tile under a stationary pointer; the library grid
+   sets data-pointer-active on the first pointermove, so hover feedback never
+   paints a tile merely because content changed beneath the pointer. */
+.launcher-grid--library:not([data-pointer-active]) .webapp-icon:hover {
+    background: transparent;
+}
+.launcher-grid--library:not([data-pointer-active]) .launcher-folder-item:hover .launcher-folder-surface {
+    background: var(--surface-soft);
 }

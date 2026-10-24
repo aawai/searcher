@@ -80,6 +80,87 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
         exact: true,
     });
 
+    interface GridLayout {
+        columns: number;
+        leftGutter: number;
+        rightGutter: number;
+        controlLeft: number;
+        controlRight: number;
+        panelWidth: number;
+    }
+    async function gridLayout(): Promise<GridLayout> {
+        return await grid.evaluate((node) => {
+            const style = getComputedStyle(node);
+            const box = node.getBoundingClientRect();
+            const tiles = [...node.querySelectorAll<HTMLElement>(
+                ".launcher-app, .launcher-folder-item",
+            )].map((tile) => tile.getBoundingClientRect());
+            const firstRowTop = Math.min(...tiles.map((rect) => rect.top));
+            const firstRow = tiles.filter((rect) =>
+                Math.abs(rect.top - firstRowTop) <= 1
+            );
+            const controls = node.closest(".library-apps")!
+                .querySelector(".library-apps-controls")!
+                .getBoundingClientRect();
+            const panel = node.closest("[data-library]")!
+                .getBoundingClientRect();
+            return {
+                columns: style.gridTemplateColumns.split(/\s+/).filter(
+                    Boolean,
+                ).length,
+                leftGutter: Math.round(
+                    Math.min(...firstRow.map((rect) => rect.left)) - box.left,
+                ),
+                rightGutter: Math.round(
+                    box.right - Math.max(...firstRow.map((rect) => rect.right)),
+                ),
+                controlLeft: Math.round(box.left - controls.left),
+                controlRight: Math.round(box.right - controls.right),
+                panelWidth: Math.round(panel.width),
+            };
+        });
+    }
+    function assertCenteredGrid(layout: GridLayout) {
+        assertEquals(layout.controlLeft, 0, JSON.stringify(layout));
+        assertEquals(layout.controlRight, 0, JSON.stringify(layout));
+        assert(
+            layout.leftGutter >= 0 && layout.rightGutter >= 0,
+            JSON.stringify(layout),
+        );
+        assert(
+            Math.abs(layout.leftGutter - layout.rightGutter) <= 1,
+            `Grid gutters must match within 1px: ${JSON.stringify(layout)}`,
+        );
+    }
+
+    await t.step(
+        "grid centres equal gutters and keeps four columns across widths",
+        async () => {
+            const desktop = await gridLayout();
+            assert(desktop.columns >= 4, JSON.stringify(desktop));
+            assertCenteredGrid(desktop);
+            await page.setViewportSize({ width: 768, height: 1024 });
+            await page.locator(
+                'aside.workspace-panel[data-presentation="panel"]',
+            ).waitFor();
+            const tablet = await gridLayout();
+            assertEquals(tablet.panelWidth, 440);
+            assert(tablet.columns >= 4, JSON.stringify(tablet));
+            assertCenteredGrid(tablet);
+            await page.setViewportSize({ width: 390, height: 844 });
+            await page.locator(
+                '.workspace-panel--mobile[data-presentation="sheet"]',
+            ).waitFor();
+            const phone = await gridLayout();
+            assertEquals(phone.columns, 4);
+            assertCenteredGrid(phone);
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await page.locator(
+                'aside.workspace-panel[data-presentation="panel"]',
+            ).waitFor();
+        },
+    );
+
     await t.step(
         "all apps, overflow and empty folders; name and URL search",
         async () => {
