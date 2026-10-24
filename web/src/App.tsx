@@ -128,6 +128,7 @@ function Layout() {
     const serviceWorker = useServiceWorkerUpdate();
     // Coming back online re-checks the session the offline start could not.
     const wasOnline = useRef(online);
+    const libraryFromMenu = useRef(false);
     useEffect(() => {
         if (online && !wasOnline.current && connectionError) {
             void retryConnection();
@@ -302,11 +303,12 @@ function Layout() {
                                     sideOffset={8}
                                     // The library moves focus into its header; restoring it to
                                     // the avatar afterwards would steal it back.
-                                    finalFocus={() =>
-                                        document.querySelector(
-                                            "[data-library]",
-                                        ) ===
-                                            null}
+                                    finalFocus={() => {
+                                        const restore = !libraryFromMenu
+                                            .current;
+                                        libraryFromMenu.current = false;
+                                        return restore;
+                                    }}
                                 >
                                     <div className="user-menu-identity">
                                         <span>{user.displayName}</span>
@@ -314,7 +316,10 @@ function Layout() {
                                     </div>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
-                                        onClick={() => openLibrary("root")}
+                                        onClick={() => {
+                                            libraryFromMenu.current = true;
+                                            openLibrary("root");
+                                        }}
                                     >
                                         <LayoutGrid
                                             size="1em"
@@ -323,7 +328,10 @@ function Layout() {
                                         <span>资料库</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        onClick={() => openLibrary("notes")}
+                                        onClick={() => {
+                                            libraryFromMenu.current = true;
+                                            openLibrary("notes");
+                                        }}
                                     >
                                         <NotebookPen
                                             size="1em"
