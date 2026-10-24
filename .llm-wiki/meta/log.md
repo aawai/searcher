@@ -434,3 +434,21 @@
 ## [2026-10-24T01:40:53.089Z] observe
 - slug: "obs-2026-10-24-issue-239-pr-266-267-main", title: "Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭", relevance: "critical"
 
+## [2026-10-24T08:00:40.076Z] capture
+- source_id: "SRC-2026-10-24-006", url: "https://sqlite.org/fts5.html", format: "web"
+
+## [2026-10-24T08:00:43.802Z] capture
+- source_id: "SRC-2026-10-24-007", url: "https://web.dev/articles/service-worker-lifecycle", format: "web"
+
+## [2026-10-24T08:00:48.194Z] capture
+- source_id: "SRC-2026-10-24-008", url: "https://developer.chrome.com/docs/capabilities/web-apis/web-share-target", format: "web"
+
+## [2026-10-24T08:00:54.679Z] capture
+- source_id: "SRC-2026-10-24-009", url: "https://developer.chrome.com/docs/web-platform/view-transitions/same-document", format: "web"
+
+## [2026-10-24T08:00:57.909Z] capture
+- source_id: "SRC-2026-10-24-010", url: "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/", format: "web"
+
+## [2026-10-24T08:28:18.272Z] observe
+- slug: "obs-2026-10-24-issue-241-pr-274-279-281-main", title: "Issue 241 壁纸取色经 PR 274/279/281 合并 main 并关闭", relevance: "critical"
+

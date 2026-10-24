@@ -1,7 +1,14 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-24T01:40:53.156Z",
+  "last_updated": "2026-10-24T08:28:18.306Z",
   "pages": {
+    "concepts/aria-combobox-grouped-suggestions": {
+      "type": "concept",
+      "title": "ARIA Combobox Grouped Suggestions",
+      "domain": "accessibility",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
     "concepts/contract-first-testing": {
       "type": "concept",
       "title": "Contract First Testing",
@@ -61,11 +68,19 @@
       "created": "2026-09-25",
       "updated": "2026-09-25"
     },
+    "concepts/pwa-service-worker-update-lifecycle": {
+      "type": "concept",
+      "title": "PWA Service Worker Update Lifecycle",
+      "domain": "engineering",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
     "concepts/react-19-actions-and-transitions": {
       "type": "concept",
       "title": "React 19 Actions and Transitions",
+      "domain": "frontend",
       "created": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-10-24"
     },
     "concepts/route-level-code-splitting-dynamic-bundling": {
       "type": "concept",
@@ -106,7 +121,7 @@
       "title": "SQLite FTS5 Fulltext Search",
       "domain": "engineering",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-10-24"
     },
     "concepts/sqlite-table-recreation-migration": {
       "type": "concept",
@@ -123,6 +138,13 @@
       ],
       "created": "2026-09-27",
       "updated": "2026-09-27"
+    },
+    "concepts/view-transitions-shared-element": {
+      "type": "concept",
+      "title": "View Transitions Shared Element",
+      "domain": "frontend",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
     },
     "concepts/web-animations-api-runtime-architecture": {
       "type": "concept",
@@ -168,8 +190,9 @@
     "entities/react-19-framework": {
       "type": "entity",
       "title": "React 19 Framework",
+      "category": "tool",
       "created": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-10-24"
     },
     "entities/searcher-项目": {
       "type": "entity",
@@ -697,6 +720,84 @@
       "source_id": "SRC-2026-10-05-004",
       "format": "web",
       "captured": "2026-10-05"
+    },
+    "sources/SRC-2026-10-24-006": {
+      "type": "source",
+      "title": "SQLite FTS5 Extension (Trigram Tokenizer)",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-24-006/extracted.md",
+      "source_id": "SRC-2026-10-24-006",
+      "format": "web",
+      "captured": "2026-10-24",
+      "entities": [
+        "[[entities/drizzle-sqlite-store]]",
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/sqlite-fts5-fulltext-search]]"
+      ]
+    },
+    "sources/SRC-2026-10-24-007": {
+      "type": "source",
+      "title": "The Service Worker Lifecycle (web.dev)",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-24-007/extracted.md",
+      "source_id": "SRC-2026-10-24-007",
+      "format": "web",
+      "captured": "2026-10-24",
+      "entities": [
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/pwa-service-worker-update-lifecycle]]"
+      ]
+    },
+    "sources/SRC-2026-10-24-008": {
+      "type": "source",
+      "title": "Receiving Shared Data with the Web Share Target API",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-24-008/extracted.md",
+      "source_id": "SRC-2026-10-24-008",
+      "format": "web",
+      "captured": "2026-10-24",
+      "entities": [
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/pwa-service-worker-update-lifecycle]]"
+      ]
+    },
+    "sources/SRC-2026-10-24-009": {
+      "type": "source",
+      "title": "Same-Document View Transitions for Single-Page Applications",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-24-009/extracted.md",
+      "source_id": "SRC-2026-10-24-009",
+      "format": "web",
+      "captured": "2026-10-24",
+      "entities": [
+        "[[entities/searcher-项目]]",
+        "[[entities/react-19-framework]]"
+      ],
+      "concepts": [
+        "[[concepts/view-transitions-shared-element]]"
+      ]
+    },
+    "sources/SRC-2026-10-24-010": {
+      "type": "source",
+      "title": "WAI-ARIA APG Combobox Pattern",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-24-010/extracted.md",
+      "source_id": "SRC-2026-10-24-010",
+      "format": "web",
+      "captured": "2026-10-24",
+      "entities": [
+        "[[entities/searcher-项目]]",
+        "[[entities/shadcn-ui-system]]"
+      ],
+      "concepts": [
+        "[[concepts/aria-combobox-grouped-suggestions]]"
+      ]
     },
     "sources/e2e-native-parallel-speedup-vs-stability-167": {
       "type": "source",
@@ -1808,6 +1909,24 @@
       "relevance": "critical",
       "observed_at": "2026-10-24T01:40:53.087Z",
       "source_context": "完成 issue 239 worktree 实施、PR 与合并",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
+    "sources/obs-2026-10-24-issue-241-pr-274-279-281-main": {
+      "type": "source",
+      "title": "Observation: Issue 241 壁纸取色经 PR 274/279/281 合并 main 并关闭",
+      "tags": [
+        "issue-241",
+        "wallpaper-accent",
+        "merged",
+        "worktree",
+        "e2e"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-24-issue-241-pr-274-279-281-main",
+      "relevance": "critical",
+      "observed_at": "2026-10-24T08:28:18.270Z",
+      "source_context": "完成 issue 241 worktree 实施、PR 与合并",
       "created": "2026-10-24",
       "updated": "2026-10-24"
     },

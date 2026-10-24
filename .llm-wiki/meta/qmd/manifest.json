@@ -2,6 +2,14 @@
   "version": 1,
   "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
   "entries": {
+    "documents/canonical/concepts/aria-combobox-grouped-suggestions.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/aria-combobox-grouped-suggestions.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/aria-combobox-grouped-suggestions",
+      "contentHash": "88d7e6a736616364c7b1ad170a3985dd27721f808b50d0d03f264196dc83a0a5",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/contract-first-testing.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/contract-first-testing.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -66,11 +74,19 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/pwa-service-worker-update-lifecycle.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/pwa-service-worker-update-lifecycle.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/pwa-service-worker-update-lifecycle",
+      "contentHash": "721b8ca0fdbc64aaf47b726dafab5406d26877da0713136b0551d9c5176e676d",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/react-19-actions-and-transitions.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/react-19-actions-and-transitions.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/react-19-actions-and-transitions",
-      "contentHash": "d1927992eea0bc3cb2f2755bc527972145d647679870cf04a7695e7dd9e17cf5",
+      "contentHash": "60d82fc334bfd8c84abb4afe0552932aae33648394a4c38934f6aa8dbed9421c",
       "role": "canonical",
       "type": "concept"
     },
@@ -118,7 +134,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/sqlite-fts5-fulltext-search.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/sqlite-fts5-fulltext-search",
-      "contentHash": "10ce256e9b6eb20c0ab4dd3df5eb703042525ed097888e037eb72508095961d0",
+      "contentHash": "b9dd73f559b38b9153b82a8c7971f6c140830653141ae2e73bf627efac74d412",
       "role": "canonical",
       "type": "concept"
     },
@@ -135,6 +151,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/tailwind-v4-css-first-architecture",
       "contentHash": "b8101874277dd9070211a95c0fa812001ee68908f03e9a74eea701fd25efced2",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/view-transitions-shared-element.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/view-transitions-shared-element.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/view-transitions-shared-element",
+      "contentHash": "975ddcad337e7e132fe23912380a976a9e1df4a6287849087fcae13f22ad8f56",
       "role": "canonical",
       "type": "concept"
     },
@@ -190,7 +214,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/react-19-framework.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/react-19-framework",
-      "contentHash": "07e31b55bca4c8434bf099588974e60fd472026bb76aabc993754010fd0457e9",
+      "contentHash": "2a4e7eb072622c4f40442d085be5f7f5259e83b387e68a57c9ccb364f2a84100",
       "role": "canonical",
       "type": "entity"
     },
@@ -607,6 +631,46 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/SRC-2026-10-05-004",
       "contentHash": "d18fc8bc877acb68663509adaa715178530aba48ae14210f17506c78f7f0469b",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-006.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-006.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-006",
+      "contentHash": "66514577bc1d35af8e49dede88781a538b07f910598c208c258f083b97b36827",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-007.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-007.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-007",
+      "contentHash": "3ddd7649c024804e606fc2b642901d18ba01784989d2ba4d80121ba39cb285a9",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-008.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-008.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-008",
+      "contentHash": "350bef3c2058ade93a99cde71a2ef8101db917a5164a916e7cb23580e00eeb84",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-009.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-009.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-009",
+      "contentHash": "e6b394d693586c934ed6f02d70717244147b6dc358d19bf84fabb0672da905f6",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-010.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-010.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-010",
+      "contentHash": "82d40a22069e192d91be639328644b863519517dbd7dea0b26ab353186c58263",
       "role": "evidence",
       "type": "source"
     },
@@ -1135,6 +1199,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-10-24-issue-239-pr-266-267-main",
       "contentHash": "91c118abad36887e650a5ab1596e3006026763d71f4cbf4963c6d3cef8c839da",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-24-issue-241-pr-274-279-281-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-24-issue-241-pr-274-279-281-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-24-issue-241-pr-274-279-281-main",
+      "contentHash": "687bc2fd3d73976b45396c46b50e8504c843375706315d3b317f83e579426161",
       "role": "evidence",
       "type": "source"
     },

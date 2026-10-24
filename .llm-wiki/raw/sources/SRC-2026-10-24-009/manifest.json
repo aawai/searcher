@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-24-009",
+  "captured": "2026-10-24",
+  "packet_version": "1.0",
+  "title": "Same-document view transitions for single-page applications Stay organized with collections Save and categorize content based on your preferences.",
+  "url": "https://developer.chrome.com/docs/web-platform/view-transitions/same-document",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

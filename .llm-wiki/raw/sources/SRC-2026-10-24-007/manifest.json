@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-24-007",
+  "captured": "2026-10-24",
+  "packet_version": "1.0",
+  "title": "The service worker lifecycle Stay organized with collections Save and categorize content based on your preferences.",
+  "url": "https://web.dev/articles/service-worker-lifecycle",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

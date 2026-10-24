@@ -142,3 +142,9 @@
 {"slug":"obs-2026-10-23-issue-237-pr-256-262-main","title":"Issue 237 统一输入框经 PR 256-262 合并 main 并关闭","relevance":"critical","timestamp":"2026-10-23T17:42:22.163Z","kind":"observe"}
 {"slug":"obs-2026-10-24-issue-238-pwa-pr-263-264-265-main","title":"Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭","relevance":"critical","timestamp":"2026-10-24T00:57:18.872Z","kind":"observe"}
 {"slug":"obs-2026-10-24-issue-239-pr-266-267-main","title":"Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭","relevance":"critical","timestamp":"2026-10-24T01:40:53.089Z","kind":"observe"}
+{"source_id":"SRC-2026-10-24-006","url":"https://sqlite.org/fts5.html","format":"web","timestamp":"2026-10-24T08:00:40.076Z","kind":"capture"}
+{"source_id":"SRC-2026-10-24-007","url":"https://web.dev/articles/service-worker-lifecycle","format":"web","timestamp":"2026-10-24T08:00:43.802Z","kind":"capture"}
+{"source_id":"SRC-2026-10-24-008","url":"https://developer.chrome.com/docs/capabilities/web-apis/web-share-target","format":"web","timestamp":"2026-10-24T08:00:48.194Z","kind":"capture"}
+{"source_id":"SRC-2026-10-24-009","url":"https://developer.chrome.com/docs/web-platform/view-transitions/same-document","format":"web","timestamp":"2026-10-24T08:00:54.679Z","kind":"capture"}
+{"source_id":"SRC-2026-10-24-010","url":"https://www.w3.org/WAI/ARIA/apg/patterns/combobox/","format":"web","timestamp":"2026-10-24T08:00:57.909Z","kind":"capture"}
+{"slug":"obs-2026-10-24-issue-241-pr-274-279-281-main","title":"Issue 241 壁纸取色经 PR 274/279/281 合并 main 并关闭","relevance":"critical","timestamp":"2026-10-24T08:28:18.272Z","kind":"observe"}

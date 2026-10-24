@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-24-006",
+  "captured": "2026-10-24",
+  "packet_version": "1.0",
+  "title": "1. Overview of FTS5",
+  "url": "https://sqlite.org/fts5.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
