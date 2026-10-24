@@ -161,6 +161,7 @@ function isRuntimeLayoutOwner(file: string): boolean {
         p.endsWith("SearchHome.tsx") ||
         p.endsWith("WebAppLauncher.tsx") ||
         p.endsWith("HomePapers.tsx") ||
+        p.endsWith("design-lab/DeskLab.tsx") ||
         p.includes("/fixtures/layout/")
     );
 }

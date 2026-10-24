@@ -62,6 +62,7 @@ const OmniboxLab = lazy(() =>
     }))
 );
 const MotionLab = lazy(() => import("./design-lab/MotionLab.tsx"));
+const DeskLab = lazy(() => import("./design-lab/DeskLab.tsx"));
 const MarkdownEditorSpike = lazy(() =>
     import("./spikes/markdown-editor/MarkdownEditorSpike.tsx")
 );
@@ -469,6 +470,7 @@ export function App() {
                     { index: true, element: <SearchHome /> },
                     { path: routes.designLab, element: <DesignLab /> },
                     { path: "/design-lab/motion", element: <MotionLab /> },
+                    { path: "/design-lab/desk", element: <DeskLab /> },
                     { path: routes.login, element: <AuthPage kind="login" /> },
                     {
                         path: routes.register,
