@@ -100,7 +100,10 @@
 - [[sources/obs-2026-10-22-searcher]] — Observation: Searcher 工作区避让以视觉平衡为优先 *(created: 2026-10-22)*
 - [[sources/obs-2026-10-23-]] — Observation: 玻璃效果档位与对比度下限的取舍 *(created: 2026-10-23)*
 - [[sources/obs-2026-10-23-issue-236-0-pr-245-246-247-main]] — Observation: Issue 236 阶段 0 经 PR 245/246/247 合并 main 并关闭 *(created: 2026-10-23)*
+- [[sources/obs-2026-10-23-issue-237-pr-256-262-main]] — Observation: Issue 237 统一输入框经 PR 256-262 合并 main 并关闭 *(created: 2026-10-23)*
 - [[sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3]] — Observation: Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法 *(created: 2026-10-23)*
+- [[sources/obs-2026-10-24-issue-238-pwa-pr-263-264-265-main]] — Observation: Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭 *(created: 2026-10-24)*
+- [[sources/obs-2026-10-24-issue-239-pr-266-267-main]] — Observation: Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭 *(created: 2026-10-24)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -157,4 +160,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-23T07:13:14.083Z* | *Total pages: 142*
+*Last updated: 2026-10-24T01:40:53.156Z* | *Total pages: 145*

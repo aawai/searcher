@@ -112,5 +112,8 @@
 - [Observation: Searcher 工作区避让以视觉平衡为优先](obs-2026-10-22-searcher.md)
 - [Observation: 玻璃效果档位与对比度下限的取舍](obs-2026-10-23-.md)
 - [Observation: Issue 236 阶段 0 经 PR 245/246/247 合并 main 并关闭](obs-2026-10-23-issue-236-0-pr-245-246-247-main.md)
+- [Observation: Issue 237 统一输入框经 PR 256-262 合并 main 并关闭](obs-2026-10-23-issue-237-pr-256-262-main.md)
 - [Observation: Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法](obs-2026-10-23-superseded-obs-2026-09-28-ui-3.md)
+- [Observation: Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭](obs-2026-10-24-issue-238-pwa-pr-263-264-265-main.md)
+- [Observation: Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭](obs-2026-10-24-issue-239-pr-266-267-main.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

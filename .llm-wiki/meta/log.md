@@ -425,3 +425,12 @@
 ## [2026-10-23T07:13:14.047Z] observe
 - slug: "obs-2026-10-23-issue-236-0-pr-245-246-247-main", title: "Issue 236 阶段 0 经 PR 245/246/247 合并 main 并关闭", relevance: "critical"
 
+## [2026-10-23T17:42:22.163Z] observe
+- slug: "obs-2026-10-23-issue-237-pr-256-262-main", title: "Issue 237 统一输入框经 PR 256-262 合并 main 并关闭", relevance: "critical"
+
+## [2026-10-24T00:57:18.872Z] observe
+- slug: "obs-2026-10-24-issue-238-pwa-pr-263-264-265-main", title: "Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭", relevance: "critical"
+
+## [2026-10-24T01:40:53.089Z] observe
+- slug: "obs-2026-10-24-issue-239-pr-266-267-main", title: "Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭", relevance: "critical"
+
