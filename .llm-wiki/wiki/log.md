@@ -2,6 +2,17 @@
 
 ## 2026-10-24
 
+- **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-240-pr-268-272-main","title":"Issue 240 可缩放桌面经 PR 268-272 合并 main 并关闭"}
+- **retro**: {"category":"architecture","slug":"service-worker-script-url-source-conflict","title":"Service Worker 脚本 URL 的官方资料冲突"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/web-app-manifest-installation-boundaries","title":"Web App Manifest Installation Boundaries"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/pwa-cache-security-boundary","title":"PWA Cache Security Boundary"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/service-worker-update-lifecycle","title":"Service Worker Update Lifecycle"}
+- **ensure\_page**: {"page_type":"entity","path":"entities/service-worker-api","title":"Service Worker API"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-005","url":"https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-004","url":"https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-003","url":"https://web.dev/articles/service-worker-lifecycle"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-002","url":"https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Caching"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-001","url":"https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers"}
 - **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-239-pr-266-267-main","title":"Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭"}
 - **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-238-pwa-pr-263-264-265-main","title":"Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭"}
 

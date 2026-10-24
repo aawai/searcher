@@ -434,3 +434,36 @@
 ## [2026-10-24T01:40:53.089Z] observe
 - slug: "obs-2026-10-24-issue-239-pr-266-267-main", title: "Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭", relevance: "critical"
 
+## [2026-10-24T03:42:26.890Z] capture
+- source_id: "SRC-2026-10-24-001", url: "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers", format: "web"
+
+## [2026-10-24T03:42:35.928Z] capture
+- source_id: "SRC-2026-10-24-002", url: "https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Caching", format: "web"
+
+## [2026-10-24T03:42:50.605Z] capture
+- source_id: "SRC-2026-10-24-003", url: "https://web.dev/articles/service-worker-lifecycle", format: "web"
+
+## [2026-10-24T03:42:57.802Z] capture
+- source_id: "SRC-2026-10-24-004", url: "https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html", format: "web"
+
+## [2026-10-24T03:43:05.629Z] capture
+- source_id: "SRC-2026-10-24-005", url: "https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference", format: "web"
+
+## [2026-10-24T03:43:41.144Z] ensure_page
+- page_type: "entity", title: "Service Worker API", path: "entities/service-worker-api"
+
+## [2026-10-24T03:43:56.848Z] ensure_page
+- page_type: "concept", title: "Service Worker Update Lifecycle", path: "concepts/service-worker-update-lifecycle"
+
+## [2026-10-24T03:45:48.700Z] ensure_page
+- page_type: "concept", title: "PWA Cache Security Boundary", path: "concepts/pwa-cache-security-boundary"
+
+## [2026-10-24T03:46:01.892Z] ensure_page
+- page_type: "concept", title: "Web App Manifest Installation Boundaries", path: "concepts/web-app-manifest-installation-boundaries"
+
+## [2026-10-24T03:46:51.152Z] retro
+- slug: "service-worker-script-url-source-conflict", title: "Service Worker 脚本 URL 的官方资料冲突", category: "architecture"
+
+## [2026-10-24T06:55:10.189Z] observe
+- slug: "obs-2026-10-24-issue-240-pr-268-272-main", title: "Issue 240 可缩放桌面经 PR 268-272 合并 main 并关闭", relevance: "critical"
+

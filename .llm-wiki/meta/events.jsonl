@@ -142,3 +142,14 @@
 {"slug":"obs-2026-10-23-issue-237-pr-256-262-main","title":"Issue 237 统一输入框经 PR 256-262 合并 main 并关闭","relevance":"critical","timestamp":"2026-10-23T17:42:22.163Z","kind":"observe"}
 {"slug":"obs-2026-10-24-issue-238-pwa-pr-263-264-265-main","title":"Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭","relevance":"critical","timestamp":"2026-10-24T00:57:18.872Z","kind":"observe"}
 {"slug":"obs-2026-10-24-issue-239-pr-266-267-main","title":"Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭","relevance":"critical","timestamp":"2026-10-24T01:40:53.089Z","kind":"observe"}
+{"source_id":"SRC-2026-10-24-001","url":"https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers","format":"web","timestamp":"2026-10-24T03:42:26.890Z","kind":"capture"}
+{"source_id":"SRC-2026-10-24-002","url":"https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Caching","format":"web","timestamp":"2026-10-24T03:42:35.928Z","kind":"capture"}
+{"source_id":"SRC-2026-10-24-003","url":"https://web.dev/articles/service-worker-lifecycle","format":"web","timestamp":"2026-10-24T03:42:50.605Z","kind":"capture"}
+{"source_id":"SRC-2026-10-24-004","url":"https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html","format":"web","timestamp":"2026-10-24T03:42:57.802Z","kind":"capture"}
+{"source_id":"SRC-2026-10-24-005","url":"https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference","format":"web","timestamp":"2026-10-24T03:43:05.629Z","kind":"capture"}
+{"page_type":"entity","title":"Service Worker API","path":"entities/service-worker-api","timestamp":"2026-10-24T03:43:41.144Z","kind":"ensure_page"}
+{"page_type":"concept","title":"Service Worker Update Lifecycle","path":"concepts/service-worker-update-lifecycle","timestamp":"2026-10-24T03:43:56.848Z","kind":"ensure_page"}
+{"page_type":"concept","title":"PWA Cache Security Boundary","path":"concepts/pwa-cache-security-boundary","timestamp":"2026-10-24T03:45:48.700Z","kind":"ensure_page"}
+{"page_type":"concept","title":"Web App Manifest Installation Boundaries","path":"concepts/web-app-manifest-installation-boundaries","timestamp":"2026-10-24T03:46:01.892Z","kind":"ensure_page"}
+{"slug":"service-worker-script-url-source-conflict","title":"Service Worker 脚本 URL 的官方资料冲突","category":"architecture","timestamp":"2026-10-24T03:46:51.152Z","kind":"retro"}
+{"slug":"obs-2026-10-24-issue-240-pr-268-272-main","title":"Issue 240 可缩放桌面经 PR 268-272 合并 main 并关闭","relevance":"critical","timestamp":"2026-10-24T06:55:10.189Z","kind":"observe"}

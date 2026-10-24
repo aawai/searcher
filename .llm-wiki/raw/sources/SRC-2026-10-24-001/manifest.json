@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-24-001",
+  "captured": "2026-10-24",
+  "packet_version": "1.0",
+  "title": "Using Service Workers",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -66,11 +66,19 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/pwa-cache-security-boundary.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/pwa-cache-security-boundary.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/pwa-cache-security-boundary",
+      "contentHash": "8f05f2cfd905d1df1719a8e5583c0564a9af7e4b44dc5f4064aac8dbe5f0590c",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/react-19-actions-and-transitions.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/react-19-actions-and-transitions.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/react-19-actions-and-transitions",
-      "contentHash": "d1927992eea0bc3cb2f2755bc527972145d647679870cf04a7695e7dd9e17cf5",
+      "contentHash": "6e667ca5097a5a92fd1e0c3b8a90fd8e39bfdfb180119a6720c907f5cad3554e",
       "role": "canonical",
       "type": "concept"
     },
@@ -87,6 +95,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/server-sent-events-sse-与实时事件流",
       "contentHash": "2992085cb339505b691467ab7475e911be58aeff0664a485f9a420c22e209f5b",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/service-worker-update-lifecycle.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/service-worker-update-lifecycle.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/service-worker-update-lifecycle",
+      "contentHash": "434a2642e14a64dd75b5b2b59a9ee4fa9c66f2bc07a1238f8162455fe704382b",
       "role": "canonical",
       "type": "concept"
     },
@@ -146,6 +162,14 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/web-app-manifest-installation-boundaries.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/web-app-manifest-installation-boundaries.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/web-app-manifest-installation-boundaries",
+      "contentHash": "b287ce9f6072784fbfc319a00f1e407c458634e475cfd9107928db0faaa4759f",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/entities/deno-runtime.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/deno-runtime.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -190,7 +214,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/react-19-framework.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/react-19-framework",
-      "contentHash": "07e31b55bca4c8434bf099588974e60fd472026bb76aabc993754010fd0457e9",
+      "contentHash": "fd23633e0727396448807ded081f9e08b60f700226326ee2f206298ab4ef434a",
       "role": "canonical",
       "type": "entity"
     },
@@ -199,6 +223,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/searcher-项目",
       "contentHash": "39fdf4deaed17d31413d59cbd35b9c8ed9573360bbdc9797ec4f9625c42a052a",
+      "role": "canonical",
+      "type": "entity"
+    },
+    "documents/canonical/entities/service-worker-api.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/service-worker-api.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "entities/service-worker-api",
+      "contentHash": "8c0189ff54f36cb7d815cd8c1f044ee4cf1959845eedc57cf4aa850ddf72d39a",
       "role": "canonical",
       "type": "entity"
     },
@@ -607,6 +639,46 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/SRC-2026-10-05-004",
       "contentHash": "d18fc8bc877acb68663509adaa715178530aba48ae14210f17506c78f7f0469b",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-001",
+      "contentHash": "2af4ae78a3f662e0d9bb8c27fad75203e393e3c87ec6e778bc3992a9a922b864",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-002",
+      "contentHash": "54338e6f3173e686757920d6f64fe69595271c028748988b3bc212a4213b891e",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-003",
+      "contentHash": "e48216349652e58e9297c15ed3ea1bc0c1f2108ab847b9f2f6ee7183e9a03900",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-004.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-004.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-004",
+      "contentHash": "f973b3caf77337855a6fe4ca9d0f6be32a2d6c74d2026bab4f0e98aa89bd806a",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-24-005.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-24-005.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-24-005",
+      "contentHash": "95f65021dcb9e060840bcc6597df55372b7c6b73f3ade09d3b8f394f38e28d37",
       "role": "evidence",
       "type": "source"
     },
@@ -1138,6 +1210,22 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-10-24-issue-240-pr-268-272-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-24-issue-240-pr-268-272-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-24-issue-240-pr-268-272-main",
+      "contentHash": "68b99fa58e3b1a13248189d6a75ebf8ae24e77a09af6f2c23fd3e58405c37261",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/service-worker-script-url-source-conflict.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/service-worker-script-url-source-conflict.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/service-worker-script-url-source-conflict",
+      "contentHash": "6dbd40ffab9c2e4c9d9acb5651b6991f4c222c561ccc7dd03d0ef929fdd8ea14",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/sqlite-table-recreation-migration-zero-loss.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/sqlite-table-recreation-migration-zero-loss.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -1150,7 +1238,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/syntheses/searcher-system-architecture.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "syntheses/searcher-system-architecture",
-      "contentHash": "6b4875fde80f0d9ddd327bc0e25cbd5427c9534c731973ca8acc3efd4e4b0c5e",
+      "contentHash": "7440430d8bb105047db0dafc51ae93eb79df412c6b8b04e0a6ce568fb83dd2be",
       "role": "canonical",
       "type": "synthesis"
     }

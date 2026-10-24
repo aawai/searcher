@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-24T01:40:53.156Z",
+  "last_updated": "2026-10-24T06:55:10.224Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -61,11 +61,18 @@
       "created": "2026-09-25",
       "updated": "2026-09-25"
     },
+    "concepts/pwa-cache-security-boundary": {
+      "type": "concept",
+      "title": "PWA Cache Security Boundary",
+      "domain": "engineering",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
     "concepts/react-19-actions-and-transitions": {
       "type": "concept",
       "title": "React 19 Actions and Transitions",
       "created": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-10-24"
     },
     "concepts/route-level-code-splitting-dynamic-bundling": {
       "type": "concept",
@@ -79,6 +86,13 @@
       "title": "Server-Sent Events (SSE) 与实时事件流",
       "created": "2026-09-25",
       "updated": "2026-09-27"
+    },
+    "concepts/service-worker-update-lifecycle": {
+      "type": "concept",
+      "title": "Service Worker Update Lifecycle",
+      "domain": "engineering",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
     },
     "concepts/session-security-and-isolation": {
       "type": "concept",
@@ -131,6 +145,13 @@
       "created": "2026-10-05",
       "updated": "2026-10-05"
     },
+    "concepts/web-app-manifest-installation-boundaries": {
+      "type": "concept",
+      "title": "Web App Manifest Installation Boundaries",
+      "domain": "engineering",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
     "entities/deno-runtime": {
       "type": "entity",
       "title": "Deno Runtime",
@@ -169,7 +190,7 @@
       "type": "entity",
       "title": "React 19 Framework",
       "created": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-10-24"
     },
     "entities/searcher-项目": {
       "type": "entity",
@@ -177,6 +198,13 @@
       "category": "project",
       "created": "2026-09-25",
       "updated": "2026-09-27"
+    },
+    "entities/service-worker-api": {
+      "type": "entity",
+      "title": "Service Worker API",
+      "category": "tool",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
     },
     "entities/shadcn-ui-system": {
       "type": "entity",
@@ -697,6 +725,61 @@
       "source_id": "SRC-2026-10-05-004",
       "format": "web",
       "captured": "2026-10-05"
+    },
+    "sources/SRC-2026-10-24-001": {
+      "type": "source",
+      "title": "Using Service Workers",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-24-001/extracted.md",
+      "source_id": "SRC-2026-10-24-001",
+      "format": "web",
+      "captured": "2026-10-24",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
+    "sources/SRC-2026-10-24-002": {
+      "type": "source",
+      "title": "MDN PWA Caching",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-24-002/extracted.md",
+      "source_id": "SRC-2026-10-24-002",
+      "format": "web",
+      "captured": "2026-10-24",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
+    "sources/SRC-2026-10-24-003": {
+      "type": "source",
+      "title": "The Service Worker Lifecycle",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-24-003/extracted.md",
+      "source_id": "SRC-2026-10-24-003",
+      "format": "web",
+      "captured": "2026-10-24",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
+    "sources/SRC-2026-10-24-004": {
+      "type": "source",
+      "title": "OWASP HTML5 Security Cheat Sheet",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-24-004/extracted.md",
+      "source_id": "SRC-2026-10-24-004",
+      "format": "web",
+      "captured": "2026-10-24",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
+    "sources/SRC-2026-10-24-005": {
+      "type": "source",
+      "title": "Web App Manifest Members Reference",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-24-005/extracted.md",
+      "source_id": "SRC-2026-10-24-005",
+      "format": "web",
+      "captured": "2026-10-24",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
     },
     "sources/e2e-native-parallel-speedup-vs-stability-167": {
       "type": "source",
@@ -1811,6 +1894,29 @@
       "created": "2026-10-24",
       "updated": "2026-10-24"
     },
+    "sources/obs-2026-10-24-issue-240-pr-268-272-main": {
+      "type": "source",
+      "title": "Observation: Issue 240 可缩放桌面经 PR 268-272 合并 main 并关闭",
+      "tags": [
+        "[\"issue-240\",\"desk\",\"merged\",\"worktree\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-24-issue-240-pr-268-272-main",
+      "relevance": "critical",
+      "observed_at": "2026-10-24T06:55:10.188Z",
+      "source_context": "完成 issue 240 worktree 实施、PR 与合并",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
+    "sources/service-worker-script-url-source-conflict": {
+      "type": "source",
+      "title": "Service Worker 脚本 URL 的官方资料冲突",
+      "category": "architecture",
+      "status": "insight",
+      "slug": "service-worker-script-url-source-conflict",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",
       "title": "SQLite Table Recreation Migration Pattern with Zero Loss",
@@ -1824,7 +1930,7 @@
       "type": "synthesis",
       "title": "Searcher System Architecture",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-10-24"
     },
     "sources/SRC-2026-09-25-029": {
       "type": "source",

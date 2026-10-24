@@ -12,9 +12,11 @@
 - [[concepts/hono-rpc-type-safe-client]] — Hono RPC & Type-Safe Client *(created: 2026-09-26)*
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
+- [[concepts/pwa-cache-security-boundary]] — PWA Cache Security Boundary *(created: 2026-10-24)*
 - [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
 - [[concepts/route-level-code-splitting-dynamic-bundling]] — Route-Level Code Splitting & Dynamic Bundling *(created: 2026-10-05)*
 - [[concepts/server-sent-events-sse-与实时事件流]] — Server-Sent Events (SSE) 与实时事件流 *(created: 2026-09-25)*
+- [[concepts/service-worker-update-lifecycle]] — Service Worker Update Lifecycle *(created: 2026-10-24)*
 - [[concepts/session-security-and-isolation]] — Session Security and Isolation *(created: 2026-09-25)*
 - [[concepts/shortest-column-masonry-layout]] — Shortest Column Masonry Layout *(created: 2026-09-25)*
 - [[concepts/single-process-architecture]] — Single Process Architecture *(created: 2026-09-25)*
@@ -22,6 +24,7 @@
 - [[concepts/sqlite-table-recreation-migration]] — SQLite Table Recreation Migration *(created: 2026-09-25)*
 - [[concepts/tailwind-v4-css-first-architecture]] — Tailwind v4 CSS First Architecture *(created: 2026-09-27)*
 - [[concepts/web-animations-api-runtime-architecture]] — Web Animations API Runtime Architecture *(created: 2026-10-05)*
+- [[concepts/web-app-manifest-installation-boundaries]] — Web App Manifest Installation Boundaries *(created: 2026-10-24)*
 
 ## Entitys
 
@@ -32,6 +35,7 @@
 - [[entities/indexeddb-本地存储引擎]] — IndexedDB 本地存储引擎 *(created: 2026-09-25)*
 - [[entities/react-19-framework]] — React 19 Framework *(created: 2026-09-27)*
 - [[entities/searcher-项目]] — Searcher 项目 *(created: 2026-09-25)*
+- [[entities/service-worker-api]] — Service Worker API *(created: 2026-10-24)*
 - [[entities/shadcn-ui-system]] — shadcn UI System *(created: 2026-09-25)*
 - [[entities/valibot-schema-validator]] — Valibot Schema Validator *(created: 2026-09-25)*
 - [[entities/vite-bundler]] — Vite Bundler *(created: 2026-10-05)*
@@ -104,6 +108,8 @@
 - [[sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3]] — Observation: Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法 *(created: 2026-10-23)*
 - [[sources/obs-2026-10-24-issue-238-pwa-pr-263-264-265-main]] — Observation: Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭 *(created: 2026-10-24)*
 - [[sources/obs-2026-10-24-issue-239-pr-266-267-main]] — Observation: Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭 *(created: 2026-10-24)*
+- [[sources/obs-2026-10-24-issue-240-pr-268-272-main]] — Observation: Issue 240 可缩放桌面经 PR 268-272 合并 main 并关闭 *(created: 2026-10-24)*
+- [[sources/service-worker-script-url-source-conflict]] — Service Worker 脚本 URL 的官方资料冲突 *(created: 2026-10-24)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -154,10 +160,15 @@
 - [[sources/SRC-2026-10-05-002]] — Taming 'Large Chunks' in Vite + React *(created: unknown)*
 - [[sources/SRC-2026-10-05-003]] — The Web Animations API vs. CSS *(created: unknown)*
 - [[sources/SRC-2026-10-05-004]] — The Web Animation Performance Tier List *(created: unknown)*
+- [[sources/SRC-2026-10-24-001]] — Using Service Workers *(created: 2026-10-24)*
+- [[sources/SRC-2026-10-24-002]] — MDN PWA Caching *(created: 2026-10-24)*
+- [[sources/SRC-2026-10-24-003]] — The Service Worker Lifecycle *(created: 2026-10-24)*
+- [[sources/SRC-2026-10-24-004]] — OWASP HTML5 Security Cheat Sheet *(created: 2026-10-24)*
+- [[sources/SRC-2026-10-24-005]] — Web App Manifest Members Reference *(created: 2026-10-24)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-24T01:40:53.156Z* | *Total pages: 145*
+*Last updated: 2026-10-24T06:55:10.224Z* | *Total pages: 156*

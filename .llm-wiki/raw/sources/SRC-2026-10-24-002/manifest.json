@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-24-002",
+  "captured": "2026-10-24",
+  "packet_version": "1.0",
+  "title": "Caching",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Caching",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

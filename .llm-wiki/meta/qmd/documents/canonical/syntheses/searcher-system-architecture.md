@@ -2,7 +2,7 @@
 type: synthesis
 title: Searcher System Architecture
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-10-24
 sources:
   - sources/SRC-2026-09-25-001
   - sources/SRC-2026-09-25-002
@@ -39,6 +39,12 @@ Searcher 采用现代化的全栈紧凑型架构，在系统层面上完全践�
    哈希，资源访问隔离仅认当前会话的所有者。
 3. **开发与质量保障**：全面实行
    [[concepts/contract-first-testing]]，通过自动化契约测试守护系统行为，确保所有重构与功能迭代不产生暗箱破坏。
+
+## PWA 知识入口
+
+[PWA 合并观察](/sources/obs-2026-10-24-issue-238-pwa-pr-263-264-265-main.md) 记录了 manifest、离线外壳、更新提示与 GET 分享入口。本轮补充平台资料：[Service Worker API](/entities/service-worker-api.md)、[更新生命周期](/concepts/service-worker-update-lifecycle.md)、[缓存与身份隔离](/concepts/pwa-cache-security-boundary.md)、[Manifest 安装边界](/concepts/web-app-manifest-installation-boundaries.md)。
+
+这些页面区分平台事实、历史项目观察与设计推导，不构成本轮对当前代码或浏览器行为的重新验收。
 
 ## 关联实体与概念
 
