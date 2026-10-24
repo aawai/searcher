@@ -1,5 +1,12 @@
 import { walk } from "@std/fs/walk";
 
+const paginationSuites = {
+    "pagination-short": ["document-zen-pagination-short"],
+    "pagination-manual": ["document-zen-pagination-manual"],
+    "pagination-consecutive": ["document-zen-pagination-consecutive"],
+    "pagination-mixed": ["document-zen-pagination-mixed"],
+} as const;
+
 // File paths live here once. Workspace order retains the pre-#167 serial order.
 export const suites = {
     workspace: [
@@ -36,7 +43,7 @@ export const suites = {
         "documents-ux",
         "documents-drafts",
         "document-vertical-layout",
-        "document-zen-pagination-stability",
+        ...Object.values(paginationSuites).flat(),
         "document-host-boundaries",
         "document-presentation-contracts",
     ],
@@ -72,7 +79,22 @@ export const suites = {
     ],
 } as const;
 
-export type Suite = keyof typeof suites | "full" | "apps" | "layout";
+const paginationFiles = new Set<string>(Object.values(paginationSuites).flat());
+
+// Execution partitions, not new affected business domains.
+export const documentPartitions = {
+    "documents-core": suites.documents.filter((name) =>
+        !paginationFiles.has(name)
+    ),
+    ...paginationSuites,
+} as const;
+
+export type Suite =
+    | keyof typeof suites
+    | keyof typeof documentPartitions
+    | "full"
+    | "apps"
+    | "layout";
 
 export function suiteFiles(suite: Suite): string[] {
     let names: readonly string[];
@@ -86,8 +108,10 @@ export function suiteFiles(suite: Suite): string[] {
         names = suites.workspace.filter((name) =>
             /^(workspace|home-launcher-|home-composition$)/.test(name)
         );
+    } else if (Object.hasOwn(documentPartitions, suite)) {
+        names = documentPartitions[suite as keyof typeof documentPartitions];
     } else {
-        names = suites[suite];
+        names = suites[suite as keyof typeof suites];
     }
     return names.map((name) => `web/e2e/${name}.test.ts`);
 }

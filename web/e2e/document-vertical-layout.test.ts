@@ -113,9 +113,36 @@ function physicalPaperDimensions(
 async function stableLayout(page: Page): Promise<void> {
     await page.evaluate(async () => {
         await document.fonts.ready;
-        await new Promise<void>((resolve) =>
-            requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-        );
+        // Pagination may schedule another reflow after applying decorations.
+        // Two animation frames are not a completion signal for a tall table.
+        // Observe convergence, not whether the later containment assertion passes.
+        const deadline = performance.now() + 10_000;
+        let previous = "";
+        let unchanged = 0;
+        while (performance.now() < deadline) {
+            await new Promise<void>((resolve) =>
+                requestAnimationFrame(() => resolve())
+            );
+            const viewport = document.querySelector<HTMLElement>(
+                ".pagination-viewport",
+            );
+            const rect = viewport?.getBoundingClientRect();
+            const signature = JSON.stringify({
+                mode: viewport?.dataset.paginationMode,
+                pages: viewport?.dataset.pageCount,
+                decorations: viewport?.dataset.decorationSignature,
+                width: rect?.width,
+                height: rect?.height,
+                zoom: viewport ? getComputedStyle(viewport).zoom : null,
+            });
+            const ready = !viewport ||
+                viewport.dataset.paginationMode !== "page" ||
+                Number(viewport.dataset.pageCount) > 0;
+            unchanged = ready && signature === previous ? unchanged + 1 : 0;
+            if (unchanged >= 3) return;
+            previous = signature;
+        }
+        throw new Error(`Pagination layout did not converge: ${previous}`);
     });
 }
 
@@ -525,7 +552,13 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
                         rect.y >= sheet.y + margin - 2 &&
                         rect.bottom <= sheet.bottom - margin + 2
                     ),
-                    `glyphs for ${marker} stay within a paper's content area`,
+                    `glyphs for ${marker} stay within a paper's content area: ${
+                        JSON.stringify({
+                            rect,
+                            sheets: geometry.sheets,
+                            scale: geometry.scale,
+                        })
+                    }`,
                 );
             }
         }

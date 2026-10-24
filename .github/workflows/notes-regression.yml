@@ -27,5 +27,3 @@ jobs:
               run: npx --yes playwright@1.56.1 install --with-deps chromium
             - name: Home papers persistence and order regression
               run: deno task test:home-papers
-            - name: Document library, Live Preview, Source and focus contracts
-              run: NODE_ENV=test deno test -A web/e2e/documents-library.test.ts web/e2e/documents-live-preview.test.ts web/e2e/documents-live-editing.test.ts web/e2e/documents-focus.test.ts
