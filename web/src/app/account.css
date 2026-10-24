@@ -18,8 +18,8 @@
     width: var(--space-9);
     height: var(--space-9);
     border-radius: var(--radius-pill);
-    background: var(--accent-soft);
-    color: var(--accent);
+    background: var(--surface-soft);
+    color: var(--foreground);
     font-size: var(--font-title-size);
     font-weight: var(--font-title-weight);
     line-height: var(--font-title-line-height);

@@ -8,6 +8,15 @@
     margin-block-end: var(--space-4);
 }
 
+.trash-empty-state {
+    align-items: center;
+    text-align: center;
+}
+
+.trash-empty-state :is(h2, h3) {
+    font-weight: var(--font-body-weight);
+}
+
 .trash-item-name {
     font-size: var(--font-body-size);
     font-weight: var(--font-label-weight);

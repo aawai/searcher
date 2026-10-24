@@ -175,7 +175,6 @@ export function ConversationWorkspace({
                         : 0}
                     terminalMessageStatus={latestAssistantMessage?.status ??
                         null}
-                    onSamplePrompt={onDraftChange}
                     models={models}
                     modelOptions={modelOptions}
                     selectedModelId={selectedModelId}

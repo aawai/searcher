@@ -117,6 +117,35 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 `All swatch items must have identical height (max diff ${heightDiff}px)`,
             );
 
+            await page.setViewportSize({ width: 390, height: 844 });
+            const narrowGrid = await swatchItems.evaluateAll((items) =>
+                items.map((item) => {
+                    const box = item.getBoundingClientRect();
+                    return {
+                        x: box.x,
+                        y: box.y,
+                        width: box.width,
+                        height: box.height,
+                    };
+                })
+            );
+            assertEquals(
+                new Set(narrowGrid.map((box) => Math.round(box.y))).size,
+                2,
+            );
+            assertEquals(
+                new Set(narrowGrid.map((box) => Math.round(box.x))).size,
+                5,
+            );
+            assert(
+                narrowGrid.every((box) => box.width >= 44 && box.height >= 44),
+            );
+            assertEquals(
+                await swatchItems.first().getAttribute("aria-label"),
+                "跟随壁纸",
+            );
+            await page.setViewportSize({ width: 1440, height: 900 });
+
             // Capture settings theme screenshot
             const swatchCard = page.locator(".settings-row").filter({
                 has: swatchGroup,

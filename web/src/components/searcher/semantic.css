@@ -220,6 +220,29 @@
 .settings-row--vertical .settings-row-control {
     justify-content: flex-start;
 }
+@media (max-width: 639px) {
+    .settings-row:has([data-variant="swatch"]) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .settings-row-control:has([data-variant="swatch"]) {
+        width: 100%;
+    }
+
+    .settings-row [data-slot="radio-group"][data-variant="swatch"] {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: var(--space-2) 0;
+        width: 100%;
+    }
+
+    .settings-row [data-variant="swatch"] .radio-item {
+        width: 100%;
+        min-height: var(--control-touch-target);
+        justify-content: center;
+    }
+}
 
 /* Inline fields: borderless with the value right-aligned (macOS System Settings).
    The field pulls its inset into the row gutter so the value lines up with plain
