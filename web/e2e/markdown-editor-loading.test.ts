@@ -7,6 +7,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
+import { deskMenuTrigger, openNotes } from "./helpers/desk.ts";
 
 interface ManifestChunk {
     file: string;
@@ -225,20 +226,26 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 await page.waitForURL(origin + "/");
                 await page.locator("main").waitFor({ state: "visible" });
 
-                // 2. Home (library grid included) must stay editor-cold
+                // 2. Home and its avatar menu must stay editor-cold.
                 await page.locator("#search-query").waitFor({
                     state: "visible",
                 });
+                await deskMenuTrigger(page).click();
+                await page.getByRole("menuitem", {
+                    name: "笔记",
+                    exact: true,
+                }).waitFor();
                 assert(
                     !requestedJs.includes(editorVendorChunk),
-                    `Home unexpectedly requested editor-vendor: ${editorVendorChunk}`,
+                    `Home avatar menu unexpectedly requested editor-vendor: ${editorVendorChunk}`,
                 );
                 assert(
                     !requestedJs.includes(runtimeChunk) &&
                         !requestedJs.includes(sharedRuntimeChunk),
-                    "Auth/Home must not request editor runtime",
+                    "Auth/Home avatar menu must not request editor runtime",
                 );
 
+                await page.keyboard.press("Escape");
                 // 3. Seed a document, then open it from the documents workspace
                 await page.evaluate(async () => {
                     const response = await fetch("/api/documents", {
@@ -252,11 +259,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                     });
                     if (!response.ok) throw new Error(await response.text());
                 });
-                const documentsSwitcher = page.locator(
-                    'button[data-workspace="documents"]',
-                ).first();
-                await documentsSwitcher.waitFor({ state: "visible" });
-                await documentsSwitcher.click();
+                await openNotes(page);
                 const documentItem = page.locator(
                     ".workspace-panel [data-document-id] h4 button",
                 ).filter({ hasText: "加载隔离笔记" }).first();

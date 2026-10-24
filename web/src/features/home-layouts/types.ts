@@ -11,7 +11,7 @@ import type {
 } from "../app-library/library-types.ts";
 import type { AppLibraryController } from "../app-library/useAppLibraryActions.ts";
 import type { HomeContinueDto, UserDto } from "@shared/contracts.ts";
-import type { WorkspaceKind } from "../workspace/workspace-state.ts";
+import type { DeskRequest } from "../desk/desk-request.ts";
 import type { SearchQuickCommand } from "../shortcuts/shortcut-catalog.ts";
 import type { PaperItem } from "./home-papers.ts";
 import type { InlineAnswer } from "../inline-ai/useInlineAnswer.ts";
@@ -59,10 +59,9 @@ export interface HomeLayoutProps {
         paper: PaperItem,
         layout: DocumentLayoutDto,
     ) => Promise<void>;
-    // sheet controls
-    openWorkspace: (workspace: WorkspaceKind) => void;
-    workspaceOpen: boolean;
-    /** Opens a document in the workspace by id (search results). */
+    /** Enters 览, or 览 with the notes detail (quick entries). */
+    openDesk: (request: DeskRequest) => void;
+    /** Opens a note's detail on the desk by id (search results). */
     openDocument: (id: string) => void;
     /** An enabled model exists for the signed-in user: AI entry points show. */
     aiAvailable: boolean;

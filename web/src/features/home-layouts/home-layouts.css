@@ -1,13 +1,11 @@
-/* Home: search, the Dock and inline notes are the only materials; apps and
-   labels sit directly on the wallpaper. */
+/* Home: search and inline notes are the only materials; apps and labels sit
+   directly on the wallpaper. */
 
 :root {
     /* Inline-paper preview geometry. The swipe distance is read by ZenInlinePapers. */
     --zen-note-preview-lines: 4;
     --zen-note-title-lines: 2;
     --zen-note-swipe-distance: 32;
-    /* Space kept under the page so the fixed Dock never covers content. */
-    --zen-dock-clearance: calc(var(--control-touch-target) + var(--space-7));
 }
 
 .home {
@@ -16,9 +14,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-block-end: calc(
-        var(--zen-dock-clearance) + env(safe-area-inset-bottom, 0px)
-    );
+    padding-block-end: calc(var(--space-7) + env(safe-area-inset-bottom, 0px));
 }
 
 .hero {
@@ -64,67 +60,6 @@
     line-height: var(--font-body-line-height);
     font-weight: var(--font-label-weight);
     color: var(--foreground);
-}
-
-/* Dock: bottom-centre capsule that opens the apps, notes and documents workspaces. */
-.zen-edge-trigger {
-    position: fixed;
-    left: 50%;
-    bottom: max(var(--space-4), env(safe-area-inset-bottom, 0px));
-    transform: translateX(-50%);
-    z-index: var(--elevation-dock);
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
-    border-radius: var(--radius-pill);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
-    transition: opacity var(--motion-base) var(--ease-standard);
-}
-
-/* The Dock hides while a workspace is open. Opacity only, so the centring
-   transform stays untouched and reduced motion needs no variant. Only a Dock
-   that returns fades in (@starting-style); the first mount appears at once.
-   Both directions are transitions, so closing or reopening mid-fade reverses
-   from the current frame. */
-.zen-edge-trigger[data-ending-style] {
-    opacity: 0;
-}
-
-@starting-style {
-    .zen-edge-trigger[data-returning] {
-        opacity: 0;
-    }
-}
-
-.zen-edge-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: var(--control-height);
-    padding: 0 var(--space-4);
-    border: 0;
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--foreground);
-    font-size: var(--font-body-size);
-    font-weight: var(--font-label-weight);
-    white-space: nowrap;
-    transition: background var(--motion-fast) var(--ease-standard);
-}
-
-.zen-edge-btn:hover {
-    background: var(--surface-soft);
-}
-
-@media (pointer: coarse), (hover: none) {
-    .zen-edge-btn {
-        min-width: var(--control-touch-target);
-        min-height: var(--control-touch-target);
-    }
 }
 
 /* Flow grid for pinned papers laid out in normal flow; used by HomePapers. */

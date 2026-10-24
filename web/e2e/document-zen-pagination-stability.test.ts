@@ -4,6 +4,7 @@ import { chromium } from "playwright";
 import type { Page, Request } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 async function sample(page: Page, duration: number) {
     return await page.evaluate(async (duration) => {
@@ -264,8 +265,7 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
                     (theme) => document.documentElement.dataset.theme === theme,
                     theme,
                 );
-                await page.locator('button[data-workspace="documents"]').first()
-                    .click();
+                await openNotes(page);
                 await page.locator(`[data-document-id="${doc.id}"] h4 button`)
                     .click();
                 await page.locator(".ProseMirror").waitFor();

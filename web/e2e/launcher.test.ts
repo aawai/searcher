@@ -534,6 +534,12 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
             await page.keyboard.press("Escape");
             await popup.waitFor({ state: "detached" });
             await search.fill("");
+            // Empty focused search now offers desktop/notes quick entries.
+            // Dismiss them before returning to pointer interactions on home.
+            await search.press("Escape");
+            await page.getByRole("listbox", { name: "搜索建议" }).waitFor({
+                state: "hidden",
+            });
         },
     );
 

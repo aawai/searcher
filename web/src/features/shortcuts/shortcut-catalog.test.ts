@@ -156,8 +156,8 @@ Deno.test("executable commands cover theme, wallpaper, settings, shortcuts, tras
     });
     assertEquals(byId.get("trash")?.target, { type: "route", to: "/trash" });
     assertEquals(byId.get("notes")?.target, {
-        type: "workspace",
-        kind: "documents",
+        type: "desk",
+        request: "notes",
     });
     assertEquals(byId.get("apps")?.target, { type: "apps" });
     for (const entry of SEARCH_QUICK_COMMANDS) {

@@ -12,15 +12,6 @@ export type DocumentsScope =
 
 export type WorkspaceRoute = DocumentsRoute;
 
-export function isDocumentsWorkspaceView(
-    state: WorkspaceRoute,
-): state is DocumentsRoute {
-    return state.view.startsWith("documents/");
-}
-
-/** Documents is the only workspace; apps live on the home page. */
-export type WorkspaceKind = "documents";
-
 export interface DomainWorkspaceState<
     Route extends WorkspaceRoute = WorkspaceRoute,
 > {
@@ -34,19 +25,11 @@ export interface DocumentsWorkspaceState
     scope: DocumentsScope;
 }
 
-export interface WorkspaceCoreState {
-    documents: DocumentsWorkspaceState;
-}
-
 export const initialDocumentsWorkspaceState: DocumentsWorkspaceState = {
     route: { view: "documents/root" },
     stack: [],
     query: "",
     scope: { type: "all" },
-};
-
-export const initialWorkspaceCoreState: WorkspaceCoreState = {
-    documents: initialDocumentsWorkspaceState,
 };
 
 export type DomainWorkspaceAction<Route = WorkspaceRoute> =

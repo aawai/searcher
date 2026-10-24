@@ -9,6 +9,7 @@ import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import { documents, users, webapps } from "../../src/db/schema.ts";
 import { aiConversations, aiProviders } from "../../src/db/ai-schema.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 // Focused regression test suite for UI Feedback, Confirmation Dialogs, UndoToasts, and Loading/Error/Empty States
 // Run with: NODE_ENV=test deno test -A web/e2e/ui-feedback.test.ts
@@ -1481,11 +1482,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             );
 
             await visit("/", documentsTestPage);
-            const documentsBtn = documentsTestPage.locator(
-                'button[data-workspace="documents"]',
-            );
-            await documentsBtn.first().waitFor({ state: "visible" });
-            await documentsBtn.first().click();
+            await openNotes(documentsTestPage);
 
             const documentsAside = documentsTestPage.locator(
                 ".workspace-panel--mobile, aside.workspace-panel",
@@ -1526,11 +1523,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             // Reload page with 500 error route active
             await documentsTestPage.reload();
-            const documentsReopenBtn = documentsTestPage.locator(
-                'button[data-workspace="documents"]',
-            );
-            await documentsReopenBtn.first().waitFor({ state: "visible" });
-            await documentsReopenBtn.first().click();
+            await openNotes(documentsTestPage);
             const documentsErrorBanner = documentsAside.locator(
                 ".status-banner:has-text('笔记服务发生内部异常')",
             );

@@ -84,6 +84,10 @@ import {
 } from "../features/desk/DeskDetails.tsx";
 import { useDeskSources } from "../features/desk/useDeskSources.ts";
 import { useDeskGestures } from "../features/desk/useDeskGestures.ts";
+import {
+    type DeskRequest,
+    readDeskRequest,
+} from "../features/desk/desk-request.ts";
 import { launcherTiles } from "../components/searcher/launcherTiles.ts";
 import "../features/desk/desk.css";
 import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
@@ -206,6 +210,7 @@ export function SearchHome() {
     const location = useLocation();
     const consumedDocumentNavigationRef = useRef<string | null>(null);
     const consumedShareNavigationRef = useRef<string | null>(null);
+    const consumedDeskNavigationRef = useRef<string | null>(null);
     const captureNoteRef = useRef<(note: SharedNote) => Promise<boolean>>(
         () => Promise.resolve(false),
     );
@@ -332,25 +337,14 @@ export function SearchHome() {
         dirtyForm.current = false;
         dispatchDesk(action.action);
     }
-    /** Remembers what to refocus when 览 closes; only taken from 静. */
-    function noteDeskOpener() {
-        if (deskRef.current.stage === "overview") return;
-        const active = document.activeElement;
-        deskOpener.current = active instanceof HTMLElement &&
-                active !== document.body
-            ? active
-            : null;
-    }
     function openDesk() {
         if (!currentUserIdRef.current) return;
-        noteDeskOpener();
         setIsManagingApps(false);
         focusDeskObject.current = true;
         requestDesk({ type: "enter" });
     }
     function selectDesk(selection: DeskSelection, route?: DocumentsRoute) {
         if (!currentUserIdRef.current) return;
-        noteDeskOpener();
         setIsManagingApps(false);
         requestDesk({ type: "select", selection, route });
     }
@@ -445,6 +439,39 @@ export function SearchHome() {
             { replace: true, state: null },
         );
         void captureNoteRef.current(note);
+    }, [
+        location.hash,
+        location.key,
+        location.pathname,
+        location.search,
+        location.state,
+        navigate,
+        ownsCurrentUserData,
+        user?.id,
+        workspaceResetUserId,
+    ]);
+    function requestDeskEntry(request: DeskRequest) {
+        if (request === "notes") selectDesk({ kind: "notes" });
+        else openDesk();
+    }
+    // The avatar menu, from any page, asks for 览 or the notes detail.
+    const deskEntryRef = useRef(requestDeskEntry);
+    deskEntryRef.current = requestDeskEntry;
+    useEffect(() => {
+        const request = readDeskRequest(location.state);
+        if (!request || consumedDeskNavigationRef.current === location.key) {
+            return;
+        }
+        if (
+            !user || workspaceResetUserId !== user.id ||
+            !ownsCurrentUserData
+        ) return;
+        consumedDeskNavigationRef.current = location.key;
+        navigate(
+            `${location.pathname}${location.search}${location.hash}`,
+            { replace: true, state: null },
+        );
+        deskEntryRef.current(request);
     }, [
         location.hash,
         location.key,
@@ -1175,7 +1202,7 @@ export function SearchHome() {
         if (target.type === "theme") {
             void setAppearance({ theme: target.theme });
         } else if (target.type === "route") navigate(target.to);
-        else if (target.type === "workspace") selectDesk({ kind: "notes" });
+        else if (target.type === "desk") requestDeskEntry(target.request);
     }
     const layoutProps: HomeLayoutProps = {
         user,
@@ -1203,13 +1230,12 @@ export function SearchHome() {
         deletePaper,
         updatePaper,
         updatePaperLayout,
-        openWorkspace: () => selectDesk({ kind: "notes" }),
+        openDesk: requestDeskEntry,
         openDocument,
         aiAvailable,
         inlineAnswer,
         onSearchCommand: runSearchCommand,
         onCapture: (text) => captureNote({ title: null, body: text }),
-        workspaceOpen: overview,
         showAppLabels: appearance.showAppLabels,
         showHomeApps: appearance.showHomeApps,
         calm: {
@@ -1249,10 +1275,13 @@ export function SearchHome() {
         ) ??
             document.querySelector<HTMLElement>("[data-desk-object]");
     }
+    /** 览 entered with nothing focused (wheel, pinch) leaves nothing focused. */
     function returnDeskFocus() {
         if (deskRef.current.stage === "overview") return firstDeskObject();
-        return deskOpener.current?.isConnected
-            ? deskOpener.current
+        const opener = deskOpener.current;
+        if (!opener) return null;
+        return opener.isConnected && !opener.closest("[inert]")
+            ? opener
             : document.getElementById("search-query");
     }
     useDeskGestures({
@@ -1265,9 +1294,20 @@ export function SearchHome() {
     });
     useEscapeLayer(overview && !desk.selection && !mobile, leaveDesk);
     const wasOverview = useRef(false);
+    // The opener is taken in the commit that enters 览. A menu item there
+    // belongs to a closing menu, which hands focus back to the trigger that
+    // labels it; that trigger is the opener.
     useLayoutEffect(() => {
-        if (overview && focusDeskObject.current && !mobile) {
-            firstDeskObject()?.focus();
+        if (overview && !wasOverview.current) {
+            const active = document.activeElement;
+            const menu = active?.closest('[role="menu"]');
+            const labelledBy = menu?.getAttribute("aria-labelledby");
+            deskOpener.current = labelledBy
+                ? document.getElementById(labelledBy)
+                : active instanceof HTMLElement && active !== document.body
+                ? active
+                : null;
+            if (focusDeskObject.current && !mobile) firstDeskObject()?.focus();
             focusDeskObject.current = false;
         } else if (!overview && wasOverview.current) {
             returnDeskFocus()?.focus({ preventScroll: true });

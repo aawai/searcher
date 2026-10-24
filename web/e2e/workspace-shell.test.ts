@@ -9,10 +9,11 @@ import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import {
     deskDetail,
+    deskMenuTrigger,
     deskObject,
     deskStage,
-    notesOpener,
     openNotes,
+    openNotesByKeyboard,
 } from "./helpers/desk.ts";
 
 Deno.test("production Workspace state, keyboard and responsive contracts", async (t) => {
@@ -147,13 +148,12 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             document.documentElement.dataset.theme === expected,
                         theme,
                     );
-                    const trigger = notesOpener(page);
+                    const trigger = deskMenuTrigger(page);
                     await trigger.waitFor();
                     const opener = await trigger.elementHandle();
                     await page.locator(".hero").waitFor();
                     const hero = await page.locator(".hero").boundingBox();
-                    await trigger.focus();
-                    await page.keyboard.press("Enter");
+                    await openNotesByKeyboard(page);
                     await search().waitFor();
                     assertEquals(
                         await panel.getAttribute("data-presentation"),
@@ -245,7 +245,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                                 .evaluate(() =>
                                     document.activeElement?.outerHTML
                                 )}; opener connected: ${await opener?.evaluate((
-                                    el,
+                                    el: Element,
                                 ) => el.isConnected)}`,
                             { cause },
                         );
@@ -267,8 +267,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         async () => {
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
-            await notesOpener(page).focus();
-            await page.keyboard.press("Enter");
+            await openNotesByKeyboard(page);
             const notesSearch = panel.getByRole("searchbox", {
                 name: "搜索笔记",
                 exact: true,
@@ -330,12 +329,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.setViewportSize({ width, height });
                 await visit("/");
 
-                // Opener: Notes edge trigger
-                const docsEdge = notesOpener(page);
-                await docsEdge.waitFor();
-                const opener = await docsEdge.elementHandle();
-                await docsEdge.focus();
-                await page.keyboard.press("Enter");
+                // Menu entries restore focus to the avatar trigger.
+                const trigger = deskMenuTrigger(page);
+                await trigger.waitFor();
+                const opener = await trigger.elementHandle();
+                await openNotesByKeyboard(page);
                 await panel.waitFor();
                 assertEquals(
                     await panel.getAttribute("data-presentation"),
@@ -416,8 +414,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     throw new Error(
                         `Escape focus at ${width}px: ${await page.evaluate(() =>
                             document.activeElement?.outerHTML
-                        )}; opener connected: ${await opener?.evaluate((el) =>
-                            el.isConnected
+                        )}; opener connected: ${await opener?.evaluate(
+                            (el: Element) => el.isConnected,
                         )}`,
                         { cause },
                     );
@@ -665,7 +663,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     });
                     assertEquals(await deskStage(page), "calm");
                     await page.waitForFunction(() =>
-                        document.activeElement?.id === "search-query"
+                        document.activeElement?.matches(".user-avatar-trigger")
                     );
                     assertEquals(
                         await page.evaluate(() => {
@@ -715,7 +713,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         async () => {
             await page.setViewportSize({ width: 390, height: 844 });
             await visit("/");
-            const opener = await notesOpener(page).elementHandle();
+            const opener = await deskMenuTrigger(page).elementHandle();
             await openDocs();
             await page.locator('[data-slot="sheet-backdrop"]').waitFor();
             await closeButton().click();
@@ -725,7 +723,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.locator('[data-slot="sheet-backdrop"]').waitFor({
                 state: "detached",
             });
-            await page.locator(".zen-edge-trigger").waitFor();
+            await deskMenuTrigger(page).waitFor();
             await page.waitForFunction(
                 (element) =>
                     document.activeElement ===
@@ -737,8 +735,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 throw new Error(
                     `Sheet close focus: ${await page.evaluate(() =>
                         document.activeElement?.outerHTML
-                    )}; opener connected: ${await opener?.evaluate((el) =>
-                        el.isConnected
+                    )}; opener connected: ${await opener?.evaluate(
+                        (el: Element) => el.isConnected,
                     )}`,
                     { cause },
                 );

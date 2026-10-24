@@ -1,5 +1,9 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
-import { deskDetail, notesOpener } from "./helpers/desk.ts";
+import {
+    deskDetail,
+    deskMenuTrigger,
+    openNotesByKeyboard,
+} from "./helpers/desk.ts";
 import { assert, assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { createApp } from "../../src/app.ts";
@@ -117,13 +121,12 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await page.waitForURL(`${origin}/`);
     await userMenu.waitFor({ state: "visible" });
     await banner.waitFor({ state: "visible" });
-    const trigger = notesOpener(page);
+    const trigger = deskMenuTrigger(page);
     await trigger.waitFor({ state: "visible" });
     const opener = await trigger.elementHandle();
     assert(opener);
 
-    await trigger.focus();
-    await page.keyboard.press("Enter");
+    await openNotesByKeyboard(page);
     const panel = deskDetail(page);
     await panel.waitFor({ state: "visible" });
     assertEquals(await panel.getAttribute("data-presentation"), "panel");

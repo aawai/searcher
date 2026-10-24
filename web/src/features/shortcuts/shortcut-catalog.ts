@@ -1,6 +1,6 @@
 import type { EngineId } from "@shared/engines.ts";
 import { routes } from "../../app/routes.ts";
-import type { WorkspaceKind } from "../workspace/workspace-state.ts";
+import type { DeskRequest } from "../desk/desk-request.ts";
 
 export type ShortcutScope = "global" | "search" | "ask" | "documents";
 export type ShortcutPlatform = "mac" | "other";
@@ -131,7 +131,7 @@ export type SearchCommandTarget =
     | { type: "mode"; mode: "ai" }
     | { type: "theme"; theme: "light" | "dark" | "system" }
     | { type: "route"; to: string }
-    | { type: "workspace"; kind: WorkspaceKind }
+    | { type: "desk"; request: DeskRequest }
     | { type: "apps" };
 export type SearchQuickCommand = {
     id: string;
@@ -220,7 +220,7 @@ export const SEARCH_QUICK_COMMANDS: readonly SearchQuickCommand[] = [
         id: "notes",
         prefix: "/notes",
         action: "打开笔记",
-        target: { type: "workspace", kind: "documents" },
+        target: { type: "desk", request: "notes" },
         requiresUser: true,
     },
     {
