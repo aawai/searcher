@@ -250,7 +250,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 - 出现与消失成对：浮层（菜单、Tooltip、Popover、对话框、Sheet、对象详情栏、“览”、撤销提示）进入与退出都有过渡；退出期间元素 `inert`，不再接收焦点与 Escape。Base UI 浮层用 `data-starting-style` / `data-ending-style`；自管挂载的元素用 `components/ui/presence.ts` 的 `usePresence`，在元素自身的动画结束后再卸载。
 - 入场位移不超过 8px；唯一例外是底部 Sheet 从视口底边滑入、滑出。禁止装饰性位移、视差、交错（staggered）或循环动画，以及对无关元素的缩放；同一对象的几何变化仅按下述共享元素契约允许，不是入场位移例外。
-- **桌面距离切换（静 ⇄ 览）**：唯一允许整层缩放的过渡，表达“拉远 / 拉近”同一张桌面。进入“览”时首页层从 1 缩到 0.92 并淡出、“览”层从 1.04 缩到 1 并淡入，退出时反向；两层各自整体缩放，层内对象不单独动画、不交错。时长 `--motion-panel`，缓动 `--ease-out-expo`；`prefers-reduced-motion: reduce` 下为同时长纯透明度交叉淡入。<768px 的“览”是 Sheet，沿用 Sheet 的滑入滑出。
+- **桌面距离切换（静 ⇄ 览）**：唯一允许整层缩放的过渡，表达“拉远 / 拉近”同一张桌面。进入“览”时首页层淡出、“览”层从 1.04 缩到 1 并淡入，退出时反向；首页层只做透明度（它含有相对视口固定定位的首页纸张画布，缩放会改变其定位参照），“览”层整体缩放，层内对象不单独动画、不交错。时长 `--motion-panel`，缓动 `--ease-out-expo`；`prefers-reduced-motion: reduce` 下为同时长纯透明度交叉淡入。<768px 的“览”是 Sheet，沿用 Sheet 的滑入滑出。
 - 顶层页面切换（首页、设置、AI 问答、回收站等之间）使用 View Transition 的纯透明度交叉淡入；`prefers-reduced-motion: reduce` 下不做页面过渡；设置、管理内部切换不使用过渡。
 - **共享元素过渡（shared-element transition）**：仅允许**同一个对象改变容器 / 状态**时使用（例如行内卡片展开为完整视图，再收回卡片）。实现使用 `document.startViewTransition`，每次生成唯一的 `view-transition-name`；旧快照恰好一个 source、新快照恰好一个 target 使用该名称，不得同帧重名。React 的 DOM 更新在 transition callback 内用 `flushSync` 同步提交。仅该对象可做 geometry morph，持续 `--motion-panel`（280ms），缓动 `--ease-out-expo`；无关元素不参与几何动画。
 - **回退**：浏览器不支持 `startViewTransition` 时立即切换状态、无动画，焦点处理不变。`prefers-reduced-motion: reduce` 下共享元素 morph 改为**同时长**的纯 opacity cross-fade：无 translate、无 scale，也不插值共享元素的 width / height / position。必须显式禁用默认 `::view-transition-group` 的尺寸 / 位置动画与 `::view-transition-image-pair` 动画（例如 `animation: none`），只在 old / new 快照上保留透明度动画，不能仅移除业务 CSS 的 transform。
