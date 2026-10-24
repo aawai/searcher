@@ -467,6 +467,23 @@
         0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent);
 }
 
+/* Wallpaper-derived canvas (览; permitted for settings-class pages): the
+   wallpaper blurred under a --background veil thick enough that body and
+   --muted text set directly on it hold 4.5:1 (glass-contrast.test.ts). */
+:root {
+    --canvas-derived-light: 94%;
+    --canvas-derived-dark: 84%;
+    --canvas-derived-filter: blur(32px) saturate(1.2);
+}
+:root,
+[data-theme] {
+    --canvas-derived-mix: var(--canvas-derived-light);
+    --canvas-derived: color-mix(in srgb, var(--background) var(--canvas-derived-mix), transparent);
+}
+[data-theme="dark"] {
+    --canvas-derived-mix: var(--canvas-derived-dark);
+}
+
 /* Without backdrop-filter, or when the OS reduces transparency, every tier renders as `off`. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter:
     blur(1px))) {
@@ -478,6 +495,9 @@
         --glass-thick-dark: 100%;
         --glass-sheen-scale: 0;
         --material-filter: none;
+        --canvas-derived-light: 100%;
+        --canvas-derived-dark: 100%;
+        --canvas-derived-filter: none;
     }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -489,6 +509,9 @@
         --glass-thick-dark: 100%;
         --glass-sheen-scale: 0;
         --material-filter: none;
+        --canvas-derived-light: 100%;
+        --canvas-derived-dark: 100%;
+        --canvas-derived-filter: none;
     }
 }
 

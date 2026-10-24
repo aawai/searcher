@@ -17,7 +17,7 @@ UI PR 在描述中逐项勾选；不适用写原因。依据 [VISUAL_LANGUAGE.md
 - [ ] 字重只用 400 / 500 / 600；不用全大写。
 - [ ] 每个区域最多一个 primary 按钮。
 - [ ] 没有复述标签的说明行、使用说明段落或“登录后可用”类提示；空状态为一句话 + 至多一个操作。
-- [ ] 动作名称全流程一致；领域词汇（应用、笔记、Dock、首页纸张）符合 Visual Language。
+- [ ] 动作名称全流程一致；领域词汇（应用、笔记、首页纸张、桌面、详情）符合 Visual Language。
 - [ ] hover / focus-visible / active / selected / disabled / loading / error 均可辨识，且不改变尺寸。
 - [ ] 次要操作可通过 hover、`⋯`、右键或长按发现。
 - [ ] 破坏性操作经 AlertDialog 确认或提供撤销。

@@ -188,3 +188,26 @@ for (const theme of ["light", "dark"] as const) {
         });
     }
 }
+
+for (const theme of ["light", "dark"] as const) {
+    Deno.test(`derived canvas ${theme}: body and --muted text set on it hold AA on the worst backdrop`, () => {
+        // The veil does not depend on the glass tier; `regular` is the default scope.
+        const tokens = cascade(theme, "regular");
+        const alpha = fillPercent(tokens, `--canvas-derived-${theme}`) / 100;
+        const veil = hex(resolve(tokens, "--background"));
+        for (const name of ["--foreground", "--muted"]) {
+            const color = hex(resolve(tokens, name));
+            const worst = Math.min(
+                ...BACKDROPS.map((backdrop) =>
+                    contrast(color, over(veil, alpha, backdrop))
+                ),
+            );
+            assert(
+                worst >= WCAG_AA_TEXT,
+                `${name} on --canvas-derived-${theme} ${alpha * 100}% gives ${
+                    worst.toFixed(2)
+                }:1`,
+            );
+        }
+    });
+}
