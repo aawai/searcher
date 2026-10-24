@@ -14,6 +14,7 @@ export interface WebAppDto {
     iconAssetId: string | null;
     iconSource: WebAppIconSource;
     sortOrder: number;
+    isHomeFixed: boolean;
     openMode: WebAppOpenMode;
     deletedAt?: number | null;
     createdAt: number;
@@ -27,6 +28,7 @@ export interface WebAppGroupDto {
     userId: string;
     name: string;
     sortOrder: number;
+    isHomeFixed: boolean;
     folderSize: WebAppFolderSize;
     createdAt: number;
     updatedAt: number;
@@ -39,6 +41,7 @@ export interface CreateWebAppInput {
     iconAssetId?: string | null;
     iconSource?: WebAppIconSource;
     sortOrder?: number;
+    isHomeFixed?: boolean;
     openMode?: WebAppOpenMode;
 }
 
@@ -49,6 +52,7 @@ export interface UpdateWebAppInput {
     iconAssetId?: string | null;
     iconSource?: WebAppIconSource;
     sortOrder?: number;
+    isHomeFixed?: boolean;
     openMode?: WebAppOpenMode;
 }
 
@@ -113,6 +117,7 @@ export class BookmarksService {
             iconAssetId: row.iconAssetId,
             iconSource: row.iconSource as WebAppIconSource,
             sortOrder: row.sortOrder,
+            isHomeFixed: row.isHomeFixed,
             openMode: row.openMode as WebAppOpenMode,
             deletedAt: row.deletedAt,
             createdAt: row.createdAt,
@@ -240,6 +245,7 @@ export class BookmarksService {
                 iconAssetId: input.iconAssetId ?? null,
                 iconSource: input.iconSource ?? "website",
                 sortOrder: input.sortOrder ?? 0,
+                isHomeFixed: input.isHomeFixed ?? false,
                 openMode: input.openMode ?? "global",
                 deletedAt: null,
                 createdAt: currentTime,
@@ -293,6 +299,24 @@ export class BookmarksService {
             const nextIconSource = input.iconSource !== undefined
                 ? input.iconSource
                 : current.iconSource;
+            let nextIsHomeFixed = input.isHomeFixed !== undefined
+                ? input.isHomeFixed
+                : current.isHomeFixed;
+            // A released member inherits the folder's pin state: it was on the
+            // home grid as part of the folder, so it stays there on its own.
+            if (
+                current.groupId !== null && nextGroupId === null &&
+                input.isHomeFixed === undefined
+            ) {
+                const releasedFrom = await db
+                    .select({ isHomeFixed: webappGroups.isHomeFixed })
+                    .from(webappGroups)
+                    .where(eq(webappGroups.id, current.groupId))
+                    .limit(1)
+                    .all();
+                nextIsHomeFixed = releasedFrom[0]?.isHomeFixed ??
+                    nextIsHomeFixed;
+            }
             let nextSortOrder = input.sortOrder !== undefined
                 ? input.sortOrder
                 : current.sortOrder;
@@ -326,6 +350,7 @@ export class BookmarksService {
                     iconAssetId: nextIconAssetId,
                     iconSource: nextIconSource,
                     sortOrder: nextSortOrder,
+                    isHomeFixed: nextIsHomeFixed,
                     openMode: nextOpenMode,
                     updatedAt: currentTime,
                 })
@@ -340,6 +365,7 @@ export class BookmarksService {
                 iconAssetId: nextIconAssetId,
                 iconSource: nextIconSource,
                 sortOrder: nextSortOrder,
+                isHomeFixed: nextIsHomeFixed,
                 openMode: nextOpenMode,
                 updatedAt: currentTime,
             });
@@ -519,25 +545,44 @@ export class BookmarksService {
         name: string,
         sortOrder = 0,
         folderSize: WebAppFolderSize = "small",
+        isHomeFixed = false,
+        memberIds: readonly string[] = [],
     ): Promise<WebAppGroupDto> {
         const id = crypto.randomUUID();
         const currentTime = this.now();
 
-        return await this.store.run(async (db) => {
-            const row = {
-                id,
-                userId,
-                name: name.trim(),
-                sortOrder,
-                folderSize,
-                createdAt: currentTime,
-                updatedAt: currentTime,
-            };
+        return await this.store.run((db) =>
+            db.transaction(async (tx) => {
+                const row = {
+                    id,
+                    userId,
+                    name: name.trim(),
+                    sortOrder,
+                    isHomeFixed,
+                    folderSize,
+                    createdAt: currentTime,
+                    updatedAt: currentTime,
+                };
 
-            await db.insert(webappGroups).values(row).run();
+                await tx.insert(webappGroups).values(row).run();
+                // A folder created by dropping one app onto another owns both
+                // apps atomically; a failed move leaves no empty shell.
+                for (let index = 0; index < memberIds.length; index++) {
+                    const updated = await tx.update(webapps).set({
+                        groupId: id,
+                        sortOrder: index,
+                        updatedAt: currentTime,
+                    }).where(and(
+                        eq(webapps.id, memberIds[index]),
+                        eq(webapps.userId, userId),
+                        isNull(webapps.deletedAt),
+                    )).returning({ id: webapps.id }).all();
+                    if (updated.length === 0) throw new WebAppNotFoundError();
+                }
 
-            return row;
-        });
+                return row;
+            })
+        );
     }
 
     async updateGroup(
@@ -546,6 +591,7 @@ export class BookmarksService {
         name?: string,
         sortOrder?: number,
         folderSize?: WebAppFolderSize,
+        isHomeFixed?: boolean,
     ): Promise<WebAppGroupDto> {
         const currentTime = this.now();
 
@@ -573,6 +619,9 @@ export class BookmarksService {
             const nextFolderSize = folderSize !== undefined
                 ? folderSize
                 : existing[0].folderSize;
+            const nextIsHomeFixed = isHomeFixed !== undefined
+                ? isHomeFixed
+                : existing[0].isHomeFixed;
 
             await db
                 .update(webappGroups)
@@ -580,6 +629,7 @@ export class BookmarksService {
                     name: nextName,
                     sortOrder: nextSortOrder,
                     folderSize: nextFolderSize,
+                    isHomeFixed: nextIsHomeFixed,
                     updatedAt: currentTime,
                 })
                 .where(
@@ -595,6 +645,7 @@ export class BookmarksService {
                 name: nextName,
                 sortOrder: nextSortOrder,
                 folderSize: nextFolderSize,
+                isHomeFixed: nextIsHomeFixed,
                 updatedAt: currentTime,
             };
         });
@@ -603,7 +654,7 @@ export class BookmarksService {
     async deleteGroup(userId: string, id: string): Promise<void> {
         return await this.store.run(async (db) => {
             const existing = await db
-                .select({ id: webappGroups.id })
+                .select()
                 .from(webappGroups)
                 .where(
                     and(
@@ -645,7 +696,11 @@ export class BookmarksService {
             for (const app of groupApps) {
                 await db
                     .update(webapps)
-                    .set({ groupId: null, sortOrder: baseSortOrder++ })
+                    .set({
+                        groupId: null,
+                        sortOrder: baseSortOrder++,
+                        isHomeFixed: existing[0].isHomeFixed,
+                    })
                     .where(
                         and(eq(webapps.id, app.id), eq(webapps.userId, userId)),
                     )
