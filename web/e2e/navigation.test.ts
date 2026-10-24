@@ -280,9 +280,27 @@ Deno.test("production navigation contracts", async (t) => {
                     exact: true,
                 }).first().waitFor({ state: "visible" });
             }
+            // A guest's home top bar holds only the theme and sign-in; settings
+            // and the shortcut reference open from search box commands.
             await visit("/");
-            await page.getByRole("link", { name: "设置", exact: true })
-                .click();
+            assertEquals(
+                (await page.getByRole("navigation", { name: "账户与设置" })
+                    .locator("a, button").evaluateAll((items) =>
+                        items.map((item) => item.getAttribute("aria-label"))
+                    )).map((label) => label?.split("，")[0]),
+                ["切换主题", "登录"],
+            );
+            const search = page.locator("#search-query");
+            await search.fill("/快捷键");
+            await page.getByRole("option", { name: /查看快捷键/ }).waitFor();
+            await search.press("ArrowDown");
+            await search.press("Enter");
+            await page.waitForURL(origin + "/settings/shortcuts");
+            await page.goBack();
+            await page.waitForURL(origin + "/");
+            await search.fill("/settings");
+            await page.getByRole("option", { name: /打开设置/ }).click();
+            await page.waitForURL(origin + "/settings");
             for (const label of ["外观", "AI 问答", "数据与同步", "快捷键"]) {
                 await page.getByRole("navigation", { name: "设置分类" })
                     .getByRole("link", { name: label, exact: true })
@@ -298,6 +316,12 @@ Deno.test("production navigation contracts", async (t) => {
                 exact: true,
             }).waitFor({ state: "visible" });
             assertEquals(page.url(), origin + "/settings/search");
+            assertEquals(
+                await page.getByRole("link", { name: "设置", exact: true })
+                    .count(),
+                1,
+                "pages other than home keep the settings link",
+            );
         },
     );
     await t.step(
@@ -490,7 +514,9 @@ Deno.test("production navigation contracts", async (t) => {
             });
 
             await context.clearCookies();
-            await page.getByRole("link", { name: "设置", exact: true }).click();
+            await page.getByRole("button", { name: /^用户菜单/ }).click();
+            await page.getByRole("menuitem", { name: "偏好设置", exact: true })
+                .click();
             await page.getByRole("navigation", { name: "设置分类" })
                 .getByRole("link", { name: "AI 问答", exact: true }).click();
             await page.getByRole("link", { name: "登录", exact: true })
@@ -697,8 +723,10 @@ Deno.test("production navigation contracts", async (t) => {
                 name: "设置分类",
             });
 
-            await visit("/");
+            // Home has no settings link; any other page keeps it.
+            await visit("/trash");
             await page.getByRole("link", { name: "设置", exact: true }).click();
+            await page.waitForURL(origin + "/settings");
             await settingsNav.waitFor({ state: "visible" });
             assertEquals(await viewTransitions(page, 1), 1, "top bar link");
             await settingsNav.getByRole("link", { name: "外观", exact: true })

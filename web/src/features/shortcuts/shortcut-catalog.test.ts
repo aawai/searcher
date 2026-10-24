@@ -126,7 +126,7 @@ Deno.test("command parsing preserves boundaries whitespace case and all canonica
     assertEquals(parseCommandPrefix("/ba")?.hasSpace, false);
 });
 
-Deno.test("executable commands cover theme, wallpaper, settings, trash and workspace entries", () => {
+Deno.test("executable commands cover theme, wallpaper, settings, shortcuts, trash and workspace entries", () => {
     const byId = new Map(
         SEARCH_QUICK_COMMANDS.map((entry) => [entry.id, entry]),
     );
@@ -149,6 +149,10 @@ Deno.test("executable commands cover theme, wallpaper, settings, trash and works
     assertEquals(byId.get("settings")?.target, {
         type: "route",
         to: "/settings",
+    });
+    assertEquals(byId.get("shortcuts")?.target, {
+        type: "route",
+        to: "/settings/shortcuts",
     });
     assertEquals(byId.get("trash")?.target, { type: "route", to: "/trash" });
     assertEquals(byId.get("notes")?.target, {
@@ -181,9 +185,25 @@ Deno.test("matchSearchCommands lists by prefix or action, hides AI and personal 
     for (const hidden of ["ai", "trash", "notes", "apps"]) {
         assertEquals(guest.includes(hidden), false);
     }
-    for (const kept of ["google", "theme-dark", "wallpaper", "settings"]) {
+    for (
+        const kept of [
+            "google",
+            "theme-dark",
+            "wallpaper",
+            "settings",
+            "shortcuts",
+        ]
+    ) {
         assertEquals(guest.includes(kept), true);
     }
+});
+
+Deno.test("guests reach settings and the shortcut reference by command name", () => {
+    const guest = { aiAvailable: false, signedIn: false };
+    const ids = (raw: string) =>
+        matchSearchCommands(raw, guest).map((entry) => entry.id);
+    assertEquals(ids("/设置"), ["settings"]);
+    assertEquals(ids("/快捷键"), ["shortcuts"]);
 });
 
 Deno.test("only engine and AI prefixes take a query argument", () => {

@@ -208,7 +208,11 @@ function Layout() {
                     s.
                 </Link>
                 <nav className="top-actions" aria-label="账户与设置">
-                    {aiModels.length > 0 && (
+                    {
+                        /* Home keeps only the theme and identity; AI and settings
+                        are reached from the search box commands and the user menu. */
+                    }
+                    {!isHomePage && aiModels.length > 0 && (
                         <Link
                             to={routes.ask}
                             viewTransition
@@ -233,17 +237,19 @@ function Layout() {
                             ? <Moon size="1em" className="icon-lg" />
                             : <SunMoon size="1em" className="icon-lg" />}
                     </button>
-                    <Link
-                        to={routes.settings()}
-                        viewTransition
-                        className={isSettingsPage
-                            ? "topbar-link topbar-link--active"
-                            : "topbar-link"}
-                        aria-label="设置"
-                        title="设置"
-                    >
-                        <Settings size="1em" className="icon-lg" />
-                    </Link>
+                    {!isHomePage && (
+                        <Link
+                            to={routes.settings()}
+                            viewTransition
+                            className={isSettingsPage
+                                ? "topbar-link topbar-link--active"
+                                : "topbar-link"}
+                            aria-label="设置"
+                            title="设置"
+                        >
+                            <Settings size="1em" className="icon-lg" />
+                        </Link>
+                    )}
                     <span className="sync-status" role="status">
                         {syncFailed && (
                             <Link
@@ -280,6 +286,20 @@ function Layout() {
                                         <span>@{user.username}</span>
                                     </div>
                                     <DropdownMenuSeparator />
+                                    {aiModels.length > 0 && (
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                navigate(routes.ask, {
+                                                    viewTransition: true,
+                                                })}
+                                        >
+                                            <Sparkles
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                            <span>AI 问答</span>
+                                        </DropdownMenuItem>
+                                    )}
                                     <DropdownMenuItem
                                         onClick={() =>
                                             navigate(routes.account, {
