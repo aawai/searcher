@@ -292,8 +292,10 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
 
     await t.step("the library add form defaults to unpinned", async () => {
         await openApps(page);
-        await page.getByRole("button", { name: "添加应用", exact: true })
-            .click();
+        await libraryView(page, "apps").getByRole("button", {
+            name: "添加应用",
+            exact: true,
+        }).click();
         const form = page.locator(".app-form-dialog");
         await form.waitFor();
         assertEquals(
