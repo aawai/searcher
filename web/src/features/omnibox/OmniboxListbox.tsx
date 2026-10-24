@@ -5,6 +5,7 @@ import {
     History,
     Image,
     Keyboard,
+    LayoutGrid,
     Moon,
     NotebookPen,
     Search,
@@ -37,6 +38,13 @@ export interface OmniboxListboxView {
     engine: EngineId;
 }
 
+/** Quick entries of the empty search box; unknown ids use the app icon. */
+const ENTRY_ICON: Record<string, typeof AppWindow> = {
+    overview: LayoutGrid,
+    notes: NotebookPen,
+    apps: AppWindow,
+};
+
 function CommandIcon({ command }: { command: SearchQuickCommand }) {
     const { target } = command;
     if (target.type === "engine") {
@@ -50,7 +58,7 @@ function CommandIcon({ command }: { command: SearchQuickCommand }) {
             : target.theme === "dark"
             ? Moon
             : SunMoon)
-        : target.type === "workspace"
+        : target.type === "desk"
         ? NotebookPen
         : target.type === "apps"
         ? AppWindow
@@ -84,8 +92,10 @@ function ItemIcon({ item }: { item: OmniboxItem }) {
                 : <Search size="1em" className="icon-md suggestion-icon" />;
         case "command":
             return <CommandIcon command={item.command} />;
-        case "entry":
-            return <AppWindow size="1em" className="icon-md suggestion-icon" />;
+        case "entry": {
+            const Icon = ENTRY_ICON[item.entry.id] ?? AppWindow;
+            return <Icon size="1em" className="icon-md suggestion-icon" />;
+        }
     }
 }
 

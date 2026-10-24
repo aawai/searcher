@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { chromium, type Page } from "playwright";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 type StoredDraft = {
     userId: string;
@@ -194,7 +195,7 @@ async function requestLogout(page: Page) {
 }
 
 async function openFromLibrary(page: Page, title: string) {
-    await page.locator('button[data-workspace="documents"]').first().click();
+    await openNotes(page);
     await page.locator("[data-document-id] h4 button").filter({
         hasText: title,
     }).click();

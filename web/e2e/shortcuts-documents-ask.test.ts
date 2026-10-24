@@ -7,6 +7,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
+import { openNotesByKeyboard } from "./helpers/desk.ts";
 
 async function pressRepeatedly(page: Page, key: string, times: number) {
     for (let i = 0; i < times; i++) await page.keyboard.press(key);
@@ -65,7 +66,7 @@ async function openShortcutDocument(
     }, { title, body });
     await page.goto(origin);
     await page.locator("main").waitFor({ state: "visible" });
-    await page.locator('button[data-workspace="documents"]').first().click();
+    await openNotesByKeyboard(page);
     await page.locator("[data-document-id] h4 button").filter({
         hasText: title,
     }).first().click();

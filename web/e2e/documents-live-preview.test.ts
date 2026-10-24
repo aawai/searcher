@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 Deno.test("Document live preview: opening and switching preserve canonical Markdown without saves", async () => {
     await using cleanup = new AsyncDisposableStack();
@@ -27,7 +28,7 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
         if (!response.ok) throw new Error("Cannot create document");
     }, body);
     await page.reload();
-    await page.locator('button[data-workspace="documents"]').click();
+    await openNotes(page);
     await page.locator("[data-document-id] h4 button").filter({
         hasText: "Live contract",
     }).click();

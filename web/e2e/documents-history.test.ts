@@ -2,6 +2,7 @@ import type { DocumentDto } from "../../src/shared/documents.ts";
 import { assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 Deno.test("Document history flush, restore and failure preserve real server contracts", async () => {
     await using cleanup = new AsyncDisposableStack();
@@ -27,7 +28,7 @@ Deno.test("Document history flush, restore and failure preserve real server cont
         return (await response.json()).data.id as string;
     });
     await page.reload();
-    await page.locator('button[data-workspace="documents"]').click();
+    await openNotes(page);
     await page.locator("[data-document-id] h4 button").filter({
         hasText: "历史契约",
     }).click();

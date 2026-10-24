@@ -217,13 +217,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     }
 
     async function readStableGeometry() {
-        await page.waitForFunction(() => {
-            const dock = document.querySelector(".zen-edge-trigger");
-            return dock !== null &&
-                !dock.hasAttribute("data-ending-style") &&
-                getComputedStyle(dock).opacity === "1" &&
-                dock.getAnimations({ subtree: true }).length === 0;
-        });
+        await settlePaint();
         return await page.evaluate(() => {
             const rect = (element: Element | null) => {
                 if (!element) return null;
@@ -835,14 +829,11 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
                         center(
                             document.querySelector(".zen-inline-note")!,
                         ) - expected,
-                        center(
-                            document.querySelector(".zen-edge-trigger")!,
-                        ) - expected,
                     ];
                 });
                 assert(
                     axes.every((offset) => Math.abs(offset) <= 1),
-                    `Search, launcher grid, note, and navigation share an axis: ${axes}`,
+                    `Search, launcher grid, and note share an axis: ${axes}`,
                 );
             } else {
                 await waitForNoInlineNotes();
@@ -1047,11 +1038,10 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         await page.evaluate(() =>
             document.querySelector(".zen-inline-note")!.getBoundingClientRect()
                 .bottom <=
-                document.querySelector(".zen-edge-trigger")!
-                    .getBoundingClientRect().top
+                innerHeight
         ),
         true,
-        "Last preview line can scroll above the floating navigation",
+        "Last preview line can scroll fully into the viewport",
     );
     await page.screenshot({
         path: `${evidenceDir}/short-screen-dynamic-font-reduced-motion.png`,

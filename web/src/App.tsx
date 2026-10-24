@@ -9,14 +9,17 @@ import {
 } from "react-router-dom";
 import {
     AlertTriangle,
+    LayoutGrid,
     LogIn,
     LogOut,
     Moon,
+    NotebookPen,
     Settings,
     Shield,
     Sparkles,
     Sun,
     SunMoon,
+    Trash2,
     UserRound,
 } from "lucide-react";
 import { AppState, useAppState } from "./app/state.tsx";
@@ -28,6 +31,10 @@ import {
 } from "@shared/wallpaper-presentation.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
 import { askConversationId, authPath, routes } from "./app/routes.ts";
+import {
+    type DeskRequest,
+    deskRequestState,
+} from "./features/desk/desk-request.ts";
 import type { AppOutletContext } from "./app/outlet-context.ts";
 import { useAiModels } from "./features/omnibox/useAiModels.ts";
 import {
@@ -144,6 +151,16 @@ function Layout() {
         setLogoutBusy(false);
         setError("");
     }, [authSession]);
+
+    /** 览 does not enter history; from another page it is a page navigation. */
+    function openDesk(request: DeskRequest) {
+        const atHome = location.pathname === routes.home;
+        navigate(routes.home, {
+            state: deskRequestState(request),
+            replace: atHome,
+            viewTransition: !atHome,
+        });
+    }
 
     async function requestLogout(force = false) {
         const session = authSession;
@@ -286,6 +303,37 @@ function Layout() {
                                         <span>{user.displayName}</span>
                                         <span>@{user.username}</span>
                                     </div>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onClick={() => openDesk("overview")}
+                                    >
+                                        <LayoutGrid
+                                            size="1em"
+                                            className="icon-md"
+                                        />
+                                        <span>桌面</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => openDesk("notes")}
+                                    >
+                                        <NotebookPen
+                                            size="1em"
+                                            className="icon-md"
+                                        />
+                                        <span>笔记</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            navigate(routes.trash, {
+                                                viewTransition: true,
+                                            })}
+                                    >
+                                        <Trash2
+                                            size="1em"
+                                            className="icon-md"
+                                        />
+                                        <span>回收站</span>
+                                    </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     {aiModels.length > 0 && (
                                         <DropdownMenuItem

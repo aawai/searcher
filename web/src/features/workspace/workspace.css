@@ -132,10 +132,6 @@
 .workspace-header > :not(.workspace-title) {
     flex-shrink: 0;
 }
-/* Root views hide the title; keep the actions at the inline end. */
-.workspace-switcher {
-    margin-inline-end: auto;
-}
 
 /* Workspace Search */
 .workspace-search-wrap {

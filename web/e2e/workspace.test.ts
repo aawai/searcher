@@ -7,6 +7,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
+import { deskMenuTrigger, openNotes } from "./helpers/desk.ts";
 
 // Run with deno task test:workspace; the task builds the real production frontend.
 
@@ -167,11 +168,9 @@ Deno.test("production workspace contracts", async (t) => {
             // Set mobile viewport (< 768px)
             await page.setViewportSize({ width: 375, height: 667 });
 
-            // Open workspace from mobile navigation
-            const mobileDocsBtn = page.locator(
-                'button.zen-edge-btn[data-workspace="documents"]',
-            );
-            await mobileDocsBtn.first().click();
+            // The avatar menu is the mobile notes entry and focus-return target.
+            const mobileDocsBtn = deskMenuTrigger(page);
+            await openNotes(page);
 
             // Mobile panel is presented inside modal Sheet
             const sheet = page.locator(".workspace-panel--mobile");
@@ -184,18 +183,17 @@ Deno.test("production workspace contracts", async (t) => {
             await page.keyboard.press("Escape");
             await sheet.waitFor({ state: "detached" });
             await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("data-workspace") ===
-                    "documents"
+                document.activeElement?.matches(".user-avatar-trigger")
             );
             assertEquals(
-                await page.evaluate(() =>
-                    document.activeElement?.getAttribute("data-workspace")
+                await mobileDocsBtn.evaluate((el) =>
+                    el === document.activeElement
                 ),
-                "documents",
+                true,
             );
 
             // Reopen sheet for swipe down test
-            await mobileDocsBtn.first().click();
+            await openNotes(page);
             await sheet.waitFor();
 
             // Mobile grip handle is visible in header
@@ -241,16 +239,15 @@ Deno.test("production workspace contracts", async (t) => {
             // Sheet closes from swipe gesture
             await sheet.waitFor({ state: "detached" });
 
-            // Focus returns to dock opener
+            // Focus returns to the avatar trigger, not the unmounted menu item.
             await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("data-workspace") ===
-                    "documents"
+                document.activeElement?.matches(".user-avatar-trigger")
             );
             assertEquals(
-                await page.evaluate(() =>
-                    document.activeElement?.getAttribute("data-workspace")
+                await mobileDocsBtn.evaluate((el) =>
+                    el === document.activeElement
                 ),
-                "documents",
+                true,
             );
         },
     );

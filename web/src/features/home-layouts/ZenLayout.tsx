@@ -1,4 +1,3 @@
-import { NotebookPen } from "lucide-react";
 import {
     lazy,
     Suspense,
@@ -16,14 +15,21 @@ import {
     type HomeAppLibraryHandle,
 } from "../app-library/HomeAppLibrary.tsx";
 import { exclusionFromRects } from "../../components/searcher/defaultNotePlacement.ts";
-import { usePresence } from "../../components/ui/presence.ts";
 import { useZenPaperSelection } from "./useZenPaperSelection.ts";
 import { InlineAnswerCard } from "../inline-ai/InlineAnswerCard.tsx";
 import { consumeSearchFocusRequest } from "../inline-ai/search-focus.ts";
 import { HomeCalm } from "../home-calm/HomeCalm.tsx";
 
-const APPS_QUICK_ENTRIES = [{ id: "apps", label: "应用" }];
-const NO_QUICK_ENTRIES: typeof APPS_QUICK_ENTRIES = [];
+/** Entries of the focused empty search box (docs/workspace.md#其他). */
+const DESK_QUICK_ENTRIES = [
+    { id: "overview", label: "桌面" },
+    { id: "notes", label: "笔记" },
+];
+const DESK_AND_APPS_QUICK_ENTRIES = [
+    ...DESK_QUICK_ENTRIES,
+    { id: "apps", label: "应用" },
+];
+const NO_QUICK_ENTRIES: typeof DESK_QUICK_ENTRIES = [];
 
 const HomePapers = lazy(() =>
     import("./HomePapers.tsx").then((module) => ({
@@ -66,8 +72,7 @@ export function ZenLayout(
         deletePaper,
         updatePaper,
         updatePaperLayout,
-        openWorkspace,
-        workspaceOpen,
+        openDesk,
         showAppLabels,
         showHomeApps,
     } = props;
@@ -90,12 +95,6 @@ export function ZenLayout(
     const [gridElement, setGridElement] = useState<HTMLElement | null>(null);
     const [exclusionRect, setExclusionRect] = useState<SafeRect | null>(null);
     const mobile = props.viewportWidth < 768;
-    // The Dock hides while a workspace is open: it fades out and stays inert
-    // until the fade ends. Only a Dock that returns after a workspace closed
-    // fades in; the first mount appears at once.
-    const dock = usePresence<HTMLElement>(!workspaceOpen);
-    const [workspaceWasOpen, setWorkspaceWasOpen] = useState(false);
-    if (workspaceOpen && !workspaceWasOpen) setWorkspaceWasOpen(true);
 
     const calmShown = props.calm.showDate || props.calm.showTime ||
         props.calm.showContinue;
@@ -153,12 +152,13 @@ export function ZenLayout(
         () => groups.map((group) => ({ id: group.id, name: group.name })),
         [groups],
     );
-    // With the home grid off, the focused empty search box offers 应用, which
-    // opens the same popup as 更多 so apps stay manageable.
-    const quickEntries = useMemo(
-        () => user && !showHomeApps ? APPS_QUICK_ENTRIES : NO_QUICK_ENTRIES,
-        [user, showHomeApps],
-    );
+    // With the home grid off, 应用 opens the same popup as 更多 so apps stay
+    // manageable.
+    const quickEntries = !user
+        ? NO_QUICK_ENTRIES
+        : showHomeApps
+        ? DESK_QUICK_ENTRIES
+        : DESK_AND_APPS_QUICK_ENTRIES;
     const libraryView = user && (
         <HomeAppLibrary
             ref={libraryRef}
@@ -232,7 +232,12 @@ export function ZenLayout(
                     }}
                     onCapture={user ? props.onCapture : undefined}
                     quickEntries={quickEntries}
-                    onQuickEntry={() => libraryRef.current?.openAll()}
+                    onQuickEntry={(id) => {
+                        if (id === "apps") libraryRef.current?.openAll();
+                        else if (id === "overview" || id === "notes") {
+                            openDesk(id);
+                        }
+                    }}
                 />
                 <InlineAnswerCard
                     view={inlineAnswer.view}
@@ -270,27 +275,6 @@ export function ZenLayout(
                     mobile={mobile}
                     onOpen={openPaper}
                 />
-            )}
-
-            {user && dock.mounted && (
-                <nav
-                    ref={dock.ref}
-                    className="zen-edge-trigger"
-                    aria-label="工作区"
-                    data-returning={workspaceWasOpen || undefined}
-                    data-ending-style={dock.ending || undefined}
-                    inert={dock.ending || undefined}
-                >
-                    <button
-                        type="button"
-                        className="zen-edge-btn"
-                        data-workspace="documents"
-                        onClick={() => openWorkspace("documents")}
-                    >
-                        <NotebookPen size="1em" className="icon-md" />
-                        <span>笔记</span>
-                    </button>
-                </nav>
             )}
         </>
     );

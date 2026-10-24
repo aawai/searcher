@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 Deno.test("Documents long document actions and menus stay reachable without replacing the editor", async () => {
     await using cleanup = new AsyncDisposableStack();
@@ -33,7 +34,7 @@ Deno.test("Documents long document actions and menus stay reachable without repl
         return (await response.json()).data.id as string;
     });
     await page.reload();
-    await page.locator('button[data-workspace="documents"]').first().click();
+    await openNotes(page);
     await page.locator(`[data-document-id="${id}"] h4 button`).click();
     const editorRoot = page.locator(".document-editor-container");
     const live = editorRoot.locator(".ProseMirror");

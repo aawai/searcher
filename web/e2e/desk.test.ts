@@ -200,6 +200,62 @@ Deno.test("desk 览: keyboard browse, open, edit and return; list fallback; Shee
         );
 
         await t.step(
+            "1440: avatar menu and empty-search entries; focus returns to them",
+            async () => {
+                // The home has no bottom navigation (the former 工作区 Dock).
+                assertEquals(
+                    await page.getByRole("navigation", { name: "工作区" })
+                        .count(),
+                    0,
+                );
+                const trigger = page.locator(".user-avatar-trigger");
+                const triggerName = await trigger.getAttribute("aria-label");
+                await trigger.click();
+                await page.getByRole("menuitem", { name: "桌面", exact: true })
+                    .click();
+                await waitStage(page, "overview");
+                await waitFocus(page, "notes");
+                await page.keyboard.press("Escape");
+                await waitStage(page, "calm");
+                await waitFocus(page, triggerName);
+
+                await trigger.click();
+                await page.getByRole("menuitem", { name: "笔记", exact: true })
+                    .click();
+                await deskDetail(page).getByRole("heading", {
+                    name: "笔记",
+                    exact: true,
+                }).waitFor();
+                await page.keyboard.press("Escape");
+                await waitStage(page, "calm");
+                await waitFocus(page, triggerName);
+
+                // The focused empty search box offers 桌面 and 笔记.
+                await page.locator("#search-query").focus();
+                const options = page.getByRole("listbox").getByRole("option");
+                await options.first().waitFor();
+                assertEquals(await options.allInnerTexts(), ["桌面", "笔记"]);
+                await page.getByRole("option", { name: "桌面" }).click();
+                await waitStage(page, "overview");
+                await page.keyboard.press("Escape");
+                await waitStage(page, "calm");
+                await waitFocus(page, "search-query");
+
+                // From another page the menu is a page navigation home.
+                await page.goto(app.origin + "/settings");
+                await trigger.click();
+                await page.getByRole("menuitem", { name: "笔记", exact: true })
+                    .click();
+                await waitStage(page, "overview");
+                assertEquals(new URL(page.url()).pathname, "/");
+                await page.goBack();
+                await page.waitForURL(app.origin + "/settings");
+                await page.goto(app.origin + "/");
+                await page.locator("#search-query").waitFor();
+            },
+        );
+
+        await t.step(
             "1440: more than 96 objects degrade to the list",
             async () => {
                 await seed(page, app.origin, 96);
