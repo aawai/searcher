@@ -380,10 +380,10 @@ export function TrashPage() {
             >
                 <TabsList>
                     <TabsTrigger value="webapps">
-                        应用 ({webapps.length})
+                        应用 {webapps.length}
                     </TabsTrigger>
                     <TabsTrigger value="documents">
-                        笔记 ({documents.length})
+                        笔记 {documents.length}
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
