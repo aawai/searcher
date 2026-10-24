@@ -210,8 +210,8 @@ async function settlePresentation(page: Page) {
 
 /**
  * Wait for the grid to be settled at the current viewport: columns follow the
- * measured parent width (ResizeObserver), tiles are laid out and the viewport
- * has the requested width.
+ * measured plate content width (ResizeObserver), tiles are laid out and the
+ * viewport has the requested width.
  */
 async function waitForHome(page: Page, width: number, theme?: Theme) {
     await page.locator(HOME).waitFor({ state: "visible" });
@@ -224,11 +224,17 @@ async function waitForHome(page: Page, width: number, theme?: Theme) {
         const parent = grid?.parentElement;
         if (!grid || !parent) return false;
         const style = getComputedStyle(grid);
+        const parentStyle = getComputedStyle(parent);
         const cell = Number.parseFloat(
             style.getPropertyValue("--launcher-col-w"),
         );
         const gap = Number.parseFloat(style.columnGap);
-        const available = parent.clientWidth;
+        // The plate's padding is outside its content box; columns derive from
+        // the content width. This fixture contains a large folder, so the
+        // capacity is not narrowed by last-row balancing.
+        const available = parent.clientWidth -
+            (Number.parseFloat(parentStyle.paddingLeft) || 0) -
+            (Number.parseFloat(parentStyle.paddingRight) || 0);
         if (!(cell > 0) || !(available > 0)) return false;
         const expected = Math.max(
             2,

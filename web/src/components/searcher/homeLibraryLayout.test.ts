@@ -21,6 +21,104 @@ const apps = (n: number, prefix = "a") =>
     Array.from({ length: n }, (_, i) => app(`${prefix}${i}`));
 const ids = (tiles: LauncherTile[]) => tiles.map((t) => t.id);
 
+Deno.test("home balances nineteen cells into five columns without another row", () => {
+    const plan = planHomeLibrary({
+        tiles: apps(18),
+        columns: 6,
+        rows: 4,
+        showAdd: true,
+    });
+    assertEquals(plan.add, { col: 3, row: 3 });
+    assertEquals(Math.max(...plan.visible.map((item) => item.col)), 4);
+    assertEquals(Math.max(...plan.visible.map((item) => item.row)), 3);
+    assertEquals(plan.overflow, []);
+});
+
+Deno.test("home keeps the capacity unless the trailing row is a lone cell", () => {
+    // 7 cells in 5 columns = 5 + 2: the last row is not lonely, so the
+    // responsive capacity is retained.
+    const seven = planHomeLibrary({
+        tiles: apps(6),
+        columns: 5,
+        rows: 4,
+        showAdd: true,
+    });
+    assertEquals(Math.max(...seven.visible.map((item) => item.col)), 4);
+    assertEquals(seven.add, { col: 1, row: 1 });
+
+    const full = planHomeLibrary({
+        tiles: apps(12),
+        columns: 6,
+        rows: 4,
+        showAdd: false,
+    });
+    assertEquals(Math.max(...full.visible.map((item) => item.col)), 5);
+    const capped = planHomeLibrary({
+        tiles: apps(18),
+        columns: 6,
+        rows: 3,
+        showAdd: true,
+    });
+    assertEquals(capped.more, { col: 5, row: 2, count: 1 });
+    assertEquals(Math.max(...capped.visible.map((item) => item.col)), 5);
+});
+
+Deno.test("large folders retain the six-column backfill rather than balancing", () => {
+    const plan = planHomeLibrary({
+        tiles: [folder("large"), ...apps(14)],
+        columns: 6,
+        rows: 4,
+        showAdd: true,
+    });
+    assertEquals(Math.max(...plan.visible.map((item) => item.col)), 5);
+    assertEquals(plan.add, { col: 0, row: 3 });
+});
+
+Deno.test("effective rows account for the bottom plate padding", () => {
+    // 1440x900: search centre 38% -> 342; search bottom 370; 20px gap -> plate
+    // top 390; 16px top padding -> grid top 406. 900 - 406 - 48 - 16 = 430,
+    // floor(430 / 96) = 4 rows.
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 900,
+            gridTop: 406,
+            rowPitch: 96,
+            platePadding: 16,
+        }),
+        4,
+    );
+    // 1366x768: search bottom 319.84; plate top 339.84; grid top 355.84.
+    // 768 - 355.84 - 48 - 16 = 348.16, floor(348.16 / 96) = 3 rows.
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 768,
+            gridTop: 355.84,
+            rowPitch: 96,
+            platePadding: 16,
+        }),
+        3,
+    );
+    // The bottom padding can remove a row on its own.
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 768,
+            gridTop: 300,
+            rowPitch: 96,
+            platePadding: 32,
+        }),
+        4,
+    );
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 768,
+            gridTop: 300,
+            rowPitch: 96,
+            platePadding: 40,
+        }),
+        3,
+    );
+});
+
 Deno.test("large folder counts as 4 cells and 4 full rows fit exactly", () => {
     // 4 columns x 4 rows = 16 cells = large folder (4) + 12 apps.
     const plan = planHomeLibrary({
@@ -60,7 +158,7 @@ Deno.test("add cell is placed after tiles when it fits", () => {
         rows: 4,
         showAdd: true,
     });
-    assertEquals(plan.add, { col: 0, row: 1 });
+    assertEquals(plan.add, { col: 2, row: 1 });
     assertEquals(plan.more, null);
     assertEquals(plan.addInOverflow, false);
 });

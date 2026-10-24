@@ -21,6 +21,40 @@ const BACKDROPS: readonly Rgb[] = [
     [128, 128, 128],
 ];
 
+/**
+ * Synthetic wallpaper colour fixtures, not samples of the user's private images.
+ * Keep adjacent light/dark and saturated patches: averaging an illustration
+ * would hide the local contrast failures that a Material plate must prevent.
+ */
+const WALLPAPER_FIXTURES: readonly {
+    name: string;
+    samples: readonly Rgb[];
+}[] = [
+    {
+        name: "light-portrait",
+        samples: [
+            [255, 255, 255],
+            [246, 242, 235],
+            [224, 191, 169],
+            [173, 132, 112],
+            [42, 34, 31],
+        ],
+    },
+    {
+        name: "high-detail-illustration",
+        samples: [
+            [255, 255, 255],
+            [245, 238, 204],
+            [225, 241, 248],
+            [250, 180, 45],
+            [210, 45, 75],
+            [40, 165, 180],
+            [45, 55, 145],
+            [15, 20, 30],
+        ],
+    },
+];
+
 function declarations(selector: string): Map<string, string> {
     const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const blocks = new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`, "g");
@@ -79,6 +113,21 @@ function fillPercent(tokens: Map<string, string>, name: string): number {
     const match = value?.match(/^(\d+(?:\.\d+)?)%$/);
     if (!match) throw new Error(`${name} must be a percentage, got ${value}`);
     return Number(match[1]);
+}
+
+function rgbAlpha(tokens: Map<string, string>, name: string): {
+    color: Rgb;
+    alpha: number;
+} {
+    const value = resolve(tokens, name);
+    const match = value.match(
+        /^rgb\((\d+) (\d+) (\d+) \/ (0(?:\.\d+)?|1(?:\.0+)?)\)$/,
+    );
+    if (!match) throw new Error(`expected rgb(r g b / alpha), got ${value}`);
+    return {
+        color: [Number(match[1]), Number(match[2]), Number(match[3])],
+        alpha: Number(match[4]),
+    };
 }
 
 for (const theme of ["light", "dark"] as const) {
@@ -210,4 +259,92 @@ for (const theme of ["light", "dark"] as const) {
             );
         }
     });
+}
+
+for (const theme of ["light", "dark"] as const) {
+    for (const tier of TIERS) {
+        for (const fixture of WALLPAPER_FIXTURES) {
+            Deno.test(`home plate ${theme}/${tier}/${fixture.name}: app labels hold AA without a capsule or wallpaper halo`, () => {
+                const tokens = cascade(theme, tier);
+                const label = hex(resolve(tokens, "--foreground"));
+                const base = hex(resolve(tokens, "--material-solid"));
+                const alpha = fillPercent(tokens, `--glass-regular-${theme}`) /
+                    100;
+                const peak = fillPercent(tokens, "--glass-sheen-peak") / 100 *
+                    Number(resolve(tokens, "--glass-sheen-scale"));
+                for (const backdrop of fixture.samples) {
+                    // Check the earliest label baseline and below the sheen.
+                    for (const height of [0.25, 0.55]) {
+                        const sheen = peak * Math.max(0, 1 - height / 0.55);
+                        const plate = over(
+                            [255, 255, 255],
+                            sheen,
+                            over(base, alpha, backdrop),
+                        );
+                        const ratio = contrast(label, plate);
+                        assert(
+                            ratio >= WCAG_AA_TEXT,
+                            `app label on ${backdrop} at ${height * 100}%: ${
+                                ratio.toFixed(2)
+                            }:1`,
+                        );
+                    }
+                }
+            });
+        }
+    }
+}
+
+for (const theme of ["light", "dark"] as const) {
+    for (const tier of TIERS) {
+        for (const fixture of WALLPAPER_FIXTURES) {
+            Deno.test(`home glyph ${theme}/${tier}/${fixture.name}: white tile edge holds 3:1 against light wallpaper`, () => {
+                const tokens = cascade(theme, tier);
+                // The dedicated inset glyph edge is painted above the
+                // server-normalized opaque white canvas, not behind the image.
+                const edge = rgbAlpha(tokens, "--glyph-edge");
+                const paintedEdge = over(
+                    edge.color,
+                    edge.alpha,
+                    [255, 255, 255],
+                );
+                const base = hex(resolve(tokens, "--material-solid"));
+                const alpha = fillPercent(tokens, `--glass-regular-${theme}`) /
+                    100;
+                const peak = fillPercent(tokens, "--glass-sheen-peak") / 100 *
+                    Number(resolve(tokens, "--glass-sheen-scale"));
+                for (const backdrop of fixture.samples) {
+                    // Only the fixture's bright regions exercise the reported
+                    // white-on-light failure; dark regions test other concerns.
+                    if (luminance(backdrop) < 0.7) continue;
+                    const ratio = contrast(paintedEdge, backdrop);
+                    assert(
+                        ratio >= SECONDARY_TEXT,
+                        `white glyph edge against ${backdrop}: ${
+                            ratio.toFixed(2)
+                        }:1`,
+                    );
+                    for (const sheen of [0, peak]) {
+                        const plate = over(
+                            [255, 255, 255],
+                            sheen,
+                            over(base, alpha, backdrop),
+                        );
+                        // On dark Material, the white tile itself supplies the
+                        // boundary; on light Material, its inset edge must do so.
+                        const boundary = theme === "dark"
+                            ? [255, 255, 255] as const
+                            : paintedEdge;
+                        const plateRatio = contrast(boundary, plate);
+                        assert(
+                            plateRatio >= SECONDARY_TEXT,
+                            `white glyph boundary on plate over ${backdrop}, sheen ${sheen}: ${
+                                plateRatio.toFixed(2)
+                            }:1`,
+                        );
+                    }
+                }
+            });
+        }
+    }
 }

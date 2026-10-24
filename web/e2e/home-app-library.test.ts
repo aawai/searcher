@@ -16,7 +16,7 @@ interface HomeMetrics {
     tileCount: number;
     pitch: number;
     gridTop: number;
-    gridBottom: number;
+    plateBottom: number;
     viewportHeight: number;
     distinctLefts: number;
     moreLabel: string | null;
@@ -43,6 +43,11 @@ function measureHome(): HomeMetrics | null {
     const bottom = Math.max(...boxes.map((box) => box.bottom));
     const pitch = cell + gap;
     const gridBox = grid.getBoundingClientRect();
+    const plate = grid.closest<HTMLElement>(".launcher-plate");
+    const plateBox = plate?.getBoundingClientRect() ?? gridBox;
+    const platePadding = plate
+        ? Number.parseFloat(getComputedStyle(plate).paddingBottom)
+        : 0;
     const viewportHeight = document.documentElement.clientHeight;
     const largeTile = cells.find((element) =>
         element.querySelector(".launcher-folder-item--large")
@@ -57,7 +62,9 @@ function measureHome(): HomeMetrics | null {
             4,
             Math.max(
                 1,
-                Math.floor((viewportHeight - gridBox.top - 48) / pitch),
+                Math.floor(
+                    (viewportHeight - gridBox.top - 48 - platePadding) / pitch,
+                ),
             ),
         ),
         columns: Number(grid.dataset.columns),
@@ -67,7 +74,7 @@ function measureHome(): HomeMetrics | null {
                 .length,
         pitch,
         gridTop: gridBox.top,
-        gridBottom: gridBox.bottom,
+        plateBottom: plateBox.bottom,
         viewportHeight,
         distinctLefts: new Set(boxes.map((box) => Math.round(box.left))).size,
         moreLabel: more?.getAttribute("aria-label") ?? null,
@@ -259,8 +266,8 @@ Deno.test("home app library (#244)", async (t) => {
                     assertEquals(m.columns, 6);
                     assertEquals(m.rows, 4);
                     assert(
-                        m.viewportHeight - m.gridBottom >= 48 - 0.5,
-                        `grid bottom ${m.gridBottom} leaves < 48px in ${m.viewportHeight}`,
+                        m.viewportHeight - m.plateBottom >= 48 - 0.5,
+                        `plate bottom ${m.plateBottom} leaves < 48px in ${m.viewportHeight}`,
                     );
                     // 4 rows x 6 columns = 24 cells; the large folder takes 4,
                     // 更多 takes the last: 23 tiles' worth of cells are visible
@@ -302,8 +309,8 @@ Deno.test("home app library (#244)", async (t) => {
                         rowsBySize.set(size.height, m.rows);
                         assert(m.rows >= 1 && m.rows <= 4);
                         assert(
-                            m.viewportHeight - m.gridBottom >= 48 - 0.5,
-                            `${size.height}: grid bottom ${m.gridBottom} too close to the bottom`,
+                            m.viewportHeight - m.plateBottom >= 48 - 0.5,
+                            `${size.height}: plate bottom ${m.plateBottom} too close to the bottom`,
                         );
                         assertEquals(
                             m.moreLabel,
@@ -330,7 +337,7 @@ Deno.test("home app library (#244)", async (t) => {
         );
 
         await t.step(
-            "mobile touch: five columns, 3x3 folder preview and whole-surface activation",
+            "mobile touch: four columns inside the plate, 3x3 folder preview and whole-surface activation",
             async () => {
                 const { page, context } = await bigLibraryPage(
                     browser,
@@ -343,8 +350,8 @@ Deno.test("home app library (#244)", async (t) => {
                 );
                 try {
                     const m = await waitForPlannedHome(page);
-                    assertEquals(m.columns, 5);
-                    assertEquals(m.distinctLefts, 5);
+                    assertEquals(m.columns, 4);
+                    assertEquals(m.distinctLefts, 4);
                     assert(m.moreLabel?.startsWith("更多（"));
                     assert(m.large && m.app);
                     assert(
