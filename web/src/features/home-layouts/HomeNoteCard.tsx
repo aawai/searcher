@@ -1,5 +1,11 @@
 import { Bookmark, ExternalLink, MoreHorizontal, Trash2 } from "lucide-react";
-import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
+import {
+    type PointerEvent as ReactPointerEvent,
+    type ReactNode,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import type { DocumentColor, DocumentNoteSize } from "@shared/documents.ts";
 import { DocumentColorItems } from "../../components/searcher/DocumentColorMenu.tsx";
 import { NoteMarkdownView } from "../../components/searcher/NoteMarkdownLoader.tsx";
@@ -60,7 +66,56 @@ export function HomeNoteCard(
     },
 ) {
     const body = useRef<HTMLDivElement>(null);
+    const suppressTaskClick = useRef(false);
     const [overflowing, setOverflowing] = useState(false);
+
+    /**
+     * Coarse pointers get a 44×44 task hit area in the leading checkbox column
+     * without changing the one-line row pitch. Neighbouring 22px rows would
+     * overlap, so the nearest row centre wins. The programmatic input click is
+     * allowed through; the compatibility click that follows is suppressed.
+     */
+    const onTaskPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+        if (!onToggleTask || !matchMedia("(any-pointer: coarse)").matches) {
+            return;
+        }
+        const element = body.current;
+        if (!element) return;
+        const target = parseFloat(
+            getComputedStyle(element).getPropertyValue(
+                "--control-touch-target",
+            ),
+        );
+        const hitSize = Number.isFinite(target) ? target : 44;
+        let nearest:
+            | { input: HTMLInputElement; distance: number }
+            | null = null;
+        for (
+            const row of element.querySelectorAll<HTMLLIElement>(
+                "li.task-list-item",
+            )
+        ) {
+            const rect = row.getBoundingClientRect();
+            if (
+                event.clientX < rect.left ||
+                event.clientX > rect.left + hitSize
+            ) continue;
+            const distance = Math.abs(
+                event.clientY - (rect.top + rect.height / 2),
+            );
+            if (distance > hitSize / 2) continue;
+            if (nearest && distance >= nearest.distance) continue;
+            const input = row.querySelector<HTMLInputElement>(
+                ":scope > input[type='checkbox']",
+            );
+            if (input && !input.disabled) nearest = { input, distance };
+        }
+        if (!nearest) return;
+        event.preventDefault();
+        event.stopPropagation();
+        suppressTaskClick.current = true;
+        nearest.input.click();
+    };
 
     // Whole-line truncation: measure the real line boxes (task rows, list
     // items and paragraphs can round differently) and end the visible body at
@@ -262,6 +317,17 @@ export function HomeNoteCard(
                     ref={body}
                     className="home-note-body markdown"
                     data-overflow={overflowing || undefined}
+                    onPointerDown={onTaskPointerDown}
+                    onClickCapture={(event) => {
+                        if (!suppressTaskClick.current) return;
+                        if (event.target instanceof HTMLInputElement) {
+                            suppressTaskClick.current = false;
+                            return;
+                        }
+                        suppressTaskClick.current = false;
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }}
                 >
                     <NoteMarkdownView
                         body={note.body}

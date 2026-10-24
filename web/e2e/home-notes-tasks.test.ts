@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import {
     createHomeNote,
     homeNote,
@@ -100,6 +100,55 @@ Deno.test("home note task toggles coalesce into one PATCH and Space toggles a fo
             note.id,
         );
         assertEquals(body, "- [x] 甲\n- [x] 乙");
+    } finally {
+        await fixture.close();
+    }
+});
+
+Deno.test("coarse pointers get a 44px task target without changing the line pitch", async () => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
+    });
+    const { page } = fixture;
+    try {
+        const note = await createHomeNote(page, {
+            title: "触屏任务",
+            body: "- [ ] 单独任务",
+        });
+        await reloadHome(page);
+        await waitForNoteCards(page, 1);
+        const card = homeNote(page, "触屏任务").locator(".home-note-card");
+        const row = card.locator("li.task-list-item");
+        const box = await row.getByRole("checkbox").boundingBox();
+        assert(box);
+        const rowBox = await row.boundingBox();
+        assert(rowBox);
+        assertEquals(Math.round(rowBox.height), 22);
+        assertEquals(Math.round(box.height), 16);
+        const saved = page.waitForResponse((response) =>
+            response.request().method() === "PATCH" &&
+            response.url().endsWith(`/api/documents/${note.id}`) &&
+            response.ok()
+        );
+        // 18px above the box centre is outside the 16px drawing but inside the
+        // extended 44px target in the leading checkbox column.
+        await page.touchscreen.tap(
+            box.x + box.width / 2,
+            box.y + box.height / 2 - 18,
+        );
+        await saved;
+        await card.getByRole("checkbox", {
+            name: "已完成任务，点击标记为未完成",
+        }).waitFor();
+        const checked = await page.evaluate(
+            async (id) =>
+                (await (await fetch(`/api/documents/${id}`)).json()).data
+                    .body as string,
+            note.id,
+        );
+        assertEquals(checked, "- [x] 单独任务");
+        assertEquals(Math.round((await row.boundingBox())!.height), 22);
     } finally {
         await fixture.close();
     }

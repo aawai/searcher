@@ -304,6 +304,12 @@
     margin: var(--space-5) auto var(--space-8);
 }
 
+/* The flow's top gap is the same search→plate rhythm, not an extra margin on
+   top of the pinned area's bottom margin. Note rows use the app grid gap. */
+.home .pinned-area:has(+ .home-notes--flow) {
+    margin-block-end: 0;
+}
+
 .home-notes--flow[data-mode="flow"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
