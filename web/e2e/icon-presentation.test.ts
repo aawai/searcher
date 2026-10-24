@@ -110,6 +110,21 @@ Deno.test("icon presentation real-page matrix: fixed glyphs, opaque and transpar
                     width < 768 ? 44 : 48,
                     width < 768 ? 44 : 48,
                 ]);
+                const edges = await page.locator(
+                    ".launcher-grid--home .webapp-glyph",
+                ).evaluateAll((nodes) =>
+                    nodes.map((node) => ({
+                        ring: getComputedStyle(node, "::after").boxShadow,
+                        shadow: getComputedStyle(node).boxShadow,
+                    }))
+                );
+                assertEquals(
+                    edges.every((edge) =>
+                        edge.ring.includes("inset") && edge.shadow !== "none"
+                    ),
+                    true,
+                );
+                assertEquals(new Set(edges.map((edge) => edge.ring)).size, 1);
                 assertEquals(
                     await page.evaluate(() =>
                         document.documentElement.scrollWidth > innerWidth

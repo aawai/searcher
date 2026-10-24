@@ -496,6 +496,7 @@
     --material-regular: color-mix(in srgb, var(--material-solid) var(--glass-fill-regular), transparent);
     --material-thick: color-mix(in srgb, var(--surface-l3) var(--glass-fill-thick), transparent);
     --shadow-material-edge: inset 0 1px 0 var(--glass-edge-top), inset 0 0 0 1px var(--glass-edge-ring), inset 0 -1px 0 var(--glass-edge-bottom);
+    --shadow-material-glyph: 0 var(--space-hairline) var(--space-half) var(--glass-edge-bottom);
     --glass-sheen: linear-gradient(180deg, color-mix(in srgb, white calc(var(--glass-sheen-peak) * var(--glass-sheen-scale)), transparent), transparent 55%);
 }
 

@@ -29,6 +29,7 @@
     background: color-mix(in srgb, var(--foreground) 14%, transparent);
 }
 .webapp-glyph {
+    position: relative;
     display: grid;
     place-items: center;
     flex: none;
@@ -40,6 +41,17 @@
     font-size: var(--font-title-size);
     font-weight: 400;
     overflow: hidden;
+    box-shadow: var(--shadow-material-glyph);
+}
+/* Paint the shared inner rim above full-bleed images, not behind their pixels. */
+.webapp-glyph::after,
+.launcher-folder-surface::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: var(--shadow-material-edge);
+    pointer-events: none;
 }
 /* Server-normalized images own their canvas and proportional inset. */
 .webapp-glyph img {
@@ -106,8 +118,8 @@
    [INVARIANT] Square Cell Grid System:
    1. --launcher-row-h MUST ALWAYS equal var(--launcher-col-w) (aspect-ratio 1:1).
    2. --launcher-gap-y MUST ALWAYS equal var(--launcher-gap-x).
-   3. Large folder spans 2 cols x 2 rows: its width is 2 x cell + gap, derived
-      from these tokens; its name follows in the lower label zone.
+   3. Large folder spans 2 cols x 2 rows; its square surface frames the icon
+      outer edges, while its name follows the second-row application labels.
    4. NEVER introduce modifiers (such as icons-only or folder variants) that alter
       col-w or row-h independently, which distorts icon spacing or tile geometry. */
 .launcher-grid,
@@ -156,7 +168,7 @@
     justify-content: center;
 }
 :is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) .webapp-icon {
-    justify-content: center;
+    justify-content: flex-start;
 }
 /* Wide Home: Safari-start-page scale icons; narrow and touch keep denser cells. */
 @media (min-width: 768px) {
@@ -278,7 +290,7 @@
     background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge);
+    box-shadow: var(--shadow-material-glyph);
     overflow: hidden;
     transition: transform var(--motion-fast) var(--ease-standard),
         background var(--motion-fast) var(--ease-standard);
@@ -293,32 +305,27 @@
     width: 100%;
     height: 100%;
 }
-/* Large: 2 x 2 cells wide; the lower --space-5 strip is the name's label zone. */
+/* Large folders frame the icon outer edges; the name follows row two labels. */
 .launcher-folder-item--large .launcher-folder-surface {
-    --launcher-surface-size: calc(2 * var(--launcher-col-w) + var(--launcher-gap-x));
+    --launcher-surface-size: calc(var(--launcher-col-w) + var(--launcher-gap-x) + var(--launcher-icon));
     --launcher-mini-size: min(var(--launcher-icon), calc((var(--launcher-surface-size) - var(--space-5) - 2 * var(--space-2) - 2 * var(--space-1)) / 3));
     position: absolute;
-    top: 0;
-    left: 0;
+    top: var(--launcher-pad-t);
+    left: calc((var(--launcher-col-w) - var(--launcher-icon)) / 2);
     width: var(--launcher-surface-size);
-    height: calc(var(--launcher-surface-size) - var(--space-5));
-    aspect-ratio: auto;
+    height: var(--launcher-surface-size);
     border-radius: var(--radius-lg);
 }
 .launcher-folder-item--large .launcher-folder-name {
     position: absolute;
-    bottom: 0;
+    top: calc(var(--launcher-col-w) + var(--launcher-gap-y) +
+        var(--launcher-pad-t) + var(--launcher-icon) +
+        var(--space-launcher-icon-gap));
     left: 50%;
     width: max-content;
     max-width: calc(100% - var(--space-2));
-    height: var(--space-5);
-    padding: var(--space-launcher-icon-gap) var(--space-2);
+    padding: 0 var(--space-2);
     transform: translateX(-50%);
-    border-radius: var(--radius-pill);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge);
 }
 .launcher-folder-item:hover .launcher-folder-surface {
     background: var(--glass-sheen), color-mix(in srgb, var(--foreground) 8%,
@@ -362,28 +369,13 @@
 .launcher-folder-item--small .launcher-folder-mini-glyph {
     font-size: var(--font-launcher-micro);
 }
-/* Large, desktop: 3 x 3 clickable icons (the 9th cell may be the remainder). */
+/* Large, all pointers: 3 x 3 slots (the 9th cell may be the remainder). */
 .launcher-folder-item--large .launcher-folder-preview {
     grid-template-columns: repeat(3, var(--launcher-mini-size));
-    grid-auto-rows: var(--launcher-mini-size);
+    grid-template-rows: repeat(3, var(--launcher-mini-size));
     gap: var(--space-1);
     padding: var(--space-2);
 }
-/* Few members, or touch: a 2 x 2 (or 1 x 2) preview of 44px+ targets. */
-.launcher-folder-item--large .launcher-folder-preview--sparse,
-.launcher-folder-item--large .launcher-folder-preview--medium {
-    grid-template-columns: repeat(2, var(--launcher-icon));
-    grid-auto-rows: var(--launcher-icon);
-    gap: var(--space-2);
-}
-.launcher-folder-item--large .launcher-folder-preview--single,
-.launcher-folder-item--large .launcher-folder-preview--empty {
-    grid-template-columns: minmax(0, calc(var(--launcher-icon) +
-        var(--space-2)));
-    grid-auto-rows: calc(var(--launcher-icon) + var(--space-2));
-    place-items: center;
-}
-.launcher-folder-item--small .launcher-folder-preview--single,
 .launcher-folder-item--small .launcher-folder-preview--empty {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
@@ -399,6 +391,10 @@
 .launcher-folder-item--large .launcher-folder-empty-icon {
     width: var(--launcher-folder-empty-icon-size-large);
     height: var(--launcher-folder-empty-icon-size-large);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 .launcher-folder-mini {
     position: relative;
@@ -435,13 +431,6 @@
     --radius-launcher-mini: calc(var(--launcher-mini-size) * var(--radius-launcher-ratio));
     border-radius: var(--radius-launcher-mini);
     font-size: var(--font-title-size);
-}
-.launcher-folder-item--large :is(.launcher-folder-preview--sparse, .launcher-folder-preview--medium) .launcher-folder-mini-glyph {
-    --radius-launcher-mini: calc(var(--launcher-icon) * var(--radius-launcher-ratio));
-}
-.launcher-folder-item--large .launcher-folder-preview--single .launcher-folder-mini-glyph {
-    --radius-launcher-mini: calc((var(--launcher-icon) + var(--space-2)) * var(--radius-launcher-ratio));
-    font-size: var(--font-page-title-size);
 }
 .launcher-folder-mini-glyph img {
     position: absolute;
@@ -496,6 +485,9 @@
 
 /* + and 更多（N） share the app icon geometry; the glyph is an action, not a site. */
 .launcher-action-cell .launcher-action-glyph {
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
     color: var(--muted);
 }
 /* The count must stay readable in a 44px mobile track: the label may extend
@@ -647,6 +639,9 @@
 }
 
 @media (any-pointer: coarse), (hover: none) {
+    .launcher-folder-item--large .launcher-folder-mini {
+        pointer-events: none;
+    }
     .launcher-grid,
     .launcher-overlay {
         --launcher-col-w: var(--launcher-touch-cell-size);

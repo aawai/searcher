@@ -10,6 +10,7 @@ import {
 import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { openMoreApps } from "./helpers/app-library.ts";
+import { assertLargeFolderGeometry } from "./helpers/launcher-geometry.ts";
 
 // Issue #244: the home page is the application library. These regressions pin
 // the density contract of its grid (docs/apps.md 首页应用库): fixed glyphs,
@@ -461,7 +462,7 @@ function assertDensity(
     );
 }
 
-function assertFolderPreviews(metrics: Metrics, coarse: boolean) {
+function assertFolderPreviews(metrics: Metrics, _coarse: boolean) {
     const small = metrics.folders.find((folder) => folder.size === "small");
     const large = metrics.folders.find((folder) => folder.size === "large");
     assert(small && large, "Both folders must be rendered on the home grid");
@@ -471,8 +472,8 @@ function assertFolderPreviews(metrics: Metrics, coarse: boolean) {
         0,
         "Small folder preview glyphs are not interactive",
     );
-    // 10 members: touch previews 3 clickable + remainder, fine pointers 8 + remainder.
-    const clickable = coarse ? 3 : 8;
+    // All pointer types share nine slots: eight apps and a remainder for 10 members.
+    const clickable = 8;
     assertEquals(
         large.previewCount,
         clickable + 1,
@@ -551,15 +552,6 @@ async function assertHomeHitTargets(page: Page) {
         "Large folder opener strip",
         "bottom-edge",
     );
-    const previews = grid.locator(
-        ".launcher-folder-item--large button.launcher-folder-mini",
-    );
-    for (let index = 0; index < await previews.count(); index++) {
-        await assertTouchTarget(
-            previews.nth(index),
-            `Large folder preview ${index + 1}`,
-        );
-    }
     // Over capacity the last cell is 更多（N）; otherwise the add cell is shown.
     const overflowCell = grid.locator(
         "[data-library-cell='more'], [data-library-cell='add']",
@@ -914,99 +906,200 @@ async function runDesktopMatrix(
     }
 }
 
-// Large folders with 1, 2 and 4 members keep their previews inside the surface
-// and clear of the title, with touch-sized buttons.
+// Each member-count variant runs with both pointer types at both target widths.
 async function runSparseLargePreviews(
     browser: Browser,
     origin: string,
     evidence: string,
 ) {
-    const context = await browser.newContext({
-        viewport: { width: 390, height: 844 },
-        deviceScaleFactor: 1,
-        isMobile: true,
-        hasTouch: true,
-        colorScheme: "light",
-    });
-    try {
-        const page = await context.newPage();
-        await register(page, origin, "apps_density_sparse");
-        const variants = await page.evaluate(async () => {
-            const ids: Array<{ id: string; count: number }> = [];
-            for (const count of [1, 2, 4]) {
-                const response = await fetch("/api/webapp-groups", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        name: `预览 ${count} 个应用的长名称文件夹`,
-                        folderSize: "large",
-                        sortOrder: count,
-                    }),
-                });
-                if (!response.ok) throw Error(await response.text());
-                const { data: group } = await response.json();
-                for (let i = 0; i < count; i++) {
-                    const result = await fetch("/api/webapps", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            name: `预览 ${count}-${i} 长名称`,
-                            url: `https://preview-${count}-${i}.example/`,
-                            groupId: group.id,
-                        }),
-                    });
-                    if (!result.ok) throw Error(await result.text());
-                }
-                ids.push({ id: group.id, count });
-            }
-            return ids;
-        });
-        await page.reload();
-        await waitForHome(page, 390);
-        for (const { id, count } of variants) {
-            const tile = page.locator(
-                `${HOME} > .launcher-tile[data-folder-id="${id}"]`,
-            );
-            const buttons = tile.locator("button.launcher-folder-mini");
-            assertEquals(await buttons.count(), count);
-            await assertTouchTarget(
-                tile.locator(".launcher-folder-background"),
-                "Sparse large folder opener",
-                "bottom-edge",
-            );
-            for (let index = 0; index < count; index++) {
-                await assertTouchTarget(
-                    buttons.nth(index),
-                    "Sparse large folder preview",
-                );
-            }
-            const inside = await tile.evaluate((tile) => {
-                const surface = tile.querySelector(".launcher-folder-surface")!
-                    .getBoundingClientRect();
-                const title = tile.querySelector(".launcher-folder-name")!
-                    .getBoundingClientRect();
-                return Array.from(
-                    tile.querySelectorAll(".launcher-folder-mini-glyph"),
-                    (glyph) => {
-                        const r = glyph.getBoundingClientRect();
-                        return r.left >= surface.left &&
-                            r.right <= surface.right &&
-                            r.top >= surface.top &&
-                            r.bottom <= surface.bottom && r.bottom <= title.top;
+    for (const width of [390, 1440]) {
+        for (const coarse of [false, true]) {
+            const context = await browser.newContext({
+                viewport: { width, height: width === 390 ? 844 : 900 },
+                hasTouch: coarse,
+                isMobile: coarse && width === 390,
+            });
+            try {
+                const page = await context.newPage();
+                await register(page, origin, `folder_${width}_${coarse}`);
+                const smallResponse = await context.request.post(
+                    `${origin}/api/webapp-groups`,
+                    {
+                        headers: { Origin: origin },
+                        data: {
+                            name: "小文件夹",
+                            folderSize: "small",
+                            sortOrder: 1,
+                        },
                     },
                 );
-            });
-            assertEquals(
-                inside,
-                Array(count).fill(true),
-                "Sparse preview glyphs stay inside the surface and clear of the title",
-            );
+                assertEquals(smallResponse.status(), 200);
+                const { data: smallGroup } = await smallResponse.json();
+                for (let index = 0; index < 5; index++) {
+                    const response = await context.request.post(
+                        `${origin}/api/webapps`,
+                        {
+                            headers: { Origin: origin },
+                            data: {
+                                name: `邻居 ${index}`,
+                                url: `https://neighbor-${index}.example/`,
+                                iconSource: "default",
+                                sortOrder: index + 10,
+                            },
+                        },
+                    );
+                    assertEquals(response.status(), 200);
+                }
+                for (const count of [0, 1, 4, 9, 12]) {
+                    const created = await context.request.post(
+                        `${origin}/api/webapp-groups`,
+                        {
+                            headers: { Origin: origin },
+                            data: {
+                                name: `预览 ${count}`,
+                                folderSize: "large",
+                                sortOrder: 0,
+                            },
+                        },
+                    );
+                    assertEquals(created.status(), 200);
+                    const { data: group } = await created.json();
+                    const members: string[] = [];
+                    for (let index = 0; index < count; index++) {
+                        const response = await context.request.post(
+                            `${origin}/api/webapps`,
+                            {
+                                headers: { Origin: origin },
+                                data: {
+                                    name: `成员 ${index}`,
+                                    url: `https://preview-${count}-${index}.example/`,
+                                    iconSource: "default",
+                                    groupId: group.id,
+                                },
+                            },
+                        );
+                        assertEquals(response.status(), 200);
+                        members.push((await response.json()).data.id);
+                    }
+                    for (const labels of [true, false]) {
+                        const pref = await context.request.patch(
+                            `${origin}/api/preferences`,
+                            {
+                                headers: { Origin: origin },
+                                data: { showAppLabels: labels },
+                            },
+                        );
+                        assertEquals(pref.status(), 200);
+                        await page.reload();
+                        await waitForHome(page, width);
+                        const tile = page.locator(
+                            `${HOME} > .launcher-tile[data-folder-id="${group.id}"]`,
+                        );
+                        await assertLargeFolderGeometry(tile, labels);
+                        const small = page.locator(
+                            `${HOME} > .launcher-tile[data-folder-id="${smallGroup.id}"]`,
+                        );
+                        assertEquals(
+                            await small.locator(".launcher-folder-name")
+                                .count(),
+                            labels ? 1 : 0,
+                        );
+                        assert(
+                            (await small.locator(".launcher-folder-background")
+                                .getAttribute("aria-label"))?.includes(
+                                    "小文件夹",
+                                ),
+                        );
+                        assertEquals(
+                            await small.locator(".launcher-folder-item")
+                                .getAttribute("title"),
+                            "小文件夹",
+                        );
+                        assertEquals(
+                            await tile.locator("button.launcher-folder-mini")
+                                .count(),
+                            Math.min(count, 9),
+                        );
+                        assertEquals(
+                            await tile.locator(".launcher-folder-remainder")
+                                .count(),
+                            count > 9 ? 1 : 0,
+                        );
+                        const opener = tile.locator(
+                            ".launcher-folder-background",
+                        );
+                        assert(
+                            (await opener.getAttribute("aria-label"))?.includes(
+                                `预览 ${count}`,
+                            ),
+                        );
+                        assertEquals(
+                            await tile.locator(".launcher-folder-item")
+                                .getAttribute("title"),
+                            `预览 ${count}`,
+                        );
+                        if (coarse) {
+                            await assertTouchTarget(
+                                opener,
+                                "Whole folder surface",
+                            );
+                            const hit = await tile.locator(
+                                ".launcher-folder-surface",
+                            ).evaluate((node) => {
+                                const box = node.getBoundingClientRect();
+                                return [0.2, 0.5, 0.8].every((fraction) =>
+                                    document.elementFromPoint(
+                                        box.left + box.width * fraction,
+                                        box.top + box.height * fraction,
+                                    )?.classList.contains(
+                                        "launcher-folder-background",
+                                    )
+                                );
+                            });
+                            assertEquals(
+                                hit,
+                                true,
+                                "Preview locations hit the whole-folder opener",
+                            );
+                            await opener.tap({ position: { x: 12, y: 12 } });
+                            await page.locator(".launcher-popup").waitFor();
+                            assertEquals(
+                                await page.locator(
+                                    ".launcher-popup .webapp-name",
+                                ).count(),
+                                labels ? count : 0,
+                            );
+                            await page.keyboard.press("Escape");
+                            await page.locator(".launcher-popup").waitFor({
+                                state: "detached",
+                            });
+                        }
+                    }
+                    await page.screenshot({
+                        path:
+                            `${evidence}/folder-${width}-${coarse}-${count}.png`,
+                    });
+                    for (const id of members) {
+                        assertEquals(
+                            (await context.request.delete(
+                                `${origin}/api/webapps/${id}`,
+                                { headers: { Origin: origin } },
+                            )).status(),
+                            200,
+                        );
+                    }
+                    assertEquals(
+                        (await context.request.delete(
+                            `${origin}/api/webapp-groups/${group.id}`,
+                            { headers: { Origin: origin } },
+                        )).status(),
+                        200,
+                    );
+                }
+            } finally {
+                await context.close();
+            }
         }
-        await page.screenshot({
-            path: `${evidence}/large-preview-variants-390.png`,
-        });
-    } finally {
-        await context.close();
     }
 }
 

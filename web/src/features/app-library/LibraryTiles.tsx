@@ -22,9 +22,9 @@ import {
     WebAppIcon,
 } from "../../components/searcher/WebAppIcon.tsx";
 
-const COARSE_POINTER = "(pointer: coarse), (hover: none)";
+const COARSE_POINTER = "(any-pointer: coarse)";
 
-/** Touch-primary devices keep 44px targets: large folders preview 2x2 there. */
+/** Coarse pointers open the whole folder surface rather than miniature apps. */
 export function useCoarsePointer(): boolean {
     const [coarse, setCoarse] = useState(() =>
         globalThis.matchMedia?.(COARSE_POINTER).matches ?? false
@@ -118,24 +118,9 @@ export function FolderTile({
     const large = tile.group.folderSize === "large";
     const preview = folderPreview(tile.apps, {
         large,
-        touch,
         folderName: tile.group.name,
     });
-    const visibleCount = preview.clickable.length +
-        (preview.remainder.length > 0 ? 1 : 0);
-    const shape = large
-        ? visibleCount === 0
-            ? "empty"
-            : visibleCount === 1
-            ? "single"
-            : touch || visibleCount <= 4
-            ? visibleCount === 2 ? "sparse" : "medium"
-            : "grid"
-        : preview.miniPreview.length === 0
-        ? "empty"
-        : preview.miniPreview.length === 1
-        ? "single"
-        : "";
+    const shape = tile.apps.length === 0 ? "empty" : "";
     const openFolder = () => actions.onOpenFolder(tile.group);
     return (
         <ContextMenu>
@@ -148,6 +133,7 @@ export function FolderTile({
                 }}
                 data-tile-id={tile.id}
                 data-folder-id={tile.group.id}
+                title={tile.group.name}
                 tabIndex={managing ? -1 : 0}
             >
                 <div className="launcher-folder-surface">
@@ -190,6 +176,7 @@ export function FolderTile({
                                 className="launcher-folder-mini"
                                 title={`打开 ${app.name}`}
                                 aria-label={`打开 ${app.name}`}
+                                tabIndex={touch ? -1 : undefined}
                                 onClick={(event) => {
                                     event.stopPropagation();
                                     if (managing) actions.onEdit(app);
@@ -214,6 +201,7 @@ export function FolderTile({
                                 className="launcher-folder-mini launcher-folder-remainder"
                                 title={preview.remainderLabel}
                                 aria-label={preview.remainderLabel}
+                                tabIndex={touch ? -1 : undefined}
                                 onClick={(event) => {
                                     event.stopPropagation();
                                     if (!managing) openFolder();
@@ -236,12 +224,14 @@ export function FolderTile({
                         </span>
                     )}
                 </div>
-                <span
-                    className="launcher-folder-name"
-                    title={tile.group.name}
-                >
-                    {tile.group.name}
-                </span>
+                {actions.showAppLabels && (
+                    <span
+                        className="launcher-folder-name"
+                        title={tile.group.name}
+                    >
+                        {tile.group.name}
+                    </span>
+                )}
             </ContextMenuTrigger>
             <ContextMenuContent aria-label={`${tile.group.name} 的操作`}>
                 <ContextMenuItem onClick={openFolder}>
