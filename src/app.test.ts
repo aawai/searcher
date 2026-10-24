@@ -13,6 +13,7 @@ const OFFICIAL_PAGES = [
     "/register",
     "/account",
     "/trash",
+    "/share",
     "/settings",
     "/settings/appearance",
     "/settings/ai",

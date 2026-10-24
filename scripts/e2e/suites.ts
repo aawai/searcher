@@ -22,7 +22,7 @@ export const suites = {
         "accent-contrast",
         "color-hierarchy",
     ],
-    routing: ["navigation", "auth", "guest-ai-auth"],
+    routing: ["navigation", "auth", "guest-ai-auth", "share"],
     documents: [
         "documents",
         "documents-library",

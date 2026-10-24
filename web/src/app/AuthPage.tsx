@@ -135,11 +135,8 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                 path,
                 json("POST", body),
             );
+            // The `ready && user` effect then leaves for the destination, once.
             login(result.user);
-            navigate(authDestination(location.search), {
-                replace: true,
-                viewTransition: true,
-            });
         } catch (err) {
             setError(errorMessage(err));
         } finally {

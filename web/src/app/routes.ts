@@ -9,6 +9,8 @@ export const routes = {
     register: "/register",
     account: "/account",
     trash: "/trash",
+    /** The installed app's share target (GET `?title&text&url`). */
+    share: "/share",
     designLab: "/design-lab",
     settings: (tab?: SettingsTab) => tab ? `/settings/${tab}` : "/settings",
     admin: (tab: AdminTab = "overview") =>

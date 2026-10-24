@@ -86,6 +86,11 @@ const AdminPage = lazy(() =>
 const TrashPage = lazy(() =>
     import("./app/TrashPage.tsx").then((m) => ({ default: m.TrashPage }))
 );
+const SharePage = lazy(() =>
+    import("./features/share/SharePage.tsx").then((m) => ({
+        default: m.SharePage,
+    }))
+);
 const NotFoundPage = lazy(() =>
     import("./app/NotFoundPage.tsx").then((m) => ({ default: m.NotFoundPage }))
 );
@@ -459,6 +464,7 @@ export function App() {
                     { path: routes.account, element: <AccountPage /> },
                     { path: `${routes.admin()}/*`, element: <AdminPage /> },
                     { path: routes.trash, element: <TrashPage /> },
+                    { path: routes.share, element: <SharePage /> },
                     {
                         path: "/design-lab/omnibox",
                         element: <OmniboxLab />,
