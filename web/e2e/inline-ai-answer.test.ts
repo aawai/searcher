@@ -243,6 +243,10 @@ const TRANSITION_RECORDER = `(() => {
             record.animations = [];
             record.error = String(error);
         });
+        // Cleanup runs after \`finished\` settles; mark it a task later.
+        transition.finished.finally(() => setTimeout(() => {
+            record.finished = true;
+        }));
         return transition;
     };
 })()`;
@@ -741,6 +745,9 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                     assertEquals(record.after, record.before);
                     assert(record.before[0].startsWith("shared-"));
                     sharedNames.push(record.before[0]);
+                    await page.waitForFunction(
+                        "window.__transitions[0]?.finished === true",
+                    );
                     assertEquals(
                         await page.evaluate(() =>
                             [...document.querySelectorAll("*")].filter((

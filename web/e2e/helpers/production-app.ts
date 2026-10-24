@@ -71,7 +71,10 @@ export function computeWorkbenchWidth(viewportWidth: number): number {
 | 2048px | 1679px | 1040px | 920px |
 `;
 
-export async function startProductionApp(): Promise<ProductionAppInstance> {
+/** `frontendPath` serves another build directory, e.g. a simulated deploy. */
+export async function startProductionApp(
+    options: { frontendPath?: string } = {},
+): Promise<ProductionAppInstance> {
     const tempDir = await Deno.makeTempDir({ prefix: "searcher_prod_app_" });
     const store = openDatabase(":memory:");
     await migrateDatabase(store);
@@ -92,7 +95,7 @@ export async function startProductionApp(): Promise<ProductionAppInstance> {
         settings: new SystemSettingsStore(":memory:"),
         wallpaper: new WallpaperService(`${tempDir}/wallpapers`),
         icons: new WebAppIconService(`${tempDir}/icons`),
-    });
+    }, { frontendPath: options.frontendPath });
 
     return {
         origin,

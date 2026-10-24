@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
     createBrowserRouter,
     Link,
@@ -36,6 +36,8 @@ import {
 } from "./app/RouteErrorBoundary.tsx";
 import { Button } from "./components/ui/button.tsx";
 import { LoadingState } from "./components/searcher/semantic.tsx";
+import { useOnline } from "./app/online.ts";
+import { useServiceWorkerUpdate } from "./pwa/service-worker.ts";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -109,6 +111,16 @@ function Layout() {
         connectionError,
         retryConnection,
     } = useAppState();
+    const online = useOnline();
+    const serviceWorker = useServiceWorkerUpdate();
+    // Coming back online re-checks the session the offline start could not.
+    const wasOnline = useRef(online);
+    useEffect(() => {
+        if (online && !wasOnline.current && connectionError) {
+            void retryConnection();
+        }
+        wasOnline.current = online;
+    }, [online, connectionError, retryConnection]);
     // Re-read when the user moves between sections, e.g. after configuring a model.
     const aiModels = useAiModels(
         Boolean(user) && location.pathname !== routes.login &&
@@ -331,24 +343,45 @@ function Layout() {
                         )}
                 </nav>
             </header>
-            {(connectionError || syncFailed) && (
+            {(!online || connectionError || syncFailed) && (
                 <aside
                     className="connection-banner"
                     role="status"
                     aria-live="polite"
                 >
                     <span>
-                        {connectionError
+                        {!online
+                            ? "当前离线"
+                            : connectionError
                             ? "网络或服务暂不可用"
                             : "偏好设置同步失败"}
                     </span>
+                    {online && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => void retryConnection()}
+                        >
+                            重试
+                        </Button>
+                    )}
+                </aside>
+            )}
+            {serviceWorker.updateReady && (
+                <aside
+                    className="connection-banner"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <span>新版本已就绪</span>
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => void retryConnection()}
+                        onClick={serviceWorker.reload}
                     >
-                        重试
+                        刷新
                     </Button>
                 </aside>
             )}

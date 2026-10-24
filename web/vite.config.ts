@@ -4,6 +4,7 @@ import deno from "@deno/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
 import { Buffer } from "node:buffer";
+import { serviceWorkerPlugin } from "./vite-service-worker.ts";
 
 function bundleReportPlugin(): Plugin {
     const rootPath = fileURLToPath(new URL("..", import.meta.url)).replace(
@@ -80,7 +81,13 @@ export default defineConfig({
             ),
         },
     },
-    plugins: [deno(), react(), tailwindcss(), bundleReportPlugin()],
+    plugins: [
+        deno(),
+        react(),
+        tailwindcss(),
+        bundleReportPlugin(),
+        serviceWorkerPlugin(),
+    ],
     build: {
         outDir: "dist",
         emptyOutDir: true,
