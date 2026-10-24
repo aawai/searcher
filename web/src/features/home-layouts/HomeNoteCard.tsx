@@ -14,6 +14,10 @@ import {
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import type { HomeNoteItem } from "./home-notes.ts";
+import {
+    clipPreviewHeight,
+    type PreviewLineRect,
+} from "./note-preview-clip.ts";
 
 const SIZE_LABEL: Record<DocumentNoteSize, string> = {
     s: "小",
@@ -58,19 +62,47 @@ export function HomeNoteCard(
     const body = useRef<HTMLDivElement>(null);
     const [overflowing, setOverflowing] = useState(false);
 
-    // Whole-line truncation: only fade when the body really extends past its
-    // fixed line count, so a fitting note stays crisp.
+    // Whole-line truncation: measure the real line boxes (task rows, list
+    // items and paragraphs can round differently) and end the visible body at
+    // the last complete line. Only then does the last line fade.
     useLayoutEffect(() => {
         const element = body.current;
         if (!element) return;
-        const update = () =>
-            setOverflowing(element.scrollHeight > element.clientHeight + 1);
+        let active = true;
+        const update = () => {
+            if (!active) return;
+            const style = getComputedStyle(element);
+            const lines = parseFloat(
+                style.getPropertyValue("--home-note-body-lines"),
+            );
+            const lineHeight = parseFloat(style.lineHeight);
+            const limit = (Number.isFinite(lines) ? lines : 5) *
+                (Number.isFinite(lineHeight) ? lineHeight : 22);
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const bodyTop = element.getBoundingClientRect().top;
+            const rects: PreviewLineRect[] = [];
+            for (const rect of range.getClientRects()) {
+                if (rect.width <= 0 || rect.height <= 0) continue;
+                rects.push({
+                    top: rect.top - bodyTop,
+                    bottom: rect.bottom - bodyTop,
+                });
+            }
+            const clip = clipPreviewHeight(rects, limit, element.scrollHeight);
+            element.style.height = `${clip.height}px`;
+            setOverflowing(clip.hasMore);
+        };
         update();
         const observer = new ResizeObserver(update);
         observer.observe(element);
         const content = element.firstElementChild;
         if (content) observer.observe(content);
-        return () => observer.disconnect();
+        void document.fonts.ready.then(update);
+        return () => {
+            active = false;
+            observer.disconnect();
+        };
     }, [note.body, note.layout.size]);
 
     const hasBody = note.body.trim().length > 0;

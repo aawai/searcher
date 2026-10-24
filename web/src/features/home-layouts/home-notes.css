@@ -185,16 +185,43 @@
 
 .home-note-body[data-overflow] {
     mask-image: linear-gradient(to bottom,
-        var(--foreground) calc(100% - var(--space-3)),
-        transparent);
+        var(--foreground) calc(100% - var(--font-body-line-height)),
+        transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom,
-        var(--foreground) calc(100% - var(--space-3)),
-        transparent);
+        var(--foreground) calc(100% - var(--font-body-line-height)),
+        transparent 100%);
 }
 
 /* Markdown blocks keep the body line grid instead of adding paragraph margins. */
 .home-note-body.markdown :is(p, ul, ol, blockquote, pre, table, h1, h2, h3, h4, h5, h6) {
     margin: 0;
+}
+
+/* Every preview line shares one pitch: list items add no block margin and task
+   rows keep the line height, with the checkbox inside it. */
+.home-note-body.markdown li {
+    margin: 0;
+    line-height: var(--font-body-line-height);
+}
+
+.home-note-body.markdown li.task-list-item,
+.home-note-body.markdown li.task-list-item:has(> input[type="checkbox"]) {
+    --task-box-hit: var(--icon-md);
+    --task-row-hit: var(--font-body-line-height);
+    min-block-size: var(--font-body-line-height);
+    padding-block: 0;
+}
+
+.home-note-body.markdown li.task-list-item > input[type="checkbox"] {
+    inline-size: var(--icon-md);
+    block-size: var(--icon-md);
+    inset-block-start: calc(
+        (var(--font-body-line-height) - var(--icon-md)) / 2
+    );
+}
+
+.home-note-body .markdown-list-item-content {
+    line-height: var(--font-body-line-height);
 }
 
 .home-note-body.markdown :is(h1, h2, h3, h4, h5, h6) {
@@ -318,10 +345,5 @@
         padding-inline-end: calc(
             2 * var(--control-touch-target) + var(--space-2)
         );
-    }
-    /* Interactive task rows grow to the touch target; the drawn box keeps its size. */
-    .home-note-body li.task-list-item:has(> input[type="checkbox"]:enabled) {
-        --task-box-hit: var(--control-touch-target);
-        --task-row-hit: var(--control-touch-target);
     }
 }
