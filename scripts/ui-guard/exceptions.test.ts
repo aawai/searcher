@@ -144,10 +144,10 @@ Deno.test("runtime exceptions - image drag transform and denial of unrelated tra
 });
 
 Deno.test("runtime exceptions - domain values and denial of arbitrary dynamic colors", () => {
-    // Home paper domain coordinates (in HomePapers.tsx)
+    // Home paper domain coordinates (in HomeNotes.tsx)
     assertEquals(
         isDomainValueException(
-            "web/src/features/home-layouts/HomePapers.tsx",
+            "web/src/features/home-layouts/HomeNotes.tsx",
             "left",
             "`${point.x}px`",
         ),
@@ -155,7 +155,7 @@ Deno.test("runtime exceptions - domain values and denial of arbitrary dynamic co
     );
     assertEquals(
         isDomainValueException(
-            "web/src/features/home-layouts/HomePapers.tsx",
+            "web/src/features/home-layouts/HomeNotes.tsx",
             "top",
             "`${point.y}px`",
         ),
@@ -163,15 +163,7 @@ Deno.test("runtime exceptions - domain values and denial of arbitrary dynamic co
     );
     assertEquals(
         isDomainValueException(
-            "web/src/features/home-layouts/HomePapers.tsx",
-            "zIndex",
-            "isDragging ? 2000 : point.z",
-        ),
-        true,
-    );
-    assertEquals(
-        isDomainValueException(
-            "web/src/features/home-layouts/HomePapers.tsx",
+            "web/src/features/home-layouts/HomeNotes.tsx",
             "--note-tilt",
             "getNoteTilt(note.id)",
         ),

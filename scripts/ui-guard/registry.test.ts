@@ -82,7 +82,7 @@ Deno.test("registry - the committed Visual Language document parses and register
         const token of [
             "--control-radius",
             "--multiline-radius",
-            "--radius-note-card",
+            "--radius-lg",
             "--radius-launcher-icon",
         ]
     ) {

@@ -1,6 +1,14 @@
 import { assert, assertEquals } from "@std/assert";
 
 const css = await Deno.readTextFile(new URL("./tokens.css", import.meta.url));
+const noteColors = await Deno.readTextFile(
+    new URL("../components/searcher/document-colors.css", import.meta.url),
+);
+const markdownCss = await Deno.readTextFile(
+    new URL("../components/searcher/markdown.css", import.meta.url),
+);
+const NOTE_SCOPE = ":where(.note-quick-dot, .documents-color-dot)";
+const DARK_NOTE_SCOPE = `[data-theme="dark"] ${NOTE_SCOPE}`;
 
 type Rgb = readonly [number, number, number];
 type Theme = "light" | "dark";
@@ -67,6 +75,21 @@ function declarations(selector: string): Map<string, string> {
     return result;
 }
 
+function declarationsIn(
+    source: string,
+    selector: string,
+): Map<string, string> {
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const blocks = new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`, "g");
+    const result = new Map<string, string>();
+    for (const block of source.matchAll(blocks)) {
+        for (
+            const declaration of block[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)
+        ) result.set(declaration[1], declaration[2].trim());
+    }
+    return result;
+}
+
 /** Tokens for one theme and tier: theme colours, then the tier block (equal specificity: later rule wins). */
 function cascade(theme: Theme, tier: string): Map<string, string> {
     const layers = [declarations(":root")];
@@ -80,6 +103,21 @@ function resolve(tokens: Map<string, string>, name: string): string {
     if (value === undefined) throw new Error(`missing token ${name}`);
     const reference = value.match(/^var\((--[\w-]+)\)$/);
     return reference ? resolve(tokens, reference[1]) : value;
+}
+
+/** Resolves a two-colour `color-mix(in srgb, var(--a) N%, var(--b))` token. */
+function mixedColor(tokens: Map<string, string>, name: string): Rgb {
+    const value = resolve(tokens, name);
+    const match = value.match(
+        /^color-mix\(in srgb, var\((--[\w-]+)\) (\d+(?:\.\d+)?)%, var\((--[\w-]+)\)\)$/,
+    );
+    if (!match) return hex(value);
+    const first = hex(resolve(tokens, match[1]));
+    const second = hex(resolve(tokens, match[3]));
+    const weight = Number(match[2]) / 100;
+    return first.map((channel, index) =>
+        Math.round(channel * weight + second[index] * (1 - weight))
+    ) as unknown as Rgb;
 }
 
 function hex(value: string): Rgb {
@@ -342,6 +380,85 @@ for (const theme of ["light", "dark"] as const) {
                                 plateRatio.toFixed(2)
                             }:1`,
                         );
+                    }
+                }
+            });
+        }
+    }
+}
+
+for (const theme of ["light", "dark"] as const) {
+    for (const tier of TIERS) {
+        for (const fixture of WALLPAPER_FIXTURES) {
+            Deno.test(`home note ${theme}/${tier}/${fixture.name}: body, task box border and colour dots hold contrast on the Material note`, () => {
+                const tokens = cascade(theme, tier);
+                const base = hex(resolve(tokens, "--material-solid"));
+                const alpha = fillPercent(tokens, `--glass-regular-${theme}`) /
+                    100;
+                const peak = fillPercent(tokens, "--glass-sheen-peak") / 100 *
+                    Number(resolve(tokens, "--glass-sheen-scale"));
+                const dotTokens = new Map([
+                    ...declarationsIn(noteColors, NOTE_SCOPE),
+                    ...(theme === "dark"
+                        ? declarationsIn(noteColors, DARK_NOTE_SCOPE)
+                        : []),
+                ]);
+                const taskTokens = new Map([
+                    ...tokens,
+                    ...declarationsIn(
+                        markdownCss,
+                        ".markdown,\n.markdown-editor",
+                    ),
+                ]);
+                const dots = ["amber", "rose", "sage", "sky", "paper"].map((
+                    name,
+                ) => [
+                    name,
+                    hex(resolve(dotTokens, `--note-dot-${name}`)),
+                ] as const);
+                for (const backdrop of fixture.samples) {
+                    // The title and dot sit near the top; the body and task rows
+                    // start below the title, so they see less of the sheen.
+                    for (const height of [0.1, 0.25, 0.55]) {
+                        const sheen = peak * Math.max(0, 1 - height / 0.55);
+                        const note = over(
+                            [255, 255, 255],
+                            sheen,
+                            over(base, alpha, backdrop),
+                        );
+                        if (height < 0.25) {
+                            const body = contrast(
+                                hex(resolve(tokens, "--foreground")),
+                                note,
+                            );
+                            assert(
+                                body >= WCAG_AA_TEXT,
+                                `body text ${body.toFixed(2)}:1 on ${backdrop}`,
+                            );
+                        }
+                        if (height >= 0.25) {
+                            const box = contrast(
+                                mixedColor(taskTokens, "--task-box-border"),
+                                note,
+                            );
+                            assert(
+                                box >= SECONDARY_TEXT,
+                                `task box border ${
+                                    box.toFixed(
+                                        2,
+                                    )
+                                }:1 on ${backdrop}`,
+                            );
+                        }
+                        for (const [name, dot] of dots) {
+                            const ratio = contrast(dot, note);
+                            assert(
+                                ratio >= SECONDARY_TEXT,
+                                `dot ${name} ${
+                                    ratio.toFixed(2)
+                                }:1 on ${backdrop}`,
+                            );
+                        }
                     }
                 }
             });

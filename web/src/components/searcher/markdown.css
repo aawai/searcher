@@ -74,14 +74,14 @@
     list-style: none;
 }
 
-/* Task checkbox: drawn, not native, so it reads on every paper colour
-   (paper-contrast.test.ts). The box is a fixed-size mask centred in the input,
+/* Task checkbox: drawn, not native, so it reads on every home-note Material
+   (glass-contrast.test.ts). The box is a fixed-size mask centred in the input,
    so a larger --task-box-hit (with --task-row-hit) enlarges the hit area
    without changing the drawing; the tick is cut out of the ink fill and shows
    the paper underneath. */
 .markdown,
 .markdown-editor {
-    --task-box-border: var(--muted);
+    --task-box-border: color-mix(in srgb, var(--muted) 62%, var(--foreground));
     --task-box-fill: var(--foreground);
     --task-done-text: var(--muted);
     --task-box-hit: var(--icon-md);

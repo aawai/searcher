@@ -39,7 +39,7 @@ function isDragOwner(file: string): boolean {
     return (
         p.endsWith("SearchHome.tsx") ||
         p.endsWith("WebAppLauncher.tsx") ||
-        p.endsWith("HomePapers.tsx") ||
+        p.endsWith("HomeNotes.tsx") ||
         p.includes("/fixtures/drag/")
     );
 }
@@ -160,7 +160,8 @@ function isRuntimeLayoutOwner(file: string): boolean {
     return (
         p.endsWith("SearchHome.tsx") ||
         p.endsWith("WebAppLauncher.tsx") ||
-        p.endsWith("HomePapers.tsx") ||
+        p.endsWith("HomeNotes.tsx") ||
+        p.endsWith("design-lab/HomeGridLab.tsx") ||
         p.endsWith("design-lab/AccentLab.tsx") ||
         p.includes("/fixtures/layout/")
     );
@@ -186,7 +187,10 @@ export function isRuntimeLayoutGeometryException(
     return norm.includes("columnLayout") ||
         norm.includes("placement") ||
         norm.includes("pos.") ||
-        norm.includes("point.");
+        norm.includes("point.") ||
+        norm.includes("target.") ||
+        norm.includes("rect.") ||
+        norm === "moreTop";
 }
 
 /**
@@ -202,12 +206,9 @@ export function isDomainValueException(
     const norm = value.trim();
     const p = normalizePath(file);
 
-    // Home paper domain coordinates (scoped to HomePapers)
-    if (p.endsWith("HomePapers.tsx") || p.includes("/fixtures/papers/")) {
+    // Home note cell coordinates (scoped to HomeNotes)
+    if (p.endsWith("HomeNotes.tsx") || p.includes("/fixtures/papers/")) {
         if ((prop === "left" || prop === "top") && norm.includes("point.")) {
-            return true;
-        }
-        if (prop === "zIndex" && norm.includes("point.z")) {
             return true;
         }
     }

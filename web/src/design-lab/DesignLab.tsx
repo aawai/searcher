@@ -92,7 +92,6 @@ const COLOR_ROLES: readonly [label: string, token: string][] = [
 const RADII: readonly [label: string, token: string][] = [
     ["控件", "--radius-control"],
     ["输入", "--radius-input"],
-    ["便签", "--radius-note-card"],
     ["面板", "--radius-sheet"],
 ];
 
@@ -142,6 +141,7 @@ export function DesignLab() {
                 <Link to="/design-lab/omnibox">统一输入框</Link>
                 <Link to="/design-lab/motion">共享元素动效实验</Link>
                 <Link to="/design-lab/accent">壁纸取色</Link>
+                <Link to="/design-lab/home-grid">首页笔记网格与构图</Link>
             </Section>
 
             <Section title="首页构图：31% / 38%">

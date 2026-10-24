@@ -8,7 +8,7 @@
 
 设备草稿的 key、读写、清除及退出发现统一由 `features/documents/document-session.ts` 拥有，key 为 `text:document:draft:<userId>:<documentId>`，复用 local 层 FIFO 与事务提交语义。
 
-编辑器按需 lazy 加载，使用共享 LoadingState 展示首开加载状态；不把编辑器业务实现放进首页入口 chunk。编辑 consumer 仅负责挂载/销毁、受控正文替换、selection/command 与 composition bridge。首页纸张、工作区列表、冲突与历史版本使用只读 Markdown 视图，不创建编辑实例。
+编辑器按需 lazy 加载，使用共享 LoadingState 展示首开加载状态；不把编辑器业务实现放进首页入口 chunk。编辑 consumer 仅负责挂载/销毁、受控正文替换、selection/command 与 composition bridge。首页笔记、工作区列表、冲突与历史版本使用只读 Markdown 视图，不创建编辑实例。
 
 ## 正文与事件
 
@@ -25,7 +25,7 @@
 - 格式菜单的 trigger、Portal 与内容通过编辑实例 owner 标记归属对应编辑实例；跨实例菜单仍是外部焦点。窄容器为标题、粗体、斜体、任务、链接、更多六个入口，宽容器将更多命令直接展示，15 个命令与 shortcut catalog 不变。
 - 历史进入时临时禁止继续输入；dirty 恰好一次 manual flush，clean 零 PATCH，等待原 mutation queue 后 GET。历史隐藏而不卸载当前编辑实例，返回使用 layout effect 在下一次输入前恢复焦点/选区/滚动；取消恢复无写入，确认 restore 共用原 queue。成功统一接受服务端 DTO、版本与颜色，清除设备草稿；失败保留历史预览和现有草稿。
 
-正文与 API 限制见 [笔记 · 实体与生命周期](../documents.md#实体与生命周期)。Live task checkbox 是用户编辑；首页纸张、冲突与历史版本中的 checkbox 只读。
+正文与 API 限制见 [笔记 · 实体与生命周期](../documents.md#实体与生命周期)。Live task checkbox 是用户编辑；首页笔记、冲突与历史版本中的 checkbox 只读。
 
 ## 设备草稿
 
