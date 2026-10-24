@@ -14,7 +14,13 @@ import {
     type WallpaperReadability,
 } from "@shared/wallpaper-presentation.ts";
 import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
-import { Check, ChevronRight, MoreVertical, Upload } from "lucide-react";
+import {
+    Check,
+    ChevronRight,
+    ImageIcon,
+    MoreVertical,
+    Upload,
+} from "lucide-react";
 import {
     type ReactNode,
     useCallback,
@@ -91,13 +97,15 @@ function useReducedTransparency(): boolean {
 }
 
 function Choices<T extends string>(
-    { title, description, value, values, control, select }: {
+    { title, description, value, values, control, select, swatchIcons }: {
         title: string;
         description?: ReactNode;
         value: string;
         values: readonly (readonly [T, string])[];
         control: "select" | "segmented" | "swatches";
         select: (v: T) => void;
+        /** Marks swatches that are a source rather than a fixed colour. */
+        swatchIcons?: Partial<Record<T, ReactNode>>;
     },
 ) {
     let input: ReactNode;
@@ -151,7 +159,9 @@ function Choices<T extends string>(
                             className="settings-swatch-color"
                             data-accent={id}
                             aria-hidden="true"
-                        />
+                        >
+                            {swatchIcons?.[id]}
+                        </span>
                     </RadioGroupItem>
                 ))}
             </RadioGroup>
@@ -674,9 +684,15 @@ export function SettingsPage() {
                                 title="强调色"
                                 value={appearance.accent}
                                 control="swatches"
-                                values={ACCENTS.map((a) =>
-                                    [a.id, a.label] as const
-                                )}
+                                values={[
+                                    ["wallpaper", "跟随壁纸"] as const,
+                                    ...ACCENTS.map((a) =>
+                                        [a.id, a.label] as const
+                                    ),
+                                ]}
+                                swatchIcons={{
+                                    wallpaper: <ImageIcon />,
+                                }}
                                 select={(v) => set("accent", v)}
                             />
                         </SettingsGroup>

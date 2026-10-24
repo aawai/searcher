@@ -186,3 +186,11 @@ sqlite3 data/searcher.sqlite < drizzle/rollback/0026_documents_fts_trigram.sql
 ```bash
 sqlite3 data/searcher.sqlite < drizzle/rollback/0027_messy_toro.sql
 ```
+
+### 升级：强调色跟随壁纸
+
+迁移 `0028_accent_follows_wallpaper` 重建 `preferences`，使 `accent` 接受 `wallpaper`（跟随壁纸取色）并以它作为新账户默认值。既有账户保留原强调色（空值记为 `blue`，与升级前的显示一致），外观不跳变。旧版本不接受 `wallpaper`，回退前先停止服务，把它改回 `blue` 并恢复旧约束，然后部署旧版本：
+
+```bash
+sqlite3 data/searcher.sqlite < drizzle/rollback/0028_accent_follows_wallpaper.sql
+```

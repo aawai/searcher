@@ -7,7 +7,7 @@ import {
     useState,
 } from "react";
 import { Link } from "react-router-dom";
-import { type AccentId, ACCENTS } from "@shared/contracts.ts";
+import { type AccentPreference, ACCENTS } from "@shared/contracts.ts";
 import type { WallpaperComposition } from "@shared/wallpaper.ts";
 import { DEFAULT_WALLPAPER_PRESENTATION } from "@shared/wallpaper-presentation.ts";
 import { type Appearance, useAppState } from "../app/state.tsx";
@@ -181,7 +181,7 @@ export default function AccentLab() {
     const [point, setPoint] = useState<WallpaperComposition>(
         DEFAULT_WALLPAPER_PRESENTATION.composition,
     );
-    const [choice, setChoice] = useState<"wallpaper" | AccentId>("wallpaper");
+    const [choice, setChoice] = useState<AccentPreference>("wallpaper");
     const [checked, setChecked] = useState(true);
     const fileInput = useRef<HTMLInputElement>(null);
     const derived = useWallpaperAccent(source, point);
@@ -206,8 +206,10 @@ export default function AccentLab() {
             theme: root.dataset.theme,
             accent: root.dataset.accent,
         };
+        // AppState owns the production pair on <html>; put it back on leave.
+        const inline = root.style.cssText;
         return () => {
-            applyWallpaperAccent(root, null);
+            root.style.cssText = inline;
             for (const [key, value] of Object.entries(original)) {
                 if (value === undefined) delete root.dataset[key];
                 else root.dataset[key] = value;

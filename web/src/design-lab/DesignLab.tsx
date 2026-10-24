@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { type AccentId, ACCENTS } from "@shared/contracts.ts";
+import { type AccentPreference, ACCENTS } from "@shared/contracts.ts";
 import { type Appearance, useAppState } from "../app/state.tsx";
 
 import { Button } from "../components/ui/button.tsx";
@@ -107,7 +107,7 @@ export function DesignLab() {
     const { appearance: saved } = useAppState();
     // Local preview only: theme and accent are restored on unmount.
     const [theme, setTheme] = useState<Appearance["theme"]>(saved.theme);
-    const [accent, setAccent] = useState<AccentId>(saved.accent);
+    const [accent, setAccent] = useState<AccentPreference>(saved.accent);
     const [view, setView] = useState("day");
     const [enabled, setEnabled] = useState(true);
     const [level, setLevel] = useState(40);
@@ -307,7 +307,8 @@ export function DesignLab() {
                         variant="swatch"
                         aria-label="强调色"
                         value={accent}
-                        onValueChange={(next) => setAccent(next as AccentId)}
+                        onValueChange={(next) =>
+                            setAccent(next as AccentPreference)}
                     >
                         {ACCENTS.map((item) => (
                             <RadioGroupItem

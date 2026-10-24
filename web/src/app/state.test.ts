@@ -261,3 +261,15 @@ Deno.test("Appearance sync: a failed patch remains queued for an explicit retry"
     assertEquals(queue.pending, {});
     assertEquals(succeeded, true);
 });
+
+Deno.test("Appearance: device caches keep their accent; new or unreadable caches follow the wallpaper", () => {
+    // Older anonymous caches always stored an accent (blue by default): no jump on upgrade.
+    assertEquals(normalizeAppearance({ accent: "blue" }).accent, "blue");
+    assertEquals(normalizeAppearance({ accent: "amber" }).accent, "amber");
+    assertEquals(
+        normalizeAppearance({ accent: "wallpaper" }).accent,
+        "wallpaper",
+    );
+    assertEquals(normalizeAppearance(undefined).accent, "wallpaper");
+    assertEquals(normalizeAppearance({ accent: "neon" }).accent, "wallpaper");
+});

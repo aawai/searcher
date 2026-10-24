@@ -26,6 +26,11 @@ export const ACCENT_IDS = [
 ] as const;
 export type AccentId = (typeof ACCENT_IDS)[number];
 
+/** 强调色偏好：跟随壁纸（默认）或手选的预设覆盖。 */
+export const ACCENT_PREFERENCES = ["wallpaper", ...ACCENT_IDS] as const;
+export type AccentPreference = (typeof ACCENT_PREFERENCES)[number];
+export const DEFAULT_ACCENT: AccentPreference = "wallpaper";
+
 /** 玻璃效果档位：驱动 Material 与 Floating 表面的 fill、blur、edge。 */
 export const GLASS_INTENSITIES = ["off", "soft", "regular", "clear"] as const;
 export type GlassIntensity = (typeof GLASS_INTENSITIES)[number];
@@ -115,14 +120,14 @@ export const ACCENTS: readonly AccentMeta[] = [
     },
 ] as const;
 
-export function normalizeAccent(raw: unknown): AccentId {
+export function normalizeAccent(raw: unknown): AccentPreference {
     if (
         typeof raw === "string" &&
-        (ACCENT_IDS as readonly string[]).includes(raw)
+        (ACCENT_PREFERENCES as readonly string[]).includes(raw)
     ) {
-        return raw as AccentId;
+        return raw as AccentPreference;
     }
-    return "blue";
+    return DEFAULT_ACCENT;
 }
 export type SearchShape = "rounded" | "pill";
 export type UserRole = "user" | "admin";
@@ -178,7 +183,7 @@ export interface AiGenerationDefaultsDto {
 export interface PreferencesDto {
     defaultEngine: EngineId;
     theme: ThemeId;
-    accent: AccentId;
+    accent: AccentPreference;
     searchShape: SearchShape;
     glassIntensity: GlassIntensity;
     backgroundImage: string | null;
