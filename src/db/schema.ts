@@ -82,6 +82,12 @@ export const preferences = sqliteTable("preferences", {
         .notNull().default(false),
     showHomeApps: integer("show_home_apps", { mode: "boolean" })
         .notNull().default(true),
+    showHomeDate: integer("show_home_date", { mode: "boolean" })
+        .notNull().default(true),
+    showHomeTime: integer("show_home_time", { mode: "boolean" })
+        .notNull().default(false),
+    showHomeContinue: integer("show_home_continue", { mode: "boolean" })
+        .notNull().default(true),
     showAppLabels: integer("show_app_labels", { mode: "boolean" })
         .notNull().default(true),
     aiGenerationDefaults: text("ai_generation_defaults"),

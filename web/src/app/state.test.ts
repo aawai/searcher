@@ -121,6 +121,37 @@ Deno.test("Appearance: showHomeApps defaults on and only accepts booleans", () =
     }
 });
 
+Deno.test("Appearance: the calm layer shows the date and 继续 by default, time only on request", () => {
+    const defaults = normalizeAppearance({});
+    assertEquals(
+        [
+            defaults.showHomeDate,
+            defaults.showHomeTime,
+            defaults.showHomeContinue,
+        ],
+        [true, false, true],
+    );
+    const saved = normalizeAppearance({
+        showHomeDate: false,
+        showHomeTime: true,
+        showHomeContinue: false,
+    });
+    assertEquals(
+        [saved.showHomeDate, saved.showHomeTime, saved.showHomeContinue],
+        [false, true, false],
+    );
+    // Older caches and invalid values fall back to the defaults.
+    const invalid = normalizeAppearance({
+        showHomeDate: "no",
+        showHomeTime: 1,
+        showHomeContinue: null,
+    });
+    assertEquals(
+        [invalid.showHomeDate, invalid.showHomeTime, invalid.showHomeContinue],
+        [true, false, true],
+    );
+});
+
 Deno.test("Appearance: switching cached wallpapers restores their own presentation and composition", () => {
     const first = "https://example.com/left.png";
     const second = "https://example.com/right.png";

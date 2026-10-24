@@ -10,7 +10,7 @@ import type {
     WebAppGroup,
 } from "../app-library/library-types.ts";
 import type { AppLibraryController } from "../app-library/useAppLibraryActions.ts";
-import type { UserDto } from "@shared/contracts.ts";
+import type { HomeContinueDto, UserDto } from "@shared/contracts.ts";
 import type { WorkspaceKind } from "../workspace/workspace-state.ts";
 import type { SearchQuickCommand } from "../shortcuts/shortcut-catalog.ts";
 import type { PaperItem } from "./home-papers.ts";
@@ -76,6 +76,14 @@ export interface HomeLayoutProps {
     showAppLabels: boolean;
     /** 在首页显示应用: the grid, + and 更多 render on home. */
     showHomeApps: boolean;
+    /** The calm layer above the search box: date, time and 继续. */
+    calm: {
+        showDate: boolean;
+        showTime: boolean;
+        /** Signed in and enabled. */
+        showContinue: boolean;
+        candidates: HomeContinueDto | null;
+    };
     // error
     setError: (err: string) => void;
 }

@@ -20,6 +20,7 @@ import { usePresence } from "../../components/ui/presence.ts";
 import { useZenPaperSelection } from "./useZenPaperSelection.ts";
 import { InlineAnswerCard } from "../inline-ai/InlineAnswerCard.tsx";
 import { consumeSearchFocusRequest } from "../inline-ai/search-focus.ts";
+import { HomeCalm } from "../home-calm/HomeCalm.tsx";
 
 const APPS_QUICK_ENTRIES = [{ id: "apps", label: "应用" }];
 const NO_QUICK_ENTRIES: typeof APPS_QUICK_ENTRIES = [];
@@ -99,6 +100,8 @@ export function ZenLayout(
     const [workspaceWasOpen, setWorkspaceWasOpen] = useState(false);
     if (workspaceOpen && !workspaceWasOpen) setWorkspaceWasOpen(true);
 
+    const calmShown = props.calm.showDate || props.calm.showTime ||
+        props.calm.showContinue;
     useLayoutEffect(() => {
         // While the docked panel moves the search aside, default-placed papers
         // keep the exclusion measured before it opened instead of re-placing
@@ -107,10 +110,13 @@ export function ZenLayout(
         const hero = heroRef.current;
         const search = hero?.querySelector(".search-form-wrap");
         if (!hero || !search) return;
-        // Default notes avoid the search box and, while the home grid is on,
-        // the measured app region (large folders and 更多 included).
+        // Default notes avoid the search box, the calm layer above it and,
+        // while the home grid is on, the measured app region (large folders
+        // and 更多 included).
+        const calm = hero.querySelector(".home-calm");
         const obstacles = [
             search,
+            ...(calm ? [calm] : []),
             ...(showHomeApps && gridElement ? [gridElement] : []),
         ];
         let active = true;
@@ -163,6 +169,7 @@ export function ZenLayout(
         panelDocked,
         showHomeApps,
         gridElement,
+        calmShown,
     ]);
 
     const libraryRef = useRef<HomeAppLibraryHandle>(null);
@@ -221,6 +228,10 @@ export function ZenLayout(
     return (
         <>
             <section className="hero" aria-label="搜索" ref={heroRef}>
+                <HomeCalm
+                    {...props.calm}
+                    onOpenDocument={props.openDocument}
+                />
                 <SearcherSearchInput
                     engine={engine}
                     onEngineChange={setEngine}

@@ -1,0 +1,102 @@
+/* Home “静” layer: date / time and one 继续 line, directly on the wallpaper
+   above the search box. The anchor has no height, so the layer never moves
+   the search box; nothing here animates. */
+
+.home-calm-anchor {
+    --home-calm-row-height: var(--control-height);
+    position: relative;
+    width: 100%;
+    max-width: var(--layout-search-max);
+    height: 0;
+}
+
+@media (pointer: coarse), (hover: none) {
+    .home-calm-anchor {
+        --home-calm-row-height: var(--control-touch-target);
+    }
+}
+
+.home-calm {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    padding-block-end: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    text-align: center;
+    color: var(--foreground);
+    text-shadow: var(--wallpaper-text-halo);
+}
+
+/* Brand display role: the same size and weight as the top-bar wordmark. */
+.home-calm__clock {
+    margin: 0;
+    font-size: var(--font-brand-size);
+    line-height: var(--font-title-line-height);
+    font-weight: var(--font-title-weight);
+    font-variant-numeric: tabular-nums;
+}
+
+.home-calm__time {
+    margin-inline-start: var(--space-2);
+}
+
+.home-calm__continue {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    max-width: 100%;
+    min-height: var(--home-calm-row-height);
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    color: var(--muted);
+}
+
+.home-calm__item {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-height: var(--home-calm-row-height);
+    padding: 0 var(--space-1);
+    border: 0;
+    border-radius: var(--control-radius);
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.home-calm__item--lead {
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.home-calm__item:hover {
+    color: var(--foreground);
+}
+
+.home-calm__title {
+    min-width: 0;
+    margin-inline-start: var(--space-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--foreground);
+    font-weight: var(--font-label-weight);
+}
+
+/* Over a photo the halo is not enough: each line gets the material chip used
+   by the home app labels. */
+.app-shell[data-wallpaper-image] :is(.home-calm__clock, nav.home-calm__continue) {
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge);
+    text-shadow: none;
+}

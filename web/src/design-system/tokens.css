@@ -303,6 +303,25 @@
     --canvas-mesh-secondary-mix: 40%;
 }
 
+/* Default canvas tone by the time of day at load (WallpaperSurface data-daypart):
+   only the secondary blob changes hue; luminance stays close to the defaults
+   above so glass contrast is unchanged. Morning keeps the warm default. */
+[data-daypart="day"] {
+    --canvas-mesh-secondary: #C3D6EA;
+}
+[data-daypart="night"] {
+    --canvas-mesh-secondary: #D3C9E8;
+}
+[data-theme="dark"] [data-daypart="morning"] {
+    --canvas-mesh-secondary: #6A5A55;
+}
+[data-theme="dark"] [data-daypart="day"] {
+    --canvas-mesh-secondary: #4D6074;
+}
+[data-theme="dark"] [data-daypart="night"] {
+    --canvas-mesh-secondary: #61557A;
+}
+
 /* Each palette owns both themes; color-scheme selects the light-dark pair. */
 :root,
 [data-accent="blue"] {
@@ -438,6 +457,14 @@
     --material-thick: color-mix(in srgb, var(--surface-l3) var(--glass-fill-thick), transparent);
     --shadow-material-edge: inset 0 1px 0 var(--glass-edge-top), inset 0 0 0 1px var(--glass-edge-ring), inset 0 -1px 0 var(--glass-edge-bottom);
     --glass-sheen: linear-gradient(180deg, color-mix(in srgb, white calc(var(--glass-sheen-peak) * var(--glass-sheen-scale)), transparent), transparent 55%);
+}
+
+/* Text set directly on the wallpaper (home app labels, the calm layer): a soft
+   halo in the surface colour keeps it legible. */
+:root,
+[data-theme] {
+    --wallpaper-text-halo: 0 0 var(--space-2) color-mix(in srgb, var(--surface-solid) 90%, transparent),
+        0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent);
 }
 
 /* Without backdrop-filter, or when the OS reduces transparency, every tier renders as `off`. */

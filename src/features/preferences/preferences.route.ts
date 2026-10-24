@@ -30,6 +30,9 @@ const GlassIntensity = v.optional(v.picklist(GLASS_INTENSITIES));
 const Target = v.optional(v.picklist(["same", "new"]));
 const HistoryEnabled = v.optional(v.boolean("搜索历史开关必须为布尔值"));
 const ShowHomeApps = v.optional(v.boolean("首页显示应用必须为布尔值"));
+const ShowHomeDate = v.optional(v.boolean("首页显示日期必须为布尔值"));
+const ShowHomeTime = v.optional(v.boolean("首页显示时间必须为布尔值"));
+const ShowHomeContinue = v.optional(v.boolean("首页显示继续必须为布尔值"));
 const ShowAppLabels = v.optional(v.boolean("显示应用名称必须为布尔值"));
 const BackgroundImage = v.optional(v.nullable(v.pipe(
     v.string(),
@@ -181,6 +184,9 @@ export function registerPreferencesRoutes(
             searchHistoryEnabled: json(HistoryEnabled),
             showAppLabels: json(ShowAppLabels),
             showHomeApps: json(ShowHomeApps),
+            showHomeDate: json(ShowHomeDate),
+            showHomeTime: json(ShowHomeTime),
+            showHomeContinue: json(ShowHomeContinue),
             backgroundImage: json(BackgroundImage),
             wallpaperPresentations: json(WallpaperPresentations),
             aiGenerationDefaults: json(AiGenerationDefaults),
