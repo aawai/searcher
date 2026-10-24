@@ -150,7 +150,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
         page.locator(".home-note, .home-note-flow-item")
             .filter({ hasText: title }).first();
 
-    async function homePapersSettled() {
+    async function homeNotesSettled() {
         await page.evaluate(async () => {
             await document.fonts.ready;
         });
@@ -534,7 +534,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             }).click();
             await workspace().waitFor({ state: "detached" });
             await page.locator("#search-query:not([inert])").waitFor();
-            await homePapersSettled();
+            await homeNotesSettled();
             const paper = homePaper(title);
             await paper.waitFor({ state: "visible" });
             assertEquals(
@@ -895,7 +895,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 isHomeFixed: true,
             });
             await visit("/");
-            await homePapersSettled();
+            await homeNotesSettled();
 
             const paper = homePaper(title);
             await paper.waitFor({ state: "visible" });
@@ -918,7 +918,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             }).click();
             await workspace().waitFor({ state: "detached" });
             await page.locator("#search-query:not([inert])").waitFor();
-            await homePapersSettled();
+            await homeNotesSettled();
 
             await paper.waitFor({ state: "visible" });
             assertEquals(
