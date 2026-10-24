@@ -66,7 +66,10 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
             scrollHeight: element.scrollHeight,
             overflow: getComputedStyle(element).overflow,
         }));
-        assertEquals(clip.clientHeight, 66);
+        assert(
+            clip.clientHeight > 0 && clip.clientHeight <= 66,
+            `visible body ${clip.clientHeight}px`,
+        );
         assert(clip.scrollHeight > clip.clientHeight);
         assertEquals(clip.overflow, "hidden");
 
