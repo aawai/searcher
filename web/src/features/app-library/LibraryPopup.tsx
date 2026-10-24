@@ -11,9 +11,9 @@ import {
 } from "../../components/ui/dialog.tsx";
 
 /**
- * In-place Floating-material popup over the home grid: folder contents, 更多（N）
- * and the all-apps entry. A Base UI Dialog owns focus containment and Escape,
- * so nested popups (a folder opened from 更多) close one layer per key press.
+ * In-place Floating-material popup over the home grid for folder contents.
+ * 更多（N） opens the library app view instead of a popup. A Base UI Dialog owns
+ * focus containment and Escape.
  */
 export function LibraryPopup({
     open,
