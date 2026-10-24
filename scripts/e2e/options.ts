@@ -1,5 +1,5 @@
 import { parseArgs } from "@std/cli/parse-args";
-import { type Suite, suites } from "./suites.ts";
+import { documentPartitions, type Suite, suites } from "./suites.ts";
 
 export const USAGE =
     "Usage: deno run -A scripts/e2e/run.ts <suite|affected|check> [--serial|--parallel] [--no-fail-fast] [--timeout <ms>] [affected only: --base <git-ref> --list]";
@@ -19,6 +19,7 @@ export type RunOptions =
 
 function isSuite(name: string): name is Suite {
     return Object.hasOwn(suites, name) ||
+        Object.hasOwn(documentPartitions, name) ||
         ["full", "apps", "layout"].includes(name);
 }
 

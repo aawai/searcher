@@ -62,6 +62,21 @@ Deno.test("affected: explicit changed E2E files select containing suites", () =>
     assertEquals(selectAffected(["web/e2e/new-test.test.ts"]).suites, ["full"]);
 });
 
+Deno.test("affected: pagination partitions still select the complete documents domain", () => {
+    for (
+        const suite of [
+            "pagination-short",
+            "pagination-manual",
+            "pagination-consecutive",
+            "pagination-mixed",
+        ] as const
+    ) {
+        const selection = selectAffected(suiteFiles(suite));
+        assertEquals(selection.suites, ["documents"]);
+        assertEquals(selection.files, suiteFiles("documents"));
+    }
+});
+
 Deno.test("affected: git intake includes committed, staged, unstaged, renamed, deleted and nonignored untracked paths", async () => {
     const cwd = await Deno.makeTempDir({ prefix: "e2e-affected-" });
     async function git(...args: string[]): Promise<void> {

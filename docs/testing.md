@@ -16,18 +16,18 @@ deno run -A npm:playwright@1.56.1 install chromium
 
 ## 常用入口
 
-| 命令 | 覆盖 |
-| --- | --- |
-| `deno task test` | 后端与前端契约测试 |
-| `deno task test:routing` | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航 |
-| `deno task test:workspace` | Workspace 完整回归（见下文） |
-| `deno task test:documents` | 完整 Documents 集合：响应式矩阵、长笔记、Library、编辑、历史、草稿与分页契约（见下文） |
-| `deno task test:wallpaper` | 壁纸链路（见下文） |
-| `deno run -A scripts/e2e/run.ts supplemental` | 完整补充集合：设置、快捷键、Omnibox、AI 反馈及编辑器加载等 |
-| `deno task test:e2e:full` | 只构建一次，串行执行所有 E2E 文件的去重并集；首次失败停止，可显式 `--parallel` 诊断并发 |
-| `deno task test:e2e:affected` | 基于 Git 路径映射选择集合；任一未知路径回退 full，仅供局部诊断 |
-| `deno task check:e2e` | 检查新增 E2E 文件是否登记 |
-| `deno task check:ui` | UI 门禁（见 [前端开发](frontend.md#ui-门禁)） |
+| 命令                                          | 覆盖                                                                                    |
+| --------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `deno task test`                              | 后端与前端契约测试                                                                      |
+| `deno task test:routing`                      | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航                       |
+| `deno task test:workspace`                    | Workspace 完整回归（见下文）                                                            |
+| `deno task test:documents`                    | 完整 Documents 集合：响应式矩阵、长笔记、Library、编辑、历史、草稿与分页契约（见下文）  |
+| `deno task test:wallpaper`                    | 壁纸链路（见下文）                                                                      |
+| `deno run -A scripts/e2e/run.ts supplemental` | 完整补充集合：设置、快捷键、Omnibox、AI 反馈及编辑器加载等                              |
+| `deno task test:e2e:full`                     | 只构建一次，串行执行所有 E2E 文件的去重并集；首次失败停止，可显式 `--parallel` 诊断并发 |
+| `deno task test:e2e:affected`                 | 基于 Git 路径映射选择集合；任一未知路径回退 full，仅供局部诊断                          |
+| `deno task check:e2e`                         | 检查新增 E2E 文件是否登记                                                               |
+| `deno task check:ui`                          | UI 门禁（见 [前端开发](frontend.md#ui-门禁)）                                           |
 
 模块入口（如 `test:workspace:apps`）仅作局部开发辅助，不替代完整 Workspace
 回归。
@@ -63,9 +63,14 @@ desk 至少覆盖 workspace + documents，并包含 routing/bundle/home-papers/s
 `documents-focus.test.ts`。这些文件仅覆盖 Documents 集合的一部分；
 完整 `documents`、`routing` 和 `supplemental` 集合当时尚未接入 CI。
 
-现在 `.github/workflows/e2e-coverage.yml` 在 PR/main 上以三个独立 matrix
-job 执行完整 `documents`、`routing`、`supplemental` 集合，每个 job 通过
-`deno run -A scripts/e2e/run.ts <suite> --serial` 先构建一次，再串行执行该集合。
+现在 `.github/workflows/e2e-coverage.yml` 在 PR/main 上以七个独立 matrix
+job 执行 `documents-core`、`pagination-short`、`pagination-manual`、
+`pagination-consecutive`、`pagination-mixed`、`routing`、`supplemental`。
+前五片无重无漏地组成完整 Documents：core 排除四个分页入口，每个分页片
+独占服务/内存数据库/资源目录/Browser/Context，串行执行 10 个场景，四片合计
+保留原有全部 40 场景及观察窗口、断言、视口和主题。
+每个 job 通过 `deno run -A scripts/e2e/run.ts <suite> --serial`
+先构建一次，再串行执行该片；七个 job 可独立并行，不另跑完整 documents。
 不设置 `E2E_TIMEOUT_MS`，保留测试 helper 的标准超时；job 上限为 60 分钟。
 matrix 不因其他集合失败而取消，测试失败通过 `pipefail` 保留非零退出码。
 无论成功或失败均尝试上传 `artifacts/e2e/<suite>/` 中的 JUnit、
@@ -73,8 +78,16 @@ matrix 不因其他集合失败而取消，测试失败通过 `pipefail` 保留�
 JUnit，已有诊断仍保留。
 
 原 Bundle 与 Notes workflow 中上述五个 Documents 文件的直接执行步骤已移除，
-由新的完整 Documents job 覆盖，避免重复执行；原 Bundle、Home papers、
+由上述 Documents core + 四个分页 job 完整覆盖，避免重复执行；原 Bundle、Home papers、
 Workspace、Wallpaper 门禁及已有 job 名称保持不变。
+
+本地完整 Documents 验收使用
+`DENO_JOBS=2 deno task test:documents --parallel`，只启动一个 Deno E2E
+进程并只构建一次。显式并行默认并发度 2，本地建议最多 3；默认 runner
+串行/fail-fast 规则未变。`test:documents` 仍覆盖全部五片，`test:e2e:full`
+仍是全项目去重完整门禁。不要并行启动多个 runner；按需使用
+`deno run -A scripts/e2e/run.ts <selector>` 定位单片，局部通过不替代完整验收。
+报告与 artifact 以 selector 区分；分片只调整调度边界，不宣称未测得的性能提升。
 
 ## 手工视觉验收数据
 

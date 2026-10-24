@@ -21,7 +21,14 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                suite: [documents, routing, supplemental]
+                suite:
+                    - documents-core
+                    - pagination-short
+                    - pagination-manual
+                    - pagination-consecutive
+                    - pagination-mixed
+                    - routing
+                    - supplemental
         steps:
             - uses: actions/checkout@v4
             - uses: denoland/setup-deno@v2

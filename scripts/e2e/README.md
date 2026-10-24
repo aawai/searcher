@@ -27,6 +27,29 @@ ownership/feedback、设置/搜索/笔记/Ask 快捷键及 Markdown editor/pagin
 full 合并回归。不使用 `--filter`、`--changed` 或 `--related`
 裁剪合并门禁；局部选择不能证明生产 React 构建的完整浏览器覆盖。
 
+Documents 的执行分区选择器为 `documents-core`、`pagination-short`、
+`pagination-manual`、`pagination-consecutive`、`pagination-mixed`，通过
+`deno run -A scripts/e2e/run.ts <selector>` 运行；它们不是新的 affected 业务域。
+`documents-core` 排除四个分页入口；每个分页入口独占 fixture（HTTP 服务、
+内存数据库、资源目录、Browser 和 Context），串行观察 10 个场景。四片合计保留
+全部 40 个默认场景、原观察窗口、断言、视口和主题，不重复运行。
+`test:documents` 仍包含 core 与四片，full 仍执行全部文件的去重并集。
+
+Coverage CI 以 `documents-core` + 四个 `pagination-*` job 组成完整 Documents
+覆盖，再加 `routing`、`supplemental`，共七个独立并行 matrix job；各 job 内
+串行执行，不额外运行完整 documents。JUnit、`timings.json`、stdout 和资源报告
+按 selector 存入 `artifacts/e2e/<selector>/`，artifact 名也携带 selector。
+
+本地完整 Documents 验收使用单个 Deno E2E 进程、一次构建：
+
+```sh
+DENO_JOBS=2 deno task test:documents --parallel
+```
+
+显式并行时默认并发度为 2；本地建议最多 3，不要同时启动多个 runner。
+不加 `--parallel` 仍保持原有串行默认；完整全项目门禁仍为
+`deno task test:e2e:full`。分片仅改变调度边界，不代表已测得性能提升。
+
 ## Affected：保守的局部选择
 
 ```sh
@@ -73,7 +96,8 @@ DENO_JOBS=2 deno task test:e2e:full --parallel --no-fail-fast --timeout 5000
 
 调度完全委托给 Deno `--parallel` / `DENO_JOBS`，不拆分单文件内有状态的测试或
 `t.step`，不共享 Browser、Context、数据库或 session。未设置 `DENO_JOBS`
-时采用保守值 2；CI 固定该值。默认 Workspace 与 Workspace CI 均为并行，显式 `--serial` 会移除
+时采用保守值 2；Workspace CI 固定该值，coverage CI 使用独立 job 并行、job 内串行。
+默认 Workspace 与 Workspace CI 均为并行，显式 `--serial` 会移除
 `--parallel`（而不是只把并发数设为 1）作为回退。full 与其他集合保持串行默认，显式 `--parallel` 可用于并发诊断；并发独有失败须单独隔离，不把单文件复查通过写成完整并发门禁通过。
 单独设置 `DENO_JOBS` 不会启用并行；以报告中的 `parallel` 与 `jobs` 为准。禁止用全局 retry 隐藏失败。
 

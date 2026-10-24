@@ -120,8 +120,12 @@ async function stableLayout(page: Page): Promise<void> {
         let previous = "";
         let unchanged = 0;
         while (performance.now() < deadline) {
-            await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-            const viewport = document.querySelector<HTMLElement>(".pagination-viewport");
+            await new Promise<void>((resolve) =>
+                requestAnimationFrame(() => resolve())
+            );
+            const viewport = document.querySelector<HTMLElement>(
+                ".pagination-viewport",
+            );
             const rect = viewport?.getBoundingClientRect();
             const signature = JSON.stringify({
                 mode: viewport?.dataset.paginationMode,
@@ -549,7 +553,11 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
                         rect.bottom <= sheet.bottom - margin + 2
                     ),
                     `glyphs for ${marker} stay within a paper's content area: ${
-                        JSON.stringify({ rect, sheets: geometry.sheets, scale: geometry.scale })
+                        JSON.stringify({
+                            rect,
+                            sheets: geometry.sheets,
+                            scale: geometry.scale,
+                        })
                     }`,
                 );
             }
