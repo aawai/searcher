@@ -330,7 +330,7 @@ Deno.test("home app library (#244)", async (t) => {
         );
 
         await t.step(
-            "mobile touch: five columns and 2x2 large folder with 3 clickable icons + remainder",
+            "mobile touch: five columns, 3x3 folder preview and whole-surface activation",
             async () => {
                 const { page, context } = await bigLibraryPage(
                     browser,
@@ -364,21 +364,22 @@ Deno.test("home app library (#244)", async (t) => {
                                 )
                             ),
                         [
-                            "打开 大文件夹成员1",
-                            "打开 大文件夹成员2",
-                            "打开 大文件夹成员3",
-                            "打开文件夹 大文件夹，另有 9 个应用",
+                            ...Array.from(
+                                { length: 8 },
+                                (_, i) => `打开 大文件夹成员${i + 1}`,
+                            ),
+                            "打开文件夹 大文件夹，另有 4 个应用",
                         ],
                     );
-                    const remainder = folder.getByRole("button", {
-                        name: "打开文件夹 大文件夹，另有 9 个应用",
-                    });
-                    const box = await remainder.boundingBox();
+                    const opener = folder.locator(
+                        ".launcher-folder-background",
+                    );
+                    const box = await opener.boundingBox();
                     assert(
                         box && box.width >= 44 && box.height >= 44,
                         "touch targets are at least 44px",
                     );
-                    await remainder.tap();
+                    await opener.tap();
                     await page.locator(".launcher-popup-title", {
                         hasText: "大文件夹",
                     }).waitFor();

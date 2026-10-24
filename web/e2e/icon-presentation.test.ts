@@ -118,9 +118,12 @@ Deno.test("icon presentation real-page matrix: fixed glyphs, opaque and transpar
                         shadow: getComputedStyle(node).boxShadow,
                     }))
                 );
-                assertEquals(edges.every((edge) =>
-                    edge.ring.includes("inset") && edge.shadow !== "none"
-                ), true);
+                assertEquals(
+                    edges.every((edge) =>
+                        edge.ring.includes("inset") && edge.shadow !== "none"
+                    ),
+                    true,
+                );
                 assertEquals(new Set(edges.map((edge) => edge.ring)).size, 1);
                 assertEquals(
                     await page.evaluate(() =>

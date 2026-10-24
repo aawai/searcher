@@ -9,6 +9,7 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import { openMoreApps } from "./helpers/app-library.ts";
+import { assertLargeFolderGeometry } from "./helpers/launcher-geometry.ts";
 
 interface ServerApp {
     id: string;
@@ -483,6 +484,12 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
             }).click();
             await menu.waitFor({ state: "detached" });
             await page.locator(".launcher-folder-item--large").waitFor();
+            await assertLargeFolderGeometry(
+                homeGrid.locator(".launcher-tile", {
+                    has: page.locator(".launcher-folder-item--large"),
+                }),
+                true,
+            );
 
             await folder.click({ button: "right" });
             await menu.getByRole("menuitem", { name: "重命名", exact: true })

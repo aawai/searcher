@@ -69,7 +69,7 @@ export function WebAppIcon({
     return (
         <Tooltip
             disabled={globalThis.matchMedia?.(
-                "(pointer: coarse), (hover: none)",
+                "(any-pointer: coarse)",
             ).matches}
         >
             <TooltipTrigger

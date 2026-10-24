@@ -1,0 +1,87 @@
+import { assert, assertEquals } from "@std/assert";
+import type { Locator } from "playwright";
+
+/** Shared home/popup contract: a square frames two rows of icon outer edges. */
+export async function assertLargeFolderGeometry(
+    tile: Locator,
+    labels: boolean,
+) {
+    const metrics = await tile.evaluate((node) => {
+        const grid = node.closest(".launcher-grid")!;
+        const style = getComputedStyle(grid);
+        const cell = parseFloat(style.getPropertyValue("--launcher-col-w"));
+        const gap = parseFloat(style.getPropertyValue("--launcher-gap-x"));
+        const icon = parseFloat(style.getPropertyValue("--launcher-icon"));
+        const pad = parseFloat(style.getPropertyValue("--launcher-pad-t"));
+        const outer = node.getBoundingClientRect();
+        const surface = node.querySelector(".launcher-folder-surface")!
+            .getBoundingClientRect();
+        const preview = getComputedStyle(
+            node.querySelector(".launcher-folder-preview")!,
+        );
+        const name = node.querySelector(".launcher-folder-name");
+        const neighbor = [...grid.querySelectorAll(".launcher-app")].find((
+            app,
+        ) => Math.abs(
+            app.getBoundingClientRect().top - outer.top - cell - gap,
+        ) <= 1);
+        const neighborName = neighbor?.querySelector(".webapp-name");
+        const neighborGlyph = grid.querySelector(".launcher-app .webapp-glyph");
+        const neighborTile = neighborGlyph?.closest(".launcher-tile");
+        return {
+            squareError: Math.abs(surface.width - surface.height),
+            sizeError: Math.abs(surface.width - cell - gap - icon),
+            leftError: Math.abs(surface.left - outer.left - (cell - icon) / 2),
+            rightError: Math.abs(
+                surface.right - outer.left - (cell + gap + (cell + icon) / 2),
+            ),
+            topError: Math.abs(surface.top - outer.top - pad),
+            neighborTopError: neighborGlyph && neighborTile
+                ? Math.abs(
+                    surface.top - outer.top -
+                        (neighborGlyph.getBoundingClientRect().top -
+                            neighborTile.getBoundingClientRect().top),
+                )
+                : null,
+            nameVisible: Boolean(name && name.getBoundingClientRect().height),
+            baselineError: name && neighborName
+                ? Math.abs(
+                    name.getBoundingClientRect().bottom -
+                        neighborName.getBoundingClientRect().bottom,
+                )
+                : null,
+            columns: preview.gridTemplateColumns.split(" ").length,
+            rows: preview.gridTemplateRows.split(" ").length,
+            clipped: [...node.querySelectorAll(".launcher-folder-mini-glyph")]
+                .some((glyph) => {
+                    const box = glyph.getBoundingClientRect();
+                    return box.left < surface.left ||
+                        box.right > surface.right || box.top < surface.top ||
+                        box.bottom > surface.bottom;
+                }),
+        };
+    });
+    for (
+        const error of [
+            metrics.squareError,
+            metrics.sizeError,
+            metrics.leftError,
+            metrics.rightError,
+            metrics.topError,
+        ]
+    ) {
+        assert(
+            error <= 1,
+            `Folder edges must align within 1px: ${JSON.stringify(metrics)}`,
+        );
+    }
+    if (metrics.neighborTopError !== null) {
+        assert(metrics.neighborTopError <= 1);
+    }
+    assertEquals(metrics.nameVisible, labels);
+    if (labels && metrics.baselineError !== null) {
+        assert(metrics.baselineError <= 1, "Row-two name baselines align");
+    }
+    assertEquals([metrics.columns, metrics.rows], [3, 3]);
+    assertEquals(metrics.clipped, false);
+}
