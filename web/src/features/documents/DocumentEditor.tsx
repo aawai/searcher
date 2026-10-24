@@ -333,7 +333,11 @@ export function DocumentEditor({
             const settings = await api<DocumentSettingsDto>(
                 `/api/documents/${encodeURIComponent(documentId)}/settings`,
             );
-            setPaperSettings(settings);
+            // Opening the dialog refetches; an unchanged result must keep its
+            // identity, or the open form resets over the user's choices.
+            setPaperSettings((previous) =>
+                previous?.updatedAt === settings.updatedAt ? previous : settings
+            );
             setPaperError(null);
         } catch (error) {
             setPaperError(

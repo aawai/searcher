@@ -19,34 +19,6 @@
     padding-block-end: calc(
         var(--zen-dock-clearance) + env(safe-area-inset-bottom, 0px)
     );
-    transition: padding-inline-end var(--motion-panel) var(--ease-out-expo);
-}
-
-/* Reserve a whole panel column only while the search would otherwise overlap:
-   1496 = search max (640) + 2 * (panel (400) + inset (12) + gap (16)).
-   CSS variables cannot be used in media queries; keep this boundary derived
-   from --layout-search-max, --workspace-width, --workspace-inset and --space-4.
-   The search is centred between the left viewport edge and the panel; wide
-   viewports retain the unchanged, full-width home layout. */
-@media (min-width: 768px) {
-    .home[data-workspace-panel="open"] {
-        padding-inline-end: calc(
-            var(--workspace-width) + var(--workspace-inset)
-        );
-    }
-}
-
-@media (min-width: 1496px) {
-    .home[data-workspace-panel="open"] {
-        padding-inline-end: 0;
-    }
-}
-
-/* A layout shift has no opacity-only form, so reduced motion applies it at once. */
-@media (prefers-reduced-motion: reduce) {
-    .home {
-        transition: none;
-    }
 }
 
 .hero {

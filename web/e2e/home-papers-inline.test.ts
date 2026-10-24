@@ -2,6 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 type ProductionChunk = {
     file: string;
@@ -654,7 +655,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         "Editing does not select another note",
     );
     await sheet.getByRole("button", {
-        name: "收起工作区",
+        name: "返回首页",
         exact: true,
     }).click();
     await sheet.waitFor({ state: "detached" });
@@ -687,11 +688,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     await inlineRegion.locator(".zen-inline-note").focus();
     await page.keyboard.press("ArrowLeft");
     await waitForCurrent(interiorDoc.id);
-    await page.locator('.zen-edge-btn[data-workspace="documents"]').click();
-    const libraryPanel = page.locator(
-        '.workspace-panel--mobile[data-presentation="sheet"]',
-    );
-    await libraryPanel.waitFor({ state: "visible" });
+    const libraryPanel = await openNotes(page);
     await libraryPanel.getByRole("button", {
         name: `笔记操作：${interiorDoc.displayTitle}`,
         exact: true,
@@ -723,7 +720,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         [interiorOrder[0].id],
     );
     await libraryPanel.getByRole("button", {
-        name: "收起工作区",
+        name: "返回首页",
         exact: true,
     }).click();
     await libraryPanel.waitFor({ state: "detached" });
@@ -1130,16 +1127,15 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         "Draft preserved across the 767/768 breakpoint.",
     );
     await responsiveSheet.getByRole("button", {
-        name: "收起工作区",
+        name: "返回首页",
         exact: true,
     }).click();
     await responsiveSheet.waitFor({ state: "detached" });
-    // The mobile opener was unmounted at 768px. Shared Host semantics restore
-    // its workspace entry rather than focusing a detached or replacement node.
+    // The mobile opener unmounted at 768px, so closing returns to the search box.
     await page.waitForFunction(
         () =>
             document.activeElement?.matches(
-                '.zen-edge-btn[data-workspace="documents"]',
+                "#search-query",
             ),
         undefined,
         { timeout: 5000 },

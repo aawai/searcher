@@ -2,7 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import { chromium, type Page } from "playwright";
 import { startProductionApp } from "./helpers/production-app.ts";
 
-const status = (page: Page) => page.locator(".desk-lab-status").innerText();
+const status = (page: Page) => page.locator(".lab-desk-status").innerText();
 const focused = (page: Page) =>
     page.evaluate(() =>
         document.activeElement?.getAttribute("data-desk-object") ??
@@ -11,7 +11,7 @@ const focused = (page: Page) =>
 
 /** Dispatches one wheel event on the desk and reports whether it was claimed. */
 function wheel(page: Page, deltaY: number, ctrlKey = false) {
-    return page.locator(".desk-lab-desk").evaluate(
+    return page.locator(".lab-desk-desk").evaluate(
         (desk, init) => {
             const event = new WheelEvent("wheel", {
                 ...init,
@@ -28,7 +28,7 @@ function wheel(page: Page, deltaY: number, ctrlKey = false) {
 async function waitForStage(page: Page, label: string) {
     await page.waitForFunction(
         (text) =>
-            document.querySelector(".desk-lab-status")?.textContent?.startsWith(
+            document.querySelector(".lab-desk-status")?.textContent?.startsWith(
                 `状态：${text}`,
             ),
         label,
@@ -45,7 +45,7 @@ Deno.test("desk lab moves between 静 and 览 by keyboard, wheel and pinch #240"
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));
         await page.goto(`${app.origin}/design-lab/desk`);
-        await page.waitForSelector(".desk-lab-home");
+        await page.waitForSelector(".lab-desk-home");
 
         // Keyboard: Mod+. enters 览 on the first object; arrows move by space.
         await page.keyboard.press("Control+.");
@@ -56,7 +56,7 @@ Deno.test("desk lab moves between 静 and 览 by keyboard, wheel and pinch #240"
         await page.keyboard.press("ArrowRight");
         assertEquals(await focused(page), "conversations");
         await page.keyboard.press("ArrowDown");
-        assertEquals(await focused(page), "paper-ideas");
+        assertEquals(await focused(page), "paper:ideas");
         await page.keyboard.press("ArrowLeft");
         assertEquals(await focused(page), "notes");
 
@@ -97,7 +97,7 @@ Deno.test("desk lab moves between 静 and 览 by keyboard, wheel and pinch #240"
         await waitForStage(page, "静");
 
         // Opening a paper from 静 returns to 静 and to that paper.
-        await page.locator("[data-desk-object='home-paper-ideas']").click();
+        await page.locator("[data-desk-object='home-paper:ideas']").click();
         await page.getByRole("complementary", { name: "灵感详情" }).waitFor();
         await page.getByRole("textbox", { name: "编辑灵感" }).fill("改过");
         await page.keyboard.press("Escape");
@@ -109,16 +109,16 @@ Deno.test("desk lab moves between 静 and 览 by keyboard, wheel and pinch #240"
         await waitForStage(page, "静");
         await page.waitForFunction(() =>
             document.activeElement?.getAttribute("data-desk-object") ===
-                "home-paper-ideas"
+                "home-paper:ideas"
         );
 
         // Over the limit the desk degrades to a grouped list.
         await page.getByLabel("对象数").selectOption("144");
         await page.keyboard.press("Control+.");
         await waitForStage(page, "览 · 列表");
-        assertEquals(await page.locator(".desk-lab-grid").count(), 0);
+        assertEquals(await page.locator(".lab-desk-grid").count(), 0);
         assertEquals(
-            await page.locator(".desk-lab-list h3").allInnerTexts(),
+            await page.locator(".lab-desk-list h3").allInnerTexts(),
             ["笔记", "AI 对话", "应用", "文件夹", "首页纸张"],
         );
         await page.keyboard.press("Escape");
@@ -146,7 +146,7 @@ Deno.test("desk lab uses a Sheet with list and nested detail below 768px #240", 
             hasTouch: true,
         });
         await page.goto(`${app.origin}/design-lab/desk`);
-        await page.waitForSelector(".desk-lab-home");
+        await page.waitForSelector(".lab-desk-home");
         await page.keyboard.press("Control+.");
         const sheet = page.getByRole("dialog", { name: "桌面" });
         await sheet.waitFor();

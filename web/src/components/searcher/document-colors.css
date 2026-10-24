@@ -1,5 +1,5 @@
 /* Note colours are domain values, not interface accent colours. */
-:where(.note-card, .note-quick-dot, .documents-color-dot) {
+:where(.note-card, [data-note-color], .note-quick-dot, .documents-color-dot) {
     --note-paper: var(--surface);
     --note-amber: #FFF4D6;
     --note-rose: #FBE7EC;
@@ -11,22 +11,26 @@
     --note-dot-sage: #7EAA76;
     --note-dot-sky: #72A5CF;
 }
-[data-theme="dark"] :where(.note-card, .note-quick-dot, .documents-color-dot) {
+[data-theme="dark"] :where(.note-card, [data-note-color], .note-quick-dot, .documents-color-dot) {
     --note-amber: #3D3420;
     --note-rose: #3F2730;
     --note-sage: #263528;
     --note-sky: #22303F;
 }
-:where(.note-card)[data-color="amber"] {
+:where(.note-card)[data-color="amber"],
+[data-note-color="amber"] {
     --note-color: var(--note-amber);
 }
-:where(.note-card)[data-color="rose"] {
+:where(.note-card)[data-color="rose"],
+[data-note-color="rose"] {
     --note-color: var(--note-rose);
 }
-:where(.note-card)[data-color="sage"] {
+:where(.note-card)[data-color="sage"],
+[data-note-color="sage"] {
     --note-color: var(--note-sage);
 }
-:where(.note-card)[data-color="sky"] {
+:where(.note-card)[data-color="sky"],
+[data-note-color="sky"] {
     --note-color: var(--note-sky);
 }
 .note-quick-dot,

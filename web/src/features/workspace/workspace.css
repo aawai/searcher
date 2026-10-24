@@ -41,9 +41,15 @@
     transition-duration: var(--motion-base);
     transition-timing-function: var(--ease-standard);
 }
+/* Editing widens the detail, always leaving two 览 columns beside it. */
 .workspace-panel[data-workspace-expanded="true"] {
-    width: min(var(--workspace-editor-expanded-width), calc(100vw - 2 *
-        var(--workspace-inset)));
+    width: max(
+        min(var(--workspace-width), calc(100vw - 2 * var(--workspace-inset))),
+        min(
+            var(--workspace-editor-expanded-width),
+            calc(100vw - 2 * var(--workspace-inset) - var(--desk-reserve))
+        )
+    );
 }
 .workspace-header {
     position: relative;

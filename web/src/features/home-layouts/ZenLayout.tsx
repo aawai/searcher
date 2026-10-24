@@ -40,8 +40,6 @@ export function ZenLayout(
     props: HomeLayoutProps & {
         availableRect: SafeRect;
         viewportWidth: number;
-        /** The non-expanded desktop panel is open beside the home content. */
-        panelDocked: boolean;
     },
 ) {
     const {
@@ -70,7 +68,6 @@ export function ZenLayout(
         updatePaperLayout,
         openWorkspace,
         workspaceOpen,
-        panelDocked,
         showAppLabels,
         showHomeApps,
     } = props;
@@ -103,10 +100,7 @@ export function ZenLayout(
     const calmShown = props.calm.showDate || props.calm.showTime ||
         props.calm.showContinue;
     useLayoutEffect(() => {
-        // While the docked panel moves the search aside, default-placed papers
-        // keep the exclusion measured before it opened instead of re-placing
-        // every frame.
-        if (mobile || panelDocked) return;
+        if (mobile) return;
         const hero = heroRef.current;
         const search = hero?.querySelector(".search-form-wrap");
         if (!hero || !search) return;
@@ -120,7 +114,6 @@ export function ZenLayout(
             ...(showHomeApps && gridElement ? [gridElement] : []),
         ];
         let active = true;
-        let stop: (() => void) | undefined;
         const measure = () => {
             if (!active) return;
             const next = exclusionFromRects(
@@ -136,37 +129,20 @@ export function ZenLayout(
                     : next
             );
         };
-        const start = () => {
-            const observer = new ResizeObserver(measure);
-            observer.observe(hero);
-            for (const element of obstacles) observer.observe(element);
-            measure();
-            void document.fonts.ready.then(measure);
-            addEventListener("scroll", measure, true);
-            stop = () => {
-                observer.disconnect();
-                removeEventListener("scroll", measure, true);
-            };
-        };
-        // The home eases back once the panel releases it; measure after that
-        // settles rather than while the search is still moving.
-        const easing = hero.closest(".home")?.getAnimations() ?? [];
-        if (easing.length === 0) start();
-        else {
-            void Promise.allSettled(
-                easing.map((animation) => animation.finished),
-            ).then(() => {
-                if (active) start();
-            });
-        }
+        const observer = new ResizeObserver(measure);
+        observer.observe(hero);
+        for (const element of obstacles) observer.observe(element);
+        measure();
+        void document.fonts.ready.then(measure);
+        addEventListener("scroll", measure, true);
         return () => {
             active = false;
-            stop?.();
+            observer.disconnect();
+            removeEventListener("scroll", measure, true);
         };
     }, [
         props.availableRect,
         mobile,
-        panelDocked,
         showHomeApps,
         gridElement,
         calmShown,

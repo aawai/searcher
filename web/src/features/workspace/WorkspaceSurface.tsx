@@ -26,7 +26,7 @@ import { WorkspaceActivity } from "./WorkspaceActivity.ts";
 export type WorkspacePresentation = "panel" | "sheet";
 
 /**
- * Hosts the workspace as a right-hand panel or a bottom Sheet.
+ * Hosts the object detail as a right-hand panel or the bottom Sheet of 览.
  *
  * `open` becoming false starts the exit motion: the surface keeps rendering its
  * last content, is inert and owns no Escape layer or focus until it unmounts.
@@ -50,6 +50,7 @@ export function WorkspaceSurface(
         expanded = false,
         headerActions,
         backLabel = "返回上一级",
+        rootFocus,
         chromeBottom = 0,
     }: {
         open: boolean;
@@ -68,6 +69,8 @@ export function WorkspaceSurface(
         expanded?: boolean;
         headerActions?: ReactNode;
         backLabel?: string;
+        /** Root views focus this instead of the close button when it exists. */
+        rootFocus?: () => HTMLElement | null;
         chromeBottom?: number;
     },
 ) {
@@ -118,6 +121,7 @@ export function WorkspaceSurface(
             onBack={onBack}
             onClose={onClose}
             headerActions={headerActions}
+            rootFocus={rootFocus}
             bodyLayout={bodyLayout}
             feedback={feedback}
             onFeedbackHost={onFeedbackHost}
@@ -129,7 +133,7 @@ export function WorkspaceSurface(
     );
     if (mobile) {
         // While closing, "trap-focus" drops Base UI's full-screen pointer
-        // blocker (only rendered for modal === true) so the Dock stays usable,
+        // blocker (only rendered for modal === true) so the home stays usable,
         // yet the focus manager remains modal; a reopen during the exit then
         // regains the full modal Sheet without switching guard semantics.
         return (
@@ -156,6 +160,7 @@ export function WorkspaceSurface(
                     <SheetPopup
                         className="workspace-panel workspace-panel--mobile"
                         data-presentation={presentation}
+                        data-desk-surface=""
                         inert={open ? undefined : true}
                         style={{
                             "--workspace-visible-height":
@@ -165,7 +170,9 @@ export function WorkspaceSurface(
                         } as CSSProperties}
                         aria-describedby={undefined}
                         initialFocus={() =>
-                            nested ? back.current : close.current}
+                            nested
+                                ? back.current
+                                : rootFocus?.() ?? close.current}
                         finalFocus={false}
                     >
                         {frame}
@@ -186,7 +193,7 @@ export function WorkspaceSurface(
             style={{
                 "--workspace-chrome-bottom": `${chromeBottom}px`,
             } as CSSProperties}
-            aria-label={title + "工作区"}
+            aria-label={`${title}详情`}
         >
             {frame}
         </aside>
@@ -207,6 +214,7 @@ function WorkspaceFrame(
         onBack,
         onClose,
         headerActions,
+        rootFocus,
         bodyLayout,
         feedback,
         onFeedbackHost,
@@ -223,6 +231,7 @@ function WorkspaceFrame(
         onBack: () => void;
         onClose: () => void;
         headerActions?: ReactNode;
+        rootFocus?: () => HTMLElement | null;
         bodyLayout?: "editor";
         feedback?: ReactNode;
         onFeedbackHost?: (host: HTMLElement | null) => void;
@@ -234,12 +243,13 @@ function WorkspaceFrame(
     useLayoutEffect(() => {
         if (!open) return;
         const focusChrome = () => {
-            (nested ? back.current : close.current)?.focus({
-                preventScroll: true,
-            });
+            const target = nested
+                ? back.current
+                : rootFocus?.() ?? close.current;
+            target?.focus({ preventScroll: true });
         };
-        if (mounted.current && !nested) {
-            // Move focus before Sheet restores a removed nested control to its popup.
+        if (mounted.current) {
+            // Move focus before Sheet restores a removed control to its popup.
             focusChrome();
             return;
         }
@@ -247,9 +257,8 @@ function WorkspaceFrame(
         const frame = requestAnimationFrame(focusChrome);
         return () => cancelAnimationFrame(frame);
     }, [open, routeKey, mobile, nested]);
-    // Root views name the surface for assistive technology only: the switcher
-    // already shows which workspace is selected.
-    const titleClass = nested ? "workspace-title" : "workspace-title sr-only";
+    // The title names what is shown: the object, or 桌面 on the Sheet's list.
+    const titleClass = "workspace-title";
     return (
         <>
             <header
@@ -288,7 +297,7 @@ function WorkspaceFrame(
                     ref={close}
                     variant="ghost"
                     size="icon"
-                    aria-label="收起工作区"
+                    aria-label={mobile ? "返回首页" : "关闭详情"}
                     onClick={onClose}
                 >
                     <X size="1em" className="icon-lg" />

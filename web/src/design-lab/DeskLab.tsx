@@ -52,15 +52,14 @@ import {
     deskColumns,
     deskNeighbour,
     type DeskObject,
-    type DeskStage,
     layoutDesk,
-    mockDeskObjects,
     normaliseWheelDelta,
     pinchIntent,
     type WheelBurst,
     wheelIntent,
     type ZoomIntent,
-} from "./desk-lab-model.ts";
+} from "../features/desk/desk-model.ts";
+import { type DeskStage, mockDeskObjects } from "./desk-lab-mock.ts";
 import "./desk-lab.css";
 
 const COUNTS = [7, 24, 48, 72, 96, 144, 200, 300, 500] as const;
@@ -107,7 +106,7 @@ function isEditable(target: EventTarget | null): boolean {
         (target.isContentEditable ||
             target.closest("textarea, select, [role='textbox']") !== null ||
             (target instanceof HTMLInputElement &&
-                !target.classList.contains("desk-lab-search-input")));
+                !target.classList.contains("lab-desk-search-input")));
 }
 
 /** Samples rAF intervals until the stage transition settles. */
@@ -295,12 +294,12 @@ export default function DeskLab() {
             const target = event.target as HTMLElement;
             if (
                 target.closest(
-                    ".desk-lab-detail, .desk-lab-suggestions, .desk-lab-controls, textarea",
+                    ".lab-desk-detail, .lab-desk-suggestions, .lab-desk-controls, textarea",
                 )
             ) return;
             const scroller = overviewRef.current;
             const result = wheelIntent(
-                stage,
+                stage === "overview",
                 {
                     delta: normaliseWheelDelta(
                         event.deltaY,
@@ -312,8 +311,8 @@ export default function DeskLab() {
                 },
                 burst.current,
                 {
-                    calm: scrollsWithin(target, desk),
-                    overviewAtTop: !scroller || scroller.scrollTop <= 0,
+                    scrollable: scrollsWithin(target, desk),
+                    atTop: !scroller || scroller.scrollTop <= 0,
                 },
             );
             burst.current = result.burst;
@@ -341,7 +340,7 @@ export default function DeskLab() {
         const onMove = (event: TouchEvent) => {
             if (event.touches.length !== 2 || start === 0) return;
             const intent = pinchIntent(
-                stage,
+                stage === "overview",
                 start,
                 distance(event.touches),
                 visualViewport?.scale ?? 1,
@@ -419,10 +418,10 @@ export default function DeskLab() {
     );
 
     return (
-        <div className="desk-lab" data-desk-state={stage}>
-            <div className="desk-lab-controls" aria-label="实验控制">
+        <div className="lab-desk" data-desk-state={stage}>
+            <div className="lab-desk-controls" aria-label="实验控制">
                 <Link to="/design-lab">返回设计实验室</Link>
-                <label className="desk-lab-control">
+                <label className="lab-desk-control">
                     对象数
                     <select
                         aria-label="对象数"
@@ -435,7 +434,7 @@ export default function DeskLab() {
                         ))}
                     </select>
                 </label>
-                <label className="desk-lab-control">
+                <label className="lab-desk-control">
                     列表阈值
                     <select
                         aria-label="列表阈值"
@@ -448,7 +447,7 @@ export default function DeskLab() {
                         ))}
                     </select>
                 </label>
-                <label className="desk-lab-control">
+                <label className="lab-desk-control">
                     已登录
                     <Switch
                         aria-label="已登录"
@@ -458,10 +457,10 @@ export default function DeskLab() {
                 </label>
                 <p
                     role="status"
-                    className="desk-lab-status"
-                    data-desk-lab-frames={metrics?.frames}
-                    data-desk-lab-average={metrics?.average.toFixed(1)}
-                    data-desk-lab-longest={metrics?.longest.toFixed(1)}
+                    className="lab-desk-status"
+                    data-lab-desk-frames={metrics?.frames}
+                    data-lab-desk-average={metrics?.average.toFixed(1)}
+                    data-lab-desk-longest={metrics?.longest.toFixed(1)}
                 >
                     状态：{STAGE_LABEL[stage]}
                     {list && overview ? " · 列表" : ""}
@@ -472,22 +471,22 @@ export default function DeskLab() {
                 </p>
             </div>
 
-            <div className="desk-lab-desk" ref={deskRef}>
+            <div className="lab-desk-desk" ref={deskRef}>
                 <section
-                    className="desk-lab-home"
+                    className="lab-desk-home"
                     aria-label="首页"
                     inert={overview && !mobile ? true : undefined}
                 >
-                    <p className="desk-lab-calm">10月24日 星期六</p>
-                    <div className="desk-lab-search">
+                    <p className="lab-desk-calm">10月24日 星期六</p>
+                    <div className="lab-desk-search">
                         <Search size="1em" className="icon-md" />
                         <input
                             ref={searchRef}
-                            className="desk-lab-search-input"
+                            className="lab-desk-search-input"
                             role="combobox"
                             aria-label="搜索或输入网址"
                             aria-expanded={suggestions}
-                            aria-controls="desk-lab-suggestions"
+                            aria-controls="lab-desk-suggestions"
                             placeholder="搜索或输入网址"
                             onFocus={() => {
                                 setStage((value) =>
@@ -517,15 +516,15 @@ export default function DeskLab() {
                         />
                         {suggestions && signedIn && (
                             <ul
-                                id="desk-lab-suggestions"
+                                id="lab-desk-suggestions"
                                 role="listbox"
                                 aria-label="搜索建议"
-                                className="desk-lab-suggestions"
+                                className="lab-desk-suggestions"
                             >
                                 <li
                                     role="option"
                                     aria-selected="false"
-                                    className="desk-lab-suggestion"
+                                    className="lab-desk-suggestion"
                                     onMouseDown={(event) => {
                                         event.preventDefault();
                                         enterOverview();
@@ -543,9 +542,9 @@ export default function DeskLab() {
                     </div>
                     {signedIn && (
                         <>
-                            <ul className="desk-lab-apps" aria-label="应用">
+                            <ul className="lab-desk-apps" aria-label="应用">
                                 {HOME_APPS.map((name) => (
-                                    <li key={name} className="desk-lab-app">
+                                    <li key={name} className="lab-desk-app">
                                         <span aria-hidden="true">
                                             {name.slice(0, 1)}
                                         </span>
@@ -553,14 +552,14 @@ export default function DeskLab() {
                                     </li>
                                 ))}
                             </ul>
-                            <div className="desk-lab-papers">
+                            <div className="lab-desk-papers">
                                 {objects.filter((object) =>
                                     object.kind === "paper"
                                 ).slice(0, 2).map((paper) => (
                                     <button
                                         key={paper.id}
                                         type="button"
-                                        className="desk-lab-paper"
+                                        className="lab-desk-paper"
                                         data-desk-object={`home-${paper.id}`}
                                         onClick={() => enterOverview(paper.id)}
                                     >
@@ -581,17 +580,17 @@ export default function DeskLab() {
                 {presence.mounted && (
                     <div
                         ref={presence.ref}
-                        className="desk-lab-overview-layer"
+                        className="lab-desk-overview-layer"
                         data-ending-style={presence.ending || undefined}
                         inert={presence.ending || undefined}
                     >
                         <section
-                            className="desk-lab-overview"
+                            className="lab-desk-overview"
                             aria-label="桌面"
                             ref={overviewRef}
                             data-detail={selected ? true : undefined}
                         >
-                            <header className="desk-lab-overview-header">
+                            <header className="lab-desk-overview-header">
                                 <h2 className="sr-only">桌面</h2>
                                 <Button
                                     variant="ghost"
@@ -604,7 +603,7 @@ export default function DeskLab() {
                             </header>
                             {list ? listView : (
                                 <div
-                                    className="desk-lab-grid"
+                                    className="lab-desk-grid"
                                     role="list"
                                     aria-label="桌面对象"
                                 >
@@ -639,7 +638,7 @@ export default function DeskLab() {
                         </section>
                         {selected && (
                             <aside
-                                className="desk-lab-detail"
+                                className="lab-desk-detail"
                                 aria-label={`${selected.title}详情`}
                             >
                                 {detailView}
@@ -669,7 +668,7 @@ export default function DeskLab() {
                     <SheetPortal>
                         <SheetBackdrop />
                         <SheetPopup
-                            className="desk-lab-sheet"
+                            className="lab-desk-sheet"
                             aria-describedby={undefined}
                             finalFocus={false}
                             initialFocus={() =>
@@ -678,7 +677,7 @@ export default function DeskLab() {
                                         objects[0]?.id ?? "",
                                     ) ?? null}
                         >
-                            <header className="desk-lab-sheet-header">
+                            <header className="lab-desk-sheet-header">
                                 {selected && (
                                     <Button
                                         ref={detailClose}
@@ -694,7 +693,7 @@ export default function DeskLab() {
                                         />
                                     </Button>
                                 )}
-                                <SheetTitle className="desk-lab-sheet-title">
+                                <SheetTitle className="lab-desk-sheet-title">
                                     {selected ? selected.title : "桌面"}
                                 </SheetTitle>
                                 <Button
@@ -706,7 +705,7 @@ export default function DeskLab() {
                                     <X size="1em" className="icon-lg" />
                                 </Button>
                             </header>
-                            <div className="desk-lab-sheet-body">
+                            <div className="lab-desk-sheet-body">
                                 {selected ? detailView : listView}
                             </div>
                         </SheetPopup>
@@ -748,7 +747,7 @@ export default function DeskLab() {
 
 function DeskObjectTile(
     { cell, selected, tabbable, register, onKeyDown, onSelect }: {
-        cell: DeskCell;
+        cell: DeskCell<DeskObject>;
         selected: boolean;
         tabbable: boolean;
         register: (node: HTMLButtonElement | null) => void;
@@ -762,7 +761,7 @@ function DeskObjectTile(
     return (
         <div
             role="listitem"
-            className="desk-lab-cell"
+            className="lab-desk-cell"
             style={{
                 gridColumn: `${placement.col + 1} / span ${placement.colSpan}`,
                 gridRow: `${placement.row + 1} / span ${placement.rowSpan}`,
@@ -771,7 +770,7 @@ function DeskObjectTile(
             <button
                 ref={register}
                 type="button"
-                className="desk-lab-object"
+                className="lab-desk-object"
                 data-kind={object.kind}
                 data-desk-object={object.id}
                 aria-pressed={selected}
@@ -796,13 +795,13 @@ function DeskObjectTile(
                     )}
                 {object.preview && (
                     <span
-                        className="desk-lab-object-preview"
+                        className="lab-desk-object-preview"
                         aria-hidden="true"
                     >
                         {object.preview.map((item) =>
                             object.kind === "apps" || object.kind === "folder"
                                 ? (
-                                    <span key={item} className="desk-lab-glyph">
+                                    <span key={item} className="lab-desk-glyph">
                                         {item.slice(0, 1)}
                                     </span>
                                 )
@@ -810,8 +809,8 @@ function DeskObjectTile(
                         )}
                     </span>
                 )}
-                <span className="desk-lab-object-title">{object.title}</span>
-                <span className="desk-lab-object-detail">
+                <span className="lab-desk-object-title">{object.title}</span>
+                <span className="lab-desk-object-detail">
                     {DESK_KIND_LABEL[object.kind]} · {object.detail}
                 </span>
             </button>
@@ -828,13 +827,13 @@ function DeskList(
     },
 ) {
     return (
-        <div className="desk-lab-list">
+        <div className="lab-desk-list">
             {DESK_KIND_ORDER.map((kind) => {
                 const items = objects.filter((object) => object.kind === kind);
                 if (items.length === 0) return null;
                 return (
-                    <section key={kind} aria-labelledby={`desk-lab-${kind}`}>
-                        <h3 id={`desk-lab-${kind}`}>
+                    <section key={kind} aria-labelledby={`lab-desk-${kind}`}>
+                        <h3 id={`lab-desk-${kind}`}>
                             {DESK_KIND_LABEL[kind]}
                         </h3>
                         <ul>
@@ -844,13 +843,13 @@ function DeskList(
                                         ref={(node) =>
                                             register(object.id, node)}
                                         type="button"
-                                        className="desk-lab-row"
+                                        className="lab-desk-row"
                                         data-desk-object={object.id}
                                         aria-pressed={object.id === selected}
                                         onClick={() => onSelect(object.id)}
                                     >
                                         <span>{object.title}</span>
-                                        <span className="desk-lab-object-detail">
+                                        <span className="lab-desk-object-detail">
                                             {object.detail}
                                         </span>
                                     </button>
@@ -874,9 +873,9 @@ function DeskDetail(
     },
 ) {
     return (
-        <div className="desk-lab-detail-body">
+        <div className="lab-desk-detail-body">
             {!mobile && (
-                <header className="desk-lab-detail-header">
+                <header className="lab-desk-detail-header">
                     <h2>{object.title}</h2>
                     <Button
                         ref={closeRef}
@@ -889,7 +888,7 @@ function DeskDetail(
                     </Button>
                 </header>
             )}
-            <p className="desk-lab-object-detail">
+            <p className="lab-desk-object-detail">
                 {DESK_KIND_LABEL[object.kind]} · {object.detail}
             </p>
             {object.kind === "paper"
@@ -901,7 +900,7 @@ function DeskDetail(
                     />
                 )
                 : (
-                    <ul className="desk-lab-detail-list">
+                    <ul className="lab-desk-detail-list">
                         {["第一项", "第二项", "第三项"].map((item) => (
                             <li key={item}>
                                 {object.title} · {item}

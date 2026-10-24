@@ -162,6 +162,7 @@ function isRuntimeLayoutOwner(file: string): boolean {
         p.endsWith("WebAppLauncher.tsx") ||
         p.endsWith("HomePapers.tsx") ||
         p.endsWith("design-lab/DeskLab.tsx") ||
+        p.endsWith("features/desk/DeskObjects.tsx") ||
         p.includes("/fixtures/layout/")
     );
 }
@@ -226,6 +227,11 @@ export function isDomainValueException(
                 norm === "`${viewport.bottom}px`") ||
             (prop === "--workspace-chrome-bottom" &&
                 norm === "`${chromeBottom}px`");
+    }
+    // 览 sits below the measured top chrome, like the detail bar beside it.
+    if (p === "web/src/features/desk/DeskOverview.tsx") {
+        return prop === "--desk-chrome-bottom" &&
+            norm === "`${chromeBottom}px`";
     }
 
     // Dynamic accent color preview swatches (scoped strictly to swatch owners)

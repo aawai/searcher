@@ -1,0 +1,234 @@
+/* The zoomable desk (docs/workspace.md#桌面静--用--览). The home layer fades;
+   览 alone scales, from slightly near to its rest size. */
+
+.desk-home {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    transition: opacity var(--motion-panel) var(--ease-out-expo);
+}
+.desk-home[data-desk-stage="overview"] {
+    opacity: 0;
+}
+
+.desk-overview {
+    --desk-chrome-bottom: 0px;
+    position: fixed;
+    inset: var(--desk-chrome-bottom) 0 0;
+    z-index: var(--elevation-canvas);
+    display: flex;
+    background: var(--canvas-derived);
+    backdrop-filter: var(--canvas-derived-filter);
+    transition: opacity var(--motion-panel) var(--ease-out-expo),
+        transform var(--motion-panel) var(--ease-out-expo);
+}
+@starting-style {
+    .desk-overview {
+        opacity: 0;
+        transform: scale(1.04);
+    }
+}
+.desk-overview[data-ending-style] {
+    opacity: 0;
+    transform: scale(1.04);
+}
+.desk-overview-scroller {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-3) var(--space-desk-padding-inline) var(--space-8);
+    transition: padding-inline-end var(--motion-panel) var(--ease-out-expo);
+}
+/* The detail bar sits over the right edge; 览 reflows in the rest. */
+.desk-overview[data-detail="panel"] .desk-overview-scroller {
+    padding-inline-end: calc(
+        var(--workspace-width) + 2 * var(--workspace-inset)
+    );
+}
+/* Same width as .workspace-panel[data-workspace-expanded] in workspace.css. */
+.desk-overview[data-detail="expanded"] .desk-overview-scroller {
+    padding-inline-end: calc(
+        max(
+            min(var(--workspace-width), 100vw - 2 * var(--workspace-inset)),
+            min(
+                var(--workspace-editor-expanded-width),
+                100vw - 2 * var(--workspace-inset) - var(--desk-reserve)
+            )
+        ) + 2 * var(--workspace-inset)
+    );
+}
+.desk-overview-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-block-end: var(--space-2);
+}
+
+.desk-grid {
+    display: grid;
+    grid-auto-columns: var(--desk-cell);
+    grid-auto-rows: var(--desk-cell);
+    justify-content: center;
+    gap: var(--space-desk-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.desk-cell {
+    display: flex;
+    min-width: 0;
+}
+.desk-object {
+    --launcher-icon: var(--control-compact-height);
+    --radius-launcher-icon: calc(var(--launcher-icon) * var(--radius-launcher-ratio));
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+    min-width: 0;
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    background: var(--glass-sheen), var(--material-regular);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    text-align: start;
+    cursor: pointer;
+}
+.desk-object[aria-pressed="true"] {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+.desk-paper {
+    border-radius: var(--radius-note-card);
+    background:
+        linear-gradient(to top, var(--paper-edge-highlight) 1px, transparent
+        1px),
+        var(--paper-shade),
+        var(--paper-grain),
+        var(--note-color);
+    backdrop-filter: none;
+    box-shadow: var(--shadow-note-card);
+}
+.desk-paper[data-note-color="paper"] {
+    --note-color: var(--paper-white);
+}
+.desk-object-preview {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    list-style: none;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+}
+.desk-object-preview li,
+.desk-object-title,
+.desk-row-title {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.desk-object-apps {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: var(--space-1);
+    min-height: 0;
+    overflow: hidden;
+}
+.desk-object[data-kind="folder"] .desk-object-apps {
+    max-width: calc(3 * var(--launcher-icon) + 2 * var(--space-1));
+}
+/* Name and detail sit at the foot of every tile. */
+.desk-object-title {
+    margin-block-start: auto;
+    font-weight: 600;
+}
+.desk-object-detail {
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    white-space: nowrap;
+}
+
+.desk-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: var(--layout-search-max);
+    margin: 0 auto;
+}
+.desk-list-title {
+    margin: 0 0 var(--space-2);
+    font-size: var(--font-body-size);
+    font-weight: 600;
+}
+.desk-list-group,
+.desk-detail-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.desk-list-group {
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+.desk-row,
+.desk-detail-row {
+    --launcher-icon: var(--control-height);
+    --radius-launcher-icon: calc(var(--launcher-icon) * var(--radius-launcher-ratio));
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: var(--row-min-height);
+    padding: var(--space-1) var(--space-4);
+    border-radius: var(--control-radius);
+    color: var(--foreground);
+    text-align: start;
+    text-decoration: none;
+}
+.desk-row-title {
+    flex: 1;
+    min-width: 0;
+}
+.desk-row[aria-pressed="true"],
+.desk-row:hover,
+.desk-detail-row:hover {
+    background: var(--surface-soft);
+}
+.desk-detail-row {
+    padding-inline: var(--space-2);
+}
+
+@media (any-pointer: coarse) {
+    .desk-row,
+    .desk-detail-row {
+        min-height: var(--control-touch-target);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .desk-overview,
+    .desk-overview-scroller {
+        transition: opacity var(--motion-panel) linear;
+    }
+    .desk-overview[data-ending-style] {
+        transform: none;
+    }
+    @starting-style {
+        .desk-overview {
+            transform: none;
+        }
+    }
+}

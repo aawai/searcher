@@ -1,4 +1,5 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
+import { deskDetail, notesOpener } from "./helpers/desk.ts";
 import { assert, assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { createApp } from "../../src/app.ts";
@@ -116,22 +117,22 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await page.waitForURL(`${origin}/`);
     await userMenu.waitFor({ state: "visible" });
     await banner.waitFor({ state: "visible" });
-    const trigger = page.locator(
-        '.zen-edge-trigger button[data-workspace="documents"]',
-    );
+    const trigger = notesOpener(page);
     await trigger.waitFor({ state: "visible" });
+    const opener = await trigger.elementHandle();
+    assert(opener);
 
     await trigger.focus();
     await page.keyboard.press("Enter");
-    const panel = page.locator("aside.workspace-panel");
+    const panel = deskDetail(page);
     await panel.waitFor({ state: "visible" });
     assertEquals(await panel.getAttribute("data-presentation"), "panel");
     const closeButton = panel.getByRole("button", {
-        name: "收起工作区",
+        name: "关闭详情",
         exact: true,
     });
     await page.waitForFunction(() =>
-        document.activeElement?.getAttribute("aria-label") === "收起工作区"
+        document.activeElement?.getAttribute("aria-label") === "关闭详情"
     );
     await page.keyboard.press("Tab");
     const search = panel.locator("input[data-workspace-search]");
@@ -293,7 +294,12 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await closeButton.focus();
     await page.keyboard.press("Enter");
     await panel.waitFor({ state: "hidden" });
-    await page.waitForFunction(() =>
-        document.activeElement?.getAttribute("data-workspace") === "documents"
+    await page.waitForFunction(
+        (element) =>
+            document.activeElement ===
+                (element.isConnected
+                    ? element
+                    : document.querySelector("#search-query")),
+        opener,
     );
 });
