@@ -14,12 +14,7 @@ import type {
     DocumentPageDto,
 } from "../../src/shared/documents.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import {
-    deskDetail,
-    deskObject,
-    deskOverview,
-    openNotes,
-} from "./helpers/desk.ts";
+import { libraryPanel, openNotes } from "./helpers/library.ts";
 
 // Documents workspace library contracts: scopes, search, row actions, create /
 // trash / restore, editor presentation (color + pin to home), save lifecycle,
@@ -94,7 +89,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
     const readDocument = (id: string) =>
         request<DocumentDto>(`/api/documents/${id}`);
 
-    const workspace = () => deskDetail(page);
+    const workspace = () => libraryPanel(page);
     const editor = () => page.locator("[data-workspace-editor]");
     const saveStatus = (status: string) =>
         page.locator(`.document-save-status[data-status="${status}"]`);
@@ -538,18 +533,12 @@ Deno.test("production documents library workspace contracts", async (t) => {
                     .getAttribute("data-color"),
                 "amber",
             );
-            await deskObject(page, `paper:${doc.id}`).waitFor({
-                state: "visible",
-            });
             await workspace().getByRole("button", {
-                name: "关闭详情",
+                name: "关闭资料库",
                 exact: true,
             }).click();
             await workspace().waitFor({ state: "detached" });
-            await page.locator(
-                '.desk-home[data-desk-stage="calm"]:not([inert])',
-            )
-                .waitFor();
+            await page.locator("#search-query:not([inert])").waitFor();
             await homePapersSettled();
             const paper = homePaper(title);
             await paper.waitFor({ state: "visible" });
@@ -887,7 +876,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                     // Mobile sheets must be dismissed before the viewport changes
                     if (vp.width < 768) {
                         await panel.getByRole("button", {
-                            name: "返回首页",
+                            name: "关闭资料库",
                             exact: true,
                         }).click();
                         await panel.waitFor({ state: "detached" });
@@ -900,7 +889,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
     );
 
     await t.step(
-        "Desk: pinned papers become overview objects beside details and return to calm home",
+        "Library: pinned notes stay on the unchanged home beside the library",
         async () => {
             const title = "Geometry Home Paper";
             const doc = await createDocument({
@@ -918,35 +907,20 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await workspace().locator("[data-document-id]").first().waitFor({
                 state: "visible",
             });
-            await deskOverview(page).waitFor({ state: "visible" });
-            await page.waitForFunction(() => {
-                const home = document.querySelector<HTMLElement>(".desk-home");
-                return home?.inert && home.dataset.deskStage === "overview" &&
-                    Number(getComputedStyle(home).opacity) === 0;
-            });
-            const object = deskObject(page, `paper:${doc.id}`);
-            await object.waitFor({ state: "visible" });
-            await page.waitForFunction(() => {
-                const panel = document.querySelector("aside.workspace-panel")
-                    ?.getBoundingClientRect();
-                const objects = [
-                    ...document.querySelectorAll("[data-desk-object]"),
-                ];
-                return panel && objects.length > 0 &&
-                    objects.every((object) =>
-                        object.getBoundingClientRect().right <= panel.left
-                    );
-            });
+            const original = await paper.boundingBox();
+            assert(original);
+            assertEquals(
+                await paper.evaluate((node) =>
+                    Boolean(node.closest("[inert]"))
+                ),
+                false,
+            );
             await workspace().getByRole("button", {
-                name: "关闭详情",
+                name: "关闭资料库",
                 exact: true,
             }).click();
             await workspace().waitFor({ state: "detached" });
-            await deskOverview(page).waitFor({ state: "detached" });
-            await page.locator(
-                '.desk-home[data-desk-stage="calm"]:not([inert])',
-            )
-                .waitFor();
+            await page.locator("#search-query:not([inert])").waitFor();
             await homePapersSettled();
 
             await paper.waitFor({ state: "visible" });

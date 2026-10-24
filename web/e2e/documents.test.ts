@@ -5,7 +5,7 @@ import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { largeDocumentMarkdown } from "./fixtures/document.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { openNotes } from "./helpers/desk.ts";
+import { openNotes } from "./helpers/library.ts";
 
 Deno.test("Documents production responsive modes and large-document integrity (#102 M7)", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -128,7 +128,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
         for (const theme of ["light", "dark"] as const) {
             assert(
                 await t.step(
-                    `${width}x${height} ${theme}: modes, overflow and desk detail boundary`,
+                    `${width}x${height} ${theme}: modes, overflow and library boundary`,
                     async () => {
                         await page.setViewportSize({ width, height });
                         await page.emulateMedia({
@@ -136,35 +136,18 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                             reducedMotion: "reduce",
                         });
                         await resetHome(theme);
-                        assertEquals(
-                            await page.locator(".desk-home").getAttribute(
-                                "data-desk-stage",
-                            ),
-                            "overview",
-                        );
-                        assert(
-                            await page.locator(".desk-home").evaluate((home) =>
-                                home.hasAttribute("inert")
-                            ),
-                            "home must be inert while an object detail is open",
-                        );
+                        await page.locator("[data-library]").waitFor();
                         if (width < 768) {
-                            await page.locator(
-                                '[role="dialog"][data-desk-surface]',
-                            ).waitFor();
-                            await page.getByRole("button", {
-                                name: "返回上一级",
-                                exact: true,
-                            }).waitFor();
+                            await page.locator('[role="dialog"][data-library]')
+                                .waitFor();
                         } else {
-                            await page.getByRole("region", {
-                                name: "桌面",
-                                exact: true,
-                            }).waitFor();
-                            await page.getByRole("button", {
-                                name: "关闭详情",
-                                exact: true,
-                            }).waitFor();
+                            assertEquals(
+                                await page.locator("#search-query").evaluate((
+                                    node,
+                                ) => Boolean(node.closest("[inert]"))),
+                                false,
+                                "desktop library must leave the home interactive",
+                            );
                         }
                         const initialBody = await request<DocumentDto>(
                             `/api/documents/${doc.id}`,

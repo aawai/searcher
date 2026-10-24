@@ -7,7 +7,7 @@
         var(--workspace-chrome-bottom)
     );
     right: var(--workspace-inset);
-    width: min(var(--workspace-width), calc(100vw - 2 *
+    width: min(var(--workspace-panel-width), calc(100vw - 2 *
         var(--workspace-inset)));
     z-index: var(--elevation-workspace);
     display: flex;
@@ -41,15 +41,10 @@
     transition-duration: var(--motion-base);
     transition-timing-function: var(--ease-standard);
 }
-/* Editing widens the detail, always leaving two 览 columns beside it. */
+/* The editor expands over home without changing home geometry. */
 .workspace-panel[data-workspace-expanded="true"] {
-    width: max(
-        min(var(--workspace-width), calc(100vw - 2 * var(--workspace-inset))),
-        min(
-            var(--workspace-editor-expanded-width),
-            calc(100vw - 2 * var(--workspace-inset) - var(--desk-reserve))
-        )
-    );
+    width: min(var(--workspace-editor-expanded-width),
+        calc(100vw - 2 * var(--workspace-inset)));
 }
 .workspace-header {
     position: relative;
@@ -78,7 +73,7 @@
     overscroll-behavior: contain;
     padding: var(--space-4);
 }
-.workspace-body:has(> [data-workspace-editor]) {
+.workspace-body:has([data-workspace-editor]) {
     overflow: hidden;
 }
 .workspace-root {

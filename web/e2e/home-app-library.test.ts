@@ -3,6 +3,7 @@ import { type Browser, type BrowserContext, type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { openMoreApps } from "./helpers/app-library.ts";
+import { closeLibrary, libraryPanel, libraryView } from "./helpers/library.ts";
 
 // Issue #244 acceptance on the real page: the home page is the app library.
 // Capacity / 更多, folder previews, layered Escape, soft-keyboard guard, the
@@ -577,7 +578,7 @@ Deno.test("home app library (#244)", async (t) => {
         );
 
         await t.step(
-            "在首页显示应用 off: no grid, search box stays, 应用 entry opens the full popup, search still opens apps and folders, on restores order",
+            "在首页显示应用 off: no grid, search box stays, 应用 entry opens the library, search still opens apps and folders, on restores order",
             async () => {
                 const { page, context } = await bigLibraryPage(
                     browser,
@@ -619,25 +620,23 @@ Deno.test("home app library (#244)", async (t) => {
                     }
 
                     await entry.click();
-                    const popup = page.locator(".launcher-popup");
-                    await popup.locator(".launcher-popup-title", {
-                        hasText: /^应用$/,
-                    }).waitFor();
+                    const appsView = libraryView(page, "apps");
+                    await appsView.waitFor();
                     assertEquals(
-                        await popup.locator(".launcher-grid > .launcher-tile")
-                            .count(),
-                        BIG_ROOT_TILES + 1,
-                    );
-                    await popup.getByRole("button", { name: "添加应用" })
-                        .waitFor();
-                    assertEquals(
-                        await popup.locator(
-                            ".launcher-grid > .launcher-tile[data-tile-id]",
+                        await appsView.locator(
+                            "[data-library-apps-grid] > :is(.launcher-app, .launcher-folder-item)",
                         ).count(),
                         BIG_ROOT_TILES,
                     );
-                    await page.keyboard.press("Escape");
-                    await popup.waitFor({ state: "detached" });
+                    await libraryPanel(page).getByRole("button", {
+                        name: "添加应用",
+                        exact: true,
+                    }).waitFor();
+                    assertEquals(
+                        await page.locator(".launcher-popup").count(),
+                        0,
+                    );
+                    await closeLibrary(page);
 
                     // Suggestions still match apps and folders.
                     await search.fill("应用07");
@@ -650,6 +649,7 @@ Deno.test("home app library (#244)", async (t) => {
                     }).first();
                     await folderOption.waitFor();
                     await folderOption.click();
+                    const popup = page.locator(".launcher-popup");
                     await popup.locator(".launcher-popup-title", {
                         hasText: "尾部文件夹",
                     }).waitFor();

@@ -32,9 +32,9 @@ import {
 import { SearchHome } from "./app/SearchHome.tsx";
 import { askConversationId, authPath, routes } from "./app/routes.ts";
 import {
-    type DeskRequest,
-    deskRequestState,
-} from "./features/desk/desk-request.ts";
+    type LibraryRequest,
+    libraryRequestState,
+} from "./features/library/library-request.ts";
 import type { AppOutletContext } from "./app/outlet-context.ts";
 import { useAiModels } from "./features/omnibox/useAiModels.ts";
 import {
@@ -69,7 +69,6 @@ const OmniboxLab = lazy(() =>
     }))
 );
 const MotionLab = lazy(() => import("./design-lab/MotionLab.tsx"));
-const DeskLab = lazy(() => import("./design-lab/DeskLab.tsx"));
 const AccentLab = lazy(() => import("./design-lab/AccentLab.tsx"));
 const MarkdownEditorSpike = lazy(() =>
     import("./spikes/markdown-editor/MarkdownEditorSpike.tsx")
@@ -129,6 +128,7 @@ function Layout() {
     const serviceWorker = useServiceWorkerUpdate();
     // Coming back online re-checks the session the offline start could not.
     const wasOnline = useRef(online);
+    const libraryFromMenu = useRef(false);
     useEffect(() => {
         if (online && !wasOnline.current && connectionError) {
             void retryConnection();
@@ -153,11 +153,11 @@ function Layout() {
         setError("");
     }, [authSession]);
 
-    /** 览 does not enter history; from another page it is a page navigation. */
-    function openDesk(request: DeskRequest) {
+    /** The library stays out of history when already on the home page. */
+    function openLibrary(request: LibraryRequest) {
         const atHome = location.pathname === routes.home;
         navigate(routes.home, {
-            state: deskRequestState(request),
+            state: libraryRequestState(request),
             replace: atHome,
             viewTransition: !atHome,
         });
@@ -299,23 +299,39 @@ function Layout() {
                                             .slice(0, 1)}
                                     </span>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent sideOffset={8}>
+                                <DropdownMenuContent
+                                    sideOffset={8}
+                                    // The library moves focus into its header; restoring it to
+                                    // the avatar afterwards would steal it back.
+                                    finalFocus={() => {
+                                        const restore = !libraryFromMenu
+                                            .current;
+                                        libraryFromMenu.current = false;
+                                        return restore;
+                                    }}
+                                >
                                     <div className="user-menu-identity">
                                         <span>{user.displayName}</span>
                                         <span>@{user.username}</span>
                                     </div>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
-                                        onClick={() => openDesk("overview")}
+                                        onClick={() => {
+                                            libraryFromMenu.current = true;
+                                            openLibrary("root");
+                                        }}
                                     >
                                         <LayoutGrid
                                             size="1em"
                                             className="icon-md"
                                         />
-                                        <span>桌面</span>
+                                        <span>资料库</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        onClick={() => openDesk("notes")}
+                                        onClick={() => {
+                                            libraryFromMenu.current = true;
+                                            openLibrary("notes");
+                                        }}
                                     >
                                         <NotebookPen
                                             size="1em"
@@ -519,7 +535,6 @@ export function App() {
                     { index: true, element: <SearchHome /> },
                     { path: routes.designLab, element: <DesignLab /> },
                     { path: "/design-lab/motion", element: <MotionLab /> },
-                    { path: "/design-lab/desk", element: <DeskLab /> },
                     { path: "/design-lab/accent", element: <AccentLab /> },
                     { path: routes.login, element: <AuthPage kind="login" /> },
                     {

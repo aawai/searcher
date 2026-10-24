@@ -12,7 +12,8 @@ export const suites = {
     workspace: [
         "workspace",
         "workspace-shell",
-        "desk",
+        "library",
+        "library-apps",
         "workspace-chrome-inset",
         "launcher",
         "apps-density",
@@ -52,7 +53,6 @@ export const suites = {
         "bundle-loading",
         "route-style-stability",
         "omnibox-lab",
-        "desk-lab",
         "accent-lab",
         "pwa",
     ],
@@ -126,7 +126,7 @@ export const affectedMappings: readonly {
     suites: readonly DeclaredSuite[];
 }[] = [
     {
-        prefix: "web/src/features/desk/",
+        prefix: "web/src/features/library/",
         suites: [
             "workspace",
             "routing",

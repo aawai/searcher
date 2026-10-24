@@ -1,9 +1,9 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import {
-    deskDetail,
-    deskMenuTrigger,
+    libraryMenuTrigger,
+    libraryPanel,
     openNotesByKeyboard,
-} from "./helpers/desk.ts";
+} from "./helpers/library.ts";
 import { assert, assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { createApp } from "../../src/app.ts";
@@ -121,24 +121,24 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await page.waitForURL(`${origin}/`);
     await userMenu.waitFor({ state: "visible" });
     await banner.waitFor({ state: "visible" });
-    const trigger = deskMenuTrigger(page);
+    const trigger = libraryMenuTrigger(page);
     await trigger.waitFor({ state: "visible" });
     const opener = await trigger.elementHandle();
     assert(opener);
 
     await openNotesByKeyboard(page);
-    const panel = deskDetail(page);
+    const panel = libraryPanel(page);
     await panel.waitFor({ state: "visible" });
     assertEquals(await panel.getAttribute("data-presentation"), "panel");
     const closeButton = panel.getByRole("button", {
-        name: "关闭详情",
+        name: "关闭资料库",
         exact: true,
     });
     await page.waitForFunction(() =>
-        document.activeElement?.getAttribute("aria-label") === "关闭详情"
+        document.activeElement?.getAttribute("aria-label") === "返回资料库"
     );
-    await page.keyboard.press("Tab");
     const search = panel.locator("input[data-workspace-search]");
+    await search.focus();
     assertEquals(
         await panel.evaluate((element) =>
             element.querySelector(".workspace-body")?.contains(

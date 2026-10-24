@@ -110,15 +110,22 @@ export function WorkspaceShell(
     const returnFocusRef = useRef(returnFocus);
     returnFocusRef.current = returnFocus;
     const wasOpen = useRef(false);
+    // A menu that opens the workspace may already have dropped focus to
+    // <body>; remember the last real focus (mapped to its menu trigger).
+    const lastFocus = useRef<HTMLElement | null>(null);
+    useEffect(() => {
+        const remember = (event: FocusEvent) => {
+            const target = focusOpener(event.target as Element | null);
+            if (target) lastFocus.current = target;
+        };
+        document.addEventListener("focusin", remember, true);
+        return () => document.removeEventListener("focusin", remember, true);
+    }, []);
     // Focus returns when `open` turns false, not when the exit motion ends.
     useLayoutEffect(() => {
         if (open && !wasOpen.current) {
-            const active = document.activeElement;
-            opener.current = active instanceof HTMLElement &&
-                    active !== document.body &&
-                    !active.closest(".workspace-panel")
-                ? active
-                : null;
+            opener.current = focusOpener(document.activeElement) ??
+                lastFocus.current;
         }
         if (!open && wasOpen.current) {
             const frame = requestAnimationFrame(() => {
@@ -156,4 +163,17 @@ export function WorkspaceShell(
             {view.children}
         </WorkspaceSurface>
     );
+}
+
+/** A menu item unmounts with its menu; the menu's trigger is the lasting opener. */
+function focusOpener(active: Element | null): HTMLElement | null {
+    if (
+        !(active instanceof HTMLElement) || active === document.body ||
+        active.closest(".workspace-panel")
+    ) return null;
+    const menu = active.closest<HTMLElement>('[role="menu"]');
+    if (!menu?.id) return active;
+    return document.querySelector<HTMLElement>(
+        `[aria-controls="${CSS.escape(menu.id)}"]`,
+    ) ?? active;
 }

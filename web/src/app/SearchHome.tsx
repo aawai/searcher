@@ -6,7 +6,6 @@ import {
     useCallback,
     useEffect,
     useLayoutEffect,
-    useMemo,
     useReducer,
     useRef,
     useState,
@@ -30,7 +29,6 @@ import {
     needsPaperRefresh,
     type PaperItem,
     setPaper,
-    sortPapers,
 } from "../features/home-layouts/home-papers.ts";
 import {
     fetchHomePapers,
@@ -42,10 +40,7 @@ import {
 } from "../features/home-layouts/home-papers-api.ts";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import { Button } from "../components/ui/button.tsx";
-import {
-    useEscapeLayer,
-    useEscapeLayerActive,
-} from "../components/ui/escape-layer-stack.tsx";
+import { useEscapeLayerActive } from "../components/ui/escape-layer-stack.tsx";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -65,32 +60,21 @@ import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx
 import "../features/workspace/documents-workspace.css";
 import type { DocumentsRoute } from "../features/workspace/workspace-state.ts";
 import {
-    type DeskAction,
-    deskObjectId,
-    deskReducer,
-    type DeskSelection,
-    deskSelectionFor,
-    initialDeskState,
-} from "../features/desk/desk-state.ts";
+    initialLibraryState,
+    type LibraryAction,
+    libraryFocusTarget,
+    libraryReducer,
+    type LibrarySelection,
+    shouldConfirmLibraryAction,
+} from "../features/library/library-state.ts";
+import { LibraryAppsView } from "../features/library/LibraryAppsView.tsx";
+import { LibraryConversationsView } from "../features/library/LibraryConversationsView.tsx";
+import { useLibraryConversations } from "../features/library/useLibraryConversations.ts";
+import { useLibraryShortcut } from "../features/library/useLibraryShortcut.ts";
 import {
-    buildDeskObjects,
-    type DeskObject,
-    type ZoomIntent,
-} from "../features/desk/desk-model.ts";
-import { DeskOverview } from "../features/desk/DeskOverview.tsx";
-import { DeskList } from "../features/desk/DeskObjects.tsx";
-import {
-    DeskAppsDetail,
-    DeskConversationsDetail,
-} from "../features/desk/DeskDetails.tsx";
-import { useDeskSources } from "../features/desk/useDeskSources.ts";
-import { useDeskGestures } from "../features/desk/useDeskGestures.ts";
-import {
-    type DeskRequest,
-    readDeskRequest,
-} from "../features/desk/desk-request.ts";
-import { launcherTiles } from "../components/searcher/launcherTiles.ts";
-import "../features/desk/desk.css";
+    type LibraryRequest,
+    readLibraryRequest,
+} from "../features/library/library-request.ts";
 import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
 import type {
     PaperTaskSaver,
@@ -180,20 +164,16 @@ const EMPTY_GROUPS: WebAppGroup[] = [];
 const EMPTY_PAPERS: PaperItem[] = [];
 
 type PendingAction =
-    | { kind: "desk"; action: DeskAction }
+    | { kind: "library"; action: LibraryAction }
     | { kind: "route"; intent: AppSessionRouteIntent }
     | { kind: "appForm" };
 
-/** Desk actions that keep an open editor mounted need no unsaved check. */
-function keepsEditor(action: DeskAction): boolean {
-    return action.type === "enter" ||
-        (action.type === "documents" &&
-            (action.action.type === "query" || action.action.type === "scope"));
-}
-
-function deskTitle(selection: DeskSelection, object: DeskObject | undefined) {
-    if (object) return object.title;
-    return selection.kind === "paper" ? "首页纸张" : "笔记";
+function libraryTitle(selection: LibrarySelection) {
+    return {
+        notes: "笔记",
+        apps: "应用",
+        conversations: "AI 对话",
+    }[selection.kind];
 }
 
 export function SearchHome() {
@@ -215,7 +195,7 @@ export function SearchHome() {
     const location = useLocation();
     const consumedDocumentNavigationRef = useRef<string | null>(null);
     const consumedShareNavigationRef = useRef<string | null>(null);
-    const consumedDeskNavigationRef = useRef<string | null>(null);
+    const consumedLibraryNavigationRef = useRef<string | null>(null);
     const captureNoteRef = useRef<(note: SharedNote) => Promise<boolean>>(
         () => Promise.resolve(false),
     );
@@ -265,15 +245,15 @@ export function SearchHome() {
         dismissLayoutError: appLayout.dismissError,
     });
     const appSession = useRef<AppSessionNavigation | null>(null);
-    const [desk, dispatchDesk] = useReducer(deskReducer, initialDeskState);
-    const deskRef = useRef(desk);
-    deskRef.current = desk;
-    const overview = desk.stage === "overview";
-    /** The control focused when 览 opened; focus returns there on leaving. */
-    const deskOpener = useRef<HTMLElement | null>(null);
-    const focusDeskObject = useRef(false);
+    const [libraryState, dispatchLibrary] = useReducer(
+        libraryReducer,
+        initialLibraryState,
+    );
+    const libraryRef = useRef(libraryState);
+    libraryRef.current = libraryState;
+    const libraryOpen = libraryState.open;
+    const libraryOpener = useRef<HTMLElement | null>(null);
     const homeRef = useRef<HTMLElement>(null);
-    const deskScroller = useRef<HTMLElement | null>(null);
     const home = useHomeViewport();
     const [mobile, setMobile] = useState(() =>
         globalThis.matchMedia(MEDIA_QUERIES.belowMedium).matches
@@ -319,13 +299,13 @@ export function SearchHome() {
         },
         [updatePendingAction],
     );
-    function requestDesk(action: DeskAction) {
+    function requestLibrary(action: LibraryAction) {
         if (pendingActionRef.current) return;
-        if (dirtyForm.current && !keepsEditor(action)) {
-            updatePendingAction({ kind: "desk", action });
+        if (shouldConfirmLibraryAction(dirtyForm.current, action)) {
+            updatePendingAction({ kind: "library", action });
             return;
         }
-        dispatchDesk(action);
+        dispatchLibrary(action);
     }
     function confirmPendingAction() {
         const action = pendingActionRef.current;
@@ -340,27 +320,23 @@ export function SearchHome() {
             return;
         }
         dirtyForm.current = false;
-        dispatchDesk(action.action);
+        dispatchLibrary(action.action);
     }
-    function openDesk() {
+    function openLibrary() {
         if (!currentUserIdRef.current) return;
         setIsManagingApps(false);
-        focusDeskObject.current = true;
-        requestDesk({ type: "enter" });
+        requestLibrary({ type: "enter" });
     }
-    function selectDesk(selection: DeskSelection, route?: DocumentsRoute) {
+    function selectLibrary(
+        selection: LibrarySelection,
+        route?: DocumentsRoute,
+    ) {
         if (!currentUserIdRef.current) return;
         setIsManagingApps(false);
-        requestDesk({ type: "select", selection, route });
+        requestLibrary({ type: "select", selection, route });
     }
-    function leaveDesk() {
-        requestDesk({ type: "leave" });
-    }
-    function zoomDesk(intent: ZoomIntent) {
-        if (intent === "out" && deskRef.current.stage === "calm") openDesk();
-        if (intent === "in" && deskRef.current.stage === "overview") {
-            leaveDesk();
-        }
+    function closeLibrary() {
+        requestLibrary({ type: "leave" });
     }
     function openCreateApp(groupId?: string) {
         setAppForm({ mode: "create", groupId });
@@ -379,14 +355,9 @@ export function SearchHome() {
         }
         setAppForm(null);
     }
-    /** Opens a note from outside the desk: a home paper as itself, any
-     * other note over the notes library. */
+    /** Every note opens over the unchanged home. */
     function openDocument(id: string) {
-        if (papersRef.current.some((paper) => paper.id === id)) {
-            selectDesk({ kind: "paper", id });
-        } else {
-            selectDesk({ kind: "notes" }, { view: "documents/edit", id });
-        }
+        selectLibrary({ kind: "notes" }, { view: "documents/edit", id });
     }
     openDocumentRef.current = openDocument;
     useEffect(() => {
@@ -455,28 +426,29 @@ export function SearchHome() {
         user?.id,
         workspaceResetUserId,
     ]);
-    function requestDeskEntry(request: DeskRequest) {
-        if (request === "notes") selectDesk({ kind: "notes" });
-        else openDesk();
+    function requestLibraryEntry(request: LibraryRequest) {
+        if (request === "notes" || request === "apps") {
+            selectLibrary({ kind: request });
+        } else openLibrary();
     }
-    // The avatar menu, from any page, asks for 览 or the notes detail.
-    const deskEntryRef = useRef(requestDeskEntry);
-    deskEntryRef.current = requestDeskEntry;
+    // Avatar entries from any page resolve to the same library.
+    const libraryEntryRef = useRef(requestLibraryEntry);
+    libraryEntryRef.current = requestLibraryEntry;
     useEffect(() => {
-        const request = readDeskRequest(location.state);
-        if (!request || consumedDeskNavigationRef.current === location.key) {
+        const request = readLibraryRequest(location.state);
+        if (!request || consumedLibraryNavigationRef.current === location.key) {
             return;
         }
         if (
             !user || workspaceResetUserId !== user.id ||
             !ownsCurrentUserData
         ) return;
-        consumedDeskNavigationRef.current = location.key;
+        consumedLibraryNavigationRef.current = location.key;
         navigate(
             `${location.pathname}${location.search}${location.hash}`,
             { replace: true, state: null },
         );
-        deskEntryRef.current(request);
+        libraryEntryRef.current(request);
     }, [
         location.hash,
         location.key,
@@ -489,17 +461,17 @@ export function SearchHome() {
         workspaceResetUserId,
     ]);
     function backDetail() {
-        if (deskRef.current.documents.stack.length > 0) {
-            requestDesk({ type: "documents", action: { type: "back" } });
-        } else requestDesk({ type: "list" });
+        if (libraryRef.current.documents.stack.length > 0) {
+            requestLibrary({ type: "documents", action: { type: "back" } });
+        } else requestLibrary({ type: "list" });
     }
     function closeDetail() {
-        requestDesk({ type: "close" });
+        requestLibrary({ type: "close" });
     }
     useEffect(() => {
         dirtyForm.current = false;
-        deskOpener.current = null;
-        dispatchDesk({ type: "reset" });
+        libraryOpener.current = null;
+        dispatchLibrary({ type: "reset" });
         cancelPendingAction();
         setAppForm(null);
         setIsManagingApps(false);
@@ -786,7 +758,7 @@ export function SearchHome() {
         enabled: showContinue,
         events: authSession.documentEvents,
         // Closing the workspace may have changed what to continue.
-        refreshKey: desk.selection,
+        refreshKey: libraryState.selection,
     });
 
     async function checkConnections() {
@@ -1252,7 +1224,7 @@ export function SearchHome() {
         if (target.type === "theme") {
             void setAppearance({ theme: target.theme });
         } else if (target.type === "route") navigate(target.to);
-        else if (target.type === "desk") requestDeskEntry(target.request);
+        else if (target.type === "library") requestLibraryEntry(target.request);
     }
     const layoutProps: HomeLayoutProps = {
         user,
@@ -1281,10 +1253,10 @@ export function SearchHome() {
         updatePaper,
         updatePaperLayout,
         toggleTask: taskSaver.toggle,
-        editingPaperId: desk.documents.route.view === "documents/edit"
-            ? desk.documents.route.id
+        editingPaperId: libraryState.documents.route.view === "documents/edit"
+            ? libraryState.documents.route.id
             : null,
-        openDesk: requestDeskEntry,
+        openLibrary: requestLibraryEntry,
         openDocument,
         aiAvailable,
         inlineAnswer,
@@ -1300,138 +1272,114 @@ export function SearchHome() {
         },
         setError,
     };
-    const sources = useDeskSources(user?.id ?? null, overview);
-    const objects = useMemo(() =>
-        buildDeskObjects({
-            recentNotes: sources.recentNotes,
-            conversations: aiAvailable || sources.conversations.length > 0
-                ? sources.conversations
-                : null,
-            tiles: launcherTiles(currentApps, currentGroups),
-            papers: sortPapers(currentPapers),
-        }), [sources, aiAvailable, currentApps, currentGroups, currentPapers]);
-    const selectedId = desk.selection ? deskObjectId(desk.selection) : null;
-    const selectedObject = objects.find((object) => object.id === selectedId);
-    const currentRoute = desk.documents.route;
-    const editor = Boolean(
-        desk.selection &&
-            (desk.selection.kind === "notes" ||
-                desk.selection.kind === "paper") &&
-            currentRoute.view !== "documents/root",
-    );
-    function selectObject(id: string) {
-        const selection = deskSelectionFor(id);
-        if (selection) selectDesk(selection);
-    }
-    function firstDeskObject() {
-        return document.querySelector<HTMLElement>(
-            '[data-desk-object][tabindex="0"]',
-        ) ??
-            document.querySelector<HTMLElement>("[data-desk-object]");
-    }
-    /** 览 entered with nothing focused (wheel, pinch) leaves nothing focused. */
-    function returnDeskFocus() {
-        if (deskRef.current.stage === "overview") return firstDeskObject();
-        const opener = deskOpener.current;
-        if (!opener) return null;
-        return opener.isConnected && !opener.closest("[inert]")
-            ? opener
-            : document.getElementById("search-query");
-    }
-    useDeskGestures({
-        root: homeRef,
-        scroller: deskScroller,
-        enabled: Boolean(user) && !overlayActive,
-        overview,
-        onZoom: zoomDesk,
-        onToggle: () => overview ? leaveDesk() : openDesk(),
+    const sources = useLibraryConversations(user?.id ?? null, libraryOpen);
+    useLibraryShortcut(Boolean(user) && !overlayActive, () => {
+        if (libraryRef.current.open) closeLibrary();
+        else openLibrary();
     });
-    useEscapeLayer(overview && !desk.selection && !mobile, leaveDesk);
-    const wasOverview = useRef(false);
-    // The opener is taken in the commit that enters 览. A menu item there
-    // belongs to a closing menu, which hands focus back to the trigger that
-    // labels it; that trigger is the opener.
+    const selectedId = libraryState.selection?.kind ?? null;
+    const currentRoute = libraryState.documents.route;
+    const editor = libraryState.selection?.kind === "notes" &&
+        currentRoute.view !== "documents/root";
+    function returnLibraryFocus() {
+        return libraryFocusTarget(
+            libraryOpener.current,
+            document.getElementById("search-query"),
+        );
+    }
+    const wasLibraryOpen = useRef(false);
     useLayoutEffect(() => {
-        if (overview && !wasOverview.current) {
+        if (libraryOpen && !wasLibraryOpen.current) {
             const active = document.activeElement;
             const menu = active?.closest('[role="menu"]');
             const labelledBy = menu?.getAttribute("aria-labelledby");
-            deskOpener.current = labelledBy
+            libraryOpener.current = labelledBy
                 ? document.getElementById(labelledBy)
                 : active instanceof HTMLElement && active !== document.body
                 ? active
                 : null;
-            if (focusDeskObject.current && !mobile) firstDeskObject()?.focus();
-            focusDeskObject.current = false;
-        } else if (!overview && wasOverview.current) {
-            returnDeskFocus()?.focus({ preventScroll: true });
         }
-        wasOverview.current = overview;
-    }, [overview, mobile]);
+        wasLibraryOpen.current = libraryOpen;
+    }, [libraryOpen]);
     function renderWorkspaceContent() {
         if (!user) return null;
-        if (!desk.selection) {
+        if (!libraryState.selection) {
             return (
-                <DeskList
-                    objects={objects}
-                    selectedId={null}
-                    onSelect={selectObject}
-                />
+                <div data-library-view="root" className="library-root">
+                    {(["notes", "conversations", "apps"] as const).map((
+                        kind,
+                    ) => (
+                        <Button
+                            key={kind}
+                            variant="ghost"
+                            onClick={() => selectLibrary({ kind })}
+                        >
+                            {libraryTitle({ kind })}
+                        </Button>
+                    ))}
+                </div>
             );
         }
-        if (
-            desk.selection.kind === "apps" || desk.selection.kind === "folder"
-        ) {
+        if (libraryState.selection.kind === "apps") {
             return (
-                <DeskAppsDetail
-                    apps={selectedObject?.apps ?? []}
+                <LibraryAppsView
+                    apps={currentApps}
+                    groups={currentGroups}
+                    library={library}
                     onOpenApp={openApp}
+                    onEditApp={openEditApp}
+                    onDeleteApp={softDeleteApp}
+                    showAppLabels={appearance.showAppLabels}
                 />
             );
         }
-        if (desk.selection.kind === "conversations") {
+        if (libraryState.selection.kind === "conversations") {
             return (
-                <DeskConversationsDetail
-                    conversations={sources.conversations}
-                    loading={sources.loading}
-                    error={sources.conversationsError}
-                />
+                <div data-library-view="conversations">
+                    <LibraryConversationsView
+                        conversations={sources.conversations}
+                        loading={sources.loading}
+                        error={sources.conversationsError}
+                    />
+                </div>
             );
         }
-        const model = desk.documents;
+        const model = libraryState.documents;
         return (
-            <DocumentsWorkspace
-                key={user.id}
-                userId={user.id}
-                eventSubscriptions={authSession.documentEvents}
-                state={model.route}
-                onDirtyChange={(dirty) => {
-                    dirtyForm.current = dirty;
-                }}
-                onOpenDocument={(id) =>
-                    requestDesk({
-                        type: "documents",
-                        action: {
-                            type: "navigate",
-                            route: { view: "documents/edit", id },
-                        },
-                    })}
-                scope={model.scope}
-                onScopeChange={(scope) =>
-                    dispatchDesk({
-                        type: "documents",
-                        action: { type: "scope", scope },
-                    })}
-                query={model.query}
-                onQueryChange={(value) =>
-                    dispatchDesk({
-                        type: "documents",
-                        action: { type: "query", value },
-                    })}
-            />
+            <div data-library-view="notes" className="library-notes">
+                <DocumentsWorkspace
+                    key={user.id}
+                    userId={user.id}
+                    eventSubscriptions={authSession.documentEvents}
+                    state={model.route}
+                    onDirtyChange={(dirty) => {
+                        dirtyForm.current = dirty;
+                    }}
+                    onOpenDocument={(id) =>
+                        requestLibrary({
+                            type: "documents",
+                            action: {
+                                type: "navigate",
+                                route: { view: "documents/edit", id },
+                            },
+                        })}
+                    scope={model.scope}
+                    onScopeChange={(scope) =>
+                        dispatchLibrary({
+                            type: "documents",
+                            action: { type: "scope", scope },
+                        })}
+                    query={model.query}
+                    onQueryChange={(value) =>
+                        dispatchLibrary({
+                            type: "documents",
+                            action: { type: "query", value },
+                        })}
+                />
+            </div>
         );
     }
-    const mobileFeedback = Boolean(user && mobile && overview);
+    const mobileFeedback = Boolean(user && mobile && libraryOpen);
     const currentUndoQueue = undoQueue.filter((record) =>
         record.userId === user?.id
     );
@@ -1556,49 +1504,28 @@ export function SearchHome() {
                         <X size="1em" className="icon-md" />
                     </Button>
                 </StatusBanner>
-                <div
-                    className="desk-home"
-                    data-desk-stage={overview ? "overview" : "calm"}
-                    inert={overview || undefined}
-                >
-                    <ZenLayout
-                        {...layoutProps}
-                        availableRect={home.availableRect}
-                        viewportWidth={home.viewportWidth}
-                    />
-                </div>
-                {user && !mobile && (
-                    <DeskOverview
-                        open={overview}
-                        objects={objects}
-                        selectedId={selectedId}
-                        detail={desk.selection
-                            ? (editor ? "expanded" : "panel")
-                            : null}
-                        chromeBottom={home.chromeBottom}
-                        scroller={deskScroller}
-                        onSelect={selectObject}
-                        onReturn={leaveDesk}
-                    />
-                )}
+                <ZenLayout
+                    {...layoutProps}
+                    availableRect={home.availableRect}
+                    viewportWidth={home.viewportWidth}
+                />
                 {user && (
                     <WorkspaceShell
-                        open={overview && (mobile || Boolean(desk.selection))}
+                        open={libraryOpen}
                         chromeBottom={home.chromeBottom}
-                        routeKey={`${selectedId ?? "desk"}:${
+                        routeKey={`${selectedId ?? "root"}:${
                             JSON.stringify(currentRoute)
                         }`}
-                        title={desk.selection
-                            ? deskTitle(desk.selection, selectedObject)
-                            : "桌面"}
-                        nested={Boolean(desk.selection) &&
-                            (mobile || desk.documents.stack.length > 0)}
+                        title={libraryState.selection
+                            ? libraryTitle(libraryState.selection)
+                            : "资料库"}
+                        nested={Boolean(libraryState.selection)}
                         expanded={editor}
                         editor={editor}
-                        backLabel={desk.documents.stack.length
+                        backLabel={libraryState.documents.stack.length
                             ? "返回上一级"
-                            : "返回桌面"}
-                        headerActions={desk.selection?.kind ===
+                            : "返回资料库"}
+                        headerActions={libraryState.selection?.kind ===
                                     "conversations" && aiAvailable
                             ? (
                                 <Button
@@ -1611,14 +1538,19 @@ export function SearchHome() {
                                     新对话
                                 </Button>
                             )
+                            : libraryState.selection?.kind === "apps"
+                            ? (
+                                <Button onClick={() => openCreateApp()}>
+                                    添加应用
+                                </Button>
+                            )
                             : undefined}
-                        rootFocus={!desk.selection
-                            ? firstDeskObject
-                            : undefined}
-                        returnFocus={returnDeskFocus}
+                        returnFocus={returnLibraryFocus}
                         onBack={backDetail}
-                        onClose={mobile ? leaveDesk : closeDetail}
-                        onEscape={desk.selection ? closeDetail : leaveDesk}
+                        onClose={closeDetail}
+                        onEscape={libraryState.selection
+                            ? backDetail
+                            : closeLibrary}
                         feedback={
                             <>
                                 {error && (
@@ -1633,7 +1565,7 @@ export function SearchHome() {
                         }
                         onFeedbackHost={setFeedbackHost}
                     >
-                        {overview && renderWorkspaceContent()}
+                        {libraryOpen && renderWorkspaceContent()}
                     </WorkspaceShell>
                 )}
                 <AppFormDialog

@@ -65,7 +65,7 @@ DENO_JOBS=2 deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast 
 发现的未忽略 untracked 文件。重命名同时考虑旧名与新名，删除仍按旧路径选择；
 路径以 NUL 分隔读取，空格、制表符、换行不作为分隔符。Git/ref 错误直接失败，不假装空差异。
 
-映射与清单共同维护在 `suites.ts`。desk 覆盖 workspace、documents、routing、
+映射与清单共同维护在 `suites.ts`。library 覆盖 workspace、documents、routing、
 bundle、home-papers 和 supplemental；documents/editor 等映射包含共享入口的消费者。
 直接修改已登记 E2E 文件会选择其所属的完整集合（不是只跑该文件）。
 共享 helper、基础设施、配置、未识别的新 E2E 或其他任一未映射路径令整次选择回退 full；
@@ -79,7 +79,7 @@ bundle、home-papers 和 supplemental；documents/editor 等映射包含共享�
 记录 `skipped`，没有 JUnit；不是合并门禁结果。非空正常执行最多 build 一次，
 调度仍只使用 Deno，默认串行 + fail-fast，可显式传并行/不 fail-fast/诊断超时。
 
-重复的领域导航复用 `web/e2e/helpers/`：`desk.ts` 进入桌面/笔记，
+重复的领域导航复用 `web/e2e/helpers/`：`library.ts` 进入资料库/笔记，
 `settings.ts` 从用户菜单进入偏好设置，`ask.ts` 加载 Ask 工作区，
 `app-library.ts` 打开首页「更多应用」弹层。这些 helper 将操作和可观察的就绪
 条件放在一起，不使用固定 sleep，也不创建或共享浏览器。路由/深链、键盘、

@@ -187,7 +187,7 @@ Deno.test("production settings shortcuts contracts", async (t) => {
                 await globalSection.innerText(),
                 "笔记正文中由插入链接优先处理",
             );
-            await globalSection.getByText("进入或退出桌面“览”", { exact: true })
+            await globalSection.getByText("打开或关闭资料库", { exact: true })
                 .waitFor();
             assertStringIncludes(
                 await globalSection.innerText(),

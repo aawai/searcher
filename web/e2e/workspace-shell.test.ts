@@ -9,13 +9,11 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import {
-    deskDetail,
-    deskMenuTrigger,
-    deskObject,
-    deskStage,
+    libraryMenuTrigger,
+    libraryPanel,
     openNotes,
     openNotesByKeyboard,
-} from "./helpers/desk.ts";
+} from "./helpers/library.ts";
 
 Deno.test("production Workspace state, keyboard and responsive contracts", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -67,7 +65,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             return (await response.json()).data;
         }, { path, method, body }) as T;
     }
-    const panel = deskDetail(page);
+    const panel = libraryPanel(page);
     const search = () => panel.locator("input[data-workspace-search]");
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
@@ -75,33 +73,23 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         await target.locator("main").waitFor();
     }
     const closeButton = (target: Page = page) =>
-        deskDetail(target).getByRole("button", {
-            name: /^(关闭详情|返回首页)$/,
+        libraryPanel(target).getByRole("button", {
+            name: "关闭资料库",
         });
     async function closeAllWorkspaces(target: Page = page) {
-        if (await deskDetail(target).first().isVisible()) {
+        if (await libraryPanel(target).first().isVisible()) {
             await closeButton(target).click();
         }
-        await deskDetail(target).first().waitFor({ state: "detached" });
+        await libraryPanel(target).first().waitFor({ state: "detached" });
     }
-    async function assertDeskLayout() {
-        await page.waitForFunction(() => {
-            const home = document.querySelector<HTMLElement>(".desk-home");
-            const detail = document.querySelector("aside.workspace-panel");
-            const objects = [
-                ...document.querySelectorAll("[data-desk-object]"),
-            ];
-            if (
-                !home?.inert || home.dataset.deskStage !== "overview" ||
-                !detail || objects.length === 0
-            ) return false;
-            const left = detail.getBoundingClientRect().left;
-            return getComputedStyle(home).opacity === "0" &&
-                objects.every((object) =>
-                    object.getBoundingClientRect().right <= left
-                );
-        });
-        assertEquals(await deskStage(page), "overview");
+    async function assertLibraryLayout() {
+        await panel.waitFor();
+        assertEquals(
+            await page.locator("#search-query").evaluate((node) =>
+                Boolean(node.closest("[inert]"))
+            ),
+            false,
+        );
     }
     const homeSettled = () =>
         page.waitForFunction(() =>
@@ -149,7 +137,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             document.documentElement.dataset.theme === expected,
                         theme,
                     );
-                    const trigger = deskMenuTrigger(page);
+                    const trigger = libraryMenuTrigger(page);
                     await trigger.waitFor();
                     const opener = await trigger.elementHandle();
                     await page.locator(".hero").waitFor();
@@ -166,7 +154,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                                 "aria-label",
                             ) ===
                                 expected,
-                        viewport.width < 768 ? "返回桌面" : "关闭详情",
+                        "返回资料库",
                     );
                     assert(await search().getAttribute("aria-label"));
                     assertEquals(
@@ -200,7 +188,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             ).count(),
                             0,
                         );
-                        await assertDeskLayout();
+                        await assertLibraryLayout();
                         await page.locator("#search-query").evaluate((el) =>
                             el.focus()
                         );
@@ -208,7 +196,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             await page.locator("#search-query").evaluate((el) =>
                                 el === document.activeElement
                             ),
-                            false,
+                            true,
                         );
                     } else {
                         assertEquals(
@@ -331,7 +319,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await visit("/");
 
                 // Menu entries restore focus to the avatar trigger.
-                const trigger = deskMenuTrigger(page);
+                const trigger = libraryMenuTrigger(page);
                 await trigger.waitFor();
                 const opener = await trigger.elementHandle();
                 await openNotesByKeyboard(page);
@@ -341,12 +329,12 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     expectedPresentation,
                 );
 
-                // Mobile notes are nested under the desk object list.
+                // Notes are nested under the library root at every breakpoint.
                 await page.waitForFunction(
                     (expected) =>
                         document.activeElement?.getAttribute("aria-label") ===
                             expected,
-                    width < 768 ? "返回桌面" : "关闭详情",
+                    "返回资料库",
                 );
 
                 // Nested Back behavior in Zen panel/sheet
@@ -381,28 +369,12 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.keyboard.press("Escape");
                 await page.getByRole("menu").waitFor({ state: "detached" });
                 assertEquals(await panel.isVisible(), true);
-                if (width < 768) {
-                    await panel.getByRole("button", {
-                        name: "返回桌面",
-                        exact: true,
-                    }).click();
-                    await panel.getByRole("heading", {
-                        name: "桌面",
-                        exact: true,
-                    }).waitFor();
-                    await deskObject(page, "notes").click();
-                    await search().waitFor();
-                }
-
-                // Closing a detail selected in 览 returns to the mobile object list.
                 await page.keyboard.press("Escape");
-                if (width < 768) {
-                    await panel.getByRole("heading", {
-                        name: "桌面",
-                        exact: true,
-                    }).waitFor();
-                    await page.keyboard.press("Escape");
-                }
+                await panel.getByRole("heading", {
+                    name: "资料库",
+                    exact: true,
+                }).waitFor();
+                await page.keyboard.press("Escape");
                 await panel.first().waitFor({ state: "detached" });
                 await page.waitForFunction(
                     (element) =>
@@ -428,7 +400,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "desk detail keeps bounded chrome, search alignment and create action hierarchy",
+        "library keeps bounded chrome, search alignment and create action hierarchy",
         async () => {
             for (const theme of ["light", "dark"] as const) {
                 await page.emulateMedia({ colorScheme: theme });
@@ -443,7 +415,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     assertNear(noteInset.searchLeftDiff, 0, 2);
                     assertNear(noteInset.searchRightDiff, 0, 2);
                     if (width >= 768) {
-                        await assertDeskLayout();
+                        await assertLibraryLayout();
                         assertEquals(
                             await page.locator(
                                 'aside.workspace-panel[data-presentation="panel"]',
@@ -461,7 +433,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await openDocs();
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("aria-label") ===
-                    "关闭详情"
+                    "返回资料库"
             );
 
             // 1. Focus visibility and blur without shift
@@ -606,7 +578,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "closing nested detail releases Escape and reopening resets the route but keeps the query",
+        "Escape unwinds nested pages and reopening resets the route but keeps the query",
         async () => {
             for (const reducedMotion of ["no-preference", "reduce"] as const) {
                 await page.emulateMedia({ reducedMotion });
@@ -620,49 +592,27 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         exact: true,
                     }).click();
                     await panel.locator("[data-workspace-editor]").waitFor();
-                    const exit = await panel.evaluate((element) => {
-                        const { promise, resolve, reject } = Promise
-                            .withResolvers<
-                                { mounted: boolean; inert: boolean }
-                            >();
-                        // Failure deadline only; the exit mutation resolves this.
-                        const timeout = setTimeout(() => {
-                            observer.disconnect();
-                            reject(new Error("Detail did not start exiting"));
-                        }, 5000);
-                        const observer = new MutationObserver(() => {
-                            if (
-                                !element.hasAttribute("data-ending-style") &&
-                                element.isConnected
-                            ) return;
-                            clearTimeout(timeout);
-                            observer.disconnect();
-                            resolve({
-                                mounted: element.isConnected,
-                                inert: element.hasAttribute("inert"),
-                            });
-                        });
-                        observer.observe(document.body, {
-                            subtree: true,
-                            childList: true,
-                            attributes: true,
-                            attributeFilter: ["data-ending-style", "inert"],
-                        });
-                        document.activeElement?.dispatchEvent(
-                            new KeyboardEvent("keydown", {
-                                key: "Escape",
-                                bubbles: true,
-                                cancelable: true,
-                            }),
-                        );
-                        return promise;
-                    });
-                    assertEquals(exit, { mounted: true, inert: true });
+                    await panel.getByRole("button", {
+                        name: "返回上一级",
+                        exact: true,
+                    }).focus();
+                    await page.keyboard.press("Escape");
+                    await search().waitFor();
+                    await panel.getByRole("button", {
+                        name: "返回资料库",
+                        exact: true,
+                    }).focus();
+                    await page.keyboard.press("Escape");
+                    await panel.getByRole("heading", {
+                        name: "资料库",
+                        exact: true,
+                    }).waitFor();
+                    await page.keyboard.press("Escape");
                     await panel.waitFor({ state: "detached" });
                     await page.locator('[data-slot="sheet-backdrop"]').waitFor({
                         state: "detached",
                     });
-                    assertEquals(await deskStage(page), "calm");
+                    assertEquals(await libraryPanel(page).count(), 0);
                     await page.waitForFunction(() =>
                         document.activeElement?.matches(".user-avatar-trigger")
                     );
@@ -693,7 +643,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "desktop desk objects stay left of the detail bar while home is inert",
+        "desktop library leaves home geometry and interaction unchanged",
         async () => {
             for (const width of [768, 800, 1024, 1440, 1600]) {
                 await page.setViewportSize({ width, height: 900 });
@@ -701,7 +651,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.locator(".hero").waitFor();
                 const hero = await page.locator(".hero").boundingBox();
                 await openDocs();
-                await assertDeskLayout();
+                await assertLibraryLayout();
                 await closeAllWorkspaces();
                 await homeSettled();
                 assertEquals(await page.locator(".hero").boundingBox(), hero);
@@ -714,7 +664,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         async () => {
             await page.setViewportSize({ width: 390, height: 844 });
             await visit("/");
-            const opener = await deskMenuTrigger(page).elementHandle();
+            const opener = await libraryMenuTrigger(page).elementHandle();
             await openDocs();
             await page.locator('[data-slot="sheet-backdrop"]').waitFor();
             await closeButton().click();
@@ -724,7 +674,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.locator('[data-slot="sheet-backdrop"]').waitFor({
                 state: "detached",
             });
-            await deskMenuTrigger(page).waitFor();
+            await libraryMenuTrigger(page).waitFor();
             await page.waitForFunction(
                 (element) =>
                     document.activeElement ===
@@ -815,7 +765,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.locator('form button[type="submit"]').click();
             await page.waitForURL(origin + "/");
             assertEquals(await panel.count(), 0);
-            assertEquals(await deskStage(page), "calm");
+            assertEquals(await libraryPanel(page).count(), 0);
             await openDocs();
             assertEquals(await search().inputValue(), "");
             await closeAllWorkspaces();

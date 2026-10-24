@@ -25,13 +25,7 @@ import { WorkspaceActivity } from "./WorkspaceActivity.ts";
 
 export type WorkspacePresentation = "panel" | "sheet";
 
-/**
- * Hosts the object detail as a right-hand panel or the bottom Sheet of 览.
- *
- * `open` becoming false starts the exit motion: the surface keeps rendering its
- * last content, is inert and owns no Escape layer or focus until it unmounts.
- * The panel unmounts through `usePresence`; Base UI unmounts the Sheet.
- */
+/** Responsive library overlay; exiting surfaces retain content but not input. */
 export function WorkspaceSurface(
     {
         open,
@@ -160,7 +154,7 @@ export function WorkspaceSurface(
                     <SheetPopup
                         className="workspace-panel workspace-panel--mobile"
                         data-presentation={presentation}
-                        data-desk-surface=""
+                        data-library=""
                         inert={open ? undefined : true}
                         style={{
                             "--workspace-visible-height":
@@ -187,13 +181,14 @@ export function WorkspaceSurface(
             ref={panel.ref}
             className="workspace-panel"
             data-presentation={presentation}
+            data-library=""
             data-workspace-expanded={expanded || undefined}
             data-ending-style={panel.ending || undefined}
             inert={panel.ending || undefined}
             style={{
                 "--workspace-chrome-bottom": `${chromeBottom}px`,
             } as CSSProperties}
-            aria-label={`${title}详情`}
+            aria-label="资料库"
         >
             {frame}
         </aside>
@@ -257,7 +252,7 @@ function WorkspaceFrame(
         const frame = requestAnimationFrame(focusChrome);
         return () => cancelAnimationFrame(frame);
     }, [open, routeKey, mobile, nested]);
-    // The title names what is shown: the object, or 桌面 on the Sheet's list.
+    // The title names the current library view.
     const titleClass = "workspace-title";
     return (
         <>
@@ -297,7 +292,7 @@ function WorkspaceFrame(
                     ref={close}
                     variant="ghost"
                     size="icon"
-                    aria-label={mobile ? "返回首页" : "关闭详情"}
+                    aria-label="关闭资料库"
                     onClick={onClose}
                 >
                     <X size="1em" className="icon-lg" />

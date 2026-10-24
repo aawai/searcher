@@ -1,5 +1,5 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { deskDetail, openNotes } from "./helpers/desk.ts";
+import { libraryPanel, openNotes } from "./helpers/library.ts";
 import { type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { createApp } from "../../src/app.ts";
@@ -74,7 +74,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
     await visit("/");
 
     function getWorkspace() {
-        return deskDetail(page);
+        return libraryPanel(page);
     }
 
     async function openWorkspace() {

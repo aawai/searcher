@@ -2,7 +2,7 @@ import { assertEquals, assertRejects } from "@std/assert";
 import { errors } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/desk.ts";
+import { openNotes } from "./helpers/library.ts";
 
 Deno.test("Documents focus boundaries, IME composition and leave flush contracts", async (t) => {
     await using cleanup = new AsyncDisposableStack();

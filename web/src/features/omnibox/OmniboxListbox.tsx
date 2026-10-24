@@ -40,7 +40,7 @@ export interface OmniboxListboxView {
 
 /** Quick entries of the empty search box; unknown ids use the app icon. */
 const ENTRY_ICON: Record<string, typeof AppWindow> = {
-    overview: LayoutGrid,
+    root: LayoutGrid,
     notes: NotebookPen,
     apps: AppWindow,
 };
@@ -58,7 +58,7 @@ function CommandIcon({ command }: { command: SearchQuickCommand }) {
             : target.theme === "dark"
             ? Moon
             : SunMoon)
-        : target.type === "desk"
+        : target.type === "library"
         ? NotebookPen
         : target.type === "apps"
         ? AppWindow

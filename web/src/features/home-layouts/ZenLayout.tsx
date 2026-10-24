@@ -22,15 +22,15 @@ import { consumeSearchFocusRequest } from "../inline-ai/search-focus.ts";
 import { HomeCalm } from "../home-calm/HomeCalm.tsx";
 
 /** Entries of the focused empty search box (docs/workspace.md#其他). */
-const DESK_QUICK_ENTRIES = [
-    { id: "overview", label: "桌面" },
+const LIBRARY_QUICK_ENTRIES = [
+    { id: "root", label: "资料库" },
     { id: "notes", label: "笔记" },
 ];
-const DESK_AND_APPS_QUICK_ENTRIES = [
-    ...DESK_QUICK_ENTRIES,
+const LIBRARY_AND_APPS_QUICK_ENTRIES = [
+    ...LIBRARY_QUICK_ENTRIES,
     { id: "apps", label: "应用" },
 ];
-const NO_QUICK_ENTRIES: typeof DESK_QUICK_ENTRIES = [];
+const NO_QUICK_ENTRIES: typeof LIBRARY_QUICK_ENTRIES = [];
 
 const HomePapers = lazy(() =>
     import("./HomePapers.tsx").then((module) => ({
@@ -73,7 +73,7 @@ export function ZenLayout(
         deletePaper,
         updatePaper,
         updatePaperLayout,
-        openDesk,
+        openLibrary,
         showAppLabels,
         showHomeApps,
     } = props;
@@ -163,8 +163,8 @@ export function ZenLayout(
     const quickEntries = !user
         ? NO_QUICK_ENTRIES
         : showHomeApps
-        ? DESK_QUICK_ENTRIES
-        : DESK_AND_APPS_QUICK_ENTRIES;
+        ? LIBRARY_QUICK_ENTRIES
+        : LIBRARY_AND_APPS_QUICK_ENTRIES;
     const libraryView = user && (
         <HomeAppLibrary
             ref={libraryRef}
@@ -233,16 +233,14 @@ export function ZenLayout(
                     onOpenFolder={(id) => libraryRef.current?.openFolder(id)}
                     onOpenDocument={props.openDocument}
                     onCommand={(command) => {
-                        if (command.target.type === "apps") {
-                            libraryRef.current?.openAll();
-                        } else props.onSearchCommand(command);
+                        if (command.target.type === "apps") openLibrary("apps");
+                        else props.onSearchCommand(command);
                     }}
                     onCapture={user ? props.onCapture : undefined}
                     quickEntries={quickEntries}
                     onQuickEntry={(id) => {
-                        if (id === "apps") libraryRef.current?.openAll();
-                        else if (id === "overview" || id === "notes") {
-                            openDesk(id);
+                        if (id === "apps" || id === "root" || id === "notes") {
+                            openLibrary(id);
                         }
                     }}
                 />

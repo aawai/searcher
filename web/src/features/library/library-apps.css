@@ -1,0 +1,91 @@
+.library-apps {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    gap: var(--space-3);
+}
+.library-apps-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+.library-apps-controls > :first-child {
+    flex: 1;
+    min-width: 0;
+}
+/* The workspace body already insets content; the header, search row and grid
+   share that content box. */
+.library-apps-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: var(--space-5);
+}
+.library-apps-section-heading {
+    display: flex;
+    align-items: center;
+    min-height: var(--control-touch-target);
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+}
+.library-apps-section-heading h2,
+.library-apps-group-heading {
+    margin: 0;
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
+}
+.library-apps-group-heading {
+    margin-block: var(--space-4) var(--space-2);
+    color: var(--muted);
+}
+.library-apps-results {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+.library-apps-result {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: var(--space-1);
+}
+.library-apps .library-apps-result-open {
+    flex: 1;
+    justify-content: flex-start;
+    min-width: 0;
+    height: auto;
+    min-height: var(--control-touch-target);
+    padding: var(--space-2);
+    gap: var(--space-3);
+    text-align: start;
+}
+.library-apps-result-glyph {
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: var(--radius);
+    font-size: var(--font-body-size);
+}
+.library-apps-result-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    gap: var(--space-1);
+}
+.library-apps-result-text > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.library-apps-result-context {
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-body-weight);
+}

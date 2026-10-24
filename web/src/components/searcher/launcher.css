@@ -22,11 +22,19 @@
     color: var(--foreground);
     transition: background var(--motion-fast) var(--ease-standard);
 }
-.webapp-icon:hover {
+/* Hover is a fine-pointer affordance: touch taps and coarse pointers must not
+   leave a sticky fill that reads as a selection. Keyboard focus paints the
+   same fill because the tile body is the only visible hit area. */
+.webapp-icon:focus-visible {
     background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
-.webapp-icon:active {
-    background: color-mix(in srgb, var(--foreground) 14%, transparent);
+@media (hover: hover) and (pointer: fine) {
+    .webapp-icon:hover {
+        background: color-mix(in srgb, var(--foreground) 8%, transparent);
+    }
+    .webapp-icon:active {
+        background: color-mix(in srgb, var(--foreground) 14%, transparent);
+    }
 }
 .webapp-glyph {
     position: relative;
@@ -155,9 +163,9 @@
     height: 0;
     pointer-events: none;
 }
-/* Home and popup grids share the square cell: the drag overlay is portaled
-   outside both, so it carries the same tokens. */
-:is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) {
+/* Home, popup and library grids share the square cell: the drag overlay is
+   portaled outside them, so it carries the same tokens. */
+:is(.launcher-grid--home, .launcher-grid--popup, .launcher-grid--library, .launcher-overlay--home, .launcher-overlay--popup) {
     --launcher-col-w: var(--home-grid-cell);
     --launcher-gap-x: var(--home-grid-gap);
     --launcher-pad-t: 0px;
@@ -169,7 +177,7 @@
 .launcher-grid--popup {
     justify-content: center;
 }
-:is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) .webapp-icon {
+:is(.launcher-grid--home, .launcher-grid--popup, .launcher-grid--library, .launcher-overlay--home, .launcher-overlay--popup) .webapp-icon {
     justify-content: flex-start;
 }
 /* Wide Home: Safari-start-page scale icons; narrow and touch keep denser cells. */
@@ -329,9 +337,16 @@
     padding: 0 var(--space-2);
     transform: translateX(-50%);
 }
-.launcher-folder-item:hover .launcher-folder-surface {
-    background: var(--glass-sheen), color-mix(in srgb, var(--foreground) 8%,
-        var(--material-regular));
+@media (hover: hover) and (pointer: fine) {
+    .launcher-folder-item:hover .launcher-folder-surface {
+        background: var(--glass-sheen), color-mix(in srgb,
+            var(--foreground) 8%, var(--material-regular));
+    }
+    /* Solid library panel: hover mixes into the soft fill, not the glass. */
+    .launcher-grid--library .launcher-folder-item:hover .launcher-folder-surface {
+        background: color-mix(in srgb, var(--foreground) 8%,
+            var(--surface-soft));
+    }
 }
 .launcher-tile.is-folder-drop-target .launcher-folder-surface {
     outline: 2px solid var(--accent);
@@ -648,7 +663,7 @@
     .launcher-overlay {
         --launcher-col-w: var(--launcher-touch-cell-size);
     }
-    :is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) {
+    :is(.launcher-grid--home, .launcher-grid--popup, .launcher-grid--library, .launcher-overlay--home, .launcher-overlay--popup) {
         --launcher-col-w: var(--home-grid-cell);
     }
     .launcher-folder-item--small {
@@ -661,4 +676,43 @@
         min-width: var(--control-touch-target);
         min-height: var(--control-touch-target);
     }
+}
+
+/* Library management reuses the home cell and folder geometry; only the
+   placement flow is library-specific (canonical order, no drag sorting).
+   Names are hidden by not rendering them, so no label display rule belongs here.
+   The grid sits on the solid Overlay surface, not a wallpaper: labels drop the
+   wallpaper halo and columns centre in the content box with equal gutters. */
+.launcher-grid--library {
+    grid-template-columns: repeat(auto-fill, var(--launcher-col-w));
+    grid-auto-flow: row dense;
+    justify-content: center;
+    /* Symmetric inline gutter: auto-fill measures one column fewer on the
+       narrow Sheet (390 ≈ 4 columns) while the centered tracks keep equal
+       gutters against the header and search content box. */
+    padding-inline: var(--space-2);
+}
+.launcher-grid--library > .launcher-folder-item--large {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+.launcher-grid--library :is(.webapp-name, .launcher-folder-name) {
+    text-shadow: none;
+}
+/* On the solid panel the Material fill and its white rim disappear; the folder
+   takes the icon block's soft fill and drops the blur, so the surface and its
+   white mini glyphs keep an edge in both themes. */
+.launcher-grid--library .launcher-folder-surface {
+    background: var(--surface-soft);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+/* A view swap can leave a tile under a stationary pointer; the library grid
+   sets data-pointer-active on the first pointermove, so hover feedback never
+   paints a tile merely because content changed beneath the pointer. */
+.launcher-grid--library:not([data-pointer-active]) .webapp-icon:hover {
+    background: transparent;
+}
+.launcher-grid--library:not([data-pointer-active]) .launcher-folder-item:hover .launcher-folder-surface {
+    background: var(--surface-soft);
 }
