@@ -91,7 +91,10 @@ import {
 import { launcherTiles } from "../components/searcher/launcherTiles.ts";
 import "../features/desk/desk.css";
 import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
-import { createPaperTaskSaver } from "../features/home-layouts/paper-task-saver.ts";
+import type {
+    PaperTaskSaver,
+    PaperTaskSaverDeps,
+} from "../features/home-layouts/paper-task-saver.ts";
 
 import {
     type AppSessionNavigation,
@@ -513,8 +516,8 @@ export function SearchHome() {
     const [error, setError] = useState("");
     const [taskConflictId, setTaskConflictId] = useState<string | null>(null);
     // Home card checkboxes: optimistic, coalesced per note, rebased on conflict.
-    const [taskSaver] = useState(() =>
-        createPaperTaskSaver({
+    const [taskSaver] = useState(() => {
+        const deps: PaperTaskSaverDeps = {
             save: (paper, body) => patchPaper(paper, { body }),
             render: (paper) =>
                 setPapers((items) => {
@@ -539,8 +542,23 @@ export function SearchHome() {
                 const timer = globalThis.setTimeout(run, delayMs);
                 return () => globalThis.clearTimeout(timer);
             },
-        })
-    );
+        };
+        let loading: Promise<PaperTaskSaver> | undefined;
+        return {
+            toggle(paper: DocumentDto, index: number, checked: boolean) {
+                // Keep the task parser out of the initial home dependency graph.
+                loading ??= import(
+                    "../features/home-layouts/paper-task-saver.ts"
+                )
+                    .then(({ createPaperTaskSaver }) =>
+                        createPaperTaskSaver(deps)
+                    );
+                void loading.then((saver) =>
+                    saver.toggle(paper, index, checked)
+                ).catch(deps.failed);
+            },
+        };
+    });
     const [undoQueue, setUndoQueue] = useState<UndoRecord[]>([]);
     const [undoPaused, setUndoPaused] = useState(false);
     const [isManagingApps, setIsManagingApps] = useState(false);
