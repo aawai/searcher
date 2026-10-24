@@ -47,12 +47,18 @@ untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` �
 desk 至少覆盖 workspace + documents，并包含 routing/bundle/home-papers/supplemental 消费者；
 直接修改 E2E 文件选择所属完整集合。共享基础设施/helper/config 及任何未知路径令整个选择
 回退 full。手工映射不是依赖图，新增跨域依赖必须更新映射；局部通过不替代完整 Workspace
-回归与交付前 full 门禁。
+回归与交付前完整门禁。
 
 没有改动时明确跳过 build/browser，不能记为测试通过。`--list` 仅 affected 可用，
 打印基线、原因、路径、集合与去重文件，便于临时 Git fixture 的 CLI smoke；不 build、
 不启动浏览器。空差异/list 仍校验清单并写 `timings.json`（含路径、基线、选中集合和 skipped），
 不生成 JUnit。正常执行至多 build 一次；完整细节见 [Production E2E](../scripts/e2e/README.md#affected保守的局部选择)。
+
+### 验证调度
+
+验证范围、并行约束、失败处理、证据复用与完成报告统一遵循
+[仓库指南 · 测试与验证](../AGENTS.md#测试与验证)，此处不维护第二套策略。
+上表提供本地执行入口；affected 仅辅助局部选择，完整 CI 分工见下节。
 
 ## CI 覆盖
 

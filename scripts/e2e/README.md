@@ -24,8 +24,9 @@
 ownership/feedback、设置/搜索/笔记/Ask 快捷键及 Markdown editor/pagination
 独立场景。新增 E2E 必须登记；任何执行入口都先检查遗漏。类别可以重叠，full
 使用去重并集。模块入口与 affected 仅用于局部开发，不替代完整 Workspace 或交付前
-full 合并回归。不使用 `--filter`、`--changed` 或 `--related`
-裁剪合并门禁；局部选择不能证明生产 React 构建的完整浏览器覆盖。
+完整合并回归。不使用 `--filter`、`--changed` 或 `--related`
+裁剪合并门禁；局部选择不能证明生产 React 构建的完整浏览器覆盖。当前 revision 的 CI
+已完整覆盖各 suite 时，可复用该完整并集，不重复本地 full。
 
 Documents 的执行分区选择器为 `documents-core`、`pagination-short`、
 `pagination-manual`、`pagination-consecutive`、`pagination-mixed`，通过
@@ -129,8 +130,9 @@ CI artifact 保留 14 天。不要把保留的证据目录误报为 fixture 资�
 现有 Workspace CI 固定报告目录 `artifacts/e2e/workspace/`，另保存完整
 `stdout.log` 与 `/usr/bin/time -v` 的资源统计。`upload-artifact@v4`
 在失败时也上传，保留 14 天；安装失败而未产生目录时给出
-warning，不替代根本失败。Job id/name、Deno 2.9.7、60/10 分钟 timeout、PR
-concurrency、其他 Workflow 及其覆盖范围保持不变。
+warning，不替代根本失败。Workspace job id/name、Deno 2.9.7、60/10 分钟
+timeout 与 PR concurrency 保持不变；完整 CI 集合分工见
+[测试 · CI 覆盖](../../docs/testing.md#ci-覆盖)。
 
 ## 诊断
 
