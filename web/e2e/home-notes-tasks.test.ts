@@ -47,8 +47,14 @@ Deno.test("home note task checkboxes toggle directly and save through the docume
         );
         await reloadHome(page);
         await waitForNoteCards(page, 1);
+        const reloaded = homeNote(page, "直接勾选").locator(
+            ".home-note-card",
+        );
+        await reloaded.getByRole("checkbox", {
+            name: "已完成任务，点击标记为未完成",
+        }).nth(1).waitFor();
         assertEquals(
-            await homeNote(page, "直接勾选").getByRole("checkbox", {
+            await reloaded.getByRole("checkbox", {
                 name: "已完成任务，点击标记为未完成",
             }).count(),
             2,

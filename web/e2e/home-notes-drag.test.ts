@@ -9,6 +9,7 @@ import {
     measureHomeNotes,
     openHomeNotesFixture,
     reloadHome,
+    seedHomeApps,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
 
@@ -20,6 +21,7 @@ Deno.test("mouse drag previews the target cell, snaps on drop and persists after
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         const first = await createHomeNote(page, {
             title: "第一张",
             body: BODY,
@@ -63,6 +65,12 @@ Deno.test("mouse drag previews the target cell, snaps on drop and persists after
         await expectLayout(page, first.id, { col: 1, row: 1, size: "s" });
         await reloadHome(page);
         await waitForNoteCards(page, 2);
+        await page.waitForFunction(() => {
+            const rect = document.querySelector(".home-note")
+                ?.getBoundingClientRect();
+            return Math.round(rect?.x ?? 0) === 1052 &&
+                Math.round(rect?.y ?? 0) === 506;
+        });
         const metrics = await measureHomeNotes(page);
         const placed = metrics.cards.find((card) => card.title === "第一张");
         assert(placed);
@@ -79,6 +87,7 @@ Deno.test("dropping on an occupied cell shifts to the nearest free cell", async 
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         const first = await createHomeNote(page, {
             title: "第一张",
             body: BODY,
@@ -128,6 +137,7 @@ Deno.test("touch drag snaps to a cell", async () => {
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         const note = await createHomeNote(page, {
             title: "触屏笔记",
             body: BODY,
@@ -147,9 +157,15 @@ Deno.test("touch drag snaps to a cell", async () => {
         await expectLayout(page, note.id, { col: 1, row: 1, size: "s" });
         await reloadHome(page);
         await waitForNoteCards(page, 1);
+        await page.waitForFunction(() => {
+            const rect = document.querySelector(".home-note")
+                ?.getBoundingClientRect();
+            return Math.round(rect?.x ?? 0) === 1052 &&
+                Math.round(rect?.y ?? 0) === 514;
+        });
         const placed = (await measureHomeNotes(page)).cards[0];
         assertEquals(Math.round(placed.x), 1052);
-        assertEquals(Math.round(placed.y), 506);
+        assertEquals(Math.round(placed.y), 514);
     } finally {
         await fixture.close();
     }
@@ -161,6 +177,7 @@ Deno.test("the note menu switches between S and W and persists the tier", async 
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         const note = await createHomeNote(page, {
             title: "尺寸笔记",
             body: BODY,

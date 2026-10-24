@@ -5,6 +5,8 @@ import {
     measureHomeNotes,
     openHomeNotesFixture,
     reloadHome,
+    seedHomeApps,
+    waitForFlowMode,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
 
@@ -17,6 +19,7 @@ Deno.test("home notes snap to the plate edges and keep the search top at every b
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         for (let index = 0; index < 4; index++) {
             await createHomeNote(page, {
                 title: `笔记 ${index}`,
@@ -26,6 +29,7 @@ Deno.test("home notes snap to the plate edges and keep the search top at every b
         }
         await reloadHome(page);
         await waitForNoteCards(page, 4);
+        await page.waitForTimeout(300);
 
         await t.step(
             "1440×900: two cells per side, aligned to the plate",
@@ -66,6 +70,7 @@ Deno.test("home notes snap to the plate edges and keep the search top at every b
                 await page.setViewportSize({ width: 1366, height: 768 });
                 await reloadHome(page);
                 await waitForNoteCards(page, 4);
+                await page.waitForTimeout(300);
                 const metrics = await measureHomeNotes(page);
                 assertNoIntersections(metrics);
                 assertEquals(metrics.cards.length, 4);
@@ -79,6 +84,7 @@ Deno.test("home notes snap to the plate edges and keep the search top at every b
                 await page.setViewportSize({ width: 1024, height: 768 });
                 await reloadHome(page);
                 await waitForNoteCards(page, 4);
+                await page.waitForTimeout(300);
                 const metrics = await measureHomeNotes(page);
                 assertEquals(metrics.flow, "flow");
                 assertEquals(metrics.cards.length, 4);
@@ -97,6 +103,7 @@ Deno.test("home notes snap to the plate edges and keep the search top at every b
                 await page.setViewportSize({ width: 768, height: 1024 });
                 await reloadHome(page);
                 await waitForNoteCards(page, 4);
+                await page.waitForTimeout(300);
                 const metrics = await measureHomeNotes(page);
                 assertEquals(metrics.flow, "flow");
                 assertEquals(metrics.cards.length, 4);
@@ -126,6 +133,7 @@ Deno.test("home notes snap to the plate edges and keep the search top at every b
                 await page.setViewportSize({ width: 390, height: 844 });
                 await reloadHome(page);
                 await waitForNoteCards(page, 4);
+                await page.waitForTimeout(300);
                 const metrics = await measureHomeNotes(page);
                 assertEquals(metrics.flow, "stack");
                 assertEquals(metrics.cards.length, 4);
@@ -166,6 +174,7 @@ Deno.test("tablet flow spans both columns for a W note", async () => {
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         await createHomeNote(page, {
             title: "宽笔记",
             body: BODY,
@@ -178,6 +187,7 @@ Deno.test("tablet flow spans both columns for a W note", async () => {
         });
         await reloadHome(page);
         await waitForNoteCards(page, 2);
+        await page.waitForTimeout(300);
         const metrics = await measureHomeNotes(page);
         assertEquals(metrics.flow, "flow");
         const wide = metrics.cards.find((card) => card.title === "宽笔记");

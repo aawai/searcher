@@ -389,3 +389,36 @@ export async function openHomeNotesFixture(
         },
     };
 }
+
+/** Seeds root apps so the home plate has multiple rows of note capacity. */
+export async function seedHomeApps(
+    page: Page,
+    count = 18,
+): Promise<void> {
+    await page.evaluate(async (total) => {
+        for (let index = 0; index < total; index++) {
+            const response = await fetch("/api/webapps", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: `应用 ${index}`,
+                    url: `https://app-${index}.example/`,
+                }),
+            });
+            if (!response.ok) throw new Error(await response.text());
+        }
+    }, count);
+}
+
+export async function waitForFlowMode(
+    page: Page,
+    mode: "flow" | "stack",
+): Promise<void> {
+    await page.waitForFunction(
+        (expected) =>
+            document.querySelector(".home-notes--flow")?.getAttribute(
+                "data-mode",
+            ) === expected,
+        mode,
+    );
+}

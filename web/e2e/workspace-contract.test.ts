@@ -191,6 +191,10 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                 ".documents-list-count",
             );
             await documentsCount.waitFor({ state: "visible" });
+            await page.waitForFunction(
+                (element) => element?.textContent === "2 条",
+                await documentsCount.elementHandle(),
+            );
             assertEquals(await documentsCount.textContent(), "2 条");
 
             // Perform search in Documents

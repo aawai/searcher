@@ -5,6 +5,7 @@ import {
     measureHomeNotes,
     openHomeNotesFixture,
     reloadHome,
+    seedHomeApps,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
 import { libraryPanel } from "./helpers/library.ts";
@@ -17,6 +18,7 @@ Deno.test("home notes follow homeSortOrder, alternate sides and leave the search
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         for (
             const [title, order] of [
                 ["顺序 3", 3],

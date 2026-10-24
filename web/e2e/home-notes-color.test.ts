@@ -4,6 +4,7 @@ import {
     homeNote,
     openHomeNotesFixture,
     reloadHome,
+    seedHomeApps,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
 
@@ -13,6 +14,7 @@ Deno.test("home note colour lives in the more menu, uses the dot and persists", 
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         const colors = [
             ["paper", "纸白"],
             ["amber", "琥珀"],

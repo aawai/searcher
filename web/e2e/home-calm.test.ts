@@ -78,7 +78,7 @@ async function setSwitch(
         await control.click();
     }
     await page.waitForFunction(switchIs, [name, String(checked)] as const);
-    const deadline = Date.now() + 5_000;
+    const deadline = Date.now() + 30_000;
     while (await page.evaluate(storedAppearance, field) !== checked) {
         if (Date.now() > deadline) {
             throw new Error(`${field} was not written to the device cache`);

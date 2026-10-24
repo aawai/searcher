@@ -4,6 +4,7 @@ import {
     measureHomeNotes,
     openHomeNotesFixture,
     reloadHome,
+    seedHomeApps,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
 import { libraryPanel, libraryView } from "./helpers/library.ts";
@@ -16,6 +17,7 @@ Deno.test("overflow notes collapse into 更多笔记（N） and open the notes l
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         for (let index = 0; index < 4; index++) {
             await createHomeNote(page, {
                 title: `容量内 ${index}`,

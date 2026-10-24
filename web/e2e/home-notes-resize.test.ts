@@ -7,6 +7,8 @@ import {
     measureHomeNotes,
     openHomeNotesFixture,
     reloadHome,
+    seedHomeApps,
+    waitForFlowMode,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
 
@@ -16,6 +18,7 @@ Deno.test("resizing folds columns without losing notes or writing to the server"
     });
     const { page } = fixture;
     try {
+        await seedHomeApps(page);
         const note = await createHomeNote(page, {
             title: "折回笔记",
             body: "窗口变窄时按列折回，不写回服务器。",
@@ -24,10 +27,12 @@ Deno.test("resizing folds columns without losing notes or writing to the server"
         });
         await reloadHome(page);
         await waitForNoteCards(page, 1);
+        await page.waitForTimeout(300);
         const patches = countLayoutPatches(page);
 
         await page.setViewportSize({ width: 1440, height: 900 });
         await waitForNoteCards(page, 1);
+        await page.waitForTimeout(300);
         await page.waitForFunction(() =>
             document.querySelector(".home-note")?.getBoundingClientRect().x ===
                 1052
@@ -38,19 +43,25 @@ Deno.test("resizing folds columns without losing notes or writing to the server"
         assertEquals(metrics.cards[0].title, "折回笔记");
 
         await page.setViewportSize({ width: 1024, height: 768 });
+        await waitForFlowMode(page, "flow");
         await waitForNoteCards(page, 1);
+        await page.waitForTimeout(300);
         metrics = await measureHomeNotes(page);
         assertEquals(metrics.flow, "flow");
         assertEquals(metrics.cards.length, 1);
 
         await page.setViewportSize({ width: 768, height: 1024 });
+        await waitForFlowMode(page, "flow");
         await waitForNoteCards(page, 1);
+        await page.waitForTimeout(300);
         metrics = await measureHomeNotes(page);
         assertEquals(metrics.flow, "flow");
         assertEquals(metrics.cards.length, 1);
 
         await page.setViewportSize({ width: 390, height: 844 });
+        await waitForFlowMode(page, "stack");
         await waitForNoteCards(page, 1);
+        await page.waitForTimeout(300);
         metrics = await measureHomeNotes(page);
         assertEquals(metrics.flow, "stack");
         assertEquals(metrics.cards.length, 1);
@@ -58,6 +69,7 @@ Deno.test("resizing folds columns without losing notes or writing to the server"
 
         await page.setViewportSize({ width: 1440, height: 900 });
         await waitForNoteCards(page, 1);
+        await page.waitForTimeout(300);
         await homeNote(page, "折回笔记").waitFor();
         metrics = await measureHomeNotes(page);
         assertEquals(metrics.cards.length, 1);
