@@ -1,4 +1,4 @@
-import { ThreadPrimitive, useAui } from "@assistant-ui/react";
+import { ThreadPrimitive } from "@assistant-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -17,17 +17,11 @@ import { SearcherAssistantMessage } from "./SearcherAssistantMessage.tsx";
 import { SearcherComposer } from "./SearcherComposer.tsx";
 import type { ModelOption } from "../../components/searcher/ModelSelector.tsx";
 import { routes } from "../../app/routes.ts";
-const SAMPLE_PROMPTS = [
-    "用一个生活化例子解释机器学习",
-    "帮我设计一周的健康饮食计划",
-    "比较远程办公与办公室办公的优缺点",
-];
 
 interface SearcherThreadProps {
     isStreaming: boolean;
     streamingTextLength: number;
     terminalMessageStatus: AiMessageDto["status"] | null;
-    onSamplePrompt: (prompt: string) => void;
     models: AiModelDto[];
     modelOptions: ModelOption[];
     selectedModelId: string | null;
@@ -48,7 +42,6 @@ export function SearcherThread({
     isStreaming,
     streamingTextLength,
     terminalMessageStatus,
-    onSamplePrompt,
     models,
     modelOptions,
     selectedModelId,
@@ -63,7 +56,6 @@ export function SearcherThread({
     isDefaultGenerationConfig,
 }: SearcherThreadProps) {
     const threadRef = useRef<HTMLDivElement>(null);
-    const aui = useAui();
     const [liveAnnouncement, setLiveAnnouncement] = useState("");
     const streamingTextLengthRef = useRef(streamingTextLength);
     streamingTextLengthRef.current = streamingTextLength;
@@ -136,20 +128,17 @@ export function SearcherThread({
                     <div className="ask-empty-centered-unit">
                         <div className="ask-empty-hero">
                             <h2 className="ask-empty-hero__title">
-                                有什么可以帮你的？
+                                {selectedModelId
+                                    ? "有什么可以帮你的？"
+                                    : "配置模型后即可开始提问。"}
                             </h2>
                             {!selectedModelId && (
-                                <>
-                                    <p className="ask-empty-hero__subtitle">
-                                        配置模型后即可开始提问。
-                                    </p>
-                                    <Link
-                                        to={routes.settings("ai")}
-                                        className="button button--primary ask-empty-hero__cta"
-                                    >
-                                        配置模型
-                                    </Link>
-                                </>
+                                <Link
+                                    to={routes.settings("ai")}
+                                    className="button button--primary ask-empty-hero__cta"
+                                >
+                                    配置模型
+                                </Link>
                             )}
                         </div>
 
@@ -169,37 +158,6 @@ export function SearcherThread({
                                     onResetDefaultGenerationConfig={onResetDefaultGenerationConfig}
                                     isDefaultGenerationConfig={isDefaultGenerationConfig}
                                 />
-                            </div>
-                        )}
-                        {selectedModelId && (
-                            <div
-                                className="ask-empty-prompts"
-                                role="group"
-                                aria-label="示例问题"
-                            >
-                                {SAMPLE_PROMPTS.map((prompt) => (
-                                    <Button
-                                        key={prompt}
-                                        type="button"
-                                        variant="outline"
-                                        className="ask-empty-prompt"
-                                        onClick={() => {
-                                            // Update the runtime immediately and keep the parent draft in sync.
-                                            aui.composer.setText(prompt);
-                                            onSamplePrompt(prompt);
-                                            globalThis.requestAnimationFrame(
-                                                () =>
-                                                    document.querySelector<
-                                                        HTMLTextAreaElement
-                                                    >(
-                                                        ".ask-empty-composer-wrap .ask-composer__textarea",
-                                                    )?.focus(),
-                                            );
-                                        }}
-                                    >
-                                        {prompt}
-                                    </Button>
-                                ))}
                             </div>
                         )}
                     </div>

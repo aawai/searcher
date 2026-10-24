@@ -8,12 +8,12 @@
     margin-block-end: var(--space-4);
 }
 
-.trash-page .empty-state {
+.trash-empty-state {
     align-items: center;
     text-align: center;
 }
 
-.trash-page .empty-state :is(h2, h3) {
+.trash-empty-state :is(h2, h3) {
     font-weight: var(--font-body-weight);
 }
 

@@ -416,7 +416,11 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             );
             await page.getByRole("heading", { name: "没有已删除的应用" })
                 .waitFor({ state: "visible" });
-            assertEquals(await page.getByRole("tab", { name: "应用 0", exact: true }).count(), 1);
+            assertEquals(
+                await page.getByRole("tab", { name: "应用 0", exact: true })
+                    .count(),
+                1,
+            );
             assertEquals(
                 await page.getByRole("heading", { name: "没有已删除的应用" })
                     .evaluate((el) => getComputedStyle(el).fontWeight),

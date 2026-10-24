@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { type Browser } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { aiModels } from "../../src/db/ai-schema.ts";
@@ -316,22 +316,23 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
                 snippet: "引用的笔记内容",
             };
         }, createdDocument);
-        const prompts = page.getByRole("group", { name: "示例问题" });
-        await prompts.waitFor({ state: "visible" });
-        assertEquals(await prompts.getByRole("button").count(), 3);
-        await prompts.getByRole("button").first().click();
+        assertEquals(
+            await page.getByRole("group", { name: "示例问题" }).count(),
+            0,
+        );
         const composer = page.locator(".ask-composer__textarea");
         await composer.waitFor({ state: "visible" });
-        assertEquals(
-            await composer.inputValue(),
-            "用一个生活化例子解释机器学习",
-        );
+        assertEquals(await composer.inputValue(), "");
+        await composer.fill("用一个生活化例子解释机器学习");
         assertEquals(await page.locator(".topbar").isVisible(), false);
-        await page.getByRole("link", { name: "返回首页", exact: true }).waitFor();
-        for (const target of [
-            page.getByRole("button", { name: "打开历史对话", exact: true }),
-            page.getByRole("link", { name: "返回首页", exact: true }),
-        ]) {
+        await page.getByRole("link", { name: "返回首页", exact: true })
+            .waitFor();
+        for (
+            const target of [
+                page.getByRole("button", { name: "打开历史对话", exact: true }),
+                page.getByRole("link", { name: "返回首页", exact: true }),
+            ]
+        ) {
             const box = await target.boundingBox();
             assert(box && box.width >= 44 && box.height >= 44);
         }
@@ -502,7 +503,7 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
         });
 
         await page.goto(app.origin + "/ask");
-        await page.locator(".ask-empty-prompts").waitFor({
+        await page.locator(".ask-empty-composer-wrap").waitFor({
             state: "visible",
         });
         await page.getByRole("button", { name: "更多设置" }).click();

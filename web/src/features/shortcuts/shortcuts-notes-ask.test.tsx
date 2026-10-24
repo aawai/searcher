@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
 import ReactDOMServer from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
 import type { AiMessageDto } from "../ask/types.ts";
 import { ConversationHeader } from "../ask/ConversationHeader.tsx";
 
@@ -20,47 +21,51 @@ Deno.test("Ask ConversationHeader renders platform-specific search hints", () =>
     };
 
     const headerMac = ReactDOMServer.renderToStaticMarkup(
-        <ConversationHeader
-            conversation={{
-                id: "conv-1",
-                userId: "user-1",
-                title: "测试会话",
-                historyEnabled: true,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-            }}
-            messages={[mockMessage]}
-            onOpenDrawer={() => {}}
-            onRename={async () => {}}
-            onDelete={async () => {}}
-            onToggleHistory={async () => {}}
-            onSaveSystemInstruction={async () => {}}
-            onOpenSearch={() => {}}
-            platform="mac"
-        />,
+        <MemoryRouter>
+            <ConversationHeader
+                conversation={{
+                    id: "conv-1",
+                    userId: "user-1",
+                    title: "测试会话",
+                    historyEnabled: true,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                }}
+                messages={[mockMessage]}
+                onOpenDrawer={() => {}}
+                onRename={async () => {}}
+                onDelete={async () => {}}
+                onToggleHistory={async () => {}}
+                onSaveSystemInstruction={async () => {}}
+                onOpenSearch={() => {}}
+                platform="mac"
+            />
+        </MemoryRouter>,
     );
     assertEquals(headerMac.includes('title="会话内搜索 (⌘ F)"'), true);
     assertEquals(headerMac.includes('aria-label="会话内搜索 (⌘ F)"'), true);
 
     const headerOther = ReactDOMServer.renderToStaticMarkup(
-        <ConversationHeader
-            conversation={{
-                id: "conv-1",
-                userId: "user-1",
-                title: "测试会话",
-                historyEnabled: true,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-            }}
-            messages={[mockMessage]}
-            onOpenDrawer={() => {}}
-            onRename={async () => {}}
-            onDelete={async () => {}}
-            onToggleHistory={async () => {}}
-            onSaveSystemInstruction={async () => {}}
-            onOpenSearch={() => {}}
-            platform="other"
-        />,
+        <MemoryRouter>
+            <ConversationHeader
+                conversation={{
+                    id: "conv-1",
+                    userId: "user-1",
+                    title: "测试会话",
+                    historyEnabled: true,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                }}
+                messages={[mockMessage]}
+                onOpenDrawer={() => {}}
+                onRename={async () => {}}
+                onDelete={async () => {}}
+                onToggleHistory={async () => {}}
+                onSaveSystemInstruction={async () => {}}
+                onOpenSearch={() => {}}
+                platform="other"
+            />
+        </MemoryRouter>,
     );
     assertEquals(headerOther.includes('title="会话内搜索 (Ctrl + F)"'), true);
     assertEquals(

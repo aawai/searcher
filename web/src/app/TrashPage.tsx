@@ -120,7 +120,12 @@ function TrashSection(
     if (rows.length === 0) {
         return (
             <section className="trash-section" aria-label={label}>
-                {loading ? <LoadingState /> : <EmptyState title={emptyTitle} />}
+                {loading ? <LoadingState /> : (
+                    <EmptyState
+                        className="trash-empty-state"
+                        title={emptyTitle}
+                    />
+                )}
             </section>
         );
     }
@@ -306,6 +311,7 @@ export function TrashPage() {
             <PageShell archetype="management" className="trash-page">
                 <PageHeader title="回收站" />
                 <EmptyState
+                    className="trash-empty-state"
                     title="未登录"
                     action={
                         <Button

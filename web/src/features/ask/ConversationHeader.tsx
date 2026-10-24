@@ -95,10 +95,14 @@ export function ConversationHeader({
     return (
         <header className="ask-header" aria-label="对话标题与操作">
             <div className="ask-header__left">
-                <Button variant="ghost" size="icon" className="ask-header__home" asChild>
-                    <Link to={routes.home} aria-label="返回首页">
-                        <ArrowLeft size="1em" className="icon-md" />
-                    </Link>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ask-header__home"
+                    nativeButton={false}
+                    render={<Link to={routes.home} aria-label="返回首页" />}
+                >
+                    <ArrowLeft size="1em" className="icon-md" />
                 </Button>
                 <Button
                     variant="ghost"
