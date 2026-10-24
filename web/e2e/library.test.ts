@@ -20,10 +20,11 @@ async function assertFocus(target: Locator) {
 }
 
 async function assertHeaderFocus(page: Page) {
-    const header = libraryPanel(page).locator(".workspace-header");
-    await page.waitForFunction(
-        (element) => element?.contains(document.activeElement),
-        await header.elementHandle(),
+    // Query on every poll: the header may remount while the view settles,
+    // so a captured element handle can go stale.
+    await page.waitForFunction(() =>
+        document.querySelector("[data-library] .workspace-header")
+            ?.contains(document.activeElement) === true
     );
 }
 

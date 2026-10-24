@@ -298,7 +298,16 @@ function Layout() {
                                             .slice(0, 1)}
                                     </span>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent sideOffset={8}>
+                                <DropdownMenuContent
+                                    sideOffset={8}
+                                    // The library moves focus into its header; restoring it to
+                                    // the avatar afterwards would steal it back.
+                                    finalFocus={() =>
+                                        document.querySelector(
+                                            "[data-library]",
+                                        ) ===
+                                            null}
+                                >
                                     <div className="user-menu-identity">
                                         <span>{user.displayName}</span>
                                         <span>@{user.username}</span>
