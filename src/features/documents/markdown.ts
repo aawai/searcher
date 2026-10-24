@@ -12,6 +12,17 @@ interface MdastNode {
     identifier?: string;
     label?: string | null;
     children?: MdastNode[];
+    checked?: boolean | null;
+}
+
+/** 仅统计 Markdown 任务列表节点，避免把代码示例误当作待办。 */
+export function countOpenTasks(body: string): number {
+    const count = (node: MdastNode): number => {
+        let open = node.type === "listItem" && node.checked === false ? 1 : 0;
+        for (const child of node.children ?? []) open += count(child);
+        return open;
+    };
+    return count(processor.parse(body) as MdastNode);
 }
 
 const BLOCK_CONTAINERS: Record<string, true> = {

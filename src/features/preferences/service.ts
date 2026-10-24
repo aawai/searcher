@@ -55,6 +55,9 @@ const defaults: PreferencesDto = {
     searchHistoryEnabled: false,
     showAppLabels: true,
     showHomeApps: true,
+    showHomeDate: true,
+    showHomeTime: false,
+    showHomeContinue: true,
     aiGenerationDefaults: {
         models: {},
     },
@@ -191,6 +194,9 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
         searchHistoryEnabled: row.searchHistoryEnabled ?? false,
         showAppLabels: row.showAppLabels ?? true,
         showHomeApps: row.showHomeApps ?? true,
+        showHomeDate: row.showHomeDate ?? true,
+        showHomeTime: row.showHomeTime ?? false,
+        showHomeContinue: row.showHomeContinue ?? true,
         aiGenerationDefaults: parseAiGenerationDefaults(
             row.aiGenerationDefaults,
         ),
@@ -454,6 +460,9 @@ export class PreferencesService {
                     false,
                 showAppLabels: canonicalDefaults.showAppLabels,
                 showHomeApps: canonicalDefaults.showHomeApps,
+                showHomeDate: canonicalDefaults.showHomeDate,
+                showHomeTime: canonicalDefaults.showHomeTime,
+                showHomeContinue: canonicalDefaults.showHomeContinue,
                 aiGenerationDefaults: JSON.stringify(
                     canonicalDefaults.aiGenerationDefaults ?? { models: {} },
                 ),

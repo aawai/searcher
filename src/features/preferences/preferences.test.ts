@@ -33,6 +33,14 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
             return cookie;
         };
         const first = await register("appearance_a");
+        const initial = await app.request("/api/preferences", {
+            headers: { cookie: first },
+        });
+        const initialData =
+            (await initial.json() as Envelope<PreferencesDto>).data;
+        assertEquals(initialData?.showHomeDate, true);
+        assertEquals(initialData?.showHomeTime, false);
+        assertEquals(initialData?.showHomeContinue, true);
         const second = await register("appearance_b");
         const response = await app.request("/api/preferences", {
             method: "PATCH",
@@ -48,6 +56,9 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 glassIntensity: "clear",
                 defaultEngine: "google",
                 showHomeApps: false,
+                showHomeDate: false,
+                showHomeTime: true,
+                showHomeContinue: false,
                 showAppLabels: false,
             }),
         });
@@ -78,6 +89,17 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(changed.data?.searchShape, "pill");
         assertEquals(changed.data?.glassIntensity, "clear");
         assertEquals(changed.data?.showAppLabels, false);
+        assertEquals(changed.data?.showHomeDate, false);
+        assertEquals(changed.data?.showHomeTime, true);
+        assertEquals(changed.data?.showHomeContinue, false);
+        const readBack = await app.request("/api/preferences", {
+            headers: { cookie: first },
+        });
+        const persisted =
+            (await readBack.json() as Envelope<PreferencesDto>).data;
+        assertEquals(persisted?.showHomeDate, false);
+        assertEquals(persisted?.showHomeTime, true);
+        assertEquals(persisted?.showHomeContinue, false);
         const toggleBack = await app.request("/api/preferences", {
             method: "PATCH",
             headers: {
@@ -167,6 +189,9 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { backgroundImage: "https://user:pass@example.com/a.png" },
                 { showHomeApps: "yes" },
                 { showHomeApps: 1 },
+                { showHomeDate: "yes" },
+                { showHomeTime: 1 },
+                { showHomeContinue: null },
                 { searchShape: "square" },
                 { glassIntensity: "ultra" },
                 { glassIntensity: 0.5 },

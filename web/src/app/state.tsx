@@ -54,6 +54,10 @@ export type Appearance = {
     showAppLabels: boolean;
     /** 登录用户的跨设备偏好：首页是否显示应用库。 */
     showHomeApps: boolean;
+    /** 首页“静”状态：搜索框上方的日期、时间与登录用户的“继续”行。 */
+    showHomeDate: boolean;
+    showHomeTime: boolean;
+    showHomeContinue: boolean;
 };
 
 const initial: Appearance = {
@@ -67,6 +71,9 @@ const initial: Appearance = {
     wallpaperPresentations: {},
     showAppLabels: true,
     showHomeApps: true,
+    showHomeDate: true,
+    showHomeTime: false,
+    showHomeContinue: true,
 };
 
 /** 旧设备缓存和旧 API 响应缺少字段时，仍生成有效的背景参数。 */
@@ -123,8 +130,16 @@ export function normalizeAppearance(raw: unknown): Appearance {
     if (typeof saved.showAppLabels === "boolean") {
         result.showAppLabels = saved.showAppLabels;
     }
-    if (typeof saved.showHomeApps === "boolean") {
-        result.showHomeApps = saved.showHomeApps;
+    for (
+        const key of [
+            "showHomeApps",
+            "showHomeDate",
+            "showHomeTime",
+            "showHomeContinue",
+        ] as const
+    ) {
+        const value = saved[key];
+        if (typeof value === "boolean") result[key] = value;
     }
     return result;
 }
@@ -327,6 +342,9 @@ export function AppState({ children }: { children: ReactNode }) {
                     wallpaperPresentations: prefs.wallpaperPresentations,
                     showAppLabels: prefs.showAppLabels,
                     showHomeApps: prefs.showHomeApps,
+                    showHomeDate: prefs.showHomeDate,
+                    showHomeTime: prefs.showHomeTime,
+                    showHomeContinue: prefs.showHomeContinue,
                 })
             );
         }
@@ -424,8 +442,15 @@ export function AppState({ children }: { children: ReactNode }) {
             if (next.showAppLabels !== undefined) {
                 updates.showAppLabels = next.showAppLabels;
             }
-            if (next.showHomeApps !== undefined) {
-                updates.showHomeApps = next.showHomeApps;
+            for (
+                const key of [
+                    "showHomeApps",
+                    "showHomeDate",
+                    "showHomeTime",
+                    "showHomeContinue",
+                ] as const
+            ) {
+                if (next[key] !== undefined) updates[key] = next[key];
             }
             if (Object.keys(updates).length === 0) return Promise.resolve();
             const owner = user.id;

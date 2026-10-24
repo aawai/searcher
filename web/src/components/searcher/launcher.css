@@ -7,9 +7,6 @@
     --launcher-folder-empty-icon-size-large: 38px;
     --space-launcher-icon-gap: 2px;
     --space-launcher-badge-padding: 1px var(--space-1);
-    /* Labels sit on the bare wallpaper: a soft halo in the surface colour keeps them legible. */
-    --launcher-label-halo: 0 0 var(--space-2) color-mix(in srgb, var(--surface-solid) 90%, transparent),
-        0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent);
 }
 
 .webapp-icon {
@@ -61,7 +58,7 @@
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     color: var(--foreground);
-    text-shadow: var(--launcher-label-halo);
+    text-shadow: var(--wallpaper-text-halo);
 }
 /* Over a photo wallpaper the halo is not enough: Home labels (apps, folders, 更多, +)
    get a small material chip. Popups already sit on Floating material. */
@@ -84,7 +81,7 @@
     gap: var(--space-3);
     color: var(--muted);
     text-align: center;
-    text-shadow: var(--launcher-label-halo);
+    text-shadow: var(--wallpaper-text-halo);
 }
 .launcher-notice {
     padding: var(--space-2) 0;
@@ -490,7 +487,7 @@
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     color: var(--foreground);
-    text-shadow: var(--launcher-label-halo);
+    text-shadow: var(--wallpaper-text-halo);
 }
 .launcher-overlay {
     width: var(--launcher-col-w);

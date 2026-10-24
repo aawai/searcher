@@ -721,6 +721,35 @@ export function SettingsPage() {
                                     />
                                 </SettingsRow>
                             )}
+                            <SettingsRow title="显示日期">
+                                <Switch
+                                    checked={appearance.showHomeDate}
+                                    onCheckedChange={(checked) =>
+                                        set("showHomeDate", checked)}
+                                    aria-label="显示日期"
+                                />
+                            </SettingsRow>
+                            <SettingsRow title="显示时间">
+                                <Switch
+                                    checked={appearance.showHomeTime}
+                                    onCheckedChange={(checked) =>
+                                        set("showHomeTime", checked)}
+                                    aria-label="显示时间"
+                                />
+                            </SettingsRow>
+                            {user && (
+                                <SettingsRow
+                                    title="显示“继续”"
+                                    description="最近编辑的笔记、未完成的 AI 对话与首页待办"
+                                >
+                                    <Switch
+                                        checked={appearance.showHomeContinue}
+                                        onCheckedChange={(checked) =>
+                                            set("showHomeContinue", checked)}
+                                        aria-label="显示“继续”"
+                                    />
+                                </SettingsRow>
+                            )}
                         </SettingsGroup>
                         <SettingsGroup
                             title="壁纸"

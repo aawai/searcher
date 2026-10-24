@@ -12,6 +12,7 @@ import { registerUserRoutes } from "./features/users/users.route.ts";
 import { registerBookmarksRoutes } from "./features/bookmarks/bookmarks.route.ts";
 import { registerDocumentsRoutes } from "./features/documents/documents.route.ts";
 import { registerPreferencesRoutes } from "./features/preferences/preferences.route.ts";
+import { registerHomeRoutes } from "./features/home/home.route.ts";
 import { registerWallpaperRoutes } from "./features/wallpaper/wallpaper.route.ts";
 import { registerAiRoutes } from "./features/ai/ai.route.ts";
 import { registerAuditRoutes } from "./features/audit/audit.route.ts";
@@ -84,6 +85,7 @@ export function createApp(
     registerBookmarksRoutes(routes, deps);
     registerDocumentsRoutes(routes, deps);
     registerPreferencesRoutes(routes, sharedDeps);
+    registerHomeRoutes(routes, sharedDeps);
     registerWallpaperRoutes(routes, sharedDeps);
     registerAiRoutes(routes, deps);
     registerAuditRoutes(routes, deps);

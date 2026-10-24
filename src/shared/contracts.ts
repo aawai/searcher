@@ -187,7 +187,19 @@ export interface PreferencesDto {
     searchHistoryEnabled?: boolean;
     showAppLabels: boolean;
     showHomeApps: boolean;
+    showHomeDate: boolean;
+    showHomeTime: boolean;
+    showHomeContinue: boolean;
     aiGenerationDefaults?: AiGenerationDefaultsDto;
+}
+
+export interface HomeContinueDto {
+    /** 最近编辑的未删除笔记，与笔记列表采用相同的显示标题。 */
+    document: { id: string; displayTitle: string; updatedAt: number } | null;
+    /** 最近更新的未完成 AI 对话。 */
+    conversation: { id: string; title: string; updatedAt: number } | null;
+    /** 首页便签未勾选待办总数；documentId 指向首张包含未完成待办的便签。 */
+    homeTasks: { open: number; documentId: string } | null;
 }
 export * from "./documents.ts";
 export interface Envelope<T> {

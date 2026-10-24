@@ -76,6 +76,7 @@ import {
 } from "../components/searcher/AppSessionProvider.tsx";
 import type { AppSessionOptions } from "../components/searcher/useAppSession.ts";
 import { useInlineAnswer } from "../features/inline-ai/useInlineAnswer.ts";
+import { useHomeContinue } from "../features/home-calm/useHomeCalm.ts";
 import { useAppOutletContext } from "./outlet-context.ts";
 import type { SearchQuickCommand } from "../features/shortcuts/shortcut-catalog.ts";
 import {
@@ -661,6 +662,14 @@ export function SearchHome() {
             }).catch(() => {});
         });
     }, [authSession, user?.id]);
+    const showContinue = Boolean(user) && appearance.showHomeContinue;
+    const continueCandidates = useHomeContinue({
+        userId: user?.id ?? null,
+        enabled: showContinue,
+        events: authSession.documentEvents,
+        // Closing the workspace may have changed what to continue.
+        refreshKey: host.activeKind,
+    });
 
     async function checkConnections() {
         setIsCheckingConnections(true);
@@ -1162,6 +1171,12 @@ export function SearchHome() {
         workspaceOpen: Boolean(host.activeKind),
         showAppLabels: appearance.showAppLabels,
         showHomeApps: appearance.showHomeApps,
+        calm: {
+            showDate: appearance.showHomeDate,
+            showTime: appearance.showHomeTime,
+            showContinue,
+            candidates: continueCandidates,
+        },
         setError,
     };
     const currentRoute = host.models.documents.route;

@@ -12,6 +12,7 @@ export const suites = {
         "home-app-library",
         "icon-presentation",
         "home-composition",
+        "home-calm",
         "apps-session",
         "apps-interactions",
         "apps-races",

@@ -178,3 +178,11 @@ Provider Key。不要将备份 ZIP、密钥或 `data/` 提交到 Git。
 ```bash
 sqlite3 data/searcher.sqlite < drizzle/rollback/0026_documents_fts_trigram.sql
 ```
+
+### 升级：首页“静”状态偏好
+
+迁移 `0027_messy_toro` 为 `preferences` 增加 `show_home_date`、`show_home_time`、`show_home_continue` 三列（默认开启 / 关闭 / 开启），既有行取默认值。旧版本忽略这些列，可直接回退；如需移除列，先停止服务再执行：
+
+```bash
+sqlite3 data/searcher.sqlite < drizzle/rollback/0027_messy_toro.sql
+```

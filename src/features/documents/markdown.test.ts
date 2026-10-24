@@ -1,10 +1,25 @@
 import { assertEquals } from "@std/assert";
 import {
+    countOpenTasks,
     documentAssetReferences,
     documentDisplayTitle,
     documentPlainText,
     documentSnippet,
 } from "./markdown.ts";
+
+Deno.test("countOpenTasks 统计嵌套及有序列表待办并忽略已勾选与代码块", () => {
+    assertEquals(countOpenTasks(""), 0);
+    assertEquals(countOpenTasks("- [ ] 待办\n- [x] 完成\n- 普通列表"), 1);
+    assertEquals(
+        countOpenTasks("- [ ] 父任务\n  - [ ] 子任务\n  - [x] 完成"),
+        2,
+    );
+    assertEquals(countOpenTasks("1. [ ] 有序任务\n2. [x] 完成"), 1);
+    assertEquals(
+        countOpenTasks("```md\n- [ ] 示例\n```\n\n    - [ ] 缩进代码"),
+        0,
+    );
+});
 
 Deno.test("documentDisplayTitle preserves explicit title precedence and first-block fallback boundary", () => {
     assertEquals(documentDisplayTitle(" Explicit ", "# Heading"), "Explicit");
