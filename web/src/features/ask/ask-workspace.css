@@ -222,7 +222,10 @@
     justify-content: space-between;
     gap: var(--space-3);
     min-height: var(--space-9);
-    padding: 0 var(--space-2) 0 var(--space-4);
+    width: calc(100% - var(--space-4) * 2);
+    max-width: var(--layout-ask-message-max);
+    margin-inline: auto;
+    padding: 0;
 }
 
 .ask-header__left {
@@ -252,7 +255,7 @@
 
 [data-slot="button"].ask-header__title {
     max-width: 100%;
-    padding: 0 var(--space-2);
+    padding: 0;
     color: var(--foreground);
     font-size: var(--font-title-size);
     line-height: var(--font-title-line-height);
@@ -322,6 +325,18 @@
     flex-direction: column;
     min-height: 0;
     overflow-y: auto;
+}
+
+.ask-thread::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: var(--elevation-local-20);
+    height: var(--space-7);
+    background: linear-gradient(to bottom, var(--background) 30%, transparent);
+    pointer-events: none;
 }
 
 .ask-thread__viewport {
