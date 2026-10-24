@@ -167,6 +167,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 - **Toast / 撤销**：底部居中材质胶囊；破坏性操作用 AlertDialog 二次确认，软删除给撤销。
 - **菜单**：`⋯` 触发；危险项置底、红色、前有分隔线。互斥选择（如搜索引擎）用单选项，当前项显示勾号。
 - **应用图标**：桌面 48px、移动 44px，格宽与间距不随图标变化。服务端将满版不透明正方形铺满 256px 画布；透明或半透明边缘的图形保留白底与每侧约 20% 内边距。`WebAppGlyph` 是非交互呈现 owner，`WebAppIcon` 只添加启动/排序交互。无可用图标时使用按 hostname 派生的稳定色相浅底（HSL 45% / 90%）与固定深墨色 `#1d1d1f`，字重 400；这是域名身份色而非强调色，明暗主题保持同一对比度。`iconFallback.ts` 拥有运行时颜色，`presentation.ts` 拥有图像画布；对比度与满版/透明/半透明测试分别保护这两个边界。
+  - 满版、透明图形白底、首字母回退共享 1px 内环（`--shadow-material-edge`，覆盖在图像之上）和贴面极淡投影（`--shadow-material-glyph`）。后者由 `--space-hairline`、`--space-half` 与 `--glass-edge-bottom` 推导，owner 为 `tokens.css`；仅用于图标块和文件夹预览表面，以浅 / 深壁纸及满版图标实页验证边缘。添加与“更多（N）”使用同尺寸 Material 小块和同一边缘，字形为 `--muted`，不使用灰色 `--surface-soft` 底。
 - **首页颜色层级**：顶栏与账户页头像使用 `--surface-soft` 底与 `--foreground`，顶栏保留姓名首字母原大小写；搜索框引擎标记使用中性单色，品牌色仅出现在引擎菜单。网页联想使用中性搜索字形，不重复引擎标识。搜索提交按钮空闲 / 输入时始终为相同形状的 ghost 图标按钮；笔记库“+”同样用 ghost，不以强调色填充争夺搜索焦点。“跟随系统”用 `SunMoon`，顶栏图标沿用 Lucide 默认描边。
 
 ### 页面原型
@@ -248,7 +249,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 | clear   | 71% / 82%                | 76% / 84%                | 12px | 2.2      |
 
 - fill 是 `--material-solid`（Floating 为 `--surface-l3`）与透明的混合比例。fill 有下限（底线：对比度）：在深 / 浅照片极值与饱和色背景上，正文 ≥ 4.5:1，`--muted` 次要文字 ≥ 3:1；暗色的下限更高，因为浅色文字在亮背景上需要更厚的底。每档每主题由 `design-system/glass-contrast.test.ts` 检验，低于下限的档位不得合入。
-- `--shadow-material-edge`（顶部 1px 高光、1px 内环和底部 1px 暗线）在所有档位保留，只与 `--shadow-l2` 叠加，不授权更强阴影。
+- `--shadow-material-edge`（顶部 1px 高光、1px 内环和底部 1px 暗线）在所有档位保留；Material / Floating 与 `--shadow-l2` 叠加，贴面图标块与 `--shadow-material-glyph` 叠加，不授权更强阴影。
 - `--glass-sheen`：Material 与 Floating 背景最上层的白色顶光（顶部最亮，到 55% 高度渐隐；亮色峰值 60%，暗色 6%），随档位缩放（off 0、soft 0.6、regular / clear 1）。对比度测试按文字所在位置计入顶光。
 - 玻璃的可感知度来自 blur、saturate、边缘高光、顶光与默认画布的色相变化，而不是更低的 fill；不得为“更透”下调 fill 下限。
 - 不支持 `backdrop-filter` 或系统开启 `prefers-reduced-transparency: reduce` 时，所有档位按 `off` 渲染（实色、无 blur），`--shadow-material-edge` 保留。设置页显示一行说明，但不禁用控件，也不改写已存值。
