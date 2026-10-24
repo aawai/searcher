@@ -100,6 +100,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             name: "Work",
             sortOrder: 0,
             folderSize: "small",
+            isHomeFixed: true,
         },
     );
     await request("/api/webapps", "POST", {
@@ -112,6 +113,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
         name: "Chat",
         url: "https://chat.example.com",
         sortOrder: 1,
+        isHomeFixed: true,
     });
     await request<{ id: string }>("/api/documents", "POST", {
         title: "Welcome Note",

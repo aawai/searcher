@@ -4,6 +4,7 @@ import {
     type LauncherGroup,
     launcherTiles,
     mergeVisibleOrder,
+    pinnedRootTiles,
     reorderRootTiles,
 } from "./launcherTiles.ts";
 
@@ -108,5 +109,32 @@ Deno.test("reorderRootTiles normalizes sequential ranks across apps and folders"
     ]);
     assertEquals(groupUpdates, [
         { id: "folder-dev", sortOrder: 1 },
+    ]);
+});
+
+Deno.test("only pinned root apps and folders enter the home grid", () => {
+    const app = (
+        id: string,
+        isHomeFixed: boolean,
+        groupId: string | null = null,
+    ): LauncherApp => ({
+        id,
+        name: id,
+        url: `https://${id}.example/`,
+        groupId,
+        isHomeFixed,
+    });
+    const groups: LauncherGroup[] = [
+        { id: "pinned", name: "Pinned", isHomeFixed: true },
+        { id: "hidden", name: "Hidden", isHomeFixed: false },
+    ];
+    const tiles = launcherTiles([
+        app("pinned-app", true),
+        app("library-app", false),
+        app("member", false, "pinned"),
+    ], groups);
+    assertEquals(pinnedRootTiles(tiles).map((tile) => tile.id), [
+        "folder:pinned",
+        "pinned-app",
     ]);
 });

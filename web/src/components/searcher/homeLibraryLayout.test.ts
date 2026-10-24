@@ -4,7 +4,7 @@ import {
     moveInVisualOrder,
     planHomeLibrary,
 } from "./homeLibraryLayout.ts";
-import type { LauncherTile } from "./launcherTiles.ts";
+import { type LauncherTile, pinnedRootTiles } from "./launcherTiles.ts";
 
 const app = (id: string): LauncherTile => ({
     type: "app",
@@ -342,5 +342,41 @@ Deno.test("moveInVisualOrder ignores overflow tiles not in visual order", () => 
     assertEquals(
         moveInVisualOrder(["A", "X", "B"], ["A", "B"], "A", 1),
         ["X", "B", "A"],
+    );
+});
+
+Deno.test("home plans pinned root tiles only and counts hidden pins in 更多", () => {
+    const root = (id: string, isHomeFixed: boolean): LauncherTile => ({
+        type: "app",
+        id,
+        app: {
+            id,
+            name: id,
+            url: `https://example.com/${id}`,
+            isHomeFixed,
+        },
+    });
+    const pinned = Array.from(
+        { length: 25 },
+        (_, i) => root(`pinned${i}`, true),
+    );
+    const library = Array.from(
+        { length: 4 },
+        (_, i) => root(`library${i}`, false),
+    );
+    const plan = planHomeLibrary({
+        tiles: pinnedRootTiles([...library, ...pinned]),
+        columns: 6,
+        rows: 4,
+        showAdd: true,
+    });
+    // 24 cells: 23 tiles and 更多; the 2 hidden pinned tiles are counted, the
+    // unpinned library apps never are.
+    assertEquals(plan.visible.length, 23);
+    assertEquals(plan.more, { col: 5, row: 3, count: 2 });
+    assertEquals(plan.addInOverflow, true);
+    assertEquals(
+        plan.visible.every((item) => item.tile.app?.isHomeFixed === true),
+        true,
     );
 });

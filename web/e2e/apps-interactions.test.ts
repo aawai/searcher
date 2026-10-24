@@ -56,7 +56,11 @@ Deno.test("app form dialog session and icon contracts on home #141 #244", async 
             app.origin + "/api/webapp-groups",
             {
                 headers: { Origin: app.origin },
-                data: { name: folderName, sortOrder: 0 },
+                data: {
+                    name: folderName,
+                    sortOrder: 0,
+                    isHomeFixed: true,
+                },
             },
         );
         assertEquals(created.status(), 200);

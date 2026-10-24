@@ -46,7 +46,10 @@ export interface HomeLayoutProps {
         },
     ) => void;
     openEditApp: (app: ExtendedWebApp, expandIcon?: boolean) => void;
-    openCreateApp: (groupId?: string) => void;
+    openCreateApp: (
+        groupId?: string,
+        isHomeFixed?: boolean,
+    ) => void;
     softDeleteApp: (app: ExtendedWebApp) => Promise<void>;
     // papers
     openPaper: (paper: PaperItem) => void;

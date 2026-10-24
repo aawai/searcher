@@ -516,8 +516,8 @@
     text-overflow: clip;
 }
 
-/* Floating-material popup over the home grid: folder contents, 更多（N） and
-   the all-apps entry. Anchored popups hang from the grid's top edge. */
+/* Floating-material popup over the home grid: folder contents. 更多（N） opens
+   the library app view instead. Anchored popups hang from the grid's top edge. */
 .dialog-backdrop.launcher-popup-backdrop {
     background: transparent;
 }

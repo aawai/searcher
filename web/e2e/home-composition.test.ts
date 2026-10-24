@@ -28,6 +28,7 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                         name: `App ${index + 1}`,
                         url: `https://app-${index}.example/`,
                         sortOrder: index,
+                        isHomeFixed: true,
                     }),
                 });
                 if (!response.ok) throw new Error(await response.text());

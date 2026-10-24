@@ -11,6 +11,7 @@ function app(id: string, groupId: string | null, sortOrder: number) {
         url: `https://${id}.example/`,
         groupId,
         sortOrder,
+        isHomeFixed: false,
     } satisfies ExtendedWebApp;
 }
 
@@ -21,6 +22,7 @@ function group(id: string, sortOrder: number, name = id): WebAppGroup {
         name,
         folderSize: "small",
         sortOrder,
+        isHomeFixed: false,
         createdAt: 0,
         updatedAt: 0,
     };
@@ -61,7 +63,11 @@ function harness(
             if (fail) return Promise.reject(new Error("boom"));
             if (init.method === "POST") {
                 return Promise.resolve(
-                    { ...group("new", body.sortOrder), name: body.name } as T,
+                    {
+                        ...group("new", body.sortOrder),
+                        name: body.name,
+                        isHomeFixed: body.isHomeFixed,
+                    } as T,
                 );
             }
             if (init.method === "PATCH") {
@@ -181,6 +187,51 @@ Deno.test("rename and resize apply optimistically and roll back on failure", asy
 Deno.test("a new folder is appended to the mixed root order", async () => {
     const h = harness([app("a", null, 0), app("b", null, 4)], [group("g", 2)]);
     await h.actions.createGroup("新文件夹");
-    assertEquals(h.requests[0].body, { name: "新文件夹", sortOrder: 5 });
+    assertEquals(h.requests[0].body, {
+        name: "新文件夹",
+        sortOrder: 5,
+        isHomeFixed: false,
+        appIds: [],
+    });
     assertEquals(h.state.groups.map((item) => item.id), ["g", "new"]);
+});
+
+Deno.test("home creates a pinned folder and moves the dropped apps into it", async () => {
+    const h = harness(
+        [app("a", null, 0), app("b", null, 1)],
+        [],
+    );
+    await h.actions.createGroup("新建文件夹", {
+        isHomeFixed: true,
+        memberIds: ["b", "a"],
+    });
+    assertEquals(h.requests[0].body, {
+        name: "新建文件夹",
+        sortOrder: 2,
+        isHomeFixed: true,
+        appIds: ["b", "a"],
+    });
+    assertEquals(h.state.groups[0].isHomeFixed, true);
+    assertEquals(
+        h.state.apps.map((item) => [item.id, item.groupId, item.sortOrder]),
+        [["a", "new", 1], ["b", "new", 0]],
+    );
+});
+
+Deno.test("app and folder pin state change optimistically and roll back on failure", async () => {
+    const h = harness([app("a", null, 0)], [group("dev", 1)]);
+    await h.actions.setAppHomeFixed(h.state.apps[0], true);
+    assertEquals(h.state.apps[0].isHomeFixed, true);
+    assertEquals(h.persisted, [{
+        path: "/api/webapps/a",
+        body: { isHomeFixed: true },
+    }]);
+    await h.actions.setGroupHomeFixed(h.state.groups[0], true);
+    assertEquals(h.state.groups[0].isHomeFixed, true);
+    assertEquals(h.requests[0].body, { isHomeFixed: true });
+
+    const bad = harness([app("a", null, 0)], [group("dev", 1)], true);
+    await bad.actions.setGroupHomeFixed(bad.state.groups[0], true);
+    assertEquals(bad.state.groups[0].isHomeFixed, false);
+    assertEquals(bad.errors.length, 1);
 });

@@ -144,6 +144,7 @@ async function seedLibrary(
                 name: folder.name,
                 folderSize: folder.size,
                 sortOrder: folder.sortOrder,
+                isHomeFixed: true,
             });
             for (let index = 0; index < folder.members; index++) {
                 await post("/api/webapps", {
@@ -159,6 +160,7 @@ async function seedLibrary(
                 name: app.name,
                 url: `https://root-${counter++}.example/`,
                 sortOrder: app.sortOrder,
+                isHomeFixed: true,
             });
         }
     }, { folders, apps });
@@ -462,7 +464,7 @@ Deno.test("home app library (#244)", async (t) => {
         );
 
         await t.step(
-            "Escape closes exactly one popup layer and focus returns to each trigger",
+            "更多 opens the library app view; Escape returns to the home grid",
             async () => {
                 const { page, context } = await bigLibraryPage(
                     browser,
@@ -473,43 +475,34 @@ Deno.test("home app library (#244)", async (t) => {
                     const more = page.getByRole("button", {
                         name: "更多（13）",
                     });
-                    const popups = await openMoreApps(page, more);
-                    // 更多 holds the add cell once the grid is over capacity.
+                    const view = await openMoreApps(page, more);
+                    await view.getByText("全部应用", { exact: true })
+                        .waitFor();
                     assertEquals(
-                        await popups.getByRole("button", { name: "添加应用" })
-                            .count(),
+                        await view.locator(
+                            "[data-library-apps-grid] > :is(.launcher-app, .launcher-folder-item)",
+                        ).count(),
+                        BIG_ROOT_TILES,
+                    );
+                    assertEquals(
+                        await libraryPanel(page).getByRole("button", {
+                            name: "添加应用",
+                            exact: true,
+                        }).count(),
                         1,
                     );
-                    const tailFolder = popups.locator(
-                        ".launcher-folder-item",
-                        { hasText: "尾部文件夹" },
-                    );
-                    await tailFolder.getByRole("button", {
-                        name: "打开文件夹 尾部文件夹，2 个应用",
-                    }).click();
-                    await popups.locator(".launcher-popup-title", {
+                    await view.locator(".launcher-folder-item", {
                         hasText: "尾部文件夹",
-                    }).waitFor();
-                    assertEquals(await popups.count(), 2);
-
-                    await page.keyboard.press("Escape");
-                    await page.waitForFunction(() =>
-                        document.querySelectorAll(".launcher-popup").length ===
-                            1
-                    );
-                    await popups.locator(".launcher-popup-title", {
-                        hasText: "更多应用",
-                    }).waitFor();
-                    await page.waitForFunction(() =>
-                        document.activeElement?.getAttribute("aria-label") ===
-                            "打开文件夹 尾部文件夹，2 个应用"
-                    );
-
-                    await page.keyboard.press("Escape");
-                    await page.waitForFunction(() =>
-                        document.querySelectorAll(".launcher-popup").length ===
-                            0
-                    );
+                    }).click();
+                    await view.getByText("尾部文件夹", { exact: true })
+                        .waitFor();
+                    await view.getByRole("button", {
+                        name: "返回应用列表",
+                        exact: true,
+                    }).click();
+                    await view.getByText("全部应用", { exact: true })
+                        .waitFor();
+                    await closeLibrary(page);
                     await page.waitForFunction(() =>
                         document.activeElement?.getAttribute("aria-label") ===
                             "更多（13）"
@@ -717,8 +710,8 @@ Deno.test("home app library (#244)", async (t) => {
                     );
                     assert(items.includes("移至回收站"), items.join("|"));
                     assert(
-                        items.every((item) => !item.includes("固定")),
-                        "no pin items: " + items.join("|"),
+                        items.includes("取消固定"),
+                        "pinned root app offers unpin: " + items.join("|"),
                     );
                     await page.keyboard.press("Escape");
                     await menu.waitFor({ state: "detached" });

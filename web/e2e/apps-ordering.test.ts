@@ -30,6 +30,7 @@ Deno.test("apps concurrent optimistic sorting converges to confirmed server orde
                         name: `Order ${index}`,
                         url: `https://order${index}.example/`,
                         sortOrder: index,
+                        isHomeFixed: true,
                     },
                 },
             );

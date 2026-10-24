@@ -37,6 +37,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                         name: index === 0 ? longName : "App " + index,
                         url: "https://home-app-" + index + ".example/",
                         sortOrder: index,
+                        isHomeFixed: true,
                     }),
                 });
                 if (!response.ok) {
@@ -632,9 +633,11 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             new URL(response.url()).pathname === "/api/webapps/reorder" &&
             response.request().method() === "PUT"
         );
+        // Drop just above the target: dropping onto an app's centre now folds
+        // the two apps into a folder (#285 Y8), while the row gap reorders.
         const dropPoint = {
             x: destination.x + destination.width / 2,
-            y: destination.y + destination.height / 2,
+            y: destination.y - 2,
             id: 1,
         };
         await cdp.send("Input.dispatchTouchEvent", {

@@ -21,6 +21,8 @@ export interface AppSessionOptions {
     sessionKey: string;
     editingApp: ExtendedWebApp | null;
     defaultGroupId: string;
+    /** Create from home pins by default; the library starts unpinned. */
+    defaultHomeFixed: boolean;
     groups: WebAppGroup[];
     appearance: Appearance;
     existingApps: ExtendedWebApp[];
@@ -91,6 +93,7 @@ export function useAppSession(options: AppSessionOptions) {
     const [appUrl, setAppUrl] = useState("");
     const [appName, setAppName] = useState("");
     const [appGroupId, setAppGroupId] = useState("");
+    const [appHomeFixed, setAppHomeFixed] = useState(false);
     const [appOpenMode, setAppOpenMode] = useState<
         "global" | "current" | "new_tab"
     >("global");
@@ -228,6 +231,7 @@ export function useAppSession(options: AppSessionOptions) {
             setAppUrl(editingApp.url);
             setAppName(editingApp.name);
             setAppGroupId(editingApp.groupId || "");
+            setAppHomeFixed(Boolean(editingApp.isHomeFixed));
             setAppOpenMode(editingApp.openMode ?? "global");
             setAppIconAssetId(editingApp.iconAssetId || null);
             setAppIconSource(editingApp.iconSource || "website");
@@ -254,6 +258,7 @@ export function useAppSession(options: AppSessionOptions) {
             setAppUrl("");
             setAppName("");
             setAppGroupId(defaultGroupId);
+            setAppHomeFixed(options.defaultHomeFixed);
             setAppOpenMode("global");
             setAppIconAssetId(null);
             setAppIconSource("website");
@@ -288,6 +293,7 @@ export function useAppSession(options: AppSessionOptions) {
             Boolean(appUrl.trim()) ||
             Boolean(appName.trim()) ||
             appGroupId !== defaultGroupId ||
+            appHomeFixed !== options.defaultHomeFixed ||
             appOpenMode !== "global" ||
             appIconAssetId !== null ||
             Boolean(iconImageUrl)
@@ -302,6 +308,8 @@ export function useAppSession(options: AppSessionOptions) {
         appIconSource,
         iconImageUrl,
         defaultGroupId,
+        appHomeFixed,
+        options.defaultHomeFixed,
     ]);
 
     // Perform URL detection
@@ -579,6 +587,7 @@ export function useAppSession(options: AppSessionOptions) {
                     iconAssetId: nextIconAssetId,
                     iconSource: nextIconSource,
                     openMode: appOpenMode,
+                    isHomeFixed: appHomeFixed,
                     sortOrder: nextAppSortOrder(
                         existingApps,
                         groups,
@@ -777,6 +786,7 @@ export function useAppSession(options: AppSessionOptions) {
         appUrl,
         appName,
         appGroupId,
+        appHomeFixed,
         appOpenMode,
         iconTab,
         appIconSource,
@@ -812,6 +822,7 @@ export function useAppSession(options: AppSessionOptions) {
         setIconExpanded,
         setAppName,
         setAppGroupId,
+        setAppHomeFixed,
         setAppOpenMode,
         setIconTab,
         setAppIconAssetId,

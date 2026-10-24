@@ -5,6 +5,7 @@ export interface LauncherGroup {
     name: string;
     sortOrder?: number;
     folderSize?: "small" | "large";
+    isHomeFixed?: boolean;
 }
 
 export interface LauncherApp extends WebAppItem {
@@ -95,6 +96,18 @@ export function launcherTiles(
     });
 
     return candidates.map((c) => c.tile);
+}
+
+/**
+ * Root tiles pinned to the home grid. Folder members follow their folder, so
+ * only root tiles are considered; unpinned tiles stay in the library.
+ */
+export function pinnedRootTiles(tiles: LauncherTile[]): LauncherTile[] {
+    return tiles.filter((tile) =>
+        tile.type === "app"
+            ? tile.app.isHomeFixed === true
+            : tile.group.isHomeFixed === true
+    );
 }
 
 /** Normalized reordering of root tiles */

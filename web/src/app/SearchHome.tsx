@@ -338,8 +338,8 @@ export function SearchHome() {
     function closeLibrary() {
         requestLibrary({ type: "leave" });
     }
-    function openCreateApp(groupId?: string) {
-        setAppForm({ mode: "create", groupId });
+    function openCreateApp(groupId?: string, isHomeFixed = true) {
+        setAppForm({ mode: "create", groupId, isHomeFixed });
     }
     function openEditApp(app: ExtendedWebApp, expandIcon?: boolean) {
         setAppForm({ mode: "edit", id: app.id, expandIcon });
@@ -616,6 +616,9 @@ export function SearchHome() {
             ? currentApps.find((app) => app.id === appForm.id) ?? null
             : null,
         defaultGroupId: appForm?.mode === "create" ? appForm.groupId ?? "" : "",
+        defaultHomeFixed: appForm?.mode === "create"
+            ? appForm.isHomeFixed ?? false
+            : false,
         groups: currentGroups,
         appearance,
         existingApps: currentApps,
@@ -1540,7 +1543,10 @@ export function SearchHome() {
                             )
                             : libraryState.selection?.kind === "apps"
                             ? (
-                                <Button onClick={() => openCreateApp()}>
+                                <Button
+                                    onClick={() =>
+                                        openCreateApp(undefined, false)}
+                                >
                                     添加应用
                                 </Button>
                             )

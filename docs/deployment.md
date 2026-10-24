@@ -194,3 +194,11 @@ sqlite3 data/searcher.sqlite < drizzle/rollback/0027_messy_toro.sql
 ```bash
 sqlite3 data/searcher.sqlite < drizzle/rollback/0028_accent_follows_wallpaper.sql
 ```
+
+### 升级：应用固定到首页
+
+迁移 `0029_dear_the_call` 为 `webapps` 与 `webapp_groups` 各增加 `is_home_fixed`（默认关闭），并把升级时未删除的根级应用与全部文件夹设为固定，使升级前后首页外观一致；文件夹内应用与已删除应用保持关闭，不单独固定。迁移只新增列并更新这两列，在同步原生事务中执行，失败回滚；旧版本忽略新增列，回退只需部署旧前端（恢复读取全部根级图块），数据库列可保留。如需彻底移除列，先停止服务：
+
+```bash
+sqlite3 data/searcher.sqlite "ALTER TABLE webapps DROP COLUMN is_home_fixed; ALTER TABLE webapp_groups DROP COLUMN is_home_fixed;"
+```

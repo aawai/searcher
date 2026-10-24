@@ -36,6 +36,7 @@ import {
     type LauncherTile,
     launcherTiles,
     mergeVisibleOrder,
+    pinnedRootTiles,
 } from "../../components/searcher/launcherTiles.ts";
 import { FolderDeleteDialog, FolderNameDialog } from "./FolderNameDialog.tsx";
 import { useGridColumns, WebAppLauncher } from "./WebAppLauncher.tsx";
@@ -48,18 +49,13 @@ import type {
     AppsStatus,
 } from "./useAppLibraryActions.ts";
 
-type LayerKind =
-    | { type: "overflow" }
-    | { type: "all" }
-    | { type: "folder"; id: string };
+type LayerKind = { type: "folder"; id: string };
 
 type Layer = LayerKind & { origin: HTMLElement | null; top: number | null };
 
 export interface HomeAppLibraryHandle {
     /** Open a folder popup, e.g. from a search suggestion. */
     openFolder: (groupId: string) => void;
-    /** Open the all-apps popup (the `应用` entry while the home grid is off). */
-    openAll: () => void;
 }
 
 export interface HomeAppLibraryProps {
@@ -80,9 +76,9 @@ export interface HomeAppLibraryProps {
     onDeleteApp: (app: LauncherApp) => void;
     /** The measured grid; note placement expands it to the plate. */
     onGridElement: (element: HTMLElement | null) => void;
+    /** 更多（N） opens the library's app view; the popup branch is gone. */
+    onOpenLibraryApps: () => void;
 }
-
-const POPUP_ROWS = 1000;
 
 function isEditable(element: Element | null): boolean {
     return element instanceof HTMLInputElement ||
@@ -138,16 +134,15 @@ function focusReturn(layer: Layer) {
                 `[data-library-cell="more"]`,
             ),
         );
-    } else if (layer.type === "overflow") {
-        candidates.push(
-            document.querySelector<HTMLElement>(`[data-library-cell="more"]`),
-        );
     }
     candidates.push(document.getElementById("search-query"));
     candidates.find((element) => element?.isConnected)?.focus({
         preventScroll: true,
     });
 }
+
+/** Folder popups are unbounded; only the home grid has row capacity. */
+const FOLDER_POPUP_ROWS = 1000;
 
 export const HomeAppLibrary = forwardRef<
     HomeAppLibraryHandle,
@@ -168,10 +163,16 @@ export const HomeAppLibrary = forwardRef<
     onCreateApp,
     onDeleteApp,
     onGridElement,
+    onOpenLibraryApps,
 }, ref) {
     const { actions } = library;
     const tiles = useMemo(() => launcherTiles(apps, groups), [apps, groups]);
+    const homeTiles = useMemo(() => pinnedRootTiles(tiles), [tiles]);
     const rootIds = useMemo(() => tiles.map((tile) => tile.id), [tiles]);
+    const homeIds = useMemo(
+        () => homeTiles.map((tile) => tile.id),
+        [homeTiles],
+    );
     const byId = useMemo(
         () => new Map(tiles.map((tile) => [tile.id, tile])),
         [tiles],
@@ -231,8 +232,9 @@ export const HomeAppLibrary = forwardRef<
         })
         : HOME_MAX_ROWS;
     const plan = useMemo(
-        () => planHomeLibrary({ tiles, columns, rows, showAdd: true }),
-        [tiles, columns, rows],
+        () =>
+            planHomeLibrary({ tiles: homeTiles, columns, rows, showAdd: true }),
+        [homeTiles, columns, rows],
     );
 
     const [layers, setLayers] = useState<Layer[]>([]);
@@ -263,7 +265,6 @@ export const HomeAppLibrary = forwardRef<
     }, [layers]);
     useImperativeHandle(ref, () => ({
         openFolder: (id) => push({ type: "folder", id }),
-        openAll: () => push({ type: "all" }),
     }), [push]);
 
     // A deleted folder cannot stay open.
@@ -291,6 +292,11 @@ export const HomeAppLibrary = forwardRef<
         onMove: (app, groupId) => void actions.moveApp(app, groupId),
         onDelete: onDeleteApp,
         onToggleManaging: () => onManagingChange(!managing),
+        onSetHomeFixed: (app, isHomeFixed) =>
+            void actions.setAppHomeFixed(app, isHomeFixed),
+        onSetGroupHomeFixed: (group, isHomeFixed) =>
+            void actions.setGroupHomeFixed(group, isHomeFixed),
+        homeSurface: "home",
         showAppLabels,
         onOpenFolder: (group) => push({ type: "folder", id: group.id }),
         onRenameFolder: setRenaming,
@@ -334,11 +340,16 @@ export const HomeAppLibrary = forwardRef<
     }
 
     const homeHandlers = subsetHandlers(
-        rootIds,
+        homeIds,
         () => plan.visible.map((item) => item.tile.id),
     );
     const dropOnFolder = (app: LauncherApp, folderId: string) =>
         void actions.moveApp(app, folderId);
+    const dropOnApp = (app: LauncherApp, target: LauncherApp) =>
+        void actions.createGroup("新建文件夹", {
+            isHomeFixed: true,
+            memberIds: [target.id, app.id],
+        });
 
     function renderLayer(index: number): ReactNode {
         const layer = layers[index];
@@ -369,28 +380,7 @@ export const HomeAppLibrary = forwardRef<
                 </FolderLayer>
             );
         }
-        const subset = layer.type === "all" ? tiles : plan.overflow;
-        return (
-            <TilesLayer
-                key={layer.type}
-                layer={layer}
-                title={layer.type === "all" ? "应用" : "更多应用"}
-                tiles={subset}
-                canonicalIds={rootIds}
-                showAdd={layer.type === "all" || plan.addInOverflow}
-                groups={groups}
-                managing={managing}
-                actions={tileActions}
-                onClose={closeTop}
-                onAdd={() => onCreateApp()}
-                onCreateFolder={() => setCreatingFolder(true)}
-                onToggleManaging={() => onManagingChange(!managing)}
-                subsetHandlers={subsetHandlers}
-                onDropOnFolder={dropOnFolder}
-            >
-                {nested}
-            </TilesLayer>
-        );
+        return nested;
     }
 
     const statusLines = (
@@ -504,10 +494,10 @@ export const HomeAppLibrary = forwardRef<
                                     variant="home"
                                     label="应用库"
                                     gridRef={setGrid}
-                                    onOpenMore={() =>
-                                        push({ type: "overflow" })}
+                                    onOpenMore={onOpenLibraryApps}
                                     onAdd={() => onCreateApp()}
                                     onDropOnFolder={dropOnFolder}
+                                    onDropOnApp={dropOnApp}
                                     {...homeHandlers}
                                 />
                             </ContextMenuTrigger>
@@ -529,7 +519,8 @@ export const HomeAppLibrary = forwardRef<
                 open={creatingFolder}
                 onOpenChange={setCreatingFolder}
                 mode="create"
-                onSubmit={actions.createGroup}
+                onSubmit={(name) =>
+                    actions.createGroup(name, { isHomeFixed: true })}
             />
             <FolderNameDialog
                 open={Boolean(renaming)}
@@ -571,102 +562,6 @@ function BlankMenu({ managing, onCreateFolder, onToggleManaging }: {
     );
 }
 
-/** Overflow and all-apps popups: root tiles in the same grid rules as home. */
-function TilesLayer({
-    layer,
-    title,
-    tiles,
-    canonicalIds,
-    showAdd,
-    groups,
-    managing,
-    actions,
-    onClose,
-    onAdd,
-    onCreateFolder,
-    onToggleManaging,
-    subsetHandlers,
-    onDropOnFolder,
-    children,
-}: {
-    layer: Layer;
-    title: string;
-    tiles: LauncherTile[];
-    canonicalIds: string[];
-    showAdd: boolean;
-    groups: LauncherGroup[];
-    managing: boolean;
-    actions: LibraryTileActions;
-    onClose: () => void;
-    onAdd: () => void;
-    onCreateFolder: () => void;
-    onToggleManaging: () => void;
-    subsetHandlers: (
-        subsetIds: string[],
-        visibleIds: () => string[],
-    ) => {
-        onReorder: (activeId: string, overId: string) => void;
-        onMoveByKey: (id: string, direction: -1 | 1) => void;
-    };
-    onDropOnFolder: (app: LauncherApp, folderId: string) => void;
-    children: ReactNode;
-}) {
-    const { gridRef, columns } = useGridColumns();
-    const plan = useMemo(
-        () =>
-            planHomeLibrary({
-                tiles,
-                columns,
-                rows: POPUP_ROWS,
-                showAdd,
-            }),
-        [tiles, columns, showAdd],
-    );
-    const subsetIds = canonicalIds.filter((id) =>
-        tiles.some((tile) => tile.id === id)
-    );
-    const handlers = subsetHandlers(
-        subsetIds,
-        () => plan.visible.map((item) => item.tile.id),
-    );
-    return (
-        <LibraryPopup
-            open
-            onClose={onClose}
-            title={title}
-            top={layer.top}
-        >
-            <ContextMenu>
-                <ContextMenuTrigger
-                    className="launcher-surface-wrap"
-                    role="group"
-                    tabIndex={0}
-                    aria-label={`${title}空白区域`}
-                >
-                    <WebAppLauncher
-                        plan={plan}
-                        groups={groups}
-                        managing={managing}
-                        actions={actions}
-                        variant="popup"
-                        label={title}
-                        gridRef={gridRef}
-                        onAdd={onAdd}
-                        onDropOnFolder={onDropOnFolder}
-                        {...handlers}
-                    />
-                </ContextMenuTrigger>
-                <BlankMenu
-                    managing={managing}
-                    onCreateFolder={onCreateFolder}
-                    onToggleManaging={onToggleManaging}
-                />
-            </ContextMenu>
-            {children}
-        </LibraryPopup>
-    );
-}
-
 function FolderLayer({
     layer,
     group,
@@ -699,7 +594,7 @@ function FolderLayer({
             planHomeLibrary({
                 tiles,
                 columns,
-                rows: POPUP_ROWS,
+                rows: FOLDER_POPUP_ROWS,
                 showAdd: false,
             }),
         [tiles, columns],

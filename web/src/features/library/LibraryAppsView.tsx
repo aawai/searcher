@@ -155,6 +155,11 @@ export function LibraryAppsView({
         onEdit: onEditApp,
         onDelete: onDeleteApp,
         onMove: (app, groupId) => void library.actions.moveApp(app, groupId),
+        onSetHomeFixed: (app, isHomeFixed) =>
+            void library.actions.setAppHomeFixed(app, isHomeFixed),
+        onSetGroupHomeFixed: (group, isHomeFixed) =>
+            void library.actions.setGroupHomeFixed(group, isHomeFixed),
+        homeSurface: "library",
         onOpenFolder: openFolder,
         onRenameFolder: setRenaming,
         onDeleteFolder: setDeleting,

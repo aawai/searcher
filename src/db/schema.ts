@@ -148,6 +148,8 @@ export const webappGroups = sqliteTable("webapp_groups", {
     }),
     name: text("name").notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
+    isHomeFixed: integer("is_home_fixed", { mode: "boolean" }).notNull()
+        .default(false),
     folderSize: text("folder_size", {
         enum: ["small", "large"],
     }).notNull().default("small"),
@@ -176,6 +178,8 @@ export const webapps = sqliteTable("webapps", {
         enum: ["website", "upload", "url", "ai", "default"],
     }).notNull().default("website"),
     sortOrder: integer("sort_order").notNull().default(0),
+    isHomeFixed: integer("is_home_fixed", { mode: "boolean" }).notNull()
+        .default(false),
     openMode: text("open_mode", {
         enum: ["global", "current", "new_tab"],
     }).notNull().default("global"),

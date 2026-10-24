@@ -77,16 +77,27 @@ export function registerBookmarksRoutes(
             name: json(TitleSchema),
             sortOrder: json(v.optional(IntegerSchema, 0)),
             folderSize: json(v.optional(FolderSizeSchema, "small")),
+            isHomeFixed: json(v.optional(v.boolean(), false)),
+            appIds: json(v.optional(v.array(IdParamSchema), [])),
         }),
         async (c, data) => {
             const user = c.get("user");
-            const group = await service.createGroup(
-                user.id,
-                data.name,
-                data.sortOrder,
-                data.folderSize,
-            );
-            return c.success(group);
+            try {
+                const group = await service.createGroup(
+                    user.id,
+                    data.name,
+                    data.sortOrder,
+                    data.folderSize,
+                    data.isHomeFixed,
+                    data.appIds,
+                );
+                return c.success(group);
+            } catch (error) {
+                if (error instanceof WebAppNotFoundError) {
+                    return c.fail(STATUS_CODE.NotFound, error.message);
+                }
+                throw error;
+            }
         },
     );
 
@@ -98,6 +109,7 @@ export function registerBookmarksRoutes(
             name: json(v.optional(TitleSchema)),
             sortOrder: json(v.optional(IntegerSchema)),
             folderSize: json(v.optional(FolderSizeSchema)),
+            isHomeFixed: json(v.optional(v.boolean())),
         }),
         async (c, data) => {
             const user = c.get("user");
@@ -108,6 +120,7 @@ export function registerBookmarksRoutes(
                     data.name,
                     data.sortOrder,
                     data.folderSize,
+                    data.isHomeFixed,
                 );
                 return c.success(group);
             } catch (error) {
@@ -180,6 +193,7 @@ export function registerBookmarksRoutes(
             iconAssetId: json(v.optional(v.nullable(v.string()))),
             iconSource: json(v.optional(IconSourceSchema, "website")),
             sortOrder: json(v.optional(IntegerSchema, 0)),
+            isHomeFixed: json(v.optional(v.boolean(), false)),
             openMode: json(v.optional(OpenModeSchema, "global")),
         }),
         async (c, data) => {
@@ -191,6 +205,7 @@ export function registerBookmarksRoutes(
                 iconAssetId: data.iconAssetId,
                 iconSource: data.iconSource,
                 sortOrder: data.sortOrder,
+                isHomeFixed: data.isHomeFixed,
                 openMode: data.openMode,
             });
             return c.success(app);
@@ -307,6 +322,7 @@ export function registerBookmarksRoutes(
             iconAssetId: json(v.optional(v.nullable(v.string()))),
             iconSource: json(v.optional(IconSourceSchema)),
             sortOrder: json(v.optional(IntegerSchema)),
+            isHomeFixed: json(v.optional(v.boolean())),
             openMode: json(v.optional(OpenModeSchema)),
         }),
         async (c, data) => {
@@ -319,6 +335,7 @@ export function registerBookmarksRoutes(
                     iconAssetId: data.iconAssetId,
                     iconSource: data.iconSource,
                     sortOrder: data.sortOrder,
+                    isHomeFixed: data.isHomeFixed,
                     openMode: data.openMode,
                 });
                 return c.success(app);

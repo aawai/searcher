@@ -27,8 +27,18 @@ export interface LibraryActionDeps {
  * optimistic. Folder CRUD rolls back on failure; layout writes go through
  * `persist`, whose owner replaces local state with the confirmed snapshot.
  */
+export interface CreateGroupOptions {
+    /** Home creates pinned; the library creates unpinned. */
+    isHomeFixed?: boolean;
+    /** Apps dropped onto another app join the new folder in this order. */
+    memberIds?: string[];
+}
+
 export interface LibraryActions {
-    createGroup: (name: string) => Promise<void>;
+    createGroup: (
+        name: string,
+        options?: CreateGroupOptions,
+    ) => Promise<void>;
     renameGroup: (group: LauncherGroup, name: string) => Promise<void>;
     changeGroupSize: (
         group: LauncherGroup,
@@ -36,6 +46,14 @@ export interface LibraryActions {
     ) => Promise<void>;
     deleteGroup: (group: LauncherGroup) => Promise<void>;
     moveApp: (app: LauncherApp, groupId: string | null) => Promise<void>;
+    setAppHomeFixed: (
+        app: LauncherApp,
+        isHomeFixed: boolean,
+    ) => Promise<void>;
+    setGroupHomeFixed: (
+        group: LauncherGroup,
+        isHomeFixed: boolean,
+    ) => Promise<void>;
     reorderRoot: (tiles: LauncherTile[]) => Promise<void>;
     reorderFolder: (appIds: string[]) => Promise<void>;
 }
@@ -43,8 +61,12 @@ export interface LibraryActions {
 export function createLibraryActions(deps: LibraryActionDeps): LibraryActions {
     const { setApps, setGroups, persist, request } = deps;
 
-    async function createGroup(name: string): Promise<void> {
+    async function createGroup(
+        name: string,
+        options: CreateGroupOptions = {},
+    ): Promise<void> {
         deps.clearError();
+        const memberIds = options.memberIds ?? [];
         try {
             const group = await request<WebAppGroup>(
                 "/api/webapp-groups",
@@ -54,9 +76,27 @@ export function createLibraryActions(deps: LibraryActionDeps): LibraryActions {
                         deps.getApps(),
                         deps.getGroups(),
                     ),
+                    isHomeFixed: options.isHomeFixed ?? false,
+                    appIds: memberIds,
                 }),
             );
             setGroups((prev) => [...prev, group]);
+            if (memberIds.length) {
+                const orders = new Map(
+                    memberIds.map((id, index) => [id, index]),
+                );
+                setApps((prev) =>
+                    prev.map((app) =>
+                        orders.has(app.id)
+                            ? {
+                                ...app,
+                                groupId: group.id,
+                                sortOrder: orders.get(app.id),
+                            }
+                            : app
+                    )
+                );
+            }
         } catch (cause) {
             deps.reportError(cause);
         }
@@ -175,6 +215,49 @@ export function createLibraryActions(deps: LibraryActionDeps): LibraryActions {
         );
     }
 
+    /** Home pin state of a root app; folder members inherit their folder. */
+    async function setAppHomeFixed(
+        app: LauncherApp,
+        isHomeFixed: boolean,
+    ): Promise<void> {
+        deps.clearError();
+        setApps((prev) =>
+            prev.map((item) =>
+                item.id === app.id ? { ...item, isHomeFixed } : item
+            )
+        );
+        await persist(
+            `/api/webapps/${app.id}`,
+            json("PATCH", { isHomeFixed }),
+        );
+    }
+
+    /** Home pin state of a folder. */
+    async function setGroupHomeFixed(
+        group: LauncherGroup,
+        isHomeFixed: boolean,
+    ): Promise<void> {
+        deps.clearError();
+        const previous = deps.getGroups();
+        setGroups((prev) =>
+            prev.map((item) =>
+                item.id === group.id ? { ...item, isHomeFixed } : item
+            )
+        );
+        try {
+            const updated = await request<WebAppGroup>(
+                `/api/webapp-groups/${group.id}`,
+                json("PATCH", { isHomeFixed }),
+            );
+            setGroups((prev) =>
+                prev.map((item) => item.id === group.id ? updated : item)
+            );
+        } catch (cause) {
+            setGroups(previous);
+            deps.reportError(cause);
+        }
+    }
+
     /** Mixed root reorder: apps and folders share one sequential order. */
     async function reorderRoot(tiles: LauncherTile[]): Promise<void> {
         deps.clearError();
@@ -231,6 +314,8 @@ export function createLibraryActions(deps: LibraryActionDeps): LibraryActions {
         changeGroupSize,
         deleteGroup,
         moveApp,
+        setAppHomeFixed,
+        setGroupHomeFixed,
         reorderRoot,
         reorderFolder,
     };

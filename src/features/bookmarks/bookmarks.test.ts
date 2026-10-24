@@ -708,3 +708,193 @@ Deno.test("WebApps mixed root reorder is atomic and owner isolated", async () =>
         await store.close();
     }
 });
+
+Deno.test("webapps contract: home pin defaults follow the entry surface and PATCH validates isHomeFixed", async () => {
+    const { store, app } = await setupTestApp();
+    try {
+        const token = await registerUser(app, "home_pin_defaults");
+        const headers = {
+            origin: ORIGIN,
+            "content-type": "application/json",
+            cookie: `${SESSION_COOKIE_NAME}=${token}`,
+        };
+        const post = async <T>(path: string, body: object): Promise<T> => {
+            const response = await app.request(path, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(body),
+            });
+            assertEquals(response.status, STATUS_CODE.OK);
+            return (await response.json() as Envelope<T>).data!;
+        };
+        const patch = async <T>(path: string, body: object): Promise<T> => {
+            const response = await app.request(path, {
+                method: "PATCH",
+                headers,
+                body: JSON.stringify(body),
+            });
+            assertEquals(response.status, STATUS_CODE.OK);
+            return (await response.json() as Envelope<T>).data!;
+        };
+
+        const unpinned = await post<WebAppDto>("/api/webapps", {
+            name: "Library entry",
+            url: "https://library.example",
+        });
+        assertEquals(unpinned.isHomeFixed, false);
+        assertEquals(
+            (await patch<WebAppDto>(`/api/webapps/${unpinned.id}`, {
+                isHomeFixed: true,
+            })).isHomeFixed,
+            true,
+        );
+        assertEquals(
+            (await post<WebAppDto>("/api/webapps", {
+                name: "Home entry",
+                url: "https://home.example",
+                isHomeFixed: true,
+            })).isHomeFixed,
+            true,
+        );
+
+        const libraryFolder = await post<WebAppGroupDto>(
+            "/api/webapp-groups",
+            { name: "Library folder", sortOrder: 0 },
+        );
+        assertEquals(libraryFolder.isHomeFixed, false);
+        const homeFolder = await post<WebAppGroupDto>("/api/webapp-groups", {
+            name: "Home folder",
+            sortOrder: 1,
+            isHomeFixed: true,
+        });
+        assertEquals(homeFolder.isHomeFixed, true);
+        assertEquals(
+            (await patch<WebAppGroupDto>(
+                `/api/webapp-groups/${homeFolder.id}`,
+                { isHomeFixed: false },
+            )).isHomeFixed,
+            false,
+        );
+
+        const invalid = await app.request("/api/webapps", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+                name: "Bad pin",
+                url: "https://bad.example",
+                isHomeFixed: "yes",
+            }),
+        });
+        assertEquals(invalid.status, STATUS_CODE.BadRequest);
+        const invalidGroup = await app.request("/api/webapp-groups", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ name: "Bad folder", isHomeFixed: "yes" }),
+        });
+        assertEquals(invalidGroup.status, STATUS_CODE.BadRequest);
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("webapps contract: an app released from a folder inherits the folder's home pin", async () => {
+    const { store, app } = await setupTestApp();
+    try {
+        const token = await registerUser(app, "home_pin_release");
+        const headers = {
+            origin: ORIGIN,
+            "content-type": "application/json",
+            cookie: `${SESSION_COOKIE_NAME}=${token}`,
+        };
+        const post = async <T>(path: string, body: object): Promise<T> => {
+            const response = await app.request(path, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(body),
+            });
+            assertEquals(response.status, STATUS_CODE.OK);
+            return (await response.json() as Envelope<T>).data!;
+        };
+        const patch = async <T>(path: string, body: object): Promise<T> => {
+            const response = await app.request(path, {
+                method: "PATCH",
+                headers,
+                body: JSON.stringify(body),
+            });
+            assertEquals(response.status, STATUS_CODE.OK);
+            return (await response.json() as Envelope<T>).data!;
+        };
+        const del = async (path: string): Promise<void> => {
+            const response = await app.request(path, {
+                method: "DELETE",
+                headers,
+            });
+            assertEquals(response.status, STATUS_CODE.OK);
+        };
+
+        const pinnedFolder = await post<WebAppGroupDto>("/api/webapp-groups", {
+            name: "Pinned folder",
+            sortOrder: 0,
+            isHomeFixed: true,
+        });
+        const unpinnedFolder = await post<WebAppGroupDto>(
+            "/api/webapp-groups",
+            { name: "Unpinned folder", sortOrder: 1 },
+        );
+        const member = await post<WebAppDto>("/api/webapps", {
+            name: "Member",
+            url: "https://member-a.example",
+            groupId: pinnedFolder.id,
+        });
+        const other = await post<WebAppDto>("/api/webapps", {
+            name: "Other member",
+            url: "https://member-b.example",
+            groupId: unpinnedFolder.id,
+            isHomeFixed: true,
+        });
+
+        assertEquals(
+            (await patch<WebAppDto>(`/api/webapps/${member.id}`, {
+                groupId: null,
+            })).isHomeFixed,
+            true,
+        );
+        assertEquals(
+            (await patch<WebAppDto>(`/api/webapps/${other.id}`, {
+                groupId: null,
+            })).isHomeFixed,
+            false,
+        );
+
+        const pinnedMember = await post<WebAppDto>("/api/webapps", {
+            name: "Pinned member",
+            url: "https://member-c.example",
+            groupId: pinnedFolder.id,
+            isHomeFixed: false,
+        });
+        const unpinnedMember = await post<WebAppDto>("/api/webapps", {
+            name: "Unpinned member",
+            url: "https://member-d.example",
+            groupId: unpinnedFolder.id,
+            isHomeFixed: true,
+        });
+        await del(`/api/webapp-groups/${pinnedFolder.id}`);
+        await del(`/api/webapp-groups/${unpinnedFolder.id}`);
+
+        const listed = await app.request("/api/webapps", {
+            method: "GET",
+            headers,
+        });
+        const apps = (await listed.json() as Envelope<WebAppDto[]>).data!;
+        assertEquals(
+            apps.find((item) => item.id === pinnedMember.id)?.isHomeFixed,
+            true,
+        );
+        assertEquals(
+            apps.find((item) => item.id === unpinnedMember.id)?.isHomeFixed,
+            false,
+        );
+    } finally {
+        await store.close();
+    }
+});

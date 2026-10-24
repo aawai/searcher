@@ -26,6 +26,7 @@ function createInMemoryStore(): DatabaseStore {
             group_id TEXT, name TEXT NOT NULL, url TEXT NOT NULL, icon_asset_id TEXT,
             icon_source TEXT DEFAULT 'manifest',
             sort_order INTEGER NOT NULL DEFAULT 0,
+            is_home_fixed INTEGER NOT NULL DEFAULT 0,
             open_mode TEXT NOT NULL DEFAULT 'same_tab', deleted_at INTEGER,
             created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
         );`,
