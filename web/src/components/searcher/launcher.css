@@ -663,7 +663,6 @@
     }
 }
 
-
 /* Library management uses the same cells and folder geometry as home. */
 .launcher-grid--library {
     grid-template-columns: repeat(auto-fill, var(--launcher-col-w));
