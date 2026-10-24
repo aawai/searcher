@@ -9,6 +9,7 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import { openNotesByKeyboard } from "./helpers/desk.ts";
+import { visitAsk } from "./helpers/ask.ts";
 
 async function pressRepeatedly(page: Page, key: string, times: number) {
     for (let i = 0; i < times; i++) await page.keyboard.press(key);
@@ -264,9 +265,7 @@ Deno.test("production shortcuts for Documents and Ask (#103)", async (t) => {
             );
 
             // Navigate to Ask page
-            await page.goto(origin + "/ask");
-            await page.locator(".ask-workspace-layout")
-                .waitFor({ state: "visible" });
+            await visitAsk(page, origin);
 
             const composer = page.locator(".ask-composer__textarea");
             await composer.waitFor({ state: "visible" });

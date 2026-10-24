@@ -9,6 +9,7 @@ import {
 } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
+import { openMoreApps } from "./helpers/app-library.ts";
 
 // Issue #244: the home page is the application library. These regressions pin
 // the density contract of its grid (docs/apps.md 首页应用库): fixed glyphs,
@@ -763,9 +764,7 @@ async function runTouchInteractions(
     const moreCount = Number(
         /（(\d+)）/.exec((await more.getAttribute("aria-label"))!)![1],
     );
-    await more.click();
-    const morePopup = page.locator(".launcher-popup");
-    await morePopup.waitFor({ state: "visible" });
+    const morePopup = await openMoreApps(page, more);
     await settlePresentation(page);
     assertEquals(
         await morePopup.locator(

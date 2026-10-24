@@ -2,6 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import { type Browser, type BrowserContext, type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
+import { openMoreApps } from "./helpers/app-library.ts";
 
 // Issue #244 acceptance on the real page: the home page is the app library.
 // Capacity / 更多, folder previews, layered Escape, soft-keyboard guard, the
@@ -463,11 +464,7 @@ Deno.test("home app library (#244)", async (t) => {
                     const more = page.getByRole("button", {
                         name: "更多（13）",
                     });
-                    await more.click();
-                    const popups = page.locator(".launcher-popup");
-                    await popups.locator(".launcher-popup-title", {
-                        hasText: "更多应用",
-                    }).waitFor();
+                    const popups = await openMoreApps(page, more);
                     // 更多 holds the add cell once the grid is over capacity.
                     assertEquals(
                         await popups.getByRole("button", { name: "添加应用" })

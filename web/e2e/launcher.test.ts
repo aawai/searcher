@@ -8,6 +8,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
+import { openMoreApps } from "./helpers/app-library.ts";
 
 interface ServerApp {
     id: string;
@@ -860,8 +861,7 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
                 await homeGrid.locator('[data-library-cell="add"]').count(),
                 0,
             );
-            await more.click();
-            await popup.waitFor();
+            await openMoreApps(page, more);
             assertEquals(
                 await popup.locator(".launcher-popup-title").textContent(),
                 "更多应用",
