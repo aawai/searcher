@@ -52,6 +52,47 @@ memory/disk cache 或等效缓存，HTML/API
 使用反向代理/CDN 时，比对容器直连与正式域名的
 `Cache-Control`，确认代理未覆盖源站策略。
 
+## Service worker 与离线外壳
+
+生产构建由 `web/vite-service-worker.ts` 产出 `/sw.js`（源码
+`web/src/pwa/sw.ts`），页面仅在生产构建中注册它。
+
+- **前提**：service worker 只在 HTTPS 或回环地址可用。非回环 `APP_ORIGIN`
+  本就必须是 HTTPS；经 HTTP 访问时应用照常工作，只是没有离线外壳与安装能力。
+- **缓存范围**：安装时预缓存 SPA HTML（`/`）及其引用的带指纹 JS/CSS；之后加载的
+  `/assets/*` 按需缓存（cache first）。`/api/*`、非 GET、跨域请求与安装文件一律
+  直连网络、不缓存。页面导航 network first，仅在网络失败时返回缓存外壳，因此在线时
+  每次加载都取得当前部署的 HTML；离线打开显示外壳与“当前离线”。
+- **版本更新**：每次构建的 `sw.js` 带新版本号与外壳清单；安装时校验服务器返回的
+  HTML 属于同一构建，不一致则放弃安装、下次再试。新 worker 安装后等待：若页面本身
+  已是该构建（在线加载即是）则静默接管；部署前就已打开的页面显示“新版本已就绪 ·
+  刷新”，刷新后才由新 worker 接管，旧缓存在接管时删除。页面回到前台时检查更新。
+- **缓存头**：`sw.js`、manifest 与 HTML 必须保持 `no-cache`。反向代理/CDN
+  不得长期缓存它们，否则客户端会滞留在旧版本。
+
+### 回滚：自注销 service worker
+
+回滚到不含 service worker 的版本，或需要停用离线外壳时，让 `/sw.js`
+返回以下脚本（`Content-Type: text/javascript`、`Cache-Control: no-cache`）：
+
+```js
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => {
+    event.waitUntil((async () => {
+        for (const name of await caches.keys()) {
+            if (name.startsWith("searcher-shell-")) await caches.delete(name);
+        }
+        await self.registration.unregister();
+    })());
+});
+```
+
+浏览器下次检查更新（打开页面、回到前台）时安装它：删除外壳缓存并注销，之后的页面
+加载不再受 service worker 控制。不含 service worker 的旧版本对 `/sw.js` 返回 HTML
+shell，浏览器不会据此注销，须在反向代理为该路径返回上述脚本，保持至所有客户端都已
+访问过；当前版本也可直接替换 `web/dist/sw.js`。脚本不刷新已打开的页面，页面均为
+network first，不会因此读到旧缓存。
+
 ## Docker 镜像
 
 基于 Deno 2.9.7 的多阶段构建：前端 build stage 使用标准 Deno

@@ -84,7 +84,9 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
     async function createIsolatedPage(): Promise<
         { page: Page; close: () => Promise<void> }
     > {
-        const context = await browser.newContext();
+        // Chunk loading is observed uncached: no HTTP cache, no service worker
+        // (whose fetches page.route could not intercept either).
+        const context = await browser.newContext({ serviceWorkers: "block" });
         const page = await context.newPage();
         const client = await context.newCDPSession(page);
         await client.send("Network.setCacheDisabled", { cacheDisabled: true });
