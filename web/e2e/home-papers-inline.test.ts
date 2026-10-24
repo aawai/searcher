@@ -368,7 +368,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         Math.abs(titleSpacing.gap - titleSpacing.expectedGap) <= 1,
         "Title and body share the inline content gap, not a section-sized void",
     );
-    await inlineRegion.locator(".zen-inline-note").focus();
+    await inlineRegion.locator(".zen-inline-note-open").focus();
     await page.keyboard.press("ArrowLeft");
     await page.keyboard.press("ArrowRight");
     await dispatchTouchGesture(-100, 0);
@@ -424,7 +424,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         "首页固定便签",
     );
     assertEquals(
-        await inlineRegion.locator(".zen-inline-note").getAttribute(
+        await inlineRegion.locator(".zen-inline-note-open").getAttribute(
             "aria-label",
         ),
         `打开便签：${expectedOrder[0].displayTitle}`,
@@ -492,7 +492,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     ).evaluateAll(
         (buttons) =>
             buttons.filter((button) => {
-                if (button.matches(".zen-inline-note")) return false;
+                if (button.matches(".zen-inline-note-open")) return false;
                 const style = getComputedStyle(button);
                 const box = button.getBoundingClientRect();
                 const hit = document.elementFromPoint(
@@ -586,7 +586,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     await next.evaluate((button) => (button as HTMLButtonElement).click());
     await waitForCurrent(expectedOrder[2].id);
     await assertBodyAlignment(expectedOrder[2].id);
-    await inlineRegion.locator(".zen-inline-note").focus();
+    await inlineRegion.locator(".zen-inline-note-open").focus();
     await page.keyboard.press("ArrowRight");
     assertEquals(
         await currentId(),
@@ -596,7 +596,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     await previous.evaluate((button) => (button as HTMLButtonElement).click());
     await waitForCurrent(expectedOrder[1].id);
     await assertBodyAlignment(expectedOrder[1].id);
-    await inlineRegion.locator(".zen-inline-note").focus();
+    await inlineRegion.locator(".zen-inline-note-open").focus();
     await page.keyboard.press("ArrowLeft");
     await waitForCurrent(expectedOrder[0].id);
     await page.keyboard.press("ArrowLeft");
@@ -679,7 +679,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     const interiorOrder = canonicalFixed(await listHomeDocuments());
     const interiorDoc = interiorOrder[1];
     const nextAfterRemoval = interiorOrder[2];
-    await inlineRegion.locator(".zen-inline-note").focus();
+    await inlineRegion.locator(".zen-inline-note-open").focus();
     await page.keyboard.press("ArrowLeft");
     await waitForCurrent(interiorDoc.id);
     const libraryPanel = await openNotes(page);
@@ -731,7 +731,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     await page.reload();
     await waitForHome();
     await waitForCurrent(interiorOrder[0].id);
-    await inlineRegion.locator(".zen-inline-note").focus();
+    await inlineRegion.locator(".zen-inline-note-open").focus();
     await page.keyboard.press("ArrowRight");
     await waitForCurrent(accountAExtra1.id);
     await page.keyboard.press("ArrowRight");
@@ -764,7 +764,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     await page.reload();
     await waitForHome();
     await waitForCurrent(docB1.id);
-    await inlineRegion.locator(".zen-inline-note").focus();
+    await inlineRegion.locator(".zen-inline-note-open").focus();
     await page.keyboard.press("ArrowRight");
     await waitForCurrent(docB2.id);
     await page.reload();
@@ -951,7 +951,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     await page.waitForFunction(() =>
         matchMedia("(prefers-reduced-motion: reduce)").matches
     );
-    await inlineRegion.locator(".zen-inline-note").focus();
+    await inlineRegion.locator(".zen-inline-note-open").focus();
     await page.keyboard.press("ArrowLeft");
     await settlePaint();
     await page.waitForFunction(
@@ -972,7 +972,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
     }));
     assertEquals(reducedMotionState.reduced, true);
     assertEquals(reducedMotionState.runningAnimations, 0);
-    await inlineRegion.locator(".zen-inline-note").focus();
+    await inlineRegion.locator(".zen-inline-note-open").focus();
     await page.keyboard.press("ArrowRight");
     await waitForCurrent(docB2.id);
     const originalFontSize = await page.locator(".zen-inline-note-body")

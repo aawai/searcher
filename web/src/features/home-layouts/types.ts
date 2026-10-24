@@ -59,6 +59,10 @@ export interface HomeLayoutProps {
         paper: PaperItem,
         layout: DocumentLayoutDto,
     ) => Promise<void>;
+    /** Toggles one task row in a note's body; optimistic, saved and coalesced. */
+    toggleTask: (paper: PaperItem, index: number, checked: boolean) => void;
+    /** The note open in the editor; its card task boxes are read-only meanwhile. */
+    editingPaperId: string | null;
     /** Enters 览, or 览 with the notes detail (quick entries). */
     openDesk: (request: DeskRequest) => void;
     /** Opens a note's detail on the desk by id (search results). */

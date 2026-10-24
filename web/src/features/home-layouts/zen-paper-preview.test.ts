@@ -4,7 +4,11 @@ import { analyzeZenPaperPreview } from "./zen-paper-preview.ts";
 Deno.test("plain paragraphs preserve line and paragraph breaks without structural formatting", () => {
     assertEquals(
         analyzeZenPaperPreview("先看一段\n第二行\n\n再看一段"),
-        { text: "先看一段\n第二行\n\n再看一段", structured: false },
+        {
+            text: "先看一段\n第二行\n\n再看一段",
+            structured: false,
+            hasTasks: false,
+        },
     );
     assertEquals(analyzeZenPaperPreview("").structured, false);
 });
@@ -50,5 +54,14 @@ Deno.test("nested ordered and task lists preserve order, indentation and checked
     assertEquals(
         preview.text,
         "3. 父项\n   • [ ] 待办\n   • [x] 已完成\n4. 下一项",
+    );
+});
+
+Deno.test("task rows are flagged so the card renders real checkboxes, not code-block lookalikes", () => {
+    assertEquals(analyzeZenPaperPreview("- [ ] 待办").hasTasks, true);
+    assertEquals(analyzeZenPaperPreview("- 普通项").hasTasks, false);
+    assertEquals(
+        analyzeZenPaperPreview("```\n- [ ] 代码\n```").hasTasks,
+        false,
     );
 });

@@ -21,6 +21,13 @@ function plainParagraph(node: MarkdownNode): boolean {
         );
 }
 
+function hasTaskItem(node: MarkdownNode): boolean {
+    if (node.type === "listItem" && typeof node.checked === "boolean") {
+        return true;
+    }
+    return (node.children ?? []).some(hasTaskItem);
+}
+
 function inlineText(node: MarkdownNode): string {
     switch (node.type) {
         case "html":
@@ -143,9 +150,15 @@ function boundedText(text: string): string {
 export function analyzeZenPaperPreview(body: string): {
     text: string;
     structured: boolean;
+    /** True when the note has task list rows (checked or unchecked). */
+    hasTasks: boolean;
 } {
     const tree: MarkdownNode = parseNoteMarkdown(body);
     const children = tree.children ?? [];
     const structured = children.some((child) => !plainParagraph(child));
-    return { text: boundedText(blockText(tree)), structured };
+    return {
+        text: boundedText(blockText(tree)),
+        structured,
+        hasTasks: hasTaskItem(tree),
+    };
 }

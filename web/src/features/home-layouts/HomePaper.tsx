@@ -6,7 +6,7 @@ import {
     MoreHorizontal,
     Trash2,
 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
 import type { DocumentColor } from "@shared/documents.ts";
 import { DocumentColorItems } from "../../components/searcher/DocumentColorMenu.tsx";
 import { NoteMarkdownView } from "../../components/searcher/NoteMarkdownLoader.tsx";
@@ -20,7 +20,6 @@ import {
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import type { PaperItem } from "./home-papers.ts";
-import { setTaskChecked } from "./paper-tasks.ts";
 
 export function isPaperCompact(
     mode?: "full" | "compact",
@@ -38,7 +37,8 @@ export function HomePaper(
         onToggleMode,
         onToggleHomeFixed,
         onChangeColor,
-        onChangeBody,
+        onToggleTask,
+        taskLockedTitle,
         onDelete,
         titleContent,
         summary,
@@ -51,8 +51,10 @@ export function HomePaper(
         onToggleMode?: () => void;
         onToggleHomeFixed?: () => void;
         onChangeColor?: (color: DocumentColor) => void;
-        /** Direct task toggling saves the whole body through the same version check as the editor. */
-        onChangeBody?: (body: string) => Promise<void> | void;
+        /** Flips one task row of the note body; the owner saves and coalesces it. */
+        onToggleTask?: (index: number, checked: boolean) => void;
+        /** Tooltip for the read-only checkboxes while the card cannot toggle tasks. */
+        taskLockedTitle?: string;
         onDelete?: () => void;
         titleContent?: ReactNode;
         summary?: ReactNode;
@@ -60,17 +62,6 @@ export function HomePaper(
     },
 ) {
     const isCompact = isPaperCompact(mode, paper.layout.expanded);
-    const [savingBody, setSavingBody] = useState(false);
-    const toggleTask = onChangeBody && !savingBody
-        ? (index: number, checked: boolean) => {
-            const next = setTaskChecked(paper.body, index, checked);
-            if (next === null) return;
-            setSavingBody(true);
-            void Promise.resolve(onChangeBody(next)).finally(() =>
-                setSavingBody(false)
-            );
-        }
-        : undefined;
     return (
         <article
             className={"note-card" +
@@ -218,7 +209,8 @@ export function HomePaper(
                 >
                     <NoteMarkdownView
                         body={paper.body}
-                        onToggleTask={toggleTask}
+                        onToggleTask={onToggleTask}
+                        taskLockedTitle={taskLockedTitle}
                     />
                 </div>
             )}

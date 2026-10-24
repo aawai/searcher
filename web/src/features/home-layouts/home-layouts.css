@@ -83,6 +83,16 @@
     box-sizing: border-box;
 }
 
+/* Tablet flow keeps papers at their 220px size: columns come from the width and the row is centred. */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .notes-flow-grid {
+        grid-template-columns: repeat(auto-fill, 220px);
+    }
+    .note-flow-item .note-card {
+        width: 220px;
+    }
+}
+
 /* Mobile fixed notes share the search/launcher axis: one material card, one note at a time. */
 .zen-inline-notes {
     width: calc(100% - 2 * var(--space-4));
@@ -91,9 +101,10 @@
     color: var(--foreground);
 }
 
-/* The extra ancestor class outranks .button.button--content, which loads later. */
-.zen-inline-notes [data-slot="button"].zen-inline-note {
+/* The card is a plain container; the open control is an overlay button, so task checkboxes can sit above it. */
+.zen-inline-notes .zen-inline-note {
     width: 100%;
+    position: relative;
     block-size: calc(
         2 * var(--space-4) +
         var(--zen-note-title-lines) * var(--font-title-line-height) +
@@ -111,12 +122,32 @@
     user-select: none;
 }
 
+/* The open control covers the card; it is transparent so the card reads as one surface. */
+.zen-inline-notes .zen-inline-note .zen-inline-note-open {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    box-shadow: none;
+}
+
 .zen-inline-note-content {
     display: flex;
     flex-direction: column;
     justify-content: center;
     block-size: 100%;
     gap: var(--space-inline-gap);
+    position: relative;
+    pointer-events: none;
+}
+
+/* Task checkboxes stay tappable above the overlay; other taps pass through to open the note. */
+.zen-inline-note-content li.task-list-item {
+    pointer-events: auto;
 }
 
 .zen-inline-note-title,
@@ -152,6 +183,24 @@
    markers and indents line up; the block itself stays centred on the shared axis.
    Short plain text stays centred line by line. */
 .zen-inline-note-body[data-structured] {
+    align-self: center;
+    max-inline-size: 100%;
+    text-align: start;
+}
+
+/* Task-bearing summaries render as Markdown, clamped to the same lines as the plain body. */
+.zen-inline-note-markdown {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--zen-note-preview-lines);
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    max-block-size: calc(
+        var(--zen-note-preview-lines) * var(--font-body-line-height)
+    );
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-body-weight);
     align-self: center;
     max-inline-size: 100%;
     text-align: start;

@@ -272,8 +272,9 @@
         min-height: var(--control-touch-target);
         height: var(--control-touch-target);
     }
-    .note-preview .task-list-item input[type="checkbox"]:enabled {
-        inline-size: var(--control-touch-target);
-        block-size: var(--control-touch-target);
+    /* Interactive task rows grow to the touch target; the drawn box keeps its size (markdown.css). */
+    .note-preview li.task-list-item:has(> input[type="checkbox"]:enabled) {
+        --task-box-hit: var(--control-touch-target);
+        --task-row-hit: var(--control-touch-target);
     }
 }

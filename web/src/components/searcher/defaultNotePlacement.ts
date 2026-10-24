@@ -53,9 +53,9 @@ function candidateCoordinates(
         candidates.add(start + obstacleSize + NOTE_GAP - offset);
         candidates.add(start - NOTE_GAP - size - offset);
     }
-    return [...candidates]
-        .filter((coordinate) => coordinate >= min && coordinate <= max)
-        .sort((a, b) => horizontal ? b - a : a - b);
+    return [...candidates].filter((coordinate) =>
+        coordinate >= min && coordinate <= max
+    );
 }
 
 function overlaps(
@@ -70,10 +70,71 @@ function overlaps(
     );
 }
 
+type Side = "left" | "right";
+
+interface RankedCandidate {
+    x: number;
+    y: number;
+    rect: PlacementRect;
+    tier: number;
+    tieBreak: number;
+}
+
+/**
+ * The side of the app band a note sits beside. Null when the note is not in the
+ * band's rows or is not cleanly left or right of it.
+ */
+function sideOfBand(rect: PlacementRect, band: PlacementRect): Side | null {
+    const inBandRows = rect.y < band.y + band.height &&
+        rect.y + rect.height > band.y;
+    if (!inBandRows) return null;
+    if (rect.x + rect.width + NOTE_GAP <= band.x) return "left";
+    if (rect.x >= band.x + band.width + NOTE_GAP) return "right";
+    return null;
+}
+
+/**
+ * Ranks one candidate. Tier 0 is the outermost column beside the app band:
+ * left and right alternate and fill top to bottom. Tier 1 is the space below
+ * the band. Tier 2 is everything else.
+ */
+function rankCandidate(
+    x: number,
+    y: number,
+    note: MeasuredDefaultNote,
+    bounds: PlacementRect,
+    band: PlacementRect,
+    preferred: Side,
+): RankedCandidate {
+    const rect = {
+        x: x + note.offsetX,
+        y: y + note.offsetY,
+        width: note.width,
+        height: note.height,
+    };
+    const side = sideOfBand(rect, band);
+    const outerColumn = (side === "left" && x === bounds.x - note.offsetX) ||
+        (side === "right" &&
+            x === bounds.x + bounds.width - note.width - note.offsetX);
+    if (outerColumn) {
+        return { x, y, rect, tier: 0, tieBreak: side === preferred ? 0 : 1 };
+    }
+    const below = rect.y >= band.y + band.height;
+    return {
+        x,
+        y,
+        rect,
+        tier: below ? 1 : 2,
+        tieBreak: preferred === "left" ? x : -x,
+    };
+}
+
 function findPosition(
     bounds: PlacementRect,
     note: MeasuredDefaultNote,
+    band: PlacementRect,
     obstacles: PlacementRect[],
+    preferred: Side,
 ): DefaultNotePosition | null {
     const minX = bounds.x - note.offsetX;
     const minY = bounds.y - note.offsetY;
@@ -97,24 +158,32 @@ function findPosition(
         obstacles,
         false,
     );
-
+    const candidates: RankedCandidate[] = [];
     for (const y of yCandidates) {
         for (const x of xCandidates) {
-            const rect = {
-                x: x + note.offsetX,
-                y: y + note.offsetY,
-                width: note.width,
-                height: note.height,
-            };
-            if (obstacles.every((obstacle) => !overlaps(rect, obstacle))) {
-                return { id: note.id, x, y };
-            }
+            candidates.push(
+                rankCandidate(x, y, note, bounds, band, preferred),
+            );
+        }
+    }
+    candidates.sort((a, b) =>
+        a.tier - b.tier || a.y - b.y || a.tieBreak - b.tieBreak
+    );
+    for (const candidate of candidates) {
+        if (
+            obstacles.every((obstacle) => !overlaps(candidate.rect, obstacle))
+        ) {
+            return { id: note.id, x: candidate.x, y: candidate.y };
         }
     }
     return null;
 }
 
-/** Places default notes using viewport-space measured bounds. */
+/**
+ * Places default notes in sort order: left and right alternate in the columns
+ * beside the app band, top first; then the space below the band; what does not
+ * fit overflows.
+ */
 export function placeDefaultNotes(
     availableRect: PlacementRect,
     exclusionRect: PlacementRect,
@@ -136,7 +205,14 @@ export function placeDefaultNotes(
             overflowIds.push(note.id);
             continue;
         }
-        const position = findPosition(availableRect, note, obstacles);
+        const preferred: Side = placed.length % 2 === 0 ? "left" : "right";
+        const position = findPosition(
+            availableRect,
+            note,
+            exclusionRect,
+            obstacles,
+            preferred,
+        );
         if (!position) {
             overflowIds.push(note.id);
             continue;

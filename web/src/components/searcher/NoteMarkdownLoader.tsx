@@ -16,7 +16,7 @@ export function preloadNoteMarkdown(): Promise<NoteMarkdownComponent> {
 }
 
 export function NoteMarkdownView(
-    { body, onToggleTask }: NoteMarkdownProps,
+    { body, onToggleTask, taskLockedTitle }: NoteMarkdownProps,
 ) {
     const [Comp, setComp] = useState<NoteMarkdownComponent | null>(
         () => cachedNoteMarkdown,
@@ -31,7 +31,13 @@ export function NoteMarkdownView(
     }, [Comp]);
 
     if (Comp) {
-        return <Comp body={body} onToggleTask={onToggleTask} />;
+        return (
+            <Comp
+                body={body}
+                onToggleTask={onToggleTask}
+                taskLockedTitle={taskLockedTitle}
+            />
+        );
     }
     return (
         <span className="note-preview-loading" aria-busy="true">

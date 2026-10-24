@@ -68,3 +68,69 @@ Deno.test("Home paper task checkboxes toggle directly and save through the docum
         2,
     );
 });
+
+Deno.test("Home paper task toggles coalesce into one PATCH, and Space toggles a focused task", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const credentials = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    await loginAndVisit(page, app.origin, "/", credentials);
+    const documentId = await page.evaluate(async () => {
+        const response = await fetch("/api/documents", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title: "连续勾选",
+                body: "- [ ] 甲\n- [ ] 乙",
+                isHomeFixed: true,
+            }),
+        });
+        return (await response.json()).data.id as string;
+    });
+    await page.reload();
+    const patchPath = `/api/documents/${documentId}`;
+    let patches = 0;
+    page.on("request", (request) => {
+        if (
+            request.method() === "PATCH" &&
+            new URL(request.url()).pathname === patchPath
+        ) {
+            patches += 1;
+        }
+    });
+    const paper = page.locator(".floating-notes .note-card").filter({
+        hasText: "甲",
+    });
+    const rowCheckbox = (text: string) =>
+        paper.locator("li.task-list-item", { hasText: text })
+            .getByRole("checkbox");
+
+    const saved = page.waitForResponse((response) =>
+        response.request().method() === "PATCH" &&
+        response.url().endsWith(patchPath) &&
+        response.ok()
+    );
+    await rowCheckbox("甲").click();
+    await rowCheckbox("乙").focus();
+    await page.keyboard.press("Space");
+    await saved;
+    await page.waitForTimeout(2000);
+    assertEquals(patches, 1, "Toggles inside one debounce window save once");
+
+    const body = await page.evaluate(
+        async (id) =>
+            (await (await fetch(`/api/documents/${id}`)).json()).data
+                .body as string,
+        documentId,
+    );
+    assertEquals(body, "- [x] 甲\n- [x] 乙");
+});

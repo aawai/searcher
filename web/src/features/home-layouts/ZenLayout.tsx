@@ -195,7 +195,8 @@ export function ZenLayout(
                     })}
                 onChangeColor={(paper, color) =>
                     void updatePaper(paper, { color })}
-                onChangeBody={(paper, body) => updatePaper(paper, { body })}
+                onToggleTask={props.toggleTask}
+                editingPaperId={props.editingPaperId}
                 onDelete={(paper) => void deletePaper(paper)}
             />
         </Suspense>
@@ -274,6 +275,8 @@ export function ZenLayout(
                     papers={papers}
                     mobile={mobile}
                     onOpen={openPaper}
+                    toggleTask={props.toggleTask}
+                    editingPaperId={props.editingPaperId}
                 />
             )}
         </>
@@ -281,17 +284,31 @@ export function ZenLayout(
 }
 
 /** Keep device selection alive even when no preview or mobile surface exists. */
-function ZenHomePapers({ userId, papers, mobile, onOpen }: {
+function ZenHomePapers({
+    userId,
+    papers,
+    mobile,
+    onOpen,
+    toggleTask,
+    editingPaperId,
+}: {
     userId: string;
     papers: HomeLayoutProps["papers"];
     mobile: boolean;
     onOpen: HomeLayoutProps["openPaper"];
+    toggleTask: HomeLayoutProps["toggleTask"];
+    editingPaperId: HomeLayoutProps["editingPaperId"];
 }) {
     const selection = useZenPaperSelection(userId, papers);
     if (!mobile || !selection.current) return null;
     return (
         <Suspense fallback={null}>
-            <ZenInlinePapers selection={selection} onOpen={onOpen} />
+            <ZenInlinePapers
+                selection={selection}
+                onOpen={onOpen}
+                onToggleTask={toggleTask}
+                editingPaperId={editingPaperId}
+            />
         </Suspense>
     );
 }
