@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { type AccentId, ACCENTS } from "@shared/contracts.ts";
+import { type AccentPreference, ACCENTS } from "@shared/contracts.ts";
 import { type Appearance, useAppState } from "../app/state.tsx";
 
 import { Button } from "../components/ui/button.tsx";
@@ -107,7 +107,7 @@ export function DesignLab() {
     const { appearance: saved } = useAppState();
     // Local preview only: theme and accent are restored on unmount.
     const [theme, setTheme] = useState<Appearance["theme"]>(saved.theme);
-    const [accent, setAccent] = useState<AccentId>(saved.accent);
+    const [accent, setAccent] = useState<AccentPreference>(saved.accent);
     const [view, setView] = useState("day");
     const [enabled, setEnabled] = useState(true);
     const [level, setLevel] = useState(40);
@@ -142,6 +142,7 @@ export function DesignLab() {
                 <Link to="/design-lab/omnibox">统一输入框</Link>
                 <Link to="/design-lab/motion">共享元素动效实验</Link>
                 <Link to="/design-lab/desk">可缩放桌面</Link>
+                <Link to="/design-lab/accent">壁纸取色</Link>
             </Section>
 
             <Section title="首页构图：31% / 38%">
@@ -306,7 +307,8 @@ export function DesignLab() {
                         variant="swatch"
                         aria-label="强调色"
                         value={accent}
-                        onValueChange={(next) => setAccent(next as AccentId)}
+                        onValueChange={(next) =>
+                            setAccent(next as AccentPreference)}
                     >
                         {ACCENTS.map((item) => (
                             <RadioGroupItem

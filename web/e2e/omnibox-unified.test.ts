@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
-import { type BrowserContext, chromium, type Page } from "playwright";
+import { type BrowserContext, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { deskDetail, deskOverview, deskStage } from "./helpers/desk.ts";
 

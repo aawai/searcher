@@ -1,10 +1,10 @@
-import { createEvidenceDirectory } from "./helpers/evidence.ts";
+import { createEvidenceDirectory } from "./evidence.ts";
 import { assert, assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./browser.ts";
 import type { Page, Request } from "playwright";
-import type { DocumentDto } from "../../src/shared/documents.ts";
-import { startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/desk.ts";
+import type { DocumentDto } from "../../../src/shared/documents.ts";
+import { startProductionApp } from "./production-app.ts";
+import { openNotes } from "./desk.ts";
 
 async function sample(page: Page, duration: number) {
     return await page.evaluate(async (duration) => {
@@ -126,77 +126,70 @@ async function ready(page: Page) {
     });
 }
 
-Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
-    await using cleanup = new AsyncDisposableStack();
-    const app = await startProductionApp();
-    cleanup.defer(() => app.close());
-    const browser = await chromium.launch({
-        handleSIGTERM: false,
-        headless: true,
-        args: ["--no-sandbox"],
-        ignoreDefaultArgs: ["--hide-scrollbars"],
-    });
-    cleanup.defer(() => browser.close());
-    const context = await browser.newContext({
-        viewport: { width: 1440, height: 900 },
-    });
-    cleanup.defer(() => context.close());
-    const page = await context.newPage();
-    const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    const evidence = Deno.env.get("E2E_EVIDENCE_DIR")
-        ? await createEvidenceDirectory("document-zen-pagination-stability")
-        : undefined;
-    await page.goto(
-        (Deno.env.get("E2E_FRONTEND_ORIGIN") ?? app.origin) + "/register",
-    );
-    await page.locator("#auth-username").fill("zen_stability_158");
-    await page.locator("#auth-display-name").fill("Zen stability");
-    await page.locator("#auth-password").fill("Zen-stability-158!");
-    await page.locator('form button[type="submit"]').click();
-    await page.waitForURL("**/");
-    async function request<T>(
-        path: string,
-        method = "GET",
-        body?: object,
-    ): Promise<T> {
-        return await page.evaluate(async ({ path, method, body }) => {
-            const response = await fetch(path, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: body ? JSON.stringify(body) : undefined,
-            });
-            if (!response.ok) throw new Error(await response.text());
-            return (await response.json()).data;
-        }, { path, method, body }) as T;
-    }
-    await request("/api/preferences", "PATCH", { theme: "light" });
-    const fixtures = [
-        { name: "short", body: "# Short\n\nOne static paragraph." },
-        {
-            name: "manual",
-            body:
-                "FIRST158\n\n<!-- pagebreak -->\n\nSECOND158\n\n<!-- pagebreak -->\n\nTHIRD158",
-        },
-        {
-            name: "consecutive",
-            body:
-                "FIRST158\n\n<!-- pagebreak -->\n\n<!-- pagebreak -->\n\n<!-- pagebreak -->\n\nLAST158",
-        },
-        {
-            name: "mixed",
-            body: "# Long paragraph\n\n" + "long paragraph words ".repeat(500) +
-                "\n\n| A | B |\n| --- | --- |\n" +
-                "| row | text |\n".repeat(40) + "\n```ts\n" +
-                "const example = 158;\n".repeat(50) + "```",
-        },
-    ];
-    const failures: string[] = [];
-    for (const fixture of fixtures) {
-        if (
-            Deno.env.get("E2E_FIXTURE") &&
-            Deno.env.get("E2E_FIXTURE") !== fixture.name
-        ) continue;
+type PaginationFixture = "short" | "manual" | "consecutive" | "mixed";
+
+const fixtureBodies: Record<PaginationFixture, string> = {
+    short: "# Short\n\nOne static paragraph.",
+    manual:
+        "FIRST158\n\n<!-- pagebreak -->\n\nSECOND158\n\n<!-- pagebreak -->\n\nTHIRD158",
+    consecutive:
+        "FIRST158\n\n<!-- pagebreak -->\n\n<!-- pagebreak -->\n\n<!-- pagebreak -->\n\nLAST158",
+    mixed: "# Long paragraph\n\n" + "long paragraph words ".repeat(500) +
+        "\n\n| A | B |\n| --- | --- |\n" +
+        "| row | text |\n".repeat(40) + "\n```ts\n" +
+        "const example = 158;\n".repeat(50) + "```",
+};
+
+export function registerPaginationStabilityTest(
+    fixtureName: PaginationFixture,
+): void {
+    Deno.test(`#158 Zen page layout reaches an idle fixed point (${fixtureName})`, async (t) => {
+        await using cleanup = new AsyncDisposableStack();
+        const app = await startProductionApp();
+        cleanup.defer(() => app.close());
+        const browser = await chromium.launch({
+            handleSIGTERM: false,
+            headless: true,
+            args: ["--no-sandbox"],
+            ignoreDefaultArgs: ["--hide-scrollbars"],
+        });
+        cleanup.defer(() => browser.close());
+        const context = await browser.newContext({
+            viewport: { width: 1440, height: 900 },
+        });
+        cleanup.defer(() => context.close());
+        const page = await context.newPage();
+        const errors: string[] = [];
+        page.on("pageerror", (error) => errors.push(error.message));
+        const evidence = Deno.env.get("E2E_EVIDENCE_DIR")
+            ? await createEvidenceDirectory(
+                `document-zen-pagination-${fixtureName}`,
+            )
+            : undefined;
+        await page.goto(app.origin + "/register");
+        await page.locator("#auth-username").fill("zen_stability_158");
+        await page.locator("#auth-display-name").fill("Zen stability");
+        await page.locator("#auth-password").fill("Zen-stability-158!");
+        await page.locator('form button[type="submit"]').click();
+        await page.waitForURL("**/");
+        async function request<T>(
+            path: string,
+            method = "GET",
+            body?: object,
+        ): Promise<T> {
+            return await page.evaluate(async ({ path, method, body }) => {
+                const response = await fetch(path, {
+                    method,
+                    headers: { "Content-Type": "application/json" },
+                    body: body ? JSON.stringify(body) : undefined,
+                });
+                if (!response.ok) throw new Error(await response.text());
+                return (await response.json()).data;
+            }, { path, method, body }) as T;
+        }
+        await request("/api/preferences", "PATCH", { theme: "light" });
+        const fixture = { name: fixtureName, body: fixtureBodies[fixtureName] };
+        const failures: string[] = [];
         let doc = await request<DocumentDto>("/api/documents", "POST", {
             title: fixture.name,
             body: fixture.body,
@@ -236,9 +229,13 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
                 },
             );
         }
-        const viewports = Deno.env.get("E2E_TALL_ONLY")
-            ? [[1024, 1552], [1024, 1548], [1024, 1556]]
-            : [[1440, 900], [1024, 768], [768, 1024], [390, 844], [1024, 1552]];
+        const viewports = [
+            [1440, 900],
+            [1024, 768],
+            [768, 1024],
+            [390, 844],
+            [1024, 1552],
+        ];
         const scenarios = viewports.flatMap(([width, height]) =>
             (["light", "dark"] as const).map((theme) => ({
                 width,
@@ -256,8 +253,7 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
                         ? "reduce"
                         : "no-preference",
                 });
-                const origin = Deno.env.get("E2E_FRONTEND_ORIGIN") ??
-                    app.origin;
+                const origin = app.origin;
                 await page.goto(origin + "/settings");
                 await request("/api/preferences", "PATCH", { theme });
                 await page.goto(origin + "/");
@@ -367,7 +363,7 @@ Deno.test("#158 Zen page layout reaches an idle fixed point", async (t) => {
             });
             if (!passed) failures.push(name);
         }
-    }
-    assertEquals(errors, []);
-    assertEquals(failures, []);
-});
+        assertEquals(errors, []);
+        assertEquals(failures, []);
+    });
+}

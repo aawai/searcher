@@ -98,6 +98,20 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         const persisted =
             (await readBack.json() as Envelope<PreferencesDto>).data;
         assertEquals(persisted?.showHomeDate, false);
+        // Choosing "follow wallpaper" again drops the manual override.
+        const follow = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: first,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ accent: "wallpaper" }),
+        });
+        assertEquals(
+            (await follow.json() as Envelope<PreferencesDto>).data?.accent,
+            "wallpaper",
+        );
         assertEquals(persisted?.showHomeTime, true);
         assertEquals(persisted?.showHomeContinue, false);
         const toggleBack = await app.request("/api/preferences", {
@@ -242,7 +256,7 @@ Deno.test("preferences: new user GET and guest GET return canonical defaults", a
         assertEquals(userRes.status, 200);
         const userBody = await userRes.json() as Envelope<PreferencesDto>;
         assertEquals(userBody.data?.wallpaperPresentations, {});
-        assertEquals(userBody.data?.accent, "blue");
+        assertEquals(userBody.data?.accent, "wallpaper");
     } finally {
         await store.close();
     }

@@ -1,6 +1,6 @@
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { openNotes } from "./helpers/desk.ts";
 

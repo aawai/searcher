@@ -390,6 +390,21 @@
     --accent-border-mix: var(--accent-mono-border-mix);
 }
 
+/* Wallpaper-derived palette: the derived light / dark pair is written over these
+   defaults (the blue palette) on <html>; without a readable wallpaper it stays blue. */
+:root {
+    --wallpaper-accent: light-dark(#1d4ed8, #60a5fa);
+    --wallpaper-accent-hover: light-dark(#1e40af, #93c5fd);
+    --wallpaper-accent-active: light-dark(#172554, #bfdbfe);
+    --wallpaper-accent-foreground: light-dark(#ffffff, #090d16);
+}
+[data-accent="wallpaper"] {
+    --accent: var(--wallpaper-accent);
+    --accent-hover: var(--wallpaper-accent-hover);
+    --accent-active: var(--wallpaper-accent-active);
+    --accent-foreground: var(--wallpaper-accent-foreground);
+}
+
 /* User preference: pill-shaped search box and its inner controls. */
 [data-shape="pill"] {
     --search-radius: var(--radius-pill);

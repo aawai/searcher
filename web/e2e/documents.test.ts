@@ -1,6 +1,6 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { largeDocumentMarkdown } from "./fixtures/document.ts";

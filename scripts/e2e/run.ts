@@ -1,29 +1,33 @@
-import { checkSuites, Suite, suiteFiles, suites } from "./suites.ts";
+import { checkSuites, selectAffected, suiteFiles } from "./suites.ts";
+import { parseRunOptions } from "./options.ts";
+import { collectAffectedPaths } from "./affected.ts";
 
 // Deliberately delegates scheduling, checking and reporting to Deno test.
-// There is no no-build mode: every public execution starts with a fresh build.
+const options = parseRunOptions(Deno.args, Deno.env.get("E2E_TIMEOUT_MS"));
 await checkSuites();
-const [name, mode] = Deno.args;
-if (name === "check" && !mode) {
+if (options.kind === "check") {
     console.log(`E2E manifest covers ${suiteFiles("full").length} files.`);
     Deno.exit(0);
 }
-if (
-    !name ||
-    !(Object.hasOwn(suites, name) ||
-        ["full", "apps", "layout"].includes(name)) ||
-    (mode !== undefined && mode !== "--serial" && mode !== "--parallel") ||
-    Deno.args.length > 2
-) {
-    throw new Error(
-        "Usage: deno run -A scripts/e2e/run.ts <suite|check> [--serial|--parallel]",
+const { suite, parallel, failFast, timeoutMs } = options;
+const changes = suite === "affected"
+    ? await collectAffectedPaths(options.base)
+    : null;
+const selection = changes ? selectAffected(changes.paths) : null;
+const files = selection
+    ? selection.files
+    : suiteFiles(suite as Exclude<typeof suite, "affected">);
+if (selection && changes) {
+    console.log(
+        `Affected base: ${
+            JSON.stringify(changes.base)
+        } (merge-base ${changes.mergeBase})`,
     );
+    console.log(`Affected reason: ${selection.reason}`);
+    console.log(`Affected suites: ${selection.suites.join(", ") || "none"}`);
+    console.log(`Affected paths: ${JSON.stringify(selection.paths)}`);
+    console.log(`Affected files: ${JSON.stringify(files)}`);
 }
-const suite = name as Suite;
-// Only Workspace defaults to parallel; full retains the conservative serial mode.
-const parallel = mode === "--parallel" ||
-    (mode === undefined && suite === "workspace");
-const failFast = suite === "full";
 const jobs = Deno.env.get("DENO_JOBS") ?? "2";
 const reportDir = Deno.env.get("E2E_REPORT_DIR") ??
     `artifacts/e2e/${suite}-${Date.now()}-${crypto.randomUUID()}`;
@@ -34,12 +38,24 @@ await Deno.remove(junit).catch((error: unknown) => {
     if (!(error instanceof Deno.errors.NotFound)) throw error;
 });
 const started = performance.now();
-const timings: Record<string, number | string | boolean | string[]> = {
+const timings: Record<string, number | string | boolean | string[] | null> = {
     suite,
     parallel,
     failFast,
     jobs: parallel ? jobs : "serial",
-    files: suiteFiles(suite),
+    // A triage timeout makes the run a diagnosis, never a merge gate.
+    timeoutMs,
+    files,
+    ...(selection && changes
+        ? {
+            affectedPaths: selection.paths,
+            base: changes.base,
+            mergeBase: changes.mergeBase,
+            selectedSuites: selection.suites,
+            selectionReason: selection.reason,
+            list: options.list ?? false,
+        }
+        : {}),
 };
 
 async function run(phase: string, args: string[]): Promise<number> {
@@ -47,7 +63,14 @@ async function run(phase: string, args: string[]): Promise<number> {
     const child = new Deno.Command(Deno.execPath(), {
         args,
         env: phase === "test"
-            ? { NODE_ENV: "test", E2E_REPORT_DIR: reportDir, DENO_JOBS: jobs }
+            ? {
+                NODE_ENV: "test",
+                E2E_REPORT_DIR: reportDir,
+                DENO_JOBS: jobs,
+                ...(timeoutMs === null
+                    ? {}
+                    : { E2E_TIMEOUT_MS: String(timeoutMs) }),
+            }
             : {},
         stdin: "inherit",
         stdout: "inherit",
@@ -75,20 +98,36 @@ async function run(phase: string, args: string[]): Promise<number> {
     }
 }
 
+const skip = selection !== null && (options.list || files.length === 0);
+if (!skip && timeoutMs !== null) {
+    console.warn(
+        `Triage run: implicit Playwright timeout ${timeoutMs}ms; not a merge gate.`,
+    );
+}
 let code = 1;
 try {
-    code = await run("build", ["task", "build"]);
-    if (code === 0) {
-        code = await run("test", [
-            "test",
-            "-A",
-            ...(parallel ? ["--parallel"] : []),
-            ...(failFast ? ["--fail-fast"] : []),
-            `--junit-path=${junit}`,
-            ...suiteFiles(suite),
-        ]);
-        // A successful run without its promised report is an acceptance failure.
-        if (code === 0 && !(await Deno.stat(junit)).isFile) code = 1;
+    if (skip) {
+        timings.skipped = true;
+        console.log(
+            options.list
+                ? "Affected selection only (--list): no build or browser; tests not run."
+                : "No affected changes: skipping build and browser; tests not run.",
+        );
+        code = 0;
+    } else {
+        code = await run("build", ["task", "build"]);
+        if (code === 0) {
+            code = await run("test", [
+                "test",
+                "-A",
+                ...(parallel ? ["--parallel"] : []),
+                ...(failFast ? ["--fail-fast"] : []),
+                `--junit-path=${junit}`,
+                ...files,
+            ]);
+            // A successful run without its promised report is an acceptance failure.
+            if (code === 0 && !(await Deno.stat(junit)).isFile) code = 1;
+        }
     }
 } finally {
     timings.wallSeconds = (performance.now() - started) / 1000;

@@ -1,5 +1,6 @@
 import {
-    type AccentId,
+    type AccentPreference,
+    DEFAULT_ACCENT,
     DEFAULT_GLASS_INTENSITY,
     type GlassIntensity,
     normalizeAccent,
@@ -11,6 +12,7 @@ import type { EngineId } from "@shared/engines.ts";
 import {
     normalizeWallpaperPresentations,
     type WallpaperPresentation,
+    wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import {
     parseWallpaperSource,
@@ -33,6 +35,10 @@ import {
     createDocumentEventSubscriptions,
     type DocumentEventSubscriptions,
 } from "../features/documents/document-event-subscriptions.ts";
+import {
+    applyWallpaperAccent,
+    useWallpaperAccent,
+} from "../components/wallpaper/wallpaper-accent-source.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
 import { syncThemeColor } from "../pwa/theme-color.ts";
@@ -44,7 +50,8 @@ import {
 
 export type Appearance = {
     theme: "system" | "light" | "dark";
-    accent: AccentId;
+    /** 跟随壁纸取色（`wallpaper`）或手选的预设覆盖。 */
+    accent: AccentPreference;
     shape: "rounded" | "pill";
     glassIntensity: GlassIntensity;
     engine: EngineId;
@@ -62,7 +69,7 @@ export type Appearance = {
 
 const initial: Appearance = {
     theme: "system",
-    accent: "blue",
+    accent: DEFAULT_ACCENT,
     shape: "rounded",
     glassIntensity: DEFAULT_GLASS_INTENSITY,
     engine: "bing",
@@ -406,12 +413,23 @@ export function AppState({ children }: { children: ReactNode }) {
         return () => media.removeEventListener("change", apply);
     }, [appearance.theme]);
 
+    // Derived even under a manual accent so "跟随壁纸" previews the wallpaper colour.
+    const wallpaperAccent = useWallpaperAccent(
+        appearance.wallpaper,
+        wallpaperPresentation(
+            appearance.wallpaper,
+            appearance.wallpaperPresentations,
+        ).composition,
+    );
     useEffect(() => {
         const root = document.documentElement;
         root.dataset.accent = appearance.accent;
         root.dataset.shape = appearance.shape;
         root.dataset.glass = appearance.glassIntensity;
     }, [appearance.accent, appearance.shape, appearance.glassIntensity]);
+    useEffect(() => {
+        applyWallpaperAccent(document.documentElement, wallpaperAccent);
+    }, [wallpaperAccent]);
 
     const setAppearance = (
         next: Partial<Appearance>,

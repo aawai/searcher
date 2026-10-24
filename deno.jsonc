@@ -11,6 +11,8 @@
         "admin:create": "deno run -A src/commands/admin.ts create",
         "admin:reset": "deno run -A src/commands/admin.ts reset",
         "test": "deno test -A src web/src",
+        // Executing E2E tasks build once; affected --list/empty diff skip execution.
+        // Local triage: --timeout 5000; full/affected: --parallel --no-fail-fast.
         "test:routing": "deno run -A scripts/e2e/run.ts routing",
         "test:workspace": "deno run -A scripts/e2e/run.ts workspace --parallel",
         "test:workspace:serial": "deno run -A scripts/e2e/run.ts workspace --serial",
@@ -18,6 +20,7 @@
         "test:workspace:apps": "deno run -A scripts/e2e/run.ts apps",
         "test:workspace:layout": "deno run -A scripts/e2e/run.ts layout",
         "test:e2e:full": "deno run -A scripts/e2e/run.ts full",
+        "test:e2e:affected": "deno run -A scripts/e2e/run.ts affected",
         "check:e2e": "deno run -A scripts/e2e/run.ts check",
         "test:documents": "deno run -A scripts/e2e/run.ts documents",
         "test:wallpaper": "deno run -A scripts/e2e/run.ts wallpaper",

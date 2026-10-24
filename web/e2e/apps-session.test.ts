@@ -1,6 +1,8 @@
 import { assertEquals } from "@std/assert";
-import { chromium, type Dialog, type Page } from "playwright";
+import { type Dialog, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
+import { openSettings } from "./helpers/settings.ts";
 
 const PASSWORD = "Apps-route-guard-password-174!";
 
@@ -90,16 +92,6 @@ async function openAddForm(
     }
 }
 
-async function goToSettings(page: Page, origin: string) {
-    await page.getByRole("button", { name: /^用户菜单/ }).click();
-    await page.getByRole("menuitem", { name: "偏好设置", exact: true })
-        .click();
-    await page.waitForURL(origin + "/settings");
-    await page.getByRole("navigation", { name: "设置分类" }).waitFor({
-        state: "visible",
-    });
-}
-
 async function goHome(page: Page, origin: string) {
     await page.getByRole("link", { name: "Searcher 首页", exact: true })
         .click();
@@ -110,7 +102,7 @@ async function goHome(page: Page, origin: string) {
 /** Settings → home, so the history has an entry to go Back to. */
 async function startWithHistory(username: string, seed?: Seed) {
     const fixture = await startFixture(username, seed);
-    await goToSettings(fixture.page, fixture.origin);
+    await openSettings(fixture.page);
     await goHome(fixture.page, fixture.origin);
     return fixture;
 }
@@ -271,7 +263,7 @@ Deno.test("dirty app drafts block browser Back and Forward until confirmed", asy
         await page.waitForURL(origin + "/");
         await page.locator("main.home").waitFor({ state: "visible" });
         assertEquals(await page.locator(".app-form-dialog").count(), 0);
-        await goToSettings(page, origin);
+        await openSettings(page);
         const cleanBack = page.goBack();
         await page.waitForURL(origin + "/");
         await cleanBack;

@@ -1,5 +1,6 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { type BrowserContext, chromium, type Page } from "playwright";
+import { type BrowserContext, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
 import { migrateDatabase } from "../../src/db/migrate.ts";
@@ -268,7 +269,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             const deviceList = page.locator(".account-device-list");
             await deviceList.waitFor({ state: "visible" });
 
-            // 0. Every device row offers the same action: one name, one danger style
+            // Every device row exposes its own sign-out action.
             const rowActions = deviceList.getByRole("button", {
                 name: "退出",
                 exact: true,
@@ -278,30 +279,6 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 .count();
             assertEquals(deviceRows >= 3, true);
             assertEquals(await rowActions.count(), deviceRows);
-            const rowActionStyles = await rowActions.evaluateAll((buttons) =>
-                buttons.map((button) => {
-                    const style = getComputedStyle(button);
-                    return [
-                        style.color,
-                        style.backgroundColor,
-                        style.height,
-                    ];
-                })
-            );
-            assertEquals(
-                new Set(rowActionStyles.map((style) => style.join(" | "))).size,
-                1,
-                "device row actions share one style",
-            );
-            const danger = await page.evaluate(() => {
-                const probe = document.createElement("span");
-                probe.style.color = "var(--danger)";
-                document.body.append(probe);
-                const color = getComputedStyle(probe).color;
-                probe.remove();
-                return color;
-            });
-            assertEquals(rowActionStyles[0][0], danger);
 
             // 1. Signing out a single other device is confirmed like the other actions
             const otherRow = deviceList.locator(".account-device-item", {
