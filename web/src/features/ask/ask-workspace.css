@@ -223,7 +223,7 @@
     gap: var(--space-3);
     min-height: var(--space-9);
     width: calc(100% - var(--space-4) * 2);
-    max-width: var(--layout-ask-message-max);
+    max-width: var(--layout-ask-composer-max);
     margin-inline: auto;
     padding: 0;
 }
