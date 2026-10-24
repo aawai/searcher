@@ -11,7 +11,7 @@ import type {
 } from "../app-library/library-types.ts";
 import type { AppLibraryController } from "../app-library/useAppLibraryActions.ts";
 import type { HomeContinueDto, UserDto } from "@shared/contracts.ts";
-import type { DeskRequest } from "../desk/desk-request.ts";
+import type { LibraryRequest } from "../library/library-request.ts";
 import type { SearchQuickCommand } from "../shortcuts/shortcut-catalog.ts";
 import type { PaperItem } from "./home-papers.ts";
 import type { InlineAnswer } from "../inline-ai/useInlineAnswer.ts";
@@ -63,9 +63,9 @@ export interface HomeLayoutProps {
     toggleTask: (paper: PaperItem, index: number, checked: boolean) => void;
     /** The note open in the editor; its card task boxes are read-only meanwhile. */
     editingPaperId: string | null;
-    /** Enters 览, or 览 with the notes detail (quick entries). */
-    openDesk: (request: DeskRequest) => void;
-    /** Opens a note's detail on the desk by id (search results). */
+    /** Opens the library root or a nested collection. */
+    openLibrary: (request: LibraryRequest) => void;
+    /** Opens a note over the unchanged home. */
     openDocument: (id: string) => void;
     /** An enabled model exists for the signed-in user: AI entry points show. */
     aiAvailable: boolean;

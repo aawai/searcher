@@ -1,0 +1,39 @@
+.library-root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+.library-root > button {
+    justify-content: flex-start;
+    min-height: var(--row-min-height);
+}
+.library-conversations {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.library-conversation {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--row-min-height);
+    padding: var(--space-2);
+    border-radius: var(--control-radius);
+    color: var(--foreground);
+    text-decoration: none;
+}
+.library-conversation:hover {
+    background: var(--surface-soft);
+}
+.library-conversation > span {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.library-conversation time {
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+}
+.library-notes {
+    display: contents;
+}

@@ -662,3 +662,21 @@
         min-height: var(--control-touch-target);
     }
 }
+
+
+/* Library management uses the same cells and folder geometry as home. */
+.launcher-grid--library {
+    grid-template-columns: repeat(auto-fill, var(--launcher-col-w));
+    grid-auto-flow: row dense;
+    justify-content: start;
+}
+.launcher-grid--library > .launcher-folder-item--large {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+.launcher-grid--library :is(.webapp-name, .launcher-folder-name) {
+    text-shadow: none;
+}
+.launcher-grid--library[data-show-app-labels="false"] .launcher-folder-name {
+    display: none;
+}

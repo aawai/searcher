@@ -1,6 +1,6 @@
 import type { EngineId } from "@shared/engines.ts";
 import { routes } from "../../app/routes.ts";
-import type { DeskRequest } from "../desk/desk-request.ts";
+import type { LibraryRequest } from "../library/library-request.ts";
 
 export type ShortcutScope = "global" | "search" | "ask" | "documents";
 export type ShortcutPlatform = "mac" | "other";
@@ -37,11 +37,11 @@ export const SHORTCUTS = {
         description: "笔记正文中由插入链接优先处理；其他输入控件内不抢占焦点。",
         binding: { key: "k", modifiers: ["mod"] },
     },
-    toggleDesk: {
-        id: "toggle-desk",
+    toggleLibrary: {
+        id: "toggle-library",
         kind: "keyboard",
         section: "global",
-        action: "进入或退出桌面“览”",
+        action: "打开或关闭资料库",
         context: "首页（含主搜索框），需要登录",
         description: "笔记编辑器与其他输入控件内不响应。",
         binding: { key: ".", modifiers: ["mod"] },
@@ -131,7 +131,7 @@ export type SearchCommandTarget =
     | { type: "mode"; mode: "ai" }
     | { type: "theme"; theme: "light" | "dark" | "system" }
     | { type: "route"; to: string }
-    | { type: "desk"; request: DeskRequest }
+    | { type: "library"; request: LibraryRequest }
     | { type: "apps" };
 export type SearchQuickCommand = {
     id: string;
@@ -220,7 +220,7 @@ export const SEARCH_QUICK_COMMANDS: readonly SearchQuickCommand[] = [
         id: "notes",
         prefix: "/notes",
         action: "打开笔记",
-        target: { type: "desk", request: "notes" },
+        target: { type: "library", request: "notes" },
         requiresUser: true,
     },
     {
