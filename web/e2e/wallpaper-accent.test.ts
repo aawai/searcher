@@ -1,5 +1,6 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
-import { type BrowserContext, chromium, type Page } from "playwright";
+import type { BrowserContext, Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 type Rgb = [number, number, number];
