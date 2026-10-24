@@ -1,96 +1,66 @@
+/* The library's notes view: one navigation row, one search row, flat rows. */
 .documents-workspace {
-    container: documents-library / inline-size;
-}
-.documents-library-layout,
-.documents-library-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-section-gap);
-    min-width: 0;
+    gap: var(--space-4);
 }
 
-/* Notebook navigation: scopes and notebooks share one row language. */
+/* Filters, notebook picker and notebook management share one control row. */
 .documents-notebook-navigation {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    min-width: 0;
-}
-.documents-notebook-scopes,
-.documents-notebook-list {
-    display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
-    min-width: 0;
-}
-.documents-notebook-header {
-    display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: var(--space-2);
-    margin-top: var(--space-2);
     min-width: 0;
 }
-.documents-notebook-title {
-    padding-inline-start: var(--space-3);
+.documents-notebook-navigation > [data-slot="radio-group"][data-variant="segmented"] {
+    flex: 1 1 216px;
+    min-width: min(100%, 200px);
+}
+.documents-notebook-picker {
+    display: flex;
+    flex: 1 1 144px;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: min(100%, 140px);
+}
+.documents-notebook-picker [data-slot="native-select-wrapper"] {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+}
+/* A borderless track matches the segmented control beside it. */
+.documents-notebook-picker [data-slot="native-select"] {
+    border: none;
+    background: var(--surface-soft);
+    font-size: var(--font-body-size);
+}
+
+/* Search and the row count share one row; the section carries the scope name. */
+.documents-list,
+.documents-list-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-row-gap);
+    min-width: 0;
+}
+.documents-list-toolbar {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-2);
+}
+.documents-list-toolbar > :first-child {
+    flex: 1;
+    min-width: 0;
+}
+.documents-list-count {
+    flex: none;
+    color: var(--muted);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
-    font-weight: var(--font-title-weight);
-    color: var(--muted);
-}
-[data-slot="button"].documents-notebook-scope-btn,
-[data-slot="button"].documents-notebook-row-btn {
-    min-width: 0;
-    justify-content: flex-start;
-    padding-inline: var(--space-3);
-}
-.documents-notebook-scope-btn > svg,
-.documents-notebook-row-btn > svg {
-    flex-shrink: 0;
-}
-.documents-notebook-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: center;
-    min-width: 0;
-    max-width: 100%;
-}
-.documents-notebook-row > * {
-    grid-area: 1 / 1;
-}
-.documents-notebook-name {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 
-/* Chip layout: only the selected notebook shows its actions. */
-.documents-notebook-row > [data-slot="dropdown-menu-trigger"].documents-row-action {
-    display: none;
-    justify-self: end;
-    margin-inline-end: var(--space-1);
-}
-.documents-notebook-row > [data-slot="button"].documents-notebook-row-btn[data-active="true"] {
-    padding-inline-end: calc(var(--control-touch-target) + var(--space-1));
-}
-.documents-notebook-row:has(> [data-active="true"]) > [data-slot="dropdown-menu-trigger"].documents-row-action {
-    display: inline-flex;
-    opacity: 1;
-}
-
-/* Row actions stay out of sight until the row is hovered or focused. */
-[data-slot="dropdown-menu-trigger"].documents-row-action {
-    opacity: 0;
-}
-.documents-summary-row:is(:hover, :focus-within) [data-slot="dropdown-menu-trigger"].documents-row-action,
-.documents-notebook-row:is(:hover, :focus-within) [data-slot="dropdown-menu-trigger"].documents-row-action,
-[data-slot="dropdown-menu-trigger"].documents-row-action[aria-expanded="true"],
-[data-slot="dropdown-menu-trigger"].documents-row-action:focus-visible {
-    opacity: 1;
-}
-
-/* Library list: flat rows, no separators; hover and focus fill the row. */
+/* Rows: title line plus one metadata line, no separators between rows. */
 .documents-workspace-list {
     display: flex;
     flex-direction: column;
@@ -136,28 +106,36 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.documents-summary-snippet {
-    display: -webkit-box;
-    margin: 0;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-    color: var(--muted);
-}
-.documents-summary-footer {
+.documents-summary-line {
     display: flex;
-    flex-wrap: wrap;
-    column-gap: var(--space-1);
+    align-items: baseline;
+    gap: var(--space-1);
+    min-width: 0;
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     color: var(--muted);
 }
-.documents-summary-footer > * + *::before {
+.documents-summary-line > * + *::before {
     content: "·";
     margin-inline-end: var(--space-1);
+}
+.documents-summary-notebook {
+    flex: 0 0 auto;
+    max-width: 35%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.documents-summary-snippet {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.documents-summary-date {
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
 }
 .documents-workspace-more {
     display: flex;
@@ -173,7 +151,9 @@
     min-width: 0;
 }
 .documents-favorite-icon {
+    flex: none;
     fill: currentColor;
+    color: var(--muted);
 }
 .menu-item > .documents-favorite-icon {
     color: var(--warning);
@@ -216,47 +196,28 @@
     color: var(--muted);
 }
 
+/* Row actions stay out of sight until the row is hovered or focused. */
+[data-slot="dropdown-menu-trigger"].documents-row-action {
+    opacity: 0;
+}
+.documents-summary-row:is(:hover, :focus-within) [data-slot="dropdown-menu-trigger"].documents-row-action,
+[data-slot="dropdown-menu-trigger"].documents-row-action[aria-expanded="true"],
+[data-slot="dropdown-menu-trigger"].documents-row-action:focus-visible {
+    opacity: 1;
+}
+
 /* Dense pointers get compact controls; touch keeps the 44px primitives. */
 @media (hover: hover) and (pointer: fine) {
     [data-slot="button"].documents-summary-open,
-    [data-slot="dropdown-menu-trigger"].documents-row-action,
-    [data-slot="button"].documents-notebook-create-trigger {
+    [data-slot="dropdown-menu-trigger"].documents-row-action {
         min-height: var(--control-compact-height);
     }
-    [data-slot="dropdown-menu-trigger"].documents-row-action,
-    [data-slot="button"].documents-notebook-create-trigger {
+    [data-slot="dropdown-menu-trigger"].documents-row-action {
         width: var(--control-compact-height);
     }
 }
 @media (any-pointer: coarse), (hover: none) {
     [data-slot="dropdown-menu-trigger"].documents-row-action {
         opacity: 1;
-    }
-}
-
-/* Content-width boundary: the narrow Zen panel never becomes two columns. */
-@container documents-library (min-width: 640px) {
-    .documents-library-layout {
-        display: grid;
-        grid-template-columns: var(--workspace-library-navigation-width)
-            minmax(0, 1fr);
-    }
-    .documents-notebook-scopes,
-    .documents-notebook-list {
-        flex-direction: column;
-        flex-wrap: nowrap;
-        gap: var(--space-1);
-    }
-    .documents-notebook-row {
-        width: 100%;
-    }
-    .documents-notebook-row[data-notebook-depth="1"] {
-        padding-inline-start: var(--space-3);
-    }
-    .documents-notebook-row > [data-slot="dropdown-menu-trigger"].documents-row-action {
-        display: inline-flex;
-    }
-    .documents-notebook-row > [data-slot="button"].documents-notebook-row-btn {
-        padding-inline-end: calc(var(--control-touch-target) + var(--space-1));
     }
 }

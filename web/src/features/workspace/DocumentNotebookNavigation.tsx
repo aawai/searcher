@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import type { DocumentNotebookDto } from "@shared/documents.ts";
 import type { DocumentsScope } from "./workspace-state.ts";
+import {
+    type DocumentNotebookNode,
+    documentNotebookTree,
+} from "./document-notebooks.ts";
 import { api, json } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
@@ -8,6 +12,10 @@ import {
     NativeSelect,
     NativeSelectOption,
 } from "../../components/ui/native-select.tsx";
+import {
+    RadioGroup,
+    RadioGroupItem,
+} from "../../components/ui/radio-group.tsx";
 import {
     Dialog,
     DialogContent,
@@ -36,15 +44,11 @@ import { StatusBanner } from "../../components/searcher/semantic.tsx";
 import {
     ArrowDown,
     ArrowUp,
-    Clock,
-    Files,
-    Folder,
     FolderInput,
-    Home,
+    FolderPlus,
     MoreHorizontal,
     Pencil,
     Plus,
-    Star,
     Trash2,
 } from "lucide-react";
 
@@ -55,13 +59,15 @@ export interface DocumentNotebookNavigationProps {
     onChanged: () => void;
 }
 
-interface FlatNotebookItem {
-    notebook: DocumentNotebookDto;
-    depth: 0 | 1;
-    siblings: DocumentNotebookDto[];
-    siblingIndex: number;
-    hasChildren: boolean;
-}
+/** The four fixed filters share one segmented control; notebooks refine it. */
+const FILTERS = [
+    { id: "all", label: "全部" },
+    { id: "recent", label: "最近" },
+    { id: "home", label: "首页" },
+    { id: "favorite", label: "收藏" },
+] as const;
+
+type FilterId = typeof FILTERS[number]["id"];
 
 export function DocumentNotebookNavigation({
     notebooks,
@@ -102,60 +108,16 @@ export function DocumentNotebookNavigation({
     const isPending = isCreating || isRenaming || isMoving || isDeleting ||
         reorderingId !== null;
 
-    // Build hierarchical tree (depth max 1: root is 0, children are 1)
-    const { flatItems, rootNotebooks } = useMemo(() => {
-        const roots: DocumentNotebookDto[] = [];
-        const childrenByParent = new Map<string, DocumentNotebookDto[]>();
+    // Notebooks are at most two levels deep; the tree owns order and labels.
+    const { roots: rootNotebooks, nodes, options } = useMemo(
+        () => documentNotebookTree(notebooks),
+        [notebooks],
+    );
 
-        for (const nb of notebooks) {
-            if (nb.parentId === null) {
-                roots.push(nb);
-            } else {
-                const list = childrenByParent.get(nb.parentId) ?? [];
-                list.push(nb);
-                childrenByParent.set(nb.parentId, list);
-            }
-        }
-
-        roots.sort((a, b) =>
-            a.sortOrder !== b.sortOrder
-                ? a.sortOrder - b.sortOrder
-                : a.id.localeCompare(b.id)
-        );
-        for (const children of childrenByParent.values()) {
-            children.sort((a, b) =>
-                a.sortOrder !== b.sortOrder
-                    ? a.sortOrder - b.sortOrder
-                    : a.id.localeCompare(b.id)
-            );
-        }
-
-        const items: FlatNotebookItem[] = [];
-        for (let rIdx = 0; rIdx < roots.length; rIdx++) {
-            const root = roots[rIdx];
-            const children = childrenByParent.get(root.id) ?? [];
-            items.push({
-                notebook: root,
-                depth: 0,
-                siblings: roots,
-                siblingIndex: rIdx,
-                hasChildren: children.length > 0,
-            });
-
-            for (let cIdx = 0; cIdx < children.length; cIdx++) {
-                const child = children[cIdx];
-                items.push({
-                    notebook: child,
-                    depth: 1,
-                    siblings: children,
-                    siblingIndex: cIdx,
-                    hasChildren: false,
-                });
-            }
-        }
-
-        return { flatItems: items, rootNotebooks: roots };
-    }, [notebooks]);
+    const selectedItem = scope.type === "notebook"
+        ? nodes.find((item) => item.notebook.id === scope.notebookId) ??
+            null
+        : null;
 
     // Create action
     const handleCreateSubmit = async (e: React.SyntheticEvent) => {
@@ -265,12 +227,10 @@ export function DocumentNotebookNavigation({
 
     // Reorder action (Up / Down)
     const handleReorder = async (
-        notebook: DocumentNotebookDto,
+        item: DocumentNotebookNode,
         direction: "up" | "down",
     ) => {
         if (reorderingId !== null || isPending) return;
-        const item = flatItems.find((f) => f.notebook.id === notebook.id);
-        if (!item) return;
 
         const { siblings, siblingIndex } = item;
         const targetIndex = direction === "up"
@@ -283,13 +243,13 @@ export function DocumentNotebookNavigation({
         newIds[targetIndex] = newIds[siblingIndex];
         newIds[siblingIndex] = temp;
 
-        setReorderingId(notebook.id);
+        setReorderingId(item.notebook.id);
         setReorderError(null);
         try {
             await api(
                 "/api/document-notebooks/reorder",
                 json("PUT", {
-                    parentId: notebook.parentId,
+                    parentId: item.notebook.parentId,
                     ids: newIds,
                 }),
             );
@@ -316,85 +276,158 @@ export function DocumentNotebookNavigation({
         ? notebooks.some((n) => n.parentId === moveTarget.id)
         : false;
 
-    return (
-        <nav
-            className="documents-notebook-navigation"
-            aria-label="笔记本导航"
-        >
-            {/* Scopes navigation buttons */}
-            <div
-                className="documents-notebook-scopes"
-                role="group"
-                aria-label="笔记范围视图"
-            >
-                <Button
-                    type="button"
-                    variant={scope.type === "all" ? "outline" : "ghost"}
-                    className="documents-notebook-scope-btn"
-                    data-active={scope.type === "all"}
-                    aria-pressed={scope.type === "all"}
-                    onClick={() => onScopeChange({ type: "all" })}
-                >
-                    <Files className="icon-md" />
-                    <span>全部笔记</span>
-                </Button>
-                <Button
-                    type="button"
-                    variant={scope.type === "recent" ? "outline" : "ghost"}
-                    className="documents-notebook-scope-btn"
-                    data-active={scope.type === "recent"}
-                    aria-pressed={scope.type === "recent"}
-                    onClick={() => onScopeChange({ type: "recent" })}
-                >
-                    <Clock className="icon-md" />
-                    <span>最近笔记</span>
-                </Button>
-                <Button
-                    type="button"
-                    variant={scope.type === "home" ? "outline" : "ghost"}
-                    className="documents-notebook-scope-btn"
-                    data-active={scope.type === "home"}
-                    aria-pressed={scope.type === "home"}
-                    onClick={() => onScopeChange({ type: "home" })}
-                >
-                    <Home className="icon-md" />
-                    <span>首页</span>
-                </Button>
-                <Button
-                    type="button"
-                    variant={scope.type === "favorite" ? "outline" : "ghost"}
-                    className="documents-notebook-scope-btn"
-                    data-active={scope.type === "favorite"}
-                    aria-pressed={scope.type === "favorite"}
-                    onClick={() => onScopeChange({ type: "favorite" })}
-                >
-                    <Star className="icon-md" />
-                    <span>收藏笔记</span>
-                </Button>
-            </div>
+    const openCreate = (parentId: string) => {
+        setCreateName("");
+        setCreateParentId(parentId);
+        setCreateError(null);
+        setCreateOpen(true);
+    };
 
-            {/* Notebooks header with new notebook secondary button */}
-            <div className="documents-notebook-header">
-                <span className="documents-notebook-title">
-                    笔记本
-                </span>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="新建笔记本"
-                    title="新建笔记本"
-                    className="documents-notebook-create-trigger"
-                    disabled={isPending}
-                    onClick={() => {
-                        setCreateName("");
-                        setCreateParentId("");
-                        setCreateError(null);
-                        setCreateOpen(true);
+    return (
+        <nav className="documents-notebook-navigation" aria-label="笔记导航">
+            <RadioGroup
+                variant="segmented"
+                className="documents-filter-group"
+                aria-label="筛选笔记"
+                value={scope.type === "notebook" ? null : scope.type}
+                onValueChange={(next) => {
+                    if (typeof next === "string") {
+                        onScopeChange({ type: next as FilterId });
+                    }
+                }}
+            >
+                {FILTERS.map((filter) => (
+                    <RadioGroupItem key={filter.id} value={filter.id}>
+                        {filter.label}
+                    </RadioGroupItem>
+                ))}
+            </RadioGroup>
+
+            <div className="documents-notebook-picker">
+                <NativeSelect
+                    className="documents-notebook-select"
+                    aria-label="按笔记本筛选"
+                    value={selectedItem?.notebook.id ?? ""}
+                    onChange={(event) => {
+                        const notebookId = event.target.value;
+                        onScopeChange(
+                            notebookId
+                                ? { type: "notebook", notebookId }
+                                : { type: "all" },
+                        );
                     }}
                 >
-                    <Plus className="icon-md" />
-                </Button>
+                    <NativeSelectOption value="">
+                        全部笔记本
+                    </NativeSelectOption>
+                    {options.map((option) => (
+                        <NativeSelectOption
+                            key={option.id}
+                            value={option.id}
+                        >
+                            {option.label}
+                        </NativeSelectOption>
+                    ))}
+                </NativeSelect>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger
+                        render={
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label="管理笔记本"
+                                title="管理笔记本"
+                                disabled={isPending}
+                            >
+                                <MoreHorizontal className="icon-md" />
+                            </Button>
+                        }
+                    />
+                    <DropdownMenuContent aria-label="笔记本管理操作">
+                        <DropdownMenuItem onClick={() => openCreate("")}>
+                            <Plus className="icon-md" />
+                            <span>新建笔记本</span>
+                        </DropdownMenuItem>
+                        {selectedItem && (
+                            <>
+                                <DropdownMenuSeparator />
+                                {selectedItem.depth === 0 && (
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            openCreate(
+                                                selectedItem.notebook.id,
+                                            )}
+                                    >
+                                        <FolderPlus className="icon-md" />
+                                        <span>新建子笔记本</span>
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        setRenameTarget(selectedItem.notebook);
+                                        setRenameName(
+                                            selectedItem.notebook.name,
+                                        );
+                                        setRenameError(null);
+                                    }}
+                                >
+                                    <Pencil className="icon-md" />
+                                    <span>重命名</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        setMoveTarget(selectedItem.notebook);
+                                        setMoveParentId(
+                                            selectedItem.notebook.parentId ??
+                                                "",
+                                        );
+                                        setMoveError(null);
+                                    }}
+                                    disabled={selectedItem.hasChildren}
+                                >
+                                    <FolderInput className="icon-md" />
+                                    <span>移动</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        void handleReorder(
+                                            selectedItem,
+                                            "up",
+                                        )}
+                                    disabled={selectedItem.siblingIndex === 0}
+                                >
+                                    <ArrowUp className="icon-md" />
+                                    <span>上移</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        void handleReorder(
+                                            selectedItem,
+                                            "down",
+                                        )}
+                                    disabled={selectedItem.siblingIndex ===
+                                        selectedItem.siblings.length - 1}
+                                >
+                                    <ArrowDown className="icon-md" />
+                                    <span>下移</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() => {
+                                        setDeleteTarget(selectedItem.notebook);
+                                        setDeleteError(null);
+                                    }}
+                                >
+                                    <Trash2 className="icon-md" />
+                                    <span>删除</span>
+                                </DropdownMenuItem>
+                            </>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             {/* Reorder error banner if inline operation fails */}
@@ -404,420 +437,394 @@ export function DocumentNotebookNavigation({
                 </StatusBanner>
             )}
 
-            {/* Notebook items list */}
-            <div
-                className="documents-notebook-list documents-notebook-navigation-list"
-                role="list"
-                aria-label="笔记本列表"
-            >
-                {flatItems.map((item) => {
-                    const {
-                        notebook,
-                        depth,
-                        siblings,
-                        siblingIndex,
-                        hasChildren,
-                    } = item;
-                    const isActive = scope.type === "notebook" &&
-                        scope.notebookId === notebook.id;
-                    const canMoveUp = siblingIndex > 0;
-                    const canMoveDown = siblingIndex < siblings.length - 1;
-
-                    return (
-                        <div
-                            key={notebook.id}
-                            className="documents-notebook-row documents-notebook-navigation-row"
-                            data-notebook-id={notebook.id}
-                            data-notebook-depth={depth}
-                            role="listitem"
-                        >
-                            <Button
-                                type="button"
-                                variant={isActive ? "outline" : "ghost"}
-                                className="documents-notebook-row-btn"
-                                data-active={isActive}
-                                aria-pressed={isActive}
-                                onClick={() =>
-                                    onScopeChange({
-                                        type: "notebook",
-                                        notebookId: notebook.id,
-                                    })}
-                            >
-                                <Folder className="icon-md" />
-                                <span className="documents-notebook-name">
-                                    {notebook.name}
-                                </span>
-                            </Button>
-
-                            <DropdownMenu>
-                                <DropdownMenuTrigger
-                                    render={
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="documents-row-action"
-                                            aria-label={`笔记本操作：${notebook.name}`}
-                                            title={`笔记本操作：${notebook.name}`}
-                                        >
-                                            <MoreHorizontal className="icon-md" />
-                                        </Button>
-                                    }
-                                />
-                                <DropdownMenuContent sideOffset={4}>
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            setRenameTarget(notebook);
-                                            setRenameName(notebook.name);
-                                            setRenameError(null);
-                                        }}
-                                        disabled={isPending}
-                                    >
-                                        <Pencil className="icon-md" />
-                                        <span>重命名</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            setMoveTarget(notebook);
-                                            setMoveParentId(
-                                                notebook.parentId ?? "",
-                                            );
-                                            setMoveError(null);
-                                        }}
-                                        disabled={isPending || hasChildren}
-                                    >
-                                        <FolderInput className="icon-md" />
-                                        <span>移动</span>
-                                    </DropdownMenuItem>
-                                    {depth === 0 && (
-                                        <DropdownMenuItem
-                                            onClick={() => {
-                                                setCreateName("");
-                                                setCreateParentId(notebook.id);
-                                                setCreateError(null);
-                                                setCreateOpen(true);
-                                            }}
-                                            disabled={isPending}
-                                        >
-                                            <Plus className="icon-md" />
-                                            <span>新建子笔记本</span>
-                                        </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            handleReorder(notebook, "up")}
-                                        disabled={!canMoveUp || isPending}
-                                    >
-                                        <ArrowUp className="icon-md" />
-                                        <span>上移</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            handleReorder(notebook, "down")}
-                                        disabled={!canMoveDown || isPending}
-                                    >
-                                        <ArrowDown className="icon-md" />
-                                        <span>下移</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            setDeleteTarget(notebook);
-                                            setDeleteError(null);
-                                        }}
-                                        disabled={isPending}
-                                        variant="destructive"
-                                    >
-                                        <Trash2 className="icon-md" />
-                                        <span>删除</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Create Notebook Dialog */}
-            <Dialog
+            <CreateNotebookDialog
                 open={createOpen}
+                parentName={createParentId
+                    ? notebooks.find((nb) => nb.id === createParentId)?.name ??
+                        null
+                    : null}
+                name={createName}
+                error={createError}
+                pending={isCreating}
+                roots={rootNotebooks}
+                parentId={createParentId}
+                onName={setCreateName}
+                onParent={setCreateParentId}
+                onSubmit={handleCreateSubmit}
                 onOpenChange={(open) => {
-                    if (!open && !isCreating) {
-                        setCreateOpen(false);
-                    }
+                    if (!open && !isCreating) setCreateOpen(false);
                 }}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {createParentId ? "新建子笔记本" : "新建笔记本"}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <form
-                        onSubmit={handleCreateSubmit}
-                        className="documents-dialog-form"
-                    >
-                        <div className="documents-dialog-field">
-                            <label
-                                htmlFor="create-notebook-name"
-                                className="documents-dialog-label"
-                            >
-                                笔记本名称
-                            </label>
-                            <Input
-                                id="create-notebook-name"
-                                autoFocus
-                                placeholder="输入笔记本名称…"
-                                value={createName}
-                                onChange={(e) => setCreateName(e.target.value)}
-                                disabled={isCreating}
-                                maxLength={100}
-                            />
-                        </div>
+            />
 
-                        <div className="documents-dialog-field">
-                            <label
-                                htmlFor="create-notebook-parent"
-                                className="documents-dialog-label"
-                            >
-                                所属父笔记本
-                            </label>
-                            <NativeSelect
-                                id="create-notebook-parent"
-                                value={createParentId}
-                                onChange={(e) =>
-                                    setCreateParentId(e.target.value)}
-                                disabled={isCreating}
-                            >
-                                <NativeSelectOption value="">
-                                    无（作为根笔记本）
+            <RenameNotebookDialog
+                target={renameTarget}
+                name={renameName}
+                error={renameError}
+                pending={isRenaming}
+                onName={setRenameName}
+                onSubmit={handleRenameSubmit}
+                onOpenChange={(open) => {
+                    if (!open && !isRenaming) setRenameTarget(null);
+                }}
+            />
+
+            <MoveNotebookDialog
+                target={moveTarget}
+                parentId={moveParentId}
+                parents={availableMoveParents}
+                hasChildren={moveTargetHasChildren}
+                error={moveError}
+                pending={isMoving}
+                onParent={setMoveParentId}
+                onSubmit={handleMoveSubmit}
+                onOpenChange={(open) => {
+                    if (!open && !isMoving) setMoveTarget(null);
+                }}
+            />
+
+            <DeleteNotebookDialog
+                target={deleteTarget}
+                error={deleteError}
+                pending={isDeleting}
+                onConfirm={handleDeleteConfirm}
+                onOpenChange={(open) => {
+                    if (!open && !isDeleting) setDeleteTarget(null);
+                }}
+            />
+        </nav>
+    );
+}
+
+function CreateNotebookDialog(
+    {
+        open,
+        parentName,
+        name,
+        error,
+        pending,
+        roots,
+        parentId,
+        onName,
+        onParent,
+        onSubmit,
+        onOpenChange,
+    }: {
+        open: boolean;
+        parentName: string | null;
+        name: string;
+        error: string | null;
+        pending: boolean;
+        roots: DocumentNotebookDto[];
+        parentId: string;
+        onName: (value: string) => void;
+        onParent: (value: string) => void;
+        onSubmit: (event: React.SyntheticEvent) => void;
+        onOpenChange: (open: boolean) => void;
+    },
+) {
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>
+                        {parentName ? "新建子笔记本" : "新建笔记本"}
+                    </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="documents-dialog-form">
+                    <div className="documents-dialog-field">
+                        <label
+                            htmlFor="create-notebook-name"
+                            className="documents-dialog-label"
+                        >
+                            笔记本名称
+                        </label>
+                        <Input
+                            id="create-notebook-name"
+                            autoFocus
+                            placeholder="输入笔记本名称…"
+                            value={name}
+                            onChange={(e) => onName(e.target.value)}
+                            disabled={pending}
+                            maxLength={100}
+                        />
+                    </div>
+
+                    <div className="documents-dialog-field">
+                        <label
+                            htmlFor="create-notebook-parent"
+                            className="documents-dialog-label"
+                        >
+                            所属父笔记本
+                        </label>
+                        <NativeSelect
+                            id="create-notebook-parent"
+                            value={parentId}
+                            onChange={(e) => onParent(e.target.value)}
+                            disabled={pending}
+                        >
+                            <NativeSelectOption value="">
+                                无（作为根笔记本）
+                            </NativeSelectOption>
+                            {roots.map((root) => (
+                                <NativeSelectOption
+                                    key={root.id}
+                                    value={root.id}
+                                >
+                                    {root.name}
                                 </NativeSelectOption>
-                                {rootNotebooks.map((r) => (
-                                    <NativeSelectOption
-                                        key={r.id}
-                                        value={r.id}
-                                    >
-                                        {r.name}
-                                    </NativeSelectOption>
-                                ))}
-                            </NativeSelect>
-                        </div>
+                            ))}
+                        </NativeSelect>
+                    </div>
 
-                        {createError && (
-                            <StatusBanner tone="error" density="compact">
-                                {createError}
-                            </StatusBanner>
-                        )}
-
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={isCreating}
-                                onClick={() => setCreateOpen(false)}
-                            >
-                                取消
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="default"
-                                disabled={isCreating || !createName.trim() ||
-                                    createName.trim().length > 100}
-                            >
-                                {isCreating ? "创建中…" : "创建"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Rename Notebook Dialog */}
-            <Dialog
-                open={renameTarget !== null}
-                onOpenChange={(open) => {
-                    if (!open && !isRenaming) {
-                        setRenameTarget(null);
-                    }
-                }}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>重命名笔记本</DialogTitle>
-                    </DialogHeader>
-                    <form
-                        onSubmit={handleRenameSubmit}
-                        className="documents-dialog-form"
-                    >
-                        <div className="documents-dialog-field">
-                            <label
-                                htmlFor="rename-notebook-name"
-                                className="documents-dialog-label"
-                            >
-                                笔记本名称
-                            </label>
-                            <Input
-                                id="rename-notebook-name"
-                                autoFocus
-                                placeholder="输入笔记本名称…"
-                                value={renameName}
-                                onChange={(e) => setRenameName(e.target.value)}
-                                disabled={isRenaming}
-                                maxLength={100}
-                            />
-                        </div>
-
-                        {renameError && (
-                            <StatusBanner tone="error" density="compact">
-                                {renameError}
-                            </StatusBanner>
-                        )}
-
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={isRenaming}
-                                onClick={() => setRenameTarget(null)}
-                            >
-                                取消
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="default"
-                                disabled={isRenaming || !renameName.trim() ||
-                                    renameName.trim().length > 100}
-                            >
-                                {isRenaming ? "保存中…" : "保存"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Move Notebook Dialog */}
-            <Dialog
-                open={moveTarget !== null}
-                onOpenChange={(open) => {
-                    if (!open && !isMoving) {
-                        setMoveTarget(null);
-                    }
-                }}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>移动笔记本</DialogTitle>
-                    </DialogHeader>
-                    <form
-                        onSubmit={handleMoveSubmit}
-                        className="documents-dialog-form"
-                    >
-                        <div className="documents-dialog-field">
-                            <label
-                                htmlFor="move-notebook-parent"
-                                className="documents-dialog-label"
-                            >
-                                所属父笔记本
-                            </label>
-                            {moveTargetHasChildren
-                                ? (
-                                    <p className="documents-dialog-hint">
-                                        含有子笔记本的根笔记本不能移动为子笔记本。
-                                    </p>
-                                )
-                                : (
-                                    <NativeSelect
-                                        id="move-notebook-parent"
-                                        value={moveParentId}
-                                        onChange={(e) =>
-                                            setMoveParentId(e.target.value)}
-                                        disabled={isMoving}
-                                    >
-                                        <NativeSelectOption value="">
-                                            无（作为根笔记本）
-                                        </NativeSelectOption>
-                                        {availableMoveParents.map((r) => (
-                                            <NativeSelectOption
-                                                key={r.id}
-                                                value={r.id}
-                                            >
-                                                {r.name}
-                                            </NativeSelectOption>
-                                        ))}
-                                    </NativeSelect>
-                                )}
-                        </div>
-
-                        {moveError && (
-                            <StatusBanner tone="error" density="compact">
-                                {moveError}
-                            </StatusBanner>
-                        )}
-
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={isMoving}
-                                onClick={() => setMoveTarget(null)}
-                            >
-                                取消
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="default"
-                                disabled={isMoving || moveTargetHasChildren}
-                            >
-                                {isMoving ? "移动中…" : "移动"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Delete Notebook Confirmation AlertDialog */}
-            <AlertDialog
-                open={deleteTarget !== null}
-                onOpenChange={(open) => {
-                    if (!open && !isDeleting) {
-                        setDeleteTarget(null);
-                    }
-                }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>删除笔记本</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            “{deleteTarget
-                                ?.name}”中的笔记会移至未分类，子笔记本会提升为根笔记本。
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-
-                    {deleteError && (
+                    {error && (
                         <StatusBanner tone="error" density="compact">
-                            {deleteError}
+                            {error}
                         </StatusBanner>
                     )}
 
-                    <AlertDialogFooter>
-                        <AlertDialogCancel
-                            disabled={isDeleting}
-                            onClick={() => setDeleteTarget(null)}
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={pending}
+                            onClick={() => onOpenChange(false)}
                         >
                             取消
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            variant="destructive"
-                            disabled={isDeleting}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                void handleDeleteConfirm();
-                            }}
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="default"
+                            disabled={pending || !name.trim() ||
+                                name.trim().length > 100}
                         >
-                            {isDeleting ? "删除中…" : "确认删除"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </nav>
+                            {pending ? "创建中…" : "创建"}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function RenameNotebookDialog(
+    {
+        target,
+        name,
+        error,
+        pending,
+        onName,
+        onSubmit,
+        onOpenChange,
+    }: {
+        target: DocumentNotebookDto | null;
+        name: string;
+        error: string | null;
+        pending: boolean;
+        onName: (value: string) => void;
+        onSubmit: (event: React.SyntheticEvent) => void;
+        onOpenChange: (open: boolean) => void;
+    },
+) {
+    return (
+        <Dialog open={target !== null} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>重命名笔记本</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="documents-dialog-form">
+                    <div className="documents-dialog-field">
+                        <label
+                            htmlFor="rename-notebook-name"
+                            className="documents-dialog-label"
+                        >
+                            笔记本名称
+                        </label>
+                        <Input
+                            id="rename-notebook-name"
+                            autoFocus
+                            placeholder="输入笔记本名称…"
+                            value={name}
+                            onChange={(e) => onName(e.target.value)}
+                            disabled={pending}
+                            maxLength={100}
+                        />
+                    </div>
+
+                    {error && (
+                        <StatusBanner tone="error" density="compact">
+                            {error}
+                        </StatusBanner>
+                    )}
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={pending}
+                            onClick={() => onOpenChange(false)}
+                        >
+                            取消
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="default"
+                            disabled={pending || !name.trim() ||
+                                name.trim().length > 100}
+                        >
+                            {pending ? "保存中…" : "保存"}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function MoveNotebookDialog(
+    {
+        target,
+        parentId,
+        parents,
+        hasChildren,
+        error,
+        pending,
+        onParent,
+        onSubmit,
+        onOpenChange,
+    }: {
+        target: DocumentNotebookDto | null;
+        parentId: string;
+        parents: DocumentNotebookDto[];
+        hasChildren: boolean;
+        error: string | null;
+        pending: boolean;
+        onParent: (value: string) => void;
+        onSubmit: (event: React.SyntheticEvent) => void;
+        onOpenChange: (open: boolean) => void;
+    },
+) {
+    return (
+        <Dialog open={target !== null} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>移动笔记本</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={onSubmit} className="documents-dialog-form">
+                    <div className="documents-dialog-field">
+                        <label
+                            htmlFor="move-notebook-parent"
+                            className="documents-dialog-label"
+                        >
+                            所属父笔记本
+                        </label>
+                        {hasChildren
+                            ? (
+                                <p className="documents-dialog-hint">
+                                    含有子笔记本的根笔记本不能移动为子笔记本。
+                                </p>
+                            )
+                            : (
+                                <NativeSelect
+                                    id="move-notebook-parent"
+                                    value={parentId}
+                                    onChange={(e) => onParent(e.target.value)}
+                                    disabled={pending}
+                                >
+                                    <NativeSelectOption value="">
+                                        无（作为根笔记本）
+                                    </NativeSelectOption>
+                                    {parents.map((root) => (
+                                        <NativeSelectOption
+                                            key={root.id}
+                                            value={root.id}
+                                        >
+                                            {root.name}
+                                        </NativeSelectOption>
+                                    ))}
+                                </NativeSelect>
+                            )}
+                    </div>
+
+                    {error && (
+                        <StatusBanner tone="error" density="compact">
+                            {error}
+                        </StatusBanner>
+                    )}
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={pending}
+                            onClick={() => onOpenChange(false)}
+                        >
+                            取消
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="default"
+                            disabled={pending || hasChildren}
+                        >
+                            {pending ? "移动中…" : "移动"}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function DeleteNotebookDialog(
+    {
+        target,
+        error,
+        pending,
+        onConfirm,
+        onOpenChange,
+    }: {
+        target: DocumentNotebookDto | null;
+        error: string | null;
+        pending: boolean;
+        onConfirm: () => Promise<void>;
+        onOpenChange: (open: boolean) => void;
+    },
+) {
+    return (
+        <AlertDialog open={target !== null} onOpenChange={onOpenChange}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>删除笔记本</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        “{target
+                            ?.name}”中的笔记会移至未分类，子笔记本会提升为根笔记本。
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                {error && (
+                    <StatusBanner tone="error" density="compact">
+                        {error}
+                    </StatusBanner>
+                )}
+
+                <AlertDialogFooter>
+                    <AlertDialogCancel
+                        disabled={pending}
+                        onClick={() => onOpenChange(false)}
+                    >
+                        取消
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        variant="destructive"
+                        disabled={pending}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            void onConfirm();
+                        }}
+                    >
+                        {pending ? "删除中…" : "确认删除"}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 }

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
 import type {
     DocumentNotebookDto,
@@ -7,7 +7,6 @@ import type {
 } from "@shared/documents.ts";
 import { api } from "../../lib/api.ts";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
-import { WorkspaceSection } from "./WorkspaceSection.tsx";
 import {
     EmptyState,
     LoadingState,
@@ -15,10 +14,8 @@ import {
 } from "../../components/searcher/semantic.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { DocumentNotebookNavigation } from "./DocumentNotebookNavigation.tsx";
-import {
-    CreateLibraryDocument,
-    DocumentLibraryActions,
-} from "./DocumentLibraryActions.tsx";
+import { DocumentLibraryActions } from "./DocumentLibraryActions.tsx";
+import { Star } from "lucide-react";
 
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
 const DocumentEditor = lazy(() => import("../documents/DocumentEditor.tsx"));
@@ -78,6 +75,13 @@ function DocumentSummaryRow(
                         <span className="documents-summary-title-text">
                             {displayTitle}
                         </span>
+                        {item.isFavorite && (
+                            <Star
+                                className="icon-sm documents-favorite-icon"
+                                data-favorite=""
+                                aria-hidden="true"
+                            />
+                        )}
                     </Button>
                 </h4>
                 <DocumentLibraryActions
@@ -86,14 +90,19 @@ function DocumentSummaryRow(
                     onChanged={onChanged}
                 />
             </div>
-            {item.snippet
-                ? <p className="documents-summary-snippet">{item.snippet}</p>
-                : null}
-            <div className="documents-summary-footer">
-                {item.isFavorite && <span>收藏</span>}
+            <div className="documents-summary-line">
                 {item.notebookName && scope.type !== "notebook" && (
-                    <span>{item.notebookName}</span>
+                    <span className="documents-summary-notebook">
+                        {item.notebookName}
+                    </span>
                 )}
+                {item.snippet
+                    ? (
+                        <span className="documents-summary-snippet">
+                            {item.snippet}
+                        </span>
+                    )
+                    : null}
                 {formattedDate
                     ? (
                         <time
@@ -141,6 +150,7 @@ function DocumentsLibrary({
     onScopeChange,
     onOpenDocument,
 }: DocumentsWorkspaceProps) {
+    const listHeadingId = useId();
     const trimmedQuery = query.trim();
     const isSearching = trimmedQuery.length > 0;
     const scopeKey = scope.type === "notebook"
@@ -281,6 +291,20 @@ function DocumentsLibrary({
 
     if (state.view !== "documents/root") return null;
 
+    const listLabel = isSearching
+        ? "搜索结果"
+        : scope.type === "recent"
+        ? "最近笔记"
+        : scope.type === "favorite"
+        ? "收藏笔记"
+        : scope.type === "home"
+        ? "首页笔记"
+        : scope.type === "notebook"
+        ? notebooks.find((notebook) => notebook.id === scope.notebookId)
+            ?.name ??
+            "笔记本内容"
+        : "全部笔记";
+
     return (
         <div
             className="workspace-root documents-workspace"
@@ -296,142 +320,131 @@ function DocumentsLibrary({
                     </div>
                 </StatusBanner>
             )}
-            <div className="documents-library-layout">
-                <DocumentNotebookNavigation
-                    notebooks={notebooks}
-                    scope={scope}
-                    onScopeChange={onScopeChange}
-                    onChanged={refresh}
-                />
-                <div className="documents-library-content">
+            <DocumentNotebookNavigation
+                notebooks={notebooks}
+                scope={scope}
+                onScopeChange={onScopeChange}
+                onChanged={refresh}
+            />
+            {/* The segmented control already names the scope on screen. */}
+            <section
+                className="documents-list"
+                aria-labelledby={listHeadingId}
+            >
+                <h3 id={listHeadingId} className="sr-only">
+                    {listLabel}
+                </h3>
+                <div className="documents-list-toolbar">
                     <WorkspaceSearch
                         ariaLabel="搜索笔记"
                         placeholder="搜索笔记标题或内容"
                         value={query}
                         onChange={onQueryChange}
                     />
-                    {loading && (
-                        <LoadingState density="compact">
-                            正在加载笔记…
-                        </LoadingState>
+                    {!loading && !error && (
+                        <span className="documents-list-count">
+                            {items.length} 条
+                        </span>
                     )}
-                    {error && (
-                        <StatusBanner tone="error" density="compact">
-                            <div className="documents-status-row">
-                                <span>{error}</span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setRetryCount((c) => c + 1)}
-                                >
-                                    重试
-                                </Button>
-                            </div>
-                        </StatusBanner>
-                    )}
-                    <WorkspaceSection
-                        title={isSearching
-                            ? "搜索结果"
-                            : scope.type === "recent"
-                            ? "最近笔记"
-                            : scope.type === "favorite"
-                            ? "收藏笔记"
-                            : scope.type === "notebook"
-                            ? "笔记本内容"
-                            : "全部笔记"}
-                        count={items.length}
-                        actions={
-                            <CreateLibraryDocument
-                                notebooks={notebooks}
-                                scope={scope}
-                                onChanged={refresh}
-                                onCreated={(document) =>
-                                    onOpenDocument(document.id)}
-                            />
-                        }
-                    >
-                        {!loading && !error && items.length === 0 && (
-                            isSearching
-                                ? (
-                                    <EmptyState
-                                        headingLevel={3}
-                                        density="compact"
-                                        title="没有匹配的笔记"
-                                        action={
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() =>
-                                                    onQueryChange("")}
-                                            >
-                                                清空搜索
-                                            </Button>
-                                        }
-                                    />
-                                )
-                                : (
-                                    <EmptyState
-                                        headingLevel={3}
-                                        density="compact"
-                                        title={scope.type === "recent"
-                                            ? "暂无最近笔记"
-                                            : scope.type === "favorite"
-                                            ? "暂无收藏笔记"
-                                            : scope.type === "notebook"
-                                            ? "笔记本为空"
-                                            : "还没有笔记"}
-                                    />
-                                )
-                        )}
-                        {items.length > 0 && (
-                            <div className="documents-workspace-list">
-                                {items.map((item) => (
-                                    <DocumentSummaryRow
-                                        key={item.id}
-                                        item={item}
-                                        notebooks={notebooks}
-                                        scope={isSearching
-                                            ? { type: "all" }
-                                            : scope}
-                                        onChanged={refresh}
-                                        onOpenDocument={onOpenDocument}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                        {loadMoreError && (
-                            <StatusBanner tone="error" density="compact">
-                                <div className="documents-status-row">
-                                    <span>{loadMoreError}</span>
+                </div>
+                {loading && (
+                    <LoadingState density="compact">
+                        正在加载笔记…
+                    </LoadingState>
+                )}
+                {error && (
+                    <StatusBanner tone="error" density="compact">
+                        <div className="documents-status-row">
+                            <span>{error}</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setRetryCount((c) => c + 1)}
+                            >
+                                重试
+                            </Button>
+                        </div>
+                    </StatusBanner>
+                )}
+                {!loading && !error && items.length === 0 && (
+                    isSearching
+                        ? (
+                            <EmptyState
+                                headingLevel={3}
+                                density="compact"
+                                title="没有匹配的笔记"
+                                action={
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={handleLoadMore}
+                                        onClick={() => onQueryChange("")}
                                     >
-                                        重试
+                                        清空搜索
                                     </Button>
-                                </div>
-                            </StatusBanner>
-                        )}
-                        {loadingMore && (
-                            <LoadingState density="compact">
-                                正在加载更多笔记…
-                            </LoadingState>
-                        )}
-                        {!loading && !loadingMore && nextCursor && (
-                            <div className="documents-workspace-more">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleLoadMore}
-                                >
-                                    加载更多
-                                </Button>
-                            </div>
-                        )}
-                    </WorkspaceSection>
-                </div>
-            </div>
+                                }
+                            />
+                        )
+                        : (
+                            <EmptyState
+                                headingLevel={3}
+                                density="compact"
+                                title={scope.type === "recent"
+                                    ? "暂无最近笔记"
+                                    : scope.type === "favorite"
+                                    ? "暂无收藏笔记"
+                                    : scope.type === "home"
+                                    ? "暂无首页笔记"
+                                    : scope.type === "notebook"
+                                    ? "笔记本为空"
+                                    : "还没有笔记"}
+                            />
+                        )
+                )}
+                {items.length > 0 && (
+                    <div className="documents-workspace-list">
+                        {items.map((item) => (
+                            <DocumentSummaryRow
+                                key={item.id}
+                                item={item}
+                                notebooks={notebooks}
+                                scope={isSearching ? { type: "all" } : scope}
+                                onChanged={refresh}
+                                onOpenDocument={onOpenDocument}
+                            />
+                        ))}
+                    </div>
+                )}
+                {loadMoreError && (
+                    <StatusBanner tone="error" density="compact">
+                        <div className="documents-status-row">
+                            <span>{loadMoreError}</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleLoadMore}
+                            >
+                                重试
+                            </Button>
+                        </div>
+                    </StatusBanner>
+                )}
+                {loadingMore && (
+                    <LoadingState density="compact">
+                        正在加载更多笔记…
+                    </LoadingState>
+                )}
+                {!loading && !loadingMore && nextCursor && (
+                    <div className="documents-workspace-more">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleLoadMore}
+                        >
+                            加载更多
+                        </Button>
+                    </div>
+                )}
+            </section>
         </div>
     );
 }
