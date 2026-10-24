@@ -188,10 +188,8 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                                     glyphBox.left + glyphBox.width / 2 -
                                         (box.left + box.width / 2),
                                 ),
-                                centeredY: Math.abs(
-                                    glyphBox.top + glyphBox.height / 2 -
-                                        (box.top + box.height / 2),
-                                ),
+                                // Glyphs sit on the row's top edge so big folders align (#285 C8).
+                                topOffset: Math.abs(glyphBox.top - box.top),
                                 hittable: hit === button ||
                                     button.contains(hit),
                             };
@@ -213,7 +211,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 assertEquals(button.height, track);
                 assertEquals(button.glyph, glyph);
                 assert(button.centeredX < 1);
-                if (!showLabels) assert(button.centeredY < 1);
+                assert(button.topOffset < 1);
                 assertEquals(button.hittable, true);
             }
         };
