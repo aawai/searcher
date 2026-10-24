@@ -54,6 +54,14 @@ desk 至少覆盖 workspace + documents，并包含 routing/bundle/home-papers/s
 不启动浏览器。空差异/list 仍校验清单并写 `timings.json`（含路径、基线、选中集合和 skipped），
 不生成 JUnit。正常执行至多 build 一次；完整细节见 [Production E2E](../scripts/e2e/README.md#affected保守的局部选择)。
 
+### 验证调度
+
+- 调试先跑聚焦文件，再跑受影响 suite；`test:e2e:affected` 是保守的本地选择建议，不能裁剪明确要求的合并门禁。
+- 代码稳定后安排一轮正常超时的完整验收。当前 revision 的 CI 若已覆盖所有 suite，可复用完整并集，不再重复一次本地 full；共享 helper、测试、构建或环境变化后只复查失效范围。
+- 本机只运行一个 E2E 进程，`DENO_JOBS=2` 为默认、最多 3。多个子 agent 只编辑并汇报待验证文件，由主代理统一执行；远端 CI 的独立 job 不占本机额度。
+- 长运行放后台，期间推进文档或其他不依赖结果的修改；不要以轮询等同于进展。发现产品、脚本或环境失败后再针对证据复查。
+- 快速超时只帮助摸底，不改变显式 timeout、分页采样与空闲观测窗口。超时对比使用独立小夹具，不能故意破坏共享入口再跑整套失败用例。
+
 ## CI 覆盖
 
 此前 CI 已运行完整 `workspace`、`bundle`、`home-papers`、`wallpaper`
