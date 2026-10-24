@@ -177,11 +177,18 @@ Deno.test("accent follows the wallpaper by default, stays a manual override and 
         assertNotEquals(tealAccent, orangeAccent);
 
         // A manual accent overrides; it persists, and "跟随壁纸" restores the wallpaper colour.
+        const accentSaved = device.page.waitForResponse((response) =>
+            response.url().endsWith("/api/preferences") &&
+            response.request().method() === "PATCH" && response.ok() &&
+            response.request().postData()?.includes('"violet"') === true
+        );
         await device.page.getByRole("radio", { name: "电光紫", exact: true })
             .click();
         await device.page.waitForFunction(() =>
             document.documentElement.dataset.accent === "violet"
         );
+        // The reload must observe the persisted choice, not race the save.
+        await accentSaved;
         await device.page.reload();
         await device.page.getByRole("radio", {
             name: "电光紫",
