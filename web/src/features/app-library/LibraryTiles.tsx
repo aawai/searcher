@@ -237,6 +237,20 @@ export function FolderTile({
                 <ContextMenuItem onClick={openFolder}>
                     打开文件夹
                 </ContextMenuItem>
+                {actions.onSetGroupHomeFixed &&
+                    (actions.homeSurface !== "home" ||
+                        tile.group.isHomeFixed) &&
+                    (
+                        <ContextMenuItem
+                            onClick={() =>
+                                actions.onSetGroupHomeFixed!(
+                                    tile.group,
+                                    !tile.group.isHomeFixed,
+                                )}
+                        >
+                            {tile.group.isHomeFixed ? "取消固定" : "固定到首页"}
+                        </ContextMenuItem>
+                    )}
                 <ContextMenuItem
                     onClick={() =>
                         actions.onFolderSizeChange(

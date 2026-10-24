@@ -11,6 +11,7 @@ export interface WebAppItem {
     iconAssetId?: string | null;
     iconSource?: "website" | "upload" | "url" | "ai" | "default";
     groupId?: string | null;
+    isHomeFixed?: boolean;
     openMode?: "global" | "current" | "new_tab";
 }
 

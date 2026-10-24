@@ -151,6 +151,7 @@ Deno.test("production home default note placement E2E (#243)", async (t) => {
                 body: JSON.stringify({
                     name: `应用 ${i}`,
                     url: `https://placement-${i}.example/`,
+                    isHomeFixed: true,
                 }),
             });
             if (!response.ok) throw new Error(await response.text());

@@ -40,7 +40,11 @@ async function startFixture(username: string, seed: Seed = {}) {
                     const response = await fetch("/api/webapp-groups", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ name, sortOrder: index }),
+                        body: JSON.stringify({
+                            name,
+                            sortOrder: index,
+                            isHomeFixed: true,
+                        }),
                     });
                     if (!response.ok) throw new Error(await response.text());
                 }
@@ -52,6 +56,7 @@ async function startFixture(username: string, seed: Seed = {}) {
                             ...item,
                             iconSource: "default",
                             openMode: "global",
+                            isHomeFixed: true,
                         }),
                     });
                     if (!response.ok) throw new Error(await response.text());

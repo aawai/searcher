@@ -9,7 +9,7 @@ import {
 
 /** What the home add/edit dialog is showing; null while it is closed. */
 export type AppFormTarget =
-    | { mode: "create"; groupId?: string }
+    | { mode: "create"; groupId?: string; isHomeFixed?: boolean }
     | { mode: "edit"; id: string; expandIcon?: boolean };
 
 /**

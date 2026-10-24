@@ -124,6 +124,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
         await api("/api/webapps", "POST", {
             name: `Host app ${index}`,
             url: `https://example.org/host158/${index}`,
+            isHomeFixed: true,
         });
     }
     for (

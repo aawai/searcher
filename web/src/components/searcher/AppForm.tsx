@@ -4,6 +4,7 @@ import { Button } from "../ui/button.tsx";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect, NativeSelectOption } from "../ui/native-select.tsx";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
+import { Switch } from "../ui/switch.tsx";
 import { LogoCandidatePicker } from "./LogoCandidatePicker.tsx";
 import { WebAppGlyph } from "./WebAppIcon.tsx";
 import {
@@ -26,6 +27,7 @@ export function AppForm() {
         appUrl,
         appName,
         appGroupId,
+        appHomeFixed,
         appOpenMode,
         iconTab,
         appIconSource,
@@ -48,6 +50,7 @@ export function AppForm() {
         setIconExpanded,
         setAppName,
         setAppGroupId,
+        setAppHomeFixed,
         setAppOpenMode,
         setIconTab,
         setAppIconAssetId,
@@ -182,6 +185,31 @@ export function AppForm() {
                             </NativeSelect>
                         </div>
                     </div>
+
+                    {!editingApp && (
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex flex-col gap-0.5">
+                                <label
+                                    htmlFor="app-home-fixed"
+                                    className="app-dialog-field-label"
+                                >
+                                    固定到首页
+                                </label>
+                                <span className="app-dialog-option-desc">
+                                    {appGroupId
+                                        ? "文件夹成员随文件夹显示，固定状态由文件夹决定"
+                                        : "只影响首页呈现，应用始终保留在资料库"}
+                                </span>
+                            </div>
+                            <Switch
+                                id="app-home-fixed"
+                                aria-label="固定到首页"
+                                checked={appGroupId ? false : appHomeFixed}
+                                disabled={Boolean(appGroupId)}
+                                onCheckedChange={setAppHomeFixed}
+                            />
+                        </div>
+                    )}
                 </section>
 
                 {/* 2. 打开设置 (清晰紧凑) */}

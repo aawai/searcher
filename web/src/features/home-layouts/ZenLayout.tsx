@@ -183,6 +183,7 @@ export function ZenLayout(
             onCreateApp={openCreateApp}
             onDeleteApp={(app) => void softDeleteApp(app)}
             onGridElement={setGridElement}
+            onOpenLibraryApps={() => openLibrary("apps")}
         />
     );
     const papersBlock = !mobile && papers.length > 0 && (

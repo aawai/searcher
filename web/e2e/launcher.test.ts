@@ -9,6 +9,7 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import { openMoreApps } from "./helpers/app-library.ts";
+import { closeLibrary } from "./helpers/library.ts";
 import { assertLargeFolderGeometry } from "./helpers/launcher-geometry.ts";
 
 interface ServerApp {
@@ -281,21 +282,25 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
         name: "Dev Tools",
         sortOrder: 0,
         folderSize: "small",
+        isHomeFixed: true,
     });
     await apiRequest("/api/webapp-groups", "POST", {
         name: "Empty Folder",
         sortOrder: 1,
         folderSize: "small",
+        isHomeFixed: true,
     });
     const { data: appGitHub } = await apiRequest("/api/webapps", "POST", {
         name: "GitHub",
         url: "https://github.com",
         sortOrder: 0,
+        isHomeFixed: true,
     });
     const { data: appLinear } = await apiRequest("/api/webapps", "POST", {
         name: "Linear",
         url: "https://linear.app",
         sortOrder: 1,
+        isHomeFixed: true,
     });
     const { data: appGitLab } = await apiRequest("/api/webapps", "POST", {
         name: "GitLab",
@@ -787,70 +792,48 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
     );
 
     await t.step(
-        "11. Folder across app and app across app preserve mixed order on reload",
+        "11. Folder across app preserves mixed order on reload",
         async () => {
-            const added = await apiRequest("/api/webapps", "POST", {
-                name: "Second Loose",
-                url: "https://example.org/second-loose",
-                sortOrder: 1000,
-            });
-            assertEquals(added.status, 200);
-            const loose = added.data as { id: string };
-            for (let i = 1; i <= 3; i++) {
-                await apiRequest("/api/webapps", "POST", {
-                    name: `Multi App ${i}`,
-                    url: `https://example.org/multi-${i}`,
-                    sortOrder: 1000 + i,
-                });
-            }
-            for (const sourceId of ["folder:" + group1.id, loose.id]) {
-                await showHome();
-                await enterArranging();
-                const before = await readTileIds(homeTiles);
-                const expected = [...before];
-                const from = before.indexOf(sourceId);
-                const to = before.indexOf(appGitHub.id);
-                assertEquals(from >= 0 && to >= 0, true);
-                expected.splice(to, 0, ...expected.splice(from, 1));
-                const target = homeGrid.locator(
-                    `.launcher-tile[data-tile-id="${appGitHub.id}"]`,
-                );
-                await dragTo(
-                    homeGrid.locator(
-                        `.launcher-tile[data-tile-id="${sourceId}"]`,
-                    ),
-                    target,
-                    () =>
-                        target.locator(
-                            "xpath=self::*[contains(@class,'is-over')]",
-                        ).waitFor(),
-                );
-                const saved = page.waitForResponse((response) =>
-                    new URL(response.url()).pathname ===
-                        "/api/webapps/reorder" &&
-                    response.request().method() === "PUT"
-                );
-                await page.mouse.up();
-                assertEquals((await saved).status(), 200);
-                assertEquals(await readTileIds(homeTiles), expected);
-                await showHome();
-                assertEquals(await readTileIds(homeTiles), expected);
-                const apps = (await apiRequest("/api/webapps"))
-                    .data as ServerApp[];
-                assertEquals(
-                    apps.find((item) => item.id === loose.id)?.groupId,
-                    null,
-                );
-                assertEquals(
-                    apps.find((item) => item.id === appGitHub.id)?.groupId,
-                    null,
-                );
-            }
+            await showHome();
+            await enterArranging();
+            const before = await readTileIds(homeTiles);
+            const expected = [...before];
+            const from = before.indexOf("folder:" + group1.id);
+            const to = before.indexOf(appGitHub.id);
+            assertEquals(from >= 0 && to >= 0, true);
+            expected.splice(to, 0, ...expected.splice(from, 1));
+            const target = homeGrid.locator(
+                `.launcher-tile[data-tile-id="${appGitHub.id}"]`,
+            );
+            await dragTo(
+                homeGrid.locator(
+                    `.launcher-tile[data-tile-id="folder:${group1.id}"]`,
+                ),
+                target,
+                () =>
+                    target.locator(
+                        "xpath=self::*[contains(@class,'is-over')]",
+                    ).waitFor(),
+            );
+            const saved = page.waitForResponse((response) =>
+                new URL(response.url()).pathname ===
+                    "/api/webapps/reorder" &&
+                response.request().method() === "PUT"
+            );
+            await page.mouse.up();
+            assertEquals((await saved).status(), 200);
+            assertEquals(await readTileIds(homeTiles), expected);
+            await showHome();
+            assertEquals(await readTileIds(homeTiles), expected);
+            assertEquals(
+                (await serverRoot()).map((item) => item.id),
+                expected,
+            );
         },
     );
 
     await t.step(
-        "12. Overflow popup (更多) reorders its tiles into the canonical order",
+        "12. 更多（N） opens the library app view instead of a popup",
         async () => {
             // One row only: the remaining root tiles move into 更多（N）.
             await page.setViewportSize({ width: 1280, height: 440 });
@@ -863,49 +846,28 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
                 await more.getAttribute("aria-label"),
                 `更多（${total - shown}）`,
             );
-            // + moves into the popup when the grid is over capacity.
             assertEquals(
                 await homeGrid.locator('[data-library-cell="add"]').count(),
                 0,
             );
-            await openMoreApps(page, more);
+            const library = await openMoreApps(page, more);
+            await library.getByText("全部应用", { exact: true }).waitFor();
             assertEquals(
-                await popup.locator(".launcher-popup-title").textContent(),
-                "更多应用",
+                await library.locator(
+                    ".launcher-grid--library > .launcher-tile[data-tile-id]",
+                ).count(),
+                total,
             );
             assertEquals(
-                await popup.locator('[data-library-cell="add"]').count(),
-                1,
+                await library.getByRole("button", {
+                    name: "添加应用",
+                    exact: true,
+                }).count() >= 1,
+                true,
             );
-            const popupTiles = popup.locator(".launcher-tile[data-tile-id]");
-            const overflow = await readTileIds(popupTiles);
-            assertEquals(overflow.length, total - shown);
-
-            const canonical = (await serverRoot()).map((item) => item.id);
-            await blankMenuItem("整理布局", ".launcher-popup");
-            await popupTiles.first().locator("button").first().focus();
-            const persisted = page.waitForResponse((response) =>
-                new URL(response.url()).pathname === "/api/webapps/reorder" &&
-                response.request().method() === "PUT"
-            );
-            await page.keyboard.press("ArrowRight");
-            assertEquals((await persisted).status(), 200);
-
-            const expected = [...canonical];
-            const first = canonical.indexOf(overflow[0]!);
-            const second = canonical.indexOf(overflow[1]!);
-            expected[first] = overflow[1]!;
-            expected[second] = overflow[0]!;
-            assertEquals((await serverRoot()).map((item) => item.id), expected);
-            assertEquals(await readTileIds(popupTiles), [
-                overflow[1],
-                overflow[0],
-                ...overflow.slice(2),
-            ]);
-            await blankMenuItem("完成整理", ".launcher-popup");
-            await page.keyboard.press("Escape");
-            await popup.waitFor({ state: "detached" });
+            await closeLibrary(page);
             await page.setViewportSize({ width: 1280, height: 800 });
+            await showHome();
         },
     );
 

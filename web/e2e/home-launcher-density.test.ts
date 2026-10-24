@@ -37,6 +37,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                         name: index === 0 ? longName : "App " + index,
                         url: "https://home-app-" + index + ".example/",
                         sortOrder: index,
+                        isHomeFixed: true,
                     }),
                 });
                 if (!response.ok) {

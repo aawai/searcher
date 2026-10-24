@@ -60,6 +60,7 @@ Deno.test("icon presentation real-page matrix: fixed glyphs, opaque and transpar
                         }.example/`,
                         iconAssetId: asset.id,
                         iconSource: "upload",
+                        isHomeFixed: true,
                     },
                     headers: { Origin: app.origin },
                 },

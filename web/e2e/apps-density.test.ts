@@ -10,6 +10,7 @@ import {
 import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { openMoreApps } from "./helpers/app-library.ts";
+import { closeLibrary } from "./helpers/library.ts";
 import { assertLargeFolderGeometry } from "./helpers/launcher-geometry.ts";
 
 // Issue #244: the home page is the application library. These regressions pin
@@ -144,6 +145,7 @@ async function seedFixtures(page: Page): Promise<Fixtures> {
                 groupId: params.groupId ?? null,
                 iconSource: "default",
                 openMode: "global",
+                isHomeFixed: true,
             });
 
         // Folders lead the canonical order so both stay on the first rows of
@@ -152,11 +154,13 @@ async function seedFixtures(page: Page): Promise<Fixtures> {
             name: "Small Sparse Folder",
             sortOrder: 0,
             folderSize: "small",
+            isHomeFixed: true,
         });
         const largeGroup = await post<{ id: string }>("/api/webapp-groups", {
             name: "Large Full Folder",
             sortOrder: 1,
             folderSize: "large",
+            isHomeFixed: true,
         });
         const looseCount = 20;
         for (let index = 0; index < looseCount; index++) {
@@ -757,27 +761,29 @@ async function runTouchInteractions(
         await popup.waitFor({ state: "detached" });
     }
 
-    // 更多（N） opens every tile that did not fit, plus the add entry.
+    // 更多（N） opens the complete library app view, with its add action.
     const more = grid.locator("[data-library-cell='more']");
     const moreCount = Number(
         /（(\d+)）/.exec((await more.getAttribute("aria-label"))!)![1],
     );
-    const morePopup = await openMoreApps(page, more);
+    const library = await openMoreApps(page, more);
     await settlePresentation(page);
+    const libraryTiles = await library.locator(
+        ".launcher-grid--library > .launcher-tile[data-tile-id]",
+    ).count();
+    assert(
+        libraryTiles >= moreCount,
+        `library shows every tile (${libraryTiles} >= ${moreCount})`,
+    );
     assertEquals(
-        await morePopup.locator(
-            ".launcher-grid--popup > .launcher-tile[data-tile-id]",
-        )
-            .count(),
-        moreCount,
-        "更多 popup shows exactly the tiles that did not fit",
+        await library.getByRole("button", {
+            name: "添加应用",
+            exact: true,
+        }).count() >= 1,
+        true,
+        "library keeps the add action",
     );
-    await assertTouchTarget(
-        morePopup.locator("[data-library-cell='add']"),
-        "Add cell inside 更多",
-    );
-    await page.keyboard.press("Escape");
-    await morePopup.waitFor({ state: "detached" });
+    await closeLibrary(page);
 }
 
 async function runTouchMatrix(

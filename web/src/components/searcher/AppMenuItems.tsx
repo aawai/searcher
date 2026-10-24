@@ -12,6 +12,13 @@ export interface AppMenuActions {
     onMove: (app: LauncherApp, groupId: string | null) => void;
     onDelete: (app: LauncherApp) => void;
     onToggleManaging?: () => void;
+    onSetHomeFixed?: (app: LauncherApp, isHomeFixed: boolean) => void;
+    onSetGroupHomeFixed?: (
+        group: LauncherGroup,
+        isHomeFixed: boolean,
+    ) => void;
+    /** Home only lists pinned tiles; the library offers both directions. */
+    homeSurface?: "home" | "library";
 }
 
 export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
@@ -30,6 +37,15 @@ export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
             <Item onClick={() => actions.onOpen(app)}>
                 打开
             </Item>
+            {actions.onSetHomeFixed && !app.groupId &&
+                (actions.homeSurface !== "home" || app.isHomeFixed) && (
+                <Item
+                    onClick={() =>
+                        actions.onSetHomeFixed!(app, !app.isHomeFixed)}
+                >
+                    {app.isHomeFixed ? "取消固定" : "固定到首页"}
+                </Item>
+            )}
             {actions.onToggleManaging && (
                 <Item onClick={actions.onToggleManaging}>
                     {managing ? "完成整理" : "整理布局"}

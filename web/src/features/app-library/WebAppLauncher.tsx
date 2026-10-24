@@ -229,6 +229,8 @@ export interface WebAppLauncherProps {
     /** `activeId` was dropped on `overId`, both visible tile ids. */
     onReorder: (activeId: string, overId: string) => void;
     onDropOnFolder: (app: LauncherApp, folderId: string) => void;
+    /** Drag one root app onto another to create a folder holding both. */
+    onDropOnApp?: (app: LauncherApp, target: LauncherApp) => void;
     onMoveByKey: (id: string, direction: -1 | 1) => void;
     label: string;
 }
@@ -244,6 +246,7 @@ export function WebAppLauncher({
     onAdd,
     onReorder,
     onDropOnFolder,
+    onDropOnApp,
     onMoveByKey,
     label,
 }: WebAppLauncherProps) {
@@ -265,6 +268,19 @@ export function WebAppLauncher({
     const active = plan.visible.find((item) => item.tile.id === activeId)
         ?.tile;
 
+    /** A drop in the gaps reorders; only a tile dropped onto the target's centre folds. */
+    function droppedOnCenter(
+        event: DragEndEvent,
+        target: { left: number; top: number; right: number; bottom: number },
+    ): boolean {
+        const translated = event.active.rect.current.translated;
+        if (!translated) return false;
+        const x = translated.left + translated.width / 2;
+        const y = translated.top + translated.height / 2;
+        return x >= target.left && x <= target.right &&
+            y >= target.top && y <= target.bottom;
+    }
+
     function dragEnd(event: DragEndEvent) {
         setActiveId(null);
         const { active: from, over } = event;
@@ -275,6 +291,13 @@ export function WebAppLauncher({
             ?.tile;
         if (fromTile?.type === "app" && overTile?.type === "folder") {
             onDropOnFolder(fromTile.app, overTile.group.id);
+            return;
+        }
+        if (
+            fromTile?.type === "app" && overTile?.type === "app" &&
+            onDropOnApp && droppedOnCenter(event, over.rect)
+        ) {
+            onDropOnApp(fromTile.app, overTile.app);
             return;
         }
         onReorder(String(from.id), String(over.id));
