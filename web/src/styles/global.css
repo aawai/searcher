@@ -233,7 +233,7 @@ a {
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
 }
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     .top-actions a,
     .top-actions button,
     .wordmark-small {
@@ -244,7 +244,7 @@ a {
 .muted {
     color: var(--muted);
 }
-@media (max-width:700px) {
+@media (max-width: 767px) {
     .topbar {
         padding: var(--space-3) var(--space-page-inline);
     }

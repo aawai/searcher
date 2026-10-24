@@ -1,3 +1,4 @@
+import { MEDIA_QUERIES } from "../design-system/breakpoints.ts";
 import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -275,10 +276,10 @@ export function SearchHome() {
     const deskScroller = useRef<HTMLElement | null>(null);
     const home = useHomeViewport();
     const [mobile, setMobile] = useState(() =>
-        globalThis.matchMedia("(max-width: 767px)").matches
+        globalThis.matchMedia(MEDIA_QUERIES.belowMedium).matches
     );
     useEffect(() => {
-        const media = globalThis.matchMedia("(max-width: 767px)");
+        const media = globalThis.matchMedia(MEDIA_QUERIES.belowMedium);
         const change = () => setMobile(media.matches);
         media.addEventListener("change", change);
         return () => media.removeEventListener("change", change);

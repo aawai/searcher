@@ -1431,7 +1431,7 @@
     }
 }
 
-@media (pointer: coarse), (hover: none), (max-width: 640px) {
+@media (any-pointer: coarse), (hover: none), (max-width: 639px) {
     .ask-composer__tool-option {
         min-height: var(--control-touch-target);
     }
@@ -1441,7 +1441,7 @@
     }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 767px) {
     .ask-sidebar {
         display: none;
     }
@@ -1451,7 +1451,7 @@
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639px) {
     .ask-thread__viewport {
         padding-right: var(--space-3);
         padding-left: var(--space-3);

@@ -1,4 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
+import { HOME_GRID } from "../../design-system/home-grid.ts";
 import {
     exclusionFromRects,
     type MeasuredDefaultNote,
@@ -121,14 +122,24 @@ Deno.test("default notes fill the columns beside the app region alternately, top
     const placedById = new Map(result.placed.map((item) => [item.id, item]));
     assertEquals(placedById.get("n0"), { id: "n0", x: 32, y: 88 });
     assertEquals(placedById.get("n1"), { id: "n1", x: 1188, y: 88 });
-    assertEquals(placedById.get("n2"), { id: "n2", x: 32, y: 324 });
-    assertEquals(placedById.get("n3"), { id: "n3", x: 1188, y: 324 });
-    assertEquals(placedById.get("n4"), { id: "n4", x: 32, y: 560 });
-    assertEquals(placedById.get("n5"), { id: "n5", x: 1188, y: 560 });
+    const secondRow = 88 + 220 + HOME_GRID.wide.gap;
+    const thirdRow = secondRow + 220 + HOME_GRID.wide.gap;
+    assertEquals(placedById.get("n2"), { id: "n2", x: 32, y: secondRow });
+    assertEquals(placedById.get("n3"), { id: "n3", x: 1188, y: secondRow });
+    assertEquals(placedById.get("n4"), { id: "n4", x: 32, y: thirdRow });
+    assertEquals(placedById.get("n5"), { id: "n5", x: 1188, y: thirdRow });
     // Six notes take the outer columns; the last two use the free space beside
     // the app band, since the 780px height has no room below it.
-    assertEquals(placedById.get("n6"), { id: "n6", x: 876, y: 88 });
-    assertEquals(placedById.get("n7"), { id: "n7", x: 952, y: 324 });
+    assertEquals(placedById.get("n6"), {
+        id: "n6",
+        x: 860 + HOME_GRID.wide.gap,
+        y: 88,
+    });
+    assertEquals(placedById.get("n7"), {
+        id: "n7",
+        x: 968 - HOME_GRID.wide.gap,
+        y: secondRow,
+    });
     assertEquals(result.overflowIds, []);
 
     for (const position of result.placed) {

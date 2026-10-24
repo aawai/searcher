@@ -193,7 +193,7 @@
     background: var(--glass-sheen), var(--material-thick);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639px) {
     .design-lab-form {
         max-width: none;
     }

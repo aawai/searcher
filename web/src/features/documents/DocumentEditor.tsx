@@ -1,3 +1,4 @@
+import { MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
 import {
     type ChangeEvent,
     type FocusEvent,
@@ -372,7 +373,7 @@ export function DocumentEditor({
             if (
                 !container.isConnected ||
                 !container.contains(document.activeElement) ||
-                !globalThis.matchMedia("(pointer: coarse), (max-width: 640px)")
+                !globalThis.matchMedia(MEDIA_QUERIES.editorCompact)
                     .matches
             ) return;
 

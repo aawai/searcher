@@ -1,3 +1,4 @@
+import { MEDIA_QUERIES } from "../design-system/breakpoints.ts";
 import {
     ChevronLeft,
     ChevronRight,
@@ -56,10 +57,10 @@ export function SettingsShell(
     const { user } = useAppState();
     const location = useLocation();
     const [mobile, setMobile] = useState(() =>
-        globalThis.matchMedia("(max-width: 767px)").matches
+        globalThis.matchMedia(MEDIA_QUERIES.belowMedium).matches
     );
     useEffect(() => {
-        const media = globalThis.matchMedia("(max-width: 767px)");
+        const media = globalThis.matchMedia(MEDIA_QUERIES.belowMedium);
         const change = () => setMobile(media.matches);
         media.addEventListener("change", change);
         return () => media.removeEventListener("change", change);

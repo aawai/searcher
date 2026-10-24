@@ -298,7 +298,7 @@
     margin-inline-start: 0;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 767px) {
     .search-frame {
         height: 52px;
     }

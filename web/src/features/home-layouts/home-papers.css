@@ -227,7 +227,7 @@
     pointer-events: none;
 }
 
-@media (min-width: 961px) {
+@media (min-width: 1024px) {
     .floating-notes--canvas {
         position: fixed;
         inset: 0;
@@ -242,13 +242,7 @@
         pointer-events: auto;
     }
 }
-@media (max-width: 960px) {
-    .floating-notes {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: var(--space-3);
-        height: auto !important;
-    }
+@media (max-width: 1023px) {
     .note-position {
         position: static !important;
         transform: none !important;
@@ -258,9 +252,6 @@
     }
 }
 @media (max-width: 767px), (any-pointer: coarse) {
-    .floating-notes {
-        grid-template-columns: minmax(0, 1fr);
-    }
     .note-card-actions,
     .note-drag {
         opacity: 1;

@@ -144,8 +144,8 @@
 /* Home and popup grids share the square cell: the drag overlay is portaled
    outside both, so it carries the same tokens. */
 :is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) {
-    --launcher-col-w: 64px;
-    --launcher-gap-x: 6px;
+    --launcher-col-w: var(--home-grid-cell);
+    --launcher-gap-x: var(--home-grid-gap);
     --launcher-pad-t: 0px;
     --launcher-pad-b: 0px;
     --space-launcher-pad-t: var(--launcher-pad-t);
@@ -160,10 +160,6 @@
 }
 /* Wide Home: Safari-start-page scale icons; narrow and touch keep denser cells. */
 @media (min-width: 768px) {
-    :is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) {
-        --launcher-gap-x: var(--space-3);
-        --launcher-col-w: 84px;
-    }
     .launcher-grid,
     .launcher-overlay {
         --launcher-icon: 48px;
@@ -650,10 +646,13 @@
     z-index: var(--elevation-popover);
 }
 
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     .launcher-grid,
     .launcher-overlay {
         --launcher-col-w: var(--launcher-touch-cell-size);
+    }
+    :is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) {
+        --launcher-col-w: var(--home-grid-cell);
     }
     .launcher-folder-item--small {
         position: relative;
@@ -667,11 +666,3 @@
     }
 }
 
-/* Narrow touch Home retains its standard cell width and spacing. */
-@media (max-width: 767px) and (pointer: coarse),
-    (max-width: 767px) and (hover: none) {
-    :is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) {
-        --launcher-gap-x: var(--space-1);
-        --launcher-col-w: 68px;
-    }
-}
