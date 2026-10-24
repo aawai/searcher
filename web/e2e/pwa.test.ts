@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
 import { copy } from "@std/fs/copy";
-import { type BrowserContext, chromium, type Page } from "playwright";
+import { type BrowserContext, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 const dist = new URL("../dist/", import.meta.url);

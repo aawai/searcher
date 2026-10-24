@@ -1,29 +1,15 @@
-import { checkSuites, Suite, suiteFiles, suites } from "./suites.ts";
+import { checkSuites, suiteFiles } from "./suites.ts";
+import { parseRunOptions } from "./options.ts";
 
 // Deliberately delegates scheduling, checking and reporting to Deno test.
 // There is no no-build mode: every public execution starts with a fresh build.
 await checkSuites();
-const [name, mode] = Deno.args;
-if (name === "check" && !mode) {
+const options = parseRunOptions(Deno.args, Deno.env.get("E2E_TIMEOUT_MS"));
+if (options.kind === "check") {
     console.log(`E2E manifest covers ${suiteFiles("full").length} files.`);
     Deno.exit(0);
 }
-if (
-    !name ||
-    !(Object.hasOwn(suites, name) ||
-        ["full", "apps", "layout"].includes(name)) ||
-    (mode !== undefined && mode !== "--serial" && mode !== "--parallel") ||
-    Deno.args.length > 2
-) {
-    throw new Error(
-        "Usage: deno run -A scripts/e2e/run.ts <suite|check> [--serial|--parallel]",
-    );
-}
-const suite = name as Suite;
-// Only Workspace defaults to parallel; full retains the conservative serial mode.
-const parallel = mode === "--parallel" ||
-    (mode === undefined && suite === "workspace");
-const failFast = suite === "full";
+const { suite, parallel, failFast, timeoutMs } = options;
 const jobs = Deno.env.get("DENO_JOBS") ?? "2";
 const reportDir = Deno.env.get("E2E_REPORT_DIR") ??
     `artifacts/e2e/${suite}-${Date.now()}-${crypto.randomUUID()}`;
@@ -34,11 +20,13 @@ await Deno.remove(junit).catch((error: unknown) => {
     if (!(error instanceof Deno.errors.NotFound)) throw error;
 });
 const started = performance.now();
-const timings: Record<string, number | string | boolean | string[]> = {
+const timings: Record<string, number | string | boolean | string[] | null> = {
     suite,
     parallel,
     failFast,
     jobs: parallel ? jobs : "serial",
+    // A triage timeout makes the run a diagnosis, never a merge gate.
+    timeoutMs,
     files: suiteFiles(suite),
 };
 
@@ -47,7 +35,14 @@ async function run(phase: string, args: string[]): Promise<number> {
     const child = new Deno.Command(Deno.execPath(), {
         args,
         env: phase === "test"
-            ? { NODE_ENV: "test", E2E_REPORT_DIR: reportDir, DENO_JOBS: jobs }
+            ? {
+                NODE_ENV: "test",
+                E2E_REPORT_DIR: reportDir,
+                DENO_JOBS: jobs,
+                ...(timeoutMs === null
+                    ? {}
+                    : { E2E_TIMEOUT_MS: String(timeoutMs) }),
+            }
             : {},
         stdin: "inherit",
         stdout: "inherit",
@@ -75,6 +70,11 @@ async function run(phase: string, args: string[]): Promise<number> {
     }
 }
 
+if (timeoutMs !== null) {
+    console.warn(
+        `Triage run: implicit Playwright timeout ${timeoutMs}ms; not a merge gate.`,
+    );
+}
 let code = 1;
 try {
     code = await run("build", ["task", "build"]);

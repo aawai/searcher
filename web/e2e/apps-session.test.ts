@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { chromium, type Dialog, type Page } from "playwright";
+import { type Dialog, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 const PASSWORD = "Apps-route-guard-password-174!";

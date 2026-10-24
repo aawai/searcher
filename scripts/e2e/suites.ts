@@ -92,13 +92,21 @@ export function suiteFiles(suite: Suite): string[] {
     return names.map((name) => `web/e2e/${name}.test.ts`);
 }
 
+/** The single Chromium entry; it applies `run.ts --timeout`. */
+const BROWSER_ENTRY = "web/e2e/helpers/browser.ts";
+const DIRECT_CHROMIUM =
+    /import\s*\{[^}]*\bchromium\b[^}]*\}\s*from\s*["']playwright["']/;
+
 export async function checkSuites(): Promise<void> {
     const declared = new Set(suiteFiles("full"));
     const actual = new Set<string>();
+    const directChromium: string[] = [];
     for await (const entry of walk("web/e2e", { includeDirs: false })) {
-        if (entry.isFile && entry.name.endsWith(".test.ts")) {
-            actual.add(entry.path);
-        }
+        if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+        if (entry.name.endsWith(".test.ts")) actual.add(entry.path);
+        if (entry.path === BROWSER_ENTRY) continue;
+        const source = await Deno.readTextFile(entry.path);
+        if (DIRECT_CHROMIUM.test(source)) directChromium.push(entry.path);
     }
     const missing = [...actual].filter((file) => !declared.has(file));
     const stale = [...declared].filter((file) => !actual.has(file));
@@ -114,6 +122,13 @@ export async function checkSuites(): Promise<void> {
             }; missing on disk: ${
                 stale.join(", ") || "none"
             }. Update scripts/e2e/suites.ts.`,
+        );
+    }
+    if (directChromium.length) {
+        throw new Error(
+            `Import chromium from ${BROWSER_ENTRY}, not "playwright", so run.ts --timeout applies: ${
+                directChromium.join(", ")
+            }`,
         );
     }
 }

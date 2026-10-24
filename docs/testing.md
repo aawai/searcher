@@ -30,6 +30,8 @@ deno run -A npm:playwright@1.56.1 install chromium
 模块入口（如 `test:workspace:apps`）仅作局部开发辅助，不替代完整 Workspace
 回归。
 
+本地摸底可用 `DENO_JOBS=2 deno task test:e2e:full --parallel --no-fail-fast --timeout 5000`，一次收集失败并缩短隐式等待。`--timeout` / `E2E_TIMEOUT_MS` 仅用于诊断，正常验收与 CI 保持默认超时；参数、优先级与报告字段见 [Production E2E](../scripts/e2e/README.md#本地快速超时)。
+
 ### 手工视觉验收数据
 
 `scripts/seed-mock-users.ts` 只创建或重置

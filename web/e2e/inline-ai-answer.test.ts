@@ -3,9 +3,9 @@ import { eq } from "drizzle-orm";
 import {
     type BrowserContext,
     type BrowserContextOptions,
-    chromium,
     type Page,
 } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 
 type StorageState = Exclude<
     NonNullable<BrowserContextOptions["storageState"]>,

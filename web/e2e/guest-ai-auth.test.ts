@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 Deno.test("guests see no AI entry on home; a conversation link signs in and returns to it #196 #237", async () => {

@@ -1,10 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
-import {
-    type Browser,
-    type BrowserContext,
-    chromium,
-    type Page,
-} from "playwright";
+import { type Browser, type BrowserContext, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 // Issue #244 acceptance on the real page: the home page is the app library.

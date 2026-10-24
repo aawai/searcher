@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 Deno.test("Home paper task checkboxes toggle directly and save through the document version", async () => {

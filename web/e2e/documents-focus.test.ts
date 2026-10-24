@@ -1,5 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { chromium, errors } from "playwright";
+import { errors } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { openNotes } from "./helpers/desk.ts";
 

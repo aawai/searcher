@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { type Browser, chromium, type Page } from "playwright";
+import { type Browser, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { eq } from "drizzle-orm";
 import { aiConversations, aiMessages } from "../../src/db/ai-schema.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";

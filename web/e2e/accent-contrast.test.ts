@@ -1,5 +1,5 @@
 import { assert } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { ACCENTS } from "../../src/shared/contracts.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 

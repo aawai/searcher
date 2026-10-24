@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 // Controlled provider/candidate responses protect lifecycle races, not real
