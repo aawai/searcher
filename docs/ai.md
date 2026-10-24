@@ -7,9 +7,7 @@ AI
 
 ## 工作区布局
 
-- 登录后 Conversation Workspace 占据 Topbar
-  与连接状态提示以下的可用空间；会话标题位于工作区 Header，不重复展示页面
-  breadcrumb 或“AI 问答”大标题。
+- 登录后 Conversation Workspace 占据可用空间；会话标题位于工作区 Header，不重复展示页面 breadcrumb 或“AI 问答”大标题。<768px 隐藏全站重复顶栏，单层会话头部保留返回首页、历史抽屉与会话操作，命中区至少 44px。
 - 历史与消息各自滚动，输入面板保留在工作区内；移动端通过历史入口打开 Sheet。
 - 未登录时保留页面标题与登录入口。
 - 会话头部与消息列共用 `--layout-ask-message-max` 和中轴；滚动区上下边缘使用同一画布背景渐隐，不硬切正文。

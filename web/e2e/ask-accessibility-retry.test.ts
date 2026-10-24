@@ -326,6 +326,15 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
             await composer.inputValue(),
             "用一个生活化例子解释机器学习",
         );
+        assertEquals(await page.locator(".topbar").isVisible(), false);
+        await page.getByRole("link", { name: "返回首页", exact: true }).waitFor();
+        for (const target of [
+            page.getByRole("button", { name: "打开历史对话", exact: true }),
+            page.getByRole("link", { name: "返回首页", exact: true }),
+        ]) {
+            const box = await target.boundingBox();
+            assert(box && box.width >= 44 && box.height >= 44);
+        }
 
         const toolbarFits = await page.locator(".ask-composer__toolbar")
             .evaluate((toolbar) => {
