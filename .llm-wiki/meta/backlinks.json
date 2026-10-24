@@ -1,4 +1,8 @@
 {
+  "concepts/aria-combobox-grouped-suggestions": [
+    "concepts/react-19-actions-and-transitions",
+    "sources/SRC-2026-10-24-010"
+  ],
   "concepts/contract-first-testing": [
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/sqlite-table-recreation-migration",
@@ -66,18 +70,30 @@
     "sources/SRC-2026-09-26-003"
   ],
   "concepts/modal-layering-and-escape-dismissal": [
+    "concepts/aria-combobox-grouped-suggestions",
     "concepts/tailwind-v4-css-first-architecture",
+    "concepts/view-transitions-shared-element",
     "entities/searcher-项目",
     "entities/shadcn-ui-system",
-    "sources/SRC-2026-09-27-001"
+    "sources/SRC-2026-09-27-001",
+    "sources/SRC-2026-10-24-010"
   ],
   "concepts/offline-first-与-local-draft-持久化架构": [
-    "sources/SRC-2026-09-25-037"
+    "concepts/pwa-service-worker-update-lifecycle",
+    "sources/SRC-2026-09-25-037",
+    "sources/SRC-2026-10-24-007"
+  ],
+  "concepts/pwa-service-worker-update-lifecycle": [
+    "sources/SRC-2026-10-24-007",
+    "sources/SRC-2026-10-24-008"
   ],
   "concepts/react-19-actions-and-transitions": [
+    "entities/react-19-framework",
     "sources/SRC-2026-09-27-004"
   ],
   "concepts/route-level-code-splitting-dynamic-bundling": [
+    "concepts/pwa-service-worker-update-lifecycle",
+    "entities/react-19-framework",
     "entities/vite-bundler",
     "sources/SRC-2026-10-05-001",
     "sources/SRC-2026-10-05-002"
@@ -90,6 +106,7 @@
   ],
   "concepts/session-security-and-isolation": [
     "concepts/hono-middleware-pipeline-request-intake",
+    "concepts/pwa-service-worker-update-lifecycle",
     "entities/hono-framework",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-001",
@@ -98,6 +115,7 @@
     "sources/SRC-2026-09-25-004",
     "sources/SRC-2026-09-25-011",
     "sources/SRC-2026-09-25-037",
+    "sources/SRC-2026-10-24-008",
     "syntheses/searcher-system-architecture"
   ],
   "concepts/shortest-column-masonry-layout": [
@@ -141,25 +159,34 @@
   ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
-    "sources/SRC-2026-09-25-028"
+    "sources/SRC-2026-09-25-028",
+    "sources/SRC-2026-10-24-006"
   ],
   "concepts/sqlite-table-recreation-migration": [
     "concepts/database-queue-serialization",
+    "concepts/sqlite-fts5-fulltext-search",
     "entities/drizzle-sqlite-store",
     "sources/SRC-2026-09-25-012",
     "sources/SRC-2026-09-25-017",
     "sources/SRC-2026-09-25-028",
     "sources/SRC-2026-09-25-031",
-    "sources/SRC-2026-09-25-032"
+    "sources/SRC-2026-09-25-032",
+    "sources/SRC-2026-10-24-006"
   ],
   "concepts/tailwind-v4-css-first-architecture": [
     "entities/searcher-项目",
     "entities/shadcn-ui-system",
     "sources/SRC-2026-09-27-002"
   ],
+  "concepts/view-transitions-shared-element": [
+    "entities/react-19-framework",
+    "sources/SRC-2026-10-24-009"
+  ],
   "concepts/web-animations-api-runtime-architecture": [
+    "concepts/view-transitions-shared-element",
     "sources/SRC-2026-10-05-003",
-    "sources/SRC-2026-10-05-004"
+    "sources/SRC-2026-10-05-004",
+    "sources/SRC-2026-10-24-009"
   ],
   "entities/deno-runtime": [
     "concepts/deno-native-serve-architecture",
@@ -225,6 +252,7 @@
     "sources/SRC-2026-09-25-031",
     "sources/SRC-2026-09-25-032",
     "sources/SRC-2026-09-25-033",
+    "sources/SRC-2026-10-24-006",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -257,19 +285,24 @@
     "sources/SRC-2026-09-25-037"
   ],
   "entities/react-19-framework": [
+    "concepts/react-19-actions-and-transitions",
     "concepts/route-level-code-splitting-dynamic-bundling",
+    "concepts/view-transitions-shared-element",
     "entities/vite-bundler",
     "sources/SRC-2026-09-27-004",
     "sources/SRC-2026-10-05-001",
-    "sources/SRC-2026-10-05-002"
+    "sources/SRC-2026-10-05-002",
+    "sources/SRC-2026-10-24-009"
   ],
   "entities/searcher-项目": [
+    "concepts/aria-combobox-grouped-suggestions",
     "concepts/contract-first-testing",
     "concepts/database-queue-serialization",
     "concepts/dnd-kit-2d-grid-sorting-architecture",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/offline-first-与-local-draft-持久化架构",
+    "concepts/pwa-service-worker-update-lifecycle",
     "concepts/route-level-code-splitting-dynamic-bundling",
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/session-security-and-isolation",
@@ -278,12 +311,14 @@
     "concepts/sqlite-fts5-fulltext-search",
     "concepts/sqlite-table-recreation-migration",
     "concepts/tailwind-v4-css-first-architecture",
+    "concepts/view-transitions-shared-element",
     "concepts/web-animations-api-runtime-architecture",
     "entities/deno-runtime",
     "entities/dnd-kit-system",
     "entities/drizzle-sqlite-store",
     "entities/hono-framework",
     "entities/indexeddb-本地存储引擎",
+    "entities/react-19-framework",
     "entities/shadcn-ui-system",
     "entities/valibot-schema-validator",
     "entities/vite-bundler",
@@ -321,13 +356,20 @@
     "sources/SRC-2026-09-25-034",
     "sources/SRC-2026-09-25-037",
     "sources/SRC-2026-09-27-002",
+    "sources/SRC-2026-10-24-006",
+    "sources/SRC-2026-10-24-007",
+    "sources/SRC-2026-10-24-008",
+    "sources/SRC-2026-10-24-009",
+    "sources/SRC-2026-10-24-010",
     "syntheses/searcher-system-architecture"
   ],
   "entities/shadcn-ui-system": [
+    "concepts/aria-combobox-grouped-suggestions",
     "concepts/dnd-kit-2d-grid-sorting-architecture",
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/tailwind-v4-css-first-architecture",
     "entities/dnd-kit-system",
+    "entities/react-19-framework",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-001",
     "sources/SRC-2026-09-25-002",
@@ -341,13 +383,16 @@
     "sources/SRC-2026-09-26-001",
     "sources/SRC-2026-09-27-001",
     "sources/SRC-2026-09-27-002",
+    "sources/SRC-2026-10-24-010",
     "syntheses/searcher-system-architecture"
   ],
   "entities/valibot-schema-validator": [
     "sources/SRC-2026-09-25-036"
   ],
   "entities/vite-bundler": [
+    "concepts/pwa-service-worker-update-lifecycle",
     "concepts/route-level-code-splitting-dynamic-bundling",
+    "entities/react-19-framework",
     "sources/SRC-2026-10-05-001",
     "sources/SRC-2026-10-05-002"
   ],
@@ -428,10 +473,14 @@
     "concepts/dnd-kit-2d-grid-sorting-architecture"
   ],
   "sources/SRC-2026-09-25-015": [
-    "concepts/dnd-kit-2d-grid-sorting-architecture"
+    "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "concepts/react-19-actions-and-transitions",
+    "entities/react-19-framework"
   ],
   "sources/SRC-2026-09-25-016": [
-    "concepts/dnd-kit-2d-grid-sorting-architecture"
+    "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "concepts/react-19-actions-and-transitions",
+    "entities/react-19-framework"
   ],
   "sources/SRC-2026-09-25-017": [
     "entities/drizzle-sqlite-store"
@@ -501,7 +550,9 @@
     "concepts/server-sent-events-sse-与实时事件流",
     "entities/deno-runtime"
   ],
-  "sources/SRC-2026-09-27-004": [],
+  "sources/SRC-2026-09-27-004": [
+    "concepts/react-19-actions-and-transitions"
+  ],
   "sources/SRC-2026-09-27-005": [
     "concepts/deno-native-serve-architecture"
   ],
@@ -518,6 +569,21 @@
   ],
   "sources/SRC-2026-10-05-004": [
     "concepts/web-animations-api-runtime-architecture"
+  ],
+  "sources/SRC-2026-10-24-006": [
+    "concepts/sqlite-fts5-fulltext-search"
+  ],
+  "sources/SRC-2026-10-24-007": [
+    "concepts/pwa-service-worker-update-lifecycle"
+  ],
+  "sources/SRC-2026-10-24-008": [
+    "concepts/pwa-service-worker-update-lifecycle"
+  ],
+  "sources/SRC-2026-10-24-009": [
+    "concepts/view-transitions-shared-element"
+  ],
+  "sources/SRC-2026-10-24-010": [
+    "concepts/aria-combobox-grouped-suggestions"
   ],
   "sources/e2e-native-parallel-speedup-vs-stability-167": [],
   "sources/e2e-parallel-default-enabled-171": [],
@@ -581,7 +647,9 @@
     "sources/issue-174-data-router-session-leave-guard"
   ],
   "sources/obs-2026-10-15-ci-p3-p4-research-branch-cleanup-and-cache-evaluation": [],
-  "sources/obs-2026-10-15-searchersearchinput-unguided-async-suggestions-reopening-bug": [],
+  "sources/obs-2026-10-15-searchersearchinput-unguided-async-suggestions-reopening-bug": [
+    "concepts/aria-combobox-grouped-suggestions"
+  ],
   "sources/obs-2026-10-16-issue-177-widgets-pr-184": [],
   "sources/obs-2026-10-17-issue-179-zen-chrome-inset-pr-186": [],
   "sources/obs-2026-10-18-zen-remark": [],
@@ -593,6 +661,7 @@
   "sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3": [],
   "sources/obs-2026-10-24-issue-238-pwa-pr-263-264-265-main": [],
   "sources/obs-2026-10-24-issue-239-pr-266-267-main": [],
+  "sources/obs-2026-10-24-issue-241-pr-274-279-281-main": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

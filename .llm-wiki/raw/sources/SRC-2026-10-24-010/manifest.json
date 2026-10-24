@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-24-010",
+  "captured": "2026-10-24",
+  "packet_version": "1.0",
+  "title": "Combobox Pattern",
+  "url": "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

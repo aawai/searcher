@@ -4,6 +4,7 @@
 
 ## Concepts
 
+- [[concepts/aria-combobox-grouped-suggestions]] — ARIA Combobox Grouped Suggestions *(created: 2026-10-24)*
 - [[concepts/contract-first-testing]] — Contract First Testing *(created: 2026-09-25)*
 - [[concepts/database-queue-serialization]] — Database Queue Serialization *(created: 2026-09-25)*
 - [[concepts/deno-native-serve-architecture]] — Deno Native Serve Architecture *(created: unknown)*
@@ -12,6 +13,7 @@
 - [[concepts/hono-rpc-type-safe-client]] — Hono RPC & Type-Safe Client *(created: 2026-09-26)*
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
+- [[concepts/pwa-service-worker-update-lifecycle]] — PWA Service Worker Update Lifecycle *(created: 2026-10-24)*
 - [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
 - [[concepts/route-level-code-splitting-dynamic-bundling]] — Route-Level Code Splitting & Dynamic Bundling *(created: 2026-10-05)*
 - [[concepts/server-sent-events-sse-与实时事件流]] — Server-Sent Events (SSE) 与实时事件流 *(created: 2026-09-25)*
@@ -21,6 +23,7 @@
 - [[concepts/sqlite-fts5-fulltext-search]] — SQLite FTS5 Fulltext Search *(created: 2026-09-25)*
 - [[concepts/sqlite-table-recreation-migration]] — SQLite Table Recreation Migration *(created: 2026-09-25)*
 - [[concepts/tailwind-v4-css-first-architecture]] — Tailwind v4 CSS First Architecture *(created: 2026-09-27)*
+- [[concepts/view-transitions-shared-element]] — View Transitions Shared Element *(created: 2026-10-24)*
 - [[concepts/web-animations-api-runtime-architecture]] — Web Animations API Runtime Architecture *(created: 2026-10-05)*
 
 ## Entitys
@@ -104,6 +107,7 @@
 - [[sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3]] — Observation: Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法 *(created: 2026-10-23)*
 - [[sources/obs-2026-10-24-issue-238-pwa-pr-263-264-265-main]] — Observation: Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭 *(created: 2026-10-24)*
 - [[sources/obs-2026-10-24-issue-239-pr-266-267-main]] — Observation: Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭 *(created: 2026-10-24)*
+- [[sources/obs-2026-10-24-issue-241-pr-274-279-281-main]] — Observation: Issue 241 壁纸取色经 PR 274/279/281 合并 main 并关闭 *(created: 2026-10-24)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -154,10 +158,15 @@
 - [[sources/SRC-2026-10-05-002]] — Taming 'Large Chunks' in Vite + React *(created: unknown)*
 - [[sources/SRC-2026-10-05-003]] — The Web Animations API vs. CSS *(created: unknown)*
 - [[sources/SRC-2026-10-05-004]] — The Web Animation Performance Tier List *(created: unknown)*
+- [[sources/SRC-2026-10-24-006]] — SQLite FTS5 Extension (Trigram Tokenizer) *(created: unknown)*
+- [[sources/SRC-2026-10-24-007]] — The Service Worker Lifecycle (web.dev) *(created: unknown)*
+- [[sources/SRC-2026-10-24-008]] — Receiving Shared Data with the Web Share Target API *(created: unknown)*
+- [[sources/SRC-2026-10-24-009]] — Same-Document View Transitions for Single-Page Applications *(created: unknown)*
+- [[sources/SRC-2026-10-24-010]] — WAI-ARIA APG Combobox Pattern *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-24T01:40:53.156Z* | *Total pages: 145*
+*Last updated: 2026-10-24T08:28:18.306Z* | *Total pages: 154*

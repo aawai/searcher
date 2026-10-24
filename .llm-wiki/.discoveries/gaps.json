@@ -1,12 +1,4 @@
 {
-  "gaps": [
-    {
-      "topic": "concepts/related-page",
-      "mentionedBy": [
-        "concepts/react-19-actions-and-transitions",
-        "entities/react-19-framework"
-      ]
-    }
-  ],
-  "generated": "2026-10-11T15:13:12.788Z"
+  "gaps": [],
+  "generated": "2026-10-24T08:04:09.516Z"
 }

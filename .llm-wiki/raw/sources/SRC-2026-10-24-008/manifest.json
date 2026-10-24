@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-24-008",
+  "captured": "2026-10-24",
+  "packet_version": "1.0",
+  "title": "Receiving shared data with the Web Share Target API Stay organized with collections Save and categorize content based on your preferences.",
+  "url": "https://developer.chrome.com/docs/capabilities/web-apis/web-share-target",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

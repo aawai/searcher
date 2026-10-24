@@ -2,6 +2,12 @@
 
 ## 2026-10-24
 
+- **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-241-pr-274-279-281-main","title":"Issue 241 壁纸取色经 PR 274/279/281 合并 main 并关闭"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-010","url":"https://www.w3.org/WAI/ARIA/apg/patterns/combobox/"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-009","url":"https://developer.chrome.com/docs/web-platform/view-transitions/same-document"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-008","url":"https://developer.chrome.com/docs/capabilities/web-apis/web-share-target"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-007","url":"https://web.dev/articles/service-worker-lifecycle"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-24-006","url":"https://sqlite.org/fts5.html"}
 - **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-239-pr-266-267-main","title":"Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭"}
 - **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-238-pwa-pr-263-264-265-main","title":"Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭"}
 
