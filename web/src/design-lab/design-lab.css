@@ -149,9 +149,6 @@
 .design-lab-radius-chip[data-token="--radius-input"] {
     border-radius: var(--radius-input);
 }
-.design-lab-radius-chip[data-token="--radius-note-card"] {
-    border-radius: var(--radius-note-card);
-}
 .design-lab-radius-chip[data-token="--radius-sheet"] {
     border-radius: var(--radius-sheet);
 }

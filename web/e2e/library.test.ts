@@ -32,10 +32,6 @@ Deno.test("Library: seven home entries, responsive presentation, unchanged home 
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
-    const credentials = await app.seedAskFixtureUser({
-        username: "library_entries",
-        password: "Library-entries-password-285!",
-    });
     const browser = await chromium.launch({ headless: true });
     cleanup.defer(() => browser.close());
 
@@ -55,6 +51,12 @@ Deno.test("Library: seven home entries, responsive presentation, unchanged home 
     });
 
     for (const width of [390, 768, 1440]) {
+        // Each width gets its own account so earlier widths' home notes cannot
+        // consume the next viewport's note capacity.
+        const credentials = await app.seedAskFixtureUser({
+            username: `library_entries_${width}`,
+            password: "Library-entries-password-285!",
+        });
         const context = await browser.newContext({
             viewport: { width, height: width === 390 ? 844 : 1024 },
             reducedMotion: "reduce",
@@ -116,12 +118,12 @@ Deno.test("Library: seven home entries, responsive presentation, unchanged home 
                     view: "notes",
                     open: () =>
                         page.getByRole("button", {
-                            name: width < 768 ? `打开便签：${title}` : title,
+                            name: title,
                             exact: true,
                         }).click(),
                     focus: () =>
                         page.getByRole("button", {
-                            name: width < 768 ? `打开便签：${title}` : title,
+                            name: title,
                             exact: true,
                         }),
                 },

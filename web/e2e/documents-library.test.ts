@@ -145,23 +145,18 @@ Deno.test("production documents library workspace contracts", async (t) => {
         );
     }
 
-    // Pinned documents render as Home papers (floating canvas or flow grid).
+    // Pinned documents render as Home notes (grid or flow stack).
     const homePaper = (title: string) =>
-        page.locator(
-            ".floating-notes .note-position, .notes-flow-grid .note-flow-item",
-        ).filter({ hasText: title }).first();
+        page.locator(".home-note, .home-note-flow-item")
+            .filter({ hasText: title }).first();
 
-    async function homePapersSettled() {
+    async function homeNotesSettled() {
         await page.evaluate(async () => {
             await document.fonts.ready;
         });
-        await page.waitForFunction(() => {
-            const canvas = document.querySelector(".floating-notes--canvas");
-            if (!canvas) return true;
-            const ready = canvas.getAttribute("data-placement-ready");
-            return ready === null ||
-                ready === "true" && canvas.getAttribute("aria-busy") !== "true";
-        });
+        await page.waitForFunction(() =>
+            document.querySelectorAll(".home-note-card").length > 0
+        );
         await page.evaluate(() => {
             const { promise, resolve } = Promise.withResolvers<void>();
             requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
@@ -539,11 +534,13 @@ Deno.test("production documents library workspace contracts", async (t) => {
             }).click();
             await workspace().waitFor({ state: "detached" });
             await page.locator("#search-query:not([inert])").waitFor();
-            await homePapersSettled();
+            await homeNotesSettled();
             const paper = homePaper(title);
             await paper.waitFor({ state: "visible" });
             assertEquals(
-                await paper.locator(".note-card").getAttribute("data-color"),
+                await paper.locator(".home-note-card").getAttribute(
+                    "data-color",
+                ),
                 "amber",
             );
 
@@ -898,7 +895,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 isHomeFixed: true,
             });
             await visit("/");
-            await homePapersSettled();
+            await homeNotesSettled();
 
             const paper = homePaper(title);
             await paper.waitFor({ state: "visible" });
@@ -921,7 +918,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             }).click();
             await workspace().waitFor({ state: "detached" });
             await page.locator("#search-query:not([inert])").waitFor();
-            await homePapersSettled();
+            await homeNotesSettled();
 
             await paper.waitFor({ state: "visible" });
             assertEquals(

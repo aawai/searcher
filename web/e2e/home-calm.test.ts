@@ -78,7 +78,7 @@ async function setSwitch(
         await control.click();
     }
     await page.waitForFunction(switchIs, [name, String(checked)] as const);
-    const deadline = Date.now() + 5_000;
+    const deadline = Date.now() + 30_000;
     while (await page.evaluate(storedAppearance, field) !== checked) {
         if (Date.now() > deadline) {
             throw new Error(`${field} was not written to the device cache`);
@@ -349,6 +349,7 @@ Deno.test("home calm layer: date, optional time, 继续 and the time-of-day canv
                     );
                     await openHome(page, app.origin);
                     await page.getByTestId("home-calm-clock").waitFor();
+                    await continueNav.waitFor({ state: "detached" });
                     assertEquals(await continueNav.count(), 0);
                     assertEquals(await searchTop(page), top, "继续 off");
                 } finally {

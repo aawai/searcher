@@ -340,14 +340,10 @@ export function checkBundle(rootDir = Deno.cwd()): {
         return files;
     };
     const sharedFiles = staticFiles("src/features/markdown-editor/runtime.ts");
-    const paperFiles = new Set<string>();
-    for (
-        const entry of [
-            "src/features/home-layouts/HomePapers.tsx",
-            "src/features/home-layouts/ZenInlinePapers.tsx",
-        ]
-    ) {
-        for (const file of staticFiles(entry)) paperFiles.add(file);
+    const noteFiles = new Set<string>();
+    // HomeNotes is the lazy entry; HomeNoteCard is part of its static graph.
+    for (const file of staticFiles("src/features/home-layouts/HomeNotes.tsx")) {
+        noteFiles.add(file);
     }
     const sharedMetrics = [...sharedFiles].filter((file) =>
         !initialFilesSet.has(file)
@@ -401,18 +397,18 @@ export function checkBundle(rootDir = Deno.cwd()): {
                 }
             }
             if (
-                paperFiles.has(file) &&
+                noteFiles.has(file) &&
                 (framework || documentsOnly.test(module.id))
             ) {
                 errors.push(
-                    "Editor runtime in Home paper graph: " + module.id,
+                    "Editor runtime in Home note graph: " + module.id,
                 );
             }
             if (
-                paperFiles.has(file) && sharedFiles.has(file) &&
+                noteFiles.has(file) && sharedFiles.has(file) &&
                 /editor-vendor|\/runtime-/.test(file)
             ) {
-                errors.push("Editor chunk in Home paper graph: " + file);
+                errors.push("Editor chunk in Home note graph: " + file);
             }
         }
     }

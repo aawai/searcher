@@ -8,14 +8,36 @@ export const DOCUMENT_SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000;
 export const DOCUMENT_SNAPSHOT_RETENTION = 100;
 
 export type DocumentColor = "paper" | "amber" | "rose" | "sage" | "sky";
+
+/** Home note tiers: S is one cell, W spans two cells in one band. */
+export type DocumentNoteSize = "s" | "w";
+export const HOME_NOTE_SPANS: Record<
+    DocumentNoteSize,
+    { readonly cols: number; readonly rows: number }
+> = {
+    s: { cols: 1, rows: 1 },
+    w: { cols: 2, rows: 1 },
+};
+// The server cannot know the viewport, so it only rejects absurd cells; the
+// client resolves the real lattice and conflicts before writing.
+export const HOME_NOTE_GRID_MAX_COL = 63;
+export const HOME_NOTE_GRID_MAX_ROW = 31;
+
+/** Half-open cell overlap; touching edges are not a conflict. */
+export function homeNoteCellsOverlap(
+    a: { col: number; row: number; size: DocumentNoteSize },
+    b: { col: number; row: number; size: DocumentNoteSize },
+): boolean {
+    const first = HOME_NOTE_SPANS[a.size];
+    const second = HOME_NOTE_SPANS[b.size];
+    return a.col < b.col + second.cols && a.col + first.cols > b.col &&
+        a.row < b.row + second.rows && a.row + first.rows > b.row;
+}
+
 export interface DocumentLayoutDto {
-    deviceClass: "desktop" | "tablet" | "mobile";
-    x: number | null;
-    y: number | null;
-    width: number | null;
-    zIndex: number;
-    expanded: boolean;
-    sortOrder: number | null;
+    col: number | null;
+    row: number | null;
+    size: DocumentNoteSize;
     updatedAt: number;
 }
 export type UpdateDocumentLayoutInput = Partial<

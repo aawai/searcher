@@ -1,0 +1,355 @@
+@import "../../components/searcher/markdown.css";
+
+/* Home notes are Material components: one presentation at every breakpoint.
+   The lattice layer uses the same viewport coordinates as the search box and
+   the app plate; flow layouts put the same cards in normal flow. */
+.home-notes--grid {
+    position: fixed;
+    inset: 0;
+    z-index: var(--elevation-canvas);
+    pointer-events: none;
+}
+
+.home-note {
+    position: absolute;
+    border-radius: var(--radius-lg);
+    pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .home-note {
+        transition:
+            left var(--motion-base) var(--ease-out-expo),
+            top var(--motion-base) var(--ease-out-expo);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-note {
+        transition: opacity var(--motion-base) var(--ease-standard);
+    }
+    .home-note[data-dragging="true"] {
+        opacity: 0.8;
+    }
+}
+
+.home-note:focus-visible {
+    outline: var(--space-half) solid var(--ring);
+    outline-offset: var(--space-1);
+}
+
+.home-note[data-dragging="true"] {
+    z-index: var(--elevation-drag);
+}
+
+.home-note-card {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: var(--space-4);
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-elevation-material);
+    color: var(--foreground);
+}
+
+.home-note-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+.home-note-head-left {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+[data-slot="button"].home-note-title {
+    display: block;
+    flex: 1;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    color: inherit;
+    text-align: start;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-title-weight);
+}
+
+.home-note-actions {
+    position: absolute;
+    top: 0;
+    inset-inline-end: 0;
+    display: flex;
+    gap: var(--space-1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.home-note:hover .home-note-actions,
+.home-note:focus-within .home-note-actions,
+.home-note[data-dragging="true"] .home-note-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.home-note-actions > * {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: var(--control-compact-height);
+    height: var(--control-compact-height);
+    min-width: var(--control-compact-height);
+    min-height: var(--control-compact-height);
+    padding: 0;
+}
+
+.home-note-action-btn {
+    border: 0;
+    border-radius: var(--control-radius);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+        color var(--motion-fast) var(--ease-standard),
+        background var(--motion-fast) var(--ease-standard);
+}
+
+.home-note-action-btn:hover {
+    color: var(--foreground);
+    background: var(--surface-soft);
+}
+
+.home-note-action-btn:focus-visible {
+    outline: var(--space-half) solid var(--ring);
+    outline-offset: var(--space-1);
+}
+
+.home-note-drag {
+    display: inline-flex;
+    align-items: center;
+    color: var(--muted);
+}
+
+.home-note-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.home-note-drag-handle:active {
+    cursor: grabbing;
+}
+
+.home-note-dropdown {
+    min-width: 160px;
+}
+
+/* Whole-line truncation: the body is exactly N line boxes, and only a real
+   overflow fades the last line. */
+.home-note-body {
+    --home-note-body-lines: 5;
+    flex: none;
+    block-size: calc(
+        var(--home-note-body-lines) * var(--font-body-line-height)
+    );
+    margin-block-start: var(--space-1);
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+.home-note-body[data-overflow] {
+    mask-image: linear-gradient(to bottom,
+        var(--foreground) calc(100% - var(--font-body-line-height)),
+        transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom,
+        var(--foreground) calc(100% - var(--font-body-line-height)),
+        transparent 100%);
+}
+
+/* Markdown blocks keep the body line grid instead of adding paragraph margins. */
+.home-note-body.markdown :is(p, ul, ol, blockquote, pre, table, h1, h2, h3, h4, h5, h6) {
+    margin: 0;
+}
+
+/* Every preview line shares one pitch: list items add no block margin and task
+   rows keep the line height, with the checkbox inside it. */
+.home-note-body.markdown li {
+    margin: 0;
+    line-height: var(--font-body-line-height);
+}
+
+.home-note-body.markdown li.task-list-item,
+.home-note-body.markdown li.task-list-item:has(> input[type="checkbox"]) {
+    --task-box-hit: var(--icon-md);
+    --task-row-hit: var(--font-body-line-height);
+    min-block-size: var(--font-body-line-height);
+    padding-block: 0;
+}
+
+.home-note-body.markdown li.task-list-item > input[type="checkbox"] {
+    inline-size: var(--icon-md);
+    block-size: var(--icon-md);
+    inset-block-start: calc(
+        (var(--font-body-line-height) - var(--icon-md)) / 2
+    );
+}
+
+.home-note-body .markdown-list-item-content {
+    line-height: var(--font-body-line-height);
+}
+
+.home-note-body.markdown :is(h1, h2, h3, h4, h5, h6) {
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
+}
+
+.home-note-body.markdown pre {
+    overflow: hidden;
+    scrollbar-width: none;
+}
+
+.home-note-body.markdown pre::-webkit-scrollbar {
+    display: none;
+}
+
+/* Transient target cell: visible only while dragging or moving by keyboard. */
+.home-note-target {
+    position: absolute;
+    z-index: var(--elevation-local-1);
+    border-radius: var(--radius-lg);
+    background: var(--accent-subtle);
+    outline: var(--space-half) dashed var(--ring);
+    outline-offset: var(--space-hairline);
+    pointer-events: none;
+}
+
+/* Overflow entry: a full S cell when one is free, otherwise a pill below. */
+.home-note-more {
+    display: grid;
+    place-items: center;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-elevation-material);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    text-align: center;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.home-note-more:hover {
+    color: var(--foreground);
+}
+
+.home-note-more:focus-visible {
+    outline: var(--space-half) solid var(--ring);
+    outline-offset: var(--space-1);
+}
+
+.home-note-more--pill {
+    display: inline-flex;
+    border-radius: var(--radius-pill);
+    padding: var(--space-2) var(--space-4);
+    white-space: nowrap;
+}
+
+.home-note-more-below {
+    position: fixed;
+    left: 50%;
+    z-index: var(--elevation-canvas);
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+/* Flow (768–1023: two columns, W spans both) and stack (<768: one column).
+   The sheet height stays one note cell; only the width follows the column. */
+.home-notes--flow {
+    display: grid;
+    gap: var(--space-home-grid-gap);
+    width: calc(100% - 2 * var(--space-4));
+    max-width: var(--home-grid-content-width);
+    margin: var(--space-5) auto var(--space-8);
+}
+
+/* The flow's top gap is the same search→plate rhythm, not an extra margin on
+   top of the pinned area's bottom margin. Note rows use the app grid gap. */
+.home .pinned-area:has(+ .home-notes--flow) {
+    margin-block-end: 0;
+}
+
+.home-notes--flow[data-mode="flow"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.home-notes--flow[data-mode="stack"] {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.home-note-flow-item {
+    display: flex;
+    min-width: 0;
+}
+
+.home-notes--flow[data-mode="flow"] .home-note-flow-item[data-size="w"] {
+    grid-column: 1 / -1;
+}
+
+.home-note-flow-item .home-note-card {
+    height: var(--home-note-cell);
+}
+
+.home-notes--flow[data-mode="stack"] .home-note-body {
+    --home-note-body-lines: 3;
+}
+
+@media (max-width: 767px), (any-pointer: coarse) {
+    .home-note-actions {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .home-note-actions > *,
+    .home-note-drag-handle {
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+        width: var(--control-touch-target);
+        height: var(--control-touch-target);
+    }
+    .home-note-head {
+        padding-inline-end: calc(
+            2 * var(--control-touch-target) + var(--space-2)
+        );
+    }
+}

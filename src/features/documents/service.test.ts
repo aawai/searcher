@@ -12,6 +12,7 @@ import {
     DOCUMENT_BODY_MAX_LENGTH,
     DOCUMENT_PAGE_MAX_LIMIT,
     DOCUMENT_TITLE_MAX_LENGTH,
+    HOME_NOTE_GRID_MAX_COL,
 } from "../../shared/documents.ts";
 import type {
     DocumentColor,
@@ -20,6 +21,7 @@ import type {
 import { DocumentLayoutsService } from "./layouts.ts";
 import {
     DocumentConflictError,
+    DocumentLayoutConflictError,
     DocumentNotFoundError,
     DocumentValidationError,
 } from "./errors.ts";
@@ -1185,51 +1187,74 @@ Deno.test("Documents colors, favorites and home ordering persist with scope-boun
     }
 });
 
-Deno.test("Document layouts isolate owners and devices, preserve partial fields and never version content", async () => {
+Deno.test("Document layouts store home note cells, reject overlaps and never version content", async () => {
     const { service, store, now, advanceTime } = await setupTestContext();
     const layouts = new DocumentLayoutsService(store, now);
     try {
-        const doc = await service.create("user-1", {});
+        const doc = await service.create("user-1", { isHomeFixed: true });
         assertEquals(await layouts.getLayout("user-1", doc.id), null);
         await assertRejects(
             () => layouts.getLayout("user-2", doc.id),
             DocumentNotFoundError,
         );
         await assertRejects(
-            () => layouts.updateLayout("user-2", doc.id, { x: 50 }),
+            () => layouts.updateLayout("user-2", doc.id, { col: 0, row: 0 }),
             DocumentNotFoundError,
         );
-        const desktop = await layouts.updateLayout("user-1", doc.id, {
-            x: 10,
-            y: 20,
-            width: 220,
-            zIndex: 5,
-            expanded: true,
-            sortOrder: 3,
+        // col and row are one position; a partial pair is invalid.
+        await assertRejects(
+            () => layouts.updateLayout("user-1", doc.id, { col: 3 }),
+            DocumentValidationError,
+        );
+        const placed = await layouts.updateLayout("user-1", doc.id, {
+            col: 0,
+            row: 0,
+            size: "w",
         });
-        assertEquals(await layouts.getLayout("user-1", doc.id), desktop);
+        assertEquals(placed, { col: 0, row: 0, size: "w", updatedAt: now() });
         advanceTime(1);
         const changed = await layouts.updateLayout("user-1", doc.id, {
-            x: null,
-            expanded: false,
+            col: 0,
+            row: 1,
+            size: "s",
         });
         assertEquals(changed, {
-            ...desktop,
-            x: null,
-            expanded: false,
+            ...placed,
+            row: 1,
+            size: "s",
             updatedAt: now(),
         });
-        const mobile = await layouts.updateLayout("user-1", doc.id, {
-            deviceClass: "mobile",
-            sortOrder: 2,
-        });
-        assertEquals(mobile.x, null);
-        assertEquals(
-            await layouts.getLayout("user-1", doc.id, "mobile"),
-            mobile,
+        // W spans two columns: it overlaps a note at the same origin.
+        const other = await service.create("user-1", { isHomeFixed: true });
+        await assertRejects(
+            () =>
+                layouts.updateLayout("user-1", other.id, {
+                    col: 0,
+                    row: 1,
+                    size: "w",
+                }),
+            DocumentLayoutConflictError,
         );
-        assertEquals(await layouts.getLayout("user-1", doc.id), changed);
-        assertEquals(await layouts.getLayout("user-1", doc.id, "tablet"), null);
+        const beside = await layouts.updateLayout("user-1", other.id, {
+            col: 2,
+            row: 1,
+        });
+        assertEquals(beside.col, 2);
+        // Off-home notes do not occupy the home lattice.
+        const hidden = await service.create("user-1", {});
+        const hiddenLayout = await layouts.updateLayout("user-1", hidden.id, {
+            col: 0,
+            row: 1,
+        });
+        assertEquals(hiddenLayout.col, 0);
+        await assertRejects(
+            () =>
+                layouts.updateLayout("user-1", doc.id, {
+                    col: HOME_NOTE_GRID_MAX_COL + 1,
+                    row: 0,
+                }),
+            DocumentValidationError,
+        );
         assertEquals(await service.get("user-1", doc.id), doc);
         await service.softDelete("user-1", doc.id, doc.version);
         await assertRejects(
@@ -1237,7 +1262,7 @@ Deno.test("Document layouts isolate owners and devices, preserve partial fields 
             DocumentNotFoundError,
         );
         await assertRejects(
-            () => layouts.updateLayout("user-1", doc.id, { y: 90 }),
+            () => layouts.updateLayout("user-1", doc.id, { col: 1, row: 1 }),
             DocumentNotFoundError,
         );
         await service.restore("user-1", doc.id);

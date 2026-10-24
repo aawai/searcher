@@ -3,7 +3,7 @@ import {
     replayTaskToggles,
     setTaskChecked,
     taskRowText,
-} from "./paper-tasks.ts";
+} from "./note-tasks.ts";
 
 Deno.test("setTaskChecked toggles the matching task in document order and ignores code blocks", () => {
     const body =

@@ -258,6 +258,7 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
     await t.step(
         "0. Empty library: only the add cell; blank menu still offers folder and arrange",
         async () => {
+            await homeGrid.locator('[data-library-cell="add"]').waitFor();
             assertEquals(await homeTiles.count(), 0);
             assertEquals(
                 await homeGrid.locator('[data-library-cell="add"]').count(),

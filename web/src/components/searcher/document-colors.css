@@ -1,40 +1,22 @@
-/* Note colours are domain values, not interface accent colours. */
-:where(.note-card, [data-note-color], .note-quick-dot, .documents-color-dot) {
-    --note-paper: var(--surface);
-    --note-amber: #FFF4D6;
-    --note-rose: #FBE7EC;
-    --note-sage: #E6F0E3;
-    --note-sky: #E3EFFA;
-    --note-color: var(--note-paper);
-    --note-dot-amber: #D9A334;
-    --note-dot-rose: #D8839D;
-    --note-dot-sage: #7EAA76;
-    --note-dot-sky: #72A5CF;
+/* Note colours are domain values. Home notes express colour as a dot before the
+   title; the palette is per theme so every dot holds 3:1 against the Material
+   component (glass-contrast.test.ts). */
+:where(.note-quick-dot, .documents-color-dot) {
+    --note-dot-amber: #7A5610;
+    --note-dot-rose: #8E3A52;
+    --note-dot-sage: #3F6B3B;
+    --note-dot-sky: #2F5A85;
+    --note-dot-paper: #5A5A60;
 }
-/* Dark papers: --paper-white mixed 16% in OKLab with a same-lightness vivid hue,
-   so all five share one lightness and differ only in hue (paper-contrast.test.ts). */
-[data-theme="dark"] :where(.note-card, [data-note-color], .note-quick-dot, .documents-color-dot) {
-    --note-amber: #3C3122;
-    --note-rose: #402C36;
-    --note-sage: #25382E;
-    --note-sky: #263445;
+
+[data-theme="dark"] :where(.note-quick-dot, .documents-color-dot) {
+    --note-dot-amber: #E0B45C;
+    --note-dot-rose: #E39AB2;
+    --note-dot-sage: #9CC594;
+    --note-dot-sky: #9AC1E3;
+    --note-dot-paper: #BEBEC4;
 }
-:where(.note-card)[data-color="amber"],
-[data-note-color="amber"] {
-    --note-color: var(--note-amber);
-}
-:where(.note-card)[data-color="rose"],
-[data-note-color="rose"] {
-    --note-color: var(--note-rose);
-}
-:where(.note-card)[data-color="sage"],
-[data-note-color="sage"] {
-    --note-color: var(--note-sage);
-}
-:where(.note-card)[data-color="sky"],
-[data-note-color="sky"] {
-    --note-color: var(--note-sky);
-}
+
 .note-quick-dot,
 .documents-color-dot {
     flex: none;
@@ -44,22 +26,27 @@
     border-radius: var(--radius-pill);
     box-shadow: var(--shadow-note-color-swatch);
 }
+
 .note-quick-dot--paper,
 .documents-color-dot[data-color="paper"] {
-    background: var(--surface-soft);
+    background: var(--note-dot-paper);
 }
+
 .note-quick-dot--amber,
 .documents-color-dot[data-color="amber"] {
     background: var(--note-dot-amber);
 }
+
 .note-quick-dot--rose,
 .documents-color-dot[data-color="rose"] {
     background: var(--note-dot-rose);
 }
+
 .note-quick-dot--sage,
 .documents-color-dot[data-color="sage"] {
     background: var(--note-dot-sage);
 }
+
 .note-quick-dot--sky,
 .documents-color-dot[data-color="sky"] {
     background: var(--note-dot-sky);

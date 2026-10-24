@@ -44,7 +44,7 @@ DENO_JOBS=2 deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast 
 基线默认 `origin/main`，`--base <git-ref>` 仅 affected 可用；不存在时先 fetch 或指定正确 ref。
 选择范围是 `merge-base(base, HEAD)` 到当前工作树的净差异（含暂存/未暂存），加上未忽略的
 untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` 同时维护映射与集合：
-desk 至少覆盖 workspace + documents，并包含 routing/bundle/home-papers/supplemental 消费者；
+资料库至少覆盖 workspace + documents，并包含 routing/bundle/home-notes/supplemental 消费者；
 直接修改 E2E 文件选择所属完整集合。共享基础设施/helper/config 及任何未知路径令整个选择
 回退 full。手工映射不是依赖图，新增跨域依赖必须更新映射；局部通过不替代完整 Workspace
 回归与交付前完整门禁。
@@ -62,7 +62,7 @@ desk 至少覆盖 workspace + documents，并包含 routing/bundle/home-papers/s
 
 ## CI 覆盖
 
-此前 CI 已运行完整 `workspace`、`bundle`、`home-papers`、`wallpaper`
+此前 CI 已运行完整 `workspace`、`bundle`、`home-notes`、`wallpaper`
 集合；Documents 并非未运行：Bundle workflow 直接运行
 `documents.test.ts`，Notes workflow 直接运行 `documents-library.test.ts`、
 `documents-live-preview.test.ts`、`documents-live-editing.test.ts` 和

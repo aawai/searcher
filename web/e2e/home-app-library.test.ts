@@ -875,7 +875,7 @@ Deno.test("home app library (#244)", async (t) => {
         );
 
         await t.step(
-            "default notes avoid the library region when it is shown and may use it when hidden",
+            "default notes stay clear of the library region and keep their side columns when it is hidden",
             async () => {
                 const { page, context } = await bigLibraryPage(
                     browser,
@@ -912,12 +912,9 @@ Deno.test("home app library (#244)", async (t) => {
                         a.left < b.right && b.left < a.right &&
                         a.top < b.bottom && b.top < a.bottom;
                     const placed = async () => {
-                        await page.locator(
-                            '.floating-notes--canvas[data-placement-ready="true"]',
-                        ).waitFor();
+                        await page.locator(".home-notes--grid").waitFor();
                         await page.waitForFunction(() =>
-                            document.querySelectorAll(".note-position")
-                                .length > 0
+                            document.querySelectorAll(".home-note").length > 0
                         );
                         return await page.evaluate(() => {
                             const box = (element: Element): Box => {
@@ -935,9 +932,7 @@ Deno.test("home app library (#244)", async (t) => {
                             return {
                                 library: library ? box(library) : null,
                                 notes: Array.from(
-                                    document.querySelectorAll(
-                                        ".note-position .note-card",
-                                    ),
+                                    document.querySelectorAll(".home-note"),
                                 ).map(box),
                             };
                         });
@@ -960,10 +955,14 @@ Deno.test("home app library (#244)", async (t) => {
                     await setShowHomeApps(page, app.origin, false);
                     const off = await placed();
                     assertEquals(off.library, null);
-                    assert(
-                        off.notes.some((note) => intersects(note, on.library!)),
-                        "some default note uses the former app region",
-                    );
+                    for (const note of off.notes) {
+                        assert(
+                            !intersects(note, on.library!),
+                            `note ${
+                                JSON.stringify(note)
+                            } keeps the former app region empty`,
+                        );
+                    }
                 } finally {
                     await context.close();
                 }

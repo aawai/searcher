@@ -40,7 +40,7 @@ Deno.test("affected: library includes documents and other known consumers withou
         "routing",
         "documents",
         "bundle",
-        "home-papers",
+        "home-notes",
         "supplemental",
     ]);
     assertEquals(selection.files, [

@@ -2,16 +2,16 @@ import { assertEquals } from "@std/assert";
 import type { DocumentDto } from "@shared/documents.ts";
 import { ApiError } from "../../lib/api.ts";
 import {
-    createPaperTaskSaver,
-    type PaperTaskSaverDeps,
+    createHomeNoteTaskSaver,
+    type HomeNoteTaskSaverDeps,
     TASK_SAVE_DEBOUNCE_MS,
-} from "./paper-task-saver.ts";
+} from "./home-note-task-saver.ts";
 
 function paperFixture(overrides: Partial<DocumentDto> = {}): DocumentDto {
     return {
         id: "p1",
         title: null,
-        displayTitle: "便签",
+        displayTitle: "笔记",
         snippet: "",
         notebookId: null,
         isFavorite: false,
@@ -27,7 +27,7 @@ function paperFixture(overrides: Partial<DocumentDto> = {}): DocumentDto {
 }
 
 interface Harness {
-    deps: PaperTaskSaverDeps;
+    deps: HomeNoteTaskSaverDeps;
     saves: Array<{ version: number; body: string }>;
     shown: Array<{ id: string; body: string }>;
     rendered: DocumentDto[];
@@ -50,7 +50,7 @@ function harness(): Harness {
     const delays: Harness["delays"] = [];
     const inFlight: Harness["inFlight"] = [];
     const timers: Array<{ run: () => void; cancelled: boolean }> = [];
-    const deps: PaperTaskSaverDeps = {
+    const deps: HomeNoteTaskSaverDeps = {
         save(document, body) {
             saves.push({ version: document.version, body });
             const { promise, resolve, reject } = Promise.withResolvers<
@@ -95,7 +95,7 @@ function conflictError(latest: DocumentDto): ApiError {
 
 Deno.test("toggle shows the change at once and sends one PATCH after the debounce", () => {
     const h = harness();
-    const saver = createPaperTaskSaver(h.deps);
+    const saver = createHomeNoteTaskSaver(h.deps);
     const paper = paperFixture({ body: "- [ ] a\n- [ ] b\n" });
 
     assertEquals(saver.toggle(paper, 0, true), true);
@@ -109,7 +109,7 @@ Deno.test("toggle shows the change at once and sends one PATCH after the debounc
 
 Deno.test("toggles within the debounce window coalesce into one PATCH", () => {
     const h = harness();
-    const saver = createPaperTaskSaver(h.deps);
+    const saver = createHomeNoteTaskSaver(h.deps);
     const paper = paperFixture({ body: "- [ ] a\n- [ ] b\n" });
 
     saver.toggle(paper, 0, true);
@@ -122,7 +122,7 @@ Deno.test("toggles within the debounce window coalesce into one PATCH", () => {
 
 Deno.test("a successful save renders the server document and later toggles use its version", async () => {
     const h = harness();
-    const saver = createPaperTaskSaver(h.deps);
+    const saver = createHomeNoteTaskSaver(h.deps);
     const paper = paperFixture({ body: "- [ ] a\n- [ ] b\n" });
 
     saver.toggle(paper, 0, true);
@@ -139,7 +139,7 @@ Deno.test("a successful save renders the server document and later toggles use i
 
 Deno.test("a 409 whose target row is unchanged replays the toggles on the latest body and retries once", async () => {
     const h = harness();
-    const saver = createPaperTaskSaver(h.deps);
+    const saver = createHomeNoteTaskSaver(h.deps);
     const paper = paperFixture({ body: "- [ ] a\n- [ ] b\n" });
 
     saver.toggle(paper, 0, true);
@@ -167,7 +167,7 @@ Deno.test("a 409 whose target row is unchanged replays the toggles on the latest
 
 Deno.test("a 409 whose target row changed rolls back to the latest server state and reports a conflict", async () => {
     const h = harness();
-    const saver = createPaperTaskSaver(h.deps);
+    const saver = createHomeNoteTaskSaver(h.deps);
     const paper = paperFixture({ body: "- [ ] a\n- [ ] b\n" });
 
     saver.toggle(paper, 1, true);
@@ -186,7 +186,7 @@ Deno.test("a 409 whose target row changed rolls back to the latest server state 
 
 Deno.test("a second 409 after the retry reports a conflict instead of looping", async () => {
     const h = harness();
-    const saver = createPaperTaskSaver(h.deps);
+    const saver = createHomeNoteTaskSaver(h.deps);
     const paper = paperFixture({ body: "- [ ] a\n- [ ] b\n" });
 
     saver.toggle(paper, 0, true);
@@ -205,7 +205,7 @@ Deno.test("a second 409 after the retry reports a conflict instead of looping", 
 
 Deno.test("toggles made while a PATCH is in flight are sent after it settles, on the new version", async () => {
     const h = harness();
-    const saver = createPaperTaskSaver(h.deps);
+    const saver = createHomeNoteTaskSaver(h.deps);
     const paper = paperFixture({ body: "- [ ] a\n- [ ] b\n" });
 
     saver.toggle(paper, 0, true);
@@ -223,7 +223,7 @@ Deno.test("toggles made while a PATCH is in flight are sent after it settles, on
 
 Deno.test("a non-conflict failure rolls the card back to the last server state", async () => {
     const h = harness();
-    const saver = createPaperTaskSaver(h.deps);
+    const saver = createHomeNoteTaskSaver(h.deps);
     const paper = paperFixture({ body: "- [ ] a\n" });
 
     saver.toggle(paper, 0, true);
@@ -239,7 +239,7 @@ Deno.test("a non-conflict failure rolls the card back to the last server state",
 
 Deno.test("toggle refuses an index that is not a task and leaves the view alone", () => {
     const h = harness();
-    const saver = createPaperTaskSaver(h.deps);
+    const saver = createHomeNoteTaskSaver(h.deps);
 
     assertEquals(saver.toggle(paperFixture({ body: "plain" }), 0, true), false);
     assertEquals(h.shown, []);

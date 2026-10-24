@@ -289,6 +289,7 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
             await openApps(page);
             const tile = folderTile(largeFolderId);
             await tile.waitFor();
+            await tile.locator(".launcher-folder-name").waitFor();
             const tokens = await grid.evaluate((node) => {
                 const style = getComputedStyle(node);
                 const root = getComputedStyle(document.documentElement);

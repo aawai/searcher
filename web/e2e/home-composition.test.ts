@@ -33,13 +33,13 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                 });
                 if (!response.ok) throw new Error(await response.text());
             }
-            for (const [index, x] of [32, 1100].entries()) {
+            for (let index = 0; index < 2; index++) {
                 const created = await fetch("/api/documents", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         title: index === 0 ? "今日计划" : "灵感",
-                        body: "保留纸张尺寸与材质。\n\n- 搜索\n- 整理",
+                        body: "保留单元尺寸与 Material。\n\n- 搜索\n- 整理",
                         isHomeFixed: true,
                     }),
                 });
@@ -51,10 +51,9 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            deviceClass: "desktop",
-                            x,
-                            y: 100,
-                            expanded: true,
+                            col: index,
+                            row: 0,
+                            size: "s",
                         }),
                     },
                 );
@@ -98,8 +97,8 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                     .first().waitFor();
                 await page.locator(
                     width < 768
-                        ? ".zen-inline-notes"
-                        : ".floating-notes .note-position, .notes-flow-grid .note-flow-item",
+                        ? '.home-notes--flow[data-mode="stack"]'
+                        : ".home-note-card",
                 ).last().waitFor();
                 await page.evaluate(() => document.fonts.ready);
                 const metrics = await page.evaluate(() => {
@@ -242,8 +241,7 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                     await target.locator(".wallpaper-surface__image").waitFor();
                     await target.locator(".search-frame").waitFor();
                     if (identity === "account") {
-                        await target.locator(".floating-notes .note-position")
-                            .nth(1).waitFor();
+                        await target.locator(".home-note").nth(1).waitFor();
                     }
                     await target.screenshot({
                         path:

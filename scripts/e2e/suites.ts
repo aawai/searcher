@@ -57,14 +57,18 @@ export const suites = {
         "accent-lab",
         "pwa",
     ],
-    "home-papers": [
-        "home-papers-color",
-        "home-papers-order",
-        "home-papers-placement",
-        "home-papers-persistence",
-        "home-papers-tasks",
-        "home-papers-inline",
-        "home-papers-document",
+    "home-notes": [
+        "home-notes-color",
+        "home-notes-order",
+        "home-notes-placement",
+        "home-notes-persistence",
+        "home-notes-tasks",
+        "home-notes-inline",
+        "home-notes-document",
+        "home-notes-drag",
+        "home-notes-keyboard",
+        "home-notes-resize",
+        "home-notes-overflow",
     ],
     supplemental: [
         "ui-ownership",
@@ -133,7 +137,7 @@ export const affectedMappings: readonly {
             "routing",
             "documents",
             "bundle",
-            "home-papers",
+            "home-notes",
             "supplemental",
         ],
     },
@@ -150,7 +154,7 @@ export const affectedMappings: readonly {
         suites: [
             "workspace",
             "documents",
-            "home-papers",
+            "home-notes",
             "supplemental",
             "bundle",
         ],
@@ -160,21 +164,21 @@ export const affectedMappings: readonly {
         suites: [
             "workspace",
             "documents",
-            "home-papers",
+            "home-notes",
             "supplemental",
             "bundle",
         ],
     },
     {
         prefix: "web/src/features/home-calm/",
-        suites: ["workspace", "home-papers", "bundle"],
+        suites: ["workspace", "home-notes", "bundle"],
     },
     {
         prefix: "web/src/features/home-layouts/",
         suites: [
             "workspace",
             "documents",
-            "home-papers",
+            "home-notes",
             "supplemental",
             "bundle",
         ],
@@ -197,7 +201,7 @@ export const affectedMappings: readonly {
     },
     {
         prefix: "web/src/features/share/",
-        suites: ["routing", "documents", "home-papers"],
+        suites: ["routing", "documents", "home-notes"],
     },
     {
         prefix: "web/src/components/wallpaper/",

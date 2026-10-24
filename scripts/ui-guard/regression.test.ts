@@ -339,15 +339,14 @@ Deno.test("regression - runtime exception safety: wallpaper, drag, domain values
             }`,
         );
 
-        // 3. Home paper domain values in HomePapers.tsx
+        // 3. Home paper domain values in HomeNotes.tsx
         await Deno.writeTextFile(
-            `${targetDir}/features/home-layouts/HomePapers.tsx`,
-            `export function HomePapers({ point }: { point: { x: number; y: number; z: number } }) {
+            `${targetDir}/features/home-layouts/HomeNotes.tsx`,
+            `export function HomeNotes({ point }: { point: { x: number; y: number } }) {
                 return (
                     <div style={{
                         left: point.x + "px",
                         top: point.y + "px",
-                        zIndex: point.z,
                     } as React.CSSProperties} />
                 );
             }`,

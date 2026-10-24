@@ -1,0 +1,422 @@
+/* #285 Y3-P / Y4-C6 prototype: identical tokens as the home surface. */
+
+.home-grid-lab {
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+/* Wallpaper layers: the shared mesh canvas below, an optional photo above it.
+   Both are fixed and inert, so the lattice can use viewport coordinates. */
+.home-grid-lab__photo {
+    position: fixed;
+    inset: 0;
+    z-index: var(--elevation-wallpaper);
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.home-grid-lab__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: var(--elevation-local-1);
+    pointer-events: none;
+    background: radial-gradient(60% 52% at 50% 46%,
+        color-mix(in srgb, var(--surface-solid) 58%, transparent),
+        transparent 72%);
+}
+
+/* Controls float in one Material pill so the wallpaper stays comparable. */
+.home-grid-lab__controls {
+    position: fixed;
+    top: var(--space-3);
+    left: 50%;
+    z-index: var(--elevation-local-20);
+    width: fit-content;
+    max-width: calc(100% - 2 * var(--space-4));
+    transform: translateX(-50%);
+    padding-inline: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+}
+
+.home-grid-lab__controls[open] {
+    width: min(calc(100% - 2 * var(--space-4)), var(--layout-home-content-max));
+}
+
+.home-grid-lab__controls summary {
+    display: flex;
+    align-items: center;
+    min-block-size: var(--control-touch-target);
+    overflow: hidden;
+    font-weight: var(--font-label-weight);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.home-grid-lab__panel {
+    display: grid;
+    gap: var(--space-2);
+    max-block-size: 60dvh;
+    padding-block: var(--space-1) var(--space-3);
+    overflow-y: auto;
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.home-grid-lab__panel > label {
+    display: grid;
+    gap: var(--space-1);
+}
+
+.home-grid-lab__panel p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.home-grid-lab__files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.home-grid-lab__toggles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Search + plate: the same 640px column, Material and radius as Y4-C3/C4. */
+.home-grid-lab__block {
+    position: fixed;
+    left: 50%;
+    z-index: var(--elevation-local-3);
+    display: grid;
+    gap: var(--space-4);
+    width: var(--home-grid-content-width);
+    transform: translateX(-50%);
+}
+
+.home-grid-lab__search {
+    display: flex;
+    align-items: center;
+    block-size: calc(var(--control-touch-target) + var(--space-3));
+    padding-inline: var(--space-5);
+    border-radius: var(--radius-lg);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+}
+
+.home-grid-lab__search .home-grid-lab__search-input {
+    inline-size: 100%;
+    block-size: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+.home-grid-lab__plate {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+}
+
+.home-grid-lab__apps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, var(--home-grid-cell));
+    gap: var(--space-home-grid-gap);
+    justify-content: center;
+}
+
+.home-grid-lab__app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    width: var(--home-grid-cell);
+    block-size: var(--home-grid-cell);
+}
+
+.home-grid-lab__glyph {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--space-9);
+    height: var(--space-9);
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--surface-soft);
+    box-shadow: var(--shadow-material-glyph), var(--shadow-material-edge);
+}
+
+.home-grid-lab__glyph img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.home-grid-lab__app-name {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (any-pointer: coarse) {
+    .home-grid-lab__glyph {
+        width: var(--control-touch-target);
+        height: var(--control-touch-target);
+    }
+}
+
+/* Notes: one absolute layer in lattice mode, normal flow below 1024. */
+.home-grid-lab__notes {
+    position: fixed;
+    inset: 0;
+    z-index: var(--elevation-local-3);
+    pointer-events: none;
+}
+
+/* Same Material tier as the plate: edge, elevation and sheen, no paper. */
+.home-grid-lab__note {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    color: var(--foreground);
+    text-align: start;
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    transition:
+        left var(--motion-base) var(--ease-out-expo),
+        top var(--motion-base) var(--ease-out-expo);
+}
+
+.home-grid-lab__note:focus-visible {
+    outline: var(--space-half) solid var(--ring);
+    outline-offset: var(--space-half);
+}
+
+.home-grid-lab__note[data-dragging="true"] {
+    z-index: var(--elevation-drag);
+    cursor: grabbing;
+}
+
+.home-grid-lab__note-title {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-title-weight);
+}
+
+.home-grid-lab__note-title > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Truncation lands on whole lines; only the last line fades. */
+.home-grid-lab__note-body {
+    display: block;
+    flex: none;
+    block-size: calc(var(--note-lines, 5) * var(--font-body-line-height));
+    margin-block-start: var(--space-1);
+    overflow: hidden;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+/* Fade only when the measured body overflows; a fitting body stays crisp. */
+.home-grid-lab__note-body[data-overflow="true"] {
+    mask-image: linear-gradient(to bottom,
+        var(--foreground) calc(100% - var(--space-2)),
+        transparent);
+    -webkit-mask-image: linear-gradient(to bottom,
+        var(--foreground) calc(100% - var(--space-2)),
+        transparent);
+}
+
+/* Transient target cell: only while dragging or moving with the keyboard. */
+.home-grid-lab__target {
+    position: absolute;
+    background: var(--accent-subtle);
+    border-radius: var(--radius-lg);
+    outline: var(--space-half) dashed var(--ring);
+    outline-offset: var(--space-hairline);
+    pointer-events: none;
+}
+
+/* Overflow entry: one pill below the plate. */
+.home-grid-lab__more {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.home-grid-lab__more--inline {
+    position: static;
+    display: inline-flex;
+}
+
+.home-grid-lab__more-under {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.home-grid-lab__status {
+    position: fixed;
+    bottom: var(--space-3);
+    left: 50%;
+    z-index: var(--elevation-local-20);
+    max-width: calc(100% - 2 * var(--space-4));
+    padding: var(--space-1) var(--space-3);
+    transform: translateX(-50%);
+    border-radius: var(--radius-pill);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge);
+    color: var(--foreground);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    text-align: center;
+}
+
+/* Below 1024 the notes leave the lattice and follow the search column. */
+.home-grid-lab[data-flow="true"] {
+    min-block-size: 100dvh;
+}
+
+.home-grid-lab[data-flow="true"] .home-grid-lab__status {
+    position: static;
+    margin: 0 auto var(--space-6);
+    transform: none;
+}
+
+.home-grid-lab[data-flow="true"] .home-grid-lab__block {
+    position: relative;
+    left: auto;
+    margin: var(--space-10) auto var(--space-4);
+    transform: none;
+}
+
+.home-grid-lab[data-flow="true"] .home-grid-lab__notes {
+    position: relative;
+    inset: auto;
+    z-index: var(--elevation-local-3);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-home-grid-gap);
+    width: var(--home-grid-content-width);
+    margin: 0 auto calc(var(--space-10) + env(safe-area-inset-bottom, 0px));
+    pointer-events: auto;
+}
+
+.home-grid-lab[data-flow="true"] .home-grid-lab__note {
+    position: relative;
+    block-size: calc(2 * var(--home-grid-cell) + var(--home-grid-gap));
+    inline-size: 100%;
+    --note-lines: 5;
+    touch-action: auto;
+    cursor: default;
+}
+
+@media (max-width: 767px) {
+    .home-grid-lab[data-flow="true"] .home-grid-lab__note {
+        --note-lines: 3;
+    }
+
+    /* Controls join the bottom status area; the top bar stays unobstructed. */
+    .home-grid-lab[data-flow="true"] {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .home-grid-lab[data-flow="true"] .home-grid-lab__block {
+        order: 1;
+    }
+
+    .home-grid-lab[data-flow="true"] .home-grid-lab__notes {
+        order: 2;
+    }
+
+    .home-grid-lab[data-flow="true"] .home-grid-lab__controls {
+        order: 3;
+        position: static;
+        align-self: flex-end;
+        width: fit-content;
+        max-width: calc(100% - 2 * var(--space-4));
+        margin: 0 var(--space-4) var(--space-3);
+        top: auto;
+        left: auto;
+        transform: none;
+    }
+
+    .home-grid-lab[data-flow="true"] .home-grid-lab__controls[open] {
+        width: auto;
+        align-self: stretch;
+        margin-inline: var(--space-4);
+    }
+
+    .home-grid-lab[data-flow="true"] .home-grid-lab__panel {
+        max-block-size: 40dvh;
+    }
+
+    .home-grid-lab[data-flow="true"] .home-grid-lab__status {
+        order: 4;
+        align-self: center;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .home-grid-lab[data-flow="true"] .home-grid-lab__notes {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-grid-lab__note {
+        transition: opacity var(--motion-base) var(--ease-standard);
+    }
+}

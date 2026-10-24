@@ -13,7 +13,7 @@ import type { AppLibraryController } from "../app-library/useAppLibraryActions.t
 import type { HomeContinueDto, UserDto } from "@shared/contracts.ts";
 import type { LibraryRequest } from "../library/library-request.ts";
 import type { SearchQuickCommand } from "../shortcuts/shortcut-catalog.ts";
-import type { PaperItem } from "./home-papers.ts";
+import type { HomeNoteItem } from "./home-notes.ts";
 import type { InlineAnswer } from "../inline-ai/useInlineAnswer.ts";
 export interface HomeLayoutProps {
     user: UserDto | null;
@@ -34,8 +34,8 @@ export interface HomeLayoutProps {
     onReloadApps: () => void;
     /** Folder CRUD, order writes and icon backfill for the home app library. */
     library: AppLibraryController;
-    papersLoading: boolean;
-    papers: PaperItem[];
+    notesLoading: boolean;
+    homeNotes: HomeNoteItem[];
     isManagingApps: boolean;
     setIsManagingApps: React.Dispatch<React.SetStateAction<boolean>>;
     openApp: (
@@ -51,24 +51,24 @@ export interface HomeLayoutProps {
         isHomeFixed?: boolean,
     ) => void;
     softDeleteApp: (app: ExtendedWebApp) => Promise<void>;
-    // papers
-    openPaper: (paper: PaperItem) => void;
-    deletePaper: (paper: PaperItem) => Promise<void>;
-    updatePaper: (
-        paper: PaperItem,
+    // home notes
+    openNote: (note: HomeNoteItem) => void;
+    deleteNote: (note: HomeNoteItem) => Promise<void>;
+    updateNote: (
+        note: HomeNoteItem,
         patch: Omit<UpdateDocumentInput, "version">,
     ) => Promise<void>;
-    updatePaperLayout: (
-        paper: PaperItem,
+    updateNoteLayout: (
+        note: HomeNoteItem,
         layout: DocumentLayoutDto,
     ) => Promise<void>;
     /** Toggles one task row in a note's body; optimistic, saved and coalesced. */
-    toggleTask: (paper: PaperItem, index: number, checked: boolean) => void;
+    toggleTask: (note: HomeNoteItem, index: number, checked: boolean) => void;
     /** The note open in the editor; its card task boxes are read-only meanwhile. */
-    editingPaperId: string | null;
+    editingNoteId: string | null;
     /** Opens the library root or a nested collection. */
     openLibrary: (request: LibraryRequest) => void;
-    /** Opens a note over the unchanged home. */
+    /** Opens a note's detail on the desk by id (search results). */
     openDocument: (id: string) => void;
     /** An enabled model exists for the signed-in user: AI entry points show. */
     aiAvailable: boolean;

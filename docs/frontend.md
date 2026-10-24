@@ -25,7 +25,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
 - 图标使用 Lucide，`size` 只允许 14、16、20（`check:ui` 强制）。语义映射：应用
   `AppWindow`、笔记 `NotebookPen`、总览 `LayoutGrid`、文件夹
   `Folder`。
-- 用户可见文案（应用 / 网站 / 网址、笔记 / 首页纸张、删除与恢复动词、版本冲突选项）以 Visual Language 文案为准；代码与 API
+- 用户可见文案（应用 / 网站 / 网址、笔记 / 首页笔记、删除与恢复动词、版本冲突选项）以 Visual Language 文案为准；代码与 API
   保持 canonical 英文命名。
 
 ## 样式
