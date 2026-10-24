@@ -46,6 +46,7 @@ export const suites = {
         "route-style-stability",
         "omnibox-lab",
         "desk-lab",
+        "accent-lab",
         "pwa",
     ],
     "home-papers": [
