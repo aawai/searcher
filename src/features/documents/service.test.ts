@@ -1115,7 +1115,9 @@ Deno.test("Documents colors, favorites and home ordering persist with scope-boun
             homeSortOrder: -1,
         });
         const expected = [...created].sort((a, b) =>
-            a.homeSortOrder - b.homeSortOrder || b.id.localeCompare(a.id)
+            a.homeSortOrder - b.homeSortOrder ||
+            a.createdAt - b.createdAt ||
+            a.id.localeCompare(b.id)
         );
         const actual = [];
         let cursor: string | undefined;

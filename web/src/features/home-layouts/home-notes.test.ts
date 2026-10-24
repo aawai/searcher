@@ -37,18 +37,18 @@ function note(
     };
 }
 
-Deno.test("home notes sort by homeSortOrder then id descending", () => {
+Deno.test("home notes sort by homeSortOrder then createdAt then id", () => {
     const input = [
-        note("beta", 2),
-        note("alpha", 2),
-        note("first", 1),
+        note("beta", 2, { createdAt: 20 }),
+        note("alpha", 2, { createdAt: 20 }),
+        note("first", 1, { createdAt: 30 }),
         note("unpinned", 0, { isHomeFixed: false }),
     ];
 
     assertEquals(sortNotes(input).map((item) => item.id), [
         "first",
-        "beta",
         "alpha",
+        "beta",
     ]);
     assertEquals(input.map((item) => item.id), [
         "beta",

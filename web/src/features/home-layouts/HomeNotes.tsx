@@ -279,7 +279,6 @@ export function HomeNotes(
             cell,
             gap: metrics.gap,
             inset: metrics.inset,
-            maxBottom: metrics.plateBottom ?? undefined,
         });
     }, [metrics, stack, narrowFlow]);
     // A wide viewport whose plate leaves no complete side column (1024–1145

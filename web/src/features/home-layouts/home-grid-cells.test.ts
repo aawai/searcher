@@ -47,22 +47,25 @@ const cell = (overrides: Partial<CellRect> = {}): CellRect => ({
 });
 
 /** Home geometry with the 180px note cell (2 app cells + one gap). */
+function contentWidth(viewportWidth: number): number {
+    return Math.max(640, Math.min(880, viewportWidth * 0.4));
+}
+
 function noteGrid(
     viewportWidth: number,
     viewportHeight: number,
     top: number,
-    maxBottom?: number,
+    width = contentWidth(viewportWidth),
 ): CellGrid {
     return homeGridFromBlock({
-        left: (viewportWidth - 640) / 2,
-        width: 640,
+        left: (viewportWidth - width) / 2,
+        width,
         top,
         viewportWidth,
         viewportHeight,
         cell: 180,
         gap: 12,
         inset: 32,
-        maxBottom,
     });
 }
 
@@ -224,7 +227,7 @@ Deno.test("folding onto the same grid is a no-op when nothing collides", () => {
 });
 
 Deno.test("the note cell is two app cells plus one gap and anchors at the block edge", () => {
-    const compact = noteGrid(1366, 768, 264, 644);
+    const compact = noteGrid(1366, 768, 264);
     assertEquals(compact.cell, 180);
     assertEquals(compact.columns, [
         { x: 171, band: "left" },
@@ -232,7 +235,7 @@ Deno.test("the note cell is two app cells plus one gap and anchors at the block 
     ]);
     assertEquals(compact.rows, 2);
 
-    const roomy = noteGrid(1440, 900, 314, 694);
+    const roomy = noteGrid(1440, 900, 314);
     // With the 32px page inset only one column fits beside the block.
     assertEquals(roomy.columns, [
         { x: 208, band: "left" },
@@ -240,46 +243,55 @@ Deno.test("the note cell is two app cells plus one gap and anchors at the block 
     ]);
     assertEquals(roomy.rows, 2);
 
-    const wide = noteGrid(1920, 1080, 382, 762);
+    const wide = noteGrid(1920, 1080, 382);
     assertEquals(wide.columns, [
-        { x: 64, band: "left" },
-        { x: 256, band: "left" },
-        { x: 448, band: "left" },
-        { x: 1292, band: "right" },
-        { x: 1484, band: "right" },
-        { x: 1676, band: "right" },
+        { x: 192, band: "left" },
+        { x: 384, band: "left" },
+        { x: 1356, band: "right" },
+        { x: 1548, band: "right" },
     ]);
-    // A width tier spans two note cells plus their gap, inside one band.
-    assertEquals(cellToPixels({ col: 1, row: 0, cols: 2, rows: 1 }, wide), {
-        x: 256,
+    // A width tier spans both columns of a band, from its outer edge.
+    assertEquals(cellToPixels({ col: 0, row: 0, cols: 2, rows: 1 }, wide), {
+        x: 192,
         y: 382,
         width: 372,
         height: 180,
     });
 });
 
-Deno.test("rows stop at the plate bottom and at the viewport clearance", () => {
+Deno.test("rows end at the viewport clearance independent of the plate height", () => {
     const cases = [
-        [1366, 768, 264, 2],
-        [1440, 900, 314, 2],
-        [1920, 1080, 382, 3],
-        [2560, 1440, 519, 4],
+        [1366, 768, 264, 2, 4],
+        [1440, 900, 314, 2, 4],
+        [1920, 1080, 382, 3, 12],
+        [2560, 1440, 519, 4, 32],
     ] as const;
-    for (const [width, height, top, rows] of cases) {
-        assertEquals(
-            noteGrid(width, height, top).rows,
-            rows,
-            `${width}x${height}`,
-        );
+    for (const [width, height, top, rows, capacity] of cases) {
+        const lattice = noteGrid(width, height, top);
+        assertEquals(lattice.rows, rows, `${width}x${height}`);
         const bottom = top + rows * 192 - 12;
         assertEquals(bottom <= height - 48, true, `${width}x${height}`);
-    }
-    // The block is 380px tall, so the plate bottom allows exactly two rows.
-    for (const [width, height, top] of cases) {
-        const plateBottom = top + 380;
-        const bounded = noteGrid(width, height, top, plateBottom);
-        assertEquals(bounded.rows, 2, `${width}x${height}`);
-        assertEquals(top + bounded.rows * 192 - 12, plateBottom - 8);
+        assertEquals(
+            cellCapacity(lattice, { cols: 1, rows: 1 }),
+            capacity,
+            `${width}x${height}`,
+        );
+        // An empty (+ only), short and tall plate all occupy the same central
+        // block; none of them can reduce the side lattice.
+        const blockWidth = contentWidth(width);
+        for (const plateHeight of [116, 308, 380, 600]) {
+            const plate = {
+                x: (width - blockWidth) / 2,
+                y: top,
+                width: blockWidth,
+                height: plateHeight,
+            };
+            assertEquals(
+                freeCells(lattice, [], [plate]).length,
+                capacity,
+                `${width}x${height} plate ${plateHeight}`,
+            );
+        }
     }
 });
 
@@ -287,11 +299,11 @@ Deno.test("capacity counts non-overlapping spans per band", () => {
     const cases = [
         [1366, 768, 264, 4, 0],
         [1440, 900, 314, 4, 0],
-        [1920, 1080, 382, 12, 4],
-        [2560, 1440, 519, 16, 8],
+        [1920, 1080, 382, 12, 6],
+        [2560, 1440, 519, 32, 16],
     ] as const;
     for (const [width, height, top, small, wide] of cases) {
-        const noteLattice = noteGrid(width, height, top, top + 380);
+        const noteLattice = noteGrid(width, height, top);
         assertEquals(
             cellCapacity(noteLattice, { cols: 1, rows: 1 }),
             small,
@@ -319,24 +331,24 @@ Deno.test("capacity counts non-overlapping spans per band", () => {
 });
 
 Deno.test("free cells list in reading order and exclude taken spans", () => {
-    const wide = noteGrid(1920, 1080, 382, 762);
+    const wide = noteGrid(1920, 1080, 382);
     const all = freeCells(wide, [], [], { cols: 2, rows: 1 });
-    assertEquals(all.length, 8);
-    assertEquals(all[all.length - 1], { col: 4, row: 1, cols: 2, rows: 1 });
+    assertEquals(all.length, 6);
+    assertEquals(all[all.length - 1], { col: 2, row: 2, cols: 2, rows: 1 });
     const oneWide = [{ col: 0, row: 0, cols: 2, rows: 1 }];
-    assertEquals(freeCells(wide, oneWide, [], { cols: 2, rows: 1 }).length, 6);
+    assertEquals(freeCells(wide, oneWide, [], { cols: 2, rows: 1 }).length, 5);
     const singles = freeCells(wide, [], []);
     assertEquals(singles.length, 12);
     // The last free position is the bottom-right cell in reading order.
     assertEquals(singles[singles.length - 1], {
-        col: 5,
-        row: 1,
+        col: 3,
+        row: 2,
         cols: 1,
         rows: 1,
     });
 
     // With one column per side a width tier has no free origin at all.
-    const narrow = noteGrid(1440, 900, 314, 694);
+    const narrow = noteGrid(1440, 900, 314);
     assertEquals(freeCells(narrow, [], [], { cols: 2, rows: 1 }), []);
 });
 
@@ -369,8 +381,10 @@ const homeNote = (
     }> = {},
 ) => ({ id, size: "s" as const, col: null, row: null, ...overrides });
 
-const referenceGrid = noteGrid(1440, 900, 314, 794);
-const wideGrid = noteGrid(1920, 1080, 382, 766);
+const referenceGrid = noteGrid(1440, 900, 314);
+// The folding case uses the 640px block to keep three columns per side; the
+// production 1920 block is wider, so capacity is covered separately.
+const wideGrid = noteGrid(1920, 1080, 382, 640);
 
 Deno.test("default home notes alternate sides and fill each band from the plate outward", () => {
     const notes = ["a", "b", "c", "d"].map((id) => homeNote(id));
