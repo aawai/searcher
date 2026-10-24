@@ -279,7 +279,7 @@
     pointer-events: none;
 }
 
-/* Overflow entry point: a chip inside the last free cell, or below the plate. */
+/* Overflow entry: one pill below the plate. */
 .home-grid-lab__more {
     position: absolute;
     display: grid;
@@ -289,37 +289,6 @@
     background: transparent;
     pointer-events: auto;
     cursor: pointer;
-}
-
-/* A full slot keeps the grid rhythm; the label stays secondary to note titles. */
-.home-grid-lab__more--cell {
-    padding: var(--space-4);
-    border-radius: var(--radius-lg);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
-}
-
-.home-grid-lab__more-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.home-grid-lab__more-icon {
-    width: var(--space-6);
-    height: var(--space-6);
-    color: var(--muted);
-}
-
-.home-grid-lab__more-label {
-    color: var(--foreground);
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-    font-weight: var(--font-label-weight);
-    text-align: center;
 }
 
 .home-grid-lab__more--inline {
@@ -333,19 +302,6 @@
     right: 0;
     display: flex;
     justify-content: center;
-}
-
-.home-grid-lab__more-chip {
-    padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
-    color: var(--foreground);
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-    white-space: nowrap;
 }
 
 .home-grid-lab__status {

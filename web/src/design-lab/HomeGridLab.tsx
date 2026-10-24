@@ -18,7 +18,6 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { StickyNote } from "lucide-react";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import {
@@ -35,7 +34,6 @@ import {
     cellToPixels,
     composeBlockTop,
     foldColumns,
-    freeCells,
     homeGridFromBlock,
     isFree,
     nearestFreeCell,
@@ -58,11 +56,6 @@ interface Note extends CellRect {
 interface NoteSpans {
     cols: number;
     rows: number;
-}
-
-interface Chip {
-    count: number;
-    cell: CellRect | null;
 }
 
 interface Metrics {
@@ -557,12 +550,6 @@ export default function HomeGridLab() {
         fixture.size === "W" &&
         placed.some((note) => note.id === fixture.id && note.size === "S")
     ).length;
-    const chip: Chip | null = grid && overflow.length
-        ? {
-            count: overflow.length,
-            cell: freeCells(grid, placed, obstacles).at(-1) ?? null,
-        }
-        : null;
     const rendered = flow ? fixtures : placed;
 
     useLayoutEffect(() => {
@@ -736,10 +723,7 @@ export default function HomeGridLab() {
             grid?.rows ?? 0
         } 行 · 搜索中心 ${anchor}% · 底板距底 ${Math.round(clearance)}px`;
 
-    const placementChip = grid && chip?.cell
-        ? cellToPixels(chip.cell, grid)
-        : null;
-    const placementBelow = metrics
+    const placementBelow = grid && overflow.length > 0 && metrics
         ? {
             top: Math.min(
                 blockTop + metrics.blockHeight + metrics.gap,
@@ -749,9 +733,9 @@ export default function HomeGridLab() {
         : null;
 
     const announceMore = () => {
-        if (!chip) return;
+        if (!overflow.length) return;
         announce(
-            `更多笔记（${chip.count}）：将打开资料库的笔记视图（本实验仅占位）。`,
+            `更多笔记（${overflow.length}）：将打开资料库的笔记视图（本实验仅占位）。`,
         );
     };
 
@@ -1028,31 +1012,7 @@ export default function HomeGridLab() {
                             />
                         );
                     })()}
-                    {!flow && chip && placementChip && (
-                        <button
-                            type="button"
-                            className="home-grid-lab__more home-grid-lab__more--cell"
-                            style={{
-                                left: placementChip.x,
-                                top: placementChip.y,
-                                width: placementChip.width,
-                                height: placementChip.height,
-                            }}
-                            aria-label={`更多笔记（${chip.count}）`}
-                            onClick={announceMore}
-                        >
-                            <span className="home-grid-lab__more-content">
-                                <StickyNote
-                                    className="home-grid-lab__more-icon"
-                                    aria-hidden="true"
-                                />
-                                <span className="home-grid-lab__more-label">
-                                    更多笔记（{chip.count}）
-                                </span>
-                            </span>
-                        </button>
-                    )}
-                    {!flow && chip && !placementChip && placementBelow && (
+                    {!flow && placementBelow && (
                         <div
                             className="home-grid-lab__more-under"
                             style={{ top: placementBelow.top }}
@@ -1060,11 +1020,11 @@ export default function HomeGridLab() {
                             <button
                                 type="button"
                                 className="home-grid-lab__more home-grid-lab__more--inline"
-                                aria-label={`更多笔记（${chip.count}）`}
+                                aria-label={`更多笔记（${overflow.length}）`}
                                 onClick={announceMore}
                             >
-                                <span className="home-grid-lab__more-chip">
-                                    更多笔记（{chip.count}）
+                                <span>
+                                    更多笔记（{overflow.length}）
                                 </span>
                             </button>
                         </div>
@@ -1098,7 +1058,7 @@ export default function HomeGridLab() {
                 data-clearance={flow ? undefined : Math.round(clearance)}
                 data-note-cell={Math.round(noteCell)}
                 data-notes={rendered.length}
-                data-chip={chip ? (placementChip ? "cell" : "below") : "none"}
+                data-chip={overflow.length > 0 ? "below" : "none"}
             >
                 {status}
             </output>
