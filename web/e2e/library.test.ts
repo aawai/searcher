@@ -114,11 +114,15 @@ Deno.test("Library: seven home entries, responsive presentation, unchanged home 
                     name: "home note",
                     view: "notes",
                     open: () =>
-                        page.locator(".note-card .note-title").filter({
-                            hasText: title,
+                        page.getByRole("button", {
+                            name: width < 768 ? `打开便签：${title}` : title,
+                            exact: true,
                         }).click(),
                     focus: () =>
-                        page.getByRole("button", { name: title, exact: true }),
+                        page.getByRole("button", {
+                            name: width < 768 ? `打开便签：${title}` : title,
+                            exact: true,
+                        }),
                 },
                 {
                     name: "continue",
@@ -151,10 +155,12 @@ Deno.test("Library: seven home entries, responsive presentation, unchanged home 
                     view: "notes",
                     open: async () => {
                         await search.fill(title);
-                        await page.getByRole("option", {
-                            name: `${title}笔记`,
+                        await page.getByRole("group", {
+                            name: "我的",
                             exact: true,
-                        }).click();
+                        })
+                            .getByRole("option").filter({ hasText: title })
+                            .click();
                     },
                     focus: () => search,
                 },

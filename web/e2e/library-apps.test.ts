@@ -74,7 +74,7 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
     const appTile = (id: string) => surface.locator(`[data-app-id="${id}"]`);
     const folderTile = (id: string) =>
         surface.locator(`[data-folder-id="${id}"]`);
-    const search = surface.getByRole("textbox", {
+    const search = surface.getByRole("searchbox", {
         name: "搜索应用",
         exact: true,
     });
