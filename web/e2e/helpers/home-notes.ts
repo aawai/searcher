@@ -403,6 +403,7 @@ export async function seedHomeApps(
                 body: JSON.stringify({
                     name: `应用 ${index}`,
                     url: `https://app-${index}.example/`,
+                    isHomeFixed: true,
                 }),
             });
             if (!response.ok) throw new Error(await response.text());
