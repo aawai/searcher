@@ -1,5 +1,5 @@
-/* Home: search and inline notes are the only materials; apps and labels sit
-   directly on the wallpaper. */
+/* Home search and application plate share the Material elevation.
+   Pinned papers keep their current appearance until the Y3 cutover. */
 
 :root {
     /* Inline-paper preview geometry. The swipe distance is read by ZenInlinePapers. */
@@ -27,7 +27,7 @@
 
 .pinned-area {
     width: calc(100% - 2 * var(--space-4));
-    max-width: var(--home-grid-content-width);
+    max-width: var(--layout-home-content-max);
     margin: var(--space-5) auto var(--space-9);
     display: flex;
     flex-direction: column;
@@ -52,7 +52,7 @@
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     border-radius: var(--radius-pill);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    box-shadow: var(--shadow-elevation-material);
 }
 
 .home-managing-text {
@@ -116,7 +116,7 @@
     background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    box-shadow: var(--shadow-elevation-material);
     text-align: center;
     touch-action: pan-y pinch-zoom;
     user-select: none;

@@ -6,7 +6,7 @@
     --home-calm-row-height: var(--control-height);
     position: relative;
     width: 100%;
-    max-width: var(--layout-search-max);
+    max-width: var(--layout-home-content-max);
     height: 0;
 }
 
@@ -30,10 +30,10 @@
     text-shadow: var(--wallpaper-text-halo);
 }
 
-/* Brand display role: the same size and weight as the top-bar wordmark. */
+/* Secondary information stays below the search and application surfaces. */
 .home-calm__clock {
     margin: 0;
-    font-size: var(--font-brand-size);
+    font-size: var(--font-title-size);
     line-height: var(--font-title-line-height);
     font-weight: var(--font-title-weight);
     font-variant-numeric: tabular-nums;

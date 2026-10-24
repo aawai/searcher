@@ -65,8 +65,13 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                     style.getPropertyValue("--launcher-col-w"),
                 );
                 const gap = Number.parseFloat(style.columnGap);
-                const width = home.parentElement?.getBoundingClientRect()
-                    .width ?? 0;
+                const parent = home.parentElement;
+                if (!parent) return false;
+                const parentStyle = getComputedStyle(parent);
+                // Columns follow the plate's content box, not its border box.
+                const width = parent.getBoundingClientRect().width -
+                    (Number.parseFloat(parentStyle.paddingLeft) || 0) -
+                    (Number.parseFloat(parentStyle.paddingRight) || 0);
                 const tiles = Array.from(
                     home.querySelectorAll<HTMLElement>(
                         ":scope > .launcher-tile",
@@ -108,7 +113,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         };
 
         // Fixed glyphs retain standard tracks and columns derived from the
-        // measured parent width, independently of label visibility.
+        // measured plate content width, independently of label visibility.
         const assertTouchGeometry = async (
             track: number,
             glyph: number,
@@ -133,8 +138,12 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 [glyph, showLabels ? APP_COUNT + 1 : 0],
             );
             const columns = await grid.evaluate((node, cell) => {
-                const width = node.parentElement?.getBoundingClientRect()
-                    .width ?? 0;
+                const parent = node.parentElement;
+                if (!parent) return 0;
+                const parentStyle = getComputedStyle(parent);
+                const width = parent.getBoundingClientRect().width -
+                    (Number.parseFloat(parentStyle.paddingLeft) || 0) -
+                    (Number.parseFloat(parentStyle.paddingRight) || 0);
                 const gap = Number.parseFloat(getComputedStyle(node).columnGap);
                 return Math.min(6, Math.floor((width + gap) / (cell + gap)));
             }, track);
@@ -215,7 +224,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 assertEquals(button.hittable, true);
             }
         };
-        await waitForHomeColumns(5);
+        await waitForHomeColumns(4);
         const keyboardTrigger = grid.locator(".launcher-tile").first()
             .locator(".webapp-icon");
         const appMenu = page.getByRole("menu");
@@ -229,7 +238,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         await page.keyboard.press("Escape");
         await appMenu.waitFor({ state: "hidden" });
         await page.reload();
-        await waitForHomeColumns(5);
+        await waitForHomeColumns(4);
         assertEquals(
             await page.evaluate(() =>
                 matchMedia("(pointer: coarse), (hover: none)").matches
@@ -389,7 +398,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         for (
             const { width, columns } of [
                 { width: 375, columns: 4 },
-                { width: 390, columns: 5 },
+                { width: 390, columns: 4 },
                 { width: 430, columns: 5 },
             ]
         ) {
@@ -406,8 +415,12 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 );
                 const gapX = parseFloat(css.columnGap);
                 const gapY = parseFloat(css.rowGap);
-                const parentWidth = element.parentElement!
-                    .getBoundingClientRect().width;
+                const parent = element.parentElement!;
+                const parentWidth = parent.getBoundingClientRect().width;
+                const parentStyle = getComputedStyle(parent);
+                const contentWidth = parentWidth -
+                    (Number.parseFloat(parentStyle.paddingLeft) || 0) -
+                    (Number.parseFloat(parentStyle.paddingRight) || 0);
                 const tiles = Array.from(
                     element.querySelectorAll<HTMLElement>(".launcher-tile"),
                     (tile) => {
@@ -449,6 +462,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                     gapX,
                     gapY,
                     parentWidth,
+                    contentWidth,
                     firstRow,
                     hittable,
                     overlaps,
@@ -465,7 +479,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 Math.min(
                     6,
                     Math.floor(
-                        (metrics.parentWidth + metrics.gapX) /
+                        (metrics.contentWidth + metrics.gapX) /
                             (metrics.col + metrics.gapX),
                     ),
                 ),
@@ -481,7 +495,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         }
 
         await page.setViewportSize({ width: 390, height: 844 });
-        await waitForHomeColumns(5);
+        await waitForHomeColumns(4);
 
         // Enter arranging via context menu; reproduce real CDP touch dragging
         // into another cell and verify the portaled preview + persistence.
@@ -653,7 +667,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             return actual[0] === ids[1] && actual[1] === ids[0];
         }, initialIds);
         await page.reload();
-        await waitForHomeColumns(5);
+        await waitForHomeColumns(4);
         const reorderedIds = await grid.locator(
             ":scope > .launcher-tile[data-tile-id]",
         )
@@ -668,7 +682,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         // Repeat the alignment regression without app labels. Cancel this
         // gesture to leave the already-persisted Home order unchanged.
         await setHomeVisuals({ showAppLabels: false });
-        await waitForHomeColumns(5);
+        await waitForHomeColumns(4);
         await page.waitForFunction(() =>
             document.querySelectorAll(
                 ".launcher-library .launcher-grid--home .webapp-name",
@@ -715,7 +729,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         });
         await overlay.waitFor({ state: "detached" });
         await setHomeVisuals({ showAppLabels: true });
-        await waitForHomeColumns(5);
+        await waitForHomeColumns(4);
 
         // Label visibility never changes fixed icon or standard cell geometry.
         for (const showLabels of [true, false]) {
@@ -723,7 +737,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             await assertTouchGeometry(68, 44, showLabels);
         }
         await setHomeVisuals({ showAppLabels: true });
-        await waitForHomeColumns(5);
+        await waitForHomeColumns(4);
 
         // Fine-pointer Home keeps the pre-existing 64px / 6px layout.
         const fineContext = await browser.newContext({

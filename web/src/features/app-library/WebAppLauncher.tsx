@@ -49,6 +49,11 @@ export function useGridColumns(): {
     useEffect(() => {
         if (!grid) return;
         const target = grid.parentElement || grid;
+        const contentWidth = () => {
+            const style = getComputedStyle(target);
+            return target.clientWidth - parseFloat(style.paddingLeft || "0") -
+                parseFloat(style.paddingRight || "0");
+        };
         const measure = (width: number) => {
             const style = getComputedStyle(grid);
             const cellWidth = parseFloat(
@@ -64,10 +69,10 @@ export function useGridColumns(): {
             }
         };
         const observer = new ResizeObserver((entries) =>
-            measure(entries[0]?.contentRect.width ?? target.clientWidth)
+            measure(entries[0]?.contentRect.width ?? contentWidth())
         );
         observer.observe(target);
-        measure(target.clientWidth);
+        measure(contentWidth());
         return () => observer.disconnect();
     }, [grid]);
     return { gridRef, grid, columns };

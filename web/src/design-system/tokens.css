@@ -51,6 +51,7 @@
     --glass-edge-top: rgb(255 255 255 / 1);
     --glass-edge-ring: rgb(255 255 255 / 0.7);
     --glass-edge-bottom: rgb(0 0 0 / 0.07);
+    --glyph-edge: rgb(0 0 0 / 0.5);
     /* Light catching the top of the glass: peak white at the top edge, fading out by 55% of the height. Scaled by the tier. */
     --glass-sheen-peak: 60%;
     /* Default canvas (no wallpaper): accent blobs plus this secondary tint give the glass something to refract. */
@@ -497,6 +498,10 @@
     --material-thick: color-mix(in srgb, var(--surface-l3) var(--glass-fill-thick), transparent);
     --shadow-material-edge: inset 0 1px 0 var(--glass-edge-top), inset 0 0 0 1px var(--glass-edge-ring), inset 0 -1px 0 var(--glass-edge-bottom);
     --shadow-material-glyph: 0 var(--space-hairline) var(--space-half) var(--glass-edge-bottom);
+    --shadow-glyph-edge: inset 0 0 0 var(--space-hairline) var(--glyph-edge);
+    --shadow-elevation-glyph: var(--shadow-material-glyph);
+    --shadow-elevation-material: var(--shadow-material-edge), var(--shadow-l2);
+    --shadow-elevation-floating: var(--shadow-material-edge), var(--shadow-l2);
     --glass-sheen: linear-gradient(180deg, color-mix(in srgb, white calc(var(--glass-sheen-peak) * var(--glass-sheen-scale)), transparent), transparent 55%);
 }
 
@@ -553,6 +558,14 @@
         --canvas-derived-light: 100%;
         --canvas-derived-dark: 100%;
         --canvas-derived-filter: none;
+    }
+}
+
+/* Wide home: the search box and plate grow with the viewport while the cell
+   grid, icons and row pitch stay fixed. 40vw reaches 640px at 1600px. */
+@media (min-width: 1024px) {
+    :root {
+        --layout-home-content-max: clamp(640px, 40vw, 880px);
     }
 }
 

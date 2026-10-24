@@ -1,9 +1,9 @@
 import { Buffer } from "node:buffer";
-import { assert, assertAlmostEquals } from "@std/assert";
+import { assert, assertAlmostEquals, assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
-Deno.test("Home anchor is shared by guests and accounts and reserves four grid rows", async () => {
+Deno.test("Home anchor is shared by guests and accounts and respects the plate clearance", async () => {
     const app = await startProductionApp();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
     const evidence = Deno.env.get("COMPOSITION_EVIDENCE_DIR");
@@ -104,17 +104,19 @@ Deno.test("Home anchor is shared by guests and accounts and reserves four grid r
                 const metrics = await page.evaluate(() => {
                     const search = document.querySelector(".search-frame")!
                         .getBoundingClientRect();
-                    const grid = document.querySelector(".launcher-grid--home")!
-                        .getBoundingClientRect();
-                    const css = getComputedStyle(
-                        document.querySelector(".launcher-grid--home")!,
-                    );
+                    const gridElement = document.querySelector(
+                        ".launcher-grid--home",
+                    )!;
+                    const grid = gridElement.getBoundingClientRect();
+                    const css = getComputedStyle(gridElement);
+                    const plate = gridElement.closest(".launcher-plate");
                     return {
                         center: search.y + search.height / 2,
                         width: search.width,
-                        fourRowBottom: grid.y +
-                            4 * parseFloat(css.gridAutoRows) +
-                            3 * parseFloat(css.rowGap),
+                        rows: css.gridTemplateRows.split(" ").filter(Boolean)
+                            .length,
+                        plateBottom: (plate?.getBoundingClientRect() ?? grid)
+                            .bottom,
                         overflow:
                             document.documentElement.scrollWidth > innerWidth,
                     };
@@ -132,12 +134,13 @@ Deno.test("Home anchor is shared by guests and accounts and reserves four grid r
                 assertAlmostEquals(metrics.center, expectedCenter, 1);
                 assertAlmostEquals(metrics.width, Math.min(640, width - 32), 1);
                 assert(!metrics.overflow);
-                if (width >= 1366) {
-                    assert(
-                        height - metrics.fourRowBottom >= 48,
-                        JSON.stringify(metrics),
-                    );
-                }
+                assert(metrics.rows >= 1 && metrics.rows <= 4);
+                if (width === 1440) assertEquals(metrics.rows, 4);
+                if (width === 1366) assertEquals(metrics.rows, 3);
+                assert(
+                    height - metrics.plateBottom >= 48 - 0.5,
+                    JSON.stringify(metrics),
+                );
                 console.log(theme, width, height, metrics);
                 if (evidence) {
                     await page.screenshot({

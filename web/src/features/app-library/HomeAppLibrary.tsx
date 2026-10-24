@@ -78,7 +78,7 @@ export interface HomeAppLibraryProps {
     onEditApp: (app: LauncherApp, expandIcon?: boolean) => void;
     onCreateApp: (groupId?: string) => void;
     onDeleteApp: (app: LauncherApp) => void;
-    /** The measured grid, for default-note placement. */
+    /** The measured grid; note placement expands it to the plate. */
     onGridElement: (element: HTMLElement | null) => void;
 }
 
@@ -182,10 +182,9 @@ export const HomeAppLibrary = forwardRef<
         onGridElement(element);
     }, [gridRef, onGridElement]);
     const root = useRef<HTMLDivElement>(null);
-    const bar = useRef<HTMLDivElement>(null);
     const layoutHeight = useLayoutViewportHeight();
     const [metrics, setMetrics] = useState<
-        { gridTop: number; rowPitch: number } | null
+        { gridTop: number; rowPitch: number; platePadding: number } | null
     >(null);
 
     useLayoutEffect(() => {
@@ -195,19 +194,21 @@ export const HomeAppLibrary = forwardRef<
             const cell = pixels(style.gridAutoRows);
             const gap = pixels(style.rowGap);
             if (!Number.isFinite(cell) || !Number.isFinite(gap)) return;
-            const barElement = bar.current;
-            const barOffset = barElement
-                ? barElement.getBoundingClientRect().height +
-                    pixels(getComputedStyle(barElement).marginBlockEnd || "0")
-                : 0;
+            // The grid top already includes the plate's top padding and the
+            // managing bar; only the bottom padding has to be reserved.
+            const platePadding = pixels(
+                getComputedStyle(grid.parentElement!).paddingBottom,
+            );
             const next = {
                 // Document coordinates: scrolling must not change the plan.
-                gridTop: grid.getBoundingClientRect().top + scrollY - barOffset,
+                gridTop: grid.getBoundingClientRect().top + scrollY,
                 rowPitch: cell + gap,
+                platePadding,
             };
             setMetrics((previous) =>
                 previous?.gridTop === next.gridTop &&
-                    previous.rowPitch === next.rowPitch
+                    previous.rowPitch === next.rowPitch &&
+                    previous.platePadding === next.platePadding
                     ? previous
                     : next
             );
@@ -219,13 +220,14 @@ export const HomeAppLibrary = forwardRef<
         if (hero) observer.observe(hero);
         void document.fonts.ready.then(measure);
         return () => observer.disconnect();
-    }, [grid, layoutHeight, columns]);
+    }, [grid, layoutHeight, columns, managing]);
 
     const rows = metrics
         ? effectiveRows({
             layoutViewportHeight: layoutHeight,
             gridTop: metrics.gridTop,
             rowPitch: metrics.rowPitch,
+            platePadding: metrics.platePadding,
         })
         : HOME_MAX_ROWS;
     const plan = useMemo(
@@ -239,7 +241,9 @@ export const HomeAppLibrary = forwardRef<
     const [creatingFolder, setCreatingFolder] = useState(false);
 
     const push = useCallback((layer: LayerKind) => {
-        const top = grid?.getBoundingClientRect().top ?? null;
+        const top =
+            grid?.closest(".launcher-plate")?.getBoundingClientRect().top ??
+                null;
         setLayers((current) => [
             ...current,
             {
@@ -452,14 +456,13 @@ export const HomeAppLibrary = forwardRef<
                     {ready && (
                         <ContextMenu>
                             <ContextMenuTrigger
-                                className="launcher-surface-wrap"
+                                className="launcher-surface-wrap launcher-plate"
                                 role="group"
                                 tabIndex={0}
                                 aria-label="应用库空白区域"
                             >
                                 {managing && (
                                     <div
-                                        ref={bar}
                                         className="home-managing-bar"
                                         role="status"
                                         aria-live="polite"

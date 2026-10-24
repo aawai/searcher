@@ -351,7 +351,7 @@
     color: var(--foreground);
     background: var(--glass-sheen), var(--material-thick);
     backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    box-shadow: var(--shadow-elevation-floating);
     z-index: var(--elevation-toast);
 }
 .status-banner[data-presentation="floating"] {
