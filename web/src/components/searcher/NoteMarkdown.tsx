@@ -8,10 +8,12 @@ export interface NoteMarkdownProps {
     body?: string | null;
     /** Makes task checkboxes interactive; index is the task's position in the body. */
     onToggleTask?: (index: number, checked: boolean) => void;
+    /** Tooltip for read-only task boxes, e.g. while the note is being edited. */
+    taskLockedTitle?: string;
 }
 
 export function NoteMarkdown(
-    { body, onToggleTask }: NoteMarkdownProps,
+    { body, onToggleTask, taskLockedTitle }: NoteMarkdownProps,
 ): ReactNode {
     const content = body ?? "";
     if (!content) {
@@ -66,6 +68,38 @@ export function NoteMarkdown(
                     <table {...props} tabIndex={0}>
                         {children}
                     </table>
+                ),
+                li: (
+                    {
+                        children,
+                        className,
+                        node: _node,
+                        ...props
+                    }: ComponentPropsWithoutRef<"li"> & { node?: unknown },
+                ) => (
+                    <li
+                        {...props}
+                        className={className}
+                        onClick={(event) => {
+                            if (
+                                !onToggleTask ||
+                                !className?.split(" ").includes(
+                                    "task-list-item",
+                                )
+                            ) return;
+                            const target = event.target;
+                            if (
+                                !(target instanceof Element) ||
+                                target.closest("li") !== event.currentTarget ||
+                                target.closest("a")
+                            ) return;
+                            event.currentTarget.querySelector<
+                                HTMLInputElement
+                            >(":scope > input[type='checkbox']")?.click();
+                        }}
+                    >
+                        {children}
+                    </li>
                 ),
                 input: (
                     {
@@ -123,6 +157,7 @@ export function NoteMarkdown(
                                 disabled
                                 readOnly
                                 tabIndex={-1}
+                                title={taskLockedTitle}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onClick?.(e);

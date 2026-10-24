@@ -72,7 +72,8 @@ function FloatingPaper(
         onToggleMode,
         onToggleHomeFixed,
         onChangeColor,
-        onChangeBody,
+        onToggleTask,
+        taskLockedTitle,
         onDelete,
     }: {
         paper: PaperItem;
@@ -82,7 +83,8 @@ function FloatingPaper(
         onToggleMode: () => void;
         onToggleHomeFixed: () => void;
         onChangeColor: (color: DocumentColor) => void;
-        onChangeBody: (body: string) => Promise<void> | void;
+        onToggleTask?: (index: number, checked: boolean) => void;
+        taskLockedTitle?: string;
         onDelete: () => void;
     },
 ) {
@@ -120,7 +122,8 @@ function FloatingPaper(
                 onToggleMode={onToggleMode}
                 onToggleHomeFixed={onToggleHomeFixed}
                 onChangeColor={onChangeColor}
-                onChangeBody={onChangeBody}
+                onToggleTask={onToggleTask}
+                taskLockedTitle={taskLockedTitle}
                 onDelete={onDelete}
                 dragHandle={
                     <span
@@ -144,7 +147,8 @@ export function HomePapers(
         onUpdateLayout,
         onToggleHomeFixed,
         onChangeColor,
-        onChangeBody,
+        onToggleTask,
+        editingPaperId,
         onDelete,
         flow = false,
         availableRect,
@@ -160,10 +164,13 @@ export function HomePapers(
             ) => Promise<void> | void;
             onToggleHomeFixed?: (paper: PaperItem) => void;
             onChangeColor?: (paper: PaperItem, color: DocumentColor) => void;
-            onChangeBody?: (
+            onToggleTask?: (
                 paper: PaperItem,
-                body: string,
-            ) => Promise<void> | void;
+                index: number,
+                checked: boolean,
+            ) => void;
+            /** The note open in the editor keeps its task boxes read-only. */
+            editingPaperId?: string | null;
             onDelete?: (paper: PaperItem) => void;
         }
         & (
@@ -390,6 +397,18 @@ export function HomePapers(
         });
     }
 
+    // A card open in the editor shows read-only task boxes instead.
+    function taskProps(paper: PaperItem) {
+        if (paper.id === editingPaperId) {
+            return { taskLockedTitle: "正在编辑" };
+        }
+        return {
+            onToggleTask: onToggleTask &&
+                ((index: number, checked: boolean) =>
+                    onToggleTask(paper, index, checked)),
+        };
+    }
+
     function renderPaperCard(
         paper: PaperItem,
         index: number,
@@ -403,8 +422,7 @@ export function HomePapers(
                 onToggleMode={() => handleToggleMode(paper, index)}
                 onToggleHomeFixed={() => onToggleHomeFixed?.(paper)}
                 onChangeColor={(color) => onChangeColor?.(paper, color)}
-                onChangeBody={onChangeBody &&
-                    ((body) => onChangeBody(paper, body))}
+                {...taskProps(paper)}
                 onDelete={() => onDelete?.(paper)}
                 dragHandle={dragHandle}
             />
@@ -456,7 +474,7 @@ export function HomePapers(
                             onToggleHomeFixed={() => onToggleHomeFixed?.(paper)}
                             onChangeColor={(color) =>
                                 onChangeColor?.(paper, color)}
-                            onChangeBody={(body) => onChangeBody?.(paper, body)}
+                            {...taskProps(paper)}
                             onDelete={() => onDelete?.(paper)}
                         />
                     ))}

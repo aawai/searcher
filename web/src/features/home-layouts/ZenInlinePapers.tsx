@@ -1,14 +1,28 @@
 import { useId, useMemo, useRef } from "react";
 import type { PointerEvent } from "react";
 import { Button } from "../../components/ui/button.tsx";
+import { NoteMarkdownView } from "../../components/searcher/NoteMarkdownLoader.tsx";
 import type { PaperItem } from "./home-papers.ts";
 import { analyzeZenPaperPreview } from "./zen-paper-preview.ts";
 import type { ZenPaperSelection } from "./useZenPaperSelection.ts";
 
+/** Checkbox rows toggle themselves on tap; they must not open the note. */
+function onTaskRow(target: EventTarget | null): boolean {
+    return target instanceof Element &&
+        target.closest("li.task-list-item") !== null;
+}
+
 /** Only the active preview exists in the interaction/accessibility tree. */
-export function ZenInlinePapers({ selection, onOpen }: {
+export function ZenInlinePapers({
+    selection,
+    onOpen,
+    onToggleTask,
+    editingPaperId,
+}: {
     selection: ZenPaperSelection;
     onOpen: (paper: PaperItem) => void;
+    onToggleTask: (paper: PaperItem, index: number, checked: boolean) => void;
+    editingPaperId: string | null;
 }) {
     const { current, index, select } = selection;
     const count = selection.papers.length;
@@ -28,7 +42,7 @@ export function ZenInlinePapers({ selection, onOpen }: {
     >(null);
     const suppressClick = useRef(false);
 
-    function pointerDown(event: PointerEvent<HTMLButtonElement>) {
+    function pointerDown(event: PointerEvent<HTMLDivElement>) {
         if (event.pointerType === "mouse" && event.button !== 0) return;
         pointers.current.add(event.pointerId);
         if (pointers.current.size !== 1 || !event.isPrimary) {
@@ -47,9 +61,11 @@ export function ZenInlinePapers({ selection, onOpen }: {
                     .getPropertyValue("--zen-note-swipe-distance"),
             ),
         };
-        event.currentTarget.setPointerCapture(event.pointerId);
+        if (!onTaskRow(event.target)) {
+            event.currentTarget.setPointerCapture(event.pointerId);
+        }
     }
-    function pointerMove(event: PointerEvent<HTMLButtonElement>) {
+    function pointerMove(event: PointerEvent<HTMLDivElement>) {
         const start = gesture.current;
         if (!start || start.id !== event.pointerId) return;
         if (
@@ -60,7 +76,7 @@ export function ZenInlinePapers({ selection, onOpen }: {
         }
     }
     function pointerEnd(
-        event: PointerEvent<HTMLButtonElement>,
+        event: PointerEvent<HTMLDivElement>,
         cancelled = false,
     ) {
         pointers.current.delete(event.pointerId);
@@ -86,17 +102,21 @@ export function ZenInlinePapers({ selection, onOpen }: {
     const label = title || preview.text.split("\n")[0] || "空白便签";
     const markCount = Math.min(count, 5);
     const markStart = Math.max(0, Math.min(index - 2, count - markCount));
+    // Only a note that is not open in the editor can toggle its task rows.
+    const onTaskChange = current.id === editingPaperId
+        ? undefined
+        : (index: number, checked: boolean) =>
+            onToggleTask(current, index, checked);
     return (
         <section className="zen-inline-notes" aria-label="首页固定便签">
-            <Button
-                variant="content"
+            <div
                 className="zen-inline-note"
                 data-note-id={current.id}
-                aria-label={`打开便签：${label}`}
-                aria-describedby={statusId}
                 onKeyDown={(event) => {
                     if (
-                        event.key !== "ArrowLeft" && event.key !== "ArrowRight"
+                        event.target instanceof HTMLInputElement ||
+                        (event.key !== "ArrowLeft" &&
+                            event.key !== "ArrowRight")
                     ) return;
                     event.preventDefault();
                     select(index + (event.key === "ArrowRight" ? 1 : -1));
@@ -106,6 +126,7 @@ export function ZenInlinePapers({ selection, onOpen }: {
                 onPointerUp={(event) => pointerEnd(event)}
                 onPointerCancel={(event) => pointerEnd(event, true)}
                 onClick={(event) => {
+                    if (onTaskChange && onTaskRow(event.target)) return;
                     if (event.detail > 0 && suppressClick.current) {
                         event.preventDefault();
                         return;
@@ -113,18 +134,40 @@ export function ZenInlinePapers({ selection, onOpen }: {
                     onOpen(current);
                 }}
             >
-                <span className="zen-inline-note-content">
+                <Button
+                    variant="content"
+                    className="zen-inline-note-open"
+                    data-note-id={current.id}
+                    aria-label={`打开便签：${label}`}
+                    aria-describedby={statusId}
+                />
+                <div className="zen-inline-note-content">
                     {title && (
                         <span className="zen-inline-note-title">{title}</span>
                     )}
-                    <span
-                        className="zen-inline-note-body"
-                        data-structured={preview.structured || undefined}
-                    >
-                        {preview.text || "空白便签"}
-                    </span>
-                </span>
-            </Button>
+                    {preview.hasTasks
+                        ? (
+                            <div className="zen-inline-note-markdown markdown">
+                                <NoteMarkdownView
+                                    body={current.body}
+                                    onToggleTask={onTaskChange}
+                                    taskLockedTitle={onTaskChange
+                                        ? undefined
+                                        : "正在编辑"}
+                                />
+                            </div>
+                        )
+                        : (
+                            <span
+                                className="zen-inline-note-body"
+                                data-structured={preview.structured ||
+                                    undefined}
+                            >
+                                {preview.text || "空白便签"}
+                            </span>
+                        )}
+                </div>
+            </div>
             <span
                 id={statusId}
                 className="sr-only"

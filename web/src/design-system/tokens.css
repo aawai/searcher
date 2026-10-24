@@ -289,7 +289,8 @@
     --shadow-l2: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 24px -6px rgb(0 0 0 / 0.5);
     --shadow-l3: 0 0 0 0.5px rgb(255 255 255 / 0.10), 0 24px 56px -12px rgb(0 0 0 / 0.65);
     --shadow-control-thumb: 0 0 0 0.5px rgb(0 0 0 / 0.2), 0 1px 3px rgb(0 0 0 / 0.4);
-    --paper-white: var(--surface-soft);
+    /* Raised neutral sheet above every UI surface; hued papers (document-colors.css) keep its OKLab lightness. */
+    --paper-white: #303034;
     --shadow-note-card: 0 0 0 0.5px rgb(255 255 255 / 0.05), 0 2px 3px -1px rgb(0 0 0 / 0.45), 0 12px 14px -8px rgb(0 0 0 / 0.65), 0 22px 22px -14px rgb(0 0 0 / 0.40);
     --shadow-note-card-hover: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 2px 3px -1px rgb(0 0 0 / 0.50), 0 16px 18px -8px rgb(0 0 0 / 0.70), 0 28px 28px -14px rgb(0 0 0 / 0.45);
     --shadow-note-drag: 0 0 0 0.5px rgb(255 255 255 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.5), 0 24px 30px -10px rgb(0 0 0 / 0.75), 0 36px 40px -18px rgb(0 0 0 / 0.5);

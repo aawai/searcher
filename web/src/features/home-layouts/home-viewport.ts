@@ -19,8 +19,8 @@ function finite(value: number): number {
 
 /**
  * Pure: non-finite inputs become 0 and every size is floored at 0. The free
- * rect sits below the top chrome and keeps `inset` (the page margin) from the
- * left, right and bottom viewport edges.
+ * rect starts one `inset` (the page margin) below the top chrome and keeps
+ * `inset` from the left, right and bottom viewport edges.
  */
 export function homeViewport(
     width: number,
@@ -37,9 +37,9 @@ export function homeViewport(
         chromeBottom: bottom,
         availableRect: {
             x: Math.min(margin, viewportWidth),
-            y: bottom,
+            y: bottom + margin,
             width: Math.max(0, viewportWidth - 2 * margin),
-            height: Math.max(0, viewportHeight - bottom - margin),
+            height: Math.max(0, viewportHeight - bottom - 2 * margin),
         },
     };
 }

@@ -11,11 +11,13 @@
     --note-dot-sage: #7EAA76;
     --note-dot-sky: #72A5CF;
 }
+/* Dark papers: --paper-white mixed 16% in OKLab with a same-lightness vivid hue,
+   so all five share one lightness and differ only in hue (paper-contrast.test.ts). */
 [data-theme="dark"] :where(.note-card, [data-note-color], .note-quick-dot, .documents-color-dot) {
-    --note-amber: #3D3420;
-    --note-rose: #3F2730;
-    --note-sage: #263528;
-    --note-sky: #22303F;
+    --note-amber: #3C3122;
+    --note-rose: #402C36;
+    --note-sage: #25382E;
+    --note-sky: #263445;
 }
 :where(.note-card)[data-color="amber"],
 [data-note-color="amber"] {

@@ -100,6 +100,58 @@ Deno.test("default notes avoid the whole app region, not only the search box", (
     assert(result.placed.length > 0);
 });
 
+Deno.test("default notes fill the columns beside the app region alternately, top first", () => {
+    const availableRect = { x: 32, y: 88, width: 1376, height: 780 };
+    const search = { x: 460, y: 280, width: 320, height: 48 };
+    const grid = { x: 380, y: 360, width: 480, height: 372 };
+    const exclusion = exclusionFromRects([search, grid], 0);
+    assert(exclusion !== null);
+    const notes: MeasuredDefaultNote[] = Array.from(
+        { length: 8 },
+        (_, index) => ({
+            id: `n${index}`,
+            width: 220,
+            height: 220,
+            offsetX: 0,
+            offsetY: 0,
+        }),
+    );
+
+    const result = placeDefaultNotes(availableRect, exclusion, notes);
+    const placedById = new Map(result.placed.map((item) => [item.id, item]));
+    assertEquals(placedById.get("n0"), { id: "n0", x: 32, y: 88 });
+    assertEquals(placedById.get("n1"), { id: "n1", x: 1188, y: 88 });
+    assertEquals(placedById.get("n2"), { id: "n2", x: 32, y: 324 });
+    assertEquals(placedById.get("n3"), { id: "n3", x: 1188, y: 324 });
+    assertEquals(placedById.get("n4"), { id: "n4", x: 32, y: 560 });
+    assertEquals(placedById.get("n5"), { id: "n5", x: 1188, y: 560 });
+    // Six notes take the outer columns; the last two use the free space beside
+    // the app band, since the 780px height has no room below it.
+    assertEquals(placedById.get("n6"), { id: "n6", x: 876, y: 88 });
+    assertEquals(placedById.get("n7"), { id: "n7", x: 952, y: 324 });
+    assertEquals(result.overflowIds, []);
+
+    for (const position of result.placed) {
+        const note = notes.find((item) => item.id === position.id);
+        assert(note !== undefined);
+        const rect = visualRect(position, note);
+        assert(rect.y >= availableRect.y);
+        assert(!overlaps(rect, search));
+        assert(!overlaps(rect, grid));
+    }
+});
+
+Deno.test("default notes that find no free room all overflow", () => {
+    const area = { x: 0, y: 0, width: 500, height: 500 };
+    const notes: MeasuredDefaultNote[] = [
+        { id: "a", width: 220, height: 220, offsetX: 0, offsetY: 0 },
+        { id: "b", width: 220, height: 220, offsetX: 0, offsetY: 0 },
+    ];
+    const result = placeDefaultNotes(area, area, notes);
+    assertEquals(result.placed, []);
+    assertEquals(result.overflowIds, ["a", "b"]);
+});
+
 Deno.test("with the home grid off the exclusion is the search box alone", () => {
     const search = { x: 460, y: 280, width: 320, height: 48 };
     assertEquals(exclusionFromRects([search], 0), search);

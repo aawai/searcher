@@ -51,6 +51,7 @@ export const suites = {
     "home-papers": [
         "home-papers-color",
         "home-papers-order",
+        "home-papers-placement",
         "home-papers-persistence",
         "home-papers-tasks",
         "home-papers-inline",

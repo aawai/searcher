@@ -91,6 +91,7 @@ import {
 import { launcherTiles } from "../components/searcher/launcherTiles.ts";
 import "../features/desk/desk.css";
 import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
+import { createPaperTaskSaver } from "../features/home-layouts/paper-task-saver.ts";
 
 import {
     type AppSessionNavigation,
@@ -510,6 +511,36 @@ export function SearchHome() {
         setWorkspaceResetUserId(user?.id ?? null);
     }, [user?.id, cancelPendingAction]);
     const [error, setError] = useState("");
+    const [taskConflictId, setTaskConflictId] = useState<string | null>(null);
+    // Home card checkboxes: optimistic, coalesced per note, rebased on conflict.
+    const [taskSaver] = useState(() =>
+        createPaperTaskSaver({
+            save: (paper, body) => patchPaper(paper, { body }),
+            render: (paper) =>
+                setPapers((items) => {
+                    const current = items.find((item) => item.id === paper.id);
+                    return setPaper(
+                        items,
+                        paper.id,
+                        paper.isHomeFixed && current
+                            ? { ...paper, layout: current.layout }
+                            : null,
+                    );
+                }),
+            show: (id, body) =>
+                setPapers((items) =>
+                    items.map((item) =>
+                        item.id === id ? { ...item, body } : item
+                    )
+                ),
+            conflict: (latest) => setTaskConflictId(latest.id),
+            failed: (cause) => setError(errorMessage(cause)),
+            schedule: (run, delayMs) => {
+                const timer = globalThis.setTimeout(run, delayMs);
+                return () => globalThis.clearTimeout(timer);
+            },
+        })
+    );
     const [undoQueue, setUndoQueue] = useState<UndoRecord[]>([]);
     const [undoPaused, setUndoPaused] = useState(false);
     const [isManagingApps, setIsManagingApps] = useState(false);
@@ -1230,6 +1261,10 @@ export function SearchHome() {
         deletePaper,
         updatePaper,
         updatePaperLayout,
+        toggleTask: taskSaver.toggle,
+        editingPaperId: desk.documents.route.view === "documents/edit"
+            ? desk.documents.route.id
+            : null,
         openDesk: requestDeskEntry,
         openDocument,
         aiAvailable,
@@ -1461,6 +1496,21 @@ export function SearchHome() {
             onPauseChange={pauseUndoQueue}
         />
     );
+    const taskConflictFeedback = (
+        <UndoToast
+            open={taskConflictId !== null}
+            message="便签已在别处修改"
+            hidden={overlayActive}
+            host={feedbackHost}
+            placement={mobileFeedback ? "inline" : "floating"}
+            onUndo={() => {
+                if (taskConflictId) openDocumentRef.current(taskConflictId);
+                setTaskConflictId(null);
+            }}
+            onClose={() => setTaskConflictId(null)}
+            undoLabel="打开便签"
+        />
+    );
     return (
         <AppSessionProvider
             options={appSessionOptions}
@@ -1572,6 +1622,7 @@ export function SearchHome() {
                     onRequestClose={requestCloseAppForm}
                 />
                 {undoFeedback}
+                {taskConflictFeedback}
                 <AlertDialog
                     open={Boolean(pendingAction)}
                     onOpenChange={(open) => {
