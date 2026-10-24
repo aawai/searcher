@@ -16,17 +16,18 @@ deno run -A npm:playwright@1.56.1 install chromium
 
 ## 常用入口
 
-| 命令                          | 覆盖                                                                                    |
-| ----------------------------- | --------------------------------------------------------------------------------------- |
-| `deno task test`              | 后端与前端契约测试                                                                      |
-| `deno task test:routing`      | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航                       |
-| `deno task test:workspace`    | Workspace 完整回归（见下文）                                                            |
-| `deno task test:documents`    | 笔记响应式矩阵与长笔记验收（见下文）                                                    |
-| `deno task test:wallpaper`    | 壁纸链路（见下文）                                                                      |
-| `deno task test:e2e:full`     | 只构建一次，串行执行所有 E2E 文件的去重并集；首次失败停止，可显式 `--parallel` 诊断并发 |
-| `deno task test:e2e:affected` | 基于 Git 路径映射选择集合；任一未知路径回退 full，仅供局部诊断                          |
-| `deno task check:e2e`         | 检查新增 E2E 文件是否登记                                                               |
-| `deno task check:ui`          | UI 门禁（见 [前端开发](frontend.md#ui-门禁)）                                           |
+| 命令 | 覆盖 |
+| --- | --- |
+| `deno task test` | 后端与前端契约测试 |
+| `deno task test:routing` | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航 |
+| `deno task test:workspace` | Workspace 完整回归（见下文） |
+| `deno task test:documents` | 完整 Documents 集合：响应式矩阵、长笔记、Library、编辑、历史、草稿与分页契约（见下文） |
+| `deno task test:wallpaper` | 壁纸链路（见下文） |
+| `deno run -A scripts/e2e/run.ts supplemental` | 完整补充集合：设置、快捷键、Omnibox、AI 反馈及编辑器加载等 |
+| `deno task test:e2e:full` | 只构建一次，串行执行所有 E2E 文件的去重并集；首次失败停止，可显式 `--parallel` 诊断并发 |
+| `deno task test:e2e:affected` | 基于 Git 路径映射选择集合；任一未知路径回退 full，仅供局部诊断 |
+| `deno task check:e2e` | 检查新增 E2E 文件是否登记 |
+| `deno task check:ui` | UI 门禁（见 [前端开发](frontend.md#ui-门禁)） |
 
 模块入口（如 `test:workspace:apps`）仅作局部开发辅助，不替代完整 Workspace
 回归。
@@ -53,7 +54,29 @@ desk 至少覆盖 workspace + documents，并包含 routing/bundle/home-papers/s
 不启动浏览器。空差异/list 仍校验清单并写 `timings.json`（含路径、基线、选中集合和 skipped），
 不生成 JUnit。正常执行至多 build 一次；完整细节见 [Production E2E](../scripts/e2e/README.md#affected保守的局部选择)。
 
-### 手工视觉验收数据
+## CI 覆盖
+
+此前 CI 已运行完整 `workspace`、`bundle`、`home-papers`、`wallpaper`
+集合；Documents 并非未运行：Bundle workflow 直接运行
+`documents.test.ts`，Notes workflow 直接运行 `documents-library.test.ts`、
+`documents-live-preview.test.ts`、`documents-live-editing.test.ts` 和
+`documents-focus.test.ts`。这些文件仅覆盖 Documents 集合的一部分；
+完整 `documents`、`routing` 和 `supplemental` 集合当时尚未接入 CI。
+
+现在 `.github/workflows/e2e-coverage.yml` 在 PR/main 上以三个独立 matrix
+job 执行完整 `documents`、`routing`、`supplemental` 集合，每个 job 通过
+`deno run -A scripts/e2e/run.ts <suite> --serial` 先构建一次，再串行执行该集合。
+不设置 `E2E_TIMEOUT_MS`，保留测试 helper 的标准超时；job 上限为 60 分钟。
+matrix 不因其他集合失败而取消，测试失败通过 `pipefail` 保留非零退出码。
+无论成功或失败均尝试上传 `artifacts/e2e/<suite>/` 中的 JUnit、
+`timings.json`、标准输出和环境/资源报告；构建失败或 job 被终止时可能没有
+JUnit，已有诊断仍保留。
+
+原 Bundle 与 Notes workflow 中上述五个 Documents 文件的直接执行步骤已移除，
+由新的完整 Documents job 覆盖，避免重复执行；原 Bundle、Home papers、
+Workspace、Wallpaper 门禁及已有 job 名称保持不变。
+
+## 手工视觉验收数据
 
 `scripts/seed-mock-users.ts` 只创建或重置
 `user_empty`、`user_sparse`、`user_dense` 三个普通用户的样本内容（分别 0/3/12
@@ -66,12 +89,11 @@ desk 至少覆盖 workspace + documents，并包含 routing/bundle/home-papers/s
 
 ### Workspace
 
-覆盖 Workspace、Shell、Unified Launcher、Documents、workspace-contract 与
-workspace-matrix，以及笔记 Live/Source
-两套编辑实页回归（无副作用切换、IME、选区、undo/redo、任务列表、409
-和恢复）。验证 loading/error/cache retry、表单与
-autosave、状态隔离、真实拖拽与回滚、键盘导航、固定 Header/Footer，以及 #92 的
-A–C 分层响应式、主题与壁纸。
+覆盖 Workspace、Shell、Desk、Unified Launcher、应用交互与会话、
+workspace-contract、workspace-matrix、颜色层级与对比度等完整 Workspace
+集合。Documents 的 Library、Live/Source 编辑、历史、草稿与分页回归属于
+独立的 `documents` 集合，不由 `test:workspace` 替代；完整文件列表以
+`scripts/e2e/suites.ts` 为准。
 
 ### 玻璃效果
 
@@ -97,7 +119,7 @@ A–C 分层响应式、主题与壁纸。
 
 设置 `E2E_EVIDENCE_DIR=<父目录>` 后，响应式矩阵在字体与布局完成后保存各
 Host/主题/视图的实页截图；每次执行在父目录下
-创建唯一子目录并打印路径。截图仍需人工检查，不替代行为断言。Bundle CI
+创建唯一子目录并打印路径。截图仍需人工检查，不替代行为断言。完整 Documents CI
 自动运行同一套测试。
 
 ### Wallpaper

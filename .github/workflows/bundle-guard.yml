@@ -71,9 +71,6 @@ jobs:
             - name: Run bundle loading production E2E suite (deno task test:bundle)
               run: deno task test:bundle
 
-            - name: Run Documents responsive and large-document contracts
-              run: NODE_ENV=test deno test -A web/e2e/documents.test.ts
-
             - name: Upload route style visual artifacts
               if: always()
               uses: actions/upload-artifact@v4

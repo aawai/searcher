@@ -1,0 +1,52 @@
+name: Complete Documents, Routing and Supplemental E2E
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+    contents: read
+
+jobs:
+    complete-e2e:
+        name: Full production ${{ matrix.suite }} E2E
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+        strategy:
+            fail-fast: false
+            matrix:
+                suite: [documents, routing, supplemental]
+        steps:
+            - uses: actions/checkout@v4
+            - uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.9.7
+            - name: Install dependencies
+              run: deno install
+            - name: Install Chromium
+              run: npx --yes playwright@1.56.1 install --with-deps chromium
+            - name: Run complete ${{ matrix.suite }} production E2E
+              env:
+                  E2E_REPORT_DIR: artifacts/e2e/${{ matrix.suite }}
+              run: |
+                  mkdir -p "$E2E_REPORT_DIR"
+                  set -o pipefail
+                  { deno --version; uname -a; lscpu; free -m; } \
+                    | tee "$E2E_REPORT_DIR/environment.txt"
+                  /usr/bin/time -v -o "$E2E_REPORT_DIR/resources.txt" \
+                    deno run -A scripts/e2e/run.ts ${{ matrix.suite }} --serial \
+                    2>&1 | tee "$E2E_REPORT_DIR/stdout.log"
+            - name: Upload ${{ matrix.suite }} E2E reports
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ matrix.suite }}-e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: artifacts/e2e/${{ matrix.suite }}/
+                  retention-days: 14
+                  if-no-files-found: warn
