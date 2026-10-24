@@ -1,7 +1,13 @@
 # Wiki Update Log
 
+## 2026-10-24
+
+- **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-239-pr-266-267-main","title":"Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭"}
+- **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-238-pwa-pr-263-264-265-main","title":"Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭"}
+
 ## 2026-10-23
 
+- **observe**: {"relevance":"critical","slug":"obs-2026-10-23-issue-237-pr-256-262-main","title":"Issue 237 统一输入框经 PR 256-262 合并 main 并关闭"}
 - **observe**: {"relevance":"critical","slug":"obs-2026-10-23-issue-236-0-pr-245-246-247-main","title":"Issue 236 阶段 0 经 PR 245/246/247 合并 main 并关闭"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-23-superseded-obs-2026-09-28-ui-3","title":"Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-23-","title":"玻璃效果档位与对比度下限的取舍"}

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-23T07:13:14.083Z",
+  "last_updated": "2026-10-24T01:40:53.156Z",
   "pages": {
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -1748,6 +1748,23 @@
       "created": "2026-10-23",
       "updated": "2026-10-23"
     },
+    "sources/obs-2026-10-23-issue-237-pr-256-262-main": {
+      "type": "source",
+      "title": "Observation: Issue 237 统一输入框经 PR 256-262 合并 main 并关闭",
+      "tags": [
+        "issue-237",
+        "omnibox",
+        "merged",
+        "worktree"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-23-issue-237-pr-256-262-main",
+      "relevance": "critical",
+      "observed_at": "2026-10-23T17:42:22.162Z",
+      "source_context": "完成 issue 237 worktree 实施、PR 与合并",
+      "created": "2026-10-23",
+      "updated": "2026-10-23"
+    },
     "sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3": {
       "type": "source",
       "title": "Observation: Superseded: obs-2026-09-28-ui-3 首页大字标与常用网站叫法",
@@ -1765,6 +1782,34 @@
       "source_context": "Issue 236 A 文档修复：统一叫法",
       "created": "2026-10-23",
       "updated": "2026-10-23"
+    },
+    "sources/obs-2026-10-24-issue-238-pwa-pr-263-264-265-main": {
+      "type": "source",
+      "title": "Observation: Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭",
+      "tags": [
+        "[\"issue-238\",\"pwa\",\"merged\",\"worktree\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-24-issue-238-pwa-pr-263-264-265-main",
+      "relevance": "critical",
+      "observed_at": "2026-10-24T00:57:18.870Z",
+      "source_context": "完成 issue 238 worktree 实施、PR 与合并",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
+    "sources/obs-2026-10-24-issue-239-pr-266-267-main": {
+      "type": "source",
+      "title": "Observation: Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭",
+      "tags": [
+        "[\"issue-239\",\"home\",\"merged\",\"worktree\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-24-issue-239-pr-266-267-main",
+      "relevance": "critical",
+      "observed_at": "2026-10-24T01:40:53.087Z",
+      "source_context": "完成 issue 239 worktree 实施、PR 与合并",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",
