@@ -439,10 +439,6 @@ export function DocumentNotebookNavigation({
 
             <CreateNotebookDialog
                 open={createOpen}
-                parentName={createParentId
-                    ? notebooks.find((nb) => nb.id === createParentId)?.name ??
-                        null
-                    : null}
                 name={createName}
                 error={createError}
                 pending={isCreating}
@@ -498,7 +494,6 @@ export function DocumentNotebookNavigation({
 function CreateNotebookDialog(
     {
         open,
-        parentName,
         name,
         error,
         pending,
@@ -510,7 +505,6 @@ function CreateNotebookDialog(
         onOpenChange,
     }: {
         open: boolean;
-        parentName: string | null;
         name: string;
         error: string | null;
         pending: boolean;
@@ -527,7 +521,7 @@ function CreateNotebookDialog(
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>
-                        {parentName ? "新建子笔记本" : "新建笔记本"}
+                        {parentId ? "新建子笔记本" : "新建笔记本"}
                     </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="documents-dialog-form">
