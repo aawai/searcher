@@ -55,6 +55,12 @@ bundle、home-papers 和 supplemental；documents/editor 等映射包含共享�
 记录 `skipped`，没有 JUnit；不是合并门禁结果。非空正常执行最多 build 一次，
 调度仍只使用 Deno，默认串行 + fail-fast，可显式传并行/不 fail-fast/诊断超时。
 
+重复的领域导航复用 `web/e2e/helpers/`：`desk.ts` 进入桌面/笔记，
+`settings.ts` 从用户菜单进入偏好设置，`ask.ts` 加载 Ask 工作区，
+`app-library.ts` 打开首页「更多应用」弹层。这些 helper 将操作和可观察的就绪
+条件放在一起，不使用固定 sleep，也不创建或共享浏览器。路由/深链、键盘、
+焦点、无障碍和懒加载机制的断言仍留在各测试内；不要为复用而隐藏被测交互。
+
 ## 并发与报告
 
 ```sh

@@ -13,6 +13,7 @@ import {
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
+import { openSettings } from "./helpers/settings.ts";
 
 // React Router starts a view transition for each `viewTransition` navigation.
 function trackViewTransitions(context: BrowserContext) {
@@ -515,11 +516,11 @@ Deno.test("production navigation contracts", async (t) => {
             });
 
             await context.clearCookies();
-            await page.getByRole("button", { name: /^用户菜单/ }).click();
-            await page.getByRole("menuitem", { name: "偏好设置", exact: true })
-                .click();
-            await page.getByRole("navigation", { name: "设置分类" })
-                .getByRole("link", { name: "AI 问答", exact: true }).click();
+            const settingsNav = await openSettings(page);
+            await settingsNav.getByRole("link", {
+                name: "AI 问答",
+                exact: true,
+            }).click();
             await page.getByRole("link", { name: "登录", exact: true })
                 .first().waitFor();
             await page.waitForFunction(() =>

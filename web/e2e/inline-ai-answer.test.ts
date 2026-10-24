@@ -14,6 +14,7 @@ type StorageState = Exclude<
 import { aiModels } from "../../src/db/ai-schema.ts";
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { visitAsk } from "./helpers/ask.ts";
 
 const QUESTION = "我的路线图是什么";
 const NOTE_TITLE = "产品路线图";
@@ -837,8 +838,7 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                     await page.locator(".ask-user-msg-container").waitFor({
                         state: "detached",
                     });
-                    await page.goto(`${app.origin}/ask`);
-                    await page.locator(".ask-workspace-layout").waitFor();
+                    await visitAsk(page, app.origin);
                     await page.locator(".ask-sidebar__item-title").first()
                         .click();
                     await page.waitForURL(/\/ask\/[^/?]+$/);
