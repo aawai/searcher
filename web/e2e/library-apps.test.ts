@@ -2,6 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import type { Locator, Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { assertLargeFolderGeometry } from "./helpers/launcher-geometry.ts";
 import {
     closeLibrary,
     libraryEntry,
@@ -102,6 +103,7 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
     );
 
     let folderId = "";
+    let largeFolderId = "";
     await t.step("create, rename and resize folder", async () => {
         await surface.getByRole("button", { name: "应用更多操作", exact: true })
             .click();
@@ -185,6 +187,51 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
         },
     );
 
+    await t.step(
+        "large folders share the home square cell and 3x3 preview",
+        async () => {
+            const large = await post("/api/webapp-groups", {
+                name: "大文件夹",
+                folderSize: "large",
+                sortOrder: 5,
+            });
+            largeFolderId = large.id;
+            for (let index = 0; index < 10; index++) {
+                await post("/api/webapps", {
+                    name: `大文件夹成员 ${index}`,
+                    url: `https://large-${index}.example.test/`,
+                    groupId: largeFolderId,
+                });
+            }
+            await closeLibrary(page);
+            await page.reload();
+            await openApps(page);
+            const tile = folderTile(largeFolderId);
+            await tile.waitFor();
+            const tokens = await grid.evaluate((node) => {
+                const style = getComputedStyle(node);
+                const root = getComputedStyle(document.documentElement);
+                return {
+                    cell: style.getPropertyValue("--launcher-col-w").trim(),
+                    gap: style.getPropertyValue("--launcher-gap-x").trim(),
+                    homeCell: root.getPropertyValue("--home-grid-cell").trim(),
+                    homeGap: root.getPropertyValue("--home-grid-gap").trim(),
+                };
+            });
+            assert(parseFloat(tokens.cell) > 0, JSON.stringify(tokens));
+            assertEquals(tokens.cell, tokens.homeCell);
+            assertEquals(tokens.gap, tokens.homeGap);
+            await assertLargeFolderGeometry(tile, true);
+            assertEquals(
+                await tile.locator(".launcher-folder-mini").count(),
+                9,
+            );
+            await page.setViewportSize({ width: 390, height: 844 });
+            await assertLargeFolderGeometry(tile, true);
+            await page.setViewportSize({ width: 1440, height: 900 });
+        },
+    );
+
     await t.step("open, edit and move an app to the recycle bin", async () => {
         const launchable = await post("/api/webapps", {
             name: "可打开应用",
@@ -257,6 +304,17 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                     ".webapp-name:visible, .launcher-folder-name:visible",
                 ).count(),
                 0,
+            );
+            const largeTile = folderTile(largeFolderId);
+            await largeTile.waitFor();
+            await assertLargeFolderGeometry(largeTile, false);
+            assertEquals(
+                await largeTile.locator(".launcher-folder-name").count(),
+                0,
+            );
+            assert(
+                (await largeTile.locator(".launcher-folder-background")
+                    .getAttribute("aria-label"))?.includes("大文件夹"),
             );
             assert(
                 await folderTile(empty.id).getByRole("button").first()

@@ -155,9 +155,9 @@
     height: 0;
     pointer-events: none;
 }
-/* Home and popup grids share the square cell: the drag overlay is portaled
-   outside both, so it carries the same tokens. */
-:is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) {
+/* Home, popup and library grids share the square cell: the drag overlay is
+   portaled outside them, so it carries the same tokens. */
+:is(.launcher-grid--home, .launcher-grid--popup, .launcher-grid--library, .launcher-overlay--home, .launcher-overlay--popup) {
     --launcher-col-w: var(--home-grid-cell);
     --launcher-gap-x: var(--home-grid-gap);
     --launcher-pad-t: 0px;
@@ -169,7 +169,7 @@
 .launcher-grid--popup {
     justify-content: center;
 }
-:is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) .webapp-icon {
+:is(.launcher-grid--home, .launcher-grid--popup, .launcher-grid--library, .launcher-overlay--home, .launcher-overlay--popup) .webapp-icon {
     justify-content: flex-start;
 }
 /* Wide Home: Safari-start-page scale icons; narrow and touch keep denser cells. */
@@ -648,7 +648,7 @@
     .launcher-overlay {
         --launcher-col-w: var(--launcher-touch-cell-size);
     }
-    :is(.launcher-grid--home, .launcher-grid--popup, .launcher-overlay--home, .launcher-overlay--popup) {
+    :is(.launcher-grid--home, .launcher-grid--popup, .launcher-grid--library, .launcher-overlay--home, .launcher-overlay--popup) {
         --launcher-col-w: var(--home-grid-cell);
     }
     .launcher-folder-item--small {
@@ -663,7 +663,10 @@
     }
 }
 
-/* Library management uses the same cells and folder geometry as home. */
+/* Library management reuses the home cell and folder geometry; only the
+   placement flow is library-specific (canonical order, no drag sorting).
+   Names are hidden by not rendering them, so no label display rule belongs here.
+   The grid sits on Material, not a wallpaper, so labels drop the wallpaper halo. */
 .launcher-grid--library {
     grid-template-columns: repeat(auto-fill, var(--launcher-col-w));
     grid-auto-flow: row dense;
@@ -675,7 +678,4 @@
 }
 .launcher-grid--library :is(.webapp-name, .launcher-folder-name) {
     text-shadow: none;
-}
-.launcher-grid--library[data-show-app-labels="false"] .launcher-folder-name {
-    display: none;
 }

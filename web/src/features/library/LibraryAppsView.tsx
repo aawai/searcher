@@ -161,9 +161,8 @@ export function LibraryAppsView({
     function renderGrid(tiles: LauncherTile[]) {
         return (
             <div
-                className="launcher-grid launcher-grid--popup launcher-grid--library"
+                className="launcher-grid launcher-grid--library"
                 data-library-apps-grid
-                data-show-app-labels={showAppLabels}
             >
                 {tiles.map((tile) =>
                     tile.type === "folder"
@@ -198,7 +197,6 @@ export function LibraryAppsView({
             className="library-apps"
             data-library-view="apps"
             data-library-apps
-            data-show-app-labels={showAppLabels}
             onKeyDown={(event) => {
                 if (
                     event.defaultPrevented || creating || renaming || deleting

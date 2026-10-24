@@ -26,8 +26,11 @@ export async function assertLargeFolderGeometry(
             app.getBoundingClientRect().top - outer.top - cell - gap,
         ) <= 1);
         const neighborName = neighbor?.querySelector(".webapp-name");
-        const neighborGlyph = grid.querySelector(".launcher-app .webapp-glyph");
-        const neighborTile = neighborGlyph?.closest(".launcher-tile");
+        // The library grid places tiles directly; home wraps them in .launcher-tile.
+        const sameRowGlyph = [...grid.querySelectorAll(".launcher-app")]
+            .find((app) =>
+                Math.abs(app.getBoundingClientRect().top - outer.top) <= 1
+            )?.querySelector(".webapp-glyph");
         return {
             squareError: Math.abs(surface.width - surface.height),
             sizeError: Math.abs(surface.width - cell - gap - icon),
@@ -36,11 +39,9 @@ export async function assertLargeFolderGeometry(
                 surface.right - outer.left - (cell + gap + (cell + icon) / 2),
             ),
             topError: Math.abs(surface.top - outer.top - pad),
-            neighborTopError: neighborGlyph && neighborTile
+            neighborTopError: sameRowGlyph
                 ? Math.abs(
-                    surface.top - outer.top -
-                        (neighborGlyph.getBoundingClientRect().top -
-                            neighborTile.getBoundingClientRect().top),
+                    surface.top - sameRowGlyph.getBoundingClientRect().top,
                 )
                 : null,
             nameVisible: Boolean(name && name.getBoundingClientRect().height),
