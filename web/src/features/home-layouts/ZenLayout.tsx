@@ -108,10 +108,15 @@ export function ZenLayout(
         // while the home grid is on, the measured app region (large folders
         // and 更多 included).
         const calm = hero.querySelector(".home-calm");
+        // The visible app region is the plate, not its inner grid: notes must
+        // clear the plate padding too.
+        const appSurface = showHomeApps && gridElement
+            ? gridElement.closest(".launcher-plate") ?? gridElement
+            : null;
         const obstacles = [
             search,
             ...(calm ? [calm] : []),
-            ...(showHomeApps && gridElement ? [gridElement] : []),
+            ...(appSurface ? [appSurface] : []),
         ];
         let active = true;
         const measure = () => {

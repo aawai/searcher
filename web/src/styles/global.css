@@ -135,6 +135,9 @@ a {
     text-decoration: none;
     transition: background var(--motion-fast) var(--ease-standard);
 }
+.app-shell[data-home] .wordmark-small {
+    font-size: var(--font-body-size);
+}
 .wordmark-small:lang(zh) {
     letter-spacing: normal;
 }

@@ -41,7 +41,7 @@
     font-size: var(--font-title-size);
     font-weight: 400;
     overflow: hidden;
-    box-shadow: var(--shadow-material-glyph);
+    box-shadow: var(--shadow-elevation-glyph);
 }
 /* Paint the shared inner rim above full-bleed images, not behind their pixels. */
 .webapp-glyph::after,
@@ -50,7 +50,7 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    box-shadow: var(--shadow-material-edge);
+    box-shadow: var(--shadow-glyph-edge);
     pointer-events: none;
 }
 /* Server-normalized images own their canvas and proportional inset. */
@@ -70,17 +70,6 @@
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     color: var(--foreground);
-    text-shadow: var(--wallpaper-text-halo);
-}
-/* Over a photo wallpaper the halo is not enough: Home labels (apps, folders, 更多, +)
-   get a small material chip. Popups already sit on Floating material. */
-.app-shell[data-wallpaper-image] .launcher-grid--home :is(.webapp-name, .launcher-folder-name) {
-    padding: 0 var(--space-2);
-    border-radius: var(--radius-pill);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge);
     text-shadow: none;
 }
 
@@ -112,6 +101,19 @@
     flex-direction: column;
     align-items: stretch;
     width: 100%;
+}
+.launcher-plate {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-elevation-material);
+}
+@media (max-width: 767px) {
+    .launcher-plate {
+        padding: var(--space-2);
+    }
 }
 
 /* Grid metrics are the single presentation source for both CSS and ResizeObserver.
@@ -290,7 +292,7 @@
     background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-glyph);
+    box-shadow: var(--shadow-elevation-glyph);
     overflow: hidden;
     transition: transform var(--motion-fast) var(--ease-standard),
         background var(--motion-fast) var(--ease-standard);
@@ -472,7 +474,7 @@
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     color: var(--foreground);
-    text-shadow: var(--wallpaper-text-halo);
+    text-shadow: none;
 }
 .launcher-overlay {
     width: var(--launcher-col-w);
@@ -515,7 +517,7 @@
     background: var(--glass-sheen), var(--material-thick);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    box-shadow: var(--shadow-elevation-floating);
     overflow: hidden;
 }
 .dialog-panel.launcher-popup[data-anchored] {

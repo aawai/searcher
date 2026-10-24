@@ -481,7 +481,7 @@
     background: var(--glass-sheen), var(--material-thick);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    box-shadow: var(--shadow-elevation-floating);
     color: var(--foreground);
     font-size: var(--font-body-size);
     outline: none;
@@ -1059,7 +1059,7 @@
     background: var(--glass-sheen), var(--material-thick);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    box-shadow: var(--shadow-elevation-floating);
     color: var(--foreground);
     outline: none;
 }

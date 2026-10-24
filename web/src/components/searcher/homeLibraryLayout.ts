@@ -9,7 +9,12 @@ export const HOME_BOTTOM_CLEARANCE = 48;
 
 const ADD_ID = "\u0000home-library-add";
 
-/** Number of grid rows that fit between the grid top and the viewport bottom. */
+/**
+ * Number of grid rows that fit between the measured grid top and the viewport
+ * bottom. `platePadding` is the bottom padding between the last row and the
+ * plate edge; the top padding (and the managing bar) are already part of
+ * `gridTop`. The clearance invariant is checked against the plate bottom.
+ */
 export function effectiveRows(
     {
         layoutViewportHeight,
@@ -17,17 +22,20 @@ export function effectiveRows(
         rowPitch,
         bottomClearance = HOME_BOTTOM_CLEARANCE,
         maxRows = HOME_MAX_ROWS,
+        platePadding = 0,
     }: {
         layoutViewportHeight: number;
         gridTop: number;
         rowPitch: number;
         bottomClearance?: number;
         maxRows?: number;
+        platePadding?: number;
     },
 ): number {
     if (!Number.isFinite(rowPitch) || rowPitch <= 0) return 1;
     const raw = Math.floor(
-        (layoutViewportHeight - gridTop - bottomClearance) / rowPitch,
+        (layoutViewportHeight - gridTop - bottomClearance - platePadding) /
+            rowPitch,
     );
     if (!Number.isFinite(raw)) return 1;
     return Math.min(Math.max(raw, 1), maxRows);
@@ -62,12 +70,17 @@ function footprint(tile: LauncherTile): DesktopFootprint {
  * Plan the home library inside a `columns` x `rows` area.
  *
  * All tiles (plus a trailing 1x1 add cell when `showAdd`) are laid out in
- * canonical order with backfill. If everything fits, there is no overflow.
- * Otherwise the last cell of the area is reserved for the "more" cell and the
- * tiles are laid out again; tiles that no longer fit go to overflow and the add
- * action moves into the overflow view. When only the add cell failed to fit,
- * every cell of the area is already taken by tiles, so the reserved cell
- * necessarily displaces at least one tile and `more.count >= 1`.
+ * canonical order with backfill. When the capacity's last row would contain a
+ * single cell, the grid narrows to the fewest columns that keep the same row
+ * count and leave at least two cells in the last row. Large folders keep the
+ * capacity and the existing 2x2 backfill.
+ *
+ * If everything fits, there is no overflow. Otherwise the last cell of the
+ * area is reserved for the "more" cell and the tiles are laid out again; tiles
+ * that no longer fit go to overflow and the add action moves into the overflow
+ * view. When only the add cell failed to fit, every cell of the area is
+ * already taken by tiles, so the reserved cell necessarily displaces at least
+ * one tile and `more.count >= 1`.
  */
 export function planHomeLibrary(
     { tiles, columns, rows, showAdd }: {
@@ -77,8 +90,31 @@ export function planHomeLibrary(
         showAdd: boolean;
     },
 ): HomeLibraryPlan {
-    const cols = Math.max(2, Math.floor(columns));
+    const availableColumns = Math.max(2, Math.floor(columns));
     const maxRows = Math.max(1, Math.floor(rows));
+    const count = tiles.length + Number(showAdd);
+    const originalRows = Math.ceil(count / availableColumns);
+    const originalLastRow = count - (originalRows - 1) * availableColumns;
+    let cols = availableColumns;
+    // A lone trailing cell (the "+" or a single tile) is the only reason to
+    // narrow the grid. Keep the capacity when the last row already has two or
+    // more cells, and keep the 2x2 backfill untouched whenever a large folder
+    // is present.
+    if (
+        count > 1 && originalLastRow === 1 && originalRows <= maxRows &&
+        !tiles.some((tile) =>
+            tile.type === "folder" && tile.group.folderSize === "large"
+        )
+    ) {
+        for (let candidate = 2; candidate < availableColumns; candidate++) {
+            const candidateRows = Math.ceil(count / candidate);
+            const lastRow = count - (candidateRows - 1) * candidate;
+            if (candidateRows === originalRows && lastRow >= 2) {
+                cols = candidate;
+                break;
+            }
+        }
+    }
     const items = tiles.map(footprint);
     const byId = new Map(tiles.map((t) => [t.id, t]));
     const visualSort = <T extends { col: number; row: number }>(list: T[]) =>

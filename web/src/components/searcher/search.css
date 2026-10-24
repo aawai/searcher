@@ -1,7 +1,7 @@
 .search-form-wrap,
 .search-form {
     width: 100%;
-    max-width: var(--layout-search-max);
+    max-width: var(--layout-home-content-max);
     position: relative;
 }
 
@@ -17,7 +17,7 @@
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     border-radius: var(--search-radius);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    box-shadow: var(--shadow-elevation-material);
     transition: background-color var(--motion-fast) var(--ease-standard),
         box-shadow var(--motion-fast) var(--ease-standard);
 }
@@ -175,7 +175,7 @@
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     border-radius: var(--radius);
-    box-shadow: var(--shadow-material-edge), var(--shadow-l2);
+    box-shadow: var(--shadow-elevation-floating);
     z-index: var(--elevation-suggestions);
     transition: opacity var(--motion-fast) var(--ease-standard);
 }
