@@ -91,7 +91,9 @@ async function openAddForm(
 }
 
 async function goToSettings(page: Page, origin: string) {
-    await page.getByRole("link", { name: "设置", exact: true }).click();
+    await page.getByRole("button", { name: /^用户菜单/ }).click();
+    await page.getByRole("menuitem", { name: "偏好设置", exact: true })
+        .click();
     await page.waitForURL(origin + "/settings");
     await page.getByRole("navigation", { name: "设置分类" }).waitFor({
         state: "visible",

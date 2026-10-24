@@ -195,6 +195,12 @@ export const SEARCH_QUICK_COMMANDS: readonly SearchQuickCommand[] = [
         target: { type: "route", to: routes.settings() },
     },
     {
+        id: "shortcuts",
+        prefix: "/shortcuts",
+        action: "查看快捷键",
+        target: { type: "route", to: routes.settings("shortcuts") },
+    },
+    {
         id: "trash",
         prefix: "/trash",
         action: "打开回收站",

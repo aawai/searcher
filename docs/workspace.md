@@ -13,6 +13,10 @@ Workspace Host 中管理。本文记录首页布局、Host
 - 搜索框下方显示应用库（见 [应用](apps.md#首页应用库)）；固定到首页的笔记以
   首页纸张呈现（见 [笔记](documents.md#首页纸张)）。
 - 不显示品牌大标题。
+- 顶栏右侧只有主题切换与身份入口（登录用户为头像菜单，访客为“登录”）。AI 问答与设置
+  不在首页顶栏：登录用户经头像菜单的“AI 问答”（有可用模型时）与“偏好设置”进入，所有人可在
+  搜索框用 `/settings`、`/shortcuts` 进入设置与快捷键说明，`/ai 问题` 在首页回答。其他页面的
+  顶栏导航不变。
 - 首页底部居中 Dock 进入笔记工作区。
 
 ## 搜索框
@@ -39,7 +43,7 @@ Workspace Host 中管理。本文记录首页布局、Host
 
 - “我的”“应用”两组来自 `GET /api/search/personal`，每组最多 5 条；请求带防抖并在输入变化时中止过期请求。
 - 访客只看到“网页”与“命令”。个人检索返回 401 时，“我的”“应用”两组立即消失，其余分组保持可用。
-- 没有可用模型（未配置或未启用）以及访客：不显示“问 AI”行与 `/ai`，`Alt/Option+Enter` 不响应，首页顶栏也没有 AI 入口；引擎菜单只含搜索引擎，没有“AI 问答”模式，`/ai 文本` 只是普通文本，按字面用默认引擎搜索。
+- 没有可用模型（未配置或未启用）以及访客：不显示“问 AI”行与 `/ai`，`Alt/Option+Enter` 不响应，头像菜单也没有“AI 问答”；引擎菜单只含搜索引擎，没有“AI 问答”模式，`/ai 文本` 只是普通文本，按字面用默认引擎搜索。
 
 ### 键盘
 
@@ -59,7 +63,7 @@ Workspace Host 中管理。本文记录首页布局、Host
 
 ### 命令
 
-命令以 `web/src/features/shortcuts/shortcut-catalog.ts` 的 `SEARCH_QUICK_COMMANDS` 为唯一 catalog，设置页的快捷命令列表由同一份 catalog 生成（见下文“快捷键”）。可执行命令包含：主题（`/light` `/dark` `/system`）、壁纸（`/wallpaper`，进入 `/settings/appearance`）、设置（`/settings`）、回收站（`/trash`）、笔记工作区（`/notes`）、应用库（`/apps`），以及引擎前缀 `/g /b /ba /d` 与 `/ai`。输入随字符过滤，可按命令前缀或动作名称匹配；动作类命令执行后清空输入并关闭建议。访客看不到需要账号的命令（`/ai`、`/trash`、`/notes`、`/apps`）；没有可用模型时 `/ai` 同样不显示。
+命令以 `web/src/features/shortcuts/shortcut-catalog.ts` 的 `SEARCH_QUICK_COMMANDS` 为唯一 catalog，设置页的快捷命令列表由同一份 catalog 生成（见下文“快捷键”）。可执行命令包含：主题（`/light` `/dark` `/system`）、壁纸（`/wallpaper`，进入 `/settings/appearance`）、设置（`/settings`）、快捷键说明（`/shortcuts`，进入 `/settings/shortcuts`）、回收站（`/trash`）、笔记工作区（`/notes`）、应用库（`/apps`），以及引擎前缀 `/g /b /ba /d` 与 `/ai`。输入随字符过滤，可按命令前缀或动作名称匹配；动作类命令执行后清空输入并关闭建议。访客看不到需要账号的命令（`/ai`、`/trash`、`/notes`、`/apps`）；没有可用模型时 `/ai` 同样不显示。
 
 ### AI 回答卡片
 

@@ -99,7 +99,8 @@ deno task check:ui --update
 
 - `/ask` 是对话工作区（空状态），`/ask/:id` 是会话深链；同一路由元素承载两者，在 `/ask`
   发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push。首页不是 Ask
-  的入口：顶栏 AI 链接只在登录且有可用模型时出现，访客与无模型用户在首页没有任何 AI 入口。
+  的入口：首页顶栏没有 AI 链接，头像菜单的“AI 问答”与其他页面顶栏的 AI 链接只在登录且有可用模型时
+  出现，访客与无模型用户在首页没有任何 AI 入口。
 - `/settings/search` replace 到 `/settings`；未知 Settings/Admin 子路径显示
   404。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。成功后由

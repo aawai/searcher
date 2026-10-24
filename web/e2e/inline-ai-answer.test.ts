@@ -495,14 +495,17 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
 
         try {
             await t.step(
-                "the AI row and the engine menu are the only AI routes in",
+                "home reaches AI from the user menu and commands, not the top bar or engine menu",
                 async () => {
                     await openHome(page, app.origin);
-                    await page.getByRole("link", {
-                        name: "AI 问答",
-                        exact: true,
-                    })
-                        .waitFor();
+                    assertEquals(
+                        await page.getByRole("link", {
+                            name: "AI 问答",
+                            exact: true,
+                        }).count(),
+                        0,
+                        "no top-bar AI link on home",
+                    );
                     await page.locator(".search-engine").click();
                     await page.getByRole("menuitemradio").first().waitFor();
                     assertEquals(
@@ -513,6 +516,18 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                         0,
                     );
                     await page.keyboard.press("Escape");
+                    // Keyboard only: the user menu leads to the AI workspace.
+                    await page.getByRole("button", { name: /^用户菜单/ })
+                        .focus();
+                    await page.keyboard.press("Enter");
+                    // A keyboard-opened menu focuses its first item: AI 问答.
+                    await page.waitForFunction(() =>
+                        document.activeElement?.getAttribute("role") ===
+                            "menuitem" &&
+                        document.activeElement.textContent?.trim() === "AI 问答"
+                    );
+                    await page.keyboard.press("Enter");
+                    await page.waitForURL(app.origin + "/ask");
                 },
             );
 

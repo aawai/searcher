@@ -4,6 +4,7 @@ import {
     Folder,
     History,
     Image,
+    Keyboard,
     Moon,
     NotebookPen,
     Search,
@@ -57,6 +58,8 @@ function CommandIcon({ command }: { command: SearchQuickCommand }) {
         ? Image
         : command.id === "trash"
         ? Trash2
+        : command.id === "shortcuts"
+        ? Keyboard
         : Settings;
     return <Icon size="1em" className="icon-md suggestion-icon" />;
 }
