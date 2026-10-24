@@ -1,0 +1,73 @@
+/* Prototype of the wallpaper-derived accent (#241 S). Not a contract: see docs/design/VISUAL_LANGUAGE.md. */
+
+.accent-lab-stage {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    cursor: crosshair;
+    touch-action: none;
+}
+.accent-lab-stage:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.accent-lab-focal {
+    position: absolute;
+    width: var(--space-4);
+    height: var(--space-4);
+    border: 2px solid var(--surface-solid);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-l2);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.accent-lab-status {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.accent-lab-remote {
+    width: calc(var(--control-height) * 8);
+    max-width: 100%;
+}
+
+.accent-lab-ring {
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-control);
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.accent-lab-palettes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
+}
+
+.accent-lab-table {
+    border-collapse: collapse;
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-variant-numeric: tabular-nums;
+}
+.accent-lab-table caption {
+    padding-bottom: var(--space-2);
+    text-align: start;
+    color: var(--muted);
+}
+.accent-lab-table th,
+.accent-lab-table td {
+    padding: var(--space-1) var(--space-3) var(--space-1) 0;
+    text-align: start;
+    font-weight: inherit;
+}
+.accent-lab-table tr[data-pass="false"] {
+    color: var(--danger);
+}
