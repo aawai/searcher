@@ -57,6 +57,7 @@ import { errorMessage, useAppState } from "./state.tsx";
 import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
 import { useAppsLayoutPersistence } from "../features/app-library/useAppsLayoutPersistence.ts";
 import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx";
+import { CreateLibraryDocument } from "../features/workspace/DocumentLibraryActions.tsx";
 import "../features/workspace/documents-workspace.css";
 import type { DocumentsRoute } from "../features/workspace/workspace-state.ts";
 import {
@@ -1549,6 +1550,15 @@ export function SearchHome() {
                                 >
                                     添加应用
                                 </Button>
+                            )
+                            : libraryState.selection?.kind === "notes" &&
+                                    currentRoute.view === "documents/root"
+                            ? (
+                                <CreateLibraryDocument
+                                    scope={libraryState.documents.scope}
+                                    onCreated={(document) =>
+                                        openDocument(document.id)}
+                                />
                             )
                             : undefined}
                         returnFocus={returnLibraryFocus}

@@ -188,10 +188,10 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
             // Section count shows the two seeded documents
             const documentsCount = documentsRegion.locator(
-                ".workspace-section-count",
+                ".documents-list-count",
             );
             await documentsCount.waitFor({ state: "visible" });
-            assertEquals(await documentsCount.textContent(), "2");
+            assertEquals(await documentsCount.textContent(), "2 条");
 
             // Perform search in Documents
             const documentsSearchInput = documentsPanel.locator(
@@ -212,10 +212,10 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
             // Section count shows 1
             const documentsSearchCount = documentsSearchRegion.locator(
-                ".workspace-section-count",
+                ".documents-list-count",
             );
             await documentsSearchCount.waitFor({ state: "visible" });
-            assertEquals(await documentsSearchCount.textContent(), "1");
+            assertEquals(await documentsSearchCount.textContent(), "1 条");
             assertStringIncludes(
                 await documentsSearchRegion.textContent() ?? "",
                 "Beta Document",
@@ -224,8 +224,8 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             // Clear search restores the full list
             await documentsSearchInput.fill("");
             await documentsRegion.waitFor({ state: "visible" });
-            await documentsRegion.locator(".workspace-section-count").filter({
-                hasText: /^2$/,
+            await documentsRegion.locator(".documents-list-count").filter({
+                hasText: /^2 条$/,
             }).waitFor({ state: "visible" });
         },
     );

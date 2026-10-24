@@ -206,6 +206,9 @@
         min-height: var(--control-touch-target);
         height: var(--control-touch-target);
     }
+    [data-slot="radio-group"][data-variant="segmented"] .radio-item {
+        min-height: var(--control-touch-target);
+    }
 }
 
 /* --------------------------------------------------------------------------

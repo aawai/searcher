@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useId, useState } from "react";
+import { type FormEvent, useEffect, useId, useMemo, useState } from "react";
 import {
     FolderInput,
     Home,
@@ -16,6 +16,7 @@ import {
     type DocumentSummaryDto,
 } from "@shared/documents.ts";
 import type { DocumentsScope } from "./workspace-state.ts";
+import { documentNotebookTree } from "./document-notebooks.ts";
 import { api, json } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
@@ -504,16 +505,13 @@ export function DocumentLibraryActions({
 }
 
 export interface CreateLibraryDocumentProps {
-    notebooks: DocumentNotebookDto[];
     scope: DocumentsScope;
-    onChanged: () => void;
     onCreated?: (document: DocumentDto) => void;
 }
 
+/** The library header's single primary action; notebooks load when it opens. */
 export function CreateLibraryDocument({
-    notebooks,
     scope,
-    onChanged,
     onCreated,
 }: CreateLibraryDocumentProps) {
     const [open, setOpen] = useState(false);
@@ -521,8 +519,16 @@ export function CreateLibraryDocument({
     const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(
         scope.type === "notebook" ? scope.notebookId : null,
     );
+    const [notebooks, setNotebooks] = useState<DocumentNotebookDto[] | null>(
+        null,
+    );
+    const [notebooksError, setNotebooksError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const notebookOptions = useMemo(
+        () => documentNotebookTree(notebooks ?? []).options,
+        [notebooks],
+    );
 
     const titleId = useId();
     const notebookId = useId();
@@ -537,6 +543,27 @@ export function CreateLibraryDocument({
             setIsSubmitting(false);
         }
     }, [open, scope]);
+
+    useEffect(() => {
+        if (!open) return;
+        const controller = new AbortController();
+        setNotebooksError(null);
+        api<DocumentNotebookDto[]>("/api/document-notebooks", {
+            signal: controller.signal,
+        })
+            .then((data) => {
+                if (!controller.signal.aborted) setNotebooks(data);
+            })
+            .catch((err: unknown) => {
+                if (controller.signal.aborted) return;
+                // Creating without a notebook stays possible.
+                setNotebooks([]);
+                setNotebooksError(
+                    err instanceof Error ? err.message : "加载笔记本失败",
+                );
+            });
+        return () => controller.abort();
+    }, [open]);
 
     async function handleCreateSubmit(e: FormEvent) {
         e.preventDefault();
@@ -560,7 +587,6 @@ export function CreateLibraryDocument({
             );
             setOpen(false);
             setTitle("");
-            onChanged();
             onCreated?.(document);
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
@@ -573,12 +599,10 @@ export function CreateLibraryDocument({
         <>
             <Button
                 variant="default"
-                size="icon"
-                aria-label="新建笔记"
-                title="新建笔记"
                 onClick={() => setOpen(true)}
             >
                 <Plus className="icon-md" />
+                <span>新建笔记</span>
             </Button>
 
             <Dialog
@@ -641,20 +665,26 @@ export function CreateLibraryDocument({
                                         setSelectedNotebookId(
                                             e.target.value || null,
                                         )}
-                                    disabled={isSubmitting}
+                                    disabled={isSubmitting ||
+                                        notebooks === null}
                                 >
                                     <NativeSelectOption value="">
                                         (无笔记本)
                                     </NativeSelectOption>
-                                    {notebooks.map((nb) => (
+                                    {notebookOptions.map((option) => (
                                         <NativeSelectOption
-                                            key={nb.id}
-                                            value={nb.id}
+                                            key={option.id}
+                                            value={option.id}
                                         >
-                                            {nb.name}
+                                            {option.label}
                                         </NativeSelectOption>
                                     ))}
                                 </NativeSelect>
+                                {notebooksError && (
+                                    <span className="documents-dialog-hint">
+                                        {notebooksError}
+                                    </span>
+                                )}
                             </div>
                         </div>
 

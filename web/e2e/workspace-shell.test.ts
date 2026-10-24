@@ -822,6 +822,10 @@ async function measureBodyInset(panelLocator: {
         const bodyRect = body.getBoundingClientRect();
         const contentRect = contentRoot.getBoundingClientRect();
         const searchRect = searchWrap.getBoundingClientRect();
+        // The notes search shares one row with the item count (#285 Y6.1);
+        // that row, not the field, spans the content box.
+        const searchRowRect = (searchWrap.closest(".documents-list-toolbar") ??
+            searchWrap).getBoundingClientRect();
         const bodyStyle = getComputedStyle(body);
         const padLeft = parseFloat(bodyStyle.paddingLeft);
         const padRight = parseFloat(bodyStyle.paddingRight);
@@ -830,7 +834,7 @@ async function measureBodyInset(panelLocator: {
                 (searchRect.left - bodyRect.left) - padLeft,
             ),
             searchRightDiff: Math.round(
-                (bodyRect.right - searchRect.right) - padRight,
+                (bodyRect.right - searchRowRect.right) - padRight,
             ),
             contentLeftDiff: Math.round(
                 (contentRoot ? (contentRect.left - bodyRect.left) : 0) -

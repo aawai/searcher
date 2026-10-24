@@ -274,23 +274,23 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await waitForRowCount(4);
 
             const scope = (name: string) =>
-                panel.getByRole("button", { name, exact: true });
+                panel.getByRole("radio", { name, exact: true });
             const section = (name: string) =>
                 panel.getByRole("heading", { name, level: 3 });
 
             await scope("首页").click();
-            await section("全部笔记").waitFor({ state: "visible" });
+            await section("首页笔记").waitFor({ state: "visible" });
             await waitForRowCount(2);
             let text = await panel.textContent() ?? "";
             assertStringIncludes(text, "Alpha Document");
             assertStringIncludes(text, "Gamma Document");
             assertEquals(text.includes("Beta Document"), false);
             assertEquals(
-                await scope("首页").getAttribute("aria-pressed"),
+                await scope("首页").getAttribute("aria-checked"),
                 "true",
             );
 
-            await scope("收藏笔记").click();
+            await scope("收藏").click();
             await section("收藏笔记").waitFor({ state: "visible" });
             // Both scopes contain two rows; wait for the new scope's content, not stale counts.
             await panel.getByRole("button", {
@@ -304,11 +304,11 @@ Deno.test("production documents library workspace contracts", async (t) => {
             assertStringIncludes(text, "Gamma Document");
             assertEquals(text.includes("Delta Document"), false);
 
-            await scope("最近笔记").click();
+            await scope("最近").click();
             await section("最近笔记").waitFor({ state: "visible" });
             await waitForRowCount(4);
 
-            await scope("全部笔记").click();
+            await scope("全部").click();
             await section("全部笔记").waitFor({ state: "visible" });
             await waitForRowCount(4);
 
@@ -360,14 +360,14 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await page.getByRole("menuitem", { name: "收藏", exact: true })
                 .click();
             await waitForDocument(page, doc.id, (d) => d.isFavorite);
-            await target.getByText("收藏", { exact: true }).waitFor({
+            await target.locator("[data-favorite]").waitFor({
                 state: "visible",
             });
             assertEquals(await editor().count(), 0);
-            await panel.getByRole("button", { name: "收藏笔记", exact: true })
+            await panel.getByRole("radio", { name: "收藏", exact: true })
                 .click();
             await target.waitFor({ state: "visible" });
-            await panel.getByRole("button", { name: "全部笔记", exact: true })
+            await panel.getByRole("radio", { name: "全部", exact: true })
                 .click();
             await target.waitFor({ state: "visible" });
 
