@@ -61,6 +61,24 @@ export class DatabaseStore {
         this.#tail = operation.then(() => {}, () => {});
         return operation;
     }
+    /**
+     * Runs `fn` in one synchronous native transaction while holding the FIFO
+     * queue; a throw rolls the whole transaction back. Owned by migrations that
+     * must compute values in TypeScript (AGENTS.md database rule).
+     */
+    nativeTransaction<T>(fn: (native: DatabaseSync) => T): Promise<T> {
+        return this.run(async () => {
+            this.native.exec("BEGIN IMMEDIATE");
+            try {
+                const result = fn(this.native);
+                this.native.exec("COMMIT");
+                return result;
+            } catch (error) {
+                this.native.exec("ROLLBACK");
+                throw error;
+            }
+        });
+    }
     // Keep SQLite and the asset swap inside the same FIFO maintenance window.
     exclusiveNative<T>(
         fn: (

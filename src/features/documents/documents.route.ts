@@ -10,10 +10,13 @@ import {
     DOCUMENT_PAGE_MAX_LIMIT,
     DOCUMENT_TITLE_MAX_LENGTH,
     type DocumentScope,
+    HOME_NOTE_GRID_MAX_COL,
+    HOME_NOTE_GRID_MAX_ROW,
 } from "../../shared/documents.ts";
 import { DocumentAssetsService } from "./assets.ts";
 import {
     DocumentConflictError,
+    DocumentLayoutConflictError,
     DocumentNotFoundError,
     DocumentValidationError,
 } from "./errors.ts";
@@ -40,8 +43,27 @@ const Title = v.nullable(
 );
 const Color = v.picklist(["paper", "amber", "rose", "sage", "sky"]);
 const Integer = v.pipe(v.number(), v.integer(), v.safeInteger());
-const DeviceClass = v.picklist(["desktop", "tablet", "mobile"]);
-const Coordinate = v.nullable(v.pipe(v.number(), v.finite()));
+const NoteSize = v.picklist(["s", "w"]);
+const GridCol = v.nullable(
+    v.pipe(
+        v.number(),
+        v.integer(),
+        v.minValue(0),
+        v.maxValue(
+            HOME_NOTE_GRID_MAX_COL,
+        ),
+    ),
+);
+const GridRow = v.nullable(
+    v.pipe(
+        v.number(),
+        v.integer(),
+        v.minValue(0),
+        v.maxValue(
+            HOME_NOTE_GRID_MAX_ROW,
+        ),
+    ),
+);
 const Body = v.pipe(v.string(), v.maxLength(DOCUMENT_BODY_MAX_LENGTH));
 const Name = v.pipe(v.string(), v.trim(), v.minLength(1, "笔记本名称不能为空"));
 const Limit = v.optional(
@@ -65,6 +87,9 @@ async function documentResponse(
         }
         if (error instanceof DocumentValidationError) {
             return c.fail(400, error.message);
+        }
+        if (error instanceof DocumentLayoutConflictError) {
+            return c.fail(409, error.message);
         }
         if (error instanceof DocumentConflictError) {
             return c.fail(409, error.message, {
@@ -303,20 +328,13 @@ export function registerDocumentsRoutes(
 
     routes.get(
         "/api/documents/:id/layout",
-        validator({
-            ...entityParam,
-            deviceClass: query(v.optional(DeviceClass, "desktop")),
-        }),
+        validator(entityParam),
         (c, data) =>
             documentResponse(
                 c,
                 async () =>
                     c.success(
-                        await layouts.getLayout(
-                            c.get("user").id,
-                            data.id,
-                            data.deviceClass,
-                        ),
+                        await layouts.getLayout(c.get("user").id, data.id),
                     ),
             ),
     );
@@ -324,13 +342,9 @@ export function registerDocumentsRoutes(
         "/api/documents/:id/layout",
         validator({
             ...entityParam,
-            deviceClass: json(v.optional(DeviceClass, "desktop")),
-            x: json(v.optional(Coordinate)),
-            y: json(v.optional(Coordinate)),
-            width: json(v.optional(Coordinate)),
-            zIndex: json(v.optional(Integer)),
-            expanded: json(v.optional(v.boolean())),
-            sortOrder: json(v.optional(v.nullable(Integer))),
+            col: json(v.optional(GridCol)),
+            row: json(v.optional(GridRow)),
+            size: json(v.optional(NoteSize)),
         }),
         (c, data) =>
             documentResponse(

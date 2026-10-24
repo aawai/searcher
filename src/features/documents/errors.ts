@@ -18,3 +18,9 @@ export class DocumentConflictError extends Error {
         this.name = "DocumentConflictError";
     }
 }
+export class DocumentLayoutConflictError extends Error {
+    constructor() {
+        super("该单元已有其他首页笔记");
+        this.name = "DocumentLayoutConflictError";
+    }
+}

@@ -303,6 +303,12 @@ export const documentLayouts = sqliteTable("document_layouts", {
     deviceClass: text("device_class", {
         enum: ["desktop", "tablet", "mobile"],
     }).notNull().default("desktop"),
+    // Home note lattice: col/row are cell origins, null until a note is placed.
+    col: integer("col"),
+    row: integer("row"),
+    size: text("size", { enum: ["s", "w"] }).notNull().default("s"),
+    // Legacy pixel layout; read-only until a later release drops these columns
+    // after the cell migration has run everywhere.
     x: real("x"),
     y: real("y"),
     width: real("width"),

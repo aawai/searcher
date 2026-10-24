@@ -167,7 +167,17 @@ Provider Key。不要将备份 ZIP、密钥或 `data/` 提交到 Git。
 - 旧备份 ZIP 仍可校验与还原：其中的 `notes` 表与便签布局被忽略，笔记（`documents`）完整保留。校验与还原结果的 `warnings: string[]` 会列出被忽略的数据。
 - 浏览器中残留的便签草稿（`note:draft:*`）不读取、不迁移，升级后被清理。
 
-首页纸张与笔记的数据模型见 [笔记 · 首页纸张](documents.md#首页纸张)。
+首页笔记与笔记的数据模型见 [笔记 · 首页笔记](documents.md#首页笔记)。
+
+### 升级：首页笔记布局改为网格单元
+
+迁移 `0029` 为 `document_layouts` 增加 `col`、`row`、`size`，并把旧 `expanded` 映射为 W / S。启动时在同一同步事务内把已存像素 `x` / `y` 换算到 1440×900 参考首页的最近空闲单元；冲突按 `homeSortOrder` 顺延，没有坐标的笔记保留 `null` 并在客户端走默认落点。旧像素列 `x`、`y`、`width`、`z_index`、`expanded`、`device_class` 仍保留可读，待所有实例完成升级后的版本再删除。回退前先停止服务，并删除新列：
+
+```bash
+sqlite3 data/searcher.sqlite < drizzle/rollback/0030_nervous_phil_sheldon.sql
+```
+
+回退只删除新列；旧像素列未改动，因此旧版本可继续使用升级前的坐标。
 
 ### 升级：笔记全文索引改为 trigram
 
