@@ -887,6 +887,16 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 .click();
             await page.getByTestId("wallpaper-preview-dialog").waitFor();
 
+            // The focal control explains that the home search and plate cover
+            // the middle of the viewport and marks that footprint on the preview.
+            const focalHint = page.getByTestId("wallpaper-focal-hint");
+            await focalHint.waitFor();
+            assert(
+                (await focalHint.textContent())?.includes("38%"),
+                "Focal hint must name the 38% home anchor",
+            );
+            await page.getByTestId("wallpaper-cover-band").waitFor();
+
             // Adjust focal point and save
             const desktop = page.getByTestId("wallpaper-preview-desktop");
             const box = await desktop.boundingBox();

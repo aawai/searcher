@@ -3,6 +3,7 @@ import {
     type PointerEvent as ReactPointerEvent,
     useCallback,
     useEffect,
+    useId,
     useMemo,
     useRef,
     useState,
@@ -52,6 +53,7 @@ export function WallpaperCompositionDialog({
     onSaveComposition,
     onSetAsCurrent,
 }: WallpaperCompositionDialogProps) {
+    const focalHintId = useId();
     const [focal, setFocal] = useState<WallpaperComposition>(
         initialComposition ?? DEFAULT_WALLPAPER_COMPOSITION,
     );
@@ -264,6 +266,15 @@ export function WallpaperCompositionDialog({
                     </Button>
                 </div>
 
+                <p
+                    id={focalHintId}
+                    className="wallpaper-composition-hint"
+                    data-testid="wallpaper-focal-hint"
+                >
+                    首页搜索框与应用底板会覆盖桌面视口约 38%
+                    高度处的中部区域（预览中已标出），构图时把焦点放在区域之外。
+                </p>
+
                 <div className="wallpaper-composition-previews">
                     {/* Desktop 16:9 preview */}
                     <div className="wallpaper-composition-preview-card wallpaper-composition-preview-card--desktop">
@@ -277,6 +288,7 @@ export function WallpaperCompositionDialog({
                             tabIndex={0}
                             role="slider"
                             aria-label="桌面 16:9 壁纸预览与构图焦点调整"
+                            aria-describedby={focalHintId}
                             aria-valuenow={Math.round(focal.focalX * 100)}
                             aria-valuetext={`X: ${focalXPercent}, Y: ${focalYPercent}`}
                             onPointerDown={handlePointerDown}
@@ -288,6 +300,12 @@ export function WallpaperCompositionDialog({
                                 source={source}
                                 presentation={effectivePresentation}
                                 embedded
+                            />
+                            {/* Home search box + app plate footprint on a 16:9 viewport. */}
+                            <div
+                                className="wallpaper-cover-band"
+                                data-testid="wallpaper-cover-band"
+                                aria-hidden="true"
                             />
                             {/* Focal marker */}
                             <div
@@ -313,6 +331,7 @@ export function WallpaperCompositionDialog({
                             tabIndex={0}
                             role="slider"
                             aria-label="移动端 9:19.5 壁纸预览与构图焦点调整"
+                            aria-describedby={focalHintId}
                             aria-valuenow={Math.round(focal.focalX * 100)}
                             aria-valuetext={`X: ${focalXPercent}, Y: ${focalYPercent}`}
                             onPointerDown={handlePointerDown}
