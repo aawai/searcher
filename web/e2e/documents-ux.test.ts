@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/desk.ts";
+import { openNotes } from "./helpers/library.ts";
 
 Deno.test("Documents long document actions and menus stay reachable without replacing the editor", async () => {
     await using cleanup = new AsyncDisposableStack();

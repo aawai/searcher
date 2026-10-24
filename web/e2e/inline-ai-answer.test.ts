@@ -521,11 +521,11 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                     await page.getByRole("button", { name: /^用户菜单/ })
                         .focus();
                     await page.keyboard.press("Enter");
-                    // The desktop entry now leads the keyboard-opened menu.
+                    // The library entry leads the keyboard-opened menu.
                     await page.waitForFunction(() =>
                         document.activeElement?.getAttribute("role") ===
                             "menuitem" &&
-                        document.activeElement.textContent?.trim() === "桌面"
+                        document.activeElement.textContent?.trim() === "资料库"
                     );
                     await page.keyboard.press("ArrowDown");
                     await page.keyboard.press("ArrowDown");

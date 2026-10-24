@@ -7,7 +7,7 @@ import type {
 } from "../../src/shared/documents.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { openNotes } from "./helpers/desk.ts";
+import { openNotes } from "./helpers/library.ts";
 
 interface Rect {
     x: number;

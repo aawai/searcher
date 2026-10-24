@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/desk.ts";
+import { openNotes } from "./helpers/library.ts";
 
 Deno.test("Documents rich editing: IME, shortcuts and silent cloud replacement", async (t) => {
     await using cleanup = new AsyncDisposableStack();

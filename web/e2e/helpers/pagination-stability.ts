@@ -4,7 +4,7 @@ import { chromium } from "./browser.ts";
 import type { Page, Request } from "playwright";
 import type { DocumentDto } from "../../../src/shared/documents.ts";
 import { startProductionApp } from "./production-app.ts";
-import { openNotes } from "./desk.ts";
+import { openNotes } from "./library.ts";
 
 async function sample(page: Page, duration: number) {
     return await page.evaluate(async (duration) => {

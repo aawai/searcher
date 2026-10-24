@@ -17,11 +17,11 @@ Deno.test("affected: unknown and shared paths override narrow matches", () => {
             "unknown.txt",
             "web/src/components/Button.tsx",
             "deno.jsonc",
-            "web/e2e/helpers/desk.ts",
+            "web/e2e/helpers/library.ts",
         ]
     ) {
         const selection = selectAffected([
-            "web/src/features/desk/Desk.tsx",
+            "web/src/features/library/Library.tsx",
             shared,
         ]);
         assertEquals(selection.suites, ["full"]);
@@ -29,9 +29,9 @@ Deno.test("affected: unknown and shared paths override narrow matches", () => {
     }
 });
 
-Deno.test("affected: desk includes documents and other known consumers without duplicate files", () => {
+Deno.test("affected: library includes documents and other known consumers without duplicate files", () => {
     const paths = [
-        "web/src/features/desk/model.ts",
+        "web/src/features/library/model.ts",
         "web/src/features/documents/view.tsx",
     ];
     const selection = selectAffected(paths);

@@ -1,5 +1,5 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
-import { deskDetail, deskOverview, openNotes } from "./helpers/desk.ts";
+import { libraryPanel, openNotes } from "./helpers/library.ts";
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
 import { type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
@@ -124,12 +124,10 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     }
 
     async function closeWorkspace(target: Page = page) {
-        const detail = deskDetail(target);
+        const detail = libraryPanel(target);
         if (await detail.isVisible()) {
             await detail.getByRole("button", {
-                name: target.viewportSize()!.width < 768
-                    ? "返回首页"
-                    : "关闭详情",
+                name: "关闭资料库",
                 exact: true,
             }).click();
             await detail.waitFor({ state: "detached" });
@@ -265,37 +263,20 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                     // 4. Presenter check: open and verify presenter type
                     await openWorkspace();
                     if (vp.width < 768) {
-                        await deskDetail(page).and(
+                        await libraryPanel(page).and(
                             page.getByRole("dialog"),
                         ).waitFor({ state: "visible" });
-                        await deskDetail(page).getByRole("button", {
-                            name: "返回桌面",
+                        await libraryPanel(page).getByRole("button", {
+                            name: "返回资料库",
                             exact: true,
                         }).waitFor({ state: "visible" });
                     } else {
-                        await deskOverview(page).waitFor({ state: "visible" });
                         assertEquals(
-                            await deskDetail(page).getAttribute("aria-label"),
-                            "笔记详情",
-                        );
-                        assertEquals(
-                            await page.locator(".desk-home").getAttribute(
-                                "inert",
+                            await page.locator("#search-query").evaluate((el) =>
+                                Boolean(el.closest("[inert]"))
                             ),
-                            "",
+                            false,
                         );
-                        const panelBox = await measure(deskDetail(page));
-                        for (
-                            const object of await page.locator(
-                                "[data-desk-object]",
-                            ).all()
-                        ) {
-                            const box = await measure(object);
-                            assert(
-                                box.x + box.width <= panelBox.x + 1,
-                                "Desk objects must reflow left of the detail bar",
-                            );
-                        }
                     }
                     await closeWorkspace();
                 }
@@ -319,7 +300,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             await page.emulateMedia({ colorScheme: "light" });
 
             await openWorkspace();
-            const sheet = deskDetail(page);
+            const sheet = libraryPanel(page);
             await sheet.waitFor({ state: "visible" });
 
             // Verify surface boundary without wallpaper
@@ -373,7 +354,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
 
             // 1e. Documents root state
             await openWorkspace();
-            const documentsPanel = deskDetail(page);
+            const documentsPanel = libraryPanel(page);
             await documentsPanel.and(page.getByRole("dialog"))
                 .waitFor({ state: "visible" });
             await documentsPanel.locator("[data-document-id]").first()
@@ -432,7 +413,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 await page.setViewportSize(viewport);
                 const targetPath = "/api/documents";
                 const isTarget = (url: URL) => url.pathname === targetPath;
-                const getSurface = () => deskDetail(page);
+                const getSurface = () => libraryPanel(page);
                 const rows = "[data-document-id]";
                 const gate = Promise.withResolvers<void>();
                 await page.route(isTarget, async (route) => {

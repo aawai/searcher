@@ -230,7 +230,6 @@ export const CSS_PREFIX_OWNER_MAP: Record<string, readonly string[]> = {
     "zen-": ["web/src/features/home-layouts/home-layouts.css"],
     "auth-": ["web/src/app/auth.css"],
     "design-lab-": ["web/src/design-lab/design-lab.css"],
-    "desk-": ["web/src/features/desk/desk.css"],
 };
 
 /**

@@ -8,7 +8,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
-import { deskMenuTrigger, openNotes } from "./helpers/desk.ts";
+import { libraryMenuTrigger, openNotes } from "./helpers/library.ts";
 
 interface ManifestChunk {
     file: string;
@@ -231,7 +231,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 await page.locator("#search-query").waitFor({
                     state: "visible",
                 });
-                await deskMenuTrigger(page).click();
+                await libraryMenuTrigger(page).click();
                 await page.getByRole("menuitem", {
                     name: "笔记",
                     exact: true,

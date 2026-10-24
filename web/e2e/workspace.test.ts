@@ -8,7 +8,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
-import { deskMenuTrigger, openNotes } from "./helpers/desk.ts";
+import { libraryMenuTrigger, openNotes } from "./helpers/library.ts";
 
 // Run with deno task test:workspace; the task builds the real production frontend.
 
@@ -170,7 +170,7 @@ Deno.test("production workspace contracts", async (t) => {
             await page.setViewportSize({ width: 375, height: 667 });
 
             // The avatar menu is the mobile notes entry and focus-return target.
-            const mobileDocsBtn = deskMenuTrigger(page);
+            const mobileDocsBtn = libraryMenuTrigger(page);
             await openNotes(page);
 
             // Mobile panel is presented inside modal Sheet
@@ -180,7 +180,10 @@ Deno.test("production workspace contracts", async (t) => {
             await backdrop.waitFor();
             assertEquals(await backdrop.isVisible(), true);
 
-            // Escape closes sheet and restores focus to opener
+            // Escape first returns to the library root, then closes the Sheet.
+            await page.keyboard.press("Escape");
+            await sheet.getByRole("heading", { name: "资料库", exact: true })
+                .waitFor();
             await page.keyboard.press("Escape");
             await sheet.waitFor({ state: "detached" });
             await page.waitForFunction(() =>

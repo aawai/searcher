@@ -2,7 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import { type BrowserContext, type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { deskDetail, deskOverview, deskStage } from "./helpers/desk.ts";
+import { libraryPanel, libraryView } from "./helpers/library.ts";
 
 const SUGGESTIONS = /\/api\/search\/suggestions\?/;
 const PERSONAL = /\/api\/search\/personal\?/;
@@ -258,7 +258,7 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
                 "灵感来源笔记",
             );
             await search.press("Enter");
-            await deskDetail(page).waitFor();
+            await libraryPanel(page).waitFor();
             assertEquals(new URL(page.url()).pathname, "/");
         });
 
@@ -413,7 +413,7 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
             await page.getByRole("option", { name: /\/notes/ }).waitFor();
             await search.press("ArrowDown");
             await search.press("Enter");
-            await deskDetail(page).waitFor();
+            await libraryPanel(page).waitFor();
 
             await openHome(page, app.origin);
             await search.fill("/wallpaper");
@@ -540,7 +540,7 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
         });
 
         await t.step(
-            "Escape dismisses suggestions; notes detail hides home and closes back to search",
+            "Escape dismisses suggestions; notes leave home interactive and return focus",
             async () => {
                 await openHome(page, app.origin);
                 await search.fill("灵感");
@@ -555,31 +555,30 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
                         document.activeElement === el
                     ),
                 );
-                assertEquals(await deskStage(page), "calm");
+                assertEquals(await libraryPanel(page).count(), 0);
                 await search.fill("/notes");
                 await page.getByRole("option", { name: /\/notes/ }).waitFor();
                 await search.press("ArrowDown");
                 await search.press("Enter");
-                await deskDetail(page).getByRole("heading", {
+                await libraryPanel(page).getByRole("heading", {
                     name: "笔记",
                     exact: true,
                 }).waitFor();
-                await deskOverview(page).waitFor();
-                assertEquals(await deskStage(page), "overview");
+                await libraryView(page, "notes").waitFor();
                 assertEquals(
-                    await page.locator(".desk-home").evaluate((el) =>
-                        el.hasAttribute("inert")
+                    await search.evaluate((el) =>
+                        Boolean(el.closest("[inert]"))
                     ),
-                    true,
+                    false,
                 );
                 assertEquals(
                     await search.getAttribute("aria-expanded"),
                     "false",
                 );
                 await page.keyboard.press("Escape");
-                await deskDetail(page).waitFor({ state: "detached" });
-                await deskOverview(page).waitFor({ state: "detached" });
-                assertEquals(await deskStage(page), "calm");
+                await libraryView(page, "root").waitFor();
+                await page.keyboard.press("Escape");
+                await libraryPanel(page).waitFor({ state: "detached" });
                 await page.waitForFunction(() =>
                     document.activeElement?.id === "search-query"
                 );

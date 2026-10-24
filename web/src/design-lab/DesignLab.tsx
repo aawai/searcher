@@ -141,7 +141,6 @@ export function DesignLab() {
             <Section title="交互原型">
                 <Link to="/design-lab/omnibox">统一输入框</Link>
                 <Link to="/design-lab/motion">共享元素动效实验</Link>
-                <Link to="/design-lab/desk">可缩放桌面</Link>
                 <Link to="/design-lab/accent">壁纸取色</Link>
             </Section>
 

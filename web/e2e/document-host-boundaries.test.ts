@@ -3,7 +3,7 @@ import { chromium } from "./helpers/browser.ts";
 import type { Locator } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/desk.ts";
+import { openNotes } from "./helpers/library.ts";
 
 async function visiblePoint(locator: Locator, minimumHeight = 24) {
     await locator.scrollIntoViewIfNeeded();
@@ -180,7 +180,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                             exact: true,
                         }),
                         host.getByRole("button", {
-                            name: width < 768 ? "返回首页" : "关闭详情",
+                            name: width < 768 ? "关闭资料库" : "关闭资料库",
                             exact: true,
                         }),
                         host.getByRole("button", { name: "链接", exact: true }),
@@ -323,7 +323,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                         .scrollTop > 0
                 );
                 await host.getByRole("button", {
-                    name: width < 768 ? "返回首页" : "关闭详情",
+                    name: width < 768 ? "关闭资料库" : "关闭资料库",
                     exact: true,
                 }).click();
                 await host.waitFor({ state: "detached" });

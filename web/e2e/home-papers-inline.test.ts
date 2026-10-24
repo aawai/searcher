@@ -2,7 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
-import { openNotes } from "./helpers/desk.ts";
+import { openNotes } from "./helpers/library.ts";
 
 type ProductionChunk = {
     file: string;
@@ -649,7 +649,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         "Editing does not select another note",
     );
     await sheet.getByRole("button", {
-        name: "返回首页",
+        name: "关闭资料库",
         exact: true,
     }).click();
     await sheet.waitFor({ state: "detached" });
@@ -714,7 +714,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         [interiorOrder[0].id],
     );
     await libraryPanel.getByRole("button", {
-        name: "返回首页",
+        name: "关闭资料库",
         exact: true,
     }).click();
     await libraryPanel.waitFor({ state: "detached" });
@@ -1117,7 +1117,7 @@ Deno.test("production Zen inline papers mobile behavior E2E (#191)", async () =>
         "Draft preserved across the 767/768 breakpoint.",
     );
     await responsiveSheet.getByRole("button", {
-        name: "返回首页",
+        name: "关闭资料库",
         exact: true,
     }).click();
     await responsiveSheet.waitFor({ state: "detached" });

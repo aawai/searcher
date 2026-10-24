@@ -5,7 +5,7 @@ import { chromium } from "./helpers/browser.ts";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { deskDetail, openNotes } from "./helpers/desk.ts";
+import { libraryPanel, openNotes } from "./helpers/library.ts";
 
 type PaperSize = "a4" | "letter";
 type Orientation = "portrait" | "landscape";
@@ -236,7 +236,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     await page.reload();
     await openNotes(page);
     await page.locator(`[data-document-id="${doc.id}"] h4 button`).click();
-    const win = deskDetail(page);
+    const win = libraryPanel(page);
     const editor = win.locator(".ProseMirror");
     await editor.waitFor();
     const originalEditor = await editor.elementHandle();

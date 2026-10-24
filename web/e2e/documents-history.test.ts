@@ -2,7 +2,7 @@ import type { DocumentDto } from "../../src/shared/documents.ts";
 import { assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/desk.ts";
+import { openNotes } from "./helpers/library.ts";
 
 Deno.test("Document history flush, restore and failure preserve real server contracts", async () => {
     await using cleanup = new AsyncDisposableStack();
