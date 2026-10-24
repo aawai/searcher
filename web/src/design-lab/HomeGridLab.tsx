@@ -509,7 +509,6 @@ export default function HomeGridLab() {
             cell: noteCell,
             gap: metrics.gap,
             inset: metrics.inset,
-            maxBottom: blockTop + metrics.blockHeight,
         })
         : null;
     const obstacles: PixelRect[] = metrics && !flow

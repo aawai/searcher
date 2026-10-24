@@ -77,8 +77,6 @@ export interface HomeBlockGeometry {
     /** Page margin that notes must stay inside. */
     inset: number;
     bottomClearance?: number;
-    /** Rows never end below this line; the plate bottom keeps notes beside the block. */
-    maxBottom?: number;
 }
 
 /**
@@ -105,16 +103,13 @@ export function homeGridFromBlock(geometry: HomeBlockGeometry): CellGrid {
     ) {
         rightColumns.push({ x, band: "right" });
     }
-    const clearanceRows = Math.floor(
-        (geometry.viewportHeight - clearance - geometry.top + geometry.gap) /
-            step,
+    const rows = Math.max(
+        0,
+        Math.floor(
+            (geometry.viewportHeight - clearance - geometry.top +
+                geometry.gap) / step,
+        ),
     );
-    const bottomRows = geometry.maxBottom === undefined
-        ? Number.POSITIVE_INFINITY
-        : Math.floor(
-            (geometry.maxBottom - geometry.top + geometry.gap) / step,
-        );
-    const rows = Math.max(0, Math.min(clearanceRows, bottomRows));
     return {
         columns: [...leftColumns, ...rightColumns],
         top: geometry.top,

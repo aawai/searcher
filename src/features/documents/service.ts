@@ -41,6 +41,7 @@ interface ListCursorPayload {
     readonly v: {
         readonly fav?: number;
         readonly home?: number;
+        readonly created?: number;
         readonly upd: number;
         readonly id: string;
     };
@@ -971,7 +972,8 @@ export class DocumentsService {
             }
             if (
                 scope.type === "home" &&
-                typeof cursorPayload.v.home !== "number"
+                (typeof cursorPayload.v.home !== "number" ||
+                    typeof cursorPayload.v.created !== "number")
             ) {
                 throw new DocumentValidationError("无效的游标");
             }
@@ -993,13 +995,22 @@ export class DocumentsService {
 
             let cursorCondition = undefined;
             if (cursorPayload) {
-                const { fav, home, upd, id } = cursorPayload.v;
-                if (scope.type === "home" && home !== undefined) {
+                const { fav, home, created, upd, id } = cursorPayload.v;
+                if (
+                    scope.type === "home" && home !== undefined &&
+                    created !== undefined
+                ) {
                     cursorCondition = or(
                         gt(documents.homeSortOrder, home),
                         and(
                             eq(documents.homeSortOrder, home),
-                            lt(documents.id, id),
+                            or(
+                                gt(documents.createdAt, created),
+                                and(
+                                    eq(documents.createdAt, created),
+                                    gt(documents.id, id),
+                                ),
+                            ),
                         ),
                     );
                 } else if (scope.type === "all" && fav !== undefined) {
@@ -1062,7 +1073,11 @@ export class DocumentsService {
                 .where(and(baseWhere, cursorCondition));
 
             const order = scope.type === "home"
-                ? [asc(documents.homeSortOrder), desc(documents.id)]
+                ? [
+                    asc(documents.homeSortOrder),
+                    asc(documents.createdAt),
+                    asc(documents.id),
+                ]
                 : [
                     ...(scope.type === "all"
                         ? [desc(documents.isFavorite)]
@@ -1088,7 +1103,10 @@ export class DocumentsService {
                             ? { fav: last.isFavorite ? 1 : 0 }
                             : {}),
                         ...(scope.type === "home"
-                            ? { home: last.homeSortOrder }
+                            ? {
+                                home: last.homeSortOrder,
+                                created: last.createdAt,
+                            }
                             : {}),
                         upd: last.updatedAt,
                         id: last.id,

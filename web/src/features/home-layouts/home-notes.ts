@@ -3,12 +3,13 @@ import type { DocumentDto, DocumentLayoutDto } from "@shared/documents.ts";
 /** A note pinned to home, with this account's home layout attached. */
 export type HomeNoteItem = DocumentDto & { layout: DocumentLayoutDto };
 
-/** Mirrors the server order for home scope: homeSortOrder ascending, then id descending. */
+/** Mirrors the server home scope: homeSortOrder, createdAt, then id ascending. */
 export function sortNotes(notes: readonly HomeNoteItem[]): HomeNoteItem[] {
-    return notes.filter((note) => note.isHomeFixed).sort((a, b) => {
-        const difference = a.homeSortOrder - b.homeSortOrder;
-        return difference !== 0 ? difference : b.id.localeCompare(a.id);
-    });
+    return notes.filter((note) => note.isHomeFixed).sort((a, b) =>
+        a.homeSortOrder - b.homeSortOrder ||
+        a.createdAt - b.createdAt ||
+        a.id.localeCompare(b.id)
+    );
 }
 
 /** Refetch when the note is unknown locally or its version moved on. */
