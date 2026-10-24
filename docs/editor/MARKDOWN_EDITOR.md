@@ -59,6 +59,8 @@ Documents 的格式状态观察保留在 `features/documents/editor-extensions.t
 
 Shared async gzip 限制 153600 bytes（150 KiB）；编辑 consumer 增量限制 40960 bytes（40 KiB）。CI 同时拒绝 initial graph 中的 editor/Markdown runtime，以及 framework package 多版本重复。
 
+首页任务勾选的 saver 仅在首次勾选时动态加载；其 `paper-tasks.ts` → `note-summary.ts` 的 remark/unified 解析链不得由首页静态导入。后续勾选复用同一个 saver，保持逐笔记的乐观更新、1500ms 合并保存与冲突重放。
+
 ## 验证入口
 
 - `deno task test`：共享 round-trip fixtures、origin、commands 与多实例等契约。
