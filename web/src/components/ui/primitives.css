@@ -197,7 +197,7 @@
     outline-offset: 0;
 }
 
-@media (pointer: coarse), (any-pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     [data-slot="radio-group"][data-variant="swatch"] {
         gap: 0;
     }
@@ -363,7 +363,7 @@
     width: var(--control-compact-height);
 }
 
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     .button,
     .button--sm,
     .button--icon {
@@ -564,7 +564,7 @@
     font-weight: var(--font-label-weight);
 }
 
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     .menu-item {
         min-height: var(--control-touch-target);
     }
@@ -760,7 +760,7 @@
     pointer-events: none;
 }
 
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     .cn-input,
     .field input,
     .field select,
@@ -770,7 +770,7 @@
 }
 
 /* iOS zooms focused fields below 16px. */
-@media (pointer: coarse) {
+@media (any-pointer: coarse) {
     .cn-input,
     .cn-textarea,
     .field input,
@@ -1037,7 +1037,7 @@
     margin-top: 0;
 }
 
-@media (max-width: 479px) {
+@media (max-width: 639px) {
     [data-slot="dialog-footer"] > .button,
     [data-slot="alert-dialog-footer"] > .button {
         flex: 1 1 100%;
@@ -1128,7 +1128,7 @@
     }
 }
 
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     [data-slot="tabs-trigger"] {
         min-width: var(--control-touch-target);
         min-height: var(--control-touch-target);

@@ -17,6 +17,7 @@ export interface VisualRegistry {
     fontTokens: ReadonlySet<string>;
     radiusTokens: ReadonlySet<string>;
     accentFills: readonly AccentFillEntry[];
+    breakpoints: ReadonlySet<number>;
 }
 
 export const DEFAULT_REGISTRY_URL = new URL(
@@ -126,6 +127,26 @@ export function parseVisualRegistry(markdown: string): VisualRegistry {
             };
         },
     );
+    const breakpoints = new Set<number>();
+    let previous = -1;
+    for (const cells of tableRowsAfter(lines, "**断点登记")) {
+        const value = unwrapCode(cells[0], "breakpoint");
+        const width = Number(value);
+        if (
+            !/^\d+$/.test(value) || width <= previous ||
+            (previous === -1 && width !== 0) ||
+            cells.length < 4 || cells.slice(1).some((cell) => !cell)
+        ) {
+            throw new Error(
+                `Invalid breakpoint registry row: ${cells.join(" | ")}`,
+            );
+        }
+        breakpoints.add(width);
+        previous = width;
+    }
+    if (breakpoints.size < 2) {
+        throw new Error("Breakpoint registry needs a boundary");
+    }
     return {
         fontTokens: parseTokenTable(lines, FONT_LADDER_MARKER, isFontTokenName),
         radiusTokens: parseTokenTable(
@@ -134,6 +155,7 @@ export function parseVisualRegistry(markdown: string): VisualRegistry {
             isRadiusTokenName,
         ),
         accentFills,
+        breakpoints,
     };
 }
 

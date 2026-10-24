@@ -1,4 +1,5 @@
 import { useLayoutEffect, useState } from "react";
+import { HOME_GRID_VIEWPORT_INSET } from "../../design-system/home-grid.ts";
 
 export type SafeRect = {
     x: number;
@@ -66,7 +67,7 @@ export function useHomeViewport(): HomeViewport {
             }
             const inset = parseFloat(
                 getComputedStyle(document.documentElement).getPropertyValue(
-                    "--space-page-inline",
+                    HOME_GRID_VIEWPORT_INSET,
                 ),
             );
             const next = homeViewport(

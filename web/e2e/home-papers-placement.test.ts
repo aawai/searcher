@@ -17,6 +17,7 @@ type PlacementMetrics = {
     grid: Box | null;
     notes: Array<Box & { title: string }>;
     flowCardWidths: number[];
+    flowItems: Box[];
 };
 
 const NOTE_COUNT = 8;
@@ -46,6 +47,9 @@ async function measure(page: Page): Promise<PlacementMetrics> {
             topbar: topbar ? boxOf(topbar) : null,
             search: search ? boxOf(search) : null,
             grid: grid ? boxOf(grid) : null,
+            flowItems: Array.from(
+                document.querySelectorAll(".notes-flow-grid .note-flow-item"),
+            ).map(boxOf),
             notes: Array.from(
                 document.querySelectorAll(".floating-notes .note-position"),
             ).map((note) => ({
@@ -219,20 +223,46 @@ Deno.test("production home default note placement E2E (#243)", async (t) => {
         },
     );
 
-    await t.step("768 flow papers keep the fixed 220px width", async () => {
-        await page.setViewportSize({ width: 768, height: 1024 });
-        await visit("/");
-        await page.waitForFunction(
-            (count) =>
-                document.querySelectorAll(
-                    ".notes-flow-grid .note-flow-item .note-card",
-                ).length === count,
-            NOTE_COUNT,
+    for (const width of [768, 900, 1023]) {
+        await t.step(
+            `${width} flow papers keep 220px width and the search axis`,
+            async () => {
+                await page.setViewportSize({ width, height: 1024 });
+                await visit("/");
+                await page.waitForFunction(
+                    (count) =>
+                        document.querySelectorAll(
+                            ".notes-flow-grid .note-flow-item .note-card",
+                        ).length === count,
+                    NOTE_COUNT,
+                );
+                const metrics = await measure(page);
+                assertEquals(metrics.flowCardWidths.length, NOTE_COUNT);
+                for (const cardWidth of metrics.flowCardWidths) {
+                    assert(
+                        Math.abs(cardWidth - 220) <= 0.5,
+                        `flow card width ${cardWidth}`,
+                    );
+                }
+                const search = metrics.search;
+                assert(search);
+                const top = Math.min(
+                    ...metrics.flowItems.map((item) => item.y),
+                );
+                const row = metrics.flowItems.filter((item) =>
+                    Math.abs(item.y - top) <= 1
+                );
+                const left = Math.min(...row.map((item) => item.x));
+                const right = Math.max(
+                    ...row.map((item) => item.x + item.width),
+                );
+                assert(
+                    Math.abs(
+                        (left + right) / 2 - (search.x + search.width / 2),
+                    ) <= 1,
+                    `${width}px note row shares the search axis`,
+                );
+            },
         );
-        const metrics = await measure(page);
-        assertEquals(metrics.flowCardWidths.length, NOTE_COUNT);
-        for (const width of metrics.flowCardWidths) {
-            assert(Math.abs(width - 220) <= 0.5, `flow card width ${width}`);
-        }
-    });
+    }
 });

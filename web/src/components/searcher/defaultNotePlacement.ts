@@ -1,3 +1,4 @@
+import { HOME_GRID } from "../../design-system/home-grid.ts";
 export interface PlacementRect {
     x: number;
     y: number;
@@ -24,7 +25,7 @@ export interface DefaultNotePlacement {
     overflowIds: string[];
 }
 
-const NOTE_GAP = 16;
+const NOTE_GAP = HOME_GRID.wide.gap;
 
 function isValidRect(rect: PlacementRect): boolean {
     return Number.isFinite(rect.x) && Number.isFinite(rect.y) &&

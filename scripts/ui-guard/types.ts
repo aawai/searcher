@@ -1,5 +1,7 @@
 export type RuleId =
     | "raw-box-shadow"
+    | "unregistered-breakpoint"
+    | "scattered-media-query"
     | "raw-z-index"
     | "raw-font-size"
     | "raw-border-radius"

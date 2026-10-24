@@ -27,13 +27,21 @@ Deno.test("scanner - scans directory with TSX and CSS files, ignoring tests", as
             `export function TestMock() { return <div style={{ fontSize: 99 }}>Mock</div>; }`,
         );
 
+        await Deno.writeTextFile(
+            `${tempDir}/components/query.ts`,
+            `export const query = "(max-width: 900px)";`,
+        );
         const { violations, totalFiles } = await scanDirectory(
             tempDir,
             FIXTURE_REGISTRY,
         );
 
-        assertEquals(totalFiles, 2); // 2 presentation files (test file excluded)
-        assertEquals(violations.length, 2);
+        assertEquals(totalFiles, 3); // Production TS queries are checked; tests excluded.
+        assertEquals(violations.length, 3);
+        assertEquals(
+            violations.some((v) => v.rule === "scattered-media-query"),
+            true,
+        );
 
         const fontViolation = violations.find((v: UiViolation) =>
             v.rule === "raw-font-size"

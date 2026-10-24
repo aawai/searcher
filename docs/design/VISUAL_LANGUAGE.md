@@ -52,6 +52,23 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 3. **文字只做两件事：命名与说明后果。** 标签 ≤ 6 个汉字；说明仅在后果不明显时出现（如“修改密码会退出所有设备”），并放在分组脚注，不放在每一行。
 4. **交互就地可发现，不写使用说明。** 次要操作在 hover / focus / 长按 / 右键 / `⋯` 中出现；快捷键写在 tooltip、菜单项右侧与 `/settings/shortcuts`，不写常驻段落。
 
+### 响应式断点与首页网格
+
+**断点登记。** 宽度只表达布局容量，不代表输入设备；CSS 只用 `min-width: Npx` / `max-width: N-1px` 的互斥边界，不使用额外数值或 range 简写。
+
+| 下界（px） | 档位 | 用途 | owner |
+| --- | --- | --- | --- |
+| `0` | 窄（<640） | 单列表单、紧凑编辑器、对话框操作纵排 | 页面 / 对话框 CSS |
+| `640` | 小（640–767） | 表单可分列，首页与导航仍为移动布局 | 表单 CSS、首页布局 |
+| `768` | 中（768–1023） | 设置双栏、工作区侧栏；首页笔记为居中流式行 | SettingsShell / WorkspaceShell、home-layouts.css |
+| `1024` | 宽（≥1024） | 首页自由画布与桌面搜索锚点 | home-papers.css、tokens.css |
+
+粗指针能力使用 `any-pointer: coarse`，不得以宽度代替触屏判定。JS 的宽度判定统一消费 `design-system/breakpoints.ts` 导出的常量；`registry.ts` 从本表解析门禁允许值。
+
+本次系统语法修订（#285 Y2）：新增布局容量四档、互斥边界与共享首页网格语义；断点 owner 见表，网格 owner 为 `tokens.css` 与 `design-system/home-grid.ts`。验证：ui-guard 的未登记 / 错配边界与 JS 散落数字夹具、CSS / TS 网格镜像单元测试，以及首页 / 设置 / 回收站 / 问答 / 编辑器 / 冲突对话框在 390 / 640 / 768 / 1024 / 1440 × light / dark 实页。768 / 900 / 1023 首页笔记行与搜索框中轴偏差须 ≤1px。
+
+首页原型共用 `--home-grid-cell` / `--home-grid-gap`（精细指针窄 / 小 64 / 6，中 / 宽 84 / 12；粗指针窄 / 小 68 / 4，中 / 宽 88 / 12）、`--home-grid-axis`（50%）与 `--home-grid-content-width`（搜索框 / 应用底板宽度上限）。`--home-grid-inline-start` / `--home-grid-inline-end` 是搜索框 / 底板外缘，`--home-grid-block-start` 是搜索框上缘：笔记列由外缘以单元 + 间距向两侧展开，行由搜索框上缘向下展开。底板内应用共享单元与间距并独立居中，不要求与外侧笔记逐列同相。笔记尺寸 / 跨度与吸附行为属于 Y3，不在本次基础网格中定义。
+
 ### Token
 
 所有视觉值来自 `web/src/design-system/tokens.css`；feature CSS 只组合 Token。

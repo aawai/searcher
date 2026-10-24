@@ -228,7 +228,7 @@
         width: var(--control-compact-height);
     }
 }
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     [data-slot="dropdown-menu-trigger"].documents-row-action {
         opacity: 1;
     }

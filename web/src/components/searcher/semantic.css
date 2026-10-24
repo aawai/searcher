@@ -441,7 +441,7 @@
     color: var(--foreground);
     background: var(--surface-soft);
 }
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     .local-navigation a {
         min-height: var(--control-touch-target);
     }

@@ -1,3 +1,4 @@
+import { MEDIA_QUERIES } from "../design-system/breakpoints.ts";
 import {
     type KeyboardEvent as ReactKeyboardEvent,
     type RefObject,
@@ -144,7 +145,7 @@ export default function DeskLab() {
     const [pending, setPending] = useState<Pending | null>(null);
     const [metrics, setMetrics] = useState<Metrics | null>(null);
     const [mobile, setMobile] = useState(() =>
-        matchMedia("(max-width: 767px)").matches
+        matchMedia(MEDIA_QUERIES.belowMedium).matches
     );
     const [width, setWidth] = useState(0);
     const objects = useMemo(() => mockDeskObjects(count), [count]);
@@ -169,7 +170,7 @@ export default function DeskLab() {
     const escapeStack = useEscapeLayerStack();
 
     useEffect(() => {
-        const media = matchMedia("(max-width: 767px)");
+        const media = matchMedia(MEDIA_QUERIES.belowMedium);
         const change = () => setMobile(media.matches);
         media.addEventListener("change", change);
         return () => media.removeEventListener("change", change);

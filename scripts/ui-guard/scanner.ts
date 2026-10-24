@@ -36,7 +36,7 @@ export async function scanDirectory(
     for await (
         const entry of walk(dirPath, {
             includeDirs: false,
-            exts: [".tsx", ".css"],
+            exts: [".ts", ".tsx", ".css"],
             skip: [
                 /\/node_modules\//,
                 /\/\.git\//,
@@ -54,7 +54,7 @@ export async function scanDirectory(
 
         const content = await Deno.readTextFile(entry.path);
 
-        if (entry.path.endsWith(".tsx")) {
+        if (entry.path.endsWith(".tsx") || entry.path.endsWith(".ts")) {
             const fileViolations = scanTsxCode(relPath, content, registry);
             violations.push(...fileViolations);
         } else if (entry.path.endsWith(".css")) {

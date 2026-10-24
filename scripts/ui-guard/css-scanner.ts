@@ -185,6 +185,36 @@ export function scanCssCode(
         const ch = cleanCss[i];
 
         if (ch === "{") {
+            const prelude = normalizeSnippet(cleanCss.slice(preludeStart, i));
+            if (prelude.startsWith("@media")) {
+                for (
+                    const match of prelude.matchAll(
+                        /\(([^()]*\bwidth\b[^()]*)\)/g,
+                    )
+                ) {
+                    const paired = /^(min|max)-width:\s*(\d+)px$/.exec(
+                        match[1].trim(),
+                    );
+                    const boundary = paired
+                        ? Number(paired[2]) + (paired[1] === "max" ? 1 : 0)
+                        : -1;
+                    if (boundary > 0 && registry.breakpoints.has(boundary)) {
+                        continue;
+                    }
+                    const { line, col } = getLineAndCol(preludeStart);
+                    violations.push({
+                        file,
+                        rule: "unregistered-breakpoint",
+                        property: "@media",
+                        value: match[0],
+                        line,
+                        column: col,
+                        fingerprint: `unregistered-breakpoint:@media:${
+                            match[0]
+                        }`,
+                    });
+                }
+            }
             preludes.push(
                 normalizeSnippet(cleanCss.slice(preludeStart, i)),
             );

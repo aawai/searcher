@@ -80,7 +80,7 @@
     margin-block-start: var(--space-2);
 }
 
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     .trash-page .trash-purge {
         opacity: 1;
     }

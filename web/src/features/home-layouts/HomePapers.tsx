@@ -1,3 +1,4 @@
+import { BREAKPOINTS } from "../../design-system/breakpoints.ts";
 import {
     DndContext,
     type DragEndEvent,
@@ -204,7 +205,7 @@ export function HomePapers(
     );
     const currentViewportWidth = viewportWidth ?? 0;
     const useFlowLayout = flow ||
-        (currentViewportWidth > 0 && currentViewportWidth <= 960);
+        (currentViewportWidth > 0 && currentViewportWidth < BREAKPOINTS.wide);
     const placementAwareDesktop = !useFlowLayout;
     const measurementKey = useMemo(
         () =>
@@ -335,7 +336,7 @@ export function HomePapers(
         const current = currentPoint(paper, index);
         if (current.z === top) return;
         setPoints((old) => ({ ...old, [paper.id]: { ...current, z: top } }));
-        if (currentViewportWidth > 960) {
+        if (currentViewportWidth >= BREAKPOINTS.wide) {
             onUpdateLayout?.(paper, {
                 ...paper.layout,
                 ...(current.manual ? { x: current.x, y: current.y } : {}),
@@ -356,7 +357,7 @@ export function HomePapers(
 
     function moved(event: DragEndEvent) {
         if (
-            currentViewportWidth <= 960 ||
+            currentViewportWidth < BREAKPOINTS.wide ||
             (!event.delta.x && !event.delta.y)
         ) {
             return;

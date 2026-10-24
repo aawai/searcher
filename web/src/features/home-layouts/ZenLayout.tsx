@@ -1,3 +1,4 @@
+import { BREAKPOINTS } from "../../design-system/breakpoints.ts";
 import {
     lazy,
     Suspense,
@@ -94,7 +95,7 @@ export function ZenLayout(
     }, [inlineAnswer.open]);
     const [gridElement, setGridElement] = useState<HTMLElement | null>(null);
     const [exclusionRect, setExclusionRect] = useState<SafeRect | null>(null);
-    const mobile = props.viewportWidth < 768;
+    const mobile = props.viewportWidth < BREAKPOINTS.medium;
 
     const calmShown = props.calm.showDate || props.calm.showTime ||
         props.calm.showContinue;

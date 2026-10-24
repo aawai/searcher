@@ -241,6 +241,24 @@ export function scanTsxCode(
     const violations: UiViolation[] = [];
 
     function visit(node: ts.Node) {
+        if (
+            file !== "web/src/design-system/breakpoints.ts" &&
+            (ts.isStringLiteral(node) ||
+                ts.isNoSubstitutionTemplateLiteral(node)) &&
+            /\([^()]*\b(?:min-|max-)?width\s*(?::|[<>=])\s*\d/.test(node.text)
+        ) {
+            const { line, character } = sourceFile
+                .getLineAndCharacterOfPosition(node.getStart());
+            violations.push({
+                file,
+                rule: "scattered-media-query",
+                property: "media-query",
+                value: node.text,
+                line: line + 1,
+                column: character + 1,
+                fingerprint: `scattered-media-query:media-query:${node.text}`,
+            });
+        }
         if (ts.isJsxAttribute(node)) {
             const attrName = node.name.getText(sourceFile);
             if (["size", "width", "height"].includes(attrName)) {

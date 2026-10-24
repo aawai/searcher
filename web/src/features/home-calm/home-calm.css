@@ -10,7 +10,7 @@
     height: 0;
 }
 
-@media (pointer: coarse), (hover: none) {
+@media (any-pointer: coarse), (hover: none) {
     .home-calm-anchor {
         --home-calm-row-height: var(--control-touch-target);
     }

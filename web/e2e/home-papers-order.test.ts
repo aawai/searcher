@@ -860,7 +860,7 @@ Deno.test("Home floating paper placement and responsive matrix", async () => {
             });
             return;
         }
-        if (viewport && viewport.width > 960) {
+        if (viewport && viewport.width >= 1024) {
             await page.waitForFunction(() => {
                 const canvas = document.querySelector(
                     ".floating-notes--canvas",
@@ -1117,12 +1117,13 @@ Deno.test("Home floating paper placement and responsive matrix", async () => {
     }
 
     // Mobile previews are covered by #191; tablet retains flowing cards.
-    // The short 961px case forces fallback when the viewport is too low.
+    // The short 1024px case forces fallback when the viewport is too low.
     await setHome("dark");
     for (
         const viewport of [
             { width: 768, height: 1024 },
-            { width: 960, height: 640 },
+            { width: 900, height: 640 },
+            { width: 1023, height: 640 },
         ]
     ) {
         await page.setViewportSize(viewport);
@@ -1136,19 +1137,19 @@ Deno.test("Home floating paper placement and responsive matrix", async () => {
         assertNoDefaultNoteOverlap(metrics, `${viewport.width}px Zen`);
         await assertSearchUsable(`${viewport.width}px Zen`);
     }
-    await page.setViewportSize({ width: 961, height: 390 });
+    await page.setViewportSize({ width: 1024, height: 390 });
     await waitForHomeLayout();
     const shortScreen = await measureHome();
     assertEquals(
         shortScreen.flow,
         true,
-        "961x390 must reflow notes when no floating position fits",
+        "1024x390 must reflow notes when no floating position fits",
     );
     assertNoDefaultNoteOverlap(
         shortScreen,
-        "961x390 Zen short-screen fallback",
+        "1024x390 Zen short-screen fallback",
     );
-    await assertSearchUsable("961x390 Zen short-screen fallback");
+    await assertSearchUsable("1024x390 Zen short-screen fallback");
     assertEquals(layoutSnapshot(await readNotes()), initialSnapshot);
     await page.mouse.move(8, 380);
     await page.mouse.wheel(0, 500);

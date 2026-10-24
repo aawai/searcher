@@ -27,14 +27,14 @@
 
 .pinned-area {
     width: calc(100% - 2 * var(--space-4));
-    max-width: var(--layout-home-content-max);
+    max-width: var(--home-grid-content-width);
     margin: var(--space-5) auto var(--space-9);
     display: flex;
     flex-direction: column;
     align-items: stretch;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 767px) {
     .pinned-area {
         margin: var(--space-6) auto var(--space-8);
     }
@@ -66,9 +66,9 @@
 .notes-flow-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--space-4);
+    gap: var(--space-home-grid-gap);
     width: 100%;
-    max-width: var(--layout-home-content-max);
+    max-width: var(--home-grid-content-width);
     margin: var(--space-5) auto 0;
     justify-content: center;
 }
@@ -96,7 +96,7 @@
 /* Mobile fixed notes share the search/launcher axis: one material card, one note at a time. */
 .zen-inline-notes {
     width: calc(100% - 2 * var(--space-4));
-    max-width: var(--layout-home-content-max);
+    max-width: var(--home-grid-content-width);
     margin: var(--space-section) auto;
     color: var(--foreground);
 }

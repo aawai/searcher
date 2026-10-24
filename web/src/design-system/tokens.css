@@ -242,6 +242,24 @@
     --layout-form-max: 560px;
     --layout-search-max: 640px;
     --layout-home-content-max: 640px;
+    /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
+    --home-grid-wide-cell: 84px;
+    --home-grid-wide-gap: 12px;
+    --home-grid-narrow-cell: 64px;
+    --home-grid-narrow-gap: 6px;
+    --home-grid-narrow-coarse-cell: 68px;
+    --home-grid-narrow-coarse-gap: 4px;
+    --home-grid-wide-coarse-cell: 88px;
+    --home-grid-wide-coarse-gap: 12px;
+    --home-grid-cell: var(--home-grid-wide-cell);
+    --home-grid-gap: var(--home-grid-wide-gap);
+    --space-home-grid-gap: var(--home-grid-gap);
+    --home-grid-axis: 50%;
+    --home-grid-viewport-inset: var(--space-page-inline);
+    --home-grid-content-width: min(var(--layout-home-content-max), calc(100vw - 2 * var(--space-4)));
+    --home-grid-inline-start: calc(var(--home-grid-axis) - var(--home-grid-content-width) / 2);
+    --home-grid-inline-end: calc(var(--home-grid-axis) + var(--home-grid-content-width) / 2);
+    --home-grid-block-start: calc(56px + var(--home-hero-inset));
     /* 38% viewport centre minus topbar (56px) and half search height (28px). */
     --home-hero-inset: max(80px, calc(38dvh - 84px));
     --layout-sheet-max: 960px;
@@ -547,6 +565,8 @@
 @media (max-width: 767px) {
     :root {
         --space-page-inline: var(--space-4);
+        --home-grid-cell: var(--home-grid-narrow-cell);
+        --home-grid-gap: var(--home-grid-narrow-gap);
         --space-page-block: var(--space-5);
         --home-hero-inset: clamp(64px, 16dvh, 140px);
         --space-search-inset-block: var(--space-1);
@@ -593,4 +613,18 @@
 @utility icon-lg {
     width: var(--icon-lg);
     height: var(--icon-lg);
+}
+
+@media (any-pointer: coarse) and (min-width: 768px) {
+    :root {
+        --home-grid-cell: var(--home-grid-wide-coarse-cell);
+        --home-grid-gap: var(--home-grid-wide-coarse-gap);
+    }
+}
+
+@media (any-pointer: coarse) and (max-width: 767px) {
+    :root {
+        --home-grid-cell: var(--home-grid-narrow-coarse-cell);
+        --home-grid-gap: var(--home-grid-narrow-coarse-gap);
+    }
 }
