@@ -437,6 +437,7 @@ Deno.test("production search shortcuts respect editable focus and submit command
                     url: "https://figma.example.test",
                     iconAssetId: icon.id,
                     iconSource: "upload",
+                    isHomeFixed: true,
                 },
             });
             assert(response.ok(), await response.text());

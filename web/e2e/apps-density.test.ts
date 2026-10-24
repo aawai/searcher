@@ -769,14 +769,14 @@ async function runTouchInteractions(
     const library = await openMoreApps(page, more);
     await settlePresentation(page);
     const libraryTiles = await library.locator(
-        ".launcher-grid--library > .launcher-tile[data-tile-id]",
+        "[data-library-apps-grid] > :is(.launcher-app, .launcher-folder-item)",
     ).count();
     assert(
         libraryTiles >= moreCount,
         `library shows every tile (${libraryTiles} >= ${moreCount})`,
     );
     assertEquals(
-        await library.getByRole("button", {
+        await page.locator("[data-library]").getByRole("button", {
             name: "添加应用",
             exact: true,
         }).count() >= 1,
@@ -942,6 +942,7 @@ async function runSparseLargePreviews(
                             name: "小文件夹",
                             folderSize: "small",
                             sortOrder: 1,
+                            isHomeFixed: true,
                         },
                     },
                 );
@@ -957,6 +958,7 @@ async function runSparseLargePreviews(
                                 url: `https://neighbor-${index}.example/`,
                                 iconSource: "default",
                                 sortOrder: index + 10,
+                                isHomeFixed: true,
                             },
                         },
                     );
@@ -971,6 +973,7 @@ async function runSparseLargePreviews(
                                 name: `预览 ${count}`,
                                 folderSize: "large",
                                 sortOrder: 0,
+                                isHomeFixed: true,
                             },
                         },
                     );

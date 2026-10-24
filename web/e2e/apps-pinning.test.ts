@@ -292,7 +292,7 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
 
     await t.step("the library add form defaults to unpinned", async () => {
         await openApps(page);
-        await libraryView(page, "apps").getByRole("button", {
+        await page.locator("[data-library]").getByRole("button", {
             name: "添加应用",
             exact: true,
         }).click();
@@ -349,8 +349,8 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
             await closeLibrary(page);
 
             await page.locator("#search-query").fill("固定在首页");
-            const suggestion = page.getByRole("option", {
-                name: /固定在首页/,
+            const suggestion = page.getByRole("option").filter({
+                hasText: "pinned-app.example.test",
             }).first();
             await suggestion.waitFor();
             const fromSearch = context.waitForEvent("page");
@@ -481,8 +481,7 @@ Deno.test("Keyboard and touch can pin and unpin #285 Y8", async () => {
     await homeTile(page, keyboardApp.id).waitFor({ state: "detached" });
 
     await openApps(page);
-    const libraryButton = libraryTile(page, keyboardApp.id)
-        .locator(".webapp-icon");
+    const libraryButton = libraryTile(page, keyboardApp.id);
     await libraryButton.focus();
     await libraryButton.press("Shift+F10");
     const pin = page.getByRole("menuitem", { name: "固定到首页", exact: true });

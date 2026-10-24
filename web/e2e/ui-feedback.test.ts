@@ -1003,6 +1003,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                     name: "Undo Target WebApp",
                     url: "https://example.com/undo-target-app",
                     sortOrder: 20,
+                    isHomeFixed: true,
                     createdAt: now,
                     updatedAt: now,
                 });
@@ -1011,6 +1012,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                         ...app,
                         userId: user.id,
                         sortOrder: 21 + index,
+                        isHomeFixed: true,
                         createdAt: now,
                         updatedAt: now,
                     })),

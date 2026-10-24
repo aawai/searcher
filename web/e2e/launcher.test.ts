@@ -835,7 +835,16 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
     await t.step(
         "12. 更多（N） opens the library app view instead of a popup",
         async () => {
-            // One row only: the remaining root tiles move into 更多（N）.
+            // Enough pinned root tiles to overflow one row at 1280x440.
+            for (let index = 1; index <= 8; index++) {
+                const added = await apiRequest("/api/webapps", "POST", {
+                    name: `Overflow ${index}`,
+                    url: `https://example.org/overflow-${index}`,
+                    sortOrder: 100 + index,
+                    isHomeFixed: true,
+                });
+                assertEquals(added.status, 200);
+            }
             await page.setViewportSize({ width: 1280, height: 440 });
             await showHome();
             const more = homeGrid.locator('[data-library-cell="more"]');
@@ -854,16 +863,16 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
             await library.getByText("全部应用", { exact: true }).waitFor();
             assertEquals(
                 await library.locator(
-                    ".launcher-grid--library > .launcher-tile[data-tile-id]",
+                    "[data-library-apps-grid] > :is(.launcher-app, .launcher-folder-item)",
                 ).count(),
                 total,
             );
             assertEquals(
-                await library.getByRole("button", {
+                await page.locator("[data-library]").getByRole("button", {
                     name: "添加应用",
                     exact: true,
-                }).count() >= 1,
-                true,
+                }).count(),
+                1,
             );
             await closeLibrary(page);
             await page.setViewportSize({ width: 1280, height: 800 });

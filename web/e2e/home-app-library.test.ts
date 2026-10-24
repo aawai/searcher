@@ -480,16 +480,16 @@ Deno.test("home app library (#244)", async (t) => {
                         .waitFor();
                     assertEquals(
                         await view.locator(
-                            ".launcher-grid--library > .launcher-tile[data-tile-id]",
+                            "[data-library-apps-grid] > :is(.launcher-app, .launcher-folder-item)",
                         ).count(),
                         BIG_ROOT_TILES,
                     );
                     assertEquals(
-                        await view.getByRole("button", {
+                        await libraryPanel(page).getByRole("button", {
                             name: "添加应用",
                             exact: true,
-                        }).count() >= 1,
-                        true,
+                        }).count(),
+                        1,
                     );
                     await view.locator(".launcher-folder-item", {
                         hasText: "尾部文件夹",

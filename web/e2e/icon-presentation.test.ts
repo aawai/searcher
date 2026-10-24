@@ -74,6 +74,7 @@ Deno.test("icon presentation real-page matrix: fixed glyphs, opaque and transpar
                     name: "域名回退",
                     url: "https://fallback.example/",
                     iconSource: "default",
+                    isHomeFixed: true,
                 },
                 headers: { Origin: app.origin },
             },
