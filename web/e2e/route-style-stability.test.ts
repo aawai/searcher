@@ -74,7 +74,11 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 '[data-slot="radio-group-item"]',
             );
             const swatchCount = await swatchItems.count();
-            assertEquals(swatchCount, 9, "Should have 9 accent swatch options");
+            assertEquals(
+                swatchCount,
+                10,
+                "Should have 跟随壁纸 plus 9 accent swatch options",
+            );
 
             const itemBoxes = [];
             const itemHeights = [];
