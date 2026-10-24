@@ -23,17 +23,17 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 不可协商。系统语法与风格方向都在这些约束之内选择。
 
-| 约束                           | 要求                                                                                                                                                          | 机检                                                                              |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| 文字对比度                     | 正文与次要文字 ≥ 4.5:1；`--muted` 在玻璃表面上 ≥ 3:1（见 [玻璃效果](#玻璃效果)）                                                                              | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/glass-contrast.test.ts` |
-| 控件边界与焦点环               | 控件边界与焦点环 ≥ 3:1；焦点环为 2px `--ring`，只在 `:focus-visible` 出现                                                                                     | 实页清单                                                                          |
-| 选中不只靠颜色                 | 配合勾号、外环或 `aria-current` / `aria-pressed`                                                                                                              | 实页清单                                                                          |
-| 命中区                         | 粗指针（`any-pointer: coarse`）下所有可操作目标 ≥ 44px；仅 hover 出现的操作在触屏常显或进入 `⋯` 菜单                                                          | 部分 e2e（`apps-density`、`route-style-stability`），其余实页清单                 |
-| `prefers-reduced-motion`       | 位移、缩放、旋转及共享元素的尺寸 / 位置插值一律改为同时长的纯透明度变化，页面切换不做过渡；加载指示（spinner）属于必要动效，保持旋转；不使用全局 `*` 清零规则 | `/design-lab/motion` + 实页清单                                                   |
-| `prefers-reduced-transparency` | 所有玻璃档位按 `off` 渲染（实色、无 blur）；不支持 `backdrop-filter` 时同样处理                                                                               | 实页清单                                                                          |
-| Escape 层栈                    | `components/ui/escape-layer-stack.tsx` 拥有 Escape：每次只关闭最上一层，关闭后焦点回到触发控件                                                                | `web/src/components/ui/escape-layer-stack.test.ts`                                |
-| 键盘                           | 主要流程可仅用键盘完成                                                                                                                                        | 实页清单                                                                          |
-| 壁纸可读性                     | 自定义壁纸由用户选择的“可读性”遮罩保证首页文字可读；“无”遮罩下不承诺可读性                                                                                    | 实页清单                                                                          |
+| 约束                           | 要求                                                                                                                                                          | 机检                                                                                                                                |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 文字对比度                     | 正文与次要文字 ≥ 4.5:1；`--muted` 在玻璃表面上 ≥ 3:1（见 [玻璃效果](#玻璃效果)）                                                                              | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/glass-contrast.test.ts`、`web/src/design-system/wallpaper-accent.test.ts` |
+| 控件边界与焦点环               | 控件边界与焦点环 ≥ 3:1；焦点环为 2px `--ring`，只在 `:focus-visible` 出现                                                                                     | 实页清单                                                                                                                            |
+| 选中不只靠颜色                 | 配合勾号、外环或 `aria-current` / `aria-pressed`                                                                                                              | 实页清单                                                                                                                            |
+| 命中区                         | 粗指针（`any-pointer: coarse`）下所有可操作目标 ≥ 44px；仅 hover 出现的操作在触屏常显或进入 `⋯` 菜单                                                          | 部分 e2e（`apps-density`、`route-style-stability`），其余实页清单                                                                   |
+| `prefers-reduced-motion`       | 位移、缩放、旋转及共享元素的尺寸 / 位置插值一律改为同时长的纯透明度变化，页面切换不做过渡；加载指示（spinner）属于必要动效，保持旋转；不使用全局 `*` 清零规则 | `/design-lab/motion` + 实页清单                                                                                                     |
+| `prefers-reduced-transparency` | 所有玻璃档位按 `off` 渲染（实色、无 blur）；不支持 `backdrop-filter` 时同样处理                                                                               | 实页清单                                                                                                                            |
+| Escape 层栈                    | `components/ui/escape-layer-stack.tsx` 拥有 Escape：每次只关闭最上一层，关闭后焦点回到触发控件                                                                | `web/src/components/ui/escape-layer-stack.test.ts`                                                                                  |
+| 键盘                           | 主要流程可仅用键盘完成                                                                                                                                        | 实页清单                                                                                                                            |
+| 壁纸可读性                     | 自定义壁纸由用户选择的“可读性”遮罩保证首页文字可读；“无”遮罩下不承诺可读性                                                                                    | 实页清单                                                                                                                            |
 
 ## 二、系统语法
 
@@ -50,18 +50,18 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 #### 颜色（中性、无色相偏移）
 
-| 角色                               | Light                  | Dark                      | 用途                                             |
-| ---------------------------------- | ---------------------- | ------------------------- | ------------------------------------------------ |
-| `--background`                     | `#F4F4F5`              | `#111113`                 | 页面画布                                         |
-| `--surface` / `--surface-solid`    | `#FFFFFF`              | `#1C1C1F`                 | 分组列表、面板、对话框                           |
-| `--surface-soft`                   | `#EBEBEE`              | `#2A2A2E`                 | 控件填充、hover、用户气泡                        |
-| `--foreground`                     | `#1D1D1F`              | `#F5F5F7`                 | 正文与标题                                       |
-| `--muted`                          | `#66666B`              | `#A1A1A6`                 | 次要文字（≥4.5:1，含填充底）                     |
-| `--border`                         | `rgb(0 0 0 / 0.09)`    | `rgb(255 255 255 / 0.10)` | 细线分隔                                         |
-| `--border-control`                 | `#86868B`              | `#747479`                 | 独立表单控件边界（≥3:1）                         |
-| `--accent`                         | 用户所选强调色（9 种） | 同左，明暗各一            | 交互语义与用户身份，见 [强调色用途](#强调色用途) |
-| `--surface-control-thumb`          | `#FFFFFF`              | `#636366`                 | 分段控件选中项、开关滑块（亮于轨道）             |
-| `--danger` `--success` `--warning` | 保持现值               | 保持现值                  | 状态，仅配合图标与文字使用                       |
+| 角色                               | Light                           | Dark                      | 用途                                             |
+| ---------------------------------- | ------------------------------- | ------------------------- | ------------------------------------------------ |
+| `--background`                     | `#F4F4F5`                       | `#111113`                 | 页面画布                                         |
+| `--surface` / `--surface-solid`    | `#FFFFFF`                       | `#1C1C1F`                 | 分组列表、面板、对话框                           |
+| `--surface-soft`                   | `#EBEBEE`                       | `#2A2A2E`                 | 控件填充、hover、用户气泡                        |
+| `--foreground`                     | `#1D1D1F`                       | `#F5F5F7`                 | 正文与标题                                       |
+| `--muted`                          | `#66666B`                       | `#A1A1A6`                 | 次要文字（≥4.5:1，含填充底）                     |
+| `--border`                         | `rgb(0 0 0 / 0.09)`             | `rgb(255 255 255 / 0.10)` | 细线分隔                                         |
+| `--border-control`                 | `#86868B`                       | `#747479`                 | 独立表单控件边界（≥3:1）                         |
+| `--accent`                         | 壁纸派生（默认）或手选 9 种之一 | 同左，明暗各一            | 交互语义与用户身份，见 [强调色用途](#强调色用途) |
+| `--surface-control-thumb`          | `#FFFFFF`                       | `#636366`                 | 分段控件选中项、开关滑块（亮于轨道）             |
+| `--danger` `--success` `--warning` | 保持现值                        | 保持现值                  | 状态，仅配合图标与文字使用                       |
 
 #### 字号
 
@@ -137,7 +137,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 - **Input / Textarea / Select**：独立表单与纵向分组行中使用 surface 背景 + `--border-control` 细边；在横向分组行内使用无边框、透明底、值右对齐的行内输入，hover 显示 `--surface-soft` 底，键盘焦点显示焦点环。
 - **分组列表（Grouped List）**：设置、账户、管理页的基本单元。圆角 `--radius` 的 `--surface` 容器；行高 ≥ 44，左侧标签，右侧控件或值；行间为左侧内缩的细线；分组标题（14 / 600、前景色）在容器外上方，脚注（metadata、`--muted`）在容器外下方。
 - **分段控件**：2–4 个互斥选项（如主题）；超过 4 个用 Select。选中项使用 `--surface-control-thumb`，在明暗主题下都亮于轨道。
-- **色点选择**：强调色为一排 24px 圆点，选中显示外环；名称只在 `aria-label` 与 tooltip。
+- **色点选择**：强调色为一排 24px 圆点，选中显示外环；名称只在 `aria-label` 与 tooltip。首个圆点是“跟随壁纸”：显示当前派生色并带图片字形，表示来源而非固定颜色。
 - **空状态**：一句话 + 至多一个操作，居中，不加插图与卡片。
 - **Toast / 撤销**：底部居中材质胶囊；破坏性操作用 AlertDialog 二次确认，软删除给撤销。
 - **菜单**：`⋯` 触发；危险项置底、红色、前有分隔线。互斥选择（如搜索引擎）用单选项，当前项显示勾号。
@@ -188,7 +188,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 以下偏好由用户在“设置 → 外观”中选择，是系统允许的离散变体，由 Token 或单一 owner 实现，不得扩展为任意数值：
 
-- 主题（跟随系统 / 浅色 / 深色）与强调色（9 种调色板）：`tokens.css`。
+- 主题（跟随系统 / 浅色 / 深色）与强调色（跟随壁纸或 9 种调色板）：`tokens.css`；壁纸派生见 [强调色来源](#强调色来源)。
 - 控件形状（圆角 / 胶囊）：`[data-shape="pill"]` 把 `--search-radius` 设为 `--radius-pill`，搜索框内控件按 `--search-inner-radius` 同心变化。
 - 玻璃效果（关闭 / 柔和 / 标准 / 通透，默认标准）：`<html data-glass>` 选择 `tokens.css` 中的整档材质取值，作用于全部 Material 与 Floating 表面，不再有搜索框独立透明度。
 - 应用图标大小（小 / 标准 / 大）与显示应用名称：仅作用于首页图标网格，`launcher.css` 的离散网格档位；隐藏名称时保留可访问名称。工作区网格固定标准尺寸并显示名称。
@@ -256,6 +256,15 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 - **回退**：浏览器不支持 `startViewTransition` 时立即切换状态、无动画，焦点处理不变。`prefers-reduced-motion: reduce` 下共享元素 morph 改为**同时长**的纯 opacity cross-fade：无 translate、无 scale，也不插值共享元素的 width / height / position。必须显式禁用默认 `::view-transition-group` 的尺寸 / 位置动画与 `::view-transition-image-pair` 动画（例如 `animation: none`），只在 old / new 快照上保留透明度动画，不能仅移除业务 CSS 的 transform。
 - **焦点与 Escape**：过渡结束后焦点移至目标的第一个可聚焦控件；反向关闭后回到原触发控件（无动画回退时立即处理）。Escape 由 `escape-layer-stack` 拥有，每次只关闭最上层，遵守底线，不另挂全局 Escape handler。
 - **验证**：`/design-lab/motion` 演示展开 / 收回、模式状态与键盘焦点；在普通模式检查 group 几何动画，在 reduced-motion 下检查 pseudo-tree 的 keyframes 仅含 opacity、无 transform / 尺寸 / 位置插值，并检查不支持 API 时立即切换。生产采用此契约时须填写 [实页清单](UI_CHECKLIST.md) 并验证主题、键盘与降级路径。
+
+### 强调色来源
+
+强调色有两种来源，偏好 `accent` 二选一：
+
+- **壁纸派生（`wallpaper`，默认）**：取当前壁纸构图焦点周围（每轴 50% 窗口）的像素，按 OKLCH 色相直方图（彩度加权、近黑近白降权）选主色；彩色像素不足 4% 时为中性，派生中性灰。由主色分别为浅色 / 深色求解 `--accent`、`--accent-hover`、`--accent-active`、`--accent-foreground`，满足与预设相同的对比度：强调色文字与焦点环分别 ≥ 4.5:1、≥ 3:1（对表面、背景、次表面与 `--accent-soft`），前景对三种填充 ≥ 4.5:1。gradient 壁纸按色标取色。owner：`design-system/wallpaper-accent.ts`（纯函数，同一像素与焦点得到同一结果）与 `components/wallpaper/wallpaper-accent-source.ts`（采样）；`AppState` 把派生对写到 `<html>` 的 `--wallpaper-accent*`，`[data-accent="wallpaper"]` 读取它们。
+- **手选（9 种预设）**：作为覆盖，不再跟随壁纸；随时可选回“跟随壁纸”。
+
+无壁纸、图片无法解码或远程图片未开放 CORS 时，壁纸派生回退为经典蓝。派生结果不上传：每台设备由同一壁纸与焦点确定性重算，因此跨设备一致；更换壁纸或调整焦点后即时重算。
 
 ### 强调色用途
 

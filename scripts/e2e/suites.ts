@@ -40,7 +40,7 @@ export const suites = {
         "document-host-boundaries",
         "document-presentation-contracts",
     ],
-    wallpaper: ["wallpaper"],
+    wallpaper: ["wallpaper", "wallpaper-accent"],
     bundle: [
         "bundle-loading",
         "route-style-stability",

@@ -162,12 +162,19 @@
     max-width: 100%;
 }
 .settings-swatch-color {
-    display: block;
+    display: grid;
+    place-items: center;
     width: var(--space-6);
     height: var(--space-6);
     border-radius: var(--radius-pill);
     /* `data-accent` scopes that palette's light-dark pair onto the dot. */
     background: var(--accent);
+    color: var(--accent-foreground);
+}
+/* "跟随壁纸" is a source, not a fixed colour: its dot carries an image glyph. */
+.settings-swatch-color > svg {
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
 /* Wallpaper source and current preview */

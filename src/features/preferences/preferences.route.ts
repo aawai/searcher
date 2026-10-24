@@ -8,7 +8,7 @@ import { WallpaperService } from "../wallpaper/service.ts";
 import { parseCookie } from "../auth/middleware.ts";
 import { SESSION_COOKIE_NAME } from "../auth/service.ts";
 import {
-    ACCENT_IDS,
+    ACCENT_PREFERENCES,
     CANONICAL_REASONING_EFFORTS,
     GLASS_INTENSITIES,
 } from "../../shared/contracts.ts";
@@ -24,7 +24,7 @@ const Engine = v.optional(
     v.picklist(["google", "bing", "baidu", "duckduckgo"]),
 );
 const Theme = v.optional(v.picklist(["system", "light", "dark"]));
-const Accent = v.optional(v.picklist(ACCENT_IDS));
+const Accent = v.optional(v.picklist(ACCENT_PREFERENCES));
 const Shape = v.optional(v.picklist(["rounded", "pill"]));
 const GlassIntensity = v.optional(v.picklist(GLASS_INTENSITIES));
 const Target = v.optional(v.picklist(["same", "new"]));

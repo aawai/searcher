@@ -3,6 +3,7 @@ import type { DatabaseStore } from "../../db/database.ts";
 import { preferences } from "../../db/schema.ts";
 import {
     type AiGenerationDefaultsDto,
+    DEFAULT_ACCENT,
     DEFAULT_GLASS_INTENSITY,
     normalizeGlassIntensity,
     normalizeWallpaperCompositions,
@@ -47,7 +48,7 @@ import type { SystemSettingsStore } from "../system/settings-store.ts";
 const defaults: PreferencesDto = {
     defaultEngine: "bing",
     theme: "system",
-    accent: "blue",
+    accent: DEFAULT_ACCENT,
     searchShape: "rounded",
     glassIntensity: DEFAULT_GLASS_INTENSITY,
     backgroundImage: null,
@@ -185,7 +186,7 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
     return {
         defaultEngine: row.defaultEngine,
         theme: row.theme,
-        accent: row.accent ?? "blue",
+        accent: row.accent,
         searchShape: row.searchShape ?? "rounded",
         glassIntensity: normalizeGlassIntensity(row.glassIntensity),
         backgroundImage: row.backgroundImage,
