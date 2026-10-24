@@ -4,6 +4,7 @@ import { chromium, type Page } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
+import { deskDetail, openNotes } from "./helpers/desk.ts";
 
 type PaperSize = "a4" | "letter";
 type Orientation = "portrait" | "landscape";
@@ -205,10 +206,9 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     );
 
     await page.reload();
-    await page.locator('.zen-edge-trigger button[data-workspace="documents"]')
-        .click();
+    await openNotes(page);
     await page.locator(`[data-document-id="${doc.id}"] h4 button`).click();
-    const win = page.locator("aside.workspace-panel");
+    const win = deskDetail(page);
     const editor = win.locator(".ProseMirror");
     await editor.waitFor();
     const originalEditor = await editor.elementHandle();
@@ -681,12 +681,12 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         );
         assertEquals(await win.locator(".ProseMirror").count(), 1);
         assertEquals(await win.locator(".pagination-sheet").count(), 3);
+        const expectedDimensions = physicalPaperDimensions(size, orientation);
         const actual = await win.locator(".pagination-sheet").first()
             .evaluate((sheet) => {
                 const { width, height } = sheet.getBoundingClientRect();
                 return { width, height };
             });
-        const expectedDimensions = physicalPaperDimensions(size, orientation);
         const scale = (await pageModeGeometry()).scale;
         assert(
             Math.abs(actual.width - expectedDimensions.width * scale) < 2 &&
@@ -723,8 +723,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         cleanup.defer(() => isolatedContext.close());
         matrixPage = await isolatedContext.newPage();
         await matrixPage.goto(app.origin + "/");
-        await matrixPage.locator('button[data-workspace="documents"]').first()
-            .click();
+        await openNotes(matrixPage);
         await matrixPage.locator(`[data-document-id="${doc.id}"] h4 button`)
             .click();
         await matrixPage.locator(".ProseMirror").waitFor();

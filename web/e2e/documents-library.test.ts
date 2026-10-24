@@ -13,6 +13,12 @@ import type {
     DocumentPageDto,
 } from "../../src/shared/documents.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
+import {
+    deskDetail,
+    deskObject,
+    deskOverview,
+    openNotes,
+} from "./helpers/desk.ts";
 
 // Documents workspace library contracts: scopes, search, row actions, create /
 // trash / restore, editor presentation (color + pin to home), save lifecycle,
@@ -87,11 +93,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
     const readDocument = (id: string) =>
         request<DocumentDto>(`/api/documents/${id}`);
 
-    // Open (non-exiting) workspace surface; an exiting one is `data-ending-style` + inert.
-    const workspace = () =>
-        page.locator(
-            ".workspace-panel--mobile:not([data-ending-style]), aside.workspace-panel:not([data-ending-style])",
-        );
+    const workspace = () => deskDetail(page);
     const editor = () => page.locator("[data-workspace-editor]");
     const saveStatus = (status: string) =>
         page.locator(`.document-save-status[data-status="${status}"]`);
@@ -99,12 +101,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
         workspace().locator(`[data-document-id="${id}"]`);
 
     async function openDocumentsRoot() {
-        const trigger = page.locator(
-            '.zen-edge-trigger:not([data-ending-style]) .zen-edge-btn[data-workspace="documents"], button[aria-label="笔记工作区"]',
-        ).first();
-        await trigger.waitFor({ state: "visible" });
-        await trigger.click();
-        await workspace().waitFor({ state: "visible" });
+        await openNotes(page);
     }
 
     // Fresh page load so the library refetches rows seeded through the API.
@@ -540,7 +537,18 @@ Deno.test("production documents library workspace contracts", async (t) => {
                     .getAttribute("data-color"),
                 "amber",
             );
-            await visit("/");
+            await deskObject(page, `paper:${doc.id}`).waitFor({
+                state: "visible",
+            });
+            await workspace().getByRole("button", {
+                name: "关闭详情",
+                exact: true,
+            }).click();
+            await workspace().waitFor({ state: "detached" });
+            await page.locator(
+                '.desk-home[data-desk-stage="calm"]:not([inert])',
+            )
+                .waitFor();
             await homePapersSettled();
             const paper = homePaper(title);
             await paper.waitFor({ state: "visible" });
@@ -878,12 +886,10 @@ Deno.test("production documents library workspace contracts", async (t) => {
                     // Mobile sheets must be dismissed before the viewport changes
                     if (vp.width < 768) {
                         await panel.getByRole("button", {
-                            name: "收起工作区",
+                            name: "返回首页",
                             exact: true,
                         }).click();
-                        await page.locator(
-                            ".workspace-panel--mobile, aside.workspace-panel",
-                        ).waitFor({ state: "detached" });
+                        await panel.waitFor({ state: "detached" });
                     }
                 }
             }
@@ -893,38 +899,61 @@ Deno.test("production documents library workspace contracts", async (t) => {
     );
 
     await t.step(
-        "Home: pinned papers keep their geometry while the documents workspace opens and closes",
+        "Desk: pinned papers become overview objects beside details and return to calm home",
         async () => {
             const title = "Geometry Home Paper";
-            await createDocument({ title, body: "Stable", isHomeFixed: true });
+            const doc = await createDocument({
+                title,
+                body: "Stable",
+                isHomeFixed: true,
+            });
             await visit("/");
             await homePapersSettled();
 
             const paper = homePaper(title);
             await paper.waitFor({ state: "visible" });
-            const before = await paper.boundingBox();
-            assert(before, "pinned paper must have geometry before opening");
 
             await openDocumentsRoot();
             await workspace().locator("[data-document-id]").first().waitFor({
                 state: "visible",
             });
-            await page.keyboard.press("Escape");
-            await page.locator(".workspace-panel").waitFor({
-                state: "detached",
+            await deskOverview(page).waitFor({ state: "visible" });
+            await page.waitForFunction(() => {
+                const home = document.querySelector<HTMLElement>(".desk-home");
+                return home?.inert && home.dataset.deskStage === "overview" &&
+                    Number(getComputedStyle(home).opacity) === 0;
             });
+            const object = deskObject(page, `paper:${doc.id}`);
+            await object.waitFor({ state: "visible" });
+            await page.waitForFunction(() => {
+                const panel = document.querySelector("aside.workspace-panel")
+                    ?.getBoundingClientRect();
+                const objects = [
+                    ...document.querySelectorAll("[data-desk-object]"),
+                ];
+                return panel && objects.length > 0 &&
+                    objects.every((object) =>
+                        object.getBoundingClientRect().right <= panel.left
+                    );
+            });
+            await workspace().getByRole("button", {
+                name: "关闭详情",
+                exact: true,
+            }).click();
+            await workspace().waitFor({ state: "detached" });
+            await deskOverview(page).waitFor({ state: "detached" });
+            await page.locator(
+                '.desk-home[data-desk-stage="calm"]:not([inert])',
+            )
+                .waitFor();
             await homePapersSettled();
 
-            const after = await paper.boundingBox();
-            assert(after, "pinned paper must have geometry after closing");
-            for (const key of ["x", "y", "width", "height"] as const) {
-                assert(
-                    Math.abs(after[key] - before[key]) < 1,
-                    `Pinned paper ${key} moved: ${before[key]} -> ${
-                        after[key]
-                    }`,
-                );
-            }
+            await paper.waitFor({ state: "visible" });
+            assertEquals(
+                await page.locator("#search-query").isEnabled(),
+                true,
+                "calm home search is usable after closing details",
+            );
         },
     );
 });

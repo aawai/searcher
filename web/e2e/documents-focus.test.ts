@@ -1,6 +1,7 @@
-import { assertEquals } from "@std/assert";
-import { chromium } from "playwright";
+import { assertEquals, assertRejects } from "@std/assert";
+import { chromium, errors } from "playwright";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 Deno.test("Documents focus boundaries, IME composition and leave flush contracts", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -36,7 +37,7 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
     });
 
     await page.reload();
-    await page.locator('button[data-workspace="documents"]').first().click();
+    await openNotes(page);
     await page.locator(`[data-document-id="${doc.id}"] h4 button`).click();
 
     const editor = page.locator(".document-editor-container");
@@ -75,7 +76,16 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
                 name: "Markdown 源码",
                 exact: true,
             }).focus();
-            await page.waitForTimeout(500);
+            await assertRejects(
+                () =>
+                    page.waitForRequest(
+                        (request) =>
+                            request.method() === "PATCH" &&
+                            request.url().endsWith(`/api/documents/${doc.id}`),
+                        { timeout: 500 },
+                    ),
+                errors.TimeoutError,
+            );
             assertEquals(
                 writes.length,
                 countBefore,
@@ -101,6 +111,8 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
             await page.getByRole("button", { name: "返回上一级", exact: true })
                 .click();
             await patchPromise;
+            await editor.waitFor({ state: "detached" });
+            await page.locator("input[data-workspace-search]").waitFor();
 
             assertEquals(
                 writes.length,
@@ -112,6 +124,7 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
             await page.locator(`[data-document-id="${doc.id}"] h4 button`)
                 .click();
             await title.waitFor({ state: "visible" });
+            assertEquals(await title.inputValue(), "失去焦点自动保存标题");
         },
     );
 
@@ -122,7 +135,17 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
             await title.focus();
             await title.dispatchEvent("compositionstart", { data: "" });
             await title.fill("正在输入的未完成拼音");
-            await page.waitForTimeout(1600); // Exceeds 1500ms debounce
+            // No write may arrive even after the 1500ms autosave debounce.
+            await assertRejects(
+                () =>
+                    page.waitForRequest(
+                        (request) =>
+                            request.method() === "PATCH" &&
+                            request.url().endsWith(`/api/documents/${doc.id}`),
+                        { timeout: 1600 },
+                    ),
+                errors.TimeoutError,
+            );
             assertEquals(
                 writes.length,
                 countBefore,

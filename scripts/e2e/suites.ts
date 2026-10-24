@@ -5,6 +5,7 @@ export const suites = {
     workspace: [
         "workspace",
         "workspace-shell",
+        "desk",
         "workspace-chrome-inset",
         "launcher",
         "apps-density",

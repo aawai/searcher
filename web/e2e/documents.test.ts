@@ -5,6 +5,7 @@ import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { largeDocumentMarkdown } from "./fixtures/document.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 Deno.test("Documents production responsive modes and large-document integrity (#102 M7)", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -81,8 +82,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
         await t.step(
             "Documents Library stays body-free and does not load editor runtime",
             async () => {
-                await page.locator('button[data-workspace="documents"]').first()
-                    .click();
+                await openNotes(page);
                 await page.locator("[data-document-id]").waitFor();
                 const summaries = await request<
                     { items: Array<Record<string, unknown>> }
@@ -114,8 +114,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             (theme) => document.documentElement.dataset.theme === theme,
             theme,
         );
-        await page.locator('button[data-workspace="documents"]').first()
-            .click();
+        await openNotes(page);
         await page.locator(`[data-document-id="${doc.id}"] h4 button`).click();
         await page.getByRole("textbox", { name: "笔记标题", exact: true })
             .waitFor();
@@ -129,7 +128,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
         for (const theme of ["light", "dark"] as const) {
             assert(
                 await t.step(
-                    `${width}x${height} ${theme}: modes, overflow and Host boundary`,
+                    `${width}x${height} ${theme}: modes, overflow and desk detail boundary`,
                     async () => {
                         await page.setViewportSize({ width, height });
                         await page.emulateMedia({
@@ -137,6 +136,36 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                             reducedMotion: "reduce",
                         });
                         await resetHome(theme);
+                        assertEquals(
+                            await page.locator(".desk-home").getAttribute(
+                                "data-desk-stage",
+                            ),
+                            "overview",
+                        );
+                        assert(
+                            await page.locator(".desk-home").evaluate((home) =>
+                                home.hasAttribute("inert")
+                            ),
+                            "home must be inert while an object detail is open",
+                        );
+                        if (width < 768) {
+                            await page.locator(
+                                '[role="dialog"][data-desk-surface]',
+                            ).waitFor();
+                            await page.getByRole("button", {
+                                name: "返回上一级",
+                                exact: true,
+                            }).waitFor();
+                        } else {
+                            await page.getByRole("region", {
+                                name: "桌面",
+                                exact: true,
+                            }).waitFor();
+                            await page.getByRole("button", {
+                                name: "关闭详情",
+                                exact: true,
+                            }).waitFor();
+                        }
                         const initialBody = await request<DocumentDto>(
                             `/api/documents/${doc.id}`,
                         );
@@ -676,8 +705,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     version: large.version,
                 });
                 await page.reload();
-                await page.locator('button[data-workspace="documents"]').first()
-                    .click();
+                await openNotes(page);
                 await page.locator(`[data-document-id="${large.id}"] h4 button`)
                     .click();
                 const editor = page.locator(".ProseMirror");

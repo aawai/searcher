@@ -3,6 +3,7 @@ import { chromium } from "playwright";
 import type { Locator } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 async function visiblePoint(locator: Locator, minimumHeight = 24) {
     await locator.scrollIntoViewIfNeeded();
@@ -139,9 +140,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
             await t.step(`${width}x${height}`, async () => {
                 await page.setViewportSize({ width, height });
                 await page.goto(app.origin + "/");
-                await page.locator('button[data-workspace="documents"]').first()
-                    .click();
-                const host = page.locator(".workspace-panel");
+                const host = await openNotes(page);
                 const row = host.locator(
                     `[data-document-id="${doc.id}"] h4 button`,
                 );
@@ -181,7 +180,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                             exact: true,
                         }),
                         host.getByRole("button", {
-                            name: "收起工作区",
+                            name: width < 768 ? "返回首页" : "关闭详情",
                             exact: true,
                         }),
                         host.getByRole("button", { name: "链接", exact: true }),
@@ -324,7 +323,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                         .scrollTop > 0
                 );
                 await host.getByRole("button", {
-                    name: "收起工作区",
+                    name: width < 768 ? "返回首页" : "关闭详情",
                     exact: true,
                 }).click();
                 await host.waitFor({ state: "detached" });

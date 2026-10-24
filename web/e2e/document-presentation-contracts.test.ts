@@ -7,6 +7,7 @@ import type {
 } from "../../src/shared/documents.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 interface Rect {
     x: number;
@@ -517,7 +518,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     });
 
     await page.reload();
-    await page.locator('button[data-workspace="documents"]').first().click();
+    await openNotes(page);
     const panel = page.locator(
         'aside.workspace-panel[data-presentation="panel"]',
     );

@@ -5,6 +5,7 @@ import {
     useCallback,
     useEffect,
     useLayoutEffect,
+    useMemo,
     useReducer,
     useRef,
     useState,
@@ -28,6 +29,7 @@ import {
     needsPaperRefresh,
     type PaperItem,
     setPaper,
+    sortPapers,
 } from "../features/home-layouts/home-papers.ts";
 import {
     fetchHomePapers,
@@ -39,7 +41,10 @@ import {
 } from "../features/home-layouts/home-papers-api.ts";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import { Button } from "../components/ui/button.tsx";
-import { useEscapeLayerActive } from "../components/ui/escape-layer-stack.tsx";
+import {
+    useEscapeLayer,
+    useEscapeLayerActive,
+} from "../components/ui/escape-layer-stack.tsx";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -57,16 +62,30 @@ import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
 import { useAppsLayoutPersistence } from "../features/app-library/useAppsLayoutPersistence.ts";
 import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx";
 import "../features/workspace/documents-workspace.css";
+import type { DocumentsRoute } from "../features/workspace/workspace-state.ts";
 import {
-    type DocumentsRoute,
-    type DomainWorkspaceAction,
-    type WorkspaceKind,
-    type WorkspaceRoute,
-} from "../features/workspace/workspace-state.ts";
+    type DeskAction,
+    deskObjectId,
+    deskReducer,
+    type DeskSelection,
+    deskSelectionFor,
+    initialDeskState,
+} from "../features/desk/desk-state.ts";
 import {
-    initialWorkspaceHost,
-    workspaceHostReducer,
-} from "../features/workspace/workspace-host.ts";
+    buildDeskObjects,
+    type DeskObject,
+    type ZoomIntent,
+} from "../features/desk/desk-model.ts";
+import { DeskOverview } from "../features/desk/DeskOverview.tsx";
+import { DeskList } from "../features/desk/DeskObjects.tsx";
+import {
+    DeskAppsDetail,
+    DeskConversationsDetail,
+} from "../features/desk/DeskDetails.tsx";
+import { useDeskSources } from "../features/desk/useDeskSources.ts";
+import { useDeskGestures } from "../features/desk/useDeskGestures.ts";
+import { launcherTiles } from "../components/searcher/launcherTiles.ts";
+import "../features/desk/desk.css";
 import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
 
 import {
@@ -151,14 +170,22 @@ const EMPTY_APPS: ExtendedWebApp[] = [];
 const EMPTY_GROUPS: WebAppGroup[] = [];
 const EMPTY_PAPERS: PaperItem[] = [];
 
-type WorkspaceAction =
-    | DomainWorkspaceAction<DocumentsRoute>
-    | { type: "close" };
-
 type PendingAction =
-    | { kind: "workspace"; action: WorkspaceAction }
+    | { kind: "desk"; action: DeskAction }
     | { kind: "route"; intent: AppSessionRouteIntent }
     | { kind: "appForm" };
+
+/** Desk actions that keep an open editor mounted need no unsaved check. */
+function keepsEditor(action: DeskAction): boolean {
+    return action.type === "enter" ||
+        (action.type === "documents" &&
+            (action.action.type === "query" || action.action.type === "scope"));
+}
+
+function deskTitle(selection: DeskSelection, object: DeskObject | undefined) {
+    if (object) return object.title;
+    return selection.kind === "paper" ? "首页纸张" : "笔记";
+}
 
 export function SearchHome() {
     const { user, appearance, authSession, setAppearance } = useAppState();
@@ -228,15 +255,16 @@ export function SearchHome() {
         dismissLayoutError: appLayout.dismissError,
     });
     const appSession = useRef<AppSessionNavigation | null>(null);
-    const [host, dispatchHost] = useReducer(
-        workspaceHostReducer,
-        initialWorkspaceHost,
-    );
-    // Keep the domain mounted through its exit so a quick reopen resumes it.
-    const closingWorkspace = useRef<WorkspaceKind | null>(null);
+    const [desk, dispatchDesk] = useReducer(deskReducer, initialDeskState);
+    const deskRef = useRef(desk);
+    deskRef.current = desk;
+    const overview = desk.stage === "overview";
+    /** The control focused when 览 opened; focus returns there on leaving. */
+    const deskOpener = useRef<HTMLElement | null>(null);
+    const focusDeskObject = useRef(false);
+    const homeRef = useRef<HTMLElement>(null);
+    const deskScroller = useRef<HTMLElement | null>(null);
     const home = useHomeViewport();
-    // True while the non-expanded desktop panel is open beside the home content.
-    const [workspaceDocked, setWorkspaceDocked] = useState(false);
     const [mobile, setMobile] = useState(() =>
         globalThis.matchMedia("(max-width: 767px)").matches
     );
@@ -281,31 +309,13 @@ export function SearchHome() {
         },
         [updatePendingAction],
     );
-    function finishWorkspaceClose() {
-        const kind = closingWorkspace.current;
-        if (!kind) return;
-        closingWorkspace.current = null;
-        dispatchHost({ type: "close", kind });
-    }
-    function resumeWorkspace() {
-        closingWorkspace.current = null;
-    }
-    function applyWorkspace(action: WorkspaceAction) {
-        if (action.type === "close") {
-            closingWorkspace.current = "documents";
-            dispatchHost({ type: "activate", kind: null });
-            return;
-        }
-        resumeWorkspace();
-        dispatchHost({ type: "domain", kind: "documents", action });
-    }
-    function requestWorkspace(action: WorkspaceAction) {
+    function requestDesk(action: DeskAction) {
         if (pendingActionRef.current) return;
-        if (dirtyForm.current) {
-            updatePendingAction({ kind: "workspace", action });
+        if (dirtyForm.current && !keepsEditor(action)) {
+            updatePendingAction({ kind: "desk", action });
             return;
         }
-        applyWorkspace(action);
+        dispatchDesk(action);
     }
     function confirmPendingAction() {
         const action = pendingActionRef.current;
@@ -320,10 +330,38 @@ export function SearchHome() {
             return;
         }
         dirtyForm.current = false;
-        applyWorkspace(action.action);
+        dispatchDesk(action.action);
     }
-    function navigateWorkspace(route: WorkspaceRoute) {
-        requestWorkspace({ type: "navigate", route });
+    /** Remembers what to refocus when 览 closes; only taken from 静. */
+    function noteDeskOpener() {
+        if (deskRef.current.stage === "overview") return;
+        const active = document.activeElement;
+        deskOpener.current = active instanceof HTMLElement &&
+                active !== document.body
+            ? active
+            : null;
+    }
+    function openDesk() {
+        if (!currentUserIdRef.current) return;
+        noteDeskOpener();
+        setIsManagingApps(false);
+        focusDeskObject.current = true;
+        requestDesk({ type: "enter" });
+    }
+    function selectDesk(selection: DeskSelection, route?: DocumentsRoute) {
+        if (!currentUserIdRef.current) return;
+        noteDeskOpener();
+        setIsManagingApps(false);
+        requestDesk({ type: "select", selection, route });
+    }
+    function leaveDesk() {
+        requestDesk({ type: "leave" });
+    }
+    function zoomDesk(intent: ZoomIntent) {
+        if (intent === "out" && deskRef.current.stage === "calm") openDesk();
+        if (intent === "in" && deskRef.current.stage === "overview") {
+            leaveDesk();
+        }
     }
     function openCreateApp(groupId?: string) {
         setAppForm({ mode: "create", groupId });
@@ -342,8 +380,14 @@ export function SearchHome() {
         }
         setAppForm(null);
     }
+    /** Opens a note from outside the desk: a home paper as itself, any
+     * other note over the notes library. */
     function openDocument(id: string) {
-        navigateWorkspace({ view: "documents/edit", id });
+        if (papersRef.current.some((paper) => paper.id === id)) {
+            selectDesk({ kind: "paper", id });
+        } else {
+            selectDesk({ kind: "notes" }, { view: "documents/edit", id });
+        }
     }
     openDocumentRef.current = openDocument;
     useEffect(() => {
@@ -412,21 +456,18 @@ export function SearchHome() {
         user?.id,
         workspaceResetUserId,
     ]);
-    function backWorkspace() {
-        if (host.activeKind) requestWorkspace({ type: "back" });
+    function backDetail() {
+        if (deskRef.current.documents.stack.length > 0) {
+            requestDesk({ type: "documents", action: { type: "back" } });
+        } else requestDesk({ type: "list" });
     }
-    function closeWorkspace() {
-        if (host.activeKind) requestWorkspace({ type: "close" });
-    }
-    function openWorkspace(kind: WorkspaceKind) {
-        resumeWorkspace();
-        setIsManagingApps(false);
-        dispatchHost({ type: "open", kind });
+    function closeDetail() {
+        requestDesk({ type: "close" });
     }
     useEffect(() => {
         dirtyForm.current = false;
-        closingWorkspace.current = null;
-        dispatchHost({ type: "reset" });
+        deskOpener.current = null;
+        dispatchDesk({ type: "reset" });
         cancelPendingAction();
         setAppForm(null);
         setIsManagingApps(false);
@@ -668,7 +709,7 @@ export function SearchHome() {
         enabled: showContinue,
         events: authSession.documentEvents,
         // Closing the workspace may have changed what to continue.
-        refreshKey: host.activeKind,
+        refreshKey: desk.selection,
     });
 
     async function checkConnections() {
@@ -1134,7 +1175,7 @@ export function SearchHome() {
         if (target.type === "theme") {
             void setAppearance({ theme: target.theme });
         } else if (target.type === "route") navigate(target.to);
-        else if (target.type === "workspace") openWorkspace(target.kind);
+        else if (target.type === "workspace") selectDesk({ kind: "notes" });
     }
     const layoutProps: HomeLayoutProps = {
         user,
@@ -1162,13 +1203,13 @@ export function SearchHome() {
         deletePaper,
         updatePaper,
         updatePaperLayout,
-        openWorkspace,
+        openWorkspace: () => selectDesk({ kind: "notes" }),
         openDocument,
         aiAvailable,
         inlineAnswer,
         onSearchCommand: runSearchCommand,
         onCapture: (text) => captureNote({ title: null, body: text }),
-        workspaceOpen: Boolean(host.activeKind),
+        workspaceOpen: overview,
         showAppLabels: appearance.showAppLabels,
         showHomeApps: appearance.showHomeApps,
         calm: {
@@ -1179,10 +1220,91 @@ export function SearchHome() {
         },
         setError,
     };
-    const currentRoute = host.models.documents.route;
+    const sources = useDeskSources(user?.id ?? null, overview);
+    const objects = useMemo(() =>
+        buildDeskObjects({
+            recentNotes: sources.recentNotes,
+            conversations: aiAvailable || sources.conversations.length > 0
+                ? sources.conversations
+                : null,
+            tiles: launcherTiles(currentApps, currentGroups),
+            papers: sortPapers(currentPapers),
+        }), [sources, aiAvailable, currentApps, currentGroups, currentPapers]);
+    const selectedId = desk.selection ? deskObjectId(desk.selection) : null;
+    const selectedObject = objects.find((object) => object.id === selectedId);
+    const currentRoute = desk.documents.route;
+    const editor = Boolean(
+        desk.selection &&
+            (desk.selection.kind === "notes" ||
+                desk.selection.kind === "paper") &&
+            currentRoute.view !== "documents/root",
+    );
+    function selectObject(id: string) {
+        const selection = deskSelectionFor(id);
+        if (selection) selectDesk(selection);
+    }
+    function firstDeskObject() {
+        return document.querySelector<HTMLElement>(
+            '[data-desk-object][tabindex="0"]',
+        ) ??
+            document.querySelector<HTMLElement>("[data-desk-object]");
+    }
+    function returnDeskFocus() {
+        if (deskRef.current.stage === "overview") return firstDeskObject();
+        return deskOpener.current?.isConnected
+            ? deskOpener.current
+            : document.getElementById("search-query");
+    }
+    useDeskGestures({
+        root: homeRef,
+        scroller: deskScroller,
+        enabled: Boolean(user) && !overlayActive,
+        overview,
+        onZoom: zoomDesk,
+        onToggle: () => overview ? leaveDesk() : openDesk(),
+    });
+    useEscapeLayer(overview && !desk.selection && !mobile, leaveDesk);
+    const wasOverview = useRef(false);
+    useLayoutEffect(() => {
+        if (overview && focusDeskObject.current && !mobile) {
+            firstDeskObject()?.focus();
+            focusDeskObject.current = false;
+        } else if (!overview && wasOverview.current) {
+            returnDeskFocus()?.focus({ preventScroll: true });
+        }
+        wasOverview.current = overview;
+    }, [overview, mobile]);
     function renderWorkspaceContent() {
         if (!user) return null;
-        const model = host.models.documents;
+        if (!desk.selection) {
+            return (
+                <DeskList
+                    objects={objects}
+                    selectedId={null}
+                    onSelect={selectObject}
+                />
+            );
+        }
+        if (
+            desk.selection.kind === "apps" || desk.selection.kind === "folder"
+        ) {
+            return (
+                <DeskAppsDetail
+                    apps={selectedObject?.apps ?? []}
+                    onOpenApp={openApp}
+                />
+            );
+        }
+        if (desk.selection.kind === "conversations") {
+            return (
+                <DeskConversationsDetail
+                    conversations={sources.conversations}
+                    loading={sources.loading}
+                    error={sources.conversationsError}
+                />
+            );
+        }
+        const model = desk.documents;
         return (
             <DocumentsWorkspace
                 key={user.id}
@@ -1192,25 +1314,30 @@ export function SearchHome() {
                 onDirtyChange={(dirty) => {
                     dirtyForm.current = dirty;
                 }}
-                onOpenDocument={openDocument}
+                onOpenDocument={(id) =>
+                    requestDesk({
+                        type: "documents",
+                        action: {
+                            type: "navigate",
+                            route: { view: "documents/edit", id },
+                        },
+                    })}
                 scope={model.scope}
                 onScopeChange={(scope) =>
-                    dispatchHost({
-                        type: "domain",
-                        kind: "documents",
+                    dispatchDesk({
+                        type: "documents",
                         action: { type: "scope", scope },
                     })}
                 query={model.query}
                 onQueryChange={(value) =>
-                    dispatchHost({
-                        type: "domain",
-                        kind: "documents",
+                    dispatchDesk({
+                        type: "documents",
                         action: { type: "query", value },
                     })}
             />
         );
     }
-    const mobileFeedback = Boolean(user && mobile && host.activeKind);
+    const mobileFeedback = Boolean(user && mobile && overview);
     const currentUndoQueue = undoQueue.filter((record) =>
         record.userId === user?.id
     );
@@ -1303,7 +1430,7 @@ export function SearchHome() {
             <PageShell
                 archetype="search"
                 className="home"
-                data-workspace-panel={workspaceDocked ? "open" : undefined}
+                ref={homeRef}
             >
                 <StatusBanner
                     tone="error"
@@ -1320,23 +1447,69 @@ export function SearchHome() {
                         <X size="1em" className="icon-md" />
                     </Button>
                 </StatusBanner>
-                <ZenLayout
-                    {...layoutProps}
-                    availableRect={home.availableRect}
-                    viewportWidth={home.viewportWidth}
-                    panelDocked={workspaceDocked}
-                />
+                <div
+                    className="desk-home"
+                    data-desk-stage={overview ? "overview" : "calm"}
+                    inert={overview || undefined}
+                >
+                    <ZenLayout
+                        {...layoutProps}
+                        availableRect={home.availableRect}
+                        viewportWidth={home.viewportWidth}
+                    />
+                </div>
+                {user && !mobile && (
+                    <DeskOverview
+                        open={overview}
+                        objects={objects}
+                        selectedId={selectedId}
+                        detail={desk.selection
+                            ? (editor ? "expanded" : "panel")
+                            : null}
+                        chromeBottom={home.chromeBottom}
+                        scroller={deskScroller}
+                        onSelect={selectObject}
+                        onReturn={leaveDesk}
+                    />
+                )}
                 {user && (
                     <WorkspaceShell
-                        open={Boolean(host.activeKind)}
+                        open={overview && (mobile || Boolean(desk.selection))}
                         chromeBottom={home.chromeBottom}
-                        onDockedChange={setWorkspaceDocked}
-                        state={currentRoute}
-                        title="笔记"
-                        onBack={backWorkspace}
-                        onClose={closeWorkspace}
-                        onEscape={closeWorkspace}
-                        onExited={finishWorkspaceClose}
+                        routeKey={`${selectedId ?? "desk"}:${
+                            JSON.stringify(currentRoute)
+                        }`}
+                        title={desk.selection
+                            ? deskTitle(desk.selection, selectedObject)
+                            : "桌面"}
+                        nested={Boolean(desk.selection) &&
+                            (mobile || desk.documents.stack.length > 0)}
+                        expanded={editor}
+                        editor={editor}
+                        backLabel={desk.documents.stack.length
+                            ? "返回上一级"
+                            : "返回桌面"}
+                        headerActions={desk.selection?.kind ===
+                                    "conversations" && aiAvailable
+                            ? (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    render={
+                                        <Link to={routes.ask} viewTransition />
+                                    }
+                                >
+                                    新对话
+                                </Button>
+                            )
+                            : undefined}
+                        rootFocus={!desk.selection
+                            ? firstDeskObject
+                            : undefined}
+                        returnFocus={returnDeskFocus}
+                        onBack={backDetail}
+                        onClose={mobile ? leaveDesk : closeDetail}
+                        onEscape={desk.selection ? closeDetail : leaveDesk}
                         feedback={
                             <>
                                 {error && (
@@ -1351,7 +1524,7 @@ export function SearchHome() {
                         }
                         onFeedbackHost={setFeedbackHost}
                     >
-                        {host.activeKind && renderWorkspaceContent()}
+                        {overview && renderWorkspaceContent()}
                     </WorkspaceShell>
                 )}
                 <AppFormDialog

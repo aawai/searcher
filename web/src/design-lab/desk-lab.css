@@ -1,7 +1,7 @@
 /* Prototype of the zoomable desk (#240 P). Not a contract: see docs/workspace.md. */
-.desk-lab {
-    --desk-lab-cell: 136px;
-    --desk-lab-detail-width: var(--workspace-width);
+.lab-desk {
+    --lab-desk-cell: 136px;
+    --lab-desk-detail-width: var(--workspace-width);
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
@@ -9,7 +9,7 @@
     padding: var(--space-3) var(--space-4);
 }
 
-.desk-lab-controls {
+.lab-desk-controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -17,17 +17,17 @@
     color: var(--muted);
     font-size: var(--font-metadata-size);
 }
-.desk-lab-control {
+.lab-desk-control {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
 }
-.desk-lab-status {
+.lab-desk-status {
     margin: 0;
     font-variant-numeric: tabular-nums;
 }
 
-.desk-lab-desk {
+.lab-desk-desk {
     position: relative;
     flex: 1;
     min-height: 70dvh;
@@ -37,7 +37,7 @@
 }
 
 /* 静 / 用: the home at its usual distance. */
-.desk-lab-home {
+.lab-desk-home {
     position: absolute;
     inset: 0;
     display: flex;
@@ -50,18 +50,18 @@
         transform var(--motion-panel) var(--ease-out-expo);
 }
 @media (min-width: 768px) {
-    .desk-lab[data-desk-state="overview"] .desk-lab-home {
+    .lab-desk[data-desk-state="overview"] .lab-desk-home {
         opacity: 0;
         transform: scale(0.92);
     }
 }
-.desk-lab-calm {
+.lab-desk-calm {
     margin: 0;
     font-size: var(--font-brand-size);
     font-weight: 600;
     text-shadow: var(--wallpaper-text-halo);
 }
-.desk-lab-search {
+.lab-desk-search {
     position: relative;
     display: flex;
     align-items: center;
@@ -76,7 +76,7 @@
     backdrop-filter: var(--material-filter);
     box-shadow: var(--shadow-material-edge), var(--shadow-l2);
 }
-.desk-lab-search-input {
+.lab-desk-search-input {
     flex: 1;
     min-width: 0;
     border: 0;
@@ -85,7 +85,7 @@
     color: var(--foreground);
     font-size: var(--font-search-input-size);
 }
-.desk-lab-suggestions {
+.lab-desk-suggestions {
     position: absolute;
     top: calc(100% + var(--space-2));
     inset-inline: 0;
@@ -98,7 +98,7 @@
     box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     z-index: var(--elevation-local-2);
 }
-.desk-lab-suggestion {
+.lab-desk-suggestion {
     display: flex;
     align-items: center;
     gap: var(--space-3);
@@ -108,15 +108,15 @@
     color: var(--foreground);
     cursor: pointer;
 }
-.desk-lab-suggestion:hover {
+.lab-desk-suggestion:hover {
     background: var(--surface-soft);
 }
-.desk-lab-suggestion kbd {
+.lab-desk-suggestion kbd {
     margin-inline-start: auto;
     color: var(--muted);
     font-size: var(--font-metadata-size);
 }
-.desk-lab-apps {
+.lab-desk-apps {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -127,14 +127,14 @@
     font-size: var(--font-metadata-size);
     text-shadow: var(--wallpaper-text-halo);
 }
-.desk-lab-app {
+.lab-desk-app {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--space-1);
     width: var(--control-touch-target);
 }
-.desk-lab-app > span {
+.lab-desk-app > span {
     display: grid;
     place-items: center;
     width: var(--control-touch-target);
@@ -142,16 +142,16 @@
     border-radius: var(--radius);
     background: var(--surface);
 }
-.desk-lab-papers {
+.lab-desk-papers {
     display: flex;
     gap: var(--space-4);
 }
-.desk-lab-paper {
+.lab-desk-paper {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    width: var(--desk-lab-cell);
-    height: var(--desk-lab-cell);
+    width: var(--lab-desk-cell);
+    height: var(--lab-desk-cell);
     padding: var(--space-3);
     border-radius: var(--radius-note-card);
     background: var(--paper-shade), var(--paper-white);
@@ -159,7 +159,7 @@
     text-align: start;
 }
 /* 览: the same desk from further away; replaces the home layer. */
-.desk-lab-overview-layer {
+.lab-desk-overview-layer {
     position: absolute;
     inset: 0;
     display: flex;
@@ -167,37 +167,37 @@
         transform var(--motion-panel) var(--ease-out-expo);
 }
 @starting-style {
-    .desk-lab-overview-layer {
+    .lab-desk-overview-layer {
         opacity: 0;
         transform: scale(1.04);
     }
 }
-.desk-lab-overview-layer[data-ending-style] {
+.lab-desk-overview-layer[data-ending-style] {
     opacity: 0;
     transform: scale(1.04);
 }
-.desk-lab-overview {
+.lab-desk-overview {
     flex: 1;
     min-width: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: var(--space-3) var(--space-6) var(--space-6);
 }
-.desk-lab-overview-header {
+.lab-desk-overview-header {
     display: flex;
     justify-content: flex-end;
 }
-.desk-lab-grid {
+.lab-desk-grid {
     display: grid;
-    grid-auto-columns: var(--desk-lab-cell);
-    grid-auto-rows: var(--desk-lab-cell);
+    grid-auto-columns: var(--lab-desk-cell);
+    grid-auto-rows: var(--lab-desk-cell);
     justify-content: center;
     gap: var(--space-4);
 }
-.desk-lab-cell {
+.lab-desk-cell {
     display: flex;
 }
-.desk-lab-object {
+.lab-desk-object {
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -213,17 +213,17 @@
     box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     text-align: start;
 }
-.desk-lab-object[data-kind="paper"] {
+.lab-desk-object[data-kind="paper"] {
     border-radius: var(--radius-note-card);
     background: var(--paper-shade), var(--paper-white);
     backdrop-filter: none;
     box-shadow: var(--shadow-note-card);
 }
-.desk-lab-object[aria-pressed="true"] {
+.lab-desk-object[aria-pressed="true"] {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
-.desk-lab-object-preview {
+.lab-desk-object-preview {
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -234,13 +234,13 @@
     color: var(--muted);
     font-size: var(--font-metadata-size);
 }
-.desk-lab-object[data-kind="apps"] .desk-lab-object-preview,
-.desk-lab-object[data-kind="folder"] .desk-lab-object-preview {
+.lab-desk-object[data-kind="apps"] .lab-desk-object-preview,
+.lab-desk-object[data-kind="folder"] .lab-desk-object-preview {
     flex-direction: row;
     flex-wrap: wrap;
     align-content: flex-start;
 }
-.desk-lab-glyph {
+.lab-desk-glyph {
     display: grid;
     place-items: center;
     width: var(--control-compact-height);
@@ -249,38 +249,38 @@
     color: var(--foreground);
     background: var(--surface-soft);
 }
-.desk-lab-object-title {
+.lab-desk-object-title {
     max-width: 100%;
     overflow: hidden;
     font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.desk-lab-object-detail {
+.lab-desk-object-detail {
     color: var(--muted);
     font-size: var(--font-metadata-size);
 }
 
-.desk-lab-list {
+.lab-desk-list {
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
     max-width: var(--layout-search-max);
     margin: 0 auto;
 }
-.desk-lab-list h3 {
+.lab-desk-list h3 {
     margin: 0 0 var(--space-2);
     font-size: var(--font-body-size);
     font-weight: 600;
 }
-.desk-lab-list ul {
+.lab-desk-list ul {
     margin: 0;
     padding: 0;
     list-style: none;
     border-radius: var(--radius);
     background: var(--surface);
 }
-.desk-lab-row {
+.lab-desk-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -290,86 +290,86 @@
     padding: 0 var(--space-4);
     text-align: start;
 }
-.desk-lab-row[aria-pressed="true"] {
+.lab-desk-row[aria-pressed="true"] {
     background: var(--surface-soft);
 }
 
-.desk-lab-detail {
+.lab-desk-detail {
     display: flex;
     flex-direction: column;
-    width: var(--desk-lab-detail-width);
+    width: var(--lab-desk-detail-width);
     border-inline-start: 1px solid var(--border);
     background: var(--surface-l3);
     box-shadow: var(--shadow-l3);
 }
-.desk-lab-detail-body {
+.lab-desk-detail-body {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
 }
-.desk-lab-detail-header {
+.lab-desk-detail-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
-.desk-lab-detail-header h2 {
+.lab-desk-detail-header h2 {
     margin: 0;
     font-size: var(--font-title-size);
     font-weight: 600;
 }
-.desk-lab-detail-list {
+.lab-desk-detail-list {
     margin: 0;
     padding: 0;
     list-style: none;
 }
-.desk-lab-detail-list li {
+.lab-desk-detail-list li {
     display: flex;
     align-items: center;
     min-height: var(--row-min-height);
     border-bottom: 1px solid var(--border);
 }
 
-.desk-lab-sheet {
+.lab-desk-sheet {
     display: flex;
     flex-direction: column;
     max-height: 90dvh;
 }
-.desk-lab-sheet-header {
+.lab-desk-sheet-header {
     display: flex;
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
 }
-.desk-lab-sheet-title {
+.lab-desk-sheet-title {
     flex: 1;
     margin: 0;
     font-size: var(--font-title-size);
     font-weight: 600;
 }
-.desk-lab-sheet-body {
+.lab-desk-sheet-body {
     overflow-y: auto;
     padding: 0 var(--space-4) var(--space-4);
 }
 
 @media (any-pointer: coarse) {
-    .desk-lab-row,
-    .desk-lab-suggestion {
+    .lab-desk-row,
+    .lab-desk-suggestion {
         min-height: var(--control-touch-target);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .desk-lab-home,
-    .desk-lab-overview-layer {
+    .lab-desk-home,
+    .lab-desk-overview-layer {
         transition: opacity var(--motion-panel) linear;
     }
-    .desk-lab[data-desk-state="overview"] .desk-lab-home,
-    .desk-lab-overview-layer[data-ending-style] {
+    .lab-desk[data-desk-state="overview"] .lab-desk-home,
+    .lab-desk-overview-layer[data-ending-style] {
         transform: none;
     }
     @starting-style {
-        .desk-lab-overview-layer {
+        .lab-desk-overview-layer {
             transform: none;
         }
     }

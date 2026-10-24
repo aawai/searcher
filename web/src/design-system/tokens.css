@@ -256,6 +256,12 @@
     --workspace-top-inset: calc(var(--control-height) + var(--space-6));
     --workspace-mobile-height: 820px;
     --workspace-library-navigation-width: 200px;
+    /* 览 grid; DeskObjects.tsx mirrors cell and gap for its column count. */
+    --desk-cell: 136px;
+    --space-desk-gap: var(--space-4);
+    --space-desk-padding-inline: var(--space-6);
+    /* Two columns of 览 stay beside the detail bar, however wide it grows. */
+    --desk-reserve: calc(2 * var(--desk-cell) + var(--space-desk-gap) + 2 * var(--space-desk-padding-inline));
 }
 
 [data-theme="dark"] {

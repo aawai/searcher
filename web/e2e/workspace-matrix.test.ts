@@ -1,4 +1,5 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
+import { deskDetail, deskOverview, openNotes } from "./helpers/desk.ts";
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
 import { chromium, type Page } from "playwright";
 import { createApp } from "../../src/app.ts";
@@ -118,30 +119,19 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     });
 
     async function openWorkspace(target: Page = page) {
-        const trigger = target.locator(
-            '.zen-edge-btn[data-workspace="documents"]',
-        ).first();
-        await trigger.waitFor({ state: "visible" });
-        await trigger.click();
-        const win = target.locator(
-            ".workspace-panel--mobile:not([data-ending-style]), aside.workspace-panel:not([data-ending-style])",
-        ).first();
-        await win.waitFor({ state: "visible" });
+        await openNotes(target);
     }
 
     async function closeWorkspace(target: Page = page) {
-        const win = target.locator(
-            ".workspace-panel--mobile:not([data-ending-style]), aside.workspace-panel:not([data-ending-style])",
-        ).first();
-        if (await win.isVisible()) {
-            const closeBtn = win.locator(
-                'button[aria-label="收起工作区"]',
-            ).first();
-            await closeBtn.waitFor({ state: "visible" });
-            await closeBtn.click();
-            await target.locator(
-                ".workspace-panel--mobile, aside.workspace-panel",
-            ).waitFor({ state: "detached" });
+        const detail = deskDetail(target);
+        if (await detail.isVisible()) {
+            await detail.getByRole("button", {
+                name: target.viewportSize()!.width < 768
+                    ? "返回首页"
+                    : "关闭详情",
+                exact: true,
+            }).click();
+            await detail.waitFor({ state: "detached" });
         }
     }
 
@@ -273,22 +263,38 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
 
                     // 4. Presenter check: open and verify presenter type
                     await openWorkspace();
-                    if (vp.width === 390) {
-                        const isMobileSheet = await page.locator(
-                            '.workspace-panel--mobile[data-slot="sheet-content"]',
-                        ).first().isVisible();
-                        assert(
-                            isMobileSheet,
-                            "Mobile viewport must render Sheet presenter",
-                        );
+                    if (vp.width < 768) {
+                        await deskDetail(page).and(
+                            page.getByRole("dialog"),
+                        ).waitFor({ state: "visible" });
+                        await deskDetail(page).getByRole("button", {
+                            name: "返回桌面",
+                            exact: true,
+                        }).waitFor({ state: "visible" });
                     } else {
-                        const isZenPanel = await page.locator(
-                            'aside.workspace-panel[data-presentation="panel"]',
-                        ).first().isVisible();
-                        assert(
-                            isZenPanel,
-                            "Tablet and desktop viewports must render Panel presenter",
+                        await deskOverview(page).waitFor({ state: "visible" });
+                        assertEquals(
+                            await deskDetail(page).getAttribute("aria-label"),
+                            "笔记详情",
                         );
+                        assertEquals(
+                            await page.locator(".desk-home").getAttribute(
+                                "inert",
+                            ),
+                            "",
+                        );
+                        const panelBox = await measure(deskDetail(page));
+                        for (
+                            const object of await page.locator(
+                                "[data-desk-object]",
+                            ).all()
+                        ) {
+                            const box = await measure(object);
+                            assert(
+                                box.x + box.width <= panelBox.x + 1,
+                                "Desk objects must reflow left of the detail bar",
+                            );
+                        }
                     }
                     await closeWorkspace();
                 }
@@ -312,9 +318,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             await page.emulateMedia({ colorScheme: "light" });
 
             await openWorkspace();
-            const sheet = page.locator(
-                '.workspace-panel--mobile, [data-slot="sheet-content"], .workspace-panel',
-            ).first();
+            const sheet = deskDetail(page);
             await sheet.waitFor({ state: "visible" });
 
             // Verify surface boundary without wallpaper
@@ -368,12 +372,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
 
             // 1e. Documents root state
             await openWorkspace();
-            await page.getByRole("dialog", { name: "笔记", exact: true })
+            const documentsPanel = deskDetail(page);
+            await documentsPanel.and(page.getByRole("dialog"))
                 .waitFor({ state: "visible" });
-            const documentsPanel = page.getByRole("dialog", {
-                name: "笔记",
-                exact: true,
-            });
             await documentsPanel.locator("[data-document-id]").first()
                 .waitFor({ state: "visible" });
 
@@ -430,12 +431,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 await page.setViewportSize(viewport);
                 const targetPath = "/api/documents";
                 const isTarget = (url: URL) => url.pathname === targetPath;
-                const getSurface = () =>
-                    page.locator(
-                        viewport.width === 390
-                            ? ".workspace-panel--mobile"
-                            : "aside.workspace-panel",
-                    );
+                const getSurface = () => deskDetail(page);
                 const rows = "[data-document-id]";
                 const gate = Promise.withResolvers<void>();
                 await page.route(isTarget, async (route) => {

@@ -1,10 +1,10 @@
 import { assert, assertEquals } from "@std/assert";
 import { type BrowserContext, chromium, type Page } from "playwright";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { deskDetail, deskOverview, deskStage } from "./helpers/desk.ts";
 
 const SUGGESTIONS = /\/api\/search\/suggestions\?/;
 const PERSONAL = /\/api\/search\/personal\?/;
-const PANEL = "aside.workspace-panel:not([data-ending-style])";
 
 async function mockWeb(context: BrowserContext, requests: string[] = []) {
     await context.route(SUGGESTIONS, (route) => {
@@ -257,7 +257,7 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
                 "灵感来源笔记",
             );
             await search.press("Enter");
-            await page.locator(PANEL).waitFor();
+            await deskDetail(page).waitFor();
             assertEquals(new URL(page.url()).pathname, "/");
         });
 
@@ -412,7 +412,7 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
             await page.getByRole("option", { name: /\/notes/ }).waitFor();
             await search.press("ArrowDown");
             await search.press("Enter");
-            await page.locator(PANEL).waitFor();
+            await deskDetail(page).waitFor();
 
             await openHome(page, app.origin);
             await search.fill("/wallpaper");
@@ -539,14 +539,9 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
         });
 
         await t.step(
-            "Escape closes the suggestions before the open workspace",
+            "Escape dismisses suggestions; notes detail hides home and closes back to search",
             async () => {
                 await openHome(page, app.origin);
-                await search.fill("/notes");
-                await page.getByRole("option", { name: /\/notes/ }).waitFor();
-                await search.press("ArrowDown");
-                await search.press("Enter");
-                await page.locator(PANEL).waitFor();
                 await search.fill("灵感");
                 await page.getByRole("option", { name: /灵感网页/ }).waitFor();
                 await search.press("Escape");
@@ -559,7 +554,34 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
                         document.activeElement === el
                     ),
                 );
-                assertEquals(await page.locator(PANEL).count(), 1);
+                assertEquals(await deskStage(page), "calm");
+                await search.fill("/notes");
+                await page.getByRole("option", { name: /\/notes/ }).waitFor();
+                await search.press("ArrowDown");
+                await search.press("Enter");
+                await deskDetail(page).getByRole("heading", {
+                    name: "笔记",
+                    exact: true,
+                }).waitFor();
+                await deskOverview(page).waitFor();
+                assertEquals(await deskStage(page), "overview");
+                assertEquals(
+                    await page.locator(".desk-home").evaluate((el) =>
+                        el.hasAttribute("inert")
+                    ),
+                    true,
+                );
+                assertEquals(
+                    await search.getAttribute("aria-expanded"),
+                    "false",
+                );
+                await page.keyboard.press("Escape");
+                await deskDetail(page).waitFor({ state: "detached" });
+                await deskOverview(page).waitFor({ state: "detached" });
+                assertEquals(await deskStage(page), "calm");
+                await page.waitForFunction(() =>
+                    document.activeElement?.id === "search-query"
+                );
             },
         );
 

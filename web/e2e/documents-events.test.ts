@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { chromium } from "playwright";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { openNotes } from "./helpers/desk.ts";
 
 declare global {
     var __documentStreams: EventSource[];
@@ -58,7 +59,7 @@ Deno.test("document editor opens share events and preserve conflict drafts", asy
         return created;
     });
     await page.reload();
-    await page.locator('button[data-workspace="documents"]').click();
+    await openNotes(page);
     for (const [index, item] of seeded.entries()) {
         if (index > 0) {
             await page.getByRole("button", { name: "返回上一级", exact: true })

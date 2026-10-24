@@ -1,4 +1,5 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
+import { deskDetail, openNotes } from "./helpers/desk.ts";
 import { chromium, type Page } from "playwright";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
@@ -72,22 +73,14 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
     await visit("/");
 
     function getWorkspace() {
-        return page.locator(
-            'aside.workspace-panel[aria-label="笔记工作区"]',
-        );
+        return deskDetail(page);
     }
 
     async function openWorkspace() {
-        const target = getWorkspace();
-        const openTarget = page.locator(
-            'aside.workspace-panel:not([data-ending-style])[aria-label="笔记工作区"]',
-        );
-        if ((await openTarget.count()) === 0) {
-            await page.locator(
-                '.zen-edge-trigger button[data-workspace="documents"]',
-            ).click();
+        if (!(await getWorkspace().isVisible())) {
+            await openNotes(page);
         }
-        await target.waitFor({ state: "visible" });
+        await getWorkspace().waitFor({ state: "visible" });
     }
 
     // 1. Heading hierarchy contract: h2 panel -> h3 subsection with accessible regions

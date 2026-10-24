@@ -134,6 +134,7 @@ Deno.test("production settings shortcuts contracts", async (t) => {
             assert(macKbd.some((text) => text.includes("⌘ ⇧ X")));
             assert(macKbd.some((text) => text.includes("⌘ Enter")));
             assert(macKbd.some((text) => text.includes("/g")));
+            assert(macKbd.includes("⌘ ."));
 
             // Screen reader accessible text on Mac
             const macSr = await macPage.locator(".settings-shortcuts .sr-only")
@@ -141,6 +142,7 @@ Deno.test("production settings shortcuts contracts", async (t) => {
             assert(macSr.some((text) => text.includes("Command K")));
             assert(macSr.some((text) => text.includes("Command Shift X")));
             assert(macSr.some((text) => text.includes("快捷命令：/g")));
+            assert(macSr.includes("快捷键：Command ."));
             await macContext.close();
 
             // Real platform detection on Linux/Windows context
@@ -159,6 +161,7 @@ Deno.test("production settings shortcuts contracts", async (t) => {
             assert(otherKbd.some((text) => text.includes("Ctrl + K")));
             assert(otherKbd.some((text) => text.includes("Ctrl + Shift + X")));
             assert(otherKbd.some((text) => text.includes("Ctrl + Enter")));
+            assert(otherKbd.includes("Ctrl + ."));
 
             // Screen reader accessible text on other
             const otherSr = await linuxPage.locator(
@@ -166,10 +169,14 @@ Deno.test("production settings shortcuts contracts", async (t) => {
             ).allTextContents();
             assert(otherSr.some((text) => text.includes("Ctrl + K")));
             assert(otherSr.some((text) => text.includes("Ctrl + Shift + X")));
+            assert(otherSr.includes("快捷键：Ctrl + ."));
 
             // Verify Cmd/Ctrl+K context separation in DOM
             const globalSection = linuxPage.locator(".settings-group").filter({
-                hasText: "全局",
+                has: linuxPage.getByRole("heading", {
+                    name: "全局",
+                    exact: true,
+                }),
             });
             assertStringIncludes(
                 await globalSection.innerText(),
@@ -179,9 +186,22 @@ Deno.test("production settings shortcuts contracts", async (t) => {
                 await globalSection.innerText(),
                 "笔记正文中由插入链接优先处理",
             );
+            await globalSection.getByText("进入或退出桌面“览”", { exact: true })
+                .waitFor();
+            assertStringIncludes(
+                await globalSection.innerText(),
+                "首页（含主搜索框），需要登录",
+            );
+            assertStringIncludes(
+                await globalSection.innerText(),
+                "笔记编辑器与其他输入控件内不响应。",
+            );
 
             const notesSection = linuxPage.locator(".settings-group").filter({
-                hasText: "笔记编辑",
+                has: linuxPage.getByRole("heading", {
+                    name: "笔记编辑",
+                    exact: true,
+                }),
             });
             assertStringIncludes(
                 await notesSection.innerText(),
@@ -218,7 +238,13 @@ Deno.test("production settings shortcuts contracts", async (t) => {
                         }
                     }, theme);
 
-                    await page.waitForTimeout(50);
+                    await page.evaluate(() => {
+                        const { promise, resolve } = Promise.withResolvers<
+                            void
+                        >();
+                        requestAnimationFrame(() => resolve());
+                        return promise;
+                    });
 
                     const hasOverflow = await page.evaluate(() => {
                         return document.documentElement.scrollWidth >
