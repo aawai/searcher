@@ -463,6 +463,24 @@
     border-radius: 50%;
     background: var(--wallpaper-overlay-contrast);
 }
+/* Home search + plate footprint at 1440x900: 34% top, 88% bottom, 640px content column. */
+.wallpaper-cover-band {
+    position: absolute;
+    inset-block-start: 34%;
+    inset-block-end: 12%;
+    inset-inline: 28%;
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--surface-scrim) 40%, transparent);
+    box-shadow: var(--shadow-material-edge);
+    pointer-events: none;
+    z-index: var(--elevation-local-1);
+}
+.wallpaper-composition-hint {
+    margin: 0 0 var(--space-3);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
 
 /* AI providers and models */
 .settings-add-row {
