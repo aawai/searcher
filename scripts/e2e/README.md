@@ -33,6 +33,7 @@ DENO_JOBS=2 deno task test:workspace:parallel
 deno task test:workspace:serial
 deno task test:e2e:full
 DENO_JOBS=2 deno task test:e2e:full --parallel
+DENO_JOBS=2 deno task test:e2e:full --parallel --no-fail-fast --timeout 5000
 ```
 
 调度完全委托给 Deno `--parallel` / `DENO_JOBS`，不拆分单文件内有状态的测试或
@@ -41,11 +42,17 @@ DENO_JOBS=2 deno task test:e2e:full --parallel
 `--parallel`（而不是只把并发数设为 1）作为回退。full 与其他集合保持串行默认，显式 `--parallel` 可用于并发诊断；并发独有失败须单独隔离，不把单文件复查通过写成完整并发门禁通过。
 单独设置 `DENO_JOBS` 不会启用并行；以报告中的 `parallel` 与 `jobs` 为准。禁止用全局 retry 隐藏失败。
 
-full 启用 Deno `--fail-fast`：首次失败后停止调度后续文件，不自动重跑；已启动的 worker 按 Deno 行为收尾。失败轮只代表已执行范围，未运行的文件不计为通过；修复后仍需完整绿色门禁。`timings.json` 记录 `failFast`、并发模式与计划文件清单，实际执行范围以 JUnit 为准。
+full 默认启用 Deno `--fail-fast`：首次失败后停止调度后续文件，不自动重跑；已启动的 worker 按 Deno 行为收尾。显式 `--no-fail-fast` 可一次收集所有文件的失败，与 `--parallel` 独立组合；`--serial` / `--parallel` 与 `--fail-fast` / `--no-fail-fast` 各自互斥。未知、重复或冲突参数会在 build 前拒绝。失败轮只代表已执行范围，未运行的文件不计为通过；实际执行范围以 JUnit 为准。
+
+### 本地快速超时
+
+`--timeout <ms>`（也支持 `--timeout=<ms>`）或 `E2E_TIMEOUT_MS` 设置 Playwright 的默认 action / wait 超时；CLI 优先。只能是正整数毫秒。不设置则保持原生 30s；显式传入 `timeout` 的调用、测试自己设置的超时和固定观测窗口都不变。可在 suite 后使用一个 `--` 分隔符。CI 不使用快速超时，快速模式输出明确的诊断警告，不代替正常超时的验收。
+
+E2E 的 `chromium` 统一从 `web/e2e/helpers/browser.ts` 获取；普通、独立 page、popup 与 persistent context 都继承默认超时。`check:e2e` 拒绝直接从 Playwright 导入 Chromium。helper 不改变测试的 Browser / Context / session 隔离。
 
 默认报告位于唯一的 `artifacts/e2e/<suite>-<timestamp>-<uuid>/`，包含原生
 `junit.xml` 与外层独立计量的 `timings.json`（build/test/wall
-秒数与退出码、文件清单、并发模式）。控制台保留 pretty 输出和错误堆栈；JUnit
+秒数与退出码、文件清单、并发模式、`failFast`、`timeoutMs`；未覆盖超时时为 null）。控制台保留 pretty 输出和错误堆栈；JUnit
 用例耗时不等于整体 wall-clock，不能简单求和替代计时。可用 `E2E_REPORT_DIR`
 指定目录；同一目录不可供同时执行的进程共享，运行前移除旧 JUnit
 防止陈旧报告假通过。build/test 失败保留非零退出码，成功但 JUnit 缺失同样失败。

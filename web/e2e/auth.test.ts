@@ -3,7 +3,8 @@ import {
     assertNotEquals,
     assertStringIncludes,
 } from "@std/assert";
-import { type Browser, chromium, type Page } from "playwright";
+import { type Browser, type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import {
     AUTH_CREDENTIAL_RULES,
     AUTH_USERNAME_PATTERN,

@@ -1,5 +1,6 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
-import { chromium, type Page } from "playwright";
+import type { Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 const status = (page: Page) =>

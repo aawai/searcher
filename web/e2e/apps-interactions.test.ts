@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import { Buffer } from "node:buffer";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
 /** The dialog footer stays inside the dialog and the viewport at every size. */

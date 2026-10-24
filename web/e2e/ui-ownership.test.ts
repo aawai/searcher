@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import { eq } from "drizzle-orm";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";

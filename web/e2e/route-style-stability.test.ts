@@ -1,6 +1,7 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
-import { chromium, type Page } from "playwright";
+import { type Page } from "playwright";
+import { chromium } from "./helpers/browser.ts";
 import {
     loginAndVisit,
     openSeededAskConversation,
