@@ -11,7 +11,7 @@
 | `test:workspace:parallel` | 相同完整集合，原生文件级 `--parallel`；用 `DENO_JOBS` 控制并发                                      |
 | `test:workspace:apps`     | Workspace 中 `apps-*`、`launcher`、`home-launcher-*`                                                |
 | `test:workspace:layout`   | Workspace 中 `workspace*`、`home-launcher-*`                                                        |
-| `test:routing`            | `navigation`、`auth`、`guest-ai-auth`：导航、认证规则/注册可用性、游客 AI 登录回跳                  |
+| `test:routing`            | `navigation`、`auth`、`guest-ai-auth`、`share`：导航、认证规则/注册可用性、游客 AI 与分享的登录回跳 |
 | `test:documents`          | 统一笔记入口：`documents-*` 与 `document-*` 文件；完整列表见清单                                    |
 | `test:wallpaper`          | `wallpaper`                                                                                         |
 | `test:bundle`             | `bundle-loading`、`route-style-stability`、`omnibox-lab`、`pwa`（安装、离线外壳、版本更新）         |

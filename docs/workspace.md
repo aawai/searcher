@@ -81,6 +81,17 @@ Workspace Host 中管理。本文记录首页布局、Host
 - 粗指针（触屏）下搜索按钮与建议选项使用 44px 点击目标。
 - 未选中建议时，`aria-activedescendant` 为空；选中项随结果刷新保持，所选项消失时回到未选中。
 
+## 捕获入口
+
+快速记录有两个入口，共用同一流程（创建未归档、未固定到首页、非收藏的笔记，提示提供“撤销”与“固定到首页”，见[键盘](#键盘)中的 `Shift+Enter`）：
+
+- 首页搜索框 `Shift+Enter`：正文为输入内容，无标题。
+- 系统分享：安装 Searcher（[部署 · Service worker](deployment.md#service-worker-与离线外壳)）后，它出现在系统分享面板中。manifest 的 `share_target` 以 GET 打开 `/share?title&text&url`，不使用 POST，因此不绕过 API 的 Origin 检查。
+  - 标题为分享的页面标题（超过 200 字符截断）；正文为 URL，空一行后接附带文本。只有 `text` 且它本身是网址时作为 URL；文本中重复的 URL 去除。三项全空时不记录，直接回首页。
+  - `/share` 立即以 replace 离开，参数不留在地址栏与历史中；页面 `referrer` 策略为 `strict-origin`，任何请求的 Referer 都不携带路径与参数。
+  - 已登录：回到首页并记录，提示与 `Shift+Enter` 相同。
+  - 未登录：分享内容只暂存在当前标签页的 `sessionStorage`，不发往服务器；跳转登录（`next=/share`），登录后回到 `/share` 取出暂存并记录。放弃登录时不产生任何服务端数据，暂存在下次 `/share` 时覆盖，关闭标签页即清除。
+
 ## 工作区呈现
 
 Workspace Host 承载笔记工作区（应用不在工作区中，见 [应用](apps.md)），按视口宽度呈现：

@@ -92,6 +92,10 @@ import {
     type AppFormTarget,
 } from "../features/app-library/AppFormDialog.tsx";
 import { useAppLibraryActions } from "../features/app-library/useAppLibraryActions.ts";
+import {
+    isSharedNote,
+    type SharedNote,
+} from "../features/share/share-capture.ts";
 type UndoRecordBase = {
     id: string;
     userId: string;
@@ -173,6 +177,10 @@ export function SearchHome() {
     const navigate = useNavigate();
     const location = useLocation();
     const consumedDocumentNavigationRef = useRef<string | null>(null);
+    const consumedShareNavigationRef = useRef<string | null>(null);
+    const captureNoteRef = useRef<(note: SharedNote) => Promise<boolean>>(
+        () => Promise.resolve(false),
+    );
     const [workspaceResetUserId, setWorkspaceResetUserId] = useState<
         string | null
     >(null);
@@ -361,6 +369,37 @@ export function SearchHome() {
             { replace: true, state: null },
         );
         openDocumentRef.current(documentId);
+    }, [
+        location.hash,
+        location.key,
+        location.pathname,
+        location.search,
+        location.state,
+        navigate,
+        ownsCurrentUserData,
+        user?.id,
+        workspaceResetUserId,
+    ]);
+    // A system share (`/share`) hands its note over in the route state.
+    useEffect(() => {
+        const routeState: unknown = location.state;
+        if (
+            !routeState || typeof routeState !== "object" ||
+            !("sharedNote" in routeState) ||
+            !isSharedNote(routeState.sharedNote) ||
+            consumedShareNavigationRef.current === location.key
+        ) return;
+        if (
+            !user || workspaceResetUserId !== user.id ||
+            !ownsCurrentUserData
+        ) return;
+        consumedShareNavigationRef.current = location.key;
+        const note = routeState.sharedNote;
+        navigate(
+            `${location.pathname}${location.search}${location.hash}`,
+            { replace: true, state: null },
+        );
+        void captureNoteRef.current(note);
     }, [
         location.hash,
         location.key,
@@ -987,14 +1026,18 @@ export function SearchHome() {
             ) setError(errorMessage(cause));
         }
     }
-    /** Shift+Enter in the search box: a new plain note, not pinned or favorited. */
-    async function captureNote(text: string): Promise<boolean> {
+    /**
+     * Quick capture — Shift+Enter in the search box or a system share: a new
+     * plain note, not pinned or favorited, with an undo.
+     */
+    async function captureNote(note: SharedNote): Promise<boolean> {
         const ownerId = currentUserIdRef.current;
         if (!ownerId) return false;
         setError("");
         try {
             const payload: CreateDocumentInput = {
-                body: text,
+                ...(note.title ? { title: note.title } : {}),
+                body: note.body,
                 isHomeFixed: false,
                 isFavorite: false,
             };
@@ -1034,6 +1077,7 @@ export function SearchHome() {
             return false;
         }
     }
+    captureNoteRef.current = captureNote;
     async function pinCapture(recordId: string) {
         const ownerId = currentUserIdRef.current;
         const record = undoQueueRef.current.find((item) =>
@@ -1114,7 +1158,7 @@ export function SearchHome() {
         aiAvailable,
         inlineAnswer,
         onSearchCommand: runSearchCommand,
-        onCapture: captureNote,
+        onCapture: (text) => captureNote({ title: null, body: text }),
         workspaceOpen: Boolean(host.activeKind),
         showAppLabels: appearance.showAppLabels,
         showHomeApps: appearance.showHomeApps,

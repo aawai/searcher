@@ -102,7 +102,10 @@ deno task check:ui --update
   的入口：顶栏 AI 链接只在登录且有可用模型时出现，访客与无模型用户在首页没有任何 AI 入口。
 - `/settings/search` replace 到 `/settings`；未知 Settings/Admin 子路径显示
   404。
-- 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。
+- 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。成功后由
+  页面上“已登录”状态这一处 replace 到目标，只导航一次（`/share` 这类一次性入口依赖它）。
+- `/share` 是分享目标，不渲染内容页，立即 replace 到首页或登录，见
+  [首页与工作区 · 捕获入口](workspace.md#捕获入口)。
 - Settings/Admin 内部 Tab replace 当前 history entry，外部进入具体 Tab 保留正常
   entry；二级页面 breadcrumb 提供稳定的上层与首页目标。登录用户的设置导航首项为
   “账户与安全”（`/account`），按设置内部 Tab 处理。

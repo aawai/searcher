@@ -31,9 +31,19 @@ Deno.test("manifest: launch colours match the light page background token", () =
     assertEquals(manifest.background_color, light);
 });
 
+Deno.test("manifest: the share target is a GET to /share, never a POST", () => {
+    // A POST target would submit outside the API's Origin check.
+    assertEquals(manifest.share_target, {
+        action: "/share",
+        method: "GET",
+        enctype: "application/x-www-form-urlencoded",
+        params: { title: "title", text: "text", url: "url" },
+    });
+});
+
 Deno.test("index.html: first-paint theme-color matches each theme's background token", () => {
     const metas = [...indexHtml.matchAll(
-        /<meta name="theme-color" content="([^"]+)" media="\(prefers-color-scheme: (light|dark)\)"/g,
+        /<meta\s+name="theme-color"\s+content="([^"]+)"\s+media="\(prefers-color-scheme: (light|dark)\)"/g,
     )].map(([, color, scheme]) => [scheme, color]);
     assertEquals(Object.fromEntries(metas), {
         light: background(":root"),
