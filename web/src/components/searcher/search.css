@@ -49,21 +49,6 @@
     background: var(--surface-soft);
 }
 
-/* Only the engine menu uses brand colors; search chrome uses neutral ink. */
-:is(.search-engine, .suggestion-item) .engine-icon,
-:is(.search-engine, .suggestion-item) .engine-icon [fill] {
-    fill: currentColor;
-}
-
-:is(.search-engine, .suggestion-item) .engine-icon--duckduckgo > circle:first-child {
-    fill: none;
-    stroke: currentColor;
-}
-
-:is(.search-engine, .suggestion-item) .engine-icon--duckduckgo > circle:not(:first-child) {
-    fill: var(--surface);
-}
-
 .engine-mark {
     width: var(--icon-md);
     height: var(--icon-md);
