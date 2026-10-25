@@ -43,6 +43,8 @@
 
 工作区列表的 `features/workspace/note-summary.ts` 只读分析入口复用 remark/remark-gfm AST，不替换共享 editor parser/serializer。列表动态加载并按当前实例 id/body 缓存结果，query 变化只生成文本节点/mark 片段；隐藏 URL 或 Markdown 语法匹配回退到 escaped 源码，不执行 HTML。
 
+资料库列表对服务端摘要做标题去重时，只静态导入无依赖的 `features/workspace/note-list-snippet.ts`。该字符串处理入口不得通过 `note-summary.ts` 的静态依赖引入 remark/unified；列表摘要行为不变，Markdown parser 仍留在异步加载图中。
+
 Documents 的格式状态观察保留在 `features/documents/editor-extensions.ts`，只读取当前实例的 selection / stored marks / document，通过 consumer callback 更新工具栏 `aria-pressed`，不改变 canonical Markdown、history 或 transaction origin。其 More 菜单 Portal 以实例 owner 关联编辑焦点边界；roving tabindex、单行滚动与触屏 header 由 Documents consumer 和 `document-editor.css` 拥有，不导入共享 runtime 的初始依赖图。visualViewport 缩小时，consumer 在布局更新后依据实际工具栏、正文与选区几何调整滚动，保持工具栏可见且光标位于其下方；监听与 RAF 随实例清理。不修改正文、选区或共享 runtime。
 
 ## Bundle gate

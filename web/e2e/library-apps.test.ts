@@ -87,9 +87,11 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
         controlLeft: number;
         controlRight: number;
         panelWidth: number;
+        panelLeftInset: number;
+        panelRightInset: number;
     }
-    async function gridLayout(): Promise<GridLayout> {
-        return await grid.evaluate((node) => {
+    async function gridLayout(target: Locator = grid): Promise<GridLayout> {
+        return await target.evaluate((node) => {
             const style = getComputedStyle(node);
             const box = node.getBoundingClientRect();
             const tiles = [...node.querySelectorAll<HTMLElement>(
@@ -117,6 +119,8 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                 controlLeft: Math.round(box.left - controls.left),
                 controlRight: Math.round(box.right - controls.right),
                 panelWidth: Math.round(panel.width),
+                panelLeftInset: Math.round(box.left - panel.left),
+                panelRightInset: Math.round(panel.right - box.right),
             };
         });
     }
@@ -134,7 +138,7 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
     }
 
     await t.step(
-        "grid centres equal gutters and keeps four columns across widths",
+        "grid centres equal gutters and fits five columns in the 390px Sheet",
         async () => {
             const desktop = await gridLayout();
             assert(desktop.columns >= 4, JSON.stringify(desktop));
@@ -152,8 +156,35 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                 '.workspace-panel--mobile[data-presentation="sheet"]',
             ).waitFor();
             const phone = await gridLayout();
-            assertEquals(phone.columns, 4);
+            assertEquals(phone.columns, 5);
+            assertEquals([phone.panelLeftInset, phone.panelRightInset], [
+                16,
+                16,
+            ]);
             assertCenteredGrid(phone);
+            const touchContext = await browser.newContext({
+                viewport: { width: 390, height: 844 },
+                hasTouch: true,
+                reducedMotion: "reduce",
+                storageState: await context.storageState(),
+            });
+            try {
+                const touchPage = await touchContext.newPage();
+                await touchPage.goto(app.origin + "/");
+                await touchPage.locator(".user-avatar-trigger").waitFor();
+                await openApps(touchPage);
+                const touch = await gridLayout(
+                    touchPage.locator("[data-library-apps-grid]"),
+                );
+                assertEquals(touch.columns, 5);
+                assertEquals(
+                    [touch.panelLeftInset, touch.panelRightInset],
+                    [16, 16],
+                );
+                assertCenteredGrid(touch);
+            } finally {
+                await touchContext.close();
+            }
             await page.setViewportSize({ width: 1440, height: 900 });
             await page.locator(
                 'aside.workspace-panel[data-presentation="panel"]',

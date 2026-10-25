@@ -173,6 +173,12 @@
     --space-launcher-pad-t: var(--launcher-pad-t);
     --space-launcher-pad-b: var(--launcher-pad-b);
 }
+/* Without names the glyph centres in its unchanged square cell: the hover box,
+   the large-folder surface (which frames the glyph edges) and the plate insets
+   stay symmetric. Only the top inset moves; col-w and row-h are untouched. */
+:is(.launcher-grid, .launcher-overlay)[data-labels="hidden"] {
+    --launcher-pad-t: calc((var(--launcher-col-w) - var(--launcher-icon)) / 2);
+}
 .launcher-grid--home,
 .launcher-grid--popup {
     justify-content: center;
@@ -656,7 +662,8 @@
 }
 
 @media (any-pointer: coarse), (hover: none) {
-    .launcher-folder-item--large .launcher-folder-mini {
+    /* Arranging by touch drags the whole large folder from any preview cell. */
+    .launcher-tile.is-managing .launcher-folder-item--large .launcher-folder-mini {
         pointer-events: none;
     }
     .launcher-grid,
@@ -687,10 +694,6 @@
     grid-template-columns: repeat(auto-fill, var(--launcher-col-w));
     grid-auto-flow: row dense;
     justify-content: center;
-    /* Symmetric inline gutter: auto-fill measures one column fewer on the
-       narrow Sheet (390 ≈ 4 columns) while the centered tracks keep equal
-       gutters against the header and search content box. */
-    padding-inline: var(--space-2);
 }
 .launcher-grid--library > .launcher-folder-item--large {
     grid-column: span 2;

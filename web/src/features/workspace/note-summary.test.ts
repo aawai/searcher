@@ -2,9 +2,9 @@ import { assertEquals } from "@std/assert";
 import {
     analyzeNoteBody,
     highlightNoteText,
-    noteListSnippet,
     noteSearchPreview,
 } from "./note-summary.ts";
+import { noteListSnippet } from "./note-list-snippet.ts";
 
 Deno.test("Notes readable summaries preserve link text, code and lists but not HTML or URLs", () => {
     assertEquals(

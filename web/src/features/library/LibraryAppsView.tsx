@@ -172,6 +172,7 @@ export function LibraryAppsView({
                 className="launcher-grid launcher-grid--library"
                 data-library-apps-grid
                 data-pointer-active={pointerActive || undefined}
+                data-labels={showAppLabels ? undefined : "hidden"}
             >
                 {tiles.map((tile) =>
                     tile.type === "folder"

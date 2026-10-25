@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef } from "react";
 import { Folder, FolderInput, GripVertical } from "lucide-react";
 import {
     ContextMenu,
@@ -21,23 +21,6 @@ import {
     WebAppGlyph,
     WebAppIcon,
 } from "../../components/searcher/WebAppIcon.tsx";
-
-const COARSE_POINTER = "(any-pointer: coarse)";
-
-/** Coarse pointers open the whole folder surface rather than miniature apps. */
-export function useCoarsePointer(): boolean {
-    const [coarse, setCoarse] = useState(() =>
-        globalThis.matchMedia?.(COARSE_POINTER).matches ?? false
-    );
-    useEffect(() => {
-        const media = globalThis.matchMedia?.(COARSE_POINTER);
-        if (!media) return;
-        const change = () => setCoarse(media.matches);
-        media.addEventListener("change", change);
-        return () => media.removeEventListener("change", change);
-    }, []);
-    return coarse;
-}
 
 /** What tiles can do; shared by the home grid and every popup. */
 export interface LibraryTileActions extends AppMenuActions {
@@ -114,7 +97,9 @@ export function FolderTile({
     dragListeners?: object;
     isFolderDropTarget?: boolean;
 }) {
-    const touch = useCoarsePointer();
+    // Taps fall through to the folder: miniatures are under the 44px touch
+    // target. Decided per press, so a mouse on a touchscreen still opens apps.
+    const touchPress = useRef(false);
     const large = tile.group.folderSize === "large";
     const preview = folderPreview(tile.apps, {
         large,
@@ -176,8 +161,17 @@ export function FolderTile({
                                 className="launcher-folder-mini"
                                 title={`打开 ${app.name}`}
                                 aria-label={`打开 ${app.name}`}
-                                tabIndex={touch ? -1 : undefined}
+                                onPointerDown={(event) => {
+                                    touchPress.current =
+                                        event.pointerType === "touch";
+                                }}
                                 onClick={(event) => {
+                                    // Keyboard activation has detail 0.
+                                    if (
+                                        event.detail !== 0 && touchPress.current
+                                    ) {
+                                        return;
+                                    }
                                     event.stopPropagation();
                                     if (managing) actions.onEdit(app);
                                     else actions.onOpen(app);
@@ -201,7 +195,6 @@ export function FolderTile({
                                 className="launcher-folder-mini launcher-folder-remainder"
                                 title={preview.remainderLabel}
                                 aria-label={preview.remainderLabel}
-                                tabIndex={touch ? -1 : undefined}
                                 onClick={(event) => {
                                     event.stopPropagation();
                                     if (!managing) openFolder();

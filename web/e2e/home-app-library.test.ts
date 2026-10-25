@@ -381,15 +381,14 @@ Deno.test("home app library (#244)", async (t) => {
                             "打开文件夹 大文件夹，另有 4 个应用",
                         ],
                     );
-                    const opener = folder.locator(
-                        ".launcher-folder-background",
-                    );
-                    const box = await opener.boundingBox();
+                    // A tap anywhere on the surface, previews included, opens it.
+                    const surface = folder.locator(".launcher-folder-surface");
+                    const box = await surface.boundingBox();
                     assert(
                         box && box.width >= 44 && box.height >= 44,
                         "touch targets are at least 44px",
                     );
-                    await opener.tap();
+                    await surface.tap();
                     await page.locator(".launcher-popup-title", {
                         hasText: "大文件夹",
                     }).waitFor();
@@ -398,6 +397,62 @@ Deno.test("home app library (#244)", async (t) => {
                             ".launcher-popup .launcher-grid > .launcher-tile",
                         ).count(),
                         12,
+                    );
+                } finally {
+                    await context.close();
+                }
+            },
+        );
+
+        await t.step(
+            "touch-capable desktop: a mouse opens preview apps, a tap on a preview opens the folder",
+            async () => {
+                // any-pointer: coarse matches, but the input is a mouse.
+                const { page, context } = await bigLibraryPage(
+                    browser,
+                    app.origin,
+                    { hasTouch: true },
+                );
+                try {
+                    const memberUrl = "https://member-0.example/";
+                    await context.route(
+                        memberUrl,
+                        (route) =>
+                            route.fulfill({
+                                contentType: "text/html",
+                                body: "member",
+                            }),
+                    );
+                    await waitForPlannedHome(page);
+                    const mini = page.locator(".launcher-folder-item--large")
+                        .getByRole("button", { name: "打开 大文件夹成员1" });
+                    await mini.tap();
+                    await page.locator(".launcher-popup-title", {
+                        hasText: "大文件夹",
+                    }).waitFor();
+                    await page.keyboard.press("Escape");
+                    await page.locator(".launcher-popup").waitFor({
+                        state: "detached",
+                    });
+                    // Pin the link target so the launch is observable as a tab.
+                    await page.evaluate(async () => {
+                        const response = await fetch("/api/preferences", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ searchTarget: "new" }),
+                        });
+                        if (!response.ok) {
+                            throw new Error(await response.text());
+                        }
+                    });
+                    await page.reload();
+                    await waitForPlannedHome(page);
+                    const opened = context.waitForEvent("page");
+                    await mini.click();
+                    await (await opened).waitForURL(memberUrl);
+                    assertEquals(
+                        await page.locator(".launcher-popup").count(),
+                        0,
                     );
                 } finally {
                     await context.close();
