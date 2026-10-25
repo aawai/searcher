@@ -12,6 +12,57 @@ import { libraryPanel } from "./helpers/library.ts";
 const LONG_BODY =
     "保留一个安静的入口，让重要的事情留在眼前。先走到窗边看看天气，再把今天的想法慢慢写下来。把复杂的事情拆成可以完成的小步，留一点空白给新的发现，也留一点时间给没有完成的部分。";
 
+Deno.test("notes that fit are measured after the Markdown preview loads and show without a fade", async () => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 1440, height: 900 },
+    });
+    const { page } = fixture;
+    try {
+        await createHomeNote(page, {
+            title: "短句",
+            body: "动效只回应操作；不做循环动画。",
+            homeSortOrder: 0,
+        });
+        await createHomeNote(page, {
+            title: "清单",
+            body: "- [ ] 牛奶\n- [x] 面包\n- [ ] 鸡蛋\n- [ ] 咖啡豆",
+            homeSortOrder: 1,
+        });
+        // A full load starts without the lazy Markdown chunk: the first
+        // measurement sees the plain-text placeholder.
+        await reloadHome(page);
+        await waitForNoteCards(page, 2);
+        await homeNote(page, "清单").locator("li.task-list-item").nth(3)
+            .waitFor();
+        await homeNote(page, "短句").locator(".home-note-body p").waitFor();
+        // Observers deliver before the next frame; two frames let them settle.
+        await page.evaluate(() =>
+            new Promise((resolve) =>
+                requestAnimationFrame(() => requestAnimationFrame(resolve))
+            )
+        );
+        for (const title of ["短句", "清单"]) {
+            const body = homeNote(page, title).locator(".home-note-body");
+            const clip = await body.evaluate((element) => ({
+                overflow: element.hasAttribute("data-overflow"),
+                clientHeight: element.clientHeight,
+                scrollHeight: element.scrollHeight,
+            }));
+            assertEquals(clip.overflow, false, `${title} has no fade`);
+            assertEquals(
+                clip.clientHeight,
+                clip.scrollHeight,
+                `${title} shows its whole body`,
+            );
+        }
+        const tasks = await homeNote(page, "清单").locator(".home-note-body")
+            .evaluate((element) => element.clientHeight);
+        assertEquals(tasks, 88, "four task rows keep the 22px line pitch");
+    } finally {
+        await fixture.close();
+    }
+});
+
 Deno.test("390px renders every pinned note as one vertical stack of Material cards", async () => {
     const fixture = await openHomeNotesFixture({
         viewport: { width: 390, height: 844 },

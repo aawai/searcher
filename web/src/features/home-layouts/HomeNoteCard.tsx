@@ -133,6 +133,10 @@ export function HomeNoteCard(
             const lineHeight = parseFloat(style.lineHeight);
             const limit = (Number.isFinite(lines) ? lines : 5) *
                 (Number.isFinite(lineHeight) ? lineHeight : 22);
+            // Collapse the previous clip so scrollHeight is the natural
+            // content height rather than the box the last pass left behind.
+            element.style.height = "0px";
+            const contentHeight = element.scrollHeight;
             const range = document.createRange();
             range.selectNodeContents(element);
             const bodyTop = element.getBoundingClientRect().top;
@@ -144,19 +148,26 @@ export function HomeNoteCard(
                     bottom: rect.bottom - bodyTop,
                 });
             }
-            const clip = clipPreviewHeight(rects, limit, element.scrollHeight);
+            const clip = clipPreviewHeight(rects, limit, contentHeight);
             element.style.height = `${clip.height}px`;
             setOverflowing(clip.hasMore);
         };
         update();
-        const observer = new ResizeObserver(update);
-        observer.observe(element);
-        const content = element.firstElementChild;
-        if (content) observer.observe(content);
+        const resize = new ResizeObserver(update);
+        resize.observe(element);
+        // The lazy Markdown renderer replaces the plain-text placeholder
+        // without resizing the clipped body, so content swaps re-measure too.
+        const mutation = new MutationObserver(update);
+        mutation.observe(element, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+        });
         void document.fonts.ready.then(update);
         return () => {
             active = false;
-            observer.disconnect();
+            resize.disconnect();
+            mutation.disconnect();
         };
     }, [note.body, note.layout.size]);
 
