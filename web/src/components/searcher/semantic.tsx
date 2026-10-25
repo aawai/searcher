@@ -383,21 +383,39 @@ export function LocalNavigation(
         const active = navigation.querySelector<HTMLElement>(
             "[aria-current=page]",
         );
-        if (!active) return;
+        // A clipped side fades, so tabs cut at the edge read as scrollable.
+        const markEdges = () => {
+            const end = navigation.scrollWidth - navigation.clientWidth;
+            navigation.toggleAttribute(
+                "data-overflow-start",
+                navigation.scrollLeft > 1,
+            );
+            navigation.toggleAttribute(
+                "data-overflow-end",
+                navigation.scrollLeft < end - 1,
+            );
+        };
         const revealActive = () => {
-            const bounds = navigation.getBoundingClientRect();
-            const item = active.getBoundingClientRect();
-            if (item.left < bounds.left) {
-                navigation.scrollLeft += item.left - bounds.left;
-            } else if (item.right > bounds.right) {
-                navigation.scrollLeft += item.right - bounds.right;
+            if (active) {
+                const bounds = navigation.getBoundingClientRect();
+                const item = active.getBoundingClientRect();
+                if (item.left < bounds.left) {
+                    navigation.scrollLeft += item.left - bounds.left;
+                } else if (item.right > bounds.right) {
+                    navigation.scrollLeft += item.right - bounds.right;
+                }
             }
+            markEdges();
         };
         revealActive();
         const observer = new ResizeObserver(revealActive);
         observer.observe(navigation);
         for (const link of navigation.children) observer.observe(link);
-        return () => observer.disconnect();
+        navigation.addEventListener("scroll", markEdges, { passive: true });
+        return () => {
+            observer.disconnect();
+            navigation.removeEventListener("scroll", markEdges);
+        };
     }, [compact, location.pathname]);
     return (
         <nav
