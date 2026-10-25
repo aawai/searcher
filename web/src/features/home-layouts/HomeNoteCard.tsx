@@ -194,7 +194,9 @@ export function HomeNoteCard(
                         aria-label={note.displayTitle}
                         onClick={onOpen}
                     >
-                        {titleContent ?? note.displayTitle}
+                        <span className="home-note-title-text">
+                            {titleContent ?? note.displayTitle}
+                        </span>
                     </Button>
                 </div>
 

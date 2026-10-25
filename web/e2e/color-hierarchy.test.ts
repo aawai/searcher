@@ -4,7 +4,7 @@ import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 
-Deno.test("home color hierarchy keeps avatar, engine and primary icons neutral", async () => {
+Deno.test("home color hierarchy keeps avatar and primary icons neutral and the engine mark in brand color", async () => {
     const app = await startProductionApp();
     const browser = await chromium.launch({
         args: ["--no-sandbox"],
@@ -60,15 +60,14 @@ Deno.test("home color hierarchy keeps avatar, engine and primary icons neutral",
                 `${theme}: submit geometry/fill does not jump while typing`,
             );
             await page.locator("#search-query").fill("");
+            // The search box shows the current engine's own logo colors.
             const engine = page.locator(".search-engine .engine-icon");
-            assert(
-                await engine.evaluate((el) =>
-                    [...el.querySelectorAll("path")].every((path) =>
-                        getComputedStyle(path).fill ===
-                            getComputedStyle(el).color
-                    )
+            assertEquals(
+                await engine.locator("path").evaluateAll((paths) =>
+                    paths.map((path) => getComputedStyle(path).fill)
                 ),
-                `${theme}: engine mark uses monochrome ink`,
+                ["rgb(37, 143, 250)"],
+                `${theme}: Bing mark uses its brand color`,
             );
         }
         await page.locator(".search-engine").click();

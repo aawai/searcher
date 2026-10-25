@@ -2,6 +2,7 @@ import { assertEquals } from "@std/assert";
 import {
     analyzeNoteBody,
     highlightNoteText,
+    noteListSnippet,
     noteSearchPreview,
 } from "./note-summary.ts";
 
@@ -37,4 +38,41 @@ Deno.test("Notes source-only queries remain visible and Unicode snippets keep wh
         { text: "[.*]", match: true },
         { text: " b", match: false },
     ]);
+});
+
+Deno.test("untitled notes do not repeat the derived title in the list snippet", () => {
+    assertEquals(
+        noteListSnippet({
+            title: null,
+            displayTitle: "少一点干扰，多一点专注。",
+            snippet: "少一点干扰，多一点专注。",
+        }),
+        "",
+    );
+    assertEquals(
+        noteListSnippet({
+            title: "  ",
+            displayTitle: "周会",
+            snippet: "周会 讨论排期与风险",
+        }),
+        "讨论排期与风险",
+    );
+    // An explicit title is not part of the body, so the snippet stays whole.
+    assertEquals(
+        noteListSnippet({
+            title: "周会",
+            displayTitle: "周会",
+            snippet: "周会 讨论排期与风险",
+        }),
+        "周会 讨论排期与风险",
+    );
+    // A derived title the snippet does not start with leaves it untouched.
+    assertEquals(
+        noteListSnippet({
+            title: null,
+            displayTitle: "标题",
+            snippet: "其他内容",
+        }),
+        "其他内容",
+    );
 });
