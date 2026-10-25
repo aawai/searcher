@@ -43,6 +43,12 @@
     text-decoration: none;
     transition: background var(--motion-fast) var(--ease-standard);
 }
+/* Width picks the layout, not the input: the two-column shell can be touched. */
+@media (any-pointer: coarse) {
+    .settings-nav-item {
+        min-height: var(--control-touch-target);
+    }
+}
 .settings-nav-item > svg {
     flex-shrink: 0;
     color: var(--muted);

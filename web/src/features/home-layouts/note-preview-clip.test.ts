@@ -50,6 +50,19 @@ Deno.test("duplicate line fragments do not move the clip boundary", () => {
     });
 });
 
+Deno.test("text fragments inset inside their line boxes still fit without a fade", () => {
+    // Text rects are glyph boxes (20px) inside 22px line boxes, so the last
+    // fragment ends 1px above the content height even though nothing is hidden.
+    const glyphs = [
+        { top: 1, bottom: 21 },
+        { top: 23, bottom: 43 },
+    ];
+    assertEquals(clipPreviewHeight(glyphs, 110, 44), {
+        height: 44,
+        hasMore: false,
+    });
+});
+
 Deno.test("content without line boxes falls back to the content height", () => {
     assertEquals(clipPreviewHeight([], 66, 44), {
         height: 44,

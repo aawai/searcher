@@ -496,6 +496,34 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 );
             }
 
+            // A 40×24 switch keeps its look; its hit area still spans 44×44.
+            const switches = page.locator('.settings-content [role="switch"]');
+            assert(await switches.count() > 0, "Appearance has switches");
+            for (let i = 0; i < await switches.count(); i++) {
+                const box = await switches.nth(i).boundingBox();
+                assert(box);
+                const hits = await switches.nth(i).evaluate(
+                    (element, box) => {
+                        const x = box.x + box.width / 2;
+                        const y = box.y + box.height / 2;
+                        // Just inside each edge of a centred 44×44 square.
+                        return [[x, y - 21], [x, y + 21], [x - 21, y], [
+                            x + 21,
+                            y,
+                        ]].map(([px, py]) =>
+                            document.elementFromPoint(px, py)?.closest(
+                                '[role="switch"]',
+                            ) === element
+                        );
+                    },
+                    box,
+                );
+                assert(
+                    hits.every(Boolean),
+                    `Switch ${i} hit area must span 44×44 (edges ${hits})`,
+                );
+            }
+
             await swatchGroup.screenshot({
                 path: `${artifactDir}/settings-theme-390.png`,
             });
@@ -584,6 +612,33 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 },
             };
 
+            await context.close();
+        },
+    );
+
+    // =========================================================================
+    // Step 4: 768x1024 touch: the two-column settings shell keeps touch targets
+    // =========================================================================
+    await t.step(
+        "768x1024 touch: settings navigation rows are touch targets",
+        async () => {
+            const context = await browser.newContext({
+                viewport: { width: 768, height: 1024 },
+                isMobile: true,
+                hasTouch: true,
+            });
+            const page = await context.newPage();
+            await loginAndVisit(page, app.origin, "/settings/appearance", user);
+            const items = page.locator(".settings-nav-item");
+            await items.first().waitFor({ state: "visible" });
+            for (let i = 0; i < await items.count(); i++) {
+                const box = await items.nth(i).boundingBox();
+                assert(box);
+                assert(
+                    box.height >= 44,
+                    `Settings nav row ${i} must be >= 44px tall on touch (got ${box.height})`,
+                );
+            }
             await context.close();
         },
     );
