@@ -18,7 +18,7 @@ import { DocumentLibraryActions } from "./DocumentLibraryActions.tsx";
 import { Star } from "lucide-react";
 
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
-import { noteListSnippet } from "./note-summary.ts";
+import { noteListSnippet } from "./note-list-snippet.ts";
 const DocumentEditor = lazy(() => import("../documents/DocumentEditor.tsx"));
 export interface DocumentsWorkspaceProps {
     state: DocumentsRoute;
