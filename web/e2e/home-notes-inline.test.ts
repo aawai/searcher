@@ -110,6 +110,18 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
 
         const first = homeNote(page, "堆叠 0").locator(".home-note-card");
         await first.locator(".note-quick-dot--amber").waitFor();
+        // The always-visible 44px menu target centres on the title line.
+        const [titleBox, menuBox] = await Promise.all([
+            first.locator(".home-note-title").boundingBox(),
+            first.getByRole("button", { name: "更多操作" }).boundingBox(),
+        ]);
+        assert(titleBox && menuBox);
+        const offset = (menuBox.y + menuBox.height / 2) -
+            (titleBox.y + titleBox.height / 2);
+        assert(
+            Math.abs(offset) <= 1,
+            `note menu centre is ${offset}px off the title line`,
+        );
         const body = first.locator(".home-note-body");
         assertEquals(await body.getAttribute("data-overflow"), "true");
         const clip = await body.evaluate((element) => ({

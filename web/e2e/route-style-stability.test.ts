@@ -1,6 +1,8 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import { type Page } from "playwright";
+import { eq } from "drizzle-orm";
+import { users } from "../../src/db/schema.ts";
 import { chromium } from "./helpers/browser.ts";
 import {
     loginAndVisit,
@@ -639,6 +641,55 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                     `Settings nav row ${i} must be >= 44px tall on touch (got ${box.height})`,
                 );
             }
+            await context.close();
+        },
+    );
+
+    // =========================================================================
+    // Step 5: 390x844 touch: text links that act as controls are touch targets
+    // =========================================================================
+    await t.step(
+        "390x844 touch: admin overview actions and the auth switch link are touch targets",
+        async () => {
+            await app.store.run(async (db) => {
+                await db.update(users).set({ role: "admin" }).where(
+                    eq(users.id, user.userId),
+                );
+            });
+            const context = await browser.newContext({
+                viewport: { width: 390, height: 844 },
+                isMobile: true,
+                hasTouch: true,
+            });
+            const page = await context.newPage();
+            await loginAndVisit(page, app.origin, "/admin", user);
+            const actions = page.locator(".admin-stat-action");
+            await actions.first().waitFor({ state: "visible" });
+            for (let i = 0; i < await actions.count(); i++) {
+                const box = await actions.nth(i).boundingBox();
+                assert(box);
+                assert(
+                    box.height >= 44,
+                    `Admin overview action ${i} must be >= 44px tall (got ${box.height})`,
+                );
+            }
+
+            const guest = await browser.newContext({
+                viewport: { width: 390, height: 844 },
+                isMobile: true,
+                hasTouch: true,
+            });
+            const guestPage = await guest.newPage();
+            await guestPage.goto(app.origin + "/login");
+            const link = guestPage.locator(".auth-footer a");
+            await link.waitFor({ state: "visible" });
+            const box = await link.boundingBox();
+            assert(box);
+            assert(
+                box.width >= 44 && box.height >= 44,
+                `Auth switch link must be >= 44x44px (got ${box.width}x${box.height})`,
+            );
+            await guest.close();
             await context.close();
         },
     );

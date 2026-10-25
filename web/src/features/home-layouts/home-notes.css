@@ -336,7 +336,11 @@
 }
 
 @media (max-width: 767px), (any-pointer: coarse) {
+    /* The 44px targets centre on the 22px title line instead of hanging below. */
     .home-note-actions {
+        top: calc(
+            (var(--font-body-line-height) - var(--control-touch-target)) / 2
+        );
         opacity: 1;
         pointer-events: auto;
     }
