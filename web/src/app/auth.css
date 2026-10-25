@@ -62,3 +62,14 @@
 .auth-footer a:hover {
     text-decoration: underline;
 }
+
+@media (any-pointer: coarse), (hover: none) {
+    .auth-footer a {
+        /* The target grows to the right so the word stays beside its prompt. */
+        display: inline-flex;
+        align-items: center;
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+        vertical-align: middle;
+    }
+}

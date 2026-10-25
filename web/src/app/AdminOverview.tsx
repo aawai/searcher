@@ -133,14 +133,6 @@ export function AdminOverview({
                         <p className="admin-stat-value">
                             {`${overview.totalWebApps} / ${overview.totalDocuments}`}
                         </p>
-                        <Button
-                            variant="link"
-                            size="sm"
-                            className="admin-stat-action"
-                            render={<Link to={routes.home} />}
-                        >
-                            返回主页
-                        </Button>
                     </div>
 
                     <div className="admin-stat">
@@ -154,7 +146,7 @@ export function AdminOverview({
                             className="admin-stat-action"
                             render={<Link to={routes.settings("ai")} />}
                         >
-                            配置 AI Provider
+                            配置 AI 提供商
                         </Button>
                     </div>
 

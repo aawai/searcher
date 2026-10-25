@@ -16,7 +16,14 @@ import {
     type EngineId,
     SEARCH_ENGINES,
 } from "@shared/engines.ts";
-import { X } from "lucide-react";
+import {
+    AppWindow,
+    ChevronRight,
+    type LucideIcon,
+    NotebookPen,
+    Sparkles,
+    X,
+} from "lucide-react";
 import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
 import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import type {
@@ -168,6 +175,12 @@ type PendingAction =
     | { kind: "library"; action: LibraryAction }
     | { kind: "route"; intent: AppSessionRouteIntent }
     | { kind: "appForm" };
+
+const LIBRARY_ICONS: Record<LibrarySelection["kind"], LucideIcon> = {
+    notes: NotebookPen,
+    conversations: Sparkles,
+    apps: AppWindow,
+};
 
 function libraryTitle(selection: LibrarySelection) {
     return {
@@ -1318,15 +1331,23 @@ export function SearchHome() {
                 <div data-library-view="root" className="library-root">
                     {(["notes", "conversations", "apps"] as const).map((
                         kind,
-                    ) => (
-                        <Button
-                            key={kind}
-                            variant="ghost"
-                            onClick={() => selectLibrary({ kind })}
-                        >
-                            {libraryTitle({ kind })}
-                        </Button>
-                    ))}
+                    ) => {
+                        const Icon = LIBRARY_ICONS[kind];
+                        return (
+                            <Button
+                                key={kind}
+                                variant="ghost"
+                                onClick={() => selectLibrary({ kind })}
+                            >
+                                <Icon size="1em" className="icon-md" />
+                                <span>{libraryTitle({ kind })}</span>
+                                <ChevronRight
+                                    size="1em"
+                                    className="icon-md library-root-chevron"
+                                />
+                            </Button>
+                        );
+                    })}
                 </div>
             );
         }

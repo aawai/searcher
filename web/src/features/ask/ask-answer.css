@@ -24,6 +24,12 @@
     overflow: visible;
 }
 
+/* Headers stay on one line; a narrow column scrolls the table instead of
+   breaking a CJK label character by character. */
+.ask-assistant-body.markdown .ask-table-scroll th {
+    white-space: nowrap;
+}
+
 .ask-assistant-body.markdown pre {
     max-width: 100%;
     margin-inline: 0;

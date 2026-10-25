@@ -389,7 +389,7 @@ function Layout() {
                                             size="1em"
                                             className="icon-md"
                                         />
-                                        <span>偏好设置</span>
+                                        <span>设置</span>
                                     </DropdownMenuItem>
                                     {user.role === "admin" && (
                                         <DropdownMenuItem

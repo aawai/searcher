@@ -754,7 +754,7 @@ Deno.test("production navigation contracts", async (t) => {
             );
             await page.getByRole("button", { name: /^用户菜单/ }).click();
             await page.getByRole("menuitem", {
-                name: "偏好设置",
+                name: "设置",
                 exact: true,
             }).click();
             await page.waitForURL(origin + "/settings");
@@ -862,7 +862,7 @@ Deno.test("production navigation contracts", async (t) => {
             await page.waitForURL(origin + "/");
             await visit("/admin");
             await page.getByRole("link", {
-                name: /^配置 AI Provider/,
+                name: /^配置 AI 提供商/,
             }).click();
             await page.waitForURL(origin + "/settings/ai");
             await page.goBack();
@@ -937,8 +937,26 @@ Deno.test("production navigation contracts", async (t) => {
                 true,
                 "/admin/backup",
             );
+            // The scrolled-out side fades so clipped tabs read as scrollable.
+            const edges = () =>
+                nav.evaluate((element) => ({
+                    start: element.hasAttribute("data-overflow-start"),
+                    end: element.hasAttribute("data-overflow-end"),
+                }));
+            await page.waitForFunction(() =>
+                document.querySelector(
+                    '[aria-label="管理后台主导航"][data-overflow-start]',
+                ) !== null
+            );
+            assertEquals(await edges(), { start: true, end: false });
             await nav.getByRole("link", { name: "概览", exact: true }).click();
             await page.waitForURL(origin + "/admin");
+            await page.waitForFunction(() =>
+                document.querySelector(
+                    '[aria-label="管理后台主导航"][data-overflow-end]',
+                ) !== null
+            );
+            assertEquals(await edges(), { start: false, end: true });
         },
     );
 });

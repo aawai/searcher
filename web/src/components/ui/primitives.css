@@ -439,6 +439,13 @@
     text-decoration: underline;
 }
 
+/* A link-styled action is still a control: coarse pointers get the full row. */
+@media (any-pointer: coarse), (hover: none) {
+    .button--link {
+        min-height: var(--control-touch-target);
+    }
+}
+
 /* A content consumption trigger, not a conventional action control. */
 .button.button--content {
     display: block;
