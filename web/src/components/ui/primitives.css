@@ -53,6 +53,19 @@
     background: var(--accent-foreground);
 }
 
+/* Coarse pointers hit a centred 44×44 square; the 40×24 track keeps its look. */
+@media (any-pointer: coarse), (hover: none) {
+    .switch::before {
+        content: "";
+        position: absolute;
+        inset-block-start: 50%;
+        inset-inline-start: 50%;
+        width: var(--control-touch-target);
+        height: var(--control-touch-target);
+        transform: translate(-50%, -50%);
+    }
+}
+
 /* --------------------------------------------------------------------------
    Radio Group: default list, segmented and swatch variants
    -------------------------------------------------------------------------- */
