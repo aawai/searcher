@@ -133,9 +133,16 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+/* The date is a right-aligned column, not part of the dotted run: a separator
+   before it would float after short snippets. */
 .documents-summary-date {
     flex: 0 0 auto;
+    margin-inline-start: auto;
+    padding-inline-start: var(--space-2);
     font-variant-numeric: tabular-nums;
+}
+.documents-summary-line > .documents-summary-date::before {
+    content: none;
 }
 .documents-workspace-more {
     display: flex;

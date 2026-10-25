@@ -1,11 +1,29 @@
+/* Root entries read as a navigation list: glyph, name, disclosure chevron and
+   an inset hairline between rows, so each row is visibly a way in. */
 .library-root {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
 }
 .library-root > button {
+    position: relative;
     justify-content: flex-start;
+    gap: var(--space-3);
     min-height: var(--row-min-height);
+}
+.library-root > button > svg {
+    color: var(--muted);
+}
+.library-root > button + button::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    /* Button inline padding + glyph + gap: the hairline starts under the label. */
+    inset-inline: calc(var(--space-4) + var(--icon-md) + var(--space-3)) 0;
+    height: var(--space-hairline);
+    background: var(--border);
+}
+.library-root-chevron {
+    margin-inline-start: auto;
 }
 .library-conversations {
     list-style: none;
