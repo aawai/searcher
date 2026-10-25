@@ -1054,29 +1054,17 @@ async function runSparseLargePreviews(
                             `预览 ${count}`,
                         );
                         if (coarse) {
+                            // Touch on any point of the surface, previews
+                            // included, opens the folder.
+                            const surface = tile.locator(
+                                ".launcher-folder-surface",
+                            );
                             await assertTouchTarget(
-                                opener,
+                                surface,
                                 "Whole folder surface",
                             );
-                            const hit = await tile.locator(
-                                ".launcher-folder-surface",
-                            ).evaluate((node) => {
-                                const box = node.getBoundingClientRect();
-                                return [0.2, 0.5, 0.8].every((fraction) =>
-                                    document.elementFromPoint(
-                                        box.left + box.width * fraction,
-                                        box.top + box.height * fraction,
-                                    )?.classList.contains(
-                                        "launcher-folder-background",
-                                    )
-                                );
-                            });
-                            assertEquals(
-                                hit,
-                                true,
-                                "Preview locations hit the whole-folder opener",
-                            );
-                            await opener.tap({ position: { x: 12, y: 12 } });
+                            // The centre is a preview cell once there are 5+ members.
+                            await surface.tap();
                             await page.locator(".launcher-popup").waitFor();
                             assertEquals(
                                 await page.locator(

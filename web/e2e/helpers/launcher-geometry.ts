@@ -12,7 +12,11 @@ export async function assertLargeFolderGeometry(
         const cell = parseFloat(style.getPropertyValue("--launcher-col-w"));
         const gap = parseFloat(style.getPropertyValue("--launcher-gap-x"));
         const icon = parseFloat(style.getPropertyValue("--launcher-icon"));
-        const pad = parseFloat(style.getPropertyValue("--launcher-pad-t"));
+        // The token may be a calc(); a rendered app reports it in px.
+        const app = grid.querySelector(".webapp-icon");
+        const pad = app
+            ? parseFloat(getComputedStyle(app).paddingTop)
+            : parseFloat(style.getPropertyValue("--launcher-pad-t"));
         const outer = node.getBoundingClientRect();
         const surface = node.querySelector(".launcher-folder-surface")!
             .getBoundingClientRect();
@@ -39,6 +43,11 @@ export async function assertLargeFolderGeometry(
                 surface.right - outer.left - (cell + gap + (cell + icon) / 2),
             ),
             topError: Math.abs(surface.top - outer.top - pad),
+            // Without names the surface is centred in its 2x2 footprint, so it
+            // frames the centred glyphs of both rows.
+            verticalCentreError: Math.abs(
+                (surface.top - outer.top) - (outer.bottom - surface.bottom),
+            ),
             neighborTopError: sameRowGlyph
                 ? Math.abs(
                     surface.top - sameRowGlyph.getBoundingClientRect().top,
@@ -78,6 +87,14 @@ export async function assertLargeFolderGeometry(
     }
     if (metrics.neighborTopError !== null) {
         assert(metrics.neighborTopError <= 1);
+    }
+    if (!labels) {
+        assert(
+            metrics.verticalCentreError <= 1,
+            `Unnamed folder centres in its footprint: ${
+                JSON.stringify(metrics)
+            }`,
+        );
     }
     assertEquals(metrics.nameVisible, labels);
     if (labels && metrics.baselineError !== null) {

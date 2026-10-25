@@ -324,6 +324,7 @@ export function WebAppLauncher({
                     aria-label={label}
                     className={`launcher-grid launcher-grid--${variant}`}
                     data-columns={usedColumns}
+                    data-labels={actions.showAppLabels ? undefined : "hidden"}
                     onKeyDown={managing ? undefined : focusAdjacent}
                 >
                     {cells.map((cell) => {
@@ -405,6 +406,9 @@ export function WebAppLauncher({
                                         ? " launcher-overlay--large"
                                         : ""
                                 }`}
+                                data-labels={actions.showAppLabels
+                                    ? undefined
+                                    : "hidden"}
                             >
                                 {active.type === "app"
                                     ? (
