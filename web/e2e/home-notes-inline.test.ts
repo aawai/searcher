@@ -122,6 +122,20 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
             Math.abs(offset) <= 1,
             `note menu centre is ${offset}px off the title line`,
         );
+        // The 22px title opens the note from a 44px band: it reaches into the
+        // card padding above and the gap below without moving the body.
+        const titleHits = await first.locator(".home-note-title").evaluate(
+            (title) => {
+                const box = title.getBoundingClientRect();
+                const x = box.left + Math.min(box.width / 2, 24);
+                return [box.top - 15, box.bottom + 5].map((y) =>
+                    document.elementFromPoint(x, y)?.closest(
+                        ".home-note-title",
+                    ) === title
+                );
+            },
+        );
+        assertEquals(titleHits, [true, true], "title hit band spans 44px");
         const body = first.locator(".home-note-body");
         assertEquals(await body.getAttribute("data-overflow"), "true");
         const clip = await body.evaluate((element) => ({

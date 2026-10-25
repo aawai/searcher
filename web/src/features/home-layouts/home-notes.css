@@ -77,20 +77,26 @@
 }
 
 [data-slot="button"].home-note-title {
+    position: relative;
     display: block;
     flex: 1;
     min-width: 0;
     height: auto;
     min-height: 0;
     padding: 0;
-    overflow: hidden;
     color: inherit;
     text-align: start;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
     font-weight: var(--font-title-weight);
+}
+
+/* The text clips, not the button, so the touch band below can reach past it. */
+.home-note-title-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .home-note-actions {
@@ -343,6 +349,20 @@
         );
         opacity: 1;
         pointer-events: auto;
+    }
+    /* The 22px title opens the note from a 44px band: the card padding above
+       and the rest below, overlapping the body's first line box by 2px (above
+       its glyphs). The band layers over the body, which a fade mask stacks. */
+    [data-slot="button"].home-note-title::before {
+        content: "";
+        position: absolute;
+        z-index: var(--elevation-local-1);
+        inset-inline: 0;
+        inset-block-start: calc(-1 * var(--space-4));
+        inset-block-end: calc(
+            var(--font-body-line-height) + var(--space-4) -
+            var(--control-touch-target)
+        );
     }
     .home-note-actions > *,
     .home-note-drag-handle {
