@@ -259,6 +259,11 @@
     padding-inline-end: var(--space-2);
     margin-inline-end: calc(-1 * (var(--space-2) + var(--space-hairline)));
 }
+/* Fields also pull into the row's block padding, so a row holding a field is
+   as tall as a row holding a value; the field keeps its own hit height. */
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select-wrapper"]) {
+    margin-block: calc(-1 * var(--space-2));
+}
 .settings-row:not(.settings-row--vertical) .settings-row-control [data-slot="native-select"] {
     text-align-last: end;
 }

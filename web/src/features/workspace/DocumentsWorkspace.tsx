@@ -18,6 +18,7 @@ import { DocumentLibraryActions } from "./DocumentLibraryActions.tsx";
 import { Star } from "lucide-react";
 
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
+import { noteListSnippet } from "./note-summary.ts";
 const DocumentEditor = lazy(() => import("../documents/DocumentEditor.tsx"));
 export interface DocumentsWorkspaceProps {
     state: DocumentsRoute;
@@ -47,6 +48,7 @@ function DocumentSummaryRow(
     },
 ) {
     const displayTitle = item.displayTitle;
+    const snippet = noteListSnippet(item);
     const timestamp = item.updatedAt || item.createdAt;
     const formattedDate = timestamp && !isNaN(timestamp)
         ? new Date(timestamp).toLocaleDateString("zh-CN", {
@@ -96,10 +98,10 @@ function DocumentSummaryRow(
                         {item.notebookName}
                     </span>
                 )}
-                {item.snippet
+                {snippet
                     ? (
                         <span className="documents-summary-snippet">
-                            {item.snippet}
+                            {snippet}
                         </span>
                     )
                     : null}

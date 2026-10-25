@@ -674,6 +674,25 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 );
             }
 
+            // Inline fields sit inside the row gutter, so value rows and
+            // field rows of one group share the 44px row height.
+            await page.goto(app.origin + "/account");
+            const rows = page.locator(".settings-card").first().locator(
+                ".settings-row",
+            );
+            await rows.first().waitFor({ state: "visible" });
+            const heights = await rows.evaluateAll((elements) =>
+                elements.map((element) =>
+                    Math.round(element.getBoundingClientRect().height)
+                )
+            );
+            assert(heights.length >= 3, `profile rows: ${heights}`);
+            assertEquals(
+                new Set(heights).size,
+                1,
+                `Profile rows share one height (got ${heights})`,
+            );
+
             const guest = await browser.newContext({
                 viewport: { width: 390, height: 844 },
                 isMobile: true,
