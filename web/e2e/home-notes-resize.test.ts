@@ -17,18 +17,27 @@ Deno.test("resizing folds columns without losing notes or writing to the server"
         viewport: { width: 1920, height: 1080 },
     });
     const { page } = fixture;
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
     try {
         await seedHomeApps(page);
         const note = await createHomeNote(page, {
             title: "折回笔记",
             body: "窗口变窄时按列折回，不写回服务器。",
-            col: 2,
+            band: "right",
+            col: 1,
             row: 0,
         });
         await reloadHome(page);
         await waitForNoteCards(page, 1);
         await page.waitForTimeout(300);
         const patches = countLayoutPatches(page);
+        // The pending target uses the outer column that disappears on resize.
+        // Reflow must cancel it without writing or crashing the whole page.
+        const wrapper = homeNote(page, "折回笔记");
+        await wrapper.focus();
+        await wrapper.press("ArrowDown");
+        await page.locator(".home-note-target").waitFor();
 
         await page.setViewportSize({ width: 1440, height: 900 });
         await waitForNoteCards(page, 1);
@@ -41,6 +50,8 @@ Deno.test("resizing folds columns without losing notes or writing to the server"
         assertEquals(metrics.cards.length, 1);
         assertEquals(Math.round(metrics.cards[0].x), 1052);
         assertEquals(metrics.cards[0].title, "折回笔记");
+        assertEquals(await page.locator(".home-note-target").count(), 0);
+        assertEquals(pageErrors, []);
 
         await page.setViewportSize({ width: 1024, height: 768 });
         await waitForFlowMode(page, "flow");
@@ -76,7 +87,12 @@ Deno.test("resizing folds columns without losing notes or writing to the server"
         assertEquals(Math.round(metrics.cards[0].x), 1052);
 
         assertEquals(patches.count(), 0);
-        await expectLayout(page, note.id, { col: 2, row: 0, size: "s" });
+        await expectLayout(page, note.id, {
+            band: "right",
+            col: 1,
+            row: 0,
+            size: "s",
+        });
     } finally {
         await fixture.close();
     }

@@ -1,20 +1,36 @@
 /**
- * Pure lattice math for notes pinned to the home surface (#285 Y3).
+ * Pure lattice math for notes pinned to the home surface.
  *
- * Notes sit beside the search box and the app plate: columns are anchored at
- * the block's outer edges and grow outward, rows start at the search box's top
- * edge. The caller measures that geometry; nothing here touches the DOM, so the
- * same functions serve the prototype and the Y3-I implementation.
+ * Notes live in three bands around the search box + app plate block (see
+ * `HomeNoteBand`): the side bands grow outward from the block's outer edges
+ * with rows phased on the search box top (and continuing above it), the
+ * centre shelf sits below the block. Cells are band-relative, so a saved cell
+ * means the same place at every viewport. The caller measures the geometry;
+ * nothing here touches the DOM.
  */
-import { type DocumentNoteSize, HOME_NOTE_SPANS } from "@shared/documents.ts";
+import {
+    type DocumentNoteSize,
+    HOME_NOTE_GRID_MAX_ROW,
+    HOME_NOTE_SPANS,
+    type HomeNoteBand,
+    homeNoteCellsOverlap,
+} from "@shared/documents.ts";
+
+export type Band = HomeNoteBand;
 
 export interface Cell {
+    band: Band;
     col: number;
     row: number;
 }
 
 /** A cell origin plus its span in cells. */
 export interface CellRect extends Cell {
+    cols: number;
+    rows: number;
+}
+
+export interface Span {
     cols: number;
     rows: number;
 }
@@ -26,36 +42,35 @@ export interface PixelRect {
     height: number;
 }
 
-/**
- * One lattice column. `band` names the side of the block the column belongs to
- * so a resize can fold a cell back into the same side, not merely the same index.
- */
-export interface GridColumn {
+export interface Point {
     x: number;
-    band: string;
+    y: number;
+}
+
+/** One band of the lattice. Only bands with at least one cell are listed. */
+export interface BandGrid {
+    band: Band;
+    /**
+     * Left edge of each column by band offset: side bands run from the block
+     * outward, the shelf runs left to right.
+     */
+    columns: readonly number[];
+    /** Top edge of row 0. */
+    top: number;
+    /** Inclusive lowest row; side bands may start above the search box. */
+    minRow: number;
+    /** Exclusive highest row. */
+    maxRow: number;
 }
 
 export interface CellGrid {
-    columns: readonly GridColumn[];
-    /** Top edge of row 0, in the same coordinate space as the rendered cells. */
-    top: number;
-    rows: number;
+    bands: readonly BandGrid[];
     cell: number;
     gap: number;
 }
 
-export interface FoldResult<T extends CellRect> {
-    placed: T[];
-    overflow: T[];
-}
-
 export function pitch(grid: CellGrid): number {
     return grid.cell + grid.gap;
-}
-
-function clampIndex(index: number, count: number): number {
-    if (!Number.isFinite(index)) return 0;
-    return Math.min(Math.max(Math.trunc(index), 0), Math.max(0, count - 1));
 }
 
 /** Home rows stop this far above the viewport bottom (Y4-C4). */
@@ -68,8 +83,14 @@ export interface HomeBlockGeometry {
     /** Left edge of the search box / app plate. */
     left: number;
     width: number;
-    /** Top edge of the search box after composition. */
-    top: number;
+    /** Top edge of the search box; side rows are phased on it. */
+    searchTop: number;
+    /** Bottom edge of the app plate, or of the search box without a plate. */
+    blockBottom: number;
+    /** Lowest y a note may start at (the top bar bottom plus one gap). */
+    topLimit: number;
+    /** Vertical distance from the block to the shelf (search → plate rhythm). */
+    shelfGap: number;
     viewportWidth: number;
     viewportHeight: number;
     cell: number;
@@ -79,41 +100,94 @@ export interface HomeBlockGeometry {
     bottomClearance?: number;
 }
 
+function rowsBelow(
+    top: number,
+    geometry: HomeBlockGeometry,
+    step: number,
+): number {
+    const clearance = geometry.bottomClearance ?? HOME_BOTTOM_CLEARANCE;
+    return Math.min(
+        HOME_NOTE_GRID_MAX_ROW + 1,
+        Math.max(
+            0,
+            Math.floor(
+                (geometry.viewportHeight - clearance - top + geometry.gap) /
+                    step,
+            ),
+        ),
+    );
+}
+
 /**
- * Columns grow outward from the block's outer edges with the shared cell and
- * gap, rows start at the search box top. The block itself is not part of the
- * lattice: callers pass it as a pixel obstacle.
+ * Side columns grow outward from the block's outer edges with the shared cell
+ * and gap; their rows are phased on the search box top and continue up to the
+ * top limit and down to the bottom clearance. The shelf centres whole cells
+ * under the block. The block itself is not part of the lattice: callers pass
+ * it (and anything else drawn there) as pixel obstacles.
  */
 export function homeGridFromBlock(geometry: HomeBlockGeometry): CellGrid {
     const step = geometry.cell + geometry.gap;
-    const clearance = geometry.bottomClearance ?? HOME_BOTTOM_CLEARANCE;
-    const leftColumns: GridColumn[] = [];
+    const left: number[] = [];
     for (
         let x = geometry.left - geometry.gap - geometry.cell;
         x >= geometry.inset - 0.5;
         x -= step
     ) {
-        leftColumns.unshift({ x, band: "left" });
+        left.push(x);
     }
-    const rightColumns: GridColumn[] = [];
+    const right: number[] = [];
     for (
         let x = geometry.left + geometry.width + geometry.gap;
         x + geometry.cell <= geometry.viewportWidth - geometry.inset + 0.5;
         x += step
     ) {
-        rightColumns.push({ x, band: "right" });
+        right.push(x);
     }
-    const rows = Math.max(
-        0,
-        Math.floor(
-            (geometry.viewportHeight - clearance - geometry.top +
-                geometry.gap) / step,
+    const sideMinRow = Math.max(
+        -HOME_NOTE_GRID_MAX_ROW,
+        Math.min(
+            0,
+            Math.ceil((geometry.topLimit - geometry.searchTop - 0.5) / step),
         ),
     );
+    const sideMaxRow = rowsBelow(geometry.searchTop, geometry, step);
+    const shelfCount = Math.max(
+        0,
+        Math.floor((geometry.width + geometry.gap) / step),
+    );
+    const shelfWidth = shelfCount * step - geometry.gap;
+    const shelfLeft = geometry.left + (geometry.width - shelfWidth) / 2;
+    const shelfTop = geometry.blockBottom + geometry.shelfGap;
+    const bands: BandGrid[] = [
+        {
+            band: "left",
+            columns: left,
+            top: geometry.searchTop,
+            minRow: sideMinRow,
+            maxRow: sideMaxRow,
+        },
+        {
+            band: "right",
+            columns: right,
+            top: geometry.searchTop,
+            minRow: sideMinRow,
+            maxRow: sideMaxRow,
+        },
+        {
+            band: "center",
+            columns: Array.from(
+                { length: shelfCount },
+                (_, index) => shelfLeft + index * step,
+            ),
+            top: shelfTop,
+            minRow: 0,
+            maxRow: rowsBelow(shelfTop, geometry, step),
+        },
+    ];
     return {
-        columns: [...leftColumns, ...rightColumns],
-        top: geometry.top,
-        rows,
+        bands: bands.filter((band) =>
+            band.columns.length > 0 && band.maxRow > band.minRow
+        ),
         cell: geometry.cell,
         gap: geometry.gap,
     };
@@ -153,42 +227,44 @@ export function composeBlockTop(options: CompositionOptions): number {
     );
 }
 
-/**
- * Pixel bounds of a cell span. Spans are contiguous inside one band, so the
- * width is `cols` cells plus the gaps between them. Out-of-range origins clamp
- * to the nearest column or row: a drag preview must stay on screen.
- */
-export function cellToPixels(rect: CellRect, grid: CellGrid): PixelRect {
-    const col = clampIndex(rect.col, grid.columns.length);
-    const row = clampIndex(rect.row, grid.rows);
-    return {
-        x: grid.columns[col]?.x ?? 0,
-        y: grid.top + row * pitch(grid),
-        width: rect.cols * grid.cell + (rect.cols - 1) * grid.gap,
-        height: rect.rows * grid.cell + (rect.rows - 1) * grid.gap,
-    };
+export function bandOf(grid: CellGrid, band: Band): BandGrid | undefined {
+    return grid.bands.find((item) => item.band === band);
 }
 
-/** Nearest cell origin to a pixel point; drag previews use the column centre. */
-export function pixelsToCell(
-    point: { x: number; y: number },
-    grid: CellGrid,
-): Cell {
-    let best = 0;
-    let distance = Infinity;
-    grid.columns.forEach((column, index) => {
-        const next = Math.abs(point.x - (column.x + grid.cell / 2));
-        if (next < distance) {
-            distance = next;
-            best = index;
-        }
-    });
+/** In bounds of an existing band, as a contiguous span. */
+export function fits(rect: CellRect, grid: CellGrid): boolean {
+    const band = bandOf(grid, rect.band);
+    if (!band) return false;
+    if (
+        !Number.isInteger(rect.col) || !Number.isInteger(rect.row) ||
+        !Number.isInteger(rect.cols) || !Number.isInteger(rect.rows)
+    ) {
+        return false;
+    }
+    if (rect.cols < 1 || rect.rows < 1) return false;
+    return rect.col >= 0 && rect.col + rect.cols <= band.columns.length &&
+        rect.row >= band.minRow && rect.row + rect.rows <= band.maxRow;
+}
+
+/**
+ * Pixel bounds of a fitting span. Side spans grow away from the block, so a
+ * left-band W starts at its outer column.
+ */
+export function cellToPixels(rect: CellRect, grid: CellGrid): PixelRect {
+    const band = bandOf(grid, rect.band);
+    if (!band || !fits(rect, grid)) {
+        throw new RangeError(
+            `Cell ${rect.band}:${rect.col},${rect.row} is outside the lattice`,
+        );
+    }
+    const x = rect.band === "left"
+        ? band.columns[rect.col + rect.cols - 1]
+        : band.columns[rect.col];
     return {
-        col: best,
-        row: clampIndex(
-            Math.round((point.y - grid.top) / pitch(grid)),
-            grid.rows,
-        ),
+        x,
+        y: band.top + rect.row * pitch(grid),
+        width: rect.cols * grid.cell + (rect.cols - 1) * grid.gap,
+        height: rect.rows * grid.cell + (rect.rows - 1) * grid.gap,
     };
 }
 
@@ -198,23 +274,7 @@ export function intersects(a: PixelRect, b: PixelRect): boolean {
         a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
-/** In bounds and, for spans, entirely inside a single band. */
-export function fits(rect: CellRect, grid: CellGrid): boolean {
-    if (!Number.isInteger(rect.cols) || !Number.isInteger(rect.rows)) {
-        return false;
-    }
-    if (rect.cols < 1 || rect.rows < 1) return false;
-    if (rect.col < 0 || rect.row < 0) return false;
-    if (rect.col + rect.cols > grid.columns.length) return false;
-    if (rect.row + rect.rows > grid.rows) return false;
-    const band = grid.columns[rect.col].band;
-    for (let col = rect.col + 1; col < rect.col + rect.cols; col++) {
-        if (grid.columns[col].band !== band) return false;
-    }
-    return true;
-}
-
-/** True when the span is in bounds, clear of obstacles and of occupied cells. */
+/** True when the span fits, is clear of obstacles and of occupied cells. */
 export function isFree(
     rect: CellRect,
     grid: CellGrid,
@@ -231,141 +291,166 @@ export function isFree(
     );
 }
 
-/** Every free span origin in reading order: rows top-down, then columns. */
+/** Every fitting origin for a span, in reading order (top-down, left-right). */
+export function allCells(grid: CellGrid, span: Span): CellRect[] {
+    const cells: Array<{ cell: CellRect; pixels: PixelRect }> = [];
+    for (const band of grid.bands) {
+        for (let row = band.minRow; row + span.rows <= band.maxRow; row++) {
+            for (
+                let col = 0;
+                col + span.cols <= band.columns.length;
+                col++
+            ) {
+                const cell = {
+                    band: band.band,
+                    col,
+                    row,
+                    cols: span.cols,
+                    rows: span.rows,
+                };
+                cells.push({ cell, pixels: cellToPixels(cell, grid) });
+            }
+        }
+    }
+    return cells
+        .sort((a, b) => a.pixels.y - b.pixels.y || a.pixels.x - b.pixels.x)
+        .map((item) => item.cell);
+}
+
+/** Every free span origin in reading order. */
 export function freeCells(
     grid: CellGrid,
     occupied: readonly CellRect[],
     obstacles: readonly PixelRect[],
-    span: { cols: number; rows: number } = { cols: 1, rows: 1 },
+    span: Span = HOME_NOTE_SPANS.s,
 ): CellRect[] {
-    const cells: CellRect[] = [];
-    for (let row = 0; row + span.rows <= grid.rows; row++) {
-        for (let col = 0; col + span.cols <= grid.columns.length; col++) {
-            const candidate = { col, row, cols: span.cols, rows: span.rows };
-            if (isFree(candidate, grid, occupied, obstacles)) {
-                cells.push(candidate);
-            }
-        }
-    }
-    return cells;
-}
-
-/**
- * Non-overlapping capacity for one span size. A span never crosses a band, so
- * each band contributes `floor(columns / span.cols) * floor(rows / span.rows)`.
- */
-export function cellCapacity(
-    grid: CellGrid,
-    span: { cols: number; rows: number },
-): number {
-    if (span.cols < 1 || span.rows < 1) return 0;
-    const bands = new Map<string, number>();
-    for (const column of grid.columns) {
-        bands.set(column.band, (bands.get(column.band) ?? 0) + 1);
-    }
-    let total = 0;
-    for (const count of bands.values()) {
-        total += Math.floor(count / span.cols) *
-            Math.floor(grid.rows / span.rows);
-    }
-    return total;
-}
-
-/** Euclidean nearest free cell; ties resolve in reading order. */
-export function nearestFreeCell(
-    target: CellRect,
-    grid: CellGrid,
-    occupied: readonly CellRect[],
-    obstacles: readonly PixelRect[],
-): CellRect | null {
-    let best: CellRect | null = null;
-    let bestDistance = Infinity;
-    for (let row = 0; row + target.rows <= grid.rows; row++) {
-        for (let col = 0; col + target.cols <= grid.columns.length; col++) {
-            const distance = (col - target.col) ** 2 + (row - target.row) ** 2;
-            if (distance >= bestDistance) continue;
-            const candidate = { ...target, col, row };
-            if (!isFree(candidate, grid, occupied, obstacles)) continue;
-            best = candidate;
-            bestDistance = distance;
-        }
-    }
-    return best;
-}
-
-function bandRange(
-    grid: CellGrid,
-    band: string,
-): { start: number; count: number } | null {
-    let start = -1;
-    let count = 0;
-    grid.columns.forEach((column, index) => {
-        if (column.band !== band) return;
-        if (start === -1) start = index;
-        count++;
-    });
-    return start === -1 ? null : { start, count };
-}
-
-function foldColumn(
-    note: CellRect,
-    from: CellGrid | null,
-    to: CellGrid,
-): number {
-    const band = from && note.col >= 0 && note.col < from.columns.length
-        ? from.columns[note.col].band
-        : null;
-    const source = band && from ? bandRange(from, band) : null;
-    const target = band ? bandRange(to, band) : null;
-    if (source && target && target.count >= note.cols) {
-        const offset = note.col - source.start;
-        return target.start +
-            Math.min(Math.max(offset, 0), target.count - note.cols);
-    }
-    return Math.min(
-        Math.max(note.col, 0),
-        Math.max(0, to.columns.length - note.cols),
+    return allCells(grid, span).filter((cell) =>
+        isFree(cell, grid, occupied, obstacles)
     );
 }
 
 /**
- * Projects cells stored for `from` onto `to` after the viewport changed. A note
- * keeps its band and its offset from that band's inner edge, rows clamp to the
- * new height, collisions resolve to the nearest free cell, and notes that no
- * longer fit are reported as overflow instead of being dropped.
+ * Non-overlapping capacity for one span size, ignoring obstacles. A span never
+ * crosses a band, so each band contributes `floor(columns / cols) * floor(rows / rows)`.
  */
-export function foldColumns<T extends CellRect>(
-    notes: readonly T[],
-    from: CellGrid | null,
-    to: CellGrid,
-    obstacles: readonly PixelRect[],
-): FoldResult<T> {
-    const placed: T[] = [];
-    const overflow: T[] = [];
-    for (const note of notes) {
-        const col = foldColumn(note, from, to);
-        const row = Math.min(
-            Math.max(note.row, 0),
-            Math.max(0, to.rows - note.rows),
-        );
-        const free = nearestFreeCell(
-            { ...note, col, row },
-            to,
-            placed,
-            obstacles,
-        );
-        if (free) placed.push({ ...note, ...free });
-        else overflow.push(note);
+export function cellCapacity(grid: CellGrid, span: Span): number {
+    if (span.cols < 1 || span.rows < 1) return 0;
+    return grid.bands.reduce(
+        (total, band) =>
+            total +
+            Math.floor(band.columns.length / span.cols) *
+                Math.floor((band.maxRow - band.minRow) / span.rows),
+        0,
+    );
+}
+
+function distance(a: Point, b: Point): number {
+    return (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+}
+
+/** Fitting origin whose top-left is nearest to a pixel point; ties keep reading order. */
+export function nearestCell(
+    point: Point,
+    grid: CellGrid,
+    span: Span,
+    accept: (cell: CellRect) => boolean = () => true,
+): CellRect | null {
+    let best: CellRect | null = null;
+    let bestDistance = Infinity;
+    for (const cell of allCells(grid, span)) {
+        const next = distance(point, cellToPixels(cell, grid));
+        if (next >= bestDistance || !accept(cell)) continue;
+        best = cell;
+        bestDistance = next;
     }
-    return { placed, overflow };
+    return best;
+}
+
+/** Euclidean nearest free cell to a pixel point; ties resolve in reading order. */
+export function nearestFreeCell(
+    point: Point,
+    span: Span,
+    grid: CellGrid,
+    occupied: readonly CellRect[],
+    obstacles: readonly PixelRect[],
+    accept?: (cell: CellRect) => boolean,
+): CellRect | null {
+    return nearestCell(
+        point,
+        grid,
+        span,
+        (cell) =>
+            isFree(cell, grid, occupied, obstacles) &&
+            (!accept || accept(cell)),
+    );
+}
+
+export type Direction = "left" | "right" | "up" | "down";
+
+/**
+ * Origins in a directional half-plane. In-line cells come first, then the
+ * nearest diagonal cells, so a side band's last row can reach the shelf and
+ * the shelf can return to the sides without a pointer.
+ */
+export function cellsInDirection(
+    from: CellRect,
+    direction: Direction,
+    grid: CellGrid,
+): CellRect[] {
+    const origin = cellToPixels(from, grid);
+    const half = pitch(grid) / 2;
+    const horizontal = direction === "left" || direction === "right";
+    const sign = direction === "right" || direction === "down" ? 1 : -1;
+    return allCells(grid, { cols: from.cols, rows: from.rows })
+        .map((cell) => {
+            const pixels = cellToPixels(cell, grid);
+            const main = horizontal
+                ? (pixels.x - origin.x) * sign
+                : (pixels.y - origin.y) * sign;
+            const cross = horizontal
+                ? Math.abs(pixels.y - origin.y)
+                : Math.abs(pixels.x - origin.x);
+            return { cell, pixels, main, inLine: cross < half };
+        })
+        .filter(({ main }) => main > 0.5)
+        .sort((a, b) =>
+            Number(b.inLine) - Number(a.inLine) ||
+            distance(a.pixels, origin) - distance(b.pixels, origin)
+        )
+        .map(({ cell }) => cell);
 }
 
 /** One home note as the server stores it: an optional cell plus a size tier. */
 export interface HomeNoteCell {
     id: string;
     size: DocumentNoteSize;
+    band: Band | null;
     col: number | null;
     row: number | null;
+}
+
+/**
+ * A rendered free cell may still intersect a saved footprint that folded to
+ * another row at this viewport, especially a W currently rendered as S.
+ * User moves must obey both footprints; automatic viewport reflow must not.
+ */
+export function canSaveHomeNoteCell(
+    note: HomeNoteCell,
+    cell: Cell,
+    saved: readonly HomeNoteCell[],
+    swapId?: string,
+): boolean {
+    const candidate = { ...cell, size: note.size };
+    return saved.every((other) =>
+        other.id === note.id || other.id === swapId ||
+        other.band === null || other.col === null || other.row === null ||
+        !homeNoteCellsOverlap(candidate, {
+            band: other.band,
+            col: other.col,
+            row: other.row,
+            size: other.size,
+        })
+    );
 }
 
 /** A placed note carries its rendered span; a W may render as S. */
@@ -374,47 +459,84 @@ export interface PlacedHomeNote<T extends HomeNoteCell> extends CellRect {
 }
 
 export interface PlaceHomeNotesOptions {
-    /** The grid the saved cells were measured on, when the viewport changes. */
-    from?: CellGrid | null;
     obstacles?: readonly PixelRect[];
 }
 
-function bandMembers(grid: CellGrid): Map<string, number[]> {
-    const bands = new Map<string, number[]>();
-    grid.columns.forEach((column, index) => {
-        const members = bands.get(column.band) ?? [];
-        members.push(index);
-        bands.set(column.band, members);
-    });
-    return bands;
+function spansFor(size: DocumentNoteSize): readonly Span[] {
+    return size === "w"
+        ? [HOME_NOTE_SPANS.w, HOME_NOTE_SPANS.s]
+        : [HOME_NOTE_SPANS.s];
 }
 
-/** Band indices ordered from the search/plate edge outward. */
-function innerFirst(
-    members: readonly number[],
-    band: string,
-): readonly number[] {
-    return band === "left" ? [...members].reverse() : members;
+/**
+ * Resolves one note near a pixel point: the nearest free cell, keeping W when
+ * any W fits and otherwise rendering it as S. The stored tier is untouched.
+ */
+export function resolveHomeNoteCell(
+    note: Pick<HomeNoteCell, "size">,
+    point: Point,
+    grid: CellGrid,
+    occupied: readonly CellRect[],
+    obstacles: readonly PixelRect[] = [],
+    accept?: (cell: CellRect) => boolean,
+): CellRect | null {
+    for (const span of spansFor(note.size)) {
+        const cell = nearestFreeCell(
+            point,
+            span,
+            grid,
+            occupied,
+            obstacles,
+            accept,
+        );
+        if (cell) return cell;
+    }
+    return null;
 }
 
-/** First free span inside one band, rows top-down and columns inner-first. */
+/**
+ * The pixel point a saved cell asks for at this viewport: out-of-range offsets
+ * and rows clamp into the band. Null when the band has no cells here.
+ */
+function savedPoint(note: HomeNoteCell, grid: CellGrid): Point | null {
+    if (note.band === null || note.col === null || note.row === null) {
+        return null;
+    }
+    const band = bandOf(grid, note.band);
+    if (!band) return null;
+    const cols = Math.min(HOME_NOTE_SPANS[note.size].cols, band.columns.length);
+    const col = Math.min(
+        Math.max(Math.trunc(note.col), 0),
+        band.columns.length - cols,
+    );
+    const row = Math.min(
+        Math.max(Math.trunc(note.row), band.minRow),
+        band.maxRow - 1,
+    );
+    return cellToPixels({ band: note.band, col, row, cols, rows: 1 }, grid);
+}
+
+/** Rows from the search line down, then above it; the shelf top-down. */
+function defaultRowOrder(band: BandGrid, span: Span): number[] {
+    const below: number[] = [];
+    const above: number[] = [];
+    for (let row = band.minRow; row + span.rows <= band.maxRow; row++) {
+        (row >= 0 ? below : above).push(row);
+    }
+    return [...below, ...above.reverse()];
+}
+
+/** First free span inside one band, rows in default order, columns inner-first. */
 function firstFreeInBand(
-    span: { cols: number; rows: number },
-    band: string,
+    span: Span,
+    band: BandGrid,
     grid: CellGrid,
     occupied: readonly CellRect[],
     obstacles: readonly PixelRect[],
 ): CellRect | null {
-    const members = bandMembers(grid).get(band) ?? [];
-    if (members.length < span.cols) return null;
-    const order = innerFirst(members, band);
-    for (let row = 0; row + span.rows <= grid.rows; row++) {
-        for (let offset = 0; offset + span.cols <= order.length; offset++) {
-            const start = order[offset];
-            const end = order[offset + span.cols - 1];
-            // A contiguous span must also be contiguous in the column array.
-            if (Math.abs(end - start) !== span.cols - 1) continue;
-            const candidate = { col: Math.min(start, end), row, ...span };
+    for (const row of defaultRowOrder(band, span)) {
+        for (let col = 0; col + span.cols <= band.columns.length; col++) {
+            const candidate = { band: band.band, col, row, ...span };
             if (isFree(candidate, grid, occupied, obstacles)) return candidate;
         }
     }
@@ -422,59 +544,11 @@ function firstFreeInBand(
 }
 
 /**
- * Resolves one note at the requested cell: the exact cell when free, else the
- * nearest free cell. A W that cannot fit is rendered as S; the stored tier is
- * preserved so the size menu still reflects the user's choice.
- */
-function placeAt(
-    note: HomeNoteCell,
-    target: { col: number; row: number },
-    grid: CellGrid,
-    occupied: readonly CellRect[],
-    obstacles: readonly PixelRect[],
-): { cell: CellRect; size: DocumentNoteSize } | null {
-    for (
-        const size of note.size === "w" ? ["w", "s"] as const : ["s"] as const
-    ) {
-        const span = HOME_NOTE_SPANS[size];
-        const cell = nearestFreeCell(
-            { col: target.col, row: target.row, ...span },
-            grid,
-            occupied,
-            obstacles,
-        );
-        if (cell) return { cell, size };
-    }
-    return null;
-}
-
-function foldedTarget(
-    note: HomeNoteCell,
-    from: CellGrid | null | undefined,
-    grid: CellGrid,
-): { col: number; row: number } {
-    const col = note.col === null ? 0 : note.col;
-    const row = note.row === null ? 0 : note.row;
-    if (!from) {
-        return {
-            col: Math.min(
-                Math.max(col, 0),
-                Math.max(0, grid.columns.length - 1),
-            ),
-            row: Math.min(Math.max(row, 0), Math.max(0, grid.rows - 1)),
-        };
-    }
-    return {
-        col: foldColumn({ col, row, cols: 1, rows: 1 }, from, grid),
-        row: Math.min(Math.max(row, 0), Math.max(0, grid.rows - 1)),
-    };
-}
-
-/**
- * Places home notes in `homeSortOrder`. Saved cells keep their band and offset
- * from it; notes without cells alternate between the sides, filling each from
- * the plate outward, top first. Notes that do not fit are returned as overflow
- * instead of being squeezed elsewhere.
+ * Places home notes in `homeSortOrder`. Saved cells are honoured first (the
+ * nearest free cell when taken or out of range); notes without a usable cell
+ * then alternate between the sides, filling each from the block outward and
+ * from the search line down, and use the shelf when both sides are full.
+ * Notes that do not fit are returned as overflow instead of being squeezed.
  */
 export function placeHomeNotes<T extends HomeNoteCell>(
     notes: readonly T[],
@@ -483,62 +557,57 @@ export function placeHomeNotes<T extends HomeNoteCell>(
 ): { placed: PlacedHomeNote<T>[]; overflow: T[] } {
     const obstacles = options.obstacles ?? [];
     const occupied: CellRect[] = [];
-    const placed: PlacedHomeNote<T>[] = [];
-    const overflow: T[] = [];
-    let preferred: "left" | "right" = "left";
+    const chosen = new Map<T, CellRect>();
+    const pending: T[] = [];
     for (const note of notes) {
-        let chosen: { cell: CellRect; size: DocumentNoteSize } | null = null;
-        if (note.col !== null && note.row !== null) {
-            chosen = placeAt(
-                note,
-                foldedTarget(note, options.from, grid),
-                grid,
-                occupied,
-                obstacles,
-            );
-        } else {
-            for (
-                const band of [
-                    preferred,
-                    preferred === "left" ? "right" : "left",
-                ]
-            ) {
-                const size = note.size;
-                const span = HOME_NOTE_SPANS[size];
-                const members = (bandMembers(grid).get(band) ?? []).length;
-                const attempt = size === "w" && members < 2
-                    ? { cols: 1, rows: 1 }
-                    : span;
-                const cell = firstFreeInBand(
-                    attempt,
-                    band,
-                    grid,
-                    occupied,
-                    obstacles,
-                );
-                if (!cell) continue;
-                chosen = { cell, size: attempt.cols === 2 ? "w" : "s" };
-                break;
-            }
-            preferred = preferred === "left" ? "right" : "left";
-        }
-        if (!chosen) {
-            overflow.push(note);
+        const point = savedPoint(note, grid);
+        if (!point) {
+            pending.push(note);
             continue;
         }
-        placed.push({ note, ...chosen.cell });
-        occupied.push(chosen.cell);
+        // A saved side is an explicit choice: keep it even if a W must render
+        // as S there. A wider shelf must not steal that note's saved position
+        // or the cells belonging to a later saved shelf note.
+        const cell = resolveHomeNoteCell(
+            note,
+            point,
+            grid,
+            occupied,
+            obstacles,
+            (candidate) => candidate.band === note.band,
+        ) ?? resolveHomeNoteCell(note, point, grid, occupied, obstacles);
+        if (!cell) continue;
+        chosen.set(note, cell);
+        occupied.push(cell);
+    }
+    let preferred: Band = "left";
+    for (const note of pending) {
+        const order: Band[] = [
+            preferred,
+            preferred === "left" ? "right" : "left",
+            "center",
+        ];
+        let cell: CellRect | null = null;
+        for (const span of spansFor(note.size)) {
+            for (const name of order) {
+                const band = bandOf(grid, name);
+                if (!band) continue;
+                cell = firstFreeInBand(span, band, grid, occupied, obstacles);
+                if (cell) break;
+            }
+            if (cell) break;
+        }
+        preferred = preferred === "left" ? "right" : "left";
+        if (!cell) continue;
+        chosen.set(note, cell);
+        occupied.push(cell);
+    }
+    const placed: PlacedHomeNote<T>[] = [];
+    const overflow: T[] = [];
+    for (const note of notes) {
+        const cell = chosen.get(note);
+        if (cell) placed.push({ note, ...cell });
+        else overflow.push(note);
     }
     return { placed, overflow };
-}
-
-/** Resolves a drag/keyboard target for one note, excluding itself from `occupied`. */
-export function resolveHomeNoteCell(
-    note: HomeNoteCell,
-    target: { col: number; row: number },
-    grid: CellGrid,
-    occupied: readonly CellRect[],
-    obstacles: readonly PixelRect[] = [],
-): { cell: CellRect; size: DocumentNoteSize } | null {
-    return placeAt(note, target, grid, occupied, obstacles);
 }

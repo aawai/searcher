@@ -18,23 +18,48 @@ export const HOME_NOTE_SPANS: Record<
     s: { cols: 1, rows: 1 },
     w: { cols: 2, rows: 1 },
 };
+
+/**
+ * Home note lattice bands, named relative to the search box + app plate block
+ * so a cell means the same place at every viewport:
+ * - `left` / `right`: columns beside the block. `col` 0 touches the block and
+ *   grows outward; `row` 0 aligns with the search box top, negative rows sit
+ *   above it.
+ * - `center`: the shelf below the block. `col` 0 is the leftmost shelf column;
+ *   `row` 0 is the first row below the plate (or the search box without one).
+ */
+export type HomeNoteBand = "left" | "right" | "center";
+export const HOME_NOTE_BANDS: readonly HomeNoteBand[] = [
+    "left",
+    "right",
+    "center",
+];
 // The server cannot know the viewport, so it only rejects absurd cells; the
 // client resolves the real lattice and conflicts before writing.
 export const HOME_NOTE_GRID_MAX_COL = 63;
 export const HOME_NOTE_GRID_MAX_ROW = 31;
+/** Side bands extend above the search box; the shelf starts below the block. */
+export function homeNoteMinRow(band: HomeNoteBand): number {
+    return band === "center" ? 0 : -HOME_NOTE_GRID_MAX_ROW;
+}
+/** Most notes one batch layout request may move (a swap moves two). */
+export const HOME_NOTE_LAYOUT_BATCH_MAX = 64;
 
-/** Half-open cell overlap; touching edges are not a conflict. */
+/** Half-open cell overlap inside one band; different bands never overlap. */
 export function homeNoteCellsOverlap(
-    a: { col: number; row: number; size: DocumentNoteSize },
-    b: { col: number; row: number; size: DocumentNoteSize },
+    a: { band: HomeNoteBand; col: number; row: number; size: DocumentNoteSize },
+    b: { band: HomeNoteBand; col: number; row: number; size: DocumentNoteSize },
 ): boolean {
+    if (a.band !== b.band) return false;
     const first = HOME_NOTE_SPANS[a.size];
     const second = HOME_NOTE_SPANS[b.size];
     return a.col < b.col + second.cols && a.col + first.cols > b.col &&
         a.row < b.row + second.rows && a.row + first.rows > b.row;
 }
 
+/** `band`, `col` and `row` are one position: all set or all null. */
 export interface DocumentLayoutDto {
+    band: HomeNoteBand | null;
     col: number | null;
     row: number | null;
     size: DocumentNoteSize;
@@ -43,6 +68,13 @@ export interface DocumentLayoutDto {
 export type UpdateDocumentLayoutInput = Partial<
     Omit<DocumentLayoutDto, "updatedAt">
 >;
+/** One atomic layout write for several notes, e.g. a drag swap. */
+export interface UpdateDocumentLayoutsInput {
+    items: Array<{ id: string } & UpdateDocumentLayoutInput>;
+}
+export interface DocumentLayoutsDto {
+    items: Array<{ id: string; layout: DocumentLayoutDto }>;
+}
 export interface DocumentUpdatedEvent {
     documentId: string;
     version: number;

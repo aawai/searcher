@@ -18,6 +18,7 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
+import { type DocumentNoteSize, HOME_NOTE_SPANS } from "@shared/documents.ts";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import {
@@ -28,32 +29,34 @@ import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { BREAKPOINTS } from "../design-system/breakpoints.ts";
 import { HOME_GRID } from "../design-system/home-grid.ts";
 import {
+    allCells,
+    type Band,
+    bandOf,
     cellCapacity,
     type CellGrid,
     type CellRect,
+    cellsInDirection,
     cellToPixels,
     composeBlockTop,
-    foldColumns,
+    type Direction,
     homeGridFromBlock,
+    type HomeNoteCell,
     isFree,
+    nearestCell,
     nearestFreeCell,
     type PixelRect,
-    pixelsToCell,
+    placeHomeNotes,
+    type Point,
 } from "../features/home-layouts/home-grid-cells.ts";
 import "./home-grid-lab.css";
 
-type NoteSize = "S" | "W";
-type SizeMode = "mixed" | NoteSize;
+type SizeMode = "mixed" | DocumentNoteSize;
 type Composition = "hint" | "lower" | "scrim";
 type Theme = "light" | "dark";
 type Wallpaper = "mesh" | "light" | "dark" | "upload0" | "upload1";
 
-interface Note extends CellRect {
-    id: string;
-    size: NoteSize;
-}
-
-interface NoteSpans {
+/** A lab note: the stored band cell plus the span it currently renders at. */
+interface Note extends HomeNoteCell {
     cols: number;
     rows: number;
 }
@@ -70,15 +73,10 @@ interface Metrics {
     inset: number;
 }
 
-const NOTE_SPANS: Record<NoteSize, NoteSpans> = {
-    S: { cols: 1, rows: 1 },
-    W: { cols: 2, rows: 1 },
-};
-
 const SIZE_MODE_LABEL: Record<SizeMode, string> = {
     mixed: "混合 S / W",
-    S: "全部 S",
-    W: "全部 W",
+    s: "全部 S",
+    w: "全部 W",
 };
 
 const COMPOSITION_LABEL: Record<Composition, string> = {
@@ -98,18 +96,21 @@ const WALLPAPER_LABEL: Record<Wallpaper, string> = {
 /** Two app cells and one gap: the big-folder footprint. */
 const NOTE_CELL_APP_CELLS = 2;
 const COUNT_OPTIONS = [2, 4, 8] as const;
+/** The lab's reserved top: the floating controls pill needs this much room. */
 const LAB_MIN_BLOCK_TOP = 72;
+/** The shelf repeats the search → plate rhythm below the plate. */
+const SHELF_GAP = 20;
 const CHIP_HEIGHT = 44;
 
-const NOTE_SIZES: readonly NoteSize[] = [
-    "S",
-    "S",
-    "W",
-    "S",
-    "S",
-    "W",
-    "S",
-    "S",
+const NOTE_SIZES: readonly DocumentNoteSize[] = [
+    "s",
+    "s",
+    "w",
+    "s",
+    "s",
+    "w",
+    "s",
+    "s",
 ];
 
 const NOTE_TITLES = [
@@ -241,112 +242,60 @@ function fixtureNotes(count: number, mode: SizeMode): Note[] {
         return {
             id: String(index),
             size,
-            ...NOTE_SPANS[size],
-            col: 0,
-            row: 0,
+            band: null,
+            col: null,
+            row: null,
+            ...HOME_NOTE_SPANS[size],
         };
     });
 }
 
-function bandIndices(grid: CellGrid): Map<string, number[]> {
-    const bands = new Map<string, number[]>();
-    grid.columns.forEach((column, index) => {
-        const list = bands.get(column.band) ?? [];
-        list.push(index);
-        bands.set(column.band, list);
-    });
-    return bands;
+/** The resolved cell of a placed note; flow-layout fixtures have none. */
+function cellOf(note: Note): CellRect | null {
+    const { band, col, row } = note;
+    return band === null || col === null || row === null
+        ? null
+        : { band, col, row, cols: note.cols, rows: note.rows };
 }
 
-/**
- * First free position for a note size inside one band. Columns fill from the
- * block edge outward and rows from the search box down, so the first column is
- * the one closest to the plate.
- */
-function firstFreeInBand(
-    note: Note,
-    band: string,
-    grid: CellGrid,
-    indices: readonly number[],
-    occupied: readonly CellRect[],
-    obstacles: readonly PixelRect[],
-): CellRect | null {
-    const span = NOTE_SPANS[note.size];
-    const innerFirst = band === "left" ? [...indices].reverse() : indices;
-    for (let row = 0; row + span.rows <= grid.rows; row++) {
-        for (const start of innerFirst) {
-            const position = indices.indexOf(start);
-            if (position < 0 || position + span.cols > indices.length) continue;
-            const col = indices[position];
-            if (indices[position + span.cols - 1] !== col + span.cols - 1) {
-                continue;
-            }
-            const candidate = { col, row, cols: span.cols, rows: span.rows };
-            if (isFree(candidate, grid, occupied, obstacles)) return candidate;
-        }
+function sameCell(a: CellRect, b: CellRect): boolean {
+    return a.band === b.band && a.col === b.col && a.row === b.row &&
+        a.cols === b.cols && a.rows === b.rows;
+}
+
+/** The cells placed notes occupy, for collision checks. */
+function occupiedCells(notes: readonly Note[]): CellRect[] {
+    const cells: CellRect[] = [];
+    for (const note of notes) {
+        const cell = cellOf(note);
+        if (cell) cells.push(cell);
     }
-    return null;
+    return cells;
 }
 
 /**
- * Default fixture placement: balance notes across both sides of the block and
- * fill each side from the plate outward, top first. Notes that do not fit are
- * reported instead of being squeezed elsewhere.
+ * Places notes with the shared home algorithm: saved cells clamp into their
+ * band and resolve to the nearest free cell; fresh notes alternate between the
+ * sides and then use the shelf below the plate. Notes that do not fit come
+ * back as overflow instead of being squeezed elsewhere.
  */
-function layoutNotes(
+function placeNotes(
     notes: readonly Note[],
     grid: CellGrid,
     obstacles: readonly PixelRect[],
 ): { placed: Note[]; overflow: Note[] } {
-    const bands = bandIndices(grid);
-    // A width note crosses the page inset only when no band has a second
-    // column; that is the single case where it becomes a small note.
-    const canSpan = [...bands.values()].some((indices) => indices.length >= 2);
-    const placed: Note[] = [];
-    const overflow: Note[] = [];
-    let lastBand: string | null = null;
-    for (const note of notes) {
-        const countIn = (band: string) =>
-            placed.filter((item) => grid.columns[item.col].band === band)
-                .length;
-        const ordered = [...bands.keys()].sort((a, b) => {
-            const difference = countIn(a) - countIn(b);
-            if (difference !== 0) return difference;
-            if (a === lastBand) return 1;
-            if (b === lastBand) return -1;
-            return 0;
-        });
-        // A width tier that would cross the page inset is placed as a small
-        // note instead; a width note that merely runs out of room overflows.
-        const sizes = note.size === "W" && !canSpan
-            ? ["S"] as const
-            : note.size === "W"
-            ? ["W"] as const
-            : ["S"] as const;
-        let chosen: { note: Note; cell: CellRect } | null = null;
-        for (const size of sizes) {
-            const candidate: Note = { ...note, size, ...NOTE_SPANS[size] };
-            for (const band of ordered) {
-                const cell = firstFreeInBand(
-                    candidate,
-                    band,
-                    grid,
-                    bands.get(band) ?? [],
-                    placed,
-                    obstacles,
-                );
-                if (cell) {
-                    chosen = { note: candidate, cell };
-                    lastBand = band;
-                    break;
-                }
-            }
-            if (chosen) break;
-        }
-        if (chosen) placed.push({ ...chosen.note, ...chosen.cell });
-        else overflow.push(note);
-    }
-    return { placed, overflow };
+    const { placed, overflow } = placeHomeNotes(notes, grid, { obstacles });
+    return {
+        placed: placed.map((item) => ({
+            ...item.note,
+            band: item.band,
+            col: item.col,
+            row: item.row,
+            cols: item.cols,
+            rows: item.rows,
+        })),
+        overflow,
+    };
 }
 
 /** The 38% search anchor is the baseline; the lower third is clamped by it and the clearances. */
@@ -360,15 +309,24 @@ function composeTop(metrics: Metrics, composition: Composition): number {
     });
 }
 
-const KEY_MOVES: Record<string, readonly [number, number]> = {
-    ArrowLeft: [-1, 0],
-    ArrowRight: [1, 0],
-    ArrowUp: [0, -1],
-    ArrowDown: [0, 1],
+const KEY_MOVES: Record<string, Direction> = {
+    ArrowLeft: "left",
+    ArrowRight: "right",
+    ArrowUp: "up",
+    ArrowDown: "down",
+};
+
+const BAND_LABEL: Record<Band, string> = {
+    left: "左侧",
+    right: "右侧",
+    center: "底板下方",
 };
 
 function cellLabel(cell: CellRect): string {
-    return `第 ${cell.col + 1} 列第 ${cell.row + 1} 行`;
+    const column = `${BAND_LABEL[cell.band]}第 ${cell.col + 1} 列`;
+    return cell.row < 0
+        ? `${column}，搜索框上方第 ${-cell.row} 行`
+        : `${column}第 ${cell.row + 1} 行`;
 }
 
 export default function HomeGridLab() {
@@ -378,8 +336,8 @@ export default function HomeGridLab() {
         return COUNT_OPTIONS.includes(value as 2 | 4 | 8) ? value : 8;
     });
     const [sizeMode, setSizeMode] = useState<SizeMode>(() => {
-        const value = params.get("sizes");
-        return value === "S" || value === "W" ? value : "mixed";
+        const value = params.get("sizes")?.toLowerCase();
+        return value === "s" || value === "w" ? value : "mixed";
     });
     const [composition, setComposition] = useState<Composition>(() => {
         const value = params.get("composition");
@@ -411,7 +369,6 @@ export default function HomeGridLab() {
     const root = useRef<HTMLElement>(null);
     const block = useRef<HTMLDivElement>(null);
     const search = useRef<HTMLDivElement>(null);
-    const previousGrid = useRef<CellGrid | null>(null);
     const objects = useRef(new Set<string>());
     const fileInputs = [
         useRef<HTMLInputElement>(null),
@@ -499,61 +456,81 @@ export default function HomeGridLab() {
     const noteCell = metrics
         ? NOTE_CELL_APP_CELLS * metrics.cell + metrics.gap
         : 2 * HOME_GRID.wide.cell + HOME_GRID.wide.gap;
-    const grid = metrics && !flow
-        ? homeGridFromBlock({
-            left: metrics.blockLeft,
-            width: metrics.blockWidth,
-            top: blockTop,
-            viewportWidth: metrics.width,
-            viewportHeight: metrics.height,
-            cell: noteCell,
-            gap: metrics.gap,
-            inset: metrics.inset,
-        })
-        : null;
-    const obstacles: PixelRect[] = metrics && !flow
-        ? [{
-            x: metrics.blockLeft,
-            y: blockTop,
-            width: metrics.blockWidth,
-            height: metrics.blockHeight,
-        }]
-        : [];
-
-    const fixtures = fixtureNotes(count, sizeMode);
-    const defaults = useMemo(
-        () => (grid ? layoutNotes(fixtures, grid, obstacles) : null),
-        // The lattice key covers the measured geometry; obstacles follow it.
-        // deno-lint-ignore-next-line react-hooks/exhaustive-deps
-        [
-            grid?.columns.length,
-            grid?.columns[0]?.x,
-            grid?.top,
-            grid?.rows,
-            grid?.cell,
-            grid?.gap,
-            count,
-            sizeMode,
-            flow,
-        ],
+    const grid = useMemo(
+        () =>
+            metrics && !flow
+                ? homeGridFromBlock({
+                    left: metrics.blockLeft,
+                    width: metrics.blockWidth,
+                    // The search box is the block's first child and the plate
+                    // its last, so the measured top and height place both.
+                    searchTop: blockTop,
+                    blockBottom: blockTop + metrics.blockHeight,
+                    topLimit: LAB_MIN_BLOCK_TOP,
+                    shelfGap: SHELF_GAP,
+                    viewportWidth: metrics.width,
+                    viewportHeight: metrics.height,
+                    cell: noteCell,
+                    gap: metrics.gap,
+                    inset: metrics.inset,
+                })
+                : null,
+        [blockTop, flow, metrics, noteCell],
     );
-    const folded = grid && stored
-        ? foldColumns(stored, previousGrid.current, grid, obstacles)
-        : null;
+    const obstacles = useMemo<PixelRect[]>(
+        () =>
+            metrics && !flow
+                ? [{
+                    x: metrics.blockLeft,
+                    y: blockTop,
+                    width: metrics.blockWidth,
+                    height: metrics.blockHeight,
+                }]
+                : [],
+        [blockTop, flow, metrics],
+    );
+    const fixtures = useMemo(
+        () => fixtureNotes(count, sizeMode),
+        [count, sizeMode],
+    );
+    const defaults = useMemo(
+        () => (grid ? placeNotes(fixtures, grid, obstacles) : null),
+        [fixtures, grid, obstacles],
+    );
+    // Saved cells are re-placed against the current lattice: out-of-range
+    // columns and rows clamp into their band, and taken cells snap to the
+    // nearest free one.
+    const folded = useMemo(
+        () => (grid && stored ? placeNotes(stored, grid, obstacles) : null),
+        [grid, obstacles, stored],
+    );
     const placed: Note[] = folded
         ? folded.placed
         : defaults?.placed ?? fixtures;
     const placedIds = new Set(placed.map((note) => note.id));
     const overflow = fixtures.filter((note) => !placedIds.has(note.id));
     const downgraded = fixtures.filter((fixture) =>
-        fixture.size === "W" &&
-        placed.some((note) => note.id === fixture.id && note.size === "S")
+        fixture.size === "w" &&
+        placed.some((note) =>
+            note.id === fixture.id && note.cols < HOME_NOTE_SPANS.w.cols
+        )
     ).length;
     const rendered = flow ? fixtures : placed;
-
-    useLayoutEffect(() => {
-        previousGrid.current = grid;
-    });
+    // Every cell of every band, including the rows above the search box and
+    // the shelf below the plate: drawn as the faint lattice overlay.
+    const lattice = useMemo(
+        () => (grid ? allCells(grid, HOME_NOTE_SPANS.s) : []),
+        [grid],
+    );
+    const leftBand = grid ? bandOf(grid, "left") : undefined;
+    const rightBand = grid ? bandOf(grid, "right") : undefined;
+    const shelfBand = grid ? bandOf(grid, "center") : undefined;
+    const leftColumns = leftBand?.columns.length ?? 0;
+    const rightColumns = rightBand?.columns.length ?? 0;
+    const shelfColumns = shelfBand?.columns.length ?? 0;
+    const sideRows = leftBand
+        ? `${leftBand.minRow}…${leftBand.maxRow - 1}`
+        : "—";
 
     const announce = useCallback((message: string) => {
         setAnnouncement((previous) =>
@@ -562,11 +539,12 @@ export default function HomeGridLab() {
     }, []);
 
     const commit = (target: Note) => {
+        const cell = cellOf(target);
         setStored(
             placed.map((note) => note.id === target.id ? { ...target } : note),
         );
         setPreview(null);
-        announce(`位置已确认：${cellLabel(target)}。`);
+        announce(cell ? `位置已确认：${cellLabel(cell)}。` : "位置已确认。");
     };
 
     const cancel = (message = "已取消移动。") => {
@@ -575,53 +553,30 @@ export default function HomeGridLab() {
     };
 
     /**
-     * A blocked target cell must not resolve back to the note's own cell: walk
-     * one more step in the requested direction before giving up.
+     * Preview the nearest free cell in one screen direction. Every band is its
+     * own row/column frame, so the arrows follow pixels, not lattice offsets.
      */
-    const resolveTarget = (note: Note, cell: CellRect): CellRect | null => {
-        if (!grid) return null;
-        const others = placed.filter((item) => item.id !== note.id);
-        const free = nearestFreeCell(cell, grid, others, obstacles);
-        if (!free) return null;
-        const moved = free.col !== note.col || free.row !== note.row;
-        if (moved) return free;
-        const stepCol = cell.col - note.col;
-        const stepRow = cell.row - note.row;
-        if (stepCol === 0 && stepRow === 0) return free;
-        let next = cell;
-        for (let step = 0; step < 4; step++) {
-            next = {
-                ...next,
-                col: next.col + stepCol,
-                row: next.row + stepRow,
-            };
-            const further = nearestFreeCell(next, grid, others, obstacles);
-            if (!further) return null;
-            if (further.col !== note.col || further.row !== note.row) {
-                return further;
-            }
-        }
-        return null;
-    };
-
-    const move = (note: Note, col: number, row: number) => {
+    const move = (note: Note, direction: Direction) => {
         if (!grid) return;
-        const target = resolveTarget(note, { ...note, col, row });
+        const cell = cellOf(note);
+        if (!cell) return;
+        const from = (preview?.id === note.id ? cellOf(preview) : null) ?? cell;
+        const others = occupiedCells(
+            placed.filter((item) => item.id !== note.id),
+        );
+        const target = cellsInDirection(from, direction, grid).find((
+            candidate,
+        ) => isFree(candidate, grid, others, obstacles));
         if (!target) {
             announce(`${NOTE_TITLES[Number(note.id)]}：这个方向没有空闲位置。`);
             return;
         }
-        const current = preview?.id === note.id ? preview : note;
         setPreview({ ...note, ...target });
-        if (target.col === current.col && target.row === current.row) {
-            announce(`${NOTE_TITLES[Number(note.id)]}：已到可移动的边界。`);
-        } else {
-            announce(
-                `${NOTE_TITLES[Number(note.id)]}：${
-                    cellLabel(target)
-                }。Enter 确认，Escape 取消。`,
-            );
-        }
+        announce(
+            `${NOTE_TITLES[Number(note.id)]}：${
+                cellLabel(target)
+            }。Enter 确认，Escape 取消。`,
+        );
     };
 
     const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, note: Note) => {
@@ -638,24 +593,38 @@ export default function HomeGridLab() {
             commit(preview);
             return;
         }
-        const step = KEY_MOVES[event.key];
-        if (!step) return;
+        const direction = KEY_MOVES[event.key];
+        if (!direction) return;
         event.preventDefault();
-        const current = preview?.id === note.id ? preview : note;
-        move(note, current.col + step[0], current.row + step[1]);
+        move(note, direction);
     };
 
     const onDragMove = (event: DragMoveEvent) => {
         if (!grid) return;
         const note = placed.find((item) => item.id === String(event.active.id));
-        if (!note) return;
-        const placement = cellToPixels(note, grid);
-        const cell = pixelsToCell({
-            x: placement.x + event.delta.x,
-            y: placement.y + event.delta.y,
-        }, grid);
-        const target = resolveTarget(note, { ...note, ...cell });
-        setPreview(target ? { ...note, ...target } : null);
+        const cell = note ? cellOf(note) : null;
+        if (!note || !cell) return;
+        const origin = cellToPixels(cell, grid);
+        const point: Point = {
+            x: origin.x + event.delta.x,
+            y: origin.y + event.delta.y,
+        };
+        const span = { cols: cell.cols, rows: cell.rows };
+        const others = occupiedCells(
+            placed.filter((item) => item.id !== note.id),
+        );
+        // The cell under the pointer wins when it is free; otherwise the note
+        // snaps to the nearest free cell of the same span.
+        const under = nearestCell(point, grid, span);
+        if (
+            under && !sameCell(under, cell) &&
+            isFree(under, grid, others, obstacles)
+        ) {
+            setPreview({ ...note, ...under });
+            return;
+        }
+        const free = nearestFreeCell(point, span, grid, others, obstacles);
+        setPreview(free && !sameCell(free, cell) ? { ...note, ...free } : null);
     };
 
     const upload = (files: FileList | null, slot: number | "icons") => {
@@ -700,8 +669,8 @@ export default function HomeGridLab() {
         ? uploads[1]
         : "";
     const iconSet = icons.length ? icons : GENERATED_ICONS;
-    const smallCapacity = grid ? cellCapacity(grid, NOTE_SPANS.S) : 0;
-    const wideCapacity = grid ? cellCapacity(grid, NOTE_SPANS.W) : 0;
+    const smallCapacity = grid ? cellCapacity(grid, HOME_NOTE_SPANS.s) : 0;
+    const wideCapacity = grid ? cellCapacity(grid, HOME_NOTE_SPANS.w) : 0;
     const anchor = metrics
         ? Math.round(
             ((blockTop + metrics.searchHeight / 2) / metrics.height) * 100,
@@ -718,9 +687,9 @@ export default function HomeGridLab() {
             Math.round(noteCell)
         } · 容量 S ${smallCapacity} / W ${wideCapacity} · 已放 ${placed.length} · 更多 ${overflow.length}${
             downgraded ? ` · W 按 S 放置 ${downgraded}` : ""
-        } · ${grid?.columns.length ?? 0} 列 × ${
-            grid?.rows ?? 0
-        } 行 · 搜索中心 ${anchor}% · 底板距底 ${Math.round(clearance)}px`;
+        } · 列 左 ${leftColumns} / 右 ${rightColumns} / 底板下 ${shelfColumns} · 侧行 ${sideRows} · ${lattice.length} 格 · 搜索中心 ${anchor}% · 底板距底 ${
+            Math.round(clearance)
+        }px`;
 
     const placementBelow = grid && overflow.length > 0 && metrics
         ? {
@@ -996,8 +965,27 @@ export default function HomeGridLab() {
                     data-flow={flow}
                     aria-label={`固定到首页的笔记（${count} 张夹具）`}
                 >
+                    {!flow && grid && lattice.map((cell) => {
+                        const rect = cellToPixels(cell, grid);
+                        return (
+                            <span
+                                key={`${cell.band}:${cell.col}:${cell.row}`}
+                                className="home-grid-lab__cell"
+                                data-band={cell.band}
+                                style={{
+                                    left: rect.x,
+                                    top: rect.y,
+                                    width: rect.width,
+                                    height: rect.height,
+                                }}
+                                aria-hidden="true"
+                            />
+                        );
+                    })}
                     {!flow && grid && preview && (() => {
-                        const placement = cellToPixels(preview, grid);
+                        const cell = cellOf(preview);
+                        if (!cell) return null;
+                        const placement = cellToPixels(cell, grid);
                         return (
                             <div
                                 className="home-grid-lab__target"
@@ -1051,8 +1039,9 @@ export default function HomeGridLab() {
                 data-placed={placed.length}
                 data-more={overflow.length}
                 data-downgraded={downgraded}
-                data-columns={grid?.columns.length ?? 0}
-                data-rows={grid?.rows ?? 0}
+                data-columns={leftColumns + rightColumns + shelfColumns}
+                data-cells={lattice.length}
+                data-bands={grid?.bands.length ?? 0}
                 data-anchor={flow ? undefined : anchor}
                 data-clearance={flow ? undefined : Math.round(clearance)}
                 data-note-cell={Math.round(noteCell)}
@@ -1100,7 +1089,9 @@ function NoteCard(
         if (element.parentElement) observer.observe(element.parentElement);
         return () => observer.disconnect();
     }, [note.id, note.size, flow]);
-    const placement = grid ? cellToPixels(note, grid) : null;
+    const cell = cellOf(note);
+    const placement = grid && cell ? cellToPixels(cell, grid) : null;
+    const size = note.cols > HOME_NOTE_SPANS.s.cols ? "w" : "s";
     const title = NOTE_TITLES[Number(note.id)];
     const color = NOTE_COLORS[Number(note.id) % NOTE_COLORS.length];
     const style: CSSProperties = {
@@ -1118,13 +1109,14 @@ function NoteCard(
             type="button"
             className="home-grid-lab__note"
             data-note={note.id}
-            data-size={note.size}
+            data-size={size}
+            data-tier={note.size}
             data-note-color={color}
             data-dragging={isDragging || preview}
-            aria-label={flow
-                ? `${title}，${note.size} 尺寸夹具`
-                : `${title}，${note.size} 尺寸，${
-                    cellLabel(note)
+            aria-label={flow || !cell
+                ? `${title}，${size === "w" ? "W" : "S"} 尺寸夹具`
+                : `${title}，${size === "w" ? "W" : "S"} 尺寸，${
+                    cellLabel(cell)
                 }。方向键移动，Enter 确认，Escape 取消`}
             style={style}
             onKeyDown={(event) => onKeyDown(event, note)}

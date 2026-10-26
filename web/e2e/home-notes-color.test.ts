@@ -166,11 +166,17 @@ Deno.test("changing colour does not move a note or create a saved cell", async (
                 .json()).data;
             return {
                 color: document.color,
+                band: layout?.band ?? null,
                 col: layout?.col ?? null,
                 row: layout?.row ?? null,
             };
         }, note.id);
-        assertEquals(saved, { color: "sage", col: null, row: null });
+        assertEquals(saved, {
+            color: "sage",
+            band: null,
+            col: null,
+            row: null,
+        });
         const after = await card.boundingBox();
         assert(after);
         assertEquals(Math.round(after.x), Math.round(before.x));

@@ -35,6 +35,7 @@ export function setNote(
 /** A note that was never moved on this account has no stored cell yet. */
 export function defaultNoteLayout(): DocumentLayoutDto {
     return {
+        band: null,
         col: null,
         row: null,
         size: "s",
@@ -42,6 +43,8 @@ export function defaultNoteLayout(): DocumentLayoutDto {
     };
 }
 
+/** Band, column and row are one position: a cell exists only with all three. */
 export function hasSavedCell(note: HomeNoteItem): boolean {
-    return note.layout.col !== null && note.layout.row !== null;
+    return note.layout.band !== null && note.layout.col !== null &&
+        note.layout.row !== null;
 }

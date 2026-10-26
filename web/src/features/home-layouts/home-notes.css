@@ -10,17 +10,21 @@
     pointer-events: none;
 }
 
+/* The whole card is the drag surface: a 4px move (or a 250ms touch hold)
+   starts a drag, a plain click still opens the note or toggles a task. */
 .home-note {
     position: absolute;
     border-radius: var(--radius-lg);
     pointer-events: auto;
+    touch-action: manipulation;
 }
 
 @media (prefers-reduced-motion: no-preference) {
     .home-note {
         transition:
             left var(--motion-base) var(--ease-out-expo),
-            top var(--motion-base) var(--ease-out-expo);
+            top var(--motion-base) var(--ease-out-expo),
+            opacity var(--motion-fast) var(--ease-standard);
     }
 }
 
@@ -40,12 +44,21 @@
 
 .home-note[data-dragging="true"] {
     z-index: var(--elevation-drag);
+    cursor: grabbing;
+}
+
+/* The note a drop would trade places with steps back. */
+.home-note[data-swap="true"] {
+    opacity: 0.55;
 }
 
 .home-note-card {
     --material-note-solid: var(--material-solid);
+    --home-note-body-lines: 5;
+    position: relative;
     display: flex;
     flex-direction: column;
+    gap: var(--space-2);
     box-sizing: border-box;
     width: 100%;
     height: 100%;
@@ -58,6 +71,7 @@
     backdrop-filter: var(--material-filter);
     box-shadow: var(--shadow-elevation-material);
     color: var(--foreground);
+    cursor: default;
 }
 
 .home-note-card[data-color="amber"] {
@@ -76,22 +90,20 @@
     --material-note-solid: var(--material-note-sky);
 }
 
-.home-note-head {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    min-width: 0;
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
+/* An untitled note gives the title row to its body. */
+.home-note-card[data-untitled="true"]:not(:has(.home-note-head)) {
+    --home-note-body-lines: 6;
 }
 
-.home-note-head-left {
+/* Title row: dot, 17px title, task progress; the end keeps room for ⋯. */
+.home-note-head {
     display: flex;
-    flex: 1;
+    flex: none;
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
+    min-height: var(--font-title-line-height);
+    padding-inline-end: var(--control-compact-height);
 }
 
 [data-slot="button"].home-note-title {
@@ -104,8 +116,8 @@
     padding: 0;
     color: inherit;
     text-align: start;
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
+    font-size: var(--font-title-size);
+    line-height: var(--font-title-line-height);
     font-weight: var(--font-title-weight);
 }
 
@@ -117,36 +129,44 @@
     white-space: nowrap;
 }
 
+.home-note-progress {
+    flex: none;
+    margin-inline-start: auto;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ⋯ sits on the title row's end, centred on its line box. */
 .home-note-actions {
     position: absolute;
-    top: 0;
-    inset-inline-end: 0;
+    inset-block-start: calc(
+        var(--space-4) +
+        (var(--font-title-line-height) - var(--control-compact-height)) / 2
+    );
+    inset-inline-end: var(--space-3);
     display: flex;
-    gap: var(--space-1);
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--motion-fast) var(--ease-standard);
 }
 
-.home-note:hover .home-note-actions,
-.home-note:focus-within .home-note-actions,
+.home-note-card:hover .home-note-actions,
+.home-note-card:focus-within .home-note-actions,
+.home-note:focus-visible .home-note-actions,
 .home-note[data-dragging="true"] .home-note-actions {
     opacity: 1;
     pointer-events: auto;
 }
 
-.home-note-actions > * {
+.home-note-action-btn {
     display: inline-grid;
     place-items: center;
     flex: none;
     width: var(--control-compact-height);
     height: var(--control-compact-height);
-    min-width: var(--control-compact-height);
-    min-height: var(--control-compact-height);
     padding: 0;
-}
-
-.home-note-action-btn {
     border: 0;
     border-radius: var(--control-radius);
     background: transparent;
@@ -167,27 +187,6 @@
     outline-offset: var(--space-1);
 }
 
-.home-note-drag {
-    display: inline-flex;
-    align-items: center;
-    color: var(--muted);
-}
-
-.home-note-drag-handle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    cursor: grab;
-    touch-action: none;
-    user-select: none;
-}
-
-.home-note-drag-handle:active {
-    cursor: grabbing;
-}
-
 .home-note-dropdown {
     min-width: 160px;
 }
@@ -195,16 +194,23 @@
 /* Whole-line truncation: the body is exactly N line boxes, and only a real
    overflow fades the last line. */
 .home-note-body {
-    --home-note-body-lines: 5;
     flex: none;
     block-size: calc(
         var(--home-note-body-lines) * var(--font-body-line-height)
     );
-    margin-block-start: var(--space-1);
     overflow: hidden;
     overflow-wrap: anywhere;
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
+}
+
+/* Without a title row the first body line flows around ⋯. */
+.home-note-card[data-untitled="true"]:not(:has(.home-note-head))
+    .home-note-body::before {
+    content: "";
+    float: inline-end;
+    inline-size: var(--control-compact-height);
+    block-size: var(--font-body-line-height);
 }
 
 .home-note-body[data-overflow] {
@@ -263,7 +269,17 @@
     display: none;
 }
 
-/* Transient target cell: visible only while dragging or moving by keyboard. */
+/* The drag space: free cells, shown only while a note is being moved. */
+.home-note-slot {
+    position: absolute;
+    border-radius: var(--radius-lg);
+    background: var(--home-note-slot-fill);
+    outline: var(--space-hairline) dashed var(--home-note-slot-ring);
+    outline-offset: calc(-1 * var(--space-hairline));
+    pointer-events: none;
+}
+
+/* Target cell, and for a swap the cell the other note moves to. */
 .home-note-target {
     position: absolute;
     z-index: var(--elevation-local-1);
@@ -274,14 +290,27 @@
     pointer-events: none;
 }
 
-/* Overflow entry: a full S cell when one is free, otherwise a pill below. */
+.home-note-target[data-kind="swap"] {
+    background: transparent;
+}
+
+/* Overflow entry: a Material pill centred in the bottom clearance, below
+   every cell and the plate. */
+.home-note-more-below {
+    position: fixed;
+    inset-block-end: var(--space-2);
+    left: 50%;
+    z-index: var(--elevation-canvas);
+    transform: translateX(-50%);
+}
+
 .home-note-more {
-    display: grid;
-    place-items: center;
-    gap: var(--space-1);
-    padding: var(--space-4);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
     border: 0;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-pill);
     background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
@@ -289,9 +318,8 @@
     color: var(--muted);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
-    text-align: center;
+    white-space: nowrap;
     cursor: pointer;
-    pointer-events: auto;
 }
 
 .home-note-more:hover {
@@ -301,21 +329,6 @@
 .home-note-more:focus-visible {
     outline: var(--space-half) solid var(--ring);
     outline-offset: var(--space-1);
-}
-
-.home-note-more--pill {
-    display: inline-flex;
-    border-radius: var(--radius-pill);
-    padding: var(--space-2) var(--space-4);
-    white-space: nowrap;
-}
-
-.home-note-more-below {
-    position: fixed;
-    left: 50%;
-    z-index: var(--elevation-canvas);
-    transform: translateX(-50%);
-    pointer-events: none;
 }
 
 /* Flow (768–1023: two columns, W spans both) and stack (<768: one column).
@@ -347,6 +360,12 @@
     min-width: 0;
 }
 
+.home-note-flow-item:focus-visible {
+    outline: var(--space-half) solid var(--ring);
+    outline-offset: var(--space-1);
+    border-radius: var(--radius-lg);
+}
+
 .home-notes--flow[data-mode="flow"] .home-note-flow-item[data-size="w"] {
     grid-column: 1 / -1;
 }
@@ -355,22 +374,38 @@
     height: var(--home-note-cell);
 }
 
-.home-notes--flow[data-mode="stack"] .home-note-body {
+.home-notes--flow[data-mode="stack"] .home-note-card {
     --home-note-body-lines: 3;
 }
 
+.home-notes--flow[data-mode="stack"]
+    .home-note-card[data-untitled="true"]:not(:has(.home-note-head)) {
+    --home-note-body-lines: 4;
+}
+
 @media (max-width: 767px), (any-pointer: coarse) {
-    /* The 44px targets centre on the 22px title line instead of hanging below. */
-    .home-note-actions {
-        top: calc(
-            (var(--font-body-line-height) - var(--control-touch-target)) / 2
+    .home-note-more::before {
+        content: "";
+        position: absolute;
+        inset-inline: 0;
+        inset-block: calc(
+            (var(--font-metadata-line-height) + 2 * var(--space-2) -
+                var(--control-touch-target)) / 2
         );
+    }
+    /* The 44px ⋯ target centres on the 24px title line and stays visible. */
+    .home-note-actions {
+        inset-block-start: calc(
+            var(--space-4) +
+            (var(--font-title-line-height) - var(--control-touch-target)) / 2
+        );
+        inset-inline-end: var(--space-1);
         opacity: 1;
         pointer-events: auto;
     }
-    /* The 22px title opens the note from a 44px band: the card padding above
-       and the rest below, overlapping the body's first line box by 2px (above
-       its glyphs). The band layers over the body, which a fade mask stacks. */
+    /* The 24px title opens the note from a 44px band: the card padding above
+       and the rest below, overlapping the body's first line box (above its
+       glyphs). The band layers over the body, which a fade mask stacks. */
     [data-slot="button"].home-note-title::before {
         content: "";
         position: absolute;
@@ -378,20 +413,19 @@
         inset-inline: 0;
         inset-block-start: calc(-1 * var(--space-4));
         inset-block-end: calc(
-            var(--font-body-line-height) + var(--space-4) -
+            var(--font-title-line-height) + var(--space-4) -
             var(--control-touch-target)
         );
     }
-    .home-note-actions > *,
-    .home-note-drag-handle {
-        min-width: var(--control-touch-target);
-        min-height: var(--control-touch-target);
+    .home-note-action-btn {
         width: var(--control-touch-target);
         height: var(--control-touch-target);
     }
     .home-note-head {
-        padding-inline-end: calc(
-            2 * var(--control-touch-target) + var(--space-2)
-        );
+        padding-inline-end: calc(var(--control-touch-target) - var(--space-3));
+    }
+    .home-note-card[data-untitled="true"]:not(:has(.home-note-head))
+        .home-note-body::before {
+        inline-size: calc(var(--control-touch-target) - var(--space-3));
     }
 }

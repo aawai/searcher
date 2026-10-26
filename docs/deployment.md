@@ -179,6 +179,32 @@ sqlite3 data/searcher.sqlite < drizzle/rollback/0030_nervous_phil_sheldon.sql
 
 回退只删除新列；旧像素列未改动，因此旧版本可继续使用升级前的坐标。
 
+### 升级：首页笔记布局改为分区坐标
+
+迁移 `0031_foamy_archangel` 为 `document_layouts` 增加可空 `band`，并在同一迁移中把旧的扁平
+`col` 回填为分区坐标：`col = 0` → `left` / 0，`col >= 1` → `right` / `(col - 1)`，没有坐标的
+行保持 `null`。启动时的像素换算也写入相同分区（参考列 0 → `left` / 0，参考列 1 → `right` / 0）。
+
+旧扁平 `col` 的含义随视口宽度变化，同一数值在宽视口可能属于另一侧；回填按 1440×900 参考首页
+（每侧一列）解释。因此在每侧多列的宽视口保存过的布局可能换到另一侧，笔记与内容不会丢失，坐标
+仍有效，升级后可拖动到期望单元。
+
+回退到升级前的版本时先停止服务。旧版本按扁平 `left` / `right` 序号读取 `col` 并忽略 `band`；
+如需保留右侧与中间货架的位置含义，先转换回旧坐标：
+
+```sql
+UPDATE document_layouts
+SET col = CASE band WHEN 'right' THEN col + 1 WHEN 'center' THEN NULL ELSE col END,
+    row = CASE WHEN band = 'center' THEN NULL ELSE row END,
+    band = NULL
+WHERE band IS NOT NULL;
+```
+
+`center` 在旧版本没有对应列，转换后这些笔记回到默认落点；不转换直接部署旧版本不会丢失数据，
+只是右侧笔记会显示在原位置内侧一列。保留 `band` 列不影响旧版本；如确需删除，停止服务后执行
+`ALTER TABLE document_layouts DROP COLUMN band;`。执行上述转换或删除列后，再次升级前需重新回填
+分区坐标或从升级前备份恢复，因为迁移记录仍标记 `0031` 已执行。
+
 ### 升级：笔记全文索引改为 trigram
 
 迁移 `0026_documents_fts_trigram` 用 FTS5 `trigram` 分词器重建 `documents_fts`（派生索引，`documents` 不变），使连续中文与英文片段可按子串命中。索引体积约为原来的数倍，笔记很多时迁移耗时与笔记总字数成正比；迁移在同步原生事务中执行，失败回滚。

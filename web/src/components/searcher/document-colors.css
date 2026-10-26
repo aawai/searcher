@@ -2,18 +2,18 @@
    a tinted Material background with a title dot; the per-theme dot palette
    holds 3:1 against the matching surface (glass-contrast.test.ts). */
 :where(.note-quick-dot, .documents-color-dot) {
-    --note-dot-amber: #7A5610;
-    --note-dot-rose: #8E3A52;
-    --note-dot-sage: #386531;
-    --note-dot-sky: #2F5A85;
+    --note-dot-amber: #724E00;
+    --note-dot-rose: #7F3B58;
+    --note-dot-sage: #2C6330;
+    --note-dot-sky: #085B87;
     --note-dot-paper: #5A5A60;
 }
 
 [data-theme="dark"] :where(.note-quick-dot, .documents-color-dot) {
-    --note-dot-amber: #E0B45C;
-    --note-dot-rose: #E39AB2;
-    --note-dot-sage: #9CC594;
-    --note-dot-sky: #9AC1E3;
+    --note-dot-amber: #E6C183;
+    --note-dot-rose: #F7AFCA;
+    --note-dot-sage: #A3D7A3;
+    --note-dot-sky: #91D0FC;
     --note-dot-paper: #BEBEC4;
 }
 

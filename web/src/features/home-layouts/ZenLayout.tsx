@@ -53,7 +53,7 @@ export function ZenLayout(
         openNote,
         deleteNote,
         updateNote,
-        updateNoteLayout,
+        updateNoteLayouts,
         openLibrary,
         showAppLabels,
         showHomeApps,
@@ -117,8 +117,7 @@ export function ZenLayout(
                 heroRef={heroRef}
                 gridElement={gridElement}
                 onOpen={openNote}
-                onUpdateLayout={(note, layout) =>
-                    void updateNoteLayout(note, layout)}
+                onUpdateLayouts={(changes) => void updateNoteLayouts(changes)}
                 onToggleHomeFixed={(note) =>
                     void updateNote(note, { isHomeFixed: false })}
                 onChangeColor={(note, color) =>

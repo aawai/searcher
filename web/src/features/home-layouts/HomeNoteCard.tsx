@@ -1,8 +1,9 @@
 import { Bookmark, ExternalLink, MoreHorizontal, Trash2 } from "lucide-react";
 import {
+    type MouseEvent as ReactMouseEvent,
     type PointerEvent as ReactPointerEvent,
-    type ReactNode,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
 } from "react";
@@ -24,34 +25,34 @@ import {
     clipPreviewHeight,
     type PreviewLineRect,
 } from "./note-preview-clip.ts";
+import { taskProgress } from "./note-tasks.ts";
 
 const SIZE_LABEL: Record<DocumentNoteSize, string> = {
     s: "小",
     w: "宽",
 };
 
+/** Clicks on these keep their own meaning (task rows toggle) instead of opening the note. */
+const INTERACTIVE = "a, button, input, label, li.task-list-item";
+
 /**
- * One Material home note. `titleContent` lets the desk preview reuse the card;
- * everything else matches the home surface at every breakpoint.
+ * One Material home note: an optional 17px title row with the colour dot and
+ * task progress, then the clipped Markdown body. A click anywhere outside a
+ * control opens the note; untitled notes give the title row to the body.
  */
 export function HomeNoteCard(
     {
         note,
         onOpen,
-        dragHandle,
         onResize,
         onToggleHomeFixed,
         onChangeColor,
         onToggleTask,
         taskLockedTitle,
         onDelete,
-        titleContent,
-        summary,
-        showColorDot = true,
     }: {
         note: HomeNoteItem;
         onOpen?: () => void;
-        dragHandle?: ReactNode;
         onResize?: (size: DocumentNoteSize) => void;
         onToggleHomeFixed?: () => void;
         onChangeColor?: (color: DocumentColor) => void;
@@ -60,9 +61,6 @@ export function HomeNoteCard(
         /** Tooltip for the read-only checkboxes while the card cannot toggle tasks. */
         taskLockedTitle?: string;
         onDelete?: () => void;
-        titleContent?: ReactNode;
-        summary?: ReactNode;
-        showColorDot?: boolean;
     },
 ) {
     const body = useRef<HTMLDivElement>(null);
@@ -169,163 +167,183 @@ export function HomeNoteCard(
             resize.disconnect();
             mutation.disconnect();
         };
-    }, [note.body, note.layout.size]);
+    }, [note.body, note.layout.size, note.title]);
 
     const hasBody = note.body.trim().length > 0;
+    // An untitled note's display title is its first line; repeating it above
+    // the body would show the same words twice.
+    const showTitle = Boolean(note.title?.trim()) || !hasBody;
+    const progress = useMemo(() => taskProgress(note.body), [note.body]);
+    const open = (event: ReactMouseEvent<HTMLElement>) => {
+        if (!onOpen || event.defaultPrevented) return;
+        const target = event.target;
+        // Menu portals bubble through React but are not inside the card.
+        if (
+            !(target instanceof Element) ||
+            !event.currentTarget.contains(target) ||
+            target.closest(INTERACTIVE)
+        ) return;
+        onOpen();
+    };
     return (
         <article
             className="home-note-card"
             data-color={note.color}
             data-size={note.layout.size}
+            data-untitled={showTitle ? undefined : "true"}
+            onClick={open}
         >
-            <header className="home-note-head">
-                <div className="home-note-head-left">
-                    {showColorDot && (
+            {(showTitle || progress) && (
+                <header className="home-note-head">
+                    <span
+                        aria-hidden="true"
+                        className={`note-quick-dot note-quick-dot--${note.color}`}
+                    />
+                    {showTitle && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            className="home-note-title"
+                            title={note.title ?? undefined}
+                            aria-label={note.displayTitle}
+                            onClick={onOpen}
+                        >
+                            <span className="home-note-title-text">
+                                {note.displayTitle}
+                            </span>
+                        </Button>
+                    )}
+                    {progress && (
                         <span
-                            aria-hidden="true"
-                            className={`note-quick-dot note-quick-dot--${note.color}`}
-                        />
-                    )}
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        className="home-note-title"
-                        title={note.title ?? undefined}
-                        aria-label={note.displayTitle}
-                        onClick={onOpen}
-                    >
-                        <span className="home-note-title-text">
-                            {titleContent ?? note.displayTitle}
+                            className="home-note-progress"
+                            aria-label={`已完成 ${progress.done} / ${progress.total} 项`}
+                        >
+                            {progress.done}/{progress.total}
                         </span>
-                    </Button>
-                </div>
-
-                <div
-                    className="home-note-actions"
-                    role="toolbar"
-                    aria-label="笔记操作"
-                >
-                    {dragHandle && (
-                        <span className="home-note-drag">{dragHandle}</span>
                     )}
+                </header>
+            )}
 
-                    {(onResize || onToggleHomeFixed || onOpen ||
-                        onChangeColor || onDelete) && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                className="home-note-action-btn"
-                                aria-label="更多操作"
-                                title="更多选项"
-                            >
-                                <MoreHorizontal
-                                    size="1em"
-                                    className="icon-sm"
-                                />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                sideOffset={8}
-                                className="home-note-dropdown"
-                                onKeyDown={(event) => {
-                                    if (event.key === "Escape") {
-                                        event.stopPropagation();
-                                    }
-                                }}
-                            >
-                                {onResize && (
-                                    <>
-                                        <DropdownMenuRadioGroup
-                                            value={note.layout.size}
-                                            onValueChange={(value) => {
-                                                if (
-                                                    value === "s" ||
-                                                    value === "w"
-                                                ) {
-                                                    onResize(value);
-                                                }
-                                            }}
-                                            aria-label="笔记尺寸"
-                                        >
-                                            {(["s", "w"] as const).map(
-                                                (size) => (
-                                                    <DropdownMenuRadioItem
-                                                        key={size}
-                                                        value={size}
-                                                        closeOnClick
-                                                    >
-                                                        {SIZE_LABEL[size]}
-                                                    </DropdownMenuRadioItem>
-                                                ),
-                                            )}
-                                        </DropdownMenuRadioGroup>
-                                        <DropdownMenuSeparator />
-                                    </>
-                                )}
-                                {onToggleHomeFixed && (
-                                    <DropdownMenuItem
-                                        onClick={(e) => {
-                                            e?.stopPropagation();
-                                            onToggleHomeFixed();
+            <div
+                className="home-note-actions"
+                role="toolbar"
+                aria-label="笔记操作"
+            >
+                {(onResize || onToggleHomeFixed || onOpen ||
+                    onChangeColor || onDelete) && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            className="home-note-action-btn"
+                            aria-label="更多操作"
+                            title="更多选项"
+                        >
+                            <MoreHorizontal
+                                size="1em"
+                                className="icon-sm"
+                            />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                            sideOffset={8}
+                            className="home-note-dropdown"
+                            onKeyDown={(event) => {
+                                if (event.key === "Escape") {
+                                    event.stopPropagation();
+                                }
+                            }}
+                        >
+                            {onResize && (
+                                <>
+                                    <DropdownMenuRadioGroup
+                                        value={note.layout.size}
+                                        onValueChange={(value) => {
+                                            if (
+                                                value === "s" ||
+                                                value === "w"
+                                            ) {
+                                                onResize(value);
+                                            }
                                         }}
+                                        aria-label="笔记尺寸"
                                     >
-                                        <Bookmark
-                                            size="1em"
-                                            className={`icon-sm ${
-                                                note.isHomeFixed
-                                                    ? "fill-current"
-                                                    : ""
-                                            }`}
-                                        />
-                                        <span>
-                                            {note.isHomeFixed
-                                                ? "移出首页"
-                                                : "固定到首页"}
-                                        </span>
-                                    </DropdownMenuItem>
-                                )}
-                                {onOpen && (
-                                    <DropdownMenuItem
-                                        onClick={(e) => {
-                                            e?.stopPropagation();
-                                            onOpen();
-                                        }}
-                                    >
-                                        <ExternalLink
-                                            size="1em"
-                                            className="icon-sm"
-                                        />
-                                        <span>编辑笔记</span>
-                                    </DropdownMenuItem>
-                                )}
-                                {onChangeColor && (
-                                    <DocumentColorItems
-                                        color={note.color}
-                                        onChange={onChangeColor}
+                                        {(["s", "w"] as const).map(
+                                            (size) => (
+                                                <DropdownMenuRadioItem
+                                                    key={size}
+                                                    value={size}
+                                                    closeOnClick
+                                                >
+                                                    {SIZE_LABEL[size]}
+                                                </DropdownMenuRadioItem>
+                                            ),
+                                        )}
+                                    </DropdownMenuRadioGroup>
+                                    <DropdownMenuSeparator />
+                                </>
+                            )}
+                            {onToggleHomeFixed && (
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e?.stopPropagation();
+                                        onToggleHomeFixed();
+                                    }}
+                                >
+                                    <Bookmark
+                                        size="1em"
+                                        className={`icon-sm ${
+                                            note.isHomeFixed
+                                                ? "fill-current"
+                                                : ""
+                                        }`}
                                     />
-                                )}
-                                {onDelete && <DropdownMenuSeparator />}
-                                {onDelete && (
-                                    <DropdownMenuItem
-                                        variant="destructive"
-                                        onClick={(e) => {
-                                            e?.stopPropagation();
-                                            onDelete();
-                                        }}
-                                    >
-                                        <Trash2
-                                            size="1em"
-                                            className="icon-sm"
-                                        />
-                                        <span>移至回收站</span>
-                                    </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
-                </div>
-            </header>
+                                    <span>
+                                        {note.isHomeFixed
+                                            ? "移出首页"
+                                            : "固定到首页"}
+                                    </span>
+                                </DropdownMenuItem>
+                            )}
+                            {onOpen && (
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e?.stopPropagation();
+                                        onOpen();
+                                    }}
+                                >
+                                    <ExternalLink
+                                        size="1em"
+                                        className="icon-sm"
+                                    />
+                                    <span>编辑笔记</span>
+                                </DropdownMenuItem>
+                            )}
+                            {onChangeColor && (
+                                <DocumentColorItems
+                                    color={note.color}
+                                    onChange={onChangeColor}
+                                />
+                            )}
+                            {onDelete && <DropdownMenuSeparator />}
+                            {onDelete && (
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={(e) => {
+                                        e?.stopPropagation();
+                                        onDelete();
+                                    }}
+                                >
+                                    <Trash2
+                                        size="1em"
+                                        className="icon-sm"
+                                    />
+                                    <span>移至回收站</span>
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
+            </div>
 
-            {summary}
-            {summary === undefined && hasBody && (
+            {hasBody && (
                 <div
                     ref={body}
                     className="home-note-body markdown"

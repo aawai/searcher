@@ -46,9 +46,11 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   640px 起进入小档，不再同时命中窄档。JS / TSX 引用 `design-system/breakpoints.ts`，
   不在组件中写数字媒体查询；触屏能力使用 `any-pointer: coarse`。
 - 首页 `tokens.css` 的 `--home-grid-*` 拥有单元、间距、中轴与搜索框 / 应用底板外缘对齐线；
-  Launcher、首页笔记流式行与安全视口消费同组 Token。默认笔记间距来自 `home-grid.ts`，
-  CSS / TS 数值镜像由单元测试保护。768–1023px 的 220px 笔记行由 `home-layouts.css`
-  唯一管理并居中，1024px 起使用自由画布；吸附与笔记跨度另由 Y3 定义。
+  Launcher、首页笔记与安全视口消费同组 Token。默认笔记间距来自 `home-grid.ts`，
+  CSS / TS 数值镜像由单元测试保护。首页笔记的分带网格数学（两侧负行、底板下方 shelf、
+  默认落点、最近空闲单元）在 `home-grid-cells.ts`；吸附、交换、键盘移动与溢出入口由
+  `HomeNotes.tsx` 和 `home-notes.css` 唯一管理。768–1023px 的两列流式与 <768px 纵向堆叠
+  是该组件的正常流分支，不再单独维护 220px 笔记行。
 - 稳定布局使用语义 class 或 Tailwind 标准 utility；壁纸、拖拽变换等 runtime
   值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何由组件维护。
 - 样式调整后构建前端，实页检查首页、设置、登录和笔记面板的浅深色与壁纸组合。

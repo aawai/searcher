@@ -21,6 +21,7 @@ Deno.test("the note size persists with one PATCH and code stays clipped without 
                 "```sh\nssh -L 51121:127.0.0.1:51121 -L 51122:127.0.0.1:51122 -N engineer@very-long-hostname.example.internal\n```\n\n后续正文。",
             col: 0,
             row: 0,
+            band: "left",
         });
         await reloadHome(page);
         await waitForNoteCards(page, 1);

@@ -51,7 +51,8 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            col: index,
+                            band: index === 0 ? "left" : "right",
+                            col: 0,
                             row: 0,
                             size: "s",
                         }),

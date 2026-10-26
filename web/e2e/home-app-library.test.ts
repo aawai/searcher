@@ -930,7 +930,7 @@ Deno.test("home app library (#244)", async (t) => {
         );
 
         await t.step(
-            "default notes stay clear of the library region and keep their side columns when it is hidden",
+            "default notes stay clear of the library region and the hidden plate becomes the shelf",
             async () => {
                 const { page, context } = await bigLibraryPage(
                     browser,
@@ -938,8 +938,8 @@ Deno.test("home app library (#244)", async (t) => {
                 );
                 try {
                     await waitForPlannedHome(page);
-                    // Enough default-placed notes (no stored layout) that the
-                    // free space beside the library cannot hold all of them.
+                    // Eight default-placed notes (no stored layout) exceed the
+                    // six side cells, so the overflow pill takes the rest.
                     const statuses = await page.evaluate(async () => {
                         const result: number[] = [];
                         for (let index = 1; index <= 8; index++) {
@@ -966,11 +966,22 @@ Deno.test("home app library (#244)", async (t) => {
                     const intersects = (a: Box, b: Box) =>
                         a.left < b.right && b.left < a.right &&
                         a.top < b.bottom && b.top < a.bottom;
-                    const placed = async () => {
+                    const placed = async (count: number) => {
                         await page.locator(".home-notes--grid").waitFor();
-                        await page.waitForFunction(() =>
-                            document.querySelectorAll(".home-note").length > 0
+                        await page.waitForFunction(
+                            (expected) =>
+                                document.querySelectorAll(".home-note")
+                                    .length === expected,
+                            count,
                         );
+                        await page.evaluate(() => {
+                            const { promise, resolve } = Promise
+                                .withResolvers<void>();
+                            requestAnimationFrame(() =>
+                                requestAnimationFrame(() => resolve())
+                            );
+                            return promise;
+                        });
                         return await page.evaluate(() => {
                             const box = (element: Element): Box => {
                                 const rect = element.getBoundingClientRect();
@@ -984,8 +995,12 @@ Deno.test("home app library (#244)", async (t) => {
                             const library = document.querySelector(
                                 ".launcher-library",
                             );
+                            const search = document.querySelector(
+                                ".search-form-wrap",
+                            );
                             return {
                                 library: library ? box(library) : null,
+                                search: search ? box(search) : null,
                                 notes: Array.from(
                                     document.querySelectorAll(".home-note"),
                                 ).map(box),
@@ -994,30 +1009,52 @@ Deno.test("home app library (#244)", async (t) => {
                     };
                     await page.reload();
                     await page.locator(".launcher-grid--home").waitFor();
-                    const on = await placed();
-                    assert(on.library && on.library.bottom > on.library.top);
-                    assert(on.notes.length > 0);
+                    const on = await placed(6);
+                    const library = on.library;
+                    assert(library, "the app library is measurable");
+                    assert(library.bottom > library.top);
+                    assert(on.search);
                     for (const note of on.notes) {
                         assert(
-                            !intersects(note, on.library),
+                            !intersects(note, library),
                             `note ${JSON.stringify(note)} overlaps library ${
-                                JSON.stringify(on.library)
+                                JSON.stringify(library)
                             }`,
                         );
                     }
 
-                    // With the grid off nothing reserves that region any more.
+                    // Without the plate the shelf below the block inherits the
+                    // former app region; the side cells do not move.
                     await setShowHomeApps(page, app.origin, false);
-                    const off = await placed();
+                    const off = await placed(8);
                     assertEquals(off.library, null);
+                    assert(off.search);
+                    const onSide = on.notes.map((note) =>
+                        `${Math.round(note.left)}:${Math.round(note.top)}`
+                    ).sort();
+                    const offSide = off.notes
+                        .filter((note) => !intersects(note, library))
+                        .map((note) =>
+                            `${Math.round(note.left)}:${Math.round(note.top)}`
+                        )
+                        .sort();
+                    assertEquals(
+                        offSide,
+                        onSide,
+                        "the hidden plate does not move a side cell",
+                    );
                     for (const note of off.notes) {
                         assert(
-                            !intersects(note, on.library!),
+                            !intersects(note, off.search),
                             `note ${
                                 JSON.stringify(note)
-                            } keeps the former app region empty`,
+                            } overlaps the search box`,
                         );
                     }
+                    assert(
+                        off.notes.some((note) => intersects(note, library)),
+                        "the shelf may use the former app region",
+                    );
                 } finally {
                     await context.close();
                 }

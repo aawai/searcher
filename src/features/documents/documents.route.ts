@@ -10,8 +10,10 @@ import {
     DOCUMENT_PAGE_MAX_LIMIT,
     DOCUMENT_TITLE_MAX_LENGTH,
     type DocumentScope,
+    HOME_NOTE_BANDS,
     HOME_NOTE_GRID_MAX_COL,
     HOME_NOTE_GRID_MAX_ROW,
+    HOME_NOTE_LAYOUT_BATCH_MAX,
 } from "../../shared/documents.ts";
 import { DocumentAssetsService } from "./assets.ts";
 import {
@@ -44,6 +46,7 @@ const Title = v.nullable(
 const Color = v.picklist(["paper", "amber", "rose", "sage", "sky"]);
 const Integer = v.pipe(v.number(), v.integer(), v.safeInteger());
 const NoteSize = v.picklist(["s", "w"]);
+const Band = v.nullable(v.picklist(HOME_NOTE_BANDS));
 const GridCol = v.nullable(
     v.pipe(
         v.number(),
@@ -58,10 +61,31 @@ const GridRow = v.nullable(
     v.pipe(
         v.number(),
         v.integer(),
-        v.minValue(0),
+        v.minValue(
+            -HOME_NOTE_GRID_MAX_ROW,
+        ),
         v.maxValue(
             HOME_NOTE_GRID_MAX_ROW,
         ),
+    ),
+);
+const LayoutItem = v.object({
+    id: Id,
+    band: v.optional(Band),
+    col: v.optional(GridCol),
+    row: v.optional(GridRow),
+    size: v.optional(NoteSize),
+});
+const LayoutItems = v.pipe(
+    v.array(LayoutItem),
+    v.minLength(1, "至少需要一项布局"),
+    v.maxLength(
+        HOME_NOTE_LAYOUT_BATCH_MAX,
+        `一次最多更新 ${HOME_NOTE_LAYOUT_BATCH_MAX} 项布局`,
+    ),
+    v.check(
+        (items) => new Set(items.map((item) => item.id)).size === items.length,
+        "笔记 ID 不能重复",
     ),
 );
 const Body = v.pipe(v.string(), v.maxLength(DOCUMENT_BODY_MAX_LENGTH));
@@ -217,6 +241,21 @@ export function registerDocumentsRoutes(
                     c.success(await documents.create(c.get("user").id, data)),
             ),
     );
+    routes.patch(
+        "/api/documents/layouts",
+        validator({ items: json(LayoutItems) }),
+        (c, data) =>
+            documentResponse(
+                c,
+                async () =>
+                    c.success(
+                        await layouts.updateLayouts(
+                            c.get("user").id,
+                            data,
+                        ),
+                    ),
+            ),
+    );
     routes.get(
         "/api/documents/:id",
         validator(entityParam),
@@ -342,6 +381,7 @@ export function registerDocumentsRoutes(
         "/api/documents/:id/layout",
         validator({
             ...entityParam,
+            band: json(v.optional(Band)),
             col: json(v.optional(GridCol)),
             row: json(v.optional(GridRow)),
             size: json(v.optional(NoteSize)),
