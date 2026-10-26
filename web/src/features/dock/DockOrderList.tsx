@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import type { DockSystemId } from "@shared/dock.ts";
 import { WebAppGlyph } from "../../components/searcher/WebAppIcon.tsx";
 import { Button } from "../../components/ui/button.tsx";
+import { Switch } from "../../components/ui/switch.tsx";
 import type { ExtendedWebApp } from "../app-library/library-types.ts";
 
 export const DOCK_SYSTEM_ITEMS: Record<
@@ -43,24 +44,31 @@ export function moveDockItem<T>(
 
 export function DockSystemOrderList({
     systemOrder,
+    hiddenSystemIds = [],
     onMove,
+    onToggleVisible,
 }: {
     systemOrder: readonly DockSystemId[];
+    hiddenSystemIds?: readonly DockSystemId[];
     onMove: (index: number, delta: -1 | 1) => void;
+    onToggleVisible?: (id: DockSystemId, visible: boolean) => void;
 }): ReactNode {
     return (
-        <div className="dock-order-list" role="list" aria-label="系统入口顺序">
+        <div className="dock-order-list" role="list" aria-label="系统入口">
             {systemOrder.map((systemId, index) => {
                 const config = DOCK_SYSTEM_ITEMS[systemId];
                 const Icon = config.icon;
                 const isFirst = index === 0;
                 const isLast = index === systemOrder.length - 1;
+                const isVisible = !hiddenSystemIds.includes(systemId);
 
                 return (
                     <div
                         key={systemId}
                         role="listitem"
                         className="dock-order-row"
+                        data-dock-system-row={systemId}
+                        data-visible={isVisible ? "true" : "false"}
                     >
                         <div className="dock-order-row__info">
                             <Icon
@@ -92,8 +100,7 @@ export function DockSystemOrderList({
                                 variant="ghost"
                                 size="sm"
                                 disabled={isLast}
-                                onClick={() =>
-                                    onMove(index, 1)}
+                                onClick={() => onMove(index, 1)}
                                 aria-label={`下移 ${config.label}`}
                             >
                                 <ArrowDown
@@ -102,6 +109,15 @@ export function DockSystemOrderList({
                                     aria-hidden="true"
                                 />
                             </Button>
+                            {onToggleVisible && (
+                                <Switch
+                                    checked={isVisible}
+                                    onCheckedChange={(checked) =>
+                                        onToggleVisible(systemId, checked)}
+                                    aria-label={`显示 ${config.label}`}
+                                    data-dock-system-toggle={systemId}
+                                />
+                            )}
                         </div>
                     </div>
                 );

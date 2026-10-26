@@ -25,6 +25,7 @@ export function DockSettings(): ReactNode {
         layout,
         setLayout,
         setSystemOrder,
+        setSystemVisible,
         setAppOrder,
         setPinned,
         refreshApps,
@@ -100,12 +101,15 @@ export function DockSettings(): ReactNode {
             </SettingsRow>
 
             <SettingsRow
-                title="系统入口顺序"
+                title="系统入口"
                 className="settings-row--vertical"
             >
                 <DockSystemOrderList
                     systemOrder={preferences.systemOrder}
+                    hiddenSystemIds={preferences.hiddenSystemIds}
                     onMove={handleMoveSystem}
+                    onToggleVisible={(id, visible) =>
+                        void setSystemVisible(id, visible)}
                 />
             </SettingsRow>
 

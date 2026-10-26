@@ -43,6 +43,11 @@ const DockSchema = v.optional(
                     v.picklist(["home", "apps", "notes", "ai"], "系统入口无效"),
                 ),
             ),
+            hiddenSystemIds: v.optional(
+                v.array(
+                    v.picklist(["home", "apps", "notes", "ai"], "系统入口无效"),
+                ),
+            ),
             appIds: v.optional(v.array(v.string())),
         }),
     ),

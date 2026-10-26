@@ -106,6 +106,58 @@ Deno.test("dock preferences: systemOrder reordering and validation guards", asyn
             }),
         });
         assertEquals(invalidPatch.status, 400);
+
+        // 5. Valid hiddenSystemIds partial update preserves systemOrder
+        const hidePatch = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                dock: { hiddenSystemIds: ["notes", "ai"] },
+            }),
+        });
+        assertEquals(hidePatch.status, 200);
+        const hideBody = await hidePatch.json() as Envelope<PreferencesDto>;
+        assertEquals(hideBody.data?.dock.systemOrder, [...reordered]);
+        assertEquals(hideBody.data?.dock.hiddenSystemIds, ["notes", "ai"]);
+
+        // 6. All four system entries hidden is valid -> 200
+        const hideAllPatch = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                dock: { hiddenSystemIds: ["home", "apps", "notes", "ai"] },
+            }),
+        });
+        assertEquals(hideAllPatch.status, 200);
+        const hideAllBody = await hideAllPatch.json() as Envelope<
+            PreferencesDto
+        >;
+        assertEquals(hideAllBody.data?.dock.hiddenSystemIds, [
+            "home",
+            "apps",
+            "notes",
+            "ai",
+        ]);
+
+        // 7. Duplicated hiddenSystemIds -> 400
+        const dupHiddenPatch = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                dock: { hiddenSystemIds: ["home", "home"] },
+            }),
+        });
+        assertEquals(dupHiddenPatch.status, 400);
+
+        // 8. Invalid hiddenSystemIds item -> 400
+        const invalidHiddenPatch = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                dock: { hiddenSystemIds: ["home", "invalid"] },
+            }),
+        });
+        assertEquals(invalidHiddenPatch.status, 400);
     } finally {
         await store.close();
     }

@@ -612,6 +612,11 @@
     text-overflow: ellipsis;
 }
 
+.dock-order-row[data-visible="false"] .dock-order-row__info,
+.dock-order-row[data-visible="false"] .dock-order-row__title {
+    color: var(--muted);
+}
+
 .dock-order-row__actions {
     display: flex;
     align-items: center;
