@@ -1370,11 +1370,35 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-10-26-issue-312-pr-314-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-26-issue-312-pr-314-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-26-issue-312-pr-314-main",
+      "contentHash": "bfd240dc345b67f3c04b18252dbe22cc4a018f0be20505ffc86152d377b08ea9",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-26-issue-313-floating-pr-315-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-26-issue-313-floating-pr-315-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-26-issue-313-floating-pr-315-main",
+      "contentHash": "df28e25501e8c61e2e815186d1c3dfd57a2e391b0391f927d1f12142beca834a",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/obs-2026-10-26-pr-309-main.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-26-pr-309-main.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-10-26-pr-309-main",
       "contentHash": "6809fd91b0a68cce893afa95d2634d06237b3f9e87745fbe260fcb7fac82d9fd",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-26-pr-317-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-26-pr-317-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-26-pr-317-main",
+      "contentHash": "0c8094c721999411fc922d955c790b4fcb6dc12da8fd7f08c04afdcd68c2dca4",
       "role": "evidence",
       "type": "source"
     },

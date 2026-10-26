@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-26T09:24:58.545Z",
+  "last_updated": "2026-10-26T14:39:33.683Z",
   "pages": {
     "concepts/accessible-grid-drag-keyboard-and-announcements": {
       "type": "concept",
@@ -2169,6 +2169,48 @@
       "created": "2026-10-26",
       "updated": "2026-10-26"
     },
+    "sources/obs-2026-10-26-issue-312-pr-314-main": {
+      "type": "source",
+      "title": "Observation: Issue 312 任务栏四边避让与展开宽度经 PR 314 合并 main 并关闭",
+      "tags": [
+        "issue-312",
+        "pr-314",
+        "workspace",
+        "dock",
+        "home-notes",
+        "app-library",
+        "ui-guard",
+        "merged"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-26-issue-312-pr-314-main",
+      "relevance": "high",
+      "observed_at": "2026-10-26T11:06:18.905Z",
+      "source_context": "实施 Issue 312 并通过 PR 314 合并至 main",
+      "created": "2026-10-26",
+      "updated": "2026-10-26"
+    },
+    "sources/obs-2026-10-26-issue-313-floating-pr-315-main": {
+      "type": "source",
+      "title": "Observation: Issue 313 任务栏 Floating 材质与分组列表重构经 PR 315 合并 main 并关闭",
+      "tags": [
+        "issue-313",
+        "pr-315",
+        "dock",
+        "settings",
+        "grouped-list",
+        "material-floating",
+        "ui-guard",
+        "merged"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-26-issue-313-floating-pr-315-main",
+      "relevance": "high",
+      "observed_at": "2026-10-26T11:38:59.290Z",
+      "source_context": "实施 Issue 313 并通过 PR 315 合并至 main",
+      "created": "2026-10-26",
+      "updated": "2026-10-26"
+    },
     "sources/obs-2026-10-26-pr-309-main": {
       "type": "source",
       "title": "Observation: 首页应用密度与可选底板经 PR 309 合并 main",
@@ -2186,6 +2228,25 @@
       "relevance": "high",
       "observed_at": "2026-10-26T04:01:22.567Z",
       "source_context": "用户要求提交全部代码、创建PR并合并main",
+      "created": "2026-10-26",
+      "updated": "2026-10-26"
+    },
+    "sources/obs-2026-10-26-pr-317-main": {
+      "type": "source",
+      "title": "Observation: PR 317 编辑器滚动条与分页表面修复合并 main",
+      "tags": [
+        "editor",
+        "css",
+        "pagination",
+        "pr317",
+        "main",
+        "ci"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-26-pr-317-main",
+      "relevance": "high",
+      "observed_at": "2026-10-26T14:39:33.645Z",
+      "source_context": "创建 PR 并合并编辑器样式修复",
       "created": "2026-10-26",
       "updated": "2026-10-26"
     },
