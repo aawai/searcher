@@ -22,7 +22,7 @@ Deno.test("Notes source-only queries remain visible and Unicode snippets keep wh
         noteSearchPreview(body, analyzeNoteBody(body), "hidden").sourceOnly,
         true,
     );
-    assertEquals(noteSearchPreview("", "", "").text, "空白便签");
+    assertEquals(noteSearchPreview("", "", "").text, "空白笔记");
     const prefix = "🙂".repeat(30);
     const preview = noteSearchPreview(
         prefix + "命中" + "界".repeat(80),

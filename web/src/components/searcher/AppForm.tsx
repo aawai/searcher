@@ -198,7 +198,7 @@ export function AppForm() {
                                 <span className="app-dialog-option-desc">
                                     {appGroupId
                                         ? "文件夹成员随文件夹显示，固定状态由文件夹决定"
-                                        : "只影响首页呈现，应用始终保留在资料库"}
+                                        : "只影响首页呈现，应用始终保留在应用面板"}
                                 </span>
                             </div>
                             <Switch

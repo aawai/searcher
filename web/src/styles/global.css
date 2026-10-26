@@ -191,6 +191,7 @@ a {
 .app-shell[data-home] .top-actions a:hover,
 .app-shell[data-home] .top-actions button:hover {
     background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     box-shadow: var(--shadow-material-edge);
 }

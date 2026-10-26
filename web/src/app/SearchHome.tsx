@@ -1531,7 +1531,7 @@ export function SearchHome() {
     const taskConflictFeedback = (
         <UndoToast
             open={taskConflictId !== null}
-            message="便签已在别处修改"
+            message="笔记已在别处修改"
             hidden={overlayActive}
             host={feedbackHost}
             placement={mobileFeedback ? "inline" : "floating"}
@@ -1540,7 +1540,7 @@ export function SearchHome() {
                 setTaskConflictId(null);
             }}
             onClose={() => setTaskConflictId(null)}
-            undoLabel="打开便签"
+            undoLabel="打开笔记"
         />
     );
     return (

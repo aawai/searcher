@@ -6,7 +6,9 @@ import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 function dockNav(page: Page): Locator {
-    return page.locator("nav[aria-label='工作区任务栏'], nav.dock-bar");
+    return page.locator(
+        "nav[aria-label='工作区任务栏']:not([data-ending-style]), nav.dock-bar:not([data-ending-style])",
+    );
 }
 
 function dockSystemButton(page: Page, name: string): Locator {
@@ -37,7 +39,7 @@ function collapseButton(page: Page): Locator {
 
 function expandBall(page: Page): Locator {
     return page.locator(
-        'button[data-dock-action="expand"], button[aria-label="展开任务栏"], .dock-ball',
+        'button[data-dock-action="expand"]:not([data-ending-style]), button[aria-label="展开任务栏"]:not([data-ending-style]), .dock-ball:not([data-ending-style])',
     );
 }
 
@@ -771,6 +773,21 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
                 await dockSystemButton(page, "首页").isVisible(),
                 true,
             );
+
+            // Keyboard Enter and Space on floating ball activate once and expand dock
+            await collapseButton(page).click();
+            await expandBall(page).waitFor({ state: "visible" });
+            await expandBall(page).focus();
+            await page.keyboard.press("Enter");
+            await dockNav(page).waitFor({ state: "visible" });
+            await expandBall(page).waitFor({ state: "detached" });
+
+            await collapseButton(page).click();
+            await expandBall(page).waitFor({ state: "visible" });
+            await expandBall(page).focus();
+            await page.keyboard.press(" ");
+            await dockNav(page).waitFor({ state: "visible" });
+            await expandBall(page).waitFor({ state: "detached" });
         },
     );
 
@@ -1534,6 +1551,178 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                     sheetBox.y + sheetBox.height
                 }) overlaps dock (${dockBoxLandscape.y})`,
             );
+        },
+    );
+
+    await t.step(
+        "Floating material on home vs solid fallback on /ask, 23% glyph radius & rim, mobile equal height + overflow mask, reduced-motion presence, and settings Grouped List",
+        async () => {
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await setDockEdge("bottom");
+
+            // Pin 4 apps so mobile dock overflows
+            const allAppsRes = await context.request.get(
+                app.origin + "/api/webapps",
+            );
+            assert(allAppsRes.ok());
+            const allApps = (await allAppsRes.json()).data as Array<{
+                id: string;
+            }>;
+            const pinnedIds = allApps.slice(0, 4).map((a) => a.id);
+            const patchDockRes = await context.request.patch(
+                app.origin + "/api/preferences",
+                {
+                    headers: { Origin: app.origin },
+                    data: {
+                        dock: {
+                            systemOrder: ["home", "apps", "notes", "ai"],
+                            appIds: pinnedIds,
+                        },
+                    },
+                },
+            );
+            assert(patchDockRes.ok());
+            await page.reload();
+            await dockNav(page).waitFor({ state: "visible" });
+
+            // 1. Home dock uses Floating glass sheen + 3-layer material edge + blur, and .dock-glyph uses 23% radius + 1px inner rim
+            const homeStyles = await page.evaluate(() => {
+                const bar = document.querySelector("nav.dock-bar")!;
+                const glyph = bar.querySelector(".dock-glyph")!;
+                const barCs = getComputedStyle(bar);
+                const glyphCs = getComputedStyle(glyph);
+                const glyphAfterCs = getComputedStyle(glyph, "::after");
+                return {
+                    bgImage: barCs.backgroundImage,
+                    backdropFilter: barCs.backdropFilter,
+                    boxShadow: barCs.boxShadow,
+                    glyphWidth: Number.parseFloat(glyphCs.width),
+                    glyphRadius: Number.parseFloat(glyphCs.borderRadius),
+                    glyphShadow: glyphCs.boxShadow,
+                    glyphAfterShadow: glyphAfterCs.boxShadow,
+                };
+            });
+            assert(
+                homeStyles.bgImage.includes("linear-gradient"),
+                `home dock must include --glass-sheen gradient, got: ${homeStyles.bgImage}`,
+            );
+            assert(
+                homeStyles.backdropFilter.includes("blur"),
+                `home dock must apply backdrop-filter blur, got: ${homeStyles.backdropFilter}`,
+            );
+            assert(
+                homeStyles.boxShadow.includes("inset"),
+                `home dock must include inset material edge shadow, got: ${homeStyles.boxShadow}`,
+            );
+            assertEquals(homeStyles.glyphWidth, 28);
+            assert(
+                Math.abs(homeStyles.glyphRadius - 28 * 0.23) < 0.2,
+                `dock-glyph radius must be 28 * 0.23 (6.44px), got: ${homeStyles.glyphRadius}`,
+            );
+            assert(
+                homeStyles.glyphShadow.includes("inset") &&
+                    homeStyles.glyphAfterShadow.includes("inset"),
+                `dock-glyph must include 1px inner rim shadow, got: ${homeStyles.glyphShadow}`,
+            );
+
+            // 2. /ask page falls back to solid surface-l3 with no backdrop-filter
+            await dockSystemButton(page, "AI 问答").click();
+            await page.waitForURL((url) => url.pathname.startsWith("/ask"));
+            await page.locator(".app-shell:not([data-home])").waitFor();
+            await dockNav(page).waitFor({ state: "visible" });
+            const askStyles = await page.evaluate(() => {
+                const bar = document.querySelector("nav.dock-bar")!;
+                const cs = getComputedStyle(bar);
+                return {
+                    bgImage: cs.backgroundImage,
+                    backdropFilter: cs.backdropFilter,
+                    borderTopWidth: cs.borderTopWidth,
+                };
+            });
+            assertEquals(askStyles.bgImage, "none");
+            assertEquals(askStyles.backdropFilter, "none");
+            assertEquals(askStyles.borderTopWidth, "1px");
+
+            // Return to home
+            await dockSystemButton(page, "首页").click();
+            await page.waitForURL(app.origin + "/");
+            await page.locator(".app-shell[data-home]").waitFor();
+            await dockNav(page).waitFor({ state: "visible" });
+
+            // 3. 390x844 mobile viewport: all dock items have equal height (44px) and overflowing apps group has mask-image
+            await page.setViewportSize({ width: 390, height: 844 });
+            await page.waitForFunction(() => {
+                const group = document.querySelector(".dock-group--apps");
+                return Boolean(
+                    group && group.hasAttribute("data-overflow-end"),
+                );
+            });
+            const mobileMetrics = await page.evaluate(() => {
+                const items = Array.from(
+                    document.querySelectorAll("nav.dock-bar .dock-item"),
+                );
+                const heights = items.map((el) =>
+                    Math.round(el.getBoundingClientRect().height)
+                );
+                const group = document.querySelector(".dock-group--apps")!;
+                const groupCs = getComputedStyle(group);
+                const mask = groupCs.maskImage || groupCs.webkitMaskImage;
+                return { heights, mask };
+            });
+            for (const h of mobileMetrics.heights) {
+                assertEquals(
+                    h,
+                    44,
+                    `all mobile dock items must be 44px tall, got: ${
+                        mobileMetrics.heights.join(",")
+                    }`,
+                );
+            }
+            assert(
+                mobileMetrics.mask.includes("linear-gradient"),
+                `overflowing mobile .dock-group--apps must apply gradient mask-image, got: ${mobileMetrics.mask}`,
+            );
+
+            // 4. prefers-reduced-motion: reduce uses pure opacity transition (translate: 0px)
+            await page.setViewportSize({ width: 1440, height: 900 });
+            await page.emulateMedia({ reducedMotion: "reduce" });
+            const reducedMotionCheck = await page.evaluate(() => {
+                const bar = document.querySelector("nav.dock-bar")!;
+                const cs = getComputedStyle(bar);
+                return {
+                    transitionProperty: cs.transitionProperty,
+                    travelY: cs.getPropertyValue("--dock-travel-y").trim(),
+                };
+            });
+            assertEquals(reducedMotionCheck.transitionProperty, "opacity");
+            assertEquals(reducedMotionCheck.travelY, "0px");
+            await page.emulateMedia({ reducedMotion: "no-preference" });
+
+            // 5. /settings/appearance dock group follows Grouped List syntax without nested --surface-soft cards
+            await page.goto(app.origin + "/settings/appearance");
+            await page.getByRole("navigation", { name: "设置分类" }).waitFor({
+                state: "visible",
+            });
+            await page.getByText("手机端展开时固定于底部").first().waitFor({
+                state: "visible",
+            });
+            const groupedListCheck = await page.evaluate(() => {
+                const rows = Array.from(
+                    document.querySelectorAll(".dock-order-row"),
+                );
+                const legacyCards = document.querySelectorAll(
+                    ".dock-settings-item",
+                ).length;
+                const bgs = rows.map((r) =>
+                    getComputedStyle(r).backgroundColor
+                );
+                return { rowCount: rows.length, legacyCards, bgs };
+            });
+            assert(groupedListCheck.rowCount >= 8);
+            assertEquals(groupedListCheck.legacyCards, 0);
+            for (const bg of groupedListCheck.bgs) {
+                assertEquals(bg, "rgba(0, 0, 0, 0)");
+            }
         },
     );
 });
