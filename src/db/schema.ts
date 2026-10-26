@@ -303,7 +303,8 @@ export const documentLayouts = sqliteTable("document_layouts", {
     deviceClass: text("device_class", {
         enum: ["desktop", "tablet", "mobile"],
     }).notNull().default("desktop"),
-    // Home note lattice: col/row are cell origins, null until a note is placed.
+    // Home note lattice: band/col/row are cell origins, null until placed.
+    band: text("band", { enum: ["left", "right", "center"] }),
     col: integer("col"),
     row: integer("row"),
     size: text("size", { enum: ["s", "w"] }).notNull().default("s"),

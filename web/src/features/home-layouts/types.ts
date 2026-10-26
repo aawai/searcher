@@ -58,9 +58,12 @@ export interface HomeLayoutProps {
         note: HomeNoteItem,
         patch: Omit<UpdateDocumentInput, "version">,
     ) => Promise<void>;
-    updateNoteLayout: (
-        note: HomeNoteItem,
-        layout: DocumentLayoutDto,
+    /** One atomic home layout write: a move or resize is one change, a swap two. */
+    updateNoteLayouts: (
+        changes: ReadonlyArray<{
+            note: HomeNoteItem;
+            layout: DocumentLayoutDto;
+        }>,
     ) => Promise<void>;
     /** Toggles one task row in a note's body; optimistic, saved and coalesced. */
     toggleTask: (note: HomeNoteItem, index: number, checked: boolean) => void;

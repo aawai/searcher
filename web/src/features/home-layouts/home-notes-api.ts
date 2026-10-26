@@ -2,6 +2,7 @@ import {
     DOCUMENT_PAGE_MAX_LIMIT,
     type DocumentDto,
     type DocumentLayoutDto,
+    type DocumentLayoutsDto,
     type DocumentPageDto,
     type DocumentSummaryDto,
     type UpdateDocumentInput,
@@ -64,18 +65,26 @@ export function patchNote(
     );
 }
 
-export function patchNoteLayout(
-    id: string,
-    layout: DocumentLayoutDto,
-): Promise<DocumentLayoutDto> {
-    return api<DocumentLayoutDto>(
-        documentPath(id, "/layout"),
+/**
+ * One atomic layout write for several notes (a swap moves two). The server
+ * applies every item or none, and answers in request order.
+ */
+export async function patchNoteLayouts(
+    items: ReadonlyArray<{ id: string; layout: DocumentLayoutDto }>,
+): Promise<Array<{ id: string; layout: DocumentLayoutDto }>> {
+    const response = await api<DocumentLayoutsDto>(
+        `${DOCUMENTS}/layouts`,
         json("PATCH", {
-            col: layout.col,
-            row: layout.row,
-            size: layout.size,
+            items: items.map(({ id, layout }) => ({
+                id,
+                band: layout.band,
+                col: layout.col,
+                row: layout.row,
+                size: layout.size,
+            })),
         }),
     );
+    return response.items;
 }
 
 export async function trashNote(

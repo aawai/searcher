@@ -178,9 +178,11 @@ function readLegacyLayouts(native: DatabaseSync): LegacyLayout[] {
 
 /**
  * Converts saved pixel layouts to the frozen reference lattice and shifts
- * conflicts by `homeSortOrder`. Runs in one native transaction while holding
- * the store's FIFO queue; any failure rolls back every converted row.
- * Idempotent: only rows with neither col nor row are considered.
+ * conflicts by `homeSortOrder`. The reference grid had one column per side;
+ * each reference column becomes a band-relative `{ band, col: 0 }` cell.
+ * Runs in one native transaction while holding the store's FIFO queue; any
+ * failure rolls back every converted row. Idempotent: only rows with neither
+ * col nor row are considered.
  */
 export async function migrateHomeNoteCells(
     store: DatabaseStore,
@@ -190,7 +192,7 @@ export async function migrateHomeNoteCells(
         if (rows.length === 0) return 0;
         const placed: CellRect[] = [];
         const update = native.prepare(
-            "UPDATE document_layouts SET col = ?, row = ?, size = ? WHERE id = ? AND col IS NULL AND row IS NULL",
+            "UPDATE document_layouts SET band = ?, col = ?, row = ?, size = ? WHERE id = ? AND col IS NULL AND row IS NULL",
         );
         for (const row of rows) {
             const target = desiredCell(row.x, row.y);
@@ -205,7 +207,12 @@ export async function migrateHomeNoteCells(
                 // default placement / 更多笔记 entry can handle it.
                 continue;
             }
-            update.run(cell.col, cell.row, size, row.id);
+            const band = HOME_NOTE_REFERENCE_GRID.columns[cell.col].band;
+            const offset = cell.col -
+                HOME_NOTE_REFERENCE_GRID.columns.findIndex((column) =>
+                    column.band === band
+                );
+            update.run(band, offset, cell.row, size, row.id);
             placed.push(cell);
         }
         return rows.length;

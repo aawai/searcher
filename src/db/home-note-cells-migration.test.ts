@@ -11,6 +11,7 @@ type JournalEntry = { idx: number; tag: string };
 async function cellMigration(): Promise<{
     before: string[][];
     cell: string[];
+    band: string[];
 }> {
     const journal: { entries: JournalEntry[] } = JSON.parse(
         await Deno.readTextFile(
@@ -21,6 +22,10 @@ async function cellMigration(): Promise<{
         entry.tag === "0030_nervous_phil_sheldon"
     );
     if (target < 0) throw new Error("Missing home note cell migration");
+    const band = journal.entries.findIndex((entry) =>
+        entry.tag === "0031_foamy_archangel"
+    );
+    if (band < 0) throw new Error("Missing home note band migration");
     const read = async (entry: JournalEntry) =>
         (await Deno.readTextFile(
             new URL(`../../drizzle/${entry.tag}.sql`, import.meta.url),
@@ -28,6 +33,7 @@ async function cellMigration(): Promise<{
     return {
         before: await Promise.all(journal.entries.slice(0, target).map(read)),
         cell: await read(journal.entries[target]),
+        band: await read(journal.entries[band]),
     };
 }
 
@@ -37,8 +43,9 @@ async function prepare(): Promise<DatabaseStore> {
     for (const statements of migration.before) store.migrate(statements);
     await store.nativeTransaction((native) => seed(native));
     // The size mapping runs in the same migration as the new columns, so seed
-    // legacy rows first.
+    // legacy rows first. The band column and its backfill follow.
     store.migrate(migration.cell);
+    store.migrate(migration.band);
     return store;
 }
 
@@ -71,6 +78,7 @@ function seed(native: DatabaseSync): void {
 
 type LayoutRow = {
     id: string;
+    band: string | null;
     col: number | null;
     row: number | null;
     size: string;
@@ -78,9 +86,10 @@ type LayoutRow = {
 
 function readLayouts(native: DatabaseSync): LayoutRow[] {
     return native.prepare(
-        "SELECT id, col, row, size FROM document_layouts ORDER BY id",
+        "SELECT id, band, col, row, size FROM document_layouts ORDER BY id",
     ).all().map((row) => ({
         id: row.id,
+        band: row.band,
         col: row.col,
         row: row.row,
         size: row.size,
@@ -100,14 +109,14 @@ Deno.test("home note cell migration converts pixels, resolves conflicts and leav
         assertEquals(await migrateHomeNoteCells(store), 4);
         await store.exclusiveNative((native) => {
             assertEquals(readLayouts(native), [
-                { id: "l-conflict", col: 1, row: 0, size: "s" },
-                { id: "l-hidden", col: null, row: null, size: "s" },
-                { id: "l-left", col: 0, row: 0, size: "s" },
-                { id: "l-none", col: null, row: null, size: "w" },
-                { id: "l-out", col: 0, row: 1, size: "s" },
+                { id: "l-conflict", band: "right", col: 0, row: 0, size: "s" },
+                { id: "l-hidden", band: null, col: null, row: null, size: "s" },
+                { id: "l-left", band: "left", col: 0, row: 0, size: "s" },
+                { id: "l-none", band: null, col: null, row: null, size: "w" },
+                { id: "l-out", band: "left", col: 0, row: 1, size: "s" },
                 // A W needs two columns; this side only has one, so it is S.
-                { id: "l-tablet", col: null, row: null, size: "w" },
-                { id: "l-wide", col: 1, row: 1, size: "s" },
+                { id: "l-tablet", band: null, col: null, row: null, size: "w" },
+                { id: "l-wide", band: "right", col: 0, row: 1, size: "s" },
             ]);
             return Promise.resolve();
         });

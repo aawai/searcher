@@ -57,32 +57,37 @@ Deno.test("home notes follow homeSortOrder, alternate sides and leave the search
             true,
         );
 
-        // Clicking the body does not switch scenes; the title is the open control.
+        // The whole card opens the note; the title stays the labelled control.
         const third = homeNote(page, "顺序 2");
         await third.locator(".home-note-body").click({
             position: { x: 10, y: 10 },
         });
-        assertEquals(await page.locator("[data-library]").count(), 0);
+        await libraryPanel(page).waitFor();
+        await page.getByRole("button", { name: "关闭资料库", exact: true })
+            .click();
+        await libraryPanel(page).waitFor({ state: "detached" });
         await third.getByRole("button", { name: "顺序 2", exact: true })
             .click();
         await libraryPanel(page).waitFor();
 
-        // Close the library and add a fifth note: it overflows.
+        // Close the library and add three notes: the last one overflows.
         await page.getByRole("button", { name: "关闭资料库", exact: true })
             .click();
         await libraryPanel(page).waitFor({ state: "detached" });
-        await createHomeNote(page, {
-            title: "顺序 4",
-            body: BODY,
-            homeSortOrder: 4,
-        });
+        for (let index = 4; index < 7; index++) {
+            await createHomeNote(page, {
+                title: `顺序 ${index}`,
+                body: BODY,
+                homeSortOrder: index,
+            });
+        }
         await reloadHome(page);
-        await waitForNoteCards(page, 4);
+        await waitForNoteCards(page, 6);
         const overflow = await measureHomeNotes(page);
-        assertEquals(overflow.cards.length, 4);
+        assertEquals(overflow.cards.length, 6);
         assertEquals(overflow.more.text, "更多笔记（1）");
         assert(
-            await page.locator(".home-note-title", { hasText: "顺序 4" })
+            await page.locator(".home-note-title", { hasText: "顺序 6" })
                 .count() === 0,
         );
     } finally {

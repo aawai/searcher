@@ -1200,22 +1200,39 @@ Deno.test("Document layouts store home note cells, reject overlaps and never ver
             DocumentNotFoundError,
         );
         await assertRejects(
-            () => layouts.updateLayout("user-2", doc.id, { col: 0, row: 0 }),
+            () =>
+                layouts.updateLayout("user-2", doc.id, {
+                    band: "left",
+                    col: 0,
+                    row: 0,
+                }),
             DocumentNotFoundError,
         );
-        // col and row are one position; a partial pair is invalid.
+        // band, col and row are one position; a partial input is invalid.
         await assertRejects(
-            () => layouts.updateLayout("user-1", doc.id, { col: 3 }),
+            () =>
+                layouts.updateLayout("user-1", doc.id, {
+                    band: "left",
+                    col: 3,
+                }),
             DocumentValidationError,
         );
         const placed = await layouts.updateLayout("user-1", doc.id, {
+            band: "left",
             col: 0,
             row: 0,
             size: "w",
         });
-        assertEquals(placed, { col: 0, row: 0, size: "w", updatedAt: now() });
+        assertEquals(placed, {
+            band: "left",
+            col: 0,
+            row: 0,
+            size: "w",
+            updatedAt: now(),
+        });
         advanceTime(1);
         const changed = await layouts.updateLayout("user-1", doc.id, {
+            band: "left",
             col: 0,
             row: 1,
             size: "s",
@@ -1231,6 +1248,7 @@ Deno.test("Document layouts store home note cells, reject overlaps and never ver
         await assertRejects(
             () =>
                 layouts.updateLayout("user-1", other.id, {
+                    band: "left",
                     col: 0,
                     row: 1,
                     size: "w",
@@ -1238,6 +1256,7 @@ Deno.test("Document layouts store home note cells, reject overlaps and never ver
             DocumentLayoutConflictError,
         );
         const beside = await layouts.updateLayout("user-1", other.id, {
+            band: "left",
             col: 2,
             row: 1,
         });
@@ -1245,6 +1264,7 @@ Deno.test("Document layouts store home note cells, reject overlaps and never ver
         // Off-home notes do not occupy the home lattice.
         const hidden = await service.create("user-1", {});
         const hiddenLayout = await layouts.updateLayout("user-1", hidden.id, {
+            band: "left",
             col: 0,
             row: 1,
         });
@@ -1252,6 +1272,7 @@ Deno.test("Document layouts store home note cells, reject overlaps and never ver
         await assertRejects(
             () =>
                 layouts.updateLayout("user-1", doc.id, {
+                    band: "left",
                     col: HOME_NOTE_GRID_MAX_COL + 1,
                     row: 0,
                 }),
@@ -1264,7 +1285,12 @@ Deno.test("Document layouts store home note cells, reject overlaps and never ver
             DocumentNotFoundError,
         );
         await assertRejects(
-            () => layouts.updateLayout("user-1", doc.id, { col: 1, row: 1 }),
+            () =>
+                layouts.updateLayout("user-1", doc.id, {
+                    band: "left",
+                    col: 1,
+                    row: 1,
+                }),
             DocumentNotFoundError,
         );
         await service.restore("user-1", doc.id);

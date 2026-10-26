@@ -41,7 +41,7 @@ import {
     fetchHomeNote,
     fetchHomeNotes,
     patchNote,
-    patchNoteLayout,
+    patchNoteLayouts,
     restoreNote,
     trashNote,
 } from "../features/home-layouts/home-notes-api.ts";
@@ -219,7 +219,8 @@ export function SearchHome() {
     const openDocumentRef = useRef<(id: string) => void>(() => {});
     const updatingNotesRef = useRef<Set<string>>(new Set());
     const paperLayoutLatestGenRef = useRef<Map<string, number>>(new Map());
-    const paperLayoutQueuesRef = useRef<Map<string, Promise<void>>>(new Map());
+    /** One queue for every layout write: a swap touches two notes at once. */
+    const paperLayoutQueueRef = useRef<Promise<void>>(Promise.resolve());
     const paperLayoutPrevCanonicalRef = useRef<
         Map<string, DocumentLayoutDto>
     >(new Map());
@@ -1044,71 +1045,96 @@ export function SearchHome() {
             updatingNotesRef.current.delete(lockKey);
         }
     }
-    async function updateNoteLayout(
-        paper: HomeNoteItem,
-        layout: DocumentLayoutDto,
+    /**
+     * One atomic write for a layout gesture: a move or resize is one change,
+     * a swap is two. Every changed cell renders together so the lattice never
+     * shows a half-applied swap, and all writes share one queue because a
+     * single request may move notes that the next request moves again.
+     */
+    async function updateNoteLayouts(
+        changes: ReadonlyArray<{
+            note: HomeNoteItem;
+            layout: DocumentLayoutDto;
+        }>,
     ) {
-        const paperId = paper.id;
-        const nextGen = (paperLayoutLatestGenRef.current.get(paperId) ?? 0) + 1;
-        paperLayoutLatestGenRef.current.set(paperId, nextGen);
-
-        if (!paperLayoutPrevCanonicalRef.current.has(paperId)) {
-            paperLayoutPrevCanonicalRef.current.set(paperId, paper.layout);
+        if (changes.length === 0) return;
+        const generations = new Map<string, number>();
+        const optimistic = new Map<string, DocumentLayoutDto>();
+        for (const { note, layout } of changes) {
+            const nextGen =
+                (paperLayoutLatestGenRef.current.get(note.id) ?? 0) + 1;
+            paperLayoutLatestGenRef.current.set(note.id, nextGen);
+            generations.set(note.id, nextGen);
+            if (!paperLayoutPrevCanonicalRef.current.has(note.id)) {
+                paperLayoutPrevCanonicalRef.current.set(note.id, note.layout);
+            }
+            optimistic.set(note.id, layout);
         }
-
         setHomeNotes((items) =>
-            items.map((item) =>
-                item.id === paperId ? { ...item, layout } : item
-            )
+            items.map((item) => {
+                const layout = optimistic.get(item.id);
+                return layout ? { ...item, layout } : item;
+            })
         );
 
-        const currentPromise = paperLayoutQueuesRef.current.get(paperId) ??
-            Promise.resolve();
+        const request = changes.map(({ note, layout }) => ({
+            id: note.id,
+            layout,
+        }));
 
         const runTask = async () => {
             try {
-                const persistedLayout = await patchNoteLayout(paperId, layout);
-                paperLayoutPrevCanonicalRef.current.set(
-                    paperId,
-                    persistedLayout,
+                const persisted = await patchNoteLayouts(request);
+                const canonical = new Map<string, DocumentLayoutDto>(
+                    persisted.map((item) => [item.id, item.layout]),
                 );
-                if (paperLayoutLatestGenRef.current.get(paperId) === nextGen) {
-                    setHomeNotes((items) =>
-                        items.map((item) =>
-                            item.id === paperId
-                                ? { ...item, layout: persistedLayout }
-                                : item
-                        )
-                    );
-                    paperLayoutPrevCanonicalRef.current.delete(paperId);
+                const settled = new Map<string, DocumentLayoutDto>();
+                for (const { id } of request) {
+                    const layout = canonical.get(id);
+                    if (!layout) continue;
+                    paperLayoutPrevCanonicalRef.current.set(id, layout);
+                    if (
+                        paperLayoutLatestGenRef.current.get(id) !==
+                            generations.get(id)
+                    ) continue;
+                    settled.set(id, layout);
+                    paperLayoutPrevCanonicalRef.current.delete(id);
                 }
+                if (settled.size === 0) return;
+                setHomeNotes((items) =>
+                    items.map((item) => {
+                        const layout = settled.get(item.id);
+                        return layout ? { ...item, layout } : item;
+                    })
+                );
             } catch (e) {
                 setError(errorMessage(e));
-                if (paperLayoutLatestGenRef.current.get(paperId) === nextGen) {
-                    const rollbackLayout =
-                        paperLayoutPrevCanonicalRef.current.get(paperId) ??
-                            paper.layout;
-                    setHomeNotes((items) =>
-                        items.map((item) =>
-                            item.id === paperId
-                                ? { ...item, layout: rollbackLayout }
-                                : item
-                        )
+                // Only cells with no newer gesture behind them roll back.
+                const rollback = new Map<string, DocumentLayoutDto>();
+                for (const { note } of changes) {
+                    if (
+                        paperLayoutLatestGenRef.current.get(note.id) !==
+                            generations.get(note.id)
+                    ) continue;
+                    rollback.set(
+                        note.id,
+                        paperLayoutPrevCanonicalRef.current.get(note.id) ??
+                            note.layout,
                     );
-                    paperLayoutPrevCanonicalRef.current.delete(paperId);
+                    paperLayoutPrevCanonicalRef.current.delete(note.id);
                 }
+                if (rollback.size === 0) return;
+                setHomeNotes((items) =>
+                    items.map((item) => {
+                        const layout = rollback.get(item.id);
+                        return layout ? { ...item, layout } : item;
+                    })
+                );
             }
         };
 
-        const taskPromise = currentPromise.then(runTask, runTask);
-        paperLayoutQueuesRef.current.set(paperId, taskPromise);
-
-        taskPromise.finally(() => {
-            if (paperLayoutQueuesRef.current.get(paperId) === taskPromise) {
-                paperLayoutQueuesRef.current.delete(paperId);
-            }
-        });
-
+        const taskPromise = paperLayoutQueueRef.current.then(runTask, runTask);
+        paperLayoutQueueRef.current = taskPromise;
         await taskPromise;
     }
     async function deleteNote(paper: HomeNoteItem) {
@@ -1274,7 +1300,7 @@ export function SearchHome() {
         openNote,
         deleteNote,
         updateNote,
-        updateNoteLayout,
+        updateNoteLayouts,
         toggleTask: taskSaver.toggle,
         editingNoteId: libraryState.documents.route.view === "documents/edit"
             ? libraryState.documents.route.id

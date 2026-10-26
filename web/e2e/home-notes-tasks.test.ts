@@ -21,6 +21,10 @@ Deno.test("home note task checkboxes toggle directly and save through the docume
         await reloadHome(page);
         await waitForNoteCards(page, 1);
         const card = homeNote(page, "直接勾选").locator(".home-note-card");
+        assertEquals(
+            await card.locator(".home-note-progress").textContent(),
+            "1/2",
+        );
         const first = card.getByRole("checkbox", {
             name: "未完成任务，点击标记为已完成",
         });
@@ -35,6 +39,8 @@ Deno.test("home note task checkboxes toggle directly and save through the docume
         await card.getByRole("checkbox", {
             name: /已完成任务，点击标记为未完成/,
         }).first().waitFor();
+        await card.locator(".home-note-progress", { hasText: "2/2" })
+            .waitFor();
         const body = await page.evaluate(
             async (id) =>
                 (await (await fetch(`/api/documents/${id}`)).json()).data
@@ -85,6 +91,10 @@ Deno.test("home note task toggles coalesce into one PATCH and Space toggles a fo
             ) patches += 1;
         });
         const card = homeNote(page, "连续勾选").locator(".home-note-card");
+        assertEquals(
+            await card.locator(".home-note-progress").textContent(),
+            "0/2",
+        );
         const row = (text: string) =>
             card.locator("li.task-list-item", { hasText: text })
                 .getByRole("checkbox");
@@ -97,6 +107,8 @@ Deno.test("home note task toggles coalesce into one PATCH and Space toggles a fo
         await row("乙").focus();
         await page.keyboard.press("Space");
         await saved;
+        await card.locator(".home-note-progress", { hasText: "2/2" })
+            .waitFor();
         await page.waitForTimeout(2000);
         assertEquals(patches, 1, "toggles inside one window save once");
         const body = await page.evaluate(
@@ -125,6 +137,10 @@ Deno.test("coarse pointers get a 44px task target without changing the line pitc
         await reloadHome(page);
         await waitForNoteCards(page, 1);
         const card = homeNote(page, "触屏任务").locator(".home-note-card");
+        assertEquals(
+            await card.locator(".home-note-progress").textContent(),
+            "0/1",
+        );
         const row = card.locator("li.task-list-item");
         const box = await row.getByRole("checkbox").boundingBox();
         assert(box);
@@ -147,6 +163,8 @@ Deno.test("coarse pointers get a 44px task target without changing the line pitc
         await card.getByRole("checkbox", {
             name: "已完成任务，点击标记为未完成",
         }).waitFor();
+        await card.locator(".home-note-progress", { hasText: "1/1" })
+            .waitFor();
         const checked = await page.evaluate(
             async (id) =>
                 (await (await fetch(`/api/documents/${id}`)).json()).data

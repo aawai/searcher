@@ -2,6 +2,7 @@ import { assertEquals } from "@std/assert";
 import {
     replayTaskToggles,
     setTaskChecked,
+    taskProgress,
     taskRowText,
 } from "./note-tasks.ts";
 
@@ -64,4 +65,14 @@ Deno.test("replayTaskToggles returns null when a target row text or ordinal chan
         }]),
         null,
     );
+});
+
+Deno.test("task progress counts nested tasks but excludes fenced examples and plain list items", () => {
+    assertEquals(
+        taskProgress(
+            "- [ ] parent\n  - [x] child\n- ordinary\n\n```md\n- [x] example\n```\n\n> - [X] quoted",
+        ),
+        { done: 2, total: 3 },
+    );
+    assertEquals(taskProgress("no tasks\n\n```\n- [ ] example\n```"), null);
 });

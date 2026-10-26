@@ -45,6 +45,29 @@ function taskAt(
     return { offset, marker };
 }
 
+function countTasks(
+    node: TaskNode,
+    progress: { done: number; total: number },
+): { done: number; total: number } {
+    if (node.type === "listItem" && typeof node.checked === "boolean") {
+        progress.total++;
+        if (node.checked) progress.done++;
+    }
+    for (const child of node.children ?? []) countTasks(child, progress);
+    return progress;
+}
+
+/** Checked and total task list items (code blocks excluded); null without tasks. */
+export function taskProgress(
+    body: string,
+): { done: number; total: number } | null {
+    const progress = countTasks(parseNoteMarkdown(body), {
+        done: 0,
+        total: 0,
+    });
+    return progress.total > 0 ? progress : null;
+}
+
 /**
  * Returns the text of the `index`-th task row, without the list marker and
  * checkbox, so that a toggle can be matched against a newer body. Null when the

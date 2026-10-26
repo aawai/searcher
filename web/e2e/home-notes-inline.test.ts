@@ -122,13 +122,13 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
             Math.abs(offset) <= 1,
             `note menu centre is ${offset}px off the title line`,
         );
-        // The 22px title opens the note from a 44px band: it reaches into the
+        // The 24px title opens the note from a 44px band: it reaches into the
         // card padding above and the gap below without moving the body.
         const titleHits = await first.locator(".home-note-title").evaluate(
             (title) => {
                 const box = title.getBoundingClientRect();
                 const x = box.left + Math.min(box.width / 2, 24);
-                return [box.top - 15, box.bottom + 5].map((y) =>
+                return [box.top - 15, box.bottom + 3].map((y) =>
                     document.elementFromPoint(x, y)?.closest(
                         ".home-note-title",
                     ) === title
@@ -163,6 +163,46 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
             ),
             false,
         );
+    } finally {
+        await fixture.close();
+    }
+});
+
+Deno.test("untitled flow notes keep one body and open from the card or keyboard", async () => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 768, height: 1024 },
+    });
+    const { page } = fixture;
+    try {
+        await createHomeNote(page, {
+            title: null,
+            body: "流动里的第一行\n\n第二段内容只出现一次。",
+        });
+        await reloadHome(page);
+        await waitForNoteCards(page, 1);
+        const item = page.locator(".home-note-flow-item").first();
+        const card = item.locator(".home-note-card");
+        assertEquals(await card.getAttribute("data-untitled"), "true");
+        assertEquals(await item.getAttribute("tabindex"), "0");
+        assertEquals(await card.locator(".home-note-title").count(), 0);
+        const text = await card.innerText();
+        assertEquals(text.split("流动里的第一行").length - 1, 1);
+        assert(text.includes("第二段内容只出现一次。"));
+
+        await item.focus();
+        await page.keyboard.press("Enter");
+        await libraryPanel(page).waitFor();
+        await page.getByRole("button", { name: "关闭资料库", exact: true })
+            .click();
+        await libraryPanel(page).waitFor({ state: "detached" });
+
+        await card.locator(".home-note-body").click({
+            position: { x: 10, y: 10 },
+        });
+        await libraryPanel(page).waitFor();
+        await page.getByRole("button", { name: "关闭资料库", exact: true })
+            .click();
+        await libraryPanel(page).waitFor({ state: "detached" });
     } finally {
         await fixture.close();
     }

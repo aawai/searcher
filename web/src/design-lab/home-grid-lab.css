@@ -196,6 +196,16 @@
     pointer-events: none;
 }
 
+/* Debug lattice: every cell of every band, including the rows above the
+   search box and the shelf below the plate. */
+.home-grid-lab__cell {
+    position: absolute;
+    border: var(--space-hairline) dashed var(--ring);
+    border-radius: var(--radius-sm);
+    opacity: 0.22;
+    pointer-events: none;
+}
+
 /* Same Material tier as the plate: edge, elevation and sheen, no paper. */
 .home-grid-lab__note {
     position: absolute;

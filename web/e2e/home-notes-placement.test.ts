@@ -1,12 +1,14 @@
 import { assert, assertEquals } from "@std/assert";
 import {
     assertNoIntersections,
+    countLayoutPatches,
     createHomeNote,
+    expectLayout,
     measureHomeNotes,
     openHomeNotesFixture,
+    readLayout,
     reloadHome,
     seedHomeApps,
-    waitForFlowMode,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
 
@@ -199,6 +201,108 @@ Deno.test("tablet flow spans both columns for a W note", async () => {
             Math.round(small.width),
             Math.round((metrics.search.width - 12) / 2),
         );
+    } finally {
+        await fixture.close();
+    }
+});
+
+Deno.test("saved cells above the search box keep a negative side row", async () => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 1440, height: 900 },
+    });
+    const { page } = fixture;
+    try {
+        await seedHomeApps(page);
+        const left = await createHomeNote(page, {
+            title: "上方左",
+            body: BODY,
+            band: "left",
+            col: 0,
+            row: -1,
+        });
+        const right = await createHomeNote(page, {
+            title: "上方右",
+            body: BODY,
+            homeSortOrder: 1,
+            band: "right",
+            col: 0,
+            row: -1,
+        });
+        await reloadHome(page);
+        await waitForNoteCards(page, 2);
+        await page.waitForTimeout(300);
+        const metrics = await measureHomeNotes(page);
+        assertNoIntersections(metrics);
+        const byTitle = new Map(
+            metrics.cards.map((card) => [card.title, card]),
+        );
+        const leftCard = byTitle.get("上方左");
+        const rightCard = byTitle.get("上方右");
+        assert(leftCard && rightCard);
+        assertEquals(
+            Math.round(leftCard.y),
+            Math.round(metrics.search.y) - 192,
+        );
+        assertEquals(
+            Math.round(rightCard.y),
+            Math.round(metrics.search.y) - 192,
+        );
+        assert(
+            leftCard.x < metrics.search.x,
+            "left row stays in the left band",
+        );
+        assert(
+            rightCard.x > metrics.search.x + metrics.search.width,
+            "right row stays in the right band",
+        );
+        await expectLayout(page, left.id, {
+            band: "left",
+            col: 0,
+            row: -1,
+            size: "s",
+        });
+        await expectLayout(page, right.id, {
+            band: "right",
+            col: 0,
+            row: -1,
+            size: "s",
+        });
+    } finally {
+        await fixture.close();
+    }
+});
+
+Deno.test("a W without a saved cell uses the centre shelf before falling back to S", async () => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 1440, height: 900 },
+    });
+    const { page } = fixture;
+    try {
+        const note = await createHomeNote(page, {
+            title: "宽笔记",
+            body: BODY,
+            size: "w",
+        });
+        await reloadHome(page);
+        await waitForNoteCards(page, 1);
+        await page.waitForTimeout(300);
+        const patches = countLayoutPatches(page);
+        const metrics = await measureHomeNotes(page);
+        const card = metrics.cards[0];
+        assertEquals(card.title, "宽笔记");
+        assertEquals(Math.round(card.width), 372, "the W tier is kept");
+        const blockBottom = metrics.plate
+            ? metrics.plate.y + metrics.plate.height
+            : metrics.search.y + metrics.search.height;
+        assert(card.y > blockBottom, "the shelf starts below the block");
+        assertNoIntersections(metrics);
+        const layout = await readLayout(page, note.id);
+        assert(layout);
+        assertEquals(layout.band, null, "placement never writes a cell");
+        assertEquals(layout.col, null);
+        assertEquals(layout.row, null);
+        assertEquals(layout.size, "w");
+        assertEquals(patches.count(), 0);
     } finally {
         await fixture.close();
     }

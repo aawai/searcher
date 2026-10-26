@@ -10,10 +10,12 @@ import {
 import { libraryPanel, libraryView } from "./helpers/library.ts";
 
 const BODY = "超出容量的笔记收进更多笔记，入口不得与搜索框或底板相交。";
+const VIEWPORT_HEIGHT = 900;
+const BOTTOM_CLEARANCE = 48;
 
 Deno.test("overflow notes collapse into 更多笔记（N） and open the notes library", async (t) => {
     const fixture = await openHomeNotesFixture({
-        viewport: { width: 1440, height: 900 },
+        viewport: { width: 1440, height: VIEWPORT_HEIGHT },
     });
     const { page } = fixture;
     try {
@@ -36,7 +38,7 @@ Deno.test("overflow notes collapse into 更多笔记（N） and open the notes l
         });
 
         await t.step(
-            "eight notes keep four notes and a 更多笔记 (4) pill",
+            "eight notes keep six notes and a 更多笔记（2） pill",
             async () => {
                 for (let index = 4; index < 8; index++) {
                     await createHomeNote(page, {
@@ -46,15 +48,23 @@ Deno.test("overflow notes collapse into 更多笔记（N） and open the notes l
                     });
                 }
                 await reloadHome(page);
-                await waitForNoteCards(page, 4);
+                await waitForNoteCards(page, 6);
                 const metrics = await measureHomeNotes(page);
-                assertEquals(metrics.cards.length, 4);
+                assertEquals(metrics.cards.length, 6);
                 assertEquals(metrics.more.mode, "pill");
-                assertEquals(metrics.more.text, "更多笔记（4）");
+                assertEquals(metrics.more.text, "更多笔记（2）");
                 assert(metrics.plate, "plate is measurable");
-                const more = await page.locator(".home-note-more")
-                    .boundingBox();
-                assert(more);
+                const more = metrics.more.box;
+                assert(more, "the pill is measurable");
+                assertEquals(
+                    Math.round(VIEWPORT_HEIGHT - (more.y + more.height)),
+                    8,
+                    "the pill sits 8px above the viewport bottom",
+                );
+                assert(
+                    more.y >= VIEWPORT_HEIGHT - BOTTOM_CLEARANCE,
+                    "the pill stays inside the 48px bottom clearance",
+                );
                 assert(
                     more.y >= metrics.plate.y + metrics.plate.height,
                     "the pill sits below the plate",
@@ -83,6 +93,7 @@ Deno.test("overflow notes collapse into 更多笔记（N） and open the notes l
                 assertEquals(metrics.flow, "stack");
                 assertEquals(metrics.cards.length, 8);
                 assertEquals(metrics.more.mode, null);
+                assertEquals(metrics.more.box, null);
             },
         );
     } finally {

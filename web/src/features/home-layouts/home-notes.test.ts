@@ -28,6 +28,7 @@ function note(
         body: "",
         version: 1,
         layout: {
+            band: null,
             col: null,
             row: null,
             size: "s",
@@ -87,19 +88,32 @@ Deno.test("setNote removes on null and keeps the newer local version on stale in
     );
 });
 
-Deno.test("a note needs both a saved column and row to keep a cell", () => {
+Deno.test("a note needs a saved band, column and row to keep a cell", () => {
     const layout = note("a", 1).layout;
 
     assertEquals(hasSavedCell(note("a", 1)), false);
     assertEquals(
-        hasSavedCell(note("a", 1, { layout: { ...layout, col: 4 } })),
+        hasSavedCell(note("a", 1, { layout: { ...layout, band: "left" } })),
+        false,
+    );
+    assertEquals(
+        hasSavedCell(note("a", 1, {
+            layout: { ...layout, band: "left", col: 4 },
+        })),
         false,
     );
     assertEquals(
         hasSavedCell(note("a", 1, { layout: { ...layout, col: 4, row: 1 } })),
+        false,
+    );
+    assertEquals(
+        hasSavedCell(note("a", 1, {
+            layout: { ...layout, band: "left", col: 4, row: 1 },
+        })),
         true,
     );
     assertEquals(defaultNoteLayout(), {
+        band: null,
         col: null,
         row: null,
         size: "s",

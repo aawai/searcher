@@ -9,6 +9,8 @@ import {
     DOCUMENT_JSON_MAX_BYTES,
     type DocumentAssetDto,
     type DocumentDto,
+    type DocumentLayoutDto,
+    type DocumentLayoutsDto,
     type DocumentNotebookDto,
     type DocumentPageDto,
     type DocumentSettingsDto,
@@ -524,23 +526,21 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata, layouts 
             (await env.request(
                 `/api/documents/${document.id}/layout`,
                 "PATCH",
-                { col: 1, row: 0, size: "w" },
+                { band: "right", col: 0, row: 0, size: "w" },
                 1,
             )).status,
             404,
         );
-        const layout = await data<{
-            col: number | null;
-            row: number | null;
-            size: "s" | "w";
-        }>(
+        const layout = await data<DocumentLayoutDto>(
             await env.request(`/api/documents/${document.id}/layout`, "PATCH", {
-                col: 1,
+                band: "right",
+                col: 0,
                 row: 0,
                 size: "w",
             }),
         );
-        assertEquals(layout.col, 1);
+        assertEquals(layout.band, "right");
+        assertEquals(layout.col, 0);
         assertEquals(layout.row, 0);
         assertEquals(layout.size, "w");
         assertEquals(
@@ -549,12 +549,13 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata, layouts 
             ),
             layout,
         );
-        // A partial cell or an out-of-range column is rejected before writing.
+        // A partial position or an out-of-range column is rejected before writing.
         assertEquals(
             (await env.request(
                 `/api/documents/${document.id}/layout`,
                 "PATCH",
                 {
+                    band: "right",
                     col: 2,
                     row: null,
                 },
@@ -566,6 +567,7 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata, layouts 
                 `/api/documents/${document.id}/layout`,
                 "PATCH",
                 {
+                    band: "right",
                     col: 999,
                     row: 0,
                 },
@@ -583,7 +585,7 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata, layouts 
             (await env.request(
                 `/api/documents/${overlap.id}/layout`,
                 "PATCH",
-                { col: 2, row: 0, size: "w" },
+                { band: "right", col: 1, row: 0, size: "w" },
             )).status,
             409,
         );
@@ -591,7 +593,7 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata, layouts 
             (await env.request(
                 `/api/documents/${overlap.id}/layout`,
                 "PATCH",
-                { col: 3, row: 0 },
+                { band: "right", col: 3, row: 0 },
             )).status,
             200,
         );
@@ -618,6 +620,322 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata, layouts 
     } finally {
         await owner.cancel();
         await other.cancel();
+        await env.store.close();
+    }
+});
+
+type TestEnv = Awaited<ReturnType<typeof setup>>;
+
+async function createHomeNote(
+    env: TestEnv,
+    body: string,
+    owner = 0,
+): Promise<DocumentDto> {
+    return await data<DocumentDto>(
+        await env.request("/api/documents", "POST", {
+            body,
+            isHomeFixed: true,
+        }, owner),
+    );
+}
+
+async function readLayoutOrNull(
+    env: TestEnv,
+    id: string,
+): Promise<DocumentLayoutDto | null> {
+    const response = await env.request(`/api/documents/${id}/layout`);
+    assertEquals(response.status, 200);
+    const envelope = await response.json() as Envelope<
+        DocumentLayoutDto | null
+    >;
+    return envelope.data ?? null;
+}
+
+Deno.test("Documents HTTP: home note cells are band-relative and validate as one position", async () => {
+    const env = await setup();
+    try {
+        const note = await createHomeNote(env, "Band note");
+        const other = await createHomeNote(env, "Center note");
+        const patch = (id: string, body: unknown) =>
+            env.request(`/api/documents/${id}/layout`, "PATCH", body);
+        const layout = await data<DocumentLayoutDto>(
+            await patch(note.id, {
+                band: "left",
+                col: 0,
+                row: 0,
+                size: "w",
+            }),
+        );
+        assertEquals(layout.band, "left");
+        assertEquals(layout.col, 0);
+        assertEquals(layout.row, 0);
+        assertEquals(layout.size, "w");
+        assertEquals(
+            await data(
+                await env.request(`/api/documents/${note.id}/layout`),
+            ),
+            layout,
+        );
+
+        // The same column and row in another band is a different cell.
+        assertEquals(
+            (await patch(other.id, {
+                band: "center",
+                col: 0,
+                row: 0,
+            })).status,
+            200,
+        );
+        assertEquals(
+            (await patch(other.id, {
+                band: "left",
+                col: 0,
+                row: 0,
+            })).status,
+            409,
+        );
+
+        // Sides extend above the search box; the center shelf does not.
+        assertEquals(
+            (await patch(note.id, {
+                band: "left",
+                col: 0,
+                row: -31,
+            })).status,
+            200,
+        );
+        assertEquals(
+            (await patch(other.id, {
+                band: "center",
+                col: 0,
+                row: -1,
+            })).status,
+            400,
+        );
+        assertEquals(
+            (await patch(note.id, {
+                band: "left",
+                col: 0,
+                row: -32,
+            })).status,
+            400,
+        );
+        assertEquals(
+            (await patch(note.id, {
+                band: "left",
+                col: 64,
+                row: 0,
+            })).status,
+            400,
+        );
+        assertEquals(
+            (await patch(note.id, {
+                band: "left",
+                col: 0,
+                row: 32,
+            })).status,
+            400,
+        );
+
+        // band/col/row are one position: all three provided or none.
+        assertEquals((await patch(note.id, { band: "left" })).status, 400);
+        assertEquals(
+            (await patch(note.id, { col: 0, row: 0 })).status,
+            400,
+        );
+        assertEquals(
+            (await patch(note.id, {
+                band: "top",
+                col: 0,
+                row: 0,
+            })).status,
+            400,
+        );
+        const cleared = await data<DocumentLayoutDto>(
+            await patch(note.id, { band: null, col: null, row: null }),
+        );
+        assertEquals(cleared.band, null);
+        assertEquals(cleared.col, null);
+        assertEquals(cleared.row, null);
+        assertEquals(cleared.size, "w");
+    } finally {
+        await env.store.close();
+    }
+});
+
+Deno.test("Documents HTTP: batch layout swaps are atomic and keep unspecified fields", async () => {
+    const env = await setup();
+    try {
+        const first = await createHomeNote(env, "First");
+        const second = await createHomeNote(env, "Second");
+        for (
+            const [id, col] of [[first.id, 0], [second.id, 1]] as const
+        ) {
+            assertEquals(
+                (await env.request(`/api/documents/${id}/layout`, "PATCH", {
+                    band: "left",
+                    col,
+                    row: 0,
+                })).status,
+                200,
+            );
+        }
+        const swapped = await data<DocumentLayoutsDto>(
+            await env.request("/api/documents/layouts", "PATCH", {
+                items: [
+                    { id: first.id, band: "left", col: 1, row: 0 },
+                    { id: second.id, band: "left", col: 0, row: 0 },
+                ],
+            }),
+        );
+        assertEquals(swapped.items.map((item) => item.id), [
+            first.id,
+            second.id,
+        ]);
+        assertEquals(swapped.items[0].layout.col, 1);
+        assertEquals(swapped.items[1].layout.col, 0);
+        assertEquals(
+            await data(
+                await env.request(`/api/documents/${first.id}/layout`),
+            ),
+            swapped.items[0].layout,
+        );
+        assertEquals(
+            await data(
+                await env.request(`/api/documents/${second.id}/layout`),
+            ),
+            swapped.items[1].layout,
+        );
+
+        // Unspecified fields keep the stored value, as in the single PATCH.
+        const resized = await data<DocumentLayoutsDto>(
+            await env.request("/api/documents/layouts", "PATCH", {
+                items: [{ id: first.id, size: "w" }],
+            }),
+        );
+        assertEquals(resized.items[0].layout.band, "left");
+        assertEquals(resized.items[0].layout.col, 1);
+        assertEquals(resized.items[0].layout.row, 0);
+        assertEquals(resized.items[0].layout.size, "w");
+    } finally {
+        await env.store.close();
+    }
+});
+
+Deno.test("Documents HTTP: batch conflicts reject the whole write", async () => {
+    const env = await setup();
+    try {
+        const first = await createHomeNote(env, "First");
+        const second = await createHomeNote(env, "Second");
+        const third = await createHomeNote(env, "Third");
+        for (
+            const [id, col] of [
+                [first.id, 0],
+                [second.id, 1],
+                [third.id, 2],
+            ] as const
+        ) {
+            assertEquals(
+                (await env.request(`/api/documents/${id}/layout`, "PATCH", {
+                    band: "left",
+                    col,
+                    row: 0,
+                })).status,
+                200,
+            );
+        }
+        // Moving onto a note outside the batch fails the whole transaction.
+        assertEquals(
+            (await env.request("/api/documents/layouts", "PATCH", {
+                items: [
+                    { id: first.id, band: "left", col: 2, row: 0 },
+                    { id: second.id, band: "left", col: 1, row: 0 },
+                ],
+            })).status,
+            409,
+        );
+        assertEquals(
+            (await readLayoutOrNull(env, first.id))?.col,
+            0,
+        );
+        assertEquals(
+            (await readLayoutOrNull(env, second.id))?.col,
+            1,
+        );
+        // Two items may not resolve to the same resulting cell either.
+        assertEquals(
+            (await env.request("/api/documents/layouts", "PATCH", {
+                items: [
+                    { id: first.id, band: "left", col: 3, row: 0 },
+                    { id: second.id, band: "left", col: 3, row: 0 },
+                ],
+            })).status,
+            409,
+        );
+        assertEquals(
+            (await readLayoutOrNull(env, first.id))?.col,
+            0,
+        );
+    } finally {
+        await env.store.close();
+    }
+});
+
+Deno.test("Documents HTTP: batch layouts reject foreign ids and invalid batches", async () => {
+    const env = await setup();
+    try {
+        const note = await createHomeNote(env, "Owned note");
+        const foreign = await createHomeNote(env, "Foreign note", 1);
+        assertEquals(
+            (await env.request("/api/documents/layouts", "PATCH", {
+                items: [
+                    { id: note.id, band: "left", col: 3, row: 0 },
+                    { id: "missing" },
+                ],
+            })).status,
+            404,
+        );
+        assertEquals(await readLayoutOrNull(env, note.id), null);
+        assertEquals(
+            (await env.request("/api/documents/layouts", "PATCH", {
+                items: [
+                    { id: note.id, band: "left", col: 3, row: 0 },
+                    {
+                        id: foreign.id,
+                        band: "left",
+                        col: 3,
+                        row: 0,
+                    },
+                ],
+            })).status,
+            404,
+        );
+        assertEquals(await readLayoutOrNull(env, note.id), null);
+        assertEquals(
+            (await env.request("/api/documents/layouts", "PATCH", {
+                items: [
+                    { id: note.id, band: "left", col: 3, row: 0 },
+                    { id: note.id, band: "left", col: 4, row: 0 },
+                ],
+            })).status,
+            400,
+        );
+        assertEquals(
+            (await env.request("/api/documents/layouts", "PATCH", {
+                items: [],
+            })).status,
+            400,
+        );
+        assertEquals(
+            (await env.request("/api/documents/layouts", "PATCH", {
+                items: Array.from({ length: 65 }, (_, index) => ({
+                    id: `note-${index}`,
+                })),
+            })).status,
+            400,
+        );
+        assertEquals(await readLayoutOrNull(env, note.id), null);
+    } finally {
         await env.store.close();
     }
 });
