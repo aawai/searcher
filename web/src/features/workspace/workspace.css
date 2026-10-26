@@ -1,5 +1,6 @@
 .workspace-panel {
     --workspace-chrome-bottom: 0px;
+    --workspace-target-width: var(--workspace-panel-width);
     position: fixed;
     inset-block-start: max(
         var(--workspace-top-inset),
@@ -7,7 +8,7 @@
     );
     inset-block-end: var(--workspace-inset);
     right: var(--workspace-inset);
-    width: min(var(--workspace-panel-width), calc(100vw - 2 *
+    width: min(var(--workspace-target-width), calc(100vw - 2 *
         var(--workspace-inset)));
     z-index: var(--elevation-workspace);
     display: flex;
@@ -27,13 +28,19 @@
             var(--dock-inset-top, 0px)
         );
     }
+    .app-shell[data-dock-edge="bottom"] .workspace-panel {
+        inset-block-end: max(
+            var(--workspace-inset),
+            var(--dock-inset-bottom, 0px)
+        );
+    }
     .app-shell[data-dock-edge="right"] .workspace-panel {
         right: max(var(--workspace-inset), var(--dock-inset-right, 0px));
-        width: min(var(--workspace-panel-width), calc(100vw - 2 *
+        width: min(var(--workspace-target-width), calc(100vw - 2 *
             var(--workspace-inset) - var(--dock-inset-right, 0px)));
     }
     .app-shell[data-dock-edge="left"] .workspace-panel {
-        width: min(var(--workspace-panel-width), calc(100vw - 2 *
+        width: min(var(--workspace-target-width), calc(100vw - 2 *
             var(--workspace-inset) - var(--dock-inset-left, 0px)));
     }
 }
@@ -61,8 +68,7 @@
 }
 /* The editor expands over home without changing home geometry. */
 .workspace-panel[data-workspace-expanded="true"] {
-    width: min(var(--workspace-editor-expanded-width),
-        calc(100vw - 2 * var(--workspace-inset)));
+    --workspace-target-width: var(--workspace-editor-expanded-width);
 }
 .workspace-panel[data-workspace-fullscreen="true"] {
     inset: 0 !important;
@@ -181,10 +187,13 @@
 }
 @media (max-width: 767px) and (max-height: 480px) {
     .workspace-panel--mobile.sheet {
-        inset: auto 0 var(--workspace-visible-bottom, 0px);
-        height: min(88dvh, var(--workspace-mobile-height));
+        inset: auto 0 max(var(--workspace-visible-bottom, 0px),
+            var(--dock-inset-bottom, 0px));
+        height: min(88dvh, var(--workspace-mobile-height),
+            calc(var(--workspace-visible-height, 100dvh) -
+            var(--dock-inset-bottom, 0px) - var(--space-4)));
         max-height: calc(var(--workspace-visible-height, 100dvh) -
-            var(--space-4));
+            var(--dock-inset-bottom, 0px) - var(--space-4));
     }
 }
 .workspace-panel--mobile.sheet[data-starting-style],

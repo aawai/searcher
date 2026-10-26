@@ -299,11 +299,58 @@ export function isDesignSystemAllowed(
             value.trim() === `var(--dock-inset-${edge})`;
     }
     if (
+        normFile === "web/src/components/searcher/semantic.css" &&
+        prop === "inset-block-end"
+    ) {
+        return value.replaceAll(/\s+/g, "") ===
+            "calc(var(--space-8)+var(--dock-inset-bottom,0px))";
+    }
+    if (
         normFile === "web/src/features/home-layouts/home-notes.css" &&
         prop === "inset-block-end"
     ) {
         return value.replaceAll(/\s+/g, "") ===
             "calc(var(--space-2)+var(--dock-inset-bottom,0px))";
+    }
+    if (
+        normFile === "web/src/features/home-layouts/home-layouts.css" &&
+        prop === "padding-block-end"
+    ) {
+        return value.replaceAll(/\s+/g, "") ===
+            "calc(var(--space-7)+var(--dock-inset-bottom,0px)+env(safe-area-inset-bottom,0px))";
+    }
+    if (normFile === "web/src/features/workspace/workspace.css") {
+        const compact = value.replaceAll(/\s+/g, "");
+        if (prop === "inset-block-start") {
+            return compact ===
+                "max(var(--workspace-top-inset),var(--workspace-chrome-bottom),var(--dock-inset-top,0px))";
+        }
+        if (prop === "inset-block-end") {
+            return compact ===
+                "max(var(--workspace-inset),var(--dock-inset-bottom,0px))";
+        }
+        if (prop === "right") {
+            return compact ===
+                "max(var(--workspace-inset),var(--dock-inset-right,0px))";
+        }
+        if (prop === "width") {
+            return compact ===
+                    "min(var(--workspace-target-width),calc(100vw-2*var(--workspace-inset)-var(--dock-inset-right,0px)))" ||
+                compact ===
+                    "min(var(--workspace-target-width),calc(100vw-2*var(--workspace-inset)-var(--dock-inset-left,0px)))";
+        }
+        if (prop === "inset") {
+            return compact ===
+                "auto0max(var(--workspace-visible-bottom,0px),var(--dock-inset-bottom,0px))";
+        }
+        if (prop === "height") {
+            return compact ===
+                "min(88dvh,var(--workspace-mobile-height),calc(var(--workspace-visible-height,100dvh)-var(--dock-inset-bottom,0px)-var(--space-4)))";
+        }
+        if (prop === "max-height") {
+            return compact ===
+                "calc(var(--workspace-visible-height,100dvh)-var(--dock-inset-bottom,0px)-var(--space-4))";
+        }
     }
     // Physical paper margins are document settings, not application visual spacing.
     if (normFile === "web/src/features/documents/document-pagination.css") {

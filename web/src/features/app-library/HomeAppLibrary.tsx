@@ -193,6 +193,7 @@ export const HomeAppLibrary = forwardRef<
             rowPitch: number;
             rowGap: number;
             platePadding: number;
+            dockBottom: number;
         } | null
     >(null);
 
@@ -208,18 +209,29 @@ export const HomeAppLibrary = forwardRef<
             const platePadding = pixels(
                 getComputedStyle(grid.parentElement!).paddingBottom,
             );
+            const shell = document.querySelector(".app-shell");
+            const dockStyle = shell
+                ? getComputedStyle(shell)
+                : getComputedStyle(document.documentElement);
+            const dockBottom = Math.max(
+                0,
+                parseFloat(dockStyle.getPropertyValue("--dock-inset-bottom")) ||
+                    0,
+            );
             const next = {
                 // Document coordinates: scrolling must not change the plan.
                 gridTop: grid.getBoundingClientRect().top + scrollY,
                 rowPitch: cell + gap,
                 rowGap: gap,
                 platePadding,
+                dockBottom,
             };
             setMetrics((previous) =>
                 previous?.gridTop === next.gridTop &&
                     previous.rowPitch === next.rowPitch &&
                     previous.rowGap === next.rowGap &&
-                    previous.platePadding === next.platePadding
+                    previous.platePadding === next.platePadding &&
+                    previous.dockBottom === next.dockBottom
                     ? previous
                     : next
             );
@@ -229,8 +241,25 @@ export const HomeAppLibrary = forwardRef<
         observer.observe(document.documentElement);
         const hero = root.current?.closest(".home")?.querySelector(".hero");
         if (hero) observer.observe(hero);
+        const dock = document.querySelector(".dock-container");
+        if (dock) observer.observe(dock);
+        const mutationObserver = new MutationObserver(measure);
+        mutationObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["style", "data-dock-edge"],
+        });
+        const shell = document.querySelector(".app-shell");
+        if (shell) {
+            mutationObserver.observe(shell, {
+                attributes: true,
+                attributeFilter: ["style", "data-dock-edge"],
+            });
+        }
         void document.fonts.ready.then(measure);
-        return () => observer.disconnect();
+        return () => {
+            observer.disconnect();
+            mutationObserver.disconnect();
+        };
     }, [grid, layoutHeight, columns, managing]);
 
     const rows = metrics
@@ -240,6 +269,7 @@ export const HomeAppLibrary = forwardRef<
             rowPitch: metrics.rowPitch,
             rowGap: metrics.rowGap,
             platePadding: metrics.platePadding,
+            dockInsetBottom: metrics.dockBottom,
         })
         : HOME_MAX_ROWS;
     const plan = useMemo(

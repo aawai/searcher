@@ -235,7 +235,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 新增例外必须说明它表达的系统级语义、owner 与验证方式，并写入本节。“更好看”“现在就是这样”不是理由。运行时几何（拖拽坐标、笔记单元、壁纸焦点）与领域颜色值（笔记颜色、引擎品牌色）不属于 raw 视觉值。
 
-任务栏运行时避让：`WorkspaceDock` 实测停靠容器几何，以像素值在 `:root` 设置 `--dock-inset-top/right/bottom/left`，使 Portal 内的手机面板与首页共享避让；AppShell 的 `data-dock-edge` 标记有效方向。`PageShell` 在 `semantic.css` 中以四向 margin 消费这些几何值，不把它们视为可任意设置的视觉间距。`exceptions.ts` 仅放行该文件和对应属性的精确变量表达式。`--dock-size`（56px）、`--dock-item-size` / `--dock-ball-size`（44px）由 `tokens.css` 拥有；验证内容与任务栏不相交、收起释放空间、Portal 继承与模态期间布局稳定。
+任务栏运行时避让：`WorkspaceDock` 实测停靠容器几何，以像素值在 `:root` 设置 `--dock-inset-top/right/bottom/left`，使 Portal 内的手机面板与首页共享避让；AppShell 的 `data-dock-edge` 标记有效方向。`PageShell` 在 `semantic.css` 中以四向 margin 消费这些几何值，浮动 `StatusBanner` / `UndoToast` 在 `semantic.css`、首页流式容器 `.home` 在 `home-layouts.css`、“更多笔记”入口在 `home-notes.css` 及工作面板 / 移动 Sheet 在 `workspace.css` 中按各自停靠边消费 `--dock-inset-*`，不把它们视为可任意设置的视觉间距。`exceptions.ts` 仅放行对应文件和属性的精确变量表达式。`--dock-size`（56px）、`--dock-item-size` / `--dock-ball-size`（44px）由 `tokens.css` 拥有；验证内容与任务栏不相交、收起释放空间、Portal 继承与模态期间布局稳定。
 
 #### 用户外观偏好
 

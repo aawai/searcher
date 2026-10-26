@@ -146,6 +146,30 @@ Deno.test("effective rows account for the bottom plate padding", () => {
         }),
         3,
     );
+    // With a 68px bottom dock, 1440x900 still fits 4 rows (900 - 406 - 48 - 68 - 16 = 362 >= 340),
+    // while 1366x768 drops from 4 rows to 3 rows (768 - 355.84 - 48 - 68 - 16 = 280.16 < 340).
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 900,
+            gridTop: 406,
+            rowPitch: 88,
+            rowGap: 12,
+            platePadding: 16,
+            dockInsetBottom: 68,
+        }),
+        4,
+    );
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 768,
+            gridTop: 355.84,
+            rowPitch: 88,
+            rowGap: 12,
+            platePadding: 16,
+            dockInsetBottom: 68,
+        }),
+        3,
+    );
 });
 
 Deno.test("large folder counts as 4 cells and 4 full rows fit exactly", () => {

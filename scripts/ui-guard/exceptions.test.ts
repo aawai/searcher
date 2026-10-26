@@ -377,21 +377,49 @@ Deno.test("viewport and physical paper exceptions reject unrelated visual values
     );
 });
 
-Deno.test("taskbar inset exemption is restricted to matching PageShell geometry", () => {
+Deno.test("taskbar inset exemption is restricted to registered dock consumers", () => {
     const shell = "web/src/components/searcher/semantic.css";
-    assertEquals(
-        isDesignSystemAllowed(
-            shell,
-            "margin-bottom",
-            "var(--dock-inset-bottom, 0px)",
-        ),
-        true,
-    );
+    const workspace = "web/src/features/workspace/workspace.css";
+    const homeLayouts = "web/src/features/home-layouts/home-layouts.css";
+    const homeNotes = "web/src/features/home-layouts/home-notes.css";
+    for (
+        const [file, property, value] of [
+            [shell, "margin-bottom", "var(--dock-inset-bottom, 0px)"],
+            [
+                shell,
+                "inset-block-end",
+                "calc(var(--space-8) + var(--dock-inset-bottom, 0px))",
+            ],
+            [
+                homeNotes,
+                "inset-block-end",
+                "calc(var(--space-2) + var(--dock-inset-bottom, 0px))",
+            ],
+            [
+                homeLayouts,
+                "padding-block-end",
+                "calc(var(--space-7) + var(--dock-inset-bottom, 0px) + env(safe-area-inset-bottom, 0px))",
+            ],
+            [
+                workspace,
+                "inset-block-end",
+                "max(var(--workspace-inset), var(--dock-inset-bottom, 0px))",
+            ],
+            [
+                workspace,
+                "width",
+                "min(var(--workspace-target-width), calc(100vw - 2 * var(--workspace-inset) - var(--dock-inset-left, 0px)))",
+            ],
+        ]
+    ) {
+        assertEquals(isDesignSystemAllowed(file, property, value), true);
+    }
     for (
         const [file, property, value] of [
             [shell, "margin-bottom", "var(--dock-inset-left)"],
             [shell, "padding-bottom", "var(--dock-inset-bottom)"],
             [shell, "margin-bottom", "var(--dock-inset-bottom, 24px)"],
+            [shell, "inset-block-end", "var(--dock-inset-bottom, 0px)"],
             [
                 "web/src/features/dock/dock.css",
                 "margin-bottom",
