@@ -506,3 +506,6 @@
 ## [2026-10-26T08:03:30.400Z] ensure_page
 - page_type: "concept", title: "CSRF Defense Boundaries", path: "concepts/csrf-defense-boundaries"
 
+## [2026-10-26T09:24:58.523Z] observe
+- slug: "obs-2026-10-26-feat-workspace-dock-pushed-pr-311-created-with-github-token-", title: "feat/workspace-dock pushed; PR 311 created with GITHUB_TOKEN from bashrc", relevance: "high"
+

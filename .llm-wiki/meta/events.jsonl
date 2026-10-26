@@ -166,3 +166,4 @@
 {"page_type":"concept","title":"SQLite Isolation and Connection Boundaries","path":"concepts/sqlite-isolation-and-connection-boundaries","timestamp":"2026-10-26T08:03:30.249Z","kind":"ensure_page"}
 {"page_type":"concept","title":"Deno Permission Boundaries","path":"concepts/deno-permission-boundaries","timestamp":"2026-10-26T08:03:30.387Z","kind":"ensure_page"}
 {"page_type":"concept","title":"CSRF Defense Boundaries","path":"concepts/csrf-defense-boundaries","timestamp":"2026-10-26T08:03:30.400Z","kind":"ensure_page"}
+{"slug":"obs-2026-10-26-feat-workspace-dock-pushed-pr-311-created-with-github-token-","title":"feat/workspace-dock pushed; PR 311 created with GITHUB_TOKEN from bashrc","relevance":"high","timestamp":"2026-10-26T09:24:58.523Z","kind":"observe"}

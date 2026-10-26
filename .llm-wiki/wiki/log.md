@@ -2,6 +2,7 @@
 
 ## 2026-10-26
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-26-feat-workspace-dock-pushed-pr-311-created-with-github-token-","title":"feat/workspace-dock pushed; PR 311 created with GITHUB_TOKEN from bashrc"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/csrf-defense-boundaries","title":"CSRF Defense Boundaries"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/deno-permission-boundaries","title":"Deno Permission Boundaries"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/sqlite-isolation-and-connection-boundaries","title":"SQLite Isolation and Connection Boundaries"}

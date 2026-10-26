@@ -118,6 +118,7 @@
 - [[sources/obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close]] — Observation: Issue 285 design convergence merged via PR 288–299 and closed *(created: 2026-10-24)*
 - [[sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden]] — Observation: dnd-kit default English announcements not overridden *(created: 2026-10-25)*
 - [[sources/obs-2026-10-26-]] — Observation: 玻璃效果通透档放宽对比度承诺 *(created: 2026-10-26)*
+- [[sources/obs-2026-10-26-feat-workspace-dock-pushed-pr-311-created-with-github-token-]] — Observation: feat/workspace-dock pushed; PR 311 created with GITHUB_TOKEN from bashrc *(created: 2026-10-26)*
 - [[sources/obs-2026-10-26-pr-309-main]] — Observation: 首页应用密度与可选底板经 PR 309 合并 main *(created: 2026-10-26)*
 - [[sources/obs-2026-10-26-q1-q19]] — Observation: 工作区任务栏设计访谈已确认 Q1–Q19，尚未授权实施 *(created: 2026-10-26)*
 - [[sources/obs-2026-10-26-q20-q25]] — Observation: 任务栏访谈 Q20–Q25 已确认，等待最终共同理解确认 *(created: 2026-10-26)*
@@ -191,4 +192,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-26T08:04:04.461Z* | *Total pages: 176*
+*Last updated: 2026-10-26T09:24:58.545Z* | *Total pages: 177*

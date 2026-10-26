@@ -134,6 +134,7 @@
 - [Observation: Issue 285 design convergence merged via PR 288–299 and closed](obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close.md)
 - [Observation: dnd-kit default English announcements not overridden](obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden.md)
 - [Observation: 玻璃效果通透档放宽对比度承诺](obs-2026-10-26-.md)
+- [Observation: feat/workspace-dock pushed; PR 311 created with GITHUB_TOKEN from bashrc](obs-2026-10-26-feat-workspace-dock-pushed-pr-311-created-with-github-token-.md)
 - [Observation: 首页应用密度与可选底板经 PR 309 合并 main](obs-2026-10-26-pr-309-main.md)
 - [Observation: 工作区任务栏设计访谈已确认 Q1–Q19，尚未授权实施](obs-2026-10-26-q1-q19.md)
 - [Observation: 任务栏访谈 Q20–Q25 已确认，等待最终共同理解确认](obs-2026-10-26-q20-q25.md)
