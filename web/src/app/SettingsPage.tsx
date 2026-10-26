@@ -729,6 +729,19 @@ export function SettingsPage() {
                                     />
                                 </SettingsRow>
                             )}
+                            {user && appearance.showHomeApps && (
+                                <SettingsRow title="显示应用底板">
+                                    <Switch
+                                        checked={appearance.showHomeAppPlate}
+                                        onCheckedChange={(checked) =>
+                                            set(
+                                                "showHomeAppPlate",
+                                                checked,
+                                            )}
+                                        aria-label="显示应用底板"
+                                    />
+                                </SettingsRow>
+                            )}
                             {(!user || appearance.showHomeApps) && (
                                 <SettingsRow title="显示应用名称">
                                     <Switch

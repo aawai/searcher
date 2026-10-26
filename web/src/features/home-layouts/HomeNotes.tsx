@@ -24,7 +24,7 @@ import type {
     DocumentLayoutDto,
     DocumentNoteSize,
 } from "@shared/documents.ts";
-import { HOME_GRID } from "../../design-system/home-grid.ts";
+import { HOME_NOTE_GRID } from "../../design-system/home-grid.ts";
 import {
     type Band,
     canSaveHomeNoteCell,
@@ -149,7 +149,7 @@ function useBlockMetrics(
             const plateRect = toRect(gridElement?.closest(".launcher-plate"));
             const calmRect = toRect(hero.querySelector(".home-calm"));
             const topbarRect = toRect(document.querySelector(".topbar"));
-            const gap = readToken("--home-grid-gap", HOME_GRID.wide.gap);
+            const gap = readToken("--home-note-gap", HOME_NOTE_GRID.wide.gap);
             const inset = readToken("--space-page-inline", 32);
             const next: Metrics = {
                 left: searchRect.x,
@@ -168,7 +168,7 @@ function useBlockMetrics(
                 ),
                 viewportWidth: innerWidth,
                 viewportHeight: innerHeight,
-                cell: readToken("--home-grid-cell", HOME_GRID.wide.cell),
+                cell: readToken("--home-note-cell", HOME_NOTE_GRID.wide.cell),
                 gap,
                 inset,
             };
@@ -337,10 +337,7 @@ export function HomeNotes(
     const narrowFlow = !stack && viewportWidth < BREAKPOINTS.wide;
     const grid = useMemo(() => {
         if (!metrics || stack || narrowFlow) return null;
-        return homeGridFromBlock({
-            ...metrics,
-            cell: 2 * metrics.cell + metrics.gap,
-        });
+        return homeGridFromBlock(metrics);
     }, [metrics, stack, narrowFlow]);
     // A measured lattice change invalidates an uncommitted move; it must not
     // write coordinates belonging to the old viewport.

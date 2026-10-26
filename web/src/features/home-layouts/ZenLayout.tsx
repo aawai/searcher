@@ -57,6 +57,7 @@ export function ZenLayout(
         openLibrary,
         showAppLabels,
         showHomeApps,
+        showHomeAppPlate,
     } = props;
     const heroRef = useRef<HTMLElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -97,6 +98,7 @@ export function ZenLayout(
             error={appsError}
             onRetry={onReloadApps}
             showGrid={showHomeApps}
+            showPlate={showHomeAppPlate}
             showAppLabels={showAppLabels}
             managing={isManagingApps}
             onManagingChange={setIsManagingApps}

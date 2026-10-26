@@ -46,10 +46,7 @@ export interface HomeLayoutProps {
         },
     ) => void;
     openEditApp: (app: ExtendedWebApp, expandIcon?: boolean) => void;
-    openCreateApp: (
-        groupId?: string,
-        isHomeFixed?: boolean,
-    ) => void;
+    openCreateApp: (groupId?: string) => void;
     softDeleteApp: (app: ExtendedWebApp) => Promise<void>;
     // home notes
     openNote: (note: HomeNoteItem) => void;
@@ -85,6 +82,8 @@ export interface HomeLayoutProps {
     showAppLabels: boolean;
     /** 在首页显示应用: the grid, + and 更多 render on home. */
     showHomeApps: boolean;
+    /** 显示应用底板: paint the Material plate behind the home grid. */
+    showHomeAppPlate: boolean;
     /** The calm layer above the search box: date, time and 继续. */
     calm: {
         showDate: boolean;

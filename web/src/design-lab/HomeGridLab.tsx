@@ -27,7 +27,7 @@ import {
 } from "../components/ui/native-select.tsx";
 import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { BREAKPOINTS } from "../design-system/breakpoints.ts";
-import { HOME_GRID } from "../design-system/home-grid.ts";
+import { HOME_NOTE_GRID } from "../design-system/home-grid.ts";
 import {
     allCells,
     type Band,
@@ -93,8 +93,6 @@ const WALLPAPER_LABEL: Record<Wallpaper, string> = {
     upload1: "真实壁纸 · 高细节插画",
 };
 
-/** Two app cells and one gap: the big-folder footprint. */
-const NOTE_CELL_APP_CELLS = 2;
 const COUNT_OPTIONS = [2, 4, 8] as const;
 /** The lab's reserved top: the floating controls pill needs this much room. */
 const LAB_MIN_BLOCK_TOP = 72;
@@ -396,8 +394,8 @@ export default function HomeGridLab() {
             searchHeight: searchRect.height,
             width: innerWidth,
             height: innerHeight,
-            cell: readToken("--home-grid-cell", HOME_GRID.wide.cell),
-            gap: readToken("--home-grid-gap", HOME_GRID.wide.gap),
+            cell: readToken("--home-note-cell", HOME_NOTE_GRID.wide.cell),
+            gap: readToken("--home-note-gap", HOME_NOTE_GRID.wide.gap),
             inset: readToken("--space-page-inline", 32),
         };
         setMetrics((previous) =>
@@ -453,9 +451,7 @@ export default function HomeGridLab() {
 
     const flow = size.width < BREAKPOINTS.wide;
     const blockTop = metrics ? composeTop(metrics, composition) : 0;
-    const noteCell = metrics
-        ? NOTE_CELL_APP_CELLS * metrics.cell + metrics.gap
-        : 2 * HOME_GRID.wide.cell + HOME_GRID.wide.gap;
+    const noteCell = metrics?.cell ?? HOME_NOTE_GRID.wide.cell;
     const grid = useMemo(
         () =>
             metrics && !flow

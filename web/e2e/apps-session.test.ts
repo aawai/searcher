@@ -7,7 +7,8 @@ import { openSettings } from "./helpers/settings.ts";
 const PASSWORD = "Apps-route-guard-password-174!";
 
 interface Seed {
-    apps?: Array<{ name: string; url: string }>;
+    /** Apps are pinned unless `isHomeFixed` is false. */
+    apps?: Array<{ name: string; url: string; isHomeFixed?: boolean }>;
     folders?: string[];
 }
 
@@ -53,10 +54,10 @@ async function startFixture(username: string, seed: Seed = {}) {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            ...item,
                             iconSource: "default",
                             openMode: "global",
                             isHomeFixed: true,
+                            ...item,
                         }),
                     });
                     if (!response.ok) throw new Error(await response.text());
@@ -80,7 +81,7 @@ async function startFixture(username: string, seed: Seed = {}) {
     }
 }
 
-/** Opens the add-app dialog from the home `+` cell and optionally types a draft. */
+/** Opens the add-app dialog from the empty home's `+` cell and optionally types a draft. */
 async function openAddForm(
     page: Page,
     draft?: { url?: string; name?: string },
@@ -393,13 +394,17 @@ Deno.test("a form close confirmation keeps its intent against a competing route 
 Deno.test("route leave waits for an app form confirmation dialog to close", async () => {
     const duplicateUrl = "https://duplicate-route.invalid/";
     const draftName = "Duplicate confirmation draft";
+    // Unpinned, so the home grid stays empty and keeps its `+`; duplicate
+    // detection still covers the whole library.
     const fixture = await startWithHistory("apps_form_dialog_competition", {
-        apps: [{ name: "Existing duplicate", url: duplicateUrl }],
+        apps: [{
+            name: "Existing duplicate",
+            url: duplicateUrl,
+            isHomeFixed: false,
+        }],
     });
     const { page } = fixture;
     try {
-        await page.locator('.launcher-app:has-text("Existing duplicate")')
-            .waitFor({ state: "visible" });
         await openAddForm(page, { url: duplicateUrl, name: draftName });
         await page.locator(".app-form-dialog").getByRole("button", {
             name: "添加应用",

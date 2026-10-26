@@ -63,8 +63,10 @@ function measureHome(): HomeMetrics | null {
             4,
             Math.max(
                 1,
+                // N rows are N * pitch - gap tall: no gap after the last row.
                 Math.floor(
-                    (viewportHeight - gridBox.top - 48 - platePadding) / pitch,
+                    (viewportHeight - gridBox.top - 48 - platePadding + gap) /
+                        pitch,
                 ),
             ),
         ),
@@ -101,11 +103,27 @@ async function homeMetrics(page: Page): Promise<HomeMetrics> {
     return metrics;
 }
 
+/**
+ * The responsive grid mounts at six columns and adopts the measured plate width
+ * a frame later. Wait for the settled `data-columns` (the plan's last column is
+ * occupied in these fixtures) before snapshotting geometry or visual order.
+ */
+async function waitForGridColumns(page: Page, columns: number) {
+    await page.waitForFunction((expected) => {
+        const m = (globalThis as unknown as HomeWindow).__measureHome();
+        return !!m && m.columns === expected;
+    }, columns);
+}
+
 /** The plan follows the measured geometry (rows === expectedRows). */
-async function waitForPlannedHome(page: Page): Promise<HomeMetrics> {
+async function waitForPlannedHome(
+    page: Page,
+    columns: number,
+): Promise<HomeMetrics> {
+    await waitForGridColumns(page, columns);
     await page.waitForFunction(() => {
         const m = (globalThis as unknown as HomeWindow).__measureHome();
-        return !!m && m.rows === m.expectedRows && m.columns > 0;
+        return !!m && m.rows === m.expectedRows;
     });
     return await homeMetrics(page);
 }
@@ -224,6 +242,36 @@ async function bigLibraryPage(
 const homeTiles = (page: Page) =>
     page.locator(".launcher-grid--home > .launcher-tile");
 
+/** A point on the blank plate, clear of every tile and control. */
+async function blankHomePoint(page: Page): Promise<{ x: number; y: number }> {
+    return await page.evaluate(() => {
+        const plate = document.querySelector<HTMLElement>(".launcher-plate");
+        if (!plate) throw new Error("No home plate");
+        const rect = plate.getBoundingClientRect();
+        const tiles = [...plate.querySelectorAll(".launcher-tile")]
+            .map((tile) => tile.getBoundingClientRect());
+        for (let y = rect.top + 3; y < rect.bottom; y += 4) {
+            for (let x = rect.left + 3; x < rect.right; x += 4) {
+                const hit = document.elementFromPoint(x, y);
+                if (
+                    !hit || !plate.contains(hit) ||
+                    hit.closest(".launcher-tile, .home-managing-bar, button")
+                ) continue;
+                const distance = Math.min(
+                    ...tiles.map((tile) =>
+                        Math.hypot(
+                            Math.max(tile.left - x, 0, x - tile.right),
+                            Math.max(tile.top - y, 0, y - tile.bottom),
+                        )
+                    ),
+                );
+                if (distance > 24) return { x, y };
+            }
+        }
+        throw new Error("No blank point on the home plate");
+    });
+}
+
 async function visualLabels(page: Page): Promise<string[]> {
     return await homeTiles(page).evaluateAll((tiles) =>
         tiles.map((tile) =>
@@ -265,20 +313,22 @@ Deno.test("home app library (#244)", async (t) => {
                 );
                 try {
                     // 1440x900: four rows, 48px clear of the viewport bottom.
-                    let m = await waitForPlannedHome(page);
-                    assertEquals(m.columns, 6);
+                    let m = await waitForPlannedHome(page, 7);
+                    // 1440px: the plate's 608px content holds seven 76px cells
+                    // with 12px gaps.
+                    assertEquals(m.columns, 7);
                     assertEquals(m.rows, 4);
                     assert(
                         m.viewportHeight - m.plateBottom >= 48 - 0.5,
                         `plate bottom ${m.plateBottom} leaves < 48px in ${m.viewportHeight}`,
                     );
-                    // 4 rows x 6 columns = 24 cells; the large folder takes 4,
-                    // 更多 takes the last: 23 tiles' worth of cells are visible
-                    // (large 4 + small 1 + 18 apps) and 12 apps + the tail
-                    // folder move into 更多.
-                    assertEquals(m.cellCount - 1, 20);
-                    assertEquals(m.tileCount, 20);
-                    assertEquals(m.moreLabel, "更多（13）");
+                    // 4 rows x 7 columns = 28 cells; the large folder takes 4,
+                    // 更多 takes the last: 27 cells hold the large folder (4)
+                    // and 23 single tiles, so 24 tiles are visible and the last
+                    // 8 apps + the tail folder move into 更多.
+                    assertEquals(m.cellCount - 1, 24);
+                    assertEquals(m.tileCount, 24);
+                    assertEquals(m.moreLabel, "更多（9）");
                     assertEquals(m.hasAdd, false);
                     assert(m.large && m.app, "large folder and an app render");
                     assert(
@@ -352,7 +402,7 @@ Deno.test("home app library (#244)", async (t) => {
                     },
                 );
                 try {
-                    const m = await waitForPlannedHome(page);
+                    const m = await waitForPlannedHome(page, 4);
                     assertEquals(m.columns, 4);
                     assertEquals(m.distinctLefts, 4);
                     assert(m.moreLabel?.startsWith("更多（"));
@@ -423,7 +473,7 @@ Deno.test("home app library (#244)", async (t) => {
                                 body: "member",
                             }),
                     );
-                    await waitForPlannedHome(page);
+                    await waitForPlannedHome(page, 7);
                     const mini = page.locator(".launcher-folder-item--large")
                         .getByRole("button", { name: "打开 大文件夹成员1" });
                     await mini.tap();
@@ -446,7 +496,7 @@ Deno.test("home app library (#244)", async (t) => {
                         }
                     });
                     await page.reload();
-                    await waitForPlannedHome(page);
+                    await waitForPlannedHome(page, 7);
                     const opened = context.waitForEvent("page");
                     await mini.click();
                     await (await opened).waitForURL(memberUrl);
@@ -468,7 +518,7 @@ Deno.test("home app library (#244)", async (t) => {
                     app.origin,
                 );
                 try {
-                    await waitForPlannedHome(page);
+                    await waitForPlannedHome(page, 7);
                     const folder = page.locator(
                         ".launcher-folder-item--large",
                         { hasText: "大文件夹" },
@@ -526,9 +576,9 @@ Deno.test("home app library (#244)", async (t) => {
                     app.origin,
                 );
                 try {
-                    await waitForPlannedHome(page);
+                    await waitForPlannedHome(page, 7);
                     const more = page.getByRole("button", {
-                        name: "更多（13）",
+                        name: "更多（9）",
                     });
                     const view = await openMoreApps(page, more);
                     await view.getByText("全部应用", { exact: true })
@@ -560,7 +610,7 @@ Deno.test("home app library (#244)", async (t) => {
                     await closeLibrary(page);
                     await page.waitForFunction(() =>
                         document.activeElement?.getAttribute("aria-label") ===
-                            "更多（13）"
+                            "更多（9）"
                     );
                 } finally {
                     await context.close();
@@ -581,7 +631,7 @@ Deno.test("home app library (#244)", async (t) => {
                     },
                 );
                 try {
-                    const before = await waitForPlannedHome(page);
+                    const before = await waitForPlannedHome(page, 4);
                     const labelsBefore = await visualLabels(page);
                     await page.locator("#search-query").focus();
                     await page.waitForFunction(() =>
@@ -633,7 +683,7 @@ Deno.test("home app library (#244)", async (t) => {
                     app.origin,
                 );
                 try {
-                    await waitForPlannedHome(page);
+                    await waitForPlannedHome(page, 7);
                     const search = page.locator("#search-query");
                     const boxOn = await search.boundingBox();
                     assert(boxOn);
@@ -711,7 +761,7 @@ Deno.test("home app library (#244)", async (t) => {
 
                     await setShowHomeApps(page, app.origin, true);
                     await page.locator(".launcher-grid--home").waitFor();
-                    await waitForPlannedHome(page);
+                    await waitForPlannedHome(page, 7);
                     assertEquals(await visualLabels(page), orderOn);
                     await search.focus();
                     assertEquals(
@@ -772,7 +822,7 @@ Deno.test("home app library (#244)", async (t) => {
                     await menu.waitFor({ state: "detached" });
 
                     // Blank area: right-click inside the grid's empty last
-                    // column of row 0 (2 apps + 2 folders + add = 5 cells at most).
+                    // column of row 0 (2 apps + 2 folders fill four cells).
                     const openBlankMenu = async () => {
                         const grid = await page.locator(".launcher-grid--home")
                             .boundingBox();
@@ -863,24 +913,26 @@ Deno.test("home app library (#244)", async (t) => {
                     app.origin,
                 );
                 try {
-                    // Canonical a1..a5, large, a6: a6 backfills the gap next
-                    // to a5 while the large folder wraps to the second row.
+                    // Canonical a1..a6, large, a7 at seven columns: the large
+                    // folder wraps to row 1, so a7 backfills the gap after a6
+                    // and its visual neighbour (a6) is not its canonical one.
                     await seedLibrary(
                         page,
                         [{
                             name: "大A",
                             size: "large",
-                            sortOrder: 5,
+                            sortOrder: 6,
                             members: 2,
                         }],
-                        [1, 2, 3, 4, 5, 6].map((n) => ({
+                        [1, 2, 3, 4, 5, 6, 7].map((n) => ({
                             name: `键${n}`,
-                            sortOrder: n < 6 ? n - 1 : 6,
+                            sortOrder: n <= 6 ? n - 1 : 7,
                         })),
                     );
                     await page.reload();
                     await page.locator(".launcher-grid--home").waitFor();
                     await homeTiles(page).first().waitFor();
+                    await waitForGridColumns(page, 7);
                     assertEquals(
                         await visualLabels(page),
                         [
@@ -890,26 +942,24 @@ Deno.test("home app library (#244)", async (t) => {
                             "键4",
                             "键5",
                             "键6",
+                            "键7",
                             "大A",
-                            "添加应用",
                         ],
                     );
 
-                    const grid = await page.locator(".launcher-grid--home")
-                        .boundingBox();
-                    assert(grid);
-                    // Empty cell right of the large folder on row 1.
-                    await page.mouse.click(
-                        grid.x + grid.width - 12,
-                        grid.y + (await homeMetrics(page)).pitch + 20,
-                        { button: "right" },
-                    );
+                    // Blank plate area; the add cell no longer sits in the grid.
+                    const blank = await blankHomePoint(page);
+                    await page.mouse.click(blank.x, blank.y, {
+                        button: "right",
+                    });
                     await page.getByRole("menuitem", { name: "整理布局" })
                         .click();
                     await page.getByText("整理中").waitFor();
-                    await homeTiles(page).filter({ hasText: "键6" })
+                    await homeTiles(page).filter({ hasText: "键7" })
                         .locator(".webapp-icon").focus();
                     await page.keyboard.press("ArrowLeft");
+                    // ArrowLeft swaps with a7's visual neighbour a6, not its
+                    // canonical neighbour (the large folder).
                     await page.waitForFunction(() => {
                         const names = Array.from(
                             document.querySelectorAll(
@@ -921,7 +971,7 @@ Deno.test("home app library (#244)", async (t) => {
                             )?.textContent?.trim()
                         );
                         return names.join(",") ===
-                            "键1,键2,键3,键4,键6,键5,大A";
+                            "键1,键2,键3,键4,键5,键7,键6,大A";
                     });
                 } finally {
                     await context.close();
@@ -937,7 +987,7 @@ Deno.test("home app library (#244)", async (t) => {
                     app.origin,
                 );
                 try {
-                    await waitForPlannedHome(page);
+                    await waitForPlannedHome(page, 7);
                     // Eight default-placed notes (no stored layout) exceed the
                     // six side cells, so the overflow pill takes the rest.
                     const statuses = await page.evaluate(async () => {
@@ -1108,6 +1158,20 @@ Deno.test("home app library (#244)", async (t) => {
                         );
                         await page.locator(".launcher-folder-surface").first()
                             .waitFor();
+                        // Sample with the pointer parked off the grid: hover
+                        // mixes 8% foreground into a folder's fill, so a
+                        // hovered folder would not match its neighbour's tier.
+                        await page.mouse.move(1, 1);
+                        // Let the hover-out transition register, then wait it
+                        // out before reading the computed fill.
+                        await page.evaluate(async () => {
+                            for (let frame = 0; frame < 2; frame++) {
+                                const { promise, resolve } = Promise
+                                    .withResolvers<void>();
+                                requestAnimationFrame(() => resolve());
+                                await promise;
+                            }
+                        });
                         await page.waitForFunction(
                             () =>
                                 document.getAnimations().every((animation) =>

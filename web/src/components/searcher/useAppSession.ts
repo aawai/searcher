@@ -21,7 +21,7 @@ export interface AppSessionOptions {
     sessionKey: string;
     editingApp: ExtendedWebApp | null;
     defaultGroupId: string;
-    /** Create from home pins by default; the library starts unpinned. */
+    /** A new app starts pinned to home from every create entry. */
     defaultHomeFixed: boolean;
     groups: WebAppGroup[];
     appearance: Appearance;

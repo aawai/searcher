@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { type Locator, type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { createApp } from "../../src/app.ts";
@@ -256,7 +256,7 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
     }
 
     await t.step(
-        "0. Empty library: only the add cell; blank menu still offers folder and arrange",
+        "0. Empty library: the add cell is the only content; 整理 hides it; blank menu offers folder and arrange",
         async () => {
             await homeGrid.locator('[data-library-cell="add"]').waitFor();
             assertEquals(await homeTiles.count(), 0);
@@ -275,6 +275,24 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
             }
             await page.keyboard.press("Escape");
             await content.waitFor({ state: "detached" });
+
+            // The empty grid's "+" hides while arranging and returns with the
+            // empty state.
+            await enterArranging();
+            try {
+                await page.locator(".home-managing-bar").waitFor();
+                assertEquals(
+                    await homeGrid.locator('[data-library-cell="add"]')
+                        .count(),
+                    0,
+                );
+            } finally {
+                await exitArranging();
+                await page.locator(".home-managing-bar").waitFor({
+                    state: "detached",
+                });
+            }
+            await homeGrid.locator('[data-library-cell="add"]').waitFor();
         },
     );
 
@@ -329,9 +347,11 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
             ).allTextContents();
             assertEquals(folderNames.includes("Dev Tools"), true);
             assertEquals(folderNames.includes("Empty Folder"), true);
+            // With tiles the "+" is not rendered: it is the empty grid's
+            // content only.
             assertEquals(
                 await homeGrid.locator('[data-library-cell="add"]').count(),
-                1,
+                0,
             );
             assertEquals(
                 await homeGrid.locator('[data-library-cell="more"]').count(),
@@ -448,11 +468,12 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
     );
 
     await t.step(
-        "3b. 整理 mode hides the add cell; it returns after finishing",
+        "3b. with tiles on home the add cell is not rendered — 整理 included",
         async () => {
+            assert((await homeTiles.count()) > 0, "home has tiles");
             assertEquals(
                 await homeGrid.locator('[data-library-cell="add"]').count(),
-                1,
+                0,
             );
             await enterArranging();
             try {
@@ -464,8 +485,14 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
                 );
             } finally {
                 await exitArranging();
+                await page.locator(".home-managing-bar").waitFor({
+                    state: "detached",
+                });
             }
-            await homeGrid.locator('[data-library-cell="add"]').waitFor();
+            assertEquals(
+                await homeGrid.locator('[data-library-cell="add"]').count(),
+                0,
+            );
         },
     );
 

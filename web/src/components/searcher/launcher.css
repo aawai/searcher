@@ -123,6 +123,18 @@
         padding: var(--space-2);
     }
 }
+/* 显示应用底板 off: the plate keeps its box (insets, radius, measured rect for
+   capacity and note obstacles) but paints nothing, so toggling never moves a
+   tile. Names then sit on the wallpaper and take the calm layer's halo. */
+.launcher-plate[data-plate="hidden"] {
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+}
+.launcher-plate[data-plate="hidden"] :is(.webapp-name, .launcher-folder-name) {
+    text-shadow: var(--wallpaper-text-halo);
+}
 
 /* Grid metrics are the single presentation source for both CSS and ResizeObserver.
    [INVARIANT] Square Cell Grid System:
@@ -164,11 +176,15 @@
     pointer-events: none;
 }
 /* Home, popup and library grids share the square cell: the drag overlay is
-   portaled outside them, so it carries the same tokens. */
+   portaled outside them, so it carries the same tokens. With names the icon,
+   icon gap and one label line centre as a stack in the cell, so the plate's
+   top inset above the first icon matches its bottom inset below the last
+   label; row-to-row spacing stays uniform. */
 :is(.launcher-grid--home, .launcher-grid--popup, .launcher-grid--library, .launcher-overlay--home, .launcher-overlay--popup) {
     --launcher-col-w: var(--home-grid-cell);
     --launcher-gap-x: var(--home-grid-gap);
-    --launcher-pad-t: 0px;
+    --launcher-pad-t: calc((var(--launcher-col-w) - var(--launcher-icon) -
+        var(--space-launcher-icon-gap) - var(--font-metadata-line-height)) / 2);
     --launcher-pad-b: 0px;
     --space-launcher-pad-t: var(--launcher-pad-t);
     --space-launcher-pad-b: var(--launcher-pad-b);

@@ -7,26 +7,28 @@ import type { LauncherTile } from "./launcherTiles.ts";
 export const HOME_MAX_ROWS = 4;
 export const HOME_BOTTOM_CLEARANCE = 48;
 
-const ADD_ID = "\u0000home-library-add";
-
 /**
  * Number of grid rows that fit between the measured grid top and the viewport
  * bottom. `platePadding` is the bottom padding between the last row and the
  * plate edge; the top padding (and the managing bar) are already part of
- * `gridTop`. The clearance invariant is checked against the plate bottom.
+ * `gridTop`. N rows are `N * rowPitch - rowGap` tall (no gap after the last
+ * row). The clearance invariant is checked against the plate bottom.
  */
 export function effectiveRows(
     {
         layoutViewportHeight,
         gridTop,
         rowPitch,
+        rowGap = 0,
         bottomClearance = HOME_BOTTOM_CLEARANCE,
         maxRows = HOME_MAX_ROWS,
         platePadding = 0,
     }: {
         layoutViewportHeight: number;
         gridTop: number;
+        /** Row height plus row gap. */
         rowPitch: number;
+        rowGap?: number;
         bottomClearance?: number;
         maxRows?: number;
         platePadding?: number;
@@ -34,8 +36,8 @@ export function effectiveRows(
 ): number {
     if (!Number.isFinite(rowPitch) || rowPitch <= 0) return 1;
     const raw = Math.floor(
-        (layoutViewportHeight - gridTop - bottomClearance - platePadding) /
-            rowPitch,
+        (layoutViewportHeight - gridTop - bottomClearance - platePadding +
+            rowGap) / rowPitch,
     );
     if (!Number.isFinite(raw)) return 1;
     return Math.min(Math.max(raw, 1), maxRows);
@@ -54,11 +56,8 @@ export interface HomeLibraryPlan {
     visible: HomeLibraryVisibleItem[];
     /** Tiles that did not fit, in canonical order. */
     overflow: LauncherTile[];
-    /** The "more" cell; `count` is the number of overflow tiles (add excluded). */
+    /** The "more" cell; `count` is the number of overflow tiles. */
     more: { col: number; row: number; count: number } | null;
-    add: { col: number; row: number } | null;
-    /** True when the add action was pushed into the overflow view. */
-    addInOverflow: boolean;
 }
 
 function footprint(tile: LauncherTile): DesktopFootprint {
@@ -69,37 +68,31 @@ function footprint(tile: LauncherTile): DesktopFootprint {
 /**
  * Plan the home library inside a `columns` x `rows` area.
  *
- * All tiles (plus a trailing 1x1 add cell when `showAdd`) are laid out in
- * canonical order with backfill. When the capacity's last row would contain a
- * single cell, the grid narrows only as far as needed to keep the same row
- * count and leave at least two cells in the last row. Large folders keep the
- * capacity and the existing 2x2 backfill.
+ * All tiles are laid out in canonical order with backfill. When the capacity's
+ * last row would contain a single tile, the grid narrows only as far as needed
+ * to keep the same row count and leave at least two tiles in the last row.
+ * Large folders keep the capacity and the existing 2x2 backfill.
  *
  * If everything fits, there is no overflow. Otherwise the last cell of the
  * area is reserved for the "more" cell and the tiles are laid out again; tiles
- * that no longer fit go to overflow and the add action moves into the overflow
- * view. When only the add cell failed to fit, every cell of the area is
- * already taken by tiles, so the reserved cell necessarily displaces at least
- * one tile and `more.count >= 1`.
+ * that no longer fit go to overflow, so `more.count >= 1`.
  */
 export function planHomeLibrary(
-    { tiles, columns, rows, showAdd }: {
+    { tiles, columns, rows }: {
         tiles: LauncherTile[];
         columns: number;
         rows: number;
-        showAdd: boolean;
     },
 ): HomeLibraryPlan {
     const availableColumns = Math.max(2, Math.floor(columns));
     const maxRows = Math.max(1, Math.floor(rows));
-    const count = tiles.length + Number(showAdd);
+    const count = tiles.length;
     const originalRows = Math.ceil(count / availableColumns);
     const originalLastRow = count - (originalRows - 1) * availableColumns;
     let cols = availableColumns;
-    // A lone trailing cell (the "+" or a single tile) is the only reason to
-    // narrow the grid. Keep the capacity when the last row already has two or
-    // more cells, and keep the 2x2 backfill untouched whenever a large folder
-    // is present.
+    // A lone trailing tile is the only reason to narrow the grid. Keep the
+    // capacity when the last row already has two or more tiles, and keep the
+    // 2x2 backfill untouched whenever a large folder is present.
     if (
         count > 1 && originalLastRow === 1 && originalRows <= maxRows &&
         !tiles.some((tile) =>
@@ -135,21 +128,9 @@ export function planHomeLibrary(
         })),
     );
 
-    const full = calculateDesktopLayout(
-        showAdd ? [...items, { id: ADD_ID, cols: 1, rows: 1 }] : items,
-        cols,
-    );
+    const full = calculateDesktopLayout(items, cols);
     if (full.every((p) => p.row + p.rowSpan <= maxRows)) {
-        const addPlacement = full.find((p) => p.id === ADD_ID);
-        return {
-            visible: toVisible(full.filter((p) => p.id !== ADD_ID)),
-            overflow: [],
-            more: null,
-            add: addPlacement
-                ? { col: addPlacement.col, row: addPlacement.row }
-                : null,
-            addInOverflow: false,
-        };
+        return { visible: toVisible(full), overflow: [], more: null };
     }
 
     const moreCell = { col: cols - 1, row: maxRows - 1 };
@@ -162,8 +143,6 @@ export function planHomeLibrary(
         visible: toVisible(placed.filter((p) => fitting.has(p.id))),
         overflow,
         more: { ...moreCell, count: overflow.length },
-        add: null,
-        addInOverflow: showAdd,
     };
 }
 

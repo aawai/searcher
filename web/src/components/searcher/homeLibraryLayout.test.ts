@@ -21,100 +21,108 @@ const apps = (n: number, prefix = "a") =>
     Array.from({ length: n }, (_, i) => app(`${prefix}${i}`));
 const ids = (tiles: LauncherTile[]) => tiles.map((t) => t.id);
 
-Deno.test("home balances nineteen cells into five columns without another row", () => {
-    const plan = planHomeLibrary({
-        tiles: apps(18),
-        columns: 6,
-        rows: 4,
-        showAdd: true,
-    });
-    assertEquals(plan.add, { col: 3, row: 3 });
+Deno.test("home balances nineteen tiles into five columns without another row", () => {
+    const plan = planHomeLibrary({ tiles: apps(19), columns: 6, rows: 4 });
     assertEquals(Math.max(...plan.visible.map((item) => item.col)), 4);
     assertEquals(Math.max(...plan.visible.map((item) => item.row)), 3);
+    assertEquals(plan.visible.filter((item) => item.row === 3).length, 4);
     assertEquals(plan.overflow, []);
 });
 
-Deno.test("home keeps eight cells spread across the available width when resizing", () => {
+Deno.test("home keeps eight tiles spread across the available width when resizing", () => {
     for (const [columns, firstRow] of [[6, 6], [7, 6], [8, 8]]) {
         const plan = planHomeLibrary({
-            tiles: [folder("small", false), ...apps(6)],
+            tiles: [folder("small", false), ...apps(7)],
             columns,
             rows: 4,
-            showAdd: true,
         });
         assertEquals(
-            plan.visible.filter((item) => item.row === 0).length +
-                Number(plan.add?.row === 0),
+            plan.visible.filter((item) => item.row === 0).length,
             firstRow,
         );
-        assertEquals(plan.add, {
-            col: 7 % firstRow,
-            row: Math.floor(7 / firstRow),
-        });
         assertEquals(plan.overflow, []);
     }
 });
 
-Deno.test("home keeps the capacity unless the trailing row is a lone cell", () => {
-    // 7 cells in 5 columns = 5 + 2: the last row is not lonely, so the
+Deno.test("home keeps the capacity unless the trailing row is a lone tile", () => {
+    // 7 tiles in 5 columns = 5 + 2: the last row is not lonely, so the
     // responsive capacity is retained.
-    const seven = planHomeLibrary({
-        tiles: apps(6),
-        columns: 5,
-        rows: 4,
-        showAdd: true,
-    });
+    const seven = planHomeLibrary({ tiles: apps(7), columns: 5, rows: 4 });
     assertEquals(Math.max(...seven.visible.map((item) => item.col)), 4);
-    assertEquals(seven.add, { col: 1, row: 1 });
+    assertEquals(seven.visible.filter((item) => item.row === 1).length, 2);
 
-    const full = planHomeLibrary({
-        tiles: apps(12),
-        columns: 6,
-        rows: 4,
-        showAdd: false,
-    });
+    const full = planHomeLibrary({ tiles: apps(12), columns: 6, rows: 4 });
     assertEquals(Math.max(...full.visible.map((item) => item.col)), 5);
-    const capped = planHomeLibrary({
-        tiles: apps(18),
-        columns: 6,
-        rows: 3,
-        showAdd: true,
-    });
-    assertEquals(capped.more, { col: 5, row: 2, count: 1 });
+    const capped = planHomeLibrary({ tiles: apps(19), columns: 6, rows: 3 });
+    assertEquals(capped.more, { col: 5, row: 2, count: 2 });
     assertEquals(Math.max(...capped.visible.map((item) => item.col)), 5);
 });
 
 Deno.test("large folders retain the six-column backfill rather than balancing", () => {
     const plan = planHomeLibrary({
-        tiles: [folder("large"), ...apps(14)],
+        tiles: [folder("large"), ...apps(15)],
         columns: 6,
         rows: 4,
-        showAdd: true,
     });
     assertEquals(Math.max(...plan.visible.map((item) => item.col)), 5);
-    assertEquals(plan.add, { col: 0, row: 3 });
+    assertEquals(plan.visible.filter((item) => item.row === 3).length, 1);
 });
 
 Deno.test("effective rows account for the bottom plate padding", () => {
     // 1440x900: search centre 38% -> 342; search bottom 370; 20px gap -> plate
-    // top 390; 16px top padding -> grid top 406. 900 - 406 - 48 - 16 = 430,
-    // floor(430 / 96) = 4 rows.
+    // top 390; 16px top padding -> grid top 406. 900 - 406 - 48 - 16 = 430;
+    // four 76px rows with three 12px gaps are 340px tall -> 4 rows.
     assertEquals(
         effectiveRows({
             layoutViewportHeight: 900,
             gridTop: 406,
-            rowPitch: 96,
+            rowPitch: 88,
+            rowGap: 12,
             platePadding: 16,
         }),
         4,
     );
     // 1366x768: search bottom 319.84; plate top 339.84; grid top 355.84.
-    // 768 - 355.84 - 48 - 16 = 348.16, floor(348.16 / 96) = 3 rows.
+    // 768 - 355.84 - 48 - 16 = 348.16. Four 76px rows need 4 * 88 - 12 =
+    // 340px, so the fourth row fits; the trailing gap must not be counted.
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 768,
+            gridTop: 355.84,
+            rowPitch: 88,
+            rowGap: 12,
+            platePadding: 16,
+        }),
+        4,
+    );
+    // The same viewport with 84px rows needs 4 * 96 - 12 = 372px > 348.16.
     assertEquals(
         effectiveRows({
             layoutViewportHeight: 768,
             gridTop: 355.84,
             rowPitch: 96,
+            rowGap: 12,
+            platePadding: 16,
+        }),
+        3,
+    );
+    // Exactly filling the space still fits; one pixel less drops the row.
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 340 + 48 + 16,
+            gridTop: 0,
+            rowPitch: 88,
+            rowGap: 12,
+            platePadding: 16,
+        }),
+        4,
+    );
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 339 + 48 + 16,
+            gridTop: 0,
+            rowPitch: 88,
+            rowGap: 12,
             platePadding: 16,
         }),
         3,
@@ -146,7 +154,6 @@ Deno.test("large folder counts as 4 cells and 4 full rows fit exactly", () => {
         tiles: [folder("L"), ...apps(12)],
         columns: 4,
         rows: 4,
-        showAdd: false,
     });
     assertEquals(plan.overflow, []);
     assertEquals(plan.more, null);
@@ -158,45 +165,23 @@ Deno.test("exceeding capacity by one tile reserves the last cell for more", () =
         tiles: [folder("L"), ...apps(13)],
         columns: 4,
         rows: 4,
-        showAdd: false,
     });
     // 15 usable cells: folder (4) + 11 apps; 2 apps overflow.
     assertEquals(plan.visible.length, 12);
     assertEquals(ids(plan.overflow), ["a11", "a12"]);
     assertEquals(plan.more, { col: 3, row: 3, count: 2 });
-    assertEquals(plan.add, null);
-    assertEquals(plan.addInOverflow, false);
+    assertEquals(plan.visible.length, 12);
     for (const v of plan.visible) {
         assertEquals(v.row + v.rowSpan <= 4, true);
         assertEquals(v.col === 3 && v.row === 3, false);
     }
 });
 
-Deno.test("mobile 5 columns: add goes to overflow when it does not fit", () => {
-    // 5 columns x 4 rows = 20 cells, filled exactly by tiles; add has no cell.
-    const plan = planHomeLibrary({
-        tiles: apps(20),
-        columns: 5,
-        rows: 4,
-        showAdd: true,
-    });
-    assertEquals(plan.addInOverflow, true);
-    assertEquals(plan.add, null);
-    assertEquals(plan.more, { col: 4, row: 3, count: 1 });
-    assertEquals(ids(plan.overflow), ["a19"]);
-    assertEquals(plan.visible.length, 19);
-});
-
-Deno.test("add is not counted in the more count", () => {
-    const plan = planHomeLibrary({
-        tiles: apps(25),
-        columns: 5,
-        rows: 4,
-        showAdd: true,
-    });
-    assertEquals(plan.more?.count, 6);
-    assertEquals(plan.overflow.length, 6);
-    assertEquals(plan.addInOverflow, true);
+Deno.test("mobile 5 columns: tiles filling the capacity exactly need no more cell", () => {
+    const plan = planHomeLibrary({ tiles: apps(20), columns: 5, rows: 4 });
+    assertEquals(plan.more, null);
+    assertEquals(plan.overflow, []);
+    assertEquals(plan.visible.length, 20);
 });
 
 Deno.test("effective rows 3: a large folder crossing the limit goes to more", () => {
@@ -204,7 +189,6 @@ Deno.test("effective rows 3: a large folder crossing the limit goes to more", ()
         tiles: [...apps(6), folder("L"), app("z")],
         columns: 4,
         rows: 3,
-        showAdd: false,
     });
     // Row 0 a0..a3, row 1 a4 a5 then folder doesn't fit at row1 (cols 2-3 ok!)
     // folder placed at (2,1) rows 1-2; z backfills; last cell (3,2) reserved.
@@ -216,7 +200,6 @@ Deno.test("effective rows 3: a large folder crossing the limit goes to more", ()
         tiles: [...apps(8), folder("L")],
         columns: 4,
         rows: 3,
-        showAdd: false,
     });
     // Rows 0-1 full of apps; folder would occupy rows 2-3 and crosses limit.
     assertEquals(ids(tight.overflow), ["folder:L"]);
@@ -229,7 +212,6 @@ Deno.test("rows = 1: a large folder always goes to more", () => {
         tiles: [folder("L"), app("a"), app("b")],
         columns: 4,
         rows: 1,
-        showAdd: false,
     });
     // The folder is laid out first at (0,0); b lands on the reserved cell (3,0).
     assertEquals(ids(plan.overflow), ["folder:L", "b"]);
@@ -240,10 +222,8 @@ Deno.test("rows = 1: a large folder always goes to more", () => {
         tiles: [folder("L")],
         columns: 4,
         rows: 1,
-        showAdd: true,
     });
     assertEquals(ids(single.overflow), ["folder:L"]);
-    assertEquals(single.addInOverflow, true);
     assertEquals(single.visible, []);
 });
 
@@ -252,7 +232,6 @@ Deno.test("columns are at least 2", () => {
         tiles: [folder("L")],
         columns: 1,
         rows: 2,
-        showAdd: false,
     });
     assertEquals(plan.overflow, []);
     assertEquals(plan.visible[0].colSpan, 2);
@@ -311,12 +290,7 @@ Deno.test("effectiveRows from viewport numbers", () => {
 
 Deno.test("visual order differs from canonical when a small tile backfills", () => {
     const tiles = [app("A"), app("B"), folder("L"), app("C")];
-    const plan = planHomeLibrary({
-        tiles,
-        columns: 3,
-        rows: 4,
-        showAdd: false,
-    });
+    const plan = planHomeLibrary({ tiles, columns: 3, rows: 4 });
     const visual = ids(plan.visible.map((v) => v.tile));
     const canonical = ids(tiles);
     assertEquals(canonical, ["A", "B", "folder:L", "C"]);
@@ -377,13 +351,11 @@ Deno.test("home plans pinned root tiles only and counts hidden pins in 更多", 
         tiles: pinnedRootTiles([...library, ...pinned]),
         columns: 6,
         rows: 4,
-        showAdd: true,
     });
     // 24 cells: 23 tiles and 更多; the 2 hidden pinned tiles are counted, the
     // unpinned library apps never are.
     assertEquals(plan.visible.length, 23);
     assertEquals(plan.more, { col: 5, row: 3, count: 2 });
-    assertEquals(plan.addInOverflow, true);
     assertEquals(
         plan.visible.every((item) => item.tile.app?.isHomeFixed === true),
         true,

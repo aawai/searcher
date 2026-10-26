@@ -1,0 +1,1 @@
+ALTER TABLE `preferences` ADD `show_home_app_plate` integer DEFAULT true NOT NULL;

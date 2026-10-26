@@ -192,6 +192,8 @@ export interface PreferencesDto {
     searchHistoryEnabled?: boolean;
     showAppLabels: boolean;
     showHomeApps: boolean;
+    /** 登录用户的跨设备偏好：首页应用网格是否绘制底板。 */
+    showHomeAppPlate: boolean;
     showHomeDate: boolean;
     showHomeTime: boolean;
     showHomeContinue: boolean;

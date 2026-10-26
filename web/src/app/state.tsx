@@ -61,6 +61,8 @@ export type Appearance = {
     showAppLabels: boolean;
     /** 登录用户的跨设备偏好：首页是否显示应用库。 */
     showHomeApps: boolean;
+    /** 登录用户的跨设备偏好：首页应用网格是否绘制底板。 */
+    showHomeAppPlate: boolean;
     /** 首页“静”状态：搜索框上方的日期、时间与登录用户的“继续”行。 */
     showHomeDate: boolean;
     showHomeTime: boolean;
@@ -78,6 +80,7 @@ const initial: Appearance = {
     wallpaperPresentations: {},
     showAppLabels: true,
     showHomeApps: true,
+    showHomeAppPlate: true,
     showHomeDate: true,
     showHomeTime: false,
     showHomeContinue: true,
@@ -140,6 +143,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
     for (
         const key of [
             "showHomeApps",
+            "showHomeAppPlate",
             "showHomeDate",
             "showHomeTime",
             "showHomeContinue",
@@ -349,6 +353,7 @@ export function AppState({ children }: { children: ReactNode }) {
                     wallpaperPresentations: prefs.wallpaperPresentations,
                     showAppLabels: prefs.showAppLabels,
                     showHomeApps: prefs.showHomeApps,
+                    showHomeAppPlate: prefs.showHomeAppPlate,
                     showHomeDate: prefs.showHomeDate,
                     showHomeTime: prefs.showHomeTime,
                     showHomeContinue: prefs.showHomeContinue,
@@ -463,6 +468,7 @@ export function AppState({ children }: { children: ReactNode }) {
             for (
                 const key of [
                     "showHomeApps",
+                    "showHomeAppPlate",
                     "showHomeDate",
                     "showHomeTime",
                     "showHomeContinue",

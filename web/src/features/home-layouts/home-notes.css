@@ -335,14 +335,14 @@
    The sheet height stays one note cell; only the width follows the column. */
 .home-notes--flow {
     display: grid;
-    gap: var(--space-home-grid-gap);
+    gap: var(--space-home-note-gap);
     width: calc(100% - 2 * var(--space-4));
     max-width: var(--home-grid-content-width);
     margin: var(--space-5) auto var(--space-8);
 }
 
 /* The flow's top gap is the same search→plate rhythm, not an extra margin on
-   top of the pinned area's bottom margin. Note rows use the app grid gap. */
+   top of the pinned area's bottom margin. Note rows use the note lattice gap. */
 .home .pinned-area:has(+ .home-notes--flow) {
     margin-block-end: 0;
 }
