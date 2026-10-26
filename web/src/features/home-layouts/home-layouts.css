@@ -8,7 +8,7 @@
     flex-direction: column;
     align-items: center;
     padding-block-end: calc(
-        var(--space-7) + var(--dock-inset-bottom, 0px) +
+        max(var(--space-7), var(--dock-inset-bottom, 0px) - var(--space-6)) +
         env(safe-area-inset-bottom, 0px)
     );
 }

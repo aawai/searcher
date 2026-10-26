@@ -398,7 +398,7 @@ Deno.test("taskbar inset exemption is restricted to registered dock consumers", 
             [
                 homeLayouts,
                 "padding-block-end",
-                "calc(var(--space-7) + var(--dock-inset-bottom, 0px) + env(safe-area-inset-bottom, 0px))",
+                "calc(max(var(--space-7), var(--dock-inset-bottom, 0px) - var(--space-6)) + env(safe-area-inset-bottom, 0px))",
             ],
             [
                 workspace,

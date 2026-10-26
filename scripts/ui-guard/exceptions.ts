@@ -317,7 +317,7 @@ export function isDesignSystemAllowed(
         prop === "padding-block-end"
     ) {
         return value.replaceAll(/\s+/g, "") ===
-            "calc(var(--space-7)+var(--dock-inset-bottom,0px)+env(safe-area-inset-bottom,0px))";
+            "calc(max(var(--space-7),var(--dock-inset-bottom,0px)-var(--space-6))+env(safe-area-inset-bottom,0px))";
     }
     if (normFile === "web/src/features/workspace/workspace.css") {
         const compact = value.replaceAll(/\s+/g, "");
@@ -345,11 +345,15 @@ export function isDesignSystemAllowed(
         }
         if (prop === "height") {
             return compact ===
-                "min(88dvh,var(--workspace-mobile-height),calc(var(--workspace-visible-height,100dvh)-var(--dock-inset-bottom,0px)-var(--space-4)))";
+                    "min(88dvh,var(--workspace-mobile-height),calc(var(--workspace-visible-height,100dvh)-var(--dock-inset-bottom,0px)-var(--space-4)))" ||
+                compact ===
+                    "min(88dvh,var(--workspace-mobile-height),calc(var(--workspace-visible-height,100dvh)-var(--dock-inset-bottom,0px)-var(--space-1)))";
         }
         if (prop === "max-height") {
             return compact ===
-                "calc(var(--workspace-visible-height,100dvh)-var(--dock-inset-bottom,0px)-var(--space-4))";
+                    "calc(var(--workspace-visible-height,100dvh)-var(--dock-inset-bottom,0px)-var(--space-4))" ||
+                compact ===
+                    "calc(var(--workspace-visible-height,100dvh)-var(--dock-inset-bottom,0px)-var(--space-1))";
         }
     }
     // Physical paper margins are document settings, not application visual spacing.

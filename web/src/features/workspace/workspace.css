@@ -185,17 +185,6 @@
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     z-index: var(--elevation-sheet);
 }
-@media (max-width: 767px) and (max-height: 480px) {
-    .workspace-panel--mobile.sheet {
-        inset: auto 0 max(var(--workspace-visible-bottom, 0px),
-            var(--dock-inset-bottom, 0px));
-        height: min(88dvh, var(--workspace-mobile-height),
-            calc(var(--workspace-visible-height, 100dvh) -
-            var(--dock-inset-bottom, 0px) - var(--space-4)));
-        max-height: calc(var(--workspace-visible-height, 100dvh) -
-            var(--dock-inset-bottom, 0px) - var(--space-4));
-    }
-}
 .workspace-panel--mobile.sheet[data-starting-style],
 .workspace-panel--mobile.sheet[data-ending-style] {
     transform: translateY(100%);
@@ -205,6 +194,34 @@
 }
 .workspace-panel--mobile .workspace-body {
     padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+}
+@media (max-height: 480px) {
+    .workspace-panel {
+        inset-block-start: var(--workspace-inset);
+    }
+    .workspace-header {
+        padding-block: var(--space-2);
+    }
+    .workspace-body {
+        padding-block: var(--space-1);
+    }
+}
+@media (max-width: 767px) and (max-height: 480px) {
+    .workspace-panel--mobile.sheet {
+        inset: auto 0 max(var(--workspace-visible-bottom, 0px),
+            var(--dock-inset-bottom, 0px));
+        height: min(88dvh, var(--workspace-mobile-height),
+            calc(var(--workspace-visible-height, 100dvh) -
+            var(--dock-inset-bottom, 0px) - var(--space-1)));
+        max-height: calc(var(--workspace-visible-height, 100dvh) -
+            var(--dock-inset-bottom, 0px) - var(--space-1));
+    }
+    .workspace-panel--mobile .workspace-header {
+        padding-block: var(--space-1);
+    }
+    .workspace-panel--mobile .workspace-body {
+        padding-bottom: max(var(--space-1), env(safe-area-inset-bottom));
+    }
 }
 .workspace-grip {
     display: block;
