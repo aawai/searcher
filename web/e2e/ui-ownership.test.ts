@@ -222,8 +222,11 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 document.documentElement.dataset.glass === "clear" &&
                 getComputedStyle(document.documentElement).getPropertyValue(
                     "--material-filter",
-                ).includes("blur(12px)")
+                ).includes("blur(8px)")
             );
+            await page.getByText("通透会透出壁纸，首页文字可读性随壁纸变化", {
+                exact: true,
+            }).waitFor();
             assertEquals(
                 await page.getByText("应用图标大小", { exact: true }).count(),
                 0,

@@ -76,7 +76,7 @@ import { type Appearance, useAppState } from "./state.tsx";
 
 const GLASS_CHOICES = [
     ["off", "关闭"],
-    ["soft", "柔和"],
+    ["soft", "轻"],
     ["regular", "标准"],
     ["clear", "通透"],
 ] as const satisfies readonly (readonly [GlassIntensity, string])[];
@@ -711,6 +711,8 @@ export function SettingsPage() {
                                 title="玻璃效果"
                                 description={reducedTransparency
                                     ? "系统已开启「减少透明度」，玻璃效果暂以实色显示"
+                                    : appearance.glassIntensity === "clear"
+                                    ? "通透会透出壁纸，首页文字可读性随壁纸变化"
                                     : undefined}
                                 control="segmented"
                                 value={appearance.glassIntensity}
