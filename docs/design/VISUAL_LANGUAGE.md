@@ -146,20 +146,21 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--search-radius`         | `--radius-lg` / `--radius-pill`     | 搜索框；随“控件形状”偏好变化                         |
 | `--search-inner-radius`   | 同心内缩，不小于 `--control-radius` | 搜索框内部控件                                       |
 | `--radius-search-inner`   | `--search-inner-radius`             | 别名                                                 |
-| `--radius-launcher-ratio` | 0.23                                | 应用图标圆角占边长的比例，仅用于下面两项             |
+| `--radius-launcher-ratio` | 0.23                                | 应用图标圆角占边长的比例，仅用于下面三项             |
 | `--radius-launcher-icon`  | 图标边长 × ratio                    | 首页与工作区应用图标                                 |
 | `--radius-launcher-mini`  | 14px × ratio                        | 文件夹预览中的小图标                                 |
+| `--radius-dock-glyph`     | 28px × ratio                        | 任务栏与设置中的紧凑应用图标                         |
 
 ### 层级
 
-| 层       | 背景                                 | 阴影                          | 示例                                 |
-| -------- | ------------------------------------ | ----------------------------- | ------------------------------------ |
-| Canvas   | `--background` / 壁纸 / 壁纸派生画布 | 无                            | 页面、首页                           |
-| Content  | `--surface`                          | 无                            | 分组列表、笔记库列表                 |
-| 图标块   | 图标画布 / `--material-regular`      | `--shadow-elevation-glyph`    | 应用、文件夹预览、“+”、“更多（N）”   |
-| Material | `--material-regular` + blur          | `--shadow-elevation-material` | 搜索框、应用底板、首页笔记、顶栏悬停 |
-| Floating | `--material-thick` + blur            | `--shadow-elevation-floating` | 菜单、Popover、建议列表、撤销提示    |
-| Overlay  | `--surface-l3`                       | `--shadow-l3`                 | 对话框、工作面板、Sheet              |
+| 层       | 背景                                 | 阴影                          | 示例                                      |
+| -------- | ------------------------------------ | ----------------------------- | ----------------------------------------- |
+| Canvas   | `--background` / 壁纸 / 壁纸派生画布 | 无                            | 页面、首页                                |
+| Content  | `--surface`                          | 无                            | 分组列表、笔记库列表                      |
+| 图标块   | 图标画布 / `--material-regular`      | `--shadow-elevation-glyph`    | 应用、文件夹预览、“+”、“更多（N）”        |
+| Material | `--material-regular` + blur          | `--shadow-elevation-material` | 搜索框、应用底板、首页笔记、顶栏悬停      |
+| Floating | `--material-thick` + blur            | `--shadow-elevation-floating` | 菜单、Popover、建议列表、撤销提示、任务栏 |
+| Overlay  | `--surface-l3`                       | `--shadow-l3`                 | 对话框、工作面板、Sheet                   |
 
 首页高度收敛为贴面图标块 → Material（搜索框 / 应用底板 / 首页笔记）→ Floating 三档，每档只消费一个组合阴影 Token；图标块组合 `--glyph-edge` 内环与极淡投影，Material / Floating 组合 `--shadow-material-edge` 与各档投影，不以 z-index 推导阴影强度。首页笔记与搜索框、应用底板同档，拖动时也不另加更高档阴影。#285 Y3 起不再有 Paper 层。
 
@@ -202,7 +203,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 
 首页尺度三级：主体块是搜索框 + 应用底板（搜索输入用 `--font-search-input-size`，底板标签用 `--font-metadata-size`）；次级是“静”状态日期 / 时间（`--font-title-size`）、“继续”（`--font-body-size`）与首页笔记（标题 `--font-body-size` / 600，正文 `--font-body-size` / 400，底部任务进度 `--font-metadata-size`）；辅助是首页顶栏字标（`--font-body-size`）、主题与头像（沿用登记图标 / 控件尺寸）。层级由块体、距离与字重共同表达，不新增 raw 字号、不将顶栏升格为页面标题；面板标题仍用 `--font-title-size`。
 
-本次系统语法修订（#285 Y3 C）：以「首页笔记」替换「纸张（Paper）」与层级表 Paper 行；新增 S / W 单元档位、吸附、不叠放、中性 Material 与跨断点短预览，保留底层 `color` 数据及笔记列表 / 编辑器配色。删除 `--radius-note-card`、`--paper-*`、`--shadow-note-*`、`--material-note-*`；正文 ≥4.5:1、任务框边界 ≥3:1。owner 为 `home-grid-cells.ts`、`HomeNoteCard.tsx` 与 `home-notes.css`；以单元换算 / 交换 / 越界 / 默认落点、迁移测试和实页验证。
+本次系统语法修订（#285 Y3 C）：以「首页笔记」替换「纸张（Paper）」与层级表 Paper 行；新增 S / W 单元档位、吸附、不叠放、中性 Material 与跨断点短预览，保留底层 `color` 数据及笔记列表 / 编辑器配色。删除首页笔记专用的 `--radius-note-card`、`--paper-*`、`--shadow-note-card*`、`--material-note-*`（仅保留编辑器颜色选择器色点的 `--shadow-note-color-swatch`）；正文 ≥4.5:1、任务框边界 ≥3:1。owner 为 `home-grid-cells.ts`、`HomeNoteCard.tsx` 与 `home-notes.css`；以单元换算 / 交换 / 越界 / 默认落点、迁移测试和实页验证。
 
 本次系统语法修订（#285 Y4 C2–C5）：新增应用底板、末行平衡与三档组合阴影，owner 分别为首页应用库 / `launcher.css`、`homeLibraryLayout.ts`、`tokens.css`；字号复用登记值。验证包括 19 / 12 格与大文件夹的布局单元测试、含内边距的有效行数测试、玻璃对比度（应用名 ≥4.5:1、浅底图标边缘 ≥3:1）、`check:ui`，以及 390 / 768 / 1440 / 1920 / 2560 × light / dark × mesh / 浅深照片 / 两张用户真实壁纸 × 四档玻璃实页与减少透明度降级；1440×900、1366×768、1920×1080 与 2560×1440 核验底板下缘留白 ≥48px。真实壁纸与 18 个真实图标的前后对比须由用户确认观感，不能以合规检查代替。
 
@@ -310,9 +311,9 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 `--motion-fast` 120ms（hover、按压、Tooltip / Popover / 菜单）、`--motion-base` 200ms（展开、切换、淡入淡出、退场）、`--motion-panel` 280ms + `--ease-out-expo`（面板、Sheet、对话框进入）。
 
-- 出现与消失成对：浮层（菜单、Tooltip、Popover、对话框、Sheet、资料库、撤销提示）进入与退出都有过渡；退出期间元素 `inert`，不再接收焦点与 Escape。Base UI 浮层用 `data-starting-style` / `data-ending-style`；自管挂载的元素用 `components/ui/presence.ts` 的 `usePresence`，在元素自身的动画结束后再卸载。
+- 出现与消失成对：浮层（菜单、Tooltip、Popover、对话框、Sheet、工作面板、任务栏、撤销提示）进入与退出都有过渡；退出期间元素 `inert`，不再接收焦点与 Escape。Base UI 浮层用 `data-starting-style` / `data-ending-style`；自管挂载的元素用 `components/ui/presence.ts` 的 `usePresence`，在元素自身的动画结束后再卸载。
 - 入场位移不超过 8px；唯一例外是底部 Sheet 从视口底边滑入、滑出。禁止装饰性位移、视差、交错（staggered）或循环动画，以及对无关元素的缩放；同一对象的几何变化仅按下述共享元素契约允许，不是入场位移例外。
-- **资料库开合**：≥768 仅资料库面板淡入淡出；<768 沿用底部 Sheet 滑入滑出。首页层保持原样，不参与缩放或透明度变化；不使用整层缩放表达场景切换。减少动态效果时 Sheet 改为同时长的纯透明度变化。
+- **工作面板开合**：≥768 仅工作面板淡入淡出；<768 沿用底部 Sheet 滑入滑出。首页层保持原样，不参与缩放或透明度变化；不使用整层缩放表达场景切换。减少动态效果时 Sheet 改为同时长的纯透明度变化。
 - 顶层页面切换（首页、设置、AI 问答、回收站等之间）使用 View Transition 的纯透明度交叉淡入；`prefers-reduced-motion: reduce` 下不做页面过渡；设置、管理内部切换不使用过渡。
 - **共享元素过渡（shared-element transition）**：仅允许**同一个对象改变容器 / 状态**时使用（例如行内卡片展开为完整视图，再收回卡片）。实现使用 `document.startViewTransition`，每次生成唯一的 `view-transition-name`；旧快照恰好一个 source、新快照恰好一个 target 使用该名称，不得同帧重名。React 的 DOM 更新在 transition callback 内用 `flushSync` 同步提交。仅该对象可做 geometry morph，持续 `--motion-panel`（280ms），缓动 `--ease-out-expo`；无关元素不参与几何动画。
 - **回退**：浏览器不支持 `startViewTransition` 时立即切换状态、无动画，焦点处理不变。`prefers-reduced-motion: reduce` 下共享元素 morph 改为**同时长**的纯 opacity cross-fade：无 translate、无 scale，也不插值共享元素的 width / height / position。必须显式禁用默认 `::view-transition-group` 的尺寸 / 位置动画与 `::view-transition-image-pair` 动画（例如 `animation: none`），只在 old / new 快照上保留透明度动画，不能仅移除业务 CSS 的 transform。

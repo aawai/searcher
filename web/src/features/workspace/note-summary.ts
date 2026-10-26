@@ -80,7 +80,7 @@ export function noteSearchPreview(
     const text = sourceOnly ? body : readable;
     const range = readableMatch ??
         (sourceOnly ? matchRange(body, normalized) : null);
-    if (!range) return { text: readable || "空白便签", sourceOnly: false };
+    if (!range) return { text: readable || "空白笔记", sourceOnly: false };
     const before = Array.from(text.slice(0, range[0]));
     const after = Array.from(text.slice(range[1]));
     return {

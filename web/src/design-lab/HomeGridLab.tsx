@@ -699,7 +699,7 @@ export default function HomeGridLab() {
     const announceMore = () => {
         if (!overflow.length) return;
         announce(
-            `更多笔记（${overflow.length}）：将打开资料库的笔记视图（本实验仅占位）。`,
+            `更多笔记（${overflow.length}）：将打开笔记面板（本实验仅占位）。`,
         );
     };
 

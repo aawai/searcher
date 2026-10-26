@@ -196,6 +196,7 @@
     --radius-sheet: var(--radius-lg);
     --radius-sm: 4px;
     --radius-inline-code: var(--radius-sm);
+    --radius-dock-glyph: calc(var(--control-compact-height) * var(--radius-launcher-ratio));
 
     /* Sizes. */
     --control-height: 36px;

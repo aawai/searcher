@@ -4,6 +4,7 @@ import {
     type ReactNode,
     useCallback,
     useEffect,
+    useLayoutEffect,
     useMemo,
     useRef,
     useState,
@@ -11,15 +12,10 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import {
     AlertCircle,
-    ArrowDown,
-    ArrowUp,
-    Home,
+    type Home,
     LayoutGrid,
     Minus,
     MoreHorizontal,
-    NotebookPen,
-    Sparkles,
-    X,
 } from "lucide-react";
 import {
     closestCenter,
@@ -72,6 +68,7 @@ import {
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import { useEscapeLayerActive } from "../../components/ui/escape-layer-stack.tsx";
+import { usePresence } from "../../components/ui/presence.ts";
 import {
     Tooltip,
     TooltipContent,
@@ -79,22 +76,14 @@ import {
 } from "../../components/ui/tooltip.tsx";
 import { MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
 import type { ExtendedWebApp } from "../app-library/library-types.ts";
+import {
+    DOCK_SYSTEM_ITEMS,
+    DockPinnedAppsList,
+    DockSystemOrderList,
+    moveDockItem,
+} from "./DockOrderList.tsx";
 import { useDock } from "./DockProvider.tsx";
 import "./dock.css";
-
-const SYSTEM_ITEM_CONFIG: Record<
-    DockSystemId,
-    {
-        label: string;
-        icon: typeof Home;
-    }
-> = {
-    home: { label: "首页", icon: Home },
-    apps: { label: "应用", icon: LayoutGrid },
-    notes: { label: "笔记", icon: NotebookPen },
-    ai: { label: "AI 问答", icon: Sparkles },
-};
-
 function SortableSystemItem({
     id,
     label,
@@ -147,7 +136,11 @@ function SortableSystemItem({
                         aria-label={label}
                         onClick={onClick}
                     >
-                        <Icon size="1.25em" aria-hidden="true" />
+                        <Icon
+                            size="1em"
+                            className="icon-lg"
+                            aria-hidden="true"
+                        />
                         <span className="dock-item-label">{label}</span>
                         {id === "ai" && aiDisabled && (
                             <span
@@ -358,6 +351,62 @@ export function WorkspaceDock(
     }, [isAiPage, isHomePage, currentView]);
 
     const effectiveEdge: DockEdge = isMobile ? "bottom" : layout.edge;
+    const isCollapsed = layout.mode === "collapsible" && layout.collapsed;
+    const barPresence = usePresence<HTMLElement>(isMounted && !isCollapsed);
+    const ballPresence = usePresence<HTMLButtonElement>(
+        isMounted && isCollapsed,
+    );
+    const appsGroupRef = useRef<HTMLDivElement | null>(null);
+
+    // Hydrate pinned apps
+    const pinnedApps = useMemo(
+        () =>
+            preferences.appIds
+                .map((id) => apps.find((a) => a.id === id))
+                .filter((app): app is NonNullable<typeof app> => Boolean(app)),
+        [preferences.appIds, apps],
+    );
+
+    useLayoutEffect(() => {
+        const group = appsGroupRef.current;
+        if (!barPresence.mounted || pinnedApps.length === 0 || !group) return;
+        const isVertical = effectiveEdge === "left" ||
+            effectiveEdge === "right";
+        const markEdges = () => {
+            if (isVertical) {
+                const end = group.scrollHeight - group.clientHeight;
+                group.toggleAttribute(
+                    "data-overflow-start",
+                    group.scrollTop > 1,
+                );
+                group.toggleAttribute(
+                    "data-overflow-end",
+                    group.scrollTop < end - 1,
+                );
+            } else {
+                const end = group.scrollWidth - group.clientWidth;
+                group.toggleAttribute(
+                    "data-overflow-start",
+                    group.scrollLeft > 1,
+                );
+                group.toggleAttribute(
+                    "data-overflow-end",
+                    group.scrollLeft < end - 1,
+                );
+            }
+        };
+        markEdges();
+        const observer = new ResizeObserver(markEdges);
+        observer.observe(group);
+        for (const child of group.children) {
+            observer.observe(child);
+        }
+        group.addEventListener("scroll", markEdges, { passive: true });
+        return () => {
+            observer.disconnect();
+            group.removeEventListener("scroll", markEdges);
+        };
+    }, [barPresence.mounted, pinnedApps.length, effectiveEdge]);
 
     // Portalled mobile panels inherit geometry from :root, not AppShell.
     useEffect(() => {
@@ -370,8 +419,7 @@ export function WorkspaceDock(
             }
             shell?.removeAttribute("data-dock-edge");
         };
-        const collapsed = layout.mode === "collapsible" && layout.collapsed;
-        if (!isMounted || collapsed) {
+        if (!isMounted || isCollapsed || !barPresence.mounted) {
             clear();
             return clear;
         }
@@ -408,7 +456,7 @@ export function WorkspaceDock(
             globalThis.removeEventListener("resize", measure);
             clear();
         };
-    }, [isMounted, layout.mode, layout.collapsed, effectiveEdge]);
+    }, [isMounted, isCollapsed, barPresence.mounted, effectiveEdge]);
 
     // Mod+. global keyboard shortcut
     useEffect(() => {
@@ -532,26 +580,24 @@ export function WorkspaceDock(
     // Reorder handlers
     const handleMoveApp = useCallback(
         (index: number, delta: -1 | 1) => {
-            const nextIndex = index + delta;
-            if (nextIndex < 0 || nextIndex >= preferences.appIds.length) return;
-            const reordered = arrayMove(preferences.appIds, index, nextIndex);
-            void setAppOrder(reordered);
+            const reordered = moveDockItem(preferences.appIds, index, delta);
+            if (reordered) {
+                void setAppOrder(reordered);
+            }
         },
         [preferences.appIds, setAppOrder],
     );
 
     const handleMoveSystem = useCallback(
         (index: number, delta: -1 | 1) => {
-            const nextIndex = index + delta;
-            if (nextIndex < 0 || nextIndex >= preferences.systemOrder.length) {
-                return;
-            }
-            const reordered = arrayMove(
+            const reordered = moveDockItem(
                 preferences.systemOrder,
                 index,
-                nextIndex,
+                delta,
             );
-            void setSystemOrder(reordered);
+            if (reordered) {
+                void setSystemOrder(reordered);
+            }
         },
         [preferences.systemOrder, setSystemOrder],
     );
@@ -666,10 +712,25 @@ export function WorkspaceDock(
         const side: DockBallSide = e.clientX < globalThis.innerWidth / 2
             ? "left"
             : "right";
-        const safeTop = 60;
-        const safeBottom = globalThis.innerHeight - 60;
-        const clampedY = Math.max(safeTop, Math.min(safeBottom, e.clientY));
-        const normalizedY = (clampedY - safeTop) / (safeBottom - safeTop);
+        const ballSize = e.currentTarget.offsetHeight || 44;
+        const halfBall = ballSize / 2;
+        const computed = globalThis.getComputedStyle(e.currentTarget);
+        const insetTop = Number.parseFloat(
+            computed.getPropertyValue("--dock-ball-inset-top"),
+        ) || 60;
+        const insetBottom = Number.parseFloat(
+            computed.getPropertyValue("--dock-ball-inset-bottom"),
+        ) || (ballSize + 12);
+        const minTop = insetTop;
+        const maxTop = Math.max(
+            minTop + 1,
+            globalThis.innerHeight - insetBottom,
+        );
+        const targetTop = Math.max(
+            minTop,
+            Math.min(maxTop, e.clientY - halfBall),
+        );
+        const normalizedY = (targetTop - minTop) / (maxTop - minTop);
 
         setLayout({
             ballSide: side,
@@ -682,230 +743,239 @@ export function WorkspaceDock(
         setBallDragState(null);
     };
 
-    const handleBallKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-        if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setLayout({ collapsed: false });
+    if (!barPresence.mounted && !ballPresence.mounted) return null;
+
+    const topRatio = Math.max(0, Math.min(1, layout.ballY ?? 0.5));
+    const ballStyle: CSSProperties = ballDragState?.isDragging
+        ? {
+            left:
+                `calc(${ballDragState.currentX}px - var(--dock-ball-size) / 2)`,
+            top: `calc(${ballDragState.currentY}px - var(--dock-ball-size) / 2)`,
         }
-    };
-
-    if (!isMounted) return null;
-
-    // Render collapsed floating ball
-    if (layout.mode === "collapsible" && layout.collapsed) {
-        let ballStyle: CSSProperties;
-        if (ballDragState?.isDragging) {
-            ballStyle = {
-                left: `${ballDragState.currentX - 22}px`,
-                top: `${ballDragState.currentY - 22}px`,
-                right: "auto",
-                transition: "none",
-            };
-        } else {
-            const topRatio = Math.max(0, Math.min(1, layout.ballY ?? 0.5));
-            ballStyle = {
-                top: `calc(60px + (100dvh - 120px) * ${topRatio})`,
-            };
-        }
-
-        return (
-            <button
-                type="button"
-                className="dock-ball"
-                data-dock-action="expand"
-                data-ball-side={layout.ballSide}
-                style={ballStyle}
-                aria-label="展开任务栏"
-                onPointerDown={handleBallPointerDown}
-                onPointerMove={handleBallPointerMove}
-                onPointerUp={handleBallPointerUp}
-                onPointerCancel={handleBallPointerCancel}
-                onKeyDown={handleBallKeyDown}
-                onClick={() => {
-                    if (ballJustDraggedRef.current) {
-                        ballJustDraggedRef.current = false;
-                        return;
-                    }
-                    setLayout({ collapsed: false });
-                }}
-            >
-                <LayoutGrid size="1.25em" aria-hidden="true" />
-            </button>
-        );
-    }
-
-    // Hydrate pinned apps
-    const pinnedApps = preferences.appIds
-        .map((id) => apps.find((a) => a.id === id))
-        .filter((app): app is NonNullable<typeof app> => Boolean(app));
+        : {
+            top: `calc(var(--dock-ball-inset-top) + (100dvh - var(--dock-ball-inset-top) - var(--dock-ball-inset-bottom)) * ${topRatio})`,
+        };
 
     const sortableStrategy =
         effectiveEdge === "left" || effectiveEdge === "right"
             ? verticalListSortingStrategy
             : horizontalListSortingStrategy;
 
-    // Container interaction styles when modalActive is true
-    const containerStyle: CSSProperties = modalActive
-        ? { pointerEvents: "none", opacity: 0.5 }
-        : {};
-
     return (
         <>
-            <aside
-                className="dock-container"
-                data-edge={effectiveEdge}
-                style={containerStyle}
-                aria-hidden={modalActive ? "true" : undefined}
-            >
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
+            {ballPresence.mounted && (
+                <button
+                    ref={ballPresence.ref}
+                    type="button"
+                    className="dock-ball"
+                    data-dock-action="expand"
+                    data-ball-side={layout.ballSide}
+                    data-dragging={ballDragState?.isDragging
+                        ? "true"
+                        : undefined}
+                    data-modal-active={modalActive ? "true" : undefined}
+                    data-ending-style={ballPresence.ending ? "" : undefined}
+                    inert={ballPresence.ending || undefined}
+                    style={ballStyle}
+                    aria-label="展开任务栏"
+                    onPointerDown={handleBallPointerDown}
+                    onPointerMove={handleBallPointerMove}
+                    onPointerUp={handleBallPointerUp}
+                    onPointerCancel={handleBallPointerCancel}
+                    onClick={() => {
+                        if (ballJustDraggedRef.current) {
+                            ballJustDraggedRef.current = false;
+                            return;
+                        }
+                        setLayout({ collapsed: false });
+                    }}
                 >
-                    <nav
-                        className="dock-bar"
-                        aria-label="工作区任务栏"
+                    <LayoutGrid
+                        size="1em"
+                        className="icon-lg"
+                        aria-hidden="true"
+                    />
+                </button>
+            )}
+
+            {barPresence.mounted && (
+                <aside
+                    className="dock-container"
+                    data-edge={effectiveEdge}
+                    data-modal-active={modalActive ? "true" : undefined}
+                    aria-hidden={modalActive ? "true" : undefined}
+                    inert={barPresence.ending || undefined}
+                >
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
                     >
-                        {/* System items group */}
-                        <div className="dock-group dock-group--system">
-                            <SortableContext
-                                items={preferences.systemOrder.map((id) =>
-                                    `system:${id}`
-                                )}
-                                strategy={sortableStrategy}
-                            >
-                                {preferences.systemOrder.map((id) => {
-                                    const config = SYSTEM_ITEM_CONFIG[id];
-                                    return (
-                                        <SortableSystemItem
-                                            key={id}
-                                            id={id}
-                                            label={config.label}
-                                            icon={config.icon}
-                                            isActive={activeSystemId === id}
-                                            aiDisabled={id === "ai" &&
-                                                !aiAvailable}
-                                            onClick={() =>
-                                                handleSystemNavigate(id)}
-                                        />
-                                    );
-                                })}
-                            </SortableContext>
-                        </div>
-
-                        {/* Divider between system items and pinned apps */}
-                        {pinnedApps.length > 0 && (
-                            <div className="dock-divider" />
-                        )}
-
-                        {/* Pinned apps group */}
-                        {pinnedApps.length > 0 && (
-                            <div className="dock-group dock-group--apps">
+                        <nav
+                            ref={barPresence.ref}
+                            className="dock-bar"
+                            data-ending-style={barPresence.ending
+                                ? ""
+                                : undefined}
+                            aria-label="工作区任务栏"
+                        >
+                            {/* System items group */}
+                            <div className="dock-group dock-group--system">
                                 <SortableContext
-                                    items={pinnedApps.map((a) => `app:${a.id}`)}
+                                    items={preferences.systemOrder.map((id) =>
+                                        `system:${id}`
+                                    )}
                                     strategy={sortableStrategy}
                                 >
-                                    {pinnedApps.map((app, index) => (
-                                        <SortableAppItem
-                                            key={app.id}
-                                            app={app}
-                                            index={index}
-                                            totalCount={pinnedApps.length}
-                                            isMobile={isMobile}
-                                            onOpen={handleOpenApp}
-                                            onMove={handleMoveApp}
-                                            onUnpin={(id) =>
-                                                void setPinned(id, false)}
-                                        />
-                                    ))}
+                                    {preferences.systemOrder.map((id) => {
+                                        const config = DOCK_SYSTEM_ITEMS[id];
+                                        return (
+                                            <SortableSystemItem
+                                                key={id}
+                                                id={id}
+                                                label={config.label}
+                                                icon={config.icon}
+                                                isActive={activeSystemId === id}
+                                                aiDisabled={id === "ai" &&
+                                                    !aiAvailable}
+                                                onClick={() =>
+                                                    handleSystemNavigate(id)}
+                                            />
+                                        );
+                                    })}
                                 </SortableContext>
                             </div>
-                        )}
 
-                        {/* Options / Management dropdown menu (Q20 / Q25 fallback & compact action) */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={
-                                    <button
-                                        type="button"
-                                        className="dock-item dock-item--action"
-                                        aria-label="任务栏选项"
-                                        data-dock-action="menu"
-                                    >
-                                        <MoreHorizontal
-                                            size="1.25em"
-                                            aria-hidden="true"
-                                        />
-                                    </button>
-                                }
-                            />
-                            <DropdownMenuContent sideOffset={8}>
-                                <DropdownMenuItem
-                                    onClick={() => setManagementOpen(true)}
+                            {/* Divider between system items and pinned apps */}
+                            {pinnedApps.length > 0 && (
+                                <div className="dock-divider" />
+                            )}
+
+                            {/* Pinned apps group */}
+                            {pinnedApps.length > 0 && (
+                                <div
+                                    ref={appsGroupRef}
+                                    className="dock-group dock-group--apps"
                                 >
-                                    管理任务栏
-                                </DropdownMenuItem>
-                                {layout.mode === "collapsible" && (
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            setLayout({ collapsed: true })}
+                                    <SortableContext
+                                        items={pinnedApps.map((a) =>
+                                            `app:${a.id}`
+                                        )}
+                                        strategy={sortableStrategy}
                                     >
-                                        收起任务栏
-                                    </DropdownMenuItem>
-                                )}
-                                {pinnedApps.length > 0 && (
-                                    <>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            data-dock-action="apps-fallback"
-                                            onClick={() =>
-                                                setManagementOpen(true)}
-                                        >
-                                            更多固定应用（{pinnedApps.length}）
-                                        </DropdownMenuItem>
-                                    </>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                        {pinnedApps.map((app, index) => (
+                                            <SortableAppItem
+                                                key={app.id}
+                                                app={app}
+                                                index={index}
+                                                totalCount={pinnedApps.length}
+                                                isMobile={isMobile}
+                                                onOpen={handleOpenApp}
+                                                onMove={handleMoveApp}
+                                                onUnpin={(id) =>
+                                                    void setPinned(id, false)}
+                                            />
+                                        ))}
+                                    </SortableContext>
+                                </div>
+                            )}
 
-                        {/* Visible error indicator with retry on click */}
-                        {error && (
-                            <Tooltip>
-                                <TooltipTrigger
+                            {/* Options / Management dropdown menu (Q20 / Q25 fallback & compact action) */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger
                                     render={
                                         <button
                                             type="button"
-                                            className="dock-item dock-item--error"
-                                            role="alert"
-                                            aria-label={`任务栏同步错误：${error}，点击重试`}
-                                            onClick={() => void refreshApps()}
+                                            className="dock-item dock-item--action"
+                                            aria-label="任务栏选项"
+                                            data-dock-action="menu"
                                         >
-                                            <AlertCircle size="1.2em" />
+                                            <MoreHorizontal
+                                                size="1em"
+                                                className="icon-lg"
+                                                aria-hidden="true"
+                                            />
                                         </button>
                                     }
                                 />
-                                <TooltipContent>
-                                    同步提示：{error}（点击重试）
-                                </TooltipContent>
-                            </Tooltip>
-                        )}
+                                <DropdownMenuContent sideOffset={8}>
+                                    <DropdownMenuItem
+                                        onClick={() => setManagementOpen(true)}
+                                    >
+                                        管理任务栏
+                                    </DropdownMenuItem>
+                                    {layout.mode === "collapsible" && (
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                setLayout({ collapsed: true })}
+                                        >
+                                            收起任务栏
+                                        </DropdownMenuItem>
+                                    )}
+                                    {pinnedApps.length > 0 && (
+                                        <>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                data-dock-action="apps-fallback"
+                                                onClick={() =>
+                                                    setManagementOpen(true)}
+                                            >
+                                                更多固定应用（{pinnedApps
+                                                    .length}）
+                                            </DropdownMenuItem>
+                                        </>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
 
-                        {/* Collapse trigger button on desktop when in collapsible mode */}
-                        {layout.mode === "collapsible" && !isMobile && (
-                            <button
-                                type="button"
-                                className="dock-collapse-btn"
-                                data-dock-action="collapse"
-                                aria-label="收起任务栏"
-                                onClick={() => setLayout({ collapsed: true })}
-                            >
-                                <Minus size="1em" aria-hidden="true" />
-                            </button>
-                        )}
-                    </nav>
-                </DndContext>
-            </aside>
+                            {/* Visible error indicator with retry on click */}
+                            {error && (
+                                <Tooltip>
+                                    <TooltipTrigger
+                                        render={
+                                            <button
+                                                type="button"
+                                                className="dock-item dock-item--error"
+                                                role="alert"
+                                                aria-label={`任务栏同步错误：${error}，点击重试`}
+                                                onClick={() =>
+                                                    void refreshApps()}
+                                            >
+                                                <AlertCircle
+                                                    size="1em"
+                                                    className="icon-lg"
+                                                    aria-hidden="true"
+                                                />
+                                            </button>
+                                        }
+                                    />
+                                    <TooltipContent>
+                                        同步提示：{error}（点击重试）
+                                    </TooltipContent>
+                                </Tooltip>
+                            )}
 
+                            {/* Collapse trigger button on desktop when in collapsible mode */}
+                            {layout.mode === "collapsible" && !isMobile && (
+                                <button
+                                    type="button"
+                                    className="dock-collapse-btn"
+                                    data-dock-action="collapse"
+                                    aria-label="收起任务栏"
+                                    onClick={() =>
+                                        setLayout({ collapsed: true })}
+                                >
+                                    <Minus
+                                        size="1em"
+                                        className="icon-md"
+                                        aria-hidden="true"
+                                    />
+                                </button>
+                            )}
+                        </nav>
+                    </DndContext>
+                </aside>
+            )}
             {/* Management Dialog (Q20: 管理弹层，支持排序与取消固定) */}
             <Dialog open={managementOpen} onOpenChange={setManagementOpen}>
                 <DialogContent
@@ -916,167 +986,26 @@ export function WorkspaceDock(
                         <DialogTitle>管理任务栏</DialogTitle>
                     </DialogHeader>
                     <div className="dock-management-content">
-                        <div>
-                            <h4
-                                style={{
-                                    margin: "0 0 var(--space-2)",
-                                    fontSize: "var(--font-body-size)",
-                                }}
-                            >
+                        <div className="dock-management-section">
+                            <h4 className="dock-management-heading">
                                 固定应用（{pinnedApps.length}）
                             </h4>
-                            {pinnedApps.length === 0
-                                ? <p className="muted">暂未固定任何应用。</p>
-                                : (
-                                    <div className="dock-management-list">
-                                        {pinnedApps.map((app, index) => (
-                                            <div
-                                                key={app.id}
-                                                className="dock-management-item"
-                                            >
-                                                <div className="dock-management-item__info">
-                                                    <WebAppGlyph
-                                                        app={app}
-                                                        className="dock-glyph"
-                                                    />
-                                                    <span className="dock-management-item__title">
-                                                        {app.name}
-                                                    </span>
-                                                </div>
-                                                <div className="dock-management-item__actions">
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        disabled={index === 0}
-                                                        onClick={() =>
-                                                            handleMoveApp(
-                                                                index,
-                                                                -1,
-                                                            )}
-                                                        aria-label={`上移 ${app.name}`}
-                                                    >
-                                                        <ArrowUp
-                                                            size="1em"
-                                                            aria-hidden="true"
-                                                        />
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        disabled={index ===
-                                                            pinnedApps.length -
-                                                                1}
-                                                        onClick={() =>
-                                                            handleMoveApp(
-                                                                index,
-                                                                1,
-                                                            )}
-                                                        aria-label={`下移 ${app.name}`}
-                                                    >
-                                                        <ArrowDown
-                                                            size="1em"
-                                                            aria-hidden="true"
-                                                        />
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            void setPinned(
-                                                                app.id,
-                                                                false,
-                                                            )}
-                                                        aria-label={`取消固定 ${app.name}`}
-                                                    >
-                                                        <X
-                                                            size="1em"
-                                                            aria-hidden="true"
-                                                        />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                            <DockPinnedAppsList
+                                pinnedApps={pinnedApps}
+                                onMove={handleMoveApp}
+                                onUnpin={(id) => void setPinned(id, false)}
+                                emptyText="暂未固定任何应用。"
+                            />
                         </div>
 
-                        <div>
-                            <h4
-                                style={{
-                                    margin: "0 0 var(--space-2)",
-                                    fontSize: "var(--font-body-size)",
-                                }}
-                            >
+                        <div className="dock-management-section">
+                            <h4 className="dock-management-heading">
                                 系统入口顺序
                             </h4>
-                            <div className="dock-management-list">
-                                {preferences.systemOrder.map(
-                                    (systemId, index) => {
-                                        const config =
-                                            SYSTEM_ITEM_CONFIG[systemId];
-                                        const Icon = config.icon;
-                                        return (
-                                            <div
-                                                key={systemId}
-                                                className="dock-management-item"
-                                            >
-                                                <div className="dock-management-item__info">
-                                                    <Icon
-                                                        size="1em"
-                                                        className="icon-md"
-                                                        aria-hidden="true"
-                                                    />
-                                                    <span className="dock-management-item__title">
-                                                        {config.label}
-                                                    </span>
-                                                </div>
-                                                <div className="dock-management-item__actions">
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        disabled={index === 0}
-                                                        onClick={() =>
-                                                            handleMoveSystem(
-                                                                index,
-                                                                -1,
-                                                            )}
-                                                        aria-label={`上移 ${config.label}`}
-                                                    >
-                                                        <ArrowUp
-                                                            size="1em"
-                                                            aria-hidden="true"
-                                                        />
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        disabled={index ===
-                                                            preferences
-                                                                    .systemOrder
-                                                                    .length - 1}
-                                                        onClick={() =>
-                                                            handleMoveSystem(
-                                                                index,
-                                                                1,
-                                                            )}
-                                                        aria-label={`下移 ${config.label}`}
-                                                    >
-                                                        <ArrowDown
-                                                            size="1em"
-                                                            aria-hidden="true"
-                                                        />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        );
-                                    },
-                                )}
-                            </div>
+                            <DockSystemOrderList
+                                systemOrder={preferences.systemOrder}
+                                onMove={handleMoveSystem}
+                            />
                         </div>
                     </div>
                     <DialogFooter>

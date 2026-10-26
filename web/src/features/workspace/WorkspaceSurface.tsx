@@ -296,6 +296,7 @@ function WorkspaceFrame(
                     variant="ghost"
                     size="icon"
                     aria-label="返回首页"
+                    title="返回首页"
                     onClick={onClose}
                 >
                     <X size="1em" className="icon-lg" />

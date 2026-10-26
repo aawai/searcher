@@ -7,6 +7,7 @@ import {
     DockProviderSession,
     useDock,
 } from "./DockProvider.tsx";
+import { DOCK_SYSTEM_ITEMS, moveDockItem } from "./DockOrderList.tsx";
 import type { Envelope, PreferencesDto } from "@shared/contracts.ts";
 import { DEFAULT_DOCK_PREFERENCES } from "@shared/dock.ts";
 
@@ -391,4 +392,19 @@ Deno.test("DockProvider: refreshApps does not overwrite pending in-flight optimi
         globalThis.fetch = originalFetch;
         dom.restore();
     }
+});
+
+Deno.test("moveDockItem: reorders within bounds without mutating source and returns null out of bounds", () => {
+    const source = ["home", "apps", "notes", "ai"] as const;
+    assertEquals(moveDockItem(source, 0, -1), null);
+    assertEquals(moveDockItem(source, 3, 1), null);
+    assertEquals(moveDockItem(source, 1, -1), ["apps", "home", "notes", "ai"]);
+    assertEquals(moveDockItem(source, 1, 1), ["home", "notes", "apps", "ai"]);
+    assertEquals(source, ["home", "apps", "notes", "ai"]);
+    assertEquals(Object.keys(DOCK_SYSTEM_ITEMS), [
+        "home",
+        "apps",
+        "notes",
+        "ai",
+    ]);
 });
