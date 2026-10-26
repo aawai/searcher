@@ -157,3 +157,4 @@
 {"source_id":"SRC-2026-10-25-006","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/line-clamp","format":"web","timestamp":"2026-10-25T08:00:51.765Z","kind":"capture"}
 {"slug":"obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden","title":"dnd-kit default English announcements not overridden","relevance":"medium","timestamp":"2026-10-25T08:04:51.477Z","kind":"observe"}
 {"slug":"obs-2026-10-26-","title":"玻璃效果通透档放宽对比度承诺","relevance":"high","timestamp":"2026-10-26T01:09:50.450Z","kind":"observe"}
+{"slug":"obs-2026-10-26-pr-309-main","title":"首页应用密度与可选底板经 PR 309 合并 main","relevance":"high","timestamp":"2026-10-26T04:01:22.571Z","kind":"observe"}

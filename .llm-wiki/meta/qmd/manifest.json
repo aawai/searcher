@@ -1314,6 +1314,14 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-10-26-pr-309-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-26-pr-309-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-26-pr-309-main",
+      "contentHash": "6809fd91b0a68cce893afa95d2634d06237b3f9e87745fbe260fcb7fac82d9fd",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/sqlite-table-recreation-migration-zero-loss.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/sqlite-table-recreation-migration-zero-loss.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",

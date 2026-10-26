@@ -115,6 +115,7 @@
 - [[sources/obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close]] — Observation: Issue 285 design convergence merged via PR 288–299 and closed *(created: 2026-10-24)*
 - [[sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden]] — Observation: dnd-kit default English announcements not overridden *(created: 2026-10-25)*
 - [[sources/obs-2026-10-26-]] — Observation: 玻璃效果通透档放宽对比度承诺 *(created: 2026-10-26)*
+- [[sources/obs-2026-10-26-pr-309-main]] — Observation: 首页应用密度与可选底板经 PR 309 合并 main *(created: 2026-10-26)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -182,4 +183,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-26T01:09:50.490Z* | *Total pages: 167*
+*Last updated: 2026-10-26T04:01:22.608Z* | *Total pages: 168*

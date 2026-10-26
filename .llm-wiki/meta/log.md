@@ -479,3 +479,6 @@
 ## [2026-10-26T01:09:50.450Z] observe
 - slug: "obs-2026-10-26-", title: "玻璃效果通透档放宽对比度承诺", relevance: "high"
 
+## [2026-10-26T04:01:22.571Z] observe
+- slug: "obs-2026-10-26-pr-309-main", title: "首页应用密度与可选底板经 PR 309 合并 main", relevance: "high"
+

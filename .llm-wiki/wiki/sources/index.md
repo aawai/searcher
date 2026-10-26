@@ -131,4 +131,5 @@
 - [Observation: Issue 285 design convergence merged via PR 288–299 and closed](obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close.md)
 - [Observation: dnd-kit default English announcements not overridden](obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden.md)
 - [Observation: 玻璃效果通透档放宽对比度承诺](obs-2026-10-26-.md)
+- [Observation: 首页应用密度与可选底板经 PR 309 合并 main](obs-2026-10-26-pr-309-main.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

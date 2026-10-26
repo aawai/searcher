@@ -729,6 +729,7 @@
   "sources/obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close": [],
   "sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden": [],
   "sources/obs-2026-10-26-": [],
+  "sources/obs-2026-10-26-pr-309-main": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

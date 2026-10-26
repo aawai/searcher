@@ -2,6 +2,7 @@
 
 ## 2026-10-26
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-26-pr-309-main","title":"首页应用密度与可选底板经 PR 309 合并 main"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-26-","title":"玻璃效果通透档放宽对比度承诺"}
 
 ## 2026-10-25
