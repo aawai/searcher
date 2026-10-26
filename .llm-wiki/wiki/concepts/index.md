@@ -2,6 +2,7 @@
 
 ## Concepts
 
+- [Accessible Grid Drag — Keyboard and Announcements](accessible-grid-drag-keyboard-and-announcements.md)
 - [ARIA Combobox Grouped Suggestions](aria-combobox-grouped-suggestions.md)
 - [Contract First Testing](contract-first-testing.md)
 - [Database Queue Serialization](database-queue-serialization.md)
@@ -11,6 +12,7 @@
 - [Hono RPC & Type-Safe Client](hono-rpc-type-safe-client.md)
 - [Modal Layering and Escape Dismissal](modal-layering-and-escape-dismissal.md)
 - [Offline-First 与 Local Draft 持久化架构](offline-first-%E4%B8%8E-local-draft-%E6%8C%81%E4%B9%85%E5%8C%96%E6%9E%B6%E6%9E%84.md)
+- [Pointer Target Size](pointer-target-size.md)
 - [PWA Service Worker Update Lifecycle](pwa-service-worker-update-lifecycle.md)
 - [React 19 Actions and Transitions](react-19-actions-and-transitions.md)
 - [Route-Level Code Splitting & Dynamic Bundling](route-level-code-splitting-dynamic-bundling.md)
@@ -22,4 +24,6 @@
 - [SQLite Table Recreation Migration](sqlite-table-recreation-migration.md)
 - [Tailwind v4 CSS First Architecture](tailwind-v4-css-first-architecture.md)
 - [View Transitions Shared Element](view-transitions-shared-element.md)
+- [Wallpaper Accent OKLCH Contrast Solver](wallpaper-accent-oklch-contrast-solver.md)
 - [Web Animations API Runtime Architecture](web-animations-api-runtime-architecture.md)
+- [Whole-line Preview Truncation](whole-line-preview-truncation.md)

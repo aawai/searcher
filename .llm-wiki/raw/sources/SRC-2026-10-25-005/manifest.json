@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-25-005",
+  "captured": "2026-10-25",
+  "packet_version": "1.0",
+  "title": "Accessibility",
+  "url": "https://docs.dndkit.com/guides/accessibility",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

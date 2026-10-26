@@ -34,6 +34,9 @@ sources:
 - 样式与视口架构：[[concepts/tailwind-v4-css-first-architecture]]
 - 弹出层与键盘流：[[concepts/modal-layering-and-escape-dismissal]]
 - 事件流推送：[[concepts/server-sent-events-sse-与实时事件流]]
+- 无障碍底线：[[concepts/pointer-target-size]]、[[concepts/accessible-grid-drag-keyboard-and-announcements]]、[[concepts/aria-combobox-grouped-suggestions]]
+- 强调色与对比度：[[concepts/wallpaper-accent-oklch-contrast-solver]]
+- 预览截断：[[concepts/whole-line-preview-truncation]]
 - 综合架构：[[syntheses/searcher-system-architecture]]
 ## 来源
 

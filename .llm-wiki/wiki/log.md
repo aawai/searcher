@@ -1,7 +1,22 @@
 # Wiki Update Log
 
+## 2026-10-26
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-26-","title":"玻璃效果通透档放宽对比度承诺"}
+
+## 2026-10-25
+
+- **observe**: {"relevance":"medium","slug":"obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden","title":"dnd-kit default English announcements not overridden"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-25-006","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/line-clamp"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-25-005","url":"https://docs.dndkit.com/guides/accessibility"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-25-004","url":"https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-25-003","url":"https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-25-002","url":"https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-25-001","url":"https://bottosson.github.io/posts/oklab/"}
+
 ## 2026-10-24
 
+- **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close","title":"Issue 285 design convergence merged via PR 288–299 and closed"}
 - **observe**: {"relevance":"critical","slug":"obs-2026-10-24-issue-241-pr-274-279-281-main","title":"Issue 241 壁纸取色经 PR 274/279/281 合并 main 并关闭"}
 - **capture**: {"format":"web","source_id":"SRC-2026-10-24-010","url":"https://www.w3.org/WAI/ARIA/apg/patterns/combobox/"}
 - **capture**: {"format":"web","source_id":"SRC-2026-10-24-009","url":"https://developer.chrome.com/docs/web-platform/view-transitions/same-document"}

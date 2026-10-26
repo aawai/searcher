@@ -452,3 +452,30 @@
 ## [2026-10-24T08:28:18.272Z] observe
 - slug: "obs-2026-10-24-issue-241-pr-274-279-281-main", title: "Issue 241 壁纸取色经 PR 274/279/281 合并 main 并关闭", relevance: "critical"
 
+## [2026-10-24T19:36:57.485Z] observe
+- slug: "obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close", title: "Issue 285 design convergence merged via PR 288–299 and closed", relevance: "critical"
+
+## [2026-10-25T08:00:41.775Z] capture
+- source_id: "SRC-2026-10-25-001", url: "https://bottosson.github.io/posts/oklab/", format: "web"
+
+## [2026-10-25T08:00:43.334Z] capture
+- source_id: "SRC-2026-10-25-002", url: "https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html", format: "web"
+
+## [2026-10-25T08:00:44.569Z] capture
+- source_id: "SRC-2026-10-25-003", url: "https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html", format: "web"
+
+## [2026-10-25T08:00:45.726Z] capture
+- source_id: "SRC-2026-10-25-004", url: "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html", format: "web"
+
+## [2026-10-25T08:00:49.508Z] capture
+- source_id: "SRC-2026-10-25-005", url: "https://docs.dndkit.com/guides/accessibility", format: "web"
+
+## [2026-10-25T08:00:51.765Z] capture
+- source_id: "SRC-2026-10-25-006", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/line-clamp", format: "web"
+
+## [2026-10-25T08:04:51.477Z] observe
+- slug: "obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden", title: "dnd-kit default English announcements not overridden", relevance: "medium"
+
+## [2026-10-26T01:09:50.450Z] observe
+- slug: "obs-2026-10-26-", title: "玻璃效果通透档放宽对比度承诺", relevance: "high"
+

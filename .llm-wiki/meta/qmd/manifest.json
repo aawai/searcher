@@ -2,6 +2,14 @@
   "version": 1,
   "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
   "entries": {
+    "documents/canonical/concepts/accessible-grid-drag-keyboard-and-announcements.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/accessible-grid-drag-keyboard-and-announcements.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/accessible-grid-drag-keyboard-and-announcements",
+      "contentHash": "d86f6df7f327f37fdf84640d8fefaa72139bb2801be3faae3a8b671bad53b081",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/aria-combobox-grouped-suggestions.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/aria-combobox-grouped-suggestions.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -38,7 +46,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/dnd-kit-2d-grid-sorting-architecture.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/dnd-kit-2d-grid-sorting-architecture",
-      "contentHash": "fe1738d168edc9f3dc0ac7b3bf43e00ea0464c8d5578ddeba12f45674b186451",
+      "contentHash": "d44ec409b914b74e05404031a11e2c75eea202cdb0dfe9f6a52db7203adf3aa5",
       "role": "canonical",
       "type": "concept"
     },
@@ -71,6 +79,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/offline-first-与-local-draft-持久化架构",
       "contentHash": "f20f604f4d219498f2bca16ade3c72d1c449d9ee93ef5d8bf661e31a33b2e54b",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/pointer-target-size.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/pointer-target-size.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/pointer-target-size",
+      "contentHash": "2a4eb7c0dc7a4df1701e797ac23b5857dc4daddb13d13300001746adcdc39b67",
       "role": "canonical",
       "type": "concept"
     },
@@ -162,11 +178,27 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/wallpaper-accent-oklch-contrast-solver.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/wallpaper-accent-oklch-contrast-solver.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/wallpaper-accent-oklch-contrast-solver",
+      "contentHash": "e576a1223395b3d5bb37a377c311d6286fd4d0763a14cf0afb367a75d4dca834",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/web-animations-api-runtime-architecture.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/web-animations-api-runtime-architecture.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/web-animations-api-runtime-architecture",
       "contentHash": "f80bc5ff0f93f9e04bda6187ac8f9f716afb4f2e0f6a33846a671b5388d665b5",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/whole-line-preview-truncation.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/whole-line-preview-truncation.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/whole-line-preview-truncation",
+      "contentHash": "9162d0f45607865ee397d7e81e122c40fe2844f288c31592e7a17896a557e265",
       "role": "canonical",
       "type": "concept"
     },
@@ -182,7 +214,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/dnd-kit-system.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/dnd-kit-system",
-      "contentHash": "347e014cd5b479fba3b52abd34fd41f9bc0a5444c2702d47c92be4d80975cb89",
+      "contentHash": "069453ba7b66970375084b9d4513c83d5913f15d0a124c034f009d224c5e0fb6",
       "role": "canonical",
       "type": "entity"
     },
@@ -222,7 +254,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/searcher-项目.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/searcher-项目",
-      "contentHash": "39fdf4deaed17d31413d59cbd35b9c8ed9573360bbdc9797ec4f9625c42a052a",
+      "contentHash": "1621297d272e011255e7a59f7f16b0cae13ef7e352132ea44d0a55671795516a",
       "role": "canonical",
       "type": "entity"
     },
@@ -671,6 +703,54 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/SRC-2026-10-24-010",
       "contentHash": "82d40a22069e192d91be639328644b863519517dbd7dea0b26ab353186c58263",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-25-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-25-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-25-001",
+      "contentHash": "39da7ad1d565a8e07be52296edb41f09a8c3564d831e61708785c90488bf262c",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-25-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-25-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-25-002",
+      "contentHash": "4fa169c9bde2a1098da5144fa4241e6c67b0e6248dbe7d7c31b20541aae5f36a",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-25-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-25-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-25-003",
+      "contentHash": "80c1667a84e352b31b14e60899c4a82099da33181085d139f41a6632b02e139e",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-25-004.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-25-004.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-25-004",
+      "contentHash": "488c5ceeb26fa1419ed65aabed1933e6a548082697a06b82e597f4575655bade",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-25-005.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-25-005.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-25-005",
+      "contentHash": "5b6474c2a85f12d7008be26b728dfe8dd615e14f4ac5fa8e988ef11d3dd56b8d",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-25-006.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-25-006.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-25-006",
+      "contentHash": "010b842c666ecdd017da27e0920260ca8238c257d9a8c077e209b1e38e681e8c",
       "role": "evidence",
       "type": "source"
     },
@@ -1207,6 +1287,30 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-10-24-issue-241-pr-274-279-281-main",
       "contentHash": "687bc2fd3d73976b45396c46b50e8504c843375706315d3b317f83e579426161",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close",
+      "contentHash": "f1e771413bbd3e4f6006ccad1bf0c2f8491c6505a403f3d04c3c3179a32fd20f",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden",
+      "contentHash": "2287b87c75a5cbfcb018220715c44e623667ee82c0a4596c5e46af2d76e9c0e4",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-26-.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-26-.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-26-",
+      "contentHash": "358b83e95ca14149e810fbffad10ac0715c4c3a2b7a461a666f0e4f225d28f68",
       "role": "evidence",
       "type": "source"
     },

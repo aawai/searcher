@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-25-001",
+  "captured": "2026-10-25",
+  "packet_version": "1.0",
+  "title": "A perceptual color space for image processing",
+  "url": "https://bottosson.github.io/posts/oklab/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

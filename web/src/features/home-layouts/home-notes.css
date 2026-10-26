@@ -43,6 +43,7 @@
 }
 
 .home-note-card {
+    --material-note-solid: var(--material-solid);
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -51,11 +52,28 @@
     padding: var(--space-4);
     overflow: hidden;
     border-radius: var(--radius-lg);
-    background: var(--glass-sheen), var(--material-regular);
+    background: var(--glass-sheen), color-mix(in srgb,
+        var(--material-note-solid) var(--glass-fill-regular), transparent);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     box-shadow: var(--shadow-elevation-material);
     color: var(--foreground);
+}
+
+.home-note-card[data-color="amber"] {
+    --material-note-solid: var(--material-note-amber);
+}
+
+.home-note-card[data-color="rose"] {
+    --material-note-solid: var(--material-note-rose);
+}
+
+.home-note-card[data-color="sage"] {
+    --material-note-solid: var(--material-note-sage);
+}
+
+.home-note-card[data-color="sky"] {
+    --material-note-solid: var(--material-note-sky);
 }
 
 .home-note-head {

@@ -71,7 +71,7 @@ function footprint(tile: LauncherTile): DesktopFootprint {
  *
  * All tiles (plus a trailing 1x1 add cell when `showAdd`) are laid out in
  * canonical order with backfill. When the capacity's last row would contain a
- * single cell, the grid narrows to the fewest columns that keep the same row
+ * single cell, the grid narrows only as far as needed to keep the same row
  * count and leave at least two cells in the last row. Large folders keep the
  * capacity and the existing 2x2 backfill.
  *
@@ -106,7 +106,11 @@ export function planHomeLibrary(
             tile.type === "folder" && tile.group.folderSize === "large"
         )
     ) {
-        for (let candidate = 2; candidate < availableColumns; candidate++) {
+        for (
+            let candidate = availableColumns - 1;
+            candidate >= 2;
+            candidate--
+        ) {
             const candidateRows = Math.ceil(count / candidate);
             const lastRow = count - (candidateRows - 1) * candidate;
             if (candidateRows === originalRows && lastRow >= 2) {

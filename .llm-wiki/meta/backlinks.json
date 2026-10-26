@@ -1,6 +1,14 @@
 {
+  "concepts/accessible-grid-drag-keyboard-and-announcements": [
+    "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "entities/dnd-kit-system",
+    "entities/searcher-项目",
+    "sources/SRC-2026-10-25-005"
+  ],
   "concepts/aria-combobox-grouped-suggestions": [
+    "concepts/pointer-target-size",
     "concepts/react-19-actions-and-transitions",
+    "entities/searcher-项目",
     "sources/SRC-2026-10-24-010"
   ],
   "concepts/contract-first-testing": [
@@ -42,6 +50,7 @@
     "sources/SRC-2026-09-27-005"
   ],
   "concepts/dnd-kit-2d-grid-sorting-architecture": [
+    "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/shortest-column-masonry-layout",
     "entities/dnd-kit-system",
     "sources/SRC-2026-09-25-009",
@@ -53,7 +62,8 @@
     "sources/SRC-2026-09-25-020",
     "sources/SRC-2026-09-25-022",
     "sources/SRC-2026-09-25-024",
-    "sources/SRC-2026-09-25-026"
+    "sources/SRC-2026-09-25-026",
+    "sources/SRC-2026-10-25-005"
   ],
   "concepts/hono-middleware-pipeline-request-intake": [
     "entities/hono-framework",
@@ -70,6 +80,7 @@
     "sources/SRC-2026-09-26-003"
   ],
   "concepts/modal-layering-and-escape-dismissal": [
+    "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/aria-combobox-grouped-suggestions",
     "concepts/tailwind-v4-css-first-architecture",
     "concepts/view-transitions-shared-element",
@@ -82,6 +93,12 @@
     "concepts/pwa-service-worker-update-lifecycle",
     "sources/SRC-2026-09-25-037",
     "sources/SRC-2026-10-24-007"
+  ],
+  "concepts/pointer-target-size": [
+    "concepts/accessible-grid-drag-keyboard-and-announcements",
+    "concepts/wallpaper-accent-oklch-contrast-solver",
+    "entities/searcher-项目",
+    "sources/SRC-2026-10-25-004"
   ],
   "concepts/pwa-service-worker-update-lifecycle": [
     "sources/SRC-2026-10-24-007",
@@ -120,6 +137,7 @@
   ],
   "concepts/shortest-column-masonry-layout": [
     "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "concepts/whole-line-preview-truncation",
     "sources/SRC-2026-09-25-019",
     "sources/SRC-2026-09-25-020",
     "sources/SRC-2026-09-25-022",
@@ -174,6 +192,7 @@
     "sources/SRC-2026-10-24-006"
   ],
   "concepts/tailwind-v4-css-first-architecture": [
+    "concepts/wallpaper-accent-oklch-contrast-solver",
     "entities/searcher-项目",
     "entities/shadcn-ui-system",
     "sources/SRC-2026-09-27-002"
@@ -182,11 +201,22 @@
     "entities/react-19-framework",
     "sources/SRC-2026-10-24-009"
   ],
+  "concepts/wallpaper-accent-oklch-contrast-solver": [
+    "concepts/pointer-target-size",
+    "entities/searcher-项目",
+    "sources/SRC-2026-10-25-001",
+    "sources/SRC-2026-10-25-002",
+    "sources/SRC-2026-10-25-003"
+  ],
   "concepts/web-animations-api-runtime-architecture": [
     "concepts/view-transitions-shared-element",
     "sources/SRC-2026-10-05-003",
     "sources/SRC-2026-10-05-004",
     "sources/SRC-2026-10-24-009"
+  ],
+  "concepts/whole-line-preview-truncation": [
+    "entities/searcher-项目",
+    "sources/SRC-2026-10-25-006"
   ],
   "entities/deno-runtime": [
     "concepts/deno-native-serve-architecture",
@@ -221,6 +251,7 @@
     "syntheses/searcher-system-architecture"
   ],
   "entities/dnd-kit-system": [
+    "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/dnd-kit-2d-grid-sorting-architecture",
     "concepts/shortest-column-masonry-layout",
     "sources/SRC-2026-09-25-009",
@@ -231,7 +262,8 @@
     "sources/SRC-2026-09-25-020",
     "sources/SRC-2026-09-25-022",
     "sources/SRC-2026-09-25-024",
-    "sources/SRC-2026-09-25-026"
+    "sources/SRC-2026-09-25-026",
+    "sources/SRC-2026-10-25-005"
   ],
   "entities/drizzle-sqlite-store": [
     "concepts/database-queue-serialization",
@@ -295,6 +327,7 @@
     "sources/SRC-2026-10-24-009"
   ],
   "entities/searcher-项目": [
+    "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/aria-combobox-grouped-suggestions",
     "concepts/contract-first-testing",
     "concepts/database-queue-serialization",
@@ -302,6 +335,7 @@
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/offline-first-与-local-draft-持久化架构",
+    "concepts/pointer-target-size",
     "concepts/pwa-service-worker-update-lifecycle",
     "concepts/route-level-code-splitting-dynamic-bundling",
     "concepts/server-sent-events-sse-与实时事件流",
@@ -312,7 +346,9 @@
     "concepts/sqlite-table-recreation-migration",
     "concepts/tailwind-v4-css-first-architecture",
     "concepts/view-transitions-shared-element",
+    "concepts/wallpaper-accent-oklch-contrast-solver",
     "concepts/web-animations-api-runtime-architecture",
+    "concepts/whole-line-preview-truncation",
     "entities/deno-runtime",
     "entities/dnd-kit-system",
     "entities/drizzle-sqlite-store",
@@ -361,6 +397,12 @@
     "sources/SRC-2026-10-24-008",
     "sources/SRC-2026-10-24-009",
     "sources/SRC-2026-10-24-010",
+    "sources/SRC-2026-10-25-001",
+    "sources/SRC-2026-10-25-002",
+    "sources/SRC-2026-10-25-003",
+    "sources/SRC-2026-10-25-004",
+    "sources/SRC-2026-10-25-005",
+    "sources/SRC-2026-10-25-006",
     "syntheses/searcher-system-architecture"
   ],
   "entities/shadcn-ui-system": [
@@ -585,6 +627,28 @@
   "sources/SRC-2026-10-24-010": [
     "concepts/aria-combobox-grouped-suggestions"
   ],
+  "sources/SRC-2026-10-25-001": [
+    "concepts/wallpaper-accent-oklch-contrast-solver"
+  ],
+  "sources/SRC-2026-10-25-002": [
+    "concepts/wallpaper-accent-oklch-contrast-solver",
+    "sources/SRC-2026-10-25-003"
+  ],
+  "sources/SRC-2026-10-25-003": [
+    "concepts/wallpaper-accent-oklch-contrast-solver",
+    "sources/SRC-2026-10-25-002"
+  ],
+  "sources/SRC-2026-10-25-004": [
+    "concepts/pointer-target-size"
+  ],
+  "sources/SRC-2026-10-25-005": [
+    "concepts/accessible-grid-drag-keyboard-and-announcements",
+    "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "entities/dnd-kit-system"
+  ],
+  "sources/SRC-2026-10-25-006": [
+    "concepts/whole-line-preview-truncation"
+  ],
   "sources/e2e-native-parallel-speedup-vs-stability-167": [],
   "sources/e2e-parallel-default-enabled-171": [],
   "sources/issue-174-data-router-session-leave-guard": [],
@@ -662,6 +726,9 @@
   "sources/obs-2026-10-24-issue-238-pwa-pr-263-264-265-main": [],
   "sources/obs-2026-10-24-issue-239-pr-266-267-main": [],
   "sources/obs-2026-10-24-issue-241-pr-274-279-281-main": [],
+  "sources/obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close": [],
+  "sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden": [],
+  "sources/obs-2026-10-26-": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",
