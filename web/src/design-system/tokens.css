@@ -61,13 +61,6 @@
     --canvas-mesh-accent-mix: 24%;
     --canvas-mesh-secondary-mix: 50%;
 
-    /* Home note domain colours tint Material without changing its glass tier.
-       One OKLCH lightness and chroma per theme (light L 0.90 / C 0.06), hues
-       spread around the wheel, so no colour shouts louder than another. */
-    --material-note-amber: #F3DAB2;
-    --material-note-rose: #FFCEE0;
-    --material-note-sage: #C6E9C6;
-    --material-note-sky: #BBE4FF;
     /* Free cells while a home note is being moved. */
     --home-note-slot-fill: rgb(255 255 255 / 0.24);
     --home-note-slot-ring: rgb(0 0 0 / 0.28);
@@ -312,11 +305,6 @@
     --shadow-document-paper: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 2px 8px -2px rgb(0 0 0 / 0.4);
     /* Dark materials lift from the soft surface so they read against the canvas. */
     --material-solid: var(--surface-soft);
-    /* Dark: OKLCH L 0.385 / C 0.068 — lifted from the old near-black tints. */
-    --material-note-amber: #573F12;
-    --material-note-rose: #603345;
-    --material-note-sage: #2B4D2C;
-    --material-note-sky: #1C4864;
     --home-note-slot-fill: rgb(255 255 255 / 0.06);
     --home-note-slot-ring: rgb(255 255 255 / 0.32);
     --glass-edge-top: rgb(255 255 255 / 0.32);

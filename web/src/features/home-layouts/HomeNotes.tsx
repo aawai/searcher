@@ -19,11 +19,7 @@ import type {
     RefObject,
 } from "react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type {
-    DocumentColor,
-    DocumentLayoutDto,
-    DocumentNoteSize,
-} from "@shared/documents.ts";
+import type { DocumentLayoutDto, DocumentNoteSize } from "@shared/documents.ts";
 import { HOME_NOTE_GRID } from "../../design-system/home-grid.ts";
 import {
     type Band,
@@ -293,7 +289,6 @@ export function HomeNotes(
         onOpen,
         onUpdateLayouts,
         onToggleHomeFixed,
-        onChangeColor,
         onToggleTask,
         editingNoteId,
         onDelete,
@@ -309,7 +304,6 @@ export function HomeNotes(
             changes: ReadonlyArray<HomeNoteLayoutChange>,
         ) => Promise<void> | void;
         onToggleHomeFixed?: (note: HomeNoteItem) => void;
-        onChangeColor?: (note: HomeNoteItem, color: DocumentColor) => void;
         onToggleTask?: (
             note: HomeNoteItem,
             index: number,
@@ -590,7 +584,6 @@ export function HomeNotes(
             onOpen={() => onOpen?.(note)}
             onResize={(size) => resize(note, size)}
             onToggleHomeFixed={() => onToggleHomeFixed?.(note)}
-            onChangeColor={(color) => onChangeColor?.(note, color)}
             onToggleTask={note.id === editingNoteId
                 ? undefined
                 : onToggleTask &&
