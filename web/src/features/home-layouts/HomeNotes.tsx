@@ -20,7 +20,10 @@ import type {
 } from "react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { DocumentLayoutDto, DocumentNoteSize } from "@shared/documents.ts";
-import { HOME_NOTE_GRID } from "../../design-system/home-grid.ts";
+import {
+    HOME_BOTTOM_CLEARANCE,
+    HOME_NOTE_GRID,
+} from "../../design-system/home-grid.ts";
 import {
     type Band,
     canSaveHomeNoteCell,
@@ -43,6 +46,7 @@ import {
 } from "./home-grid-cells.ts";
 import { HomeNoteCard } from "./HomeNoteCard.tsx";
 import type { HomeNoteItem } from "./home-notes.ts";
+import type { SafeRect } from "./home-viewport.ts";
 import "./home-notes.css";
 
 interface Metrics {
@@ -51,6 +55,9 @@ interface Metrics {
     searchTop: number;
     blockBottom: number;
     topLimit: number;
+    leftLimit: number;
+    rightLimit: number;
+    bottomClearance: number;
     shelfGap: number;
     obstacles: PixelRect[];
     viewportWidth: number;
@@ -109,6 +116,9 @@ function sameMetrics(a: Metrics | null, b: Metrics): boolean {
         "searchTop",
         "blockBottom",
         "topLimit",
+        "leftLimit",
+        "rightLimit",
+        "bottomClearance",
         "shelfGap",
         "viewportWidth",
         "viewportHeight",
@@ -133,6 +143,7 @@ function sameMetrics(a: Metrics | null, b: Metrics): boolean {
 function useBlockMetrics(
     heroRef: RefObject<HTMLElement | null>,
     gridElement: HTMLElement | null,
+    availableRect?: SafeRect,
 ): Metrics | null {
     const [metrics, setMetrics] = useState<Metrics | null>(null);
     useLayoutEffect(() => {
@@ -147,6 +158,43 @@ function useBlockMetrics(
             const topbarRect = toRect(document.querySelector(".topbar"));
             const gap = readToken("--home-note-gap", HOME_NOTE_GRID.wide.gap);
             const inset = readToken("--space-page-inline", 32);
+            const shell = document.querySelector(".app-shell");
+            const dockStyle = shell
+                ? getComputedStyle(shell)
+                : getComputedStyle(document.documentElement);
+            const dockTop = Math.max(
+                0,
+                parseFloat(dockStyle.getPropertyValue("--dock-inset-top")) || 0,
+            );
+            const dockRight = Math.max(
+                0,
+                parseFloat(dockStyle.getPropertyValue("--dock-inset-right")) ||
+                    0,
+            );
+            const dockBottom = Math.max(
+                0,
+                parseFloat(dockStyle.getPropertyValue("--dock-inset-bottom")) ||
+                    0,
+            );
+            const dockLeft = Math.max(
+                0,
+                parseFloat(dockStyle.getPropertyValue("--dock-inset-left")) ||
+                    0,
+            );
+            const baseTopLimit = topbarRect
+                ? topbarRect.y + topbarRect.height + gap
+                : inset;
+            const measuredLeftLimit = inset + dockLeft;
+            const measuredRightLimit = innerWidth - inset - dockRight;
+            const leftLimit = availableRect && availableRect.width > 0
+                ? Math.max(measuredLeftLimit, availableRect.x)
+                : measuredLeftLimit;
+            const rightLimit = availableRect && availableRect.width > 0
+                ? Math.min(
+                    measuredRightLimit,
+                    availableRect.x + availableRect.width,
+                )
+                : measuredRightLimit;
             const next: Metrics = {
                 left: searchRect.x,
                 width: searchRect.width,
@@ -154,9 +202,13 @@ function useBlockMetrics(
                 blockBottom: plateRect
                     ? plateRect.y + plateRect.height
                     : searchRect.y + searchRect.height,
-                topLimit: topbarRect
-                    ? topbarRect.y + topbarRect.height + gap
-                    : inset,
+                topLimit: Math.max(baseTopLimit, dockTop + gap),
+                leftLimit,
+                rightLimit,
+                bottomClearance: Math.max(
+                    HOME_BOTTOM_CLEARANCE,
+                    dockBottom + gap,
+                ),
                 // The shelf repeats the search → plate rhythm below the plate.
                 shelfGap: readToken("--space-5", 20),
                 obstacles: [searchRect, calmRect, plateRect].filter(
@@ -179,18 +231,32 @@ function useBlockMetrics(
                 heroRef.current,
                 heroRef.current?.querySelector(".search-form-wrap"),
                 gridElement?.closest(".launcher-plate"),
+                document.querySelector(".dock-container"),
             ]
         ) {
             if (element) observer.observe(element);
+        }
+        const mutationObserver = new MutationObserver(measure);
+        mutationObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["style", "data-dock-edge"],
+        });
+        const shell = document.querySelector(".app-shell");
+        if (shell) {
+            mutationObserver.observe(shell, {
+                attributes: true,
+                attributeFilter: ["style", "data-dock-edge"],
+            });
         }
         addEventListener("resize", measure);
         void document.fonts.ready.then(measure);
         return () => {
             active = false;
             observer.disconnect();
+            mutationObserver.disconnect();
             removeEventListener("resize", measure);
         };
-    }, [heroRef, gridElement]);
+    }, [heroRef, gridElement, availableRect]);
     return metrics;
 }
 
@@ -284,6 +350,7 @@ export function HomeNotes(
     {
         notes,
         viewportWidth,
+        availableRect,
         heroRef,
         gridElement,
         onOpen,
@@ -296,6 +363,7 @@ export function HomeNotes(
     }: {
         notes: HomeNoteItem[];
         viewportWidth: number;
+        availableRect?: SafeRect;
         heroRef: RefObject<HTMLElement | null>;
         gridElement: HTMLElement | null;
         onOpen?: (note: HomeNoteItem) => void;
@@ -315,7 +383,7 @@ export function HomeNotes(
         onOpenLibrary?: () => void;
     },
 ) {
-    const metrics = useBlockMetrics(heroRef, gridElement);
+    const metrics = useBlockMetrics(heroRef, gridElement, availableRect);
     const [preview, setPreview] = useState<Preview | null>(null);
     const [draggingId, setDraggingId] = useState<string | null>(null);
     const [announcement, setAnnouncement] = useState("");

@@ -49,6 +49,7 @@ type Metrics = {
         remainderCount: number;
     }>;
     moreLabel: string | null;
+    dockBottom: number;
 };
 
 type Fixtures = {
@@ -386,6 +387,13 @@ async function collectMetrics(
             folders,
             moreLabel: grid.querySelector("[data-library-cell='more']")
                 ?.getAttribute("aria-label") ?? null,
+            dockBottom: Math.max(
+                0,
+                px(
+                    getComputedStyle(document.documentElement)
+                        .getPropertyValue("--dock-inset-bottom"),
+                ),
+            ),
         };
     }, { fixture: fixtures, selector });
 }
@@ -453,14 +461,18 @@ function assertDensity(
     // must not fit.
     const viewportHeight = viewport.height;
     const plateBottom = metrics.grid.bottom + metrics.platePadding;
+    const clearance = Math.max(
+        BOTTOM_CLEARANCE,
+        metrics.dockBottom + metrics.rowGap,
+    );
     assert(
-        plateBottom <= viewportHeight - BOTTOM_CLEARANCE + 0.75,
-        `Plate bottom ${plateBottom} must keep ${BOTTOM_CLEARANCE}px clear of the ${viewportHeight}px viewport`,
+        plateBottom <= viewportHeight - clearance + 0.75,
+        `Plate bottom ${plateBottom} must keep ${clearance}px clear of the ${viewportHeight}px viewport`,
     );
     if (metrics.rowTracks.length < HOME_MAX_ROWS) {
         assert(
             plateBottom + metrics.rowHeight + metrics.rowGap >
-                viewportHeight - BOTTOM_CLEARANCE - 0.75,
+                viewportHeight - clearance - 0.75,
             `Another row would still fit: plate bottom ${plateBottom}, viewport ${viewportHeight}`,
         );
     }
@@ -924,13 +936,12 @@ async function runDesktopMatrix(
                 assertDensity(metrics, viewport, false, fixtures.rootTileCount);
                 assertFolderPreviews(metrics, false);
                 if (viewport.height === 768) {
-                    // Four 76px rows with 12px gaps are 4 * 88 - 12 = 340px,
-                    // which fits the 348.16px a 1366x768 plate holds below its
-                    // grid top: the short window keeps all four rows.
+                    // With the 68px bottom dock active, 1366x768 reserves 80px bottom
+                    // clearance (768 - 355.84 - 80 - 16 = 316.16px) and fits three 76px rows.
                     assertEquals(
                         metrics.rowTracks.length,
-                        HOME_MAX_ROWS,
-                        `1366x768 fits four rows: ${metrics.rowTracks.length}`,
+                        3,
+                        `1366x768 fits three rows above the bottom dock: ${metrics.rowTracks.length}`,
                     );
                 }
                 await page.screenshot({

@@ -138,7 +138,7 @@ export function useHomeViewport(): HomeViewport {
             resizeObserver.disconnect();
             for (
                 const element of document.querySelectorAll(
-                    ".topbar, .connection-banner",
+                    ".topbar, .connection-banner, .dock-container",
                 )
             ) {
                 resizeObserver.observe(element);
@@ -146,7 +146,7 @@ export function useHomeViewport(): HomeViewport {
             schedule();
         };
         const mutationObserver = new MutationObserver(observeChrome);
-        mutationObserver.observe(document.body, {
+        mutationObserver.observe(document.documentElement, {
             childList: true,
             subtree: true,
             attributes: true,

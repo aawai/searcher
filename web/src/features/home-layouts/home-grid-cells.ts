@@ -15,6 +15,7 @@ import {
     type HomeNoteBand,
     homeNoteCellsOverlap,
 } from "@shared/documents.ts";
+import { HOME_BOTTOM_CLEARANCE } from "../../design-system/home-grid.ts";
 
 export type Band = HomeNoteBand;
 
@@ -73,8 +74,7 @@ export function pitch(grid: CellGrid): number {
     return grid.cell + grid.gap;
 }
 
-/** Home rows stop this far above the viewport bottom (Y4-C4). */
-export const HOME_BOTTOM_CLEARANCE = 48;
+export { HOME_BOTTOM_CLEARANCE };
 
 /** The search box centre sits at 38% of the viewport (VISUAL_LANGUAGE home prototype). */
 export const HOME_SEARCH_ANCHOR = 0.38;
@@ -97,6 +97,9 @@ export interface HomeBlockGeometry {
     gap: number;
     /** Page margin that notes must stay inside. */
     inset: number;
+    /** Optional asymmetric horizontal bounds (e.g. inset + dockInsetLeft / viewportWidth - inset - dockInsetRight). */
+    leftLimit?: number;
+    rightLimit?: number;
     bottomClearance?: number;
 }
 
@@ -127,10 +130,13 @@ function rowsBelow(
  */
 export function homeGridFromBlock(geometry: HomeBlockGeometry): CellGrid {
     const step = geometry.cell + geometry.gap;
+    const leftLimit = geometry.leftLimit ?? geometry.inset;
+    const rightLimit = geometry.rightLimit ??
+        geometry.viewportWidth - geometry.inset;
     const left: number[] = [];
     for (
         let x = geometry.left - geometry.gap - geometry.cell;
-        x >= geometry.inset - 0.5;
+        x >= leftLimit - 0.5;
         x -= step
     ) {
         left.push(x);
@@ -138,7 +144,7 @@ export function homeGridFromBlock(geometry: HomeBlockGeometry): CellGrid {
     const right: number[] = [];
     for (
         let x = geometry.left + geometry.width + geometry.gap;
-        x + geometry.cell <= geometry.viewportWidth - geometry.inset + 0.5;
+        x + geometry.cell <= rightLimit + 0.5;
         x += step
     ) {
         right.push(x);

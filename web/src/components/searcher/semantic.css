@@ -349,7 +349,7 @@
 .status-banner[data-presentation="floating"],
 .undo-toast {
     position: fixed;
-    inset-block-end: var(--space-8);
+    inset-block-end: calc(var(--space-8) + var(--dock-inset-bottom, 0px));
     inset-inline-start: 50%;
     transform: translateX(-50%);
     max-width: calc(100% - 2 * var(--space-page-inline));
@@ -367,13 +367,6 @@
 }
 .status-banner[data-presentation="floating"] {
     padding: var(--space-2) var(--space-4);
-}
-@media (max-width: 767px) {
-    .status-banner[data-presentation="floating"],
-    .undo-toast[data-placement="floating"] {
-        inset-block-end: calc(env(safe-area-inset-bottom, 0px) +
-            var(--control-touch-target) + var(--space-8));
-    }
 }
 /* Starting styles and exit styles share transitions, so closing mid-enter
    reverses from the current frame instead of cancelling an entrance animation. */

@@ -365,3 +365,32 @@ Deno.test("composition keeps the 38% anchor unless the lower third is requested"
         72,
     );
 });
+
+Deno.test("asymmetric dock limits drop only the overlapping side band and preserve saved coordinates", () => {
+    // 1096x900: 640px block is at x = 228..868; left col 0 is x = 36..216,
+    // right col 0 is x = 880..1060. A 68px left dock sets leftLimit = 100.
+    const leftDocked = homeGridFromBlock(
+        geometry(1096, 900, 314, 200, {
+            leftLimit: 32 + 68,
+            rightLimit: 1096 - 32,
+        }),
+    );
+    assertEquals(bandOf(leftDocked, "left"), undefined);
+    assertEquals(bandOf(leftDocked, "right")?.columns, [880]);
+
+    const rightDocked = homeGridFromBlock(
+        geometry(1096, 900, 314, 200, {
+            leftLimit: 32,
+            rightLimit: 1096 - 32 - 68,
+        }),
+    );
+    assertEquals(bandOf(rightDocked, "left")?.columns, [36]);
+    assertEquals(bandOf(rightDocked, "right"), undefined);
+
+    const savedLeft = homeNote("left-note", { band: "left", col: 0, row: 0 });
+    const { placed } = placeHomeNotes([savedLeft], leftDocked);
+    assertEquals(cells(placed), [["left-note", "right", 0, 0, 1]]);
+    assertEquals(savedLeft.band, "left");
+    assertEquals(savedLeft.col, 0);
+    assertEquals(savedLeft.row, 0);
+});

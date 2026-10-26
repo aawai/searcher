@@ -1573,6 +1573,7 @@ export function SearchHome() {
                 <ZenLayout
                     {...layoutProps}
                     viewportWidth={home.viewportWidth}
+                    availableRect={home.availableRect}
                 />
                 {user && (
                     <WorkspaceShell

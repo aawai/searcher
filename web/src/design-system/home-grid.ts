@@ -16,3 +16,6 @@ export const HOME_NOTE_GRID = {
 } as const;
 
 export const HOME_GRID_VIEWPORT_INSET = "--home-grid-viewport-inset";
+
+/** Home rows and the app plate stop at least this far above the bottom edge. */
+export const HOME_BOTTOM_CLEARANCE = 48;

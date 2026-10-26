@@ -3,9 +3,10 @@ import {
     type DesktopFootprint,
 } from "./desktopLayout.ts";
 import type { LauncherTile } from "./launcherTiles.ts";
+import { HOME_BOTTOM_CLEARANCE } from "../../design-system/home-grid.ts";
 
+export { HOME_BOTTOM_CLEARANCE };
 export const HOME_MAX_ROWS = 4;
-export const HOME_BOTTOM_CLEARANCE = 48;
 
 /**
  * Number of grid rows that fit between the measured grid top and the viewport
@@ -21,6 +22,7 @@ export function effectiveRows(
         rowPitch,
         rowGap = 0,
         bottomClearance = HOME_BOTTOM_CLEARANCE,
+        dockInsetBottom = 0,
         maxRows = HOME_MAX_ROWS,
         platePadding = 0,
     }: {
@@ -30,14 +32,19 @@ export function effectiveRows(
         rowPitch: number;
         rowGap?: number;
         bottomClearance?: number;
+        dockInsetBottom?: number;
         maxRows?: number;
         platePadding?: number;
     },
 ): number {
     if (!Number.isFinite(rowPitch) || rowPitch <= 0) return 1;
+    const dockBottom = Number.isFinite(dockInsetBottom)
+        ? Math.max(0, dockInsetBottom)
+        : 0;
+    const clearance = Math.max(bottomClearance, dockBottom + rowGap);
     const raw = Math.floor(
-        (layoutViewportHeight - gridTop - bottomClearance - platePadding +
-            rowGap) / rowPitch,
+        (layoutViewportHeight - gridTop - clearance - platePadding + rowGap) /
+            rowPitch,
     );
     if (!Number.isFinite(raw)) return 1;
     return Math.min(Math.max(raw, 1), maxRows);

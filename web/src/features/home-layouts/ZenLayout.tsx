@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import type { SafeRect } from "./home-viewport.ts";
 import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
 import {
@@ -26,7 +27,10 @@ const HomeNotes = lazy(() =>
 );
 
 export function ZenLayout(
-    props: HomeLayoutProps & { viewportWidth: number },
+    props: HomeLayoutProps & {
+        viewportWidth: number;
+        availableRect?: SafeRect;
+    },
 ) {
     const {
         user,
@@ -115,6 +119,7 @@ export function ZenLayout(
             <HomeNotes
                 notes={homeNotes}
                 viewportWidth={props.viewportWidth}
+                availableRect={props.availableRect}
                 heroRef={heroRef}
                 gridElement={gridElement}
                 onOpen={openNote}
