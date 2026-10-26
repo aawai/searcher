@@ -29,6 +29,7 @@ type Metrics = {
     columns: number;
     formulaColumns: number;
     cell: number;
+    platePadding: number;
     rowHeight: number;
     columnGap: number;
     rowGap: number;
@@ -70,6 +71,7 @@ const TOUCH_VIEWPORTS: Viewport[] = [
 const THEMES: Theme[] = ["light", "dark"];
 const HOME = ".launcher-library .launcher-grid--home";
 const BOTTOM_CLEARANCE = 48;
+const HOME_MAX_ROWS = 4;
 
 function assertNear(
     actual: number,
@@ -83,16 +85,16 @@ function assertNear(
     );
 }
 
-/** Documented tracks: standard 84/12 desktop, 64/6 mobile; touch 88/12, 68/4. */
+/** Documented tracks: standard 76/12 desktop, 64/6 mobile; touch 80/8, 68/4. */
 function expectedGeometry(viewport: Viewport, coarse: boolean): Geometry {
     const wide = viewport.width >= 768;
     if (coarse) {
         return wide
-            ? { cell: 88, gap: 12, glyph: 48 }
+            ? { cell: 80, gap: 8, glyph: 48 }
             : { cell: 68, gap: 4, glyph: 44 };
     }
     return wide
-        ? { cell: 84, gap: 12, glyph: 48 }
+        ? { cell: 76, gap: 12, glyph: 48 }
         : { cell: 64, gap: 6, glyph: 44 };
 }
 
@@ -274,6 +276,8 @@ async function collectMetrics(
         );
         const cell = px(gridStyle.getPropertyValue("--launcher-col-w"));
         const columnGap = px(gridStyle.columnGap);
+        const rowHeight = px(gridStyle.getPropertyValue("--launcher-row-h"));
+        const rowGap = px(gridStyle.rowGap);
         const box = (rect: DOMRect) => ({
             x: rect.x,
             y: rect.y,
@@ -365,9 +369,10 @@ async function collectMetrics(
                 Math.floor((availableWidth + columnGap) / (cell + columnGap)),
             ),
             cell,
-            rowHeight: px(gridStyle.getPropertyValue("--launcher-row-h")),
+            rowHeight,
             columnGap,
-            rowGap: px(gridStyle.rowGap),
+            rowGap,
+            platePadding: px(containerStyle.paddingBottom),
             columnTracks: gridStyle.gridTemplateColumns.split(" ").map(
                 Number.parseFloat,
             ),
@@ -409,7 +414,8 @@ function assertDensity(
         "Computed CSS column tracks",
     );
     assert(
-        metrics.rowTracks.length >= 1 && metrics.rowTracks.length <= 4,
+        metrics.rowTracks.length >= 1 &&
+            metrics.rowTracks.length <= HOME_MAX_ROWS,
         `Home shows at most four rows: ${metrics.rowTracks.length}`,
     );
     assert(
@@ -440,19 +446,22 @@ function assertDensity(
     assertNear(metrics.glyph.width, glyph, "Home app glyph width");
     assertNear(metrics.glyph.height, glyph, "Home app glyph height");
 
-    // The tiles cover every row the viewport can hold: either four rows, or
-    // one more row (counted by its pitch: row plus gap) would break the 48px
-    // bottom clearance.
+    // The plate keeps 48px clear of the viewport bottom. N rows are
+    // N * (row height + row gap) - gap tall (no gap after the last row), so
+    // while the plan holds fewer than the four-row maximum, one more row
+    // (row height + gap) below the last row plus the plate's bottom padding
+    // must not fit.
     const viewportHeight = viewport.height;
+    const plateBottom = metrics.grid.bottom + metrics.platePadding;
     assert(
-        metrics.grid.bottom <= viewportHeight - BOTTOM_CLEARANCE + 0.75,
-        `Grid bottom ${metrics.grid.bottom} must keep ${BOTTOM_CLEARANCE}px clear of the ${viewportHeight}px viewport`,
+        plateBottom <= viewportHeight - BOTTOM_CLEARANCE + 0.75,
+        `Plate bottom ${plateBottom} must keep ${BOTTOM_CLEARANCE}px clear of the ${viewportHeight}px viewport`,
     );
-    if (metrics.rowTracks.length < 4) {
+    if (metrics.rowTracks.length < HOME_MAX_ROWS) {
         assert(
-            metrics.grid.bottom + pitch + gap >
+            plateBottom + metrics.rowHeight + metrics.rowGap >
                 viewportHeight - BOTTOM_CLEARANCE - 0.75,
-            `Another row would still fit: bottom ${metrics.grid.bottom}, viewport ${viewportHeight}`,
+            `Another row would still fit: plate bottom ${plateBottom}, viewport ${viewportHeight}`,
         );
     }
 
@@ -542,7 +551,7 @@ async function assertTouchTarget(
     );
 }
 
-async function assertHomeHitTargets(page: Page) {
+async function assertHomeHitTargets(page: Page, rootTileCount: number) {
     const grid = page.locator(HOME);
     await assertTouchTarget(
         grid.locator(".launcher-tile:not([data-folder-id]) .webapp-icon")
@@ -562,12 +571,25 @@ async function assertHomeHitTargets(page: Page) {
         "Large folder opener strip",
         "bottom-edge",
     );
-    // Over capacity the last cell is 更多（N）; otherwise the add cell is shown.
-    const overflowCell = grid.locator(
-        "[data-library-cell='more'], [data-library-cell='add']",
+    // The add cell only fills an empty home grid. Beside tiles the grid either
+    // overflows into exactly one 更多（N） cell or ends with its last tile.
+    assertEquals(
+        await grid.locator("[data-library-cell='add']").count(),
+        0,
+        "A home grid with tiles shows no add cell",
     );
-    assertEquals(await overflowCell.count(), 1, "One trailing library cell");
-    await assertTouchTarget(overflowCell, "Trailing library cell");
+    const moreCell = grid.locator("[data-library-cell='more']");
+    const moreCount = await moreCell.count();
+    assert(moreCount <= 1, `At most one 更多 cell, got ${moreCount}`);
+    if (moreCount === 1) {
+        await assertTouchTarget(moreCell, "更多（N） cell");
+        return;
+    }
+    assertEquals(
+        await grid.locator(":scope > .launcher-tile[data-tile-id]").count(),
+        rootTileCount,
+        "Without overflow every root tile sits on the grid",
+    );
 }
 
 /** Open an app context menu: a real right-click, as on the other home specs. */
@@ -614,7 +636,7 @@ async function runTouchInteractions(
     assertEquals(
         await grid.locator("[data-library-cell='add']").count(),
         0,
-        "Arranging hides the add cell",
+        "Arranging keeps the empty-state add cell off the tiled home grid",
     );
     await assertTouchTarget(apps.first(), "App target while arranging");
     await assertTouchTarget(
@@ -825,7 +847,7 @@ async function runTouchMatrix(
                     true,
                 );
                 assertFolderPreviews(metrics, true);
-                await assertHomeHitTargets(page);
+                await assertHomeHitTargets(page, fixtures.rootTileCount);
                 assertEquals(
                     await page.evaluate(() =>
                         document.documentElement.scrollWidth > innerWidth
@@ -902,9 +924,13 @@ async function runDesktopMatrix(
                 assertDensity(metrics, viewport, false, fixtures.rootTileCount);
                 assertFolderPreviews(metrics, false);
                 if (viewport.height === 768) {
-                    assert(
-                        metrics.rowTracks.length <= 3,
-                        `Short desktop viewports show three rows or fewer: ${metrics.rowTracks.length}`,
+                    // Four 76px rows with 12px gaps are 4 * 88 - 12 = 340px,
+                    // which fits the 348.16px a 1366x768 plate holds below its
+                    // grid top: the short window keeps all four rows.
+                    assertEquals(
+                        metrics.rowTracks.length,
+                        HOME_MAX_ROWS,
+                        `1366x768 fits four rows: ${metrics.rowTracks.length}`,
                     );
                 }
                 await page.screenshot({

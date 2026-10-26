@@ -66,6 +66,8 @@ export interface HomeAppLibraryProps {
     onRetry: () => void;
     /** `showHomeApps`: render the grid; popups stay reachable either way. */
     showGrid: boolean;
+    /** `showHomeAppPlate`: paint the Material plate behind the home grid. */
+    showPlate: boolean;
     showAppLabels: boolean;
     managing: boolean;
     onManagingChange: (managing: boolean) => void;
@@ -154,6 +156,7 @@ export const HomeAppLibrary = forwardRef<
     error,
     onRetry,
     showGrid,
+    showPlate,
     showAppLabels,
     managing,
     onManagingChange,
@@ -185,7 +188,12 @@ export const HomeAppLibrary = forwardRef<
     const root = useRef<HTMLDivElement>(null);
     const layoutHeight = useLayoutViewportHeight();
     const [metrics, setMetrics] = useState<
-        { gridTop: number; rowPitch: number; platePadding: number } | null
+        {
+            gridTop: number;
+            rowPitch: number;
+            rowGap: number;
+            platePadding: number;
+        } | null
     >(null);
 
     useLayoutEffect(() => {
@@ -204,11 +212,13 @@ export const HomeAppLibrary = forwardRef<
                 // Document coordinates: scrolling must not change the plan.
                 gridTop: grid.getBoundingClientRect().top + scrollY,
                 rowPitch: cell + gap,
+                rowGap: gap,
                 platePadding,
             };
             setMetrics((previous) =>
                 previous?.gridTop === next.gridTop &&
                     previous.rowPitch === next.rowPitch &&
+                    previous.rowGap === next.rowGap &&
                     previous.platePadding === next.platePadding
                     ? previous
                     : next
@@ -228,12 +238,12 @@ export const HomeAppLibrary = forwardRef<
             layoutViewportHeight: layoutHeight,
             gridTop: metrics.gridTop,
             rowPitch: metrics.rowPitch,
+            rowGap: metrics.rowGap,
             platePadding: metrics.platePadding,
         })
         : HOME_MAX_ROWS;
     const plan = useMemo(
-        () =>
-            planHomeLibrary({ tiles: homeTiles, columns, rows, showAdd: true }),
+        () => planHomeLibrary({ tiles: homeTiles, columns, rows }),
         [homeTiles, columns, rows],
     );
 
@@ -447,6 +457,7 @@ export const HomeAppLibrary = forwardRef<
                         <ContextMenu>
                             <ContextMenuTrigger
                                 className="launcher-surface-wrap launcher-plate"
+                                data-plate={showPlate ? undefined : "hidden"}
                                 role="group"
                                 tabIndex={0}
                                 aria-label="应用库空白区域"
@@ -590,13 +601,7 @@ function FolderLayer({
     const { gridRef, columns } = useGridColumns();
     const tiles = useMemo(() => memberTiles(members), [members]);
     const plan: HomeLibraryPlan = useMemo(
-        () =>
-            planHomeLibrary({
-                tiles,
-                columns,
-                rows: FOLDER_POPUP_ROWS,
-                showAdd: false,
-            }),
+        () => planHomeLibrary({ tiles, columns, rows: FOLDER_POPUP_ROWS }),
         [tiles, columns],
     );
     const ids = tiles.map((tile) => tile.id);

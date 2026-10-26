@@ -45,9 +45,9 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
 - 布局断点只用 Visual Language 登记的 640 / 768 / 1024，`max-width` 使用前一像素；
   640px 起进入小档，不再同时命中窄档。JS / TSX 引用 `design-system/breakpoints.ts`，
   不在组件中写数字媒体查询；触屏能力使用 `any-pointer: coarse`。
-- 首页 `tokens.css` 的 `--home-grid-*` 拥有单元、间距、中轴与搜索框 / 应用底板外缘对齐线；
-  Launcher、首页笔记与安全视口消费同组 Token。默认笔记间距来自 `home-grid.ts`，
-  CSS / TS 数值镜像由单元测试保护。首页笔记的分带网格数学（两侧负行、底板下方 shelf、
+- 首页 `tokens.css` 的 `--home-grid-*` 拥有应用方格、间距、中轴与搜索框 / 应用底板外缘对齐线，
+  `--home-note-*` 拥有与应用方格脱钩的笔记单元与间距；Launcher 消费前者，首页笔记消费后者。
+  `home-grid.ts` 的 `HOME_GRID` / `HOME_NOTE_GRID` 是数值镜像，由单元测试保护。首页笔记的分带网格数学（两侧负行、底板下方 shelf、
   默认落点、最近空闲单元）在 `home-grid-cells.ts`；吸附、交换、键盘移动与溢出入口由
   `HomeNotes.tsx` 和 `home-notes.css` 唯一管理。768–1023px 的两列流式与 <768px 纵向堆叠
   是该组件的正常流分支，不再单独维护 220px 笔记行。

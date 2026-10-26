@@ -357,7 +357,7 @@
     z-index: var(--elevation-local-3);
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-home-grid-gap);
+    gap: var(--space-home-note-gap);
     width: var(--home-grid-content-width);
     margin: 0 auto calc(var(--space-10) + env(safe-area-inset-bottom, 0px));
     pointer-events: auto;
@@ -365,7 +365,7 @@
 
 .home-grid-lab[data-flow="true"] .home-grid-lab__note {
     position: relative;
-    block-size: calc(2 * var(--home-grid-cell) + var(--home-grid-gap));
+    block-size: var(--home-note-cell);
     inline-size: 100%;
     --note-lines: 5;
     touch-action: auto;

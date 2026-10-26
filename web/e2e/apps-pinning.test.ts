@@ -190,14 +190,47 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
             ).count(),
             0,
         );
+        // The "+" is the empty home's only content; it never shares the grid
+        // with tiles.
         assertEquals(
             await homeGrid(page).locator('[data-library-cell="add"]').count(),
-            1,
+            0,
         );
     });
 
+    await t.step(
+        "unpin updates home immediately and survives reload",
+        async () => {
+            const patched = page.waitForResponse((response) =>
+                response.request().method() === "PATCH" &&
+                new URL(response.url()).pathname === `/api/webapps/${pinned.id}`
+            );
+            await chooseMenu(page, homeTile(page, pinned.id), "取消固定");
+            assertEquals((await patched).status(), 200);
+            await homeTile(page, pinned.id).waitFor({ state: "detached" });
+            // The emptied home shows the "+" in place of its last tile.
+            await homeGrid(page).locator('[data-library-cell="add"]').waitFor();
+            assertEquals(
+                await homeGrid(page).locator('[data-library-cell="add"]')
+                    .count(),
+                1,
+            );
+            await reloadHome(page);
+            assertEquals(await homeTile(page, pinned.id).count(), 0);
+            assertEquals(
+                await homeGrid(page).locator('[data-library-cell="add"]')
+                    .count(),
+                1,
+            );
+        },
+    );
+
     await t.step("home add defaults to pinned", async () => {
-        await homeGrid(page).locator('[data-library-cell="add"]').click();
+        // The empty home's "+" is still an app-create entry: 固定到首页
+        // starts on and the created app lands on home.
+        const add = homeGrid(page).locator('[data-library-cell="add"]');
+        await add.waitFor();
+        await add.click();
         const form = page.locator(".app-form-dialog");
         await form.waitFor();
         const toggle = form.getByRole("switch", {
@@ -223,26 +256,6 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
             exact: true,
         }).waitFor();
     });
-
-    await t.step(
-        "unpin updates home immediately and survives reload",
-        async () => {
-            const patched = page.waitForResponse((response) =>
-                response.request().method() === "PATCH" &&
-                new URL(response.url()).pathname === `/api/webapps/${pinned.id}`
-            );
-            await chooseMenu(page, homeTile(page, pinned.id), "取消固定");
-            assertEquals((await patched).status(), 200);
-            await homeTile(page, pinned.id).waitFor({ state: "detached" });
-            assertEquals(
-                await homeGrid(page).locator('[data-library-cell="add"]')
-                    .count(),
-                1,
-            );
-            await reloadHome(page);
-            assertEquals(await homeTile(page, pinned.id).count(), 0);
-        },
-    );
 
     await t.step(
         "the library pins a folder and an app back onto home",
@@ -290,7 +303,7 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
         },
     );
 
-    await t.step("the library add form defaults to unpinned", async () => {
+    await t.step("the library add form defaults to pinned", async () => {
         await openApps(page);
         await page.locator("[data-library]").getByRole("button", {
             name: "添加应用",
@@ -303,7 +316,7 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
                 name: "固定到首页",
                 exact: true,
             }).getAttribute("aria-checked"),
-            "false",
+            "true",
         );
         await form.locator("#app-url-input").fill(
             "https://library-added.example.test/",
@@ -316,22 +329,28 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
         await form.locator(".app-dialog-footer button[type=submit]").click();
         const response = await created;
         assertEquals(response.status(), 200);
-        assertEquals((await response.json()).data.isHomeFixed, false);
+        assertEquals((await response.json()).data.isHomeFixed, true);
         await form.waitFor({ state: "detached" });
         await page.locator(
             '[data-library-view="apps"] .webapp-name',
             { hasText: "资料库添加" },
         ).waitFor();
         await closeLibrary(page);
+        // Every app-create entry pins by default, so the library's new app is
+        // on home too.
         await homeGrid(page).getByRole("button", {
             name: "打开 资料库添加",
             exact: true,
-        }).count().then((count) => assertEquals(count, 0));
+        }).waitFor();
     });
 
     await t.step(
         "an unpinned app still opens from the library and search",
         async () => {
+            // Self-contained: a reloaded home cannot inherit an earlier
+            // step's form backdrop or open panel, which would swallow the
+            // avatar menu click.
+            await reloadHome(page);
             await context.route(
                 "https://pinned-app.example.test/**",
                 (route) =>

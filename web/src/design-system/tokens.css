@@ -238,20 +238,30 @@
     --layout-search-max: 640px;
     --layout-home-content-max: 640px;
     /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
-    --home-grid-wide-cell: 84px;
+    --home-grid-wide-cell: 76px;
     --home-grid-wide-gap: 12px;
     --home-grid-narrow-cell: 64px;
     --home-grid-narrow-gap: 6px;
     --home-grid-narrow-coarse-cell: 68px;
     --home-grid-narrow-coarse-gap: 4px;
-    --home-grid-wide-coarse-cell: 88px;
-    --home-grid-wide-coarse-gap: 12px;
+    --home-grid-wide-coarse-cell: 80px;
+    --home-grid-wide-coarse-gap: 8px;
     --home-grid-cell: var(--home-grid-wide-cell);
     --home-grid-gap: var(--home-grid-wide-gap);
-    /* A home note is the big-folder footprint: two cells plus one gap. */
-    --home-note-cell: calc(2 * var(--home-grid-cell) + var(--home-grid-gap));
-    --home-note-wide: calc(2 * var(--home-note-cell) + var(--home-grid-gap));
+    /* Home notes own their lattice: an S note is one note cell, independent of
+       the app cell. Numeric mirrors in home-grid.ts are unit-tested. */
+    --home-note-wide-cell: 180px;
+    --home-note-wide-gap: 12px;
+    --home-note-narrow-cell: 134px;
+    --home-note-narrow-gap: 6px;
+    --home-note-narrow-coarse-cell: 140px;
+    --home-note-narrow-coarse-gap: 4px;
+    --home-note-wide-coarse-cell: 188px;
+    --home-note-wide-coarse-gap: 12px;
+    --home-note-cell: var(--home-note-wide-cell);
+    --home-note-gap: var(--home-note-wide-gap);
     --space-home-grid-gap: var(--home-grid-gap);
+    --space-home-note-gap: var(--home-note-gap);
     --home-grid-axis: 50%;
     --home-grid-viewport-inset: var(--space-page-inline);
     --home-grid-content-width: min(var(--layout-home-content-max), calc(100vw - 2 * var(--space-4)));
@@ -574,6 +584,8 @@
         --space-page-inline: var(--space-4);
         --home-grid-cell: var(--home-grid-narrow-cell);
         --home-grid-gap: var(--home-grid-narrow-gap);
+        --home-note-cell: var(--home-note-narrow-cell);
+        --home-note-gap: var(--home-note-narrow-gap);
         --space-page-block: var(--space-5);
         --home-hero-inset: clamp(64px, 16dvh, 140px);
         --space-search-inset-block: var(--space-1);
@@ -626,6 +638,8 @@
     :root {
         --home-grid-cell: var(--home-grid-wide-coarse-cell);
         --home-grid-gap: var(--home-grid-wide-coarse-gap);
+        --home-note-cell: var(--home-note-wide-coarse-cell);
+        --home-note-gap: var(--home-note-wide-coarse-gap);
     }
 }
 
@@ -633,5 +647,7 @@
     :root {
         --home-grid-cell: var(--home-grid-narrow-coarse-cell);
         --home-grid-gap: var(--home-grid-narrow-coarse-gap);
+        --home-note-cell: var(--home-note-narrow-coarse-cell);
+        --home-note-gap: var(--home-note-narrow-coarse-gap);
     }
 }

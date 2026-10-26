@@ -534,7 +534,15 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             await guest.getByTestId("wallpaper-current-adjust-focal-btn")
                 .waitFor();
             await guest.goto(origin + "/");
-            await guest.getByTestId("home-wallpaper-surface-image").waitFor();
+            // The surface can render the cached gradient before IndexedDB
+            // appearance hydration restores the uploaded image.
+            await guest.waitForFunction(() => {
+                const surface = document.querySelector(
+                    '[data-testid="home-wallpaper-surface-image"]',
+                );
+                return surface && getComputedStyle(surface).backgroundImage
+                    .includes("data:image/png;base64,");
+            });
             assertStringIncludes(
                 await guest.getByTestId("home-wallpaper-surface-image")
                     .evaluate((el) => getComputedStyle(el).backgroundImage),

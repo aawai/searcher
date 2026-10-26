@@ -137,7 +137,8 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                 assert(!metrics.overflow);
                 assert(metrics.rows >= 1 && metrics.rows <= 4);
                 if (width === 1440) assertEquals(metrics.rows, 4);
-                if (width === 1366) assertEquals(metrics.rows, 3);
+                // 1366x768: 348.16px holds four 76px rows (4 * 88 - 12 = 340).
+                if (width === 1366) assertEquals(metrics.rows, 4);
                 assert(
                     height - metrics.plateBottom >= 48 - 0.5,
                     JSON.stringify(metrics),

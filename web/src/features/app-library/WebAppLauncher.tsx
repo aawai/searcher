@@ -179,10 +179,14 @@ type GridCell =
     | { kind: "more"; col: number; row: number; count: number }
     | { kind: "add"; col: number; row: number };
 
-/** The add cell is hidden while arranging; its slot stays reserved so the plan does not shift. */
+/**
+ * The "+" is the empty home grid's only content (callers pass `showAdd` only
+ * for that grid); it is hidden while arranging.
+ */
 export function planCells(
     plan: HomeLibraryPlan,
     managing: boolean,
+    showAdd: boolean,
 ): GridCell[] {
     const cells: GridCell[] = plan.visible.map((item) => ({
         kind: "tile" as const,
@@ -191,7 +195,9 @@ export function planCells(
         item,
     }));
     if (plan.more) cells.push({ kind: "more", ...plan.more });
-    if (plan.add && !managing) cells.push({ kind: "add", ...plan.add });
+    if (showAdd && !managing && cells.length === 0) {
+        cells.push({ kind: "add", col: 0, row: 0 });
+    }
     return cells.sort((a, b) => a.row - b.row || a.col - b.col);
 }
 
@@ -250,7 +256,10 @@ export function WebAppLauncher({
     onMoveByKey,
     label,
 }: WebAppLauncherProps) {
-    const cells = useMemo(() => planCells(plan, managing), [plan, managing]);
+    const cells = useMemo(
+        () => planCells(plan, managing, Boolean(onAdd)),
+        [plan, managing, onAdd],
+    );
     const usedColumns = Math.max(
         1,
         ...cells.map((cell) =>

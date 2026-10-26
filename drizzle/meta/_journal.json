@@ -225,6 +225,13 @@
       "when": 1792981372488,
       "tag": "0031_foamy_archangel",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1792984177395,
+      "tag": "0032_home_app_plate",
+      "breakpoints": true
     }
   ]
 }

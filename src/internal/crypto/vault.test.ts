@@ -91,10 +91,13 @@ Deno.test({
 
         const { cipher } = await customVault.fields.encrypt(secretText);
         const parts = cipher.split(":");
-        // 篡改密文部分
+        // Flip one bit: replacing the last byte with a constant can leave it
+        // unchanged (e.g. when it already ends in ff).
+        const changedByte = (Number.parseInt(parts[2].slice(-2), 16) ^ 1)
+            .toString(16).padStart(2, "0");
         const tamperedCipher = `${parts[0]}:${parts[1]}:${
             parts[2].slice(0, -2)
-        }ff`;
+        }${changedByte}`;
 
         await assertRejects(
             () => customVault.fields.decrypt(tamperedCipher),

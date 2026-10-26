@@ -2,8 +2,9 @@ import { assert, assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 
-// Production-page regression for mobile Home: square touch tracks,
-// centered glyphs and usable targets, without changing tablet or desktop.
+// Production-page regression for mobile Home: square touch tracks, centred
+// glyph stacks and usable targets. Fine-pointer narrow keeps 64/6 while the
+// desktop plate uses 76/12 tracks.
 Deno.test("Home touch grid density and drag alignment", async () => {
     const app = await startProductionApp();
     const browser = await chromium.launch({
@@ -25,8 +26,9 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
 
-        // Six apps plus the trailing 添加应用 cell: the home grid is the library.
-        const APP_COUNT = 6;
+        // Seven apps fill the home grid: the 添加应用 cell only appears on an
+        // empty grid, so tile-only planning balances these seven tiles.
+        const APP_COUNT = 7;
         const longAppName = "A".repeat(80);
         await page.evaluate(async ([longName, appCount]) => {
             for (let index = 0; index < appCount; index++) {
@@ -80,7 +82,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 );
                 if (
                     cell !== track || gap !== 4 ||
-                    tiles.length !== appCount + 1 ||
+                    tiles.length !== appCount ||
                     width <= 0
                 ) return false;
                 const measured = Math.max(
@@ -136,7 +138,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                         home.querySelectorAll(".webapp-name").length ===
                             labelCount;
                 },
-                [glyph, showLabels ? APP_COUNT + 1 : 0],
+                [glyph, showLabels ? APP_COUNT : 0],
             );
             const columns = await grid.evaluate((node, cell) => {
                 const parent = node.parentElement;
@@ -146,7 +148,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                     (Number.parseFloat(parentStyle.paddingLeft) || 0) -
                     (Number.parseFloat(parentStyle.paddingRight) || 0);
                 const gap = Number.parseFloat(getComputedStyle(node).columnGap);
-                return Math.min(6, Math.floor((width + gap) / (cell + gap)));
+                return Math.floor((width + gap) / (cell + gap));
             }, track);
             await waitForHomeColumns(columns, track);
             const metrics = await grid.evaluate((node) => {
@@ -186,6 +188,9 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                             const glyphBox = button.querySelector(
                                 ".webapp-glyph",
                             )!.getBoundingClientRect();
+                            const nameBox = button.querySelector(
+                                ".webapp-name",
+                            )?.getBoundingClientRect();
                             const hit = document.elementFromPoint(
                                 box.left + box.width / 2,
                                 box.top + box.height / 2,
@@ -198,10 +203,14 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                                     glyphBox.left + glyphBox.width / 2 -
                                         (box.left + box.width / 2),
                                 ),
-                                // Named glyphs sit on the row's top edge so big folders
-                                // align (#285 C8); without names they centre in the cell.
+                                // With names the icon, the 2px icon gap and the
+                                // 16px label line centre as a stack; without
+                                // names the glyph alone centres in the cell.
                                 topOffset: glyphBox.top - box.top,
                                 bottomOffset: box.bottom - glyphBox.bottom,
+                                labelBottomOffset: nameBox
+                                    ? box.bottom - nameBox.bottom
+                                    : null,
                                 hittable: hit === button ||
                                     button.contains(hit),
                             };
@@ -217,18 +226,36 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             assertEquals(metrics.firstRow, columns);
             assert(metrics.centerOffset < 1, JSON.stringify(metrics));
             assertEquals(metrics.overflow, false);
-            assertEquals(metrics.labels, showLabels ? APP_COUNT + 1 : 0);
+            assertEquals(metrics.labels, showLabels ? APP_COUNT : 0);
+            // pad-t = (cell - icon - 2px icon gap - 16px label line) / 2 with
+            // names, (cell - icon) / 2 without: 3px / 12px for this 68px cell.
+            const padTop = showLabels
+                ? (track - glyph - 2 - 16) / 2
+                : (track - glyph) / 2;
             for (const button of metrics.buttons) {
                 assertEquals(button.width, track);
                 assertEquals(button.height, track);
                 assertEquals(button.glyph, glyph);
                 assert(button.centeredX < 1);
                 assert(
-                    showLabels
-                        ? Math.abs(button.topOffset) < 1
-                        : Math.abs(button.topOffset - button.bottomOffset) < 1,
+                    Math.abs(button.topOffset - padTop) < 1,
                     JSON.stringify(button),
                 );
+                if (showLabels) {
+                    assert(button.labelBottomOffset !== null);
+                    assert(
+                        Math.abs(button.labelBottomOffset! - padTop) < 1,
+                        `Named stack must centre in its cell: ${
+                            JSON.stringify(button)
+                        }`,
+                    );
+                } else {
+                    assertEquals(button.labelBottomOffset, null);
+                    assert(
+                        Math.abs(button.topOffset - button.bottomOffset) < 1,
+                        JSON.stringify(button),
+                    );
+                }
                 assertEquals(button.hittable, true);
             }
         };
@@ -395,11 +422,10 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             name: firstHomeTileLabel,
             exact: true,
         }).waitFor({ state: "visible" });
-        await page.waitForFunction(() =>
+        await page.waitForFunction((count) =>
             document.querySelectorAll(
                 ".launcher-library .launcher-grid--home > .launcher-tile[data-tile-id]",
-            ).length === 6
-        );
+            ).length === count, APP_COUNT);
         await page.clock.resume();
         await undoToast.waitFor({ state: "detached" });
 
@@ -484,12 +510,9 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             assertEquals(metrics.gapY, 4);
             assertEquals(metrics.columns, columns);
             assertEquals(
-                Math.min(
-                    6,
-                    Math.floor(
-                        (metrics.contentWidth + metrics.gapX) /
-                            (metrics.col + metrics.gapX),
-                    ),
+                Math.floor(
+                    (metrics.contentWidth + metrics.gapX) /
+                        (metrics.col + metrics.gapX),
                 ),
                 columns,
             );
@@ -511,7 +534,7 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         const initialIds = await tiles.evaluateAll((nodes) =>
             nodes.map((node) => node.getAttribute("data-tile-id"))
         );
-        assertEquals(initialIds.length, 6);
+        assertEquals(initialIds.length, APP_COUNT);
         const cdp = await context.newCDPSession(page);
         const pressBox = (await tiles.first().locator(".webapp-icon")
             .boundingBox())!;
@@ -536,11 +559,10 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             touchPoints: [],
         });
         await arrange.click();
-        await page.waitForFunction(() =>
+        await page.waitForFunction((count) =>
             document.querySelectorAll(
                 ".launcher-library .launcher-tile.is-managing",
-            ).length === 6
-        );
+            ).length === count, APP_COUNT);
         const source = (await tiles.nth(0).boundingBox())!;
         const destination = (await tiles.nth(1).boundingBox())!;
         const start = {
@@ -708,11 +730,10 @@ Deno.test("Home touch grid density and drag alignment", async () => {
             name: "整理布局",
             exact: true,
         }).click();
-        await page.waitForFunction(() =>
+        await page.waitForFunction((count) =>
             document.querySelectorAll(
                 ".launcher-library .launcher-tile.is-managing",
-            ).length === 6
-        );
+            ).length === count, APP_COUNT);
         const hiddenBox = (await hiddenTiles.first().boundingBox())!;
         const hiddenStart = {
             x: hiddenBox.x + hiddenBox.width / 2,
@@ -749,7 +770,8 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         await setHomeVisuals({ showAppLabels: true });
         await waitForHomeColumns(4);
 
-        // Fine-pointer Home keeps the pre-existing 64px / 6px layout.
+        // Fine-pointer Home keeps 64/6 below 768px; desktop grows to 76/12,
+        // which holds seven columns at 1440px. Seven apps fill that row.
         const fineContext = await browser.newContext({
             viewport: { width: 390, height: 844 },
             storageState: await context.storageState(),
@@ -778,9 +800,12 @@ Deno.test("Home touch grid density and drag alignment", async () => {
                 const home = document.querySelector<HTMLElement>(
                     ".launcher-library .launcher-grid--home",
                 );
-                return !!home &&
-                    getComputedStyle(home).getPropertyValue("--launcher-col-w")
-                            .trim() === "84px" &&
+                if (!home) return false;
+                const style = getComputedStyle(home);
+                return style.getPropertyValue("--launcher-col-w").trim() ===
+                        "76px" &&
+                    parseFloat(style.columnGap) === 12 &&
+                    Number(home.dataset.columns) === 7 &&
                     home.querySelector(".webapp-glyph")!
                             .getBoundingClientRect().width === 48;
             });

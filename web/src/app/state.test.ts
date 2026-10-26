@@ -121,6 +121,25 @@ Deno.test("Appearance: showHomeApps defaults on and only accepts booleans", () =
     }
 });
 
+Deno.test("Appearance: showHomeAppPlate defaults on and only accepts booleans", () => {
+    assertEquals(normalizeAppearance(undefined).showHomeAppPlate, true);
+    assertEquals(normalizeAppearance({}).showHomeAppPlate, true);
+    assertEquals(
+        normalizeAppearance({ showHomeAppPlate: false }).showHomeAppPlate,
+        false,
+    );
+    assertEquals(
+        normalizeAppearance({ showHomeAppPlate: true }).showHomeAppPlate,
+        true,
+    );
+    for (const bad of ["false", 0, null, "off"]) {
+        assertEquals(
+            normalizeAppearance({ showHomeAppPlate: bad }).showHomeAppPlate,
+            true,
+        );
+    }
+});
+
 Deno.test("Appearance: the calm layer shows the date and 继续 by default, time only on request", () => {
     const defaults = normalizeAppearance({});
     assertEquals(
