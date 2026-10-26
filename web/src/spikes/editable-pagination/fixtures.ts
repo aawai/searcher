@@ -150,9 +150,11 @@ export function generateOversizedPngDataUrl(): string {
 export function createOversizedFixtureMarkdown(): string {
     const pngDataUrl = generateOversizedPngDataUrl();
 
-    // Deterministic long paragraph exceeding single page height
+    // Latin text keeps this paragraph oversized even without CJK fallback fonts.
+    // Keep a single paragraph without hard breaks to exercise inline pagination.
     const sentence =
-        "流式排版超限测试段落：该段落由大量连续文本行组成，不包含额外硬回车换行符，其整体垂直渲染高度显著超出单张纸张的可打印区域高度限制，用于验证现代浏览器 CSS 多栏排版引擎对超限段落的视觉跨栏碎片化（Visual Fragmentation）行为；在正确的排版机制下，普通块级元素虽然设置了 break-inside: avoid，但当其自身固有高度超过容器单列高度时，浏览器排版器将优雅回退并从段落中间断开，平滑流向下一列继续显示后续文字，而不会导致内容截断或产生不可见的视口溢出。";
+        "流式排版超限测试段落：该段落由大量连续文本行组成，不包含额外硬回车换行符，其整体垂直渲染高度显著超出单张纸张的可打印区域高度限制，用于验证现代浏览器 CSS 多栏排版引擎对超限段落的视觉跨栏碎片化（Visual Fragmentation）行为；在正确的排版机制下，普通块级元素虽然设置了 break-inside: avoid，但当其自身固有高度超过容器单列高度时，浏览器排版器将优雅回退并从段落中间断开，平滑流向下一列继续显示后续文字，而不会导致内容截断或产生不可见的视口溢出。 " +
+        "This oversized paragraph must flow across physical page boundaries without hard line breaks. Ordinary words provide measurable line wrapping even when the browser has no Chinese fallback font installed. Pagination must preserve every word and continue the same editable paragraph on the next sheet.";
     const longParagraph = Array.from({ length: 14 }, () => sentence).join(" ");
 
     // Deterministic oversized code block (70 lines)
