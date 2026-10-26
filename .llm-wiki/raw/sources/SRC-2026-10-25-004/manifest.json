@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-25-004",
+  "captured": "2026-10-25",
+  "packet_version": "1.0",
+  "title": "Understanding [SC 2.5.8](https://w3.org/TR/WCAG22#target-size-minimum) Target Size (Minimum) (Level AA)",
+  "url": "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

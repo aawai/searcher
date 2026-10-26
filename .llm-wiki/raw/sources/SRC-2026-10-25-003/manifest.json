@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-25-003",
+  "captured": "2026-10-25",
+  "packet_version": "1.0",
+  "title": "Understanding [SC 1.4.11](https://w3.org/TR/WCAG22#non-text-contrast) Non-text Contrast (Level AA)",
+  "url": "https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -34,6 +34,27 @@ Deno.test("home balances nineteen cells into five columns without another row", 
     assertEquals(plan.overflow, []);
 });
 
+Deno.test("home keeps eight cells spread across the available width when resizing", () => {
+    for (const [columns, firstRow] of [[6, 6], [7, 6], [8, 8]]) {
+        const plan = planHomeLibrary({
+            tiles: [folder("small", false), ...apps(6)],
+            columns,
+            rows: 4,
+            showAdd: true,
+        });
+        assertEquals(
+            plan.visible.filter((item) => item.row === 0).length +
+                Number(plan.add?.row === 0),
+            firstRow,
+        );
+        assertEquals(plan.add, {
+            col: 7 % firstRow,
+            row: Math.floor(7 / firstRow),
+        });
+        assertEquals(plan.overflow, []);
+    }
+});
+
 Deno.test("home keeps the capacity unless the trailing row is a lone cell", () => {
     // 7 cells in 5 columns = 5 + 2: the last row is not lonely, so the
     // responsive capacity is retained.
@@ -149,18 +170,6 @@ Deno.test("exceeding capacity by one tile reserves the last cell for more", () =
         assertEquals(v.row + v.rowSpan <= 4, true);
         assertEquals(v.col === 3 && v.row === 3, false);
     }
-});
-
-Deno.test("add cell is placed after tiles when it fits", () => {
-    const plan = planHomeLibrary({
-        tiles: apps(5),
-        columns: 5,
-        rows: 4,
-        showAdd: true,
-    });
-    assertEquals(plan.add, { col: 2, row: 1 });
-    assertEquals(plan.more, null);
-    assertEquals(plan.addInOverflow, false);
 });
 
 Deno.test("mobile 5 columns: add goes to overflow when it does not fit", () => {

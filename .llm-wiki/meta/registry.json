@@ -1,7 +1,14 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-24T08:28:18.306Z",
+  "last_updated": "2026-10-26T01:09:50.490Z",
   "pages": {
+    "concepts/accessible-grid-drag-keyboard-and-announcements": {
+      "type": "concept",
+      "title": "Accessible Grid Drag — Keyboard and Announcements",
+      "domain": "accessibility",
+      "created": "2026-10-25",
+      "updated": "2026-10-25"
+    },
     "concepts/aria-combobox-grouped-suggestions": {
       "type": "concept",
       "title": "ARIA Combobox Grouped Suggestions",
@@ -67,6 +74,13 @@
       "title": "Offline-First 与 Local Draft 持久化架构",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "concepts/pointer-target-size": {
+      "type": "concept",
+      "title": "Pointer Target Size",
+      "domain": "accessibility",
+      "created": "2026-10-25",
+      "updated": "2026-10-25"
     },
     "concepts/pwa-service-worker-update-lifecycle": {
       "type": "concept",
@@ -146,12 +160,26 @@
       "created": "2026-10-24",
       "updated": "2026-10-24"
     },
+    "concepts/wallpaper-accent-oklch-contrast-solver": {
+      "type": "concept",
+      "title": "Wallpaper Accent OKLCH Contrast Solver",
+      "domain": "design-system",
+      "created": "2026-10-25",
+      "updated": "2026-10-25"
+    },
     "concepts/web-animations-api-runtime-architecture": {
       "type": "concept",
       "title": "Web Animations API Runtime Architecture",
       "domain": "engineering",
       "created": "2026-10-05",
       "updated": "2026-10-05"
+    },
+    "concepts/whole-line-preview-truncation": {
+      "type": "concept",
+      "title": "Whole-line Preview Truncation",
+      "domain": "frontend",
+      "created": "2026-10-25",
+      "updated": "2026-10-25"
     },
     "entities/deno-runtime": {
       "type": "entity",
@@ -797,6 +825,97 @@
       ],
       "concepts": [
         "[[concepts/aria-combobox-grouped-suggestions]]"
+      ]
+    },
+    "sources/SRC-2026-10-25-001": {
+      "type": "source",
+      "title": "A perceptual color space for image processing (Oklab)",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-25-001/extracted.md",
+      "source_id": "SRC-2026-10-25-001",
+      "format": "web",
+      "captured": "2026-10-25",
+      "entities": [
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/wallpaper-accent-oklch-contrast-solver]]"
+      ]
+    },
+    "sources/SRC-2026-10-25-002": {
+      "type": "source",
+      "title": "Understanding WCAG 2.2 SC 1.4.3: Contrast (Minimum)",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-25-002/extracted.md",
+      "source_id": "SRC-2026-10-25-002",
+      "format": "web",
+      "captured": "2026-10-25",
+      "entities": [
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/wallpaper-accent-oklch-contrast-solver]]"
+      ]
+    },
+    "sources/SRC-2026-10-25-003": {
+      "type": "source",
+      "title": "Understanding WCAG 2.2 SC 1.4.11: Non-text Contrast",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-25-003/extracted.md",
+      "source_id": "SRC-2026-10-25-003",
+      "format": "web",
+      "captured": "2026-10-25",
+      "entities": [
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/wallpaper-accent-oklch-contrast-solver]]"
+      ]
+    },
+    "sources/SRC-2026-10-25-004": {
+      "type": "source",
+      "title": "Understanding WCAG 2.2 SC 2.5.8: Target Size (Minimum)",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-25-004/extracted.md",
+      "source_id": "SRC-2026-10-25-004",
+      "format": "web",
+      "captured": "2026-10-25",
+      "entities": [
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/pointer-target-size]]"
+      ]
+    },
+    "sources/SRC-2026-10-25-005": {
+      "type": "source",
+      "title": "dnd-kit Accessibility Guide",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-25-005/extracted.md",
+      "source_id": "SRC-2026-10-25-005",
+      "format": "web",
+      "captured": "2026-10-25",
+      "entities": [
+        "[[entities/dnd-kit-system]]",
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/accessible-grid-drag-keyboard-and-announcements]]"
+      ]
+    },
+    "sources/SRC-2026-10-25-006": {
+      "type": "source",
+      "title": "MDN: line-clamp CSS property",
+      "status": "processed",
+      "raw_path": "raw/sources/SRC-2026-10-25-006/extracted.md",
+      "source_id": "SRC-2026-10-25-006",
+      "format": "web",
+      "captured": "2026-10-25",
+      "entities": [
+        "[[entities/searcher-项目]]"
+      ],
+      "concepts": [
+        "[[concepts/whole-line-preview-truncation]]"
       ]
     },
     "sources/e2e-native-parallel-speedup-vs-stability-167": {
@@ -1929,6 +2048,57 @@
       "source_context": "完成 issue 241 worktree 实施、PR 与合并",
       "created": "2026-10-24",
       "updated": "2026-10-24"
+    },
+    "sources/obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close": {
+      "type": "source",
+      "title": "Observation: Issue 285 design convergence merged via PR 288–299 and closed",
+      "tags": [
+        "issue-285",
+        "merged",
+        "worktree",
+        "home-notes",
+        "library",
+        "e2e"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close",
+      "relevance": "critical",
+      "observed_at": "2026-10-24T19:36:57.484Z",
+      "source_context": "完成 issue 285 worktree 实施、PR 与合并",
+      "created": "2026-10-24",
+      "updated": "2026-10-24"
+    },
+    "sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden": {
+      "type": "source",
+      "title": "Observation: dnd-kit default English announcements not overridden",
+      "tags": [
+        "accessibility",
+        "dnd-kit",
+        "home-notes"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden",
+      "relevance": "medium",
+      "observed_at": "2026-10-25T08:04:51.476Z",
+      "source_context": "wiki-run 2026-10-25 ingesting dnd-kit accessibility guide",
+      "created": "2026-10-25",
+      "updated": "2026-10-25"
+    },
+    "sources/obs-2026-10-26-": {
+      "type": "source",
+      "title": "Observation: 玻璃效果通透档放宽对比度承诺",
+      "tags": [
+        "glass",
+        "contrast",
+        "settings"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-26-",
+      "relevance": "high",
+      "observed_at": "2026-10-26T01:09:50.447Z",
+      "source_context": "玻璃效果档位词不达意修复",
+      "created": "2026-10-26",
+      "updated": "2026-10-26"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

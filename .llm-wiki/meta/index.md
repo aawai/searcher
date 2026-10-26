@@ -4,6 +4,7 @@
 
 ## Concepts
 
+- [[concepts/accessible-grid-drag-keyboard-and-announcements]] — Accessible Grid Drag — Keyboard and Announcements *(created: 2026-10-25)*
 - [[concepts/aria-combobox-grouped-suggestions]] — ARIA Combobox Grouped Suggestions *(created: 2026-10-24)*
 - [[concepts/contract-first-testing]] — Contract First Testing *(created: 2026-09-25)*
 - [[concepts/database-queue-serialization]] — Database Queue Serialization *(created: 2026-09-25)*
@@ -13,6 +14,7 @@
 - [[concepts/hono-rpc-type-safe-client]] — Hono RPC & Type-Safe Client *(created: 2026-09-26)*
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
+- [[concepts/pointer-target-size]] — Pointer Target Size *(created: 2026-10-25)*
 - [[concepts/pwa-service-worker-update-lifecycle]] — PWA Service Worker Update Lifecycle *(created: 2026-10-24)*
 - [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
 - [[concepts/route-level-code-splitting-dynamic-bundling]] — Route-Level Code Splitting & Dynamic Bundling *(created: 2026-10-05)*
@@ -24,7 +26,9 @@
 - [[concepts/sqlite-table-recreation-migration]] — SQLite Table Recreation Migration *(created: 2026-09-25)*
 - [[concepts/tailwind-v4-css-first-architecture]] — Tailwind v4 CSS First Architecture *(created: 2026-09-27)*
 - [[concepts/view-transitions-shared-element]] — View Transitions Shared Element *(created: 2026-10-24)*
+- [[concepts/wallpaper-accent-oklch-contrast-solver]] — Wallpaper Accent OKLCH Contrast Solver *(created: 2026-10-25)*
 - [[concepts/web-animations-api-runtime-architecture]] — Web Animations API Runtime Architecture *(created: 2026-10-05)*
+- [[concepts/whole-line-preview-truncation]] — Whole-line Preview Truncation *(created: 2026-10-25)*
 
 ## Entitys
 
@@ -108,6 +112,9 @@
 - [[sources/obs-2026-10-24-issue-238-pwa-pr-263-264-265-main]] — Observation: Issue 238 PWA 经 PR 263/264/265 合并 main 并关闭 *(created: 2026-10-24)*
 - [[sources/obs-2026-10-24-issue-239-pr-266-267-main]] — Observation: Issue 239 首页静状态与顶栏精简经 PR 266/267 合并 main 并关闭 *(created: 2026-10-24)*
 - [[sources/obs-2026-10-24-issue-241-pr-274-279-281-main]] — Observation: Issue 241 壁纸取色经 PR 274/279/281 合并 main 并关闭 *(created: 2026-10-24)*
+- [[sources/obs-2026-10-24-issue-285-design-convergence-merged-via-pr-288-299-and-close]] — Observation: Issue 285 design convergence merged via PR 288–299 and closed *(created: 2026-10-24)*
+- [[sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden]] — Observation: dnd-kit default English announcements not overridden *(created: 2026-10-25)*
+- [[sources/obs-2026-10-26-]] — Observation: 玻璃效果通透档放宽对比度承诺 *(created: 2026-10-26)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -163,10 +170,16 @@
 - [[sources/SRC-2026-10-24-008]] — Receiving Shared Data with the Web Share Target API *(created: unknown)*
 - [[sources/SRC-2026-10-24-009]] — Same-Document View Transitions for Single-Page Applications *(created: unknown)*
 - [[sources/SRC-2026-10-24-010]] — WAI-ARIA APG Combobox Pattern *(created: unknown)*
+- [[sources/SRC-2026-10-25-001]] — A perceptual color space for image processing (Oklab) *(created: unknown)*
+- [[sources/SRC-2026-10-25-002]] — Understanding WCAG 2.2 SC 1.4.3: Contrast (Minimum) *(created: unknown)*
+- [[sources/SRC-2026-10-25-003]] — Understanding WCAG 2.2 SC 1.4.11: Non-text Contrast *(created: unknown)*
+- [[sources/SRC-2026-10-25-004]] — Understanding WCAG 2.2 SC 2.5.8: Target Size (Minimum) *(created: unknown)*
+- [[sources/SRC-2026-10-25-005]] — dnd-kit Accessibility Guide *(created: unknown)*
+- [[sources/SRC-2026-10-25-006]] — MDN: line-clamp CSS property *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-24T08:28:18.306Z* | *Total pages: 154*
+*Last updated: 2026-10-26T01:09:50.490Z* | *Total pages: 167*

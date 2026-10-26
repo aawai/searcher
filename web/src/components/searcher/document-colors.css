@@ -1,10 +1,10 @@
-/* Note colours are domain values. Home notes express colour as a dot before the
-   title; the palette is per theme so every dot holds 3:1 against the Material
-   component (glass-contrast.test.ts). */
+/* Note colours are domain values, independent of the accent. Home notes pair
+   a tinted Material background with a title dot; the per-theme dot palette
+   holds 3:1 against the matching surface (glass-contrast.test.ts). */
 :where(.note-quick-dot, .documents-color-dot) {
     --note-dot-amber: #7A5610;
     --note-dot-rose: #8E3A52;
-    --note-dot-sage: #3F6B3B;
+    --note-dot-sage: #386531;
     --note-dot-sky: #2F5A85;
     --note-dot-paper: #5A5A60;
 }

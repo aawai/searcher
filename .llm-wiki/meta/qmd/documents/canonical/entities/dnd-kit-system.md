@@ -41,6 +41,7 @@ First）的拖放交互工具套件。在 [[entities/searcher-项目]] 中，它
 ## 关联架构
 
 - 二维网格排序概念：[[concepts/dnd-kit-2d-grid-sorting-architecture]]
+- 键盘移动与本地化播报：[[concepts/accessible-grid-drag-keyboard-and-announcements]]（首页笔记不用 `KeyboardSensor`，自建按单元移动与中文 live region；两处 `DndContext` 均未覆盖库默认英文 `accessibility`）
 - 宿主系统：[[entities/searcher-项目]]
 - UI 交互契约：[[entities/shadcn-ui-system]]
 
@@ -50,3 +51,4 @@ First）的拖放交互工具套件。在 [[entities/searcher-项目]] 中，它
 - [[sources/SRC-2026-09-25-005]]
 - [[sources/SRC-2026-09-25-009]]
 - [[sources/SRC-2026-09-25-026]]
+- [[sources/SRC-2026-10-25-005]]

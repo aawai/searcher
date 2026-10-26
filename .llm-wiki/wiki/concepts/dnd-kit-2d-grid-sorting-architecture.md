@@ -79,6 +79,7 @@ DragOverlay，在不定高便签场景下，系统演进出了更为动态的
 - 交互引擎：[[entities/dnd-kit-system]]
 - 宿主系统：[[entities/searcher-项目]]
 - UI 呈现：[[entities/shadcn-ui-system]]
+- 无障碍：[[concepts/accessible-grid-drag-keyboard-and-announcements]]
 
 ## 来源与观察
 
@@ -90,3 +91,4 @@ DragOverlay，在不定高便签场景下，系统演进出了更为动态的
 - [[sources/SRC-2026-09-25-016]]
 - 实战观察：[[sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture]]
 - [[sources/SRC-2026-09-25-026]]
+- [[sources/SRC-2026-10-25-005]]

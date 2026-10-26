@@ -61,7 +61,11 @@
     --canvas-mesh-accent-mix: 24%;
     --canvas-mesh-secondary-mix: 50%;
 
-    /* Home note: colour swatch ring only; the note itself is Material. */
+    /* Home note domain colours tint Material without changing its glass tier. */
+    --material-note-amber: #FFE49A;
+    --material-note-rose: #FFC9DE;
+    --material-note-sage: #C8ECA6;
+    --material-note-sky: #B8DEFF;
     --shadow-note-color-swatch: inset 0 0 0 1px var(--border);
 
     /* Documents paper and achromatic print. */
@@ -293,6 +297,10 @@
     --shadow-document-paper: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 2px 8px -2px rgb(0 0 0 / 0.4);
     /* Dark materials lift from the soft surface so they read against the canvas. */
     --material-solid: var(--surface-soft);
+    --material-note-amber: #483611;
+    --material-note-rose: #4A2638;
+    --material-note-sage: #263F20;
+    --material-note-sky: #203950;
     --glass-edge-top: rgb(255 255 255 / 0.32);
     --glass-edge-ring: rgb(255 255 255 / 0.12);
     --glass-edge-bottom: rgb(0 0 0 / 0.35);
