@@ -1,4 +1,12 @@
-import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
+import {
+    lazy,
+    Suspense,
+    useContext,
+    useEffect,
+    useId,
+    useRef,
+    useState,
+} from "react";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
 import type {
     DocumentNotebookDto,
@@ -19,6 +27,7 @@ import { Star } from "lucide-react";
 
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
 import { noteListSnippet } from "./note-list-snippet.ts";
+import { WorkspaceActivity } from "./WorkspaceActivity.ts";
 const DocumentEditor = lazy(() => import("../documents/DocumentEditor.tsx"));
 export interface DocumentsWorkspaceProps {
     state: DocumentsRoute;
@@ -153,6 +162,8 @@ function DocumentsLibrary({
     onOpenDocument,
 }: DocumentsWorkspaceProps) {
     const listHeadingId = useId();
+    const active = useContext(WorkspaceActivity);
+    const loadedListKey = useRef<string | null>(null);
     const trimmedQuery = query.trim();
     const isSearching = trimmedQuery.length > 0;
     const scopeKey = scope.type === "notebook"
@@ -170,6 +181,7 @@ function DocumentsLibrary({
     const [notebookError, setNotebookError] = useState<string | null>(null);
     const refresh = () => setRetryCount((count) => count + 1);
     useEffect(() => {
+        if (!active) return;
         const controller = new AbortController();
         setNotebookError(null);
         api<DocumentNotebookDto[]>("/api/document-notebooks", {
@@ -188,11 +200,12 @@ function DocumentsLibrary({
                 }
             });
         return () => controller.abort();
-    }, [userId, retryCount]);
+    }, [userId, retryCount, active]);
 
     const activeRequestRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
+        if (!active) return;
         if (!userId) {
             setItems([]);
             setNextCursor(null);
@@ -207,11 +220,13 @@ function DocumentsLibrary({
 
         activeRequestRef.current = controller;
 
-        setLoading(true);
+        const listKey = `${userId}/${scopeKey}/${trimmedQuery}`;
+        const changedList = loadedListKey.current !== listKey;
+        setLoading(changedList);
         setLoadingMore(false);
         setError(null);
         setLoadMoreError(null);
-        setItems([]);
+        if (changedList) setItems([]);
         setNextCursor(null);
 
         const params = new URLSearchParams();
@@ -232,6 +247,7 @@ function DocumentsLibrary({
                 if (cancelled || controller.signal.aborted) {
                     return;
                 }
+                loadedListKey.current = listKey;
                 setItems(data.items ?? []);
                 setNextCursor(data.nextCursor ?? null);
                 setLoading(false);
@@ -255,7 +271,7 @@ function DocumentsLibrary({
             cancelled = true;
             controller.abort();
         };
-    }, [userId, trimmedQuery, scopeKey, retryCount]);
+    }, [userId, trimmedQuery, scopeKey, retryCount, active]);
 
     const handleLoadMore = async () => {
         const controller = activeRequestRef.current;

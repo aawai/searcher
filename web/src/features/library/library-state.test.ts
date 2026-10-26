@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import {
     initialLibraryState,
     libraryFocusTarget,
@@ -13,15 +13,13 @@ Deno.test("opening a note is an overlay, not a home scene change", () => {
         route: { view: "documents/edit", id: "note" },
     });
     assertEquals(opened.open, true);
-    assertEquals("stage" in opened, false);
     assertEquals(opened.documents.stack, [{ view: "documents/root" }]);
-    assertEquals(libraryReducer(opened, { type: "close" }).open, false);
+    assertEquals(libraryReducer(opened, { type: "leave" }).open, false);
 });
 
 Deno.test("closing a dirty note requires confirmation, clean and filter actions do not", () => {
-    assertEquals(shouldConfirmLibraryAction(true, { type: "close" }), true);
-    assertEquals(shouldConfirmLibraryAction(true, { type: "list" }), true);
-    assertEquals(shouldConfirmLibraryAction(false, { type: "close" }), false);
+    assertEquals(shouldConfirmLibraryAction(true, { type: "leave" }), true);
+    assertEquals(shouldConfirmLibraryAction(false, { type: "leave" }), false);
     assertEquals(
         shouldConfirmLibraryAction(true, {
             type: "documents",

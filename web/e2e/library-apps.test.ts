@@ -3,12 +3,7 @@ import type { Locator, Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { assertLargeFolderGeometry } from "./helpers/launcher-geometry.ts";
-import {
-    closeLibrary,
-    libraryEntry,
-    libraryPanel,
-    openLibrary,
-} from "./helpers/library.ts";
+import { closeLibrary, openApps } from "./helpers/library.ts";
 
 async function chooseMenu(page: Page, tile: Locator, name: string) {
     await tile.click({ button: "right" });
@@ -18,12 +13,6 @@ async function chooseMenu(page: Page, tile: Locator, name: string) {
         0,
     );
     await page.getByRole("menuitem", { name, exact: true }).click();
-}
-
-async function openApps(page: Page) {
-    await openLibrary(page);
-    await libraryEntry(page, "apps").click();
-    await page.locator("[data-library-apps]").waitFor();
 }
 
 Deno.test("Library apps: complete searchable library, folder management, no sorting and labels #285", async (t) => {
@@ -441,10 +430,7 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                 }).count(),
                 0,
             );
-            await libraryPanel(page).getByRole("button", {
-                name: "关闭资料库",
-                exact: true,
-            }).click();
+            await closeLibrary(page);
         },
     );
 });

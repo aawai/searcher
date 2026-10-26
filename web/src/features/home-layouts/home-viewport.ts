@@ -8,6 +8,13 @@ export type SafeRect = {
     height: number;
 };
 
+export type DockInsets = {
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
+};
+
 export type HomeViewport = {
     viewportWidth: number;
     chromeBottom: number;
@@ -28,19 +35,36 @@ export function homeViewport(
     height: number,
     chromeBottom: number,
     inset: number,
+    dockInsets: DockInsets = {},
 ): HomeViewport {
     const viewportWidth = Math.max(0, finite(width));
     const viewportHeight = Math.max(0, finite(height));
     const bottom = Math.min(viewportHeight, Math.max(0, finite(chromeBottom)));
     const margin = Math.max(0, finite(inset));
+    const dockTop = Math.max(0, finite(dockInsets.top ?? 0));
+    const dockRight = Math.max(0, finite(dockInsets.right ?? 0));
+    const dockBottom = Math.max(0, finite(dockInsets.bottom ?? 0));
+    const dockLeft = Math.max(0, finite(dockInsets.left ?? 0));
+
+    const topEdge = Math.max(bottom, dockTop);
+    const startX = Math.min(margin + dockLeft, viewportWidth);
+    const availableWidth = Math.max(
+        0,
+        viewportWidth - 2 * margin - dockLeft - dockRight,
+    );
+    const availableHeight = Math.max(
+        0,
+        viewportHeight - topEdge - 2 * margin - dockBottom,
+    );
+
     return {
         viewportWidth,
         chromeBottom: bottom,
         availableRect: {
-            x: Math.min(margin, viewportWidth),
-            y: bottom + margin,
-            width: Math.max(0, viewportWidth - 2 * margin),
-            height: Math.max(0, viewportHeight - bottom - 2 * margin),
+            x: startX,
+            y: topEdge + margin,
+            width: availableWidth,
+            height: availableHeight,
         },
     };
 }
@@ -70,11 +94,29 @@ export function useHomeViewport(): HomeViewport {
                     HOME_GRID_VIEWPORT_INSET,
                 ),
             );
+            const shell = document.querySelector(".app-shell");
+            const style = shell
+                ? getComputedStyle(shell)
+                : getComputedStyle(document.documentElement);
+            const dockTop =
+                parseFloat(style.getPropertyValue("--dock-inset-top")) || 0;
+            const dockRight =
+                parseFloat(style.getPropertyValue("--dock-inset-right")) || 0;
+            const dockBottom =
+                parseFloat(style.getPropertyValue("--dock-inset-bottom")) || 0;
+            const dockLeft =
+                parseFloat(style.getPropertyValue("--dock-inset-left")) || 0;
             const next = homeViewport(
                 globalThis.innerWidth,
                 globalThis.innerHeight,
                 chromeBottom,
                 inset,
+                {
+                    top: dockTop,
+                    right: dockRight,
+                    bottom: dockBottom,
+                    left: dockLeft,
+                },
             );
             setViewport((previous) =>
                 previous.viewportWidth === next.viewportWidth &&
@@ -108,7 +150,7 @@ export function useHomeViewport(): HomeViewport {
             childList: true,
             subtree: true,
             attributes: true,
-            attributeFilter: ["class", "hidden"],
+            attributeFilter: ["class", "hidden", "style", "data-dock-edge"],
         });
         observeChrome();
         measure();

@@ -11,7 +11,6 @@ import { libraryPanel, libraryView } from "./helpers/library.ts";
 
 const BODY = "超出容量的笔记收进更多笔记，入口不得与搜索框或底板相交。";
 const VIEWPORT_HEIGHT = 900;
-const BOTTOM_CLEARANCE = 48;
 
 Deno.test("overflow notes collapse into 更多笔记（N） and open the notes library", async (t) => {
     const fixture = await openHomeNotesFixture({
@@ -56,14 +55,11 @@ Deno.test("overflow notes collapse into 更多笔记（N） and open the notes l
                 assert(metrics.plate, "plate is measurable");
                 const more = metrics.more.box;
                 assert(more, "the pill is measurable");
-                assertEquals(
-                    Math.round(VIEWPORT_HEIGHT - (more.y + more.height)),
-                    8,
-                    "the pill sits 8px above the viewport bottom",
-                );
+                const dock = await page.locator("nav.dock-bar").boundingBox();
+                assert(dock, "the dock is measurable");
                 assert(
-                    more.y >= VIEWPORT_HEIGHT - BOTTOM_CLEARANCE,
-                    "the pill stays inside the 48px bottom clearance",
+                    more.y + more.height <= dock.y,
+                    "the pill sits above the dock without intersecting it",
                 );
                 assert(
                     more.y >= metrics.plate.y + metrics.plate.height,

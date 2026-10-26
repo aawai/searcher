@@ -187,16 +187,6 @@ Deno.test("production settings shortcuts contracts", async (t) => {
                 await globalSection.innerText(),
                 "笔记正文中由插入链接优先处理",
             );
-            await globalSection.getByText("打开或关闭资料库", { exact: true })
-                .waitFor();
-            assertStringIncludes(
-                await globalSection.innerText(),
-                "首页（含主搜索框），需要登录",
-            );
-            assertStringIncludes(
-                await globalSection.innerText(),
-                "笔记编辑器与其他输入控件内不响应。",
-            );
 
             const notesSection = linuxPage.locator(".settings-group").filter({
                 has: linuxPage.getByRole("heading", {

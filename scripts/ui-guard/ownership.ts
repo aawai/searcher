@@ -61,6 +61,7 @@ export const GLOBAL_FEATURE_PREFIXES: readonly string[] = [
     "launcher-",
     "widgets-",
     "zen-",
+    "dock-",
 ] as const;
 
 /**
@@ -230,6 +231,7 @@ export const CSS_PREFIX_OWNER_MAP: Record<string, readonly string[]> = {
     "zen-": ["web/src/features/home-layouts/home-layouts.css"],
     "auth-": ["web/src/app/auth.css"],
     "design-lab-": ["web/src/design-lab/design-lab.css"],
+    "dock-": ["web/src/features/dock/dock.css"],
 };
 
 /**

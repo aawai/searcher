@@ -26,8 +26,13 @@
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
+  "concepts/csrf-defense-boundaries": [
+    "concepts/session-security-and-isolation",
+    "sources/SRC-2026-10-26-003"
+  ],
   "concepts/database-queue-serialization": [
     "concepts/sqlite-fts5-fulltext-search",
+    "concepts/sqlite-isolation-and-connection-boundaries",
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",
     "entities/searcher-项目",
@@ -43,11 +48,17 @@
     "sources/SRC-2026-09-25-030",
     "sources/SRC-2026-09-25-031",
     "sources/SRC-2026-09-25-032",
+    "sources/SRC-2026-10-26-001",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
   "concepts/deno-native-serve-architecture": [
     "sources/SRC-2026-09-27-005"
+  ],
+  "concepts/deno-permission-boundaries": [
+    "concepts/csrf-defense-boundaries",
+    "entities/deno-runtime",
+    "sources/SRC-2026-10-26-002"
   ],
   "concepts/dnd-kit-2d-grid-sorting-architecture": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
@@ -122,6 +133,8 @@
     "sources/SRC-2026-09-27-003"
   ],
   "concepts/session-security-and-isolation": [
+    "concepts/csrf-defense-boundaries",
+    "concepts/deno-permission-boundaries",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/pwa-service-worker-update-lifecycle",
     "entities/hono-framework",
@@ -133,6 +146,8 @@
     "sources/SRC-2026-09-25-011",
     "sources/SRC-2026-09-25-037",
     "sources/SRC-2026-10-24-008",
+    "sources/SRC-2026-10-26-002",
+    "sources/SRC-2026-10-26-003",
     "syntheses/searcher-system-architecture"
   ],
   "concepts/shortest-column-masonry-layout": [
@@ -180,6 +195,10 @@
     "sources/SRC-2026-09-25-028",
     "sources/SRC-2026-10-24-006"
   ],
+  "concepts/sqlite-isolation-and-connection-boundaries": [
+    "entities/drizzle-sqlite-store",
+    "sources/SRC-2026-10-26-001"
+  ],
   "concepts/sqlite-table-recreation-migration": [
     "concepts/database-queue-serialization",
     "concepts/sqlite-fts5-fulltext-search",
@@ -220,6 +239,7 @@
   ],
   "entities/deno-runtime": [
     "concepts/deno-native-serve-architecture",
+    "concepts/deno-permission-boundaries",
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/single-process-architecture",
     "entities/hono-framework",
@@ -248,6 +268,7 @@
     "sources/SRC-2026-09-26-002",
     "sources/SRC-2026-09-27-003",
     "sources/SRC-2026-09-27-005",
+    "sources/SRC-2026-10-26-002",
     "syntheses/searcher-system-architecture"
   ],
   "entities/dnd-kit-system": [
@@ -268,6 +289,7 @@
   "entities/drizzle-sqlite-store": [
     "concepts/database-queue-serialization",
     "concepts/sqlite-fts5-fulltext-search",
+    "concepts/sqlite-isolation-and-connection-boundaries",
     "concepts/sqlite-table-recreation-migration",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-001",
@@ -285,6 +307,7 @@
     "sources/SRC-2026-09-25-032",
     "sources/SRC-2026-09-25-033",
     "sources/SRC-2026-10-24-006",
+    "sources/SRC-2026-10-26-001",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -649,6 +672,18 @@
   "sources/SRC-2026-10-25-006": [
     "concepts/whole-line-preview-truncation"
   ],
+  "sources/SRC-2026-10-26-001": [
+    "concepts/sqlite-isolation-and-connection-boundaries",
+    "entities/drizzle-sqlite-store"
+  ],
+  "sources/SRC-2026-10-26-002": [
+    "concepts/deno-permission-boundaries",
+    "entities/deno-runtime"
+  ],
+  "sources/SRC-2026-10-26-003": [
+    "concepts/csrf-defense-boundaries",
+    "concepts/session-security-and-isolation"
+  ],
   "sources/e2e-native-parallel-speedup-vs-stability-167": [],
   "sources/e2e-parallel-default-enabled-171": [],
   "sources/issue-174-data-router-session-leave-guard": [],
@@ -730,6 +765,8 @@
   "sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden": [],
   "sources/obs-2026-10-26-": [],
   "sources/obs-2026-10-26-pr-309-main": [],
+  "sources/obs-2026-10-26-q1-q19": [],
+  "sources/obs-2026-10-26-q20-q25": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

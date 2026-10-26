@@ -3,7 +3,7 @@ import { json, validator } from "@internal/validator/hono.ts";
 import type { Routes } from "@internal/hono/routes.ts";
 import * as v from "@valibot/valibot";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
-import { PreferencesService } from "./service.ts";
+import { PreferencesService, PreferencesValidationError } from "./service.ts";
 import { WallpaperService } from "../wallpaper/service.ts";
 import { parseCookie } from "../auth/middleware.ts";
 import { SESSION_COOKIE_NAME } from "../auth/service.ts";
@@ -35,6 +35,18 @@ const ShowHomeDate = v.optional(v.boolean("首页显示日期必须为布尔值"
 const ShowHomeTime = v.optional(v.boolean("首页显示时间必须为布尔值"));
 const ShowHomeContinue = v.optional(v.boolean("首页显示继续必须为布尔值"));
 const ShowAppLabels = v.optional(v.boolean("显示应用名称必须为布尔值"));
+const DockSchema = v.optional(
+    v.nullable(
+        v.object({
+            systemOrder: v.optional(
+                v.array(
+                    v.picklist(["home", "apps", "notes", "ai"], "系统入口无效"),
+                ),
+            ),
+            appIds: v.optional(v.array(v.string())),
+        }),
+    ),
+);
 const BackgroundImage = v.optional(v.nullable(v.pipe(
     v.string(),
     v.maxLength(2048),
@@ -193,6 +205,7 @@ export function registerPreferencesRoutes(
             wallpaperPresentations: json(WallpaperPresentations),
             aiGenerationDefaults: json(AiGenerationDefaults),
             wallpaperCompositions: json(WallpaperCompositions),
+            dock: json(DockSchema),
         }),
         async (c, data) => {
             if (
@@ -329,7 +342,15 @@ export function registerPreferencesRoutes(
                 }
 
                 // Pass 2: Atomic DB update and manifest synchronization
-                const updated = await service.update(user.id, data);
+                let updated;
+                try {
+                    updated = await service.update(user.id, data);
+                } catch (error) {
+                    if (error instanceof PreferencesValidationError) {
+                        return c.fail(STATUS_CODE.BadRequest, error.message);
+                    }
+                    throw error;
+                }
                 const syncedIds = new Set<string>();
                 // Process in reverse to use the latest focal coordinates if duplicated
                 for (let i = uploadedFocalsToSync.length - 1; i >= 0; i--) {

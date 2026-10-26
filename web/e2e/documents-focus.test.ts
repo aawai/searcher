@@ -113,7 +113,8 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
                 .click();
             await patchPromise;
             await editor.waitFor({ state: "detached" });
-            await page.locator("input[data-workspace-search]").waitFor();
+            await page.locator("input[data-workspace-search]:visible")
+                .waitFor();
 
             assertEquals(
                 writes.length,

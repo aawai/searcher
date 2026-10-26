@@ -27,23 +27,30 @@ export interface AppSessionRouteIntent {
 
 const SessionContext = createContext<AppSession | null>(null);
 
+export interface AppSessionProviderProps {
+    options: AppSessionOptions;
+    navigationRef: RefObject<AppSessionNavigation | null>;
+    onRouteBlocked: (intent: AppSessionRouteIntent | null) => void;
+    isExternalDirty?: () => boolean;
+    children: ReactNode;
+}
+
 export function AppSessionProvider({
     options,
     navigationRef,
     onRouteBlocked,
+    isExternalDirty,
     children,
-}: {
-    options: AppSessionOptions;
-    navigationRef: RefObject<AppSessionNavigation | null>;
-    onRouteBlocked: (intent: AppSessionRouteIntent | null) => void;
-    children: ReactNode;
-}) {
+}: AppSessionProviderProps) {
     const session = useAppSession(options);
-    const blocker = useBlocker(({ currentLocation, nextLocation }) =>
-        currentLocation.pathname !== nextLocation.pathname &&
-        Boolean(options.sessionKey) &&
-        (session.isDirty || session.isSubmitting)
-    );
+    const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+        const urlChanged = currentLocation.pathname !== nextLocation.pathname ||
+            currentLocation.search !== nextLocation.search;
+        const appDirty = Boolean(options.sessionKey) &&
+            (session.isDirty || session.isSubmitting);
+        const externalDirty = Boolean(isExternalDirty?.());
+        return urlChanged && (appDirty || externalDirty);
+    });
     const reportedLocationKey = useRef<string | null>(null);
     navigationRef.current = session;
     useEffect(() => {
@@ -54,7 +61,11 @@ export function AppSessionProvider({
             }
             return;
         }
-        if (!options.sessionKey || !session.isDirty || session.isSubmitting) {
+        const appDirty = Boolean(options.sessionKey) && session.isDirty &&
+            !session.isSubmitting;
+        const externalDirty = Boolean(isExternalDirty?.());
+        const hasUnsaved = appDirty || externalDirty;
+        if (!hasUnsaved) {
             if (reportedLocationKey.current !== null) {
                 reportedLocationKey.current = null;
                 onRouteBlocked(null);
@@ -87,20 +98,22 @@ export function AppSessionProvider({
         session.isDirty,
         session.isSubmitting,
         options.sessionKey,
+        isExternalDirty,
     ]);
     useEffect(() => {
-        if (
-            typeof window === "undefined" || !options.sessionKey ||
-            !session.isDirty
-        ) return;
+        if (typeof window === "undefined") return;
         function preventUnload(event: BeforeUnloadEvent) {
+            if (
+                !(Boolean(options.sessionKey) && session.isDirty) &&
+                !isExternalDirty?.()
+            ) return;
             event.preventDefault();
             event.returnValue = "";
         }
         globalThis.addEventListener("beforeunload", preventUnload);
         return () =>
             globalThis.removeEventListener("beforeunload", preventUnload);
-    }, [session.isDirty, options.sessionKey]);
+    }, [session.isDirty, options.sessionKey, isExternalDirty]);
     useEffect(() => () => {
         navigationRef.current = null;
     }, [navigationRef]);

@@ -108,12 +108,12 @@ Deno.test("production documents library workspace contracts", async (t) => {
 
     async function backToLibrary() {
         await workspace().getByRole("button", {
-            name: "返回上一级",
-            exact: true,
+            name: /返回笔记|返回上一级/,
         }).click();
-        await workspace().locator("input[data-workspace-search]").waitFor({
-            state: "visible",
-        });
+        await workspace().locator("input[data-workspace-search]:visible")
+            .waitFor({
+                state: "visible",
+            });
         await editor().waitFor({ state: "detached" });
     }
 
@@ -208,7 +208,9 @@ Deno.test("production documents library workspace contracts", async (t) => {
             assertEquals(await empty.count(), 0);
 
             // 3. Body search matches; a miss shows the no-result state
-            const search = panel.locator("input[data-workspace-search]");
+            const search = panel.locator(
+                "input[data-workspace-search]:visible",
+            );
             assertEquals(await search.getAttribute("aria-label"), "搜索笔记");
             await search.fill("unique keyword");
             await panel.getByRole("heading", { name: "搜索结果", level: 3 })
@@ -308,7 +310,9 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await waitForRowCount(4);
 
             // Search spans every scope and drops the scope heading
-            const search = panel.locator("input[data-workspace-search]");
+            const search = panel.locator(
+                "input[data-workspace-search]:visible",
+            );
             await search.fill("Delta");
             await section("搜索结果").waitFor({ state: "visible" });
             await waitForRowCount(1);
@@ -529,7 +533,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 "amber",
             );
             await workspace().getByRole("button", {
-                name: "关闭资料库",
+                name: "返回首页",
                 exact: true,
             }).click();
             await workspace().waitFor({ state: "detached" });
@@ -541,7 +545,8 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 await paper.locator(".home-note-card").getAttribute(
                     "data-color",
                 ),
-                "amber",
+                null,
+                "home notes are neutral Material; color lives only in the library and editor",
             );
 
             // 4. Unpin from the editor menu
@@ -873,7 +878,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                     // Mobile sheets must be dismissed before the viewport changes
                     if (vp.width < 768) {
                         await panel.getByRole("button", {
-                            name: "关闭资料库",
+                            name: "返回首页",
                             exact: true,
                         }).click();
                         await panel.waitFor({ state: "detached" });
@@ -889,7 +894,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
         "Library: pinned notes stay on the unchanged home beside the library",
         async () => {
             const title = "Geometry Home Paper";
-            const doc = await createDocument({
+            await createDocument({
                 title,
                 body: "Stable",
                 isHomeFixed: true,
@@ -913,7 +918,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 false,
             );
             await workspace().getByRole("button", {
-                name: "关闭资料库",
+                name: "返回首页",
                 exact: true,
             }).click();
             await workspace().waitFor({ state: "detached" });

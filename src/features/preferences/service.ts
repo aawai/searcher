@@ -1,6 +1,13 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { DatabaseStore } from "../../db/database.ts";
-import { preferences } from "../../db/schema.ts";
+import { preferences, webapps } from "../../db/schema.ts";
+import {
+    DEFAULT_DOCK_PREFERENCES,
+    DOCK_SYSTEM_IDS,
+    type DockPreferences,
+    isValidDockSystemId,
+    normalizeDockPreferences,
+} from "@shared/dock.ts";
 import {
     type AiGenerationDefaultsDto,
     DEFAULT_ACCENT,
@@ -20,6 +27,13 @@ import {
     wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
+
+export class PreferencesValidationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "PreferencesValidationError";
+    }
+}
 
 export type UpdateAiGenerationDefaultsInput = {
     default?:
@@ -64,6 +78,7 @@ const defaults: PreferencesDto = {
         models: {},
     },
     wallpaperPresentations: {},
+    dock: { ...DEFAULT_DOCK_PREFERENCES },
 };
 
 function cleanConfig(
@@ -148,6 +163,15 @@ function parseWallpaperPresentations(
     }
     return undefined;
 }
+function parseDockPreferences(raw?: string | null): DockPreferences {
+    if (!raw) return { ...DEFAULT_DOCK_PREFERENCES };
+    try {
+        const parsed = JSON.parse(raw);
+        return normalizeDockPreferences(parsed);
+    } catch {
+        return { ...DEFAULT_DOCK_PREFERENCES };
+    }
+}
 
 function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
     const compositions = parseWallpaperCompositions(row.wallpaperCompositions);
@@ -203,6 +227,7 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
         aiGenerationDefaults: parseAiGenerationDefaults(
             row.aiGenerationDefaults,
         ),
+        dock: parseDockPreferences(row.dock),
     };
 }
 
@@ -241,6 +266,7 @@ export class PreferencesService {
                     | "aiGenerationDefaults"
                     | "wallpaperCompositions"
                     | "wallpaperPresentations"
+                    | "dock"
                 >
             >
             & {
@@ -251,6 +277,7 @@ export class PreferencesService {
                 wallpaperPresentations?:
                     | Record<string, Partial<WallpaperPresentation>>
                     | null;
+                dock?: Partial<DockPreferences> | null;
             },
     ): Promise<PreferencesDto> {
         const canonicalDefaults = await this.getDefaults();
@@ -258,6 +285,7 @@ export class PreferencesService {
             aiGenerationDefaults,
             wallpaperCompositions,
             wallpaperPresentations,
+            dock,
             ...rest
         } = updates;
         return await this.store.run(async (db) => {
@@ -310,6 +338,80 @@ export class PreferencesService {
                     models: mergedModels,
                 };
                 serializedAiDefaults = JSON.stringify(merged);
+            }
+            let serializedDock: string | undefined = undefined;
+            if (dock === null) {
+                serializedDock = JSON.stringify(DEFAULT_DOCK_PREFERENCES);
+            } else if (dock !== undefined) {
+                const [existingRow] = await db.select().from(preferences)
+                    .where(eq(preferences.userId, userId)).limit(1).all();
+                const currentDock = parseDockPreferences(existingRow?.dock);
+
+                let systemOrder = currentDock.systemOrder;
+                if (dock.systemOrder !== undefined) {
+                    if (
+                        !Array.isArray(dock.systemOrder) ||
+                        dock.systemOrder.length !== DOCK_SYSTEM_IDS.length ||
+                        new Set(dock.systemOrder).size !==
+                            DOCK_SYSTEM_IDS.length ||
+                        !dock.systemOrder.every((id) => isValidDockSystemId(id))
+                    ) {
+                        throw new PreferencesValidationError(
+                            "系统入口必须完整包含且不重复: home, apps, notes, ai",
+                        );
+                    }
+                    systemOrder = [...dock.systemOrder];
+                }
+
+                let appIds = currentDock.appIds;
+                if (dock.appIds !== undefined) {
+                    if (!Array.isArray(dock.appIds)) {
+                        throw new PreferencesValidationError(
+                            "固定应用列表必须为数组",
+                        );
+                    }
+                    const seen = new Set<string>();
+                    for (const id of dock.appIds) {
+                        if (typeof id !== "string" || !id.trim()) {
+                            throw new PreferencesValidationError(
+                                "应用 ID 无效",
+                            );
+                        }
+                        if (seen.has(id)) {
+                            throw new PreferencesValidationError(
+                                "固定应用不能重复",
+                            );
+                        }
+                        seen.add(id);
+                    }
+                    if (dock.appIds.length > 0) {
+                        const validRows = await db
+                            .select({ id: webapps.id })
+                            .from(webapps)
+                            .where(
+                                and(
+                                    eq(webapps.userId, userId),
+                                    isNull(webapps.deletedAt),
+                                ),
+                            )
+                            .all();
+                        const validSet = new Set(validRows.map((r) => r.id));
+                        for (const id of dock.appIds) {
+                            if (!validSet.has(id)) {
+                                throw new PreferencesValidationError(
+                                    "应用不存在或已被删除",
+                                );
+                            }
+                        }
+                    }
+                    appIds = [...dock.appIds];
+                }
+
+                const mergedDock: DockPreferences = {
+                    systemOrder,
+                    appIds,
+                };
+                serializedDock = JSON.stringify(mergedDock);
             }
             let serializedWallpaperPresentations: string | undefined =
                 undefined;
@@ -442,6 +544,9 @@ export class PreferencesService {
                 patchValues.wallpaperPresentations =
                     serializedWallpaperPresentations;
             }
+            if (serializedDock !== undefined) {
+                patchValues.dock = serializedDock;
+            }
 
             if (Object.keys(patchValues).length === 0) {
                 const rows = await db.select().from(preferences)
@@ -473,6 +578,9 @@ export class PreferencesService {
                 wallpaperCompositions: JSON.stringify({}),
                 wallpaperPresentations: JSON.stringify(
                     canonicalDefaults.wallpaperPresentations ?? {},
+                ),
+                dock: JSON.stringify(
+                    canonicalDefaults.dock ?? DEFAULT_DOCK_PREFERENCES,
                 ),
             };
             const insertValues = {

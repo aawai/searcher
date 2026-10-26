@@ -8,7 +8,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
-import { libraryMenuTrigger, openNotes } from "./helpers/library.ts";
+import { openNotes, workspaceNotesTrigger } from "./helpers/library.ts";
 
 interface ManifestChunk {
     file: string;
@@ -227,26 +227,22 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 await page.waitForURL(origin + "/");
                 await page.locator("main").waitFor({ state: "visible" });
 
-                // 2. Home and its avatar menu must stay editor-cold.
+                // 2. Home and its workspace triggers must stay editor-cold.
                 await page.locator("#search-query").waitFor({
                     state: "visible",
                 });
-                await libraryMenuTrigger(page).click();
-                await page.getByRole("menuitem", {
-                    name: "笔记",
-                    exact: true,
-                }).waitFor();
+                await workspaceNotesTrigger(page).waitFor({
+                    state: "visible",
+                });
                 assert(
                     !requestedJs.includes(editorVendorChunk),
-                    `Home avatar menu unexpectedly requested editor-vendor: ${editorVendorChunk}`,
+                    `Home unexpectedly requested editor-vendor: ${editorVendorChunk}`,
                 );
                 assert(
                     !requestedJs.includes(runtimeChunk) &&
                         !requestedJs.includes(sharedRuntimeChunk),
-                    "Auth/Home avatar menu must not request editor runtime",
+                    "Auth/Home must not request editor runtime",
                 );
-
-                await page.keyboard.press("Escape");
                 // 3. Seed a document, then open it from the documents workspace
                 await page.evaluate(async () => {
                     const response = await fetch("/api/documents", {

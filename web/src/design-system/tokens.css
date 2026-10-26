@@ -208,6 +208,14 @@
     --icon-md: 16px;
     --icon-lg: 20px;
 
+    /* Dock geometry and layout insets. */
+    --dock-size: 56px;
+    --dock-item-size: 44px;
+    --dock-ball-size: 44px;
+    --dock-inset-top: 0px;
+    --dock-inset-bottom: 0px;
+    --dock-inset-left: 0px;
+    --dock-inset-right: 0px;
     /* Motion: answers user actions only. */
     --motion-fast: 120ms;
     --motion-base: 200ms;

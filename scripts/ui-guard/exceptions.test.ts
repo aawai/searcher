@@ -376,3 +376,29 @@ Deno.test("viewport and physical paper exceptions reject unrelated visual values
         false,
     );
 });
+
+Deno.test("taskbar inset exemption is restricted to matching PageShell geometry", () => {
+    const shell = "web/src/components/searcher/semantic.css";
+    assertEquals(
+        isDesignSystemAllowed(
+            shell,
+            "margin-bottom",
+            "var(--dock-inset-bottom, 0px)",
+        ),
+        true,
+    );
+    for (
+        const [file, property, value] of [
+            [shell, "margin-bottom", "var(--dock-inset-left)"],
+            [shell, "padding-bottom", "var(--dock-inset-bottom)"],
+            [shell, "margin-bottom", "var(--dock-inset-bottom, 24px)"],
+            [
+                "web/src/features/dock/dock.css",
+                "margin-bottom",
+                "var(--dock-inset-bottom)",
+            ],
+        ]
+    ) {
+        assertEquals(isDesignSystemAllowed(file, property, value), false);
+    }
+});

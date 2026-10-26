@@ -401,6 +401,7 @@ export function SearcherSearchInput(
                         value={query}
                         onChange={(e) => {
                             setQuery(e.target.value);
+                            setFocused(true);
                             setDismissed(false);
                             setSelectedKey(null);
                         }}

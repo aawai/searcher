@@ -9,11 +9,9 @@ import {
 } from "react-router-dom";
 import {
     AlertTriangle,
-    LayoutGrid,
     LogIn,
     LogOut,
     Moon,
-    NotebookPen,
     Settings,
     Shield,
     Sparkles,
@@ -31,10 +29,8 @@ import {
 } from "@shared/wallpaper-presentation.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
 import { askConversationId, authPath, routes } from "./app/routes.ts";
-import {
-    type LibraryRequest,
-    libraryRequestState,
-} from "./features/library/library-request.ts";
+import { DockProvider } from "./features/dock/DockProvider.tsx";
+import { WorkspaceDock } from "./features/dock/WorkspaceDock.tsx";
 import type { AppOutletContext } from "./app/outlet-context.ts";
 import { useAiModels } from "./features/omnibox/useAiModels.ts";
 import {
@@ -129,7 +125,6 @@ function Layout() {
     const serviceWorker = useServiceWorkerUpdate();
     // Coming back online re-checks the session the offline start could not.
     const wasOnline = useRef(online);
-    const libraryFromMenu = useRef(false);
     useEffect(() => {
         if (online && !wasOnline.current && connectionError) {
             void retryConnection();
@@ -153,16 +148,6 @@ function Layout() {
         setLogoutBusy(false);
         setError("");
     }, [authSession]);
-
-    /** The library stays out of history when already on the home page. */
-    function openLibrary(request: LibraryRequest) {
-        const atHome = location.pathname === routes.home;
-        navigate(routes.home, {
-            state: libraryRequestState(request),
-            replace: atHome,
-            viewTransition: !atHome,
-        });
-    }
 
     async function requestLogout(force = false) {
         const session = authSession;
@@ -300,73 +285,12 @@ function Layout() {
                                             .slice(0, 1)}
                                     </span>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    sideOffset={8}
-                                    // The library moves focus into its header; restoring it to
-                                    // the avatar afterwards would steal it back.
-                                    finalFocus={() => {
-                                        const restore = !libraryFromMenu
-                                            .current;
-                                        libraryFromMenu.current = false;
-                                        return restore;
-                                    }}
-                                >
+                                <DropdownMenuContent sideOffset={8}>
                                     <div className="user-menu-identity">
                                         <span>{user.displayName}</span>
                                         <span>@{user.username}</span>
                                     </div>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            libraryFromMenu.current = true;
-                                            openLibrary("root");
-                                        }}
-                                    >
-                                        <LayoutGrid
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                        <span>资料库</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => {
-                                            libraryFromMenu.current = true;
-                                            openLibrary("notes");
-                                        }}
-                                    >
-                                        <NotebookPen
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                        <span>笔记</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            navigate(routes.trash, {
-                                                viewTransition: true,
-                                            })}
-                                    >
-                                        <Trash2
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                        <span>回收站</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    {aiModels.length > 0 && (
-                                        <DropdownMenuItem
-                                            onClick={() =>
-                                                navigate(routes.ask, {
-                                                    viewTransition: true,
-                                                })}
-                                        >
-                                            <Sparkles
-                                                size="1em"
-                                                className="icon-md"
-                                            />
-                                            <span>AI 问答</span>
-                                        </DropdownMenuItem>
-                                    )}
                                     <DropdownMenuItem
                                         onClick={() =>
                                             navigate(routes.account, {
@@ -405,6 +329,18 @@ function Layout() {
                                             <span>管理后台</span>
                                         </DropdownMenuItem>
                                     )}
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            navigate(routes.trash, {
+                                                viewTransition: true,
+                                            })}
+                                    >
+                                        <Trash2
+                                            size="1em"
+                                            className="icon-md"
+                                        />
+                                        <span>回收站</span>
+                                    </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         variant="destructive"
@@ -511,11 +447,14 @@ function Layout() {
             {!ready
                 ? <LoadingState className="page">正在加载…</LoadingState>
                 : (
-                    <RouteErrorBoundary locationKey={location.pathname}>
-                        <Suspense fallback={<RouteLoadingFallback />}>
-                            <Outlet context={outletContext} />
-                        </Suspense>
-                    </RouteErrorBoundary>
+                    <>
+                        <RouteErrorBoundary locationKey={location.pathname}>
+                            <Suspense fallback={<RouteLoadingFallback />}>
+                                <Outlet context={outletContext} />
+                            </Suspense>
+                        </RouteErrorBoundary>
+                        <WorkspaceDock aiAvailable={aiModels.length > 0} />
+                    </>
                 )}
         </div>
     );
@@ -527,7 +466,9 @@ export function App() {
                 path: routes.home,
                 element: (
                     <AppState>
-                        <Layout />
+                        <DockProvider>
+                            <Layout />
+                        </DockProvider>
                     </AppState>
                 ),
                 // Page links need the data router's navigation options, including

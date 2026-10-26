@@ -199,7 +199,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
             // Perform search in Documents
             const documentsSearchInput = documentsPanel.locator(
-                "input[data-workspace-search]",
+                "input[data-workspace-search]:visible",
             );
             await documentsSearchInput.fill("Beta");
 
@@ -241,7 +241,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await openWorkspace();
             const documentsPanel = getWorkspace();
             const searchInput = documentsPanel.locator(
-                "input[data-workspace-search]",
+                "input[data-workspace-search]:visible",
             );
             await searchInput.fill("__nonexistent_query_xyz__");
 

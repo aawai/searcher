@@ -173,7 +173,7 @@ Deno.test("the note wrapper joins the Tab order and Enter opens the note", async
         assert(reached, "the note wrapper is reachable with Tab");
         await page.keyboard.press("Enter");
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "关闭资料库", exact: true })
+        await page.getByRole("button", { name: "返回首页", exact: true })
             .click();
         await libraryPanel(page).waitFor({ state: "detached" });
     } finally {

@@ -18,6 +18,7 @@ type WorkspaceView = {
     routeKey: string;
     nested: boolean;
     expanded: boolean;
+    fullScreen: boolean;
     editor: boolean;
     headerActions: ReactNode;
     feedback: ReactNode;
@@ -48,6 +49,7 @@ export function WorkspaceShell(
         routeKey,
         nested,
         expanded = false,
+        fullScreen = false,
         editor = false,
         backLabel,
         headerActions,
@@ -68,6 +70,7 @@ export function WorkspaceShell(
         routeKey: string;
         nested: boolean;
         expanded?: boolean;
+        fullScreen?: boolean;
         editor?: boolean;
         backLabel: string;
         headerActions?: ReactNode;
@@ -100,6 +103,7 @@ export function WorkspaceShell(
         routeKey,
         nested,
         expanded,
+        fullScreen,
         editor,
         headerActions,
         feedback,
@@ -148,6 +152,7 @@ export function WorkspaceShell(
             chromeBottom={chromeBottom}
             title={view.title}
             expanded={view.expanded}
+            fullScreen={view.fullScreen}
             headerActions={view.headerActions}
             routeKey={view.routeKey}
             nested={view.nested}

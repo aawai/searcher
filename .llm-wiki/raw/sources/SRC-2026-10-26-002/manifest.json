@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-26-002",
+  "captured": "2026-10-26",
+  "packet_version": "1.0",
+  "title": "Security and permissions",
+  "url": "https://docs.deno.com/runtime/fundamentals/security/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

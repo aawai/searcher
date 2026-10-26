@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-26T04:01:22.608Z",
+  "last_updated": "2026-10-26T08:04:04.461Z",
   "pages": {
     "concepts/accessible-grid-drag-keyboard-and-announcements": {
       "type": "concept",
@@ -23,6 +23,13 @@
       "created": "2026-09-25",
       "updated": "2026-09-25"
     },
+    "concepts/csrf-defense-boundaries": {
+      "type": "concept",
+      "title": "CSRF Defense Boundaries",
+      "domain": "engineering",
+      "created": "2026-10-26",
+      "updated": "2026-10-26"
+    },
     "concepts/database-queue-serialization": {
       "type": "concept",
       "title": "Database Queue Serialization",
@@ -39,6 +46,13 @@
         "hono",
         "http"
       ]
+    },
+    "concepts/deno-permission-boundaries": {
+      "type": "concept",
+      "title": "Deno Permission Boundaries",
+      "domain": "engineering",
+      "created": "2026-10-26",
+      "updated": "2026-10-26"
     },
     "concepts/dnd-kit-2d-grid-sorting-architecture": {
       "type": "concept",
@@ -114,7 +128,7 @@
       "title": "Session Security and Isolation",
       "domain": "engineering",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-10-26"
     },
     "concepts/shortest-column-masonry-layout": {
       "type": "concept",
@@ -136,6 +150,13 @@
       "domain": "engineering",
       "created": "2026-09-25",
       "updated": "2026-10-24"
+    },
+    "concepts/sqlite-isolation-and-connection-boundaries": {
+      "type": "concept",
+      "title": "SQLite Isolation and Connection Boundaries",
+      "domain": "engineering",
+      "created": "2026-10-26",
+      "updated": "2026-10-26"
     },
     "concepts/sqlite-table-recreation-migration": {
       "type": "concept",
@@ -186,7 +207,7 @@
       "title": "Deno Runtime",
       "category": "tool",
       "created": "2026-09-25",
-      "updated": "2026-09-27"
+      "updated": "2026-10-26"
     },
     "entities/dnd-kit-system": {
       "type": "entity",
@@ -200,7 +221,7 @@
       "title": "Drizzle SQLite Store",
       "category": "tool",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-10-26"
     },
     "entities/hono-framework": {
       "type": "entity",
@@ -917,6 +938,36 @@
       "concepts": [
         "[[concepts/whole-line-preview-truncation]]"
       ]
+    },
+    "sources/SRC-2026-10-26-001": {
+      "type": "source",
+      "title": "Isolation In SQLite",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-26-001/extracted.md",
+      "source_id": "SRC-2026-10-26-001",
+      "format": "web",
+      "captured": "2026-10-26",
+      "updated": "2026-10-26"
+    },
+    "sources/SRC-2026-10-26-002": {
+      "type": "source",
+      "title": "Security and permissions",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-26-002/extracted.md",
+      "source_id": "SRC-2026-10-26-002",
+      "format": "web",
+      "captured": "2026-10-26",
+      "updated": "2026-10-26"
+    },
+    "sources/SRC-2026-10-26-003": {
+      "type": "source",
+      "title": "OWASP Cross-Site Request Forgery Prevention Cheat Sheet",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-26-003/extracted.md",
+      "source_id": "SRC-2026-10-26-003",
+      "format": "web",
+      "captured": "2026-10-26",
+      "updated": "2026-10-26"
     },
     "sources/e2e-native-parallel-speedup-vs-stability-167": {
       "type": "source",
@@ -2117,6 +2168,41 @@
       "relevance": "high",
       "observed_at": "2026-10-26T04:01:22.567Z",
       "source_context": "用户要求提交全部代码、创建PR并合并main",
+      "created": "2026-10-26",
+      "updated": "2026-10-26"
+    },
+    "sources/obs-2026-10-26-q1-q19": {
+      "type": "source",
+      "title": "Observation: 工作区任务栏设计访谈已确认 Q1–Q19，尚未授权实施",
+      "tags": [
+        "workspace",
+        "dock",
+        "navigation",
+        "grilling",
+        "design"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-26-q1-q19",
+      "relevance": "high",
+      "observed_at": "2026-10-26T06:57:51.511Z",
+      "source_context": "2026-10-26 任务栏与移除资料库设计访谈",
+      "created": "2026-10-26",
+      "updated": "2026-10-26"
+    },
+    "sources/obs-2026-10-26-q20-q25": {
+      "type": "source",
+      "title": "Observation: 任务栏访谈 Q20–Q25 已确认，等待最终共同理解确认",
+      "tags": [
+        "workspace",
+        "dock",
+        "grilling",
+        "interaction"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-26-q20-q25",
+      "relevance": "high",
+      "observed_at": "2026-10-26T07:03:30.081Z",
+      "source_context": "2026-10-26 任务栏设计访谈后续确认",
       "created": "2026-10-26",
       "updated": "2026-10-26"
     },

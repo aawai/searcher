@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-26-001",
+  "captured": "2026-10-26",
+  "packet_version": "1.0",
+  "title": "Isolation In SQLite",
+  "url": "https://www.sqlite.org/isolation.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

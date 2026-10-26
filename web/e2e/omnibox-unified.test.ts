@@ -576,8 +576,6 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
                     "false",
                 );
                 await page.keyboard.press("Escape");
-                await libraryView(page, "root").waitFor();
-                await page.keyboard.press("Escape");
                 await libraryPanel(page).waitFor({ state: "detached" });
                 await page.waitForFunction(() =>
                     document.activeElement?.id === "search-query"

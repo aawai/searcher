@@ -7,7 +7,7 @@ import {
     initialDocumentsWorkspaceState,
 } from "../workspace/workspace-state.ts";
 
-export type LibrarySelection = { kind: "notes" | "apps" | "conversations" };
+export type LibrarySelection = { kind: "notes" | "apps" };
 export interface LibraryState {
     open: boolean;
     selection: LibrarySelection | null;
@@ -18,7 +18,7 @@ export type DocumentsAction = DomainWorkspaceAction<DocumentsRoute> | {
     scope: DocumentsScope;
 };
 export type LibraryAction =
-    | { type: "enter" | "leave" | "close" | "list" | "reset" }
+    | { type: "leave" | "reset" }
     | { type: "select"; selection: LibrarySelection; route?: DocumentsRoute }
     | { type: "documents"; action: DocumentsAction };
 export const initialLibraryState: LibraryState = {
@@ -36,19 +36,10 @@ export function libraryReducer(
     switch (action.type) {
         case "reset":
             return initialLibraryState;
-        case "enter":
-            return { ...state, open: true };
         case "leave":
-        case "close":
             return {
                 ...state,
                 open: false,
-                selection: null,
-                documents: root(state.documents),
-            };
-        case "list":
-            return {
-                ...state,
                 selection: null,
                 documents: root(state.documents),
             };

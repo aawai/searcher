@@ -1,57 +1,51 @@
 import { assert, assertEquals } from "@std/assert";
 import type { Locator, Page } from "playwright";
 
-export function libraryMenuTrigger(page: Page): Locator {
-    return page.locator(".user-avatar-trigger");
+export function workspaceDock(page: Page): Locator {
+    return page.getByRole("navigation", { name: "工作区任务栏", exact: true });
 }
 
-/** Shared surface: nonmodal right panel at >=768px, bottom Sheet below. */
+export function workspaceNotesTrigger(page: Page): Locator {
+    return workspaceDock(page).getByRole("button", {
+        name: "笔记",
+        exact: true,
+    });
+}
+
+export function workspaceAppsTrigger(page: Page): Locator {
+    return workspaceDock(page).getByRole("button", {
+        name: "应用",
+        exact: true,
+    });
+}
+
+/** Shared surface: nonmodal right panel at >=768px, bottom sheet below (nonmodal in all widths). */
 export function libraryPanel(page: Page): Locator {
     return page.locator("[data-library]");
 }
 
 export function libraryView(
     page: Page,
-    view: "root" | "notes" | "apps" | "conversations",
+    view: "notes" | "apps",
 ): Locator {
     return page.locator(`[data-library-view="${view}"]`);
 }
 
-export function libraryRoot(page: Page): Locator {
-    return libraryView(page, "root");
-}
-
-export function libraryEntry(
-    page: Page,
-    view: "notes" | "apps" | "conversations",
-): Locator {
-    const names = { notes: "笔记", apps: "应用", conversations: "AI 对话" };
-    return libraryRoot(page).getByRole("button", {
-        name: names[view],
-        exact: true,
-    });
-}
-
-export async function openLibrary(page: Page): Promise<Locator> {
-    await libraryMenuTrigger(page).click();
-    await page.getByRole("menuitem", { name: "资料库", exact: true }).click();
-    await libraryRoot(page).waitFor();
-    return libraryPanel(page);
-}
-
 export async function openNotes(page: Page): Promise<Locator> {
-    await libraryMenuTrigger(page).click();
-    await page.getByRole("menuitem", { name: "笔记", exact: true }).click();
+    await workspaceNotesTrigger(page).click();
     await libraryView(page, "notes").waitFor();
     return libraryPanel(page);
 }
 
+export async function openApps(page: Page): Promise<Locator> {
+    await workspaceAppsTrigger(page).click();
+    await libraryView(page, "apps").waitFor();
+    return libraryPanel(page);
+}
+
 export async function openNotesByKeyboard(page: Page): Promise<Locator> {
-    await libraryMenuTrigger(page).focus();
-    await page.keyboard.press("Enter");
-    const item = page.getByRole("menuitem", { name: "笔记", exact: true });
-    await item.waitFor();
-    await item.focus();
+    const trigger = workspaceNotesTrigger(page);
+    await trigger.focus();
     await page.keyboard.press("Enter");
     await libraryView(page, "notes").waitFor();
     return libraryPanel(page);
@@ -91,7 +85,7 @@ export async function assertInteractiveHome(page: Page): Promise<void> {
 
 export async function closeLibrary(page: Page): Promise<void> {
     await libraryPanel(page).getByRole("button", {
-        name: "关闭资料库",
+        name: "返回首页",
         exact: true,
     }).click();
     await libraryPanel(page).waitFor({ state: "detached" });

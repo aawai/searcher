@@ -1,0 +1,490 @@
+/* Workspace Dock styling */
+.dock-container {
+    position: fixed;
+    z-index: var(--elevation-dock);
+    pointer-events: none;
+    box-sizing: border-box;
+}
+
+/* Four-edge positioning on desktop */
+.dock-container[data-edge="bottom"] {
+    bottom: max(var(--space-3), env(safe-area-inset-bottom, var(--space-3)));
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.dock-container[data-edge="top"] {
+    top: max(var(--space-3), env(safe-area-inset-top, var(--space-3)));
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.dock-container[data-edge="left"] {
+    left: max(var(--space-3), env(safe-area-inset-left, var(--space-3)));
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.dock-container[data-edge="right"] {
+    right: max(var(--space-3), env(safe-area-inset-right, var(--space-3)));
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Force bottom on mobile viewports */
+@media (max-width: 767px) {
+    .dock-container {
+        top: auto !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: max(var(--space-2), env(safe-area-inset-bottom, var(--space-2)))
+            !important;
+        transform: translateX(-50%) !important;
+        max-width: calc(100vw - var(--space-4));
+    }
+}
+
+/* The dock bar */
+.dock-bar {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    background: var(--material-thick, var(--surface-solid));
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    border: var(--space-hairline) solid var(--border);
+    box-shadow: var(--shadow-l2);
+    border-radius: var(--radius-lg);
+    padding: var(--space-1);
+    gap: var(--space-1);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-x pan-y;
+}
+
+.dock-container[data-edge="bottom"] .dock-bar,
+.dock-container[data-edge="top"] .dock-bar {
+    flex-direction: row;
+    height: var(--dock-size);
+}
+
+.dock-container[data-edge="left"] .dock-bar,
+.dock-container[data-edge="right"] .dock-bar {
+    flex-direction: column;
+    width: var(--dock-size);
+}
+
+@media (max-width: 767px) {
+    .dock-bar {
+        flex-direction: row !important;
+        height: auto !important;
+        min-height: var(--dock-size);
+        width: auto !important;
+        max-width: 100%;
+        border-radius: var(--radius-lg);
+    }
+}
+
+/* System and App groups */
+.dock-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    box-sizing: border-box;
+}
+
+.dock-container[data-edge="left"] .dock-group,
+.dock-container[data-edge="right"] .dock-group {
+    flex-direction: column;
+}
+
+@media (max-width: 767px) {
+    .dock-group {
+        flex-direction: row !important;
+    }
+}
+
+.dock-group--system {
+    flex-shrink: 0;
+}
+
+.dock-group--apps {
+    flex-shrink: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: min(52vw, 480px);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.dock-group--apps::-webkit-scrollbar {
+    display: none;
+}
+
+.dock-container[data-edge="left"] .dock-group--apps,
+.dock-container[data-edge="right"] .dock-group--apps {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: min(45vh, 400px);
+    max-width: none;
+}
+
+@media (max-width: 767px) {
+    .dock-group--apps {
+        max-width: calc(100vw - 230px);
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+    }
+}
+
+/* Divider between groups */
+.dock-divider {
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+.dock-container[data-edge="bottom"] .dock-divider,
+.dock-container[data-edge="top"] .dock-divider {
+    width: var(--space-hairline);
+    height: var(--space-6);
+    margin: 0 var(--space-half);
+}
+
+.dock-container[data-edge="left"] .dock-divider,
+.dock-container[data-edge="right"] .dock-divider {
+    height: var(--space-hairline);
+    width: var(--space-6);
+    margin: var(--space-half) 0;
+}
+
+@media (max-width: 767px) {
+    .dock-divider {
+        width: var(--space-hairline) !important;
+        height: var(--space-6) !important;
+        margin: 0 var(--space-half);
+    }
+}
+
+/* Dock items */
+.dock-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: var(--dock-item-size);
+    height: var(--dock-item-size);
+    min-width: var(--control-touch-target);
+    min-height: var(--control-touch-target);
+    border-radius: var(--control-radius);
+    border: none;
+    background: transparent;
+    color: var(--foreground);
+    cursor: pointer;
+    text-decoration: none;
+    padding: 0;
+    outline: none;
+    box-sizing: border-box;
+    transition: background var(--motion-fast) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard),
+        color var(--motion-fast) var(--ease-standard);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.dock-item:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.dock-item:hover {
+    background: var(--surface-soft);
+}
+
+.dock-item:active {
+    transform: scale(0.94);
+}
+
+/* Active system entry */
+.dock-item[data-active="true"] {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.dock-item[data-active="true"]::after {
+    content: "";
+    position: absolute;
+    width: var(--space-1);
+    height: var(--space-1);
+    border-radius: 50%;
+    background: var(--accent);
+    bottom: var(--space-half);
+}
+
+.dock-container[data-edge="left"] .dock-item[data-active="true"]::after {
+    bottom: auto;
+    right: var(--space-half);
+    top: calc(50% - var(--space-half));
+}
+
+.dock-container[data-edge="right"] .dock-item[data-active="true"]::after {
+    bottom: auto;
+    left: var(--space-half);
+    top: calc(50% - var(--space-half));
+}
+
+@media (max-width: 767px) {
+    .dock-item[data-active="true"]::after {
+        display: none;
+    }
+}
+
+/* System labels on mobile */
+.dock-item-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: var(--space-visually-hidden-offset);
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 767px) {
+    .dock-item--system {
+        width: auto;
+        min-width: var(--control-touch-target);
+        height: auto;
+        min-height: var(--control-touch-target);
+        padding: var(--space-1) var(--space-2);
+    }
+
+    .dock-item--system .dock-item-label {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: var(--space-half) 0 0;
+        overflow: visible;
+        clip: auto;
+        white-space: nowrap;
+        font-size: var(--font-metadata-size);
+        line-height: var(--font-metadata-line-height);
+        color: var(--muted);
+        font-weight: var(--font-label-weight);
+    }
+
+    .dock-item--system[data-active="true"] .dock-item-label {
+        color: var(--accent);
+        font-weight: var(--font-title-weight);
+    }
+}
+
+/* Icon glyph in dock */
+.dock-glyph {
+    width: var(--control-compact-height);
+    height: var(--control-compact-height);
+    font-size: var(--font-body-size);
+    border-radius: var(--control-radius);
+}
+
+.dock-item.is-dragging {
+    opacity: 0.35;
+    transform: scale(0.92);
+}
+
+.dock-item.is-drag-preview {
+    box-shadow: var(--shadow-l3);
+    background: var(--surface-solid);
+    border: var(--space-hairline) solid var(--border);
+    border-radius: var(--control-radius);
+    z-index: var(--elevation-drag);
+}
+
+/* Actions button */
+.dock-item--action {
+    color: var(--muted);
+    flex-shrink: 0;
+}
+
+.dock-item--error {
+    color: var(--danger);
+}
+
+.dock-item--action:hover {
+    color: var(--foreground);
+}
+
+/* Collapse trigger button */
+.dock-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-touch-target);
+    height: var(--control-touch-target);
+    min-width: var(--control-touch-target);
+    min-height: var(--control-touch-target);
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+    flex-shrink: 0;
+    transition: background var(--motion-fast), color var(--motion-fast);
+}
+
+.dock-collapse-btn:hover {
+    background: var(--surface-soft);
+    color: var(--foreground);
+}
+
+.dock-collapse-btn:focus-visible {
+    outline: 2px solid var(--ring);
+}
+
+/* Floating Ball when collapsed */
+.dock-ball {
+    position: fixed;
+    z-index: var(--elevation-dock);
+    pointer-events: auto;
+    width: var(--dock-ball-size);
+    height: var(--dock-ball-size);
+    min-width: var(--control-touch-target);
+    min-height: var(--control-touch-target);
+    border-radius: var(--radius-pill);
+    border: var(--space-hairline) solid var(--border);
+    background: var(--material-thick, var(--surface-solid));
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-l2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--foreground);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.dock-ball:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.dock-ball:hover {
+    transform: scale(1.08);
+    box-shadow: var(--shadow-l3);
+}
+
+.dock-ball:active {
+    transform: scale(0.95);
+}
+
+.dock-ball[data-ball-side="left"] {
+    left: max(var(--space-3), env(safe-area-inset-left, var(--space-3)));
+}
+
+.dock-ball[data-ball-side="right"] {
+    right: max(var(--space-3), env(safe-area-inset-right, var(--space-3)));
+}
+
+/* Error badge on dock */
+.dock-error-badge {
+    position: absolute;
+    top: var(--space-half);
+    right: var(--space-half);
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: 50%;
+    background: var(--danger);
+}
+
+/* Reduced transparency */
+@media (prefers-reduced-transparency: reduce) {
+    .dock-bar,
+    .dock-ball {
+        background: var(--surface-solid) !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+}
+
+[data-reduced-transparency="true"] .dock-bar,
+[data-reduced-transparency="true"] .dock-ball {
+    background: var(--surface-solid) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .dock-bar,
+    .dock-ball,
+    .dock-item,
+    .dock-collapse-btn {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* Settings and Management items */
+.dock-settings-list,
+.dock-management-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    width: 100%;
+}
+
+.dock-settings-item,
+.dock-management-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--control-radius);
+    background: var(--surface-soft);
+    gap: var(--space-3);
+}
+
+.dock-settings-item__info,
+.dock-management-item__info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1;
+    min-width: 0;
+}
+
+.dock-settings-item__title,
+.dock-management-item__title {
+    font-size: var(--font-body-size);
+    font-weight: var(--font-label-weight);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dock-settings-item__actions,
+.dock-management-item__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-shrink: 0;
+}
+
+/* Management modal content container */
+.dock-management-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: var(--space-1) 0;
+}

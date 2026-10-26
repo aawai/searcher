@@ -7,8 +7,10 @@
 - [[concepts/accessible-grid-drag-keyboard-and-announcements]] — Accessible Grid Drag — Keyboard and Announcements *(created: 2026-10-25)*
 - [[concepts/aria-combobox-grouped-suggestions]] — ARIA Combobox Grouped Suggestions *(created: 2026-10-24)*
 - [[concepts/contract-first-testing]] — Contract First Testing *(created: 2026-09-25)*
+- [[concepts/csrf-defense-boundaries]] — CSRF Defense Boundaries *(created: 2026-10-26)*
 - [[concepts/database-queue-serialization]] — Database Queue Serialization *(created: 2026-09-25)*
 - [[concepts/deno-native-serve-architecture]] — Deno Native Serve Architecture *(created: unknown)*
+- [[concepts/deno-permission-boundaries]] — Deno Permission Boundaries *(created: 2026-10-26)*
 - [[concepts/dnd-kit-2d-grid-sorting-architecture]] — dnd-kit 2D Grid Sorting Architecture *(created: 2026-09-25)*
 - [[concepts/hono-middleware-pipeline-request-intake]] — Hono Middleware Pipeline & Request Intake *(created: 2026-09-25)*
 - [[concepts/hono-rpc-type-safe-client]] — Hono RPC & Type-Safe Client *(created: 2026-09-26)*
@@ -23,6 +25,7 @@
 - [[concepts/shortest-column-masonry-layout]] — Shortest Column Masonry Layout *(created: 2026-09-25)*
 - [[concepts/single-process-architecture]] — Single Process Architecture *(created: 2026-09-25)*
 - [[concepts/sqlite-fts5-fulltext-search]] — SQLite FTS5 Fulltext Search *(created: 2026-09-25)*
+- [[concepts/sqlite-isolation-and-connection-boundaries]] — SQLite Isolation and Connection Boundaries *(created: 2026-10-26)*
 - [[concepts/sqlite-table-recreation-migration]] — SQLite Table Recreation Migration *(created: 2026-09-25)*
 - [[concepts/tailwind-v4-css-first-architecture]] — Tailwind v4 CSS First Architecture *(created: 2026-09-27)*
 - [[concepts/view-transitions-shared-element]] — View Transitions Shared Element *(created: 2026-10-24)*
@@ -116,6 +119,8 @@
 - [[sources/obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden]] — Observation: dnd-kit default English announcements not overridden *(created: 2026-10-25)*
 - [[sources/obs-2026-10-26-]] — Observation: 玻璃效果通透档放宽对比度承诺 *(created: 2026-10-26)*
 - [[sources/obs-2026-10-26-pr-309-main]] — Observation: 首页应用密度与可选底板经 PR 309 合并 main *(created: 2026-10-26)*
+- [[sources/obs-2026-10-26-q1-q19]] — Observation: 工作区任务栏设计访谈已确认 Q1–Q19，尚未授权实施 *(created: 2026-10-26)*
+- [[sources/obs-2026-10-26-q20-q25]] — Observation: 任务栏访谈 Q20–Q25 已确认，等待最终共同理解确认 *(created: 2026-10-26)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -177,10 +182,13 @@
 - [[sources/SRC-2026-10-25-004]] — Understanding WCAG 2.2 SC 2.5.8: Target Size (Minimum) *(created: unknown)*
 - [[sources/SRC-2026-10-25-005]] — dnd-kit Accessibility Guide *(created: unknown)*
 - [[sources/SRC-2026-10-25-006]] — MDN: line-clamp CSS property *(created: unknown)*
+- [[sources/SRC-2026-10-26-001]] — Isolation In SQLite *(created: unknown)*
+- [[sources/SRC-2026-10-26-002]] — Security and permissions *(created: unknown)*
+- [[sources/SRC-2026-10-26-003]] — OWASP Cross-Site Request Forgery Prevention Cheat Sheet *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-26T04:01:22.608Z* | *Total pages: 168*
+*Last updated: 2026-10-26T08:04:04.461Z* | *Total pages: 176*

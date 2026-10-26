@@ -11,6 +11,7 @@ const paginationSuites = {
 export const suites = {
     workspace: [
         "workspace",
+        "dock",
         "workspace-shell",
         "library",
         "library-apps",

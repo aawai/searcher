@@ -9,10 +9,10 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import {
-    libraryMenuTrigger,
     libraryPanel,
     openNotes,
     openNotesByKeyboard,
+    workspaceNotesTrigger,
 } from "./helpers/library.ts";
 
 Deno.test("production Workspace state, keyboard and responsive contracts", async (t) => {
@@ -66,7 +66,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         }, { path, method, body }) as T;
     }
     const panel = libraryPanel(page);
-    const search = () => panel.locator("input[data-workspace-search]");
+    const search = () => panel.locator("input[data-workspace-search]:visible");
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
@@ -74,7 +74,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     }
     const closeButton = (target: Page = page) =>
         libraryPanel(target).getByRole("button", {
-            name: "关闭资料库",
+            name: "返回首页",
         });
     async function closeAllWorkspaces(target: Page = page) {
         if (await libraryPanel(target).first().isVisible()) {
@@ -137,7 +137,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             document.documentElement.dataset.theme === expected,
                         theme,
                     );
-                    const trigger = libraryMenuTrigger(page);
+                    const trigger = workspaceNotesTrigger(page);
                     await trigger.waitFor();
                     const opener = await trigger.elementHandle();
                     await page.locator(".hero").waitFor();
@@ -147,14 +147,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     assertEquals(
                         await panel.getAttribute("data-presentation"),
                         viewport.width < 768 ? "sheet" : "panel",
-                    );
-                    await page.waitForFunction(
-                        (expected) =>
-                            document.activeElement?.getAttribute(
-                                "aria-label",
-                            ) ===
-                                expected,
-                        "返回资料库",
                     );
                     assert(await search().getAttribute("aria-label"));
                     assertEquals(
@@ -199,24 +191,13 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             true,
                         );
                     } else {
+                        // Mobile is non-modal in all widths; backdrop is absent
                         assertEquals(
                             await page.locator(
                                 '[data-slot="sheet-backdrop"]',
-                            ).isVisible(),
-                            true,
+                            ).count(),
+                            0,
                         );
-                        await closeButton().focus();
-                        for (let tabIndex = 0; tabIndex < 12; tabIndex++) {
-                            await page.keyboard.press("Tab");
-                            assertEquals(
-                                await page.evaluate(() =>
-                                    !!document.activeElement?.closest(
-                                        ".workspace-panel--mobile, .workspace-panel",
-                                    )
-                                ),
-                                true,
-                            );
-                        }
                     }
                     await closeButton().focus();
                     await page.keyboard.press("Enter");
@@ -318,8 +299,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.setViewportSize({ width, height });
                 await visit("/");
 
-                // Menu entries restore focus to the avatar trigger.
-                const trigger = libraryMenuTrigger(page);
+                // Dock trigger restores focus when workspace closes.
+                const trigger = workspaceNotesTrigger(page);
                 await trigger.waitFor();
                 const opener = await trigger.elementHandle();
                 await openNotesByKeyboard(page);
@@ -327,14 +308,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 assertEquals(
                     await panel.getAttribute("data-presentation"),
                     expectedPresentation,
-                );
-
-                // Notes are nested under the library root at every breakpoint.
-                await page.waitForFunction(
-                    (expected) =>
-                        document.activeElement?.getAttribute("aria-label") ===
-                            expected,
-                    "返回资料库",
                 );
 
                 // Nested Back behavior in Zen panel/sheet
@@ -345,10 +318,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await noteOpen.focus();
                 await page.keyboard.press("Enter");
                 await panel.locator("[data-workspace-editor]").waitFor();
-                // Back returns to the library root
+                // Back returns to notes list
                 await panel.getByRole("button", {
-                    name: "返回上一级",
-                    exact: true,
+                    name: /返回笔记|返回上一级/,
                 }).click();
                 await search().waitFor();
 
@@ -369,11 +341,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.keyboard.press("Escape");
                 await page.getByRole("menu").waitFor({ state: "detached" });
                 assertEquals(await panel.isVisible(), true);
-                await page.keyboard.press("Escape");
-                await panel.getByRole("heading", {
-                    name: "资料库",
-                    exact: true,
-                }).waitFor();
+                // Next Escape closes workspace surface directly (no root view)
                 await page.keyboard.press("Escape");
                 await panel.first().waitFor({ state: "detached" });
                 await page.waitForFunction(
@@ -431,10 +399,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
             await openDocs();
-            await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("aria-label") ===
-                    "返回资料库"
-            );
+            await search().waitFor({ state: "visible" });
 
             // 1. Focus visibility and blur without shift
             await homeSettled();
@@ -593,28 +558,20 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     }).click();
                     await panel.locator("[data-workspace-editor]").waitFor();
                     await panel.getByRole("button", {
-                        name: "返回上一级",
-                        exact: true,
+                        name: /返回笔记|返回上一级/,
                     }).focus();
                     await page.keyboard.press("Escape");
                     await search().waitFor();
-                    await panel.getByRole("button", {
-                        name: "返回资料库",
-                        exact: true,
-                    }).focus();
-                    await page.keyboard.press("Escape");
-                    await panel.getByRole("heading", {
-                        name: "资料库",
-                        exact: true,
-                    }).waitFor();
                     await page.keyboard.press("Escape");
                     await panel.waitFor({ state: "detached" });
-                    await page.locator('[data-slot="sheet-backdrop"]').waitFor({
-                        state: "detached",
-                    });
                     assertEquals(await libraryPanel(page).count(), 0);
-                    await page.waitForFunction(() =>
-                        document.activeElement?.matches(".user-avatar-trigger")
+                    await page.waitForFunction(
+                        (el) =>
+                            document.activeElement ===
+                                (el?.isConnected
+                                    ? el
+                                    : document.getElementById("search-query")),
+                        await workspaceNotesTrigger(page).elementHandle(),
                     );
                     assertEquals(
                         await page.evaluate(() => {
@@ -660,21 +617,19 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "mobile Sheet detaches with its backdrop and restores its opener or search fallback",
+        "mobile Sheet detaches and restores its opener or search fallback",
         async () => {
             await page.setViewportSize({ width: 390, height: 844 });
             await visit("/");
-            const opener = await libraryMenuTrigger(page).elementHandle();
+            const trigger = workspaceNotesTrigger(page);
+            await trigger.waitFor();
+            const opener = await trigger.elementHandle();
             await openDocs();
-            await page.locator('[data-slot="sheet-backdrop"]').waitFor();
             await closeButton().click();
             await page.locator(".workspace-panel--mobile").waitFor({
                 state: "detached",
             });
-            await page.locator('[data-slot="sheet-backdrop"]').waitFor({
-                state: "detached",
-            });
-            await libraryMenuTrigger(page).waitFor();
+            await trigger.waitFor();
             await page.waitForFunction(
                 (element) =>
                     document.activeElement ===

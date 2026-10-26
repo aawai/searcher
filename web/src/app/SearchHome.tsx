@@ -1,31 +1,3 @@
-import { MEDIA_QUERIES } from "../design-system/breakpoints.ts";
-import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
-import { PageShell } from "../components/searcher/PageShell.tsx";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-    useCallback,
-    useEffect,
-    useLayoutEffect,
-    useReducer,
-    useRef,
-    useState,
-} from "react";
-import { routes } from "./routes.ts";
-import {
-    buildSearchUrl,
-    type EngineId,
-    SEARCH_ENGINES,
-} from "@shared/engines.ts";
-import {
-    AppWindow,
-    ChevronRight,
-    type LucideIcon,
-    NotebookPen,
-    Sparkles,
-    X,
-} from "lucide-react";
-import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
-import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import type {
     CreateDocumentInput,
     DocumentDto,
@@ -33,21 +5,24 @@ import type {
     UpdateDocumentInput,
 } from "@shared/documents.ts";
 import {
-    type HomeNoteItem,
-    needsNoteRefresh,
-    setNote,
-} from "../features/home-layouts/home-notes.ts";
+    buildSearchUrl,
+    type EngineId,
+    SEARCH_ENGINES,
+} from "@shared/engines.ts";
+import { Maximize2, Minimize2, X } from "lucide-react";
 import {
-    fetchHomeNote,
-    fetchHomeNotes,
-    patchNote,
-    patchNoteLayouts,
-    restoreNote,
-    trashNote,
-} from "../features/home-layouts/home-notes-api.ts";
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useReducer,
+    useRef,
+    useState,
+} from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { PageShell } from "../components/searcher/PageShell.tsx";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
-import { Button } from "../components/ui/button.tsx";
-import { useEscapeLayerActive } from "../components/ui/escape-layer-stack.tsx";
+import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -58,15 +33,31 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../components/ui/alert-dialog.tsx";
-import { api, ApiError, json } from "../lib/api.ts";
-import { getLocal, setLocal } from "../lib/local.ts";
-import { errorMessage, useAppState } from "./state.tsx";
-import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
+import { Button } from "../components/ui/button.tsx";
+import { useEscapeLayerActive } from "../components/ui/escape-layer-stack.tsx";
+import { MEDIA_QUERIES } from "../design-system/breakpoints.ts";
 import { useAppsLayoutPersistence } from "../features/app-library/useAppsLayoutPersistence.ts";
-import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx";
-import { CreateLibraryDocument } from "../features/workspace/DocumentLibraryActions.tsx";
-import "../features/workspace/documents-workspace.css";
-import type { DocumentsRoute } from "../features/workspace/workspace-state.ts";
+import { useDock } from "../features/dock/DockProvider.tsx";
+import type {
+    HomeNoteTaskSaver,
+    HomeNoteTaskSaverDeps,
+} from "../features/home-layouts/home-note-task-saver.ts";
+import {
+    fetchHomeNote,
+    fetchHomeNotes,
+    patchNote,
+    patchNoteLayouts,
+    restoreNote,
+    trashNote,
+} from "../features/home-layouts/home-notes-api.ts";
+import {
+    type HomeNoteItem,
+    needsNoteRefresh,
+    setNote,
+} from "../features/home-layouts/home-notes.ts";
+import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
+import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
+import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import {
     initialLibraryState,
     type LibraryAction,
@@ -76,18 +67,17 @@ import {
     shouldConfirmLibraryAction,
 } from "../features/library/library-state.ts";
 import { LibraryAppsView } from "../features/library/LibraryAppsView.tsx";
-import { LibraryConversationsView } from "../features/library/LibraryConversationsView.tsx";
-import { useLibraryConversations } from "../features/library/useLibraryConversations.ts";
-import { useLibraryShortcut } from "../features/library/useLibraryShortcut.ts";
-import {
-    type LibraryRequest,
-    readLibraryRequest,
-} from "../features/library/library-request.ts";
-import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
-import type {
-    HomeNoteTaskSaver,
-    HomeNoteTaskSaverDeps,
-} from "../features/home-layouts/home-note-task-saver.ts";
+import "../features/library/library.css";
+import { CreateLibraryDocument } from "../features/workspace/DocumentLibraryActions.tsx";
+import "../features/workspace/documents-workspace.css";
+import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx";
+import type { DocumentsRoute } from "../features/workspace/workspace-state.ts";
+import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
+import { WorkspaceActivity } from "../features/workspace/WorkspaceActivity.ts";
+import { api, ApiError, json } from "../lib/api.ts";
+import { getLocal, setLocal } from "../lib/local.ts";
+import { routes } from "./routes.ts";
+import { errorMessage, useAppState } from "./state.tsx";
 
 import {
     type AppSessionNavigation,
@@ -95,28 +85,28 @@ import {
     type AppSessionRouteIntent,
 } from "../components/searcher/AppSessionProvider.tsx";
 import type { AppSessionOptions } from "../components/searcher/useAppSession.ts";
-import { useInlineAnswer } from "../features/inline-ai/useInlineAnswer.ts";
+import {
+    AppFormDialog,
+    type AppFormTarget,
+} from "../features/app-library/AppFormDialog.tsx";
+import type {
+    ExtendedWebApp,
+    WebAppGroup,
+} from "../features/app-library/library-types.ts";
+import { useAppLibraryActions } from "../features/app-library/useAppLibraryActions.ts";
 import { useHomeContinue } from "../features/home-calm/useHomeCalm.ts";
-import { useAppOutletContext } from "./outlet-context.ts";
+import { useInlineAnswer } from "../features/inline-ai/useInlineAnswer.ts";
+import {
+    isSharedNote,
+    type SharedNote,
+} from "../features/share/share-capture.ts";
 import type { SearchQuickCommand } from "../features/shortcuts/shortcut-catalog.ts";
+import { useAppOutletContext } from "./outlet-context.ts";
 import {
     undoErrorMessage,
     undoMessage,
     type UndoSubject,
 } from "./undo-feedback.ts";
-import type {
-    ExtendedWebApp,
-    WebAppGroup,
-} from "../features/app-library/library-types.ts";
-import {
-    AppFormDialog,
-    type AppFormTarget,
-} from "../features/app-library/AppFormDialog.tsx";
-import { useAppLibraryActions } from "../features/app-library/useAppLibraryActions.ts";
-import {
-    isSharedNote,
-    type SharedNote,
-} from "../features/share/share-capture.ts";
 type UndoRecordBase = {
     id: string;
     userId: string;
@@ -176,20 +166,6 @@ type PendingAction =
     | { kind: "route"; intent: AppSessionRouteIntent }
     | { kind: "appForm" };
 
-const LIBRARY_ICONS: Record<LibrarySelection["kind"], LucideIcon> = {
-    notes: NotebookPen,
-    conversations: Sparkles,
-    apps: AppWindow,
-};
-
-function libraryTitle(selection: LibrarySelection) {
-    return {
-        notes: "笔记",
-        apps: "应用",
-        conversations: "AI 对话",
-    }[selection.kind];
-}
-
 export function SearchHome() {
     const { user, appearance, authSession, setAppearance } = useAppState();
     const { aiModels } = useAppOutletContext();
@@ -209,7 +185,6 @@ export function SearchHome() {
     const location = useLocation();
     const consumedDocumentNavigationRef = useRef<string | null>(null);
     const consumedShareNavigationRef = useRef<string | null>(null);
-    const consumedLibraryNavigationRef = useRef<string | null>(null);
     const captureNoteRef = useRef<(note: SharedNote) => Promise<boolean>>(
         () => Promise.resolve(false),
     );
@@ -264,9 +239,26 @@ export function SearchHome() {
         libraryReducer,
         initialLibraryState,
     );
+    const searchParams = useMemo(
+        () => new URLSearchParams(location.search),
+        [location.search],
+    );
+    const currentView = searchParams.get("view");
+    const isLibraryOpen = Boolean(
+        user && (currentView === "apps" || currentView === "notes"),
+    );
+
+    const dock = useDock();
+    const [noteFullScreen, setNoteFullScreen] = useState(false);
+
+    useEffect(() => {
+        dock.setSuppressed(noteFullScreen);
+        return () => dock.setSuppressed(false);
+    }, [noteFullScreen, dock.setSuppressed]);
+
     const libraryRef = useRef(libraryState);
     libraryRef.current = libraryState;
-    const libraryOpen = libraryState.open;
+    const libraryOpen = isLibraryOpen;
     const libraryOpener = useRef<HTMLElement | null>(null);
     const homeRef = useRef<HTMLElement>(null);
     const home = useHomeViewport();
@@ -282,6 +274,7 @@ export function SearchHome() {
     const [appForm, setAppForm] = useState<AppFormTarget | null>(null);
     const [feedbackHost, setFeedbackHost] = useState<HTMLElement | null>(null);
     const dirtyForm = useRef(false);
+    const isNoteDirty = useCallback(() => dirtyForm.current, []);
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(
         null,
     );
@@ -327,6 +320,7 @@ export function SearchHome() {
         if (!action) return;
         updatePendingAction(null);
         if (action.kind === "route") {
+            dirtyForm.current = false;
             action.intent.proceed();
             return;
         }
@@ -337,21 +331,24 @@ export function SearchHome() {
         dirtyForm.current = false;
         dispatchLibrary(action.action);
     }
-    function openLibrary() {
-        if (!currentUserIdRef.current) return;
-        setIsManagingApps(false);
-        requestLibrary({ type: "enter" });
-    }
     function selectLibrary(
         selection: LibrarySelection,
         route?: DocumentsRoute,
     ) {
         if (!currentUserIdRef.current) return;
         setIsManagingApps(false);
+        if (currentView !== selection.kind) {
+            navigate(`/?view=${selection.kind}`);
+        }
         requestLibrary({ type: "select", selection, route });
     }
     function closeLibrary() {
-        requestLibrary({ type: "leave" });
+        if (noteFullScreen) setNoteFullScreen(false);
+        if (currentView) {
+            navigate("/");
+        } else {
+            requestLibrary({ type: "leave" });
+        }
     }
     function openCreateApp(groupId?: string) {
         setAppForm({ mode: "create", groupId });
@@ -394,10 +391,7 @@ export function SearchHome() {
             !ownsCurrentUserData
         ) return;
         consumedDocumentNavigationRef.current = location.key;
-        navigate(
-            `${location.pathname}${location.search}${location.hash}`,
-            { replace: true, state: null },
-        );
+        navigate("/?view=notes", { replace: true, state: null });
         openDocumentRef.current(documentId);
     }, [
         location.hash,
@@ -425,10 +419,10 @@ export function SearchHome() {
         ) return;
         consumedShareNavigationRef.current = location.key;
         const note = routeState.sharedNote;
-        navigate(
-            `${location.pathname}${location.search}${location.hash}`,
-            { replace: true, state: null },
-        );
+        navigate(`${location.pathname}${location.search}${location.hash}`, {
+            replace: true,
+            state: null,
+        });
         void captureNoteRef.current(note);
     }, [
         location.hash,
@@ -441,47 +435,67 @@ export function SearchHome() {
         user?.id,
         workspaceResetUserId,
     ]);
-    function requestLibraryEntry(request: LibraryRequest) {
-        if (request === "notes" || request === "apps") {
-            selectLibrary({ kind: request });
-        } else openLibrary();
+    function requestLibraryEntry(request: "notes" | "apps") {
+        if (!currentUserIdRef.current) return;
+        setIsManagingApps(false);
+        if (currentView === request) return;
+        navigate(`/?view=${request}`);
     }
-    // Avatar entries from any page resolve to the same library.
-    const libraryEntryRef = useRef(requestLibraryEntry);
-    libraryEntryRef.current = requestLibraryEntry;
+    // Sync URL ?view=apps|notes with library state
     useEffect(() => {
-        const request = readLibraryRequest(location.state);
-        if (!request || consumedLibraryNavigationRef.current === location.key) {
+        if (!user || workspaceResetUserId !== user.id || !ownsCurrentUserData) {
             return;
         }
-        if (
-            !user || workspaceResetUserId !== user.id ||
-            !ownsCurrentUserData
-        ) return;
-        consumedLibraryNavigationRef.current = location.key;
-        navigate(
-            `${location.pathname}${location.search}${location.hash}`,
-            { replace: true, state: null },
-        );
-        libraryEntryRef.current(request);
-    }, [
-        location.hash,
-        location.key,
-        location.pathname,
-        location.search,
-        location.state,
-        navigate,
-        ownsCurrentUserData,
-        user?.id,
-        workspaceResetUserId,
-    ]);
+        if (currentView === "notes") {
+            if (
+                !libraryRef.current.open ||
+                libraryRef.current.selection?.kind !== "notes"
+            ) {
+                dispatchLibrary({
+                    type: "select",
+                    selection: { kind: "notes" },
+                });
+            }
+        } else if (currentView === "apps") {
+            if (
+                !libraryRef.current.open ||
+                libraryRef.current.selection?.kind !== "apps"
+            ) {
+                dispatchLibrary({
+                    type: "select",
+                    selection: { kind: "apps" },
+                });
+            }
+        } else {
+            if (libraryRef.current.open) {
+                dispatchLibrary({ type: "leave" });
+            }
+        }
+    }, [currentView, user, workspaceResetUserId, ownsCurrentUserData]);
     function backDetail() {
+        if (noteFullScreen) {
+            setNoteFullScreen(false);
+            return;
+        }
+        if (dirtyForm.current) {
+            updatePendingAction({
+                kind: "library",
+                action: { type: "documents", action: { type: "back" } },
+            });
+            return;
+        }
         if (libraryRef.current.documents.stack.length > 0) {
             requestLibrary({ type: "documents", action: { type: "back" } });
-        } else requestLibrary({ type: "list" });
+        } else if (
+            libraryRef.current.documents.route.view !== "documents/root"
+        ) {
+            requestLibrary({ type: "select", selection: { kind: "notes" } });
+        } else {
+            closeLibrary();
+        }
     }
     function closeDetail() {
-        requestLibrary({ type: "close" });
+        closeLibrary();
     }
     useEffect(() => {
         dirtyForm.current = false;
@@ -644,6 +658,7 @@ export function SearchHome() {
                     : [...items, saved]
             );
             setAppForm(null);
+            void dock.refreshApps();
         },
         onClose: requestCloseAppForm,
     };
@@ -867,6 +882,7 @@ export function SearchHome() {
                 currentUserIdRef.current !== ownerId
             ) return;
             setApps((items) => items.filter((item) => item.id !== app.id));
+            void dock.refreshApps();
             if (undoQueueRef.current.length === 0 && undoPausedRef.current) {
                 undoPausedRef.current = false;
                 setUndoPaused(false);
@@ -977,6 +993,7 @@ export function SearchHome() {
             }
             if (restoredApps.length > 0) {
                 setApps((items) => [...items, ...restoredApps]);
+                void dock.refreshApps();
             }
             if (restoredNotes.length > 0) {
                 setHomeNotes((items) =>
@@ -1271,8 +1288,13 @@ export function SearchHome() {
         const { target } = command;
         if (target.type === "theme") {
             void setAppearance({ theme: target.theme });
-        } else if (target.type === "route") navigate(target.to);
-        else if (target.type === "library") requestLibraryEntry(target.request);
+        } else if (target.type === "route") {
+            navigate(target.to, { viewTransition: true });
+        } else if (target.type === "library") {
+            navigate("/?view=notes");
+        } else if (target.type === "apps") {
+            navigate("/?view=apps");
+        }
     }
     const layoutProps: HomeLayoutProps = {
         user,
@@ -1321,14 +1343,8 @@ export function SearchHome() {
         },
         setError,
     };
-    const sources = useLibraryConversations(user?.id ?? null, libraryOpen);
-    useLibraryShortcut(Boolean(user) && !overlayActive, () => {
-        if (libraryRef.current.open) closeLibrary();
-        else openLibrary();
-    });
-    const selectedId = libraryState.selection?.kind ?? null;
     const currentRoute = libraryState.documents.route;
-    const editor = libraryState.selection?.kind === "notes" &&
+    const editor = currentView === "notes" &&
         currentRoute.view !== "documents/root";
     function returnLibraryFocus() {
         return libraryFocusTarget(
@@ -1352,88 +1368,80 @@ export function SearchHome() {
     }, [libraryOpen]);
     function renderWorkspaceContent() {
         if (!user) return null;
-        if (!libraryState.selection) {
-            return (
-                <div data-library-view="root" className="library-root">
-                    {(["notes", "conversations", "apps"] as const).map((
-                        kind,
-                    ) => {
-                        const Icon = LIBRARY_ICONS[kind];
-                        return (
-                            <Button
-                                key={kind}
-                                variant="ghost"
-                                onClick={() => selectLibrary({ kind })}
-                            >
-                                <Icon size="1em" className="icon-md" />
-                                <span>{libraryTitle({ kind })}</span>
-                                <ChevronRight
-                                    size="1em"
-                                    className="icon-md library-root-chevron"
-                                />
-                            </Button>
-                        );
-                    })}
-                </div>
-            );
-        }
-        if (libraryState.selection.kind === "apps") {
-            return (
-                <LibraryAppsView
-                    apps={currentApps}
-                    groups={currentGroups}
-                    library={library}
-                    onOpenApp={openApp}
-                    onEditApp={openEditApp}
-                    onDeleteApp={softDeleteApp}
-                    showAppLabels={appearance.showAppLabels}
-                />
-            );
-        }
-        if (libraryState.selection.kind === "conversations") {
-            return (
-                <div data-library-view="conversations">
-                    <LibraryConversationsView
-                        conversations={sources.conversations}
-                        loading={sources.loading}
-                        error={sources.conversationsError}
-                    />
-                </div>
-            );
-        }
-        const model = libraryState.documents;
         return (
-            <div data-library-view="notes" className="library-notes">
-                <DocumentsWorkspace
-                    key={user.id}
-                    userId={user.id}
-                    eventSubscriptions={authSession.documentEvents}
-                    state={model.route}
-                    onDirtyChange={(dirty) => {
-                        dirtyForm.current = dirty;
-                    }}
-                    onOpenDocument={(id) =>
-                        requestLibrary({
-                            type: "documents",
-                            action: {
-                                type: "navigate",
-                                route: { view: "documents/edit", id },
-                            },
-                        })}
-                    scope={model.scope}
-                    onScopeChange={(scope) =>
-                        dispatchLibrary({
-                            type: "documents",
-                            action: { type: "scope", scope },
-                        })}
-                    query={model.query}
-                    onQueryChange={(value) =>
-                        dispatchLibrary({
-                            type: "documents",
-                            action: { type: "query", value },
-                        })}
-                />
-            </div>
+            <>
+                {currentView === "apps" && (
+                    <div
+                        className="library-pane library-pane--apps"
+                        data-active={currentView === "apps"
+                            ? "true"
+                            : undefined}
+                        hidden={currentView !== "apps"}
+                    >
+                        <WorkspaceActivity value={currentView === "apps"}>
+                            {currentView === "apps" && (
+                                <LibraryAppsView
+                                    apps={currentApps}
+                                    groups={currentGroups}
+                                    library={library}
+                                    onOpenApp={openApp}
+                                    onEditApp={openEditApp}
+                                    onDeleteApp={softDeleteApp}
+                                    showAppLabels={appearance.showAppLabels}
+                                />
+                            )}
+                        </WorkspaceActivity>
+                    </div>
+                )}
+                {currentView === "notes" && (
+                    <div
+                        data-library-view="notes"
+                        className="library-pane library-pane--notes library-notes"
+                        data-active={currentView === "notes"
+                            ? "true"
+                            : undefined}
+                        hidden={currentView !== "notes"}
+                    >
+                        <WorkspaceActivity value={currentView === "notes"}>
+                            {currentView === "notes" && (
+                                <DocumentsWorkspace
+                                    key={user.id}
+                                    userId={user.id}
+                                    eventSubscriptions={authSession
+                                        .documentEvents}
+                                    state={libraryState.documents.route}
+                                    onDirtyChange={(dirty) => {
+                                        dirtyForm.current = dirty;
+                                    }}
+                                    onOpenDocument={(id) =>
+                                        requestLibrary({
+                                            type: "documents",
+                                            action: {
+                                                type: "navigate",
+                                                route: {
+                                                    view: "documents/edit",
+                                                    id,
+                                                },
+                                            },
+                                        })}
+                                    scope={libraryState.documents.scope}
+                                    onScopeChange={(scope) =>
+                                        dispatchLibrary({
+                                            type: "documents",
+                                            action: { type: "scope", scope },
+                                        })}
+                                    query={libraryState.documents.query}
+                                    onQueryChange={(value) =>
+                                        dispatchLibrary({
+                                            type: "documents",
+                                            action: { type: "query", value },
+                                        })}
+                                />
+                            )}
+                        </WorkspaceActivity>
+                    </div>
+                )}
+            </>
         );
     }
     const mobileFeedback = Boolean(user && mobile && libraryOpen);
@@ -1540,6 +1548,7 @@ export function SearchHome() {
             options={appSessionOptions}
             navigationRef={appSession}
             onRouteBlocked={onRouteBlocked}
+            isExternalDirty={isNoteDirty}
         >
             <PageShell
                 archetype="search"
@@ -1567,34 +1576,21 @@ export function SearchHome() {
                 />
                 {user && (
                     <WorkspaceShell
-                        open={libraryOpen}
+                        open={isLibraryOpen}
                         chromeBottom={home.chromeBottom}
-                        routeKey={`${selectedId ?? "root"}:${
+                        routeKey={`${currentView ?? "closed"}:${
                             JSON.stringify(currentRoute)
                         }`}
-                        title={libraryState.selection
-                            ? libraryTitle(libraryState.selection)
-                            : "资料库"}
-                        nested={Boolean(libraryState.selection)}
+                        title={currentView === "apps" ? "应用" : "笔记"}
+                        nested={currentView === "notes" &&
+                            currentRoute.view !== "documents/root"}
                         expanded={editor}
+                        fullScreen={noteFullScreen}
                         editor={editor}
                         backLabel={libraryState.documents.stack.length
                             ? "返回上一级"
-                            : "返回资料库"}
-                        headerActions={libraryState.selection?.kind ===
-                                    "conversations" && aiAvailable
-                            ? (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    render={
-                                        <Link to={routes.ask} viewTransition />
-                                    }
-                                >
-                                    新对话
-                                </Button>
-                            )
-                            : libraryState.selection?.kind === "apps"
+                            : "返回笔记"}
+                        headerActions={currentView === "apps"
                             ? (
                                 <Button
                                     onClick={() => openCreateApp()}
@@ -1602,7 +1598,7 @@ export function SearchHome() {
                                     添加应用
                                 </Button>
                             )
-                            : libraryState.selection?.kind === "notes" &&
+                            : currentView === "notes" &&
                                     currentRoute.view === "documents/root"
                             ? (
                                 <CreateLibraryDocument
@@ -1611,13 +1607,41 @@ export function SearchHome() {
                                         openDocument(document.id)}
                                 />
                             )
+                            : currentView === "notes" && editor
+                            ? (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={noteFullScreen
+                                        ? "退出全屏"
+                                        : "全屏编辑"}
+                                    onClick={() =>
+                                        setNoteFullScreen((prev) => !prev)}
+                                >
+                                    {noteFullScreen
+                                        ? (
+                                            <Minimize2
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                        )
+                                        : (
+                                            <Maximize2
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                        )}
+                                </Button>
+                            )
                             : undefined}
                         returnFocus={returnLibraryFocus}
                         onBack={backDetail}
                         onClose={closeDetail}
-                        onEscape={libraryState.selection
-                            ? backDetail
-                            : closeLibrary}
+                        onEscape={() => {
+                            if (noteFullScreen) setNoteFullScreen(false);
+                            else if (editor) backDetail();
+                            else closeLibrary();
+                        }}
                         feedback={
                             <>
                                 {error && (
@@ -1632,7 +1656,7 @@ export function SearchHome() {
                         }
                         onFeedbackHost={setFeedbackHost}
                     >
-                        {libraryOpen && renderWorkspaceContent()}
+                        {isLibraryOpen && renderWorkspaceContent()}
                     </WorkspaceShell>
                 )}
                 <AppFormDialog
@@ -1650,8 +1674,11 @@ export function SearchHome() {
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>
-                                {pendingAction?.kind === "route" ||
-                                        pendingAction?.kind === "appForm"
+                                {pendingAction?.kind === "route" &&
+                                        dirtyForm.current
+                                    ? "放弃未保存的修改？"
+                                    : pendingAction?.kind === "route" ||
+                                            pendingAction?.kind === "appForm"
                                     ? "放弃未保存的应用修改？"
                                     : "放弃未保存的修改？"}
                             </AlertDialogTitle>
@@ -1662,7 +1689,9 @@ export function SearchHome() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>继续编辑</AlertDialogCancel>
+                            <AlertDialogCancel onClick={cancelPendingAction}>
+                                继续编辑
+                            </AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={confirmPendingAction}
                             >
