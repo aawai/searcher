@@ -13,6 +13,8 @@ const DARK_NOTE_SCOPE = `[data-theme="dark"] ${NOTE_SCOPE}`;
 type Rgb = readonly [number, number, number];
 type Theme = "light" | "dark";
 const TIERS = ["off", "soft", "regular", "clear"] as const;
+/** Tiers whose Material keeps the readability floor; `clear` is see-through by choice. */
+const MATERIAL_FLOOR_TIERS = ["off", "soft", "regular"] as const;
 const WCAG_AA_TEXT = 4.5;
 const SECONDARY_TEXT = 3;
 
@@ -175,10 +177,15 @@ for (const theme of ["light", "dark"] as const) {
             const text = hex(resolve(tokens, "--foreground"));
             const muted = hex(resolve(tokens, "--muted"));
             // Material is mixed over --material-solid, Floating over --surface-l3.
-            const surfaces = [
-                [`--glass-regular-${theme}`, "--material-solid"],
-                [`--glass-thick-${theme}`, "--surface-l3"],
+            // Floating keeps the floor in every tier; the see-through `clear` Material does not.
+            const floating = [
+                `--glass-thick-${theme}`,
+                "--surface-l3",
             ] as const;
+            const surfaces = tier === "clear" ? [floating] : [
+                [`--glass-regular-${theme}`, "--material-solid"] as const,
+                floating,
+            ];
             // The sheen fades linearly to 0 at 55% of the height; text starts no higher than 25% down.
             const sheen = fillPercent(tokens, "--glass-sheen-peak") / 100 *
                 Number(resolve(tokens, "--glass-sheen-scale")) *
@@ -232,7 +239,7 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 for (const theme of ["light", "dark"] as const) {
-    for (const tier of TIERS) {
+    for (const tier of MATERIAL_FLOOR_TIERS) {
         Deno.test(`glass ${theme}/${tier}: folder label, empty-folder icon and mini icons hold contrast on the folder Material`, () => {
             const tokens = cascade(theme, tier);
             const alpha = fillPercent(tokens, `--glass-regular-${theme}`) / 100;
@@ -300,7 +307,7 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 for (const theme of ["light", "dark"] as const) {
-    for (const tier of TIERS) {
+    for (const tier of MATERIAL_FLOOR_TIERS) {
         for (const fixture of WALLPAPER_FIXTURES) {
             Deno.test(`home plate ${theme}/${tier}/${fixture.name}: app labels hold AA without a capsule or wallpaper halo`, () => {
                 const tokens = cascade(theme, tier);
@@ -334,7 +341,7 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 for (const theme of ["light", "dark"] as const) {
-    for (const tier of TIERS) {
+    for (const tier of MATERIAL_FLOOR_TIERS) {
         for (const fixture of WALLPAPER_FIXTURES) {
             Deno.test(`home glyph ${theme}/${tier}/${fixture.name}: white tile edge holds 3:1 against light wallpaper`, () => {
                 const tokens = cascade(theme, tier);
@@ -388,7 +395,7 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 for (const theme of ["light", "dark"] as const) {
-    for (const tier of TIERS) {
+    for (const tier of MATERIAL_FLOOR_TIERS) {
         for (const fixture of WALLPAPER_FIXTURES) {
             Deno.test(`home note ${theme}/${tier}/${fixture.name}: body, task box border and colour dots hold contrast on the Material note`, () => {
                 const tokens = cascade(theme, tier);

@@ -31,7 +31,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 | 约束                           | 要求                                                                                                                                                          | 机检                                                                                                                                |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 文字对比度                     | 正文与次要文字 ≥ 4.5:1；`--muted` 在玻璃表面上 ≥ 3:1（见 [玻璃效果](#玻璃效果)）                                                                              | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/glass-contrast.test.ts`、`web/src/design-system/wallpaper-accent.test.ts` |
+| 文字对比度                     | 正文与次要文字 ≥ 4.5:1；`--muted` 在玻璃表面上 ≥ 3:1（`clear` 档 Material 除外，见 [玻璃效果](#玻璃效果)）                                                    | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/glass-contrast.test.ts`、`web/src/design-system/wallpaper-accent.test.ts` |
 | 控件边界与焦点环               | 控件边界与焦点环 ≥ 3:1；焦点环为 2px `--ring`，只在 `:focus-visible` 出现                                                                                     | 实页清单                                                                                                                            |
 | 选中不只靠颜色                 | 配合勾号、外环或 `aria-current` / `aria-pressed`                                                                                                              | 实页清单                                                                                                                            |
 | 命中区                         | 粗指针（`any-pointer: coarse`）下所有可操作目标 ≥ 44px；仅 hover 出现的操作在触屏常显或进入 `⋯` 菜单                                                          | 部分 e2e（`apps-density`、`route-style-stability`），其余实页清单                                                                   |
@@ -254,22 +254,23 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 ### 玻璃效果
 
-“设置 → 外观 → 玻璃效果”是全局档位（`glassIntensity`）：关闭（`off`）、柔和（`soft`）、标准（`regular`，默认）、通透（`clear`）。`AppState` 把档位写到 `<html data-glass>`；每档在 `tokens.css` 里同时固定 fill、blur 与 saturate，Material 与 Floating 不得自带透明度或模糊取值。
+“设置 → 外观 → 玻璃效果”是全局档位（`glassIntensity`）：关闭（`off`）、轻（`soft`）、标准（`regular`，默认）、通透（`clear`）。`AppState` 把档位写到 `<html data-glass>`；每档在 `tokens.css` 里同时固定 fill、blur 与 saturate，Material 与 Floating 不得自带透明度或模糊取值。
 
-| 档位    | Material fill（亮 / 暗） | Floating fill（亮 / 暗） | blur | saturate |
-| ------- | ------------------------ | ------------------------ | ---- | -------- |
-| off     | 100% / 100%              | 100% / 100%              | 无   | 1        |
-| soft    | 90% / 92%                | 95% / 95%                | 16px | 1.6      |
-| regular | 78% / 84%                | 86% / 90%                | 20px | 2        |
-| clear   | 71% / 82%                | 76% / 84%                | 12px | 2.2      |
+| 档位    | Material fill（亮 / 暗） | Floating fill（亮 / 暗） | blur | saturate | 顶光缩放 |
+| ------- | ------------------------ | ------------------------ | ---- | -------- | -------- |
+| off     | 100% / 100%              | 100% / 100%              | 无   | 1        | 0        |
+| soft    | 90% / 92%                | 95% / 95%                | 16px | 1.6      | 0.6      |
+| regular | 78% / 84%                | 86% / 90%                | 20px | 2        | 1        |
+| clear   | 45% / 55%                | 76% / 84%                | 8px  | 1.8      | 0.25     |
 
-- fill 是 `--material-solid`（Floating 为 `--surface-l3`）与透明的混合比例。fill 有下限（底线：对比度）：在深 / 浅照片极值与饱和色背景上，正文 ≥ 4.5:1，`--muted` 次要文字 ≥ 3:1；暗色的下限更高，因为浅色文字在亮背景上需要更厚的底。每档每主题由 `design-system/glass-contrast.test.ts` 检验，低于下限的档位不得合入。
+- fill 是 `--material-solid`（Floating 为 `--surface-l3`）与透明的混合比例。fill 有下限（底线：对比度）：在深 / 浅照片极值与饱和色背景上，正文 ≥ 4.5:1，`--muted` 次要文字 ≥ 3:1；暗色的下限更高，因为浅色文字在亮背景上需要更厚的底（当前实测 Material 下限亮 69%、暗 81%）。Floating 在所有档位、Material 在 off / soft / regular 守此下限，由 `design-system/glass-contrast.test.ts` 逐档逐主题检验，低于下限不得合入。
+- `clear` 是唯一的例外：用户主动选择“通透”时 Material 明显透出壁纸，不承诺 Material 上文字的对比度（与壁纸可读性选“无”同理），设置页在选中时显示一行说明。菜单、Popover、建议列表等 Floating 仍守下限。不得把这一例外扩展到其他档位或默认档。
 - `--shadow-material-edge`（顶部 1px 高光、1px 内环和底部 1px 暗线）在所有档位保留；图标块、Material 与 Floating 分别消费 `--shadow-elevation-glyph`、`--shadow-elevation-material`、`--shadow-elevation-floating`，组合边缘与对应投影，不在组件中另加更强阴影。
-- `--glass-sheen`：Material 与 Floating 背景最上层的白色顶光（顶部最亮，到 55% 高度渐隐；亮色峰值 60%，暗色 6%），随档位缩放（off 0、soft 0.6、regular / clear 1）。对比度测试按文字所在位置计入顶光。
-- 玻璃的可感知度来自 blur、saturate、边缘高光、顶光与默认画布的色相变化，而不是更低的 fill；不得为“更透”下调 fill 下限。
+- `--glass-sheen`：Material 与 Floating 背景最上层的白色顶光（顶部最亮，到 55% 高度渐隐；亮色峰值 60%，暗色 6%），按上表随档位缩放；`clear` 减弱顶光，避免白色顶光把透出的壁纸重新盖成乳白。对比度测试按文字所在位置计入顶光。
+- off / soft / regular 的可感知度来自 blur、saturate、边缘高光、顶光与默认画布的色相变化，不得为“更透”把这三档下调到 fill 下限以下；要更透只能选 `clear`。
 - 不支持 `backdrop-filter` 或系统开启 `prefers-reduced-transparency: reduce` 时，所有档位按 `off` 渲染（实色、无 blur），`--shadow-material-edge` 保留。设置页显示一行说明，但不禁用控件，也不改写已存值。
 - 无壁纸时的默认画布是低饱和 mesh 渐变（强调色加 `--canvas-mesh-secondary` 的大色斑），让玻璃背后有色相与明暗可折射；不提供关闭选项。明暗主题独立定义 `--canvas-mesh-base` / `--canvas-mesh-floor` 与色斑混合比例，不复用控件表面作为画布底色：浅色左下保留灰蓝色调而非近白空洞，深色底部抬升至中性灰紫而非近黑暗斑。`--canvas-mesh-secondary` 的色相按页面加载时的本地时段选择（`WallpaperSurface` 的 `data-daypart`：早 05–10 暖杏、午 11–17 浅天蓝、夜 18–04 淡紫；深色为暖褐、灰蓝、灰紫），明度与默认值接近，玻璃对比度不变；只在挂载时决定，不循环、不过渡。
-- 应用底板内名称直接使用 Material 表面的前景色，不套逐项胶囊、不依赖 `--wallpaper-text-halo`；各档明暗主题与壁纸夹具上应用名对比度须 ≥4.5:1。底板外直接放在壁纸上的“静”状态继续用 `--wallpaper-text-halo` 表面色光晕，图片壁纸上保留现行 Material 小胶囊底；壁纸文字的强调色用途见 [强调色用途](#强调色用途)。
+- 应用底板内名称直接使用 Material 表面的前景色，不套逐项胶囊、不依赖 `--wallpaper-text-halo`；off / soft / regular 档明暗主题与壁纸夹具上应用名对比度须 ≥4.5:1（`clear` 不承诺）。底板外直接放在壁纸上的“静”状态继续用 `--wallpaper-text-halo` 表面色光晕，图片壁纸上保留现行 Material 小胶囊底；壁纸文字的强调色用途见 [强调色用途](#强调色用途)。
 - 档位对比在设计实验室“材质”区块，用高对比夹具并排渲染四档。
 
 ### 首页笔记（Home Note）

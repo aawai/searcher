@@ -73,7 +73,7 @@ import "./design-lab.css";
 
 const GLASS_TIERS = [
     ["off", "关闭"],
-    ["soft", "柔和"],
+    ["soft", "轻"],
     ["regular", "标准"],
     ["clear", "通透"],
 ] as const;
