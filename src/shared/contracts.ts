@@ -1,4 +1,6 @@
 export * from "./wallpaper.ts";
+export * from "./dock.ts";
+import type { DockPreferences } from "./dock.ts";
 import type { WallpaperPresentation } from "./wallpaper-presentation.ts";
 export type { WallpaperPresentation };
 import type { EngineId } from "./engines.ts";
@@ -198,6 +200,7 @@ export interface PreferencesDto {
     showHomeTime: boolean;
     showHomeContinue: boolean;
     aiGenerationDefaults?: AiGenerationDefaultsDto;
+    dock: DockPreferences;
 }
 
 export interface HomeContinueDto {

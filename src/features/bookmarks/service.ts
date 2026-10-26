@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, isNull, max, sql } from "drizzle-orm";
-import type { DatabaseStore } from "../../db/database.ts";
-import { webappGroups, webapps } from "../../db/schema.ts";
+import type { DatabaseStore, SearchDatabase } from "../../db/database.ts";
+import { preferences, webappGroups, webapps } from "../../db/schema.ts";
 
 export type WebAppIconSource = "website" | "upload" | "url" | "ai" | "default";
 export type WebAppOpenMode = "global" | "current" | "new_tab";
@@ -99,6 +99,36 @@ export function normalizeWebAppUrl(rawUrl: string): string {
     }
 
     return parsed.toString();
+}
+async function unpinWebAppFromDock(
+    db: SearchDatabase,
+    userId: string,
+    appId: string,
+): Promise<void> {
+    const rows = await db
+        .select({ dock: preferences.dock })
+        .from(preferences)
+        .where(eq(preferences.userId, userId))
+        .limit(1)
+        .all();
+    if (!rows[0] || !rows[0].dock) return;
+    try {
+        const parsed = JSON.parse(rows[0].dock);
+        if (
+            parsed && Array.isArray(parsed.appIds) &&
+            parsed.appIds.includes(appId)
+        ) {
+            parsed.appIds = parsed.appIds.filter((id: unknown) => id !== appId);
+            await db
+                .update(preferences)
+                .set({ dock: JSON.stringify(parsed) })
+                .where(eq(preferences.userId, userId))
+                .run();
+        }
+    } catch (e) {
+        if (e instanceof SyntaxError) return;
+        throw e;
+    }
 }
 
 export class BookmarksService {
@@ -411,27 +441,39 @@ export class BookmarksService {
 
     async softDeleteWebApp(userId: string, id: string): Promise<void> {
         return await this.store.run(async (db) => {
-            const existing = await db
-                .select({ id: webapps.id })
-                .from(webapps)
-                .where(
-                    and(
-                        eq(webapps.id, id),
-                        eq(webapps.userId, userId),
-                        isNull(webapps.deletedAt),
-                    ),
-                )
-                .limit(1)
-                .all();
+            await db.run(sql`BEGIN IMMEDIATE`);
+            try {
+                const existing = await db
+                    .select({ id: webapps.id })
+                    .from(webapps)
+                    .where(
+                        and(
+                            eq(webapps.id, id),
+                            eq(webapps.userId, userId),
+                            isNull(webapps.deletedAt),
+                        ),
+                    )
+                    .limit(1)
+                    .all();
 
-            if (existing.length === 0) throw new WebAppNotFoundError();
+                if (existing.length === 0) throw new WebAppNotFoundError();
 
-            const currentTime = this.now();
-            await db
-                .update(webapps)
-                .set({ deletedAt: currentTime })
-                .where(and(eq(webapps.id, id), eq(webapps.userId, userId)))
-                .run();
+                const currentTime = this.now();
+                await db
+                    .update(webapps)
+                    .set({ deletedAt: currentTime })
+                    .where(and(eq(webapps.id, id), eq(webapps.userId, userId)))
+                    .run();
+                await unpinWebAppFromDock(db, userId, id);
+                await db.run(sql`COMMIT`);
+            } catch (error) {
+                try {
+                    await db.run(sql`ROLLBACK`);
+                } catch {
+                    // Ignore rollback error if database already rolled back
+                }
+                throw error;
+            }
         });
     }
 
@@ -458,19 +500,31 @@ export class BookmarksService {
 
     async permanentDeleteWebApp(userId: string, id: string): Promise<void> {
         return await this.store.run(async (db) => {
-            const existing = await db
-                .select({ id: webapps.id })
-                .from(webapps)
-                .where(and(eq(webapps.id, id), eq(webapps.userId, userId)))
-                .limit(1)
-                .all();
+            await db.run(sql`BEGIN IMMEDIATE`);
+            try {
+                const existing = await db
+                    .select({ id: webapps.id })
+                    .from(webapps)
+                    .where(and(eq(webapps.id, id), eq(webapps.userId, userId)))
+                    .limit(1)
+                    .all();
 
-            if (existing.length === 0) throw new WebAppNotFoundError();
+                if (existing.length === 0) throw new WebAppNotFoundError();
 
-            await db
-                .delete(webapps)
-                .where(and(eq(webapps.id, id), eq(webapps.userId, userId)))
-                .run();
+                await db
+                    .delete(webapps)
+                    .where(and(eq(webapps.id, id), eq(webapps.userId, userId)))
+                    .run();
+                await unpinWebAppFromDock(db, userId, id);
+                await db.run(sql`COMMIT`);
+            } catch (error) {
+                try {
+                    await db.run(sql`ROLLBACK`);
+                } catch {
+                    // Ignore rollback error if database already rolled back
+                }
+                throw error;
+            }
         });
     }
 

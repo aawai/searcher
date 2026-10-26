@@ -3,7 +3,7 @@ type: entity
 category: tool
 title: "Drizzle SQLite Store"
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-10-26
 sources: [
     sources/SRC-2026-09-25-001,
     sources/SRC-2026-09-25-002,
@@ -14,6 +14,7 @@ sources: [
     sources/sqlite-table-recreation-migration-zero-loss,
     sources/SRC-2026-09-25-017,
     sources/SRC-2026-09-25-028,
+    sources/SRC-2026-10-26-001,
 ]
 ---
 
@@ -25,10 +26,11 @@ sources: [
 
 ## 架构原则与约束
 
-1. **严格 FIFO 队列访问**：为了彻底避免 SQLite
-   在多并发异步环境下的读写锁争用与死锁，所有数据库交互强制经由
-   [[concepts/database-queue-serialization]] 提供的 `DatabaseStore.run`
-   串行执行。
+1. **严格 FIFO 队列访问**：所有数据库交互经由
+   [[concepts/database-queue-serialization]] 提供的 `DatabaseStore.run` 串行执行，
+   覆盖完整异步事务，避免共享连接上的任务交错。SQLite 的隔离发生在连接之间，
+   同一连接可读自身未提交修改；队列不构成“彻底避免所有锁争用或死锁”的保证，
+   见 [SQLite 隔离边界](/concepts/sqlite-isolation-and-connection-boundaries.md)。
 2. **查询规范**：只允许使用 `.all()` 与 `.limit(1)`
    查询方法，禁止使用容易引发歧义的 `.get()`。
 3. **WAL 模式与事务安全**：生产数据库运行在 WAL 模式（见
@@ -63,3 +65,4 @@ sources: [
 - [[sources/sqlite-table-recreation-migration-zero-loss]]
 - [[sources/SRC-2026-09-25-017]]
 - [[sources/SRC-2026-09-25-028]]
+- [SQLite Isolation](/sources/SRC-2026-10-26-001.md)

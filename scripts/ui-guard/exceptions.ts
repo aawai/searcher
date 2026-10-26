@@ -288,6 +288,23 @@ export function isDesignSystemAllowed(
     value: string,
 ): boolean {
     const normFile = normalizePath(file);
+    // AppShell insets are measured taskbar geometry, not visual spacing choices.
+    if (
+        normFile === "web/src/components/searcher/semantic.css" &&
+        /^margin-(top|right|bottom|left)$/.test(prop)
+    ) {
+        const edge = prop.slice("margin-".length);
+        return value.replaceAll(/\s+/g, "") ===
+                `var(--dock-inset-${edge},0px)` ||
+            value.trim() === `var(--dock-inset-${edge})`;
+    }
+    if (
+        normFile === "web/src/features/home-layouts/home-notes.css" &&
+        prop === "inset-block-end"
+    ) {
+        return value.replaceAll(/\s+/g, "") ===
+            "calc(var(--space-2)+var(--dock-inset-bottom,0px))";
+    }
     // Physical paper margins are document settings, not application visual spacing.
     if (normFile === "web/src/features/documents/document-pagination.css") {
         return prop === "padding" && value.replaceAll(/\s+/g, " ").trim() ===

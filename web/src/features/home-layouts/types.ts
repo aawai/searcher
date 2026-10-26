@@ -66,7 +66,7 @@ export interface HomeLayoutProps {
     toggleTask: (note: HomeNoteItem, index: number, checked: boolean) => void;
     /** The note open in the editor; its card task boxes are read-only meanwhile. */
     editingNoteId: string | null;
-    /** Opens the library root or a nested collection. */
+    /** Opens the complete apps or notes management panel directly. */
     openLibrary: (request: LibraryRequest) => void;
     /** Opens a note's detail on the desk by id (search results). */
     openDocument: (id: string) => void;

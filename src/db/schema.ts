@@ -96,6 +96,7 @@ export const preferences = sqliteTable("preferences", {
     aiGenerationDefaults: text("ai_generation_defaults"),
     wallpaperCompositions: text("wallpaper_compositions"),
     wallpaperPresentations: text("wallpaper_presentations"),
+    dock: text("dock"),
 }, (t) => [
     check(
         "preferences_engine_check",

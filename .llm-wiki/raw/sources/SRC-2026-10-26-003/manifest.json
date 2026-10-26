@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-26-003",
+  "captured": "2026-10-26",
+  "packet_version": "1.0",
+  "title": "Cross-Site Request Forgery Prevention Cheat Sheet[¶](#cross-site-request-forgery-prevention-cheat-sheet \"Permanent link\")",
+  "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

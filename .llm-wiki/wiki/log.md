@@ -2,6 +2,14 @@
 
 ## 2026-10-26
 
+- **ensure\_page**: {"page_type":"concept","path":"concepts/csrf-defense-boundaries","title":"CSRF Defense Boundaries"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/deno-permission-boundaries","title":"Deno Permission Boundaries"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/sqlite-isolation-and-connection-boundaries","title":"SQLite Isolation and Connection Boundaries"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-26-003","url":"https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-26-002","url":"https://docs.deno.com/runtime/fundamentals/security/"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-26-001","url":"https://www.sqlite.org/isolation.html"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-26-q20-q25","title":"任务栏访谈 Q20–Q25 已确认，等待最终共同理解确认"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-26-q1-q19","title":"工作区任务栏设计访谈已确认 Q1–Q19，尚未授权实施"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-26-pr-309-main","title":"首页应用密度与可选底板经 PR 309 合并 main"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-26-","title":"玻璃效果通透档放宽对比度承诺"}
 

@@ -18,7 +18,13 @@
     max-width: var(--page-shell-workbench-max, var(--layout-workbench-max));
 }
 .app-shell:has(> .page-shell[data-archetype="workbench"]) {
-    height: 100dvh;
+    min-height: 0;
+    height: calc(100dvh - var(--dock-inset-bottom, 0px) - var(--dock-inset-top,
+        0px));
+    margin-top: var(--dock-inset-top, 0px);
+    margin-bottom: var(--dock-inset-bottom, 0px);
+    margin-left: var(--dock-inset-left, 0px);
+    margin-right: var(--dock-inset-right, 0px);
     display: flex;
     flex-direction: column;
 }

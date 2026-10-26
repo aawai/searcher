@@ -177,11 +177,10 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                     const locator of [
                         host.locator(".workspace-title"),
                         host.getByRole("button", {
-                            name: "返回上一级",
-                            exact: true,
+                            name: /返回笔记|返回上一级/,
                         }),
                         host.getByRole("button", {
-                            name: width < 768 ? "关闭资料库" : "关闭资料库",
+                            name: "返回首页",
                             exact: true,
                         }),
                         host.getByRole("button", { name: "链接", exact: true }),
@@ -324,7 +323,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                         .scrollTop > 0
                 );
                 await host.getByRole("button", {
-                    name: width < 768 ? "关闭资料库" : "关闭资料库",
+                    name: "返回首页",
                     exact: true,
                 }).click();
                 await host.waitFor({ state: "detached" });

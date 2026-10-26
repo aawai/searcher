@@ -4,6 +4,7 @@ import {
     DropdownMenuSeparator,
 } from "../ui/dropdown-menu.tsx";
 import type { LauncherApp, LauncherGroup } from "./launcherTiles.ts";
+import { useDock } from "../../features/dock/DockProvider.tsx";
 
 export interface AppMenuActions {
     onOpen: (app: LauncherApp) => void;
@@ -28,6 +29,8 @@ export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
     actions: AppMenuActions;
     Item: typeof ContextMenuItem | typeof DropdownMenuItem;
 }) {
+    const dock = useDock();
+    const dockPinned = dock.preferences.appIds.includes(app.id);
     const Separator = Item === ContextMenuItem
         ? ContextMenuSeparator
         : DropdownMenuSeparator;
@@ -36,6 +39,9 @@ export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
             <div className="launcher-menu-title">{app.name}</div>
             <Item onClick={() => actions.onOpen(app)}>
                 打开
+            </Item>
+            <Item onClick={() => void dock.setPinned(app.id, !dockPinned)}>
+                {dockPinned ? "取消任务栏固定" : "固定到任务栏"}
             </Item>
             {actions.onSetHomeFixed && !app.groupId &&
                 (actions.homeSurface !== "home" || app.isHomeFixed) && (

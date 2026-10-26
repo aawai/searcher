@@ -314,7 +314,7 @@
    every cell and the plate. */
 .home-note-more-below {
     position: fixed;
-    inset-block-end: var(--space-2);
+    inset-block-end: calc(var(--space-2) + var(--dock-inset-bottom, 0px));
     left: 50%;
     z-index: var(--elevation-canvas);
     transform: translateX(-50%);

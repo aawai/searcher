@@ -7,24 +7,7 @@ import type {
 } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import {
-    closeLibrary,
-    libraryEntry,
-    libraryView,
-    openLibrary,
-} from "./helpers/library.ts";
-
-// Issue #285 Y8: the library holds every app; the home grid shows only pinned
-// root apps and folders. 更多（N） opens the library app view, releases inherit
-// their folder's pin, and pin/unpin works with pointer, keyboard and touch.
-
-async function openApps(page: Page): Promise<Locator> {
-    await openLibrary(page);
-    await libraryEntry(page, "apps").click();
-    const view = libraryView(page, "apps");
-    await view.waitFor();
-    return view;
-}
+import { closeLibrary, openApps } from "./helpers/library.ts";
 
 async function chooseMenu(page: Page, tile: Locator, name: string) {
     await tile.click({ button: "right" });

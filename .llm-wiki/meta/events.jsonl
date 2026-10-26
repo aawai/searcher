@@ -158,3 +158,11 @@
 {"slug":"obs-2026-10-25-dnd-kit-default-english-announcements-not-overridden","title":"dnd-kit default English announcements not overridden","relevance":"medium","timestamp":"2026-10-25T08:04:51.477Z","kind":"observe"}
 {"slug":"obs-2026-10-26-","title":"玻璃效果通透档放宽对比度承诺","relevance":"high","timestamp":"2026-10-26T01:09:50.450Z","kind":"observe"}
 {"slug":"obs-2026-10-26-pr-309-main","title":"首页应用密度与可选底板经 PR 309 合并 main","relevance":"high","timestamp":"2026-10-26T04:01:22.571Z","kind":"observe"}
+{"slug":"obs-2026-10-26-q1-q19","title":"工作区任务栏设计访谈已确认 Q1–Q19，尚未授权实施","relevance":"high","timestamp":"2026-10-26T06:57:51.514Z","kind":"observe"}
+{"slug":"obs-2026-10-26-q20-q25","title":"任务栏访谈 Q20–Q25 已确认，等待最终共同理解确认","relevance":"high","timestamp":"2026-10-26T07:03:30.082Z","kind":"observe"}
+{"source_id":"SRC-2026-10-26-001","url":"https://www.sqlite.org/isolation.html","format":"web","timestamp":"2026-10-26T08:01:38.931Z","kind":"capture"}
+{"source_id":"SRC-2026-10-26-002","url":"https://docs.deno.com/runtime/fundamentals/security/","format":"web","timestamp":"2026-10-26T08:01:42.554Z","kind":"capture"}
+{"source_id":"SRC-2026-10-26-003","url":"https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html","format":"web","timestamp":"2026-10-26T08:01:44.559Z","kind":"capture"}
+{"page_type":"concept","title":"SQLite Isolation and Connection Boundaries","path":"concepts/sqlite-isolation-and-connection-boundaries","timestamp":"2026-10-26T08:03:30.249Z","kind":"ensure_page"}
+{"page_type":"concept","title":"Deno Permission Boundaries","path":"concepts/deno-permission-boundaries","timestamp":"2026-10-26T08:03:30.387Z","kind":"ensure_page"}
+{"page_type":"concept","title":"CSRF Defense Boundaries","path":"concepts/csrf-defense-boundaries","timestamp":"2026-10-26T08:03:30.400Z","kind":"ensure_page"}

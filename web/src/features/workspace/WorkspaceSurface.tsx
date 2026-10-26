@@ -1,3 +1,4 @@
+import { ArrowLeft, X } from "lucide-react";
 import {
     type CSSProperties,
     type ReactNode,
@@ -7,7 +8,6 @@ import {
     useRef,
     useState,
 } from "react";
-import { ArrowLeft, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import {
     useEscapeLayer,
@@ -16,7 +16,6 @@ import {
 import { usePresence } from "../../components/ui/presence.ts";
 import {
     Sheet,
-    SheetBackdrop,
     SheetPopup,
     SheetPortal,
     SheetTitle,
@@ -43,7 +42,8 @@ export function WorkspaceSurface(
         onEscape = onClose,
         expanded = false,
         headerActions,
-        backLabel = "返回上一级",
+        fullScreen = false,
+        backLabel = "返回笔记",
         rootFocus,
         chromeBottom = 0,
     }: {
@@ -61,6 +61,7 @@ export function WorkspaceSurface(
         bodyLayout?: "editor";
         onEscape?: () => void;
         expanded?: boolean;
+        fullScreen?: boolean;
         headerActions?: ReactNode;
         backLabel?: string;
         /** Root views focus this instead of the close button when it exists. */
@@ -126,14 +127,12 @@ export function WorkspaceSurface(
         </WorkspaceFrame>
     );
     if (mobile) {
-        // While closing, "trap-focus" drops Base UI's full-screen pointer
-        // blocker (only rendered for modal === true) so the home stays usable,
-        // yet the focus manager remains modal; a reopen during the exit then
-        // regains the full modal Sheet without switching guard semantics.
+        // The dock and home remain interactive; outside presses must not add
+        // a spurious home entry while a dock click switches workspace views.
         return (
             <Sheet
                 open={open}
-                modal={open ? true : "trap-focus"}
+                modal={false}
                 escapeLayer={false}
                 onOpenChangeComplete={(nextOpen) => {
                     if (!nextOpen) exited.current?.();
@@ -146,15 +145,18 @@ export function WorkspaceSurface(
                         }
                         return;
                     }
-                    if (!nextOpen) onClose();
+                    // Non-modal: dock and home interactions move focus outside
+                    // the Sheet without closing it; explicit close controls own
+                    // dismissal.
+                    if (!nextOpen) details.cancel();
                 }}
             >
                 <SheetPortal>
-                    <SheetBackdrop inert={open ? undefined : true} />
                     <SheetPopup
                         className="workspace-panel workspace-panel--mobile"
                         data-presentation={presentation}
-                        data-library=""
+                        data-library={title === "应用" ? "apps" : "notes"}
+                        data-workspace-fullscreen={fullScreen || undefined}
                         inert={open ? undefined : true}
                         style={{
                             "--workspace-visible-height":
@@ -181,14 +183,15 @@ export function WorkspaceSurface(
             ref={panel.ref}
             className="workspace-panel"
             data-presentation={presentation}
-            data-library=""
+            data-library={title === "应用" ? "apps" : "notes"}
             data-workspace-expanded={expanded || undefined}
+            data-workspace-fullscreen={fullScreen || undefined}
             data-ending-style={panel.ending || undefined}
             inert={panel.ending || undefined}
             style={{
                 "--workspace-chrome-bottom": `${chromeBottom}px`,
             } as CSSProperties}
-            aria-label="资料库"
+            aria-label={title}
         >
             {frame}
         </aside>
@@ -292,7 +295,7 @@ function WorkspaceFrame(
                     ref={close}
                     variant="ghost"
                     size="icon"
-                    aria-label="关闭资料库"
+                    aria-label="返回首页"
                     onClick={onClose}
                 >
                     <X size="1em" className="icon-lg" />

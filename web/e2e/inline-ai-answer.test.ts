@@ -517,23 +517,11 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                         0,
                     );
                     await page.keyboard.press("Escape");
-                    // Keyboard only: the user menu leads to the AI workspace.
-                    await page.getByRole("button", { name: /^用户菜单/ })
-                        .focus();
-                    await page.keyboard.press("Enter");
-                    // The library entry leads the keyboard-opened menu.
-                    await page.waitForFunction(() =>
-                        document.activeElement?.getAttribute("role") ===
-                            "menuitem" &&
-                        document.activeElement.textContent?.trim() === "资料库"
-                    );
-                    await page.keyboard.press("ArrowDown");
-                    await page.keyboard.press("ArrowDown");
-                    await page.keyboard.press("ArrowDown");
-                    await page.waitForFunction(() =>
-                        document.activeElement?.textContent?.trim() ===
-                            "AI 问答"
-                    );
+                    // Keyboard only: the dock leads to the AI workspace.
+                    const aiButton = page.getByRole("navigation", {
+                        name: "工作区任务栏",
+                    }).getByRole("button", { name: "AI 问答", exact: true });
+                    await aiButton.focus();
                     await page.keyboard.press("Enter");
                     await page.waitForURL(app.origin + "/ask");
                 },

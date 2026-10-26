@@ -63,7 +63,7 @@ Deno.test("home notes follow homeSortOrder, alternate sides and leave the search
             position: { x: 10, y: 10 },
         });
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "关闭资料库", exact: true })
+        await page.getByRole("button", { name: "返回首页", exact: true })
             .click();
         await libraryPanel(page).waitFor({ state: "detached" });
         await third.getByRole("button", { name: "顺序 2", exact: true })
@@ -71,7 +71,7 @@ Deno.test("home notes follow homeSortOrder, alternate sides and leave the search
         await libraryPanel(page).waitFor();
 
         // Close the library and add three notes: the last one overflows.
-        await page.getByRole("button", { name: "关闭资料库", exact: true })
+        await page.getByRole("button", { name: "返回首页", exact: true })
             .click();
         await libraryPanel(page).waitFor({ state: "detached" });
         for (let index = 4; index < 7; index++) {

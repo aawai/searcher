@@ -450,13 +450,17 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                     state: "visible",
                 });
 
-            // 4. Ask page workbench layout canonical rendering
+            // 4. Ask page workbench layout canonical rendering (no models configured)
             await visit("/ask", page);
-            await page.getByRole("button", { name: "新对话" }).waitFor({
+            await page.getByRole("button", { name: "新建对话" }).waitFor({
                 state: "visible",
             });
-            const chatInput = page.getByRole("textbox");
-            await chatInput.first().waitFor({ state: "visible" });
+            await page.getByText("暂无可用 AI 模型", { exact: true }).waitFor({
+                state: "visible",
+            });
+            await page.getByRole("link", { name: "前往模型配置" }).waitFor({
+                state: "visible",
+            });
         },
     );
 });

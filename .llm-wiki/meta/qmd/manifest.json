@@ -26,6 +26,14 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/csrf-defense-boundaries.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/csrf-defense-boundaries.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/csrf-defense-boundaries",
+      "contentHash": "e39674bbb689671b39dbf0bc5999b4bda2a4c9bcd52e8c9fe92e0406e7ac6a9a",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/database-queue-serialization.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/database-queue-serialization.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -39,6 +47,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/deno-native-serve-architecture",
       "contentHash": "3c4a6f60dd430a395a42ba6a016ac71bf737769a272b1a3a872d1f6487979e8b",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/deno-permission-boundaries.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/deno-permission-boundaries.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/deno-permission-boundaries",
+      "contentHash": "36470e864f4c88674cbcf570827d01dfab76a88ec54bb54428894e2dd4e3119b",
       "role": "canonical",
       "type": "concept"
     },
@@ -126,7 +142,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/session-security-and-isolation.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/session-security-and-isolation",
-      "contentHash": "3574808f320f095cd09c728a3e256270d41666f039b3373f345ef5068e3744a7",
+      "contentHash": "c12a98f25555c21b919c9eec027f8ae6abb030cd4d0f428a6e98159247d73c74",
       "role": "canonical",
       "type": "concept"
     },
@@ -151,6 +167,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/sqlite-fts5-fulltext-search",
       "contentHash": "b9dd73f559b38b9153b82a8c7971f6c140830653141ae2e73bf627efac74d412",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/sqlite-isolation-and-connection-boundaries.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/sqlite-isolation-and-connection-boundaries.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/sqlite-isolation-and-connection-boundaries",
+      "contentHash": "aee2b49952263bdb2aed66c3a22b76cce075f2a63117265f6524954745f99e98",
       "role": "canonical",
       "type": "concept"
     },
@@ -206,7 +230,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/deno-runtime.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/deno-runtime",
-      "contentHash": "774c17e147aa01f15ece98f1734d3d0317342d43f2406f0d785a42e716c2f508",
+      "contentHash": "a866f5c4d15cecff9dbdb1bfdfb08298111697a1b7978de08250bf0451dbdd1b",
       "role": "canonical",
       "type": "entity"
     },
@@ -222,7 +246,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/drizzle-sqlite-store.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/drizzle-sqlite-store",
-      "contentHash": "7d2a2e154301308dd0ca5f2f68e47c9b99c44576d943564102e6a51cb624bde6",
+      "contentHash": "443f934212dbfd35970f2be1df3328d8b4108230e3f314d97633f9a8de27fb30",
       "role": "canonical",
       "type": "entity"
     },
@@ -751,6 +775,30 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/SRC-2026-10-25-006",
       "contentHash": "010b842c666ecdd017da27e0920260ca8238c257d9a8c077e209b1e38e681e8c",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-26-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-26-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-26-001",
+      "contentHash": "d1e923e15bd0a457808a47ab32c1f6cae48b6f4b42b6a91c5b45096013849fe0",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-26-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-26-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-26-002",
+      "contentHash": "9cda076ac1591981afe845a8067cad0d3b824890d096fefb1304f06eb4e7922d",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-26-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-26-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-26-003",
+      "contentHash": "0865ff7fc9d5dd01b8a0d18b44652f00c9df98b987cae0d90bd7bfc55fde83eb",
       "role": "evidence",
       "type": "source"
     },
@@ -1319,6 +1367,22 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-10-26-pr-309-main",
       "contentHash": "6809fd91b0a68cce893afa95d2634d06237b3f9e87745fbe260fcb7fac82d9fd",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-26-q1-q19.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-26-q1-q19.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-26-q1-q19",
+      "contentHash": "63e87accf35bf4e517f9a29462c51c130650bcd91c1d1af75b3b9486547b441a",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-26-q20-q25.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-26-q20-q25.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-26-q20-q25",
+      "contentHash": "6fc33aca86ee0dd1a25d74c6bc90428cc117b47872aa943fd6f3906141652ede",
       "role": "evidence",
       "type": "source"
     },

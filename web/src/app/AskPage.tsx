@@ -12,7 +12,11 @@ import type {
 } from "../../../src/features/ai/types.ts";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
+import {
+    EmptyState,
+    StatusBanner,
+    UndoToast,
+} from "../components/searcher/semantic.tsx";
 import "../features/ask/ask-workspace.css";
 import { ConversationSidebar } from "../features/ask/ConversationSidebar.tsx";
 import { ConversationWorkspace } from "../features/ask/ConversationWorkspace.tsx";
@@ -522,85 +526,113 @@ export function AskPage() {
                     onDeleteConversation={deleteConversation}
                 />
 
-                <ConversationWorkspace
-                    conversation={conversation?.conversation ?? null}
-                    allMessages={conversation?.messages ?? []}
-                    isStreaming={isStreaming}
-                    draft={input}
-                    draftKey={draftKey}
-                    onDraftChange={setInput}
-                    models={models}
-                    modelOptions={modelOptions}
-                    selectedModelId={selectedModelId}
-                    onSelectModel={handleSelectModel}
-                    generationConfig={generationConfig}
-                    onChangeGenerationConfig={setGenerationConfig}
-                    onSaveDefaultGenerationConfig={(config) =>
-                        saveGenerationDefault(config)}
-                    onResetDefaultGenerationConfig={() =>
-                        saveGenerationDefault(null)}
-                    isDefaultGenerationConfig={!!models.find((m) =>
-                        m.id === selectedModelId &&
-                        userDefaults.models?.[m.modelId]
+                {loaded && models.length === 0
+                    ? (
+                        <EmptyState
+                            title="暂无可用 AI 模型"
+                            description={user.role === "admin"
+                                ? "系统尚未配置或启用任何 AI 模型。请前往管理后台配置模型与提供商。"
+                                : "当前系统暂无可用 AI 模型，请联系管理员进行配置。"}
+                            action={user.role === "admin"
+                                ? (
+                                    <Link
+                                        to={routes.admin("settings")}
+                                        className="button button--primary"
+                                    >
+                                        前往模型配置
+                                    </Link>
+                                )
+                                : undefined}
+                        />
+                    )
+                    : (
+                        <ConversationWorkspace
+                            conversation={conversation?.conversation ?? null}
+                            allMessages={conversation?.messages ?? []}
+                            isStreaming={isStreaming}
+                            draft={input}
+                            draftKey={draftKey}
+                            onDraftChange={setInput}
+                            models={models}
+                            modelOptions={modelOptions}
+                            selectedModelId={selectedModelId}
+                            onSelectModel={handleSelectModel}
+                            generationConfig={generationConfig}
+                            onChangeGenerationConfig={setGenerationConfig}
+                            onSaveDefaultGenerationConfig={(config) =>
+                                saveGenerationDefault(config)}
+                            onResetDefaultGenerationConfig={() =>
+                                saveGenerationDefault(null)}
+                            isDefaultGenerationConfig={!!models.find((m) =>
+                                m.id === selectedModelId &&
+                                userDefaults.models?.[m.modelId]
+                            )}
+                            toolsConfig={toolsConfig}
+                            onChangeToolsConfig={setToolsConfig}
+                            capabilities={capabilities}
+                            onSend={async (text, atts) => {
+                                return await sendChatRequest(text, atts, {
+                                    parentMessageId: conversation?.conversation
+                                        .activeLeafMessageId ??
+                                        undefined,
+                                });
+                            }}
+                            onStop={stopStream}
+                            onRegenerate={async (msgId) => {
+                                const targetMsg = conversation?.messages.find((
+                                    m,
+                                ) => m.id === msgId);
+                                if (!targetMsg) return;
+                                const prior = conversation?.messages.find(
+                                    (m) => m.id === targetMsg.parentMessageId,
+                                );
+                                if (prior) {
+                                    await sendChatRequest(
+                                        prior.content,
+                                        undefined,
+                                        {
+                                            regenerateMessageId: msgId,
+                                            parentMessageId:
+                                                prior.parentMessageId ??
+                                                    undefined,
+                                        },
+                                    );
+                                }
+                            }}
+                            onEditAndResend={async (msgId, newContent) => {
+                                const targetMsg = conversation?.messages.find((
+                                    m,
+                                ) => m.id === msgId);
+                                await sendChatRequest(newContent, undefined, {
+                                    editMessageId: msgId,
+                                    parentMessageId:
+                                        targetMsg?.parentMessageId ??
+                                            undefined,
+                                });
+                            }}
+                            onOpenDrawer={() => setDrawerOpen(true)}
+                            onRenameConversation={(newTitle) =>
+                                conversation
+                                    ? renameConversation(
+                                        conversation.conversation.id,
+                                        newTitle,
+                                    )
+                                    : Promise.resolve()}
+                            onDeleteConversation={() =>
+                                conversation
+                                    ? deleteConversation(
+                                        conversation.conversation.id,
+                                        conversation.conversation.title,
+                                    )
+                                    : Promise.resolve()}
+                            onToggleHistory={(enabled) =>
+                                toggleHistoryMode(enabled)}
+                            onSaveSystemInstruction={saveSystemInstruction}
+                            onSelectLeafMessage={selectLeafMessage}
+                            isNewConversationTemporary={!newConvHistoryEnabled}
+                            newConversationInstruction={newConvSystemInstruction}
+                        />
                     )}
-                    toolsConfig={toolsConfig}
-                    onChangeToolsConfig={setToolsConfig}
-                    capabilities={capabilities}
-                    onSend={async (text, atts) => {
-                        return await sendChatRequest(text, atts, {
-                            parentMessageId: conversation?.conversation
-                                .activeLeafMessageId ??
-                                undefined,
-                        });
-                    }}
-                    onStop={stopStream}
-                    onRegenerate={async (msgId) => {
-                        const targetMsg = conversation?.messages.find((m) =>
-                            m.id === msgId
-                        );
-                        if (!targetMsg) return;
-                        const prior = conversation?.messages.find(
-                            (m) => m.id === targetMsg.parentMessageId,
-                        );
-                        if (prior) {
-                            await sendChatRequest(prior.content, undefined, {
-                                regenerateMessageId: msgId,
-                                parentMessageId: prior.parentMessageId ??
-                                    undefined,
-                            });
-                        }
-                    }}
-                    onEditAndResend={async (msgId, newContent) => {
-                        const targetMsg = conversation?.messages.find((m) =>
-                            m.id === msgId
-                        );
-                        await sendChatRequest(newContent, undefined, {
-                            editMessageId: msgId,
-                            parentMessageId: targetMsg?.parentMessageId ??
-                                undefined,
-                        });
-                    }}
-                    onOpenDrawer={() => setDrawerOpen(true)}
-                    onRenameConversation={(newTitle) =>
-                        conversation
-                            ? renameConversation(
-                                conversation.conversation.id,
-                                newTitle,
-                            )
-                            : Promise.resolve()}
-                    onDeleteConversation={() =>
-                        conversation
-                            ? deleteConversation(
-                                conversation.conversation.id,
-                                conversation.conversation.title,
-                            )
-                            : Promise.resolve()}
-                    onToggleHistory={(enabled) => toggleHistoryMode(enabled)}
-                    onSaveSystemInstruction={saveSystemInstruction}
-                    onSelectLeafMessage={selectLeafMessage}
-                    isNewConversationTemporary={!newConvHistoryEnabled}
-                    newConversationInstruction={newConvSystemInstruction}
-                />
             </div>
 
             <StatusBanner

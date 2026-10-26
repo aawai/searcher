@@ -11,7 +11,6 @@ import { HomeCalm } from "../home-calm/HomeCalm.tsx";
 
 /** Entries of the focused empty search box (docs/workspace.md#其他). */
 const LIBRARY_QUICK_ENTRIES = [
-    { id: "root", label: "资料库" },
     { id: "notes", label: "笔记" },
 ];
 const LIBRARY_AND_APPS_QUICK_ENTRIES = [
@@ -162,7 +161,7 @@ export function ZenLayout(
                     onCapture={user ? props.onCapture : undefined}
                     quickEntries={quickEntries}
                     onQuickEntry={(id) => {
-                        if (id === "apps" || id === "root" || id === "notes") {
+                        if (id === "apps" || id === "notes") {
                             openLibrary(id);
                         }
                     }}

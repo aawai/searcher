@@ -1,8 +1,8 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import {
-    libraryMenuTrigger,
     libraryPanel,
     openNotesByKeyboard,
+    workspaceNotesTrigger,
 } from "./helpers/library.ts";
 import { assert, assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
@@ -121,7 +121,7 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await page.waitForURL(`${origin}/`);
     await userMenu.waitFor({ state: "visible" });
     await banner.waitFor({ state: "visible" });
-    const trigger = libraryMenuTrigger(page);
+    const trigger = workspaceNotesTrigger(page);
     await trigger.waitFor({ state: "visible" });
     const opener = await trigger.elementHandle();
     assert(opener);
@@ -131,13 +131,11 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await panel.waitFor({ state: "visible" });
     assertEquals(await panel.getAttribute("data-presentation"), "panel");
     const closeButton = panel.getByRole("button", {
-        name: "关闭资料库",
+        name: "返回首页",
         exact: true,
     });
-    await page.waitForFunction(() =>
-        document.activeElement?.getAttribute("aria-label") === "返回资料库"
-    );
-    const search = panel.locator("input[data-workspace-search]");
+    await closeButton.waitFor({ state: "visible" });
+    const search = panel.locator("input[data-workspace-search]:visible");
     await search.focus();
     assertEquals(
         await panel.evaluate((element) =>

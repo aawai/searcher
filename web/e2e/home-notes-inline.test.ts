@@ -191,7 +191,7 @@ Deno.test("untitled flow notes keep one body and open from the card or keyboard"
         await item.focus();
         await page.keyboard.press("Enter");
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "关闭资料库", exact: true })
+        await page.getByRole("button", { name: "返回首页", exact: true })
             .click();
         await libraryPanel(page).waitFor({ state: "detached" });
 
@@ -199,7 +199,7 @@ Deno.test("untitled flow notes keep one body and open from the card or keyboard"
             position: { x: 10, y: 10 },
         });
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "关闭资料库", exact: true })
+        await page.getByRole("button", { name: "返回首页", exact: true })
             .click();
         await libraryPanel(page).waitFor({ state: "detached" });
     } finally {

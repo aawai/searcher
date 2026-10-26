@@ -129,7 +129,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
         const detail = libraryPanel(target);
         if (await detail.isVisible()) {
             await detail.getByRole("button", {
-                name: "关闭资料库",
+                name: "返回首页",
                 exact: true,
             }).click();
             await detail.waitFor({ state: "detached" });
@@ -265,11 +265,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                     // 4. Presenter check: open and verify presenter type
                     await openWorkspace();
                     if (vp.width < 768) {
-                        await libraryPanel(page).and(
-                            page.getByRole("dialog"),
-                        ).waitFor({ state: "visible" });
+                        await libraryPanel(page).waitFor({ state: "visible" });
                         await libraryPanel(page).getByRole("button", {
-                            name: "返回资料库",
+                            name: "返回首页",
                             exact: true,
                         }).waitFor({ state: "visible" });
                     } else {
@@ -357,8 +355,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             // 1e. Documents root state
             await openWorkspace();
             const documentsPanel = libraryPanel(page);
-            await documentsPanel.and(page.getByRole("dialog"))
-                .waitFor({ state: "visible" });
+            await documentsPanel.waitFor({ state: "visible" });
             await documentsPanel.locator("[data-document-id]").first()
                 .waitFor({ state: "visible" });
 
@@ -371,9 +368,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 ".document-editor-container, [data-workspace-editor]",
             ).first();
             await docEditor.waitFor({ state: "visible" });
-            const mobileDocBack = documentsPanel.locator(
-                'button[aria-label="返回上一级"]',
-            ).first();
+            const mobileDocBack = documentsPanel.getByRole("button", {
+                name: /返回笔记|返回上一级/,
+            }).first();
             await mobileDocBack.waitFor({ state: "visible" });
             await mobileDocBack.click();
             await documentsPanel.locator("[data-document-id]").first()

@@ -5,11 +5,12 @@ import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import {
     assertInteractiveHome,
     closeLibrary,
-    libraryEntry,
-    libraryMenuTrigger,
     libraryPanel,
     libraryView,
-    openLibrary,
+    openApps,
+    openNotes,
+    workspaceAppsTrigger,
+    workspaceNotesTrigger,
 } from "./helpers/library.ts";
 
 async function assertFocus(target: Locator) {
@@ -20,22 +21,20 @@ async function assertFocus(target: Locator) {
 }
 
 async function assertHeaderFocus(page: Page) {
-    // Query on every poll: the header may remount while the view settles,
-    // so a captured element handle can go stale.
     await page.waitForFunction(() =>
         document.querySelector("[data-library] .workspace-header")
             ?.contains(document.activeElement) === true
     );
 }
 
-Deno.test("Library: seven home entries, responsive presentation, unchanged home and focus #285", async (t) => {
+Deno.test("Workspace entries, responsive presentation, history and focus contracts #285", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
     const browser = await chromium.launch({ headless: true });
     cleanup.defer(() => browser.close());
 
-    await t.step("guests cannot open the library", async () => {
+    await t.step("guests cannot open the workspace panel", async () => {
         const guest = await browser.newPage({
             viewport: { width: 1440, height: 900 },
         });
@@ -54,8 +53,8 @@ Deno.test("Library: seven home entries, responsive presentation, unchanged home 
         // Each width gets its own account so earlier widths' home notes cannot
         // consume the next viewport's note capacity.
         const credentials = await app.seedAskFixtureUser({
-            username: `library_entries_${width}`,
-            password: "Library-entries-password-285!",
+            username: `workspace_entries_${width}`,
+            password: "Workspace-entries-password-285!",
         });
         const context = await browser.newContext({
             viewport: { width, height: width === 390 ? 844 : 1024 },
@@ -71,47 +70,32 @@ Deno.test("Library: seven home entries, responsive presentation, unchanged home 
                 {
                     headers: { Origin: app.origin },
                     data: {
-                        title: `资料库入口 ${width}`,
+                        title: `工作区入口 ${width}`,
                         body: "入口回归正文",
                         isHomeFixed: true,
                     },
                 },
             );
             assert(created.ok(), await created.text());
-            const title = `资料库入口 ${width}`;
+            const title = `工作区入口 ${width}`;
             const search = page.locator("#search-query");
             const entries: {
                 name: string;
-                view: "root" | "notes";
+                view: "notes" | "apps";
                 open: () => Promise<unknown>;
                 focus: () => Locator;
             }[] = [
                 {
-                    name: "avatar menu",
-                    view: "root",
-                    open: () => openLibrary(page),
-                    focus: () => libraryMenuTrigger(page),
+                    name: "dock notes button",
+                    view: "notes",
+                    open: () => openNotes(page),
+                    focus: () => workspaceNotesTrigger(page),
                 },
                 {
-                    name: "empty search shortcut",
-                    view: "root",
-                    open: async () => {
-                        await search.focus();
-                        await page.getByRole("option", {
-                            name: "资料库",
-                            exact: true,
-                        }).click();
-                    },
-                    focus: () => search,
-                },
-                {
-                    name: "Mod+.",
-                    view: "root",
-                    open: async () => {
-                        await search.focus();
-                        await search.press("Control+.");
-                    },
-                    focus: () => search,
+                    name: "dock apps button",
+                    view: "apps",
+                    open: () => openApps(page),
+                    focus: () => workspaceAppsTrigger(page),
                 },
                 {
                     name: "home note",
@@ -168,6 +152,7 @@ Deno.test("Library: seven home entries, responsive presentation, unchanged home 
                     focus: () => search,
                 },
             ];
+
             for (const entry of entries) {
                 await t.step(`${width}: ${entry.name}`, async () => {
                     await page.goto(app.origin + "/");
@@ -211,39 +196,114 @@ Deno.test("Library: seven home entries, responsive presentation, unchanged home 
                         );
                         await assertInteractiveHome(page);
                     } else {
-                        await libraryPanel(page).and(page.getByRole("dialog"))
-                            .waitFor();
+                        // All widths are non-modal; no backdrop blocks home interaction
+                        assertEquals(
+                            await page.locator('[data-slot="sheet-backdrop"]')
+                                .count(),
+                            0,
+                        );
                     }
                     await closeLibrary(page);
                     await assertFocus(entry.focus());
                 });
             }
+
             await t.step(
-                `${width}: Escape unwinds nested views and root; restores opener`,
+                `${width}: Escape unwinds nested detail view, closes workspace and restores opener`,
                 async () => {
                     await page.goto(app.origin + "/");
-                    await openLibrary(page);
-                    for (
-                        const view of [
-                            "notes",
-                            "conversations",
-                            "apps",
-                        ] as const
-                    ) {
-                        await libraryEntry(page, view).click();
-                        await libraryView(page, view).waitFor();
-                        await libraryPanel(page).getByRole("button", {
-                            name: "返回资料库",
-                            exact: true,
-                        }).focus();
+                    await openNotes(page);
+                    // Open document into editor
+                    const noteCard = libraryPanel(page).locator(
+                        `[data-document-id] h4 button`,
+                    ).first();
+                    if (await noteCard.isVisible()) {
+                        await noteCard.click();
+                        await libraryPanel(page).locator(
+                            "[data-workspace-editor]",
+                        )
+                            .waitFor();
+                        // First Escape exits editor back to notes list
                         await page.keyboard.press("Escape");
-                        await libraryView(page, "root").waitFor();
+                        await libraryView(page, "notes").waitFor();
                     }
+                    // Next Escape closes the workspace panel
                     await page.keyboard.press("Escape");
                     await libraryPanel(page).waitFor({ state: "detached" });
-                    await assertFocus(libraryMenuTrigger(page));
+                    await assertFocus(workspaceNotesTrigger(page));
                 },
             );
+
+            await t.step(
+                `${width}: URL navigation and history between notes, apps and home`,
+                async () => {
+                    await page.goto(app.origin + "/");
+                    await openNotes(page);
+                    await page.waitForURL((url) =>
+                        url.searchParams.get("view") === "notes"
+                    );
+
+                    await openApps(page);
+                    await page.waitForURL((url) =>
+                        url.searchParams.get("view") === "apps"
+                    );
+
+                    await page.goBack();
+                    await page.waitForURL((url) =>
+                        url.searchParams.get("view") === "notes"
+                    );
+                    await libraryView(page, "notes").waitFor();
+
+                    await page.goBack();
+                    await page.waitForURL((url) =>
+                        !url.searchParams.has("view")
+                    );
+                    await libraryPanel(page).waitFor({ state: "detached" });
+                },
+            );
+
+            if (width === 1440) {
+                await t.step(
+                    "reactivating notes refreshes results without resetting its query",
+                    async () => {
+                        await page.goto(app.origin + "/");
+                        await openNotes(page);
+                        const query = libraryPanel(page).getByRole(
+                            "searchbox",
+                            {
+                                name: "搜索笔记",
+                            },
+                        );
+                        await query.fill("Hidden pane refresh");
+                        await libraryPanel(page).getByText("没有匹配的笔记", {
+                            exact: true,
+                        })
+                            .waitFor();
+                        await openApps(page);
+                        const created = await page.request.post(
+                            app.origin + "/api/documents",
+                            {
+                                headers: { Origin: app.origin },
+                                data: {
+                                    title: "Hidden pane refresh",
+                                    body: "Created while apps is active",
+                                },
+                            },
+                        );
+                        assert(created.ok(), await created.text());
+                        await openNotes(page);
+                        assertEquals(
+                            await query.inputValue(),
+                            "Hidden pane refresh",
+                        );
+                        await libraryPanel(page).getByRole("button", {
+                            name: "打开笔记：Hidden pane refresh",
+                            exact: true,
+                        }).waitFor();
+                    },
+                );
+            }
+
             assertEquals(errors, []);
         } finally {
             await context.close();

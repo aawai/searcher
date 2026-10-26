@@ -37,13 +37,13 @@ export const SHORTCUTS = {
         description: "笔记正文中由插入链接优先处理；其他输入控件内不抢占焦点。",
         binding: { key: "k", modifiers: ["mod"] },
     },
-    toggleLibrary: {
-        id: "toggle-library",
+    toggleDock: {
+        id: "toggle-dock",
         kind: "keyboard",
         section: "global",
-        action: "打开或关闭资料库",
-        context: "首页（含主搜索框），需要登录",
-        description: "笔记编辑器与其他输入控件内不响应。",
+        action: "展开并聚焦任务栏",
+        context: "全局，需要登录",
+        description: "展开收起的任务栏并聚焦首个入口。",
         binding: { key: ".", modifiers: ["mod"] },
     },
     searchNewTab: {

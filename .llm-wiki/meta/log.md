@@ -482,3 +482,27 @@
 ## [2026-10-26T04:01:22.571Z] observe
 - slug: "obs-2026-10-26-pr-309-main", title: "首页应用密度与可选底板经 PR 309 合并 main", relevance: "high"
 
+## [2026-10-26T06:57:51.514Z] observe
+- slug: "obs-2026-10-26-q1-q19", title: "工作区任务栏设计访谈已确认 Q1–Q19，尚未授权实施", relevance: "high"
+
+## [2026-10-26T07:03:30.082Z] observe
+- slug: "obs-2026-10-26-q20-q25", title: "任务栏访谈 Q20–Q25 已确认，等待最终共同理解确认", relevance: "high"
+
+## [2026-10-26T08:01:38.931Z] capture
+- source_id: "SRC-2026-10-26-001", url: "https://www.sqlite.org/isolation.html", format: "web"
+
+## [2026-10-26T08:01:42.554Z] capture
+- source_id: "SRC-2026-10-26-002", url: "https://docs.deno.com/runtime/fundamentals/security/", format: "web"
+
+## [2026-10-26T08:01:44.559Z] capture
+- source_id: "SRC-2026-10-26-003", url: "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html", format: "web"
+
+## [2026-10-26T08:03:30.249Z] ensure_page
+- page_type: "concept", title: "SQLite Isolation and Connection Boundaries", path: "concepts/sqlite-isolation-and-connection-boundaries"
+
+## [2026-10-26T08:03:30.387Z] ensure_page
+- page_type: "concept", title: "Deno Permission Boundaries", path: "concepts/deno-permission-boundaries"
+
+## [2026-10-26T08:03:30.400Z] ensure_page
+- page_type: "concept", title: "CSRF Defense Boundaries", path: "concepts/csrf-defense-boundaries"
+

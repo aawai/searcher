@@ -8,7 +8,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
-import { libraryMenuTrigger, openNotes } from "./helpers/library.ts";
+import { openNotes, workspaceNotesTrigger } from "./helpers/library.ts";
 
 // Run with deno task test:workspace; the task builds the real production frontend.
 
@@ -169,25 +169,24 @@ Deno.test("production workspace contracts", async (t) => {
             // Set mobile viewport (< 768px)
             await page.setViewportSize({ width: 375, height: 667 });
 
-            // The avatar menu is the mobile notes entry and focus-return target.
-            const mobileDocsBtn = libraryMenuTrigger(page);
+            // The Dock notes button is the mobile notes entry and focus-return target.
+            const mobileDocsBtn = workspaceNotesTrigger(page);
             await openNotes(page);
 
-            // Mobile panel is presented inside modal Sheet
+            // Mobile panel is presented inside non-modal Sheet/panel
             const sheet = page.locator(".workspace-panel--mobile");
             await sheet.waitFor();
-            const backdrop = page.locator('[data-slot="sheet-backdrop"]');
-            await backdrop.waitFor();
-            assertEquals(await backdrop.isVisible(), true);
+            assertEquals(
+                await page.locator('[data-slot="sheet-backdrop"]').count(),
+                0,
+            );
 
-            // Escape first returns to the library root, then closes the Sheet.
-            await page.keyboard.press("Escape");
-            await sheet.getByRole("heading", { name: "资料库", exact: true })
-                .waitFor();
+            // Escape closes the panel (no root view).
             await page.keyboard.press("Escape");
             await sheet.waitFor({ state: "detached" });
-            await page.waitForFunction(() =>
-                document.activeElement?.matches(".user-avatar-trigger")
+            await page.waitForFunction(
+                (btn) => document.activeElement === btn,
+                await mobileDocsBtn.elementHandle(),
             );
             assertEquals(
                 await mobileDocsBtn.evaluate((el) =>
@@ -243,9 +242,10 @@ Deno.test("production workspace contracts", async (t) => {
             // Sheet closes from swipe gesture
             await sheet.waitFor({ state: "detached" });
 
-            // Focus returns to the avatar trigger, not the unmounted menu item.
-            await page.waitForFunction(() =>
-                document.activeElement?.matches(".user-avatar-trigger")
+            // Focus returns to the dock trigger.
+            await page.waitForFunction(
+                (btn) => document.activeElement === btn,
+                await mobileDocsBtn.elementHandle(),
             );
             assertEquals(
                 await mobileDocsBtn.evaluate((el) =>
