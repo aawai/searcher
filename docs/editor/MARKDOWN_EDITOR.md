@@ -41,6 +41,8 @@
 
 操作区与正文滚动分离；阅读宽度 720px，最低正文 240px，低高度允许整个编辑器滚动。Live/Source 各自记录滚动位置，模式切换的既有 runtime 生命周期不变。展开/收起编辑不更换编辑器 key；跨 Host 断点挂载策略不在此契约内。
 
+编辑器内的工具栏、正文、源码与局部内容滚动区统一使用原生细滚动条，颜色继承全局 Token；不隐藏滚动能力。分页保留实际页间距与纸张细边框，但不绘制纸张投影或灰色页间底带，正文仍只由外层滚动区承载。
+
 工作区列表的 `features/workspace/note-summary.ts` 只读分析入口复用 remark/remark-gfm AST，不替换共享 editor parser/serializer。列表动态加载并按当前实例 id/body 缓存结果，query 变化只生成文本节点/mark 片段；隐藏 URL 或 Markdown 语法匹配回退到 escaped 源码，不执行 HTML。
 
 笔记面板列表对服务端摘要做标题去重时，只静态导入无依赖的 `features/workspace/note-list-snippet.ts`。该字符串处理入口不得通过 `note-summary.ts` 的静态依赖引入 remark/unified；列表摘要行为不变，Markdown parser 仍留在异步加载图中。

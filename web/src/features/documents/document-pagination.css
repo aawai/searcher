@@ -37,7 +37,7 @@
     min-height: 0;
     max-height: none;
     overflow: visible;
-    background: var(--surface-soft);
+    background: transparent;
     padding: 0;
 }
 
@@ -91,7 +91,6 @@
     width: var(--page-width);
     height: var(--page-height);
     background: var(--surface-document-paper, var(--surface-solid));
-    box-shadow: var(--shadow-document-paper);
     border: 1px solid var(--border);
     pointer-events: none;
 }
