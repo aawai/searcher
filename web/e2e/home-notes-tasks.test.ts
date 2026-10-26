@@ -25,6 +25,14 @@ Deno.test("home note task checkboxes toggle directly and save through the docume
             await card.locator(".home-note-progress").textContent(),
             "1/2",
         );
+        assertEquals(
+            await card.getByRole("progressbar").getAttribute("value"),
+            "1",
+        );
+        assertEquals(
+            await card.getByRole("progressbar").getAttribute("max"),
+            "2",
+        );
         const first = card.getByRole("checkbox", {
             name: "未完成任务，点击标记为已完成",
         });
@@ -41,6 +49,10 @@ Deno.test("home note task checkboxes toggle directly and save through the docume
         }).first().waitFor();
         await card.locator(".home-note-progress", { hasText: "2/2" })
             .waitFor();
+        assertEquals(
+            await card.getByRole("progressbar").getAttribute("value"),
+            "2",
+        );
         const body = await page.evaluate(
             async (id) =>
                 (await (await fetch(`/api/documents/${id}`)).json()).data

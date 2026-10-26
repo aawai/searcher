@@ -53,8 +53,7 @@
 }
 
 .home-note-card {
-    --material-note-solid: var(--material-solid);
-    --home-note-body-lines: 5;
+    --home-note-body-lines: 3;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -65,8 +64,7 @@
     padding: var(--space-4);
     overflow: hidden;
     border-radius: var(--radius-lg);
-    background: var(--glass-sheen), color-mix(in srgb,
-        var(--material-note-solid) var(--glass-fill-regular), transparent);
+    background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     box-shadow: var(--shadow-elevation-material);
@@ -74,35 +72,19 @@
     cursor: default;
 }
 
-.home-note-card[data-color="amber"] {
-    --material-note-solid: var(--material-note-amber);
+/* A wide preview gets one extra line; card geometry stays on the note grid. */
+.home-note-card[data-size="w"] {
+    --home-note-body-lines: 4;
 }
 
-.home-note-card[data-color="rose"] {
-    --material-note-solid: var(--material-note-rose);
-}
-
-.home-note-card[data-color="sage"] {
-    --material-note-solid: var(--material-note-sage);
-}
-
-.home-note-card[data-color="sky"] {
-    --material-note-solid: var(--material-note-sky);
-}
-
-/* An untitled note gives the title row to its body. */
-.home-note-card[data-untitled="true"]:not(:has(.home-note-head)) {
-    --home-note-body-lines: 6;
-}
-
-/* Title row: dot, 17px title, task progress; the end keeps room for ⋯. */
+/* Title row keeps room for ⋯, not decorative identity markers. */
 .home-note-head {
     display: flex;
     flex: none;
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
-    min-height: var(--font-title-line-height);
+    min-height: var(--font-body-line-height);
     padding-inline-end: var(--control-compact-height);
 }
 
@@ -116,8 +98,8 @@
     padding: 0;
     color: inherit;
     text-align: start;
-    font-size: var(--font-title-size);
-    line-height: var(--font-title-line-height);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
     font-weight: var(--font-title-weight);
 }
 
@@ -129,10 +111,40 @@
     white-space: nowrap;
 }
 
+.home-note-task-summary {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+    margin-block-start: auto;
+}
+
+.home-note-progress-track {
+    appearance: none;
+    flex: 1;
+    min-width: 0;
+    height: var(--space-half);
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--border);
+    color: var(--foreground);
+}
+
+.home-note-progress-track::-webkit-progress-bar {
+    background: var(--border);
+}
+
+.home-note-progress-track::-webkit-progress-value {
+    background: var(--foreground);
+}
+
+.home-note-progress-track::-moz-progress-bar {
+    background: var(--foreground);
+}
+
 .home-note-progress {
     flex: none;
-    margin-inline-start: auto;
-    color: var(--muted);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     font-variant-numeric: tabular-nums;
@@ -143,7 +155,7 @@
     position: absolute;
     inset-block-start: calc(
         var(--space-4) +
-        (var(--font-title-line-height) - var(--control-compact-height)) / 2
+        (var(--font-body-line-height) - var(--control-compact-height)) / 2
     );
     inset-inline-end: var(--space-3);
     display: flex;
@@ -198,6 +210,11 @@
     block-size: calc(
         var(--home-note-body-lines) * var(--font-body-line-height)
     );
+    /* A breakpoint budget must constrain the last measured inline height too,
+       so ResizeObserver can re-measure even when the width is unchanged. */
+    max-block-size: calc(
+        var(--home-note-body-lines) * var(--font-body-line-height)
+    );
     overflow: hidden;
     overflow-wrap: anywhere;
     font-size: var(--font-body-size);
@@ -205,8 +222,7 @@
 }
 
 /* Without a title row the first body line flows around ⋯. */
-.home-note-card[data-untitled="true"]:not(:has(.home-note-head))
-    .home-note-body::before {
+.home-note-card[data-untitled="true"]:not(:has(.home-note-head)) .home-note-body::before {
     content: "";
     float: inline-end;
     inline-size: var(--control-compact-height);
@@ -378,9 +394,9 @@
     --home-note-body-lines: 3;
 }
 
-.home-notes--flow[data-mode="stack"]
-    .home-note-card[data-untitled="true"]:not(:has(.home-note-head)) {
-    --home-note-body-lines: 4;
+/* The task footer needs one line in the short mobile cell. */
+.home-notes--flow[data-mode="stack"] .home-note-card[data-tasks="true"] {
+    --home-note-body-lines: 2;
 }
 
 @media (max-width: 767px), (any-pointer: coarse) {
@@ -390,22 +406,20 @@
         inset-inline: 0;
         inset-block: calc(
             (var(--font-metadata-line-height) + 2 * var(--space-2) -
-                var(--control-touch-target)) / 2
+            var(--control-touch-target)) / 2
         );
     }
-    /* The 44px ⋯ target centres on the 24px title line and stays visible. */
+    /* The 44px ⋯ target centres on the title line and stays visible. */
     .home-note-actions {
         inset-block-start: calc(
             var(--space-4) +
-            (var(--font-title-line-height) - var(--control-touch-target)) / 2
+            (var(--font-body-line-height) - var(--control-touch-target)) / 2
         );
         inset-inline-end: var(--space-1);
         opacity: 1;
         pointer-events: auto;
     }
-    /* The 24px title opens the note from a 44px band: the card padding above
-       and the rest below, overlapping the body's first line box (above its
-       glyphs). The band layers over the body, which a fade mask stacks. */
+    /* Extend the title into padding and the gap to keep a 44px touch band. */
     [data-slot="button"].home-note-title::before {
         content: "";
         position: absolute;
@@ -413,7 +427,7 @@
         inset-inline: 0;
         inset-block-start: calc(-1 * var(--space-4));
         inset-block-end: calc(
-            var(--font-title-line-height) + var(--space-4) -
+            var(--font-body-line-height) + var(--space-4) -
             var(--control-touch-target)
         );
     }
@@ -424,8 +438,7 @@
     .home-note-head {
         padding-inline-end: calc(var(--control-touch-target) - var(--space-3));
     }
-    .home-note-card[data-untitled="true"]:not(:has(.home-note-head))
-        .home-note-body::before {
+    .home-note-card[data-untitled="true"]:not(:has(.home-note-head)) .home-note-body::before {
         inline-size: calc(var(--control-touch-target) - var(--space-3));
     }
 }

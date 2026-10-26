@@ -7,8 +7,7 @@ import {
     useRef,
     useState,
 } from "react";
-import type { DocumentColor, DocumentNoteSize } from "@shared/documents.ts";
-import { DocumentColorItems } from "../../components/searcher/DocumentColorMenu.tsx";
+import type { DocumentNoteSize } from "@shared/documents.ts";
 import { NoteMarkdownView } from "../../components/searcher/NoteMarkdownLoader.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
@@ -36,9 +35,9 @@ const SIZE_LABEL: Record<DocumentNoteSize, string> = {
 const INTERACTIVE = "a, button, input, label, li.task-list-item";
 
 /**
- * One Material home note: an optional 17px title row with the colour dot and
- * task progress, then the clipped Markdown body. A click anywhere outside a
- * control opens the note; untitled notes give the title row to the body.
+ * One neutral Material home note: an optional title, a short Markdown preview
+ * and a task progress footer. A click outside a control opens the note;
+ * untitled notes show their body without repeating it as a title.
  */
 export function HomeNoteCard(
     {
@@ -46,7 +45,6 @@ export function HomeNoteCard(
         onOpen,
         onResize,
         onToggleHomeFixed,
-        onChangeColor,
         onToggleTask,
         taskLockedTitle,
         onDelete,
@@ -55,7 +53,6 @@ export function HomeNoteCard(
         onOpen?: () => void;
         onResize?: (size: DocumentNoteSize) => void;
         onToggleHomeFixed?: () => void;
-        onChangeColor?: (color: DocumentColor) => void;
         /** Flips one task row of the note body; the owner saves and coalesces it. */
         onToggleTask?: (index: number, checked: boolean) => void;
         /** Tooltip for the read-only checkboxes while the card cannot toggle tasks. */
@@ -73,7 +70,9 @@ export function HomeNoteCard(
      * overlap, so the nearest row centre wins. The programmatic input click is
      * allowed through; the compatibility click that follows is suppressed.
      */
-    const onTaskPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const onTaskPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
+        suppressTaskClick.current = false;
+        if (!event.currentTarget.contains(event.target as Node)) return;
         if (!onToggleTask || !matchMedia("(any-pointer: coarse)").matches) {
             return;
         }
@@ -85,6 +84,7 @@ export function HomeNoteCard(
             ),
         );
         const hitSize = Number.isFinite(target) ? target : 44;
+        const preview = element.getBoundingClientRect();
         let nearest:
             | { input: HTMLInputElement; distance: number }
             | null = null;
@@ -94,6 +94,11 @@ export function HomeNoteCard(
             )
         ) {
             const rect = row.getBoundingClientRect();
+            if (
+                rect.top < preview.top - 1 || rect.bottom > preview.bottom + 1
+            ) {
+                continue;
+            }
             if (
                 event.clientX < rect.left ||
                 event.clientX > rect.left + hitSize
@@ -129,7 +134,7 @@ export function HomeNoteCard(
                 style.getPropertyValue("--home-note-body-lines"),
             );
             const lineHeight = parseFloat(style.lineHeight);
-            const limit = (Number.isFinite(lines) ? lines : 5) *
+            const limit = (Number.isFinite(lines) ? lines : 3) *
                 (Number.isFinite(lineHeight) ? lineHeight : 22);
             // Collapse the previous clip so scrollHeight is the natural
             // content height rather than the box the last pass left behind.
@@ -188,39 +193,33 @@ export function HomeNoteCard(
     return (
         <article
             className="home-note-card"
-            data-color={note.color}
             data-size={note.layout.size}
             data-untitled={showTitle ? undefined : "true"}
+            data-tasks={progress ? "true" : undefined}
             onClick={open}
+            onPointerDownCapture={onTaskPointerDown}
+            onClickCapture={(event) => {
+                if (!suppressTaskClick.current) return;
+                if (event.target instanceof HTMLInputElement) return;
+                suppressTaskClick.current = false;
+                event.preventDefault();
+                event.stopPropagation();
+            }}
         >
-            {(showTitle || progress) && (
+            {showTitle && (
                 <header className="home-note-head">
-                    <span
-                        aria-hidden="true"
-                        className={`note-quick-dot note-quick-dot--${note.color}`}
-                    />
-                    {showTitle && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            className="home-note-title"
-                            title={note.title ?? undefined}
-                            aria-label={note.displayTitle}
-                            onClick={onOpen}
-                        >
-                            <span className="home-note-title-text">
-                                {note.displayTitle}
-                            </span>
-                        </Button>
-                    )}
-                    {progress && (
-                        <span
-                            className="home-note-progress"
-                            aria-label={`已完成 ${progress.done} / ${progress.total} 项`}
-                        >
-                            {progress.done}/{progress.total}
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="home-note-title"
+                        title={note.title ?? undefined}
+                        aria-label={note.displayTitle}
+                        onClick={onOpen}
+                    >
+                        <span className="home-note-title-text">
+                            {note.displayTitle}
                         </span>
-                    )}
+                    </Button>
                 </header>
             )}
 
@@ -229,8 +228,7 @@ export function HomeNoteCard(
                 role="toolbar"
                 aria-label="笔记操作"
             >
-                {(onResize || onToggleHomeFixed || onOpen ||
-                    onChangeColor || onDelete) && (
+                {(onResize || onToggleHomeFixed || onOpen || onDelete) && (
                     <DropdownMenu>
                         <DropdownMenuTrigger
                             className="home-note-action-btn"
@@ -316,12 +314,6 @@ export function HomeNoteCard(
                                     <span>编辑笔记</span>
                                 </DropdownMenuItem>
                             )}
-                            {onChangeColor && (
-                                <DocumentColorItems
-                                    color={note.color}
-                                    onChange={onChangeColor}
-                                />
-                            )}
                             {onDelete && <DropdownMenuSeparator />}
                             {onDelete && (
                                 <DropdownMenuItem
@@ -348,17 +340,6 @@ export function HomeNoteCard(
                     ref={body}
                     className="home-note-body markdown"
                     data-overflow={overflowing || undefined}
-                    onPointerDown={onTaskPointerDown}
-                    onClickCapture={(event) => {
-                        if (!suppressTaskClick.current) return;
-                        if (event.target instanceof HTMLInputElement) {
-                            suppressTaskClick.current = false;
-                            return;
-                        }
-                        suppressTaskClick.current = false;
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }}
                 >
                     <NoteMarkdownView
                         body={note.body}
@@ -366,6 +347,19 @@ export function HomeNoteCard(
                         taskLockedTitle={taskLockedTitle}
                     />
                 </div>
+            )}
+            {progress && (
+                <footer className="home-note-task-summary">
+                    <progress
+                        className="home-note-progress-track"
+                        value={progress.done}
+                        max={progress.total}
+                        aria-label={`已完成 ${progress.done} / ${progress.total} 项`}
+                    />
+                    <span className="home-note-progress" aria-hidden="true">
+                        {progress.done}/{progress.total}
+                    </span>
+                </footer>
             )}
         </article>
     );

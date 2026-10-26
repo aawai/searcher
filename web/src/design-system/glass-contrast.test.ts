@@ -1,14 +1,9 @@
 import { assert, assertEquals } from "@std/assert";
 
 const css = await Deno.readTextFile(new URL("./tokens.css", import.meta.url));
-const noteColors = await Deno.readTextFile(
-    new URL("../components/searcher/document-colors.css", import.meta.url),
-);
 const markdownCss = await Deno.readTextFile(
     new URL("../components/searcher/markdown.css", import.meta.url),
 );
-const NOTE_SCOPE = ":where(.note-quick-dot, .documents-color-dot)";
-const DARK_NOTE_SCOPE = `[data-theme="dark"] ${NOTE_SCOPE}`;
 
 type Rgb = readonly [number, number, number];
 type Theme = "light" | "dark";
@@ -397,18 +392,12 @@ for (const theme of ["light", "dark"] as const) {
 for (const theme of ["light", "dark"] as const) {
     for (const tier of MATERIAL_FLOOR_TIERS) {
         for (const fixture of WALLPAPER_FIXTURES) {
-            Deno.test(`home note ${theme}/${tier}/${fixture.name}: body, task box border and colour dots hold contrast on the Material note`, () => {
+            Deno.test(`home note ${theme}/${tier}/${fixture.name}: preview, progress and task box hold contrast on neutral Material`, () => {
                 const tokens = cascade(theme, tier);
                 const alpha = fillPercent(tokens, `--glass-regular-${theme}`) /
                     100;
                 const peak = fillPercent(tokens, "--glass-sheen-peak") / 100 *
                     Number(resolve(tokens, "--glass-sheen-scale"));
-                const dotTokens = new Map([
-                    ...declarationsIn(noteColors, NOTE_SCOPE),
-                    ...(theme === "dark"
-                        ? declarationsIn(noteColors, DARK_NOTE_SCOPE)
-                        : []),
-                ]);
                 const taskTokens = new Map([
                     ...tokens,
                     ...declarationsIn(
@@ -416,59 +405,35 @@ for (const theme of ["light", "dark"] as const) {
                         ".markdown,\n.markdown-editor",
                     ),
                 ]);
-                const dots = ["amber", "rose", "sage", "sky", "paper"].map((
-                    name,
-                ) => [
-                    name,
-                    hex(resolve(dotTokens, `--note-dot-${name}`)),
-                ] as const);
-                for (const [color, dot] of dots) {
-                    const base = hex(resolve(
-                        tokens,
-                        color === "paper"
-                            ? "--material-solid"
-                            : `--material-note-${color}`,
-                    ));
-                    for (const backdrop of fixture.samples) {
-                        // The title and dot sit near the top; the body and task rows
-                        // start below the title, so they see less of the sheen.
-                        for (const height of [0.1, 0.25, 0.55]) {
-                            const sheen = peak * Math.max(0, 1 - height / 0.55);
-                            const note = over(
-                                [255, 255, 255],
-                                sheen,
-                                over(base, alpha, backdrop),
-                            );
-                            const body = contrast(
-                                hex(resolve(tokens, "--foreground")),
-                                note,
-                            );
-                            assert(
-                                body >= WCAG_AA_TEXT,
-                                `body text ${body.toFixed(2)}:1 on ${backdrop}`,
-                            );
-                            if (height >= 0.25) {
-                                const box = contrast(
-                                    mixedColor(taskTokens, "--task-box-border"),
-                                    note,
-                                );
-                                assert(
-                                    box >= SECONDARY_TEXT,
-                                    `task box border ${
-                                        box.toFixed(
-                                            2,
-                                        )
-                                    }:1 on ${backdrop}`,
-                                );
-                            }
-                            const ratio = contrast(dot, note);
-                            assert(
-                                ratio >= SECONDARY_TEXT,
-                                `dot ${color} ${
-                                    ratio.toFixed(2)
-                                }:1 on ${backdrop}`,
-                            );
-                        }
+                const base = hex(resolve(tokens, "--material-solid"));
+                for (const backdrop of fixture.samples) {
+                    for (const height of [0.1, 0.25, 0.55]) {
+                        const sheen = peak * Math.max(0, 1 - height / 0.55);
+                        const note = over(
+                            [255, 255, 255],
+                            sheen,
+                            over(base, alpha, backdrop),
+                        );
+                        const ratio = contrast(
+                            hex(resolve(tokens, "--foreground")),
+                            note,
+                        );
+                        assert(
+                            ratio >= WCAG_AA_TEXT,
+                            `preview and progress ${
+                                ratio.toFixed(2)
+                            }:1 on ${backdrop}`,
+                        );
+                        const box = contrast(
+                            mixedColor(taskTokens, "--task-box-border"),
+                            note,
+                        );
+                        assert(
+                            box >= SECONDARY_TEXT,
+                            `task box border ${
+                                box.toFixed(2)
+                            }:1 on ${backdrop}`,
+                        );
                     }
                 }
             });

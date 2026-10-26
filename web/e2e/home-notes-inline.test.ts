@@ -25,14 +25,14 @@ Deno.test("notes that fit are measured after the Markdown preview loads and show
         });
         await createHomeNote(page, {
             title: "清单",
-            body: "- [ ] 牛奶\n- [x] 面包\n- [ ] 鸡蛋\n- [ ] 咖啡豆",
+            body: "- [ ] 牛奶\n- [x] 面包\n- [ ] 鸡蛋",
             homeSortOrder: 1,
         });
         // A full load starts without the lazy Markdown chunk: the first
         // measurement sees the plain-text placeholder.
         await reloadHome(page);
         await waitForNoteCards(page, 2);
-        await homeNote(page, "清单").locator("li.task-list-item").nth(3)
+        await homeNote(page, "清单").locator("li.task-list-item").nth(2)
             .waitFor();
         await homeNote(page, "短句").locator(".home-note-body p").waitFor();
         // Observers deliver before the next frame; two frames let them settle.
@@ -57,7 +57,7 @@ Deno.test("notes that fit are measured after the Markdown preview loads and show
         }
         const tasks = await homeNote(page, "清单").locator(".home-note-body")
             .evaluate((element) => element.clientHeight);
-        assertEquals(tasks, 88, "four task rows keep the 22px line pitch");
+        assertEquals(tasks, 66, "three task rows keep the 22px line pitch");
     } finally {
         await fixture.close();
     }
@@ -109,7 +109,6 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
         );
 
         const first = homeNote(page, "堆叠 0").locator(".home-note-card");
-        await first.locator(".note-quick-dot--amber").waitFor();
         // The always-visible 44px menu target centres on the title line.
         const [titleBox, menuBox] = await Promise.all([
             first.locator(".home-note-title").boundingBox(),
@@ -122,7 +121,7 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
             Math.abs(offset) <= 1,
             `note menu centre is ${offset}px off the title line`,
         );
-        // The 24px title opens the note from a 44px band: it reaches into the
+        // The title opens the note from a 44px band: it reaches into the
         // card padding above and the gap below without moving the body.
         const titleHits = await first.locator(".home-note-title").evaluate(
             (title) => {
@@ -203,6 +202,56 @@ Deno.test("untitled flow notes keep one body and open from the card or keyboard"
         await page.getByRole("button", { name: "关闭资料库", exact: true })
             .click();
         await libraryPanel(page).waitFor({ state: "detached" });
+    } finally {
+        await fixture.close();
+    }
+});
+
+Deno.test("wide previews reclip when the note grid becomes a mobile stack", async () => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 768, height: 1024 },
+    });
+    const { page } = fixture;
+    try {
+        await createHomeNote(page, {
+            title: "跨断点预览",
+            body: "第一行\n第二行\n第三行\n第四行\n第五行",
+            size: "w",
+        });
+        await reloadHome(page);
+        await waitForNoteCards(page, 1);
+        const body = homeNote(page, "跨断点预览").locator(".home-note-body");
+        await body.locator("p").waitFor();
+        await page.waitForFunction(() => {
+            const height = document.querySelector(".home-note-body")
+                ?.clientHeight;
+            return height !== undefined && height > 66 && height <= 88;
+        });
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.waitForFunction(() =>
+            document.querySelector(".home-notes--flow")?.getAttribute(
+                "data-mode",
+            ) === "stack"
+        );
+        // The compact card must leave its bottom padding clear, not retain
+        // the four-line desktop height after only its CSS budget changes.
+        await page.waitForFunction(
+            () => {
+                const body = document.querySelector(".home-note-body");
+                return body && body.clientHeight > 0 && body.clientHeight <= 66;
+            },
+            undefined,
+            { timeout: 5000 },
+        );
+        const clearance = await body.evaluate((element) => {
+            const card = element.closest(".home-note-card")!;
+            return card.getBoundingClientRect().bottom -
+                element.getBoundingClientRect().bottom;
+        });
+        assert(
+            clearance >= 16,
+            `preview leaves ${clearance}px bottom clearance`,
+        );
     } finally {
         await fixture.close();
     }

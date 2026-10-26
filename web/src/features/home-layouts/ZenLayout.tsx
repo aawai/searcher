@@ -122,8 +122,6 @@ export function ZenLayout(
                 onUpdateLayouts={(changes) => void updateNoteLayouts(changes)}
                 onToggleHomeFixed={(note) =>
                     void updateNote(note, { isHomeFixed: false })}
-                onChangeColor={(note, color) =>
-                    void updateNote(note, { color })}
                 onToggleTask={props.toggleTask}
                 editingNoteId={props.editingNoteId}
                 onDelete={(note) => void deleteNote(note)}
