@@ -502,6 +502,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             const switches = page.locator('.settings-content [role="switch"]');
             assert(await switches.count() > 0, "Appearance has switches");
             for (let i = 0; i < await switches.count(); i++) {
+                await switches.nth(i).scrollIntoViewIfNeeded();
                 const box = await switches.nth(i).boundingBox();
                 assert(box);
                 const hits = await switches.nth(i).evaluate(
@@ -526,6 +527,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 );
             }
 
+            await swatchGroup.scrollIntoViewIfNeeded();
             await swatchGroup.screenshot({
                 path: `${artifactDir}/settings-theme-390.png`,
             });
