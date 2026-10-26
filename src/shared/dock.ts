@@ -3,11 +3,13 @@ export type DockSystemId = (typeof DOCK_SYSTEM_IDS)[number];
 
 export interface DockPreferences {
     systemOrder: DockSystemId[];
+    hiddenSystemIds: DockSystemId[];
     appIds: string[];
 }
 
 export const DEFAULT_DOCK_PREFERENCES: DockPreferences = {
     systemOrder: [...DOCK_SYSTEM_IDS],
+    hiddenSystemIds: [],
     appIds: [],
 };
 
@@ -40,6 +42,7 @@ export function normalizeDockPreferences(raw: unknown): DockPreferences {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
         return {
             systemOrder: [...DOCK_SYSTEM_IDS],
+            hiddenSystemIds: [],
             appIds: [],
         };
     }
@@ -64,6 +67,17 @@ export function normalizeDockPreferences(raw: unknown): DockPreferences {
         }
     }
 
+    const hiddenSystemIds: DockSystemId[] = [];
+    if (Array.isArray(r.hiddenSystemIds)) {
+        const seenHidden = new Set<DockSystemId>();
+        for (const item of r.hiddenSystemIds) {
+            if (isValidDockSystemId(item) && !seenHidden.has(item)) {
+                seenHidden.add(item);
+                hiddenSystemIds.push(item);
+            }
+        }
+    }
+
     const appIds: string[] = [];
     if (Array.isArray(r.appIds)) {
         const seenApps = new Set<string>();
@@ -77,6 +91,7 @@ export function normalizeDockPreferences(raw: unknown): DockPreferences {
 
     return {
         systemOrder,
+        hiddenSystemIds,
         appIds,
     };
 }

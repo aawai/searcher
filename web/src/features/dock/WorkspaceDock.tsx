@@ -273,6 +273,7 @@ export function WorkspaceDock(
         layout,
         setLayout,
         setSystemOrder,
+        setSystemVisible,
         setAppOrder,
         setPinned,
         refreshApps,
@@ -358,6 +359,14 @@ export function WorkspaceDock(
     );
     const appsGroupRef = useRef<HTMLDivElement | null>(null);
 
+    // Visible system items in configured order
+    const visibleSystemIds = useMemo(
+        () =>
+            preferences.systemOrder.filter(
+                (id) => !preferences.hiddenSystemIds.includes(id),
+            ),
+        [preferences.systemOrder, preferences.hiddenSystemIds],
+    );
     // Hydrate pinned apps
     const pinnedApps = useMemo(
         () =>
@@ -820,34 +829,41 @@ export function WorkspaceDock(
                             aria-label="工作区任务栏"
                         >
                             {/* System items group */}
-                            <div className="dock-group dock-group--system">
-                                <SortableContext
-                                    items={preferences.systemOrder.map((id) =>
-                                        `system:${id}`
-                                    )}
-                                    strategy={sortableStrategy}
-                                >
-                                    {preferences.systemOrder.map((id) => {
-                                        const config = DOCK_SYSTEM_ITEMS[id];
-                                        return (
-                                            <SortableSystemItem
-                                                key={id}
-                                                id={id}
-                                                label={config.label}
-                                                icon={config.icon}
-                                                isActive={activeSystemId === id}
-                                                aiDisabled={id === "ai" &&
-                                                    !aiAvailable}
-                                                onClick={() =>
-                                                    handleSystemNavigate(id)}
-                                            />
-                                        );
-                                    })}
-                                </SortableContext>
-                            </div>
+                            {visibleSystemIds.length > 0 && (
+                                <div className="dock-group dock-group--system">
+                                    <SortableContext
+                                        items={visibleSystemIds.map((id) =>
+                                            `system:${id}`
+                                        )}
+                                        strategy={sortableStrategy}
+                                    >
+                                        {visibleSystemIds.map((id) => {
+                                            const config =
+                                                DOCK_SYSTEM_ITEMS[id];
+                                            return (
+                                                <SortableSystemItem
+                                                    key={id}
+                                                    id={id}
+                                                    label={config.label}
+                                                    icon={config.icon}
+                                                    isActive={activeSystemId ===
+                                                        id}
+                                                    aiDisabled={id === "ai" &&
+                                                        !aiAvailable}
+                                                    onClick={() =>
+                                                        handleSystemNavigate(
+                                                            id,
+                                                        )}
+                                                />
+                                            );
+                                        })}
+                                    </SortableContext>
+                                </div>
+                            )}
 
                             {/* Divider between system items and pinned apps */}
-                            {pinnedApps.length > 0 && (
+                            {visibleSystemIds.length > 0 &&
+                                pinnedApps.length > 0 && (
                                 <div className="dock-divider" />
                             )}
 
@@ -1000,11 +1016,14 @@ export function WorkspaceDock(
 
                         <div className="dock-management-section">
                             <h4 className="dock-management-heading">
-                                系统入口顺序
+                                系统入口
                             </h4>
                             <DockSystemOrderList
                                 systemOrder={preferences.systemOrder}
+                                hiddenSystemIds={preferences.hiddenSystemIds}
                                 onMove={handleMoveSystem}
+                                onToggleVisible={(id, visible) =>
+                                    void setSystemVisible(id, visible)}
                             />
                         </div>
                     </div>

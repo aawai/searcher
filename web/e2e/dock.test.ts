@@ -177,6 +177,7 @@ Deno.test("workspace dock: guest has no dock, first login has four system items 
             const prefBody = await prefRes.json();
             assertEquals(prefBody.data.dock, {
                 systemOrder: ["home", "apps", "notes", "ai"],
+                hiddenSystemIds: [],
                 appIds: [],
             });
         },
@@ -617,9 +618,35 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             const prefBody = await prefRes.json();
             assertEquals(prefBody.data.dock.appIds, [appB.id, appA.id]);
 
+            // Toggle off "AI 问答" inside management modal
+            const toggleAiModal = modal.getByRole("switch", {
+                name: "显示 AI 问答",
+            });
+            await toggleAiModal.waitFor({ state: "visible" });
+            await toggleAiModal.click();
+
             // Close management modal
             await modal.getByRole("button", { name: "完成" }).click();
             await modal.waitFor({ state: "hidden" });
+
+            // Verify AI 问答 is hidden on the dock while other 3 system items remain visible
+            assertEquals(
+                await dockNav(page).locator('[data-dock-id="ai"]').count(),
+                0,
+                "hidden system entry AI 问答 must not render on dock",
+            );
+            assertEquals(
+                await dockSystemButton(page, "首页").isVisible(),
+                true,
+            );
+            assertEquals(
+                await dockSystemButton(page, "应用").isVisible(),
+                true,
+            );
+            assertEquals(
+                await dockSystemButton(page, "笔记").isVisible(),
+                true,
+            );
         },
     );
 
@@ -656,6 +683,40 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
                 await dockNav(page).locator(`[data-dock-app-id="${appB.id}"]`)
                     .count(),
                 0,
+            );
+
+            // In settings, toggle "笔记" off and "AI 问答" back on, then verify on dock
+            await page.goto(app.origin + "/settings/appearance");
+            await page.getByRole("navigation", { name: "设置分类" }).waitFor({
+                state: "visible",
+            });
+            const toggleNotes = page.getByRole("switch", { name: "显示 笔记" });
+            const toggleAi = page.getByRole("switch", { name: "显示 AI 问答" });
+            await toggleNotes.waitFor({ state: "visible" });
+            assertEquals(
+                await toggleAi.getAttribute("aria-checked"),
+                "false",
+            );
+            await toggleNotes.click();
+            await toggleAi.click();
+
+            const prefAfterToggle = await (await context.request.get(
+                app.origin + "/api/preferences",
+            )).json();
+            assertEquals(prefAfterToggle.data.dock.hiddenSystemIds, ["notes"]);
+
+            await page.getByRole("link", { name: "Searcher 首页" }).click();
+            await page.waitForURL(app.origin + "/");
+            await dockNav(page).waitFor({ state: "visible" });
+            assertEquals(
+                await dockNav(page).locator('[data-dock-id="notes"]').count(),
+                0,
+                "hidden system entry 笔记 must not render on dock",
+            );
+            assertEquals(
+                await dockSystemButton(page, "AI 问答").isVisible(),
+                true,
+                "re-enabled system entry AI 问答 must render on dock",
             );
         },
     );

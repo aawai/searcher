@@ -66,7 +66,7 @@ jobs:
               run: deno install
 
             - name: Install Chromium
-              run: npx --yes playwright@1.56.1 install --with-deps chromium
+              run: npx --yes playwright@1.56.1 install chromium
 
             - name: Run bundle loading production E2E suite (deno task test:bundle)
               run: deno task test:bundle

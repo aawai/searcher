@@ -363,6 +363,23 @@ export class PreferencesService {
                     systemOrder = [...dock.systemOrder];
                 }
 
+                let hiddenSystemIds = currentDock.hiddenSystemIds;
+                if (dock.hiddenSystemIds !== undefined) {
+                    if (
+                        !Array.isArray(dock.hiddenSystemIds) ||
+                        new Set(dock.hiddenSystemIds).size !==
+                            dock.hiddenSystemIds.length ||
+                        !dock.hiddenSystemIds.every((id) =>
+                            isValidDockSystemId(id)
+                        )
+                    ) {
+                        throw new PreferencesValidationError(
+                            "隐藏系统入口列表不能重复且必须为合法系统入口",
+                        );
+                    }
+                    hiddenSystemIds = [...dock.hiddenSystemIds];
+                }
+
                 let appIds = currentDock.appIds;
                 if (dock.appIds !== undefined) {
                     if (!Array.isArray(dock.appIds)) {
@@ -409,6 +426,7 @@ export class PreferencesService {
 
                 const mergedDock: DockPreferences = {
                     systemOrder,
+                    hiddenSystemIds,
                     appIds,
                 };
                 serializedDock = JSON.stringify(mergedDock);

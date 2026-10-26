@@ -14,13 +14,15 @@ Deno.test("shared/dock: normalizeDockPreferences fallback on null/empty/invalid 
     assertEquals(normalizeDockPreferences({}), DEFAULT_DOCK_PREFERENCES);
 });
 
-Deno.test("shared/dock: normalizeDockPreferences preserves complete system order and deduplicates appIds", () => {
+Deno.test("shared/dock: normalizeDockPreferences preserves complete system order, hiddenSystemIds, and deduplicates appIds", () => {
     const custom = {
         systemOrder: ["ai", "notes", "apps", "home"],
+        hiddenSystemIds: ["notes", "ai", "notes", "invalid"],
         appIds: ["app1", "app2", "app1", "app3", ""],
     };
     const normalized = normalizeDockPreferences(custom);
     assertEquals(normalized.systemOrder, ["ai", "notes", "apps", "home"]);
+    assertEquals(normalized.hiddenSystemIds, ["notes", "ai"]);
     assertEquals(normalized.appIds, ["app1", "app2", "app3"]);
 });
 

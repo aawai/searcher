@@ -51,7 +51,7 @@ jobs:
             - name: Verify E2E runner option contracts
               run: deno test -A scripts/e2e/
             - name: Install Chromium
-              run: npx --yes playwright@1.56.1 install --with-deps chromium
+              run: npx --yes playwright@1.56.1 install chromium
             - name: Run full Workspace production E2E
               env:
                   E2E_REPORT_DIR: artifacts/e2e/workspace

@@ -46,6 +46,7 @@ export interface DockContextValue {
     layout: DockLayout;
     setLayout: (patch: Partial<DockLayout>) => void;
     setSystemOrder: (ids: DockSystemId[]) => Promise<void>;
+    setSystemVisible: (id: DockSystemId, visible: boolean) => Promise<void>;
     setAppOrder: (ids: string[]) => Promise<void>;
     setPinned: (id: string, pinned: boolean) => Promise<void>;
     refreshApps: () => Promise<void>;
@@ -358,6 +359,35 @@ export function DockProviderSession({ userId, children }: DockSessionProps) {
         [mutatePreferences],
     );
 
+    const setSystemVisible = useCallback(
+        async (id: DockSystemId, visible: boolean): Promise<void> => {
+            if (!isValidDockSystemId(id)) {
+                setError("系统入口无效");
+                return;
+            }
+            try {
+                await mutatePreferences((prev) => {
+                    const hiddenSystemIds = visible
+                        ? prev.hiddenSystemIds.filter((item) => item !== id)
+                        : prev.hiddenSystemIds.includes(id)
+                        ? prev.hiddenSystemIds
+                        : [...prev.hiddenSystemIds, id];
+                    return {
+                        ...prev,
+                        hiddenSystemIds,
+                    };
+                });
+            } catch (err) {
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : "更新系统入口显示状态失败",
+                );
+            }
+        },
+        [mutatePreferences],
+    );
+
     const setAppOrder = useCallback(
         async (ids: string[]): Promise<void> => {
             if (!Array.isArray(ids)) {
@@ -400,6 +430,7 @@ export function DockProviderSession({ userId, children }: DockSessionProps) {
         layout,
         setLayout,
         setSystemOrder,
+        setSystemVisible,
         setAppOrder,
         setPinned,
         refreshApps,

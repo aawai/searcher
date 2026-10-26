@@ -158,6 +158,30 @@ Deno.test("DockProvider: synchronous consecutive setPinned calls chain without d
         // 2. Verify consumer-visible state retains both items
         const dock = latestDock as unknown as DockContextValue;
         assertEquals(dock.preferences.appIds, ["app-1", "app-2"]);
+
+        // 3. Consecutive setSystemVisible calls chain and toggle visibility
+        await act(async () => {
+            const v1 = latestDock?.setSystemVisible("home", false);
+            const v2 = latestDock?.setSystemVisible("ai", false);
+            await Promise.all([v1, v2]);
+        });
+        assertEquals(sentPatches.length, 4);
+        assertEquals(sentPatches[2].dock.hiddenSystemIds, ["home"]);
+        assertEquals(sentPatches[3].dock.hiddenSystemIds, ["home", "ai"]);
+        assertEquals(
+            (latestDock as unknown as DockContextValue).preferences
+                .hiddenSystemIds,
+            ["home", "ai"],
+        );
+
+        await act(async () => {
+            await latestDock?.setSystemVisible("home", true);
+        });
+        assertEquals(
+            (latestDock as unknown as DockContextValue).preferences
+                .hiddenSystemIds,
+            ["ai"],
+        );
     } finally {
         await act(async () => {
             root.unmount();
