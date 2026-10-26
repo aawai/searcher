@@ -464,9 +464,24 @@ Deno.test("M0B production editable pagination preserves state, boundaries and IM
                             geometry.naturalRatio,
                     ) < 0.01,
                 );
-                assert(geometry.paragraphs.some((pages) => pages.length > 1));
-                assert(geometry.code.some((pages) => pages.length > 1));
-                assert(geometry.tables.some((pages) => pages.length > 1));
+                assert(
+                    geometry.paragraphs.some((pages) => pages.length > 1),
+                    `Oversized paragraph must span pages: ${
+                        JSON.stringify(geometry)
+                    }`,
+                );
+                assert(
+                    geometry.code.some((pages) => pages.length > 1),
+                    `Oversized code must span pages: ${
+                        JSON.stringify(geometry)
+                    }`,
+                );
+                assert(
+                    geometry.tables.some((pages) => pages.length > 1),
+                    `Oversized table must span pages: ${
+                        JSON.stringify(geometry)
+                    }`,
+                );
                 assertEquals(await canonical.textContent(), markdown);
                 assertEquals(
                     await page.evaluate(() =>

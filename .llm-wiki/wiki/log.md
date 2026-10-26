@@ -2,6 +2,9 @@
 
 ## 2026-10-26
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-26-pr-317-main","title":"PR 317 编辑器滚动条与分页表面修复合并 main"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-26-issue-313-floating-pr-315-main","title":"Issue 313 任务栏 Floating 材质与分组列表重构经 PR 315 合并 main 并关闭"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-26-issue-312-pr-314-main","title":"Issue 312 任务栏四边避让与展开宽度经 PR 314 合并 main 并关闭"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-26-feat-workspace-dock-pushed-pr-311-created-with-github-token-","title":"feat/workspace-dock pushed; PR 311 created with GITHUB_TOKEN from bashrc"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/csrf-defense-boundaries","title":"CSRF Defense Boundaries"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/deno-permission-boundaries","title":"Deno Permission Boundaries"}

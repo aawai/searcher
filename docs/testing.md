@@ -14,6 +14,10 @@ E2E 入口清单、并行/串行回退、JUnit 与资源报告、证据目录和
 deno run -A npm:playwright@1.56.1 install chromium
 ```
 
+`editable-pagination-spike` 的超限段落夹具混合中文与 Latin 文本，确保缺少 CJK
+fallback 字体的 Linux 环境中也实际超过 A4 单页高度；不通过安装中文字体或放宽
+跨页断言来满足夹具前置条件。段落、代码和表格的跨页断言失败时输出实际页分布与图片几何。
+
 ## 常用入口
 
 | 命令                                          | 覆盖                                                                                    |
