@@ -1524,7 +1524,7 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                 const d = document.querySelector("nav.dock-bar");
                 if (!s || !d) return false;
                 return s.getBoundingClientRect().bottom <=
-                    d.getBoundingClientRect().top + 1;
+                    d.getBoundingClientRect().top + 0.1;
             });
             const sheetBox = (await mobileSheet.boundingBox())!;
             const dockBoxLandscape = (await dockNav(page).boundingBox())!;

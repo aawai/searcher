@@ -146,8 +146,8 @@ Deno.test("effective rows account for the bottom plate padding", () => {
         }),
         3,
     );
-    // With a 68px bottom dock, 1440x900 still fits 4 rows (900 - 406 - 48 - 68 - 16 = 362 >= 340),
-    // while 1366x768 drops from 4 rows to 3 rows (768 - 355.84 - 48 - 68 - 16 = 280.16 < 340).
+    // With a 68px bottom dock (clearance = max(48, 68 + 12) = 80), 1440x900 still fits 4 rows
+    // (900 - 406 - 80 - 16 = 398 >= 340), while 1366x768 drops to 3 rows (768 - 355.84 - 80 - 16 = 316.16 < 340).
     assertEquals(
         effectiveRows({
             layoutViewportHeight: 900,

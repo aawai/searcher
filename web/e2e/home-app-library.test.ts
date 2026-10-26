@@ -50,6 +50,16 @@ function measureHome(): HomeMetrics | null {
         ? Number.parseFloat(getComputedStyle(plate).paddingBottom)
         : 0;
     const viewportHeight = document.documentElement.clientHeight;
+    const shell = document.querySelector(".app-shell");
+    const dockStyle = shell
+        ? getComputedStyle(shell)
+        : getComputedStyle(document.documentElement);
+    const dockBottom = Math.max(
+        0,
+        Number.parseFloat(dockStyle.getPropertyValue("--dock-inset-bottom")) ||
+            0,
+    );
+    const clearance = Math.max(48, dockBottom + gap);
     const largeTile = cells.find((element) =>
         element.querySelector(".launcher-folder-item--large")
     );
@@ -65,7 +75,8 @@ function measureHome(): HomeMetrics | null {
                 1,
                 // N rows are N * pitch - gap tall: no gap after the last row.
                 Math.floor(
-                    (viewportHeight - gridBox.top - 48 - platePadding + gap) /
+                    (viewportHeight - gridBox.top - clearance - platePadding +
+                        gap) /
                         pitch,
                 ),
             ),
