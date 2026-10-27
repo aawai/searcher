@@ -121,6 +121,20 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
             Math.abs(offset) <= 1,
             `note menu centre is ${offset}px off the title line`,
         );
+        await first.getByRole("button", { name: "更多操作" }).focus();
+        const focusClearance = await first.evaluate((card) => {
+            const progress = card.querySelector(".home-note-progress")!;
+            const menu = card.querySelector(".home-note-action-btn")!;
+            const style = getComputedStyle(menu);
+            return menu.getBoundingClientRect().left -
+                progress.getBoundingClientRect().right -
+                parseFloat(style.outlineWidth) -
+                parseFloat(style.outlineOffset);
+        });
+        assert(
+            focusClearance >= 0,
+            `menu focus ring overlaps progress by ${-focusClearance}px`,
+        );
         // The title opens the note from a 44px band: it reaches into the
         // card padding above and the gap below without moving the body.
         const titleHits = await first.locator(".home-note-title").evaluate(

@@ -186,7 +186,7 @@
 
 .home-note-action-btn:focus-visible {
     outline: var(--space-half) solid var(--ring);
-    outline-offset: var(--space-1);
+    outline-offset: 0;
 }
 
 .home-note-dropdown {
@@ -441,7 +441,9 @@
         height: var(--control-touch-target);
     }
     .home-note-head {
-        padding-inline-end: calc(var(--control-touch-target) - var(--space-3));
+        padding-inline-end: calc(
+            var(--control-touch-target) - var(--space-3) + var(--space-1)
+        );
     }
     .home-note-card[data-untitled="true"]:not(:has(.home-note-head)) .home-note-body::before {
         inline-size: calc(var(--control-touch-target) - var(--space-3));
