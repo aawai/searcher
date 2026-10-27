@@ -15,40 +15,48 @@ async function pressRepeatedly(page: Page, key: string, times: number) {
     for (let i = 0; i < times; i++) await page.keyboard.press(key);
 }
 
-/** Selects the leading text; the editor may remount once after load, so retry until the browser selection matches. */
-async function selectLeading(page: Page, length: number, expected: string) {
+/** Establish a native browser selection before exercising the formatting key. */
+async function selectLeading(
+    page: Page,
+    length: number,
+    expected: string,
+    delaySelectionChange = false,
+) {
     const editor = page.locator(
         ".document-editor-scroll-area .ProseMirror[contenteditable='true']",
     );
-    let selected = "";
-    for (let attempt = 0; attempt < 5; attempt++) {
-        await editor.focus();
-        await page.keyboard.press("Control+Home");
-        await pressRepeatedly(page, "Shift+ArrowRight", length);
-        selected = await page.evaluate(() =>
-            globalThis.getSelection()?.toString() ?? ""
-        );
-        if (selected === expected) {
-            // ProseMirror ingests DOM selection on an async selectionchange; wait for it to flush.
-            await page.evaluate(async () => {
-                for (let frame = 0; frame < 2; frame++) {
-                    const { promise, resolve } = Promise.withResolvers<
-                        number
-                    >();
-                    requestAnimationFrame(resolve);
-                    await promise;
-                }
-            });
-            return;
+    await editor.focus();
+    await editor.evaluate((root, { length, delaySelectionChange }) => {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const first = walker.nextNode();
+        if (!first) throw new Error("Editor has no selectable text");
+        const range = document.createRange();
+        range.setStart(first, 0);
+        let node: Node | null = first;
+        let remaining = length;
+        while (node && remaining > (node.textContent?.length ?? 0)) {
+            remaining -= node.textContent?.length ?? 0;
+            node = walker.nextNode();
         }
-        await page.waitForFunction(() =>
-            document.querySelector(
-                    ".document-editor-scroll-area .ProseMirror.ProseMirror-focused",
-                ) !== null || document.activeElement === document.body
-        );
-    }
-    throw new Error(
-        `selection never became "${expected}", last: "${selected}"`,
+        if (!node) throw new Error("Editor text is shorter than the selection");
+        range.setEnd(node, remaining);
+        const selection = globalThis.getSelection();
+        if (!selection) throw new Error("Browser selection is unavailable");
+        if (delaySelectionChange) {
+            // Model a queued native notification without changing the visible
+            // selection. Formatting must not depend on that event arriving first.
+            document.addEventListener(
+                "selectionchange",
+                (event) => event.stopImmediatePropagation(),
+                { capture: true, once: true },
+            );
+        }
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }, { length, delaySelectionChange });
+    await page.waitForFunction(
+        (expected) => globalThis.getSelection()?.toString() === expected,
+        expected,
     );
 }
 
@@ -77,7 +85,7 @@ async function openShortcutDocument(
         ".document-editor-scroll-area .ProseMirror[contenteditable='true']",
     ).filter({ hasText: body });
     await editor.waitFor({ state: "visible" });
-    await editor.focus();
+    await editor.click();
     await page.locator(
         ".document-editor-scroll-area .ProseMirror.ProseMirror-focused",
     ).waitFor({ state: "visible" });
@@ -180,7 +188,7 @@ Deno.test("production shortcuts for Documents and Ask (#103)", async (t) => {
     );
 
     await t.step(
-        "documents Control+B formats the selection as bold",
+        "documents Control+B formats the visible selection before selectionchange notification",
         async () => {
             await openShortcutDocument(
                 page,
@@ -188,7 +196,7 @@ Deno.test("production shortcuts for Documents and Ask (#103)", async (t) => {
                 "Shortcut bold",
                 "Bold text test",
             );
-            await selectLeading(page, 9, "Bold text");
+            await selectLeading(page, 9, "Bold text", true);
             await page.keyboard.press("Control+b");
             await page.locator(
                 ".document-editor-scroll-area .ProseMirror strong",

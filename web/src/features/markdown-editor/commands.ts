@@ -15,7 +15,12 @@ import { lift, setBlockType, wrapIn } from "@milkdown/prose/commands";
 import { closeHistory } from "@milkdown/prose/history";
 import type { Mark, Node, NodeType } from "@milkdown/prose/model";
 import { liftListItem, wrapInList } from "@milkdown/prose/schema-list";
-import type { EditorState, Transaction } from "@milkdown/prose/state";
+import {
+    type EditorState,
+    TextSelection,
+    type Transaction,
+} from "@milkdown/prose/state";
+import type { EditorView } from "@milkdown/prose/view";
 
 import type {
     MarkdownEditorCommand,
@@ -23,6 +28,29 @@ import type {
 } from "./types.ts";
 
 export type { MarkdownEditorCommand, MarkdownEditorCommandParams };
+
+/** Formatting must use the visible selection, even before selectionchange delivery. */
+export function syncNativeTextSelection(view: EditorView): void {
+    if (
+        view.composing || !view.hasFocus() ||
+        !(view.state.selection instanceof TextSelection)
+    ) return;
+    const selection = view.dom.ownerDocument.getSelection();
+    if (
+        !selection?.anchorNode || !selection.focusNode ||
+        !view.dom.contains(selection.anchorNode) ||
+        !view.dom.contains(selection.focusNode)
+    ) return;
+    const anchor = view.posAtDOM(selection.anchorNode, selection.anchorOffset);
+    const head = view.posAtDOM(selection.focusNode, selection.focusOffset);
+    const next = TextSelection.between(
+        view.state.doc.resolve(anchor),
+        view.state.doc.resolve(head),
+    );
+    if (!next.eq(view.state.selection)) {
+        view.dispatch(view.state.tr.setSelection(next));
+    }
+}
 
 /**
  * Toggles a heading level or turns it back into a paragraph if all textblocks
@@ -427,6 +455,7 @@ export function executeCommand<
         return false;
     }
 
+    syncNativeTextSelection(view);
     const commands = ctx.get(commandsCtx);
 
     switch (command) {

@@ -927,7 +927,7 @@ export function DocumentEditor({
     };
 
     // 16. Initial Loading & Fatal Error state
-    if (snapshot.loading && !snapshot.document) {
+    if (!snapshot.document && !snapshot.error) {
         return (
             <div className="document-editor-container document-editor-state">
                 <LoadingState density="default">正在加载笔记…</LoadingState>

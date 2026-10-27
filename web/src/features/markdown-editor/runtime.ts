@@ -23,7 +23,7 @@ import type {
     MarkdownEditorHandle,
     MarkdownEditorOptions,
 } from "./types.ts";
-import { executeCommand } from "./commands.ts";
+import { executeCommand, syncNativeTextSelection } from "./commands.ts";
 
 export const originMetaKey = new PluginKey<MarkdownEditorChangeOrigin>(
     "markdownEditorChangeOrigin",
@@ -136,6 +136,19 @@ function createDomEventsPlugin(options?: MarkdownEditorOptions) {
                     },
                     blur: () => {
                         options?.onBlur?.();
+                        return false;
+                    },
+                    keydown: (view, event) => {
+                        const key = event as KeyboardEvent;
+                        if (
+                            !key.isComposing && key.keyCode !== 229 &&
+                            (key.ctrlKey || key.metaKey) && !key.altKey &&
+                            ["b", "i"].includes(key.key.toLowerCase())
+                        ) {
+                            // These shortcuts run in Milkdown's native keymap;
+                            // other toolbar/shortcut commands use executeCommand.
+                            syncNativeTextSelection(view);
+                        }
                         return false;
                     },
                     compositionstart: (_view, event) => {

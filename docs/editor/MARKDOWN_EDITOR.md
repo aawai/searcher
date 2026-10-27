@@ -49,6 +49,8 @@
 
 Documents 的格式状态观察保留在 `features/documents/editor-extensions.ts`，只读取当前实例的 selection / stored marks / document，通过 consumer callback 更新工具栏 `aria-pressed`，不改变 canonical Markdown、history 或 transaction origin。其 More 菜单 Portal 以实例 owner 关联编辑焦点边界；roving tabindex、单行滚动与触屏 header 由 Documents consumer 和 `document-editor.css` 拥有，不导入共享 runtime 的初始依赖图。visualViewport 缩小时，consumer 在布局更新后依据实际工具栏、正文与选区几何调整滚动，保持工具栏可见且光标位于其下方；监听与 RAF 随实例清理。不修改正文、选区或共享 runtime。
 
+格式化命令与 Ctrl/Cmd+B、Ctrl/Cmd+I 执行前，如果当前实例持有编辑焦点且为文本选区，使用公开的 `posAtDOM` / `TextSelection` 将浏览器可见选区同步到 EditorState，避免原生 `selectionchange` 尚未送达时格式化旧位置。组合输入中不执行同步或格式化；失焦工具栏命令保留原选区 bookmark，节点选区不转换为文本选区。首次笔记加载尚未得到文档时显示加载态，不先挂载可交互的空编辑器头部。
+
 ## Bundle gate
 
 `deno task check:bundle` 使用 production manifest 的静态依赖闭包，扣除 initial graph 后计算 gzip（level 9）。renderer vendor 与 parser vendor 分离，编辑器不为只读 React renderer/sanitizer 支付下载成本。
