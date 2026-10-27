@@ -229,14 +229,22 @@ Deno.test("the note menu switches between S and W and persists the tier", async 
             title: "尺寸笔记",
             body: BODY,
             band: "left",
-            col: 0,
+            col: 1,
             row: 0,
         });
         await reloadHome(page);
         await waitForNoteCards(page, 1);
         const card = noteCard(page, "尺寸笔记");
         assertEquals(Math.round((await card.boundingBox())!.width), 180);
-        await card.hover();
+        const titleBtn = card.locator(".home-note-title");
+        await titleBtn.hover();
+        assertEquals(await titleBtn.getAttribute("title"), null);
+        assertEquals(
+            await titleBtn.evaluate(
+                (el) => getComputedStyle(el).backgroundColor,
+            ),
+            "rgba(0, 0, 0, 0)",
+        );
         await card.locator('[aria-label="更多操作"]').click();
         const saved = layoutPatch(page);
         await page.getByRole("menuitemradio", { name: "宽", exact: true })

@@ -22,16 +22,18 @@ Deno.test("home note task checkboxes toggle directly and save through the docume
         await waitForNoteCards(page, 1);
         const card = homeNote(page, "直接勾选").locator(".home-note-card");
         assertEquals(
-            await card.locator(".home-note-progress").textContent(),
+            await card.locator(".home-note-head .home-note-progress")
+                .textContent(),
             "1/2",
         );
         assertEquals(
-            await card.getByRole("progressbar").getAttribute("value"),
-            "1",
+            await card.locator(".home-note-head .home-note-progress")
+                .getAttribute("aria-label"),
+            "已完成 1 / 2 项",
         );
         assertEquals(
-            await card.getByRole("progressbar").getAttribute("max"),
-            "2",
+            await card.locator(".home-note-task-summary, progress").count(),
+            0,
         );
         const first = card.getByRole("checkbox", {
             name: "未完成任务，点击标记为已完成",
@@ -50,8 +52,9 @@ Deno.test("home note task checkboxes toggle directly and save through the docume
         await card.locator(".home-note-progress", { hasText: "2/2" })
             .waitFor();
         assertEquals(
-            await card.getByRole("progressbar").getAttribute("value"),
-            "2",
+            await card.locator(".home-note-head .home-note-progress")
+                .getAttribute("aria-label"),
+            "已完成 2 / 2 项",
         );
         const body = await page.evaluate(
             async (id) =>
@@ -130,6 +133,89 @@ Deno.test("home note task toggles coalesce into one PATCH and Space toggles a fo
             note.id,
         );
         assertEquals(body, "- [x] 甲\n- [x] 乙");
+    } finally {
+        await fixture.close();
+    }
+});
+
+Deno.test("only visible task controls are reachable as the preview grows", async () => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 390, height: 844 },
+    });
+    const { page } = fixture;
+    try {
+        const note = await createHomeNote(page, {
+            title: "预览任务",
+            body: "- [ ] 一\n- [ ] 二\n- [ ] 三\n- [ ] 四\n- [ ] 五",
+        });
+        await reloadHome(page);
+        await waitForNoteCards(page, 1);
+        const card = homeNote(page, "预览任务").locator(".home-note-card");
+        await card.locator("li.task-list-item").nth(4).waitFor({
+            state: "attached",
+        });
+        await page.waitForFunction(() => {
+            const preview = document.querySelector(".home-note-body");
+            const boxes = preview?.querySelectorAll("input");
+            if (!preview || !boxes || boxes.length !== 5) return false;
+            const bounds = preview.getBoundingClientRect();
+            return bounds.height > 0 &&
+                boxes[2].getBoundingClientRect().bottom <= bounds.bottom &&
+                boxes[3].getBoundingClientRect().top >= bounds.bottom;
+        });
+        const inputs = card.locator("li.task-list-item input");
+        await card.locator(".home-note-title").focus();
+        await page.keyboard.press("Tab");
+        assertEquals(
+            await card.getByRole("button", { name: "更多操作" })
+                .evaluate((element) => document.activeElement === element),
+            true,
+        );
+        for (let index = 0; index < 3; index++) {
+            await page.keyboard.press("Tab");
+            assertEquals(
+                await inputs.nth(index).evaluate(
+                    (element) => document.activeElement === element,
+                ),
+                true,
+            );
+        }
+        await page.keyboard.press("Tab");
+        assertEquals(
+            await card.evaluate((element) =>
+                element.contains(document.activeElement)
+            ),
+            false,
+            "Tab skips the clipped tasks",
+        );
+        assertEquals(
+            await card.locator(".home-note-body").evaluate((element) =>
+                element.scrollTop
+            ),
+            0,
+        );
+
+        await page.setViewportSize({ width: 768, height: 1024 });
+        await page.waitForFunction(() => {
+            const preview = document.querySelector(".home-note-body");
+            const inputs = preview?.querySelectorAll("input");
+            if (!preview || !inputs || inputs.length !== 5) return false;
+            return inputs[4].getBoundingClientRect().bottom <=
+                preview.getBoundingClientRect().bottom;
+        });
+        const fifth = inputs.nth(4);
+        const saved = page.waitForResponse((response) =>
+            response.request().method() === "PATCH" &&
+            response.url().endsWith(`/api/documents/${note.id}`) &&
+            response.ok()
+        );
+        await fifth.focus();
+        await page.keyboard.press("Space");
+        await saved;
+        assertEquals(
+            await card.locator(".home-note-progress").textContent(),
+            "1/5",
+        );
     } finally {
         await fixture.close();
     }

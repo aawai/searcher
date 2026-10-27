@@ -25,14 +25,14 @@ Deno.test("notes that fit are measured after the Markdown preview loads and show
         });
         await createHomeNote(page, {
             title: "清单",
-            body: "- [ ] 牛奶\n- [x] 面包\n- [ ] 鸡蛋",
+            body: "- [ ] 牛奶\n- [x] 面包\n- [ ] 鸡蛋\n- [ ] 咖啡豆",
             homeSortOrder: 1,
         });
         // A full load starts without the lazy Markdown chunk: the first
         // measurement sees the plain-text placeholder.
         await reloadHome(page);
         await waitForNoteCards(page, 2);
-        await homeNote(page, "清单").locator("li.task-list-item").nth(2)
+        await homeNote(page, "清单").locator("li.task-list-item").nth(3)
             .waitFor();
         await homeNote(page, "短句").locator(".home-note-body p").waitFor();
         // Observers deliver before the next frame; two frames let them settle.
@@ -57,7 +57,7 @@ Deno.test("notes that fit are measured after the Markdown preview loads and show
         }
         const tasks = await homeNote(page, "清单").locator(".home-note-body")
             .evaluate((element) => element.clientHeight);
-        assertEquals(tasks, 66, "three task rows keep the 22px line pitch");
+        assertEquals(tasks, 88, "four task rows keep the 22px line pitch");
     } finally {
         await fixture.close();
     }
@@ -120,6 +120,20 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
         assert(
             Math.abs(offset) <= 1,
             `note menu centre is ${offset}px off the title line`,
+        );
+        await first.getByRole("button", { name: "更多操作" }).focus();
+        const focusClearance = await first.evaluate((card) => {
+            const progress = card.querySelector(".home-note-progress")!;
+            const menu = card.querySelector(".home-note-action-btn")!;
+            const style = getComputedStyle(menu);
+            return menu.getBoundingClientRect().left -
+                progress.getBoundingClientRect().right -
+                parseFloat(style.outlineWidth) -
+                parseFloat(style.outlineOffset);
+        });
+        assert(
+            focusClearance >= 0,
+            `menu focus ring overlaps progress by ${-focusClearance}px`,
         );
         // The title opens the note from a 44px band: it reaches into the
         // card padding above and the gap below without moving the body.
@@ -202,6 +216,27 @@ Deno.test("untitled flow notes keep one body and open from the card or keyboard"
         await page.getByRole("button", { name: "返回首页", exact: true })
             .click();
         await libraryPanel(page).waitFor({ state: "detached" });
+
+        await createHomeNote(page, { title: null, body: "" });
+        await reloadHome(page);
+        await waitForNoteCards(page, 2);
+        const empty = page.locator(".home-note-flow-item").filter({
+            hasText: "无标题笔记",
+        });
+        await page.locator("#search-query").focus();
+        const focused: string[] = [];
+        for (let step = 0; step < 60; step++) {
+            await page.keyboard.press("Tab");
+            const name = await empty.evaluate((element) => {
+                const active = document.activeElement;
+                return active && element.contains(active)
+                    ? `${active.tagName}:${active.getAttribute("aria-label")}`
+                    : null;
+            });
+            if (name) focused.push(name);
+            if (name === "BUTTON:更多操作") break;
+        }
+        assertEquals(focused, ["BUTTON:无标题笔记", "BUTTON:更多操作"]);
     } finally {
         await fixture.close();
     }
@@ -215,7 +250,7 @@ Deno.test("wide previews reclip when the note grid becomes a mobile stack", asyn
     try {
         await createHomeNote(page, {
             title: "跨断点预览",
-            body: "第一行\n第二行\n第三行\n第四行\n第五行",
+            body: "第一行\n第二行\n第三行\n第四行\n第五行\n第六行",
             size: "w",
         });
         await reloadHome(page);
@@ -225,8 +260,28 @@ Deno.test("wide previews reclip when the note grid becomes a mobile stack", asyn
         await page.waitForFunction(() => {
             const height = document.querySelector(".home-note-body")
                 ?.clientHeight;
-            return height !== undefined && height > 66 && height <= 88;
+            return height !== undefined && height > 88 && height <= 110;
         });
+        const desktopSymmetry = await body.evaluate((element) => {
+            const card = element.closest(".home-note-card")!;
+            const style = getComputedStyle(card);
+            const head = card.querySelector(".home-note-head")!;
+            const cardRect = card.getBoundingClientRect();
+            const headRect = head.getBoundingClientRect();
+            const bodyRect = element.getBoundingClientRect();
+            return {
+                paddingTop: style.paddingTop,
+                paddingBottom: style.paddingBottom,
+                top: Math.round(headRect.top - cardRect.top),
+                bottom: Math.round(cardRect.bottom - bodyRect.bottom),
+            };
+        });
+        assertEquals(desktopSymmetry.paddingTop, "20px");
+        assertEquals(desktopSymmetry.paddingBottom, "20px");
+        assert(
+            Math.abs(desktopSymmetry.top - desktopSymmetry.bottom) <= 1,
+            `desktop top ${desktopSymmetry.top}px vs bottom ${desktopSymmetry.bottom}px`,
+        );
         await page.setViewportSize({ width: 390, height: 844 });
         await page.waitForFunction(() =>
             document.querySelector(".home-notes--flow")?.getAttribute(
@@ -243,14 +298,25 @@ Deno.test("wide previews reclip when the note grid becomes a mobile stack", asyn
             undefined,
             { timeout: 5000 },
         );
-        const clearance = await body.evaluate((element) => {
+        const mobileSymmetry = await body.evaluate((element) => {
             const card = element.closest(".home-note-card")!;
-            return card.getBoundingClientRect().bottom -
-                element.getBoundingClientRect().bottom;
+            const style = getComputedStyle(card);
+            const head = card.querySelector(".home-note-head")!;
+            const cardRect = card.getBoundingClientRect();
+            const headRect = head.getBoundingClientRect();
+            const bodyRect = element.getBoundingClientRect();
+            return {
+                paddingTop: style.paddingTop,
+                paddingBottom: style.paddingBottom,
+                top: Math.round(headRect.top - cardRect.top),
+                bottom: Math.round(cardRect.bottom - bodyRect.bottom),
+            };
         });
+        assertEquals(mobileSymmetry.paddingTop, "19px");
+        assertEquals(mobileSymmetry.paddingBottom, "19px");
         assert(
-            clearance >= 16,
-            `preview leaves ${clearance}px bottom clearance`,
+            Math.abs(mobileSymmetry.top - mobileSymmetry.bottom) <= 1,
+            `mobile top ${mobileSymmetry.top}px vs bottom ${mobileSymmetry.bottom}px`,
         );
     } finally {
         await fixture.close();

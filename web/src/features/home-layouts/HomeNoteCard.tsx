@@ -1,4 +1,10 @@
-import { Bookmark, ExternalLink, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+    Bookmark,
+    ExternalLink,
+    MoreHorizontal,
+    SquareCheckBig,
+    Trash2,
+} from "lucide-react";
 import {
     type MouseEvent as ReactMouseEvent,
     type PointerEvent as ReactPointerEvent,
@@ -33,15 +39,18 @@ const SIZE_LABEL: Record<DocumentNoteSize, string> = {
 
 /** Clicks on these keep their own meaning (task rows toggle) instead of opening the note. */
 const INTERACTIVE = "a, button, input, label, li.task-list-item";
+const PREVIEW_CONTROLS = "a[href], button, input, select, textarea, [tabindex]";
 
 /**
- * One neutral Material home note: an optional title, a short Markdown preview
- * and a task progress footer. A click outside a control opens the note;
- * untitled notes show their body without repeating it as a title.
+ * One neutral Material home note: an optional title row with inline task
+ * progress on the right, followed by a whole-line clipped Markdown preview.
+ * A click outside a control opens the note; untitled notes show their body
+ * without repeating it as a title.
  */
 export function HomeNoteCard(
     {
         note,
+        cardOwnsFocus = false,
         onOpen,
         onResize,
         onToggleHomeFixed,
@@ -50,6 +59,8 @@ export function HomeNoteCard(
         onDelete,
     }: {
         note: HomeNoteItem;
+        /** The enclosing grid item already opens and moves the note by keyboard. */
+        cardOwnsFocus?: boolean;
         onOpen?: () => void;
         onResize?: (size: DocumentNoteSize) => void;
         onToggleHomeFixed?: () => void;
@@ -61,8 +72,10 @@ export function HomeNoteCard(
     },
 ) {
     const body = useRef<HTMLDivElement>(null);
+    const titleText = useRef<HTMLSpanElement>(null);
     const suppressTaskClick = useRef(false);
     const [overflowing, setOverflowing] = useState(false);
+    const [titleOverflowing, setTitleOverflowing] = useState(false);
 
     /**
      * Coarse pointers get a 44×44 task hit area in the leading checkbox column
@@ -125,19 +138,34 @@ export function HomeNoteCard(
     // the last complete line. Only then does the last line fade.
     useLayoutEffect(() => {
         const element = body.current;
-        if (!element) return;
+        const titleEl = titleText.current;
+        if (!element && !titleEl) return;
         let active = true;
         const update = () => {
             if (!active) return;
+            const currentTitle = titleText.current;
+            setTitleOverflowing(
+                Boolean(
+                    currentTitle &&
+                        currentTitle.scrollWidth > currentTitle.clientWidth + 1,
+                ),
+            );
+            if (!element) {
+                setOverflowing(false);
+                return;
+            }
             const style = getComputedStyle(element);
             const lines = parseFloat(
                 style.getPropertyValue("--home-note-body-lines"),
             );
-            const lineHeight = parseFloat(style.lineHeight);
-            const limit = (Number.isFinite(lines) ? lines : 3) *
-                (Number.isFinite(lineHeight) ? lineHeight : 22);
+            const measuredLineHeight = parseFloat(style.lineHeight);
+            const lineHeight = Number.isFinite(measuredLineHeight)
+                ? measuredLineHeight
+                : 22;
+            const limit = (Number.isFinite(lines) ? lines : 5) * lineHeight;
             // Collapse the previous clip so scrollHeight is the natural
             // content height rather than the box the last pass left behind.
+            element.scrollTop = 0;
             element.style.height = "0px";
             const contentHeight = element.scrollHeight;
             const range = document.createRange();
@@ -151,28 +179,48 @@ export function HomeNoteCard(
                     bottom: rect.bottom - bodyTop,
                 });
             }
-            const clip = clipPreviewHeight(rects, limit, contentHeight);
+            const clip = clipPreviewHeight(
+                rects,
+                limit,
+                contentHeight,
+                lineHeight,
+            );
             element.style.height = `${clip.height}px`;
+            // Clipped controls must not enter Tab order or scroll the preview
+            // into content that is supposed to remain outside the card.
+            const preview = element.getBoundingClientRect();
+            for (
+                const control of element.querySelectorAll<HTMLElement>(
+                    PREVIEW_CONTROLS,
+                )
+            ) {
+                const rect = control.getBoundingClientRect();
+                control.inert = rect.top < preview.top - 0.5 ||
+                    rect.bottom > preview.bottom + 0.5;
+            }
             setOverflowing(clip.hasMore);
         };
         update();
         const resize = new ResizeObserver(update);
-        resize.observe(element);
+        if (element) resize.observe(element);
+        if (titleEl) resize.observe(titleEl);
         // The lazy Markdown renderer replaces the plain-text placeholder
         // without resizing the clipped body, so content swaps re-measure too.
         const mutation = new MutationObserver(update);
-        mutation.observe(element, {
-            childList: true,
-            subtree: true,
-            characterData: true,
-        });
+        if (element) {
+            mutation.observe(element, {
+                childList: true,
+                subtree: true,
+                characterData: true,
+            });
+        }
         void document.fonts.ready.then(update);
         return () => {
             active = false;
             resize.disconnect();
             mutation.disconnect();
         };
-    }, [note.body, note.layout.size, note.title]);
+    }, [note.body, note.displayTitle, note.layout.size, note.title]);
 
     const hasBody = note.body.trim().length > 0;
     // An untitled note's display title is its first line; repeating it above
@@ -206,23 +254,45 @@ export function HomeNoteCard(
                 event.stopPropagation();
             }}
         >
-            {showTitle && (
+            {(showTitle || progress) && (
                 <header className="home-note-head">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        className="home-note-title"
-                        title={note.title ?? undefined}
-                        aria-label={note.displayTitle}
-                        onClick={onOpen}
-                    >
-                        <span className="home-note-title-text">
-                            {note.displayTitle}
+                    {showTitle && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            tabIndex={cardOwnsFocus ? -1 : undefined}
+                            className="home-note-title"
+                            title={titleOverflowing
+                                ? (note.title ?? note.displayTitle)
+                                : undefined}
+                            aria-label={note.displayTitle}
+                            onClick={onOpen}
+                        >
+                            <span
+                                ref={titleText}
+                                className="home-note-title-text"
+                            >
+                                {note.displayTitle}
+                            </span>
+                        </Button>
+                    )}
+                    {progress && (
+                        <span
+                            className="home-note-progress"
+                            aria-label={`已完成 ${progress.done} / ${progress.total} 项`}
+                        >
+                            <SquareCheckBig
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                            <span>
+                                {progress.done}/{progress.total}
+                            </span>
                         </span>
-                    </Button>
+                    )}
                 </header>
             )}
-
             <div
                 className="home-note-actions"
                 role="toolbar"
@@ -347,19 +417,6 @@ export function HomeNoteCard(
                         taskLockedTitle={taskLockedTitle}
                     />
                 </div>
-            )}
-            {progress && (
-                <footer className="home-note-task-summary">
-                    <progress
-                        className="home-note-progress-track"
-                        value={progress.done}
-                        max={progress.total}
-                        aria-label={`已完成 ${progress.done} / ${progress.total} 项`}
-                    />
-                    <span className="home-note-progress" aria-hidden="true">
-                        {progress.done}/{progress.total}
-                    </span>
-                </footer>
             )}
         </article>
     );

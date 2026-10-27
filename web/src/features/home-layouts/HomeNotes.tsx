@@ -19,13 +19,18 @@ import type {
     RefObject,
 } from "react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { DocumentLayoutDto, DocumentNoteSize } from "@shared/documents.ts";
+import {
+    type DocumentLayoutDto,
+    type DocumentNoteSize,
+    HOME_NOTE_SPANS,
+} from "@shared/documents.ts";
 import {
     HOME_BOTTOM_CLEARANCE,
     HOME_NOTE_GRID,
 } from "../../design-system/home-grid.ts";
 import {
     type Band,
+    bandOf,
     canSaveHomeNoteCell,
     type CellGrid,
     type CellRect,
@@ -640,15 +645,37 @@ export function HomeNotes(
     };
 
     const resize = (note: HomeNoteItem, size: DocumentNoteSize) => {
-        onUpdateLayouts?.([{ note, layout: { ...note.layout, size } }]);
+        const item = find(note.id);
+        let layout: DocumentLayoutDto = { ...note.layout, size };
+        if (
+            item &&
+            note.layout.band !== null &&
+            note.layout.col !== null &&
+            note.layout.row !== null
+        ) {
+            const band = grid ? bandOf(grid, item.band) : undefined;
+            const spanCols = HOME_NOTE_SPANS[size].cols;
+            const col = band && band.columns.length >= spanCols
+                ? Math.min(item.col, band.columns.length - spanCols)
+                : item.col;
+            layout = {
+                ...note.layout,
+                band: item.band,
+                col,
+                row: item.row,
+                size,
+            };
+        }
+        onUpdateLayouts?.([{ note, layout }]);
         announce(
             `${note.displayTitle}：已切换为${size === "w" ? "宽" : "小"}尺寸。`,
         );
     };
 
-    const card = (note: HomeNoteItem) => (
+    const card = (note: HomeNoteItem, cardOwnsFocus = false) => (
         <HomeNoteCard
             note={note}
+            cardOwnsFocus={cardOwnsFocus}
             onOpen={() => onOpen?.(note)}
             onResize={(size) => resize(note, size)}
             onToggleHomeFixed={() => onToggleHomeFixed?.(note)}
@@ -676,7 +703,9 @@ export function HomeNotes(
                         className="home-note-flow-item"
                         data-size={note.layout.size}
                         role="group"
-                        tabIndex={note.title?.trim() ? undefined : 0}
+                        tabIndex={!note.title?.trim() && note.body.trim()
+                            ? 0
+                            : undefined}
                         aria-label={note.displayTitle}
                         onKeyDown={(event) => {
                             if (
@@ -764,7 +793,7 @@ export function HomeNotes(
                             swapping={preview?.swap?.note.id === item.note.id}
                             onKeyDown={(event) => onKeyDown(event, item)}
                             onClickCapture={suppressDragClick}
-                            card={card(item.note)}
+                            card={card(item.note, true)}
                         />
                     ))}
                 </section>
