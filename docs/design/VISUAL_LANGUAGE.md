@@ -389,3 +389,5 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 - **约束范围**：不受 [UI_CHECKLIST](UI_CHECKLIST.md) 的 390 / 768 / 1440 × light / dark 实页矩阵约束；仍受 [底线](#一底线) 约束——实验不得示范违反底线的做法。
 - **转正**：原型要进入生产，必须先有对应阶段的契约子任务：改写本文的相应层（风格方向可改，系统语法须写语义与验证方式，底线不可放宽），再实现，再按 UI_CHECKLIST 验收。原型本身不是契约。
 - 现有入口：`/design-lab`（正式组件、交互状态、主题与响应式预览，含玻璃档位对比）、`/design-lab/motion`（共享元素展开 / 收回、reduced-motion 与焦点回退）、`/design-lab/omnibox`（统一输入框模拟交互；键盘与分组契约以 [首页 · 搜索框](../workspace.md#搜索框) 为准）、`/design-lab/accent`（壁纸取色原型：焦点区域主色、浅色 / 深色对比度校正与手选覆盖，见 #241 S）、`/design-lab/home-grid`（首页笔记单元、吸附拖动与构图原型，见 #285 Y3-P）、`/design-lab/markdown-editor`、`/design-lab/editable-pagination`（编辑技术验证，见 [M0A 报告](../editor/MARKDOWN_EDITOR_M0A.md)）。
+
+正式 `/design-lab` 的按钮对照显式使用 `variant="default"` 展示 primary，省略 variant 的样本保持安全默认 outline / subtle，并覆盖 ghost、link、content、destructive；危险操作分别检查普通态与 AlertDialog 内的填充态。首页构图对照始终使用 1440×900 源画布、统一 40% 缩放；外部预览区不超过容器宽度，窄屏通过可聚焦、具名的局部横向滚动区查看完整画布，不改变真实首页锚点或持久化偏好。几何回归由 `route-style-stability.test.ts` 覆盖 320 / 390 / 768 / 1440 × light / dark 的文档宽度、源画布尺寸、同倍率与右侧可达性。
