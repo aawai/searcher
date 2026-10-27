@@ -818,6 +818,13 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
                 "dock nav unmounted or hidden while collapsed",
             );
 
+            await page.waitForFunction(() =>
+                Number.parseFloat(
+                    getComputedStyle(document.documentElement)
+                        .getPropertyValue("--dock-inset-bottom"),
+                ) === 0
+            );
+
             // Reload page to verify collapsed state persists
             await page.reload();
             await expandBall(page).waitFor({ state: "visible" });
@@ -830,6 +837,12 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
             // Click floating ball to expand
             await expandBall(page).click();
             await dockNav(page).waitFor({ state: "visible" });
+            await page.waitForFunction(() =>
+                Number.parseFloat(
+                    getComputedStyle(document.documentElement)
+                        .getPropertyValue("--dock-inset-bottom"),
+                ) > 0
+            );
             assertEquals(
                 await dockSystemButton(page, "首页").isVisible(),
                 true,
@@ -888,6 +901,160 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
             ).first().waitFor();
         },
     );
+});
+
+Deno.test("workspace dock: four saved edges survive the 767/768 boundary with reachable overflow and matching insets", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+    const context = await browser.newContext({
+        viewport: { width: 1440, height: 900 },
+        reducedMotion: "reduce",
+    });
+    cleanup.defer(() => context.close());
+    const page = await context.newPage();
+    await registerFreshUser(page, app.origin, "dock_boundary_user");
+
+    const appIds: string[] = [];
+    for (let i = 1; i <= 14; i++) {
+        const pinned = await createWebApp(context, app.origin, {
+            name: `Boundary App ${i}`,
+            url: `https://boundary-${i}.example.test/`,
+        });
+        appIds.push(pinned.id);
+    }
+    const response = await context.request.patch(
+        app.origin + "/api/preferences",
+        {
+            headers: { Origin: app.origin },
+            data: {
+                dock: {
+                    systemOrder: ["notes", "home", "apps", "ai"],
+                    hiddenSystemIds: ["ai"],
+                    appIds,
+                },
+            },
+        },
+    );
+    assert(response.ok(), await response.text());
+
+    for (
+        const [savedEdge, label] of [
+            ["top", "顶部"],
+            ["bottom", "底部"],
+            ["left", "左侧"],
+            ["right", "右侧"],
+        ] as const
+    ) {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await page.goto(app.origin + "/settings/appearance");
+        await page.getByRole("radio", { name: label, exact: true }).click();
+        await page.getByRole("link", { name: "Searcher 首页" }).click();
+        await page.waitForURL(app.origin + "/");
+
+        for (const width of [1440, 767, 768, 1440]) {
+            await page.setViewportSize({ width, height: 900 });
+            if (width === 767) await page.reload();
+            const edge = width < 768 ? "bottom" : savedEdge;
+            await page.waitForFunction((expectedEdge) => {
+                const dock = document.querySelector<HTMLElement>(
+                    ".dock-container",
+                );
+                const shell = document.querySelector<HTMLElement>(
+                    ".app-shell",
+                );
+                if (
+                    !dock || dock.dataset.edge !== expectedEdge ||
+                    shell?.dataset.dockEdge !== expectedEdge
+                ) return false;
+                const r = dock.getBoundingClientRect();
+                const expectedInset = {
+                    top: r.bottom,
+                    right: innerWidth - r.left,
+                    bottom: innerHeight - r.top,
+                    left: r.right,
+                }[expectedEdge];
+                const actualInset = Number.parseFloat(
+                    getComputedStyle(document.documentElement)
+                        .getPropertyValue(`--dock-inset-${expectedEdge}`),
+                );
+                return Math.abs(actualInset - expectedInset) < 1;
+            }, edge);
+
+            const geometry = await page.evaluate(() => {
+                const dock = document.querySelector<HTMLElement>(
+                    ".dock-container",
+                )!;
+                const r = dock.getBoundingClientRect();
+                const root = getComputedStyle(document.documentElement);
+                return {
+                    gaps: {
+                        top: r.top,
+                        right: innerWidth - r.right,
+                        bottom: innerHeight - r.bottom,
+                        left: r.left,
+                    },
+                    insets: Object.fromEntries(
+                        ["top", "right", "bottom", "left"].map((e) => [
+                            e,
+                            Number.parseFloat(
+                                root.getPropertyValue(`--dock-inset-${e}`),
+                            ),
+                        ]),
+                    ),
+                    systemIds: Array.from(
+                        dock.querySelectorAll<HTMLElement>("[data-dock-id]"),
+                        (item) => item.dataset.dockId,
+                    ),
+                };
+            });
+            assert(
+                geometry.gaps[edge] >= 0 && geometry.gaps[edge] <= 16,
+                `${width}px ${edge} dock must remain against its edge`,
+            );
+            for (const other of ["top", "right", "bottom", "left"] as const) {
+                if (other !== edge) assertEquals(geometry.insets[other], 0);
+            }
+            assertEquals(geometry.systemIds, ["notes", "home", "apps"]);
+
+            const apps = dockNav(page).locator(".dock-group--apps");
+            const vertical = edge === "left" || edge === "right";
+            const overflow = await apps.evaluate((group) => ({
+                width: group.scrollWidth - group.clientWidth,
+                height: group.scrollHeight - group.clientHeight,
+            }));
+            assert(
+                (vertical ? overflow.height : overflow.width) > 0,
+                `${width}px ${edge} pinned apps must overflow on the dock axis`,
+            );
+            await apps.evaluate((group) => {
+                group.scrollLeft = group.scrollWidth;
+                group.scrollTop = group.scrollHeight;
+            });
+            await page.waitForFunction(() => {
+                const group = document.querySelector(".dock-group--apps");
+                return group?.hasAttribute("data-overflow-start") &&
+                    !group.hasAttribute("data-overflow-end");
+            });
+            const groupBox = (await apps.boundingBox())!;
+            const lastBox = (await apps.locator("[data-dock-app-id]").last()
+                .boundingBox())!;
+            assert(
+                vertical
+                    ? lastBox.y + lastBox.height <=
+                        groupBox.y + groupBox.height + 1
+                    : lastBox.x + lastBox.width <=
+                        groupBox.x + groupBox.width + 1,
+                `${width}px ${edge} last pinned app must be reachable`,
+            );
+        }
+    }
 });
 
 Deno.test("workspace dock: multi-context cloud sync and independent device layout", async (t) => {
