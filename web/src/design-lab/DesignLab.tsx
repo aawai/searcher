@@ -146,24 +146,31 @@ export function DesignLab() {
 
             <Section title="首页构图：31% / 38%">
                 <p>
-                    真实首页，1440×900
-                    画布；仅在此预览覆盖纵向锚点，不保存偏好。
+                    真实首页，1440×900 画布，统一缩放至
+                    40%，窄屏可在预览内横向滚动；仅在此预览覆盖纵向锚点，不保存偏好。
                 </p>
                 {[31, 38].map((anchor) => (
                     <div className="design-lab-composition" key={anchor}>
                         <p>搜索框中心 {anchor}%</p>
-                        <div className="design-lab-composition-viewport">
-                            <iframe
-                                title={`首页锚点 ${anchor}%`}
-                                src="/"
-                                onLoad={(event) => {
-                                    event.currentTarget.contentDocument
-                                        ?.documentElement.style.setProperty(
-                                            "--home-hero-inset",
-                                            `calc(${anchor}dvh - 84px)`,
-                                        );
-                                }}
-                            />
+                        <div
+                            className="design-lab-composition-scroll"
+                            role="region"
+                            aria-label={`首页锚点 ${anchor}% 构图预览`}
+                            tabIndex={0}
+                        >
+                            <div className="design-lab-composition-viewport">
+                                <iframe
+                                    title={`首页锚点 ${anchor}%`}
+                                    src="/"
+                                    onLoad={(event) => {
+                                        event.currentTarget.contentDocument
+                                            ?.documentElement.style.setProperty(
+                                                "--home-hero-inset",
+                                                `calc(${anchor}dvh - 84px)`,
+                                            );
+                                    }}
+                                />
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -232,16 +239,24 @@ export function DesignLab() {
 
             <Section title="按钮">
                 <div className="design-lab-row">
-                    <Button>默认</Button>
-                    <Button variant="outline">描边</Button>
+                    <Button variant="default">主操作</Button>
+                    <Button>安全默认（省略 variant）</Button>
+                    <Button variant="outline">次要</Button>
                     <Button variant="ghost">幽灵</Button>
-                    <Button variant="destructive">删除</Button>
                     <Button variant="link">链接</Button>
+                    <Button variant="content">内容入口</Button>
+                    <Button variant="destructive">危险操作</Button>
                     <Button disabled>禁用</Button>
                 </div>
+                <p>
+                    default 为 primary；outline 为 subtle（安全默认）；ghost /
+                    link / content / destructive
+                    分别为幽灵、链接、内容入口与危险操作。
+                    危险按钮在普通页面使用危险文字色，仅在确认对话框内填充危险色。
+                </p>
                 <div className="design-lab-row">
                     <Button size="sm">小号</Button>
-                    <Button size="sm" variant="outline">小号描边</Button>
+                    <Button size="sm" variant="outline">小号次要</Button>
                     <Button size="icon" variant="ghost" aria-label="更多">
                         ···
                     </Button>

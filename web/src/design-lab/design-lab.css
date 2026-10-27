@@ -204,6 +204,17 @@
     }
 }
 
+.design-lab-composition-scroll {
+    width: 100%;
+    max-width: 576px;
+    overflow-x: auto;
+}
+
+.design-lab-composition-scroll:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
 /* Fixed source viewport makes anchor comparisons independent of lab width. */
 .design-lab-composition-viewport {
     width: 576px;

@@ -2024,3 +2024,74 @@ Deno.test(
         );
     },
 );
+
+Deno.test("Design Lab composition geometry", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const browser = await chromium.launch({
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+    const page = await browser.newPage();
+    for (const theme of ["light", "dark"] as const) {
+        await page.emulateMedia({ colorScheme: theme });
+        for (const width of [320, 390, 768, 1440]) {
+            await page.setViewportSize({ width, height: 900 });
+            await page.goto(`${app.origin}/design-lab`);
+            await page.locator(".design-lab-composition iframe").last()
+                .waitFor();
+            const geometry = await page.evaluate(() => ({
+                documentWidth: document.documentElement.scrollWidth,
+                viewportWidth: document.documentElement.clientWidth,
+                previews: Array.from(
+                    document.querySelectorAll(
+                        ".design-lab-composition iframe",
+                    ),
+                    (frame) => {
+                        const box = frame.getBoundingClientRect();
+                        const iframe = frame as HTMLIFrameElement;
+                        return {
+                            width: box.width,
+                            height: box.height,
+                            sourceWidth: iframe.clientWidth,
+                            sourceHeight: iframe.clientHeight,
+                        };
+                    },
+                ),
+            }));
+            assert(
+                geometry.documentWidth <= geometry.viewportWidth,
+                `${width}/${theme}: ${JSON.stringify(geometry)}`,
+            );
+            assertEquals(geometry.previews.length, 2);
+            assertEquals(geometry.previews[0], geometry.previews[1]);
+            for (const preview of geometry.previews) {
+                assertEquals(preview.sourceWidth, 1440);
+                assertEquals(preview.sourceHeight, 900);
+                assertEquals(preview.width / preview.height, 1.6);
+            }
+            for (
+                const region of await page.getByRole("region", {
+                    name: /构图预览/,
+                }).all()
+            ) {
+                const reach = await region.evaluate((element) => {
+                    element.scrollLeft = element.scrollWidth;
+                    const frame = element.querySelector("iframe");
+                    const box = element.getBoundingClientRect();
+                    return {
+                        right: frame?.getBoundingClientRect().right,
+                        containerRight: box.right,
+                        scrollLeft: element.scrollLeft,
+                        maxScroll: element.scrollWidth - element.clientWidth,
+                    };
+                });
+                assertEquals(reach.scrollLeft, reach.maxScroll);
+                assert(reach.right !== undefined);
+                assert(Math.abs(reach.right - reach.containerRight) <= 1);
+            }
+        }
+    }
+});
