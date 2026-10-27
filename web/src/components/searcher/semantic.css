@@ -165,6 +165,8 @@
 }
 .settings-row {
     position: relative;
+    /* Eight body glyphs of reading capacity, capped by the available row width. */
+    --settings-row-label-min: 8em;
     min-height: var(--row-min-height);
     padding: var(--space-2) var(--space-card-padding);
     display: flex;
@@ -172,7 +174,7 @@
     justify-content: space-between;
     gap: var(--space-2) var(--space-4);
 }
-/* Labels never shrink below their text; wide controls shrink, then wrap below. */
+/* Reserve label reading capacity before wrapping the right-aligned value below. */
 .settings-row:not(.settings-row--vertical) {
     flex-wrap: wrap;
 }
@@ -189,8 +191,9 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-half);
-    min-width: 0;
-    flex: 1 1 0;
+    min-width: min(100%, var(--settings-row-label-min));
+    max-width: 100%;
+    flex: 1 1 var(--settings-row-label-min);
 }
 .settings-row-title {
     font-size: var(--font-body-size);
@@ -213,6 +216,9 @@
     flex-shrink: 1;
     min-width: 0;
     flex-wrap: wrap;
+    max-width: 100%;
+    margin-inline-start: auto;
+    overflow-wrap: anywhere;
     color: var(--muted);
 }
 .settings-row-control > * {
@@ -223,13 +229,21 @@
     align-items: stretch;
     padding-block: var(--space-3);
 }
+.settings-row--vertical .settings-row-label {
+    flex: none;
+}
 .settings-row--vertical .settings-row-control {
     justify-content: flex-start;
+    margin-inline-start: 0;
 }
 @media (max-width: 639px) {
     .settings-row:has([data-variant="swatch"]) {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .settings-row:has([data-variant="swatch"]) .settings-row-label {
+        flex: none;
     }
 
     .settings-row-control:has([data-variant="swatch"]) {
