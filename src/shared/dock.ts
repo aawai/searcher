@@ -14,12 +14,10 @@ export const DEFAULT_DOCK_PREFERENCES: DockPreferences = {
 };
 
 export type DockEdge = "top" | "bottom" | "left" | "right";
-export type DockMode = "fixed" | "collapsible";
 export type DockBallSide = "left" | "right";
 
 export interface DockLayout {
     edge: DockEdge;
-    mode: DockMode;
     collapsed: boolean;
     ballSide: DockBallSide;
     ballY: number;
@@ -27,7 +25,6 @@ export interface DockLayout {
 
 export const DEFAULT_DOCK_LAYOUT: DockLayout = {
     edge: "bottom",
-    mode: "fixed",
     collapsed: false,
     ballSide: "left",
     ballY: 0.5,
@@ -106,10 +103,9 @@ export function normalizeDockLayout(raw: unknown): DockLayout {
             r.edge === "right"
             ? r.edge
             : DEFAULT_DOCK_LAYOUT.edge;
-    const mode: DockMode = r.mode === "fixed" || r.mode === "collapsible"
-        ? r.mode
-        : DEFAULT_DOCK_LAYOUT.mode;
-    const collapsed = typeof r.collapsed === "boolean"
+    const collapsed = r.mode === "fixed"
+        ? false
+        : typeof r.collapsed === "boolean"
         ? r.collapsed
         : DEFAULT_DOCK_LAYOUT.collapsed;
     const ballSide: DockBallSide =
@@ -124,7 +120,6 @@ export function normalizeDockLayout(raw: unknown): DockLayout {
 
     return {
         edge,
-        mode,
         collapsed,
         ballSide,
         ballY,

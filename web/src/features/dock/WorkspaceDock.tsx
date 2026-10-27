@@ -1,5 +1,6 @@
 import {
     type CSSProperties,
+    type MouseEvent as ReactMouseEvent,
     type PointerEvent as ReactPointerEvent,
     type ReactNode,
     useCallback,
@@ -12,9 +13,17 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import {
     AlertCircle,
+    ArrowDown,
+    ArrowLeft,
+    ArrowRight,
+    ArrowUp,
     type Home,
     LayoutGrid,
+    Minimize2,
     MoreHorizontal,
+    PinOff,
+    Settings2,
+    X,
 } from "lucide-react";
 import {
     closestCenter,
@@ -38,7 +47,6 @@ import { CSS } from "@dnd-kit/utilities";
 import {
     type DockBallSide,
     type DockEdge,
-    type DockMode,
     type DockSystemId,
 } from "@shared/dock.ts";
 import { routes } from "../../app/routes.ts";
@@ -46,17 +54,9 @@ import { useAppState } from "../../app/state.tsx";
 import { WebAppGlyph } from "../../components/searcher/WebAppIcon.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
-    ContextMenu,
-    ContextMenuContent,
-    ContextMenuItem,
-    ContextMenuSeparator,
-    ContextMenuTrigger,
-} from "../../components/ui/context-menu.tsx";
-import {
     Dialog,
     DialogClose,
     DialogContent,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "../../components/ui/dialog.tsx";
@@ -64,6 +64,9 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuPopup,
+    DropdownMenuPortal,
+    DropdownMenuPositioner,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
@@ -73,6 +76,7 @@ import {
     RadioGroup,
     RadioGroupItem,
 } from "../../components/ui/radio-group.tsx";
+import { Switch } from "../../components/ui/switch.tsx";
 import {
     Tooltip,
     TooltipContent,
@@ -80,14 +84,28 @@ import {
 } from "../../components/ui/tooltip.tsx";
 import { MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
 import type { ExtendedWebApp } from "../app-library/library-types.ts";
-import {
-    DOCK_SYSTEM_ITEMS,
-    DockPinnedAppsList,
-    DockSystemOrderList,
-    moveDockItem,
-} from "./DockOrderList.tsx";
+import { DOCK_SYSTEM_ITEMS } from "./DockOrderList.tsx";
 import { useDock } from "./DockProvider.tsx";
 import "./dock.css";
+
+const TOUCH_HOLD_MS = 250;
+const TOUCH_TOLERANCE = 8;
+const COMPAT_MOUSE_WINDOW_MS = 500;
+
+function mayComeFromTouch(event: MouseEvent): boolean {
+    const capabilities = "sourceCapabilities" in event
+        ? event.sourceCapabilities
+        : null;
+    return !capabilities || typeof capabilities !== "object" ||
+        !("firesTouchEvents" in capabilities) ||
+        capabilities.firesTouchEvents !== false;
+}
+
+type DockItem =
+    | { kind: "system"; id: DockSystemId }
+    | { kind: "app"; id: string };
+type DockItemMenu = DockItem & { anchor: HTMLElement; touch: boolean };
+
 function SortableSystemItem({
     id,
     label,
@@ -95,6 +113,7 @@ function SortableSystemItem({
     isActive,
     aiDisabled,
     onClick,
+    onContextMenu,
 }: {
     id: DockSystemId;
     label: string;
@@ -102,6 +121,7 @@ function SortableSystemItem({
     isActive: boolean;
     aiDisabled: boolean;
     onClick: () => void;
+    onContextMenu: (event: ReactMouseEvent<HTMLButtonElement>) => void;
 }) {
     const {
         attributes,
@@ -139,6 +159,7 @@ function SortableSystemItem({
                         aria-current={isActive ? "page" : undefined}
                         aria-label={label}
                         onClick={onClick}
+                        onContextMenu={onContextMenu}
                     >
                         <Icon
                             size="1em"
@@ -163,22 +184,12 @@ function SortableSystemItem({
 
 function SortableAppItem({
     app,
-    index,
-    totalCount,
-    isMobile,
-    isVertical,
     onOpen,
-    onMove,
-    onUnpin,
+    onContextMenu,
 }: {
     app: ExtendedWebApp;
-    index: number;
-    totalCount: number;
-    isMobile: boolean;
-    isVertical: boolean;
-    onOpen: (app: ExtendedWebApp, target?: "current" | "new_tab") => void;
-    onMove: (index: number, delta: -1 | 1) => void;
-    onUnpin: (appId: string) => void;
+    onOpen: (app: ExtendedWebApp) => void;
+    onContextMenu: (event: ReactMouseEvent<HTMLButtonElement>) => void;
 }) {
     const {
         attributes,
@@ -194,74 +205,31 @@ function SortableAppItem({
         transition,
     };
 
-    const buttonEl = (
-        <button
-            ref={setNodeRef}
-            style={style}
-            {...attributes}
-            {...listeners}
-            type="button"
-            className={`dock-item dock-item--app${
-                isDragging ? " is-dragging" : ""
-            }`}
-            data-dock-app-id={app.id}
-            aria-label={app.name}
-            onClick={() => onOpen(app)}
-        >
-            <WebAppGlyph app={app} className="dock-glyph" />
-            <span className="dock-item-label">{app.name}</span>
-        </button>
-    );
-
-    // On mobile touch devices, do not wrap in ContextMenu to avoid long-press conflict
-    if (isMobile) {
-        return (
-            <Tooltip>
-                <TooltipTrigger render={buttonEl} />
-                <TooltipContent>{app.name}</TooltipContent>
-            </Tooltip>
-        );
-    }
-
     return (
-        <ContextMenu>
-            <ContextMenuTrigger
+        <Tooltip>
+            <TooltipTrigger
                 render={
-                    <Tooltip>
-                        <TooltipTrigger render={buttonEl} />
-                        <TooltipContent>{app.name}</TooltipContent>
-                    </Tooltip>
+                    <button
+                        ref={setNodeRef}
+                        style={style}
+                        {...attributes}
+                        {...listeners}
+                        type="button"
+                        className={`dock-item dock-item--app${
+                            isDragging ? " is-dragging" : ""
+                        }`}
+                        data-dock-app-id={app.id}
+                        aria-label={app.name}
+                        onClick={() => onOpen(app)}
+                        onContextMenu={onContextMenu}
+                    >
+                        <WebAppGlyph app={app} className="dock-glyph" />
+                        <span className="dock-item-label">{app.name}</span>
+                    </button>
                 }
             />
-            <ContextMenuContent>
-                <ContextMenuItem onClick={() => onOpen(app, "current")}>
-                    在当前标签页打开
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => onOpen(app, "new_tab")}>
-                    在新标签页打开
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                    disabled={index === 0}
-                    onClick={() => onMove(index, -1)}
-                >
-                    {isVertical ? "向上移动" : "向前移动"}
-                </ContextMenuItem>
-                <ContextMenuItem
-                    disabled={index === totalCount - 1}
-                    onClick={() => onMove(index, 1)}
-                >
-                    {isVertical ? "向下移动" : "向后移动"}
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                    variant="destructive"
-                    onClick={() => onUnpin(app.id)}
-                >
-                    取消任务栏固定
-                </ContextMenuItem>
-            </ContextMenuContent>
-        </ContextMenu>
+            <TooltipContent>{app.name}</TooltipContent>
+        </Tooltip>
     );
 }
 
@@ -290,6 +258,45 @@ export function WorkspaceDock(
     const [keyboardOpen, setKeyboardOpen] = useState(false);
     const [managementOpen, setManagementOpen] = useState(false);
     const [appsOverflowing, setAppsOverflowing] = useState(false);
+    const [itemMenu, setItemMenu] = useState<DockItemMenu | null>(null);
+    const optionsRef = useRef<HTMLButtonElement | null>(null);
+    const touchActiveRef = useRef(false);
+    const multipleTouchRef = useRef(false);
+    const touchContextDeadlineRef = useRef(0);
+    const touchReleaseRef = useRef<{ x: number; y: number } | null>(null);
+    const suppressTouchMouseRef = useRef(false);
+    const touchMovedRef = useRef(false);
+
+    // The browser may synthesize mouse events on the menu backdrop after a touch drag.
+    useEffect(() => {
+        const suppressCompatibilityMouse = (event: MouseEvent) => {
+            const release = touchReleaseRef.current;
+            if (
+                !suppressTouchMouseRef.current || !release ||
+                Date.now() >= touchContextDeadlineRef.current ||
+                !mayComeFromTouch(event) ||
+                Math.hypot(
+                        event.clientX - release.x,
+                        event.clientY - release.y,
+                    ) >= TOUCH_TOLERANCE
+            ) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (event.type === "click") suppressTouchMouseRef.current = false;
+        };
+        for (const type of ["mousedown", "mouseup", "click"] as const) {
+            globalThis.addEventListener(type, suppressCompatibilityMouse, true);
+        }
+        return () => {
+            for (const type of ["mousedown", "mouseup", "click"] as const) {
+                globalThis.removeEventListener(
+                    type,
+                    suppressCompatibilityMouse,
+                    true,
+                );
+            }
+        };
+    }, []);
 
     // Track mobile viewport using MEDIA_QUERIES.belowMedium
     const [isMobile, setIsMobile] = useState(() =>
@@ -359,7 +366,7 @@ export function WorkspaceDock(
     }, [isAiPage, isHomePage, currentView]);
 
     const effectiveEdge: DockEdge = isMobile ? "bottom" : layout.edge;
-    const isCollapsed = layout.mode === "collapsible" && layout.collapsed;
+    const isCollapsed = layout.collapsed;
     const barPresence = usePresence<HTMLElement>(isMounted && !isCollapsed);
     const ballPresence = usePresence<HTMLButtonElement>(
         isMounted && isCollapsed,
@@ -382,6 +389,16 @@ export function WorkspaceDock(
                 .filter((app): app is NonNullable<typeof app> => Boolean(app)),
         [preferences.appIds, apps],
     );
+
+    useEffect(() => {
+        if (!itemMenu) return;
+        const available = itemMenu.kind === "system"
+            ? visibleSystemIds.includes(itemMenu.id)
+            : pinnedApps.some((app) => app.id === itemMenu.id);
+        if (!isMounted || isCollapsed || !available) {
+            setItemMenu(null);
+        }
+    }, [itemMenu, isMounted, isCollapsed, pinnedApps, visibleSystemIds]);
 
     useLayoutEffect(() => {
         const group = appsGroupRef.current;
@@ -531,7 +548,10 @@ export function WorkspaceDock(
     const sensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
         useSensor(TouchSensor, {
-            activationConstraint: { delay: 250, tolerance: 8 },
+            activationConstraint: {
+                delay: TOUCH_HOLD_MS,
+                tolerance: TOUCH_TOLERANCE,
+            },
         }),
         useSensor(KeyboardSensor, {
             // Enter stays a click so keyboard users can activate entries.
@@ -590,36 +610,88 @@ export function WorkspaceDock(
         [appearance.target],
     );
 
-    // Reorder handlers
-    const handleMoveApp = useCallback(
-        (index: number, delta: -1 | 1) => {
-            const reordered = moveDockItem(preferences.appIds, index, delta);
-            if (reordered) {
-                void setAppOrder(reordered);
-            }
-        },
-        [preferences.appIds, setAppOrder],
-    );
+    const openItemContextMenu = (
+        event: ReactMouseEvent<HTMLButtonElement>,
+        item: DockItem,
+    ) => {
+        event.preventDefault();
+        const native = event.nativeEvent;
+        if (
+            touchActiveRef.current ||
+            Date.now() < touchContextDeadlineRef.current ||
+            ("pointerType" in native && native.pointerType === "touch")
+        ) return;
+        setItemMenu({ ...item, anchor: event.currentTarget, touch: false });
+    };
 
-    const handleMoveSystem = useCallback(
-        (index: number, delta: -1 | 1) => {
-            const reordered = moveDockItem(
-                preferences.systemOrder,
-                index,
-                delta,
-            );
-            if (reordered) {
-                void setSystemOrder(reordered);
-            }
-        },
-        [preferences.systemOrder, setSystemOrder],
-    );
+    const closeItemMenu = () => {
+        const anchor = itemMenu?.anchor;
+        setItemMenu(null);
+        requestAnimationFrame(() => {
+            (anchor?.isConnected ? anchor : optionsRef.current)?.focus();
+        });
+    };
+
+    const handleMoveApp = useCallback((id: string, delta: -1 | 1) => {
+        const visibleIndex = pinnedApps.findIndex((app) => app.id === id);
+        const neighbor = pinnedApps[visibleIndex + delta];
+        if (visibleIndex < 0 || !neighbor) return;
+        const from = preferences.appIds.indexOf(id);
+        const to = preferences.appIds.indexOf(neighbor.id);
+        if (from !== -1 && to !== -1) {
+            void setAppOrder(arrayMove(preferences.appIds, from, to));
+        }
+    }, [pinnedApps, preferences.appIds, setAppOrder]);
+
+    const handleMoveSystem = useCallback((id: DockSystemId, delta: -1 | 1) => {
+        const visibleIndex = visibleSystemIds.indexOf(id);
+        const neighbor = visibleSystemIds[visibleIndex + delta];
+        if (visibleIndex < 0 || !neighbor) return;
+        const from = preferences.systemOrder.indexOf(id);
+        const to = preferences.systemOrder.indexOf(neighbor);
+        if (from !== -1 && to !== -1) {
+            void setSystemOrder(arrayMove(preferences.systemOrder, from, to));
+        }
+    }, [visibleSystemIds, preferences.systemOrder, setSystemOrder]);
 
     const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
-        if (!over || active.id === over.id) return;
-
         const activeIdStr = String(active.id);
+        if (event.activatorEvent.type === "touchstart") {
+            suppressTouchMouseRef.current = true;
+        }
+        if (
+            event.activatorEvent.type === "touchstart" &&
+            !multipleTouchRef.current &&
+            !touchMovedRef.current &&
+            Math.hypot(event.delta.x, event.delta.y) < TOUCH_TOLERANCE
+        ) {
+            const target = event.activatorEvent.target;
+            const anchor = target instanceof Element
+                ? target.closest("button")
+                : null;
+            if (anchor && activeIdStr.startsWith("system:")) {
+                setItemMenu({
+                    kind: "system",
+                    id: activeIdStr.slice("system:".length) as DockSystemId,
+                    anchor,
+                    touch: true,
+                });
+            } else if (anchor && activeIdStr.startsWith("app:")) {
+                setItemMenu({
+                    kind: "app",
+                    id: activeIdStr.slice("app:".length),
+                    anchor,
+                    touch: true,
+                });
+            }
+            return;
+        }
+        if (
+            (event.activatorEvent.type === "touchstart" &&
+                multipleTouchRef.current) ||
+            !over || active.id === over.id
+        ) return;
         const overIdStr = String(over.id);
 
         if (
@@ -773,6 +845,28 @@ export function WorkspaceDock(
         effectiveEdge === "left" || effectiveEdge === "right"
             ? verticalListSortingStrategy
             : horizontalListSortingStrategy;
+    const vertical = effectiveEdge === "left" || effectiveEdge === "right";
+    const menuApp = itemMenu?.kind === "app"
+        ? pinnedApps.find((app) => app.id === itemMenu.id)
+        : undefined;
+    const menuLabel = itemMenu?.kind === "system"
+        ? DOCK_SYSTEM_ITEMS[itemMenu.id].label
+        : menuApp?.name;
+    const menuIndex = itemMenu?.kind === "system"
+        ? visibleSystemIds.indexOf(itemMenu.id)
+        : pinnedApps.findIndex((app) => app.id === itemMenu?.id);
+    const menuCount = itemMenu?.kind === "system"
+        ? visibleSystemIds.length
+        : pinnedApps.length;
+    const menuSide = effectiveEdge === "bottom"
+        ? "top"
+        : effectiveEdge === "top"
+        ? "bottom"
+        : effectiveEdge === "left"
+        ? "right"
+        : "left";
+    const PreviousIcon = vertical ? ArrowUp : ArrowLeft;
+    const NextIcon = vertical ? ArrowDown : ArrowRight;
 
     return (
         <>
@@ -822,6 +916,17 @@ export function WorkspaceDock(
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}
+                        onDragStart={() => {
+                            touchMovedRef.current = false;
+                        }}
+                        onDragMove={(event) => {
+                            if (
+                                Math.hypot(event.delta.x, event.delta.y) >=
+                                    TOUCH_TOLERANCE
+                            ) {
+                                touchMovedRef.current = true;
+                            }
+                        }}
                         onDragEnd={handleDragEnd}
                     >
                         <nav
@@ -831,6 +936,31 @@ export function WorkspaceDock(
                                 ? ""
                                 : undefined}
                             aria-label="工作区任务栏"
+                            onTouchStartCapture={(event) => {
+                                if (event.touches.length === 1) {
+                                    suppressTouchMouseRef.current = false;
+                                }
+                                touchActiveRef.current = true;
+                                if (
+                                    event.touches.length === 1
+                                ) multipleTouchRef.current = false;
+                                else multipleTouchRef.current = true;
+                            }}
+                            onTouchEndCapture={(event) => {
+                                touchActiveRef.current =
+                                    event.touches.length > 0;
+                                const touch = event.changedTouches[0];
+                                touchReleaseRef.current = touch
+                                    ? { x: touch.clientX, y: touch.clientY }
+                                    : null;
+                                touchContextDeadlineRef.current = Date.now() +
+                                    COMPAT_MOUSE_WINDOW_MS;
+                            }}
+                            onTouchCancelCapture={() => {
+                                touchActiveRef.current = false;
+                                touchContextDeadlineRef.current = Date.now() +
+                                    COMPAT_MOUSE_WINDOW_MS;
+                            }}
                         >
                             {/* System items group */}
                             {visibleSystemIds.length > 0 && (
@@ -858,6 +988,14 @@ export function WorkspaceDock(
                                                         handleSystemNavigate(
                                                             id,
                                                         )}
+                                                    onContextMenu={(event) =>
+                                                        openItemContextMenu(
+                                                            event,
+                                                            {
+                                                                kind: "system",
+                                                                id,
+                                                            },
+                                                        )}
                                                 />
                                             );
                                         })}
@@ -883,20 +1021,16 @@ export function WorkspaceDock(
                                         )}
                                         strategy={sortableStrategy}
                                     >
-                                        {pinnedApps.map((app, index) => (
+                                        {pinnedApps.map((app) => (
                                             <SortableAppItem
                                                 key={app.id}
                                                 app={app}
-                                                index={index}
-                                                totalCount={pinnedApps.length}
-                                                isMobile={isMobile}
-                                                isVertical={effectiveEdge ===
-                                                        "left" ||
-                                                    effectiveEdge === "right"}
                                                 onOpen={handleOpenApp}
-                                                onMove={handleMoveApp}
-                                                onUnpin={(id) =>
-                                                    void setPinned(id, false)}
+                                                onContextMenu={(event) =>
+                                                    openItemContextMenu(event, {
+                                                        kind: "app",
+                                                        id: app.id,
+                                                    })}
                                             />
                                         ))}
                                     </SortableContext>
@@ -914,6 +1048,7 @@ export function WorkspaceDock(
                                 <DropdownMenuTrigger
                                     render={
                                         <button
+                                            ref={optionsRef}
                                             type="button"
                                             className="dock-item dock-item--action"
                                             aria-label="任务栏选项"
@@ -927,39 +1062,90 @@ export function WorkspaceDock(
                                         </button>
                                     }
                                 />
-                                <DropdownMenuContent sideOffset={8}>
+                                <DropdownMenuContent
+                                    sideOffset={8}
+                                    className="dock-options-menu"
+                                >
                                     <DropdownMenuItem
+                                        aria-label="管理任务栏"
                                         onClick={() => setManagementOpen(true)}
                                     >
-                                        管理任务栏
+                                        <Settings2
+                                            size="1em"
+                                            className="icon-md"
+                                            aria-hidden="true"
+                                        />
+                                        管理
                                     </DropdownMenuItem>
-                                    {layout.mode === "collapsible" && (
-                                        <DropdownMenuItem
-                                            data-dock-action="collapse"
-                                            onClick={() =>
-                                                setLayout({ collapsed: true })}
-                                        >
-                                            收起任务栏
-                                        </DropdownMenuItem>
-                                    )}
+                                    <DropdownMenuItem
+                                        aria-label="收起任务栏"
+                                        data-dock-action="collapse"
+                                        onClick={() =>
+                                            setLayout({ collapsed: true })}
+                                    >
+                                        <Minimize2
+                                            size="1em"
+                                            className="icon-md"
+                                            aria-hidden="true"
+                                        />
+                                        收起
+                                    </DropdownMenuItem>
                                     {appsOverflowing &&
                                         pinnedApps.length > 0 && (
                                         <>
                                             <DropdownMenuSeparator />
                                             {pinnedApps.map((app) => (
-                                                <DropdownMenuItem
+                                                <div
+                                                    className="dock-overflow-row"
+                                                    role="none"
                                                     key={app.id}
-                                                    data-dock-overflow-app={app
-                                                        .id}
-                                                    onClick={() =>
-                                                        handleOpenApp(app)}
                                                 >
-                                                    <WebAppGlyph
-                                                        app={app}
-                                                        className="dock-glyph"
-                                                    />
-                                                    <span>{app.name}</span>
-                                                </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        data-dock-overflow-app={app
+                                                            .id}
+                                                        onClick={() =>
+                                                            handleOpenApp(app)}
+                                                    >
+                                                        <WebAppGlyph
+                                                            app={app}
+                                                            className="dock-glyph"
+                                                        />
+                                                        <span className="dock-overflow-name">
+                                                            {app.name}
+                                                        </span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        className="dock-overflow-action"
+                                                        aria-label={`${app.name} 的操作`}
+                                                        onClick={() => {
+                                                            const anchor =
+                                                                optionsRef
+                                                                    .current;
+                                                            if (anchor) {
+                                                                requestAnimationFrame(
+                                                                    () =>
+                                                                        setItemMenu(
+                                                                            {
+                                                                                kind:
+                                                                                    "app",
+                                                                                id: app
+                                                                                    .id,
+                                                                                anchor,
+                                                                                touch:
+                                                                                    true,
+                                                                            },
+                                                                        ),
+                                                                );
+                                                            }
+                                                        }}
+                                                    >
+                                                        <MoreHorizontal
+                                                            size="1em"
+                                                            className="icon-md"
+                                                            aria-hidden="true"
+                                                        />
+                                                    </DropdownMenuItem>
+                                                </div>
                                             ))}
                                         </>
                                     )}
@@ -996,18 +1182,152 @@ export function WorkspaceDock(
                     </DndContext>
                 </aside>
             )}
+            {itemMenu && menuLabel && menuIndex >= 0 && (
+                <DropdownMenu
+                    open
+                    onOpenChange={(open, details) => {
+                        const event = details.event;
+                        const release = touchReleaseRef.current;
+                        const fromRelease = itemMenu.touch &&
+                            event instanceof MouseEvent &&
+                            Date.now() < touchContextDeadlineRef.current &&
+                            mayComeFromTouch(event) &&
+                            release !== null &&
+                            Math.hypot(
+                                    event.clientX - release.x,
+                                    event.clientY - release.y,
+                                ) < TOUCH_TOLERANCE;
+                        if (!open && !fromRelease) closeItemMenu();
+                    }}
+                >
+                    <DropdownMenuPortal>
+                        <DropdownMenuPositioner
+                            anchor={itemMenu.anchor}
+                            side={menuSide}
+                            sideOffset={8}
+                        >
+                            <DropdownMenuPopup
+                                aria-label={`${menuLabel} 的操作`}
+                                data-dock-item-menu
+                            >
+                                <div className="menu-label dock-item-menu-label">
+                                    {menuApp && (
+                                        <WebAppGlyph
+                                            app={menuApp}
+                                            className="dock-glyph"
+                                        />
+                                    )}
+                                    <span>{menuLabel}</span>
+                                </div>
+                                {menuApp && !itemMenu.touch && (
+                                    <>
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                handleOpenApp(
+                                                    menuApp,
+                                                    "current",
+                                                )}
+                                        >
+                                            在当前标签页打开
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                handleOpenApp(
+                                                    menuApp,
+                                                    "new_tab",
+                                                )}
+                                        >
+                                            在新标签页打开
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                    </>
+                                )}
+                                <DropdownMenuItem
+                                    disabled={menuIndex === 0}
+                                    onClick={() => {
+                                        if (itemMenu.kind === "system") {
+                                            handleMoveSystem(itemMenu.id, -1);
+                                        } else handleMoveApp(itemMenu.id, -1);
+                                    }}
+                                >
+                                    <PreviousIcon
+                                        size="1em"
+                                        className="icon-md"
+                                        aria-hidden="true"
+                                    />
+                                    {vertical ? "向上移动" : "向左移动"}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    disabled={menuIndex === menuCount - 1}
+                                    onClick={() => {
+                                        if (itemMenu.kind === "system") {
+                                            handleMoveSystem(itemMenu.id, 1);
+                                        } else handleMoveApp(itemMenu.id, 1);
+                                    }}
+                                >
+                                    <NextIcon
+                                        size="1em"
+                                        className="icon-md"
+                                        aria-hidden="true"
+                                    />
+                                    {vertical ? "向下移动" : "向右移动"}
+                                </DropdownMenuItem>
+                                {menuApp && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            aria-label="取消任务栏固定"
+                                            onClick={() => {
+                                                closeItemMenu();
+                                                void setPinned(
+                                                    menuApp.id,
+                                                    false,
+                                                );
+                                            }}
+                                        >
+                                            <PinOff
+                                                size="1em"
+                                                className="icon-md"
+                                                aria-hidden="true"
+                                            />
+                                            取消固定
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuPopup>
+                        </DropdownMenuPositioner>
+                    </DropdownMenuPortal>
+                </DropdownMenu>
+            )}
             {/* Management Dialog */}
             <Dialog open={managementOpen} onOpenChange={setManagementOpen}>
                 <DialogContent
                     aria-label="管理任务栏"
+                    className="dock-management"
                     data-dock-modal="management"
                 >
-                    <DialogHeader>
-                        <DialogTitle>管理任务栏</DialogTitle>
+                    <DialogHeader className="dock-management-header">
+                        <DialogTitle>任务栏</DialogTitle>
+                        <DialogClose
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="关闭"
+                                />
+                            }
+                        >
+                            <X
+                                size="1em"
+                                className="icon-md"
+                                aria-hidden="true"
+                            />
+                        </DialogClose>
                     </DialogHeader>
                     <div className="dock-management-content">
-                        <div className="dock-management-layout">
-                            {!isMobile && (
+                        {!isMobile && (
+                            <div className="dock-management-layout">
                                 <div className="dock-management-row">
                                     <span className="dock-management-label">
                                         位置
@@ -1015,9 +1335,9 @@ export function WorkspaceDock(
                                     <RadioGroup
                                         variant="segmented"
                                         value={layout.edge}
-                                        onValueChange={(val) =>
+                                        onValueChange={(value) =>
                                             setLayout({
-                                                edge: val as DockEdge,
+                                                edge: value as DockEdge,
                                             })}
                                         aria-label="任务栏位置"
                                     >
@@ -1035,61 +1355,44 @@ export function WorkspaceDock(
                                         </RadioGroupItem>
                                     </RadioGroup>
                                 </div>
-                            )}
-                            <div className="dock-management-row">
-                                <span className="dock-management-label">
-                                    展示模式
-                                </span>
-                                <RadioGroup
-                                    variant="segmented"
-                                    value={layout.mode}
-                                    onValueChange={(val) =>
-                                        setLayout({ mode: val as DockMode })}
-                                    aria-label="任务栏展示模式"
-                                >
-                                    <RadioGroupItem value="fixed">
-                                        常驻
-                                    </RadioGroupItem>
-                                    <RadioGroupItem value="collapsible">
-                                        可收起
-                                    </RadioGroupItem>
-                                </RadioGroup>
                             </div>
-                        </div>
-
-                        <div className="dock-management-section">
+                        )}
+                        <section className="dock-management-section">
                             <h4 className="dock-management-heading">
                                 系统入口
                             </h4>
-                            <DockSystemOrderList
-                                systemOrder={preferences.systemOrder}
-                                hiddenSystemIds={preferences.hiddenSystemIds}
-                                onMove={handleMoveSystem}
-                                onReorder={(next) => void setSystemOrder(next)}
-                                onToggleVisible={(id, visible) =>
-                                    void setSystemVisible(id, visible)}
-                            />
-                        </div>
-
-                        <div className="dock-management-section">
-                            <h4 className="dock-management-heading">
-                                固定应用（{pinnedApps.length}）
-                            </h4>
-                            <DockPinnedAppsList
-                                pinnedApps={pinnedApps}
-                                availableApps={apps}
-                                onMove={handleMoveApp}
-                                onReorder={(next) => void setAppOrder(next)}
-                                onPin={(id) => void setPinned(id, true)}
-                                onUnpin={(id) => void setPinned(id, false)}
-                            />
-                        </div>
+                            {preferences.systemOrder.map((id) => {
+                                const { label, icon: Icon } =
+                                    DOCK_SYSTEM_ITEMS[id];
+                                return (
+                                    <div
+                                        className="dock-management-system-row"
+                                        key={id}
+                                    >
+                                        <span className="dock-management-system-label">
+                                            <Icon
+                                                size="1em"
+                                                className="icon-md"
+                                                aria-hidden="true"
+                                            />
+                                            {label}
+                                        </span>
+                                        <Switch
+                                            checked={!preferences
+                                                .hiddenSystemIds.includes(id)}
+                                            onCheckedChange={(visible) =>
+                                                void setSystemVisible(
+                                                    id,
+                                                    visible,
+                                                )}
+                                            aria-label={`显示 ${label}`}
+                                            data-dock-system-toggle={id}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </section>
                     </div>
-                    <DialogFooter>
-                        <DialogClose
-                            render={<Button type="button">完成</Button>}
-                        />
-                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </>

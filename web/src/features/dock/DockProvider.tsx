@@ -14,7 +14,6 @@ import {
     type DockBallSide,
     type DockEdge,
     type DockLayout,
-    type DockMode,
     type DockPreferences,
     type DockSystemId,
     isValidDockSystemId,
@@ -31,7 +30,6 @@ export type {
     DockBallSide,
     DockEdge,
     DockLayout,
-    DockMode,
     DockPreferences,
     DockSystemId,
     ExtendedWebApp,
@@ -123,7 +121,7 @@ export function DockProviderSession({ userId, children }: DockSessionProps) {
         syncQueueRef.current = Promise.resolve();
         refreshEpochRef.current = 0;
         const initialRevision = ++layoutRevisionRef.current;
-        getLocal<DockLayout>(layoutKey)
+        getLocal<unknown>(layoutKey)
             .then((saved) => {
                 if (!active()) return;
                 if (layoutRevisionRef.current === initialRevision && saved) {

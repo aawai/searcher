@@ -26,9 +26,25 @@ function dockOptionsMenu(page: Page): Locator {
 }
 
 function dockManagementModal(page: Page): Locator {
-    return page.locator(
-        '[data-dock-modal="management"], [aria-label="管理任务栏"]',
-    );
+    return page.locator('[data-dock-modal="management"]');
+}
+
+async function openDockManagement(page: Page): Promise<Locator> {
+    await dockOptionsMenu(page).click();
+    await page.getByRole("menuitem", { name: "管理任务栏" }).click();
+    const modal = dockManagementModal(page);
+    await modal.waitFor({ state: "visible" });
+    return modal;
+}
+
+async function setDockEdgeViaManagement(
+    page: Page,
+    label: string,
+): Promise<void> {
+    const modal = await openDockManagement(page);
+    await modal.getByRole("radio", { name: label, exact: true }).click();
+    await modal.getByRole("button", { name: "关闭" }).click();
+    await modal.waitFor({ state: "hidden" });
 }
 
 async function collapseDockViaMenu(page: Page): Promise<void> {
@@ -585,67 +601,38 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
     });
 
     await t.step(
-        "options menu displays management entry without redundant non-overflow apps, and management dialog manages layout, system items, and pinned apps",
+        "management configures system visibility without duplicating app actions",
         async () => {
-            await page.locator("main.home").waitFor({ state: "visible" });
-
-            // Open options dropdown menu
-            const menuBtn = dockOptionsMenu(page);
-            await menuBtn.waitFor({ state: "visible" });
-            await menuBtn.click();
-
-            // When 2 apps do not overflow on 1280px desktop, overflow items must not clutter the menu
+            await dockOptionsMenu(page).click();
             assertEquals(
                 await page.locator("[data-dock-overflow-app]").count(),
                 0,
-                "non-overflowing dock must not show overflow app items in options menu",
+                "non-overflowing dock does not list apps in the options menu",
             );
-
-            const manageItem = page.getByRole("menuitem", {
-                name: "管理任务栏",
-            });
-            await manageItem.waitFor({ state: "visible" });
-            await manageItem.click();
+            await page.getByRole("menuitem", { name: "管理任务栏" }).click();
             const modal = dockManagementModal(page);
             await modal.waitFor({ state: "visible" });
-
-            // Verify section order in management modal: 系统入口 appears before 固定应用
-            const headings = await modal.locator(".dock-management-heading")
-                .allInnerTexts();
-            assertEquals(headings[0].trim(), "系统入口");
-            assert(headings[1].trim().startsWith("固定应用"));
-
-            // Non-drag reorder inside management modal
-            const moveDownAlpha = modal.getByRole("button", {
-                name: `下移 ${appA.name}`,
-            });
-            await moveDownAlpha.waitFor({ state: "visible" });
-            await moveDownAlpha.click();
-
-            // Verify cloud preferences updated: Beta before Alpha
-            const prefRes = await context.request.get(
-                app.origin + "/api/preferences",
+            assertEquals(await modal.getByRole("switch").count(), 4);
+            assertEquals(
+                await modal.getByRole("radiogroup", { name: "任务栏位置" })
+                    .count(),
+                1,
             );
-            assert(prefRes.ok());
-            const prefBody = await prefRes.json();
-            assertEquals(prefBody.data.dock.appIds, [appB.id, appA.id]);
-
-            // Toggle off "AI 问答" inside management modal
-            const toggleAiModal = modal.getByRole("switch", {
-                name: "显示 AI 问答",
-            });
-            await toggleAiModal.waitFor({ state: "visible" });
-            await toggleAiModal.click();
-
-            // Close management modal
-            await modal.getByRole("button", { name: "完成" }).click();
+            assertEquals(
+                await modal.getByRole("radiogroup", { name: "任务栏展示模式" })
+                    .count(),
+                0,
+            );
+            assertEquals(
+                await modal.getByRole("heading", { name: /^固定应用/ }).count(),
+                0,
+            );
+            await modal.getByRole("switch", { name: "显示 AI 问答" }).click();
+            await modal.getByRole("button", { name: "关闭" }).click();
             await modal.waitFor({ state: "hidden" });
-
-            // Verify AI 问答 is hidden on the dock while other 3 system items remain visible
             assertEquals(
                 await dockNav(page).locator('[data-dock-id="ai"]').count(),
                 0,
-                "hidden system entry AI 问答 must not render on dock",
             );
             assertEquals(
                 await dockSystemButton(page, "首页").isVisible(),
@@ -663,96 +650,116 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
     );
 
     await t.step(
-        "settings non-drag unpinning removes app from dock and add-pinned-app re-pins it",
+        "taskbar context menu reorders and unpins without deleting the application or home pin",
         async () => {
-            await page.goto(app.origin + "/settings/appearance");
-            await page.getByRole("navigation", { name: "设置分类" }).waitFor({
-                state: "visible",
-            });
-
-            const unpinBeta = page.getByRole("button", {
-                name: `取消固定 ${appB.name}`,
-            });
-            await unpinBeta.waitFor({ state: "visible" });
-            await unpinBeta.click();
-
-            // Beta is unpinned, Alpha remains
-            const prefRes = await context.request.get(
-                app.origin + "/api/preferences",
+            await dockAppButton(page, appA.name).click({ button: "right" });
+            await page.getByRole("menuitem", { name: "向右移动" }).click();
+            await page.waitForFunction(([first, second]) =>
+                Array.from(
+                    document.querySelectorAll<HTMLElement>(
+                        "[data-dock-app-id]",
+                    ),
+                    (item) => item.dataset.dockAppId,
+                ).slice(0, 2).join(",") === `${first},${second}`, [
+                appB.id,
+                appA.id,
+            ]);
+            await dockAppButton(page, appB.name).click({ button: "right" });
+            await page.getByRole("menuitem", { name: "取消任务栏固定" })
+                .click();
+            await dockAppButton(page, appB.name).waitFor({ state: "detached" });
+            await page.waitForFunction(async (id) => {
+                const response = await fetch("/api/preferences");
+                const body = await response.json();
+                return !body.data.dock.appIds.includes(id);
+            }, appB.id);
+            const appsResponse = await context.request.get(
+                app.origin + "/api/webapps",
             );
-            assert(prefRes.ok());
-            const prefBody = await prefRes.json();
-            assertEquals(prefBody.data.dock.appIds, [appA.id]);
-
-            // Re-pin Beta via "添加固定应用" button in settings
-            const addPinnedBtn = page.locator(
-                'button[data-dock-action="add-pinned-app"]',
-            );
-            await addPinnedBtn.waitFor({ state: "visible" });
-            await addPinnedBtn.click();
-            const addBetaItem = page.getByRole("menuitem", {
-                name: appB.name,
-            });
-            await addBetaItem.waitFor({ state: "visible" });
-            await addBetaItem.click();
-
-            // Verify Beta is re-pinned, then unpin again for subsequent check
-            const prefAfterAdd = await (await context.request.get(
-                app.origin + "/api/preferences",
-            )).json();
-            assertEquals(prefAfterAdd.data.dock.appIds, [appA.id, appB.id]);
-            await page.getByRole("button", {
-                name: `取消固定 ${appB.name}`,
-            }).click();
-
-            await page.getByRole("link", { name: "Searcher 首页" }).click();
-            await page.waitForURL(app.origin + "/");
-            await dockNav(page).waitFor({ state: "visible" });
+            assert(appsResponse.ok());
+            const appList = (await appsResponse.json()).data as Array<{
+                id: string;
+                isHomeFixed: boolean;
+            }>;
             assertEquals(
-                await dockAppButton(page, "Dock App Alpha").isVisible(),
+                appList.find((item) => item.id === appB.id)?.isHomeFixed,
                 true,
             );
-            assertEquals(
-                await dockNav(page).locator(`[data-dock-app-id="${appB.id}"]`)
-                    .count(),
-                0,
-            );
 
-            // In settings, toggle "笔记" off and "AI 问答" back on, then verify on dock
-            await page.goto(app.origin + "/settings/appearance");
-            await page.getByRole("navigation", { name: "设置分类" }).waitFor({
-                state: "visible",
+            await dockSystemButton(page, "应用").click();
+            const appsView = page.locator("[data-library-apps]");
+            await appsView.locator(`[data-app-id="${appB.id}"]`).click({
+                button: "right",
             });
-            const toggleNotes = page.getByRole("switch", { name: "显示 笔记" });
-            const toggleAi = page.getByRole("switch", { name: "显示 AI 问答" });
-            await toggleNotes.waitFor({ state: "visible" });
-            assertEquals(
-                await toggleAi.getAttribute("aria-checked"),
-                "false",
-            );
-            await toggleNotes.click();
-            await toggleAi.click();
+            await page.getByRole("menuitem", { name: "固定到任务栏" }).click();
+            await dockAppButton(page, appB.name).waitFor({ state: "visible" });
+            await page.getByRole("button", { name: "返回首页" }).click();
+            await appsView.waitFor({ state: "detached" });
+        },
+    );
 
-            const prefAfterToggle = await (await context.request.get(
-                app.origin + "/api/preferences",
-            )).json();
-            assertEquals(prefAfterToggle.data.dock.hiddenSystemIds, ["notes"]);
-
-            await page.getByRole("link", { name: "Searcher 首页" }).click();
-            await page.waitForURL(app.origin + "/");
-            await dockNav(page).waitFor({ state: "visible" });
-            assertEquals(
-                await dockNav(page).locator('[data-dock-id="notes"]').count(),
-                0,
-                "hidden system entry 笔记 must not render on dock",
+    await t.step(
+        "keyboard opens the taskbar item menu, sorts, and restores focus",
+        async () => {
+            const notes = dockSystemButton(page, "笔记");
+            await notes.focus();
+            await page.keyboard.press("Shift+F10");
+            const menu = page.locator("[data-dock-item-menu]");
+            await menu.waitFor();
+            await menu.getByRole("menuitem", { name: "向左移动" }).focus();
+            await page.keyboard.press("Enter");
+            await page.waitForFunction(() =>
+                Array.from(
+                    document.querySelectorAll<HTMLElement>("[data-dock-id]"),
+                    (item) => item.dataset.dockId,
+                ).join(",") === "home,notes,apps"
             );
-            assertEquals(
-                await dockSystemButton(page, "AI 问答").isVisible(),
-                true,
-                "re-enabled system entry AI 问答 must render on dock",
+            assertEquals(new URL(page.url()).search, "");
+            await page.waitForFunction(() =>
+                document.activeElement?.getAttribute("data-dock-id") === "notes"
+            );
+
+            await page.keyboard.press("Shift+F10");
+            await menu.waitFor();
+            await page.keyboard.press("Escape");
+            await menu.waitFor({ state: "hidden" });
+            await page.waitForFunction(() =>
+                document.activeElement?.getAttribute("data-dock-id") === "notes"
             );
         },
     );
+
+    await t.step("settings no longer duplicates taskbar controls", async () => {
+        await page.goto(app.origin + "/settings/appearance");
+        await page.getByRole("navigation", { name: "设置分类" }).waitFor({
+            state: "visible",
+        });
+        assertEquals(
+            await page.getByRole("heading", { name: "任务栏", exact: true })
+                .count(),
+            0,
+        );
+        assertEquals(
+            await page.getByRole("radiogroup", { name: "任务栏位置" }).count(),
+            0,
+        );
+        assertEquals(
+            await page.getByRole("switch", { name: "显示 笔记" }).count(),
+            0,
+        );
+        await page.goto(app.origin + "/");
+        await dockNav(page).waitFor({ state: "visible" });
+        const modal = await openDockManagement(page);
+        await modal.getByRole("switch", { name: "显示 笔记" }).click();
+        await modal.getByRole("switch", { name: "显示 AI 问答" }).click();
+        await modal.getByRole("button", { name: "关闭" }).click();
+        await modal.waitFor({ state: "hidden" });
+        assertEquals(
+            await dockNav(page).locator('[data-dock-id="notes"]').count(),
+            0,
+        );
+        assertEquals(await dockSystemButton(page, "AI 问答").isVisible(), true);
+    });
 });
 
 Deno.test("workspace dock: desktop four edges, collapsible floating ball with refresh recovery, and mobile bottom isolation", async (t) => {
@@ -776,11 +783,6 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
     await registerFreshUser(page, app.origin, "dock_layout_user");
 
     await t.step("desktop four edges placement switching", async () => {
-        await page.goto(app.origin + "/settings/appearance");
-        await page.getByRole("navigation", { name: "设置分类" }).waitFor({
-            state: "visible",
-        });
-
         for (const edge of ["top", "left", "right", "bottom"] as const) {
             const edgeNames: Record<string, string> = {
                 top: "顶部",
@@ -788,59 +790,17 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
                 right: "右侧",
                 bottom: "底部",
             };
-            const radio = page.getByRole("radio", { name: edgeNames[edge] });
-            await radio.waitFor({ state: "visible" });
-            await radio.click();
-
-            // Return to home via SPA link to assert Dock edge
-            await page.getByRole("link", { name: "Searcher 首页" }).click();
-            await page.waitForURL(app.origin + "/");
-            await dockNav(page).waitFor({ state: "visible" });
-
-            // Verify app-shell and dock container receive edge on home page
+            await setDockEdgeViaManagement(page, edgeNames[edge]);
             await page.locator(
                 `.app-shell[data-dock-edge="${edge}"], .dock-container[data-edge="${edge}"]`,
             ).first().waitFor();
-
-            // Return to settings for next edge if not finished
-            if (edge !== "bottom") {
-                await page.goto(app.origin + "/settings/appearance");
-                await page.getByRole("navigation", { name: "设置分类" })
-                    .waitFor({
-                        state: "visible",
-                    });
-            }
         }
     });
 
     await t.step(
-        "collapsible mode and floating ball persists across page reload",
+        "floating ball persists across page reload",
         async () => {
-            // Set mode to collapsible
-            await page.goto(app.origin + "/settings/appearance");
-            await page.getByRole("navigation", { name: "设置分类" }).waitFor({
-                state: "visible",
-            });
-            const collapsibleRadio = page.getByRole("radio", {
-                name: "可收起",
-            });
-            await collapsibleRadio.waitFor({ state: "visible" });
-            await collapsibleRadio.click();
-
-            // Return to home via SPA link
-            await page.getByRole("link", { name: "Searcher 首页" }).click();
-            await page.waitForURL(app.origin + "/");
-            await dockNav(page).waitFor({ state: "visible" });
-            // Can collapse via options menu item or desktop collapse button
-            const menuBtn = dockOptionsMenu(page);
-            await menuBtn.waitFor({ state: "visible" });
-            await menuBtn.click();
-
-            const collapseItem = page.getByRole("menuitem", {
-                name: "收起任务栏",
-            });
-            await collapseItem.waitFor({ state: "visible" });
-            await collapseItem.click();
+            await collapseDockViaMenu(page);
 
             // Dock is collapsed into floating ball
             const ball = expandBall(page);
@@ -901,24 +861,13 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
     await t.step(
         "mobile viewport locks dock to bottom without overwriting desktop layout",
         async () => {
-            // Change desktop edge to left
-            await page.goto(app.origin + "/settings/appearance");
-            await page.getByRole("navigation", { name: "设置分类" }).waitFor({
-                state: "visible",
-            });
-            await page.getByRole("radio", { name: "左侧" }).click();
-
-            // Return to home via SPA link to assert desktop left
-            await page.getByRole("link", { name: "Searcher 首页" }).click();
-            await page.waitForURL(app.origin + "/");
-            await dockNav(page).waitFor({ state: "visible" });
+            await setDockEdgeViaManagement(page, "左侧");
             await page.locator(
                 `.app-shell[data-dock-edge="left"], .dock-container[data-edge="left"]`,
             ).first().waitFor();
 
             // Switch to mobile viewport (< 768px)
             await page.setViewportSize({ width: 390, height: 844 });
-            await page.waitForTimeout(50);
             // On mobile, effective dock edge is forced to bottom
             await page.locator(
                 `.app-shell[data-dock-edge="bottom"], .dock-container[data-edge="bottom"]`,
@@ -926,7 +875,6 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
 
             // Switch back to desktop viewport
             await page.setViewportSize({ width: 1280, height: 800 });
-            await page.waitForTimeout(50);
 
             // Desktop layout edge remains "left", not overwritten by mobile
             await page.locator(
@@ -976,6 +924,8 @@ Deno.test("workspace dock: four saved edges survive the 767/768 boundary with re
         },
     );
     assert(response.ok(), await response.text());
+    await page.reload();
+    await dockNav(page).waitFor({ state: "visible" });
 
     for (
         const [savedEdge, label] of [
@@ -986,10 +936,7 @@ Deno.test("workspace dock: four saved edges survive the 767/768 boundary with re
         ] as const
     ) {
         await page.setViewportSize({ width: 1440, height: 900 });
-        await page.goto(app.origin + "/settings/appearance");
-        await page.getByRole("radio", { name: label, exact: true }).click();
-        await page.getByRole("link", { name: "Searcher 首页" }).click();
-        await page.waitForURL(app.origin + "/");
+        await setDockEdgeViaManagement(page, label);
 
         for (const width of [1440, 767, 768, 1440]) {
             await page.setViewportSize({ width, height: 900 });
@@ -1122,13 +1069,7 @@ Deno.test("workspace dock: multi-context cloud sync and independent device layou
         url: "https://synced.dock.test/",
     });
 
-    await pageA.goto(app.origin + "/settings/appearance");
-    await pageA.getByRole("navigation", { name: "设置分类" }).waitFor({
-        state: "visible",
-    });
-    await pageA.getByRole("radio", { name: "右侧" }).click();
-    await pageA.getByRole("link", { name: "Searcher 首页" }).click();
-    await pageA.waitForURL(app.origin + "/");
+    await setDockEdgeViaManagement(pageA, "右侧");
     await pageA.locator(
         `.app-shell[data-dock-edge="right"], .dock-container[data-edge="right"]`,
     ).first().waitFor();
@@ -1172,13 +1113,7 @@ Deno.test("workspace dock: multi-context cloud sync and independent device layou
             ).first().waitFor();
 
             // Change Context B edge to top
-            await pageB.goto(app.origin + "/settings/appearance");
-            await pageB.getByRole("navigation", { name: "设置分类" }).waitFor({
-                state: "visible",
-            });
-            await pageB.getByRole("radio", { name: "顶部" }).click();
-            await pageB.getByRole("link", { name: "Searcher 首页" }).click();
-            await pageB.waitForURL(app.origin + "/");
+            await setDockEdgeViaManagement(pageB, "顶部");
             await pageB.locator(
                 `.app-shell[data-dock-edge="top"], .dock-container[data-edge="top"]`,
             ).first().waitFor();
@@ -1333,17 +1268,7 @@ Deno.test("workspace dock: Mod+. expands and focuses dock without opening any pa
 
     await registerFreshUser(page, app.origin, "dock_shortcut_user");
 
-    // Enable collapsible mode and collapse dock
-    await page.goto(app.origin + "/settings/appearance");
-    await page.getByRole("navigation", { name: "设置分类" }).waitFor({
-        state: "visible",
-    });
-    await page.getByRole("radio", { name: "可收起" }).click();
-
-    // Return to home via SPA link to collapse dock
-    await page.getByRole("link", { name: "Searcher 首页" }).click();
-    await page.waitForURL(app.origin + "/");
-    await dockNav(page).waitFor({ state: "visible" });
+    // Manual collapse is available without changing a mode.
     await collapseDockViaMenu(page);
     await expandBall(page).waitFor({ state: "visible" });
 
@@ -1374,7 +1299,7 @@ Deno.test("workspace dock: Mod+. expands and focuses dock without opening any pa
     assertEquals(new URL(page.url()).searchParams.has("view"), false);
 });
 
-Deno.test("workspace dock: real touch long-press drag gesture on mobile viewport", async () => {
+Deno.test("workspace dock: touch drag, long-press actions, and overflow management", async () => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
@@ -1393,6 +1318,8 @@ Deno.test("workspace dock: real touch long-press drag gesture on mobile viewport
     });
     cleanup.defer(() => touchContext.close());
     const page = await touchContext.newPage();
+    let unexpectedPopups = 0;
+    page.on("popup", () => unexpectedPopups++);
 
     await registerFreshUser(page, app.origin, "dock_touch_drag_user");
 
@@ -1461,13 +1388,134 @@ Deno.test("workspace dock: real touch long-press drag gesture on mobile viewport
         touchPoints: [],
     });
 
-    // Check cloud preferences: order was reordered by real touch drag
-    const prefRes = await touchContext.request.get(
-        app.origin + "/api/preferences",
+    await page.waitForFunction(([first, second]) =>
+        Array.from(
+            document.querySelectorAll<HTMLElement>("[data-dock-app-id]"),
+            (item) => item.dataset.dockAppId,
+        ).join(",") === `${first},${second}`, [app2.id, app1.id]);
+    // Observe the delayed compatibility click as well as the drag result.
+    await page.waitForTimeout(300);
+    assertEquals(await page.locator("[data-dock-item-menu]").count(), 0);
+    assertEquals(unexpectedPopups, 0);
+
+    // Returning to the starting point is still a drag, not a long-press action.
+    const returnedBox = (await btn2.boundingBox())!;
+    const returnedX = returnedBox.x + returnedBox.width / 2;
+    const returnedY = returnedBox.y + returnedBox.height / 2;
+    await session.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ x: returnedX, y: returnedY, id: 1 }],
+    });
+    await page.waitForTimeout(320);
+    await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: returnedX + 20, y: returnedY, id: 1 }],
+    });
+    await page.waitForTimeout(25);
+    await session.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: returnedX, y: returnedY, id: 1 }],
+    });
+    await session.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+    });
+    await page.waitForTimeout(300);
+    assertEquals(await page.locator("[data-dock-item-menu]").count(), 0);
+    assertEquals(unexpectedPopups, 0);
+
+    const longPress = async (target: Locator) => {
+        const box = (await target.boundingBox())!;
+        const x = box.x + box.width / 2;
+        const y = box.y + box.height / 2;
+        await session.send("Input.dispatchTouchEvent", {
+            type: "touchStart",
+            touchPoints: [{ x, y, id: 1 }],
+        });
+        await page.waitForTimeout(320);
+        await session.send("Input.dispatchTouchEvent", {
+            type: "touchEnd",
+            touchPoints: [],
+        });
+        await page.locator("[data-dock-item-menu]").waitFor({
+            state: "visible",
+        });
+    };
+
+    await longPress(btn2);
+    await page.getByRole("menuitem", { name: "向右移动" }).tap();
+    await page.waitForFunction(([first, second]) =>
+        Array.from(
+            document.querySelectorAll<HTMLElement>("[data-dock-app-id]"),
+            (item) => item.dataset.dockAppId,
+        ).join(",") === `${first},${second}`, [app1.id, app2.id]);
+
+    await longPress(btn2);
+    await page.getByRole("menuitem", { name: "取消任务栏固定" }).tap();
+    await btn2.waitFor({ state: "detached" });
+    await page.waitForFunction(async (id) => {
+        const response = await fetch("/api/preferences");
+        return !(await response.json()).data.dock.appIds.includes(id);
+    }, app2.id);
+    const appsResponse = await touchContext.request.get(
+        app.origin + "/api/webapps",
     );
-    assert(prefRes.ok());
-    const prefBody = await prefRes.json();
-    assertEquals(prefBody.data.dock.appIds, [app2.id, app1.id]);
+    assert(appsResponse.ok());
+    const allApps = (await appsResponse.json()).data as Array<{ id: string }>;
+    assert(
+        allApps.some((item) => item.id === app2.id),
+        "unpinning must not delete the app",
+    );
+    assertEquals(unexpectedPopups, 0);
+
+    await longPress(dockSystemButton(page, "笔记"));
+    assertEquals(
+        await page.getByRole("menuitem", { name: "取消任务栏固定" }).count(),
+        0,
+    );
+    await page.getByRole("menuitem", { name: "向左移动" }).tap();
+    await page.waitForFunction(() =>
+        Array.from(
+            document.querySelectorAll<HTMLElement>("[data-dock-id]"),
+            (item) => item.dataset.dockId,
+        ).join(",") === "home,notes,apps,ai"
+    );
+
+    const extraApps = [];
+    for (let i = 0; i < 3; i++) {
+        extraApps.push(
+            await createWebApp(touchContext, app.origin, {
+                name: `Overflow ${i}`,
+                url: `https://overflow-${i}.example.test/`,
+            }),
+        );
+    }
+    const update = await touchContext.request.patch(
+        app.origin + "/api/preferences",
+        {
+            headers: { Origin: app.origin },
+            data: {
+                dock: {
+                    appIds: [app1.id, ...extraApps.map((item) => item.id)],
+                },
+            },
+        },
+    );
+    assert(update.ok());
+    await page.reload();
+    await dockNav(page).waitFor({ state: "visible" });
+    await page.waitForFunction(() =>
+        document.querySelector(".dock-group--apps")?.hasAttribute(
+            "data-overflow-end",
+        )
+    );
+    await dockOptionsMenu(page).tap();
+    await page.getByRole("menuitem", { name: "Overflow 2 的操作" }).tap();
+    await page.getByRole("menuitem", { name: "取消任务栏固定" }).tap();
+    await page.waitForFunction(async (id) => {
+        const response = await fetch("/api/preferences");
+        return !(await response.json()).data.dock.appIds.includes(id);
+    }, extraApps[2].id);
 });
 
 function boxesOverlap(
@@ -1560,14 +1608,9 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
             right: "右侧",
             bottom: "底部",
         };
-        await page.goto(app.origin + "/settings/appearance");
-        await page.getByRole("navigation", { name: "设置分类" }).waitFor({
-            state: "visible",
-        });
-        await page.getByRole("radio", { name: edgeNames[edge] }).click();
-        await page.getByRole("link", { name: "Searcher 首页" }).click();
-        await page.waitForURL(app.origin + "/");
+        await page.goto(app.origin + "/");
         await dockNav(page).waitFor({ state: "visible" });
+        await setDockEdgeViaManagement(page, edgeNames[edge]);
         await page.locator(`.app-shell[data-dock-edge="${edge}"]`).waitFor();
     };
 
@@ -1815,7 +1858,7 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
     );
 
     await t.step(
-        "Floating material on home vs solid fallback on /ask, 23% glyph radius & rim, mobile equal height + overflow mask, reduced-motion presence, and settings Grouped List",
+        "Floating material, solid fallback, mobile overflow and reduced motion",
         async () => {
             await page.setViewportSize({ width: 1440, height: 900 });
             await setDockEdge("bottom");
@@ -1927,7 +1970,13 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                 const group = document.querySelector(".dock-group--apps")!;
                 const groupCs = getComputedStyle(group);
                 const mask = groupCs.maskImage || groupCs.webkitMaskImage;
-                return { heights, mask };
+                const labels = Array.from(
+                    document.querySelectorAll(
+                        "nav.dock-bar .dock-item--system .dock-item-label",
+                    ),
+                    (el) => el.getBoundingClientRect().width,
+                );
+                return { heights, mask, labels };
             });
             for (const h of mobileMetrics.heights) {
                 assertEquals(
@@ -1938,6 +1987,11 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                     }`,
                 );
             }
+            assertEquals(mobileMetrics.labels.length, 4);
+            assert(
+                mobileMetrics.labels.every((width) => width <= 1),
+                "system labels must not be visibly rendered",
+            );
             assert(
                 mobileMetrics.mask.includes("linear-gradient"),
                 `overflowing mobile .dock-group--apps must apply gradient mask-image, got: ${mobileMetrics.mask}`,
@@ -1968,32 +2022,6 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
             assertEquals(reducedMotionCheck.transitionProperty, "opacity");
             assertEquals(reducedMotionCheck.travelY, "0px");
             await page.emulateMedia({ reducedMotion: "no-preference" });
-
-            // 5. /settings/appearance dock group follows Grouped List syntax without nested --surface-soft cards
-            await page.goto(app.origin + "/settings/appearance");
-            await page.getByRole("navigation", { name: "设置分类" }).waitFor({
-                state: "visible",
-            });
-            await page.getByText("手机端展开时固定于底部").first().waitFor({
-                state: "visible",
-            });
-            const groupedListCheck = await page.evaluate(() => {
-                const rows = Array.from(
-                    document.querySelectorAll(".dock-order-row"),
-                );
-                const legacyCards = document.querySelectorAll(
-                    ".dock-settings-item",
-                ).length;
-                const bgs = rows.map((r) =>
-                    getComputedStyle(r).backgroundColor
-                );
-                return { rowCount: rows.length, legacyCards, bgs };
-            });
-            assert(groupedListCheck.rowCount >= 8);
-            assertEquals(groupedListCheck.legacyCards, 0);
-            for (const bg of groupedListCheck.bgs) {
-                assertEquals(bg, "rgba(0, 0, 0, 0)");
-            }
         },
     );
 });

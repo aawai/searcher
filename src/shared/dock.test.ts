@@ -38,21 +38,35 @@ Deno.test("shared/dock: normalizeDockPreferences backfills missing system ids", 
     }
 });
 
-Deno.test("shared/dock: normalizeDockLayout validates edges, modes, and clamps ballY", () => {
+Deno.test("shared/dock: normalizeDockLayout migrates legacy collapsible, preserves new collapsed state, and clamps ballY", () => {
     assertEquals(normalizeDockLayout(null), DEFAULT_DOCK_LAYOUT);
 
-    const valid = normalizeDockLayout({
+    const legacyCollapsible = normalizeDockLayout({
         edge: "right",
         mode: "collapsible",
         collapsed: true,
         ballSide: "right",
         ballY: 0.75,
     });
-    assertEquals(valid.edge, "right");
-    assertEquals(valid.mode, "collapsible");
-    assertEquals(valid.collapsed, true);
-    assertEquals(valid.ballSide, "right");
-    assertEquals(valid.ballY, 0.75);
+    assertEquals(legacyCollapsible, {
+        edge: "right",
+        collapsed: true,
+        ballSide: "right",
+        ballY: 0.75,
+    });
+
+    const modernCollapsed = normalizeDockLayout({
+        edge: "left",
+        collapsed: true,
+        ballSide: "left",
+        ballY: 0.25,
+    });
+    assertEquals(modernCollapsed, {
+        edge: "left",
+        collapsed: true,
+        ballSide: "left",
+        ballY: 0.25,
+    });
 
     // Out of bounds ballY clamped
     const clampedHigh = normalizeDockLayout({ ballY: 1.5 });
@@ -61,11 +75,27 @@ Deno.test("shared/dock: normalizeDockLayout validates edges, modes, and clamps b
     const clampedLow = normalizeDockLayout({ ballY: -0.2 });
     assertEquals(clampedLow.ballY, 0);
 
-    // Invalid edge and mode fallback to default
+    // Invalid fields fallback to expanded defaults
     const fallback = normalizeDockLayout({
         edge: "diagonal",
-        mode: "floating",
+        collapsed: "yes",
+        ballSide: "center",
+        ballY: Number.NaN,
     });
-    assertEquals(fallback.edge, DEFAULT_DOCK_LAYOUT.edge);
-    assertEquals(fallback.mode, DEFAULT_DOCK_LAYOUT.mode);
+    assertEquals(fallback, DEFAULT_DOCK_LAYOUT);
+});
+
+Deno.test("shared/dock: legacy fixed layout remains expanded after migration", () => {
+    const restored = normalizeDockLayout({
+        edge: "right",
+        mode: "fixed",
+        collapsed: true,
+        ballSide: "right",
+        ballY: 0.75,
+    });
+
+    assertEquals(restored.collapsed, false);
+    assertEquals(restored.edge, "right");
+    assertEquals(restored.ballSide, "right");
+    assertEquals(restored.ballY, 0.75);
 });
