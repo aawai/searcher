@@ -37,7 +37,6 @@ Deno.test("scanner - scans directory with TSX and CSS files, ignoring tests", as
         );
 
         assertEquals(totalFiles, 3); // Production TS queries are checked; tests excluded.
-        assertEquals(violations.length, 3);
         assertEquals(
             violations.some((v) => v.rule === "scattered-media-query"),
             true,

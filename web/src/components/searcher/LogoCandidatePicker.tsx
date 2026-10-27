@@ -259,7 +259,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     }
                 }}
             >
-                <AlertDialogContent className="max-w-md max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto]">
+                <AlertDialogContent className="app-ai-confirm-dialog">
                     {confirmSnapshot && (
                         <>
                             <AlertDialogHeader>

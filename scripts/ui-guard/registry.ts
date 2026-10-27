@@ -13,11 +13,28 @@ export interface AccentFillEntry {
     selector: string;
 }
 
+export type TailwindVisualDimension =
+    | "字重"
+    | "间距"
+    | "圆角"
+    | "阴影"
+    | "图标";
+
+export interface TailwindVisualEntry {
+    utility: string;
+    dimension: TailwindVisualDimension;
+    source: string;
+    semantic: string;
+}
+
 export interface VisualRegistry {
     fontTokens: ReadonlySet<string>;
     radiusTokens: ReadonlySet<string>;
     accentFills: readonly AccentFillEntry[];
     breakpoints: ReadonlySet<number>;
+    tailwindBreakpoints: ReadonlyMap<string, number>;
+    tailwindVisualUtilities: ReadonlySet<string>;
+    tailwindVisuals: readonly TailwindVisualEntry[];
 }
 
 export const DEFAULT_REGISTRY_URL = new URL(
@@ -28,6 +45,7 @@ export const DEFAULT_REGISTRY_URL = new URL(
 const FONT_LADDER_MARKER = "**字号阶梯登记";
 const RADIUS_LADDER_MARKER = "**圆角阶梯登记";
 const ACCENT_FILL_MARKER = "**强调色填充登记";
+const TAILWIND_VISUAL_MARKER = "**Tailwind 视觉工具类登记";
 
 /** `font-size` Tokens: every `--font-*` except families, weights and line heights. */
 const FONT_TOKEN_NAME =
@@ -107,6 +125,38 @@ export function normalizeSelector(selector: string): string {
     return selector.replaceAll(/\s+/g, " ").trim();
 }
 
+function isValidTailwindVisualEntry(
+    utility: string,
+    dimension: string,
+    source: string,
+    radiusTokens: ReadonlySet<string>,
+): dimension is TailwindVisualDimension {
+    switch (dimension) {
+        case "字重":
+            return /^font-(?:normal|medium|semibold)$/.test(utility) &&
+                /^var\(--font-(?:body|label|title)-weight\)$/.test(source);
+        case "间距":
+            return /^(?:p|px|py|pt|pb|pl|pr|ps|pe|m|mx|my|mt|mb|ml|mr|ms|me|gap|gap-x|gap-y)-\d+$/
+                .test(utility) &&
+                (source === "0" || /^var\(--space-[a-z0-9-]+\)$/.test(source));
+        case "圆角": {
+            if (!/^rounded(?:-[a-z0-9-]+)?$/.test(utility)) return false;
+            if (source === "0") return true;
+            const match = /^var\((--[a-z0-9-]+)\)$/.exec(source);
+            return Boolean(match && radiusTokens.has(match[1]));
+        }
+        case "阴影":
+            return /^shadow-(?:none|[a-z0-9-]+)$/.test(utility) &&
+                (source === "none" ||
+                    /^var\(--shadow-[a-z0-9-]+\)$/.test(source));
+        case "图标":
+            return /^icon-(?:sm|md|lg)$/.test(utility) &&
+                /^var\(--icon-(?:sm|md|lg)\)$/.test(source);
+        default:
+            return false;
+    }
+}
+
 export function parseVisualRegistry(markdown: string): VisualRegistry {
     const lines = markdown.split("\n");
     const accentFills = tableRowsAfter(lines, ACCENT_FILL_MARKER).map(
@@ -128,6 +178,7 @@ export function parseVisualRegistry(markdown: string): VisualRegistry {
         },
     );
     const breakpoints = new Set<number>();
+    const tailwindBreakpoints = new Map<string, number>();
     let previous = -1;
     for (const cells of tableRowsAfter(lines, "**断点登记")) {
         const value = unwrapCode(cells[0], "breakpoint");
@@ -135,27 +186,82 @@ export function parseVisualRegistry(markdown: string): VisualRegistry {
         if (
             !/^\d+$/.test(value) || width <= previous ||
             (previous === -1 && width !== 0) ||
-            cells.length < 4 || cells.slice(1).some((cell) => !cell)
+            cells.length < 5 || cells.slice(1, 5).some((cell) => !cell)
         ) {
             throw new Error(
                 `Invalid breakpoint registry row: ${cells.join(" | ")}`,
             );
         }
+        const prefix = cells[4] === "—"
+            ? null
+            : unwrapCode(cells[4], "Tailwind breakpoint");
+        if (
+            (width === 0 && prefix !== null) ||
+            (width > 0 && (
+                prefix === null ||
+                !/^(?:[23]?xs|sm|md|lg|[2-9]?xl)$/.test(prefix) ||
+                tailwindBreakpoints.has(prefix)
+            ))
+        ) {
+            throw new Error(
+                `Invalid Tailwind breakpoint: ${cells.join(" | ")}`,
+            );
+        }
+        if (prefix !== null) tailwindBreakpoints.set(prefix, width);
         breakpoints.add(width);
         previous = width;
     }
     if (breakpoints.size < 2) {
         throw new Error("Breakpoint registry needs a boundary");
     }
+    const fontTokens = parseTokenTable(
+        lines,
+        FONT_LADDER_MARKER,
+        isFontTokenName,
+    );
+    const radiusTokens = parseTokenTable(
+        lines,
+        RADIUS_LADDER_MARKER,
+        isRadiusTokenName,
+    );
+    const tailwindVisualUtilities = new Set<string>();
+    const tailwindVisuals: TailwindVisualEntry[] = [];
+    for (const cells of tableRowsAfter(lines, TAILWIND_VISUAL_MARKER)) {
+        if (cells.length < 4 || cells.slice(0, 4).some((cell) => !cell)) {
+            throw new Error(
+                `Tailwind visual row needs utility, dimension, source and semantic: ${
+                    cells.join(" | ")
+                }`,
+            );
+        }
+        const utility = unwrapCode(cells[0], "tailwind-visual utility");
+        const dimension = cells[1];
+        const source = unwrapCode(cells[2], "tailwind-visual source");
+        const semantic = cells[3];
+        if (
+            tailwindVisualUtilities.has(utility) ||
+            !isValidTailwindVisualEntry(
+                utility,
+                dimension,
+                source,
+                radiusTokens,
+            )
+        ) {
+            throw new Error(
+                `Invalid Tailwind visual registry row: ${cells.join(" | ")}`,
+            );
+        }
+        tailwindVisualUtilities.add(utility);
+        tailwindVisuals.push({ utility, dimension, source, semantic });
+    }
     return {
-        fontTokens: parseTokenTable(lines, FONT_LADDER_MARKER, isFontTokenName),
-        radiusTokens: parseTokenTable(
-            lines,
-            RADIUS_LADDER_MARKER,
-            isRadiusTokenName,
-        ),
+        fontTokens,
+        radiusTokens,
         accentFills,
         breakpoints,
+        tailwindBreakpoints,
+        tailwindVisualUtilities,
+        tailwindVisuals,
     };
 }
 

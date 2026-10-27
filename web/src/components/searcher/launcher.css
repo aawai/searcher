@@ -619,6 +619,10 @@
     color: var(--muted);
 }
 
+[data-slot="alert-dialog-content"].app-ai-confirm-dialog {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
 .app-ai-confirm-body {
     display: flex;
     flex-direction: column;
@@ -670,6 +674,30 @@
     font-weight: var(--font-label-weight);
     overflow-wrap: anywhere;
     white-space: normal;
+}
+
+.dialog-panel.launcher-folder-dialog {
+    width: min(calc(100vw - var(--space-6)), var(--layout-auth-max));
+}
+
+.launcher-folder-dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+}
+
+.launcher-folder-dialog-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.launcher-folder-dialog-label {
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
 }
 
 /* The drag overlay is portaled to the body: above popups when dragging inside one. */

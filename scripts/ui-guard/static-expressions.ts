@@ -405,5 +405,13 @@ export function staticExpressions(source: ts.SourceFile) {
         );
     }
 
-    return { classes, styles, unknown };
+    function stringValues(expr: ts.Expression): ts.StringLiteralLike[] {
+        return branches(expr, (node) => {
+            if (ts.isStringLiteralLike(node)) return [node];
+            unknown.add(node);
+            return [];
+        });
+    }
+
+    return { classes, styles, stringValues, unknown };
 }

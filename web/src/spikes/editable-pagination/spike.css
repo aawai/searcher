@@ -56,3 +56,14 @@
     max-height: var(--page-content-height);
     overflow: auto;
 }
+.pagination-spike-error {
+    padding: var(--space-2);
+    color: var(--danger);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+.pagination-spike-empty {
+    padding: var(--space-7);
+    color: var(--muted);
+    text-align: center;
+}

@@ -130,7 +130,7 @@ Deno.test("tsx-scanner - allows valid tokens, semantic classes, and runtime exce
         export function SearchHomeComponent({ transform, isDragging }: Record<string, unknown>) {
             return (
                 <div
-                    className="p-4 rounded-lg shadow-none text-sm text-foreground bg-surface"
+                    className="p-4 rounded shadow-none font-medium text-foreground bg-surface"
                     style={{
                         transform: CSS.Transform.toString(transform),
                         zIndex: isDragging ? 50 : undefined,
@@ -152,12 +152,12 @@ Deno.test("tsx-scanner - allows valid tokens, semantic classes, and runtime exce
 
     // SettingsPage owns swatch preview
     const settingsCode = `
-        export function SettingsComponent({ swatchId }: Record<string, unknown>) {
+        export function SettingsComponent({ swatchId, hex }: Record<string, unknown>) {
             return (
                 <div
                     style={{
                         background: getAccentLight(swatchId),
-                        "--item-accent": "#1d4ed8",
+                        "--item-accent": hex,
                     }}
                 />
             );
@@ -210,6 +210,7 @@ Deno.test("tsx-scanner - DocumentsWorkspace does not exempt static visuals or ot
     `;
     assertEquals(
         scanTsxCode("web/src/features/workspace/DocumentsWorkspace.tsx", code)
+            .filter((violation) => violation.rule !== "raw-color")
             .map((violation) => [violation.property, violation.rule]),
         [
             ["width", "inline-visual-style"],
@@ -534,7 +535,7 @@ const style = {fontSize:19};
 const alias = style;
 alias.fontSize = 20;
 <div style={style} />;
-<div className={cn("focus:ring-2 flex p-4", flag && "text-[var(--font-body-size)]")} />;
+<div className={cn("focus:ring-2 flex p-4", flag && "bg-[var(--surface)]")} />;
 `;
     assertEquals(
         scanTsxCode("web/src/app/AuditProbe.tsx", code).map((

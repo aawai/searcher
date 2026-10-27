@@ -54,12 +54,12 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 **断点登记。** 宽度只表达布局容量，不代表输入设备；CSS 只用 `min-width: Npx` / `max-width: N-1px` 的互斥边界，不使用额外数值或 range 简写。
 
-| 下界（px） | 档位           | 用途                                       | owner                                          |
-| ---------- | -------------- | ------------------------------------------ | ---------------------------------------------- |
-| `0`        | 窄（<640）     | 单列表单、紧凑编辑器、对话框操作纵排       | 页面 / 对话框 CSS                              |
-| `640`      | 小（640–767）  | 表单可分列，首页与导航仍为移动布局         | 表单 CSS、首页布局                             |
-| `768`      | 中（768–1023） | 设置双栏、工作区侧栏；首页笔记为居中流式行 | SettingsShell / WorkspaceShell、home-notes.css |
-| `1024`     | 宽（≥1024）    | 首页笔记吸附网格与桌面搜索锚点             | home-notes.css、tokens.css                     |
+| 下界（px） | 档位           | 用途                                       | owner                                          | Tailwind |
+| ---------- | -------------- | ------------------------------------------ | ---------------------------------------------- | -------- |
+| `0`        | 窄（<640）     | 单列表单、紧凑编辑器、对话框操作纵排       | 页面 / 对话框 CSS                              | —        |
+| `640`      | 小（640–767）  | 表单可分列，首页与导航仍为移动布局         | 表单 CSS、首页布局                             | `sm`     |
+| `768`      | 中（768–1023） | 设置双栏、工作区侧栏；首页笔记为居中流式行 | SettingsShell / WorkspaceShell、home-notes.css | `md`     |
+| `1024`     | 宽（≥1024）    | 首页笔记吸附网格与桌面搜索锚点             | home-notes.css、tokens.css                     | `lg`     |
 
 粗指针能力使用 `any-pointer: coarse`，不得以宽度代替触屏判定。JS 的宽度判定统一消费 `design-system/breakpoints.ts` 导出的常量；`registry.ts` 从本表解析门禁允许值。
 
@@ -151,6 +151,38 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--radius-launcher-mini`  | 14px × ratio                        | 文件夹预览中的小图标                                 |
 | `--radius-dock-glyph`     | 28px × ratio                        | 任务栏与设置中的紧凑应用图标                         |
 
+#### Tailwind 视觉工具类与响应式前缀
+
+布局与交互状态工具类（`flex`、`grid`、对齐、`overflow`、`sr-only`、`outline-none`、`disabled:*`、`animate-spin` 等）直接可用；响应式前缀只允许与 **断点登记** 下界一一对应的 `sm:`（640px）、`md:`（768px）、`lg:`（1024px），并在 `tokens.css` 的 `@theme` 绑定 `--breakpoint-sm` / `--breakpoint-md` / `--breakpoint-lg`。`xl:`、`2xl:`、`max-*`、`min-[*]` 与容器查询前缀未登记，一律拒绝。
+
+字号与行高必须按语义角色成对消费登记 Token 或组件 CSS，不映射或放行 `text-xs`、`text-sm`、`text-lg`、`text-xl`、`leading-*`、`tracking-*` 等默认文字尺度。字重、间距、圆角、阴影与图标尺寸工具类仅允许下表登记项，每项在 `tokens.css` 以显式 `@utility` 直接引用唯一正式 Token（不以 `--spacing` 倍数推导，也不全局 `--*: initial` 清零）；其余默认视觉尺度、数值尺寸阶梯（`w-4`、`max-w-sm`、`size-*` 等）及默认调色板类名由 `check:ui` 诊断为 `unregistered-tailwind-visual`。
+
+**Tailwind 视觉工具类登记。** `className`（含变体前缀、`cn` / `clsx`、条件与静态常量）中的视觉尺度工具类只允许引用本表登记项；新增或修改须先更新本表并在 `tokens.css` 绑定唯一 Token。
+
+| 工具类            | 维度 | 唯一来源                   | 语义用途                           |
+| ----------------- | ---- | -------------------------- | ---------------------------------- |
+| `font-normal`     | 字重 | `var(--font-body-weight)`  | 正文默认字重（400）                |
+| `font-medium`     | 字重 | `var(--font-label-weight)` | 标签与强调值字重（500）            |
+| `font-semibold`   | 字重 | `var(--font-title-weight)` | 小标题与分组字重（600）            |
+| `m-0`             | 间距 | `0`                        | 段落或容器外边距清零               |
+| `p-0`             | 间距 | `0`                        | 容器内边距清零                     |
+| `gap-1`           | 间距 | `var(--space-1)`           | 紧凑行内或纵向堆叠间距（4px）      |
+| `gap-2`           | 间距 | `var(--space-2)`           | 控件、按钮组与行内元素间距（8px）  |
+| `gap-3`           | 间距 | `var(--space-3)`           | 表单字段行与分组间距（12px）       |
+| `gap-4`           | 间距 | `var(--space-4)`           | 对话框表单与卡片区块间距（16px）   |
+| `p-4`             | 间距 | `var(--space-4)`           | 标准容器内边距（16px）             |
+| `rounded-none`    | 圆角 | `0`                        | 直角清零                           |
+| `rounded-sm`      | 圆角 | `var(--radius-sm)`         | 复选框与微内嵌圆角（4px）          |
+| `rounded-control` | 圆角 | `var(--control-radius)`    | 按钮、分段控件圆角（8px）          |
+| `rounded-input`   | 圆角 | `var(--input-radius)`      | 单行输入控件圆角（8px）            |
+| `rounded`         | 圆角 | `var(--radius)`            | 分组列表、卡片、菜单圆角（12px）   |
+| `rounded-lg`      | 圆角 | `var(--radius-lg)`         | 对话框、面板、Sheet 圆角（16px）   |
+| `rounded-full`    | 圆角 | `var(--radius-pill)`       | 胶囊与圆形（999px）                |
+| `shadow-none`     | 阴影 | `none`                     | 显式无阴影                         |
+| `icon-sm`         | 图标 | `var(--icon-sm)`           | 紧凑图标尺寸（14px）               |
+| `icon-md`         | 图标 | `var(--icon-md)`           | 标准控件图标尺寸（16px）           |
+| `icon-lg`         | 图标 | `var(--icon-lg)`           | 顶栏、导航与空状态图标尺寸（20px） |
+
 ### 层级
 
 | 层       | 背景                                 | 阴影                          | 示例                                      |
@@ -233,11 +265,20 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 | reset、AppShell、顶栏、壁纸画布 | `web/src/styles/global.css`                                           |
 | 场景布局与领域呈现              | 对应 feature 的 CSS（如 `launcher.css`、`notes.css`、`settings.css`） |
 
-feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 primitive 前须确认现有组件及其 variant 无法表达，且至少两个页面需要同一语义。`deno task check:ui` 拒绝 raw 颜色、字号、圆角、阴影、间距与 z-index，以及未定义的 CSS 变量；并按本文登记表拒绝未登记的字号 / 圆角 Token（`unregistered-font-token`、`unregistered-radius-token`）、未登记的字号 / 圆角 Token 定义（`unregistered-token-definition`，覆盖 `tokens.css` 与 feature CSS）和未登记的强调色填充（`unregistered-accent-fill`）。登记表由 `scripts/ui-guard/registry.ts` 从本文解析，表格缺失或格式错误时门禁失败，不会静默放行。
+feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 primitive 前须确认现有组件及其 variant 无法表达，且至少两个页面需要同一语义。`deno task check:ui` 在颜色语义属性、颜色语义自定义属性及支持的 TSX 静态样式 / SVG 属性 / 任意颜色类中以 `raw-color` 拒绝 hex、颜色函数和 CSS 命名色，包括渐变、阴影与 `var()` fallback 中的颜色；Token、`currentColor` 和 `transparent` 允许，字符串与 URL 内容不作颜色判定。此规则与 `unregistered-accent-fill` 独立：前者检查 raw 色值，后者检查强调色填充的文件和选择器登记。门禁还拒绝 raw 字号、圆角、阴影、间距与 z-index、未定义的 CSS 变量、未登记的字号 / 圆角 Token 及其定义，以及未登记的 Tailwind 视觉尺度与断点前缀。登记表由 `scripts/ui-guard/registry.ts` 从本文解析，表格缺失或格式错误时门禁失败；`tokens.css` 的登记工具类及断点还须与表中唯一来源一致。
 
 ### 例外
 
 新增例外必须说明它表达的系统级语义、owner 与验证方式，并写入本节。“更好看”“现在就是这样”不是理由。运行时几何（拖拽坐标、笔记单元、壁纸焦点）与领域颜色值（笔记颜色、引擎品牌色）不属于 raw 视觉值。
+
+颜色领域例外按 owner、属性、选择器及值精确限制，不能豁免整个文件：
+
+- 笔记色点仅 `components/searcher/document-colors.css` 的 `:where(.note-quick-dot, .documents-color-dot)` 及其暗色选择器可定义 `--note-dot-amber/rose/sage/sky/paper`：亮色依次为 `#724E00` / `#7F3B58` / `#2C6330` / `#085B87` / `#5A5A60`，暗色为 `#E6C183` / `#F7AFCA` / `#A3D7A3` / `#91D0FC` / `#BEBEC4`。
+- 搜索引擎品牌仅 `components/searcher/EngineSelector.tsx` 的 SVG `fill` 可使用登记的 Google、Bing、Baidu 与 DuckDuckGo 品牌原色；具体色值由 `scripts/ui-guard/raw-color.ts` 精确限制，其他属性、owner 与未登记颜色不放行。
+- 玻璃对照仅 `design-lab/design-lab.css` 的 `.design-lab-wallpaper` 的 `background` 可使用固定高对比渐变样本，值由同一门禁精确核对。
+- 域名回退身份色由 `iconFallback.ts` 按 hostname 计算 HSL 浅底并配固定深墨色，`WebAppIcon.tsx` 以运行时函数调用消费；跨模块函数返回值是静态抽取的未知边界，不视为门禁已经求值。原有域名稳定性及对比度测试保护这一领域合同。
+
+验证：CSS / TSX 门禁的正确 owner、属性、值和反例测试、生产 `check:ui`，以及各领域既有对比度测试；用户壁纸与运行时几何不因此转成固定颜色或静态视觉值。
 
 任务栏运行时避让：`WorkspaceDock` 实测停靠容器几何，以像素值在 `:root` 设置 `--dock-inset-top/right/bottom/left`，使 Portal 内的手机面板与首页共享避让；AppShell 的 `data-dock-edge` 标记有效方向。`PageShell` 在 `semantic.css` 中以四向 margin 消费这些几何值，浮动 `StatusBanner` / `UndoToast` 在 `semantic.css`、首页流式容器 `.home` 在 `home-layouts.css`、“更多笔记”入口在 `home-notes.css` 及工作面板 / 移动 Sheet 在 `workspace.css` 中按各自停靠边消费 `--dock-inset-*`，不把它们视为可任意设置的视觉间距。`exceptions.ts` 仅放行对应文件和属性的精确变量表达式。`--dock-size`（56px）、`--dock-item-size` / `--dock-ball-size`（44px）由 `tokens.css` 拥有；验证内容与任务栏不相交、收起释放空间、Portal 继承与模态期间布局稳定。
 
