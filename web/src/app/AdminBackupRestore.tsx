@@ -377,7 +377,10 @@ export function AdminBackupRestore() {
                         </span>
                     </Button>
                 </SettingsRow>
-                <SettingsRow title="备份文件">
+                <SettingsRow
+                    title="备份文件"
+                    className="settings-row--vertical"
+                >
                     <div className="admin-file-row">
                         <FilePicker
                             id="backup-restore-file"

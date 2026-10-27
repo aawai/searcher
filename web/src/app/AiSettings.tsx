@@ -479,6 +479,9 @@ export function AiSettings() {
                             return (
                                 <SettingsRow
                                     key={model.id}
+                                    className={manageable
+                                        ? "settings-row--vertical"
+                                        : undefined}
                                     title={model.displayName}
                                     description={
                                         <span className="ai-model-meta">
