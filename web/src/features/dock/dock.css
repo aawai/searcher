@@ -6,7 +6,7 @@
     box-sizing: border-box;
 }
 
-/* Four-edge positioning on desktop */
+/* Position from the effective edge supplied by WorkspaceDock. */
 .dock-container[data-edge="bottom"] {
     bottom: max(var(--space-3), env(safe-area-inset-bottom, var(--space-3)));
     left: 50%;
@@ -31,15 +31,11 @@
     transform: translateY(-50%);
 }
 
-/* Force bottom on mobile viewports */
+/* Mobile bottom spacing and width preserve the safe area and touch targets. */
 @media (max-width: 767px) {
-    .dock-container {
-        top: auto !important;
-        left: 50% !important;
-        right: auto !important;
-        bottom: max(var(--space-2), env(safe-area-inset-bottom, var(--space-2)))
-            !important;
-        transform: translateX(-50%) !important;
+    .dock-container[data-edge="bottom"] {
+        bottom: max(var(--space-2), env(safe-area-inset-bottom,
+            var(--space-2)));
         width: max-content;
         max-width: calc(100vw - var(--space-4));
     }
@@ -97,23 +93,30 @@
 .dock-container[data-edge="bottom"] .dock-bar,
 .dock-container[data-edge="top"] .dock-bar {
     flex-direction: row;
-    height: var(--dock-size);
 }
 
 .dock-container[data-edge="left"] .dock-bar,
 .dock-container[data-edge="right"] .dock-bar {
     flex-direction: column;
-    width: var(--dock-size);
+}
+
+/* Fixed bar thickness applies only at desktop capacity. */
+@media (min-width: 768px) {
+    .dock-container[data-edge="bottom"] .dock-bar,
+    .dock-container[data-edge="top"] .dock-bar {
+        height: var(--dock-size);
+    }
+
+    .dock-container[data-edge="left"] .dock-bar,
+    .dock-container[data-edge="right"] .dock-bar {
+        width: var(--dock-size);
+    }
 }
 
 @media (max-width: 767px) {
     .dock-bar {
-        flex-direction: row !important;
-        height: auto !important;
         min-height: var(--dock-size);
-        width: auto !important;
         max-width: 100%;
-        border-radius: var(--radius-lg);
     }
 }
 
@@ -128,12 +131,6 @@
 .dock-container[data-edge="left"] .dock-group,
 .dock-container[data-edge="right"] .dock-group {
     flex-direction: column;
-}
-
-@media (max-width: 767px) {
-    .dock-group {
-        flex-direction: row !important;
-    }
 }
 
 .dock-group--system {
@@ -208,8 +205,6 @@
 @media (max-width: 767px) {
     .dock-group--apps {
         max-width: none;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
     }
 }
 
@@ -231,14 +226,6 @@
     height: var(--space-hairline);
     width: var(--space-6);
     margin: var(--space-half) 0;
-}
-
-@media (max-width: 767px) {
-    .dock-divider {
-        width: var(--space-hairline) !important;
-        height: var(--space-6) !important;
-        margin: 0 var(--space-half);
-    }
 }
 
 /* Dock items */
