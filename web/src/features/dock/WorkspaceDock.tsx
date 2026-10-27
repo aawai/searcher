@@ -14,7 +14,6 @@ import {
     AlertCircle,
     type Home,
     LayoutGrid,
-    Minus,
     MoreHorizontal,
 } from "lucide-react";
 import {
@@ -39,6 +38,7 @@ import { CSS } from "@dnd-kit/utilities";
 import {
     type DockBallSide,
     type DockEdge,
+    type DockMode,
     type DockSystemId,
 } from "@shared/dock.ts";
 import { routes } from "../../app/routes.ts";
@@ -69,6 +69,10 @@ import {
 } from "../../components/ui/dropdown-menu.tsx";
 import { useEscapeLayerActive } from "../../components/ui/escape-layer-stack.tsx";
 import { usePresence } from "../../components/ui/presence.ts";
+import {
+    RadioGroup,
+    RadioGroupItem,
+} from "../../components/ui/radio-group.tsx";
 import {
     Tooltip,
     TooltipContent,
@@ -162,6 +166,7 @@ function SortableAppItem({
     index,
     totalCount,
     isMobile,
+    isVertical,
     onOpen,
     onMove,
     onUnpin,
@@ -170,6 +175,7 @@ function SortableAppItem({
     index: number;
     totalCount: number;
     isMobile: boolean;
+    isVertical: boolean;
     onOpen: (app: ExtendedWebApp, target?: "current" | "new_tab") => void;
     onMove: (index: number, delta: -1 | 1) => void;
     onUnpin: (appId: string) => void;
@@ -239,13 +245,13 @@ function SortableAppItem({
                     disabled={index === 0}
                     onClick={() => onMove(index, -1)}
                 >
-                    向前移动
+                    {isVertical ? "向上移动" : "向前移动"}
                 </ContextMenuItem>
                 <ContextMenuItem
                     disabled={index === totalCount - 1}
                     onClick={() => onMove(index, 1)}
                 >
-                    向后移动
+                    {isVertical ? "向下移动" : "向后移动"}
                 </ContextMenuItem>
                 <ContextMenuSeparator />
                 <ContextMenuItem
@@ -283,6 +289,7 @@ export function WorkspaceDock(
     const modalActive = useEscapeLayerActive("overlay");
     const [keyboardOpen, setKeyboardOpen] = useState(false);
     const [managementOpen, setManagementOpen] = useState(false);
+    const [appsOverflowing, setAppsOverflowing] = useState(false);
 
     // Track mobile viewport using MEDIA_QUERIES.belowMedium
     const [isMobile, setIsMobile] = useState(() =>
@@ -378,30 +385,27 @@ export function WorkspaceDock(
 
     useLayoutEffect(() => {
         const group = appsGroupRef.current;
-        if (!barPresence.mounted || pinnedApps.length === 0 || !group) return;
+        if (!barPresence.mounted || pinnedApps.length === 0 || !group) {
+            setAppsOverflowing(false);
+            return;
+        }
         const isVertical = effectiveEdge === "left" ||
             effectiveEdge === "right";
         const markEdges = () => {
             if (isVertical) {
                 const end = group.scrollHeight - group.clientHeight;
-                group.toggleAttribute(
-                    "data-overflow-start",
-                    group.scrollTop > 1,
-                );
-                group.toggleAttribute(
-                    "data-overflow-end",
-                    group.scrollTop < end - 1,
-                );
+                const startOverflow = group.scrollTop > 1;
+                const endOverflow = group.scrollTop < end - 1;
+                group.toggleAttribute("data-overflow-start", startOverflow);
+                group.toggleAttribute("data-overflow-end", endOverflow);
+                setAppsOverflowing(startOverflow || endOverflow);
             } else {
                 const end = group.scrollWidth - group.clientWidth;
-                group.toggleAttribute(
-                    "data-overflow-start",
-                    group.scrollLeft > 1,
-                );
-                group.toggleAttribute(
-                    "data-overflow-end",
-                    group.scrollLeft < end - 1,
-                );
+                const startOverflow = group.scrollLeft > 1;
+                const endOverflow = group.scrollLeft < end - 1;
+                group.toggleAttribute("data-overflow-start", startOverflow);
+                group.toggleAttribute("data-overflow-end", endOverflow);
+                setAppsOverflowing(startOverflow || endOverflow);
             }
         };
         markEdges();
@@ -886,6 +890,9 @@ export function WorkspaceDock(
                                                 index={index}
                                                 totalCount={pinnedApps.length}
                                                 isMobile={isMobile}
+                                                isVertical={effectiveEdge ===
+                                                        "left" ||
+                                                    effectiveEdge === "right"}
                                                 onOpen={handleOpenApp}
                                                 onMove={handleMoveApp}
                                                 onUnpin={(id) =>
@@ -896,7 +903,13 @@ export function WorkspaceDock(
                                 </div>
                             )}
 
-                            {/* Options / Management dropdown menu (Q20 / Q25 fallback & compact action) */}
+                            {/* Divider before dock actions */}
+                            {(visibleSystemIds.length > 0 ||
+                                pinnedApps.length > 0) && (
+                                <div className="dock-divider" />
+                            )}
+
+                            {/* Options / Management dropdown menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger
                                     render={
@@ -922,23 +935,32 @@ export function WorkspaceDock(
                                     </DropdownMenuItem>
                                     {layout.mode === "collapsible" && (
                                         <DropdownMenuItem
+                                            data-dock-action="collapse"
                                             onClick={() =>
                                                 setLayout({ collapsed: true })}
                                         >
                                             收起任务栏
                                         </DropdownMenuItem>
                                     )}
-                                    {pinnedApps.length > 0 && (
+                                    {appsOverflowing &&
+                                        pinnedApps.length > 0 && (
                                         <>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                data-dock-action="apps-fallback"
-                                                onClick={() =>
-                                                    setManagementOpen(true)}
-                                            >
-                                                更多固定应用（{pinnedApps
-                                                    .length}）
-                                            </DropdownMenuItem>
+                                            {pinnedApps.map((app) => (
+                                                <DropdownMenuItem
+                                                    key={app.id}
+                                                    data-dock-overflow-app={app
+                                                        .id}
+                                                    onClick={() =>
+                                                        handleOpenApp(app)}
+                                                >
+                                                    <WebAppGlyph
+                                                        app={app}
+                                                        className="dock-glyph"
+                                                    />
+                                                    <span>{app.name}</span>
+                                                </DropdownMenuItem>
+                                            ))}
                                         </>
                                     )}
                                 </DropdownMenuContent>
@@ -970,29 +992,11 @@ export function WorkspaceDock(
                                     </TooltipContent>
                                 </Tooltip>
                             )}
-
-                            {/* Collapse trigger button on desktop when in collapsible mode */}
-                            {layout.mode === "collapsible" && !isMobile && (
-                                <button
-                                    type="button"
-                                    className="dock-collapse-btn"
-                                    data-dock-action="collapse"
-                                    aria-label="收起任务栏"
-                                    onClick={() =>
-                                        setLayout({ collapsed: true })}
-                                >
-                                    <Minus
-                                        size="1em"
-                                        className="icon-md"
-                                        aria-hidden="true"
-                                    />
-                                </button>
-                            )}
                         </nav>
                     </DndContext>
                 </aside>
             )}
-            {/* Management Dialog (Q20: 管理弹层，支持排序与取消固定) */}
+            {/* Management Dialog */}
             <Dialog open={managementOpen} onOpenChange={setManagementOpen}>
                 <DialogContent
                     aria-label="管理任务栏"
@@ -1002,16 +1006,55 @@ export function WorkspaceDock(
                         <DialogTitle>管理任务栏</DialogTitle>
                     </DialogHeader>
                     <div className="dock-management-content">
-                        <div className="dock-management-section">
-                            <h4 className="dock-management-heading">
-                                固定应用（{pinnedApps.length}）
-                            </h4>
-                            <DockPinnedAppsList
-                                pinnedApps={pinnedApps}
-                                onMove={handleMoveApp}
-                                onUnpin={(id) => void setPinned(id, false)}
-                                emptyText="暂未固定任何应用。"
-                            />
+                        <div className="dock-management-layout">
+                            {!isMobile && (
+                                <div className="dock-management-row">
+                                    <span className="dock-management-label">
+                                        位置
+                                    </span>
+                                    <RadioGroup
+                                        variant="segmented"
+                                        value={layout.edge}
+                                        onValueChange={(val) =>
+                                            setLayout({
+                                                edge: val as DockEdge,
+                                            })}
+                                        aria-label="任务栏位置"
+                                    >
+                                        <RadioGroupItem value="bottom">
+                                            底部
+                                        </RadioGroupItem>
+                                        <RadioGroupItem value="top">
+                                            顶部
+                                        </RadioGroupItem>
+                                        <RadioGroupItem value="left">
+                                            左侧
+                                        </RadioGroupItem>
+                                        <RadioGroupItem value="right">
+                                            右侧
+                                        </RadioGroupItem>
+                                    </RadioGroup>
+                                </div>
+                            )}
+                            <div className="dock-management-row">
+                                <span className="dock-management-label">
+                                    展示模式
+                                </span>
+                                <RadioGroup
+                                    variant="segmented"
+                                    value={layout.mode}
+                                    onValueChange={(val) =>
+                                        setLayout({ mode: val as DockMode })}
+                                    aria-label="任务栏展示模式"
+                                >
+                                    <RadioGroupItem value="fixed">
+                                        常驻
+                                    </RadioGroupItem>
+                                    <RadioGroupItem value="collapsible">
+                                        可收起
+                                    </RadioGroupItem>
+                                </RadioGroup>
+                            </div>
                         </div>
 
                         <div className="dock-management-section">
@@ -1022,8 +1065,23 @@ export function WorkspaceDock(
                                 systemOrder={preferences.systemOrder}
                                 hiddenSystemIds={preferences.hiddenSystemIds}
                                 onMove={handleMoveSystem}
+                                onReorder={(next) => void setSystemOrder(next)}
                                 onToggleVisible={(id, visible) =>
                                     void setSystemVisible(id, visible)}
+                            />
+                        </div>
+
+                        <div className="dock-management-section">
+                            <h4 className="dock-management-heading">
+                                固定应用（{pinnedApps.length}）
+                            </h4>
+                            <DockPinnedAppsList
+                                pinnedApps={pinnedApps}
+                                availableApps={apps}
+                                onMove={handleMoveApp}
+                                onReorder={(next) => void setAppOrder(next)}
+                                onPin={(id) => void setPinned(id, true)}
+                                onUnpin={(id) => void setPinned(id, false)}
                             />
                         </div>
                     </div>

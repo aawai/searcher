@@ -49,6 +49,10 @@ export function DockSettings(): ReactNode {
         }
     };
 
+    const handlePin = (appId: string) => {
+        void setPinned(appId, true);
+    };
+
     const handleUnpin = (appId: string) => {
         void setPinned(appId, false);
     };
@@ -108,18 +112,22 @@ export function DockSettings(): ReactNode {
                     systemOrder={preferences.systemOrder}
                     hiddenSystemIds={preferences.hiddenSystemIds}
                     onMove={handleMoveSystem}
+                    onReorder={(next) => void setSystemOrder(next)}
                     onToggleVisible={(id, visible) =>
                         void setSystemVisible(id, visible)}
                 />
             </SettingsRow>
 
             <SettingsRow
-                title="固定应用管理"
+                title={`固定应用（${pinnedApps.length}）`}
                 className="settings-row--vertical"
             >
                 <DockPinnedAppsList
                     pinnedApps={pinnedApps}
+                    availableApps={apps}
                     onMove={handleMoveApp}
+                    onReorder={(next) => void setAppOrder(next)}
+                    onPin={handlePin}
                     onUnpin={handleUnpin}
                 />
             </SettingsRow>
