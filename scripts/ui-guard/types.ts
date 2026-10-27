@@ -1,4 +1,6 @@
 export type RuleId =
+    | "raw-color"
+    | "unregistered-tailwind-visual"
     | "raw-box-shadow"
     | "unregistered-breakpoint"
     | "scattered-media-query"

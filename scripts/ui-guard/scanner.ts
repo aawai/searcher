@@ -58,7 +58,10 @@ export async function scanDirectory(
             const fileViolations = scanTsxCode(relPath, content, registry);
             violations.push(...fileViolations);
         } else if (entry.path.endsWith(".css")) {
-            const fileViolations = scanCssCode(relPath, content, registry);
+            const fileViolations = scanCssCode(relPath, content, registry, {
+                verifyTokenBindings:
+                    relPath === "web/src/design-system/tokens.css",
+            });
             violations.push(...fileViolations);
         }
     }

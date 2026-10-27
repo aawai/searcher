@@ -71,16 +71,16 @@ export function FolderNameDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogPortal>
                 <DialogBackdrop />
-                <DialogPopup className="max-w-sm">
+                <DialogPopup className="launcher-folder-dialog">
                     <DialogTitle>{title}</DialogTitle>
                     <form
                         onSubmit={handleSubmit}
-                        className="flex flex-col gap-4 mt-3"
+                        className="launcher-folder-dialog-form"
                     >
-                        <div className="flex flex-col gap-1.5">
+                        <div className="launcher-folder-dialog-field">
                             <label
                                 htmlFor="folder-name-input"
-                                className="text-xs text-[var(--muted)] font-medium"
+                                className="launcher-folder-dialog-label"
                             >
                                 文件夹名称
                             </label>
@@ -104,7 +104,7 @@ export function FolderNameDialog({
                             </p>
                         )}
 
-                        <div className="flex items-center justify-end gap-2 pt-1">
+                        <div className="flex items-center justify-end gap-2">
                             <Button
                                 type="button"
                                 variant="outline"

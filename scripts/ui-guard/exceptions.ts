@@ -11,6 +11,7 @@
  */
 
 import { RUNTIME_CSS_VARIABLE_REGISTRY } from "./ownership.ts";
+import { hasRawColor } from "./raw-color.ts";
 
 const ALLOWED_PRIMITIVE_PROPS: Record<string, true> = {
     width: true,
@@ -70,6 +71,10 @@ export function isWallpaperFilterException(
     prop: string,
     value: string,
 ): boolean {
+    if (hasRawColor(value.trim().replaceAll(/^['"`]|['"`]$/g, ""), prop)) {
+        return false;
+    }
+
     if (RUNTIME_CSS_VARIABLE_REGISTRY[prop]) {
         return normalizePath(file).endsWith(
             "/components/wallpaper/WallpaperSurface.tsx",
@@ -249,7 +254,10 @@ export function isDomainValueException(
     // Sheet dynamic mobile height CSS variable (scoped to ContentSheet)
     if (p.endsWith("ContentSheet.tsx") || p.includes("/fixtures/sheet/")) {
         if (prop === "--sheet-mobile-height") {
-            return true;
+            return !hasRawColor(
+                norm.replaceAll(/^['"`]|['"`]$/g, ""),
+                prop,
+            );
         }
     }
     // Workspace surfaces consume measured Host / VisualViewport geometry only.
@@ -262,17 +270,25 @@ export function isDomainValueException(
                 norm === "`${chromeBottom}px`");
     }
 
-    // Dynamic accent color preview swatches (scoped strictly to swatch owners)
+    // Dynamic accent color preview swatches (scoped strictly to swatch owners and runtime expressions)
     if (isSwatchOwner(file)) {
+        if (hasRawColor(norm.replaceAll(/^['"`]|['"`]$/g, ""), prop)) {
+            return false;
+        }
         if (prop === "--item-accent") {
-            return true;
+            return (
+                norm === "hex" ||
+                norm === "accent.hex" ||
+                norm === "swatch.hex" ||
+                norm === "swatch.color"
+            );
         }
         if (prop === "background" || prop === "backgroundColor") {
             return (
-                norm.includes("getAccentLight(") ||
-                norm.includes("swatch.color") ||
-                norm.includes("swatch.hex") ||
-                norm.includes("accent.hex")
+                /^getAccentLight\(\s*[a-zA-Z_$][\w$.]*\s*\)$/.test(norm) ||
+                norm === "swatch.color" ||
+                norm === "swatch.hex" ||
+                norm === "accent.hex"
             );
         }
     }

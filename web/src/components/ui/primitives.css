@@ -1198,3 +1198,24 @@
 [data-slot="table-row"][data-state="selected"] {
     background: var(--accent-soft);
 }
+
+/* --------------------------------------------------------------------------
+   Breadcrumb
+   -------------------------------------------------------------------------- */
+[data-slot="breadcrumb-list"] {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+[data-slot="breadcrumb-page"] {
+    color: var(--foreground);
+}
+
+[data-slot="breadcrumb-separator"] > svg {
+    width: var(--icon-sm);
+    height: var(--icon-sm);
+}

@@ -51,8 +51,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   默认落点、最近空闲单元）在 `home-grid-cells.ts`；吸附、交换、键盘移动与溢出入口由
   `HomeNotes.tsx` 和 `home-notes.css` 唯一管理。768–1023px 的两列流式与 <768px 纵向堆叠
   是该组件的正常流分支，不再单独维护 220px 笔记行。
-- 稳定布局使用语义 class 或 Tailwind 标准 utility；壁纸、拖拽变换等 runtime
-  值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何由组件维护。
+- 稳定布局与交互状态使用语义 class 或 Tailwind 布局 / 状态 utility；视觉尺度（字重、间距、圆角、无阴影、图标尺寸）只使用 [Visual Language](design/VISUAL_LANGUAGE.md) 登记并在 `tokens.css` 以 `@utility` 绑定正式 Token 的工具类，响应式前缀只使用已登记的 `sm:` / `md:` / `lg:`。字号与行高统一由语义 CSS 消费登记 Token，不使用 `text-xs`、`text-sm`、`text-xl` 等默认文字尺度。壁纸、拖拽变换等 runtime 值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何由组件维护。
 - 样式调整后构建前端，实页检查首页、设置、登录和笔记面板的浅深色与壁纸组合。
 
 ## UI 门禁
@@ -64,28 +63,30 @@ deno test -A scripts/ui-guard/
 deno task check:ui --update
 ```
 
-- 门禁按文件、rule 和具体值计数；已有文件中新加的 raw
-  spacing/font/shadow/radius、arbitrary Tailwind 或 inline presentation
-  同样失败。
-- runtime geometry 与 domain-specific value 例外只限明确的 owner 和表达式，见
-  `scripts/ui-guard/exceptions.ts`。
+- 门禁按文件、rule 和具体值计数；新加的 raw color / spacing / font / shadow / radius、
+  arbitrary Tailwind 或 inline presentation 同样失败。`raw-color` 检查颜色语义位置，
+  包含渐变、阴影和 `var()` fallback；字符串和 URL 不按颜色扫描。领域色例外按具体
+  owner、属性、选择器和值限制；运行时几何例外见 `scripts/ui-guard/exceptions.ts`。
 - TSX 的 className 支持字符串、括号 / as / satisfies 包装、条件与短路表达式、
   模板中边界完整的静态 class，以及已知 `cn` / `clsx` 的参数、数组成员和对象类名键。
   对象值只决定 truthiness，不作为 class 扫描；模板不跨 `${...}` 拼造 class。
 - style 支持静态对象、条件 / 短路分支和静态对象展开，按后写覆盖前写处理；
-  属性 initializer 保持完整，继续交给原有视觉规则和精确 runtime owner 例外。
-  同文件 `const` 按词法绑定解析；检测到赋值、成员修改、未知调用逃逸及其直接别名时停止解析。
+  其他视觉规则与 runtime 例外仍接收完整 initializer；颜色规则另外复用抽取器检查
+  其中可确定的字符串分支。同文件 `const` 按词法绑定解析；检测到赋值、成员修改、
+  未知调用逃逸及其直接别名时停止解析。
   `let` / 参数、跨模块值、任意函数返回值、动态键和无法静态确定的 spread 均为未知边界。
   未知 spread 可能覆盖此前属性，因此只保留其后可确定的属性。
 - 抽取器记录未知 AST 节点，不执行 JS；每个入口限制 64 层递归、4096 次节点展开和
   64 个对象展开组合，并检测循环引用。未知不是“已验证安全”，门禁通过不代表 runtime
-  输入经过完整求值，也不覆盖默认尺度 utility（如 `text-xl`）到正式 Token 的映射策略。
-  诊断定位静态值来源；同一来源复用只报告一次，不合并不同来源的同值违规。
+  输入经过完整求值。诊断定位静态值来源；同一来源复用只报告一次，不合并不同来源的同值违规。
 - 语义规则读取 [Visual Language](design/VISUAL_LANGUAGE.md) 的登记表（解析见
   `scripts/ui-guard/registry.ts`）：`font-size` / `border-radius` 只能引用已登记
   Token，`--font-*` / 圆角 Token 的定义必须已登记，`var(--accent)` 作为
-  background / fill 必须在已登记的文件与选择器中。登记表缺失或格式错误时门禁失败。
-  新增 Token 或强调色填充先改 Visual Language，再改实现。
+  background / fill 必须在已登记的文件与选择器中；TSX `className` 的视觉尺度工具类
+  与响应式前缀只能使用已登记项（未登记项拒绝为 `unregistered-tailwind-visual`）。
+  `tokens.css` 的登记 `@utility` 与断点必须与表中的 Token / 断点匹配；缺失、重复或
+  不匹配会被门禁拒绝。登记表缺失或格式错误时门禁失败。
+  新增 Token、强调色填充或 Tailwind 视觉工具类先改 Visual Language，再改实现。
 - CSS `@media` 宽度须使用登记边界的 `min-width: Npx` / `max-width: N-1px`，
   拒绝未登记数值、错配边界与其他宽度写法；TS / TSX 中散落的数字媒体查询同样失败。
   允许值由 `registry.ts` 从断点表解析，新增档位先修改契约与验证矩阵。

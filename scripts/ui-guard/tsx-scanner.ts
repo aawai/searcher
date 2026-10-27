@@ -3,6 +3,11 @@ import type { UiViolation } from "./types.ts";
 import { checkFontSize, checkRadius, type VisualRegistry } from "./registry.ts";
 import { staticExpressions } from "./static-expressions.ts";
 import {
+    hasDisallowedRawColor,
+    isColorSemanticProperty,
+    isSvgColorAttribute,
+} from "./raw-color.ts";
+import {
     isDesignSystemAllowed,
     isDomainValueException,
     isDragTransformException,
@@ -73,14 +78,149 @@ function isAllowedSpacing(value: string): boolean {
     });
 }
 
+const TAILWIND_PALETTE_COLOR =
+    /^(?:bg|text|border|ring|outline|fill|stroke|from|via|to|decoration|accent|caret|divide)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)(?:\/\d+)?$/;
+
+function splitTailwindVariants(
+    cls: string,
+): { variants: string[]; base: string } {
+    const parts: string[] = [];
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < cls.length; i++) {
+        const ch = cls[i];
+        if (ch === "[" || ch === "(") depth++;
+        else if (ch === "]" || ch === ")") depth = Math.max(0, depth - 1);
+        else if (ch === ":" && depth === 0) {
+            parts.push(cls.slice(start, i));
+            start = i + 1;
+        }
+    }
+    const rawBase = cls.slice(start);
+    const base = rawBase.replace(/^!+|!+$/g, "");
+    return { variants: parts, base };
+}
+
+function isUnregisteredResponsiveVariant(
+    variant: string,
+    registry: VisualRegistry,
+): boolean {
+    if (/^(?:[23]?xs|sm|md|lg|[2-9]?xl)$/.test(variant)) {
+        return !registry.tailwindBreakpoints.has(variant);
+    }
+    return /^(?:max-(?:[23]?xs|sm|md|lg|[23]?xl|\[.+\])|min-\[.+\]|@[a-z0-9[\]-]+)$/
+        .test(variant);
+}
+
+function isUnregisteredTailwindVisualBase(
+    base: string,
+    registry: VisualRegistry,
+): boolean {
+    if (registry.tailwindVisualUtilities.has(base)) {
+        return false;
+    }
+
+    // 1. Typography: default font-size scale, arbitrary font-size tokens, line-height, tracking, weight/family
+    if (/^text-(?:[23]?xs|sm|base|lg|[2-9]?xl)(?:\/.+)?$/.test(base)) {
+        return true;
+    }
+    if (base.startsWith("text-[") && base.endsWith("]")) {
+        const inner = base.slice("text-[".length, -1).trim();
+        if (
+            inner.startsWith("length:") || inner.startsWith("fontsize:") ||
+            /^var\(\s*--font-/.test(inner)
+        ) {
+            return true;
+        }
+    }
+    if (
+        /^leading-(?:none|tight|snug|normal|relaxed|loose|\d+(?:\.\d+)?|\[.+\])$/
+            .test(base)
+    ) {
+        return true;
+    }
+    if (
+        /^-?tracking-(?:tighter|tight|normal|wide|wider|widest|\[.+\])$/.test(
+            base,
+        )
+    ) {
+        return true;
+    }
+    if (
+        /^font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black|serif|stretch-[a-z0-9%-]+|\[.+\])$/
+            .test(base)
+    ) {
+        return true;
+    }
+
+    // 2. Spacing: padding, margin, gap, space-x/y (excluding *-auto alignment keywords)
+    if (
+        /^-?(?:p|px|py|pt|pb|pl|pr|ps|pe|m|mx|my|mt|mb|ml|mr|ms|me|gap|gap-x|gap-y|space-x|space-y)-(?:px|\d+(?:\.\d+)?|\[.+\])$/
+            .test(base)
+    ) {
+        return true;
+    }
+
+    // 3. Border radius: rounded and rounded-*
+    if (/^rounded(?:-[a-z0-9]+)*(?:-\[.+\])?$/.test(base)) {
+        return true;
+    }
+
+    // 4. Shadows & elevation
+    if (
+        /^(?:shadow|shadow-[a-z0-9-]+|inset-shadow(?:-[a-z0-9-]+|-\[.+\])?|drop-shadow(?:-[a-z0-9-]+|-\[.+\])?)$/
+            .test(base)
+    ) {
+        return true;
+    }
+    if (/^-?z-/.test(base)) {
+        if (
+            base === "z-auto" ||
+            /^z-\[var\(--elevation-[a-z0-9-]+\)\]$/.test(base)
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    // 5. Sizing & icon scale: unregistered icon-*, numeric spacing multipliers (> 0), named max-w-* scale, arbitrary size literals
+    if (/^icon-(?:[23]?xs|sm|md|lg|[2-9]?xl|\d+|\[.+\])$/.test(base)) {
+        return true;
+    }
+    const numericSize = /^(?:w|h|size|min-w|min-h|max-w|max-h)-(\d+(?:\.\d+)?)$/
+        .exec(base);
+    if (numericSize && Number(numericSize[1]) !== 0) {
+        return true;
+    }
+    if (
+        /^(?:min-w|max-w|w)-(?:[23]?xs|sm|md|lg|[2-7]?xl|prose|screen-[a-z0-9-]+)$/
+            .test(base)
+    ) {
+        return true;
+    }
+    if (/^(?:w|h|size|min-w|min-h|max-w|max-h)-\[.+\]$/.test(base)) {
+        return true;
+    }
+
+    // 6. Default Tailwind color palette scale (e.g. bg-red-500, text-slate-400)
+    if (TAILWIND_PALETTE_COLOR.test(base)) {
+        return true;
+    }
+
+    return false;
+}
+
 function checkTailwindClass(
     cls: string,
     file: string,
     line: number,
     col: number,
+    registry: VisualRegistry,
 ): UiViolation | null {
+    const { variants, base } = splitTailwindVariants(cls);
+
     // Arbitrary box shadow: shadow-[...]
-    if (/^shadow-\[.+\]$/.test(cls)) {
+    if (/^shadow-\[.+\]$/.test(base)) {
         return {
             file,
             rule: "raw-box-shadow",
@@ -93,7 +233,7 @@ function checkTailwindClass(
     }
 
     // Arbitrary font size: text-[14px], text-[0.875rem]
-    if (/^text-\[[0-9]+(?:\.[0-9]+)?(?:px|rem|em|pt)\]$/.test(cls)) {
+    if (/^text-\[[0-9]+(?:\.[0-9]+)?(?:px|rem|em|pt)\]$/.test(base)) {
         return {
             file,
             rule: "raw-font-size",
@@ -106,7 +246,11 @@ function checkTailwindClass(
     }
 
     // Arbitrary border radius: rounded-[10px], rounded-t-[8px]
-    if (/^rounded(?:-[trblse])?-\[[0-9]+(?:\.[0-9]+)?(?:px|rem)\]$/.test(cls)) {
+    if (
+        /^rounded(?:-[trblse]{1,2})?-\[[0-9]+(?:\.[0-9]+)?(?:px|rem)\]$/.test(
+            base,
+        )
+    ) {
         return {
             file,
             rule: "raw-border-radius",
@@ -120,8 +264,8 @@ function checkTailwindClass(
 
     // Arbitrary spacing: p-[14px], mt-[18px], gap-[12px]
     if (
-        /^(?:p|px|py|pt|pb|pl|pr|m|mx|my|mt|mb|ml|mr|gap|gap-x|gap-y|space-x|space-y)-\[[0-9]+(?:\.[0-9]+)?(?:px|rem)\]$/
-            .test(cls)
+        /^-?(?:p|px|py|pt|pb|pl|pr|ps|pe|m|mx|my|mt|mb|ml|mr|ms|me|gap|gap-x|gap-y|space-x|space-y)-\[[0-9]+(?:\.[0-9]+)?(?:px|rem)\]$/
+            .test(base)
     ) {
         return {
             file,
@@ -134,7 +278,7 @@ function checkTailwindClass(
         };
     }
     // Static Tailwind stacking levels, including variants and negative utilities.
-    if (/^(?:[^:]+:)*-?z-\d+$/.test(cls)) {
+    if (/^-?z-(?:\d+|\[\d+\])$/.test(base)) {
         return {
             file,
             rule: "raw-z-index",
@@ -147,7 +291,7 @@ function checkTailwindClass(
     }
 
     // Arbitrary color/visual classes: bg-[#...], text-[#...], border-[#...]
-    if (/^(?:bg|text|border|ring|outline)-\[(?:#|rgb|hsl).+\]$/.test(cls)) {
+    if (/^(?:bg|text|border|ring|outline)-\[(?:#|rgb|hsl).+\]$/.test(base)) {
         return {
             file,
             rule: "arbitrary-tailwind",
@@ -162,8 +306,8 @@ function checkTailwindClass(
     // Accent fills as Tailwind utilities: bg-primary, fill-accent/50, data-[checked]:bg-accent.
     // A utility cannot be registered by CSS selector, so it is always rejected.
     if (
-        /^(?:[^:]+:)*(?:bg|fill|from|via|to)-(?:primary|accent)(?:\/\d+)?$/
-            .test(cls)
+        /^(?:bg|fill|from|via|to)-(?:primary|accent)(?:\/\d+)?$/
+            .test(base)
     ) {
         return {
             file,
@@ -173,6 +317,23 @@ function checkTailwindClass(
             line,
             column: col,
             fingerprint: `unregistered-accent-fill:className:${cls}`,
+        };
+    }
+
+    if (
+        variants.some((variant) =>
+            isUnregisteredResponsiveVariant(variant, registry)
+        ) ||
+        isUnregisteredTailwindVisualBase(base, registry)
+    ) {
+        return {
+            file,
+            rule: "unregistered-tailwind-visual",
+            property: "className",
+            value: cls,
+            line,
+            column: col,
+            fingerprint: `unregistered-tailwind-visual:className:${cls}`,
         };
     }
 
@@ -242,6 +403,25 @@ export function scanTsxCode(
     const violations: UiViolation[] = [];
     const expressions = staticExpressions(sourceFile);
 
+    function checkColorString(property: string, value: ts.StringLiteralLike) {
+        if (!hasDisallowedRawColor(file, property, value.text)) return;
+        const { line, character } = sourceFile.getLineAndCharacterOfPosition(
+            value.getStart(),
+        );
+        const snippet = normalizeSnippet(
+            `${property}: ${value.getText(sourceFile)}`,
+        );
+        violations.push({
+            file,
+            rule: "raw-color",
+            property,
+            value: snippet,
+            line: line + 1,
+            column: character + 1,
+            fingerprint: `raw-color:${property}:${snippet}`,
+        });
+    }
+
     function visit(node: ts.Node) {
         if (
             file !== "web/src/design-system/breakpoints.ts" &&
@@ -263,6 +443,26 @@ export function scanTsxCode(
         }
         if (ts.isJsxAttribute(node)) {
             const attrName = node.name.getText(sourceFile);
+            const element = node.parent.parent;
+            if (
+                (ts.isJsxOpeningElement(element) ||
+                    ts.isJsxSelfClosingElement(element)) &&
+                isSvgColorAttribute(
+                    attrName,
+                    element.tagName.getText(sourceFile),
+                )
+            ) {
+                const initializer = node.initializer;
+                const expression =
+                    initializer && ts.isJsxExpression(initializer)
+                        ? initializer.expression
+                        : initializer;
+                if (expression) {
+                    for (const color of expressions.stringValues(expression)) {
+                        checkColorString(attrName, color);
+                    }
+                }
+            }
             if (["size", "width", "height"].includes(attrName)) {
                 const element = node.parent.parent;
                 if (
@@ -335,8 +535,35 @@ export function scanTsxCode(
                                 file,
                                 line + 1,
                                 character + 1,
+                                registry,
                             );
                             if (violation) violations.push(violation);
+                            const { base } = splitTailwindVariants(match[0]);
+                            const arbitraryColor =
+                                /^(bg|text|border|ring|outline|fill|stroke|from|via|to|decoration|accent|caret|shadow)-\[(.*)\](?:\/\d+)?$/
+                                    .exec(base);
+                            if (
+                                arbitraryColor &&
+                                hasDisallowedRawColor(
+                                    file,
+                                    arbitraryColor[1] === "shadow"
+                                        ? "box-shadow"
+                                        : "color",
+                                    arbitraryColor[2].replaceAll("_", " "),
+                                )
+                            ) {
+                                violations.push({
+                                    file,
+                                    rule: "raw-color",
+                                    property: "className",
+                                    value: match[0],
+                                    line: line + 1,
+                                    column: character + 1,
+                                    fingerprint: `raw-color:className:${
+                                        match[0]
+                                    }`,
+                                });
+                            }
                         }
                     }
                 }
@@ -356,6 +583,14 @@ export function scanTsxCode(
                             .getLineAndCharacterOfPosition(value.getStart());
                         const posLine = line + 1;
                         const posCol = character + 1;
+
+                        if (isColorSemanticProperty(propName)) {
+                            for (
+                                const color of expressions.stringValues(value)
+                            ) {
+                                checkColorString(propName, color);
+                            }
+                        }
 
                         // Runtime z-index expressions and elevation tokens are
                         // allowed; only literal numeric levels are forbidden.

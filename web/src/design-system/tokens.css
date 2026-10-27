@@ -614,6 +614,81 @@
     --color-border: var(--border);
     --radius-control: var(--control-radius);
     --radius-input: var(--input-radius);
+    --breakpoint-sm: 640px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1024px;
+}
+
+@utility font-normal {
+    font-weight: var(--font-body-weight);
+}
+
+@utility font-medium {
+    font-weight: var(--font-label-weight);
+}
+
+@utility font-semibold {
+    font-weight: var(--font-title-weight);
+}
+
+@utility m-0 {
+    margin: 0;
+}
+
+@utility p-0 {
+    padding: 0;
+}
+
+@utility gap-1 {
+    gap: var(--space-1);
+}
+
+@utility gap-2 {
+    gap: var(--space-2);
+}
+
+@utility gap-3 {
+    gap: var(--space-3);
+}
+
+@utility gap-4 {
+    gap: var(--space-4);
+}
+
+@utility p-4 {
+    padding: var(--space-4);
+}
+
+@utility rounded-none {
+    border-radius: 0;
+}
+
+@utility rounded-sm {
+    border-radius: var(--radius-sm);
+}
+
+@utility rounded-control {
+    border-radius: var(--control-radius);
+}
+
+@utility rounded-input {
+    border-radius: var(--input-radius);
+}
+
+@utility rounded {
+    border-radius: var(--radius);
+}
+
+@utility rounded-lg {
+    border-radius: var(--radius-lg);
+}
+
+@utility rounded-full {
+    border-radius: var(--radius-pill);
+}
+
+@utility shadow-none {
+    box-shadow: none;
 }
 
 @utility icon-sm {

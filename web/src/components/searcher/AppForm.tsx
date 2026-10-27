@@ -188,7 +188,7 @@ export function AppForm() {
 
                     {!editingApp && (
                         <div className="flex items-center justify-between gap-3">
-                            <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-col gap-1">
                                 <label
                                     htmlFor="app-home-fixed"
                                     className="app-dialog-field-label"
@@ -217,7 +217,7 @@ export function AppForm() {
                     <h3 className="app-dialog-section-title">打开设置</h3>
                     <div className="app-dialog-options-card">
                         {/* 打开方式 */}
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-2">
                             <div className="flex items-center justify-between gap-2">
                                 <span className="app-dialog-option-title">
                                     打开方式
@@ -271,7 +271,7 @@ export function AppForm() {
                                 }}
                             />
                             <div className="app-dialog-preview-meta">
-                                <div className="flex items-center gap-1.5">
+                                <div className="flex items-center gap-2">
                                     <span className="app-dialog-preview-meta-title">
                                         当前图标
                                     </span>

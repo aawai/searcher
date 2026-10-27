@@ -452,7 +452,7 @@ export function EditablePaginationSpike() {
                 </div>
 
                 {error && (
-                    <div className="text-sm text-[var(--danger)] p-2">
+                    <div className="pagination-spike-error">
                         加载错误: {error}
                     </div>
                 )}
@@ -472,7 +472,7 @@ export function EditablePaginationSpike() {
                         tabIndex={0}
                     >
                         {!isOpen && (
-                            <div className="p-8 text-center text-muted-foreground">
+                            <div className="pagination-spike-empty">
                                 编辑器未加载。请点击上方【打开编辑器】按钮以按需加载分页排版运行时。
                             </div>
                         )}

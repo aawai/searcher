@@ -1,5 +1,6 @@
 import type { UiViolation } from "./types.ts";
 import { isDesignSystemAllowed } from "./exceptions.ts";
+import { hasDisallowedRawColor } from "./raw-color.ts";
 import {
     checkFontSize,
     checkRadius,
@@ -111,19 +112,37 @@ export function scanCssCode(
     file: string,
     cssText: string,
     registry: VisualRegistry,
+    options: { verifyTokenBindings?: boolean } = {},
 ): UiViolation[] {
     const violations: UiViolation[] = [];
 
     // Replace comment bodies with spaces so line numbers and offsets are preserved
     let inComment = false;
+    let commentQuote: '"' | "'" | null = null;
     const chars = Array.from(cssText);
     for (let i = 0; i < chars.length; i++) {
-        if (!inComment && chars[i] === "/" && chars[i + 1] === "*") {
-            inComment = true;
-            chars[i] = " ";
-            chars[i + 1] = " ";
-            i++;
-            continue;
+        if (!inComment) {
+            if (commentQuote !== null) {
+                if (chars[i] === "\\") {
+                    i++;
+                    continue;
+                }
+                if (chars[i] === commentQuote) {
+                    commentQuote = null;
+                }
+                continue;
+            }
+            if (chars[i] === '"' || chars[i] === "'") {
+                commentQuote = chars[i] as '"' | "'";
+                continue;
+            }
+            if (chars[i] === "/" && chars[i + 1] === "*") {
+                inComment = true;
+                chars[i] = " ";
+                chars[i + 1] = " ";
+                i++;
+                continue;
+            }
         }
         if (inComment && chars[i] === "*" && chars[i + 1] === "/") {
             inComment = false;
@@ -172,6 +191,13 @@ export function scanCssCode(
     let declStart = -1;
     let preludeStart = 0;
     const preludes: string[] = [];
+    const utilities = new Map<string, {
+        count: number;
+        line: number;
+        column: number;
+        properties: Map<string, string>;
+    }>();
+    const themeBreakpoints = new Map<string, string>();
 
     // The innermost style-rule selector; at-rules such as @media do not count.
     function currentSelector(): string {
@@ -181,11 +207,58 @@ export function scanCssCode(
         return "";
     }
 
+    let scanQuote: '"' | "'" | null = null;
+    let parenDepth = 0;
+
     for (let i = 0; i < cleanCss.length; i++) {
         const ch = cleanCss[i];
 
+        if (scanQuote !== null) {
+            if (ch === "\\") {
+                i++;
+                continue;
+            }
+            if (ch === scanQuote) {
+                scanQuote = null;
+            }
+            continue;
+        }
+        if (ch === '"' || ch === "'") {
+            scanQuote = ch;
+            continue;
+        }
+        if (ch === "(") {
+            parenDepth++;
+            continue;
+        }
+        if (ch === ")") {
+            parenDepth = Math.max(0, parenDepth - 1);
+            continue;
+        }
+        if (parenDepth > 0) {
+            continue;
+        }
+
         if (ch === "{") {
             const prelude = normalizeSnippet(cleanCss.slice(preludeStart, i));
+            const utilityName = /^@utility\s+([a-z0-9-]+)$/.exec(prelude)?.[1];
+            if (options.verifyTokenBindings && utilityName) {
+                const existing = utilities.get(utilityName);
+                if (existing) {
+                    existing.count++;
+                } else {
+                    const { line, col } = getLineAndCol(
+                        preludeStart +
+                            cleanCss.slice(preludeStart, i).search(/\S/),
+                    );
+                    utilities.set(utilityName, {
+                        count: 1,
+                        line,
+                        column: col,
+                        properties: new Map(),
+                    });
+                }
+            }
             if (prelude.startsWith("@media")) {
                 for (
                     const match of prelude.matchAll(
@@ -264,6 +337,18 @@ export function scanCssCode(
         if (!prop || !value) {
             return;
         }
+        if (options.verifyTokenBindings) {
+            const prelude = preludes.at(-1) ?? "";
+            const utilityName = /^@utility\s+([a-z0-9-]+)$/.exec(prelude)?.[1];
+            if (utilityName) {
+                utilities.get(utilityName)?.properties.set(prop, value);
+            }
+            if (
+                prelude === "@theme inline" && prop.startsWith("--breakpoint-")
+            ) {
+                themeBreakpoints.set(prop, value);
+            }
+        }
 
         const { line, col } = getLineAndCol(offset + rawDecl.indexOf(prop));
 
@@ -296,10 +381,18 @@ export function scanCssCode(
                     prop,
                     `${prop}: ${value}`,
                 );
+                return;
             }
             if (isDesignSystemAllowed(file, prop, value)) {
                 return;
             }
+        }
+
+        if (isDesignSystemAllowed(file, prop, value)) {
+            return;
+        }
+        if (hasDisallowedRawColor(file, prop, value, selector)) {
+            pushViolation("raw-color", prop, `${prop}: ${value}`);
         }
 
         // Accent fills are limited to the semantics registered in Visual Language.
@@ -312,14 +405,10 @@ export function scanCssCode(
                     prop,
                     `${selector} { ${prop}: ${value} }`,
                 );
+                return;
             }
-            return;
         }
 
-        // Documented rules: check design-system permissions
-        if (isDesignSystemAllowed(file, prop, value)) {
-            return;
-        }
         // Numeric z-index values must use an elevation token. Runtime token expressions
         // and `auto` remain valid because they do not encode a local static layer.
         if (prop === "z-index") {
@@ -354,8 +443,8 @@ export function scanCssCode(
                     column: col,
                     fingerprint: `raw-box-shadow:${prop}:${snippet}`,
                 });
+                return;
             }
-            return;
         }
 
         // font-size: only registered Tokens or relative keywords
@@ -403,6 +492,89 @@ export function scanCssCode(
                 });
             }
             return;
+        }
+    }
+
+    if (options.verifyTokenBindings) {
+        const spacingProperties: Record<string, string> = {
+            p: "padding",
+            px: "padding-inline",
+            py: "padding-block",
+            pt: "padding-top",
+            pb: "padding-bottom",
+            pl: "padding-left",
+            pr: "padding-right",
+            ps: "padding-inline-start",
+            pe: "padding-inline-end",
+            m: "margin",
+            mx: "margin-inline",
+            my: "margin-block",
+            mt: "margin-top",
+            mb: "margin-bottom",
+            ml: "margin-left",
+            mr: "margin-right",
+            ms: "margin-inline-start",
+            me: "margin-inline-end",
+            gap: "gap",
+            "gap-x": "column-gap",
+            "gap-y": "row-gap",
+        };
+        for (const entry of registry.tailwindVisuals) {
+            let property: string[];
+            switch (entry.dimension) {
+                case "字重":
+                    property = ["font-weight"];
+                    break;
+                case "圆角":
+                    property = ["border-radius"];
+                    break;
+                case "阴影":
+                    property = ["box-shadow"];
+                    break;
+                case "图标":
+                    property = ["width", "height"];
+                    break;
+                case "间距":
+                    property = [
+                        spacingProperties[entry.utility.replace(/-\d+$/, "")],
+                    ];
+                    break;
+            }
+            const binding = utilities.get(entry.utility);
+            if (
+                binding?.count === 1 &&
+                binding.properties.size === property.length &&
+                property.every((name) =>
+                    binding.properties.get(name) === entry.source
+                )
+            ) continue;
+            const value = `@utility ${entry.utility} must bind ${
+                property.join(" / ")
+            } to ${entry.source}`;
+            violations.push({
+                file,
+                rule: "unregistered-tailwind-visual",
+                property: `@utility ${entry.utility}`,
+                value,
+                line: binding?.line ?? 1,
+                column: binding?.column ?? 1,
+                fingerprint:
+                    `unregistered-tailwind-visual:@utility:${entry.utility}:${entry.source}`,
+            });
+        }
+        for (const [name, width] of registry.tailwindBreakpoints) {
+            const prop = `--breakpoint-${name}`;
+            const expected = `${width}px`;
+            if (themeBreakpoints.get(prop) === expected) continue;
+            violations.push({
+                file,
+                rule: "unregistered-breakpoint",
+                property: prop,
+                value: `${prop} must equal ${expected}`,
+                line: 1,
+                column: 1,
+                fingerprint: `unregistered-breakpoint:${prop}:${expected}`,
+            });
         }
     }
 

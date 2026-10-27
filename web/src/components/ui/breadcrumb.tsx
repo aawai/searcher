@@ -10,7 +10,7 @@ function BreadcrumbList({ className, ...props }: ComponentProps<"ol">) {
         <ol
             data-slot="breadcrumb-list"
             className={cn(
-                "flex flex-wrap items-center gap-1.5 text-sm text-[var(--muted)] sm:gap-2",
+                "flex flex-wrap items-center gap-1 sm:gap-2",
                 className,
             )}
             {...props}
@@ -22,7 +22,7 @@ function BreadcrumbItem({ className, ...props }: ComponentProps<"li">) {
         <li
             data-slot="breadcrumb-item"
             className={cn(
-                "inline-flex min-w-0 items-center gap-1.5",
+                "inline-flex min-w-0 items-center gap-1 sm:gap-2",
                 className,
             )}
             {...props}
@@ -34,10 +34,7 @@ function BreadcrumbPage({ className, ...props }: ComponentProps<"span">) {
         <span
             data-slot="breadcrumb-page"
             aria-current="page"
-            className={cn(
-                "break-words font-medium text-[var(--foreground)]",
-                className,
-            )}
+            className={cn("break-words font-medium", className)}
             {...props}
         />
     );
@@ -50,10 +47,10 @@ function BreadcrumbSeparator(
             data-slot="breadcrumb-separator"
             role="presentation"
             aria-hidden="true"
-            className={cn("shrink-0 [&>svg]:size-[var(--icon-sm)]", className)}
+            className={cn("inline-flex shrink-0 items-center", className)}
             {...props}
         >
-            {children ?? <ChevronRight />}
+            {children ?? <ChevronRight size="1em" className="icon-sm" />}
         </li>
     );
 }

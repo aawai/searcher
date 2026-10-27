@@ -28,6 +28,10 @@ Deno.test("registry - parses the Visual Language tables", () => {
         ],
     );
     assertEquals([...FIXTURE_REGISTRY.breakpoints], [0, 640, 768, 1024]);
+    assert(FIXTURE_REGISTRY.tailwindVisualUtilities.has("p-4"));
+    assert(FIXTURE_REGISTRY.tailwindVisualUtilities.has("gap-2"));
+    assert(FIXTURE_REGISTRY.tailwindVisualUtilities.has("rounded"));
+    assert(FIXTURE_REGISTRY.tailwindVisualUtilities.has("shadow-none"));
 });
 
 Deno.test("registry - fails closed on a missing, empty or malformed table", () => {
@@ -89,6 +93,19 @@ Deno.test("registry - the committed Visual Language document parses and register
         assert(registry.radiusTokens.has(token), token);
     }
     assert(registry.accentFills.length > 0);
+    for (
+        const utility of [
+            "font-medium",
+            "gap-2",
+            "gap-3",
+            "p-4",
+            "rounded-lg",
+            "shadow-none",
+            "icon-md",
+        ]
+    ) {
+        assert(registry.tailwindVisualUtilities.has(utility), utility);
+    }
 });
 
 Deno.test("registry - font-size accepts registered Tokens and relative keywords only", () => {
