@@ -31,15 +31,15 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 | 约束                           | 要求                                                                                                                                                          | 机检                                                                                                                                |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 文字对比度                     | 正文与次要文字 ≥ 4.5:1；`--muted` 在玻璃表面上 ≥ 3:1（`clear` 档 Material 除外，见 [玻璃效果](#玻璃效果)）                                                    | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/glass-contrast.test.ts`、`web/src/design-system/wallpaper-accent.test.ts` |
-| 控件边界与焦点环               | 控件边界与焦点环 ≥ 3:1；焦点环为 2px `--ring`，只在 `:focus-visible` 出现                                                                                     | 实页清单                                                                                                                            |
+| 文字对比度                     | 正文与次要信息文字（含 `--muted` 承载的时间、计数、脚注、说明等可读信息）≥ 4.5:1；仅禁用控件与纯装饰元素不适用文字对比度下限。`glass-contrast.test.ts` 中对玻璃表面 `--muted` 的 ≥ 3:1 断言仅为无模糊极值背景的合成回归探针，不构成信息文字降为 3:1 的规范豁免；`clear` 档 Material 未纳入自动对比度断言（见 [玻璃效果](#玻璃效果)） | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/glass-contrast.test.ts`、`web/src/design-system/wallpaper-accent.test.ts` + 实页清单 |
+| 控件边界与焦点环               | 非文字控件边界、复选框 / 图标块边缘等图形界面部件及焦点环 ≥ 3:1；焦点环为 2px `--ring`，只在 `:focus-visible` 出现                                                                                     | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/glass-contrast.test.ts` + 实页清单                                                    |
 | 选中不只靠颜色                 | 配合勾号、外环或 `aria-current` / `aria-pressed`                                                                                                              | 实页清单                                                                                                                            |
 | 命中区                         | 粗指针（`any-pointer: coarse`）下所有可操作目标 ≥ 44px；仅 hover 出现的操作在触屏常显或进入 `⋯` 菜单                                                          | 部分 e2e（`apps-density`、`route-style-stability`），其余实页清单                                                                   |
 | `prefers-reduced-motion`       | 位移、缩放、旋转及共享元素的尺寸 / 位置插值一律改为同时长的纯透明度变化，页面切换不做过渡；加载指示（spinner）属于必要动效，保持旋转；不使用全局 `*` 清零规则 | `/design-lab/motion` + 实页清单                                                                                                     |
 | `prefers-reduced-transparency` | 所有玻璃档位按 `off` 渲染（实色、无 blur）；不支持 `backdrop-filter` 时同样处理                                                                               | 实页清单                                                                                                                            |
 | Escape 层栈                    | `components/ui/escape-layer-stack.tsx` 拥有 Escape：每次只关闭最上一层，关闭后焦点回到触发控件                                                                | `web/src/components/ui/escape-layer-stack.test.ts`                                                                                  |
 | 键盘                           | 主要流程可仅用键盘完成                                                                                                                                        | 实页清单                                                                                                                            |
-| 壁纸可读性                     | 自定义壁纸由用户选择的“可读性”遮罩保证首页文字可读；“无”遮罩下不承诺可读性                                                                                    | 实页清单                                                                                                                            |
+| 壁纸可读性                     | 自定义壁纸由用户选择的“可读性”遮罩辅助首页文字可读；“无”遮罩与 `clear` 档 Material 属于用户主动选择的通透偏好，静态 Token 与自动测试不覆盖任意壁纸下的 4.5:1 对比度                                     | 实页清单                                                                                                                            |
 
 ## 二、系统语法
 
@@ -117,7 +117,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--font-markdown-title-size`      | 1.35em             | 同上下文    | Markdown 标题，相对正文缩放                                                                            |
 | `--font-markdown-section-size`    | 1.2em              | 同上下文    | Markdown 二级标题                                                                                      |
 | `--font-markdown-subsection-size` | 1.1em              | 同上下文    | Markdown 三级标题                                                                                      |
-| `--font-launcher-micro`           | 9                  | 600         | 应用文件夹小尺寸预览中 14px 缩略图内的首字母（仅此处低于 12px）                                        |
+| `--font-launcher-micro`           | 9                  | 400         | 应用文件夹小尺寸 2×2（14px）预览与大文件夹第 9 格 2×2 余数缩略图内的首字母（仅此处低于 12px）          |
 
 #### 间距、圆角、尺寸
 
@@ -147,9 +147,9 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--search-inner-radius`   | 同心内缩，不小于 `--control-radius` | 搜索框内部控件                                       |
 | `--radius-search-inner`   | `--search-inner-radius`             | 别名                                                 |
 | `--radius-launcher-ratio` | 0.23                                | 应用图标圆角占边长的比例，仅用于下面三项             |
-| `--radius-launcher-icon`  | 图标边长 × ratio                    | 首页与工作区应用图标                                 |
-| `--radius-launcher-mini`  | 14px × ratio                        | 文件夹预览中的小图标                                 |
-| `--radius-dock-glyph`     | 28px × ratio                        | 任务栏与设置中的紧凑应用图标                         |
+| `--radius-launcher-icon`  | `--launcher-icon × ratio`                                                            | 首页、工作区与应用表单预览图标（`launcher.css` / `apps.css`）                                                                            |
+| `--radius-launcher-mini`  | `14px × ratio` / `--launcher-mini-size × ratio` / `--launcher-mini-size / 2 × ratio` | 文件夹预览缩略图（唯一 owner `launcher.css`：小文件夹 2×2 的 14px 图块、大文件夹 3×3 预览图块，以及第 9 格 2×2 余数子图以预览格位一半 `22px` 缺省基准折算） |
+| `--radius-dock-glyph`     | `--control-compact-height（28px）× ratio`                                            | 任务栏紧凑应用图标（`tokens.css` 定义，`dock.css` 消费）                                                                                 |
 
 #### Tailwind 视觉工具类与响应式前缀
 
@@ -200,7 +200,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `components/ui/primitives.css` 统一拥有。不另造 Button / Dialog / Menu / Tabs / Toast。
 
-- **Button**：`default`（强调色填充，每区域最多一个）、`outline`（`--surface-soft` 填充、无描边，次要操作）、`ghost`（透明，工具栏与图标按钮）、`destructive`（危险文字色，仅在确认对话框中填充）、`link`。尺寸 `default` 36、`sm` 28、`icon` 36 方形。
+- **Button**：省略 `variant` 时默认 `outline`（`.button--subtle`，`--surface-soft` 填充、无描边，作为次要操作与安全默认，避免未传参误建多个主按钮）；显式 `variant="default"` 为 primary（`.button--primary`，强调色填充，每区域最多一个）；`ghost`（`.button--ghost`，透明，工具栏与图标按钮）；`destructive`（`.button--danger`，普通态为危险文字色配 12% 危险色浅底，仅在 `AlertDialog` 确认对话框内实色填充 `--danger`）；`link`（`.button--link`，强调色文字、无内边距，粗指针命中高 ≥ 44px）；`content`（`.button--content`，块级透明、继承字号与字色、允许换行、最小 44×44 命中区，用于会话列表项与搜索结果等内容消费触发器，而非传统动作按钮）。常规按钮的 `size` 是单选：`default` 高 36、`sm` 高 28、`icon` 为 36 方形；粗指针命中区 ≥ 44×44。`link` 与 `content` 的尺寸另按上述变体规则覆盖。
 - **Input / Textarea / Select**：独立表单与纵向分组行中使用 surface 背景 + `--border-control` 细边；在横向分组行内使用无边框、透明底、值右对齐的行内输入，hover 显示 `--surface-soft` 底，键盘焦点显示焦点环。
 - **分组列表（Grouped List）**：设置、账户、管理页的基本单元。圆角 `--radius` 的 `--surface` 容器；行高 ≥ 44，左侧标签，右侧控件或值；行间为左侧内缩的细线；分组标题（14 / 600、前景色）在容器外上方，脚注（metadata、`--muted`）在容器外下方。
   - **容量与堆叠**：`semantic.css` 拥有 `SettingsRow` 布局。普通单值行保留右对齐值与 Input / Select；标签以局部语义 Token `--settings-row-label-min: 8em` 保留约八个正文字符的阅读容量，下限不超过行可用宽度，容量不足时控件先换到下一行并保持右对齐，不把短标签压成字列。长用户标题、metadata 与值允许在行内换行，不使用全局 nowrap 或 max-content 下限。
@@ -213,7 +213,8 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 - **菜单**：`⋯` 触发；危险项置底、红色、前有分隔线。互斥选择（如搜索引擎）用单选项，当前项显示勾号。
 - **应用图标**：桌面 48px、移动 44px，格宽与间距不随图标变化。服务端将满版不透明正方形铺满 256px 画布；透明或半透明边缘的图形保留白底与每侧约 20% 内边距。`WebAppGlyph` 是非交互呈现 owner，`WebAppIcon` 只添加启动/排序交互。无可用图标时使用按 hostname 派生的稳定色相浅底（HSL 45% / 90%）与固定深墨色 `#1d1d1f`，字重 400；这是域名身份色而非强调色，明暗主题保持同一对比度。`iconFallback.ts` 拥有运行时颜色，`presentation.ts` 拥有图像画布；对比度与满版/透明/半透明测试分别保护这两个边界。
   - 满版、透明图形白底、首字母回退共享 1px 内环（`--glyph-edge`，黑色 50%，覆盖在图像之上）和贴面极淡投影；统一消费 `--shadow-elevation-glyph`，投影由 `--space-hairline`、`--space-half` 与 `--glass-edge-bottom` 推导，owner 为 `tokens.css`。此档仅用于图标块和文件夹预览表面，以浅 / 深壁纸及满版图标实页验证边缘；浅底边缘对比度须 ≥3:1。添加与“更多（N）”使用同尺寸 Material 小块和同一边缘，字形为 `--muted`，不使用灰色 `--surface-soft` 底。
-  - 大文件夹保持 2×2 方格足迹，正方形表面边长为 `--launcher-col-w + --launcher-gap-x + --launcher-icon`，左偏移为 `(格宽 − 图标宽) / 2`、上偏移为 `--launcher-pad-t`；与相邻两列图标外缘对齐。名称位于第 2 行应用名称基线，不占表面高度。精细 / 粗指针均为固定 3×3 预览格位，不足时从左上填充，空文件夹保留空状态图标；仅成员 >9 时第 9 格为余数格。迷你应用的激活按本次输入判定、不按设备能力：鼠标、触控笔与键盘直接打开迷你应用（带触屏的电脑同样适用），触摸点按表面任意位置（含迷你图标）打开文件夹（≥44px）；整理模式下粗指针设备的迷你图标不单独命中，整块表面供拖动。390 / 1440 实页验证边缘误差 ≤1px、名称基线与无裁切。
+  - 文件夹缩略图尺寸与圆角由 `web/src/components/searcher/launcher.css` 唯一拥有：基础 `.launcher-folder-mini-glyph` 宽 `min(100%, 19px)`、正方形、首字母字重 400；小文件夹（1×1，表面圆角 `--radius-launcher-icon`）为固定 2×2 × 14px 格位（间距 `--space-1`），缩略图 `14px`、圆角 `--radius-launcher-mini = calc(14px * var(--radius-launcher-ratio))`、首字母 `--font-launcher-micro`（9px）。大文件夹保持 2×2 方格足迹，正方形表面边长为 `--launcher-col-w + --launcher-gap-x + --launcher-icon`、圆角 `--radius-lg`（16px），左偏移为 `(格宽 − 图标宽) / 2`、上偏移为 `--launcher-pad-t`；与相邻两列图标外缘对齐。名称位于第 2 行应用名称基线，不占表面高度。精细 / 粗指针均为固定 3×3 预览格位（单格边长 `--launcher-mini-size = min(var(--launcher-icon), calc((var(--launcher-surface-size) - var(--space-5) - 2 * var(--space-2) - 2 * var(--space-1)) / 3))`，内边距 `--space-2`、间距 `--space-1`），普通缩略图填满单格、圆角覆写为 `calc(var(--launcher-mini-size) * var(--radius-launcher-ratio))`、首字母 `--font-title-size`；不足时从左上填充，空文件夹保留空状态图标；仅成员 >9 时第 9 格为 2×2 余数网格（`.launcher-folder-remainder-grid` 含 2px 内边距与 2px 间距，内层子图实际宽度小于半格，其圆角按预览格位的一半 `calc(var(--launcher-mini-size, 22px) * var(--radius-launcher-ratio) / 2)` 计算、首字母用 `--font-launcher-micro`）。迷你应用的激活按本次输入判定、不按设备能力：鼠标、触控笔与键盘直接打开迷你应用（带触屏的电脑同样适用），触摸点按表面任意位置（含迷你图标）打开文件夹（≥44px）；整理模式下粗指针设备的迷你图标不单独命中，整块表面供拖动。390 / 1440 实页验证边缘误差 ≤1px、名称基线与无裁切。
+  - 余数网格容器自身不是缩略图的后代，圆角继承根级 `14px × ratio`；仅其内部子图按半个预览格位计算，不能把两者的半径当成同一公式。
   - 首页应用底板与搜索框共用 `--layout-home-content-max`（<1024px 640px；≥1024px 为 `clamp(640px, 40vw, 880px)`，1440→640、1920→768、≥2200→880），圆角 `--radius-lg`（16px）；≥768px 内边距 `--space-4`（16px），<768px 同搜索框全宽且内边距 `--space-2`（8px），粗指针命中区仍 ≥44px。背景 / blur / 阴影只消费全局玻璃 Token；`off` 与减少透明度时实色、无 blur 且保留边缘。关闭首页应用不渲染底板；首页没有已固定图块时只含“+”，有图块时不显示“+”；文件夹弹层锚定底板上缘。“显示应用底板”关闭时 `.launcher-plate[data-plate="hidden"]` 只去掉背景、blur、阴影与边缘，保留盒子（内边距、圆角、实测矩形），名称改用 `--wallpaper-text-halo`，与“静”状态一样直接落在壁纸上；文件夹表面、“+”与“更多（N）”不变。
   - 列数按底板内容区实测宽度求上限，网格水平居中；精细指针宽屏格宽 / 间距 / 图标固定为 76 / 12 / 48（粗指针 80 / 8 / 48），宽度只增加列数：1440 下 608px、7 列容量（7×76 + 6×12 = 604，余 4 对称分配；粗指针 7×80 + 6×8 = 608），1920 下 736px、8 列，2560 下 848px、9 列。<768px 底板与搜索框同宽：390px 下内宽 342px，5×64 + 4×6 = 344px 超出，故用 4 列；430px 起内宽 382px，可容 5 列。行高 = 格宽、纵横间距相等。显示名称时 `--launcher-pad-t` 为 `(格宽 − 图标宽 − --space-launcher-icon-gap − --font-metadata-line-height) / 2`，图标、间距与一行名称作为一组在方格内垂直居中（桌面 5px），底板上下留白等高；隐藏名称不改方格，只把 `--launcher-pad-t` 设为 `(格宽 − 图标宽) / 2`（`[data-labels="hidden"]`），使图标与悬停框在方格内垂直居中、大文件夹表面居中于 2×2 足迹，底板上下留白对称。`planHomeLibrary` 只排图块（“+”不参与），外层只在容量列末行仅 1 个图块时收窄列数，并仍交给 `calculateDesktopLayout` 回填：不增加已有行数、不超过有效行数，选使末行 ≥2 个图块的最大列数，仅做必要的收窄；8 个 / 上限 7 列 → 6 + 2，与上限 6 列一致，避免宽屏反而收成 4 + 4；19 个 / 上限 6 列 → 5 列 × 4 行（末行 4 个），12 个 / 6 列与 7 个 / 5 列不变。含大文件夹时不做列数平衡，保持 2×2 足迹、回填和“更多”预留规则。
   - 实色表面（工作面板、Sheet）不使用 Material：文件夹取 `--surface-soft` 实色并关闭模糊与顶光，保留 `--shadow-elevation-glyph`。预览小图标为 `--surface-solid`，明暗主题均须可辨识边界。
@@ -263,7 +264,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 | 基础控件外观                    | `web/src/components/ui/*.tsx` + `primitives.css`                      |
 | 页面骨架、分组列表、状态反馈    | `web/src/components/searcher/semantic.tsx` + `semantic.css`           |
 | reset、AppShell、顶栏、壁纸画布 | `web/src/styles/global.css`                                           |
-| 场景布局与领域呈现              | 对应 feature 的 CSS（如 `launcher.css`、`notes.css`、`settings.css`） |
+| 场景布局与领域呈现              | 对应 feature / 领域 CSS（如 `launcher.css`、`home-notes.css`、`documents-workspace.css`、`document-editor.css`、`document-colors.css`、`markdown.css`、`settings.css`；原 `notes.css` 已拆分退役） |
 
 feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 primitive 前须确认现有组件及其 variant 无法表达，且至少两个页面需要同一语义。`deno task check:ui` 在颜色语义属性、颜色语义自定义属性及支持的 TSX 静态样式 / SVG 属性 / 任意颜色类中以 `raw-color` 拒绝 hex、颜色函数和 CSS 命名色，包括渐变、阴影与 `var()` fallback 中的颜色；Token、`currentColor` 和 `transparent` 允许，字符串与 URL 内容不作颜色判定。此规则与 `unregistered-accent-fill` 独立：前者检查 raw 色值，后者检查强调色填充的文件和选择器登记。门禁还拒绝 raw 字号、圆角、阴影、间距与 z-index、未定义的 CSS 变量、未登记的字号 / 圆角 Token 及其定义，以及未登记的 Tailwind 视觉尺度与断点前缀。登记表由 `scripts/ui-guard/registry.ts` 从本文解析，表格缺失或格式错误时门禁失败；`tokens.css` 的登记工具类及断点还须与表中唯一来源一致。
 
@@ -323,14 +324,14 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 | regular | 78% / 84%                | 86% / 90%                | 20px | 2        | 1        |
 | clear   | 45% / 55%                | 76% / 84%                | 8px  | 1.8      | 0.25     |
 
-- fill 是 `--material-solid`（Floating 为 `--surface-l3`）与透明的混合比例。fill 有下限（底线：对比度）：在深 / 浅照片极值与饱和色背景上，正文 ≥ 4.5:1，`--muted` 次要文字 ≥ 3:1；暗色的下限更高，因为浅色文字在亮背景上需要更厚的底（当前实测 Material 下限亮 69%、暗 81%）。Floating 在所有档位、Material 在 off / soft / regular 守此下限，由 `design-system/glass-contrast.test.ts` 逐档逐主题检验，低于下限不得合入。
-- `clear` 是唯一的例外：用户主动选择“通透”时 Material 明显透出壁纸，不承诺 Material 上文字的对比度（与壁纸可读性选“无”同理），设置页在选中时显示一行说明。菜单、Popover、建议列表等 Floating 仍守下限。不得把这一例外扩展到其他档位或默认档。
+- fill 是 `--material-solid`（Floating 为 `--surface-l3`）与透明的混合比例。规范要求玻璃表面上的正文与可读信息文字均须 ≥ 4.5:1，3:1 仅适用于非文字控件边界、图形部件（如空文件夹字形、图标块内环、任务复选框）与焦点环。`design-system/glass-contrast.test.ts` 以无模糊 sRGB 极值样本加顶光建立自动回归探针：在 Floating 四档与 Material `off` / `soft` / `regular` 上断言 `--foreground` ≥ 4.5:1，并对非文字图形及玻璃表面 `--muted` 探针断言 ≥ 3:1（由此确定当前合成模型下的 Material fill 下限：亮 69%、暗 81%）。该 3:1 探针仅反映合成回归覆盖边界，不得将玻璃表面的普通 `--muted` 信息文字解释为 3:1 合规豁免；按同一极值无模糊合成模型计算，Floating `dark/regular` 在 `[224,224,224]` 背景上 `--muted` 约为 4.18:1、`light/clear` 在 `[32,32,32]` 上约为 3.62:1，因此 Floating / Material 上的可读次要信息（如文件夹弹层计数 `.launcher-popup-count`）在极端背景下的 4.5:1 仍属合成模型潜在风险与实页待核验边界，不能仅凭现有测试宣称已验证通过。
+- `clear` 是用户主动选择的通透档位：Material fill 降至 45% / 55% 以透出壁纸（与壁纸可读性遮罩选“无”同理），设置页在选中时显示可读性说明；`glass-contrast.test.ts` 未将 `clear` 档 Material 纳入对比度断言，静态 Token 亦不保证其在任意壁纸上达到 4.5:1（开启 `prefers-reduced-transparency: reduce` 或不支持 `backdrop-filter` 时自动回退为 `off` 100% 实色）。菜单、Popover、建议列表等 Floating 在 `clear` 档仍保持 76% / 84% 填充并纳入上述合成探针。不得把 `clear` 档 Material 的未覆盖状态表述为已验证可读，也不得扩展到默认档或 `off` / `soft` / `regular`。
 - `--shadow-material-edge`（顶部 1px 高光、1px 内环和底部 1px 暗线）在所有档位保留；图标块、Material 与 Floating 分别消费 `--shadow-elevation-glyph`、`--shadow-elevation-material`、`--shadow-elevation-floating`，组合边缘与对应投影，不在组件中另加更强阴影。
 - `--glass-sheen`：Material 与 Floating 背景最上层的白色顶光（顶部最亮，到 55% 高度渐隐；亮色峰值 60%，暗色 6%），按上表随档位缩放；`clear` 减弱顶光，避免白色顶光把透出的壁纸重新盖成乳白。对比度测试按文字所在位置计入顶光。
 - off / soft / regular 的可感知度来自 blur、saturate、边缘高光、顶光与默认画布的色相变化，不得为“更透”把这三档下调到 fill 下限以下；要更透只能选 `clear`。
 - 不支持 `backdrop-filter` 或系统开启 `prefers-reduced-transparency: reduce` 时，所有档位按 `off` 渲染（实色、无 blur），`--shadow-material-edge` 保留。设置页显示一行说明，但不禁用控件，也不改写已存值。
 - 无壁纸时的默认画布是低饱和 mesh 渐变（强调色加 `--canvas-mesh-secondary` 的大色斑），让玻璃背后有色相与明暗可折射；不提供关闭选项。明暗主题独立定义 `--canvas-mesh-base` / `--canvas-mesh-floor` 与色斑混合比例，不复用控件表面作为画布底色：浅色左下保留灰蓝色调而非近白空洞，深色底部抬升至中性灰紫而非近黑暗斑。`--canvas-mesh-secondary` 的色相按页面加载时的本地时段选择（`WallpaperSurface` 的 `data-daypart`：早 05–10 暖杏、午 11–17 浅天蓝、夜 18–04 淡紫；深色为暖褐、灰蓝、灰紫），明度与默认值接近，玻璃对比度不变；只在挂载时决定，不循环、不过渡。
-- 应用底板内名称直接使用 Material 表面的前景色，不套逐项胶囊、不依赖 `--wallpaper-text-halo`；off / soft / regular 档明暗主题与壁纸夹具上应用名对比度须 ≥4.5:1（`clear` 不承诺）。底板外直接放在壁纸上的“静”状态继续用 `--wallpaper-text-halo` 表面色光晕，图片壁纸上保留现行 Material 小胶囊底；壁纸文字的强调色用途见 [强调色用途](#强调色用途)。
+- 应用底板内名称直接使用 Material 表面的 `--foreground` 前景色，不套逐项胶囊、不依赖 `--wallpaper-text-halo`；`off` / `soft` / `regular` 档明暗主题与壁纸夹具上应用名由 `glass-contrast.test.ts` 校验合成对比度 ≥ 4.5:1，`clear` 档 Material 未纳入该自动断言。底板外直接放在壁纸上的“静”状态继续用 `--wallpaper-text-halo` 表面色光晕，图片壁纸上保留现行 Material 小胶囊底；壁纸文字的强调色用途见 [强调色用途](#强调色用途)。
 - 档位对比在设计实验室“材质”区块，用高对比夹具并排渲染四档。
 
 ### 首页笔记（Home Note）
@@ -344,7 +345,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 - **窗口尺寸变化**：越界的 `col` / `row` 在所在带内夹取，不丢失、不写回服务器；带在当前视口不存在时（如高底板挤掉 shelf）按默认落点重新放置，同样不写回。只有用户再次拖动、交换或键盘移动时才保存。
 - **默认落点**：先放置有保存坐标的笔记；没有坐标或所在带不存在的笔记由 `placeHomeNotes` 计算默认落点：避开搜索框、应用底板与“静”状态，左右两侧交替，从搜索行向下、再向上填满，最后使用 shelf；放不下 W 时按 S 渲染。`placeHomeNotes` 为纯函数，owner 为 `home-grid-cells.ts`。
 - **尺寸切换**：笔记菜单提供 S / W 两项（取代原“展开 / 折叠”）。切换只改 `size`，不改变已保存的单元；放不下 W 时按 S 渲染。
-- **颜色**：首页固定笔记统一使用 `--glass-sheen` + `--material-regular` 中性材质，移除整面着色、色点及首页配色入口。底层 `color` 保留，笔记列表色点与编辑器五项颜色单选不变。正文对比度 ≥4.5:1、任务框边界 ≥3:1（off / soft / regular；clear 沿用可读性例外）。
+- **颜色**：首页固定笔记统一使用 `--glass-sheen` + `--material-regular` 中性材质，移除整面着色、色点及首页配色入口。底层 `color` 保留，笔记列表色点与编辑器五项颜色单选不变。标题、正文与底部任务进度计数均使用 `--foreground`（不降为 `--muted`）；`glass-contrast.test.ts` 在 `off` / `soft` / `regular` 壁纸夹具上校验正文与进度文字 ≥ 4.5:1、任务框边界 `--task-box-border` ≥ 3:1，`clear` 档 Material 未纳入该自动断言。
 - **排版**：标题 `--font-body-size`（14 / 22）/ 600，正文 `--font-body-size`（14 / 22）/ 400，继承 `--foreground`；标题行与正文间距 `--space-2`（8px），卡片内边距 `--space-4`（16px）。通过标题 600 / 正文 400 与短预览留白建立层级，不新增 Token。正文按整行裁切：任务行、列表行与段落共享同一行距（任务复选框在行内），以 Range 的实际 line box 计算可见高度，停在最后一条完整行的底部；仅在实际溢出时最后一行渐隐，渐隐不得切半个字，正文不出现滚动条。短预览行数：S 档正文 3 行、W 档 4 行；<768px 纵向堆叠统一 3 行，带任务的堆叠卡为 2 行以容纳底部进度线。无标题但有正文的笔记不重复显示首行标题，且无标题也不额外增加正文行数。不做插画与链接图片预览。任务进度移至卡片底部，由原生 `<progress>` 2px（`--space-half`）中性前景色填充的细进度线与 `--font-metadata-size`（12 / 16）继承 `--foreground` 的完成数 / 总数计数（数字等宽）组成，不新增强调色。任务 checkbox 保留自绘样式：未完成 `--task-box-border` 描边、已完成墨色填充加镂空对勾，边框对组件底 ≥3:1、正文 ≥4.5:1。粗指针下任务命中区仍为 44×44：只在行首复选框列内向上下扩展到 44px 高，相邻行重叠带按行中心最近者判定，不改变 22px 行距。
 - **跨断点**：≥1024px 且至少一侧有完整单元时为分带吸附网格；两侧的负行与底板下方 shelf 只在这个形态存在。768–1023px 与 1024–1087px 无侧列时为两列流式（S 占一列，W 跨两列，高度仍为单元高；与底板的间距等于搜索框→底板间距，笔记间距等于应用网格间距）；<768px 为纵向堆叠（单列、与搜索框同宽、单元高），取代原单张轮播。各断点由同一组件渲染，材质与排版一致，没有新增尺寸档位。流式与堆叠中无标题卡片可聚焦，获得焦点时显示与卡片同圆角的焦点环。
 - **容量与“更多笔记”**：入口为固定在视口底部、任务栏避让区域之上的 Material pill，消费 `--space-2` 间距，不占网格单元；可见高度 32px，粗指针及窄屏命中区 ≥44px。点击直达笔记面板，不与搜索框、底板、笔记或任务栏相交。容量依据扣除任务栏后的可用区域完整单元计算；两侧计入搜索框上下的可用行，shelf 位于底板下 20px，W 占两格，两侧单列时按 S 渲染或放入 shelf。窗口变化不改写保存坐标。

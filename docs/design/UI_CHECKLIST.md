@@ -4,7 +4,7 @@ UI PR 在描述中逐项勾选；不适用写原因。依据 [VISUAL_LANGUAGE.md
 
 ## 底线
 
-- [ ] 文字对比度 ≥ 4.5:1，控件边界与焦点环 ≥ 3:1（light / dark 均检查）。
+- [ ] 正文与次要信息文字（含 `--muted`）对比度 ≥ 4.5:1，非文字控件边界、图形部件与焦点环 ≥ 3:1（light / dark 均检查；禁用控件与纯装饰元素除外，合成测试探针不替代实页可读性检查）。
 - [ ] 焦点环为 2px `--ring`，只在 `:focus-visible` 出现；选中不只靠颜色。
 - [ ] 粗指针下可操作目标 ≥ 44px；hover 才出现的操作在触屏常显或进入 `⋯` 菜单。
 - [ ] `prefers-reduced-motion` 与 `prefers-reduced-transparency` 下表现正确。
