@@ -16,12 +16,30 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   编辑技术验证入口，仅本地演示，不保存或替换笔记。验证结论、bundle 口径和 #110
   输入约束见 [M0A 报告](editor/MARKDOWN_EDITOR_M0A.md)。
 - 页面语义由 `components/searcher/` 拥有：`PageShell` / `PageHeader`
-  管理页面骨架与唯一标题；`semantic.tsx` 提供 `Section`、`SettingsCard` /
-  `SettingsRow`、`ActionGroup`、`EmptyState`、`StatusBanner`、`LoadingState`、`UndoToast`、`LocalNavigation`、`ManagementTable`
+  管理页面骨架与唯一标题；`semantic.tsx` 提供 `Section`、`SettingsGroup`、
+  `SettingsCard` / `SettingsRow`、`ActionGroup`、`EmptyState`、`StatusBanner`、
+  `LoadingState`、`UndoToast`、`LocalNavigation`、`ManagementTable`
   等共享语义组件。Feature 不另建同名反馈或分组容器。
-- 标题层级：每个页面只有一个 `h1`。设置页 `h1` 为“设置”，Tab 为 `h2`，分组为
-  `h3`；Tab 内的 `LoadingState` / `EmptyState` 使用 `headingLevel={3}`。Ask
-  登录态的会话标题是唯一 H1。
+- 标题层级：独立内容页保持单一可见 `h1`（首页 `/` 不设页面 `h1`，以命名
+  landmark 组织区域；首页工作面板 `/?view=apps`、`/?view=notes` 标题为 `h2` /
+  `SheetTitle`，面板内分组与 `EmptyState` 使用 `headingLevel={3}`）。设置与账户
+  共用 `SettingsShell`：`<nav aria-label="设置分类">` 含 `.settings-nav-title`
+  （`h1`“设置”），`<section class="settings-panel">` 含当前分类的 `PageHeader`
+  （`h1`：“账户与安全”、“搜索”、“外观”、“AI 问答”、“数据与同步”、“快捷键”）。
+  `<768px` 的 `/settings`（`data-view="list"`）显示分类导航与 `h1`“设置”，通过
+  `display: none` 隐藏右侧面板；`≥768px` 各设置/账户路径（`/settings` 默认展示
+  “搜索”）及 `<768px` 各详情路径（`/settings/:tab`、`/account`，
+  `data-view="detail"`）通过 `display: none` 隐藏 `.settings-nav-title`（窄屏详情
+  隐藏整个 `.settings-nav`），以当前分类 `PageHeader` 作为唯一可见/暴露给辅助技术
+  的 `h1`。设置、账户与管理后台内的 `SettingsGroup` / `Section` 默认渲染 `h2`；
+  `EmptyState` 默认渲染 `h2`，仅在已有上层 `h2` 容器时传 `headingLevel={3}`；
+  `LoadingState` 为 `role="status"` / `presentation` 状态容器，不渲染 heading。
+  管理后台 `PageHeader` 的 `h1` 为“管理后台”，`LocalNavigation`（`aria-label="管理后台主导航"`）
+  只渲染导航链接、不渲染 Tab `h2`。Ask 访客态 `PageHeader` 为 `h1`“AI 问答”，
+  登录态对话工作区以 `ConversationHeader` 的会话标题作为唯一 `h1`。
+  已知待单独修复的差距：管理后台部分 `EmptyState` 在没有上层 `h2` 时直接使用
+  `h3`（`AdminPage.tsx`）；登录用户无可用模型时 Ask 渲染空状态，但不渲染页面 `h1`
+  （`AskPage.tsx`）。这些现状不改变上述标题层级要求。
 - 图标使用 Lucide，`size` 只允许 14、16、20（`check:ui` 强制）。语义映射：应用
   `AppWindow`、笔记 `NotebookPen`、总览 `LayoutGrid`、文件夹
   `Folder`。
@@ -124,15 +142,24 @@ deno task check:ui --update
 
 - `/ask` 是对话工作区（空状态），`/ask/:id` 是会话深链；同一路由元素承载两者，在 `/ask` 发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push。登录用户由任务栏进入 AI 问答；无模型时保留入口并显示不可用原因，访客不显示任务栏。
 - `/?view=apps` 与 `/?view=notes` 是首页上的应用、笔记工作面板；功能切换 push 浏览器历史，重复点击当前入口不重置，浏览器返回保留未保存保护。不再有资料库根视图或头像内的应用 / 笔记 / AI 导航。
-- `/settings/search` replace 到 `/settings`；未知 Settings/Admin 子路径显示
-  404。
+- `/settings` 与 `/settings/search` 均解析为 `search` 分类（`/settings/search`
+  是“搜索”分类的直接深链，不重定向到 `/settings`）：`≥768px` 双栏同时显示“设置分类”
+  导航与“搜索”面板；`<768px` 下 `/settings` 为分类列表页（`data-view="list"`），
+  `/settings/search` 等 `/settings/:tab` 与 `/account` 打开详情视图
+  （`data-view="detail"`）并提供返回 `/settings` 的“设置”链接。未知
+  Settings/Admin 子路径显示 404（提供“返回首页”及“返回设置”/“返回管理后台”）。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。成功后由
   页面上“已登录”状态这一处 replace 到目标，只导航一次（`/share` 这类一次性入口依赖它）。
 - `/share` 是分享目标，不渲染内容页，立即 replace 到首页或登录，见
   [首页与桌面 · 捕获入口](workspace.md#捕获入口)。
-- Settings/Admin 内部 Tab replace 当前 history entry，外部进入具体 Tab 保留正常
-  entry；二级页面 breadcrumb 提供稳定的上层与首页目标。登录用户的设置导航首项为
-  “账户与安全”（`/account`），按设置内部 Tab 处理。
+- 外部进入 `/settings`、`/settings/:tab`、`/account` 或 `/admin/:tab` 保留正常
+  history entry。登录用户的设置导航首项为“账户与安全”（`/account`），与各设置分类
+  共用 `SettingsShell`：`≥768px` 在“设置分类”内切换使用 `replace`（浏览器一次后退
+  即可离开设置/账户）；`<768px` 从 `/settings` 列表点入详情使用 `push`，此时浏览器
+  后退回到列表；详情顶部“设置”链接则 `push` 到 `/settings`，从详情深链直达时也可
+  使用，不等同浏览器后退。Admin 内部 `LocalNavigation` 切换始终 `replace` 当前
+  history entry。设置、账户、管理与回收站不渲染 breadcrumb（`PageHeader` 的
+  `items` 仅用于三层及以上的直达页）。
 - 顶层页面之间的导航（顶栏、用户菜单、404 返回等）启用 React Router
   `viewTransition`；设置、管理内部 Tab 与工作区不使用。首页回答卡片展开为 `/ask/:id`
   使用共享元素过渡（`web/src/lib/shared-element.ts`），不经过 React Router 的
