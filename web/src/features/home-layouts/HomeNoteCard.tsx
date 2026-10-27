@@ -49,6 +49,7 @@ const INTERACTIVE = "a, button, input, label, li.task-list-item";
 export function HomeNoteCard(
     {
         note,
+        cardOwnsFocus = false,
         onOpen,
         onResize,
         onToggleHomeFixed,
@@ -57,6 +58,8 @@ export function HomeNoteCard(
         onDelete,
     }: {
         note: HomeNoteItem;
+        /** The enclosing grid item already opens and moves the note by keyboard. */
+        cardOwnsFocus?: boolean;
         onOpen?: () => void;
         onResize?: (size: DocumentNoteSize) => void;
         onToggleHomeFixed?: () => void;
@@ -236,6 +239,7 @@ export function HomeNoteCard(
                         <Button
                             type="button"
                             variant="ghost"
+                            tabIndex={cardOwnsFocus ? -1 : undefined}
                             className="home-note-title"
                             title={titleOverflowing
                                 ? (note.title ?? note.displayTitle)

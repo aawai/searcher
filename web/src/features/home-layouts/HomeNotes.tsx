@@ -672,9 +672,10 @@ export function HomeNotes(
         );
     };
 
-    const card = (note: HomeNoteItem) => (
+    const card = (note: HomeNoteItem, cardOwnsFocus = false) => (
         <HomeNoteCard
             note={note}
+            cardOwnsFocus={cardOwnsFocus}
             onOpen={() => onOpen?.(note)}
             onResize={(size) => resize(note, size)}
             onToggleHomeFixed={() => onToggleHomeFixed?.(note)}
@@ -702,7 +703,9 @@ export function HomeNotes(
                         className="home-note-flow-item"
                         data-size={note.layout.size}
                         role="group"
-                        tabIndex={note.title?.trim() ? undefined : 0}
+                        tabIndex={!note.title?.trim() && note.body.trim()
+                            ? 0
+                            : undefined}
                         aria-label={note.displayTitle}
                         onKeyDown={(event) => {
                             if (
@@ -790,7 +793,7 @@ export function HomeNotes(
                             swapping={preview?.swap?.note.id === item.note.id}
                             onKeyDown={(event) => onKeyDown(event, item)}
                             onClickCapture={suppressDragClick}
-                            card={card(item.note)}
+                            card={card(item.note, true)}
                         />
                     ))}
                 </section>

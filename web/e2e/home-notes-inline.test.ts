@@ -202,6 +202,27 @@ Deno.test("untitled flow notes keep one body and open from the card or keyboard"
         await page.getByRole("button", { name: "返回首页", exact: true })
             .click();
         await libraryPanel(page).waitFor({ state: "detached" });
+
+        await createHomeNote(page, { title: null, body: "" });
+        await reloadHome(page);
+        await waitForNoteCards(page, 2);
+        const empty = page.locator(".home-note-flow-item").filter({
+            hasText: "无标题笔记",
+        });
+        await page.locator("#search-query").focus();
+        const focused: string[] = [];
+        for (let step = 0; step < 60; step++) {
+            await page.keyboard.press("Tab");
+            const name = await empty.evaluate((element) => {
+                const active = document.activeElement;
+                return active && element.contains(active)
+                    ? `${active.tagName}:${active.getAttribute("aria-label")}`
+                    : null;
+            });
+            if (name) focused.push(name);
+            if (name === "BUTTON:更多操作") break;
+        }
+        assertEquals(focused, ["BUTTON:无标题笔记", "BUTTON:更多操作"]);
     } finally {
         await fixture.close();
     }
