@@ -53,7 +53,14 @@
 }
 
 .home-note-card {
-    --home-note-body-lines: 3;
+    --home-note-body-lines: 5;
+    --space-home-note-pad-block: calc(
+        (
+            var(--home-note-cell) -
+            (var(--home-note-body-lines) + 1) * var(--font-body-line-height) -
+            var(--space-2)
+        ) / 2
+    );
     position: relative;
     display: flex;
     flex-direction: column;
@@ -61,7 +68,8 @@
     box-sizing: border-box;
     width: 100%;
     height: 100%;
-    padding: var(--space-4);
+    padding-block: var(--space-home-note-pad-block);
+    padding-inline: var(--space-4);
     overflow: hidden;
     border-radius: var(--radius-lg);
     background: var(--glass-sheen), var(--material-regular);
@@ -72,12 +80,19 @@
     cursor: default;
 }
 
-/* A wide preview gets one extra line; card geometry stays on the note grid. */
-.home-note-card[data-size="w"] {
-    --home-note-body-lines: 4;
+/* An untitled note without tasks gives the header row to its body while
+   keeping top and bottom whitespace symmetric. */
+.home-note-card[data-untitled="true"]:not(:has(.home-note-head)) {
+    --home-note-body-lines: 6;
+    --space-home-note-pad-block: calc(
+        (
+            var(--home-note-cell) -
+            var(--home-note-body-lines) * var(--font-body-line-height)
+        ) / 2
+    );
 }
 
-/* Title row keeps room for ⋯, not decorative identity markers. */
+/* Title row: title, inline task progress, and room at the end for ⋯. */
 .home-note-head {
     display: flex;
     flex: none;
@@ -87,8 +102,9 @@
     min-height: var(--font-body-line-height);
     padding-inline-end: var(--control-compact-height);
 }
-
-[data-slot="button"].home-note-title {
+[data-slot="button"].home-note-title,
+[data-slot="button"].home-note-title:hover,
+[data-slot="button"].home-note-title:active {
     position: relative;
     display: block;
     flex: 1;
@@ -96,13 +112,14 @@
     height: auto;
     min-height: 0;
     padding: 0;
+    border-radius: 0;
+    background: transparent;
     color: inherit;
     text-align: start;
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
     font-weight: var(--font-title-weight);
 }
-
 /* The text clips, not the button, so the touch band below can reach past it. */
 .home-note-title-text {
     display: block;
@@ -111,40 +128,13 @@
     white-space: nowrap;
 }
 
-.home-note-task-summary {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: var(--space-2);
-    margin-block-start: auto;
-}
-
-.home-note-progress-track {
-    appearance: none;
-    flex: 1;
-    min-width: 0;
-    height: var(--space-half);
-    overflow: hidden;
-    border: 0;
-    border-radius: var(--radius-pill);
-    background: var(--border);
-    color: var(--foreground);
-}
-
-.home-note-progress-track::-webkit-progress-bar {
-    background: var(--border);
-}
-
-.home-note-progress-track::-webkit-progress-value {
-    background: var(--foreground);
-}
-
-.home-note-progress-track::-moz-progress-bar {
-    background: var(--foreground);
-}
-
 .home-note-progress {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
     flex: none;
+    margin-inline-start: auto;
+    color: var(--foreground);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     font-variant-numeric: tabular-nums;
@@ -154,7 +144,7 @@
 .home-note-actions {
     position: absolute;
     inset-block-start: calc(
-        var(--space-4) +
+        var(--space-home-note-pad-block) +
         (var(--font-body-line-height) - var(--control-compact-height)) / 2
     );
     inset-inline-end: var(--space-3);
@@ -230,12 +220,28 @@
 }
 
 .home-note-body[data-overflow] {
-    mask-image: linear-gradient(to bottom,
+    mask-image:
+        linear-gradient(
+        to bottom,
         var(--foreground) calc(100% - var(--font-body-line-height)),
-        transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom,
+        transparent calc(100% - var(--font-body-line-height))
+    ),
+        linear-gradient(
+        to right,
+        var(--foreground) 60%,
+        transparent 100%
+    );
+    -webkit-mask-image:
+        linear-gradient(
+        to bottom,
         var(--foreground) calc(100% - var(--font-body-line-height)),
-        transparent 100%);
+        transparent calc(100% - var(--font-body-line-height))
+    ),
+        linear-gradient(
+        to right,
+        var(--foreground) 60%,
+        transparent 100%
+    );
 }
 
 /* Markdown blocks keep the body line grid instead of adding paragraph margins. */
@@ -394,9 +400,8 @@
     --home-note-body-lines: 3;
 }
 
-/* The task footer needs one line in the short mobile cell. */
-.home-notes--flow[data-mode="stack"] .home-note-card[data-tasks="true"] {
-    --home-note-body-lines: 2;
+.home-notes--flow[data-mode="stack"] .home-note-card[data-untitled="true"]:not(:has(.home-note-head)) {
+    --home-note-body-lines: 4;
 }
 
 @media (max-width: 767px), (any-pointer: coarse) {
@@ -412,7 +417,7 @@
     /* The 44px ⋯ target centres on the title line and stays visible. */
     .home-note-actions {
         inset-block-start: calc(
-            var(--space-4) +
+            var(--space-home-note-pad-block) +
             (var(--font-body-line-height) - var(--control-touch-target)) / 2
         );
         inset-inline-end: var(--space-1);

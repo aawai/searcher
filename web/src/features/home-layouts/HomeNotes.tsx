@@ -19,13 +19,18 @@ import type {
     RefObject,
 } from "react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { DocumentLayoutDto, DocumentNoteSize } from "@shared/documents.ts";
+import {
+    type DocumentLayoutDto,
+    type DocumentNoteSize,
+    HOME_NOTE_SPANS,
+} from "@shared/documents.ts";
 import {
     HOME_BOTTOM_CLEARANCE,
     HOME_NOTE_GRID,
 } from "../../design-system/home-grid.ts";
 import {
     type Band,
+    bandOf,
     canSaveHomeNoteCell,
     type CellGrid,
     type CellRect,
@@ -640,7 +645,28 @@ export function HomeNotes(
     };
 
     const resize = (note: HomeNoteItem, size: DocumentNoteSize) => {
-        onUpdateLayouts?.([{ note, layout: { ...note.layout, size } }]);
+        const item = find(note.id);
+        let layout: DocumentLayoutDto = { ...note.layout, size };
+        if (
+            item &&
+            note.layout.band !== null &&
+            note.layout.col !== null &&
+            note.layout.row !== null
+        ) {
+            const band = grid ? bandOf(grid, item.band) : undefined;
+            const spanCols = HOME_NOTE_SPANS[size].cols;
+            const col = band && band.columns.length >= spanCols
+                ? Math.min(item.col, band.columns.length - spanCols)
+                : item.col;
+            layout = {
+                ...note.layout,
+                band: item.band,
+                col,
+                row: item.row,
+                size,
+            };
+        }
+        onUpdateLayouts?.([{ note, layout }]);
         announce(
             `${note.displayTitle}：已切换为${size === "w" ? "宽" : "小"}尺寸。`,
         );
