@@ -542,6 +542,51 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 );
                 return surface && getComputedStyle(surface).backgroundImage
                     .includes("data:image/png;base64,");
+            }).catch(async (error: unknown) => {
+                console.error(
+                    "Anonymous wallpaper diagnostics",
+                    await guest.evaluate(async () => {
+                        const surface = document.querySelector(
+                            '[data-testid="home-wallpaper-surface"]',
+                        );
+                        const image = document.querySelector(
+                            '[data-testid="home-wallpaper-surface-image"]',
+                        );
+                        const opened = Promise.withResolvers<IDBDatabase>();
+                        const req = indexedDB.open("searcher-client", 1);
+                        req.onsuccess = () => opened.resolve(req.result);
+                        req.onerror = () => opened.reject(req.error);
+                        const db = await opened.promise;
+                        const loaded = Promise.withResolvers<
+                            { wallpaper?: string }
+                        >();
+                        const get = db.transaction("state").objectStore("state")
+                            .get("appearance:anonymous");
+                        get.onsuccess = () => loaded.resolve(get.result);
+                        get.onerror = () => loaded.reject(get.error);
+                        const value = await loaded.promise;
+                        db.close();
+                        return {
+                            url: location.href,
+                            storedWallpaper: value?.wallpaper?.slice(0, 100),
+                            storedLength: value?.wallpaper?.length,
+                            substrate: surface?.getAttribute("data-substrate"),
+                            source: surface instanceof HTMLElement
+                                ? surface.style.getPropertyValue(
+                                    "--wallpaper-image",
+                                ).slice(0, 100)
+                                : null,
+                            computed: image
+                                ? getComputedStyle(image).backgroundImage.slice(
+                                    0,
+                                    100,
+                                )
+                                : null,
+                            page: document.body.innerText.slice(0, 300),
+                        };
+                    }),
+                );
+                throw error;
             });
             assertStringIncludes(
                 await guest.getByTestId("home-wallpaper-surface-image")
