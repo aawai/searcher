@@ -43,8 +43,9 @@ import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
 import { syncThemeColor } from "../pwa/theme-color.ts";
 import {
-    appearanceStorageKey,
+    type AppearanceOwnerStore,
     type AppearanceSyncQueue,
+    createAppearanceOwnerStore,
     queueAppearanceSync,
 } from "./appearance-sync.ts";
 
@@ -187,12 +188,34 @@ export function useAppState() {
 
 export function AppState({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<UserDto | null>(null);
+    const [authReady, setAuthReady] = useState(false);
     const [ready, setReady] = useState(false);
     const [appearance, setValue] = useState<Appearance>(initial);
-    const [appearanceOwner, setAppearanceOwner] = useState<string | null>(null);
     const [syncFailed, setSyncFailed] = useState(false);
     const [authConnectionError, setAuthConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
+    const storeRef = useRef<AppearanceOwnerStore<Appearance> | null>(null);
+    const getOrCreateStore = useCallback((userId: string | null) => {
+        if (
+            storeRef.current &&
+            storeRef.current.isAlive() &&
+            storeRef.current.userId === userId
+        ) {
+            return storeRef.current;
+        }
+        storeRef.current?.dispose();
+        const store = createAppearanceOwnerStore<Appearance>({
+            userId,
+            initial,
+            normalize: normalizeAppearance,
+            readLocal: getLocal,
+            writeLocal: setLocal,
+            onChange: setValue,
+            onHydrated: () => setReady(true),
+        });
+        storeRef.current = store;
+        return store;
+    }, []);
     const sessionRef = useRef<AuthSession | null>(null);
     if (sessionRef.current === null) {
         const session: AuthSession = {
@@ -205,7 +228,7 @@ export function AppState({ children }: { children: ReactNode }) {
     // Object identity is the auth epoch, renewed even when the same account logs in again.
     const updateUser = useCallback((next: UserDto | null, renew = false) => {
         if (userRef.current?.id !== next?.id) {
-            setAppearanceOwner(null);
+            getOrCreateStore(next?.id ?? null);
             setValue(initial);
         }
         if (renew || userRef.current?.id !== next?.id) {
@@ -219,7 +242,7 @@ export function AppState({ children }: { children: ReactNode }) {
         }
         userRef.current = next;
         setUser(next);
-    }, []);
+    }, [getOrCreateStore]);
     useEffect(() => {
         void cleanupLegacyNoteDrafts().catch(() => undefined);
         return () => sessionRef.current!.documentEvents.dispose();
@@ -230,7 +253,7 @@ export function AppState({ children }: { children: ReactNode }) {
         pending: {},
         reconciled: {},
     });
-    const appearanceRevision = useRef(0);
+    // Per-owner revisions live inside storeRef.current.
     useEffect(() => {
         // 旧缓存未关联用户，不能作为匿名或账号偏好继续使用。
         try {
@@ -283,7 +306,7 @@ export function AppState({ children }: { children: ReactNode }) {
             updateUser(next.user);
             setAuthConnectionError(next.connectionError);
         } finally {
-            setReady(true);
+            setAuthReady(true);
         }
     }, [updateUser]);
 
@@ -315,14 +338,15 @@ export function AppState({ children }: { children: ReactNode }) {
 
     // 设备缓存按 owner 隔离；账号共享偏好始终以云端为准。
     useEffect(() => {
-        if (!ready) return;
+        if (!authReady) return;
         const userId = user?.id ?? null;
-        const key = appearanceStorageKey(userId);
-        let alive = true;
-        setAppearanceOwner(null);
-        setValue(initial);
-        const active = () => alive && (userRef.current?.id ?? null) === userId;
-        const revision = appearanceRevision.current;
+        const store = getOrCreateStore(userId);
+        setValue(store.current());
+        const active = () =>
+            storeRef.current === store &&
+            store.isAlive() &&
+            (userRef.current?.id ?? null) === userId;
+        const initialRevision = store.revision();
         sync.current = {
             owner: userId,
             tail: Promise.resolve(),
@@ -337,10 +361,8 @@ export function AppState({ children }: { children: ReactNode }) {
             if (Object.keys(sync.current.pending).length === 0) {
                 setSyncFailed(false);
             }
-            if (appearanceRevision.current !== revision) return;
-            setValue((prev) =>
-                normalizeAppearance({
-                    ...prev,
+            await store.applyCloud(
+                {
                     engine: prefs.defaultEngine,
                     theme: prefs.theme,
                     accent: normalizeAccent(prefs.accent),
@@ -357,18 +379,14 @@ export function AppState({ children }: { children: ReactNode }) {
                     showHomeDate: prefs.showHomeDate,
                     showHomeTime: prefs.showHomeTime,
                     showHomeContinue: prefs.showHomeContinue,
-                })
+                },
+                initialRevision,
             );
         }
         retryAppearanceLoad.current = loadCloudAppearance;
         async function loadAppearance() {
-            const saved = await getLocal<unknown>(key)
-                .catch(() => undefined);
-            if (!active()) return;
-            if (appearanceRevision.current === revision) {
-                setValue(normalizeAppearance(saved));
-            }
-            setAppearanceOwner(key);
+            const hydrated = await store.hydrate();
+            if (!hydrated || !active()) return;
             await loadCloudAppearance();
         }
         void loadAppearance().catch((err) => {
@@ -377,23 +395,16 @@ export function AppState({ children }: { children: ReactNode }) {
             }
         });
         return () => {
-            alive = false;
+            store.dispose();
             if (retryAppearanceLoad.current === loadCloudAppearance) {
                 retryAppearanceLoad.current = () => Promise.resolve();
             }
         };
-    }, [ready, user?.id]);
-
-    useEffect(() => {
-        const key = appearanceStorageKey(user?.id ?? null);
-        if (!ready || appearanceOwner !== key) return;
-        void setLocal(key, appearance).catch(() => {});
-    }, [ready, user?.id, appearanceOwner, appearance]);
+    }, [authReady, user?.id, getOrCreateStore]);
 
     useEffect(() => {
         const expired = () => {
             if (userRef.current) setValue(initial);
-            setAppearanceOwner(null);
             updateUser(null);
             setSyncFailed(false);
             setAuthConnectionError(false);
@@ -440,9 +451,10 @@ export function AppState({ children }: { children: ReactNode }) {
         next: Partial<Appearance>,
         options?: { sync?: boolean },
     ): Promise<void> => {
-        appearanceRevision.current++;
-        setValue((current) => normalizeAppearance({ ...current, ...next }));
-        if (user) {
+        const currentUser = userRef.current ?? user;
+        const store = getOrCreateStore(currentUser?.id ?? null);
+        const localDone = store.update(next);
+        if (currentUser) {
             const updates: Record<string, unknown> = {};
             if (next.theme !== undefined) updates.theme = next.theme;
             if (next.accent !== undefined) updates.accent = next.accent;
@@ -476,10 +488,10 @@ export function AppState({ children }: { children: ReactNode }) {
             ) {
                 if (next[key] !== undefined) updates[key] = next[key];
             }
-            if (Object.keys(updates).length === 0) return Promise.resolve();
-            const owner = user.id;
+            if (Object.keys(updates).length === 0) return localDone;
+            const owner = currentUser.id;
             const queue = sync.current;
-            if (queue.owner !== owner) return Promise.resolve();
+            if (queue.owner !== owner) return localDone;
             if (options?.sync === false) {
                 Object.assign(queue.reconciled, updates);
                 for (const key of Object.keys(updates)) {
@@ -488,15 +500,25 @@ export function AppState({ children }: { children: ReactNode }) {
                 if (Object.keys(queue.pending).length === 0) {
                     setSyncFailed(false);
                 }
-                return Promise.resolve();
+                return localDone;
             }
             for (const key of Object.keys(updates)) {
                 delete queue.reconciled[key];
             }
             Object.assign(queue.pending, updates);
-            return sendPendingAppearance(queue, owner);
+            const syncDone = sendPendingAppearance(queue, owner);
+            return Promise.allSettled([localDone, syncDone]).then(
+                ([localResult, syncResult]) => {
+                    if (syncResult.status === "rejected") {
+                        throw syncResult.reason;
+                    }
+                    if (localResult.status === "rejected") {
+                        throw localResult.reason;
+                    }
+                },
+            );
         }
-        return Promise.resolve();
+        return localDone;
     };
 
     const logout = async (options?: { force?: boolean }) => {
@@ -521,8 +543,6 @@ export function AppState({ children }: { children: ReactNode }) {
         await api("/api/auth/logout", { method: "POST" });
         if (!session.isCurrent()) return true;
         updateUser(null);
-        setAppearanceOwner(null);
-        setValue(initial);
         return true;
     };
 
@@ -537,7 +557,11 @@ export function AppState({ children }: { children: ReactNode }) {
                 retryConnection,
                 appearance,
                 setAppearance,
-                settleAppearanceSync: () => sync.current.tail,
+                settleAppearanceSync: () =>
+                    Promise.all([
+                        storeRef.current?.settle() ?? Promise.resolve(),
+                        sync.current.tail,
+                    ]).then(() => {}),
                 login: (user) => updateUser(user, true),
                 logout,
             }}

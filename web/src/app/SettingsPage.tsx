@@ -269,7 +269,7 @@ export function SettingsPage() {
                     ...diff,
                 };
                 const nextRecords = touchWallpaperPresentation(
-                    appearance.wallpaperPresentations,
+                    { ...appearance.wallpaperPresentations },
                     appearance.wallpaper,
                     nextPres,
                 );
@@ -374,7 +374,7 @@ export function SettingsPage() {
                 composition: { focalX: 0.5, focalY: 0.5 },
             };
             const nextRecords = touchWallpaperPresentation(
-                appearance.wallpaperPresentations,
+                { ...appearance.wallpaperPresentations },
                 url,
                 nextPres,
             );
@@ -414,7 +414,7 @@ export function SettingsPage() {
         setIsApplyingDraft(true);
         try {
             const nextRecords = touchWallpaperPresentation(
-                appearance.wallpaperPresentations,
+                { ...appearance.wallpaperPresentations },
                 parsed.value,
             );
             await setAppearance({
@@ -455,7 +455,7 @@ export function SettingsPage() {
                 composition: focal,
             };
             const nextRecords = touchWallpaperPresentation(
-                appearance.wallpaperPresentations,
+                { ...appearance.wallpaperPresentations },
                 record.url,
                 nextPres,
             );
@@ -486,7 +486,7 @@ export function SettingsPage() {
                 composition: focal,
             };
             const nextRecords = touchWallpaperPresentation(
-                appearance.wallpaperPresentations,
+                { ...appearance.wallpaperPresentations },
                 target.url,
                 nextPres,
             );
@@ -559,7 +559,7 @@ export function SettingsPage() {
                 composition: focal,
             };
             const nextRecords = touchWallpaperPresentation(
-                appearance.wallpaperPresentations,
+                { ...appearance.wallpaperPresentations },
                 target.url,
                 nextPres,
             );
@@ -600,7 +600,7 @@ export function SettingsPage() {
                 await api(`/api/wallpaper/${uuid}`, { method: "DELETE" });
             }
             const nextRecords = purgeWallpaperPresentation(
-                appearance.wallpaperPresentations,
+                { ...appearance.wallpaperPresentations },
                 target.url,
             );
             if (isCurrent) {
