@@ -1783,9 +1783,9 @@ Deno.test(
                 ) {
                     await page.setViewportSize(vp);
                     await spaNavigate(page, "/settings/ai");
-                    await page.locator(".settings-content").waitFor({
-                        state: "visible",
-                    });
+                    await page.getByText("标准稳定模型", { exact: true })
+                        .first()
+                        .waitFor({ state: "visible" });
                     const aiTouchTargets = await page.evaluate(() => {
                         const row = Array.from(
                             document.querySelectorAll<HTMLElement>(
