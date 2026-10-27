@@ -22,23 +22,22 @@ async function selectLeading(page: Page, length: number, expected: string) {
     );
     let selected = "";
     for (let attempt = 0; attempt < 5; attempt++) {
-        await editor.focus();
+        await editor.click();
         await page.keyboard.press("Control+Home");
         await pressRepeatedly(page, "Shift+ArrowRight", length);
+        // Wait for the render frames before verifying the selection, so any
+        // post-focus reset timer or pending flush has settled.
+        await page.evaluate(async () => {
+            for (let frame = 0; frame < 2; frame++) {
+                const { promise, resolve } = Promise.withResolvers<number>();
+                requestAnimationFrame(resolve);
+                await promise;
+            }
+        });
         selected = await page.evaluate(() =>
             globalThis.getSelection()?.toString() ?? ""
         );
         if (selected === expected) {
-            // ProseMirror ingests DOM selection on an async selectionchange; wait for it to flush.
-            await page.evaluate(async () => {
-                for (let frame = 0; frame < 2; frame++) {
-                    const { promise, resolve } = Promise.withResolvers<
-                        number
-                    >();
-                    requestAnimationFrame(resolve);
-                    await promise;
-                }
-            });
             return;
         }
         await page.waitForFunction(() =>
@@ -77,7 +76,7 @@ async function openShortcutDocument(
         ".document-editor-scroll-area .ProseMirror[contenteditable='true']",
     ).filter({ hasText: body });
     await editor.waitFor({ state: "visible" });
-    await editor.focus();
+    await editor.click();
     await page.locator(
         ".document-editor-scroll-area .ProseMirror.ProseMirror-focused",
     ).waitFor({ state: "visible" });

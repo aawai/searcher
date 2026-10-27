@@ -1,6 +1,7 @@
 import ts from "typescript";
 import type { UiViolation } from "./types.ts";
 import { checkFontSize, checkRadius, type VisualRegistry } from "./registry.ts";
+import { staticExpressions } from "./static-expressions.ts";
 import {
     isDesignSystemAllowed,
     isDomainValueException,
@@ -239,6 +240,7 @@ export function scanTsxCode(
     );
 
     const violations: UiViolation[] = [];
+    const expressions = staticExpressions(sourceFile);
 
     function visit(node: ts.Node) {
         if (
@@ -317,38 +319,24 @@ export function scanTsxCode(
             // 1. Inspect className attribute
             if (attrName === "className") {
                 const init = node.initializer;
-                if (init) {
-                    let rawClasses = "";
-                    if (ts.isStringLiteral(init)) {
-                        rawClasses = init.text;
-                    } else if (ts.isJsxExpression(init) && init.expression) {
-                        const expr = init.expression;
-                        if (
-                            ts.isStringLiteral(expr) ||
-                            ts.isNoSubstitutionTemplateLiteral(expr)
-                        ) {
-                            rawClasses = expr.text;
-                        } else if (ts.isTemplateExpression(expr)) {
-                            rawClasses = expr.head.text +
-                                expr.templateSpans.map((s) => s.literal.text)
-                                    .join(" ");
-                        }
-                    }
-
-                    if (rawClasses) {
-                        const tokens = rawClasses.split(/\s+/).filter(Boolean);
-                        const { line, character } = sourceFile
-                            .getLineAndCharacterOfPosition(node.getStart());
-                        for (const token of tokens) {
+                const expression = init && ts.isJsxExpression(init)
+                    ? init.expression
+                    : init;
+                if (expression) {
+                    for (const value of expressions.classes(expression)) {
+                        for (const match of value.text.matchAll(/\S+/g)) {
+                            const { line, character } = sourceFile
+                                .getLineAndCharacterOfPosition(
+                                    value.node.getStart() + value.offset +
+                                        match.index,
+                                );
                             const violation = checkTailwindClass(
-                                token,
+                                match[0],
                                 file,
                                 line + 1,
                                 character + 1,
                             );
-                            if (violation) {
-                                violations.push(violation);
-                            }
+                            if (violation) violations.push(violation);
                         }
                     }
                 }
@@ -358,207 +346,187 @@ export function scanTsxCode(
             if (attrName === "style") {
                 const init = node.initializer;
                 if (init && ts.isJsxExpression(init) && init.expression) {
-                    let objExpr: ts.ObjectLiteralExpression | null = null;
-                    if (ts.isObjectLiteralExpression(init.expression)) {
-                        objExpr = init.expression;
-                    } else if (
-                        ts.isAsExpression(init.expression) &&
-                        ts.isObjectLiteralExpression(init.expression.expression)
+                    for (
+                        const { name: propName, value } of expressions.styles(
+                            init.expression,
+                        )
                     ) {
-                        objExpr = init.expression.expression;
-                    }
+                        const propValue = value.getText(sourceFile);
+                        const { line, character } = sourceFile
+                            .getLineAndCharacterOfPosition(value.getStart());
+                        const posLine = line + 1;
+                        const posCol = character + 1;
 
-                    if (objExpr) {
-                        for (const prop of objExpr.properties) {
+                        // Runtime z-index expressions and elevation tokens are
+                        // allowed; only literal numeric levels are forbidden.
+                        if (
+                            propName === "zIndex" ||
+                            propName === "z-index"
+                        ) {
                             if (
-                                ts.isPropertyAssignment(prop) ||
-                                ts.isShorthandPropertyAssignment(prop)
+                                /^(?:[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|["'`][+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?["'`])$/
+                                    .test(propValue.trim())
                             ) {
-                                const propName = prop.name.getText(sourceFile)
-                                    .replaceAll(/^['"`]|['"`]$/g, "");
-                                const propValue = ts.isPropertyAssignment(prop)
-                                    ? prop.initializer.getText(sourceFile)
-                                    : propName;
-
-                                const { line, character } = sourceFile
-                                    .getLineAndCharacterOfPosition(
-                                        prop.getStart(),
-                                    );
-                                const posLine = line + 1;
-                                const posCol = character + 1;
-
-                                // Runtime z-index expressions and elevation tokens are
-                                // allowed; only literal numeric levels are forbidden.
-                                if (
-                                    propName === "zIndex" ||
-                                    propName === "z-index"
-                                ) {
-                                    if (
-                                        /^(?:[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|["'`][+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?["'`])$/
-                                            .test(propValue.trim())
-                                    ) {
-                                        const snippet = normalizeSnippet(
-                                            `${propName}: ${propValue}`,
-                                        );
-                                        violations.push({
-                                            file,
-                                            rule: "raw-z-index",
-                                            property: propName,
-                                            value: snippet,
-                                            line: posLine,
-                                            column: posCol,
-                                            fingerprint:
-                                                `raw-z-index:${propName}:${snippet}`,
-                                        });
-                                    }
-                                    continue;
-                                }
-                                // Check runtime exceptions
-                                if (
-                                    isWallpaperFilterException(
-                                        file,
-                                        propName,
-                                        propValue,
-                                    ) ||
-                                    isDragTransformException(
-                                        file,
-                                        propName,
-                                        propValue,
-                                    ) ||
-                                    isRuntimeLayoutGeometryException(
-                                        file,
-                                        propName,
-                                        propValue,
-                                    ) ||
-                                    isDomainValueException(
-                                        file,
-                                        propName,
-                                        propValue,
-                                    ) ||
-                                    isPrimitiveOwningGeometry(
-                                        file,
-                                        propName,
-                                        propValue,
-                                    ) ||
-                                    isDesignSystemAllowed(
-                                        file,
-                                        propName,
-                                        propValue,
-                                    )
-                                ) {
-                                    continue;
-                                }
-
-                                // Check raw box-shadow
-                                if (propName === "boxShadow") {
-                                    if (!isAllowedShadow(propValue)) {
-                                        const snippet = normalizeSnippet(
-                                            `${propName}: ${propValue}`,
-                                        );
-                                        violations.push({
-                                            file,
-                                            rule: "raw-box-shadow",
-                                            property: propName,
-                                            value: snippet,
-                                            line: posLine,
-                                            column: posCol,
-                                            fingerprint:
-                                                `raw-box-shadow:${propName}:${snippet}`,
-                                        });
-                                    }
-                                    continue;
-                                }
-
-                                // Check raw font-size
-                                if (propName === "fontSize") {
-                                    const verdict = checkFontSize(
-                                        stripQuotes(propValue),
-                                        registry,
-                                    );
-                                    if (verdict !== "ok") {
-                                        const rule = verdict === "raw"
-                                            ? "raw-font-size"
-                                            : "unregistered-font-token";
-                                        const snippet = normalizeSnippet(
-                                            `${propName}: ${propValue}`,
-                                        );
-                                        violations.push({
-                                            file,
-                                            rule,
-                                            property: propName,
-                                            value: snippet,
-                                            line: posLine,
-                                            column: posCol,
-                                            fingerprint:
-                                                `${rule}:${propName}:${snippet}`,
-                                        });
-                                    }
-                                    continue;
-                                }
-
-                                // Check raw border-radius
-                                if (RADIUS_PROPS[propName]) {
-                                    const verdict = checkRadius(
-                                        stripQuotes(propValue),
-                                        registry,
-                                    );
-                                    if (verdict !== "ok") {
-                                        const rule = verdict === "raw"
-                                            ? "raw-border-radius"
-                                            : "unregistered-radius-token";
-                                        const snippet = normalizeSnippet(
-                                            `${propName}: ${propValue}`,
-                                        );
-                                        violations.push({
-                                            file,
-                                            rule,
-                                            property: propName,
-                                            value: snippet,
-                                            line: posLine,
-                                            column: posCol,
-                                            fingerprint:
-                                                `${rule}:${propName}:${snippet}`,
-                                        });
-                                    }
-                                    continue;
-                                }
-
-                                // Check raw spacing literal
-                                if (SPACING_PROPS[propName]) {
-                                    if (!isAllowedSpacing(propValue)) {
-                                        const snippet = normalizeSnippet(
-                                            `${propName}: ${propValue}`,
-                                        );
-                                        violations.push({
-                                            file,
-                                            rule: "raw-spacing-literal",
-                                            property: propName,
-                                            value: snippet,
-                                            line: posLine,
-                                            column: posCol,
-                                            fingerprint:
-                                                `raw-spacing-literal:${propName}:${snippet}`,
-                                        });
-                                    }
-                                    continue;
-                                }
-
-                                // Any remaining unexcepted inline style property is an inline-visual-style violation
                                 const snippet = normalizeSnippet(
                                     `${propName}: ${propValue}`,
                                 );
                                 violations.push({
                                     file,
-                                    rule: "inline-visual-style",
+                                    rule: "raw-z-index",
                                     property: propName,
                                     value: snippet,
                                     line: posLine,
                                     column: posCol,
                                     fingerprint:
-                                        `inline-visual-style:${propName}:${snippet}`,
+                                        `raw-z-index:${propName}:${snippet}`,
                                 });
                             }
+                            continue;
                         }
+                        // Check runtime exceptions
+                        if (
+                            isWallpaperFilterException(
+                                file,
+                                propName,
+                                propValue,
+                            ) ||
+                            isDragTransformException(
+                                file,
+                                propName,
+                                propValue,
+                            ) ||
+                            isRuntimeLayoutGeometryException(
+                                file,
+                                propName,
+                                propValue,
+                            ) ||
+                            isDomainValueException(
+                                file,
+                                propName,
+                                propValue,
+                            ) ||
+                            isPrimitiveOwningGeometry(
+                                file,
+                                propName,
+                                propValue,
+                            ) ||
+                            isDesignSystemAllowed(
+                                file,
+                                propName,
+                                propValue,
+                            )
+                        ) {
+                            continue;
+                        }
+
+                        // Check raw box-shadow
+                        if (propName === "boxShadow") {
+                            if (!isAllowedShadow(propValue)) {
+                                const snippet = normalizeSnippet(
+                                    `${propName}: ${propValue}`,
+                                );
+                                violations.push({
+                                    file,
+                                    rule: "raw-box-shadow",
+                                    property: propName,
+                                    value: snippet,
+                                    line: posLine,
+                                    column: posCol,
+                                    fingerprint:
+                                        `raw-box-shadow:${propName}:${snippet}`,
+                                });
+                            }
+                            continue;
+                        }
+
+                        // Check raw font-size
+                        if (propName === "fontSize") {
+                            const verdict = checkFontSize(
+                                stripQuotes(propValue),
+                                registry,
+                            );
+                            if (verdict !== "ok") {
+                                const rule = verdict === "raw"
+                                    ? "raw-font-size"
+                                    : "unregistered-font-token";
+                                const snippet = normalizeSnippet(
+                                    `${propName}: ${propValue}`,
+                                );
+                                violations.push({
+                                    file,
+                                    rule,
+                                    property: propName,
+                                    value: snippet,
+                                    line: posLine,
+                                    column: posCol,
+                                    fingerprint:
+                                        `${rule}:${propName}:${snippet}`,
+                                });
+                            }
+                            continue;
+                        }
+
+                        // Check raw border-radius
+                        if (RADIUS_PROPS[propName]) {
+                            const verdict = checkRadius(
+                                stripQuotes(propValue),
+                                registry,
+                            );
+                            if (verdict !== "ok") {
+                                const rule = verdict === "raw"
+                                    ? "raw-border-radius"
+                                    : "unregistered-radius-token";
+                                const snippet = normalizeSnippet(
+                                    `${propName}: ${propValue}`,
+                                );
+                                violations.push({
+                                    file,
+                                    rule,
+                                    property: propName,
+                                    value: snippet,
+                                    line: posLine,
+                                    column: posCol,
+                                    fingerprint:
+                                        `${rule}:${propName}:${snippet}`,
+                                });
+                            }
+                            continue;
+                        }
+
+                        // Check raw spacing literal
+                        if (SPACING_PROPS[propName]) {
+                            if (!isAllowedSpacing(propValue)) {
+                                const snippet = normalizeSnippet(
+                                    `${propName}: ${propValue}`,
+                                );
+                                violations.push({
+                                    file,
+                                    rule: "raw-spacing-literal",
+                                    property: propName,
+                                    value: snippet,
+                                    line: posLine,
+                                    column: posCol,
+                                    fingerprint:
+                                        `raw-spacing-literal:${propName}:${snippet}`,
+                                });
+                            }
+                            continue;
+                        }
+
+                        // Any remaining unexcepted inline style property is an inline-visual-style violation
+                        const snippet = normalizeSnippet(
+                            `${propName}: ${propValue}`,
+                        );
+                        violations.push({
+                            file,
+                            rule: "inline-visual-style",
+                            property: propName,
+                            value: snippet,
+                            line: posLine,
+                            column: posCol,
+                            fingerprint:
+                                `inline-visual-style:${propName}:${snippet}`,
+                        });
                     }
                 }
             }
@@ -568,5 +536,19 @@ export function scanTsxCode(
     }
 
     visit(sourceFile);
-    return violations;
+    // Shared constants can be reached from multiple attributes or branches.
+    // Keep distinct source occurrences, but report each source/rule only once.
+    const seen = new Set<string>();
+    return violations.filter((violation) => {
+        const key = JSON.stringify([
+            violation.rule,
+            violation.property,
+            violation.line,
+            violation.column,
+            violation.value,
+        ]);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 }

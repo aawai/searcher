@@ -533,6 +533,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             await guest.reload();
             await guest.getByTestId("wallpaper-current-adjust-focal-btn")
                 .waitFor();
+            assertEquals(
+                await guest.getByTestId("wallpaper-current-preview")
+                    .getAttribute("data-substrate"),
+                "image",
+            );
             await guest.goto(origin + "/");
             // The surface can render the cached gradient before IndexedDB
             // appearance hydration restores the uploaded image.

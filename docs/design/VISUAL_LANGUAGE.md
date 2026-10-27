@@ -241,6 +241,8 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 任务栏运行时避让：`WorkspaceDock` 实测停靠容器几何，以像素值在 `:root` 设置 `--dock-inset-top/right/bottom/left`，使 Portal 内的手机面板与首页共享避让；AppShell 的 `data-dock-edge` 标记有效方向。`PageShell` 在 `semantic.css` 中以四向 margin 消费这些几何值，浮动 `StatusBanner` / `UndoToast` 在 `semantic.css`、首页流式容器 `.home` 在 `home-layouts.css`、“更多笔记”入口在 `home-notes.css` 及工作面板 / 移动 Sheet 在 `workspace.css` 中按各自停靠边消费 `--dock-inset-*`，不把它们视为可任意设置的视觉间距。`exceptions.ts` 仅放行对应文件和属性的精确变量表达式。`--dock-size`（56px）、`--dock-item-size` / `--dock-ball-size`（44px）由 `tokens.css` 拥有；验证内容与任务栏不相交、收起释放空间、Portal 继承与模态期间布局稳定。
 
+表达式扫描补全（#320）不改变上述视觉规则。以下运行时几何在 `exceptions.ts` 按精确 owner / 属性 / 表达式登记：`WorkspaceDock.tsx` 的 dnd-kit `transition`、悬浮球指针坐标减去半径的 `left/top` 与安全区域内归一化 `topRatio` 定位；`LibraryPopup.tsx` 的锚点 `top` 与扣除锚点及 `--space-4` 的视口剩余 `maxHeight`；实验通道 `HomeGridLab.tsx` 的计算位置 `top: blockTop`。它们表达拖拽反馈、吸边或锚定容量，不放行静态字号、颜色或任意坐标。验证由真实 scanner 输入的合法对照与错误 owner / 静态值反例，以及全库 `check:ui` 提供；本次仅变更门禁，不改变生产 UI。
+
 #### 用户外观偏好
 
 以下偏好由用户在“设置 → 外观”中选择，是系统允许的离散变体，由 Token 或单一 owner 实现，不得扩展为任意数值：

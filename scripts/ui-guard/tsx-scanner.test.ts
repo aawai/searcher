@@ -371,3 +371,205 @@ Deno.test("tsx-scanner - accent fills as Tailwind utilities are rejected, tints 
         ],
     );
 });
+
+Deno.test("tsx-scanner - equivalent class and style branches retain static violations", () => {
+    const code = `
+<div className="text-[19px]" />;
+<div className={cn("text-[19px]")} />;
+<div className={clsx(flag && ["text-[19px]"], {"text-[19px]": flag})} />;
+<div style={{fontSize:19}} />;
+<div style={flag ? {fontSize:19} : undefined} />;
+`;
+    assertEquals(
+        scanTsxCode("web/src/app/AuditProbe.tsx", code).map((
+            v,
+        ) => [v.rule, v.line]),
+        [
+            ["raw-font-size", 2],
+            ["raw-font-size", 3],
+            ["raw-font-size", 4],
+            ["raw-font-size", 4],
+            ["raw-font-size", 5],
+            ["raw-font-size", 6],
+        ],
+    );
+});
+
+Deno.test("tsx-scanner - resolves scoped constants, spreads and distinct source locations", () => {
+    const code = `
+const bad = "text-[19px]";
+const base = {fontSize: 19, borderRadius: 7};
+const good = {fontSize: "var(--font-body-size)"};
+<div className={cn(bad, bad)} style={{...base, ...good}} />;
+<div style={{...good, ...base}} />;
+function Nested(bad: string) {
+    return <div className={cn(bad)} />;
+}
+`;
+    assertEquals(
+        scanTsxCode("web/src/app/AuditProbe.tsx", code).map((
+            v,
+        ) => [v.rule, v.line, v.column]),
+        [
+            ["raw-font-size", 2, 14],
+            ["raw-border-radius", 3, 43],
+            ["raw-font-size", 3, 25],
+        ],
+    );
+});
+
+Deno.test("tsx-scanner - templates do not invent classes across runtime holes", () => {
+    const code = [
+        "<div className={`text-[19px] ${runtime} rounded-[7px]`} />;",
+        "<div className={`text-[${size}px] text-[19px]${suffix}`} />;",
+        '<div className={cn({safe: "text-[19px]"}, ["focus:ring-2", "flex"])} />;',
+        '<div className={unknown("text-[19px]")} />;',
+    ].join("\\n");
+    assertEquals(
+        scanTsxCode("web/src/app/AuditProbe.tsx", code).map((
+            v,
+        ) => [v.rule, v.line]),
+        [["raw-font-size", 1], ["raw-border-radius", 1]],
+    );
+});
+
+Deno.test("tsx-scanner - conditional spreads preserve fallback properties and ignore overwritten values", () => {
+    const code = `
+<div style={{fontSize:19, ...(flag ? {fontSize:"var(--font-body-size)"} : {})}} />;
+<div style={{fontSize:19, ...(flag && {fontSize:"var(--font-body-size)"})}} />;
+<div style={{fontSize:19, ...unknown}} />;
+<div style={{...unknown, fontSize:19}} />;
+<div style={flag ? {fontSize:19} : {fontSize:21}} />;
+`;
+    assertEquals(
+        scanTsxCode("web/src/app/AuditProbe.tsx", code).map((
+            v,
+        ) => [v.rule, v.line]),
+        [
+            ["raw-font-size", 2],
+            ["raw-font-size", 3],
+            ["raw-font-size", 5],
+            ["raw-font-size", 6],
+            ["raw-font-size", 6],
+        ],
+    );
+});
+
+Deno.test("tsx-scanner - runtime calls, mutable bindings and cycles are never evaluated", () => {
+    const code = `
+const cycle = cycle;
+let mutable = "text-[19px]";
+const recurse = [recurse];
+<div className={cn(cycle, mutable, recurse, (() => {throw new Error("executed")})())} />;
+<div style={getStyle()} />;
+`;
+    assertEquals(scanTsxCode("web/src/app/AuditProbe.tsx", code), []);
+});
+
+Deno.test("tsx-scanner - class composition respects truthiness, object keys and local helper shadowing", () => {
+    const code = `
+<div className={cn(false && "text-[19px]", {"text-[21px]": false}, {...["text-[23px]"]})} />;
+<div className={cn({"text-[25px]": true, ...{"text-[25px]": false}})} />;
+<div className={true ? "text-[27px]" : "text-[29px]"} />;
+function Nested(cn: Function) { return <div className={cn("text-[31px]")} />; }
+`;
+    assertEquals(
+        scanTsxCode("web/src/app/AuditProbe.tsx", code).map((v) => v.value),
+        ["text-[27px]"],
+    );
+});
+
+Deno.test("tsx-scanner - mutated const objects are unknown rather than frozen snapshots", () => {
+    const code = `
+const style = {fontSize: 19};
+style.fontSize = 20;
+const classes = ["text-[19px]"];
+classes.push("flex");
+<div style={style} className={cn(classes)} />;
+`;
+    assertEquals(scanTsxCode("web/src/app/AuditProbe.tsx", code), []);
+});
+
+Deno.test("tsx-scanner - runtime geometry exceptions stay exact after extraction", () => {
+    const cases = [
+        [
+            "web/src/features/dock/WorkspaceDock.tsx",
+            "const style = {transition}; <div style={style} />;",
+            [],
+        ],
+        [
+            "web/src/features/app-library/LibraryPopup.tsx",
+            "<div style={flag ? {top, maxHeight: `calc(100dvh - ${top}px - var(--space-4))`} : undefined} />;",
+            [],
+        ],
+        [
+            "web/src/design-lab/HomeGridLab.tsx",
+            "<div style={flag ? {top: blockTop} : undefined} />;",
+            [],
+        ],
+        [
+            "web/src/app/Unrelated.tsx",
+            "const style = {transition}; <div style={style} />;",
+            ["inline-visual-style"],
+        ],
+        [
+            "web/src/features/dock/WorkspaceDock.tsx",
+            "<div style={flag ? {top: 42, fontSize:19} : undefined} />;",
+            ["inline-visual-style", "raw-font-size"],
+        ],
+    ] as const;
+    for (const [file, code, rules] of cases) {
+        assertEquals(scanTsxCode(file, code).map((v) => v.rule), [...rules]);
+    }
+});
+
+Deno.test("tsx-scanner - imported composers, wrappers and array spreads retain their semantics", () => {
+    const code = `
+import {cn as join} from "../lib/utils.ts";
+import cx from "clsx";
+const bad = ["text-[19px]"] as const;
+<div className={(join([...bad], cx(flag ? "rounded-[7px]" : "flex")) satisfies string)} />;
+<div className={cn([..."text-[21px]"])} />;
+const style = {fontSize:19};
+const alias = style;
+alias.fontSize = 20;
+<div style={style} />;
+<div className={cn("focus:ring-2 flex p-4", flag && "text-[var(--font-body-size)]")} />;
+`;
+    assertEquals(
+        scanTsxCode("web/src/app/AuditProbe.tsx", code).map((
+            v,
+        ) => [v.rule, v.line]),
+        [["raw-font-size", 4], ["raw-border-radius", 5]],
+    );
+});
+
+Deno.test("tsx-scanner - deeply nested and cyclic objects stop without hiding later inputs", () => {
+    const nested = "cn(".repeat(90) + '"text-[19px]"' + ")".repeat(90);
+    const code = `
+const a = { ...b };
+const b = { ...a };
+<div style={a} className={${nested}} />;
+<div className={cn("text-[21px]")} />;
+`;
+    assertEquals(
+        scanTsxCode("web/src/app/AuditProbe.tsx", code).map((
+            v,
+        ) => [v.rule, v.line]),
+        [["raw-font-size", 5]],
+    );
+});
+
+Deno.test("tsx-scanner - immutable style value aliases preserve tokens and source locations", () => {
+    const code = `
+const fontSize = "var(--font-body-size)";
+const radius = 7;
+<div style={{fontSize, borderRadius: (radius as number)}} />;
+`;
+    assertEquals(
+        scanTsxCode("web/src/app/AuditProbe.tsx", code).map((
+            v,
+        ) => [v.rule, v.line, v.column]),
+        [["raw-border-radius", 3, 16]],
+    );
+});
