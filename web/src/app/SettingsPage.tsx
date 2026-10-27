@@ -67,7 +67,6 @@ import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperStageContextPreview.tsx";
 import { api } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
-import { DockSettings } from "../features/dock/DockSettings.tsx";
 import { AiSettings } from "./AiSettings.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
 import { routes, settingsTab } from "./routes.ts";
@@ -783,7 +782,6 @@ export function SettingsPage() {
                                 </SettingsRow>
                             )}
                         </SettingsGroup>
-                        <DockSettings />
                         <SettingsGroup
                             title="壁纸"
                             footer={user

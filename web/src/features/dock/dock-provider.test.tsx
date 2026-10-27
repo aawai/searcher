@@ -10,6 +10,8 @@ import {
 import { DOCK_SYSTEM_ITEMS, moveDockItem } from "./DockOrderList.tsx";
 import type { Envelope, PreferencesDto } from "@shared/contracts.ts";
 import { DEFAULT_DOCK_PREFERENCES } from "@shared/dock.ts";
+import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
+import { setupMockIndexedDB } from "../../lib/test-mock-idb.ts";
 
 function setupDom() {
     const win = new Window();
@@ -431,4 +433,175 @@ Deno.test("moveDockItem: reorders within bounds without mutating source and retu
         "notes",
         "ai",
     ]);
+});
+
+Deno.test("DockProvider: migrates legacy fixed/collapsible layouts and isolates manual collapse per account", async () => {
+    if (
+        typeof (globalThis as { indexedDB?: unknown }).indexedDB === "undefined"
+    ) {
+        setupMockIndexedDB();
+    }
+    const dom = setupDom();
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes("/api/webapps")) {
+            return Promise.resolve(
+                new Response(
+                    JSON.stringify({ status: true, data: [] }),
+                    {
+                        headers: { "content-type": "application/json" },
+                        status: 200,
+                    },
+                ),
+            );
+        }
+        return Promise.resolve(
+            new Response(
+                JSON.stringify({
+                    status: true,
+                    data: { dock: { ...DEFAULT_DOCK_PREFERENCES } },
+                }),
+                {
+                    headers: { "content-type": "application/json" },
+                    status: 200,
+                },
+            ),
+        );
+    };
+
+    const fixedKey = "dock_layout:user-legacy-fixed";
+    const collapsibleKey = "dock_layout:user-legacy-collapsible";
+    const freshKey = "dock_layout:user-fresh";
+
+    await setLocal(fixedKey, {
+        edge: "left",
+        mode: "fixed",
+        collapsed: true,
+        ballSide: "right",
+        ballY: 0.3,
+    });
+    await setLocal(collapsibleKey, {
+        edge: "right",
+        mode: "collapsible",
+        collapsed: true,
+        ballSide: "right",
+        ballY: 0.8,
+    });
+
+    const container = dom.document.createElement("div");
+    const root = createRoot(container as unknown as Element);
+    let latestDock: DockContextValue | null = null;
+    const currentDock = (): DockContextValue => {
+        if (!latestDock) throw new Error("Dock context was not mounted");
+        return latestDock;
+    };
+
+    const flushAsync = async () => {
+        for (let i = 0; i < 6; i++) {
+            await Promise.resolve();
+        }
+    };
+
+    try {
+        // 1. Fresh account starts expanded and can manually collapse at any time
+        await act(async () => {
+            root.render(
+                <DockProviderSession userId="user-fresh">
+                    <Harness
+                        onDock={(dock) => {
+                            latestDock = dock;
+                        }}
+                    />
+                </DockProviderSession>,
+            );
+            await flushAsync();
+        });
+
+        assertEquals(currentDock().layout, {
+            edge: "bottom",
+            collapsed: false,
+            ballSide: "left",
+            ballY: 0.5,
+        });
+
+        await act(async () => {
+            latestDock?.setLayout({ collapsed: true, edge: "top" });
+            await flushAsync();
+        });
+
+        assertEquals(currentDock().layout, {
+            edge: "top",
+            collapsed: true,
+            ballSide: "left",
+            ballY: 0.5,
+        });
+        assertEquals(await getLocal(freshKey), {
+            edge: "top",
+            collapsed: true,
+            ballSide: "left",
+            ballY: 0.5,
+        });
+
+        // 2. Legacy fixed account with stale collapsed=true stays expanded
+        await act(async () => {
+            root.render(
+                <DockProviderSession userId="user-legacy-fixed">
+                    <Harness
+                        onDock={(dock) => {
+                            latestDock = dock;
+                        }}
+                    />
+                </DockProviderSession>,
+            );
+            await flushAsync();
+        });
+
+        assertEquals(currentDock().layout, {
+            edge: "left",
+            collapsed: false,
+            ballSide: "right",
+            ballY: 0.3,
+        });
+
+        // 3. Legacy collapsible account preserves collapsed=true and ball placement
+        await act(async () => {
+            root.render(
+                <DockProviderSession userId="user-legacy-collapsible">
+                    <Harness
+                        onDock={(dock) => {
+                            latestDock = dock;
+                        }}
+                    />
+                </DockProviderSession>,
+            );
+            await flushAsync();
+        });
+
+        assertEquals(currentDock().layout, {
+            edge: "right",
+            collapsed: true,
+            ballSide: "right",
+            ballY: 0.8,
+        });
+
+        // Verify fresh user's persisted layout remained isolated
+        assertEquals(await getLocal(freshKey), {
+            edge: "top",
+            collapsed: true,
+            ballSide: "left",
+            ballY: 0.5,
+        });
+    } finally {
+        await act(async () => {
+            root.unmount();
+            await Promise.resolve();
+        });
+        await deleteLocal(fixedKey);
+        await deleteLocal(collapsibleKey);
+        await deleteLocal(freshKey);
+        globalThis.fetch = originalFetch;
+        dom.restore();
+    }
 });
