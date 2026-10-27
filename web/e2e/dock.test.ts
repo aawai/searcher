@@ -694,23 +694,20 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             await page.getByRole("menuitem", { name: "固定到任务栏" }).click();
             await dockAppButton(page, appB.name).waitFor({ state: "visible" });
             await page.getByRole("button", { name: "返回首页" }).click();
+            await appsView.waitFor({ state: "detached" });
         },
     );
 
     await t.step(
-        "keyboard sorts and opens the taskbar item menu without navigation",
+        "keyboard opens the taskbar item menu, sorts, and restores focus",
         async () => {
             const notes = dockSystemButton(page, "笔记");
             await notes.focus();
-            await page.keyboard.press("Space");
-            await page.locator('[data-dock-id="notes"].is-dragging').waitFor();
-            await page.keyboard.press("ArrowLeft");
-            await page.waitForFunction(() =>
-                Array.from(document.querySelectorAll('[role="status"]')).some(
-                    (item) => item.textContent?.includes("system:apps"),
-                )
-            );
-            await page.keyboard.press("Space");
+            await page.keyboard.press("Shift+F10");
+            const menu = page.locator("[data-dock-item-menu]");
+            await menu.waitFor();
+            await menu.getByRole("menuitem", { name: "向左移动" }).focus();
+            await page.keyboard.press("Enter");
             await page.waitForFunction(() =>
                 Array.from(
                     document.querySelectorAll<HTMLElement>("[data-dock-id]"),
@@ -718,14 +715,14 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
                 ).join(",") === "home,notes,apps"
             );
             assertEquals(new URL(page.url()).search, "");
+            await page.waitForFunction(() =>
+                document.activeElement?.getAttribute("data-dock-id") === "notes"
+            );
 
-            await notes.focus();
             await page.keyboard.press("Shift+F10");
-            await page.locator("[data-dock-item-menu]").waitFor();
+            await menu.waitFor();
             await page.keyboard.press("Escape");
-            await page.locator("[data-dock-item-menu]").waitFor({
-                state: "hidden",
-            });
+            await menu.waitFor({ state: "hidden" });
             await page.waitForFunction(() =>
                 document.activeElement?.getAttribute("data-dock-id") === "notes"
             );
