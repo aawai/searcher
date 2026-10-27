@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-27-005",
+  "captured": "2026-10-27",
+  "packet_version": "1.0",
+  "title": "Cross-site scripting (XSS)",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

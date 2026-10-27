@@ -1,0 +1,11 @@
+{
+  "scenario": "1440 dark synthetic wallpaper; open apps panel then close; one unthrottled sample; duration seconds; no performance budget judgement",
+  "delta": {
+    "LayoutCount": 17,
+    "RecalcStyleCount": 51,
+    "LayoutDuration": 0.002752,
+    "RecalcStyleDuration": 0.022625,
+    "ScriptDuration": 0.13326,
+    "TaskDuration": 0.236806
+  }
+}

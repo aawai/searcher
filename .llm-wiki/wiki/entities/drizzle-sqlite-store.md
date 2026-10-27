@@ -3,7 +3,7 @@ type: entity
 category: tool
 title: "Drizzle SQLite Store"
 created: 2026-09-25
-updated: 2026-10-26
+updated: 2026-10-27
 sources: [
     sources/SRC-2026-09-25-001,
     sources/SRC-2026-09-25-002,
@@ -15,6 +15,8 @@ sources: [
     sources/SRC-2026-09-25-017,
     sources/SRC-2026-09-25-028,
     sources/SRC-2026-10-26-001,
+    sources/SRC-2026-10-27-001,
+    sources/SRC-2026-10-27-002,
 ]
 ---
 
@@ -41,13 +43,13 @@ sources: [
    [[sources/SRC-2026-09-25-012]] 与
    [[sources/sqlite-table-recreation-migration-zero-loss]]），严格执行事务外禁用外键、正向重建临时表并断言
    `PRAGMA foreign_key_check`。
-5. **备份机制**：通过全量导出包含 SQLite 数据、设置与静态资产的 ZIP
-   包进行安全归档，并在恢复操作前自动生成防御性快照。
+5. **备份机制**：管理员导出 ZIP 包含数据库、系统设置及壁纸、图标；还原前进行校验并保存恢复前快照。不要在运行时只复制数据库主文件，详见 [部署文档](../../../docs/deployment.md#备份与恢复) 与 [SQLite 备份与恢复边界](/concepts/sqlite-backup-and-recovery-boundaries.md)。
 
 ## 关联架构与文档
 
 - [[concepts/database-queue-serialization]]
 - [[concepts/sqlite-table-recreation-migration]]
+- [SQLite Backup and Recovery Boundaries](/concepts/sqlite-backup-and-recovery-boundaries.md)
 - [[syntheses/searcher-system-architecture]]
 - Drizzle ORM 生态文档：[[sources/SRC-2026-09-25-007]]
 - SQLite WAL 架构文档：[[sources/SRC-2026-09-25-010]]

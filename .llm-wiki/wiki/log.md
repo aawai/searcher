@@ -1,5 +1,22 @@
 # Wiki Update Log
 
+## 2026-10-27
+
+- **retro**: {"category":"frontend","slug":"issue-326-dock-effective-edge-responsive","title":"Dock 有效方向与响应式覆盖收敛"}
+- **retro**: {"category":"frontend","slug":"css-var-fallback-consumer-value-boundary","title":"CSS var() 回退不验证消费属性"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/xss-sanitization-and-trusted-types","title":"XSS Sanitization and Trusted Types"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/css-custom-property-fallback-and-registration","title":"CSS Custom Property Fallback and Registration"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/sqlite-backup-and-recovery-boundaries","title":"SQLite Backup and Recovery Boundaries"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-27-006","url":"https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-27-005","url":"https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-27-004","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Properties_and_values_API/Registering_properties"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-27-003","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascading_variables/Using_custom_properties"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-27-002","url":"https://www.sqlite.org/pragma.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-27-001","url":"https://www.sqlite.org/backup.html"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-27-issue-325-ui-pr-331-main","title":"Issue 325 UI 契约经 PR 331 合并 main"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-27-issue-322-327-ui-guard-token-pr-330","title":"Issue 322/327 UI Guard 与 Token 治理经 PR 330 合并"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-27-issue-320-ui-guard-actions-pr-329-main","title":"Issue 320 UI Guard 静态表达式覆盖与 Actions 竞态修复经 PR 329 合并 main"}
+
 ## 2026-10-26
 
 - **observe**: {"relevance":"high","slug":"obs-2026-10-26-pr-317-main","title":"PR 317 编辑器滚动条与分页表面修复合并 main"}

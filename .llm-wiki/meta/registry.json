@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-26T14:39:33.683Z",
+  "last_updated": "2026-10-27T08:41:26.976Z",
   "pages": {
     "concepts/accessible-grid-drag-keyboard-and-announcements": {
       "type": "concept",
@@ -29,6 +29,12 @@
       "domain": "engineering",
       "created": "2026-10-26",
       "updated": "2026-10-26"
+    },
+    "concepts/css-custom-property-fallback-and-registration": {
+      "type": "concept",
+      "title": "CSS Custom Property Fallback and Registration",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
     },
     "concepts/database-queue-serialization": {
       "type": "concept",
@@ -128,7 +134,7 @@
       "title": "Session Security and Isolation",
       "domain": "engineering",
       "created": "2026-09-25",
-      "updated": "2026-10-26"
+      "updated": "2026-10-27"
     },
     "concepts/shortest-column-masonry-layout": {
       "type": "concept",
@@ -143,6 +149,12 @@
       "domain": "engineering",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "concepts/sqlite-backup-and-recovery-boundaries": {
+      "type": "concept",
+      "title": "SQLite Backup and Recovery Boundaries",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
     },
     "concepts/sqlite-fts5-fulltext-search": {
       "type": "concept",
@@ -172,7 +184,7 @@
         "[[entities/searcher-项目]]"
       ],
       "created": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-10-27"
     },
     "concepts/view-transitions-shared-element": {
       "type": "concept",
@@ -202,6 +214,12 @@
       "created": "2026-10-25",
       "updated": "2026-10-25"
     },
+    "concepts/xss-sanitization-and-trusted-types": {
+      "type": "concept",
+      "title": "XSS Sanitization and Trusted Types",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
+    },
     "entities/deno-runtime": {
       "type": "entity",
       "title": "Deno Runtime",
@@ -221,7 +239,7 @@
       "title": "Drizzle SQLite Store",
       "category": "tool",
       "created": "2026-09-25",
-      "updated": "2026-10-26"
+      "updated": "2026-10-27"
     },
     "entities/hono-framework": {
       "type": "entity",
@@ -248,7 +266,7 @@
       "title": "Searcher 项目",
       "category": "project",
       "created": "2026-09-25",
-      "updated": "2026-09-27"
+      "updated": "2026-10-27"
     },
     "entities/shadcn-ui-system": {
       "type": "entity",
@@ -969,6 +987,75 @@
       "captured": "2026-10-26",
       "updated": "2026-10-26"
     },
+    "sources/SRC-2026-10-27-001": {
+      "type": "source",
+      "title": "SQLite Online Backup API",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-27-001/extracted.md",
+      "source_id": "SRC-2026-10-27-001",
+      "format": "web",
+      "captured": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/SRC-2026-10-27-002": {
+      "type": "source",
+      "title": "SQLite PRAGMA Statements",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-27-002/extracted.md",
+      "source_id": "SRC-2026-10-27-002",
+      "format": "web",
+      "captured": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/SRC-2026-10-27-003": {
+      "type": "source",
+      "title": "Using CSS custom properties (variables)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-27-003/extracted.md",
+      "source_id": "SRC-2026-10-27-003",
+      "format": "web",
+      "captured": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/SRC-2026-10-27-004": {
+      "type": "source",
+      "title": "Registering custom properties in CSS",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-27-004/extracted.md",
+      "source_id": "SRC-2026-10-27-004",
+      "format": "web",
+      "captured": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/SRC-2026-10-27-005": {
+      "type": "source",
+      "title": "Cross-site scripting (XSS)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-27-005/extracted.md",
+      "source_id": "SRC-2026-10-27-005",
+      "format": "web",
+      "captured": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/SRC-2026-10-27-006": {
+      "type": "source",
+      "title": "Trusted Types API",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-27-006/extracted.md",
+      "source_id": "SRC-2026-10-27-006",
+      "format": "web",
+      "captured": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/css-var-fallback-consumer-value-boundary": {
+      "type": "source",
+      "title": "CSS var() 回退不验证消费属性",
+      "category": "frontend",
+      "status": "insight",
+      "slug": "css-var-fallback-consumer-value-boundary",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
+    },
     "sources/e2e-native-parallel-speedup-vs-stability-167": {
       "type": "source",
       "title": "E2E原生并行提速存在但默认保留串行",
@@ -995,6 +1082,15 @@
       "slug": "issue-174-data-router-session-leave-guard",
       "created": "2026-10-16",
       "updated": "2026-10-16"
+    },
+    "sources/issue-326-dock-effective-edge-responsive": {
+      "type": "source",
+      "title": "Dock 有效方向与响应式覆盖收敛",
+      "category": "frontend",
+      "status": "insight",
+      "slug": "issue-326-dock-effective-edge-responsive",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
     },
     "sources/obs-2026-09-25-ui-app": {
       "type": "source",
@@ -2284,6 +2380,65 @@
       "source_context": "2026-10-26 任务栏设计访谈后续确认",
       "created": "2026-10-26",
       "updated": "2026-10-26"
+    },
+    "sources/obs-2026-10-27-issue-320-ui-guard-actions-pr-329-main": {
+      "type": "source",
+      "title": "Observation: Issue 320 UI Guard 静态表达式覆盖与 Actions 竞态修复经 PR 329 合并 main",
+      "tags": [
+        "issue-320",
+        "pr-329",
+        "ui-guard",
+        "tsx-scanner",
+        "wallpaper-e2e",
+        "editor-shortcuts"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-27-issue-320-ui-guard-actions-pr-329-main",
+      "relevance": "high",
+      "observed_at": "2026-10-27T03:02:15.088Z",
+      "source_context": "Issue #320 UI Guard expression coverage and CI Actions fixes",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/obs-2026-10-27-issue-322-327-ui-guard-token-pr-330": {
+      "type": "source",
+      "title": "Observation: Issue 322/327 UI Guard 与 Token 治理经 PR 330 合并",
+      "tags": [
+        "issue-322",
+        "issue-327",
+        "pr-330",
+        "ui-guard",
+        "tailwind",
+        "visual-contract"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-27-issue-322-327-ui-guard-token-pr-330",
+      "relevance": "high",
+      "observed_at": "2026-10-27T05:23:27.123Z",
+      "source_context": "Issue 322 and 327 implementation and merge",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/obs-2026-10-27-issue-325-ui-pr-331-main": {
+      "type": "source",
+      "title": "Observation: Issue 325 UI 契约经 PR 331 合并 main",
+      "tags": [
+        "issue-325",
+        "pr-331",
+        "ui-contract",
+        "accessibility",
+        "contrast",
+        "settings",
+        "button",
+        "miniature"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-27-issue-325-ui-pr-331-main",
+      "relevance": "high",
+      "observed_at": "2026-10-27T07:11:34.061Z",
+      "source_context": "Issue 325 implementation and merge",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

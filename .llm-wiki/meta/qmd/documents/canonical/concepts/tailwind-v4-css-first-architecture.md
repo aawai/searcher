@@ -2,9 +2,11 @@
 type: concept
 title: Tailwind v4 CSS First Architecture
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-10-27
 sources:
   - "[[sources/SRC-2026-09-27-002]]"
+  - "[[sources/SRC-2026-10-27-003]]"
+  - "[[sources/SRC-2026-10-27-004]]"
 entities:
   - "[[entities/shadcn-ui-system]]"
   - "[[entities/searcher-项目]]"
@@ -39,12 +41,13 @@ Tailwind v4 内置了基于现代 CSS 规范的原生视口工具链：
 
 Tailwind v4 借助现代浏览器普遍支持的原生特性提升运行效率与样式隔离：
 - **`@layer` 级联控制**：通过 `@layer theme, base, components, utilities;` 确立不可逾越的特异性（Specificity）顺序，彻底终结组件类与工具类之间的权重对抗；
-- **`@property` 类型化注册**：原生声明自定义属性类型，使渐变背景与微拟态阴影动画无需繁琐的 JS 轮询，由 GPU 原生平滑插值；
+- **`@property` 类型化注册**：声明自定义属性类型、继承行为和初始值，使可插值类型能够平滑动画；注册本身不保证动画只在 GPU 或合成线程执行，见 [变量回退与注册](/concepts/css-custom-property-fallback-and-registration.md) 中的来源分歧。
 - **广色域与 `color-mix()`**：利用现代色彩空间（如 OKLab）动态混合半透明度与底色，使 Glass 拟态与深色模式切换更自然纯净。
 
 ## 相关实体与概念
 
 - [[entities/shadcn-ui-system]]: 依赖 Tailwind CSS 变量与设计令牌的高品质组件体系。
 - [[entities/searcher-项目]]: 全面落地 Tailwind CSS v4 与 Vite 构建工具链的搜索主页应用。
+- [CSS Custom Property Fallback and Registration](/concepts/css-custom-property-fallback-and-registration.md)：变量回退、注册和动画性能边界。
 - [[concepts/modal-layering-and-escape-dismissal]]: 利用动态视口高度单位与实底规范实现多视口弹出层适配。
 - [[sources/SRC-2026-09-27-002]]: Tailwind CSS v4 官方架构白皮书与升级指南。

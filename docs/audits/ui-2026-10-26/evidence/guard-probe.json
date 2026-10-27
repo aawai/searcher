@@ -1,0 +1,36 @@
+[
+  {
+    "name": "direct arbitrary",
+    "code": "<div className=\"text-[19px]\"/>",
+    "rules": [
+      "raw-font-size"
+    ]
+  },
+  {
+    "name": "cn arbitrary",
+    "code": "<div className={cn(\"text-[19px]\")}/>",
+    "rules": []
+  },
+  {
+    "name": "scale",
+    "code": "<div className=\"text-xl gap-7\"/>",
+    "rules": []
+  },
+  {
+    "name": "direct style",
+    "code": "<div style={{fontSize:19}}/>",
+    "rules": [
+      "raw-font-size"
+    ]
+  },
+  {
+    "name": "conditional style",
+    "code": "<div style={flag?{fontSize:19}:undefined}/>",
+    "rules": []
+  },
+  {
+    "name": "CSS raw color",
+    "code": ".audit{color:#ff00ff;background:#00ff00}",
+    "rules": []
+  }
+]

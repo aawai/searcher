@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-27-003",
+  "captured": "2026-10-27",
+  "packet_version": "1.0",
+  "title": "Using CSS custom properties (variables)",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascading_variables/Using_custom_properties",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

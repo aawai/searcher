@@ -1,0 +1,56 @@
+[
+  {
+    "text": "默认",
+    "classes": "button group/button inline-flex shrink-0 items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--subtle",
+    "bg": "rgb(235, 235, 238)",
+    "h": 44
+  },
+  {
+    "text": "描边",
+    "classes": "button group/button inline-flex shrink-0 items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--subtle",
+    "bg": "rgb(235, 235, 238)",
+    "h": 44
+  },
+  {
+    "text": "幽灵",
+    "classes": "button group/button inline-flex shrink-0 items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--ghost",
+    "bg": "rgba(0, 0, 0, 0)",
+    "h": 44
+  },
+  {
+    "text": "删除",
+    "classes": "button group/button inline-flex shrink-0 items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--danger",
+    "bg": "color(srgb 0.682353 0.243137 0.278431 / 0.12)",
+    "h": 44
+  },
+  {
+    "text": "链接",
+    "classes": "button group/button inline-flex shrink-0 items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--link",
+    "bg": "rgba(0, 0, 0, 0)",
+    "h": 44
+  },
+  {
+    "text": "禁用",
+    "classes": "button group/button inline-flex shrink-0 items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--subtle",
+    "bg": "rgb(235, 235, 238)",
+    "h": 44
+  },
+  {
+    "text": "小号",
+    "classes": "button group/button inline-flex shrink-0 items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--subtle button--sm",
+    "bg": "rgb(235, 235, 238)",
+    "h": 44
+  },
+  {
+    "text": "小号描边",
+    "classes": "button group/button inline-flex shrink-0 items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--subtle button--sm",
+    "bg": "rgb(235, 235, 238)",
+    "h": 44
+  },
+  {
+    "text": "···",
+    "classes": "button group/button inline-flex shrink-0 items-center justify-center outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 cursor-pointer button--ghost button--icon",
+    "bg": "rgba(0, 0, 0, 0)",
+    "h": 44
+  }
+]

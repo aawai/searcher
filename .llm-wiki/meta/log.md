@@ -518,3 +518,45 @@
 ## [2026-10-26T14:39:33.648Z] observe
 - slug: "obs-2026-10-26-pr-317-main", title: "PR 317 编辑器滚动条与分页表面修复合并 main", relevance: "high"
 
+## [2026-10-27T03:02:15.090Z] observe
+- slug: "obs-2026-10-27-issue-320-ui-guard-actions-pr-329-main", title: "Issue 320 UI Guard 静态表达式覆盖与 Actions 竞态修复经 PR 329 合并 main", relevance: "high"
+
+## [2026-10-27T05:23:27.126Z] observe
+- slug: "obs-2026-10-27-issue-322-327-ui-guard-token-pr-330", title: "Issue 322/327 UI Guard 与 Token 治理经 PR 330 合并", relevance: "high"
+
+## [2026-10-27T07:11:34.065Z] observe
+- slug: "obs-2026-10-27-issue-325-ui-pr-331-main", title: "Issue 325 UI 契约经 PR 331 合并 main", relevance: "high"
+
+## [2026-10-27T08:02:02.914Z] capture
+- source_id: "SRC-2026-10-27-001", url: "https://www.sqlite.org/backup.html", format: "web"
+
+## [2026-10-27T08:02:17.428Z] capture
+- source_id: "SRC-2026-10-27-002", url: "https://www.sqlite.org/pragma.html", format: "web"
+
+## [2026-10-27T08:02:22.748Z] capture
+- source_id: "SRC-2026-10-27-003", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Cascading_variables/Using_custom_properties", format: "web"
+
+## [2026-10-27T08:02:29.674Z] capture
+- source_id: "SRC-2026-10-27-004", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Properties_and_values_API/Registering_properties", format: "web"
+
+## [2026-10-27T08:02:36.105Z] capture
+- source_id: "SRC-2026-10-27-005", url: "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS", format: "web"
+
+## [2026-10-27T08:02:41.071Z] capture
+- source_id: "SRC-2026-10-27-006", url: "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API", format: "web"
+
+## [2026-10-27T08:03:56.541Z] ensure_page
+- page_type: "concept", title: "SQLite Backup and Recovery Boundaries", path: "concepts/sqlite-backup-and-recovery-boundaries"
+
+## [2026-10-27T08:04:09.546Z] ensure_page
+- page_type: "concept", title: "CSS Custom Property Fallback and Registration", path: "concepts/css-custom-property-fallback-and-registration"
+
+## [2026-10-27T08:04:32.927Z] ensure_page
+- page_type: "concept", title: "XSS Sanitization and Trusted Types", path: "concepts/xss-sanitization-and-trusted-types"
+
+## [2026-10-27T08:08:19.598Z] retro
+- slug: "css-var-fallback-consumer-value-boundary", title: "CSS var() 回退不验证消费属性", category: "frontend"
+
+## [2026-10-27T08:41:26.929Z] retro
+- slug: "issue-326-dock-effective-edge-responsive", title: "Dock 有效方向与响应式覆盖收敛", category: "frontend"
+

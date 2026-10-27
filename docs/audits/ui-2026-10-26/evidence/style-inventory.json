@@ -1,0 +1,306 @@
+[
+  {
+    "file": "web/src/app/admin.css",
+    "lines": 273,
+    "bytes": 5410,
+    "important": 0,
+    "media": 4,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/app/trash.css",
+    "lines": 107,
+    "bytes": 2074,
+    "important": 0,
+    "media": 2,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/app/narrow-form.css",
+    "lines": 16,
+    "bytes": 377,
+    "important": 0,
+    "media": 1,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/app/auth.css",
+    "lines": 76,
+    "bytes": 1476,
+    "important": 0,
+    "media": 1,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/app/settings.css",
+    "lines": 709,
+    "bytes": 18377,
+    "important": 0,
+    "media": 8,
+    "backdrop": 2
+  },
+  {
+    "file": "web/src/app/account.css",
+    "lines": 125,
+    "bytes": 2495,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/spikes/markdown-editor/spike.css",
+    "lines": 71,
+    "bytes": 1463,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/spikes/editable-pagination/spike.css",
+    "lines": 59,
+    "bytes": 1584,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/design-system/tokens.css",
+    "lines": 651,
+    "bytes": 25105,
+    "important": 0,
+    "media": 6,
+    "backdrop": 2
+  },
+  {
+    "file": "web/src/design-lab/omnibox-lab.css",
+    "lines": 91,
+    "bytes": 2146,
+    "important": 0,
+    "media": 1,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/design-lab/motion-lab.css",
+    "lines": 41,
+    "bytes": 845,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/design-lab/accent-lab.css",
+    "lines": 74,
+    "bytes": 1786,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/design-lab/home-grid-lab.css",
+    "lines": 433,
+    "bytes": 11618,
+    "important": 0,
+    "media": 4,
+    "backdrop": 10
+  },
+  {
+    "file": "web/src/design-lab/design-lab.css",
+    "lines": 221,
+    "bytes": 5214,
+    "important": 0,
+    "media": 1,
+    "backdrop": 1
+  },
+  {
+    "file": "web/src/components/ui/primitives.css",
+    "lines": 1201,
+    "bytes": 31362,
+    "important": 1,
+    "media": 10,
+    "backdrop": 4
+  },
+  {
+    "file": "web/src/components/searcher/document-colors.css",
+    "lines": 54,
+    "bytes": 1403,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/components/searcher/semantic.css",
+    "lines": 528,
+    "bytes": 15317,
+    "important": 0,
+    "media": 4,
+    "backdrop": 2
+  },
+  {
+    "file": "web/src/components/searcher/markdown.css",
+    "lines": 235,
+    "bytes": 6955,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/components/searcher/conflict-dialog.css",
+    "lines": 78,
+    "bytes": 1942,
+    "important": 0,
+    "media": 1,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/components/searcher/launcher.css",
+    "lines": 738,
+    "bytes": 23254,
+    "important": 0,
+    "media": 8,
+    "backdrop": 12
+  },
+  {
+    "file": "web/src/components/searcher/search.css",
+    "lines": 312,
+    "bytes": 7302,
+    "important": 0,
+    "media": 2,
+    "backdrop": 4
+  },
+  {
+    "file": "web/src/components/searcher/apps.css",
+    "lines": 473,
+    "bytes": 10489,
+    "important": 0,
+    "media": 3,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/ask/ask-workspace.css",
+    "lines": 1518,
+    "bytes": 36519,
+    "important": 0,
+    "media": 6,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/ask/ask-answer.css",
+    "lines": 97,
+    "bytes": 2193,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/home-calm/home-calm.css",
+    "lines": 103,
+    "bytes": 2657,
+    "important": 0,
+    "media": 1,
+    "backdrop": 2
+  },
+  {
+    "file": "web/src/features/home-layouts/home-notes.css",
+    "lines": 445,
+    "bytes": 12664,
+    "important": 0,
+    "media": 3,
+    "backdrop": 4
+  },
+  {
+    "file": "web/src/features/home-layouts/home-layouts.css",
+    "lines": 60,
+    "bytes": 1673,
+    "important": 0,
+    "media": 1,
+    "backdrop": 2
+  },
+  {
+    "file": "web/src/features/library/library-apps.css",
+    "lines": 92,
+    "bytes": 2167,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/library/library.css",
+    "lines": 21,
+    "bytes": 322,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/markdown-editor/structural.css",
+    "lines": 17,
+    "bytes": 343,
+    "important": 0,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/inline-ai/inline-ai.css",
+    "lines": 151,
+    "bytes": 3549,
+    "important": 0,
+    "media": 1,
+    "backdrop": 2
+  },
+  {
+    "file": "web/src/features/workspace/documents-workspace.css",
+    "lines": 231,
+    "bytes": 6153,
+    "important": 0,
+    "media": 2,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/workspace/workspace.css",
+    "lines": 260,
+    "bytes": 8084,
+    "important": 7,
+    "media": 5,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/dock/dock.css",
+    "lines": 657,
+    "bytes": 16386,
+    "important": 13,
+    "media": 9,
+    "backdrop": 10
+  },
+  {
+    "file": "web/src/features/documents/document-pagination.css",
+    "lines": 226,
+    "bytes": 5479,
+    "important": 4,
+    "media": 0,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/documents/document-print.css",
+    "lines": 117,
+    "bytes": 3200,
+    "important": 0,
+    "media": 1,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/features/documents/document-editor.css",
+    "lines": 859,
+    "bytes": 20438,
+    "important": 0,
+    "media": 5,
+    "backdrop": 0
+  },
+  {
+    "file": "web/src/styles/global.css",
+    "lines": 327,
+    "bytes": 8660,
+    "important": 0,
+    "media": 4,
+    "backdrop": 2
+  }
+]

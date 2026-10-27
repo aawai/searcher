@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-27-001",
+  "captured": "2026-10-27",
+  "packet_version": "1.0",
+  "title": "1. Using the SQLite Online Backup API",
+  "url": "https://www.sqlite.org/backup.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

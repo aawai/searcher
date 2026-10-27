@@ -3,13 +3,15 @@ type: concept
 title: Session Security and Isolation
 domain: engineering
 created: 2026-09-25
-updated: 2026-10-26
+updated: 2026-10-27
 sources:
   - sources/SRC-2026-09-25-001
   - sources/SRC-2026-09-25-002
   - sources/SRC-2026-09-25-003
   - sources/SRC-2026-09-25-004
   - sources/SRC-2026-10-26-003
+  - sources/SRC-2026-10-27-005
+  - sources/SRC-2026-10-27-006
 ---
 
 # Session Security and Isolation (会话安全与隔离模式)
@@ -37,6 +39,7 @@ sources:
 
 - 项目应用：[[entities/searcher-项目]]
 - 架构总览：[[syntheses/searcher-system-architecture]]
+- [XSS Sanitization and Trusted Types](/concepts/xss-sanitization-and-trusted-types.md)：输出编码、HTML 净化与 DOM sink 的独立防线。
 
 ## 来源
 
