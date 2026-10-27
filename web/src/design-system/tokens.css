@@ -430,12 +430,12 @@
 /*
  * Glass intensity: AppState sets data-glass on :root; design-lab nests it to
  * compare tiers. A tier fixes fill, blur and saturation together. Fills are
- * declared per theme. For off / soft / regular the Material fill floor keeps
- * body text (4.5:1) and --muted (3:1) legible over a bright or dark backdrop;
- * `clear` trades that promise for a see-through Material, like the wallpaper
- * readability "none". Floating keeps the floor in every tier.
- * glass-contrast.test.ts checks both. The `:root` values are `regular`, the
- * no-attribute default.
+ * declared per theme. glass-contrast.test.ts checks synthetic backdrops:
+ * body text >=4.5:1 and --muted >=3:1 on Material off / soft / regular
+ * and Floating in every tier. It does not prove 4.5:1 for informational
+ * --muted text or cover clear Material. These are test-coverage limits,
+ * not exceptions to the Visual Language contrast floor.
+ * The `:root` values are `regular`, the no-attribute default.
  */
 :root {
     --glass-regular-light: 78%;
