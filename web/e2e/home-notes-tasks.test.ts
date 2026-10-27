@@ -154,18 +154,56 @@ Deno.test("only visible task controls are reachable as the preview grows", async
         await card.locator("li.task-list-item").nth(4).waitFor({
             state: "attached",
         });
-        await page.waitForFunction(() =>
-            document.querySelectorAll(".home-note-body input:not([inert])")
-                .length === 3
+        await page.waitForFunction(() => {
+            const preview = document.querySelector(".home-note-body");
+            const boxes = preview?.querySelectorAll("input");
+            if (!preview || !boxes || boxes.length !== 5) return false;
+            const bounds = preview.getBoundingClientRect();
+            return bounds.height > 0 &&
+                boxes[2].getBoundingClientRect().bottom <= bounds.bottom &&
+                boxes[3].getBoundingClientRect().top >= bounds.bottom;
+        });
+        const inputs = card.locator("li.task-list-item input");
+        await card.locator(".home-note-title").focus();
+        await page.keyboard.press("Tab");
+        assertEquals(
+            await card.getByRole("button", { name: "更多操作" })
+                .evaluate((element) => document.activeElement === element),
+            true,
         );
-        assertEquals(await card.getByRole("checkbox").count(), 3);
+        for (let index = 0; index < 3; index++) {
+            await page.keyboard.press("Tab");
+            assertEquals(
+                await inputs.nth(index).evaluate(
+                    (element) => document.activeElement === element,
+                ),
+                true,
+            );
+        }
+        await page.keyboard.press("Tab");
+        assertEquals(
+            await card.evaluate((element) =>
+                element.contains(document.activeElement)
+            ),
+            false,
+            "Tab skips the clipped tasks",
+        );
+        assertEquals(
+            await card.locator(".home-note-body").evaluate((element) =>
+                element.scrollTop
+            ),
+            0,
+        );
 
         await page.setViewportSize({ width: 768, height: 1024 });
-        await page.waitForFunction(() =>
-            document.querySelectorAll(".home-note-body input:not([inert])")
-                .length === 5
-        );
-        const fifth = card.getByRole("checkbox").nth(4);
+        await page.waitForFunction(() => {
+            const preview = document.querySelector(".home-note-body");
+            const inputs = preview?.querySelectorAll("input");
+            if (!preview || !inputs || inputs.length !== 5) return false;
+            return inputs[4].getBoundingClientRect().bottom <=
+                preview.getBoundingClientRect().bottom;
+        });
+        const fifth = inputs.nth(4);
         const saved = page.waitForResponse((response) =>
             response.request().method() === "PATCH" &&
             response.url().endsWith(`/api/documents/${note.id}`) &&
