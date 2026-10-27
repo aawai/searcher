@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-27-006",
+  "captured": "2026-10-27",
+  "packet_version": "1.0",
+  "title": "Trusted Types API",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

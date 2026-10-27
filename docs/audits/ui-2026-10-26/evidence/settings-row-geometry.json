@@ -1,0 +1,242 @@
+[
+  {
+    "route": "/settings/ai",
+    "w": 320,
+    "rows": [
+      {
+        "text": "对话页面",
+        "labelWidth": 158,
+        "controlWidth": 82,
+        "height": 60
+      },
+      {
+        "text": "标准稳定模型mock-model-standard · 文本 · 工具 · 流式 · 推理未知",
+        "labelWidth": 256,
+        "controlWidth": 256,
+        "height": 156
+      }
+    ]
+  },
+  {
+    "route": "/admin/backup",
+    "w": 320,
+    "rows": [
+      {
+        "text": "导出配置",
+        "labelWidth": 118.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "导入配置",
+        "labelWidth": 118.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "创建备份",
+        "labelWidth": 95.984375,
+        "controlWidth": 144.015625,
+        "height": 60
+      },
+      {
+        "text": "备份文件",
+        "labelWidth": 256,
+        "controlWidth": 256,
+        "height": 142
+      }
+    ]
+  },
+  {
+    "route": "/settings/ai",
+    "w": 390,
+    "rows": [
+      {
+        "text": "对话页面",
+        "labelWidth": 228,
+        "controlWidth": 82,
+        "height": 60
+      },
+      {
+        "text": "标准稳定模型mock-model-standard · 文本 · 工具 · 流式 · 推理未知",
+        "labelWidth": 26,
+        "controlWidth": 284,
+        "height": 390
+      }
+    ]
+  },
+  {
+    "route": "/admin/backup",
+    "w": 390,
+    "rows": [
+      {
+        "text": "导出配置",
+        "labelWidth": 188.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "导入配置",
+        "labelWidth": 188.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "创建备份",
+        "labelWidth": 165.984375,
+        "controlWidth": 144.015625,
+        "height": 60
+      },
+      {
+        "text": "备份文件",
+        "labelWidth": 8.296875,
+        "controlWidth": 301.703125,
+        "height": 104
+      }
+    ]
+  },
+  {
+    "route": "/settings/ai",
+    "w": 640,
+    "rows": [
+      {
+        "text": "对话页面",
+        "labelWidth": 478,
+        "controlWidth": 82,
+        "height": 60
+      },
+      {
+        "text": "标准稳定模型mock-model-standard · 文本 · 工具 · 流式 · 推理未知",
+        "labelWidth": 276,
+        "controlWidth": 284,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "route": "/admin/backup",
+    "w": 640,
+    "rows": [
+      {
+        "text": "导出配置",
+        "labelWidth": 438.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "导入配置",
+        "labelWidth": 438.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "创建备份",
+        "labelWidth": 415.984375,
+        "controlWidth": 144.015625,
+        "height": 60
+      },
+      {
+        "text": "备份文件",
+        "labelWidth": 258.296875,
+        "controlWidth": 301.703125,
+        "height": 60
+      }
+    ]
+  },
+  {
+    "route": "/settings/ai",
+    "w": 768,
+    "rows": [
+      {
+        "text": "对话页面",
+        "labelWidth": 318,
+        "controlWidth": 82,
+        "height": 60
+      },
+      {
+        "text": "标准稳定模型mock-model-standard · 文本 · 工具 · 流式 · 推理未知",
+        "labelWidth": 116,
+        "controlWidth": 284,
+        "height": 104
+      }
+    ]
+  },
+  {
+    "route": "/admin/backup",
+    "w": 768,
+    "rows": [
+      {
+        "text": "导出配置",
+        "labelWidth": 510.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "导入配置",
+        "labelWidth": 510.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "创建备份",
+        "labelWidth": 487.984375,
+        "controlWidth": 144.015625,
+        "height": 60
+      },
+      {
+        "text": "备份文件",
+        "labelWidth": 330.296875,
+        "controlWidth": 301.703125,
+        "height": 60
+      }
+    ]
+  },
+  {
+    "route": "/settings/ai",
+    "w": 1440,
+    "rows": [
+      {
+        "text": "对话页面",
+        "labelWidth": 550,
+        "controlWidth": 82,
+        "height": 60
+      },
+      {
+        "text": "标准稳定模型mock-model-standard · 文本 · 工具 · 流式 · 推理未知",
+        "labelWidth": 348,
+        "controlWidth": 284,
+        "height": 60
+      }
+    ]
+  },
+  {
+    "route": "/admin/backup",
+    "w": 1440,
+    "rows": [
+      {
+        "text": "导出配置",
+        "labelWidth": 510.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "导入配置",
+        "labelWidth": 510.515625,
+        "controlWidth": 121.484375,
+        "height": 60
+      },
+      {
+        "text": "创建备份",
+        "labelWidth": 487.984375,
+        "controlWidth": 144.015625,
+        "height": 60
+      },
+      {
+        "text": "备份文件",
+        "labelWidth": 330.296875,
+        "controlWidth": 301.703125,
+        "height": 60
+      }
+    ]
+  }
+]

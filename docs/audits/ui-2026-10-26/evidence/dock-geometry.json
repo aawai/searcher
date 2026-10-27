@@ -1,0 +1,98 @@
+[
+  {
+    "edge": "top",
+    "dock": {
+      "x": 598,
+      "y": 12,
+      "width": 244,
+      "height": 56,
+      "top": 12,
+      "right": 842,
+      "bottom": 68,
+      "left": 598
+    },
+    "panel": {
+      "x": 967.203125,
+      "y": 68,
+      "width": 460.796875,
+      "height": 820,
+      "top": 68,
+      "right": 1428,
+      "bottom": 888,
+      "left": 967.203125
+    },
+    "intersects": false
+  },
+  {
+    "edge": "left",
+    "dock": {
+      "x": 12,
+      "y": 328,
+      "width": 56,
+      "height": 244,
+      "top": 328,
+      "right": 68,
+      "bottom": 572,
+      "left": 12
+    },
+    "panel": {
+      "x": 967.203125,
+      "y": 60,
+      "width": 460.796875,
+      "height": 828,
+      "top": 60,
+      "right": 1428,
+      "bottom": 888,
+      "left": 967.203125
+    },
+    "intersects": false
+  },
+  {
+    "edge": "right",
+    "dock": {
+      "x": 1372,
+      "y": 328,
+      "width": 56,
+      "height": 244,
+      "top": 328,
+      "right": 1428,
+      "bottom": 572,
+      "left": 1372
+    },
+    "panel": {
+      "x": 911.203125,
+      "y": 60,
+      "width": 460.796875,
+      "height": 828,
+      "top": 60,
+      "right": 1372,
+      "bottom": 888,
+      "left": 911.203125
+    },
+    "intersects": false
+  },
+  {
+    "edge": "bottom",
+    "dock": {
+      "x": 598,
+      "y": 832,
+      "width": 244,
+      "height": 56,
+      "top": 832,
+      "right": 842,
+      "bottom": 888,
+      "left": 598
+    },
+    "panel": {
+      "x": 967.203125,
+      "y": 60,
+      "width": 460.796875,
+      "height": 772,
+      "top": 60,
+      "right": 1428,
+      "bottom": 832,
+      "left": 967.203125
+    },
+    "intersects": false
+  }
+]

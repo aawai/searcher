@@ -1,0 +1,17 @@
+{
+  "scope": "1440 dark; 16 populated routes; no hover-state union; used ranges may overlap; unused does not mean dead",
+  "sheets": [
+    {
+      "url": "index-DY15Qo5O.css",
+      "chars": 148330,
+      "usedRuleChars": 146433,
+      "observedRules": 137
+    },
+    {
+      "url": "TrashPage-SsgiZvfI.css",
+      "chars": 1548,
+      "usedRuleChars": 180,
+      "observedRules": 3
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+[
+  {
+    "theme": "light",
+    "accent": "blue",
+    "ring": "rgb(29, 78, 216)",
+    "surface": "rgb(255, 255, 255)",
+    "ratio": 6.701618401398807
+  },
+  {
+    "theme": "light",
+    "accent": "cyan",
+    "ring": "rgb(14, 116, 144)",
+    "surface": "rgb(255, 255, 255)",
+    "ratio": 5.3577549124490425
+  },
+  {
+    "theme": "light",
+    "accent": "teal",
+    "ring": "rgb(15, 118, 110)",
+    "surface": "rgb(255, 255, 255)",
+    "ratio": 5.473250081210842
+  },
+  {
+    "theme": "light",
+    "accent": "violet",
+    "ring": "rgb(109, 40, 217)",
+    "surface": "rgb(255, 255, 255)",
+    "ratio": 7.104892978519159
+  },
+  {
+    "theme": "light",
+    "accent": "orange",
+    "ring": "rgb(194, 65, 12)",
+    "surface": "rgb(255, 255, 255)",
+    "ratio": 5.178415705888697
+  },
+  {
+    "theme": "light",
+    "accent": "mono",
+    "ring": "rgb(39, 39, 42)",
+    "surface": "rgb(255, 255, 255)",
+    "ratio": 14.894588477600598
+  },
+  {
+    "theme": "light",
+    "accent": "rose",
+    "ring": "rgb(190, 18, 60)",
+    "surface": "rgb(255, 255, 255)",
+    "ratio": 6.285164560662439
+  },
+  {
+    "theme": "light",
+    "accent": "emerald",
+    "ring": "rgb(21, 126, 61)",
+    "surface": "rgb(255, 255, 255)",
+    "ratio": 5.142506118148432
+  },
+  {
+    "theme": "light",
+    "accent": "amber",
+    "ring": "rgb(178, 82, 9)",
+    "surface": "rgb(255, 255, 255)",
+    "ratio": 5.117136810407847
+  },
+  {
+    "theme": "dark",
+    "accent": "blue",
+    "ring": "rgb(96, 165, 250)",
+    "surface": "rgb(28, 28, 31)",
+    "ratio": 6.6867061397052865
+  },
+  {
+    "theme": "dark",
+    "accent": "cyan",
+    "ring": "rgb(34, 211, 238)",
+    "surface": "rgb(28, 28, 31)",
+    "ratio": 9.407175062122375
+  },
+  {
+    "theme": "dark",
+    "accent": "teal",
+    "ring": "rgb(45, 212, 191)",
+    "surface": "rgb(28, 28, 31)",
+    "ratio": 9.132704576643984
+  },
+  {
+    "theme": "dark",
+    "accent": "violet",
+    "ring": "rgb(167, 139, 250)",
+    "surface": "rgb(28, 28, 31)",
+    "ratio": 6.246907190919229
+  },
+  {
+    "theme": "dark",
+    "accent": "orange",
+    "ring": "rgb(251, 146, 60)",
+    "surface": "rgb(28, 28, 31)",
+    "ratio": 7.5114783906034
+  },
+  {
+    "theme": "dark",
+    "accent": "mono",
+    "ring": "rgb(228, 228, 231)",
+    "surface": "rgb(28, 28, 31)",
+    "ratio": 13.398010303134201
+  },
+  {
+    "theme": "dark",
+    "accent": "rose",
+    "ring": "rgb(251, 113, 133)",
+    "surface": "rgb(28, 28, 31)",
+    "ratio": 6.316541673532144
+  },
+  {
+    "theme": "dark",
+    "accent": "emerald",
+    "ring": "rgb(74, 222, 128)",
+    "surface": "rgb(28, 28, 31)",
+    "ratio": 9.756129489411704
+  },
+  {
+    "theme": "dark",
+    "accent": "amber",
+    "ring": "rgb(251, 191, 36)",
+    "surface": "rgb(28, 28, 31)",
+    "ratio": 10.183778969160434
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-27-004",
+  "captured": "2026-10-27",
+  "packet_version": "1.0",
+  "title": "Registering custom properties in CSS",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Properties_and_values_API/Registering_properties",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

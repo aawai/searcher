@@ -1,0 +1,22 @@
+[
+  {
+    "scenario": "Dialog Escape focus return",
+    "pass": true
+  },
+  {
+    "scenario": "Design Lab Tabs",
+    "pass": true
+  },
+  {
+    "scenario": "Dock collapse and expand",
+    "pass": true
+  },
+  {
+    "scenario": "Home note mouse drag preview and Escape cancel",
+    "pass": true
+  },
+  {
+    "scenario": "Home note keyboard movement preview and Escape cancel",
+    "pass": true
+  }
+]

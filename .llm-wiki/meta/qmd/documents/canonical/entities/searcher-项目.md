@@ -3,7 +3,7 @@ type: entity
 title: Searcher 项目
 category: project
 created: 2026-09-25
-updated: 2026-09-27
+updated: 2026-10-27
 sources:
   - sources/SRC-2026-09-25-001
   - sources/SRC-2026-09-25-002
@@ -19,8 +19,7 @@ sources:
 
 1. **同源单进程**：由 [[entities/deno-runtime]] 单一进程承载后端 API 与前端 SPA
    静态托管，践行 [[concepts/single-process-architecture]]。
-2. **渐进式功能体验**：普通访客享受纯粹快速的搜索体验，匿名偏好不落盘；登录后开放
-   Web App 抽屉面板、Markdown 便签、AI 问答服务与跨设备同步。
+2. **渐进式功能体验**：普通访客使用搜索和设置；匿名外观偏好保存在当前设备且不上传服务器，与账号缓存隔离。应用、笔记及跨设备偏好需要登录，见 [外观偏好存储](../../../docs/appearance.md#偏好存储)。
 3. **安全严密设计**：管理员通过交互式命令行创建，会话实行严格的
    [[concepts/session-security-and-isolation]]，数据库操作经由
    [[concepts/database-queue-serialization]] 保护。
@@ -37,6 +36,9 @@ sources:
 - 无障碍底线：[[concepts/pointer-target-size]]、[[concepts/accessible-grid-drag-keyboard-and-announcements]]、[[concepts/aria-combobox-grouped-suggestions]]
 - 强调色与对比度：[[concepts/wallpaper-accent-oklch-contrast-solver]]
 - 预览截断：[[concepts/whole-line-preview-truncation]]
+- 数据库备份与恢复：[SQLite Backup and Recovery Boundaries](/concepts/sqlite-backup-and-recovery-boundaries.md)
+- 样式变量语义：[CSS Custom Property Fallback and Registration](/concepts/css-custom-property-fallback-and-registration.md)
+- 内容防护边界：[XSS Sanitization and Trusted Types](/concepts/xss-sanitization-and-trusted-types.md)
 - 综合架构：[[syntheses/searcher-system-architecture]]
 ## 来源
 

@@ -1,0 +1,13 @@
+{
+  "commit": "5bb55b91dc2829c5fa37b7b32d1a5e07e8b4df77",
+  "branch": "main",
+  "initialWorkingTree": "clean",
+  "deno": "2.9.8",
+  "browserVersion": "150.0.7871.24",
+  "productionBuild": true,
+  "fixture": "existing startProductionApp; isolated in-memory SQLite; seeded administrator and historical AI conversation; 36 apps, 2 folders, 8 notes, 4 home-fixed; no real model request",
+  "screenshots": 231,
+  "cssFiles": 38,
+  "cssLineCountConvention": "split on newline, includes trailing empty line",
+  "pageErrors": []
+}

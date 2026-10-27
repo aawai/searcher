@@ -8,6 +8,7 @@
 - [[concepts/aria-combobox-grouped-suggestions]] — ARIA Combobox Grouped Suggestions *(created: 2026-10-24)*
 - [[concepts/contract-first-testing]] — Contract First Testing *(created: 2026-09-25)*
 - [[concepts/csrf-defense-boundaries]] — CSRF Defense Boundaries *(created: 2026-10-26)*
+- [[concepts/css-custom-property-fallback-and-registration]] — CSS Custom Property Fallback and Registration *(created: 2026-10-27)*
 - [[concepts/database-queue-serialization]] — Database Queue Serialization *(created: 2026-09-25)*
 - [[concepts/deno-native-serve-architecture]] — Deno Native Serve Architecture *(created: unknown)*
 - [[concepts/deno-permission-boundaries]] — Deno Permission Boundaries *(created: 2026-10-26)*
@@ -24,6 +25,7 @@
 - [[concepts/session-security-and-isolation]] — Session Security and Isolation *(created: 2026-09-25)*
 - [[concepts/shortest-column-masonry-layout]] — Shortest Column Masonry Layout *(created: 2026-09-25)*
 - [[concepts/single-process-architecture]] — Single Process Architecture *(created: 2026-09-25)*
+- [[concepts/sqlite-backup-and-recovery-boundaries]] — SQLite Backup and Recovery Boundaries *(created: 2026-10-27)*
 - [[concepts/sqlite-fts5-fulltext-search]] — SQLite FTS5 Fulltext Search *(created: 2026-09-25)*
 - [[concepts/sqlite-isolation-and-connection-boundaries]] — SQLite Isolation and Connection Boundaries *(created: 2026-10-26)*
 - [[concepts/sqlite-table-recreation-migration]] — SQLite Table Recreation Migration *(created: 2026-09-25)*
@@ -32,6 +34,7 @@
 - [[concepts/wallpaper-accent-oklch-contrast-solver]] — Wallpaper Accent OKLCH Contrast Solver *(created: 2026-10-25)*
 - [[concepts/web-animations-api-runtime-architecture]] — Web Animations API Runtime Architecture *(created: 2026-10-05)*
 - [[concepts/whole-line-preview-truncation]] — Whole-line Preview Truncation *(created: 2026-10-25)*
+- [[concepts/xss-sanitization-and-trusted-types]] — XSS Sanitization and Trusted Types *(created: 2026-10-27)*
 
 ## Entitys
 
@@ -48,9 +51,11 @@
 
 ## Sources
 
+- [[sources/css-var-fallback-consumer-value-boundary]] — CSS var() 回退不验证消费属性 *(created: 2026-10-27)*
 - [[sources/e2e-native-parallel-speedup-vs-stability-167]] — E2E原生并行提速存在但默认保留串行 *(created: 2026-10-15)*
 - [[sources/e2e-parallel-default-enabled-171]] — E2E并行默认启用及回退策略 *(created: 2026-10-15)*
 - [[sources/issue-174-data-router-session-leave-guard]] — Issue 174 data-router Apps leave guard merged via PR 183 *(created: 2026-10-16)*
+- [[sources/issue-326-dock-effective-edge-responsive]] — Dock 有效方向与响应式覆盖收敛 *(created: 2026-10-27)*
 - [[sources/obs-2026-09-25-ui-app]] — Observation: UI 精致化与交互优化：APP 命名对齐、壁纸复合输入、便签全屏与悬浮卡片空间优化 *(created: 2026-09-25)*
 - [[sources/obs-2026-09-25-ui-ux]] — Observation: UI/UX 精致化与设计系统收敛落地 *(created: 2026-09-25)*
 - [[sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture]] — Observation: Web App Launcher Grid Alignment & Square Folder Architecture *(created: 2026-09-25)*
@@ -125,6 +130,9 @@
 - [[sources/obs-2026-10-26-pr-317-main]] — Observation: PR 317 编辑器滚动条与分页表面修复合并 main *(created: 2026-10-26)*
 - [[sources/obs-2026-10-26-q1-q19]] — Observation: 工作区任务栏设计访谈已确认 Q1–Q19，尚未授权实施 *(created: 2026-10-26)*
 - [[sources/obs-2026-10-26-q20-q25]] — Observation: 任务栏访谈 Q20–Q25 已确认，等待最终共同理解确认 *(created: 2026-10-26)*
+- [[sources/obs-2026-10-27-issue-320-ui-guard-actions-pr-329-main]] — Observation: Issue 320 UI Guard 静态表达式覆盖与 Actions 竞态修复经 PR 329 合并 main *(created: 2026-10-27)*
+- [[sources/obs-2026-10-27-issue-322-327-ui-guard-token-pr-330]] — Observation: Issue 322/327 UI Guard 与 Token 治理经 PR 330 合并 *(created: 2026-10-27)*
+- [[sources/obs-2026-10-27-issue-325-ui-pr-331-main]] — Observation: Issue 325 UI 契约经 PR 331 合并 main *(created: 2026-10-27)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
 - [[sources/SRC-2026-09-25-001]] — AGENTS.md: Searcher 仓库架构与工程指南 *(created: unknown)*
 - [[sources/SRC-2026-09-25-002]] — README.md: Searcher 项目使用与运维部署总览 *(created: unknown)*
@@ -189,10 +197,16 @@
 - [[sources/SRC-2026-10-26-001]] — Isolation In SQLite *(created: unknown)*
 - [[sources/SRC-2026-10-26-002]] — Security and permissions *(created: unknown)*
 - [[sources/SRC-2026-10-26-003]] — OWASP Cross-Site Request Forgery Prevention Cheat Sheet *(created: unknown)*
+- [[sources/SRC-2026-10-27-001]] — SQLite Online Backup API *(created: unknown)*
+- [[sources/SRC-2026-10-27-002]] — SQLite PRAGMA Statements *(created: unknown)*
+- [[sources/SRC-2026-10-27-003]] — Using CSS custom properties (variables) *(created: unknown)*
+- [[sources/SRC-2026-10-27-004]] — Registering custom properties in CSS *(created: unknown)*
+- [[sources/SRC-2026-10-27-005]] — Cross-site scripting (XSS) *(created: unknown)*
+- [[sources/SRC-2026-10-27-006]] — Trusted Types API *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-26T14:39:33.683Z* | *Total pages: 180*
+*Last updated: 2026-10-27T08:41:26.976Z* | *Total pages: 194*

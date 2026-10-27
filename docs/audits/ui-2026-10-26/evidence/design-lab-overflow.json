@@ -1,0 +1,30 @@
+[
+  {
+    "cls": "design-lab-composition-viewport",
+    "tag": "DIV",
+    "right": 592,
+    "w": 576,
+    "scroll": 1440
+  },
+  {
+    "cls": "",
+    "tag": "IFRAME",
+    "right": 592,
+    "w": 576,
+    "scroll": 1440
+  },
+  {
+    "cls": "design-lab-composition-viewport",
+    "tag": "DIV",
+    "right": 592,
+    "w": 576,
+    "scroll": 1440
+  },
+  {
+    "cls": "",
+    "tag": "IFRAME",
+    "right": 592,
+    "w": 576,
+    "scroll": 1440
+  }
+]

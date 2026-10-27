@@ -31,10 +31,13 @@ function dockManagementModal(page: Page): Locator {
     );
 }
 
-function collapseButton(page: Page): Locator {
-    return page.locator(
-        'button[data-dock-action="collapse"], button[aria-label="收起任务栏"]',
-    );
+async function collapseDockViaMenu(page: Page): Promise<void> {
+    const menuBtn = dockOptionsMenu(page);
+    await menuBtn.waitFor({ state: "visible" });
+    await menuBtn.click();
+    const collapseItem = page.getByRole("menuitem", { name: "收起任务栏" });
+    await collapseItem.waitFor({ state: "visible" });
+    await collapseItem.click();
 }
 
 function expandBall(page: Page): Locator {
@@ -582,7 +585,7 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
     });
 
     await t.step(
-        "options menu displays management entry, apps-fallback, and management dialog manages pinned apps",
+        "options menu displays management entry without redundant non-overflow apps, and management dialog manages layout, system items, and pinned apps",
         async () => {
             await page.locator("main.home").waitFor({ state: "visible" });
 
@@ -591,17 +594,26 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             await menuBtn.waitFor({ state: "visible" });
             await menuBtn.click();
 
-            // Pinned apps exist, verify fallback entry "更多固定应用" is displayed
-            const fallbackItem = page.locator(
-                '[data-dock-action="apps-fallback"]',
+            // When 2 apps do not overflow on 1280px desktop, overflow items must not clutter the menu
+            assertEquals(
+                await page.locator("[data-dock-overflow-app]").count(),
+                0,
+                "non-overflowing dock must not show overflow app items in options menu",
             );
-            await fallbackItem.waitFor({ state: "visible" });
-            assert((await fallbackItem.innerText()).includes("更多固定应用"));
 
-            // Click fallback item opens management dialog
-            await fallbackItem.click();
+            const manageItem = page.getByRole("menuitem", {
+                name: "管理任务栏",
+            });
+            await manageItem.waitFor({ state: "visible" });
+            await manageItem.click();
             const modal = dockManagementModal(page);
             await modal.waitFor({ state: "visible" });
+
+            // Verify section order in management modal: 系统入口 appears before 固定应用
+            const headings = await modal.locator(".dock-management-heading")
+                .allInnerTexts();
+            assertEquals(headings[0].trim(), "系统入口");
+            assert(headings[1].trim().startsWith("固定应用"));
 
             // Non-drag reorder inside management modal
             const moveDownAlpha = modal.getByRole("button", {
@@ -651,7 +663,7 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
     );
 
     await t.step(
-        "settings non-drag unpinning removes app from dock",
+        "settings non-drag unpinning removes app from dock and add-pinned-app re-pins it",
         async () => {
             await page.goto(app.origin + "/settings/appearance");
             await page.getByRole("navigation", { name: "设置分类" }).waitFor({
@@ -671,6 +683,27 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             assert(prefRes.ok());
             const prefBody = await prefRes.json();
             assertEquals(prefBody.data.dock.appIds, [appA.id]);
+
+            // Re-pin Beta via "添加固定应用" button in settings
+            const addPinnedBtn = page.locator(
+                'button[data-dock-action="add-pinned-app"]',
+            );
+            await addPinnedBtn.waitFor({ state: "visible" });
+            await addPinnedBtn.click();
+            const addBetaItem = page.getByRole("menuitem", {
+                name: appB.name,
+            });
+            await addBetaItem.waitFor({ state: "visible" });
+            await addBetaItem.click();
+
+            // Verify Beta is re-pinned, then unpin again for subsequent check
+            const prefAfterAdd = await (await context.request.get(
+                app.origin + "/api/preferences",
+            )).json();
+            assertEquals(prefAfterAdd.data.dock.appIds, [appA.id, appB.id]);
+            await page.getByRole("button", {
+                name: `取消固定 ${appB.name}`,
+            }).click();
 
             await page.getByRole("link", { name: "Searcher 首页" }).click();
             await page.waitForURL(app.origin + "/");
@@ -849,14 +882,14 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
             );
 
             // Keyboard Enter and Space on floating ball activate once and expand dock
-            await collapseButton(page).click();
+            await collapseDockViaMenu(page);
             await expandBall(page).waitFor({ state: "visible" });
             await expandBall(page).focus();
             await page.keyboard.press("Enter");
             await dockNav(page).waitFor({ state: "visible" });
             await expandBall(page).waitFor({ state: "detached" });
 
-            await collapseButton(page).click();
+            await collapseDockViaMenu(page);
             await expandBall(page).waitFor({ state: "visible" });
             await expandBall(page).focus();
             await page.keyboard.press(" ");
@@ -1311,8 +1344,7 @@ Deno.test("workspace dock: Mod+. expands and focuses dock without opening any pa
     await page.getByRole("link", { name: "Searcher 首页" }).click();
     await page.waitForURL(app.origin + "/");
     await dockNav(page).waitFor({ state: "visible" });
-    await collapseButton(page).waitFor({ state: "visible" });
-    await collapseButton(page).click();
+    await collapseDockViaMenu(page);
     await expandBall(page).waitFor({ state: "visible" });
 
     // Focus away on search input
@@ -1911,6 +1943,17 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                 `overflowing mobile .dock-group--apps must apply gradient mask-image, got: ${mobileMetrics.mask}`,
             );
 
+            // When overflowing on 390x844, options menu lists pinned apps directly
+            await dockOptionsMenu(page).click();
+            const menu = page.locator('[role="menu"]');
+            await menu.waitFor({ state: "visible" });
+            assertEquals(
+                await menu.locator("[data-dock-overflow-app]").count(),
+                4,
+                "overflowing dock must list all 4 pinned apps in options menu",
+            );
+            await page.keyboard.press("Escape");
+            await menu.waitFor({ state: "hidden" });
             // 4. prefers-reduced-motion: reduce uses pure opacity transition (translate: 0px)
             await page.setViewportSize({ width: 1440, height: 900 });
             await page.emulateMedia({ reducedMotion: "reduce" });

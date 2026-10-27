@@ -1,0 +1,27 @@
+{
+  "missingMatrix": [],
+  "brokenLinks": [],
+  "invalidJson": [],
+  "pngDimensions": [
+    {
+      "file": "ai-settings-390-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "admin-backup-390-light.png",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "file": "home-1440-light.png",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "file": "design-lab-390-light.png",
+      "width": 592,
+      "height": 4542
+    }
+  ]
+}

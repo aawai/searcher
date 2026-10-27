@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-27-002",
+  "captured": "2026-10-27",
+  "packet_version": "1.0",
+  "title": "PRAGMA Statements",
+  "url": "https://www.sqlite.org/pragma.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

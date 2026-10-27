@@ -28,7 +28,16 @@
   ],
   "concepts/csrf-defense-boundaries": [
     "concepts/session-security-and-isolation",
-    "sources/SRC-2026-10-26-003"
+    "concepts/xss-sanitization-and-trusted-types",
+    "sources/SRC-2026-10-26-003",
+    "sources/SRC-2026-10-27-006"
+  ],
+  "concepts/css-custom-property-fallback-and-registration": [
+    "concepts/tailwind-v4-css-first-architecture",
+    "entities/searcher-项目",
+    "sources/SRC-2026-10-27-003",
+    "sources/SRC-2026-10-27-004",
+    "sources/css-var-fallback-consumer-value-boundary"
   ],
   "concepts/database-queue-serialization": [
     "concepts/sqlite-fts5-fulltext-search",
@@ -137,6 +146,7 @@
     "concepts/deno-permission-boundaries",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/pwa-service-worker-update-lifecycle",
+    "concepts/xss-sanitization-and-trusted-types",
     "entities/hono-framework",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-001",
@@ -148,6 +158,7 @@
     "sources/SRC-2026-10-24-008",
     "sources/SRC-2026-10-26-002",
     "sources/SRC-2026-10-26-003",
+    "sources/SRC-2026-10-27-005",
     "syntheses/searcher-system-architecture"
   ],
   "concepts/shortest-column-masonry-layout": [
@@ -190,12 +201,19 @@
     "sources/SRC-2026-09-26-002",
     "syntheses/searcher-system-architecture"
   ],
+  "concepts/sqlite-backup-and-recovery-boundaries": [
+    "entities/drizzle-sqlite-store",
+    "entities/searcher-项目",
+    "sources/SRC-2026-10-27-001",
+    "sources/SRC-2026-10-27-002"
+  ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
     "sources/SRC-2026-09-25-028",
     "sources/SRC-2026-10-24-006"
   ],
   "concepts/sqlite-isolation-and-connection-boundaries": [
+    "concepts/sqlite-backup-and-recovery-boundaries",
     "entities/drizzle-sqlite-store",
     "sources/SRC-2026-10-26-001"
   ],
@@ -208,13 +226,16 @@
     "sources/SRC-2026-09-25-028",
     "sources/SRC-2026-09-25-031",
     "sources/SRC-2026-09-25-032",
-    "sources/SRC-2026-10-24-006"
+    "sources/SRC-2026-10-24-006",
+    "sources/SRC-2026-10-27-002"
   ],
   "concepts/tailwind-v4-css-first-architecture": [
+    "concepts/css-custom-property-fallback-and-registration",
     "concepts/wallpaper-accent-oklch-contrast-solver",
     "entities/searcher-项目",
     "entities/shadcn-ui-system",
-    "sources/SRC-2026-09-27-002"
+    "sources/SRC-2026-09-27-002",
+    "sources/SRC-2026-10-27-003"
   ],
   "concepts/view-transitions-shared-element": [
     "entities/react-19-framework",
@@ -228,14 +249,22 @@
     "sources/SRC-2026-10-25-003"
   ],
   "concepts/web-animations-api-runtime-architecture": [
+    "concepts/css-custom-property-fallback-and-registration",
     "concepts/view-transitions-shared-element",
     "sources/SRC-2026-10-05-003",
     "sources/SRC-2026-10-05-004",
-    "sources/SRC-2026-10-24-009"
+    "sources/SRC-2026-10-24-009",
+    "sources/SRC-2026-10-27-004"
   ],
   "concepts/whole-line-preview-truncation": [
     "entities/searcher-项目",
     "sources/SRC-2026-10-25-006"
+  ],
+  "concepts/xss-sanitization-and-trusted-types": [
+    "concepts/session-security-and-isolation",
+    "entities/searcher-项目",
+    "sources/SRC-2026-10-27-005",
+    "sources/SRC-2026-10-27-006"
   ],
   "entities/deno-runtime": [
     "concepts/deno-native-serve-architecture",
@@ -288,6 +317,7 @@
   ],
   "entities/drizzle-sqlite-store": [
     "concepts/database-queue-serialization",
+    "concepts/sqlite-backup-and-recovery-boundaries",
     "concepts/sqlite-fts5-fulltext-search",
     "concepts/sqlite-isolation-and-connection-boundaries",
     "concepts/sqlite-table-recreation-migration",
@@ -308,6 +338,7 @@
     "sources/SRC-2026-09-25-033",
     "sources/SRC-2026-10-24-006",
     "sources/SRC-2026-10-26-001",
+    "sources/SRC-2026-10-27-001",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -372,6 +403,7 @@
     "concepts/wallpaper-accent-oklch-contrast-solver",
     "concepts/web-animations-api-runtime-architecture",
     "concepts/whole-line-preview-truncation",
+    "concepts/xss-sanitization-and-trusted-types",
     "entities/deno-runtime",
     "entities/dnd-kit-system",
     "entities/drizzle-sqlite-store",
@@ -430,6 +462,7 @@
   ],
   "entities/shadcn-ui-system": [
     "concepts/aria-combobox-grouped-suggestions",
+    "concepts/css-custom-property-fallback-and-registration",
     "concepts/dnd-kit-2d-grid-sorting-architecture",
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/tailwind-v4-css-first-architecture",
@@ -519,6 +552,7 @@
   ],
   "sources/SRC-2026-09-25-010": [
     "concepts/database-queue-serialization",
+    "concepts/sqlite-backup-and-recovery-boundaries",
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store"
   ],
@@ -633,7 +667,9 @@
     "concepts/web-animations-api-runtime-architecture"
   ],
   "sources/SRC-2026-10-05-004": [
-    "concepts/web-animations-api-runtime-architecture"
+    "concepts/css-custom-property-fallback-and-registration",
+    "concepts/web-animations-api-runtime-architecture",
+    "sources/SRC-2026-10-27-004"
   ],
   "sources/SRC-2026-10-24-006": [
     "concepts/sqlite-fts5-fulltext-search"
@@ -684,9 +720,38 @@
     "concepts/csrf-defense-boundaries",
     "concepts/session-security-and-isolation"
   ],
+  "sources/SRC-2026-10-27-001": [
+    "concepts/sqlite-backup-and-recovery-boundaries",
+    "sources/SRC-2026-10-27-002"
+  ],
+  "sources/SRC-2026-10-27-002": [
+    "concepts/sqlite-backup-and-recovery-boundaries",
+    "sources/SRC-2026-10-27-001"
+  ],
+  "sources/SRC-2026-10-27-003": [
+    "concepts/css-custom-property-fallback-and-registration",
+    "sources/SRC-2026-10-27-004",
+    "sources/css-var-fallback-consumer-value-boundary"
+  ],
+  "sources/SRC-2026-10-27-004": [
+    "concepts/css-custom-property-fallback-and-registration",
+    "sources/SRC-2026-10-27-003"
+  ],
+  "sources/SRC-2026-10-27-005": [
+    "concepts/xss-sanitization-and-trusted-types",
+    "sources/SRC-2026-10-27-006"
+  ],
+  "sources/SRC-2026-10-27-006": [
+    "concepts/xss-sanitization-and-trusted-types",
+    "sources/SRC-2026-10-27-005"
+  ],
+  "sources/css-var-fallback-consumer-value-boundary": [
+    "concepts/css-custom-property-fallback-and-registration"
+  ],
   "sources/e2e-native-parallel-speedup-vs-stability-167": [],
   "sources/e2e-parallel-default-enabled-171": [],
   "sources/issue-174-data-router-session-leave-guard": [],
+  "sources/issue-326-dock-effective-edge-responsive": [],
   "sources/obs-2026-09-25-ui-app": [],
   "sources/obs-2026-09-25-ui-ux": [],
   "sources/obs-2026-09-25-web-app-launcher-grid-alignment-square-folder-architecture": [
@@ -771,6 +836,9 @@
   "sources/obs-2026-10-26-pr-317-main": [],
   "sources/obs-2026-10-26-q1-q19": [],
   "sources/obs-2026-10-26-q20-q25": [],
+  "sources/obs-2026-10-27-issue-320-ui-guard-actions-pr-329-main": [],
+  "sources/obs-2026-10-27-issue-322-327-ui-guard-token-pr-330": [],
+  "sources/obs-2026-10-27-issue-325-ui-pr-331-main": [],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",
