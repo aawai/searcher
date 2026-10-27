@@ -39,6 +39,7 @@ const SIZE_LABEL: Record<DocumentNoteSize, string> = {
 
 /** Clicks on these keep their own meaning (task rows toggle) instead of opening the note. */
 const INTERACTIVE = "a, button, input, label, li.task-list-item";
+const PREVIEW_CONTROLS = "a[href], button, input, select, textarea, [tabindex]";
 
 /**
  * One neutral Material home note: an optional title row with inline task
@@ -157,11 +158,14 @@ export function HomeNoteCard(
             const lines = parseFloat(
                 style.getPropertyValue("--home-note-body-lines"),
             );
-            const lineHeight = parseFloat(style.lineHeight);
-            const limit = (Number.isFinite(lines) ? lines : 5) *
-                (Number.isFinite(lineHeight) ? lineHeight : 22);
+            const measuredLineHeight = parseFloat(style.lineHeight);
+            const lineHeight = Number.isFinite(measuredLineHeight)
+                ? measuredLineHeight
+                : 22;
+            const limit = (Number.isFinite(lines) ? lines : 5) * lineHeight;
             // Collapse the previous clip so scrollHeight is the natural
             // content height rather than the box the last pass left behind.
+            element.scrollTop = 0;
             element.style.height = "0px";
             const contentHeight = element.scrollHeight;
             const range = document.createRange();
@@ -175,8 +179,25 @@ export function HomeNoteCard(
                     bottom: rect.bottom - bodyTop,
                 });
             }
-            const clip = clipPreviewHeight(rects, limit, contentHeight);
+            const clip = clipPreviewHeight(
+                rects,
+                limit,
+                contentHeight,
+                lineHeight,
+            );
             element.style.height = `${clip.height}px`;
+            // Clipped controls must not enter Tab order or scroll the preview
+            // into content that is supposed to remain outside the card.
+            const preview = element.getBoundingClientRect();
+            for (
+                const control of element.querySelectorAll<HTMLElement>(
+                    PREVIEW_CONTROLS,
+                )
+            ) {
+                const rect = control.getBoundingClientRect();
+                control.inert = rect.top < preview.top - 0.5 ||
+                    rect.bottom > preview.bottom + 0.5;
+            }
             setOverflowing(clip.hasMore);
         };
         update();

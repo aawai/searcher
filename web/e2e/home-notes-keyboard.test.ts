@@ -151,7 +151,8 @@ Deno.test("the note wrapper joins the Tab order and Enter opens the note", async
     try {
         const note = await createHomeNote(page, {
             title: "可聚焦笔记",
-            body: "键盘可以到达卡片本身。",
+            body:
+                "第一行\n第二行\n第三行\n第四行\n第五行\n第六行\n\n- [ ] 截断外的任务",
             band: "left",
             col: 0,
             row: 0,
@@ -159,6 +160,8 @@ Deno.test("the note wrapper joins the Tab order and Enter opens the note", async
         await reloadHome(page);
         await waitForNoteCards(page, 1);
         const wrapper = page.locator(`.home-note[data-note-id="${note.id}"]`);
+        const hiddenTask = wrapper.locator(".home-note-body input");
+        await hiddenTask.waitFor({ state: "attached" });
         await page.locator("#search-query").focus();
         let reached = false;
         for (let step = 0; step < 60 && !reached; step++) {
@@ -179,6 +182,15 @@ Deno.test("the note wrapper joins the Tab order and Enter opens the note", async
             true,
             "Tab skips the redundant title button and reaches note actions",
         );
+        await page.keyboard.press("Tab");
+        assertEquals(
+            await hiddenTask.evaluate(
+                (element) => document.activeElement === element,
+            ),
+            false,
+            "a task outside the clipped preview is not keyboard reachable",
+        );
+        await page.keyboard.press("Shift+Tab");
         await page.keyboard.press("Shift+Tab");
         await page.keyboard.press("Enter");
         await libraryPanel(page).waitFor();

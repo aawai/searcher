@@ -138,6 +138,51 @@ Deno.test("home note task toggles coalesce into one PATCH and Space toggles a fo
     }
 });
 
+Deno.test("only visible task controls are reachable as the preview grows", async () => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 390, height: 844 },
+    });
+    const { page } = fixture;
+    try {
+        const note = await createHomeNote(page, {
+            title: "预览任务",
+            body: "- [ ] 一\n- [ ] 二\n- [ ] 三\n- [ ] 四\n- [ ] 五",
+        });
+        await reloadHome(page);
+        await waitForNoteCards(page, 1);
+        const card = homeNote(page, "预览任务").locator(".home-note-card");
+        await card.locator("li.task-list-item").nth(4).waitFor({
+            state: "attached",
+        });
+        await page.waitForFunction(() =>
+            document.querySelectorAll(".home-note-body input:not([inert])")
+                .length === 3
+        );
+        assertEquals(await card.getByRole("checkbox").count(), 3);
+
+        await page.setViewportSize({ width: 768, height: 1024 });
+        await page.waitForFunction(() =>
+            document.querySelectorAll(".home-note-body input:not([inert])")
+                .length === 5
+        );
+        const fifth = card.getByRole("checkbox").nth(4);
+        const saved = page.waitForResponse((response) =>
+            response.request().method() === "PATCH" &&
+            response.url().endsWith(`/api/documents/${note.id}`) &&
+            response.ok()
+        );
+        await fifth.focus();
+        await page.keyboard.press("Space");
+        await saved;
+        assertEquals(
+            await card.locator(".home-note-progress").textContent(),
+            "1/5",
+        );
+    } finally {
+        await fixture.close();
+    }
+});
+
 Deno.test("coarse pointers get a 44px task target without changing the line pitch", async () => {
     const fixture = await openHomeNotesFixture({
         viewport: { width: 390, height: 844 },
