@@ -69,6 +69,18 @@ deno task check:ui --update
   同样失败。
 - runtime geometry 与 domain-specific value 例外只限明确的 owner 和表达式，见
   `scripts/ui-guard/exceptions.ts`。
+- TSX 的 className 支持字符串、括号 / as / satisfies 包装、条件与短路表达式、
+  模板中边界完整的静态 class，以及已知 `cn` / `clsx` 的参数、数组成员和对象类名键。
+  对象值只决定 truthiness，不作为 class 扫描；模板不跨 `${...}` 拼造 class。
+- style 支持静态对象、条件 / 短路分支和静态对象展开，按后写覆盖前写处理；
+  属性 initializer 保持完整，继续交给原有视觉规则和精确 runtime owner 例外。
+  同文件 `const` 按词法绑定解析；检测到赋值、成员修改、未知调用逃逸及其直接别名时停止解析。
+  `let` / 参数、跨模块值、任意函数返回值、动态键和无法静态确定的 spread 均为未知边界。
+  未知 spread 可能覆盖此前属性，因此只保留其后可确定的属性。
+- 抽取器记录未知 AST 节点，不执行 JS；每个入口限制 64 层递归、4096 次节点展开和
+  64 个对象展开组合，并检测循环引用。未知不是“已验证安全”，门禁通过不代表 runtime
+  输入经过完整求值，也不覆盖默认尺度 utility（如 `text-xl`）到正式 Token 的映射策略。
+  诊断定位静态值来源；同一来源复用只报告一次，不合并不同来源的同值违规。
 - 语义规则读取 [Visual Language](design/VISUAL_LANGUAGE.md) 的登记表（解析见
   `scripts/ui-guard/registry.ts`）：`font-size` / `border-radius` 只能引用已登记
   Token，`--font-*` / 圆角 Token 的定义必须已登记，`var(--accent)` 作为

@@ -102,6 +102,10 @@ export function isDragTransformException(
     value: string,
 ): boolean {
     const normValue = value.trim();
+    if (
+        normalizePath(file) === "web/src/features/dock/WorkspaceDock.tsx" &&
+        prop === "transition" && normValue === "transition"
+    ) return true;
 
     // dnd-kit transform functions are explicit contracts
     if (prop === "transform") {
@@ -177,6 +181,35 @@ export function isRuntimeLayoutGeometryException(
     prop: string,
     value: string,
 ): boolean {
+    const path = normalizePath(file);
+    const normValue = value.trim();
+    // These were previously hidden behind conditional/const style objects.
+    // Match measured geometry exactly, never a whole owner or visual property.
+    if (path === "web/src/design-lab/HomeGridLab.tsx") {
+        if (prop === "top" && normValue === "blockTop") return true;
+    }
+    if (path === "web/src/features/app-library/LibraryPopup.tsx") {
+        if (prop === "top" && normValue === "top") return true;
+        if (
+            prop === "maxHeight" &&
+            normValue === "`calc(100dvh - ${top}px - var(--space-4))`"
+        ) return true;
+    }
+    if (path === "web/src/features/dock/WorkspaceDock.tsx") {
+        if (
+            prop === "left" &&
+            normValue ===
+                "`calc(${ballDragState.currentX}px - var(--dock-ball-size) / 2)`"
+        ) return true;
+        if (
+            prop === "top" && (
+                normValue ===
+                    "`calc(${ballDragState.currentY}px - var(--dock-ball-size) / 2)`" ||
+                normValue ===
+                    "`calc(var(--dock-ball-inset-top) + (100dvh - var(--dock-ball-inset-top) - var(--dock-ball-inset-bottom)) * ${topRatio})`"
+            )
+        ) return true;
+    }
     if (!RUNTIME_LAYOUT_PROPS[prop] || !isRuntimeLayoutOwner(file)) {
         return false;
     }
