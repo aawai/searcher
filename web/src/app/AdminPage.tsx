@@ -20,7 +20,12 @@ import {
     TableRow,
 } from "../components/ui/table.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
-import { AlertCircle, MoreHorizontal, RefreshCw } from "lucide-react";
+import {
+    AlertCircle,
+    ChevronDown,
+    MoreHorizontal,
+    RefreshCw,
+} from "lucide-react";
 import { AdminOverview } from "./AdminOverview.tsx";
 import { AdminSystemSettings } from "./AdminSystemSettings.tsx";
 import { AdminBackupRestore } from "./AdminBackupRestore.tsx";
@@ -49,6 +54,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu.tsx";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "../components/ui/popover.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import {
@@ -634,12 +644,12 @@ export function AdminPage() {
                                                                 : ""}
                                                         </span>
                                                     </TableCell>
-                                                    <TableCell className="admin-hide-narrow">
+                                                    <TableCell className="admin-hide-narrow admin-nowrap">
                                                         {isAdmin
                                                             ? "系统管理员"
                                                             : "普通用户"}
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className="admin-nowrap">
                                                         <span
                                                             className={u
                                                                     .disabled
@@ -944,7 +954,7 @@ export function AdminPage() {
                                                             log.createdAt,
                                                         )}
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className="admin-audit-action">
                                                         <span
                                                             className={danger
                                                                 ? "admin-danger"
@@ -955,21 +965,48 @@ export function AdminPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         {log.targetType}
-                                                        <span
-                                                            className="admin-audit-target-id"
-                                                            title={log.targetId}
-                                                        >
+                                                        <div>
                                                             {log.targetId
                                                                     .length > 10
-                                                                ? `${
-                                                                    log.targetId
-                                                                        .slice(
-                                                                            0,
-                                                                            10,
-                                                                        )
-                                                                }…`
-                                                                : log.targetId}
-                                                        </span>
+                                                                ? (
+                                                                    <Popover>
+                                                                        <PopoverTrigger
+                                                                            render={
+                                                                                <Button
+                                                                                    type="button"
+                                                                                    variant="ghost"
+                                                                                    size="sm"
+                                                                                    className="admin-audit-target-id"
+                                                                                    aria-label={`查看对象 ID ${log.targetId}`}
+                                                                                />
+                                                                            }
+                                                                        >
+                                                                            {`${
+                                                                                log.targetId
+                                                                                    .slice(
+                                                                                        0,
+                                                                                        10,
+                                                                                    )
+                                                                            }…`}
+                                                                            <ChevronDown
+                                                                                size="1em"
+                                                                                className="icon-sm"
+                                                                                aria-hidden="true"
+                                                                            />
+                                                                        </PopoverTrigger>
+                                                                        <PopoverContent aria-label="完整对象 ID">
+                                                                            <span className="admin-audit-full-id">
+                                                                                {log.targetId}
+                                                                            </span>
+                                                                        </PopoverContent>
+                                                                    </Popover>
+                                                                )
+                                                                : (
+                                                                    <span className="admin-audit-short-id">
+                                                                        {log.targetId}
+                                                                    </span>
+                                                                )}
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         {entries.length > 0
