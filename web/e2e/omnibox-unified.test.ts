@@ -693,7 +693,9 @@ Deno.test("focusing an empty search never opens suggestions", async () => {
         await search.fill("/notes");
         await page.getByRole("option", { name: /\/notes/ }).click();
         await libraryView(page, "notes").waitFor();
-        await page.keyboard.press("Escape");
+        await search.focus();
+        assertEquals(await search.getAttribute("aria-expanded"), "false");
+        await search.press("Escape");
         await libraryPanel(page).waitFor({ state: "detached" });
         await page.waitForFunction(() =>
             document.activeElement?.id === "search-query"
