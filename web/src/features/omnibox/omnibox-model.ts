@@ -41,10 +41,6 @@ export interface OmniboxFolder {
     id: string;
     name: string;
 }
-export interface OmniboxQuickEntry {
-    id: string;
-    label: string;
-}
 export interface OnlineSuggestion {
     text: string;
     engine?: EngineId;
@@ -57,8 +53,7 @@ export type OmniboxItem =
     | { kind: "app"; app: OmniboxApp }
     | { kind: "history"; text: string }
     | { kind: "online"; text: string; engine?: EngineId }
-    | { kind: "command"; command: SearchQuickCommand }
-    | { kind: "entry"; entry: OmniboxQuickEntry };
+    | { kind: "command"; command: SearchQuickCommand };
 
 export interface OmniboxGroup {
     id: OmniboxGroupId;
@@ -69,8 +64,6 @@ export interface OmniboxGroup {
 export type ResolvedQuery =
     /** Nothing to list. */
     | { kind: "idle" }
-    /** The focused empty box offers its quick entries. */
-    | { kind: "entries" }
     | { kind: "commands"; commands: SearchQuickCommand[] }
     | {
         kind: "search";
@@ -81,15 +74,14 @@ export type ResolvedQuery =
     };
 
 export function resolveOmniboxQuery(
-    { raw, engine, context, hasQuickEntries }: {
+    { raw, engine, context }: {
         raw: string;
         engine: EngineId;
         context: SearchCommandContext;
-        hasQuickEntries: boolean;
     },
 ): ResolvedQuery {
     const text = raw.trim();
-    if (!text) return hasQuickEntries ? { kind: "entries" } : { kind: "idle" };
+    if (!text) return { kind: "idle" };
     const commands = matchSearchCommands(raw, context);
     if (commands.length > 0) return { kind: "commands", commands };
     const prefix = parseCommandPrefix(raw);
@@ -119,7 +111,6 @@ export interface OmniboxData {
     libraryApps: readonly OmniboxApp[];
     history: readonly string[];
     online: readonly OnlineSuggestion[];
-    quickEntries: readonly OmniboxQuickEntry[];
 }
 
 function webItems(
@@ -157,12 +148,6 @@ export function buildOmniboxGroups(
     const groups = new Map<OmniboxGroupId, OmniboxItem[]>();
     switch (query.kind) {
         case "idle":
-            break;
-        case "entries":
-            groups.set(
-                "commands",
-                data.quickEntries.map((entry) => ({ kind: "entry", entry })),
-            );
             break;
         case "commands":
             groups.set(
@@ -238,7 +223,6 @@ export type OmniboxAction =
     | { type: "open-document"; id: string }
     | { type: "open-folder"; id: string }
     | { type: "open-app"; app: OmniboxApp }
-    | { type: "quick-entry"; entryId: string }
     | { type: "command"; command: SearchQuickCommand }
     /** Replace the input (an engine or /ai prefix waiting for its query). */
     | { type: "fill"; text: string };
@@ -287,8 +271,6 @@ export function itemAction(
             return { type: "open-folder", id: item.folder.id };
         case "app":
             return { type: "open-app", app: item.app };
-        case "entry":
-            return { type: "quick-entry", entryId: item.entry.id };
         case "command":
             return item.command.target.type === "engine" ||
                     item.command.target.type === "mode"
@@ -323,7 +305,5 @@ export function omniboxItemKey(item: OmniboxItem): string {
             return `online:${item.text}`;
         case "command":
             return `command:${item.command.id}`;
-        case "entry":
-            return `entry:${item.entry.id}`;
     }
 }

@@ -34,7 +34,6 @@ import {
     type OmniboxApp,
     type OmniboxFolder,
     omniboxItemKey,
-    type OmniboxQuickEntry,
     resolveOmniboxQuery,
 } from "../../features/omnibox/omnibox-model.ts";
 import {
@@ -51,7 +50,6 @@ export type Reachability = Record<
 const EMPTY_REACHABILITY: Reachability = {};
 const EMPTY_APPS: OmniboxApp[] = [];
 const EMPTY_FOLDERS: OmniboxFolder[] = [];
-const EMPTY_QUICK_ENTRIES: OmniboxQuickEntry[] = [];
 
 export function SearcherSearchInput(
     {
@@ -72,8 +70,6 @@ export function SearcherSearchInput(
         onOpenDocument,
         onCommand,
         onCapture,
-        quickEntries = EMPTY_QUICK_ENTRIES,
-        onQuickEntry,
         inputRef,
     }: {
         engine: EngineId;
@@ -109,9 +105,6 @@ export function SearcherSearchInput(
         onCommand?: (command: SearchQuickCommand) => void;
         /** Shift+Enter quick capture; resolves true when the note was created. */
         onCapture?: (text: string) => Promise<boolean>;
-        /** Shown while the focused box is empty (e.g. 应用 with the home grid off). */
-        quickEntries?: OmniboxQuickEntry[];
-        onQuickEntry?: (entryId: string) => void;
         /** Lets the host return focus here, e.g. when the answer card closes. */
         inputRef?: RefObject<HTMLInputElement | null>;
     },
@@ -138,9 +131,8 @@ export function SearcherSearchInput(
                 raw: query,
                 engine,
                 context,
-                hasQuickEntries: quickEntries.length > 0,
             }),
-        [query, engine, context, quickEntries.length],
+        [query, engine, context],
     );
     const sources = useOmniboxSources(resolved, { signedIn });
     const groups = useMemo(
@@ -153,7 +145,6 @@ export function SearcherSearchInput(
                 libraryApps: webApps,
                 history: sources.history,
                 online: sources.online,
-                quickEntries,
             }),
         [
             resolved,
@@ -162,7 +153,6 @@ export function SearcherSearchInput(
             sources,
             webFolders,
             webApps,
-            quickEntries,
         ],
     );
     const items = useMemo(() => flattenOmniboxGroups(groups), [groups]);
@@ -250,10 +240,6 @@ export function SearcherSearchInput(
                         "noopener,noreferrer",
                     );
                 }
-                return;
-            case "quick-entry":
-                finish();
-                onQuickEntry?.(action.entryId);
                 return;
             case "command":
                 finish();

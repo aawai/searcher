@@ -10,16 +10,6 @@ import { InlineAnswerCard } from "../inline-ai/InlineAnswerCard.tsx";
 import { consumeSearchFocusRequest } from "../inline-ai/search-focus.ts";
 import { HomeCalm } from "../home-calm/HomeCalm.tsx";
 
-/** Entries of the focused empty search box (docs/workspace.md#其他). */
-const LIBRARY_QUICK_ENTRIES = [
-    { id: "notes", label: "笔记" },
-];
-const LIBRARY_AND_APPS_QUICK_ENTRIES = [
-    ...LIBRARY_QUICK_ENTRIES,
-    { id: "apps", label: "应用" },
-];
-const NO_QUICK_ENTRIES: typeof LIBRARY_QUICK_ENTRIES = [];
-
 const HomeNotes = lazy(() =>
     import("./HomeNotes.tsx").then((module) => ({
         default: module.HomeNotes,
@@ -85,13 +75,6 @@ export function ZenLayout(
         () => groups.map((group) => ({ id: group.id, name: group.name })),
         [groups],
     );
-    // With the home grid off, 应用 opens the same popup as 更多 so apps stay
-    // manageable.
-    const quickEntries = !user
-        ? NO_QUICK_ENTRIES
-        : showHomeApps
-        ? LIBRARY_QUICK_ENTRIES
-        : LIBRARY_AND_APPS_QUICK_ENTRIES;
     const libraryView = user && (
         <HomeAppLibrary
             ref={libraryRef}
@@ -164,12 +147,6 @@ export function ZenLayout(
                         } else props.onSearchCommand(command);
                     }}
                     onCapture={user ? props.onCapture : undefined}
-                    quickEntries={quickEntries}
-                    onQuickEntry={(id) => {
-                        if (id === "apps" || id === "notes") {
-                            openLibrary(id);
-                        }
-                    }}
                 />
                 <InlineAnswerCard
                     view={inlineAnswer.view}

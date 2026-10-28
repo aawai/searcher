@@ -3,7 +3,6 @@ import type { PersonalSearchDto } from "@shared/personal-search.ts";
 import { SEARCH_QUICK_COMMANDS } from "../shortcuts/shortcut-catalog.ts";
 import {
     buildOmniboxGroups,
-    countOmniboxItems,
     defaultSubmitAction,
     flattenOmniboxGroups,
     itemAction,
@@ -17,12 +16,10 @@ const guest = { aiAvailable: false, signedIn: false };
 const resolve = (
     raw: string,
     context = signedIn,
-    hasQuickEntries = false,
 ) => resolveOmniboxQuery({
     raw,
     engine: "bing",
     context,
-    hasQuickEntries,
 });
 
 const note = (id: string, displayTitle: string) => ({
@@ -59,7 +56,6 @@ const data = (patch: Partial<OmniboxData> = {}): OmniboxData => ({
     libraryApps: [],
     history: [],
     online: [],
-    quickEntries: [],
     ...patch,
 });
 const groupIds = (
@@ -76,7 +72,6 @@ const groupIds = (
 
 Deno.test("query resolution: empty, prefixes and plain text", () => {
     assertEquals(resolve("   "), { kind: "idle" });
-    assertEquals(resolve("   ", signedIn, true), { kind: "entries" });
     assertEquals(resolve("rust"), {
         kind: "search",
         text: "rust",
@@ -199,15 +194,6 @@ Deno.test("engine prefix lists only web results for the stripped query", () => {
         data({ history: ["灵感记录"], online: [{ text: "灵感网" }] }),
     );
     assertEquals(groups.map((group) => group.id), ["web"]);
-});
-
-Deno.test("empty focus offers quick entries under 命令", () => {
-    const groups = buildOmniboxGroups(
-        resolve("", signedIn, true),
-        data({ quickEntries: [{ id: "apps", label: "应用" }] }),
-    );
-    assertEquals(groups.map((group) => group.id), ["commands"]);
-    assertEquals(countOmniboxItems(groups), 1);
 });
 
 Deno.test("Enter with nothing selected is always a default-engine search (no routing)", () => {
