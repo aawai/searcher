@@ -80,7 +80,6 @@ export async function assertInteractiveHome(page: Page): Promise<void> {
     assertEquals(await search.inputValue(), "首页仍可交互");
     assert(await libraryPanel(page).isVisible());
     await search.fill("");
-    await search.press("Escape");
 }
 
 export async function closeLibrary(page: Page): Promise<void> {

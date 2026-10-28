@@ -687,7 +687,7 @@ Deno.test("home app library (#244)", async (t) => {
         );
 
         await t.step(
-            "在首页显示应用 off: no grid, search box stays, 应用 entry opens the library, search still opens apps and folders, on restores order",
+            "在首页显示应用 off: no grid, search box stays, /apps opens the library, search still opens apps and folders, on restores order",
             async () => {
                 const { page, context } = await bigLibraryPage(
                     browser,
@@ -701,14 +701,19 @@ Deno.test("home app library (#244)", async (t) => {
                     const orderOn = await visualLabels(page);
 
                     await setShowHomeApps(page, app.origin, false);
-                    // Focusing the empty box offers 应用 only while the grid
-                    // is off, so its presence also marks the loaded state.
+                    await page.getByRole("navigation", {
+                        name: "工作区任务栏",
+                    }).waitFor();
                     await search.focus();
-                    const entry = page.getByRole("option", {
-                        name: "应用",
-                        exact: true,
-                    });
-                    await entry.waitFor();
+                    assertEquals(
+                        await search.getAttribute("aria-expanded"),
+                        "false",
+                    );
+                    assertEquals(
+                        await page.getByRole("listbox", { name: "搜索建议" })
+                            .isVisible(),
+                        false,
+                    );
                     assertEquals(
                         await page.locator(".launcher-grid").count(),
                         0,
@@ -728,7 +733,8 @@ Deno.test("home app library (#244)", async (t) => {
                         );
                     }
 
-                    await entry.click();
+                    await search.fill("/apps");
+                    await page.getByRole("option", { name: /\/apps/ }).click();
                     const appsView = libraryView(page, "apps");
                     await appsView.waitFor();
                     assertEquals(
@@ -776,11 +782,8 @@ Deno.test("home app library (#244)", async (t) => {
                     assertEquals(await visualLabels(page), orderOn);
                     await search.focus();
                     assertEquals(
-                        await page.getByRole("option", {
-                            name: "应用",
-                            exact: true,
-                        }).count(),
-                        0,
+                        await search.getAttribute("aria-expanded"),
+                        "false",
                     );
                 } finally {
                     await context.close();

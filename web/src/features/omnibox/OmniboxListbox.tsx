@@ -5,7 +5,6 @@ import {
     History,
     Image,
     Keyboard,
-    LayoutGrid,
     Moon,
     NotebookPen,
     Search,
@@ -37,13 +36,6 @@ export interface OmniboxListboxView {
     onlineUnavailable: boolean;
     engine: EngineId;
 }
-
-/** Quick entries of the empty search box; unknown ids use the app icon. */
-const ENTRY_ICON: Record<string, typeof AppWindow> = {
-    root: LayoutGrid,
-    notes: NotebookPen,
-    apps: AppWindow,
-};
 
 function CommandIcon({ command }: { command: SearchQuickCommand }) {
     const { target } = command;
@@ -90,10 +82,6 @@ function ItemIcon({ item }: { item: OmniboxItem }) {
             return <Search size="1em" className="icon-md suggestion-icon" />;
         case "command":
             return <CommandIcon command={item.command} />;
-        case "entry": {
-            const Icon = ENTRY_ICON[item.entry.id] ?? AppWindow;
-            return <Icon size="1em" className="icon-md suggestion-icon" />;
-        }
     }
 }
 
@@ -112,8 +100,6 @@ function itemLabel(item: OmniboxItem): string {
             return item.text;
         case "command":
             return `${item.command.prefix} · ${item.command.action}`;
-        case "entry":
-            return item.entry.label;
     }
 }
 
@@ -137,8 +123,6 @@ function itemBadge(item: OmniboxItem, engine: EngineId): string | null {
             return item.engine && item.engine !== engine ? item.engine : null;
         case "command":
             return "快捷命令";
-        case "entry":
-            return null;
     }
 }
 

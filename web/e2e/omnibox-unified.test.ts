@@ -651,3 +651,60 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
         await app.close();
     }
 });
+
+Deno.test("focusing an empty search never opens suggestions", async () => {
+    const app = await startProductionApp();
+    const credentials = await app.seedAskFixtureUser({
+        username: "omnibox_focus",
+        password: "Omnibox-focus-password-237!",
+    });
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    try {
+        const context = await browser.newContext();
+        await mockWeb(context);
+        const page = await context.newPage();
+        await loginAndVisit(page, app.origin, "/", credentials);
+        await page.locator(".launcher-grid--home").waitFor();
+        const search = page.locator("#search-query");
+        const listbox = page.getByRole("listbox", { name: "搜索建议" });
+
+        await search.click();
+        assertEquals(await search.getAttribute("aria-expanded"), "false");
+        assertEquals(await listbox.isVisible(), false);
+
+        await search.fill("   ");
+        assertEquals(await search.getAttribute("aria-expanded"), "false");
+
+        await search.fill("灵感");
+        await page.getByRole("option", { name: /灵感网页/ }).waitFor();
+        await search.blur();
+        assertEquals(await search.getAttribute("aria-expanded"), "false");
+        await search.focus();
+        assertEquals(await search.getAttribute("aria-expanded"), "true");
+
+        await search.fill("");
+        assertEquals(await search.getAttribute("aria-expanded"), "false");
+        await listbox.waitFor({ state: "hidden" });
+
+        await search.fill("/notes");
+        await page.getByRole("option", { name: /\/notes/ }).click();
+        await libraryView(page, "notes").waitFor();
+        await search.focus();
+        assertEquals(await search.getAttribute("aria-expanded"), "false");
+        await search.press("Escape");
+        await libraryPanel(page).waitFor({ state: "detached" });
+        await page.waitForFunction(() =>
+            document.activeElement?.id === "search-query"
+        );
+        assertEquals(await search.getAttribute("aria-expanded"), "false");
+        assertEquals(await search.inputValue(), "");
+        await context.close();
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
