@@ -320,7 +320,14 @@ Deno.test("DockProvider: refreshApps does not overwrite pending in-flight optimi
                         status: true,
                         data: {
                             dock: {
-                                systemOrder: ["home", "apps", "notes", "ai"],
+                                systemOrder: [
+                                    "home",
+                                    "apps",
+                                    "notes",
+                                    "ai",
+                                    "settings",
+                                    "trash",
+                                ],
                                 appIds: ["app-in-flight"],
                             },
                         },
@@ -353,7 +360,14 @@ Deno.test("DockProvider: refreshApps does not overwrite pending in-flight optimi
                     status: true,
                     data: {
                         dock: {
-                            systemOrder: ["home", "apps", "notes", "ai"],
+                            systemOrder: [
+                                "home",
+                                "apps",
+                                "notes",
+                                "ai",
+                                "settings",
+                                "trash",
+                            ],
                             appIds: [],
                         },
                     },
@@ -421,17 +435,40 @@ Deno.test("DockProvider: refreshApps does not overwrite pending in-flight optimi
 });
 
 Deno.test("moveDockItem: reorders within bounds without mutating source and returns null out of bounds", () => {
-    const source = ["home", "apps", "notes", "ai"] as const;
+    const source = [
+        "home",
+        "apps",
+        "notes",
+        "ai",
+        "settings",
+        "trash",
+    ] as const;
     assertEquals(moveDockItem(source, 0, -1), null);
-    assertEquals(moveDockItem(source, 3, 1), null);
-    assertEquals(moveDockItem(source, 1, -1), ["apps", "home", "notes", "ai"]);
-    assertEquals(moveDockItem(source, 1, 1), ["home", "notes", "apps", "ai"]);
-    assertEquals(source, ["home", "apps", "notes", "ai"]);
+    assertEquals(moveDockItem(source, 5, 1), null);
+    assertEquals(moveDockItem(source, 4, 1), [
+        "home",
+        "apps",
+        "notes",
+        "ai",
+        "trash",
+        "settings",
+    ]);
+    assertEquals(moveDockItem(source, 1, -1), [
+        "apps",
+        "home",
+        "notes",
+        "ai",
+        "settings",
+        "trash",
+    ]);
+    assertEquals(source, ["home", "apps", "notes", "ai", "settings", "trash"]);
     assertEquals(Object.keys(DOCK_SYSTEM_ITEMS), [
         "home",
         "apps",
         "notes",
         "ai",
+        "settings",
+        "trash",
     ]);
 });
 

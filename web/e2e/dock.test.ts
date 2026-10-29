@@ -108,7 +108,7 @@ async function createWebApp(
     return body.data;
 }
 
-Deno.test("workspace dock: guest has no dock, first login has four system items and no copied home apps", async (t) => {
+Deno.test("workspace dock: guest has no dock, first login has six system items and no copied home apps", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
@@ -139,7 +139,7 @@ Deno.test("workspace dock: guest has no dock, first login has four system items 
     });
 
     await t.step(
-        "first login displays 4 system items, no pinned apps and independent from home apps",
+        "first login displays six system items, no pinned apps and independent from home apps",
         async () => {
             const context = await browser.newContext({
                 viewport: { width: 1280, height: 800 },
@@ -163,7 +163,7 @@ Deno.test("workspace dock: guest has no dock, first login has four system items 
             const dock = dockNav(page);
             await dock.waitFor({ state: "visible" });
 
-            // Exactly four system entries present
+            // All six system entries are present
             assertEquals(
                 await dockSystemButton(page, "首页").isVisible(),
                 true,
@@ -180,6 +180,15 @@ Deno.test("workspace dock: guest has no dock, first login has four system items 
                 await dockSystemButton(page, "AI 问答").isVisible(),
                 true,
             );
+            assertEquals(
+                await dockSystemButton(page, "设置").isVisible(),
+                true,
+            );
+            assertEquals(
+                await dockSystemButton(page, "回收站").isVisible(),
+                true,
+            );
+            assertEquals(await dock.locator("button[data-dock-id]").count(), 6);
 
             // No app items pinned to dock initially
             assertEquals(
@@ -195,7 +204,14 @@ Deno.test("workspace dock: guest has no dock, first login has four system items 
             assert(prefRes.ok());
             const prefBody = await prefRes.json();
             assertEquals(prefBody.data.dock, {
-                systemOrder: ["home", "apps", "notes", "ai"],
+                systemOrder: [
+                    "home",
+                    "apps",
+                    "notes",
+                    "ai",
+                    "settings",
+                    "trash",
+                ],
                 hiddenSystemIds: [],
                 appIds: [],
             });
@@ -315,6 +331,25 @@ Deno.test("workspace dock: system navigation, nonmodal panels, and browser back/
                 url.pathname === "/" && !url.searchParams.has("view")
             );
             await page.locator("[data-library]").waitFor({ state: "detached" });
+        },
+    );
+    await t.step(
+        "settings and trash open their existing standalone routes",
+        async () => {
+            for (
+                const [label, path] of [
+                    ["设置", "/settings"],
+                    ["回收站", "/trash"],
+                ] as const
+            ) {
+                await dockSystemButton(page, label).click();
+                await page.waitForURL(app.origin + path);
+                await dockNav(page).waitFor({ state: "detached" });
+                assertEquals(await dockNav(page).count(), 0);
+                await page.goBack();
+                await page.waitForURL(app.origin + "/");
+                await dockNav(page).waitFor({ state: "visible" });
+            }
         },
     );
 
@@ -612,7 +647,7 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             await page.getByRole("menuitem", { name: "管理任务栏" }).click();
             const modal = dockManagementModal(page);
             await modal.waitFor({ state: "visible" });
-            assertEquals(await modal.getByRole("switch").count(), 4);
+            assertEquals(await modal.getByRole("switch").count(), 6);
             assertEquals(
                 await modal.getByRole("radiogroup", { name: "任务栏位置" })
                     .count(),
@@ -628,8 +663,26 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
                 0,
             );
             await modal.getByRole("switch", { name: "显示 AI 问答" }).click();
+            await modal.getByRole("switch", { name: "显示 设置" }).click();
+            await modal.getByRole("switch", { name: "显示 回收站" }).click();
             await modal.getByRole("button", { name: "关闭" }).click();
             await modal.waitFor({ state: "hidden" });
+            assertEquals(
+                await dockNav(page).locator('[data-dock-id="settings"]')
+                    .count(),
+                0,
+            );
+            assertEquals(
+                await dockNav(page).locator('[data-dock-id="trash"]').count(),
+                0,
+            );
+            const restoreModal = await openDockManagement(page);
+            await restoreModal.getByRole("switch", { name: "显示 设置" })
+                .click();
+            await restoreModal.getByRole("switch", { name: "显示 回收站" })
+                .click();
+            await restoreModal.getByRole("button", { name: "关闭" }).click();
+            await restoreModal.waitFor({ state: "hidden" });
             assertEquals(
                 await dockNav(page).locator('[data-dock-id="ai"]').count(),
                 0,
@@ -712,7 +765,7 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
                 Array.from(
                     document.querySelectorAll<HTMLElement>("[data-dock-id]"),
                     (item) => item.dataset.dockId,
-                ).join(",") === "home,notes,apps"
+                ).join(",") === "home,notes,apps,settings,trash"
             );
             assertEquals(new URL(page.url()).search, "");
             await page.waitForFunction(() =>
@@ -728,6 +781,17 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             );
         },
     );
+
+    await t.step("new system entries can be reordered", async () => {
+        await dockSystemButton(page, "回收站").click({ button: "right" });
+        await page.getByRole("menuitem", { name: "向左移动" }).click();
+        await page.waitForFunction(() =>
+            Array.from(
+                document.querySelectorAll<HTMLElement>("[data-dock-id]"),
+                (item) => item.dataset.dockId,
+            ).join(",") === "home,notes,apps,trash,settings"
+        );
+    });
 
     await t.step("settings no longer duplicates taskbar controls", async () => {
         await page.goto(app.origin + "/settings/appearance");
@@ -916,7 +980,14 @@ Deno.test("workspace dock: four saved edges survive the 767/768 boundary with re
             headers: { Origin: app.origin },
             data: {
                 dock: {
-                    systemOrder: ["notes", "home", "apps", "ai"],
+                    systemOrder: [
+                        "notes",
+                        "home",
+                        "apps",
+                        "ai",
+                        "settings",
+                        "trash",
+                    ],
                     hiddenSystemIds: ["ai"],
                     appIds,
                 },
@@ -1001,7 +1072,13 @@ Deno.test("workspace dock: four saved edges survive the 767/768 boundary with re
             for (const other of ["top", "right", "bottom", "left"] as const) {
                 if (other !== edge) assertEquals(geometry.insets[other], 0);
             }
-            assertEquals(geometry.systemIds, ["notes", "home", "apps"]);
+            assertEquals(geometry.systemIds, [
+                "notes",
+                "home",
+                "apps",
+                "settings",
+                "trash",
+            ]);
 
             const apps = dockNav(page).locator(".dock-group--apps");
             const vertical = edge === "left" || edge === "right";
@@ -1078,7 +1155,14 @@ Deno.test("workspace dock: multi-context cloud sync and independent device layou
         headers: { Origin: app.origin },
         data: {
             dock: {
-                systemOrder: ["home", "apps", "notes", "ai"],
+                systemOrder: [
+                    "home",
+                    "apps",
+                    "notes",
+                    "ai",
+                    "settings",
+                    "trash",
+                ],
                 appIds: [cloudApp.id],
             },
         },
@@ -1156,7 +1240,14 @@ Deno.test("workspace dock: soft-deleted app is removed from dock and does not re
         headers: { Origin: app.origin },
         data: {
             dock: {
-                systemOrder: ["home", "apps", "notes", "ai"],
+                systemOrder: [
+                    "home",
+                    "apps",
+                    "notes",
+                    "ai",
+                    "settings",
+                    "trash",
+                ],
                 appIds: [ephemeralApp.id],
             },
         },
@@ -1312,7 +1403,7 @@ Deno.test("workspace dock: touch drag, long-press actions, and overflow manageme
     cleanup.defer(() => browser.close());
 
     const touchContext = await browser.newContext({
-        viewport: { width: 390, height: 844 },
+        viewport: { width: 600, height: 844 },
         hasTouch: true,
         isMobile: true,
     });
@@ -1337,7 +1428,14 @@ Deno.test("workspace dock: touch drag, long-press actions, and overflow manageme
         headers: { Origin: app.origin },
         data: {
             dock: {
-                systemOrder: ["home", "apps", "notes", "ai"],
+                systemOrder: [
+                    "home",
+                    "apps",
+                    "notes",
+                    "ai",
+                    "settings",
+                    "trash",
+                ],
                 appIds: [app1.id, app2.id],
             },
         },
@@ -1478,7 +1576,7 @@ Deno.test("workspace dock: touch drag, long-press actions, and overflow manageme
         Array.from(
             document.querySelectorAll<HTMLElement>("[data-dock-id]"),
             (item) => item.dataset.dockId,
-        ).join(",") === "home,notes,apps,ai"
+        ).join(",") === "home,notes,apps,ai,settings,trash"
     );
 
     const extraApps = [];
@@ -1502,6 +1600,7 @@ Deno.test("workspace dock: touch drag, long-press actions, and overflow manageme
         },
     );
     assert(update.ok());
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
     await dockNav(page).waitFor({ state: "visible" });
     await page.waitForFunction(() =>
@@ -1878,7 +1977,14 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                     headers: { Origin: app.origin },
                     data: {
                         dock: {
-                            systemOrder: ["home", "apps", "notes", "ai"],
+                            systemOrder: [
+                                "home",
+                                "apps",
+                                "notes",
+                                "ai",
+                                "settings",
+                                "trash",
+                            ],
                             appIds: pinnedIds,
                         },
                     },
@@ -1987,7 +2093,7 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                     }`,
                 );
             }
-            assertEquals(mobileMetrics.labels.length, 4);
+            assertEquals(mobileMetrics.labels.length, 6);
             assert(
                 mobileMetrics.labels.every((width) => width <= 1),
                 "system labels must not be visibly rendered",
@@ -2008,6 +2114,23 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
             );
             await page.keyboard.press("Escape");
             await menu.waitFor({ state: "hidden" });
+            // At 360px the system group can scroll without hiding the options.
+            await page.setViewportSize({ width: 360, height: 844 });
+            const systemGroup = dockNav(page).locator(".dock-group--system");
+            await page.waitForFunction(() => {
+                const group = document.querySelector(".dock-group--system");
+                return Boolean(group && group.scrollWidth > group.clientWidth);
+            });
+            await systemGroup.evaluate((group) => {
+                group.scrollLeft = group.scrollWidth;
+            });
+            await dockSystemButton(page, "回收站").click();
+            await page.waitForURL(app.origin + "/trash");
+            await page.goBack();
+            await dockNav(page).waitFor({ state: "visible" });
+            await dockOptionsMenu(page).click();
+            await page.getByRole("menuitem", { name: "管理任务栏" }).waitFor();
+            await page.keyboard.press("Escape");
             // 4. prefers-reduced-motion: reduce uses pure opacity transition (translate: 0px)
             await page.setViewportSize({ width: 1440, height: 900 });
             await page.emulateMedia({ reducedMotion: "reduce" });

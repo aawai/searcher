@@ -578,6 +578,10 @@ export function WorkspaceDock(
         } else if (id === "ai") {
             if (location.pathname.startsWith("/ask")) return;
             navigate(routes.ask, { viewTransition: true });
+        } else if (id === "settings") {
+            navigate(routes.settings(), { viewTransition: true });
+        } else if (id === "trash") {
+            navigate(routes.trash, { viewTransition: true });
         }
     }, [location.pathname, location.search, currentView, navigate, isHomePage]);
 

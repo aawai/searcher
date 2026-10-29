@@ -1,4 +1,11 @@
-export const DOCK_SYSTEM_IDS = ["home", "apps", "notes", "ai"] as const;
+export const DOCK_SYSTEM_IDS = [
+    "home",
+    "apps",
+    "notes",
+    "ai",
+    "settings",
+    "trash",
+] as const;
 export type DockSystemId = (typeof DOCK_SYSTEM_IDS)[number];
 
 export interface DockPreferences {

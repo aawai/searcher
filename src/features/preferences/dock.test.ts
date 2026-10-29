@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { eq, sql } from "drizzle-orm";
-import { webapps } from "../../db/schema.ts";
+import { preferences, webapps } from "../../db/schema.ts";
 import { createApp } from "../../app.ts";
 import { AuthService } from "../auth/service.ts";
 import { openDatabase } from "../../db/database.ts";
@@ -65,7 +65,14 @@ Deno.test("dock preferences: systemOrder reordering and validation guards", asyn
         const cookie = regRes.headers.get("set-cookie")?.split(";")[0] ?? "";
 
         // 1. Valid reordering
-        const reordered = ["ai", "notes", "apps", "home"] as const;
+        const reordered = [
+            "ai",
+            "notes",
+            "apps",
+            "home",
+            "trash",
+            "settings",
+        ] as const;
         const validPatch = await app.request("/api/preferences", {
             method: "PATCH",
             headers: { origin, cookie, "content-type": "application/json" },
@@ -92,7 +99,16 @@ Deno.test("dock preferences: systemOrder reordering and validation guards", asyn
             method: "PATCH",
             headers: { origin, cookie, "content-type": "application/json" },
             body: JSON.stringify({
-                dock: { systemOrder: ["ai", "ai", "notes", "apps"] },
+                dock: {
+                    systemOrder: [
+                        "ai",
+                        "ai",
+                        "notes",
+                        "apps",
+                        "settings",
+                        "trash",
+                    ],
+                },
             }),
         });
         assertEquals(duplicatePatch.status, 400);
@@ -102,7 +118,16 @@ Deno.test("dock preferences: systemOrder reordering and validation guards", asyn
             method: "PATCH",
             headers: { origin, cookie, "content-type": "application/json" },
             body: JSON.stringify({
-                dock: { systemOrder: ["ai", "notes", "apps", "invalid"] },
+                dock: {
+                    systemOrder: [
+                        "ai",
+                        "notes",
+                        "apps",
+                        "home",
+                        "settings",
+                        "invalid",
+                    ],
+                },
             }),
         });
         assertEquals(invalidPatch.status, 400);
@@ -120,12 +145,21 @@ Deno.test("dock preferences: systemOrder reordering and validation guards", asyn
         assertEquals(hideBody.data?.dock.systemOrder, [...reordered]);
         assertEquals(hideBody.data?.dock.hiddenSystemIds, ["notes", "ai"]);
 
-        // 6. All four system entries hidden is valid -> 200
+        // 6. All six system entries hidden is valid -> 200
         const hideAllPatch = await app.request("/api/preferences", {
             method: "PATCH",
             headers: { origin, cookie, "content-type": "application/json" },
             body: JSON.stringify({
-                dock: { hiddenSystemIds: ["home", "apps", "notes", "ai"] },
+                dock: {
+                    hiddenSystemIds: [
+                        "home",
+                        "apps",
+                        "notes",
+                        "ai",
+                        "settings",
+                        "trash",
+                    ],
+                },
             }),
         });
         assertEquals(hideAllPatch.status, 200);
@@ -137,6 +171,8 @@ Deno.test("dock preferences: systemOrder reordering and validation guards", asyn
             "apps",
             "notes",
             "ai",
+            "settings",
+            "trash",
         ]);
 
         // 7. Duplicated hiddenSystemIds -> 400
@@ -158,6 +194,130 @@ Deno.test("dock preferences: systemOrder reordering and validation guards", asyn
             }),
         });
         assertEquals(invalidHiddenPatch.status, 400);
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("dock preferences: legacy data is read lazily, rejects old snapshots, and resets", async () => {
+    const store = openDatabase(":memory:");
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const app = createApp({ store, auth, origin });
+        const reg = await app.request("/api/auth/register", {
+            method: "POST",
+            headers: { origin, "content-type": "application/json" },
+            body: JSON.stringify({
+                username: "dock_legacy_user",
+                displayName: "Legacy User",
+                password: "Password123456!",
+            }),
+        });
+        const cookie = reg.headers.get("set-cookie")?.split(";")[0] ?? "";
+        const headers = { origin, cookie, "content-type": "application/json" };
+        const created = await app.request("/api/webapps", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+                name: "Pinned",
+                url: "https://example.com",
+            }),
+        });
+        const pinned = (await created.json() as Envelope<WebAppDto>).data!;
+        const initial = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ dock: { appIds: [pinned.id] } }),
+        });
+        assertEquals(initial.status, 200);
+
+        const legacy = JSON.stringify({
+            systemOrder: ["ai", "notes", "apps", "home"],
+            hiddenSystemIds: ["home", "apps", "notes", "ai"],
+            appIds: [pinned.id],
+        });
+        await store.run(async (db) => {
+            await db.update(preferences).set({ dock: legacy });
+        });
+        const readStored = () =>
+            store.run(async (db) =>
+                (await db.select().from(preferences).all())[0]
+            );
+        const migrated = {
+            systemOrder: ["ai", "notes", "apps", "home", "settings", "trash"],
+            hiddenSystemIds: ["home", "apps", "notes", "ai"],
+            appIds: [pinned.id],
+        };
+        const get = await app.request("/api/preferences", {
+            headers: { cookie },
+        });
+        assertEquals(
+            (await get.json() as Envelope<PreferencesDto>).data?.dock,
+            migrated,
+        );
+        assertEquals((await readStored()).dock, legacy);
+
+        const before = await readStored();
+        const oldPatch = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ theme: "dark", dock: JSON.parse(legacy) }),
+        });
+        assertEquals(oldPatch.status, 400);
+        assertEquals(
+            (await oldPatch.json() as Envelope<never>).message,
+            "任务栏入口已更新，请刷新页面后重试；系统入口必须完整包含且不重复: home, apps, notes, ai, settings, trash",
+        );
+        assertEquals(await readStored(), before);
+
+        const unrelated = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ theme: "dark" }),
+        });
+        assertEquals(unrelated.status, 200);
+        assertEquals((await readStored()).dock, legacy);
+
+        const patch = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ dock: { hiddenSystemIds: ["trash"] } }),
+        });
+        assertEquals(patch.status, 200);
+        assertEquals(JSON.parse((await readStored()).dock!), {
+            ...migrated,
+            hiddenSystemIds: ["trash"],
+        });
+
+        const reset = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ dock: null }),
+        });
+        assertEquals(reset.status, 200);
+        assertEquals(
+            (await reset.json() as Envelope<PreferencesDto>).data?.dock,
+            DEFAULT_DOCK_PREFERENCES,
+        );
+        assertEquals(
+            JSON.parse((await readStored()).dock!),
+            DEFAULT_DOCK_PREFERENCES,
+        );
+
+        for (const stored of [null, "", "{invalid", "{}"]) {
+            await store.run(async (db) => {
+                await db.update(preferences).set({ dock: stored });
+            });
+            const response = await app.request("/api/preferences", {
+                headers: { cookie },
+            });
+            assertEquals(
+                (await response.json() as Envelope<PreferencesDto>).data?.dock,
+                DEFAULT_DOCK_PREFERENCES,
+            );
+            assertEquals((await readStored()).dock, stored);
+        }
     } finally {
         await store.close();
     }

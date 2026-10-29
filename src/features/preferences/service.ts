@@ -357,7 +357,9 @@ export class PreferencesService {
                         !dock.systemOrder.every((id) => isValidDockSystemId(id))
                     ) {
                         throw new PreferencesValidationError(
-                            "系统入口必须完整包含且不重复: home, apps, notes, ai",
+                            `任务栏入口已更新，请刷新页面后重试；系统入口必须完整包含且不重复: ${
+                                DOCK_SYSTEM_IDS.join(", ")
+                            }`,
                         );
                     }
                     systemOrder = [...dock.systemOrder];

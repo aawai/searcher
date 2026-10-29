@@ -12,6 +12,7 @@ import {
     CANONICAL_REASONING_EFFORTS,
     GLASS_INTENSITIES,
 } from "../../shared/contracts.ts";
+import { DOCK_SYSTEM_IDS } from "../../shared/dock.ts";
 import {
     normalizeWallpaperPresentation,
     type WallpaperPresentation,
@@ -40,12 +41,12 @@ const DockSchema = v.optional(
         v.object({
             systemOrder: v.optional(
                 v.array(
-                    v.picklist(["home", "apps", "notes", "ai"], "系统入口无效"),
+                    v.picklist(DOCK_SYSTEM_IDS, "系统入口无效"),
                 ),
             ),
             hiddenSystemIds: v.optional(
                 v.array(
-                    v.picklist(["home", "apps", "notes", "ai"], "系统入口无效"),
+                    v.picklist(DOCK_SYSTEM_IDS, "系统入口无效"),
                 ),
             ),
             appIds: v.optional(v.array(v.string())),
