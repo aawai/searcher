@@ -1,8 +1,8 @@
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
 import { RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { api } from "../lib/api.ts";
+import { type PageHost, usePagePresenter } from "./page-host.tsx";
 import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { Button } from "../components/ui/button.tsx";
@@ -188,8 +188,12 @@ function TrashSection(
 }
 
 export function TrashPage() {
+    return <TrashContent host={usePagePresenter()} />;
+}
+
+export function TrashContent({ host }: { host: PageHost }) {
     const { user } = useAppState();
-    const location = useLocation();
+    const { location, Link } = host;
     const [tab, setTab] = useState<"webapps" | "documents">("webapps");
     const [webapps, setWebapps] = useState<TrashWebApp[]>([]);
     const [documents, setDocuments] = useState<TrashDocument[]>([]);
@@ -308,7 +312,11 @@ export function TrashPage() {
 
     if (!user) {
         return (
-            <PageShell archetype="management" className="trash-page">
+            <PageShell
+                archetype="management"
+                className="trash-page"
+                data-host-narrow={host.narrow ? "true" : undefined}
+            >
                 <PageHeader title="回收站" />
                 <EmptyState
                     className="trash-empty-state"
@@ -357,7 +365,11 @@ export function TrashPage() {
     const pending = !initialized || loading;
 
     return (
-        <PageShell archetype="management" className="trash-page">
+        <PageShell
+            archetype="management"
+            className="trash-page"
+            data-host-narrow={host.narrow ? "true" : undefined}
+        >
             <PageHeader
                 title="回收站"
                 actions={

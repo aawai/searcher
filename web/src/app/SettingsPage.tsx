@@ -30,7 +30,6 @@ import {
     useState,
     useSyncExternalStore,
 } from "react";
-import { Link, useLocation } from "react-router-dom";
 import {
     ActionGroup,
     SettingsGroup,
@@ -68,11 +67,12 @@ import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperS
 import { api } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
 import { AiSettings } from "./AiSettings.tsx";
-import { NotFoundPage } from "./NotFoundPage.tsx";
+import { NotFoundContent } from "./NotFoundPage.tsx";
 import { routes, settingsTab } from "./routes.ts";
 import { SettingsShell } from "./SettingsShell.tsx";
 import "./settings.css";
 import { type Appearance, useAppState } from "./state.tsx";
+import { type PageHost, usePagePresenter } from "./page-host.tsx";
 
 const GLASS_CHOICES = [
     ["off", "关闭"],
@@ -182,6 +182,11 @@ export interface WallpaperHistoryRecord {
 }
 
 export function SettingsPage() {
+    return <SettingsContent host={usePagePresenter()} />;
+}
+
+export function SettingsContent({ host }: { host: PageHost }) {
+    const { location, Link } = host;
     const { appearance, setAppearance, user, settleAppearanceSync } =
         useAppState();
     const isAdmin = user?.role === "admin";
@@ -627,7 +632,7 @@ export function SettingsPage() {
             setIsDeleting(false);
         }
     }
-    const location = useLocation();
+
     const tab = settingsTab(location.pathname);
 
     function set<K extends keyof Appearance>(key: K, value: Appearance[K]) {
@@ -636,13 +641,17 @@ export function SettingsPage() {
 
     if (!tab) {
         return (
-            <NotFoundPage parent={{ label: "设置", to: routes.settings() }} />
+            <NotFoundContent
+                parent={{ label: "设置", to: routes.settings() }}
+                location={host.location}
+                Link={host.Link}
+            />
         );
     }
 
     return (
         <>
-            <SettingsShell current={tab}>
+            <SettingsShell current={tab} host={host}>
                 {tab === "search" && (
                     <SettingsGroup>
                         <Choices
@@ -1133,7 +1142,7 @@ export function SettingsPage() {
                                 </Button>
                             </SettingsRow>
                         </SettingsGroup>
-                        <AiSettings />
+                        <AiSettings host={host} />
                     </>
                 )}
                 {tab === "data" && (

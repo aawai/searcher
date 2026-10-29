@@ -3,7 +3,7 @@ import type {
     PreferencesDto,
 } from "@shared/contracts.ts";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { resolveModelSwitchGenerationConfig } from "../../../src/features/ai/reasoning.ts";
 import type {
     AiConversationDto,
@@ -32,12 +32,32 @@ import type { ExpandedAnswerState } from "../features/inline-ai/inline-answer.ts
 import { requestSearchFocus } from "../features/inline-ai/search-focus.ts";
 import { authPath, routes } from "./routes.ts";
 import { errorMessage, useAppState } from "./state.tsx";
+import {
+    type PageHost,
+    PageHostProvider,
+    usePagePresenter,
+} from "./page-host.tsx";
 
 export function AskPage() {
+    const host = usePagePresenter();
+    const { id } = useParams<{ id: string }>();
+    return <AskContent host={host} routeId={id} />;
+}
+
+export function AskContent(props: { host: PageHost; routeId?: string }) {
     const { user } = useAppState();
-    const location = useLocation();
-    const navigate = useNavigate();
-    const { id: routeId } = useParams<{ id: string }>();
+    return (
+        <PageHostProvider host={props.host}>
+            <AskWorkspaceContent key={user?.id ?? "anonymous"} {...props} />
+        </PageHostProvider>
+    );
+}
+
+function AskWorkspaceContent(
+    { host, routeId }: { host: PageHost; routeId?: string },
+) {
+    const { user } = useAppState();
+    const { location, navigate, Link } = host;
     // The home answer card hands over its conversation so the first frame of the
     // shared-element transition already shows it; the server copy replaces it.
     const handedOver = (location.state as Partial<ExpandedAnswerState> | null)
@@ -507,7 +527,11 @@ export function AskPage() {
     }));
 
     return (
-        <PageShell archetype="workbench" className="ask-page-shell">
+        <PageShell
+            archetype="workbench"
+            className="ask-page-shell"
+            data-host-narrow={host.narrow ? "true" : undefined}
+        >
             <div className="ask-workspace-layout">
                 <ConversationSidebar
                     history={history}

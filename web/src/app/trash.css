@@ -95,12 +95,10 @@
     }
 }
 
-@media (max-width: 767px) {
-    .trash-table-view {
-        display: none;
-    }
+.trash-page[data-host-narrow="true"] .trash-table-view {
+    display: none;
+}
 
-    .trash-mobile-list {
-        display: block;
-    }
+.trash-page[data-host-narrow="true"] .trash-mobile-list {
+    display: block;
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, Menu, MoreHorizontal, Pencil, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { usePageHost } from "../../app/page-host.tsx";
 import { routes } from "../../app/routes.ts";
 import { Button, buttonVariants } from "../../components/ui/button.tsx";
 import {
@@ -47,6 +47,7 @@ export function ConversationHeader({
     newConversationInstruction = null,
     platform,
 }: ConversationHeaderProps) {
+    const { Link } = usePageHost();
     const [renameOpen, setRenameOpen] = useState(false);
     const [instructionOpen, setInstructionOpen] = useState(false);
 

@@ -1436,14 +1436,12 @@
     }
 }
 
-@media (max-width: 767px) {
-    .ask-sidebar {
-        display: none;
-    }
+.ask-page-shell[data-host-narrow="true"] .ask-sidebar {
+    display: none;
+}
 
-    .ask-header [data-slot="button"].ask-header__drawer-toggle {
-        display: inline-flex;
-    }
+.ask-page-shell[data-host-narrow="true"] .ask-header [data-slot="button"].ask-header__drawer-toggle {
+    display: inline-flex;
 }
 
 @media (max-width: 767px) {

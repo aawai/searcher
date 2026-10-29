@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { usePageHost } from "../../app/page-host.tsx";
 import {
     ActionBarPrimitive,
     BranchPickerPrimitive,
@@ -53,7 +53,7 @@ export function SearcherAssistantMessage() {
     );
 
     const copied = useAuiState((s) => s.message.isCopied);
-    const navigate = useNavigate();
+    const { navigate } = usePageHost();
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [toolsExpanded, setToolsExpanded] = useState(false);
 

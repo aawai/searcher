@@ -164,6 +164,8 @@ deno task check:ui --update
   `viewTransition`；设置、管理内部 Tab 与工作区不使用。首页回答卡片展开为 `/ask/:id`
   使用共享元素过渡（`web/src/lib/shared-element.ts`），不经过 React Router 的
   `viewTransition`。
+- 现有页面仍按路由挂载：`DesktopHost` 拥有唯一首页、工作面板数据及应用表单 session；Ask、设置 / 账户与回收站内容从 Presenter 接收 `PageHost` 的局部位置、导航、链接、活动状态与容量，不自行读取全局位置。设置、回收站和 Ask 侧栏消费 Host 容量切换既有紧凑布局。
+- `NavigationGuardProvider` 拥有唯一 Router blocker，各内容 owner 根据导航是否销毁内容登记保护并参与 `beforeunload`；多个 owner 的确认按顺序处理，取消保留原地址与内容，未决意图不会被后续导航覆盖。所有 owner 确认且导航到达目标后，放弃的应用表单才关闭，包括首页与工作面板之间的前进 / 后退。当前旧 Presenter 仍按既有 URL 挂载，面板内容随路由关闭而销毁。
 - 从 `/ask/:id` 离开到首页时（任意方式），首页挂载后把焦点放回搜索框。
 
 服务端路由回退规则见 [部署细节](deployment.md#请求路由)。

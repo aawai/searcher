@@ -1,7 +1,7 @@
 import { ThreadPrimitive } from "@assistant-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { usePageHost } from "../../app/page-host.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import type {
     AiMessageDto,
@@ -55,6 +55,7 @@ export function SearcherThread({
     onResetDefaultGenerationConfig,
     isDefaultGenerationConfig,
 }: SearcherThreadProps) {
+    const { Link } = usePageHost();
     const threadRef = useRef<HTMLDivElement>(null);
     const [liveAnnouncement, setLiveAnnouncement] = useState("");
     const streamingTextLengthRef = useRef(streamingTextLength);

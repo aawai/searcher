@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import type { PageHost } from "./page-host.tsx";
 import { Eye, EyeOff, MoreHorizontal, Plus, RotateCcw } from "lucide-react";
 import type {
     AiModelDto,
@@ -111,9 +111,9 @@ function describeReasoning(
     return { label: "推理未知", title: "Provider 未声明推理支持状态" };
 }
 
-export function AiSettings() {
+export function AiSettings({ host }: { host: PageHost }) {
     const { user } = useAppState();
-    const location = useLocation();
+    const { location, Link } = host;
     const [providers, setProviders] = useState<AiProviderDto[]>([]);
     const [models, setModels] = useState<AiModelDto[]>([]);
     const [name, setName] = useState("");

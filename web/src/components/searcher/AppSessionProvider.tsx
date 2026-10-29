@@ -6,7 +6,10 @@ import {
     useEffect,
     useRef,
 } from "react";
-import { useBlocker } from "react-router-dom";
+import {
+    type NavigationIntent,
+    useNavigationGuard,
+} from "../../app/navigation-guards.tsx";
 import {
     type AppSession,
     type AppSessionOptions,
@@ -31,7 +34,9 @@ export interface AppSessionProviderProps {
     options: AppSessionOptions;
     navigationRef: RefObject<AppSessionNavigation | null>;
     onRouteBlocked: (intent: AppSessionRouteIntent | null) => void;
+    onRouteCommitted?: () => void;
     isExternalDirty?: () => boolean;
+    willDestroyContent?: (intent: NavigationIntent) => boolean;
     children: ReactNode;
 }
 
@@ -39,22 +44,36 @@ export function AppSessionProvider({
     options,
     navigationRef,
     onRouteBlocked,
+    onRouteCommitted,
     isExternalDirty,
+    willDestroyContent,
     children,
 }: AppSessionProviderProps) {
     const session = useAppSession(options);
-    const blocker = useBlocker(({ currentLocation, nextLocation }) => {
-        const urlChanged = currentLocation.pathname !== nextLocation.pathname ||
-            currentLocation.search !== nextLocation.search;
-        const appDirty = Boolean(options.sessionKey) &&
-            (session.isDirty || session.isSubmitting);
-        const externalDirty = Boolean(isExternalDirty?.());
-        return urlChanged && (appDirty || externalDirty);
+    const blocker = useNavigationGuard({
+        blocks: (intent) => {
+            const destroysContent = willDestroyContent
+                ? willDestroyContent(intent)
+                : intent.currentLocation.pathname !==
+                        intent.nextLocation.pathname ||
+                    intent.currentLocation.search !==
+                        intent.nextLocation.search;
+            const appDirty = Boolean(options.sessionKey) &&
+                (session.isDirty || session.isSubmitting);
+            return destroysContent &&
+                (appDirty || Boolean(isExternalDirty?.()));
+        },
+        warnOnUnload: () =>
+            (Boolean(options.sessionKey) && session.isDirty) ||
+            Boolean(isExternalDirty?.()),
+        onCommit: () => {
+            if (options.sessionKey && session.isDirty) onRouteCommitted?.();
+        },
     });
     const reportedLocationKey = useRef<string | null>(null);
     navigationRef.current = session;
     useEffect(() => {
-        if (blocker.state !== "blocked") {
+        if (!blocker) {
             if (reportedLocationKey.current !== null) {
                 reportedLocationKey.current = null;
                 onRouteBlocked(null);
@@ -100,20 +119,6 @@ export function AppSessionProvider({
         options.sessionKey,
         isExternalDirty,
     ]);
-    useEffect(() => {
-        if (typeof window === "undefined") return;
-        function preventUnload(event: BeforeUnloadEvent) {
-            if (
-                !(Boolean(options.sessionKey) && session.isDirty) &&
-                !isExternalDirty?.()
-            ) return;
-            event.preventDefault();
-            event.returnValue = "";
-        }
-        globalThis.addEventListener("beforeunload", preventUnload);
-        return () =>
-            globalThis.removeEventListener("beforeunload", preventUnload);
-    }, [session.isDirty, options.sessionKey, isExternalDirty]);
     useEffect(() => () => {
         navigationRef.current = null;
     }, [navigationRef]);

@@ -4,12 +4,24 @@ import { PageShell } from "../components/searcher/PageShell.tsx";
 import { ActionGroup } from "../components/searcher/semantic.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { routes } from "./routes.ts";
+import type { PageHost } from "./page-host.tsx";
 import "./narrow-form.css";
 
 export function NotFoundPage(
     { parent }: { parent?: { label: string; to: string } },
 ) {
-    const { pathname } = useLocation();
+    const location = useLocation();
+    return <NotFoundContent parent={parent} location={location} Link={Link} />;
+}
+
+export function NotFoundContent(
+    { parent, location, Link }: {
+        parent?: { label: string; to: string };
+        location: PageHost["location"];
+        Link: PageHost["Link"];
+    },
+) {
+    const { pathname } = location;
     const workspace = parent ??
         (pathname === routes.settings() ||
                 pathname.startsWith(`${routes.settings()}/`)

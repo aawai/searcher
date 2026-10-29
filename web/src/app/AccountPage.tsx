@@ -1,5 +1,4 @@
 import { type SubmitEvent, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import type { UserDto } from "@shared/contracts.ts";
 import { Badge } from "../components/ui/badge.tsx";
@@ -37,6 +36,7 @@ import { errorMessage, useAppState } from "./state.tsx";
 import { authPath, routes } from "./routes.ts";
 import { SettingsShell } from "./SettingsShell.tsx";
 import "./account.css";
+import { type PageHost, usePagePresenter } from "./page-host.tsx";
 
 interface SessionDevice {
     id: string;
@@ -124,9 +124,12 @@ function SessionConfirmDialog(
 }
 
 export function AccountPage() {
+    return <AccountContent host={usePagePresenter()} />;
+}
+
+export function AccountContent({ host }: { host: PageHost }) {
     const { user, login, logout } = useAppState();
-    const navigate = useNavigate();
-    const location = useLocation();
+    const { navigate, location, Link } = host;
 
     // Profile state
     const [displayName, setDisplayName] = useState(user?.displayName ?? "");
@@ -335,7 +338,7 @@ export function AccountPage() {
 
     if (!user) {
         return (
-            <SettingsShell current="account">
+            <SettingsShell current="account" host={host}>
                 <EmptyState
                     title="未登录"
                     action={
@@ -363,6 +366,7 @@ export function AccountPage() {
     return (
         <>
             <SettingsShell
+                host={host}
                 current="account"
                 actions={user.role === "admin"
                     ? (

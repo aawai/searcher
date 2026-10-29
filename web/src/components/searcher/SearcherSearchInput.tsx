@@ -61,6 +61,7 @@ export function SearcherSearchInput(
         onCheck,
         isChecking = false,
         disabled = false,
+        active = true,
         signedIn = false,
         aiAvailable = false,
         webApps = EMPTY_APPS,
@@ -85,6 +86,7 @@ export function SearcherSearchInput(
         onCheck?: () => void;
         isChecking?: boolean;
         disabled?: boolean;
+        active?: boolean;
         /** Personal groups (我的, 应用) and account commands need a signed-in user. */
         signedIn?: boolean;
         /** An enabled model exists: shows 问 AI, Alt+Enter and /ai. */
@@ -173,6 +175,7 @@ export function SearcherSearchInput(
 
     // Global keyboard shortcut focus (/ and Cmd/Ctrl+K)
     useEffect(() => {
+        if (!active) return;
         const focus = (event: KeyboardEvent) => {
             if (isEditableShortcutTarget(event.target)) return;
             if (
@@ -185,7 +188,7 @@ export function SearcherSearchInput(
         };
         document.addEventListener("keydown", focus);
         return () => document.removeEventListener("keydown", focus);
-    }, []);
+    }, [active]);
 
     function saveToLocalHistory(term: string) {
         if (!term.trim()) return;

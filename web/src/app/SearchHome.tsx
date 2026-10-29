@@ -14,12 +14,15 @@ import {
     useCallback,
     useEffect,
     useLayoutEffect,
-    useMemo,
     useReducer,
     useRef,
     useState,
 } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+    type PageHost,
+    PageHostProvider,
+    usePagePresenter,
+} from "./page-host.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
@@ -35,7 +38,6 @@ import {
 } from "../components/ui/alert-dialog.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { useEscapeLayerActive } from "../components/ui/escape-layer-stack.tsx";
-import { MEDIA_QUERIES } from "../design-system/breakpoints.ts";
 import { useAppsLayoutPersistence } from "../features/app-library/useAppsLayoutPersistence.ts";
 import { useDock } from "../features/dock/DockProvider.tsx";
 import type {
@@ -66,17 +68,16 @@ import {
     type LibrarySelection,
     shouldConfirmLibraryAction,
 } from "../features/library/library-state.ts";
-import { LibraryAppsView } from "../features/library/LibraryAppsView.tsx";
 import "../features/library/library.css";
 import { CreateLibraryDocument } from "../features/workspace/DocumentLibraryActions.tsx";
 import "../features/workspace/documents-workspace.css";
-import { DocumentsWorkspace } from "../features/workspace/DocumentsWorkspace.tsx";
+import { HomeWorkspaceContent } from "../features/workspace/HomeWorkspaceContent.tsx";
 import type { DocumentsRoute } from "../features/workspace/workspace-state.ts";
 import { WorkspaceShell } from "../features/workspace/WorkspaceShell.tsx";
-import { WorkspaceActivity } from "../features/workspace/WorkspaceActivity.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { getLocal, setLocal } from "../lib/local.ts";
 import { routes } from "./routes.ts";
+import type { NavigationIntent } from "./navigation-guards.tsx";
 import { errorMessage, useAppState } from "./state.tsx";
 
 import {
@@ -101,7 +102,10 @@ import {
     type SharedNote,
 } from "../features/share/share-capture.ts";
 import type { SearchQuickCommand } from "../features/shortcuts/shortcut-catalog.ts";
-import { useAppOutletContext } from "./outlet-context.ts";
+import {
+    type AppOutletContext,
+    useAppOutletContext,
+} from "./outlet-context.ts";
 import {
     undoErrorMessage,
     undoMessage,
@@ -166,11 +170,36 @@ type PendingAction =
     | { kind: "route"; intent: AppSessionRouteIntent }
     | { kind: "appForm" };
 
+/** Current route presenter. A future presenter can retain DesktopHost and
+ * supply its own local workspace view without reading the address bar. */
 export function SearchHome() {
-    const { user, appearance, authSession, setAppearance } = useAppState();
+    const host = usePagePresenter();
     const { aiModels } = useAppOutletContext();
+    return (
+        <DesktopHost
+            host={host}
+            view={new URLSearchParams(host.location.search).get("view")}
+            aiModels={aiModels}
+        />
+    );
+}
+
+export interface DesktopHostProps {
+    host: PageHost;
+    /** Presenter-owned workspace view; it need not be derived from a URL. */
+    view: string | null;
+    willDestroyContent?: (intent: NavigationIntent) => boolean;
+    aiModels: AppOutletContext["aiModels"];
+}
+
+/** Single owner of the desktop, application form, and workspace data. */
+export function DesktopHost(
+    { host, view: currentView, aiModels, willDestroyContent }: DesktopHostProps,
+) {
+    const { location, navigate, Link, active } = host;
+    const { user, appearance, authSession, setAppearance } = useAppState();
     const aiAvailable = aiModels.length > 0;
-    const inlineAnswer = useInlineAnswer({ user, models: aiModels });
+    const inlineAnswer = useInlineAnswer({ user, models: aiModels, active });
     const overlayActive = useEscapeLayerActive("overlay");
     const currentUserIdRef = useRef<string | null>(user?.id ?? null);
     currentUserIdRef.current = user?.id ?? null;
@@ -181,8 +210,7 @@ export function SearchHome() {
             componentMountedRef.current = false;
         };
     }, []);
-    const navigate = useNavigate();
-    const location = useLocation();
+    // Navigation and local view are supplied by the presenter.
     const consumedDocumentNavigationRef = useRef<string | null>(null);
     const consumedShareNavigationRef = useRef<string | null>(null);
     const captureNoteRef = useRef<(note: SharedNote) => Promise<boolean>>(
@@ -239,11 +267,7 @@ export function SearchHome() {
         libraryReducer,
         initialLibraryState,
     );
-    const searchParams = useMemo(
-        () => new URLSearchParams(location.search),
-        [location.search],
-    );
-    const currentView = searchParams.get("view");
+    // Workspace selection is independent of the presenter's URL.
     const isLibraryOpen = Boolean(
         user && (currentView === "apps" || currentView === "notes"),
     );
@@ -262,15 +286,7 @@ export function SearchHome() {
     const libraryOpener = useRef<HTMLElement | null>(null);
     const homeRef = useRef<HTMLElement>(null);
     const home = useHomeViewport();
-    const [mobile, setMobile] = useState(() =>
-        globalThis.matchMedia(MEDIA_QUERIES.belowMedium).matches
-    );
-    useEffect(() => {
-        const media = globalThis.matchMedia(MEDIA_QUERIES.belowMedium);
-        const change = () => setMobile(media.matches);
-        media.addEventListener("change", change);
-        return () => media.removeEventListener("change", change);
-    }, []);
+    const mobile = host.narrow;
     const [appForm, setAppForm] = useState<AppFormTarget | null>(null);
     const [feedbackHost, setFeedbackHost] = useState<HTMLElement | null>(null);
     const dirtyForm = useRef(false);
@@ -320,7 +336,6 @@ export function SearchHome() {
         if (!action) return;
         updatePendingAction(null);
         if (action.kind === "route") {
-            dirtyForm.current = false;
             action.intent.proceed();
             return;
         }
@@ -1368,81 +1383,60 @@ export function SearchHome() {
     }, [libraryOpen]);
     function renderWorkspaceContent() {
         if (!user) return null;
-        return (
-            <>
-                {currentView === "apps" && (
-                    <div
-                        className="library-pane library-pane--apps"
-                        data-active={currentView === "apps"
-                            ? "true"
-                            : undefined}
-                        hidden={currentView !== "apps"}
-                    >
-                        <WorkspaceActivity value={currentView === "apps"}>
-                            {currentView === "apps" && (
-                                <LibraryAppsView
-                                    apps={currentApps}
-                                    groups={currentGroups}
-                                    library={library}
-                                    onOpenApp={openApp}
-                                    onEditApp={openEditApp}
-                                    onDeleteApp={softDeleteApp}
-                                    showAppLabels={appearance.showAppLabels}
-                                />
-                            )}
-                        </WorkspaceActivity>
-                    </div>
-                )}
-                {currentView === "notes" && (
-                    <div
-                        data-library-view="notes"
-                        className="library-pane library-pane--notes library-notes"
-                        data-active={currentView === "notes"
-                            ? "true"
-                            : undefined}
-                        hidden={currentView !== "notes"}
-                    >
-                        <WorkspaceActivity value={currentView === "notes"}>
-                            {currentView === "notes" && (
-                                <DocumentsWorkspace
-                                    key={user.id}
-                                    userId={user.id}
-                                    eventSubscriptions={authSession
-                                        .documentEvents}
-                                    state={libraryState.documents.route}
-                                    onDirtyChange={(dirty) => {
-                                        dirtyForm.current = dirty;
-                                    }}
-                                    onOpenDocument={(id) =>
-                                        requestLibrary({
-                                            type: "documents",
-                                            action: {
-                                                type: "navigate",
-                                                route: {
-                                                    view: "documents/edit",
-                                                    id,
-                                                },
-                                            },
-                                        })}
-                                    scope={libraryState.documents.scope}
-                                    onScopeChange={(scope) =>
-                                        dispatchLibrary({
-                                            type: "documents",
-                                            action: { type: "scope", scope },
-                                        })}
-                                    query={libraryState.documents.query}
-                                    onQueryChange={(value) =>
-                                        dispatchLibrary({
-                                            type: "documents",
-                                            action: { type: "query", value },
-                                        })}
-                                />
-                            )}
-                        </WorkspaceActivity>
-                    </div>
-                )}
-            </>
-        );
+        if (currentView === "apps") {
+            return (
+                <HomeWorkspaceContent
+                    view="apps"
+                    active={active}
+                    apps={{
+                        apps: currentApps,
+                        groups: currentGroups,
+                        library,
+                        onOpenApp: openApp,
+                        onEditApp: openEditApp,
+                        onDeleteApp: softDeleteApp,
+                        showAppLabels: appearance.showAppLabels,
+                    }}
+                />
+            );
+        }
+        if (currentView === "notes") {
+            return (
+                <HomeWorkspaceContent
+                    view="notes"
+                    active={active}
+                    notes={{
+                        userId: user.id,
+                        eventSubscriptions: authSession.documentEvents,
+                        state: libraryState.documents.route,
+                        onDirtyChange: (dirty) => {
+                            dirtyForm.current = dirty;
+                        },
+                        onOpenDocument: (id) =>
+                            requestLibrary({
+                                type: "documents",
+                                action: {
+                                    type: "navigate",
+                                    route: { view: "documents/edit", id },
+                                },
+                            }),
+                        scope: libraryState.documents.scope,
+                        onScopeChange: (scope) =>
+                            dispatchLibrary({
+                                type: "documents",
+                                action: { type: "scope", scope },
+                            }),
+                        query: libraryState.documents.query,
+                        onQueryChange: (value) =>
+                            dispatchLibrary({
+                                type: "documents",
+                                action: { type: "query", value },
+                            }),
+                    }}
+                />
+            );
+        }
+        return null;
     }
     const mobileFeedback = Boolean(user && mobile && libraryOpen);
     const currentUndoQueue = undoQueue.filter((record) =>
@@ -1544,164 +1538,172 @@ export function SearchHome() {
         />
     );
     return (
-        <AppSessionProvider
-            options={appSessionOptions}
-            navigationRef={appSession}
-            onRouteBlocked={onRouteBlocked}
-            isExternalDirty={isNoteDirty}
-        >
-            <PageShell
-                archetype="search"
-                className="home"
-                ref={homeRef}
+        <PageHostProvider host={host}>
+            <AppSessionProvider
+                options={appSessionOptions}
+                navigationRef={appSession}
+                onRouteBlocked={onRouteBlocked}
+                onRouteCommitted={() => setAppForm(null)}
+                isExternalDirty={isNoteDirty}
+                willDestroyContent={willDestroyContent}
             >
-                <StatusBanner
-                    tone="error"
-                    presentation="floating"
-                    open={Boolean(error) && !mobileFeedback}
+                <PageShell
+                    archetype="search"
+                    className="home"
+                    ref={homeRef}
                 >
-                    <span>{error}</span>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="关闭错误提示"
-                        onClick={() => setError("")}
+                    <StatusBanner
+                        tone="error"
+                        presentation="floating"
+                        open={Boolean(error) && !mobileFeedback}
                     >
-                        <X size="1em" className="icon-md" />
-                    </Button>
-                </StatusBanner>
-                <ZenLayout
-                    {...layoutProps}
-                    viewportWidth={home.viewportWidth}
-                    availableRect={home.availableRect}
-                />
-                {user && (
-                    <WorkspaceShell
-                        open={isLibraryOpen}
-                        chromeBottom={home.chromeBottom}
-                        routeKey={`${currentView ?? "closed"}:${
-                            JSON.stringify(currentRoute)
-                        }`}
-                        title={currentView === "apps" ? "应用" : "笔记"}
-                        nested={currentView === "notes" &&
-                            currentRoute.view !== "documents/root"}
-                        expanded={editor}
-                        fullScreen={noteFullScreen}
-                        editor={editor}
-                        backLabel={libraryState.documents.stack.length
-                            ? "返回上一级"
-                            : "返回笔记"}
-                        headerActions={currentView === "apps"
-                            ? (
-                                <Button
-                                    onClick={() => openCreateApp()}
-                                >
-                                    添加应用
-                                </Button>
-                            )
-                            : currentView === "notes" &&
-                                    currentRoute.view === "documents/root"
-                            ? (
-                                <CreateLibraryDocument
-                                    scope={libraryState.documents.scope}
-                                    onCreated={(document) =>
-                                        openDocument(document.id)}
-                                />
-                            )
-                            : currentView === "notes" && editor
-                            ? (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label={noteFullScreen
-                                        ? "退出全屏"
-                                        : "全屏编辑"}
-                                    onClick={() =>
-                                        setNoteFullScreen((prev) => !prev)}
-                                >
-                                    {noteFullScreen
-                                        ? (
-                                            <Minimize2
-                                                size="1em"
-                                                className="icon-md"
-                                            />
-                                        )
-                                        : (
-                                            <Maximize2
-                                                size="1em"
-                                                className="icon-md"
-                                            />
-                                        )}
-                                </Button>
-                            )
-                            : undefined}
-                        returnFocus={returnLibraryFocus}
-                        onBack={backDetail}
-                        onClose={closeDetail}
-                        onEscape={() => {
-                            if (noteFullScreen) setNoteFullScreen(false);
-                            else if (editor) backDetail();
-                            else closeLibrary();
-                        }}
-                        feedback={
-                            <>
-                                {error && (
-                                    <StatusBanner
-                                        tone="error"
-                                        density="compact"
+                        <span>{error}</span>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="关闭错误提示"
+                            onClick={() => setError("")}
+                        >
+                            <X size="1em" className="icon-md" />
+                        </Button>
+                    </StatusBanner>
+                    <ZenLayout
+                        {...layoutProps}
+                        viewportWidth={home.viewportWidth}
+                        availableRect={home.availableRect}
+                    />
+                    {user && (
+                        <WorkspaceShell
+                            active={active}
+                            open={isLibraryOpen}
+                            chromeBottom={home.chromeBottom}
+                            routeKey={`${currentView ?? "closed"}:${
+                                JSON.stringify(currentRoute)
+                            }`}
+                            title={currentView === "apps" ? "应用" : "笔记"}
+                            nested={currentView === "notes" &&
+                                currentRoute.view !== "documents/root"}
+                            expanded={editor}
+                            fullScreen={noteFullScreen}
+                            editor={editor}
+                            backLabel={libraryState.documents.stack.length
+                                ? "返回上一级"
+                                : "返回笔记"}
+                            headerActions={currentView === "apps"
+                                ? (
+                                    <Button
+                                        onClick={() => openCreateApp()}
                                     >
-                                        {error}
-                                    </StatusBanner>
-                                )}
-                            </>
-                        }
-                        onFeedbackHost={setFeedbackHost}
+                                        添加应用
+                                    </Button>
+                                )
+                                : currentView === "notes" &&
+                                        currentRoute.view === "documents/root"
+                                ? (
+                                    <CreateLibraryDocument
+                                        scope={libraryState.documents.scope}
+                                        onCreated={(document) =>
+                                            openDocument(document.id)}
+                                    />
+                                )
+                                : currentView === "notes" && editor
+                                ? (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label={noteFullScreen
+                                            ? "退出全屏"
+                                            : "全屏编辑"}
+                                        onClick={() =>
+                                            setNoteFullScreen((prev) => !prev)}
+                                    >
+                                        {noteFullScreen
+                                            ? (
+                                                <Minimize2
+                                                    size="1em"
+                                                    className="icon-md"
+                                                />
+                                            )
+                                            : (
+                                                <Maximize2
+                                                    size="1em"
+                                                    className="icon-md"
+                                                />
+                                            )}
+                                    </Button>
+                                )
+                                : undefined}
+                            returnFocus={returnLibraryFocus}
+                            onBack={backDetail}
+                            onClose={closeDetail}
+                            onEscape={() => {
+                                if (noteFullScreen) setNoteFullScreen(false);
+                                else if (editor) backDetail();
+                                else closeLibrary();
+                            }}
+                            feedback={
+                                <>
+                                    {error && (
+                                        <StatusBanner
+                                            tone="error"
+                                            density="compact"
+                                        >
+                                            {error}
+                                        </StatusBanner>
+                                    )}
+                                </>
+                            }
+                            onFeedbackHost={setFeedbackHost}
+                        >
+                            {isLibraryOpen && renderWorkspaceContent()}
+                        </WorkspaceShell>
+                    )}
+                    <AppFormDialog
+                        target={user && ownsCurrentUserData ? appForm : null}
+                        onRequestClose={requestCloseAppForm}
+                    />
+                    {undoFeedback}
+                    {taskConflictFeedback}
+                    <AlertDialog
+                        open={Boolean(pendingAction)}
+                        onOpenChange={(open) => {
+                            if (!open) cancelPendingAction();
+                        }}
                     >
-                        {isLibraryOpen && renderWorkspaceContent()}
-                    </WorkspaceShell>
-                )}
-                <AppFormDialog
-                    target={user && ownsCurrentUserData ? appForm : null}
-                    onRequestClose={requestCloseAppForm}
-                />
-                {undoFeedback}
-                {taskConflictFeedback}
-                <AlertDialog
-                    open={Boolean(pendingAction)}
-                    onOpenChange={(open) => {
-                        if (!open) cancelPendingAction();
-                    }}
-                >
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>
-                                {pendingAction?.kind === "route" &&
-                                        dirtyForm.current
-                                    ? "放弃未保存的修改？"
-                                    : pendingAction?.kind === "route" ||
-                                            pendingAction?.kind === "appForm"
-                                    ? "放弃未保存的应用修改？"
-                                    : "放弃未保存的修改？"}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {pendingAction?.kind === "appForm"
-                                    ? "关闭后，当前未保存的表单内容将丢失。"
-                                    : "离开当前页面或工作区后，当前未保存的表单内容将丢失。"}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel onClick={cancelPendingAction}>
-                                继续编辑
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={confirmPendingAction}
-                            >
-                                放弃修改
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </PageShell>
-        </AppSessionProvider>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    {pendingAction?.kind === "route" &&
+                                            dirtyForm.current
+                                        ? "放弃未保存的修改？"
+                                        : pendingAction?.kind === "route" ||
+                                                pendingAction?.kind ===
+                                                    "appForm"
+                                        ? "放弃未保存的应用修改？"
+                                        : "放弃未保存的修改？"}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    {pendingAction?.kind === "appForm"
+                                        ? "关闭后，当前未保存的表单内容将丢失。"
+                                        : "离开当前页面或工作区后，当前未保存的表单内容将丢失。"}
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel
+                                    onClick={cancelPendingAction}
+                                >
+                                    继续编辑
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={confirmPendingAction}
+                                >
+                                    放弃修改
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </PageShell>
+            </AppSessionProvider>
+        </PageHostProvider>
     );
 }

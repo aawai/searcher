@@ -28,6 +28,7 @@ export type WorkspacePresentation = "panel" | "sheet";
 export function WorkspaceSurface(
     {
         open,
+        active = true,
         presentation,
         title,
         routeKey,
@@ -48,6 +49,7 @@ export function WorkspaceSurface(
         chromeBottom = 0,
     }: {
         open: boolean;
+        active?: boolean;
         presentation: WorkspacePresentation;
         title: string;
         routeKey: string;
@@ -77,7 +79,7 @@ export function WorkspaceSurface(
         if (!mobile && !open && !panel.mounted) exited.current?.();
     }, [mobile, open, panel.mounted]);
     const escapeStack = useEscapeLayerStack();
-    useEscapeLayer(open, onEscape, "host");
+    useEscapeLayer(open && active, onEscape, "host");
     const back = useRef<HTMLButtonElement>(null);
     const close = useRef<HTMLButtonElement>(null);
     const [viewport, setViewport] = useState(() => ({
@@ -106,6 +108,7 @@ export function WorkspaceSurface(
     const frame = (
         <WorkspaceFrame
             open={open}
+            active={active}
             mobile={mobile}
             title={title}
             routeKey={routeKey}
@@ -121,7 +124,7 @@ export function WorkspaceSurface(
             feedback={feedback}
             onFeedbackHost={onFeedbackHost}
         >
-            <WorkspaceActivity.Provider value={open}>
+            <WorkspaceActivity.Provider value={open && active}>
                 {children}
             </WorkspaceActivity.Provider>
         </WorkspaceFrame>
@@ -140,7 +143,7 @@ export function WorkspaceSurface(
                 onOpenChange={(nextOpen, details) => {
                     if (!nextOpen && details.reason === "escape-key") {
                         details.cancel();
-                        if (details.event instanceof KeyboardEvent) {
+                        if (active && details.event instanceof KeyboardEvent) {
                             escapeStack.dispatch(details.event);
                         }
                         return;
@@ -157,7 +160,7 @@ export function WorkspaceSurface(
                         data-presentation={presentation}
                         data-library={title === "应用" ? "apps" : "notes"}
                         data-workspace-fullscreen={fullScreen || undefined}
-                        inert={open ? undefined : true}
+                        inert={open && active ? undefined : true}
                         style={{
                             "--workspace-visible-height":
                                 `${viewport.height}px`,
@@ -165,10 +168,12 @@ export function WorkspaceSurface(
                                 `${viewport.bottom}px`,
                         } as CSSProperties}
                         aria-describedby={undefined}
-                        initialFocus={() =>
-                            nested
-                                ? back.current
-                                : rootFocus?.() ?? close.current}
+                        initialFocus={active
+                            ? () =>
+                                nested
+                                    ? back.current
+                                    : rootFocus?.() ?? close.current
+                            : false}
                         finalFocus={false}
                     >
                         {frame}
@@ -187,7 +192,7 @@ export function WorkspaceSurface(
             data-workspace-expanded={expanded || undefined}
             data-workspace-fullscreen={fullScreen || undefined}
             data-ending-style={panel.ending || undefined}
-            inert={panel.ending || undefined}
+            inert={panel.ending || !active || undefined}
             style={{
                 "--workspace-chrome-bottom": `${chromeBottom}px`,
             } as CSSProperties}
@@ -202,6 +207,7 @@ export function WorkspaceSurface(
 function WorkspaceFrame(
     {
         open,
+        active,
         mobile,
         title,
         routeKey,
@@ -219,6 +225,7 @@ function WorkspaceFrame(
         children,
     }: {
         open: boolean;
+        active: boolean;
         mobile: boolean;
         title: string;
         routeKey: string;
@@ -239,7 +246,7 @@ function WorkspaceFrame(
     const touchY = useRef<number | null>(null);
     const mounted = useRef(false);
     useLayoutEffect(() => {
-        if (!open) return;
+        if (!open || !active) return;
         const focusChrome = () => {
             const target = nested
                 ? back.current
@@ -254,7 +261,7 @@ function WorkspaceFrame(
         mounted.current = true;
         const frame = requestAnimationFrame(focusChrome);
         return () => cancelAnimationFrame(frame);
-    }, [open, routeKey, mobile, nested]);
+    }, [open, active, routeKey, mobile, nested]);
     // The title names the current library view.
     const titleClass = "workspace-title";
     return (

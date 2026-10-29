@@ -45,6 +45,7 @@ function useLastOpenView(open: boolean, view: WorkspaceView): WorkspaceView {
 export function WorkspaceShell(
     {
         open,
+        active = true,
         title,
         routeKey,
         nested,
@@ -65,6 +66,7 @@ export function WorkspaceShell(
         onMobileChange,
     }: {
         open: boolean;
+        active?: boolean;
         title: string;
         /** Changes whenever the shown view changes; refocuses the chrome. */
         routeKey: string;
@@ -127,11 +129,11 @@ export function WorkspaceShell(
     }, []);
     // Focus returns when `open` turns false, not when the exit motion ends.
     useLayoutEffect(() => {
-        if (open && !wasOpen.current) {
+        if (active && open && !wasOpen.current) {
             opener.current = focusOpener(document.activeElement) ??
                 lastFocus.current;
         }
-        if (!open && wasOpen.current) {
+        if (active && !open && wasOpen.current) {
             const frame = requestAnimationFrame(() => {
                 const target = opener.current?.isConnected &&
                         !opener.current.closest("[inert]")
@@ -144,10 +146,11 @@ export function WorkspaceShell(
             return () => cancelAnimationFrame(frame);
         }
         wasOpen.current = open;
-    }, [open]);
+    }, [active, open]);
     return (
         <WorkspaceSurface
             open={open}
+            active={active}
             presentation={presentation}
             chromeBottom={chromeBottom}
             title={view.title}

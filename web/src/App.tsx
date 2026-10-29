@@ -31,6 +31,7 @@ import { SearchHome } from "./app/SearchHome.tsx";
 import { askConversationId, authPath, routes } from "./app/routes.ts";
 import { DockProvider } from "./features/dock/DockProvider.tsx";
 import { WorkspaceDock } from "./features/dock/WorkspaceDock.tsx";
+import { NavigationGuardProvider } from "./app/navigation-guards.tsx";
 import type { AppOutletContext } from "./app/outlet-context.ts";
 import { useAiModels } from "./features/omnibox/useAiModels.ts";
 import {
@@ -467,7 +468,9 @@ export function App() {
                 element: (
                     <AppState>
                         <DockProvider>
-                            <Layout />
+                            <NavigationGuardProvider>
+                                <Layout />
+                            </NavigationGuardProvider>
                         </DockProvider>
                     </AppState>
                 ),
