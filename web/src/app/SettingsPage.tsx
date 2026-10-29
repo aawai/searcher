@@ -148,21 +148,27 @@ function Choices<T extends string>(
                 onValueChange={(next) => select(next as T)}
                 aria-label={title}
             >
-                {values.map(([id, label]) => (
-                    <RadioGroupItem
-                        key={id}
-                        value={id}
-                        aria-label={label}
-                        title={label}
-                    >
-                        <span
-                            className="settings-swatch-color"
-                            data-accent={id}
-                            aria-hidden="true"
-                        >
-                            {swatchIcons?.[id]}
-                        </span>
-                    </RadioGroupItem>
+                {[values.slice(0, 5), values.slice(5)].filter((group) =>
+                    group.length > 0
+                ).map((group) => (
+                    <span className="settings-swatch-set" key={group[0][0]}>
+                        {group.map(([id, label]) => (
+                            <RadioGroupItem
+                                key={id}
+                                value={id}
+                                aria-label={label}
+                                title={label}
+                            >
+                                <span
+                                    className="settings-swatch-color"
+                                    data-accent={id}
+                                    aria-hidden="true"
+                                >
+                                    {swatchIcons?.[id]}
+                                </span>
+                            </RadioGroupItem>
+                        ))}
+                    </span>
                 ))}
             </RadioGroup>
         );

@@ -15,6 +15,7 @@ import {
     MoreHorizontal,
     X,
 } from "lucide-react";
+import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,6 +27,7 @@ import {
     useEscapeLayerStack,
 } from "../../components/ui/escape-layer-stack.tsx";
 import { BREAKPOINTS } from "../../design-system/breakpoints.ts";
+import { isEditableShortcutTarget } from "../shortcuts/shortcut-catalog.ts";
 import { useWindowManager, type WindowId } from "./window-context.tsx";
 import "./window-frame.css";
 
@@ -119,7 +121,13 @@ export function WindowFrame(
     const lastFocus = useRef<HTMLElement | null>(null);
     const savedTabs = useRef(new Map<HTMLElement, string | null>());
     const drag = useRef<
-        | { x: number; y: number; before: Rect; direction: Direction | "move" }
+        | {
+            pointerId: number;
+            x: number;
+            y: number;
+            before: Rect;
+            direction: Direction | "move";
+        }
         | null
     >(null);
     const [geometry, setGeometry] = useState<Geometry | null>(null);
@@ -309,7 +317,12 @@ export function WindowFrame(
     useEffect(() => {
         if (!operation || !geometry || !active || !open || minimized) return;
         const keydown = (event: KeyboardEvent) => {
-            if (event.isComposing || stack.hasLayer("overlay")) return;
+            if (
+                event.isComposing || stack.hasLayer("overlay") ||
+                isEditableShortcutTarget(event.target) ||
+                (event.target instanceof Element &&
+                    event.target.closest(".window-frame__operation"))
+            ) return;
             if (event.key === "Enter") {
                 event.preventDefault();
                 setOperation(null);
@@ -359,7 +372,11 @@ export function WindowFrame(
     useEffect(() => {
         const move = (event: globalThis.PointerEvent) => {
             const current = drag.current;
-            if (!current || !geometry) return;
+            if (
+                !current || current.pointerId !== event.pointerId || !geometry
+            ) {
+                return;
+            }
             const dx = event.clientX - current.x,
                 dy = event.clientY - current.y;
             if (!dx && !dy) return;
@@ -379,8 +396,14 @@ export function WindowFrame(
                     ),
             );
         };
-        const end = () => {
+        const end = (event: globalThis.PointerEvent) => {
+            if (drag.current?.pointerId !== event.pointerId) return;
             drag.current = null;
+            if (event.pointerType !== "touch" || !operation) return;
+            const canceled = event.type === "pointercancel";
+            if (canceled) setBounds(operation.saved);
+            setOperation(null);
+            setAnnouncement(canceled ? "已取消窗口调整" : "已完成窗口调整");
         };
         globalThis.addEventListener("pointermove", move);
         globalThis.addEventListener("pointerup", end);
@@ -390,7 +413,7 @@ export function WindowFrame(
             globalThis.removeEventListener("pointerup", end);
             globalThis.removeEventListener("pointercancel", end);
         };
-    }, [geometry]);
+    }, [geometry, operation]);
 
     const area = geometry?.area;
     const initial = geometry && area
@@ -410,9 +433,13 @@ export function WindowFrame(
         event: PointerEvent,
         direction: Direction | "move",
     ) => {
-        if (!rect || !geometry?.wide || maximized || event.button !== 0) return;
+        if (
+            !rect || !geometry?.wide || maximized || event.button !== 0 ||
+            !event.isPrimary || drag.current
+        ) return;
         event.preventDefault();
         drag.current = {
+            pointerId: event.pointerId,
             x: event.clientX,
             y: event.clientY,
             before: rect,
@@ -428,7 +455,7 @@ export function WindowFrame(
                 kind === "move"
                     ? "移动"
                     : "调整大小"
-            }：方向键调整，Shift 微调，Enter 提交，Escape 取消`,
+            }：拖动标题栏或方向键调整，Shift 微调，Enter 提交，Escape 取消`,
         );
     };
     const style: CSSProperties | undefined = rect
@@ -482,10 +509,19 @@ export function WindowFrame(
                             (event.target as HTMLElement).closest(
                                 ".window-frame__title",
                             )
-                        ) beginPointer(event, "move");
+                        ) {
+                            beginPointer(
+                                event,
+                                operation?.kind === "resize"
+                                    ? operation.direction ?? "se"
+                                    : "move",
+                            );
+                        }
                     }}
                     onDoubleClick={() => {
-                        if (geometry?.wide) setMaximized((value) => !value);
+                        if (geometry?.wide && !operation) {
+                            setMaximized((value) => !value);
+                        }
                     }}
                 >
                     <span className="window-frame__title">{title}</span>
@@ -594,6 +630,33 @@ export function WindowFrame(
                         </button>
                     </div>
                 </header>
+                {operation && (
+                    <div className="window-frame__operation">
+                        <span>
+                            {operation.kind === "resize"
+                                ? "拖动标题栏调整所选边"
+                                : "拖动标题栏移动窗口"}
+                        </span>
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                setBounds(operation.saved);
+                                setOperation(null);
+                                setAnnouncement("已取消窗口调整");
+                            }}
+                        >
+                            取消调整
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setOperation(null);
+                                setAnnouncement("已完成窗口调整");
+                            }}
+                        >
+                            完成调整
+                        </Button>
+                    </div>
+                )}
                 <div ref={host} className="window-frame__content">
                     {open ? children : null}
                 </div>
@@ -612,8 +675,11 @@ export function WindowFrame(
                             key={direction}
                             aria-hidden="true"
                             className={`window-frame__resize window-frame__resize--${direction}`}
-                            onPointerDown={(event) =>
-                                beginPointer(event, direction)}
+                            onPointerDown={(event) => {
+                                if (event.pointerType !== "touch") {
+                                    beginPointer(event, direction);
+                                }
+                            }}
                         />
                     ))}
             </section>

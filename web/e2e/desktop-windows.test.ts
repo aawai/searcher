@@ -71,7 +71,7 @@ Deno.test("窗口键盘操作可移动、取消，并调整所选边", async () 
         viewport: { width: 1440, height: 900 },
     });
     try {
-        await loginAndVisit(page, app.origin, "/settings", user);
+        await loginAndVisit(page, app.origin, "/settings/appearance", user);
         const frame = page.locator('[data-window-id="settings"]');
         await frame.waitFor({ state: "visible" });
         const before = await frame.boundingBox();
@@ -112,7 +112,132 @@ Deno.test("窗口键盘操作可移动、取消，并调整所选边", async () 
         await page.keyboard.press("Enter");
         const resized = await frame.boundingBox();
         assert(resized && resized.x > before.x && resized.width < before.width);
+        await frame.getByRole("button", { name: "设置窗口菜单" }).click();
+        await page.getByRole("menuitem", { name: "调整左边" }).click();
+        const wallpaper = frame.getByRole("textbox", { name: "壁纸来源" });
+        await wallpaper.fill("https://example.com/image");
+        await wallpaper.press("End");
+        await wallpaper.press("ArrowLeft");
+        assertEquals(
+            await wallpaper.evaluate((element: HTMLInputElement) =>
+                element.selectionStart
+            ),
+            "https://example.com/image".length - 1,
+        );
+        assertEquals((await frame.boundingBox())?.width, resized.width);
+        await frame.getByRole("button", { name: "取消调整" }).click();
     } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("粗指针可通过窗口菜单拖动调整尺寸并取消或完成", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const context = await browser.newContext({
+        viewport: { width: 1440, height: 900 },
+        hasTouch: true,
+    });
+    const page = await context.newPage();
+    try {
+        await loginAndVisit(page, app.origin, "/settings/appearance", user);
+        const frame = page.locator('[data-window-id="settings"]');
+        await frame.waitFor({ state: "visible" });
+        const before = await frame.boundingBox();
+        assert(before);
+        const cdp = await context.newCDPSession(page);
+        const drag = async (
+            x: number,
+            y: number,
+            dx: number,
+            cancel = false,
+        ) => {
+            await cdp.send("Input.dispatchTouchEvent", {
+                type: "touchStart",
+                touchPoints: [{ x, y, id: 1 }],
+            });
+            await cdp.send("Input.dispatchTouchEvent", {
+                type: "touchMove",
+                touchPoints: [{ x: x + dx, y, id: 1 }],
+            });
+            await page.waitForFunction(
+                (width) =>
+                    document.querySelector('[data-window-id="settings"]')!
+                        .getBoundingClientRect().width < width,
+                before.width,
+            );
+            await cdp.send("Input.dispatchTouchEvent", {
+                type: cancel ? "touchCancel" : "touchEnd",
+                touchPoints: [],
+            });
+        };
+        const beginResize = async () => {
+            await frame.getByRole("button", { name: "设置窗口菜单" }).tap();
+            await page.getByRole("menuitem", { name: "调整左边" }).tap();
+            await frame.getByText("拖动标题栏调整所选边").waitFor();
+        };
+        await beginResize();
+        for (const name of ["取消调整", "完成调整"]) {
+            const size = await frame.getByRole("button", { name })
+                .boundingBox();
+            assert(size && size.width >= 44 && size.height >= 44);
+        }
+        await frame.getByRole("button", { name: "取消调整" }).tap();
+        await frame.getByText("拖动标题栏调整所选边").waitFor({
+            state: "detached",
+        });
+        await beginResize();
+        await drag(before.x + 60, before.y + 22, 48, true);
+        await page.waitForFunction(
+            ({ x, width }) => {
+                const bounds = document.querySelector(
+                    '[data-window-id="settings"]',
+                )!.getBoundingClientRect();
+                return bounds.x === x && bounds.width === width;
+            },
+            { x: before.x, width: before.width },
+        );
+        const canceled = await frame.boundingBox();
+        assert(
+            canceled && canceled.x === before.x &&
+                canceled.width === before.width,
+        );
+
+        await page.reload();
+        await frame.waitFor({ state: "visible" });
+        await beginResize();
+        await drag(before.x + 60, before.y + 22, 48);
+        await frame.getByText("拖动标题栏调整所选边").waitFor({
+            state: "detached",
+        });
+        const completed = await frame.boundingBox();
+        assert(
+            completed && completed.x > before.x &&
+                completed.width < before.width,
+        );
+        const swatches = frame.getByRole("radiogroup", { name: "强调色" })
+            .getByRole("radio");
+        const rows = await swatches.evaluateAll((items) => {
+            const counts = new Map<number, number>();
+            for (const item of items) {
+                const top = Math.round(item.getBoundingClientRect().top);
+                counts.set(top, (counts.get(top) ?? 0) + 1);
+            }
+            return [...counts.values()];
+        });
+        assertEquals(rows, [5, 5]);
+        await swatches.nth(4).focus();
+        await page.keyboard.press("ArrowRight");
+        assertEquals(
+            await swatches.nth(5).evaluate((element) =>
+                document.activeElement === element
+            ),
+            true,
+        );
+    } finally {
+        await context.close();
         await browser.close();
         await app.close();
     }

@@ -209,7 +209,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
   - **颜色归属**：普通值继承 `--foreground`；Button 等控件保留各自的 primary / destructive 等语义颜色，分组行不得覆盖。
 - **管理表格**：固定的短状态、角色与审计操作保留阅读宽度；长名称和明细允许换行，容量不足时在表格容器内横向滚动。审计对象 ID 的缩略值可通过键盘或触屏打开 Popover 查看完整值，Escape 关闭并返回触发控件。
 - **分段控件**：2–4 个互斥选项（如主题）；超过 4 个用 Select。选中项使用 `--surface-control-thumb`，在明暗主题下都亮于轨道。
-- **色点选择**：强调色为一排 24px 圆点，选中显示外环；名称只在 `aria-label` 与 tooltip。首个圆点是“跟随壁纸”：显示当前派生色并带图片字形，表示来源而非固定颜色。<640px 时色点位于分组行下方的整行五列均分网格，十项分两行，避免孤点；命中区至少 44px。
+- **色点选择**：强调色使用 24px 圆点，选中显示外环；名称只在 `aria-label` 与 tooltip。首个圆点是“跟随壁纸”：显示当前派生色并带图片字形，表示来源而非固定颜色。十项空间充足时排列一行，空间不足时按五项一组换为两行，避免窗口 Host 收窄后出现孤点；<640px 时为分组行下方的整行五列均分网格。粗指针命中区至少 44px；`SettingsPage.tsx` 与 `settings.css` 拥有分组，验证跨组键盘导航及视口和 Host 收窄。
 - **空状态**：一句话 + 至多一个操作，居中，不加插图与卡片。
 - **Toast / 撤销**：底部居中材质胶囊；破坏性操作用 AlertDialog 二次确认，软删除给撤销。
 - **菜单**：`⋯` 触发；危险项置底、红色、前有分隔线。互斥选择（如搜索引擎）用单选项，当前项显示勾号。
@@ -442,7 +442,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 登录用户的设置 / 账户与回收站是非模态窗口，首页仍为唯一桌面；应用与笔记保留旧面板、AI 保留独立页。窗口消费 Overlay 实色 `--surface-l3` 与 `--shadow-l3`，MRU 通过同层 DOM 顺序置顶，窗口层使用 `--elevation-workspace`，任务栏及真正模态、菜单和提示继续消费各自全局层级。背景窗口不进入 Tab 顺序，首个指针操作同时激活和作用于目标；设置与回收站不响应窗口层 Escape。
 
-`tokens.css` 拥有 `--window-settings-width/height`（840×680）、`--window-trash-width/height`（880×640）和 `--window-min-width/height`（320×240）；标题操作消费 `--control-touch-target`，工作区边距和键盘步长消费 `--space-4`，Shift 微调消费 `--space-1`。`features/windowing/WindowFrame.tsx` 是几何 owner：按实测任务栏 / 悬浮球、安全区和视口投影普通矩形，保存矩形不因临时夹取而改写；<1024px 或空间不足时为单活动大窗口。Host 实测宽度决定设置与回收站的紧凑布局。
+`tokens.css` 拥有 `--window-settings-width/height`（840×680）、`--window-trash-width/height`（880×640）和 `--window-min-width/height`（320×240）；标题操作消费 `--control-touch-target`，工作区边距和键盘步长消费 `--space-4`，Shift 微调消费 `--space-1`。`features/windowing/WindowFrame.tsx` 是几何 owner：按实测任务栏 / 悬浮球、安全区和视口投影普通矩形，保存矩形不因临时夹取而改写；<1024px 或空间不足时为单活动大窗口。Host 实测宽度决定设置与回收站的紧凑布局。精细指针可拖动边角；触屏通过窗口菜单选择边角后拖动标题栏，抬起提交、系统取消触摸还原，操作栏的取消 / 完成按钮使用共享 Button 和 44px 命中区。键盘调整可提交或撤销，且不截取编辑控件按键。
 
 `scripts/ui-guard/exceptions.ts` 只允许生产 `WindowFrame.tsx` 将运行时投影 `rect.x`、`rect.y`、`rect.width`、`rect.height` 分别用于 `left`、`top`、`width`、`height`；其他 owner、静态值及属性错配不豁免。以真实 Host、四边任务栏、悬浮球、窗口尺寸变化和键盘操作验证；实验原型不是生产验收证据。
 

@@ -165,6 +165,21 @@
     width: calc(var(--control-height) * 4 + var(--space-5));
     max-width: 100%;
 }
+.settings-swatch-set {
+    display: flex;
+    flex: none;
+    gap: var(--space-2);
+}
+@media (any-pointer: coarse), (hover: none) {
+    .settings-swatch-set {
+        gap: 0;
+    }
+}
+@media (max-width: 639px) {
+    .settings-swatch-set {
+        display: contents;
+    }
+}
 .settings-swatch-color {
     display: grid;
     place-items: center;
