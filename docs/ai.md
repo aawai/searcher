@@ -31,7 +31,7 @@ AI
   的会话原语（Thread、Message、Composer、BranchPicker、附件渲染与滚动），通过
   `SearcherAssistantRuntimeProvider`（基于 `useExternalStoreRuntime` 与
   `ExportedMessageRepository.fromBranchableArray`）接入服务端数据。
-- 数据表：`ai_conversations`、`ai_messages`、`ai_blobs`、`ai_providers`、`ai_models`。
+- 数据表：`ai_conversations`、`ai_temporary_leases`、`ai_messages`、`ai_blobs`、`ai_providers`、`ai_models`。
 - Provider API Key 以 AES-256-GCM 加密，密钥为 `ENCRYPTION_KEY`（见
   [README · 配置](../README.md#配置)）。
 
@@ -94,12 +94,12 @@ UI
 ### 临时会话与草稿
 
 - 新建对话或当前会话可切换为临时模式（History-off），不进入历史侧边栏。
-- 切换对话或卸载页面时，前端以 `keepalive: true` 调用
-  `DELETE /api/ai/conversations/:id/temporary`，删除临时会话、消息及附件。
-- 服务端以 30 分钟
-  TTL（`purgeExpiredTemporaryConversations`）清理未被前端正常销毁的临时数据。
-- Composer 草稿按会话 ID
-  保存在前端内存，跨会话切换时暂存与恢复，不持久化到服务端。
+- 每个持有临时会话的标签页有独立租约。新建临时会话时服务端原子创建会话和未认领的初始租约，通过流的 `meta.temporaryLease` 返回；页面认领初始租约，直达已有临时会话的其他标签页各自获取租约。租约不含对话内容，属于当前账号及会话，并在 SQLite 中保存，服务重启后仍有效。
+- `POST /api/ai/conversations/:id/temporary/leases` 获取租约，`PUT /api/ai/conversations/:id/temporary/leases/:leaseId` 认领或续期；每次续期将有效期设为服务端当前时间后 30 分钟。Ask 页面持有会话期间每 5 分钟续期。
+- 切换对话或离开 Ask 时先中止流，再以 `keepalive: true` 调用 `DELETE /api/ai/conversations/:id/temporary`，在 `X-Searcher-Temporary-Lease` 中携带本标签页的租约 ID。最后一个有效租约释放后，没有进行中的流则立即删除临时会话、消息及附件；有流时记录待删除标记，等待其结束落库后删除。若服务先退出，重启后的定时清理会处理待删除会话；其他标签页获得租约时取消该标记。
+- 旧客户端无租约凭证的 DELETE 只释放未认领的初始租约；仍有其他有效租约时保留会话。列表请求不清理临时会话。服务实例每 5 分钟清理一次：会话有效期取未释放租约的最大到期时间与 `updatedAt + 30 分钟` 的较大值，且正在生成的会话不清理；没有租约的旧数据按 `updatedAt` 处理。
+- 页面离开前尚未收到会话 ID、释放请求失败、离线或进程异常时依赖到期清理。后台冻结、离线或休眠超过租约期可能导致会话过期；恢复失败会提示复制仍在页面内存中的内容，不保证离线无限保留。
+- Composer 草稿按会话 ID 保存在前端内存，跨会话切换时暂存与恢复，不持久化到服务端。
 
 ## 附件
 

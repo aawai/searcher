@@ -62,6 +62,7 @@ export interface StreamMeta {
     title?: string;
     providerId?: string;
     modelId?: string;
+    temporaryLease?: { id: string; expiresAt: number };
 }
 
 export type AskMessageDto = AiMessageDto & {

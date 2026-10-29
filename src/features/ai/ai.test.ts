@@ -4,6 +4,7 @@ import { DatabaseStore } from "../../db/database.ts";
 import { AiService, AiServiceError } from "./service.ts";
 import { and, eq } from "drizzle-orm";
 import {
+    aiBlobs,
     aiConversations,
     aiMessages,
     aiModels,
@@ -71,11 +72,17 @@ function createInMemoryStore(): DatabaseStore {
             user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             title TEXT NOT NULL,
             history_enabled INTEGER NOT NULL DEFAULT 1,
+            temporary_delete_pending INTEGER NOT NULL DEFAULT 0,
             active_leaf_message_id TEXT,
             system_instruction TEXT,
             deleted_at INTEGER,
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL
+        );`,
+        `CREATE TABLE ai_temporary_leases (
+            id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL REFERENCES ai_conversations(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL,
+            claimed INTEGER NOT NULL DEFAULT 0, released INTEGER NOT NULL DEFAULT 0
         );`,
         `CREATE TABLE ai_messages (
             id TEXT PRIMARY KEY,
@@ -1306,6 +1313,574 @@ Deno.test("AI Service: Target unavailable rejects without silent failover", asyn
             const messages = await db.select().from(aiMessages).all();
             assertEquals(messages.length, 0);
         });
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("temporary leases isolate holders, survive service restart and cascade attachments", async () => {
+    const store = createInMemoryStore();
+    let now = 1_000_000;
+    try {
+        await store.run(async (db) => {
+            await db.insert(aiConversations).values({
+                id: "temporary",
+                userId: "user-1",
+                title: "temporary",
+                historyEnabled: false,
+                createdAt: now,
+                updatedAt: now,
+            }).run();
+            await db.insert(aiBlobs).values({
+                id: "attachment",
+                userId: "user-1",
+                conversationId: "temporary",
+                mimeType: "image/png",
+                data: "data",
+                size: 4,
+                createdAt: now,
+            }).run();
+        });
+        const service = new AiService({ store, now: () => now });
+        const first = await service.acquireTemporaryLease(
+            "user-1",
+            "temporary",
+        );
+        const second = await service.acquireTemporaryLease(
+            "user-1",
+            "temporary",
+        );
+        await assertRejects(
+            () => service.renewTemporaryLease("admin-1", "temporary", first.id),
+            AiServiceError,
+        );
+        await assertRejects(
+            () =>
+                service.purgeTemporaryConversation(
+                    "user-1",
+                    "temporary",
+                    "foreign",
+                ),
+            AiServiceError,
+        );
+        now += 25 * 60_000;
+        assertEquals(
+            (await service.renewTemporaryLease(
+                "user-1",
+                "temporary",
+                second.id,
+            )).expiresAt,
+            now + 30 * 60_000,
+        );
+        await service.purgeTemporaryConversation(
+            "user-1",
+            "temporary",
+            first.id,
+        );
+        await service.purgeTemporaryConversation("user-1", "temporary");
+        const restarted = new AiService({ store, now: () => now });
+        now += 10 * 60_000;
+        assertEquals(await restarted.purgeExpiredTemporaryConversations(), 0);
+        await restarted.getConversation("user-1", "temporary");
+        await restarted.purgeTemporaryConversation(
+            "user-1",
+            "temporary",
+            second.id,
+        );
+        assertEquals(
+            await store.run((db) => db.select().from(aiBlobs).all()),
+            [],
+        );
+        await assertRejects(
+            () => restarted.getConversation("user-1", "temporary"),
+            AiServiceError,
+        );
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("temporary cleanup respects old data, updates, and list has no cleanup side effect", async () => {
+    const store = createInMemoryStore();
+    let now = 4_000_000;
+    try {
+        await store.run(async (db) => {
+            await db.insert(aiConversations).values([
+                {
+                    id: "old",
+                    userId: "user-1",
+                    title: "old",
+                    historyEnabled: false,
+                    createdAt: 1,
+                    updatedAt: 1,
+                },
+                {
+                    id: "recent",
+                    userId: "user-1",
+                    title: "recent",
+                    historyEnabled: false,
+                    createdAt: 1,
+                    updatedAt: now,
+                },
+            ]).run();
+        });
+        const service = new AiService({ store, now: () => now });
+        await service.listConversations("admin-1");
+        await service.getConversation("user-1", "old");
+        assertEquals(await service.purgeExpiredTemporaryConversations(), 1);
+        await service.getConversation("user-1", "recent");
+        now += 30 * 60_000;
+        assertEquals(await service.purgeExpiredTemporaryConversations(), 1);
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("legacy temporary conversation remains available after continued activity without lease renewal", async () => {
+    const store = createInMemoryStore();
+    let now = 1_000_000;
+    try {
+        const fetchFn: typeof fetch = (input) =>
+            Promise.resolve(
+                parseUrl(input).endsWith("/models")
+                    ? jsonResponse({
+                        object: "list",
+                        data: [{ id: "legacy-model", object: "model" }],
+                    })
+                    : sseResponse([makeChunk("answer"), makeDoneChunk()]),
+            );
+        const service = new AiService({
+            store,
+            now: () => now,
+            encryptionKey: TEST_KEY,
+            fetchFn,
+        });
+        const provider = await service.createProvider("user-1", {
+            name: "Legacy",
+            baseUrl: "https://api.ai.com/v1",
+            apiKey: "sk-legacy-test",
+            scope: "user",
+        });
+        let conversationId = "";
+        for await (
+            const event of service.streamChat("user-1", {
+                providerId: provider.id,
+                modelId: "legacy-model",
+                message: "first",
+                historyEnabled: false,
+            })
+        ) {
+            if (
+                event.event === "meta" && event.data &&
+                typeof event.data === "object" &&
+                "conversationId" in event.data &&
+                typeof event.data.conversationId === "string"
+            ) {
+                conversationId = event.data.conversationId;
+            }
+        }
+        now += 25 * 60_000;
+        for await (
+            const _event of service.streamChat("user-1", {
+                conversationId,
+                providerId: provider.id,
+                modelId: "legacy-model",
+                message: "continue without lease renewal",
+            })
+        ) { /* drain the real stream to persist activity */ }
+        now += 10 * 60_000;
+        assertEquals(await service.purgeExpiredTemporaryConversations(), 0);
+        assertEquals(
+            (await service.getConversation("user-1", conversationId)).messages
+                .length,
+            4,
+        );
+        now += 21 * 60_000;
+        assertEquals(await service.purgeExpiredTemporaryConversations(), 1);
+        await assertRejects(
+            () => service.getConversation("user-1", conversationId),
+            AiServiceError,
+        );
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("temporary release and expiry wait for every stream, including return at meta", async () => {
+    const store = createInMemoryStore();
+    let now = 1_000_000;
+    try {
+        const fetchFn: typeof fetch = (input) => {
+            if (parseUrl(input).endsWith("/models")) {
+                return Promise.resolve(jsonResponse({
+                    object: "list",
+                    data: [{ id: "lease-model", object: "model" }],
+                }));
+            }
+            return Promise.resolve(
+                sseResponse([makeChunk("ok"), makeDoneChunk()]),
+            );
+        };
+        const service = new AiService({
+            store,
+            encryptionKey: TEST_KEY,
+            now: () => now,
+            fetchFn,
+        });
+        const provider = await service.createProvider("user-1", {
+            name: "Lease",
+            baseUrl: "https://api.ai.com/v1",
+            apiKey: "sk-lease-test",
+            scope: "user",
+        });
+        const first = service.streamChat("user-1", {
+            providerId: provider.id,
+            modelId: "lease-model",
+            message: "one",
+            historyEnabled: false,
+        });
+        const firstMeta = (await first.next()).value!;
+        const meta = firstMeta.data as {
+            conversationId: string;
+            temporaryLease: { id: string };
+        };
+        await service.renewTemporaryLease(
+            "user-1",
+            meta.conversationId,
+            meta.temporaryLease.id,
+        );
+        const second = service.streamChat("user-1", {
+            providerId: provider.id,
+            modelId: "lease-model",
+            message: "two",
+            conversationId: meta.conversationId,
+        });
+        await second.next();
+        now += 31 * 60_000;
+        assertEquals(await service.purgeExpiredTemporaryConversations(), 0);
+        await service.getConversation("user-1", meta.conversationId);
+        await service.purgeTemporaryConversation(
+            "user-1",
+            meta.conversationId,
+            meta.temporaryLease.id,
+        );
+        await first.return(undefined);
+        await service.getConversation("user-1", meta.conversationId);
+        await second.return(undefined);
+        await assertRejects(
+            () => service.getConversation("user-1", meta.conversationId),
+            AiServiceError,
+        );
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("switching history mode invalidates old leases without deleting the conversation", async () => {
+    const store = createInMemoryStore();
+    try {
+        await store.run(async (db) => {
+            await db.insert(aiConversations).values({
+                id: "switch",
+                userId: "user-1",
+                title: "switch",
+                historyEnabled: false,
+                createdAt: 1,
+                updatedAt: 1,
+            }).run();
+        });
+        const service = new AiService({ store });
+        const lease = await service.acquireTemporaryLease("user-1", "switch");
+        await service.updateConversation("user-1", "switch", {
+            historyEnabled: true,
+        });
+        await assertRejects(
+            () => service.renewTemporaryLease("user-1", "switch", lease.id),
+            AiServiceError,
+        );
+        await service.purgeTemporaryConversation("user-1", "switch");
+        await service.updateConversation("user-1", "switch", {
+            historyEnabled: false,
+        });
+        const next = await service.acquireTemporaryLease("user-1", "switch");
+        await service.purgeTemporaryConversation("user-1", "switch", next.id);
+        await assertRejects(
+            () => service.getConversation("user-1", "switch"),
+            AiServiceError,
+        );
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("failure before meta leaves an unclaimed lease that expires after restart", async () => {
+    const store = createInMemoryStore();
+    let now = 1_000_000;
+    try {
+        const fetchFn: typeof fetch = () =>
+            Promise.resolve(jsonResponse({
+                object: "list",
+                data: [{ id: "lease-model", object: "model" }],
+            }));
+        const service = new AiService({
+            store,
+            now: () => now,
+            encryptionKey: TEST_KEY,
+            fetchFn,
+        });
+        const provider = await service.createProvider("user-1", {
+            name: "Lease",
+            baseUrl: "https://api.ai.com/v1",
+            apiKey: "sk-lease-test",
+            scope: "user",
+        });
+        await store.nativeTransaction((db) => {
+            db.exec(
+                "CREATE TRIGGER reject_ai_message BEFORE INSERT ON ai_messages BEGIN SELECT RAISE(FAIL, 'failure'); END",
+            );
+        });
+        const stream = service.streamChat("user-1", {
+            providerId: provider.id,
+            modelId: "lease-model",
+            message: "one",
+            historyEnabled: false,
+        });
+        await assertRejects(() => stream.next());
+        const rows = await store.run((db) =>
+            db.select().from(aiConversations).all()
+        );
+        assertEquals(rows.length, 1);
+        now += 30 * 60_000;
+        assertEquals(
+            await new AiService({ store, now: () => now })
+                .purgeExpiredTemporaryConversations(),
+            1,
+        );
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("temporary cleanup retries after a database failure", async () => {
+    const store = createInMemoryStore();
+    const originalSetInterval = globalThis.setInterval;
+    const originalClearInterval = globalThis.clearInterval;
+    let tick: (() => void) | undefined;
+    try {
+        await store.run(async (db) => {
+            await db.insert(aiConversations).values({
+                id: "expired",
+                userId: "user-1",
+                title: "expired",
+                historyEnabled: false,
+                createdAt: 1,
+                updatedAt: 1,
+            }).run();
+        });
+        await store.nativeTransaction((db) => {
+            db.exec(
+                "CREATE TRIGGER reject_cleanup BEFORE DELETE ON ai_conversations BEGIN SELECT RAISE(FAIL, 'cleanup failed'); END",
+            );
+        });
+        globalThis.setInterval = ((callback: () => void) => {
+            tick = callback;
+            return 1;
+        }) as typeof setInterval;
+        globalThis.clearInterval = (() => {}) as typeof clearInterval;
+        const service = new AiService({ store, now: () => 4_000_000 });
+        service.startTemporaryCleanup();
+        if (!tick) throw new Error("cleanup timer was not registered");
+        tick();
+        await service.getConversation("user-1", "expired");
+        await store.nativeTransaction((db) =>
+            db.exec("DROP TRIGGER reject_cleanup")
+        );
+        tick();
+        await service.stopTemporaryCleanup();
+        const error = await assertRejects(
+            () => service.getConversation("user-1", "expired"),
+            AiServiceError,
+        );
+        assertEquals(error.statusCode, 404);
+    } finally {
+        globalThis.setInterval = originalSetInterval;
+        globalThis.clearInterval = originalClearInterval;
+        await store.close();
+    }
+});
+
+Deno.test("abort before meta delivery leaves a recoverable unclaimed lease", async () => {
+    const store = createInMemoryStore();
+    let now = 1_000_000;
+    try {
+        const fetchFn: typeof fetch = () =>
+            Promise.resolve(jsonResponse({
+                object: "list",
+                data: [{ id: "lease-model", object: "model" }],
+            }));
+        const service = new AiService({
+            store,
+            now: () => now,
+            encryptionKey: TEST_KEY,
+            fetchFn,
+        });
+        const provider = await service.createProvider("user-1", {
+            name: "Lease",
+            baseUrl: "https://api.ai.com/v1",
+            apiKey: "sk-lease-test",
+            scope: "user",
+        });
+        const abort = new AbortController();
+        const stream = service.streamChat("user-1", {
+            providerId: provider.id,
+            modelId: "lease-model",
+            message: "one",
+            historyEnabled: false,
+        }, abort.signal);
+        const pending = stream.next();
+        abort.abort();
+        await pending;
+        await stream.return(undefined);
+        assertEquals(
+            (await store.run((db) => db.select().from(aiConversations).all()))
+                .length,
+            1,
+        );
+        now += 30 * 60_000;
+        assertEquals(
+            await new AiService({ store, now: () => now })
+                .purgeExpiredTemporaryConversations(),
+            1,
+        );
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("pending releases survive restart, while a new holder or history conversion cancels them", async () => {
+    const store = createInMemoryStore();
+    let now = 1_000_000;
+    try {
+        const fetchFn: typeof fetch = (input) =>
+            parseUrl(input).endsWith("/models")
+                ? Promise.resolve(
+                    jsonResponse({
+                        object: "list",
+                        data: [{ id: "lease-model", object: "model" }],
+                    }),
+                )
+                : Promise.resolve(
+                    sseResponse([makeChunk("ok"), makeDoneChunk()]),
+                );
+        const service = new AiService({
+            store,
+            now: () => now,
+            encryptionKey: TEST_KEY,
+            fetchFn,
+        });
+        const provider = await service.createProvider("user-1", {
+            name: "Lease",
+            baseUrl: "https://api.ai.com/v1",
+            apiKey: "sk-lease-test",
+            scope: "user",
+        });
+        const start = () =>
+            service.streamChat("user-1", {
+                providerId: provider.id,
+                modelId: "lease-model",
+                message: "one",
+                historyEnabled: false,
+            });
+        const first = start();
+        const firstMeta = (await first.next()).value!.data as {
+            conversationId: string;
+            temporaryLease: { id: string };
+        };
+        await service.renewTemporaryLease(
+            "user-1",
+            firstMeta.conversationId,
+            firstMeta.temporaryLease.id,
+        );
+        await service.purgeTemporaryConversation(
+            "user-1",
+            firstMeta.conversationId,
+            firstMeta.temporaryLease.id,
+        );
+        const restarted = new AiService({ store, now: () => now });
+        assertEquals(await restarted.purgeExpiredTemporaryConversations(), 1);
+        await first.return(undefined);
+
+        await store.run(async (db) => {
+            await db.insert(aiConversations).values({
+                id: "legacy-pending",
+                userId: "user-1",
+                title: "legacy",
+                historyEnabled: false,
+                createdAt: now,
+                updatedAt: now,
+            }).run();
+        });
+        const legacy = service.streamChat("user-1", {
+            providerId: provider.id,
+            modelId: "lease-model",
+            message: "legacy",
+            conversationId: "legacy-pending",
+        });
+        await legacy.next();
+        await service.purgeTemporaryConversation("user-1", "legacy-pending");
+        assertEquals(await restarted.purgeExpiredTemporaryConversations(), 1);
+        await legacy.return(undefined);
+
+        const protectedStream = start();
+        const protectedMeta = (await protectedStream.next()).value!.data as {
+            conversationId: string;
+            temporaryLease: { id: string };
+        };
+        await service.purgeTemporaryConversation(
+            "user-1",
+            protectedMeta.conversationId,
+        );
+        const holder = await restarted.acquireTemporaryLease(
+            "user-1",
+            protectedMeta.conversationId,
+        );
+        await protectedStream.return(undefined);
+        assertEquals(await restarted.purgeExpiredTemporaryConversations(), 0);
+        now += 30 * 60_000;
+        await restarted.updateConversation(
+            "user-1",
+            protectedMeta.conversationId,
+            { title: "still active" },
+        );
+        assertEquals(await restarted.purgeExpiredTemporaryConversations(), 0);
+        await restarted.getConversation("user-1", protectedMeta.conversationId);
+
+        const historyStream = service.streamChat("user-1", {
+            providerId: provider.id,
+            modelId: "lease-model",
+            message: "history",
+            conversationId: protectedMeta.conversationId,
+        });
+        await historyStream.next();
+        await service.purgeTemporaryConversation(
+            "user-1",
+            protectedMeta.conversationId,
+            holder.id,
+        );
+        await service.updateConversation(
+            "user-1",
+            protectedMeta.conversationId,
+            { historyEnabled: true },
+        );
+        await historyStream.return(undefined);
+        assertEquals(await restarted.purgeExpiredTemporaryConversations(), 0);
+        assertEquals(
+            (await restarted.getConversation(
+                "user-1",
+                protectedMeta.conversationId,
+            )).conversation.historyEnabled,
+            true,
+        );
     } finally {
         await store.close();
     }

@@ -4,6 +4,7 @@ import type { AuthService } from "../features/auth/service.ts";
 import type { WallpaperService } from "../features/wallpaper/service.ts";
 import type { WebAppIconService } from "../features/webapp-icons/service.ts";
 import type { SystemSettingsStore } from "../features/system/settings-store.ts";
+import type { AiService } from "../features/ai/service.ts";
 export type AppVariables = {
     user: UserDto;
     sessionToken?: string;
@@ -21,5 +22,6 @@ export interface AppDeps {
     wallpaper?: WallpaperService;
     icons?: WebAppIconService;
     settings?: SystemSettingsStore;
+    ai?: AiService;
     now?: () => number;
 }

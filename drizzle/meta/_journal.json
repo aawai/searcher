@@ -239,6 +239,13 @@
       "when": 1792998582025,
       "tag": "0033_sad_strong_guy",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1792998582026,
+      "tag": "0034_temporary_leases",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,7 @@ import {
     aiMessages,
     aiModels,
     aiProviders,
+    aiTemporaryLeases,
 } from "../../db/ai-schema.ts";
 import { auditLogs, preferences } from "../../db/schema.ts";
 import { decryptApiKey, encryptApiKey, maskApiKey } from "./crypto.ts";
@@ -91,6 +92,51 @@ export class AiService {
     readonly #now: () => number;
     readonly #encryptionKey?: string;
     readonly #fetchFn: typeof fetch;
+    readonly #activeStreams = new Map<string, number>();
+    #cleanupTimer?: ReturnType<typeof setInterval>;
+    #cleanupInFlight?: Promise<void>;
+
+    startTemporaryCleanup(): void {
+        if (this.#cleanupTimer) return;
+        this.#cleanupTimer = setInterval(() => {
+            if (this.#cleanupInFlight) return;
+            this.#cleanupInFlight = this.purgeExpiredTemporaryConversations()
+                .then(() => {})
+                .catch((error) =>
+                    console.error("AI temporary cleanup failed", error)
+                )
+                .finally(() => {
+                    this.#cleanupInFlight = undefined;
+                });
+        }, 5 * 60 * 1000);
+    }
+
+    async stopTemporaryCleanup(): Promise<void> {
+        if (this.#cleanupTimer) clearInterval(this.#cleanupTimer);
+        this.#cleanupTimer = undefined;
+        await this.#cleanupInFlight;
+    }
+
+    #registerStream(id: string): void {
+        this.#activeStreams.set(id, (this.#activeStreams.get(id) ?? 0) + 1);
+    }
+
+    async #finishStream(id: string): Promise<void> {
+        await this.#store.run(async (db) => {
+            const count = this.#activeStreams.get(id) ?? 0;
+            if (count > 1) {
+                this.#activeStreams.set(id, count - 1);
+                return;
+            }
+            this.#activeStreams.delete(id);
+            await db.delete(aiConversations).where(and(
+                eq(aiConversations.id, id),
+                eq(aiConversations.historyEnabled, false),
+                eq(aiConversations.temporaryDeletePending, true),
+                sql`not exists (select 1 from ai_temporary_leases l where l.conversation_id = ${aiConversations.id} and l.released = 0 and l.expires_at > ${this.#now()})`,
+            )).run();
+        });
+    }
 
     constructor(deps: AiServiceDeps) {
         this.#store = deps.store;
@@ -710,27 +756,6 @@ export class AiService {
 
     async listConversations(userId: string): Promise<AiConversationDto[]> {
         return await this.#store.run(async (db: SearchDatabase) => {
-            // 服务端短 TTL 清理兜底：清除超过 30 分钟未更新的临时会话与消息
-            const cutoff = this.#now() - 30 * 60 * 1000;
-            const expired = await db
-                .select({ id: aiConversations.id })
-                .from(aiConversations)
-                .where(
-                    and(
-                        eq(aiConversations.historyEnabled, false),
-                        sql`${aiConversations.updatedAt} < ${cutoff}`,
-                    ),
-                )
-                .all();
-            for (const { id } of expired) {
-                await db.delete(aiMessages).where(
-                    eq(aiMessages.conversationId, id),
-                ).run();
-                await db.delete(aiConversations).where(
-                    eq(aiConversations.id, id),
-                ).run();
-            }
-
             const rows = await db
                 .select()
                 .from(aiConversations)
@@ -938,6 +963,9 @@ export class AiService {
             }
             if (input.historyEnabled !== undefined) {
                 setObj.historyEnabled = input.historyEnabled;
+                if (input.historyEnabled !== conv.historyEnabled) {
+                    setObj.temporaryDeletePending = false;
+                }
             }
             if (input.activeLeafMessageId !== undefined) {
                 setObj.activeLeafMessageId = input.activeLeafMessageId;
@@ -950,6 +978,14 @@ export class AiService {
                 .set(setObj)
                 .where(eq(aiConversations.id, conversationId))
                 .run();
+            if (
+                input.historyEnabled !== undefined &&
+                input.historyEnabled !== conv.historyEnabled
+            ) {
+                await db.delete(aiTemporaryLeases).where(
+                    eq(aiTemporaryLeases.conversationId, conversationId),
+                ).run();
+            }
 
             const [updated] = await db
                 .select()
@@ -1167,71 +1203,146 @@ export class AiService {
         });
     }
 
-    /**
-     * 彻底清理/删除 historyEnabled=false 的临时会话及关联消息。
-     * 在用户切换新对话、关闭/退出会话时调用。
-     */
-    async purgeTemporaryConversation(
+    async #temporaryConversation(
+        db: SearchDatabase,
         userId: string,
-        conversationId: string,
-    ): Promise<void> {
-        await this.#store.run(async (db: SearchDatabase) => {
-            const [conv] = await db
-                .select()
-                .from(aiConversations)
-                .where(
-                    and(
-                        eq(aiConversations.id, conversationId),
-                        eq(aiConversations.userId, userId),
-                        eq(aiConversations.historyEnabled, false),
-                    ),
-                )
-                .limit(1)
-                .all();
+        id: string,
+    ) {
+        const [conversation] = await db.select().from(aiConversations).where(
+            and(
+                eq(aiConversations.id, id),
+                eq(aiConversations.userId, userId),
+                eq(aiConversations.historyEnabled, false),
+                isNull(aiConversations.deletedAt),
+            ),
+        ).limit(1).all();
+        if (!conversation) throw new AiServiceError("临时会话不存在", 404);
+        return conversation;
+    }
 
-            if (!conv) return;
-
-            await db.delete(aiMessages)
-                .where(eq(aiMessages.conversationId, conversationId))
-                .run();
-
-            await db.delete(aiConversations)
-                .where(eq(aiConversations.id, conversationId))
-                .run();
+    async acquireTemporaryLease(userId: string, conversationId: string) {
+        return await this.#store.nativeTransaction((db) => {
+            const conversation = db.prepare(`select id from ai_conversations
+                where id = ? and user_id = ? and history_enabled = 0 and deleted_at is null limit 1`)
+                .all(conversationId, userId);
+            if (!conversation.length) {
+                throw new AiServiceError("临时会话不存在", 404);
+            }
+            const lease = {
+                id: crypto.randomUUID(),
+                expiresAt: this.#now() + 30 * 60 * 1000,
+            };
+            db.prepare(`insert into ai_temporary_leases
+                (id, conversation_id, user_id, expires_at, claimed, released)
+                values (?, ?, ?, ?, 1, 0)`).run(
+                lease.id,
+                conversationId,
+                userId,
+                lease.expiresAt,
+            );
+            db.prepare(
+                "update ai_conversations set temporary_delete_pending = 0 where id = ?",
+            )
+                .run(conversationId);
+            return lease;
         });
     }
 
-    /**
-     * 服务端短 TTL 清理兜底：清除超过指定 TTL（默认 30 分钟）的 historyEnabled=false 临时会话及消息。
-     * 防止客户端异常关闭/断网未触发显式关闭而残留历史。
-     */
-    async purgeExpiredTemporaryConversations(
-        ttlMs: number = 30 * 60 * 1000,
-    ): Promise<number> {
-        return await this.#store.run(async (db: SearchDatabase) => {
-            const cutoff = this.#now() - ttlMs;
-            const expired = await db
-                .select({ id: aiConversations.id })
-                .from(aiConversations)
-                .where(
-                    and(
-                        eq(aiConversations.historyEnabled, false),
-                        sql`${aiConversations.updatedAt} < ${cutoff}`,
-                    ),
-                )
-                .all();
-
-            if (!expired.length) return 0;
-            for (const { id } of expired) {
-                await db.delete(aiMessages)
-                    .where(eq(aiMessages.conversationId, id))
-                    .run();
-                await db.delete(aiConversations)
-                    .where(eq(aiConversations.id, id))
-                    .run();
+    async renewTemporaryLease(
+        userId: string,
+        conversationId: string,
+        leaseId: string,
+    ) {
+        return await this.#store.run(async (db) => {
+            await this.#temporaryConversation(db, userId, conversationId);
+            const [lease] = await db.select().from(aiTemporaryLeases).where(and(
+                eq(aiTemporaryLeases.id, leaseId),
+                eq(aiTemporaryLeases.conversationId, conversationId),
+                eq(aiTemporaryLeases.userId, userId),
+                eq(aiTemporaryLeases.released, false),
+            )).limit(1).all();
+            if (!lease || lease.expiresAt <= this.#now()) {
+                throw new AiServiceError("租约不存在或已过期", 404);
             }
+            const expiresAt = this.#now() + 30 * 60 * 1000;
+            await db.update(aiTemporaryLeases).set({ claimed: true, expiresAt })
+                .where(eq(aiTemporaryLeases.id, leaseId)).run();
+            return { id: leaseId, expiresAt };
+        });
+    }
 
-            return expired.length;
+    async purgeTemporaryConversation(
+        userId: string,
+        conversationId: string,
+        leaseId?: string,
+    ): Promise<void> {
+        await this.#store.nativeTransaction((db) => {
+            const conv = db.prepare(`select id from ai_conversations
+                where id = ? and user_id = ? and history_enabled = 0 limit 1`)
+                .all(conversationId, userId);
+            if (!conv.length) {
+                if (leaseId) throw new AiServiceError("临时会话不存在", 404);
+                return;
+            }
+            if (leaseId) {
+                const lease = db.prepare(`select id from ai_temporary_leases
+                    where id = ? and conversation_id = ? and user_id = ? limit 1`)
+                    .all(leaseId, conversationId, userId);
+                if (!lease.length) throw new AiServiceError("租约不存在", 404);
+                db.prepare(
+                    "update ai_temporary_leases set released = 1 where id = ?",
+                ).run(leaseId);
+            } else {
+                db.prepare(`update ai_temporary_leases set released = 1
+                    where conversation_id = ? and claimed = 0`).run(
+                    conversationId,
+                );
+            }
+            const protectedLease = db.prepare(
+                `select id from ai_temporary_leases
+                where conversation_id = ? and released = 0 and expires_at > ? limit 1`,
+            )
+                .all(conversationId, this.#now());
+            if (!protectedLease.length) {
+                if (this.#activeStreams.has(conversationId)) {
+                    db.prepare(
+                        "update ai_conversations set temporary_delete_pending = 1 where id = ?",
+                    )
+                        .run(conversationId);
+                } else {
+                    db.prepare("delete from ai_conversations where id = ?").run(
+                        conversationId,
+                    );
+                }
+            }
+        });
+    }
+
+    async purgeExpiredTemporaryConversations(
+        ttlMs = 30 * 60 * 1000,
+    ): Promise<number> {
+        return await this.#store.run(async (db) => {
+            const now = this.#now();
+            const expired = await db.select({ id: aiConversations.id }).from(
+                aiConversations,
+            )
+                .where(and(
+                    eq(aiConversations.historyEnabled, false),
+                    or(
+                        eq(aiConversations.temporaryDeletePending, true),
+                        sql`${aiConversations.updatedAt} + ${ttlMs} <= ${now}`,
+                    ),
+                    sql`not exists (select 1 from ai_temporary_leases l where l.conversation_id = ${aiConversations.id} and l.released = 0 and l.expires_at > ${now})`,
+                )).all();
+            let count = 0;
+            for (const { id } of expired) {
+                if (this.#activeStreams.has(id)) continue;
+                await db.delete(aiConversations).where(
+                    eq(aiConversations.id, id),
+                ).run();
+                count++;
+            }
+            return count;
         });
     }
 
@@ -1583,608 +1694,681 @@ export class AiService {
         let variantGroupId: string | null = null;
         let branchStartParentId: string | null = null;
         const branchChain: typeof aiMessages.$inferSelect[] = [];
-
-        // 2. Validate conversation & targets BEFORE blob storage or any DB mutations
-        if (existingConvId) {
-            convId = existingConvId;
-            const existing = await this.#store.run(
-                async (db: SearchDatabase) => {
-                    const [c] = await db
-                        .select()
-                        .from(aiConversations)
-                        .where(
-                            and(
-                                eq(aiConversations.id, existingConvId),
-                                eq(aiConversations.userId, userId),
-                                isNull(aiConversations.deletedAt),
-                            ),
-                        )
-                        .limit(1)
-                        .all();
-                    return c;
-                },
-            );
-            if (!existing) {
-                throw new AiServiceError("对话不存在", 404);
-            }
-            title = existing.title;
-            if (!systemInstruction && existing.systemInstruction) {
-                systemInstruction = existing.systemInstruction;
-            }
-
-            const allMsgs = await this.#store.run(
-                async (db: SearchDatabase) => {
-                    return await db
-                        .select()
-                        .from(aiMessages)
-                        .where(eq(aiMessages.conversationId, existingConvId))
-                        .all();
-                },
-            );
-            const msgMap = new Map(allMsgs.map((m) => [m.id, m]));
-
-            if (request.regenerateMessageId) {
-                const targetMsg = msgMap.get(request.regenerateMessageId);
-                if (!targetMsg || targetMsg.role !== "assistant") {
-                    throw new AiServiceError("要重新生成的助手回复不存在", 404);
+        let registered = false;
+        let temporaryLease: { id: string; expiresAt: number } | undefined;
+        let pendingAssistantId: string | undefined;
+        try {
+            // 2. Validate conversation & targets BEFORE blob storage or any DB mutations
+            if (existingConvId) {
+                convId = existingConvId;
+                const existing = await this.#store.run(
+                    async (db: SearchDatabase) => {
+                        const [c] = await db
+                            .select()
+                            .from(aiConversations)
+                            .where(
+                                and(
+                                    eq(aiConversations.id, existingConvId),
+                                    eq(aiConversations.userId, userId),
+                                    isNull(aiConversations.deletedAt),
+                                ),
+                            )
+                            .limit(1)
+                            .all();
+                        if (c) {
+                            this.#registerStream(existingConvId);
+                            registered = true;
+                        }
+                        return c;
+                    },
+                );
+                if (!existing) {
+                    throw new AiServiceError("对话不存在", 404);
                 }
-                variantGroupId = targetMsg.variantGroupId ?? targetMsg.id;
-                userMsgParentId = targetMsg.parentMessageId;
-                branchStartParentId = targetMsg.parentMessageId;
-            } else if (request.editMessageId) {
-                const editedMsg = msgMap.get(request.editMessageId);
-                if (!editedMsg || editedMsg.role !== "user") {
-                    throw new AiServiceError("要编辑的用户消息不存在", 404);
+                title = existing.title;
+                if (!systemInstruction && existing.systemInstruction) {
+                    systemInstruction = existing.systemInstruction;
                 }
-                userMsgParentId = editedMsg.parentMessageId;
-                branchStartParentId = editedMsg.parentMessageId;
-            } else if (request.parentMessageId) {
-                const parentMsg = msgMap.get(request.parentMessageId);
-                if (!parentMsg) {
-                    throw new AiServiceError("指定的父消息不存在", 404);
+
+                const allMsgs = await this.#store.run(
+                    async (db: SearchDatabase) => {
+                        return await db
+                            .select()
+                            .from(aiMessages)
+                            .where(
+                                eq(aiMessages.conversationId, existingConvId),
+                            )
+                            .all();
+                    },
+                );
+                const msgMap = new Map(allMsgs.map((m) => [m.id, m]));
+
+                if (request.regenerateMessageId) {
+                    const targetMsg = msgMap.get(request.regenerateMessageId);
+                    if (!targetMsg || targetMsg.role !== "assistant") {
+                        throw new AiServiceError(
+                            "要重新生成的助手回复不存在",
+                            404,
+                        );
+                    }
+                    variantGroupId = targetMsg.variantGroupId ?? targetMsg.id;
+                    userMsgParentId = targetMsg.parentMessageId;
+                    branchStartParentId = targetMsg.parentMessageId;
+                } else if (request.editMessageId) {
+                    const editedMsg = msgMap.get(request.editMessageId);
+                    if (!editedMsg || editedMsg.role !== "user") {
+                        throw new AiServiceError("要编辑的用户消息不存在", 404);
+                    }
+                    userMsgParentId = editedMsg.parentMessageId;
+                    branchStartParentId = editedMsg.parentMessageId;
+                } else if (request.parentMessageId) {
+                    const parentMsg = msgMap.get(request.parentMessageId);
+                    if (!parentMsg) {
+                        throw new AiServiceError("指定的父消息不存在", 404);
+                    }
+                    userMsgParentId = request.parentMessageId;
+                    branchStartParentId = request.parentMessageId;
+                } else {
+                    userMsgParentId = existing.activeLeafMessageId ?? null;
+                    branchStartParentId = existing.activeLeafMessageId ?? null;
                 }
-                userMsgParentId = request.parentMessageId;
-                branchStartParentId = request.parentMessageId;
+
+                let currId: string | null = branchStartParentId;
+                const visited = new Set<string>();
+                while (currId && !visited.has(currId)) {
+                    visited.add(currId);
+                    const m = msgMap.get(currId);
+                    if (!m) break;
+                    branchChain.unshift(m);
+                    currId = m.parentMessageId;
+                }
             } else {
-                userMsgParentId = existing.activeLeafMessageId ?? null;
-                branchStartParentId = existing.activeLeafMessageId ?? null;
+                if (request.regenerateMessageId) {
+                    throw new AiServiceError(
+                        "无法在未指定对话时重新生成回复",
+                        400,
+                    );
+                }
+                if (request.editMessageId) {
+                    throw new AiServiceError("无法在未指定对话时编辑消息", 400);
+                }
+                if (request.parentMessageId) {
+                    throw new AiServiceError(
+                        "无法在未指定对话时指定父消息",
+                        400,
+                    );
+                }
+                const newConvId = crypto.randomUUID();
+                convId = newConvId;
+                title = request.message.trim().slice(0, 30) || "新对话";
+                temporaryLease = historyEnabled ? undefined : {
+                    id: crypto.randomUUID(),
+                    expiresAt: now + 30 * 60 * 1000,
+                };
+                await this.#store.nativeTransaction((native) => {
+                    native.prepare(`insert into ai_conversations
+                    (id, user_id, title, history_enabled, system_instruction, deleted_at, created_at, updated_at)
+                    values (?, ?, ?, ?, ?, null, ?, ?)`)
+                        .run(
+                            newConvId,
+                            userId,
+                            title,
+                            historyEnabled ? 1 : 0,
+                            systemInstruction ?? null,
+                            now,
+                            now,
+                        );
+                    if (temporaryLease) {
+                        native.prepare(`insert into ai_temporary_leases
+                        (id, conversation_id, user_id, expires_at, claimed, released)
+                        values (?, ?, ?, ?, 0, 0)`)
+                            .run(
+                                temporaryLease.id,
+                                newConvId,
+                                userId,
+                                temporaryLease.expiresAt,
+                            );
+                    }
+                    this.#registerStream(newConvId);
+                    registered = true;
+                });
             }
 
-            let currId: string | null = branchStartParentId;
-            const visited = new Set<string>();
-            while (currId && !visited.has(currId)) {
-                visited.add(currId);
-                const m = msgMap.get(currId);
-                if (!m) break;
-                branchChain.unshift(m);
-                currId = m.parentMessageId;
-            }
-        } else {
-            if (request.regenerateMessageId) {
-                throw new AiServiceError("无法在未指定对话时重新生成回复", 400);
-            }
-            if (request.editMessageId) {
-                throw new AiServiceError("无法在未指定对话时编辑消息", 400);
-            }
-            if (request.parentMessageId) {
-                throw new AiServiceError("无法在未指定对话时指定父消息", 400);
-            }
-            const newConvId = crypto.randomUUID();
-            convId = newConvId;
-            title = request.message.trim().slice(0, 30) || "新对话";
-            await this.#store.run(async (db: SearchDatabase) => {
-                await db.insert(aiConversations).values({
-                    id: newConvId,
-                    userId,
-                    title,
-                    historyEnabled,
-                    systemInstruction: systemInstruction ?? null,
-                    deletedAt: null,
-                    createdAt: now,
-                    updatedAt: now,
-                }).run();
-            });
-        }
+            // 3. Process and store attachments safely tied to conversation
+            const attachmentParts = await processAndStoreAttachments(
+                userId,
+                convId,
+                request.attachments,
+                this.#store,
+            );
 
-        // 3. Process and store attachments safely tied to conversation
-        const attachmentParts = await processAndStoreAttachments(
-            userId,
-            convId,
-            request.attachments,
-            this.#store,
-        );
+            // 4. Insert new user message if not regenerate
+            let userMsgId: string;
+            if (!request.regenerateMessageId) {
+                userMsgId = crypto.randomUUID();
+                const userParts: MessageContentPart[] = [];
+                if (request.message) {
+                    userParts.push({ type: "text", text: request.message });
+                }
+                for (const att of attachmentParts) {
+                    userParts.push(att);
+                }
 
-        // 4. Insert new user message if not regenerate
-        let userMsgId: string;
-        if (!request.regenerateMessageId) {
-            userMsgId = crypto.randomUUID();
-            const userParts: MessageContentPart[] = [];
-            if (request.message) {
-                userParts.push({ type: "text", text: request.message });
+                await this.#store.run(async (db: SearchDatabase) => {
+                    await db.insert(aiMessages).values({
+                        id: userMsgId,
+                        conversationId: convId!,
+                        parentMessageId: userMsgParentId,
+                        role: "user",
+                        content: request.message,
+                        partsJson: userParts.length > 0
+                            ? JSON.stringify(userParts)
+                            : null,
+                        providerId: null,
+                        modelId: null,
+                        status: "complete",
+                        variantGroupId: null,
+                        inputTokens: null,
+                        outputTokens: null,
+                        createdAt: now,
+                    }).run();
+                });
+            } else {
+                userMsgId = branchStartParentId ?? "";
             }
-            for (const att of attachmentParts) {
-                userParts.push(att);
-            }
+
+            // 5. Create Assistant message (status: "streaming")
+            const assistantMsgId = crypto.randomUUID();
+            const assistantParentId = !request.regenerateMessageId
+                ? userMsgId
+                : branchStartParentId;
 
             await this.#store.run(async (db: SearchDatabase) => {
                 await db.insert(aiMessages).values({
-                    id: userMsgId,
+                    id: assistantMsgId,
                     conversationId: convId!,
-                    parentMessageId: userMsgParentId,
-                    role: "user",
-                    content: request.message,
-                    partsJson: userParts.length > 0
-                        ? JSON.stringify(userParts)
-                        : null,
-                    providerId: null,
-                    modelId: null,
-                    status: "complete",
-                    variantGroupId: null,
+                    parentMessageId: assistantParentId,
+                    role: "assistant",
+                    content: "",
+                    partsJson: null,
+                    providerId: provider.id,
+                    modelId: model.modelId,
+                    status: "streaming",
+                    variantGroupId,
                     inputTokens: null,
                     outputTokens: null,
-                    createdAt: now,
+                    createdAt: this.#now(),
                 }).run();
             });
-        } else {
-            userMsgId = branchStartParentId ?? "";
-        }
+            pendingAssistantId = assistantMsgId;
 
-        // 5. Create Assistant message (status: "streaming")
-        const assistantMsgId = crypto.randomUUID();
-        const assistantParentId = !request.regenerateMessageId
-            ? userMsgId
-            : branchStartParentId;
+            // Emit meta event
+            yield {
+                event: "meta",
+                data: {
+                    conversationId: convId,
+                    messageId: assistantMsgId,
+                    userMessageId: userMsgId,
+                    assistantMessageId: assistantMsgId,
+                    title,
+                    providerId: provider.id,
+                    modelId: model.modelId,
+                    ...(temporaryLease ? { temporaryLease } : {}),
+                },
+            };
 
-        await this.#store.run(async (db: SearchDatabase) => {
-            await db.insert(aiMessages).values({
-                id: assistantMsgId,
-                conversationId: convId!,
-                parentMessageId: assistantParentId,
-                role: "assistant",
-                content: "",
-                partsJson: null,
-                providerId: provider.id,
-                modelId: model.modelId,
-                status: "streaming",
-                variantGroupId,
-                inputTokens: null,
-                outputTokens: null,
-                createdAt: this.#now(),
-            }).run();
-        });
+            // 6. Prepare LLM message history with attachment replay
+            const llmMessages: OpenAIChatMessage[] = [];
+            if (systemInstruction) {
+                llmMessages.push({
+                    role: "system",
+                    content: systemInstruction,
+                });
+            }
 
-        // Emit meta event
-        yield {
-            event: "meta",
-            data: {
-                conversationId: convId,
-                messageId: assistantMsgId,
-                userMessageId: userMsgId,
-                assistantMessageId: assistantMsgId,
-                title,
-                providerId: provider.id,
-                modelId: model.modelId,
-            },
-        };
-
-        // 6. Prepare LLM message history with attachment replay
-        const llmMessages: OpenAIChatMessage[] = [];
-        if (systemInstruction) {
-            llmMessages.push({ role: "system", content: systemInstruction });
-        }
-
-        for (const m of branchChain) {
-            if (m.role === "user" && m.partsJson) {
-                try {
-                    const parts = JSON.parse(m.partsJson);
-                    if (Array.isArray(parts)) {
-                        const blocks: Array<
-                            | { type: "text"; text: string }
-                            | { type: "image_url"; image_url: { url: string } }
-                        > = [];
-                        for (const p of parts) {
-                            if (
-                                p.type === "attachment" &&
-                                p.mimeType?.startsWith("image/")
-                            ) {
-                                if (model.supportsVision) {
-                                    const blob = await this.#store.run(
-                                        async (db) => {
-                                            const [row] = await db
-                                                .select()
-                                                .from(aiBlobs)
-                                                .where(eq(aiBlobs.id, p.id))
-                                                .limit(1)
-                                                .all();
-                                            return row;
-                                        },
-                                    );
-                                    if (blob && blob.data) {
+            for (const m of branchChain) {
+                if (m.role === "user" && m.partsJson) {
+                    try {
+                        const parts = JSON.parse(m.partsJson);
+                        if (Array.isArray(parts)) {
+                            const blocks: Array<
+                                | { type: "text"; text: string }
+                                | {
+                                    type: "image_url";
+                                    image_url: { url: string };
+                                }
+                            > = [];
+                            for (const p of parts) {
+                                if (
+                                    p.type === "attachment" &&
+                                    p.mimeType?.startsWith("image/")
+                                ) {
+                                    if (model.supportsVision) {
+                                        const blob = await this.#store.run(
+                                            async (db) => {
+                                                const [row] = await db
+                                                    .select()
+                                                    .from(aiBlobs)
+                                                    .where(eq(aiBlobs.id, p.id))
+                                                    .limit(1)
+                                                    .all();
+                                                return row;
+                                            },
+                                        );
+                                        if (blob && blob.data) {
+                                            blocks.push({
+                                                type: "image_url",
+                                                image_url: { url: blob.data },
+                                            });
+                                        }
+                                    } else {
                                         blocks.push({
-                                            type: "image_url",
-                                            image_url: { url: blob.data },
+                                            type: "text",
+                                            text: `[Attached image: ${p.name}]`,
                                         });
                                     }
-                                } else {
+                                } else if (p.type === "attachment" && p.data) {
                                     blocks.push({
                                         type: "text",
-                                        text: `[Attached image: ${p.name}]`,
+                                        text:
+                                            `[Attached file: ${p.name}]\n${p.data}\n`,
+                                    });
+                                } else if (p.type === "text" && p.text) {
+                                    blocks.push({ type: "text", text: p.text });
+                                }
+                            }
+                            if (blocks.length > 0) {
+                                llmMessages.push({
+                                    role: "user",
+                                    content: blocks,
+                                });
+                                continue;
+                            }
+                        }
+                    } catch {
+                        // fallback
+                    }
+                }
+                llmMessages.push({
+                    role: m.role as "system" | "user" | "assistant",
+                    content: m.content,
+                });
+            }
+
+            if (!request.regenerateMessageId) {
+                if (model.supportsVision && hasImages) {
+                    const blocks: Array<
+                        | { type: "text"; text: string }
+                        | { type: "image_url"; image_url: { url: string } }
+                    > = [];
+                    for (const att of attachmentParts) {
+                        if (att.mimeType.startsWith("image/") && att.data) {
+                            blocks.push({
+                                type: "image_url",
+                                image_url: { url: att.data },
+                            });
+                        } else if (att.data) {
+                            blocks.push({
+                                type: "text",
+                                text:
+                                    `[Attached file: ${att.name}]\n${att.data}\n`,
+                            });
+                        }
+                    }
+                    if (request.message) {
+                        blocks.push({ type: "text", text: request.message });
+                    }
+                    llmMessages.push({ role: "user", content: blocks });
+                } else {
+                    let userText = request.message;
+                    const textAtts = attachmentParts.filter((a) =>
+                        !a.mimeType.startsWith("image/") && a.data
+                    );
+                    if (textAtts.length > 0) {
+                        const prefix = textAtts.map((a) =>
+                            `[Attached file: ${a.name}]\n${a.data}\n`
+                        ).join("\n");
+                        userText = `${prefix}\n${userText}`;
+                    }
+                    llmMessages.push({ role: "user", content: userText });
+                }
+            }
+
+            const toolDefs = buildToolDefinitions(
+                request.tools,
+                model.supportsTools,
+            );
+
+            // 7. Stream and multi-round tool loop
+            const apiKey = await decryptApiKey(
+                provider.encryptedApiKey,
+                this.#encryptionKey,
+            );
+
+            let fullContent = "";
+            let finalStatus: "complete" | "interrupted" | "failed" = "complete";
+            let totalInputTokens = 0;
+            let totalOutputTokens = 0;
+            const assistantParts: MessageContentPart[] = [];
+            let round = 0;
+            const MAX_TOOL_ROUNDS = 3;
+            let hadToolCalls = false;
+
+            try {
+                while (round < MAX_TOOL_ROUNDS) {
+                    round++;
+                    const stream = streamOpenAIChat(
+                        provider.baseUrl,
+                        apiKey,
+                        {
+                            model: model.modelId,
+                            messages: llmMessages,
+                            ...generationParams,
+                            tools: toolDefs.length > 0 ? toolDefs : undefined,
+                        },
+                        this.#fetchFn,
+                        signal,
+                    );
+
+                    let roundHadToolCalls = false;
+                    for await (const chunk of stream) {
+                        if (signal?.aborted) {
+                            finalStatus = "interrupted";
+                            yield { event: "error", data: "请求已中断" };
+                            break;
+                        }
+
+                        if (chunk.type === "token" && chunk.token) {
+                            fullContent += chunk.token;
+                            yield { event: "token", data: chunk.token };
+                        } else if (
+                            chunk.type === "tool_calls" &&
+                            chunk.toolCalls &&
+                            chunk.toolCalls.length > 0
+                        ) {
+                            roundHadToolCalls = true;
+                            hadToolCalls = true;
+                            if (typeof chunk.inputTokens === "number") {
+                                totalInputTokens += chunk.inputTokens;
+                            }
+                            if (typeof chunk.outputTokens === "number") {
+                                totalOutputTokens += chunk.outputTokens;
+                            }
+
+                            const toolCallMessages: Array<{
+                                id: string;
+                                type: "function";
+                                function: { name: string; arguments: string };
+                            }> = [];
+
+                            for (const tc of chunk.toolCalls) {
+                                let parsedArgs: Record<string, unknown> = {};
+                                try {
+                                    parsedArgs = JSON.parse(
+                                        tc.arguments || "{}",
+                                    );
+                                } catch {
+                                    parsedArgs = { raw: tc.arguments };
+                                }
+
+                                const canonicalName:
+                                    | "documents"
+                                    | "apps"
+                                    | "webSearch" =
+                                        tc.name === "lookup_documents" ||
+                                            tc.name === "documents"
+                                            ? "documents"
+                                            : tc.name === "lookup_apps" ||
+                                                    tc.name === "apps"
+                                            ? "apps"
+                                            : "webSearch";
+
+                                yield {
+                                    event: "tool-call",
+                                    data: {
+                                        callId: tc.id,
+                                        toolName: canonicalName,
+                                        args: parsedArgs,
+                                    },
+                                };
+
+                                const execResult = await executeToolCall(
+                                    tc.name,
+                                    parsedArgs,
+                                    {
+                                        userId,
+                                        store: this.#store,
+                                        allowedTools: request.tools,
+                                        signal,
+                                    },
+                                );
+
+                                yield {
+                                    event: "tool-result",
+                                    data: {
+                                        callId: tc.id,
+                                        toolName: canonicalName,
+                                        result: execResult.result,
+                                        error: execResult.error,
+                                    },
+                                };
+
+                                if (
+                                    execResult.sources &&
+                                    execResult.sources.length > 0
+                                ) {
+                                    yield {
+                                        event: "sources",
+                                        data: { sources: execResult.sources },
+                                    };
+                                    assistantParts.push({
+                                        type: "sources",
+                                        sources: execResult.sources,
                                     });
                                 }
-                            } else if (p.type === "attachment" && p.data) {
-                                blocks.push({
-                                    type: "text",
-                                    text:
-                                        `[Attached file: ${p.name}]\n${p.data}\n`,
-                                });
-                            } else if (p.type === "text" && p.text) {
-                                blocks.push({ type: "text", text: p.text });
-                            }
-                        }
-                        if (blocks.length > 0) {
-                            llmMessages.push({ role: "user", content: blocks });
-                            continue;
-                        }
-                    }
-                } catch {
-                    // fallback
-                }
-            }
-            llmMessages.push({
-                role: m.role as "system" | "user" | "assistant",
-                content: m.content,
-            });
-        }
 
-        if (!request.regenerateMessageId) {
-            if (model.supportsVision && hasImages) {
-                const blocks: Array<
-                    | { type: "text"; text: string }
-                    | { type: "image_url"; image_url: { url: string } }
-                > = [];
-                for (const att of attachmentParts) {
-                    if (att.mimeType.startsWith("image/") && att.data) {
-                        blocks.push({
-                            type: "image_url",
-                            image_url: { url: att.data },
-                        });
-                    } else if (att.data) {
-                        blocks.push({
-                            type: "text",
-                            text: `[Attached file: ${att.name}]\n${att.data}\n`,
-                        });
-                    }
-                }
-                if (request.message) {
-                    blocks.push({ type: "text", text: request.message });
-                }
-                llmMessages.push({ role: "user", content: blocks });
-            } else {
-                let userText = request.message;
-                const textAtts = attachmentParts.filter((a) =>
-                    !a.mimeType.startsWith("image/") && a.data
-                );
-                if (textAtts.length > 0) {
-                    const prefix = textAtts.map((a) =>
-                        `[Attached file: ${a.name}]\n${a.data}\n`
-                    ).join("\n");
-                    userText = `${prefix}\n${userText}`;
-                }
-                llmMessages.push({ role: "user", content: userText });
-            }
-        }
-
-        const toolDefs = buildToolDefinitions(
-            request.tools,
-            model.supportsTools,
-        );
-
-        // 7. Stream and multi-round tool loop
-        const apiKey = await decryptApiKey(
-            provider.encryptedApiKey,
-            this.#encryptionKey,
-        );
-
-        let fullContent = "";
-        let finalStatus: "complete" | "interrupted" | "failed" = "complete";
-        let totalInputTokens = 0;
-        let totalOutputTokens = 0;
-        const assistantParts: MessageContentPart[] = [];
-        let round = 0;
-        const MAX_TOOL_ROUNDS = 3;
-        let hadToolCalls = false;
-
-        try {
-            while (round < MAX_TOOL_ROUNDS) {
-                round++;
-                const stream = streamOpenAIChat(
-                    provider.baseUrl,
-                    apiKey,
-                    {
-                        model: model.modelId,
-                        messages: llmMessages,
-                        ...generationParams,
-                        tools: toolDefs.length > 0 ? toolDefs : undefined,
-                    },
-                    this.#fetchFn,
-                    signal,
-                );
-
-                let roundHadToolCalls = false;
-                for await (const chunk of stream) {
-                    if (signal?.aborted) {
-                        finalStatus = "interrupted";
-                        yield { event: "error", data: "请求已中断" };
-                        break;
-                    }
-
-                    if (chunk.type === "token" && chunk.token) {
-                        fullContent += chunk.token;
-                        yield { event: "token", data: chunk.token };
-                    } else if (
-                        chunk.type === "tool_calls" &&
-                        chunk.toolCalls &&
-                        chunk.toolCalls.length > 0
-                    ) {
-                        roundHadToolCalls = true;
-                        hadToolCalls = true;
-                        if (typeof chunk.inputTokens === "number") {
-                            totalInputTokens += chunk.inputTokens;
-                        }
-                        if (typeof chunk.outputTokens === "number") {
-                            totalOutputTokens += chunk.outputTokens;
-                        }
-
-                        const toolCallMessages: Array<{
-                            id: string;
-                            type: "function";
-                            function: { name: string; arguments: string };
-                        }> = [];
-
-                        for (const tc of chunk.toolCalls) {
-                            let parsedArgs: Record<string, unknown> = {};
-                            try {
-                                parsedArgs = JSON.parse(tc.arguments || "{}");
-                            } catch {
-                                parsedArgs = { raw: tc.arguments };
-                            }
-
-                            const canonicalName:
-                                | "documents"
-                                | "apps"
-                                | "webSearch" =
-                                    tc.name === "lookup_documents" ||
-                                        tc.name === "documents"
-                                        ? "documents"
-                                        : tc.name === "lookup_apps" ||
-                                                tc.name === "apps"
-                                        ? "apps"
-                                        : "webSearch";
-
-                            yield {
-                                event: "tool-call",
-                                data: {
+                                assistantParts.push({
+                                    type: "tool-call",
                                     callId: tc.id,
                                     toolName: canonicalName,
                                     args: parsedArgs,
-                                },
-                            };
-
-                            const execResult = await executeToolCall(
-                                tc.name,
-                                parsedArgs,
-                                {
-                                    userId,
-                                    store: this.#store,
-                                    allowedTools: request.tools,
-                                    signal,
-                                },
-                            );
-
-                            yield {
-                                event: "tool-result",
-                                data: {
+                                });
+                                assistantParts.push({
+                                    type: "tool-result",
                                     callId: tc.id,
                                     toolName: canonicalName,
                                     result: execResult.result,
                                     error: execResult.error,
-                                },
-                            };
+                                });
 
-                            if (
-                                execResult.sources &&
-                                execResult.sources.length > 0
-                            ) {
-                                yield {
-                                    event: "sources",
-                                    data: { sources: execResult.sources },
-                                };
-                                assistantParts.push({
-                                    type: "sources",
-                                    sources: execResult.sources,
+                                toolCallMessages.push({
+                                    id: tc.id,
+                                    type: "function",
+                                    function: {
+                                        name: tc.name,
+                                        arguments: tc.arguments,
+                                    },
+                                });
+
+                                llmMessages.push({
+                                    role: "tool",
+                                    tool_call_id: tc.id,
+                                    content:
+                                        typeof execResult.result === "string"
+                                            ? execResult.result
+                                            : JSON.stringify(
+                                                execResult.result ?? {
+                                                    error: execResult.error,
+                                                },
+                                            ),
                                 });
                             }
 
-                            assistantParts.push({
-                                type: "tool-call",
-                                callId: tc.id,
-                                toolName: canonicalName,
-                                args: parsedArgs,
-                            });
-                            assistantParts.push({
-                                type: "tool-result",
-                                callId: tc.id,
-                                toolName: canonicalName,
-                                result: execResult.result,
-                                error: execResult.error,
-                            });
-
-                            toolCallMessages.push({
-                                id: tc.id,
-                                type: "function",
-                                function: {
-                                    name: tc.name,
-                                    arguments: tc.arguments,
+                            llmMessages.splice(
+                                llmMessages.length - toolCallMessages.length,
+                                0,
+                                {
+                                    role: "assistant",
+                                    content: "",
+                                    tool_calls: toolCallMessages,
                                 },
-                            });
+                            );
 
-                            llmMessages.push({
-                                role: "tool",
-                                tool_call_id: tc.id,
-                                content: typeof execResult.result === "string"
-                                    ? execResult.result
-                                    : JSON.stringify(
-                                        execResult.result ?? {
-                                            error: execResult.error,
-                                        },
-                                    ),
-                            });
+                            break; // re-invoke next round
+                        } else if (chunk.type === "done") {
+                            if (typeof chunk.inputTokens === "number") {
+                                totalInputTokens += chunk.inputTokens;
+                            }
+                            if (typeof chunk.outputTokens === "number") {
+                                totalOutputTokens += chunk.outputTokens;
+                            }
+                            finalStatus = "complete";
+                            break;
+                        } else if (chunk.type === "error") {
+                            finalStatus = signal?.aborted
+                                ? "interrupted"
+                                : "failed";
+                            yield { event: "error", data: chunk.error };
+                            break;
                         }
+                    }
 
-                        llmMessages.splice(
-                            llmMessages.length - toolCallMessages.length,
-                            0,
-                            {
-                                role: "assistant",
-                                content: "",
-                                tool_calls: toolCallMessages,
-                            },
-                        );
-
-                        break; // re-invoke next round
-                    } else if (chunk.type === "done") {
-                        if (typeof chunk.inputTokens === "number") {
-                            totalInputTokens += chunk.inputTokens;
-                        }
-                        if (typeof chunk.outputTokens === "number") {
-                            totalOutputTokens += chunk.outputTokens;
-                        }
-                        finalStatus = "complete";
+                    if (
+                        !roundHadToolCalls || finalStatus !== "complete" ||
+                        signal?.aborted
+                    ) {
                         break;
-                    } else if (chunk.type === "error") {
-                        finalStatus = signal?.aborted
-                            ? "interrupted"
-                            : "failed";
-                        yield { event: "error", data: chunk.error };
-                        break;
+                    }
+                }
+
+                // If max tool rounds reached and tool calls occurred without a final textual answer,
+                // force one final turn without tools so the model must provide text.
+                if (
+                    hadToolCalls && !fullContent &&
+                    finalStatus === "complete" &&
+                    !signal?.aborted
+                ) {
+                    const finalStream = streamOpenAIChat(
+                        provider.baseUrl,
+                        apiKey,
+                        {
+                            model: model.modelId,
+                            messages: llmMessages,
+                            ...generationParams,
+                            tools: undefined,
+                        },
+                        this.#fetchFn,
+                        signal,
+                    );
+                    for await (const chunk of finalStream) {
+                        if (signal?.aborted) {
+                            finalStatus = "interrupted";
+                            yield { event: "error", data: "请求已中断" };
+                            break;
+                        }
+                        if (chunk.type === "token" && chunk.token) {
+                            fullContent += chunk.token;
+                            yield { event: "token", data: chunk.token };
+                        } else if (chunk.type === "done") {
+                            if (typeof chunk.inputTokens === "number") {
+                                totalInputTokens += chunk.inputTokens;
+                            }
+                            if (typeof chunk.outputTokens === "number") {
+                                totalOutputTokens += chunk.outputTokens;
+                            }
+                            finalStatus = "complete";
+                            break;
+                        } else if (chunk.type === "error") {
+                            finalStatus = signal?.aborted
+                                ? "interrupted"
+                                : "failed";
+                            yield { event: "error", data: chunk.error };
+                            break;
+                        }
                     }
                 }
 
                 if (
-                    !roundHadToolCalls || finalStatus !== "complete" ||
-                    signal?.aborted
+                    hadToolCalls && !fullContent && finalStatus === "complete"
                 ) {
-                    break;
+                    finalStatus = "failed";
+                    fullContent = "已达到工具调用轮数上限，未能生成最终回答";
+                }
+            } catch (err: unknown) {
+                finalStatus = signal?.aborted ? "interrupted" : "failed";
+                const msg = err instanceof Error ? err.message : String(err);
+                yield { event: "error", data: msg };
+            } finally {
+                const finishedNow = this.#now();
+                if (signal?.aborted) {
+                    finalStatus = "interrupted";
+                }
+
+                if (fullContent) {
+                    assistantParts.unshift({ type: "text", text: fullContent });
+                }
+
+                // Commit to DB BEFORE yielding done!
+                await this.#store.run(async (db: SearchDatabase) => {
+                    await db.update(aiMessages)
+                        .set({
+                            content: fullContent,
+                            partsJson: assistantParts.length > 0
+                                ? JSON.stringify(assistantParts)
+                                : null,
+                            status: finalStatus,
+                            inputTokens: totalInputTokens > 0
+                                ? totalInputTokens
+                                : null,
+                            outputTokens: totalOutputTokens > 0
+                                ? totalOutputTokens
+                                : null,
+                        })
+                        .where(eq(aiMessages.id, assistantMsgId))
+                        .run();
+
+                    await db.update(aiConversations)
+                        .set({
+                            activeLeafMessageId: assistantMsgId,
+                            updatedAt: finishedNow,
+                        })
+                        .where(eq(aiConversations.id, convId!))
+                        .run();
+                });
+
+                // NOW emit done event AFTER persistence is committed!
+                if (finalStatus === "complete") {
+                    yield {
+                        event: "done",
+                        data: {
+                            assistantMessageId: assistantMsgId,
+                            status: finalStatus,
+                            inputTokens: totalInputTokens > 0
+                                ? totalInputTokens
+                                : null,
+                            outputTokens: totalOutputTokens > 0
+                                ? totalOutputTokens
+                                : null,
+                        },
+                    };
                 }
             }
-
-            // If max tool rounds reached and tool calls occurred without a final textual answer,
-            // force one final turn without tools so the model must provide text.
-            if (
-                hadToolCalls && !fullContent && finalStatus === "complete" &&
-                !signal?.aborted
-            ) {
-                const finalStream = streamOpenAIChat(
-                    provider.baseUrl,
-                    apiKey,
-                    {
-                        model: model.modelId,
-                        messages: llmMessages,
-                        ...generationParams,
-                        tools: undefined,
-                    },
-                    this.#fetchFn,
-                    signal,
-                );
-                for await (const chunk of finalStream) {
-                    if (signal?.aborted) {
-                        finalStatus = "interrupted";
-                        yield { event: "error", data: "请求已中断" };
-                        break;
-                    }
-                    if (chunk.type === "token" && chunk.token) {
-                        fullContent += chunk.token;
-                        yield { event: "token", data: chunk.token };
-                    } else if (chunk.type === "done") {
-                        if (typeof chunk.inputTokens === "number") {
-                            totalInputTokens += chunk.inputTokens;
-                        }
-                        if (typeof chunk.outputTokens === "number") {
-                            totalOutputTokens += chunk.outputTokens;
-                        }
-                        finalStatus = "complete";
-                        break;
-                    } else if (chunk.type === "error") {
-                        finalStatus = signal?.aborted
-                            ? "interrupted"
-                            : "failed";
-                        yield { event: "error", data: chunk.error };
-                        break;
-                    }
-                }
-            }
-
-            if (hadToolCalls && !fullContent && finalStatus === "complete") {
-                finalStatus = "failed";
-                fullContent = "已达到工具调用轮数上限，未能生成最终回答";
-            }
-        } catch (err: unknown) {
-            finalStatus = signal?.aborted ? "interrupted" : "failed";
-            const msg = err instanceof Error ? err.message : String(err);
-            yield { event: "error", data: msg };
         } finally {
-            const finishedNow = this.#now();
-            if (signal?.aborted) {
-                finalStatus = "interrupted";
-            }
-
-            if (fullContent) {
-                assistantParts.unshift({ type: "text", text: fullContent });
-            }
-
-            // Commit to DB BEFORE yielding done!
-            await this.#store.run(async (db: SearchDatabase) => {
-                await db.update(aiMessages)
-                    .set({
-                        content: fullContent,
-                        partsJson: assistantParts.length > 0
-                            ? JSON.stringify(assistantParts)
-                            : null,
-                        status: finalStatus,
-                        inputTokens: totalInputTokens > 0
-                            ? totalInputTokens
-                            : null,
-                        outputTokens: totalOutputTokens > 0
-                            ? totalOutputTokens
-                            : null,
-                    })
-                    .where(eq(aiMessages.id, assistantMsgId))
-                    .run();
-
-                await db.update(aiConversations)
-                    .set({
-                        activeLeafMessageId: assistantMsgId,
-                        updatedAt: finishedNow,
-                    })
-                    .where(eq(aiConversations.id, convId!))
-                    .run();
-            });
-
-            // NOW emit done event AFTER persistence is committed!
-            if (finalStatus === "complete") {
-                yield {
-                    event: "done",
-                    data: {
-                        assistantMessageId: assistantMsgId,
-                        status: finalStatus,
-                        inputTokens: totalInputTokens > 0
-                            ? totalInputTokens
-                            : null,
-                        outputTokens: totalOutputTokens > 0
-                            ? totalOutputTokens
-                            : null,
-                    },
-                };
+            if (registered) {
+                try {
+                    if (pendingAssistantId) {
+                        await this.#store.run(async (db) => {
+                            await db.update(aiMessages).set({
+                                status: "interrupted",
+                            }).where(and(
+                                eq(aiMessages.id, pendingAssistantId!),
+                                eq(aiMessages.status, "streaming"),
+                            )).run();
+                        });
+                    }
+                } finally {
+                    await this.#finishStream(convId!);
+                }
             }
         }
     }

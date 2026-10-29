@@ -27,6 +27,7 @@ import type {
     ToolsConfig,
 } from "../features/ask/types.ts";
 import { useAskStream } from "../features/ask/useAskStream.ts";
+import { TemporaryLeaseOwner } from "../features/ask/temporary-lease.ts";
 import { api, json } from "../lib/api.ts";
 import type { ExpandedAnswerState } from "../features/inline-ai/inline-answer.ts";
 import { requestSearchFocus } from "../features/inline-ai/search-focus.ts";
@@ -103,6 +104,7 @@ function AskWorkspaceContent(
     // UI state
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [leaseOwner] = useState(() => new TemporaryLeaseOwner(setError));
     const [undoConversation, setUndoConversation] = useState<
         {
             id: string;
@@ -138,35 +140,44 @@ function AskWorkspaceContent(
         toolsConfig,
         generationConfig,
         generationEpochRef,
+        onTemporaryLease: (id, lease, active) => {
+            if (active) void leaseOwner.acquire(id, lease);
+            else leaseOwner.discard(id, lease);
+        },
     });
 
     // Helper: purge temporary conversation on switch or teardown
     function purgeTemporaryIfNeeded(conv: ConversationFullData | null) {
         if (conv && !conv.conversation.historyEnabled) {
-            const convId = conv.conversation.id;
-            delete draftsRef.current[convId];
-            try {
-                fetch(
-                    "/api/ai/conversations/" + encodeURIComponent(convId) +
-                        "/temporary",
-                    { method: "DELETE", keepalive: true },
-                ).catch(() => {});
-            } catch {
-                // Ignore teardown errors
-            }
+            delete draftsRef.current[conv.conversation.id];
         }
+        leaseOwner.release();
     }
 
     // Teardown on unmount and pagehide
     useEffect(() => {
         const handlePageHide = () => {
+            generationEpochRef.current += 1;
+            stopStream();
             purgeTemporaryIfNeeded(convRef.current);
         };
+        const handlePageShow = (event: PageTransitionEvent) => {
+            const current = convRef.current;
+            if (
+                event.persisted && current &&
+                !current.conversation.historyEnabled
+            ) {
+                void leaseOwner.acquire(current.conversation.id);
+            }
+        };
+        globalThis.addEventListener("pageshow", handlePageShow);
         globalThis.addEventListener("pagehide", handlePageHide);
         return () => {
+            globalThis.removeEventListener("pageshow", handlePageShow);
             globalThis.removeEventListener("pagehide", handlePageHide);
-            purgeTemporaryIfNeeded(convRef.current);
+            generationEpochRef.current += 1;
             stopStream();
+            purgeTemporaryIfNeeded(convRef.current);
             if (undoConversation?.timer) {
                 clearTimeout(undoConversation.timer);
             }
@@ -320,8 +331,9 @@ function AskWorkspaceContent(
     // Open existing conversation
     async function openConversation(id: string) {
         generationEpochRef.current += 1;
+        const epoch = generationEpochRef.current;
         resetStream();
-        if (conversation && conversation.conversation.id !== id) {
+        if (conversation?.conversation.id !== id) {
             purgeTemporaryIfNeeded(conversation);
         }
         switchDraft(id);
@@ -330,6 +342,8 @@ function AskWorkspaceContent(
             const data = await api<ConversationFullData>(
                 "/api/ai/conversations/" + encodeURIComponent(id),
             );
+            if (epoch !== generationEpochRef.current) return;
+            if (!data.conversation.historyEnabled) void leaseOwner.acquire(id);
             setConversation(data);
             const activeMessage = data.messages.find((message) =>
                 message.id === data.conversation.activeLeafMessageId
@@ -351,6 +365,7 @@ function AskWorkspaceContent(
             setDrawerOpen(false);
             setError(null);
         } catch (e) {
+            if (epoch !== generationEpochRef.current) return;
             setConversation(null);
             setError(errorMessage(e));
         }
@@ -444,18 +459,26 @@ function AskWorkspaceContent(
             setNewConvHistoryEnabled(historyEnabled);
             return;
         }
+        const epoch = generationEpochRef.current;
         try {
             const result = await api<AiConversationDto>(
                 "/api/ai/conversations/" +
                     encodeURIComponent(conversation.conversation.id),
                 json("PATCH", { historyEnabled }),
             );
-            setConversation({ ...conversation, conversation: result });
+            if (epoch !== generationEpochRef.current) return;
+            if (historyEnabled) leaseOwner.forget();
+            else void leaseOwner.acquire(result.id);
+            setConversation((current) =>
+                current?.conversation.id === result.id
+                    ? { ...current, conversation: result }
+                    : current
+            );
             setHistory((items) =>
                 items.map((it) => (it.id === result.id ? result : it))
             );
         } catch (e) {
-            setError(errorMessage(e));
+            if (epoch === generationEpochRef.current) setError(errorMessage(e));
         }
     }
 
