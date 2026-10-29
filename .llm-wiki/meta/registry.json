@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-27T08:41:26.976Z",
+  "last_updated": "2026-10-29T09:56:07.335Z",
   "pages": {
     "concepts/accessible-grid-drag-keyboard-and-announcements": {
       "type": "concept",
@@ -15,6 +15,13 @@
       "domain": "accessibility",
       "created": "2026-10-24",
       "updated": "2026-10-24"
+    },
+    "concepts/browser-storage-persistence-and-eviction": {
+      "type": "concept",
+      "title": "Browser Storage Persistence and Eviction",
+      "domain": "engineering",
+      "created": "2026-10-28",
+      "updated": "2026-10-28"
     },
     "concepts/contract-first-testing": {
       "type": "concept",
@@ -79,6 +86,20 @@
       "created": "2026-09-26",
       "updated": "2026-09-26"
     },
+    "concepts/http-cache-and-service-worker-boundaries": {
+      "type": "concept",
+      "title": "HTTP Cache and Service Worker Boundaries",
+      "domain": "engineering",
+      "created": "2026-10-28",
+      "updated": "2026-10-28"
+    },
+    "concepts/modal-dialog-focus-and-semantics": {
+      "type": "concept",
+      "title": "Modal Dialog Focus and Semantics",
+      "domain": "engineering",
+      "created": "2026-10-29",
+      "updated": "2026-10-29"
+    },
     "concepts/modal-layering-and-escape-dismissal": {
       "type": "concept",
       "title": "Modal Layering and Escape Dismissal",
@@ -87,13 +108,14 @@
         "[[entities/searcher-项目]]"
       ],
       "created": "2026-09-27",
-      "updated": "2026-09-27"
+      "updated": "2026-10-29"
     },
     "concepts/offline-first-与-local-draft-持久化架构": {
       "type": "concept",
       "title": "Offline-First 与 Local Draft 持久化架构",
+      "domain": "engineering",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-10-28"
     },
     "concepts/pointer-target-size": {
       "type": "concept",
@@ -107,7 +129,7 @@
       "title": "PWA Service Worker Update Lifecycle",
       "domain": "engineering",
       "created": "2026-10-24",
-      "updated": "2026-10-24"
+      "updated": "2026-10-28"
     },
     "concepts/react-19-actions-and-transitions": {
       "type": "concept",
@@ -134,7 +156,7 @@
       "title": "Session Security and Isolation",
       "domain": "engineering",
       "created": "2026-09-25",
-      "updated": "2026-10-27"
+      "updated": "2026-10-29"
     },
     "concepts/shortest-column-masonry-layout": {
       "type": "concept",
@@ -154,7 +176,7 @@
       "type": "concept",
       "title": "SQLite Backup and Recovery Boundaries",
       "created": "2026-10-27",
-      "updated": "2026-10-27"
+      "updated": "2026-10-29"
     },
     "concepts/sqlite-fts5-fulltext-search": {
       "type": "concept",
@@ -239,7 +261,7 @@
       "title": "Drizzle SQLite Store",
       "category": "tool",
       "created": "2026-09-25",
-      "updated": "2026-10-27"
+      "updated": "2026-10-29"
     },
     "entities/hono-framework": {
       "type": "entity",
@@ -251,8 +273,9 @@
     "entities/indexeddb-本地存储引擎": {
       "type": "entity",
       "title": "IndexedDB 本地存储引擎",
+      "category": "tool",
       "created": "2026-09-25",
-      "updated": "2026-09-25"
+      "updated": "2026-10-28"
     },
     "entities/react-19-framework": {
       "type": "entity",
@@ -273,7 +296,7 @@
       "title": "shadcn UI System",
       "category": "tool",
       "created": "2026-09-25",
-      "updated": "2026-09-27"
+      "updated": "2026-10-29"
     },
     "entities/valibot-schema-validator": {
       "type": "entity",
@@ -1047,12 +1070,101 @@
       "captured": "2026-10-27",
       "updated": "2026-10-27"
     },
+    "sources/SRC-2026-10-28-001": {
+      "type": "source",
+      "title": "HTTP caching",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-28-001/extracted.md",
+      "source_id": "SRC-2026-10-28-001",
+      "format": "web",
+      "captured": "2026-10-28",
+      "updated": "2026-10-28"
+    },
+    "sources/SRC-2026-10-28-002": {
+      "type": "source",
+      "title": "Cache",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-28-002/extracted.md",
+      "source_id": "SRC-2026-10-28-002",
+      "format": "web",
+      "captured": "2026-10-28",
+      "updated": "2026-10-28"
+    },
+    "sources/SRC-2026-10-28-003": {
+      "type": "source",
+      "title": "Storage quotas and eviction criteria",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-28-003/extracted.md",
+      "source_id": "SRC-2026-10-28-003",
+      "format": "web",
+      "captured": "2026-10-28",
+      "updated": "2026-10-28"
+    },
+    "sources/SRC-2026-10-28-004": {
+      "type": "source",
+      "title": "StorageManager: persist() method",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-28-004/extracted.md",
+      "source_id": "SRC-2026-10-28-004",
+      "format": "web",
+      "captured": "2026-10-28",
+      "updated": "2026-10-28"
+    },
+    "sources/SRC-2026-10-28-005": {
+      "type": "source",
+      "title": "Offline data",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-28-005/extracted.md",
+      "source_id": "SRC-2026-10-28-005",
+      "format": "web",
+      "captured": "2026-10-28",
+      "updated": "2026-10-28"
+    },
+    "sources/SRC-2026-10-29-001": {
+      "type": "source",
+      "title": "Secure cookie configuration",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-29-001/extracted.md",
+      "source_id": "SRC-2026-10-29-001",
+      "format": "web",
+      "captured": "2026-10-29",
+      "updated": "2026-10-29"
+    },
+    "sources/SRC-2026-10-29-002": {
+      "type": "source",
+      "title": "Dialog (Modal) Pattern",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-29-002/extracted.md",
+      "source_id": "SRC-2026-10-29-002",
+      "format": "web",
+      "captured": "2026-10-29",
+      "updated": "2026-10-29"
+    },
+    "sources/SRC-2026-10-29-003": {
+      "type": "source",
+      "title": "How To Corrupt An SQLite Database File",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-10-29-003/original/source.html",
+      "source_id": "SRC-2026-10-29-003",
+      "format": "web",
+      "captured": "2026-10-29",
+      "updated": "2026-10-29"
+    },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",
       "title": "CSS var() 回退不验证消费属性",
       "category": "frontend",
       "status": "insight",
       "slug": "css-var-fallback-consumer-value-boundary",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/dock-touch-context-and-dnd-readiness": {
+      "type": "source",
+      "title": "Dock touch context and keyboard drag readiness",
+      "category": "frontend",
+      "status": "insight",
+      "slug": "dock-touch-context-and-dnd-readiness",
       "created": "2026-10-27",
       "updated": "2026-10-27"
     },
@@ -2381,6 +2493,42 @@
       "created": "2026-10-26",
       "updated": "2026-10-26"
     },
+    "sources/obs-2026-10-27-": {
+      "type": "source",
+      "title": "Observation: 任务栏图标仅显示图形的视觉要求",
+      "tags": [
+        "dock",
+        "mobile",
+        "ui",
+        "accessibility",
+        "design"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-27-",
+      "relevance": "high",
+      "observed_at": "2026-10-27T10:58:08.891Z",
+      "source_context": "用户审核任务栏精简方案与效果图",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
+    },
+    "sources/obs-2026-10-27-dock-simplification-review-requirements": {
+      "type": "source",
+      "title": "Observation: Dock simplification review requirements",
+      "tags": [
+        "dock",
+        "mobile",
+        "ui",
+        "design",
+        "approval"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-27-dock-simplification-review-requirements",
+      "relevance": "high",
+      "observed_at": "2026-10-27T10:58:23.509Z",
+      "source_context": "任务栏菜单、配置与移动端交互设计评审",
+      "created": "2026-10-27",
+      "updated": "2026-10-27"
+    },
     "sources/obs-2026-10-27-issue-320-ui-guard-actions-pr-329-main": {
       "type": "source",
       "title": "Observation: Issue 320 UI Guard 静态表达式覆盖与 Actions 竞态修复经 PR 329 合并 main",
@@ -2439,6 +2587,97 @@
       "source_context": "Issue 325 implementation and merge",
       "created": "2026-10-27",
       "updated": "2026-10-27"
+    },
+    "sources/obs-2026-10-28-": {
+      "type": "source",
+      "title": "Observation: 管理后台样式一致性实页审查发现",
+      "tags": [
+        "admin",
+        "ui",
+        "audit",
+        "visual",
+        "accessibility"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-28-",
+      "relevance": "high",
+      "observed_at": "2026-10-28T13:03:10.960Z",
+      "source_context": "管理后台样式一致性实页审查与优化计划",
+      "created": "2026-10-28",
+      "updated": "2026-10-28"
+    },
+    "sources/obs-2026-10-29-issue-338-a-c1": {
+      "type": "source",
+      "title": "Observation: Issue 338 阶段 A 工作区实现及 C1 发布门槛",
+      "tags": [
+        "issue338",
+        "阶段A",
+        "Dock",
+        "C1",
+        "发布"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-29-issue-338-a-c1",
+      "relevance": "high",
+      "observed_at": "2026-10-29T09:53:29.083Z",
+      "source_context": "检查 issue #338 阶段 A、B 完成度",
+      "created": "2026-10-29",
+      "updated": "2026-10-29"
+    },
+    "sources/obs-2026-10-29-issue-338-a-main": {
+      "type": "source",
+      "title": "Observation: Issue 338 A 合入 main 会触发镜像发布",
+      "tags": [
+        "issue338",
+        "阶段A",
+        "C1",
+        "Docker",
+        "main",
+        "发布"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-29-issue-338-a-main",
+      "relevance": "high",
+      "observed_at": "2026-10-29T09:56:07.288Z",
+      "source_context": "评估是否可合并当前 PR 后再实施下一阶段",
+      "created": "2026-10-29",
+      "updated": "2026-10-29"
+    },
+    "sources/obs-2026-10-29-issue-338-b": {
+      "type": "source",
+      "title": "Observation: Issue 338 阶段 B 表单导航确认未销毁",
+      "tags": [
+        "issue338",
+        "阶段B",
+        "navigation",
+        "guard",
+        "表单"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-29-issue-338-b",
+      "relevance": "high",
+      "observed_at": "2026-10-29T09:52:07.190Z",
+      "source_context": "检查 issue #338 阶段 A、B 完成度",
+      "created": "2026-10-29",
+      "updated": "2026-10-29"
+    },
+    "sources/searcher-session-token-hash-is-not-salted": {
+      "type": "source",
+      "title": "Searcher 会话 Token 使用无盐 SHA-256",
+      "category": "security",
+      "status": "insight",
+      "slug": "searcher-session-token-hash-is-not-salted",
+      "created": "2026-10-29",
+      "updated": "2026-10-29"
+    },
+    "sources/service-worker-bypass-does-not-bypass-http-cache": {
+      "type": "source",
+      "title": "Service Worker 直通与 HTTP 缓存边界",
+      "category": "architecture",
+      "status": "insight",
+      "slug": "service-worker-bypass-does-not-bypass-http-cache",
+      "created": "2026-10-28",
+      "updated": "2026-10-28"
     },
     "sources/sqlite-table-recreation-migration-zero-loss": {
       "type": "source",

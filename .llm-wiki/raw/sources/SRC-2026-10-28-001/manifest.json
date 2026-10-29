@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-28-001",
+  "captured": "2026-10-28",
+  "packet_version": "1.0",
+  "title": "HTTP caching",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

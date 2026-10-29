@@ -560,3 +560,66 @@
 ## [2026-10-27T08:41:26.929Z] retro
 - slug: "issue-326-dock-effective-edge-responsive", title: "Dock 有效方向与响应式覆盖收敛", category: "frontend"
 
+## [2026-10-27T10:55:46.541Z] observe
+- slug: "obs-2026-10-27-", title: "任务栏配置精简与移动端手势新需求", relevance: "high"
+
+## [2026-10-27T10:58:08.892Z] observe
+- slug: "obs-2026-10-27-", title: "任务栏图标仅显示图形的视觉要求", relevance: "high"
+
+## [2026-10-27T10:58:23.509Z] observe
+- slug: "obs-2026-10-27-dock-simplification-review-requirements", title: "Dock simplification review requirements", relevance: "high"
+
+## [2026-10-27T15:40:28.055Z] retro
+- slug: "dock-touch-context-and-dnd-readiness", title: "Dock touch context and keyboard drag readiness", category: "frontend"
+
+## [2026-10-28T08:01:12.087Z] capture
+- source_id: "SRC-2026-10-28-001", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching", format: "web"
+
+## [2026-10-28T08:01:15.856Z] capture
+- source_id: "SRC-2026-10-28-002", url: "https://developer.mozilla.org/en-US/docs/Web/API/Cache", format: "web"
+
+## [2026-10-28T08:01:19.253Z] capture
+- source_id: "SRC-2026-10-28-003", url: "https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria", format: "web"
+
+## [2026-10-28T08:01:22.827Z] capture
+- source_id: "SRC-2026-10-28-004", url: "https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist", format: "web"
+
+## [2026-10-28T08:03:42.539Z] capture
+- source_id: "SRC-2026-10-28-005", url: "https://web.dev/learn/pwa/offline-data", format: "web"
+
+## [2026-10-28T08:04:22.256Z] ensure_page
+- page_type: "concept", title: "HTTP Cache and Service Worker Boundaries", path: "concepts/http-cache-and-service-worker-boundaries"
+
+## [2026-10-28T08:04:22.439Z] ensure_page
+- page_type: "concept", title: "Browser Storage Persistence and Eviction", path: "concepts/browser-storage-persistence-and-eviction"
+
+## [2026-10-28T08:05:44.387Z] retro
+- slug: "service-worker-bypass-does-not-bypass-http-cache", title: "Service Worker 直通与 HTTP 缓存边界", category: "architecture"
+
+## [2026-10-28T13:03:10.964Z] observe
+- slug: "obs-2026-10-28-", title: "管理后台样式一致性实页审查发现", relevance: "high"
+
+## [2026-10-29T08:01:11.395Z] capture
+- source_id: "SRC-2026-10-29-001", url: "https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/Cookies", format: "web"
+
+## [2026-10-29T08:01:14.794Z] capture
+- source_id: "SRC-2026-10-29-002", url: "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/", format: "web"
+
+## [2026-10-29T08:03:06.454Z] capture
+- source_id: "SRC-2026-10-29-003", url: "https://www.sqlite.org/howtocorrupt.html", format: "web"
+
+## [2026-10-29T08:04:37.371Z] ensure_page
+- page_type: "concept", title: "Modal Dialog Focus and Semantics", path: "concepts/modal-dialog-focus-and-semantics"
+
+## [2026-10-29T08:11:31.427Z] retro
+- slug: "searcher-session-token-hash-is-not-salted", title: "Searcher 会话 Token 使用无盐 SHA-256", category: "security"
+
+## [2026-10-29T09:52:07.194Z] observe
+- slug: "obs-2026-10-29-issue-338-b", title: "Issue 338 阶段 B 表单导航确认未销毁", relevance: "high"
+
+## [2026-10-29T09:53:29.084Z] observe
+- slug: "obs-2026-10-29-issue-338-a-c1", title: "Issue 338 阶段 A 工作区实现及 C1 发布门槛", relevance: "high"
+
+## [2026-10-29T09:56:07.290Z] observe
+- slug: "obs-2026-10-29-issue-338-a-main", title: "Issue 338 A 合入 main 会触发镜像发布", relevance: "high"
+

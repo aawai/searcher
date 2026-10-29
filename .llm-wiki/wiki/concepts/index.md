@@ -4,6 +4,7 @@
 
 - [Accessible Grid Drag — Keyboard and Announcements](accessible-grid-drag-keyboard-and-announcements.md)
 - [ARIA Combobox Grouped Suggestions](aria-combobox-grouped-suggestions.md)
+- [Browser Storage Persistence and Eviction](browser-storage-persistence-and-eviction.md)
 - [Contract First Testing](contract-first-testing.md)
 - [CSRF Defense Boundaries](csrf-defense-boundaries.md)
 - [CSS Custom Property Fallback and Registration](css-custom-property-fallback-and-registration.md)
@@ -13,6 +14,8 @@
 - [dnd-kit 2D Grid Sorting Architecture](dnd-kit-2d-grid-sorting-architecture.md)
 - [Hono Middleware Pipeline & Request Intake](hono-middleware-pipeline-request-intake.md)
 - [Hono RPC & Type-Safe Client](hono-rpc-type-safe-client.md)
+- [HTTP Cache and Service Worker Boundaries](http-cache-and-service-worker-boundaries.md)
+- [Modal Dialog Focus and Semantics](modal-dialog-focus-and-semantics.md)
 - [Modal Layering and Escape Dismissal](modal-layering-and-escape-dismissal.md)
 - [Offline-First 与 Local Draft 持久化架构](offline-first-%E4%B8%8E-local-draft-%E6%8C%81%E4%B9%85%E5%8C%96%E6%9E%B6%E6%9E%84.md)
 - [Pointer Target Size](pointer-target-size.md)

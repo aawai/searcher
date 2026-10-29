@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-29-002",
+  "captured": "2026-10-29",
+  "packet_version": "1.0",
+  "title": "Dialog (Modal) Pattern",
+  "url": "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
