@@ -142,31 +142,20 @@ deno task check:ui --update
 
 - `/ask` 是对话工作区（空状态），`/ask/:id` 是会话深链；同一路由元素承载两者，在 `/ask` 发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push。登录用户由任务栏进入 AI 问答；无模型时保留入口并显示不可用原因，访客不显示任务栏。
 - `/?view=apps` 与 `/?view=notes` 是首页上的应用、笔记工作面板；功能切换 push 浏览器历史，重复点击当前入口不重置，浏览器返回保留未保存保护。不再有资料库根视图或头像内的应用 / 笔记 / AI 导航。
-- `/settings` 与 `/settings/search` 均解析为 `search` 分类（`/settings/search`
-  是“搜索”分类的直接深链，不重定向到 `/settings`）：`≥768px` 双栏同时显示“设置分类”
-  导航与“搜索”面板；`<768px` 下 `/settings` 为分类列表页（`data-view="list"`），
-  `/settings/search` 等 `/settings/:tab` 与 `/account` 打开详情视图
-  （`data-view="detail"`）并提供返回 `/settings` 的“设置”链接。未知
-  Settings/Admin 子路径显示 404（提供“返回首页”及“返回设置”/“返回管理后台”）。
+- `/settings` 与 `/settings/search` 均解析为 `search` 分类，不互相重定向；登录用户的设置和 `/account` 同属一个窗口，回收站为另一个窗口。设置内容按 Host 宽度（访客独立页按视口）选择布局：≥768px 双栏，<768px 的 `/settings` 为列表，分类与 `/account` 为详情并提供返回设置的链接。未知 Settings/Admin 子路径保持 404。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。成功后由
   页面上“已登录”状态这一处 replace 到目标，只导航一次（`/share` 这类一次性入口依赖它）。
 - `/share` 是分享目标，不渲染内容页，立即 replace 到首页或登录，见
   [首页与桌面 · 捕获入口](workspace.md#捕获入口)。
-- 外部进入 `/settings`、`/settings/:tab`、`/account` 或 `/admin/:tab` 保留正常
-  history entry。登录用户的设置导航首项为“账户与安全”（`/account`），与各设置分类
-  共用 `SettingsShell`：`≥768px` 在“设置分类”内切换使用 `replace`（浏览器一次后退
-  即可离开设置/账户）；`<768px` 从 `/settings` 列表点入详情使用 `push`，此时浏览器
-  后退回到列表；详情顶部“设置”链接则 `push` 到 `/settings`，从详情深链直达时也可
-  使用，不等同浏览器后退。Admin 内部 `LocalNavigation` 切换始终 `replace` 当前
-  history entry。设置、账户、管理与回收站不渲染 breadcrumb（`PageHeader` 的
-  `items` 仅用于三层及以上的直达页）。
+- 外部进入设置、账户或管理路径保留正常 history entry。设置导航首项为“账户与安全”；设置 Host ≥768px 时分类切换用 `replace`，<768px 列表到详情用 `push`，详情顶部“设置”链接也用 `push`。Admin 内部切换仍为 `replace`；这些内容不渲染 breadcrumb。
 - 顶层页面之间的导航（顶栏、用户菜单、404 返回等）启用 React Router
   `viewTransition`；设置、管理内部 Tab 与工作区不使用。首页回答卡片展开为 `/ask/:id`
   使用共享元素过渡（`web/src/lib/shared-element.ts`），不经过 React Router 的
   `viewTransition`。
-- 现有页面仍按路由挂载：`DesktopHost` 拥有唯一首页、工作面板数据及应用表单 session；Ask、设置 / 账户与回收站内容从 Presenter 接收 `PageHost` 的局部位置、导航、链接、活动状态与容量，不自行读取全局位置。设置、回收站和 Ask 侧栏消费 Host 容量切换既有紧凑布局。
-- `NavigationGuardProvider` 拥有唯一 Router blocker，各内容 owner 根据导航是否销毁内容登记保护并参与 `beforeunload`；多个 owner 的确认按顺序处理，取消保留原地址与内容，未决意图不会被后续导航覆盖。所有 owner 确认且导航到达目标后，放弃的应用表单才关闭，包括首页与工作面板之间的前进 / 后退。当前旧 Presenter 仍按既有 URL 挂载，面板内容随路由关闭而销毁。
-- 从 `/ask/:id` 离开到首页时（任意方式），首页挂载后把焦点放回搜索框。
+- 登录用户的 `DesktopHost` 在当前账号 session 中只有一份；设置 / 账户与回收站由窗口 Host 提供各自的局部位置和实测宽度，最小化不卸载，关闭才销毁。独立路由暂时隐藏桌面并保留实例。访客设置继续使用独立 Presenter。应用、笔记面板和 AI 仍按[混合状态](workspace.md#当前混合状态)的旧呈现运行。
+- `NavigationGuardProvider` 拥有唯一 Router blocker，按是否销毁内容聚合 owner 与 `beforeunload`；确认前冻结首个目标，竞争 POP 时校验 Router 管理的 history key、index、长度和 guard 集合后重放，无法核实时不放行。应用表单在目标实际提交后关闭；取消保持原地址与内容。退出登录先检查本地未同步草稿，再通过相同的保护协调销毁账号内容。
+- 返回桌面时焦点回搜索框；窗口重新激活优先恢复仍可用的上次焦点，焦点目标不可用时回到窗口标题栏。
+- 账户资料更新不更换登录 session 或销毁窗口。会话因 401 失效时立即清除账号内容；正在使用的首页搜索保留当前输入和焦点，但不保留个人搜索结果。
 
 服务端路由回退规则见 [部署细节](deployment.md#请求路由)。
 

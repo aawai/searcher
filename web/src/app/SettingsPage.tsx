@@ -187,11 +187,23 @@ export function SettingsPage() {
 
 export function SettingsContent({ host }: { host: PageHost }) {
     const { location, Link } = host;
-    const { appearance, setAppearance, user, settleAppearanceSync } =
-        useAppState();
+    const {
+        appearance,
+        setAppearance,
+        user,
+        authSession,
+        settleAppearanceSync,
+    } = useAppState();
     const isAdmin = user?.role === "admin";
     const reducedTransparency = useReducedTransparency();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const mounted = useRef(true);
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+        };
+    }, []);
     const [wallpaperHistory, setWallpaperHistory] = useState<
         WallpaperHistoryRecord[]
     >([]);
@@ -217,6 +229,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
     );
 
     const showToast = (msg: string) => {
+        if (!mounted.current || !authSession.isCurrent()) return;
         clearTimeout(toastTimerRef.current);
         setToastMessage(msg);
         toastTimerRef.current = setTimeout(() => {
@@ -326,7 +339,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
         return () => {
             cancelled = true;
         };
-    }, [user?.id]);
+    }, [authSession, user?.id]);
 
     async function handleWallpaperUpload(file: File) {
         if (file.size > 5 * 1024 * 1024) {
@@ -339,6 +352,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
             let id: string;
             if (user) {
                 await settleAppearanceSync();
+                if (!mounted.current || !authSession.isCurrent()) return;
                 const form = new FormData();
                 form.append("image", file);
                 const res = await api<{ url: string; id?: string }>(
@@ -363,6 +377,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 });
                 id = "guest-" + Date.now();
             }
+            if (!mounted.current || !authSession.isCurrent()) return;
             const newRecord: WallpaperHistoryRecord = {
                 id,
                 url,
@@ -386,6 +401,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 wallpaper: url,
                 wallpaperPresentations: nextRecords,
             });
+            if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((current) =>
                 [
                     newRecord,
@@ -398,7 +414,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
         } catch (error) {
             showToast(error instanceof Error ? error.message : "上传壁纸失败");
         } finally {
-            setUploadingWallpaper(false);
+            if (authSession.isCurrent()) setUploadingWallpaper(false);
         }
     }
 
@@ -427,9 +443,9 @@ export function SettingsContent({ host }: { host: PageHost }) {
             });
             showToast("壁纸已更新");
         } catch {
-            setDraftError("同步壁纸失败，请重试");
+            if (authSession.isCurrent()) setDraftError("同步壁纸失败，请重试");
         } finally {
-            setIsApplyingDraft(false);
+            if (authSession.isCurrent()) setIsApplyingDraft(false);
         }
     }
 
@@ -496,6 +512,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
             );
             if (isUploadedAsset) {
                 await settleAppearanceSync();
+                if (!mounted.current || !authSession.isCurrent()) return;
                 const uuid = parsed.value.replace("/api/wallpaper/", "");
                 await api(`/api/wallpaper/${uuid}`, {
                     method: "PATCH",
@@ -505,6 +522,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                     }),
                     headers: { "Content-Type": "application/json" },
                 });
+                if (!mounted.current || !authSession.isCurrent()) return;
                 await setAppearance(
                     { wallpaperPresentations: nextRecords },
                     { sync: false },
@@ -516,6 +534,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                     { sync: isCurrent },
                 );
             }
+            if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((prev) =>
                 prev.map((item) =>
                     item.id === target.id
@@ -544,6 +563,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
             const isUploadedAsset = user && parsed?.type === "uploaded";
             if (isUploadedAsset) {
                 await settleAppearanceSync();
+                if (!mounted.current || !authSession.isCurrent()) return;
                 const uuid = parsed.value.replace("/api/wallpaper/", "");
                 await api(`/api/wallpaper/${uuid}`, {
                     method: "PATCH",
@@ -553,6 +573,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                     }),
                     headers: { "Content-Type": "application/json" },
                 });
+                if (!mounted.current || !authSession.isCurrent()) return;
             }
             const targetPres = wallpaperPresentation(
                 target.url,
@@ -571,6 +592,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 wallpaper: target.url,
                 wallpaperPresentations: nextRecords,
             });
+            if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((prev) =>
                 prev.map((item) =>
                     item.id === target.id
@@ -600,9 +622,11 @@ export function SettingsContent({ host }: { host: PageHost }) {
             const parsed = parseWallpaperSource(target.url);
             if (user && parsed?.type === "uploaded") {
                 await settleAppearanceSync();
+                if (!mounted.current || !authSession.isCurrent()) return;
                 const uuid = parsed.value.replace("/api/wallpaper/", "");
                 await api(`/api/wallpaper/${uuid}`, { method: "DELETE" });
             }
+            if (!mounted.current || !authSession.isCurrent()) return;
             const nextRecords = purgeWallpaperPresentation(
                 { ...appearance.wallpaperPresentations },
                 target.url,
@@ -620,6 +644,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 );
                 showToast("壁纸已删除");
             }
+            if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((prev) =>
                 prev.filter((item) => item.id !== target.id)
             );
@@ -629,7 +654,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 error instanceof Error ? error.message : "删除壁纸失败，请重试",
             );
         } finally {
-            setIsDeleting(false);
+            if (authSession.isCurrent()) setIsDeleting(false);
         }
     }
 
@@ -1216,7 +1241,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 {tab === "shortcuts" && <ShortcutsSettings />}
             </SettingsShell>
             <WallpaperCompositionDialog
-                open={compositionTarget !== null}
+                open={host.active && compositionTarget !== null}
                 onOpenChange={(open) => {
                     if (!open) setCompositionTarget(null);
                 }}
@@ -1240,7 +1265,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 onSetAsCurrent={handleSetCurrentWithFocal}
             />
             <AlertDialog
-                open={deleteTarget !== null}
+                open={host.active && deleteTarget !== null}
                 onOpenChange={(open) => {
                     if (!open && !isDeleting) setDeleteTarget(null);
                 }}
@@ -1281,7 +1306,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
             <StatusBanner
                 tone="success"
                 presentation="floating"
-                open={toastMessage !== null}
+                open={host.active && toastMessage !== null}
                 data-testid="wallpaper-toast"
             >
                 {toastMessage}

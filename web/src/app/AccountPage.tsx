@@ -1,4 +1,4 @@
-import { type SubmitEvent, useEffect, useState } from "react";
+import { type SubmitEvent, useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import type { UserDto } from "@shared/contracts.ts";
 import { Badge } from "../components/ui/badge.tsx";
@@ -128,8 +128,16 @@ export function AccountPage() {
 }
 
 export function AccountContent({ host }: { host: PageHost }) {
-    const { user, login, logout } = useAppState();
+    const { user, authSession, updateProfile, logout } = useAppState();
     const { navigate, location, Link } = host;
+    const mounted = useRef(true);
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+        };
+    }, []);
+    const isCurrent = () => mounted.current && authSession.isCurrent();
 
     // Profile state
     const [displayName, setDisplayName] = useState(user?.displayName ?? "");
@@ -180,11 +188,12 @@ export function AccountContent({ host }: { host: PageHost }) {
             const res = await api<{ devices: SessionDevice[] }>(
                 "/api/auth/devices",
             );
+            if (!isCurrent()) return;
             setDevices(res.devices);
         } catch (err) {
-            setDevicesError(errorMessage(err));
+            if (isCurrent()) setDevicesError(errorMessage(err));
         } finally {
-            setDevicesLoading(false);
+            if (isCurrent()) setDevicesLoading(false);
         }
     };
 
@@ -192,7 +201,7 @@ export function AccountContent({ host }: { host: PageHost }) {
         if (user) {
             void loadDevices();
         }
-    }, [user]);
+    }, [authSession, user?.id]);
 
     // Save profile
     const handleSaveProfile = async (e: SubmitEvent<HTMLFormElement>) => {
@@ -208,12 +217,13 @@ export function AccountContent({ host }: { host: PageHost }) {
                     email: email.trim() || undefined,
                 }),
             );
-            login(res.user);
+            if (!isCurrent()) return;
+            updateProfile(res.user);
             setProfileSuccess("个人资料更新成功");
         } catch (err) {
-            setProfileError(errorMessage(err));
+            if (isCurrent()) setProfileError(errorMessage(err));
         } finally {
-            setProfileSaving(false);
+            if (isCurrent()) setProfileSaving(false);
         }
     };
 
@@ -241,6 +251,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                     newPassword,
                 }),
             );
+            if (!isCurrent()) return;
             setPasswordSuccess(
                 "密码修改成功！所有设备上的会话均已安全注销，请使用新密码重新登录。",
             );
@@ -249,14 +260,15 @@ export function AccountContent({ host }: { host: PageHost }) {
             setConfirmPassword("");
             // Logout after short delay
             setTimeout(() => {
+                if (!isCurrent()) return;
                 void logout().then(() =>
                     navigate(routes.login, { viewTransition: true })
                 );
             }, 2500);
         } catch (err) {
-            setPasswordError(errorMessage(err));
+            if (isCurrent()) setPasswordError(errorMessage(err));
         } finally {
-            setPasswordSaving(false);
+            if (isCurrent()) setPasswordSaving(false);
         }
     };
 
@@ -290,14 +302,16 @@ export function AccountContent({ host }: { host: PageHost }) {
             await api(`/api/auth/devices/${revokeDeviceId}`, {
                 method: "DELETE",
             });
+            if (!isCurrent()) return;
             setDevicesActionMsg("已退出该设备");
             setRevokeDeviceId(null);
             await loadDevices();
         } catch (err) {
+            if (!isCurrent()) return;
             setDevicesError(errorMessage(err));
             setRevokeDeviceId(null);
         } finally {
-            setRevokeDevicePending(false);
+            if (isCurrent()) setRevokeDevicePending(false);
         }
     };
 
@@ -305,10 +319,14 @@ export function AccountContent({ host }: { host: PageHost }) {
     const handleConfirmLogoutCurrent = async () => {
         setLogoutCurrentPending(true);
         try {
-            await logout();
+            const loggedOut = await logout();
+            if (!mounted.current || !loggedOut || authSession.isCurrent()) {
+                return;
+            }
             setLogoutCurrentOpen(false);
             navigate(routes.login, { viewTransition: true });
         } catch (err) {
+            if (!isCurrent()) return;
             setDevicesError(errorMessage(err));
             setLogoutCurrentOpen(false);
         } finally {
@@ -324,15 +342,19 @@ export function AccountContent({ host }: { host: PageHost }) {
         setDevicesActionMsg("");
         try {
             await api("/api/auth/devices/revoke-others", { method: "POST" });
+            if (!isCurrent()) return;
             setDevicesActionMsg("已退出所有其他设备");
             setRevokeOthersOpen(false);
             await loadDevices();
         } catch (err) {
+            if (!isCurrent()) return;
             setDevicesError(errorMessage(err));
             setRevokeOthersOpen(false);
         } finally {
-            setRevokeOthersPending(false);
-            setDevicesLoading(false);
+            if (isCurrent()) {
+                setRevokeOthersPending(false);
+                setDevicesLoading(false);
+            }
         }
     };
 
@@ -591,7 +613,7 @@ export function AccountContent({ host }: { host: PageHost }) {
             </SettingsShell>
 
             <Dialog
-                open={passwordDialogOpen}
+                open={host.active && passwordDialogOpen}
                 onOpenChange={handlePasswordDialogOpenChange}
             >
                 <DialogPortal>
@@ -716,7 +738,7 @@ export function AccountContent({ host }: { host: PageHost }) {
             </Dialog>
 
             <SessionConfirmDialog
-                open={revokeDeviceId !== null}
+                open={host.active && revokeDeviceId !== null}
                 pending={revokeDevicePending}
                 title="退出该设备"
                 description="确定要退出该设备吗？该设备需要重新登录。"
@@ -725,7 +747,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                 onConfirm={handleConfirmRevokeDevice}
             />
             <SessionConfirmDialog
-                open={logoutCurrentOpen}
+                open={host.active && logoutCurrentOpen}
                 pending={logoutCurrentPending}
                 title="退出当前设备"
                 description="确定要退出当前设备吗？退出后需要重新登录。"
@@ -734,7 +756,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                 onConfirm={handleConfirmLogoutCurrent}
             />
             <SessionConfirmDialog
-                open={revokeOthersOpen}
+                open={host.active && revokeOthersOpen}
                 pending={revokeOthersPending}
                 title="退出其他所有设备"
                 description="确定要退出除当前设备外的所有其他设备吗？"

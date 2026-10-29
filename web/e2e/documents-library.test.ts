@@ -65,7 +65,13 @@ Deno.test("production documents library workspace contracts", async (t) => {
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
-        await target.locator("main").waitFor({ state: "visible" });
+        await target.locator(
+            path === "/register"
+                ? "main:has(#auth-username)"
+                : path === "/trash"
+                ? ".trash-page"
+                : "main.home",
+        ).waitFor({ state: "visible" });
     }
 
     async function request<T>(
@@ -171,7 +177,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
     await page.locator("#auth-password").fill(password);
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor({ state: "visible" });
+    await page.locator("main.home").waitFor({ state: "visible" });
     await request("/api/preferences", "PATCH", { theme: "system" });
     await visit("/");
 

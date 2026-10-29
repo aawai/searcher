@@ -28,10 +28,23 @@ import {
     wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
-import { askConversationId, authPath, routes } from "./app/routes.ts";
+import {
+    askConversationId,
+    authPath,
+    routes,
+    settingsTab,
+} from "./app/routes.ts";
 import { DockProvider } from "./features/dock/DockProvider.tsx";
 import { WorkspaceDock } from "./features/dock/WorkspaceDock.tsx";
-import { NavigationGuardProvider } from "./app/navigation-guards.tsx";
+import {
+    DesktopCoordinator,
+    DesktopStage,
+} from "./features/windowing/DesktopCoordinator.tsx";
+import {
+    NavigationGuardProvider,
+    useDestructiveAction,
+} from "./app/navigation-guards.tsx";
+import { hasUnsyncedDocumentDrafts } from "./features/documents/local-drafts.ts";
 import type { AppOutletContext } from "./app/outlet-context.ts";
 import { useAiModels } from "./features/omnibox/useAiModels.ts";
 import {
@@ -108,6 +121,8 @@ function Layout() {
     const isHomePage = location.pathname === routes.home;
     const isAskPage = location.pathname === routes.ask ||
         askConversationId(location.pathname) !== null;
+    const isAuthPage = location.pathname === routes.login ||
+        location.pathname === routes.register;
     // The account page shares the settings shell, so it keeps the icon active.
     const isSettingsPage = location.pathname === routes.settings() ||
         location.pathname.startsWith(`${routes.settings()}/`) ||
@@ -123,6 +138,20 @@ function Layout() {
         connectionError,
         retryConnection,
     } = useAppState();
+    const hasDesktopCanvas = isHomePage || Boolean(
+        user && (
+            isAskPage || settingsTab(location.pathname) !== null ||
+            location.pathname === routes.account ||
+            location.pathname === routes.trash
+        ),
+    );
+    const hasVisibleDesktop = isHomePage || Boolean(
+        user && (
+            settingsTab(location.pathname) !== null ||
+            location.pathname === routes.account ||
+            location.pathname === routes.trash
+        ),
+    );
     const online = useOnline();
     const serviceWorker = useServiceWorkerUpdate();
     // Coming back online re-checks the session the offline start could not.
@@ -133,13 +162,12 @@ function Layout() {
         }
         wasOnline.current = online;
     }, [online, connectionError, retryConnection]);
-    // Re-read when the user moves between sections, e.g. after configuring a model.
-    const aiModels = useAiModels(
-        Boolean(user) && location.pathname !== routes.login &&
-            location.pathname !== routes.register,
-        location.pathname.split("/")[1],
-    );
+    // Authentication pages hide the retained desktop without clearing its models.
+    const modelSection = useRef(location.pathname.split("/")[1]);
+    if (!isAuthPage) modelSection.current = location.pathname.split("/")[1];
+    const aiModels = useAiModels(Boolean(user), modelSection.current);
     const outletContext: AppOutletContext = { aiModels };
+    const requestDestructiveAction = useDestructiveAction();
     const [error, setError] = useState("");
     const [logoutSession, setLogoutSession] = useState<
         typeof authSession | null
@@ -157,14 +185,39 @@ function Layout() {
         if (force && logoutSession !== session) return;
         setError("");
         setLogoutBusy(true);
-        try {
-            const done = await logout({ force });
-            if (session.isCurrent()) setLogoutSession(done ? null : session);
-        } catch (error) {
-            if (session.isCurrent()) setError(String(error));
-        } finally {
-            if (session.isCurrent()) setLogoutBusy(false);
+        if (!force && session.userId) {
+            try {
+                const hasDrafts = await hasUnsyncedDocumentDrafts(
+                    session.userId,
+                    session.isCurrent,
+                );
+                if (!session.isCurrent()) return;
+                if (hasDrafts) {
+                    setLogoutSession(session);
+                    setLogoutBusy(false);
+                    return;
+                }
+            } catch {
+                if (session.isCurrent()) {
+                    setError(
+                        "未能检查本地笔记草稿，尚未退出登录；请重试退出。",
+                    );
+                    setLogoutBusy(false);
+                }
+                return;
+            }
         }
+        setLogoutSession(null);
+        setLogoutBusy(false);
+        requestDestructiveAction(() => {
+            if (!session.isCurrent()) return;
+            setLogoutBusy(true);
+            void logout({ force: true }).catch((error) => {
+                if (session.isCurrent()) setError(String(error));
+            }).finally(() => {
+                if (session.isCurrent()) setLogoutBusy(false);
+            });
+        });
     }
     const imageSource = appearance.wallpaper.startsWith("data:image/") ||
         ["uploaded", "remote"].includes(
@@ -191,275 +244,301 @@ function Layout() {
     }，下一个：${themeNames[nextTheme]}`;
 
     return (
-        <div
-            className="app-shell"
-            data-home={isHomePage ? "true" : undefined}
-            data-wallpaper-image={isHomePage && imageSource
-                ? "true"
-                : undefined}
-        >
-            {isHomePage && (
-                <WallpaperSurface
-                    source={appearance.wallpaper}
-                    presentation={presentation}
-                    testId="home-wallpaper-surface"
-                />
-            )}
-            <header className="topbar">
-                <Link
-                    className="wordmark-small"
-                    to={routes.home}
-                    viewTransition
-                    aria-label="Searcher 首页"
-                >
-                    s.
-                </Link>
-                <nav className="top-actions" aria-label="账户与设置">
-                    {
-                        /* Home keeps only the theme and identity; AI and settings
-                        are reached from the search box commands and the user menu. */
-                    }
-                    {!isHomePage && aiModels.length > 0 && (
-                        <Link
-                            to={routes.ask}
-                            viewTransition
-                            className={isAskPage
-                                ? "topbar-link topbar-link--active"
-                                : "topbar-link"}
-                            aria-label="AI 问答"
-                            title="AI 问答"
-                        >
-                            <Sparkles size="1em" className="icon-lg" />
-                        </Link>
-                    )}
-                    <button
-                        type="button"
-                        onClick={() => void setAppearance({ theme: nextTheme })}
-                        aria-label={themeLabel}
-                        title={themeLabel}
+        <DesktopCoordinator aiModels={aiModels}>
+            <div
+                className="app-shell"
+                data-home={hasVisibleDesktop ? "true" : undefined}
+                data-ask={user && isAskPage ? "true" : undefined}
+                data-wallpaper-image={hasVisibleDesktop && imageSource
+                    ? "true"
+                    : undefined}
+            >
+                {hasDesktopCanvas && (
+                    <WallpaperSurface
+                        source={appearance.wallpaper}
+                        presentation={presentation}
+                        testId="home-wallpaper-surface"
+                    />
+                )}
+                <header className="topbar">
+                    <Link
+                        className="wordmark-small"
+                        to={routes.home}
+                        viewTransition
+                        aria-label="Searcher 首页"
                     >
-                        {appearance.theme === "dark"
-                            ? <Sun size="1em" className="icon-lg" />
-                            : appearance.theme === "light"
-                            ? <Moon size="1em" className="icon-lg" />
-                            : <SunMoon size="1em" className="icon-lg" />}
-                    </button>
-                    {!isHomePage && (
-                        <Link
-                            to={routes.settings()}
-                            viewTransition
-                            className={isSettingsPage
-                                ? "topbar-link topbar-link--active"
-                                : "topbar-link"}
-                            aria-label="设置"
-                            title="设置"
-                        >
-                            <Settings size="1em" className="icon-lg" />
-                        </Link>
-                    )}
-                    <span className="sync-status" role="status">
-                        {syncFailed && (
+                        s.
+                    </Link>
+                    <nav className="top-actions" aria-label="账户与设置">
+                        {
+                            /* Home keeps only the theme and identity; AI and settings
+                        are reached from the search box commands and the user menu. */
+                        }
+                        {!isHomePage && !isAuthPage && aiModels.length > 0 && (
                             <Link
-                                to={routes.settings("data")}
+                                to={routes.ask}
                                 viewTransition
-                                className="sync-failed-badge"
-                                aria-label="偏好设置同步失败"
+                                className={isAskPage
+                                    ? "topbar-link topbar-link--active"
+                                    : "topbar-link"}
+                                aria-label="AI 问答"
+                                title="AI 问答"
                             >
-                                <AlertTriangle
-                                    size="1em"
-                                    className="icon-md"
-                                    aria-hidden="true"
-                                />
-                                <span>同步失败</span>
+                                <Sparkles size="1em" className="icon-lg" />
                             </Link>
                         )}
-                    </span>
-                    {user
-                        ? (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger
-                                    className="user-avatar-trigger"
-                                    aria-label={`用户菜单：${user.displayName}`}
-                                    title={user.displayName}
+                        <button
+                            type="button"
+                            onClick={() =>
+                                void setAppearance({ theme: nextTheme })}
+                            aria-label={themeLabel}
+                            title={themeLabel}
+                        >
+                            {appearance.theme === "dark"
+                                ? <Sun size="1em" className="icon-lg" />
+                                : appearance.theme === "light"
+                                ? <Moon size="1em" className="icon-lg" />
+                                : <SunMoon size="1em" className="icon-lg" />}
+                        </button>
+                        {(!isHomePage || !user) && (
+                            <Link
+                                to={routes.settings()}
+                                viewTransition
+                                className={isSettingsPage
+                                    ? "topbar-link topbar-link--active"
+                                    : "topbar-link"}
+                                aria-label="设置"
+                                title="设置"
+                            >
+                                <Settings size="1em" className="icon-lg" />
+                            </Link>
+                        )}
+                        <span className="sync-status" role="status">
+                            {syncFailed && (
+                                <Link
+                                    to={routes.settings("data")}
+                                    viewTransition
+                                    className="sync-failed-badge"
+                                    aria-label="偏好设置同步失败"
                                 >
-                                    <span className="user-avatar-badge">
-                                        {(user.displayName || user.username)
-                                            .slice(0, 1)}
-                                    </span>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent sideOffset={8}>
-                                    <div className="user-menu-identity">
-                                        <span>{user.displayName}</span>
-                                        <span>@{user.username}</span>
-                                    </div>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            navigate(routes.account, {
-                                                viewTransition: true,
-                                            })}
+                                    <AlertTriangle
+                                        size="1em"
+                                        className="icon-md"
+                                        aria-hidden="true"
+                                    />
+                                    <span>同步失败</span>
+                                </Link>
+                            )}
+                        </span>
+                        {user
+                            ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger
+                                        className="user-avatar-trigger"
+                                        aria-label={`用户菜单：${user.displayName}`}
+                                        title={user.displayName}
                                     >
-                                        <UserRound
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                        <span>账户与安全</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            navigate(routes.settings(), {
-                                                viewTransition: true,
-                                            })}
-                                    >
-                                        <Settings
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                        <span>设置</span>
-                                    </DropdownMenuItem>
-                                    {user.role === "admin" && (
+                                        <span className="user-avatar-badge">
+                                            {(user.displayName || user.username)
+                                                .slice(0, 1)}
+                                        </span>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent sideOffset={8}>
+                                        <div className="user-menu-identity">
+                                            <span>{user.displayName}</span>
+                                            <span>@{user.username}</span>
+                                        </div>
+                                        <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             onClick={() =>
-                                                navigate(routes.admin(), {
+                                                navigate(routes.account, {
                                                     viewTransition: true,
                                                 })}
                                         >
-                                            <Shield
+                                            <UserRound
                                                 size="1em"
                                                 className="icon-md"
                                             />
-                                            <span>管理后台</span>
+                                            <span>账户与安全</span>
                                         </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            navigate(routes.trash, {
-                                                viewTransition: true,
-                                            })}
-                                    >
-                                        <Trash2
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                        <span>回收站</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        variant="destructive"
-                                        aria-label="退出登录"
-                                        disabled={logoutBusy}
-                                        onClick={() => void requestLogout()}
-                                    >
-                                        <LogOut
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                        <span>退出登录</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )
-                        : (location.pathname !== routes.login &&
-                            location.pathname !== routes.register) && (
-                            <Link
-                                to={authPath("login", location)}
-                                viewTransition
-                                className="user-link"
-                                aria-label="登录"
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                navigate(routes.settings(), {
+                                                    viewTransition: true,
+                                                })}
+                                        >
+                                            <Settings
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                            <span>设置</span>
+                                        </DropdownMenuItem>
+                                        {user.role === "admin" && (
+                                            <DropdownMenuItem
+                                                onClick={() =>
+                                                    navigate(routes.admin(), {
+                                                        viewTransition: true,
+                                                    })}
+                                            >
+                                                <Shield
+                                                    size="1em"
+                                                    className="icon-md"
+                                                />
+                                                <span>管理后台</span>
+                                            </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                navigate(routes.trash, {
+                                                    viewTransition: true,
+                                                })}
+                                        >
+                                            <Trash2
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                            <span>回收站</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            variant="destructive"
+                                            aria-label="退出登录"
+                                            disabled={logoutBusy}
+                                            onClick={() => void requestLogout()}
+                                        >
+                                            <LogOut
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                            <span>退出登录</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )
+                            : (location.pathname !== routes.login &&
+                                location.pathname !== routes.register) && (
+                                <Link
+                                    to={authPath("login", location)}
+                                    viewTransition
+                                    className="user-link"
+                                    aria-label="登录"
+                                >
+                                    <LogIn size="1em" className="icon-lg" />
+                                    <span>登录</span>
+                                </Link>
+                            )}
+                    </nav>
+                </header>
+                {(!online || connectionError || syncFailed) && (
+                    <aside
+                        className="connection-banner"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <span>
+                            {!online
+                                ? "当前离线"
+                                : connectionError
+                                ? "网络或服务暂不可用"
+                                : "偏好设置同步失败"}
+                        </span>
+                        {online && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => void retryConnection()}
                             >
-                                <LogIn size="1em" className="icon-lg" />
-                                <span>登录</span>
-                            </Link>
+                                重试
+                            </Button>
                         )}
-                </nav>
-            </header>
-            {(!online || connectionError || syncFailed) && (
-                <aside
-                    className="connection-banner"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <span>
-                        {!online
-                            ? "当前离线"
-                            : connectionError
-                            ? "网络或服务暂不可用"
-                            : "偏好设置同步失败"}
-                    </span>
-                    {online && (
+                    </aside>
+                )}
+                {serviceWorker.updateReady && (
+                    <aside
+                        className="connection-banner"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <span>新版本已就绪</span>
                         <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => void retryConnection()}
+                            onClick={serviceWorker.reload}
                         >
-                            重试
+                            刷新
                         </Button>
-                    )}
-                </aside>
-            )}
-            {serviceWorker.updateReady && (
-                <aside
-                    className="connection-banner"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <span>新版本已就绪</span>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={serviceWorker.reload}
-                    >
-                        刷新
-                    </Button>
-                </aside>
-            )}
-            {error && <p role="alert" className="error">{error}</p>}
-            <Dialog
-                open={logoutSession?.isCurrent() ?? false}
-                onOpenChange={(open) => {
-                    if (!open && !logoutBusy) setLogoutSession(null);
-                }}
-            >
-                <DialogContent aria-label="退出登录确认">
-                    <DialogTitle>有未同步的笔记草稿</DialogTitle>
-                    <DialogDescription>
-                        退出后草稿仍保留在此浏览器，重新登录可继续同步。
-                    </DialogDescription>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            disabled={logoutBusy}
-                            onClick={() => setLogoutSession(null)}
-                        >
-                            先去同步
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            disabled={logoutBusy}
-                            onClick={() => void requestLogout(true)}
-                        >
-                            仍要退出
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-            {!ready
-                ? <LoadingState className="page">正在加载…</LoadingState>
-                : (
-                    <>
-                        <RouteErrorBoundary locationKey={location.pathname}>
-                            <Suspense fallback={<RouteLoadingFallback />}>
-                                <Outlet context={outletContext} />
-                            </Suspense>
-                        </RouteErrorBoundary>
-                        <WorkspaceDock aiAvailable={aiModels.length > 0} />
-                    </>
+                    </aside>
                 )}
-        </div>
+                {error && <p role="alert" className="error">{error}</p>}
+                <Dialog
+                    open={logoutSession?.isCurrent() ?? false}
+                    onOpenChange={(open) => {
+                        if (!open && !logoutBusy) setLogoutSession(null);
+                    }}
+                >
+                    <DialogContent aria-label="退出登录确认">
+                        <DialogTitle>有未同步的笔记草稿</DialogTitle>
+                        <DialogDescription>
+                            退出后草稿仍保留在此浏览器，重新登录可继续同步。
+                        </DialogDescription>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                disabled={logoutBusy}
+                                onClick={() => setLogoutSession(null)}
+                            >
+                                先去同步
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                disabled={logoutBusy}
+                                onClick={() => void requestLogout(true)}
+                            >
+                                仍要退出
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+                {!ready
+                    ? <LoadingState className="page">正在加载…</LoadingState>
+                    : (
+                        <>
+                            <DesktopStage />
+                            <RouteErrorBoundary locationKey={location.pathname}>
+                                <Suspense fallback={<RouteLoadingFallback />}>
+                                    <Outlet context={outletContext} />
+                                </Suspense>
+                            </RouteErrorBoundary>
+                            <WorkspaceDock aiAvailable={aiModels.length > 0} />
+                        </>
+                    )}
+            </div>
+        </DesktopCoordinator>
     );
+}
+
+function HomeRoute() {
+    const { user } = useAppState();
+    return user ? null : <SearchHome />;
+}
+
+function SettingsRoute() {
+    const { user } = useAppState();
+    const { pathname } = useLocation();
+    return user && settingsTab(pathname) !== null ? null : <SettingsPage />;
+}
+
+function AccountRoute() {
+    const { user } = useAppState();
+    return user ? null : <AccountPage />;
+}
+
+function TrashRoute() {
+    const { user } = useAppState();
+    return user ? null : <TrashPage />;
 }
 export function App() {
     const [router] = useState(() =>
@@ -478,7 +557,7 @@ export function App() {
                 // Page links need the data router's navigation options, including
                 // viewTransition; descendant <Routes> would discard them.
                 children: [
-                    { index: true, element: <SearchHome /> },
+                    { index: true, element: <HomeRoute /> },
                     { path: routes.designLab, element: <DesignLab /> },
                     { path: "/design-lab/motion", element: <MotionLab /> },
                     { path: "/design-lab/windows", element: <WindowLab /> },
@@ -494,14 +573,14 @@ export function App() {
                     },
                     {
                         path: `${routes.settings()}/*`,
-                        element: <SettingsPage />,
+                        element: <SettingsRoute />,
                     },
                     // One route for /ask and /ask/:id keeps the page mounted when
                     // a started conversation gets its own URL.
                     { path: `${routes.ask}/:id?`, element: <AskPage /> },
-                    { path: routes.account, element: <AccountPage /> },
+                    { path: routes.account, element: <AccountRoute /> },
                     { path: `${routes.admin()}/*`, element: <AdminPage /> },
-                    { path: routes.trash, element: <TrashPage /> },
+                    { path: routes.trash, element: <TrashRoute /> },
                     { path: routes.share, element: <SharePage /> },
                     {
                         path: "/design-lab/omnibox",

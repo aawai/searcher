@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import {
     NavigationGuardProvider,
+    useDestructiveAction,
     useNavigationGuard,
 } from "./navigation-guards.tsx";
 
@@ -26,10 +27,14 @@ Deno.test("navigation guards preserve the original destination until every owner
         .IS_REACT_ACT_ENVIRONMENT;
     (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
+    let additionalGuard = false;
     function Owner({ name }: { name: string }) {
         const [content, setContent] = useState("draft");
         const blocked = useNavigationGuard({
-            blocks: ({ nextLocation }) => nextLocation.pathname === "/ask/2",
+            blocks: ({ nextLocation }) =>
+                (nextLocation.pathname === "/ask/2" ||
+                    nextLocation.pathname === "/login") &&
+                (name !== "third" || additionalGuard),
             warnOnUnload: () => false,
             onCommit: () => setContent("discarded"),
         });
@@ -58,12 +63,28 @@ Deno.test("navigation guards preserve the original destination until every owner
         );
     }
 
+    function DestructiveAction() {
+        const request = useDestructiveAction();
+        const [count, setCount] = useState(0);
+        return (
+            <button
+                id="destructive"
+                type="button"
+                onClick={() => request(() => setCount((value) => value + 1))}
+            >
+                {count}
+            </button>
+        );
+    }
+
     const router = createMemoryRouter([{
         path: "*",
         element: (
             <NavigationGuardProvider>
                 <Owner name="first" />
                 <Owner name="second" />
+                <Owner name="third" />
+                <DestructiveAction />
             </NavigationGuardProvider>
         ),
     }], { initialEntries: ["/?view=notes"] });
@@ -164,6 +185,40 @@ Deno.test("navigation guards preserve the original destination until every owner
         await act(async () => {
             await router.navigate(1);
         });
+        assertEquals(router.state.location.pathname, "/trash");
+
+        // An owner becoming dangerous after the first approval cannot inherit it.
+        await act(async () => {
+            await router.navigate(-1);
+        });
+        await click("first-approve");
+        additionalGuard = true;
+        await click("second-approve");
+        assertEquals(router.state.location.pathname, "/trash");
+        assertEquals(
+            win.document.getElementById("third-content")?.textContent,
+            "draft",
+        );
+
+        additionalGuard = false;
+        await click("destructive");
+        await click("first-approve");
+        await click("second-cancel");
+        assertEquals(
+            win.document.getElementById("destructive")?.textContent,
+            "0",
+        );
+        await click("destructive");
+        await act(async () => {
+            await router.navigate("/competing");
+        });
+        assertEquals(router.state.location.pathname, "/trash");
+        await click("first-approve");
+        await click("second-approve");
+        assertEquals(
+            win.document.getElementById("destructive")?.textContent,
+            "1",
+        );
         assertEquals(router.state.location.pathname, "/trash");
     } finally {
         await act(() => root.unmount());

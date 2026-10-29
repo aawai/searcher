@@ -217,6 +217,13 @@
     --dock-inset-bottom: 0px;
     --dock-inset-left: 0px;
     --dock-inset-right: 0px;
+    /* Ordinary desktop window dimensions and minimum usable frame. */
+    --window-settings-width: 840px;
+    --window-settings-height: 680px;
+    --window-trash-width: 880px;
+    --window-trash-height: 640px;
+    --window-min-width: 320px;
+    --window-min-height: 240px;
     /* Motion: answers user actions only. */
     --motion-fast: 120ms;
     --motion-base: 200ms;

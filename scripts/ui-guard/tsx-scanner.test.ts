@@ -514,6 +514,21 @@ Deno.test("tsx-scanner - runtime geometry exceptions stay exact after extraction
             [],
         ],
         [
+            "web/src/features/windowing/WindowFrame.tsx",
+            "<div style={rect ? {left: rect.x, top: rect.y, width: rect.width, height: rect.height} : undefined} />;",
+            [],
+        ],
+        [
+            "web/src/features/windowing/WindowFrame.tsx",
+            "<div style={{left: 42, top: rect.x, width: rect.height, height: 640}} />;",
+            [
+                "inline-visual-style",
+                "inline-visual-style",
+                "inline-visual-style",
+                "inline-visual-style",
+            ],
+        ],
+        [
             "web/src/app/Unrelated.tsx",
             "<div style={{left: rect.x, top: rect.y, width: rect.width, height: rect.height}} />;",
             [

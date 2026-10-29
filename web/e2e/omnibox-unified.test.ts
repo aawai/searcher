@@ -596,11 +596,32 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
                             message: "未登录",
                         }),
                     }));
+                const denied = page.waitForResponse((response) =>
+                    PERSONAL.test(response.url()) && response.status() === 401
+                );
                 await search.fill("灵感");
+                await denied;
+                await page.locator(".dock-container").waitFor({
+                    state: "detached",
+                });
                 await page.getByRole("option", { name: /灵感网页/ }).waitFor();
+                await page.getByRole("group", { name: "网页" }).waitFor({
+                    state: "visible",
+                });
                 await page.waitForFunction(() =>
                     !document.body.textContent?.includes("问 AI：")
                 );
+                assertEquals(await search.inputValue(), "灵感");
+                assertEquals(
+                    await search.evaluate((element) =>
+                        document.activeElement === element
+                    ),
+                    true,
+                );
+                assertEquals(await groupNames(page), ["网页"]);
+                await search.fill("继续搜索");
+                await page.getByRole("option", { name: /灵感网页/ }).waitFor();
+                assertEquals(await search.inputValue(), "继续搜索");
                 assertEquals(await groupNames(page), ["网页"]);
                 await context.unroute(PERSONAL);
             },

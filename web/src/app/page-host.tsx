@@ -23,6 +23,8 @@ export interface PageHost {
     Link: ComponentType<LinkProps>;
     narrow: boolean;
     active: boolean;
+    /** Window content is a region within the desktop, not another page landmark. */
+    inWindow?: boolean;
 }
 
 /** Adapter for the existing standalone pages; future hosts provide their own value. */

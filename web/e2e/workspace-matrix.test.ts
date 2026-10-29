@@ -63,7 +63,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
-        await target.locator("main").waitFor({ state: "visible" });
+        await target.locator(
+            path === "/register" ? "main:has(#auth-username)" : "main.home",
+        ).waitFor({ state: "visible" });
     }
 
     async function request<T>(
@@ -90,7 +92,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     await page.locator("#auth-password").fill("Matrix-password-92!");
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor({ state: "visible" });
+    await page.locator("main.home").waitFor({ state: "visible" });
 
     // Seed test data: 1 group, 2 webapps, 1 note
     const workGroup = await request<{ id: string }>(

@@ -161,9 +161,17 @@ type AuthSession = {
     documentEvents: DocumentEventSubscriptions;
 };
 
+type SearchContinuation = {
+    query: string;
+    focused: boolean;
+    selectionStart: number | null;
+    selectionEnd: number | null;
+};
+
 type State = {
     user: UserDto | null;
     authSession: AuthSession;
+    searchContinuation: { current: SearchContinuation | null };
     ready: boolean;
     syncFailed: boolean;
     connectionError: boolean;
@@ -175,6 +183,7 @@ type State = {
     ) => Promise<void>;
     settleAppearanceSync: () => Promise<void>;
     login: (user: UserDto) => void;
+    updateProfile: (user: UserDto) => void;
     /** 登出：有未同步草稿时返回 false 并由调用方弹确认（V-003）。 */
     logout: (options?: { force?: boolean }) => Promise<boolean>;
 };
@@ -194,6 +203,7 @@ export function AppState({ children }: { children: ReactNode }) {
     const [syncFailed, setSyncFailed] = useState(false);
     const [authConnectionError, setAuthConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
+    const searchContinuation = useRef<SearchContinuation | null>(null);
     const storeRef = useRef<AppearanceOwnerStore<Appearance> | null>(null);
     const getOrCreateStore = useCallback((userId: string | null) => {
         if (
@@ -226,23 +236,27 @@ export function AppState({ children }: { children: ReactNode }) {
         sessionRef.current = session;
     }
     // Object identity is the auth epoch, renewed even when the same account logs in again.
-    const updateUser = useCallback((next: UserDto | null, renew = false) => {
-        if (userRef.current?.id !== next?.id) {
-            getOrCreateStore(next?.id ?? null);
-            setValue(initial);
-        }
-        if (renew || userRef.current?.id !== next?.id) {
-            sessionRef.current!.documentEvents.dispose();
-            const session: AuthSession = {
-                userId: next?.id ?? null,
-                isCurrent: () => sessionRef.current === session,
-                documentEvents: createDocumentEventSubscriptions(),
-            };
-            sessionRef.current = session;
-        }
-        userRef.current = next;
-        setUser(next);
-    }, [getOrCreateStore]);
+    const updateUser = useCallback(
+        (next: UserDto | null, renew = false, preserveSearch = false) => {
+            if (userRef.current?.id !== next?.id) {
+                getOrCreateStore(next?.id ?? null);
+                setValue(initial);
+            }
+            if (renew || userRef.current?.id !== next?.id) {
+                if (!preserveSearch) searchContinuation.current = null;
+                sessionRef.current!.documentEvents.dispose();
+                const session: AuthSession = {
+                    userId: next?.id ?? null,
+                    isCurrent: () => sessionRef.current === session,
+                    documentEvents: createDocumentEventSubscriptions(),
+                };
+                sessionRef.current = session;
+            }
+            userRef.current = next;
+            setUser(next);
+        },
+        [getOrCreateStore],
+    );
     useEffect(() => {
         void cleanupLegacyNoteDrafts().catch(() => undefined);
         return () => sessionRef.current!.documentEvents.dispose();
@@ -405,7 +419,7 @@ export function AppState({ children }: { children: ReactNode }) {
     useEffect(() => {
         const expired = () => {
             if (userRef.current) setValue(initial);
-            updateUser(null);
+            updateUser(null, false, true);
             setSyncFailed(false);
             setAuthConnectionError(false);
         };
@@ -551,6 +565,7 @@ export function AppState({ children }: { children: ReactNode }) {
             value={{
                 user,
                 authSession: sessionRef.current!,
+                searchContinuation,
                 ready,
                 syncFailed,
                 connectionError: authConnectionError,
@@ -563,6 +578,9 @@ export function AppState({ children }: { children: ReactNode }) {
                         sync.current.tail,
                     ]).then(() => {}),
                 login: (user) => updateUser(user, true),
+                updateProfile: (next) => {
+                    if (userRef.current?.id === next.id) updateUser(next);
+                },
                 logout,
             }}
         >

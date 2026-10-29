@@ -180,7 +180,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
 
                 const res = await page.goto(origin + "/");
                 assertEquals(res?.status(), 200);
-                await page.locator("main").waitFor({ state: "visible" });
+                await page.locator("main.home").waitFor({ state: "visible" });
 
                 assert(
                     !requestedJs.includes(editorVendorChunk),
@@ -225,7 +225,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 );
                 await page.locator('form button[type="submit"]').click();
                 await page.waitForURL(origin + "/");
-                await page.locator("main").waitFor({ state: "visible" });
+                await page.locator("main.home").waitFor({ state: "visible" });
 
                 // 2. Home and its workspace triggers must stay editor-cold.
                 await page.locator("#search-query").waitFor({

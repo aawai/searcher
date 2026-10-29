@@ -58,8 +58,7 @@ export function AppSessionProvider({
                         intent.nextLocation.pathname ||
                     intent.currentLocation.search !==
                         intent.nextLocation.search;
-            const appDirty = Boolean(options.sessionKey) &&
-                (session.isDirty || session.isSubmitting);
+            const appDirty = Boolean(options.sessionKey);
             return destroysContent &&
                 (appDirty || Boolean(isExternalDirty?.()));
         },
@@ -67,7 +66,7 @@ export function AppSessionProvider({
             (Boolean(options.sessionKey) && session.isDirty) ||
             Boolean(isExternalDirty?.()),
         onCommit: () => {
-            if (options.sessionKey && session.isDirty) onRouteCommitted?.();
+            if (options.sessionKey) onRouteCommitted?.();
         },
     });
     const reportedLocationKey = useRef<string | null>(null);
@@ -84,12 +83,12 @@ export function AppSessionProvider({
             !session.isSubmitting;
         const externalDirty = Boolean(isExternalDirty?.());
         const hasUnsaved = appDirty || externalDirty;
-        if (!hasUnsaved) {
-            if (reportedLocationKey.current !== null) {
-                reportedLocationKey.current = null;
-                onRouteBlocked(null);
-            }
+        if (session.isSubmitting && options.sessionKey) {
             blocker.reset();
+            return;
+        }
+        if (!hasUnsaved) {
+            blocker.proceed();
             return;
         }
         if (session.hasDialog) return;

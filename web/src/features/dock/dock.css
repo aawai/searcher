@@ -286,6 +286,34 @@
     color: var(--accent);
 }
 
+/* A solid square marks an open window; an outline marks a minimized one.
+   The active entry keeps its existing background and dot. */
+.dock-item[data-window-status]:not([data-active])::before {
+    content: "";
+    position: absolute;
+    top: var(--space-1);
+    right: var(--space-1);
+    width: var(--space-2);
+    height: var(--space-2);
+    border: var(--space-hairline) solid currentColor;
+    background: currentColor;
+}
+
+.dock-item[data-window-status="minimized"]:not([data-active])::before {
+    background: transparent;
+}
+
+.dock-item[data-window-status][data-active="true"]::before {
+    content: "";
+    position: absolute;
+    top: var(--space-1);
+    right: var(--space-1);
+    width: var(--space-2);
+    height: var(--space-2);
+    border: var(--space-hairline) solid currentColor;
+    transform: rotate(45deg);
+}
+
 .dock-item[data-active="true"]::after {
     content: "";
     position: absolute;
@@ -548,6 +576,18 @@
     max-height: 60vh;
     overflow-y: auto;
     padding: var(--space-1) 0;
+}
+
+.dock-window-row,
+.dock-window-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.dock-window-row {
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
 
 .dock-management-layout {

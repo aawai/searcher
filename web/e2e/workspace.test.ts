@@ -48,7 +48,9 @@ Deno.test("production workspace contracts", async (t) => {
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
-        await target.locator("main").waitFor();
+        await target.locator(
+            path === "/register" ? "main:has(#auth-username)" : "main.home",
+        ).waitFor();
     }
 
     // Register and set up user account
@@ -58,7 +60,7 @@ Deno.test("production workspace contracts", async (t) => {
     await page.locator("#auth-password").fill(password);
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor();
+    await page.locator("main.home").waitFor();
 
     await page.setViewportSize({ width: 1280, height: 800 });
     await visit("/");

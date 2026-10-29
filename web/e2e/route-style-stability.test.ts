@@ -207,7 +207,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             await openSeededAskConversation(page);
 
             // Record Ask 1440 metrics
-            const pageShellBox = await page.locator(".page-shell")
+            const pageShellBox = await page.locator(".ask-page-shell:visible")
                 .boundingBox();
             const sidebarBox = await page.locator(".ask-sidebar").boundingBox();
             const messagesInnerBox = await page.locator(
@@ -344,7 +344,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             await loginAndVisit(page, app.origin, "/ask", user);
             await openSeededAskConversation(page);
 
-            const pageShellBox = await page.locator(".page-shell")
+            const pageShellBox = await page.locator(".ask-page-shell:visible")
                 .boundingBox();
             const sidebarBox = await page.locator(".ask-sidebar").boundingBox();
             const messagesInnerBox = await page.locator(
@@ -676,10 +676,10 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
     );
 
     // =========================================================================
-    // Step 4: 768x1024 touch: the two-column settings shell keeps touch targets
+    // Step 4: 768x1024 touch: settings window navigation keeps touch targets
     // =========================================================================
     await t.step(
-        "768x1024 touch: settings navigation rows are touch targets",
+        "768x1024 touch: settings window navigation rows are touch targets",
         async () => {
             const context = await browser.newContext({
                 viewport: { width: 768, height: 1024 },
@@ -688,7 +688,17 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             });
             const page = await context.newPage();
             await loginAndVisit(page, app.origin, "/settings/appearance", user);
-            const items = page.locator(".settings-nav-item");
+            const settings = page.locator(".settings-layout:visible");
+            assertEquals(
+                await settings.getAttribute("data-host-narrow"),
+                "true",
+            );
+            await settings.getByRole("link", { name: "设置", exact: true })
+                .click();
+            await settings.locator(".settings-nav-item:visible").first()
+                .waitFor();
+            assertEquals(await settings.getAttribute("data-view"), "list");
+            const items = settings.locator(".settings-nav-item");
             await items.first().waitFor({ state: "visible" });
             for (let i = 0; i < await items.count(); i++) {
                 const box = await items.nth(i).boundingBox();

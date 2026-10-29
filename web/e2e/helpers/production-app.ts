@@ -224,7 +224,7 @@ export async function loginAndVisit(
     await page.locator("#auth-password").fill(credentials.password);
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor({ state: "visible" });
+    await page.locator("main.home").waitFor({ state: "visible" });
 
     if (path !== "/") {
         await page.goto(origin + path);

@@ -79,6 +79,7 @@ import { getLocal, setLocal } from "../lib/local.ts";
 import { routes } from "./routes.ts";
 import type { NavigationIntent } from "./navigation-guards.tsx";
 import { errorMessage, useAppState } from "./state.tsx";
+import { notifyTrashChange, subscribeTrashChanges } from "./trash-events.ts";
 
 import {
     type AppSessionNavigation,
@@ -764,6 +765,28 @@ export function DesktopHost(
     }, [user?.id, reloadApps]);
 
     useEffect(() => {
+        if (!user) return;
+        return subscribeTrashChanges((change) => {
+            if (
+                !authSession.isCurrent() || change.userId !== user.id ||
+                change.source !== "trash"
+            ) return;
+            if (change.itemId) {
+                setUndoQueue((records) =>
+                    records.filter((record) => {
+                        const sameDomain = change.domain === "webapps"
+                            ? record.kind === "app"
+                            : record.kind !== "app";
+                        return !sameDomain || record.item.id !== change.itemId;
+                    })
+                );
+            }
+            setReloadApps((count) => count + 1);
+            if (change.domain === "webapps") void dock.refreshApps();
+        });
+    }, [authSession, user?.id, dock.refreshApps]);
+
+    useEffect(() => {
         if (
             user && ownsCurrentUserData && loadedUserId === user.id &&
             appsStatus === "ready"
@@ -898,6 +921,11 @@ export function DesktopHost(
             ) return;
             setApps((items) => items.filter((item) => item.id !== app.id));
             void dock.refreshApps();
+            notifyTrashChange({
+                userId: ownerId,
+                domain: "webapps",
+                source: "desktop",
+            });
             if (undoQueueRef.current.length === 0 && undoPausedRef.current) {
                 undoPausedRef.current = false;
                 setUndoPaused(false);
@@ -1000,6 +1028,24 @@ export function DesktopHost(
                 } else {
                     if (result.restored) restoredNotes.push(result.restored);
                 }
+            }
+            if (restoredApps.length > 0) {
+                notifyTrashChange({
+                    userId: ownerId,
+                    domain: "webapps",
+                    source: "desktop",
+                });
+            }
+            if (
+                results.some((result) =>
+                    !("error" in result) && result.kind !== "app"
+                )
+            ) {
+                notifyTrashChange({
+                    userId: ownerId,
+                    domain: "documents",
+                    source: "desktop",
+                });
             }
             if (trashedCaptureIds.size > 0) {
                 setHomeNotes((items) =>
@@ -1178,6 +1224,11 @@ export function DesktopHost(
                 !componentMountedRef.current ||
                 currentUserIdRef.current !== ownerId
             ) return;
+            notifyTrashChange({
+                userId: ownerId,
+                domain: "documents",
+                source: "desktop",
+            });
             setHomeNotes((items) =>
                 items.filter((item) => item.id !== paper.id)
             );

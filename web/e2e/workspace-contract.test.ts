@@ -59,7 +59,9 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
-        await target.locator("main").waitFor();
+        await target.locator(
+            path === "/register" ? "main:has(#auth-username)" : "main.home",
+        ).waitFor();
     }
 
     // Register primary user
@@ -69,7 +71,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
     await page.locator("#auth-password").fill(password);
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor();
+    await page.locator("main.home").waitFor();
 
     await visit("/");
 
@@ -175,7 +177,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
             // Reload page to reflect seeded data
             await page.reload();
-            await page.locator("main").waitFor();
+            await page.locator("main.home").waitFor();
 
             // B. Documents Workspace: section count & search
             await openWorkspace();

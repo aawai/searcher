@@ -62,7 +62,7 @@ export function SettingsShell(
     );
 
     return (
-        <PageShell archetype="utility">
+        <PageShell as={host.inWindow ? "section" : "main"} archetype="utility">
             <div
                 className="settings-layout"
                 data-host-narrow={mobile ? "true" : undefined}

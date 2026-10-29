@@ -334,21 +334,23 @@ Deno.test("workspace dock: system navigation, nonmodal panels, and browser back/
         },
     );
     await t.step(
-        "settings and trash open their existing standalone routes",
+        "settings and trash keep the dock and desktop while opening windows",
         async () => {
             for (
-                const [label, path] of [
-                    ["设置", "/settings"],
-                    ["回收站", "/trash"],
+                const [label, path, id] of [
+                    ["设置", "/settings", "settings"],
+                    ["回收站", "/trash", "trash"],
                 ] as const
             ) {
                 await dockSystemButton(page, label).click();
                 await page.waitForURL(app.origin + path);
-                await dockNav(page).waitFor({ state: "detached" });
-                assertEquals(await dockNav(page).count(), 0);
+                const frame = page.locator(`[data-window-id="${id}"]`);
+                await frame.waitFor({ state: "visible" });
+                await dockNav(page).waitFor({ state: "visible" });
+                assertEquals(await page.locator("main.home").count(), 1);
                 await page.goBack();
                 await page.waitForURL(app.origin + "/");
-                await dockNav(page).waitFor({ state: "visible" });
+                await frame.waitFor({ state: "hidden" });
             }
         },
     );

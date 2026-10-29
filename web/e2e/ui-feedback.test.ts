@@ -63,7 +63,16 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
     async function visit(path: string, page: Page) {
         const response = await page.goto(origin + path);
         assertEquals(response?.status(), 200, path);
-        await page.locator("main").waitFor({ state: "visible" });
+        const selector = path === "/register"
+            ? "main:has(#auth-username)"
+            : path === "/trash"
+            ? ".trash-page"
+            : path === "/account" || path.startsWith("/settings")
+            ? ".settings-layout"
+            : path === "/ask"
+            ? "main.ask-page-shell"
+            : "main.home";
+        await page.locator(selector).waitFor({ state: "visible" });
     }
 
     // Register primary user
@@ -74,7 +83,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
     await regPage.locator("#auth-password").fill(password);
     await regPage.locator('form button[type="submit"]').click();
     await regPage.waitForURL(origin + "/");
-    await regPage.locator("main").waitFor({ state: "visible" });
+    await regPage.locator("main.home").waitFor({ state: "visible" });
 
     // Retrieve registered user
     const dbUser = await store.run((db) => db.select().from(users).all());
@@ -1426,7 +1435,9 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await emptyRegPage.locator("#auth-password").fill(emptyPassword);
             await emptyRegPage.locator('form button[type="submit"]').click();
             await emptyRegPage.waitForURL(origin + "/");
-            await emptyRegPage.locator("main").waitFor({ state: "visible" });
+            await emptyRegPage.locator("main.home").waitFor({
+                state: "visible",
+            });
 
             // 1. Documents: initial loading gate -> ensure empty state does NOT flicker during load
             const { page: documentsTestPage, context: documentsContext } =
