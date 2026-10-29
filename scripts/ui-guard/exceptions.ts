@@ -193,6 +193,12 @@ export function isRuntimeLayoutGeometryException(
     if (path === "web/src/design-lab/HomeGridLab.tsx") {
         if (prop === "top" && normValue === "blockTop") return true;
     }
+    if (path === "web/src/design-lab/WindowLab.tsx") {
+        return (prop === "left" && normValue === "rect.x") ||
+            (prop === "top" && normValue === "rect.y") ||
+            (prop === "width" && normValue === "rect.width") ||
+            (prop === "height" && normValue === "rect.height");
+    }
     if (path === "web/src/features/app-library/LibraryPopup.tsx") {
         if (prop === "top" && normValue === "top") return true;
         if (
