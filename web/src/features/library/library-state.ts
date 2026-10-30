@@ -27,7 +27,7 @@ export const initialLibraryState: LibraryState = {
     documents: initialDocumentsWorkspaceState,
 };
 function root(documents: DocumentsWorkspaceState): DocumentsWorkspaceState {
-    return { ...documents, route: { view: "documents/root" }, stack: [] };
+    return { ...documents, route: { view: "documents/root" } };
 }
 export function libraryReducer(
     state: LibraryState,
@@ -53,7 +53,6 @@ export function libraryReducer(
                         ? {
                             ...state.documents,
                             route: action.route,
-                            stack: [{ view: "documents/root" }],
                         }
                         : root(state.documents),
             };
@@ -77,7 +76,8 @@ export function shouldConfirmLibraryAction(
     action: LibraryAction,
 ): boolean {
     return dirty && !(action.type === "documents" &&
-        (action.action.type === "query" || action.action.type === "scope"));
+        (action.action.type === "query" || action.action.type === "scope" ||
+            action.action.type === "created"));
 }
 /** Returning focus never targets a detached trigger. */
 export function libraryFocusTarget<T extends { isConnected: boolean }>(

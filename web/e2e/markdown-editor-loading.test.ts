@@ -8,7 +8,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
-import { openNotes, workspaceNotesTrigger } from "./helpers/library.ts";
+import { openNoteRows, workspaceNotesTrigger } from "./helpers/library.ts";
 
 interface ManifestChunk {
     file: string;
@@ -256,7 +256,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                     });
                     if (!response.ok) throw new Error(await response.text());
                 });
-                await openNotes(page);
+                await openNoteRows(page);
                 const documentItem = page.locator(
                     '[data-library="notes"] [data-document-id] h4 button',
                 ).filter({ hasText: "加载隔离笔记" }).first();
@@ -284,6 +284,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 const editorLoads = requestedJs.filter((file) =>
                     file === editorVendorChunk || file === sharedRuntimeChunk
                 );
+                await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
                 await page.getByRole("button", {
                     name: "Markdown 源码",
                     exact: true,

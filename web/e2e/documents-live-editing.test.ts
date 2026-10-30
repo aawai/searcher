@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/library.ts";
+import { openNoteRows } from "./helpers/library.ts";
 
 Deno.test("Documents rich editing: IME, shortcuts and silent cloud replacement", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -31,7 +31,7 @@ Deno.test("Documents rich editing: IME, shortcuts and silent cloud replacement",
         return (await response.json()).data.id as string;
     });
     await page.reload();
-    await openNotes(page);
+    await openNoteRows(page);
     await page.locator(`[data-document-id="${id}"] h4 button`).click();
     const live = page.locator(".document-editor-container .ProseMirror");
     await live.waitFor();

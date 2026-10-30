@@ -10,7 +10,7 @@ import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import { documents, users, webapps } from "../../src/db/schema.ts";
 import { aiConversations, aiProviders } from "../../src/db/ai-schema.ts";
-import { libraryWindow, openNotes } from "./helpers/library.ts";
+import { libraryWindow, openNoteRows } from "./helpers/library.ts";
 
 // Focused regression test suite for UI Feedback, Confirmation Dialogs, UndoToasts, and Loading/Error/Empty States
 // Run with: NODE_ENV=test deno test -A web/e2e/ui-feedback.test.ts
@@ -1472,7 +1472,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             );
 
             await visit("/", documentsTestPage);
-            await openNotes(documentsTestPage);
+            await openNoteRows(documentsTestPage);
 
             const documentsAside = libraryWindow(documentsTestPage, "notes");
             await documentsAside.waitFor({ state: "visible" });
@@ -1482,7 +1482,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await documentsLoading.waitFor({ state: "visible" });
 
             const documentsEmpty = documentsAside.locator(
-                ".empty-state:has-text('还没有笔记')",
+                ".empty-state:has-text('暂无最近笔记')",
             );
             assertEquals(await documentsEmpty.isVisible(), false);
 
@@ -1511,7 +1511,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
 
             // Reload page with 500 error route active
             await documentsTestPage.reload();
-            await openNotes(documentsTestPage);
+            await openNoteRows(documentsTestPage);
             const documentsErrorBanner = documentsAside.locator(
                 ".status-banner:has-text('笔记服务发生内部异常')",
             );

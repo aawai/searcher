@@ -86,6 +86,11 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
         await getWorkspace().waitFor({ state: "visible" });
     }
 
+    // Document rows and list states live in the flat 最近 list; the sidebar opens as a tree.
+    async function showRecent() {
+        await getWorkspace().getByRole("button", { name: "最近", exact: true }).click();
+    }
+
     // 1. Heading hierarchy contract: the window is a landmark named by its title
     // bar (not a heading); sections inside it are h3 and no level is skipped.
     await t.step(
@@ -123,14 +128,14 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             );
 
             const documentsSubH3 = documentsPanel.getByRole("heading", {
-                name: "全部笔记",
+                name: "笔记本",
                 level: 3,
             });
             await documentsSubH3.waitFor({ state: "visible" });
-            assertEquals(await documentsSubH3.textContent(), "全部笔记");
+            assertEquals(await documentsSubH3.textContent(), "笔记本");
 
             const documentsRegion = documentsPanel.getByRole("region", {
-                name: "全部笔记",
+                name: "笔记本",
             });
             await documentsRegion.waitFor({ state: "visible" });
 
@@ -206,21 +211,14 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await openWorkspace();
             const documentsPanel = getWorkspace();
             await documentsPanel.waitFor({ state: "visible" });
+            await showRecent();
             const documentsRegion = documentsPanel.getByRole("region", {
-                name: "全部笔记",
+                name: "最近笔记",
             });
             await documentsRegion.waitFor({ state: "visible" });
-
-            // Section count shows the two seeded documents
-            const documentsCount = documentsRegion.locator(
-                ".documents-list-count",
-            );
-            await documentsCount.waitFor({ state: "visible" });
             await page.waitForFunction(
-                (element) => element?.textContent === "2 条",
-                await documentsCount.elementHandle(),
+                () => document.querySelectorAll('[data-library] [data-document-id]').length === 2,
             );
-            assertEquals(await documentsCount.textContent(), "2 条");
 
             // Perform search in Documents
             const documentsSearchInput = documentsPanel.locator(
@@ -228,34 +226,28 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             );
             await documentsSearchInput.fill("Beta");
 
-            // "全部笔记" region transforms into "搜索结果"
+            // "最近笔记" region transforms into "搜索结果"
             const documentsSearchRegion = documentsPanel.getByRole("region", {
                 name: "搜索结果",
             });
             await documentsSearchRegion.waitFor({ state: "visible" });
             assertEquals(
-                await documentsPanel.getByRole("region", { name: "全部笔记" })
+                await documentsPanel.getByRole("region", { name: "最近笔记" })
                     .count(),
                 0,
             );
-
-            // Section count shows 1
-            const documentsSearchCount = documentsSearchRegion.locator(
-                ".documents-list-count",
-            );
-            await documentsSearchCount.waitFor({ state: "visible" });
-            assertEquals(await documentsSearchCount.textContent(), "1 条");
+            assertEquals(await documentsSearchRegion.locator("[data-document-id]").count(), 1);
             assertStringIncludes(
                 await documentsSearchRegion.textContent() ?? "",
                 "Beta Document",
             );
 
-            // Clear search restores the full list
+            // Clear search restores the previous mode: the full 最近 list
             await documentsSearchInput.fill("");
             await documentsRegion.waitFor({ state: "visible" });
-            await documentsRegion.locator(".documents-list-count").filter({
-                hasText: /^2 条$/,
-            }).waitFor({ state: "visible" });
+            await page.waitForFunction(
+                () => document.querySelectorAll('[data-library] [data-document-id]').length === 2,
+            );
         },
     );
 
@@ -297,7 +289,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             assertEquals(await searchInput.inputValue(), "");
 
             const region = documentsPanel.getByRole("region", {
-                name: "全部笔记",
+                name: "最近笔记",
             });
             await region.waitFor({ state: "visible" });
             await region.getByText("Alpha Document").waitFor({
@@ -329,6 +321,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
             await page.reload();
             await openWorkspace();
+            await showRecent();
             const errorPanel = getWorkspace();
 
             // StatusBanner tone="error" has role="alert" and data-density="compact"
@@ -349,7 +342,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await page.unroute(failList);
             await retryBtn.click();
             await alertBanner.waitFor({ state: "hidden" });
-            await errorPanel.getByRole("region", { name: "全部笔记" })
+            await errorPanel.getByRole("region", { name: "最近笔记" })
                 .waitFor({ state: "visible" });
 
             // B. Loading state with status live role in Documents
@@ -373,6 +366,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             // Trigger refetch by reloading
             await page.reload();
             await openWorkspace();
+            await showRecent();
             const documentsPanel = getWorkspace();
             await documentsPanel.waitFor({ state: "visible" });
 
@@ -390,7 +384,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await loadingState.waitFor({ state: "hidden" });
             documentsUnrouted = true;
             await page.unroute(documentsListUrl);
-            await documentsPanel.getByRole("region", { name: "全部笔记" })
+            await documentsPanel.getByRole("region", { name: "最近笔记" })
                 .waitFor({ state: "visible" });
         },
     );

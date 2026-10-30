@@ -16,16 +16,16 @@ async function box(page: Page, selector: string) {
     return rect;
 }
 
-/** The list's create action asks for a title, then opens the note. */
+/** A new note opens immediately and is persisted after the first input. */
 async function createNote(page: Page, title: string) {
-    await page.locator(NOTES).getByRole("button", {
-        name: "新建笔记",
-        exact: true,
-    }).click();
-    const dialog = page.getByRole("dialog", { name: "新建笔记", exact: true });
-    await dialog.getByLabel("笔记标题").fill(title);
-    await dialog.getByRole("button", { name: "创建", exact: true }).click();
-    await dialog.waitFor({ state: "detached" });
+    const frame = page.locator(NOTES);
+    await frame.getByRole("button", { name: /^新建笔记(?:（|$)/ }).click();
+    const created = page.waitForResponse((response) =>
+        response.request().method() === "POST" &&
+        new URL(response.url()).pathname === "/api/documents" && response.ok()
+    );
+    await frame.getByRole("textbox", { name: "笔记标题", exact: true }).fill(title);
+    await created;
 }
 
 Deno.test("应用窗口锚定任务栏图标，失焦或再次点击图标收起且不留历史", async () => {
@@ -154,7 +154,7 @@ Deno.test("移动过的应用窗口脱离锚定，其他窗口接管时保持可
     }
 });
 
-Deno.test("笔记窗口最小化保留编辑内容，Escape 先退出内部视图再最小化", async () => {
+Deno.test("笔记窗口最小化保留编辑内容，Escape 直接最小化", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
@@ -186,17 +186,13 @@ Deno.test("笔记窗口最小化保留编辑内容，Escape 先退出内部视�
         assertEquals(await title.inputValue(), "窗口内的笔记");
         assertEquals(await editor.textContent(), "最小化后仍在编辑");
 
-        // Escape closes the open note first, then minimizes the window.
-        await frame.getByRole("button", { name: /^返回/ }).focus();
-        await page.keyboard.press("Escape");
-        await frame.getByRole("button", { name: "新建笔记", exact: true })
-            .waitFor();
-        assert(await frame.isVisible());
+        // There is no intermediate list route: Escape minimizes the editor.
+        await title.focus();
         await page.keyboard.press("Escape");
         await frame.waitFor({ state: "hidden" });
         await page.waitForURL(app.origin + "/");
 
-        // Closing destroys the window; reopening starts at the list.
+        // Closing destroys the window and its selection.
         await icon.click();
         await frame.getByRole("button", { name: "关闭笔记" }).click();
         await frame.waitFor({ state: "hidden" });
@@ -218,6 +214,8 @@ Deno.test("全屏笔记覆盖视口，Escape 先退出全屏而不最小化窗�
         await loginAndVisit(page, app.origin, "/?view=notes", user);
         const frame = page.locator(NOTES);
         await createNote(page, "全屏笔记");
+        const sidebar = frame.getByRole("button", { name: "笔记侧栏", exact: true });
+        const sidebarExpanded = await sidebar.getAttribute("aria-expanded");
         await frame.getByRole("button", { name: "全屏编辑" }).click();
         await page.waitForFunction((selector) => {
             const rect = document.querySelector(selector)
@@ -227,11 +225,54 @@ Deno.test("全屏笔记覆盖视口，Escape 先退出全屏而不最小化窗�
         await page.locator('[data-dock-id="notes"]').waitFor({
             state: "detached",
         });
+        assertEquals(await sidebar.isVisible(), false);
         await frame.getByRole("button", { name: "退出全屏" }).focus();
         await page.keyboard.press("Escape");
         await frame.getByRole("button", { name: "全屏编辑" }).waitFor();
+        assertEquals(await sidebar.getAttribute("aria-expanded"), sidebarExpanded);
         assert(await frame.isVisible());
         assertEquals(page.url(), app.origin + "/?view=notes");
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("大纲在窗口调整时保留展开状态，覆盖层不阻止编辑", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+    try {
+        await loginAndVisit(page, app.origin, "/?view=notes", user);
+        const frame = page.locator(NOTES);
+        await createNote(page, "大纲宽度测试");
+        const outlineButton = frame.getByRole("button", { name: "大纲", exact: true });
+        await outlineButton.click();
+        const overlay = frame.locator(".document-outline-panel--overlay");
+        await overlay.waitFor({ state: "visible" });
+        const editor = frame.locator(".ProseMirror");
+        await editor.fill("覆盖层打开时仍可编辑");
+        assertEquals(await editor.textContent(), "覆盖层打开时仍可编辑");
+        await overlay.getByRole("button", { name: "收起大纲", exact: true }).focus();
+        await page.keyboard.press("Escape");
+        await overlay.waitFor({ state: "detached" });
+        assertEquals(await outlineButton.evaluate((el) => el === document.activeElement), true);
+        await outlineButton.click();
+        await overlay.waitFor({ state: "visible" });
+
+        await frame.getByRole("button", { name: "笔记窗口菜单" }).click();
+        await page.getByRole("menuitem", { name: "调整左边" }).click();
+        for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowLeft");
+        await page.keyboard.press("Enter");
+        await frame.locator(".document-outline-panel:not(.document-outline-panel--overlay)")
+            .waitFor({ state: "visible" });
+        assertEquals(await editor.textContent(), "覆盖层打开时仍可编辑");
+        await frame.getByRole("button", { name: "笔记窗口菜单" }).click();
+        await page.getByRole("menuitem", { name: "调整左边" }).click();
+        for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowRight");
+        await page.keyboard.press("Enter");
+        await overlay.waitFor({ state: "visible" });
     } finally {
         await browser.close();
         await app.close();

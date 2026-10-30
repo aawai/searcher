@@ -10,19 +10,12 @@ export interface DocumentNotebookNode {
     siblingIndex: number;
 }
 
-export interface DocumentNotebookOption {
-    id: string;
-    label: string;
-}
-
 export interface DocumentNotebookTree {
     roots: DocumentNotebookDto[];
     nodes: DocumentNotebookNode[];
-    /** Picker options in display order; children read `父 › 子`. */
-    options: DocumentNotebookOption[];
 }
 
-/** Notebooks are at most two levels deep; options and rows share one order. */
+/** Notebooks are at most two levels deep; roots and children share one order. */
 export function documentNotebookTree(
     notebooks: DocumentNotebookDto[],
 ): DocumentNotebookTree {
@@ -73,11 +66,5 @@ export function documentNotebookTree(
     return {
         roots,
         nodes,
-        options: nodes.map((node) => ({
-            id: node.notebook.id,
-            label: node.parentName
-                ? `${node.parentName} › ${node.notebook.name}`
-                : node.notebook.name,
-        })),
     };
 }

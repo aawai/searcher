@@ -206,7 +206,7 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
             }
 
             await t.step(
-                `${width}: Escape unwinds nested detail view, minimizes the window and restores opener`,
+                `${width}: Escape minimizes the editor and restores opener`,
                 async () => {
                     await page.goto(app.origin + "/");
                     await openNotes(page);
@@ -221,16 +221,20 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                             "[data-workspace-editor]",
                         )
                             .waitFor();
-                        // The editor swallows Escape; the back button owns focus.
-                        await libraryPanel(page).getByRole("button", {
-                            name: /^返回/,
+                        await libraryPanel(page).getByRole("textbox", {
+                            name: "笔记标题",
+                            exact: true,
                         }).focus();
-                        // First Escape exits editor back to notes list
-                        await page.keyboard.press("Escape");
-                        await libraryView(page, "notes").waitFor();
-                        await notes.waitFor({ state: "visible" });
                     }
-                    // Next Escape minimizes the window: hidden, content kept.
+                    const sidebar = notes.getByRole("button", {
+                        name: "笔记侧栏",
+                        exact: true,
+                    });
+                    if (await sidebar.getAttribute("aria-expanded") === "true" && width < 1024) {
+                        await page.keyboard.press("Escape");
+                        assertEquals(await sidebar.getAttribute("aria-expanded"), "false");
+                    }
+                    // Escape minimizes the window: hidden, content kept.
                     await page.keyboard.press("Escape");
                     await notes.waitFor({ state: "hidden" });
                     await page.waitForURL((url) =>
@@ -255,6 +259,11 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                     await page.waitForURL((url) =>
                         url.searchParams.get("view") === "notes"
                     );
+                    const drawerDismiss = page.getByRole("button", {
+                        name: "关闭笔记侧栏",
+                        exact: true,
+                    });
+                    if (await drawerDismiss.isVisible()) await drawerDismiss.click();
 
                     await openApps(page);
                     await page.waitForURL((url) =>

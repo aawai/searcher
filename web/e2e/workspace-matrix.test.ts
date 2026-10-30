@@ -132,6 +132,13 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
         await openNotes(target);
     }
 
+    // The notes sidebar opens as a tree; document rows live in the 最近 list.
+    async function showNoteRows(target: Page = page) {
+        await libraryPanel(target).getByRole("button", {
+            name: "最近",
+            exact: true,
+        }).click();
+    }
     async function closeWorkspace(target: Page = page) {
         if (await libraryPanel(target).count()) await closeLibrary(target);
     }
@@ -377,6 +384,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
 
             // 1e. Documents root state
             await openWorkspace();
+            await showNoteRows();
             const documentsPanel = libraryPanel(page);
             await documentsPanel.waitFor({ state: "visible" });
             await documentsPanel.locator("[data-document-id]").first()
@@ -391,11 +399,12 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 ".document-editor-container, [data-workspace-editor]",
             ).first();
             await docEditor.waitFor({ state: "visible" });
-            const mobileDocBack = documentsPanel.getByRole("button", {
-                name: /返回笔记|返回上一级/,
-            }).first();
-            await mobileDocBack.waitFor({ state: "visible" });
-            await mobileDocBack.click();
+            const sidebar = documentsPanel.getByRole("button", {
+                name: "笔记侧栏",
+                exact: true,
+            });
+            assertEquals(await sidebar.getAttribute("aria-expanded"), "false");
+            await sidebar.click();
             await documentsPanel.locator("[data-document-id]").first()
                 .waitFor({ state: "visible" });
 
@@ -447,6 +456,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 try {
                     await visit("/");
                     await openWorkspace();
+                    await showNoteRows();
                     const surface = getSurface();
                     const loading = surface.locator(
                         '.loading-state[role="status"]',
@@ -481,6 +491,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 try {
                     await visit("/");
                     await openWorkspace();
+                    await showNoteRows();
                     const surface = getSurface();
                     const alert = surface.locator(
                         '.status-banner[role="alert"]',

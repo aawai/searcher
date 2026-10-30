@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import type { DocumentNotebookDto } from "@shared/documents.ts";
-import type { DocumentsScope } from "./workspace-state.ts";
 import {
     type DocumentNotebookNode,
     documentNotebookTree,
@@ -12,10 +11,6 @@ import {
     NativeSelect,
     NativeSelectOption,
 } from "../../components/ui/native-select.tsx";
-import {
-    RadioGroup,
-    RadioGroupItem,
-} from "../../components/ui/radio-group.tsx";
 import {
     Dialog,
     DialogContent,
@@ -33,48 +28,23 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../../components/ui/alert-dialog.tsx";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu.tsx";
 import { StatusBanner } from "../../components/searcher/semantic.tsx";
-import {
-    ArrowDown,
-    ArrowUp,
-    FolderInput,
-    FolderPlus,
-    MoreHorizontal,
-    Pencil,
-    Plus,
-    Trash2,
-} from "lucide-react";
-
-export interface DocumentNotebookNavigationProps {
+export interface DocumentNotebookOperationsProps {
     notebooks: DocumentNotebookDto[];
-    scope: DocumentsScope;
-    onScopeChange: (scope: DocumentsScope) => void;
     onChanged: () => void;
+    /** A notebook was deleted; its notes stay and its children move up. */
+    onNotebookDeleted?: (id: string) => void;
+    /** A notebook was created under `parentId` (null for a root). */
+    onNotebookCreated?: (parentId: string | null) => void;
 }
 
-/** The four fixed filters share one segmented control; notebooks refine it. */
-const FILTERS = [
-    { id: "all", label: "全部" },
-    { id: "recent", label: "最近" },
-    { id: "home", label: "首页" },
-    { id: "favorite", label: "收藏" },
-] as const;
-
-type FilterId = typeof FILTERS[number]["id"];
-
-export function DocumentNotebookNavigation({
+/** Notebook management shared by every tree entry point: operations plus their dialogs. */
+export function useDocumentNotebookOperations({
     notebooks,
-    scope,
-    onScopeChange,
     onChanged,
-}: DocumentNotebookNavigationProps) {
+    onNotebookDeleted,
+    onNotebookCreated,
+}: DocumentNotebookOperationsProps) {
     // Dialog state
     const [createOpen, setCreateOpen] = useState(false);
     const [createName, setCreateName] = useState("");
@@ -109,15 +79,10 @@ export function DocumentNotebookNavigation({
         reorderingId !== null;
 
     // Notebooks are at most two levels deep; the tree owns order and labels.
-    const { roots: rootNotebooks, nodes, options } = useMemo(
+    const { roots: rootNotebooks } = useMemo(
         () => documentNotebookTree(notebooks),
         [notebooks],
     );
-
-    const selectedItem = scope.type === "notebook"
-        ? nodes.find((item) => item.notebook.id === scope.notebookId) ??
-            null
-        : null;
 
     // Create action
     const handleCreateSubmit = async (e: React.SyntheticEvent) => {
@@ -139,6 +104,7 @@ export function DocumentNotebookNavigation({
             setCreateName("");
             setCreateParentId("");
             onChanged();
+            onNotebookCreated?.(createParentId ? createParentId : null);
         } catch (err) {
             setCreateError(
                 err instanceof Error ? err.message : "创建笔记本失败",
@@ -208,14 +174,9 @@ export function DocumentNotebookNavigation({
             await api(`/api/document-notebooks/${deleteTarget.id}`, {
                 method: "DELETE",
             });
-            if (
-                scope.type === "notebook" &&
-                scope.notebookId === deleteTarget.id
-            ) {
-                onScopeChange({ type: "all" });
-            }
             setDeleteTarget(null);
             onChanged();
+            onNotebookDeleted?.(deleteTarget.id);
         } catch (err) {
             setDeleteError(
                 err instanceof Error ? err.message : "删除笔记本失败",
@@ -283,154 +244,8 @@ export function DocumentNotebookNavigation({
         setCreateOpen(true);
     };
 
-    return (
-        <nav className="documents-notebook-navigation" aria-label="笔记导航">
-            <RadioGroup
-                variant="segmented"
-                className="documents-filter-group"
-                aria-label="筛选笔记"
-                value={scope.type === "notebook" ? null : scope.type}
-                onValueChange={(next) => {
-                    if (typeof next === "string") {
-                        onScopeChange({ type: next as FilterId });
-                    }
-                }}
-            >
-                {FILTERS.map((filter) => (
-                    <RadioGroupItem key={filter.id} value={filter.id}>
-                        {filter.label}
-                    </RadioGroupItem>
-                ))}
-            </RadioGroup>
-
-            <div className="documents-notebook-picker">
-                <NativeSelect
-                    className="documents-notebook-select"
-                    aria-label="按笔记本筛选"
-                    value={selectedItem?.notebook.id ?? ""}
-                    onChange={(event) => {
-                        const notebookId = event.target.value;
-                        onScopeChange(
-                            notebookId
-                                ? { type: "notebook", notebookId }
-                                : { type: "all" },
-                        );
-                    }}
-                >
-                    <NativeSelectOption value="">
-                        全部笔记本
-                    </NativeSelectOption>
-                    {options.map((option) => (
-                        <NativeSelectOption
-                            key={option.id}
-                            value={option.id}
-                        >
-                            {option.label}
-                        </NativeSelectOption>
-                    ))}
-                </NativeSelect>
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger
-                        render={
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                aria-label="管理笔记本"
-                                title="管理笔记本"
-                                disabled={isPending}
-                            >
-                                <MoreHorizontal className="icon-md" />
-                            </Button>
-                        }
-                    />
-                    <DropdownMenuContent aria-label="笔记本管理操作">
-                        <DropdownMenuItem onClick={() => openCreate("")}>
-                            <Plus className="icon-md" />
-                            <span>新建笔记本</span>
-                        </DropdownMenuItem>
-                        {selectedItem && (
-                            <>
-                                <DropdownMenuSeparator />
-                                {selectedItem.depth === 0 && (
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            openCreate(
-                                                selectedItem.notebook.id,
-                                            )}
-                                    >
-                                        <FolderPlus className="icon-md" />
-                                        <span>新建子笔记本</span>
-                                    </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                    onClick={() => {
-                                        setRenameTarget(selectedItem.notebook);
-                                        setRenameName(
-                                            selectedItem.notebook.name,
-                                        );
-                                        setRenameError(null);
-                                    }}
-                                >
-                                    <Pencil className="icon-md" />
-                                    <span>重命名</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => {
-                                        setMoveTarget(selectedItem.notebook);
-                                        setMoveParentId(
-                                            selectedItem.notebook.parentId ??
-                                                "",
-                                        );
-                                        setMoveError(null);
-                                    }}
-                                    disabled={selectedItem.hasChildren}
-                                >
-                                    <FolderInput className="icon-md" />
-                                    <span>移动</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        void handleReorder(
-                                            selectedItem,
-                                            "up",
-                                        )}
-                                    disabled={selectedItem.siblingIndex === 0}
-                                >
-                                    <ArrowUp className="icon-md" />
-                                    <span>上移</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        void handleReorder(
-                                            selectedItem,
-                                            "down",
-                                        )}
-                                    disabled={selectedItem.siblingIndex ===
-                                        selectedItem.siblings.length - 1}
-                                >
-                                    <ArrowDown className="icon-md" />
-                                    <span>下移</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                    variant="destructive"
-                                    onClick={() => {
-                                        setDeleteTarget(selectedItem.notebook);
-                                        setDeleteError(null);
-                                    }}
-                                >
-                                    <Trash2 className="icon-md" />
-                                    <span>删除</span>
-                                </DropdownMenuItem>
-                            </>
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-
-            {/* Reorder error banner if inline operation fails */}
+    const dialogs = (
+        <>
             {reorderError && (
                 <StatusBanner tone="error" density="compact">
                     {reorderError}
@@ -487,8 +302,30 @@ export function DocumentNotebookNavigation({
                     if (!open && !isDeleting) setDeleteTarget(null);
                 }}
             />
-        </nav>
+        </>
     );
+
+    return {
+        isPending,
+        dialogs,
+        createNotebook: openCreate,
+        rename: (notebook: DocumentNotebookDto) => {
+            setRenameTarget(notebook);
+            setRenameName(notebook.name);
+            setRenameError(null);
+        },
+        move: (notebook: DocumentNotebookDto) => {
+            setMoveTarget(notebook);
+            setMoveParentId(notebook.parentId ?? "");
+            setMoveError(null);
+        },
+        remove: (notebook: DocumentNotebookDto) => {
+            setDeleteTarget(notebook);
+            setDeleteError(null);
+        },
+        reorder: (node: DocumentNotebookNode, direction: "up" | "down") =>
+            void handleReorder(node, direction),
+    };
 }
 
 function CreateNotebookDialog(

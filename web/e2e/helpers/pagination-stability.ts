@@ -4,7 +4,7 @@ import { chromium } from "./browser.ts";
 import type { Page, Request } from "playwright";
 import type { DocumentDto } from "../../../src/shared/documents.ts";
 import { startProductionApp } from "./production-app.ts";
-import { openNotes } from "./library.ts";
+import { openNoteRows } from "./library.ts";
 
 async function sample(page: Page, duration: number) {
     return await page.evaluate(async (duration) => {
@@ -261,7 +261,7 @@ export function registerPaginationStabilityTest(
                     (theme) => document.documentElement.dataset.theme === theme,
                     theme,
                 );
-                await openNotes(page);
+                await openNoteRows(page);
                 await page.locator(`[data-document-id="${doc.id}"] h4 button`)
                     .click();
                 await page.locator(".ProseMirror").waitFor();
@@ -274,6 +274,9 @@ export function registerPaginationStabilityTest(
                     ) patches.push(req.postData() ?? "");
                 };
                 page.on("request", listener);
+                await page.getByRole("button", {
+                    name: /^切换编辑模式，当前：/,
+                }).click();
                 await page.getByRole("button", { name: "分页", exact: true })
                     .click();
                 const initial = await sample(page, 5000);
