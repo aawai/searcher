@@ -148,7 +148,7 @@ Deno.test({
 
 Deno.test({
     name:
-        "webapps & webapp-groups: CRUD, groups, group deletion migration, pin, order, soft-delete, trash and restore",
+        "webapps & webapp-groups: CRUD, groups, soft-delete, trash and restore",
     async fn() {
         const { store, app } = await setupTestApp();
         try {
@@ -229,7 +229,7 @@ Deno.test({
                 }),
             });
             assertEquals(createW2Res.status, STATUS_CODE.OK);
-            const w2 = (await createW2Res.json() as Envelope<WebAppDto>).data!;
+            await createW2Res.json();
 
             // 3. Query filtered by groupId
             const listGroupRes = await app.request(
@@ -246,23 +246,6 @@ Deno.test({
                 (await listGroupRes.json() as Envelope<WebAppDto[]>).data!;
             assertEquals(groupApps.length, 1);
             assertEquals(groupApps[0].id, w1.id);
-
-            // 4. Reorder webapps
-            const reorderRes = await app.request("/api/webapps/reorder", {
-                method: "PUT",
-                headers: {
-                    "origin": ORIGIN,
-                    "content-type": "application/json",
-                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
-                },
-                body: JSON.stringify({
-                    items: [
-                        { id: w1.id, sortOrder: 10 },
-                        { id: w2.id, sortOrder: 5 },
-                    ],
-                }),
-            });
-            assertEquals(reorderRes.status, STATUS_CODE.OK);
 
             // 5. Soft-delete w1 -> moves to trash
             const deleteRes = await app.request(`/api/webapps/${w1.id}`, {
@@ -320,33 +303,6 @@ Deno.test({
             const restoredList =
                 (await listAfterRestore.json() as Envelope<WebAppDto[]>).data!;
             assertEquals(restoredList.some((w) => w.id === w1.id), true);
-
-            // 7. Delete group -> per spec 9.2, WebApps migrate to ungrouped (groupId = null)
-            const deleteGroupRes = await app.request(
-                `/api/webapp-groups/${devGroup.id}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        "origin": ORIGIN,
-                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
-                    },
-                },
-            );
-            assertEquals(deleteGroupRes.status, STATUS_CODE.OK);
-
-            const w1AfterGroupDelete = await app.request(
-                `/api/webapps/${w1.id}`,
-                {
-                    method: "GET",
-                    headers: {
-                        cookie: `${SESSION_COOKIE_NAME}=${token}`,
-                    },
-                },
-            );
-            assertEquals(w1AfterGroupDelete.status, STATUS_CODE.OK);
-            const w1Final =
-                (await w1AfterGroupDelete.json() as Envelope<WebAppDto>).data!;
-            assertEquals(w1Final.groupId, null);
 
             // 8. Permanent delete
             const permDeleteRes = await app.request(

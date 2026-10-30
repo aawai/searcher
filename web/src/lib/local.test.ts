@@ -1,8 +1,24 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { deleteLocal, getLocal, listLocalKeys, setLocal } from "./local.ts";
 
+// Writes complete out of issue order: even-numbered writes take more
+// microtask hops than odd-numbered ones, so only the caller-side
+// serialisation keeps them in order. Every write takes at least one hop,
+// because setLocal assigns tx.oncomplete after calling put().
+function writeCompletionHops(writeIndex: number): number {
+    return writeIndex % 2 === 0 ? 3 : 1;
+}
+
+async function completeAfterHops(hops: number, complete: () => void) {
+    for (let i = 0; i < hops; i++) {
+        await undefined;
+    }
+    complete();
+}
+
 function setupMockIndexedDB() {
     const memoryStores = new Map<string, Map<string, unknown>>();
+    let writeCount = 0;
 
     const mockIDB = {
         open(_dbName: string, _version?: number) {
@@ -51,14 +67,20 @@ function setupMockIndexedDB() {
                                         return getReq;
                                     },
                                     put(val: unknown, key: string) {
-                                        store!.set(key, val);
-                                        queueMicrotask(() => {
+                                        const hops = writeCompletionHops(
+                                            writeCount++,
+                                        );
+                                        void completeAfterHops(hops, () => {
+                                            store!.set(key, val);
                                             tx.oncomplete?.();
                                         });
                                     },
                                     delete(key: string) {
-                                        store!.delete(key);
-                                        queueMicrotask(() => {
+                                        const hops = writeCompletionHops(
+                                            writeCount++,
+                                        );
+                                        void completeAfterHops(hops, () => {
+                                            store!.delete(key);
                                             tx.oncomplete?.();
                                         });
                                     },

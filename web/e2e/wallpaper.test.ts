@@ -235,22 +235,6 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                         "Apply button should be disabled when input matches current remote source",
                     );
 
-                    const gradient =
-                        "linear-gradient(135deg, #102030, #405060)";
-                    await input.fill(gradient);
-                    assert(
-                        !await applyBtn.isDisabled(),
-                        "Apply button should enable when new gradient source is drafted",
-                    );
-                    await input.press("Enter");
-                    await waitCurrent(gradient);
-                    assertEquals((await prefs()).backgroundImage, gradient);
-                    assertEquals(await input.inputValue(), gradient);
-                    assert(
-                        await applyBtn.isDisabled(),
-                        "Apply button should be disabled when input matches current gradient source",
-                    );
-
                     const leftId = source.split("/").pop()!;
                     await page.getByTestId(`wallpaper-menu-trigger-${leftId}`)
                         .click();
@@ -479,7 +463,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                     await route.continue();
                 }
             });
-            await input.fill("linear-gradient(90deg, #102030, #405060)");
+            await input.fill("https://example.com/recovered.png");
             await page.getByTestId("wallpaper-apply-btn").click();
             await page.locator(".sync-failed-badge").waitFor();
             const theme = page.getByRole("button", { name: /^切换主题，/ });
@@ -487,7 +471,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             await held.promise;
             await theme.click();
             release.resolve();
-            await waitCurrent("linear-gradient(90deg, #102030, #405060)");
+            await waitCurrent("https://example.com/recovered.png");
             await page.locator(".sync-failed-badge").waitFor({
                 state: "detached",
             });
@@ -505,15 +489,15 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
         },
     );
     await t.step(
-        "anonymous gradient and local upload survive reload without touching cloud preferences",
+        "anonymous remote URL and local upload survive reload without touching cloud preferences",
         async () => {
             const guestContext = await browser.newContext();
             const cloudBefore = await prefs();
             const guest = await guestContext.newPage();
             await guest.goto(origin + "/settings/appearance");
             await guest.getByTestId("wallpaper-guest-notice").waitFor();
-            const gradient = "linear-gradient(135deg, #204060, #80a0c0)";
-            await guest.getByTestId("wallpaper-input").fill(gradient);
+            const remote = "https://images.unsplash.com/photo-guest-restore";
+            await guest.getByTestId("wallpaper-input").fill(remote);
             await guest.getByTestId("wallpaper-apply-btn").click();
             await guest.getByTestId("wallpaper-toast").waitFor();
             await guest.reload();
@@ -522,7 +506,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                     (document.querySelector(
                         '[data-testid="wallpaper-input"]',
                     ) as HTMLInputElement)?.value === value,
-                gradient,
+                remote,
             );
             await guest.getByTestId("wallpaper-file-input").setInputFiles(
                 `${files}/subject-0.2.png`,
@@ -539,7 +523,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 "image",
             );
             await guest.goto(origin + "/");
-            // The surface can render the cached gradient before IndexedDB
+            // The surface can render the cached remote URL before IndexedDB
             // appearance hydration restores the uploaded image.
             await guest.waitForFunction(() => {
                 const surface = document.querySelector(
@@ -801,10 +785,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
     let uploadedSource = "";
     const remoteSource =
         "https://images.unsplash.com/photo-presentation-restore";
-    const gradientSource = "linear-gradient(135deg, #223344, #556677)";
+    const remoteSource2 =
+        "https://images.unsplash.com/photo-presentation-restore-2";
 
     await t.step(
-        "per-wallpaper presentation restore across uploaded, remote, and gradient sources and reload",
+        "per-wallpaper presentation restore across uploaded and remote sources and reload",
         async () => {
             // 1. Upload fresh wallpaper and customize presentation
             uploadedSource = await upload(0.3);
@@ -831,6 +816,11 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             await input.fill(remoteSource);
             await page.getByTestId("wallpaper-apply-btn").click();
             await waitCurrent(remoteSource);
+            await page.waitForFunction(() =>
+                document.querySelector(
+                    '[data-testid="wallpaper-current-preview"]',
+                )?.getAttribute("data-substrate") === "image"
+            );
 
             // Remote: readability="clear"(0)
             await readability.locator(".settings-preset-slider__mark").filter({
@@ -843,12 +833,17 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 return p?.readability === "clear";
             }, remoteSource);
 
-            // 3. Set Gradient wallpaper and customize presentation
-            await input.fill(gradientSource);
+            // 3. Set second remote wallpaper and customize presentation
+            await input.fill(remoteSource2);
             await page.getByTestId("wallpaper-apply-btn").click();
-            await waitCurrent(gradientSource);
+            await waitCurrent(remoteSource2);
+            await page.waitForFunction(() =>
+                document.querySelector(
+                    '[data-testid="wallpaper-current-preview"]',
+                )?.getAttribute("data-substrate") === "image"
+            );
 
-            // Gradient: readability="focus"(3)
+            // Second remote: readability="focus"(4, 专注)
             await readability.locator(".settings-preset-slider__mark").filter({
                 hasText: "专注",
             }).click();
@@ -857,7 +852,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 const res = await (await fetch("/api/preferences")).json();
                 const p = res.data.wallpaperPresentations[src];
                 return p?.readability === "focus";
-            }, gradientSource);
+            }, remoteSource2);
 
             // 4. Switch back to uploaded and verify restored state
             const uploadedId = uploadedSource.split("/").pop()!;
@@ -881,10 +876,10 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
 
             assertEquals(await rThumb.getAttribute("aria-valuenow"), "1");
 
-            // 6. Switch back to gradient and verify restored state
-            await input.fill(gradientSource);
+            // 6. Switch back to second remote and verify restored state
+            await input.fill(remoteSource2);
             await page.getByTestId("wallpaper-apply-btn").click();
-            await waitCurrent(gradientSource);
+            await waitCurrent(remoteSource2);
 
             assertEquals(await rThumb.getAttribute("aria-valuenow"), "4");
 

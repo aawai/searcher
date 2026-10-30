@@ -16,3 +16,5 @@ updated: 2026-10-27
 以 CSP 为后备防线，不替代上下文编码和净化。tinyfill 只复用净化函数、不提供浏览器级 sink 强制执行；浏览器兼容性、策略与实际渲染路径必须单独核验（[raw](../../raw/sources/SRC-2026-10-27-006/extracted.md)，第 422–470 行）。本页不宣称 Searcher 已启用 Trusted Types、CSP 或特定 sanitizer，也不是项目安全审计。
 
 关联：[Session Security and Isolation](/concepts/session-security-and-isolation.md)、[CSRF Defense Boundaries](/concepts/csrf-defense-boundaries.md)、[Searcher 项目](/entities/searcher-项目.md)。
+
+CSP 的部署方式（strict CSP、`frame-ancestors`、report-only）见 [Content Security Policy Strict Deployment](/concepts/content-security-policy-strict-deployment.md)。

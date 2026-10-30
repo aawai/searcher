@@ -2,6 +2,7 @@ import { assertEquals, assertMatch, assertRejects } from "@std/assert";
 import * as fflate from "fflate";
 import { DatabaseSync } from "node:sqlite";
 import { readMigrationFiles } from "drizzle-orm/migrator";
+import { eq } from "drizzle-orm";
 import { DatabaseStore, openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
 import { preferences, users } from "../../db/schema.ts";
@@ -26,67 +27,6 @@ const PNG_HEADER = new Uint8Array([
     0x00,
     0x0d,
 ]);
-
-Deno.test("backup prevalidation: valid backup zip with wallpapers and settings passes", async () => {
-    const dir = await Deno.makeTempDir({ prefix: "searcher_test_backup_" });
-    const wallpaperDir = `${dir}/wallpapers`;
-    const iconDir = `${dir}/icons`;
-    const store = openDatabase(":memory:");
-    try {
-        await migrateDatabase(store);
-        const settingsStore = new SystemSettingsStore(`${dir}/settings.json`);
-        const wallpaperService = new WallpaperService(wallpaperDir);
-        const iconService = new WebAppIconService(iconDir);
-
-        const userId = crypto.randomUUID();
-        const now = Date.now();
-        await store.run(async (db) => {
-            await db.insert(users).values({
-                id: userId,
-                username: "testuser",
-                displayName: "Test User",
-                passwordHash: "dummyhash",
-                role: "user",
-                disabled: false,
-                authVersion: 1,
-                createdAt: now,
-                updatedAt: now,
-            });
-        });
-
-        // Save a valid wallpaper for user
-        const { id: wallpaperId } = await wallpaperService.saveWallpaper(
-            userId,
-            PNG_HEADER,
-        );
-
-        // Update user preference to reference this wallpaper
-        await store.run(async (db) => {
-            await db.insert(preferences).values({
-                userId,
-                backgroundImage: `/api/wallpaper/${wallpaperId}`,
-            });
-        });
-
-        const systemService = new SystemService({
-            store,
-            settingsStore,
-            wallpaperService,
-            iconService,
-            now: () => now,
-        });
-
-        const zipBytes = await systemService.createFullBackupZip();
-
-        // Validate backup zip
-        const validation = await systemService.validateBackupZip(zipBytes);
-        assertEquals(validation.valid, true);
-        assertEquals(validation.manifest?.assets.wallpapersCount, 1);
-    } finally {
-        await store.close();
-        await Deno.remove(dir, { recursive: true });
-    }
-});
 
 Deno.test("backup prevalidation: focal handling supports old manifest and validates new 0..1", async () => {
     const dir = await Deno.makeTempDir({
@@ -189,7 +129,7 @@ Deno.test("backup prevalidation: focal handling supports old manifest and valida
         assertEquals(invalidValidation.valid, false);
         assertMatch(invalidValidation.error ?? "", /非法记录|字段缺失/);
 
-        // Case 4: Partial focal coordinates (focalX present but focalY missing)
+        // Case 4: focalX present, focalY missing -> focalY defaults to 0.5 and the backup stays valid
         const partialFocalZip = fflate.zipSync({
             ...unzipped,
             "assets/wallpapers/manifest.json": new TextEncoder().encode(
@@ -201,7 +141,6 @@ Deno.test("backup prevalidation: focal handling supports old manifest and valida
                         size: PNG_HEADER.length,
                         createdAt: now,
                         focalX: 0.5,
-                        focalY: -0.2,
                     },
                 ]),
             ),
@@ -209,8 +148,7 @@ Deno.test("backup prevalidation: focal handling supports old manifest and valida
         const partialValidation = await systemService.validateBackupZip(
             partialFocalZip,
         );
-        assertEquals(partialValidation.valid, false);
-        assertMatch(partialValidation.error ?? "", /非法记录|字段缺失/);
+        assertEquals(partialValidation.valid, true);
     } finally {
         await store.close();
         await Deno.remove(dir, { recursive: true });
@@ -560,8 +498,7 @@ Deno.test("backup prevalidation: enforces preference local refs exist AND are ow
         const danglingId = crypto.randomUUID();
         await store.run(async (db) => {
             await db.update(preferences)
-                .set({ backgroundImage: `/api/wallpaper/${danglingId}` })
-                .where(users ? undefined : undefined); // update all
+                .set({ backgroundImage: `/api/wallpaper/${danglingId}` });
         });
         const danglingZip = await systemService.createFullBackupZip();
         const danglingCheck = await systemService.validateBackupZip(
@@ -580,7 +517,7 @@ Deno.test("backup prevalidation: enforces preference local refs exist AND are ow
         assertEquals(unownedCheck.valid, false);
         assertMatch(unownedCheck.error ?? "", /不属于该用户/);
 
-        // Case 3: Alice references an external HTTPS image or CSS gradient (not a local wallpaper)
+        // Case 3: Alice references an external HTTPS image (not a local wallpaper)
         await store.run(async (db) => {
             await db.update(preferences)
                 .set({ backgroundImage: "https://example.com/pic.jpg" });
@@ -652,6 +589,17 @@ Deno.test("backup restore: validates before restore and fails closed on corrupte
             Error,
             "资源文件不存在",
         );
+        const remainingUsers = await store.run(async (db) =>
+            await db.select().from(users).where(eq(users.id, userId)).all()
+        );
+        assertEquals(remainingUsers.map((u) => u.displayName), [
+            "Restore User",
+        ]);
+        const stillStored = await wallpaperService.getWallpaper(
+            wallpaperId,
+            userId,
+        );
+        assertEquals(stillStored?.record.id, wallpaperId);
     } finally {
         await store.close();
         await Deno.remove(dir, { recursive: true });
@@ -734,8 +682,7 @@ Deno.test("backup smoke: roundtrip full backup and restore preserves wallpaper f
         await wallpaperService.deleteWallpaper(wallpaperId, userId);
         await store.run(async (db) => {
             await db.update(preferences)
-                .set({ backgroundImage: null })
-                .where(users ? undefined : undefined);
+                .set({ backgroundImage: null });
         });
         await documentsService.permanentDelete(
             userId,
@@ -794,7 +741,7 @@ Deno.test("backup smoke: roundtrip full backup and restore preserves wallpaper f
     }
 });
 
-Deno.test("backup prevalidation: validates wallpaperCompositions local references and ownership", async () => {
+Deno.test("backup prevalidation: wallpaperPresentations local references must exist and be owned by the user", async () => {
     const dir = await Deno.makeTempDir({
         prefix: "searcher_test_backup_comp_",
     });
@@ -844,11 +791,11 @@ Deno.test("backup prevalidation: validates wallpaperCompositions local reference
             PNG_HEADER,
         );
 
-        // Alice legitimately uses her own wallpaper in compositions
+        // Alice legitimately uses her own wallpaper in presentations
         await store.run(async (db) => {
             await db.insert(preferences).values({
                 userId: userAlice,
-                wallpaperCompositions: JSON.stringify({
+                wallpaperPresentations: JSON.stringify({
                     [`/api/wallpaper/${aliceWallpaperId}`]: {
                         focalX: 0.3,
                         focalY: 0.7,
@@ -874,37 +821,35 @@ Deno.test("backup prevalidation: validates wallpaperCompositions local reference
         const validRes = await systemService.validateBackupZip(validZip);
         assertEquals(validRes.valid, true);
 
-        // Case 2: Alice references Bob's wallpaper in compositions (unowned)
+        // Case 2: Alice references Bob's wallpaper in presentations (unowned)
         await store.run(async (db) => {
             await db.update(preferences)
                 .set({
-                    wallpaperCompositions: JSON.stringify({
+                    wallpaperPresentations: JSON.stringify({
                         [`/api/wallpaper/${bobWallpaperId}`]: {
                             focalX: 0.1,
                             focalY: 0.9,
                         },
                     }),
-                })
-                .where(users ? undefined : undefined);
+                });
         });
         const unownedZip = await systemService.createFullBackupZip();
         const unownedRes = await systemService.validateBackupZip(unownedZip);
         assertEquals(unownedRes.valid, false);
         assertMatch(unownedRes.error ?? "", /不属于该用户/);
 
-        // Case 3: Alice references a dangling non-existent wallpaper in compositions
+        // Case 3: Alice references a dangling non-existent wallpaper in presentations
         const danglingId = crypto.randomUUID();
         await store.run(async (db) => {
             await db.update(preferences)
                 .set({
-                    wallpaperCompositions: JSON.stringify({
+                    wallpaperPresentations: JSON.stringify({
                         [`/api/wallpaper/${danglingId}`]: {
                             focalX: 0.5,
                             focalY: 0.5,
                         },
                     }),
-                })
-                .where(users ? undefined : undefined);
+                });
         });
         const danglingZip = await systemService.createFullBackupZip();
         const danglingRes = await systemService.validateBackupZip(danglingZip);

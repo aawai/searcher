@@ -196,8 +196,7 @@ Deno.test({
 });
 
 Deno.test({
-    name:
-        "auth security: Origin check and rate limiting boundaries on mutating endpoints",
+    name: "auth security: Origin and Content-Type checks on mutating endpoints",
     async fn() {
         const { store, app } = await setupTestApp();
         try {
@@ -243,6 +242,41 @@ Deno.test({
                 badContentTypeRes.status,
                 STATUS_CODE.UnsupportedMediaType,
             );
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name:
+        "auth security: login returns 429 after 10 attempts on one account without affecting others",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            const login = (username: string) =>
+                app.request("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "origin": ORIGIN,
+                        "content-type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password: "WrongPassword123!",
+                    }),
+                });
+            for (let attempt = 0; attempt < 10; attempt++) {
+                const res = await login("ratelimited_user");
+                assertEquals(res.status, STATUS_CODE.BadRequest);
+            }
+
+            const limited = await login("ratelimited_user");
+            assertEquals(limited.status, STATUS_CODE.TooManyRequests);
+            assertNotEquals(limited.headers.get("Retry-After"), null);
+
+            const otherAccount = await login("other_user");
+            assertEquals(otherAccount.status, STATUS_CODE.BadRequest);
         } finally {
             await store.close();
         }

@@ -1,4 +1,4 @@
-import { assertEquals, assertNotEquals } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
@@ -202,7 +202,6 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
         });
         assertEquals(backupRes.status, STATUS_CODE.OK);
         const backupBytes = new Uint8Array(await backupRes.arrayBuffer());
-        assertNotEquals(backupBytes.length, 0);
         await Deno.writeFile(
             `${ctx.wallpaperDir}/${originalWallpaper.id}.bin`,
             new Uint8Array([

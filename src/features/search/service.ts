@@ -1,5 +1,5 @@
 // src/features/search/service.ts
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import type { DatabaseStore } from "../../db/database.ts";
 import { preferences, searchHistory } from "../../db/schema.ts";
 import type { EngineId } from "@shared/engines.ts";
@@ -180,13 +180,16 @@ export class SearchService {
     }
 
     async deleteHistoryItem(
-        _userId: string,
+        userId: string,
         id: string,
     ): Promise<boolean> {
         return await this.store.run(async (db) => {
             const rows = await db
                 .delete(searchHistory)
-                .where(eq(searchHistory.id, id))
+                .where(and(
+                    eq(searchHistory.id, id),
+                    eq(searchHistory.userId, userId),
+                ))
                 .returning({ id: searchHistory.id })
                 .all();
 

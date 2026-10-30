@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
 import { AuthService } from "../auth/service.ts";
@@ -99,9 +99,36 @@ Deno.test("settings-enforcement: registration gating & custom default engine/the
         assertEquals(userPrefs.data?.theme, "dark");
         assertEquals(userPrefs.data?.searchTarget, "new");
 
-        // 10. Suggestions without explicit engine parameter uses default engine (duckduckgo)
-        const suggRes = await app.request("/api/search/suggestions?q=deno");
-        assertEquals(suggRes.status, 200);
+        // 10. Without an explicit engine the configured default (duckduckgo) uses the Bing fallback.
+        // Network is stubbed so the test never reaches the real suggestion providers.
+        const requestedUrls: string[] = [];
+        const originalFetch = globalThis.fetch;
+        globalThis.fetch = ((input: string | URL | Request) => {
+            requestedUrls.push(String(input));
+            return Promise.resolve(
+                new Response(
+                    JSON.stringify(["deno", ["deno land", "deno deploy"]]),
+                    {
+                        headers: { "content-type": "application/json" },
+                    },
+                ),
+            );
+        }) as typeof fetch;
+        try {
+            const suggRes = await app.request("/api/search/suggestions?q=deno");
+            assertEquals(suggRes.status, 200);
+            const suggestions = await suggRes.json() as Envelope<
+                Array<{ text: string }>
+            >;
+            assertEquals(requestedUrls.length, 1);
+            assertStringIncludes(requestedUrls[0], "api.bing.com/osjson.aspx");
+            assertEquals(suggestions.data?.map((s) => s.text), [
+                "deno land",
+                "deno deploy",
+            ]);
+        } finally {
+            globalThis.fetch = originalFetch;
+        }
     } finally {
         await store.close();
     }

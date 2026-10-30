@@ -45,19 +45,20 @@ Deno.test("WallpaperSurface: formatWallpaperCss escapes URLs and rejects unsuppo
     );
 });
 
-Deno.test("WallpaperSurface: substrate classifies image, gradient, and rejected sources", () => {
+Deno.test("WallpaperSurface: substrate classifies image and rejected sources", () => {
     const image = renderToStaticMarkup(createElement(WallpaperSurface, {
         source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
+    }));
+    const rejected = renderToStaticMarkup(createElement(WallpaperSurface, {
+        source: "http://unsafe.example/image.jpg",
     }));
     const gradient = renderToStaticMarkup(createElement(WallpaperSurface, {
         source: "linear-gradient(135deg, #555, #aaa)",
         embedded: true,
     }));
-    const rejected = renderToStaticMarkup(createElement(WallpaperSurface, {
-        source: "http://unsafe.example/image.jpg",
-    }));
     assertMatch(image, /data-substrate="image"/);
-    assertMatch(gradient, /data-substrate="gradient"/);
     assertMatch(rejected, /data-substrate="canvas"/);
+    assertMatch(gradient, /data-substrate="canvas"/);
     assertNotMatch(rejected, /wallpaper-surface__image/);
+    assertNotMatch(gradient, /wallpaper-surface__image/);
 });

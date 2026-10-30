@@ -18,11 +18,27 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/backdrop-filter-backdrop-root.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/backdrop-filter-backdrop-root.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/backdrop-filter-backdrop-root",
+      "contentHash": "9f49f97b1da590ba94d63a6550c456cd49dd626614e76de995d740523d2ee92e",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/browser-storage-persistence-and-eviction.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/browser-storage-persistence-and-eviction.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/browser-storage-persistence-and-eviction",
       "contentHash": "a901ccf0fe5e87d5a5ce806120f87ba9dfe05541e32265fc5ce4b5f128502b31",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/content-security-policy-strict-deployment.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/content-security-policy-strict-deployment.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/content-security-policy-strict-deployment",
+      "contentHash": "6c21fd7b8e3f9b2062989e17080d544b8b75b0c8a4f5404c9dbec10be2c789fa",
       "role": "canonical",
       "type": "concept"
     },
@@ -39,6 +55,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/csrf-defense-boundaries",
       "contentHash": "e39674bbb689671b39dbf0bc5999b4bda2a4c9bcd52e8c9fe92e0406e7ac6a9a",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/css-container-queries.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/css-container-queries.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/css-container-queries",
+      "contentHash": "145400586897da588f7c3a06dce0a22fe4383f58afa29e24ccc3ac4fa6cc5e3a",
       "role": "canonical",
       "type": "concept"
     },
@@ -130,6 +154,14 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/password-hashing-and-pbkdf2-parameters.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/password-hashing-and-pbkdf2-parameters.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/password-hashing-and-pbkdf2-parameters",
+      "contentHash": "22beabf854432a5f06f2eb68fcc6069b95a26288c9208c4aca3a3d17805d0f1e",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/pointer-target-size.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/pointer-target-size.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -174,7 +206,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/session-security-and-isolation.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/session-security-and-isolation",
-      "contentHash": "cd977d8382ae9579aa0efc3e4c45d075d08cd7d1d1c469e5788ab86a007da6a2",
+      "contentHash": "9b34d1c2c70f6b180537d9cf987922538cea67b935782cfdc4442bcf0e522a19",
       "role": "canonical",
       "type": "concept"
     },
@@ -230,7 +262,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/tailwind-v4-css-first-architecture.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/tailwind-v4-css-first-architecture",
-      "contentHash": "aeb98f16dc72b110c049f72c21468c971d6ebbcdb4ea10d6adc8807b1bfd83e3",
+      "contentHash": "d379afbbc1d1b969c76379d89666c48818d75e292f5537d997e9699d67f67614",
       "role": "canonical",
       "type": "concept"
     },
@@ -246,7 +278,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/wallpaper-accent-oklch-contrast-solver.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/wallpaper-accent-oklch-contrast-solver",
-      "contentHash": "e576a1223395b3d5bb37a377c311d6286fd4d0763a14cf0afb367a75d4dca834",
+      "contentHash": "5cee88ee7d506af4440f7f7dbaf57f885470a981c0e07d1cc59f1d25ffc4f701",
       "role": "canonical",
       "type": "concept"
     },
@@ -254,7 +286,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/web-animations-api-runtime-architecture.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/web-animations-api-runtime-architecture",
-      "contentHash": "f80bc5ff0f93f9e04bda6187ac8f9f716afb4f2e0f6a33846a671b5388d665b5",
+      "contentHash": "88105c416f96a795416bdc1ae4ea6ce271febbbabbab3f931b00d53a83246423",
       "role": "canonical",
       "type": "concept"
     },
@@ -270,7 +302,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/xss-sanitization-and-trusted-types.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/xss-sanitization-and-trusted-types",
-      "contentHash": "78365486bd4a24645ea6edd8edd7a42f5fdd51263c7c65bd335f2a9cf5e282ff",
+      "contentHash": "868b17b81a262cec4a5535f80d50c087fb637f6b3b579669ce05be6bb6f504e1",
       "role": "canonical",
       "type": "concept"
     },
@@ -959,6 +991,46 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/SRC-2026-10-29-003",
       "contentHash": "d98bde90594d2948d682f907afc779138022a625870e34b9b54774b150154d12",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-30-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-30-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-30-001",
+      "contentHash": "32ec96d6ae7e069b4f430c7b7f2387cccf619d195bd988e888cd7a353b65b786",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-30-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-30-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-30-002",
+      "contentHash": "1143071e43c779ca5f9b4fd258d6e2d91ce32d0d53863f455bfa0d981fb70ba3",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-30-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-30-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-30-003",
+      "contentHash": "532ecf0a9df2983d517d9cae2e7323728b7fa73f5862fe2686a1e97b248621a0",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-30-004.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-30-004.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-30-004",
+      "contentHash": "8f2511305d580966c54302de90a242b6fde33ea2130d1b0106da6e91165347f1",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-30-005.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-30-005.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-30-005",
+      "contentHash": "f2ba015ca02f9511bd730f52ec1d095c8884a22cb519b93bb1c058af25d04085",
       "role": "evidence",
       "type": "source"
     },
@@ -1687,6 +1759,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-10-30-issue-338-c3-ai",
       "contentHash": "9961c56a5666e3326b4f6e7119480811d80c685f5b8036edd8fbfe3225b9e319",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-30-issue-340.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-30-issue-340.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-30-issue-340",
+      "contentHash": "7d396f52378ee90ad24fb43cd92dc72d777d87bf7c3b78b4ab9c57865e1139ae",
       "role": "evidence",
       "type": "source"
     },

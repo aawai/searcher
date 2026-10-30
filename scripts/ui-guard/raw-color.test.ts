@@ -5,19 +5,16 @@ import {
     isWallpaperFilterException,
 } from "./exceptions.ts";
 import { findRawColors, hasRawColor } from "./raw-color.ts";
-import { loadVisualRegistry } from "./registry.ts";
 import { FIXTURE_REGISTRY } from "./test-registry.ts";
 
 function scanCss(file: string, css: string) {
     return scanCssCode(file, css, FIXTURE_REGISTRY);
 }
 
-Deno.test("raw-color - issue #322 audit probe reports raw-color with exact locations", async () => {
-    const registry = await loadVisualRegistry();
-    const violations = scanCssCode(
+Deno.test("raw-color - reports raw colors with exact file, line, and column locations", () => {
+    const violations = scanCss(
         "web/src/app/audit-probe.css",
         ".audit{color:#ff00ff;background:#00ff00}",
-        registry,
     );
     assertEquals(violations, [
         {

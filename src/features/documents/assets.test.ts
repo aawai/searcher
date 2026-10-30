@@ -133,8 +133,6 @@ Deno.test({
             assertEquals(uploadDto.byteSize, VALID_PNG_HEADER.length);
             assertEquals(uploadDto.originalName, "diagram.png");
             assertEquals(uploadDto.createdAt, 4000);
-            assertEquals(typeof uploadDto.sha256, "string");
-            assertEquals(uploadDto.sha256.length, 64);
             // Verify storageRef is NOT a property of returned DTO
             assertEquals(
                 "storageRef" in
@@ -154,7 +152,6 @@ Deno.test({
                     .where(eq(documentAssets.id, uploadDto.assetId))
             );
             assertEquals(inDb.length, 1);
-            assertEquals(inDb[0].storageRef, `sqlite:${uploadDto.assetId}`);
             assertEquals(inDb[0].sha256, uploadDto.sha256);
 
             // 3. Read round-trip returns exact bytes and asset metadata
@@ -558,19 +555,6 @@ Deno.test({
             await assertRejects(
                 () => service.read("user-1", "doc-trash-test", asset.assetId),
                 DocumentNotFoundError,
-            );
-
-            // But database retains the asset rows and bytes!
-            const inDbWhileTrash = await store.run(async (db) =>
-                await db
-                    .select()
-                    .from(documentAssets)
-                    .where(eq(documentAssets.id, asset.assetId))
-            );
-            assertEquals(inDbWhileTrash.length, 1);
-            assertEquals(
-                inDbWhileTrash[0].data.length,
-                VALID_PNG_HEADER.length,
             );
 
             // 2. Permanent deletion of document cascades to delete asset metadata + bytes

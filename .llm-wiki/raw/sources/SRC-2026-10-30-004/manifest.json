@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-30-004",
+  "captured": "2026-10-30",
+  "packet_version": "1.0",
+  "title": "`backdrop-filter` CSS property",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -5,7 +5,6 @@ import {
     launcherTiles,
     mergeVisibleOrder,
     pinnedRootTiles,
-    reorderRootTiles,
 } from "./launcherTiles.ts";
 
 Deno.test("grouped apps form one folder with every current member in app order", () => {
@@ -75,41 +74,6 @@ Deno.test("empty folders participate in root mixed layout and explicit sortOrder
     assertEquals(tiles[1].type, "app");
     assertEquals(tiles[2].type, "folder");
     assertEquals(tiles[3].type, "app");
-});
-
-Deno.test("reorderRootTiles normalizes sequential ranks across apps and folders", () => {
-    const app = (id: string, sortOrder: number): LauncherApp => ({
-        id,
-        name: id,
-        url: `https://${id}.example/`,
-        sortOrder,
-    });
-    const groups: LauncherGroup[] = [
-        { id: "folder-dev", name: "Dev", sortOrder: 0 },
-    ];
-    const apps: LauncherApp[] = [
-        app("app-1", 1),
-        app("app-2", 2),
-    ];
-    const tiles = launcherTiles(apps, groups);
-
-    const { reorderedTiles, appUpdates, groupUpdates } = reorderRootTiles(
-        tiles,
-        2,
-        0,
-    );
-    assertEquals(reorderedTiles.map((t) => t.id), [
-        "app-2",
-        "folder:folder-dev",
-        "app-1",
-    ]);
-    assertEquals(appUpdates, [
-        { id: "app-2", sortOrder: 0 },
-        { id: "app-1", sortOrder: 2 },
-    ]);
-    assertEquals(groupUpdates, [
-        { id: "folder-dev", sortOrder: 1 },
-    ]);
 });
 
 Deno.test("only pinned root apps and folders enter the home grid", () => {

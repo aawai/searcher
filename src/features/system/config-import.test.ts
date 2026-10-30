@@ -113,7 +113,7 @@ Deno.test("Config Export/Import: validates malformed input gracefully", async ()
     );
 });
 
-Deno.test("Config Export/Import: roundtrip exports and imports settings, system providers and models without secrets", async () => {
+Deno.test("Config Export/Import: roundtrip exports system providers without secrets, imports them disabled and updates on re-import", async () => {
     const { store, service } = await setupTestDb();
     const now = Date.now();
 

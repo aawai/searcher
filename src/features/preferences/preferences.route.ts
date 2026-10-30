@@ -58,7 +58,7 @@ const BackgroundImage = v.optional(v.nullable(v.pipe(
     v.maxLength(2048),
     v.check((value) => {
         return parseWallpaperSource(value) !== null;
-    }, "壁纸必须是 HTTPS 地址、本人上传的壁纸或合法的 CSS 渐变"),
+    }, "壁纸必须是 HTTPS 地址或本人上传的壁纸"),
 )));
 const WallpaperCompositions = v.optional(
     v.nullable(

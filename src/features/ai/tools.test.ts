@@ -4,11 +4,7 @@ import { DatabaseStore, openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
 import { users } from "../../db/schema.ts";
 import { DocumentsService } from "../documents/service.ts";
-import {
-    buildToolDefinitions,
-    executeToolCall,
-    getAiCapabilities,
-} from "./tools.ts";
+import { buildToolDefinitions, executeToolCall } from "./tools.ts";
 
 function createInMemoryStore(): DatabaseStore {
     const native = new DatabaseSync(":memory:");
@@ -58,15 +54,6 @@ async function createDocumentsStore(): Promise<DatabaseStore> {
     });
     return store;
 }
-
-Deno.test("Tools: getAiCapabilities returns tool and attachment caps", () => {
-    const caps = getAiCapabilities();
-    assertEquals(caps.tools.documents, true);
-    assertEquals(caps.tools.apps, true);
-    assertEquals(caps.attachments.maxFiles, 4);
-    assertEquals(caps.attachments.maxImageSize, 5 * 1024 * 1024);
-    assertEquals(caps.attachments.maxTextSize, 1 * 1024 * 1024);
-});
 
 Deno.test("Tools: buildToolDefinitions respects opt-in flags", () => {
     const empty = buildToolDefinitions({
@@ -193,58 +180,54 @@ Deno.test("Tools: executeToolCall apps lookup returns read-only apps", async () 
     }
 });
 
-Deno.test("Tools: executeToolCall web search queries SearXNG mock", async () => {
+Deno.test("Tools: executeToolCall web search surfaces SearXNG HTTP failures as tool errors", async () => {
     const store = createInMemoryStore();
     try {
-        // Spin up a small local server simulating SearXNG
-        const server = Deno.serve({ port: 0 }, (req) => {
-            const url = new URL(req.url);
-            if (url.pathname === "/search") {
-                const q = url.searchParams.get("q");
-                return new Response(
-                    JSON.stringify({
-                        query: q,
-                        results: [
-                            {
-                                title: "Deno Documentation",
-                                url: "https://deno.com",
-                                content:
-                                    "Deno is a modern runtime for JavaScript and TypeScript.",
-                            },
-                        ],
-                    }),
-                    { headers: { "Content-Type": "application/json" } },
-                );
-            }
-            return new Response("Not found", { status: 404 });
-        });
-
-        const addr = server.addr as Deno.NetAddr;
-        const mockSearxngUrl = `http://127.0.0.1:${addr.port}`;
-
+        const server = Deno.serve(
+            { port: 0 },
+            () => new Response("unavailable", { status: 503 }),
+        );
         try {
+            const addr = server.addr as Deno.NetAddr;
             const res = await executeToolCall(
                 "web_search",
                 { query: "deno runtime" },
                 {
                     userId: "u1",
                     store,
-                    searxngUrl: mockSearxngUrl,
+                    searxngUrl: `http://127.0.0.1:${addr.port}`,
                 },
             );
-
             assertEquals(res.toolName, "webSearch");
-            assertExists(res.sources);
-            assertEquals(res.sources.length, 1);
-            const source = res.sources[0];
-            if (source.type === "document") {
-                throw new Error("Expected a web source citation");
-            }
-            assertEquals(source.title, "Deno Documentation");
-            assertEquals(source.url, "https://deno.com");
+            assertEquals(res.result, null);
+            assertEquals(res.error, "SearXNG search failed with status 503");
         } finally {
             await server.shutdown();
         }
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("Tools: executeToolCall web search reports an unreachable SearXNG as a tool error", async () => {
+    const store = createInMemoryStore();
+    const server = Deno.serve({ port: 0 }, () => new Response("ok"));
+    const addr = server.addr as Deno.NetAddr;
+    await server.shutdown();
+    try {
+        const res = await executeToolCall(
+            "web_search",
+            { query: "deno runtime" },
+            {
+                userId: "u1",
+                store,
+                searxngUrl: `http://127.0.0.1:${addr.port}`,
+            },
+        );
+        assertEquals(res.toolName, "webSearch");
+        assertEquals(res.result, null);
+        assertEquals(res.sources, undefined);
+        assertEquals(typeof res.error, "string");
     } finally {
         await store.close();
     }

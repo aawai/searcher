@@ -4,22 +4,6 @@ import { FIXTURE_MARKDOWN, FIXTURE_REGISTRY } from "./test-registry.ts";
 import { scanTsxCode } from "./tsx-scanner.ts";
 import { scanCssCode } from "./css-scanner.ts";
 
-Deno.test("tailwind-scale - audit probe rejects unregistered text-xl and gap-7", async () => {
-    const registry = await loadVisualRegistry();
-    const violations = scanTsxCode(
-        "web/src/app/AuditProbe.tsx",
-        '<div className="text-xl gap-7"/>',
-        registry,
-    );
-    assertEquals(
-        violations.map((v) => [v.rule, v.property, v.value]),
-        [
-            ["unregistered-tailwind-visual", "className", "text-xl"],
-            ["unregistered-tailwind-visual", "className", "gap-7"],
-        ],
-    );
-});
-
 Deno.test("tailwind-scale - registry table fails closed on missing, duplicate, or raw-value entries", () => {
     assertThrows(
         () =>

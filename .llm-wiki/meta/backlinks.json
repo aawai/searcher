@@ -11,6 +11,11 @@
     "entities/searcher-项目",
     "sources/SRC-2026-10-24-010"
   ],
+  "concepts/backdrop-filter-backdrop-root": [
+    "concepts/wallpaper-accent-oklch-contrast-solver",
+    "concepts/web-animations-api-runtime-architecture",
+    "sources/SRC-2026-10-30-004"
+  ],
   "concepts/browser-storage-persistence-and-eviction": [
     "concepts/http-cache-and-service-worker-boundaries",
     "concepts/offline-first-与-local-draft-持久化架构",
@@ -20,6 +25,10 @@
     "sources/SRC-2026-10-28-003",
     "sources/SRC-2026-10-28-004",
     "sources/SRC-2026-10-28-005"
+  ],
+  "concepts/content-security-policy-strict-deployment": [
+    "concepts/xss-sanitization-and-trusted-types",
+    "sources/SRC-2026-10-30-003"
   ],
   "concepts/contract-first-testing": [
     "concepts/modal-layering-and-escape-dismissal",
@@ -41,7 +50,12 @@
     "concepts/xss-sanitization-and-trusted-types",
     "sources/SRC-2026-10-26-003",
     "sources/SRC-2026-10-27-006",
-    "sources/SRC-2026-10-29-001"
+    "sources/SRC-2026-10-29-001",
+    "sources/SRC-2026-10-30-005"
+  ],
+  "concepts/css-container-queries": [
+    "concepts/tailwind-v4-css-first-architecture",
+    "sources/SRC-2026-10-30-002"
   ],
   "concepts/css-custom-property-fallback-and-registration": [
     "concepts/tailwind-v4-css-first-architecture",
@@ -143,6 +157,10 @@
     "sources/SRC-2026-10-24-007",
     "sources/SRC-2026-10-28-005"
   ],
+  "concepts/password-hashing-and-pbkdf2-parameters": [
+    "concepts/session-security-and-isolation",
+    "sources/SRC-2026-10-30-001"
+  ],
   "concepts/pointer-target-size": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/wallpaper-accent-oklch-contrast-solver",
@@ -176,10 +194,12 @@
     "sources/SRC-2026-09-27-003"
   ],
   "concepts/session-security-and-isolation": [
+    "concepts/content-security-policy-strict-deployment",
     "concepts/csrf-defense-boundaries",
     "concepts/deno-permission-boundaries",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/http-cache-and-service-worker-boundaries",
+    "concepts/password-hashing-and-pbkdf2-parameters",
     "concepts/pwa-service-worker-update-lifecycle",
     "concepts/xss-sanitization-and-trusted-types",
     "entities/hono-framework",
@@ -196,6 +216,8 @@
     "sources/SRC-2026-10-27-005",
     "sources/SRC-2026-10-28-001",
     "sources/SRC-2026-10-29-001",
+    "sources/SRC-2026-10-30-001",
+    "sources/SRC-2026-10-30-005",
     "sources/searcher-session-token-hash-is-not-salted",
     "syntheses/searcher-system-architecture"
   ],
@@ -210,6 +232,7 @@
     "sources/SRC-2026-09-25-026"
   ],
   "concepts/single-process-architecture": [
+    "concepts/content-security-policy-strict-deployment",
     "concepts/sqlite-fts5-fulltext-search",
     "entities/deno-runtime",
     "entities/hono-framework",
@@ -270,25 +293,30 @@
     "sources/SRC-2026-10-27-002"
   ],
   "concepts/tailwind-v4-css-first-architecture": [
+    "concepts/css-container-queries",
     "concepts/css-custom-property-fallback-and-registration",
     "concepts/wallpaper-accent-oklch-contrast-solver",
     "entities/searcher-项目",
     "entities/shadcn-ui-system",
     "sources/SRC-2026-09-27-002",
-    "sources/SRC-2026-10-27-003"
+    "sources/SRC-2026-10-27-003",
+    "sources/SRC-2026-10-30-002"
   ],
   "concepts/view-transitions-shared-element": [
     "entities/react-19-framework",
     "sources/SRC-2026-10-24-009"
   ],
   "concepts/wallpaper-accent-oklch-contrast-solver": [
+    "concepts/backdrop-filter-backdrop-root",
     "concepts/pointer-target-size",
     "entities/searcher-项目",
     "sources/SRC-2026-10-25-001",
     "sources/SRC-2026-10-25-002",
-    "sources/SRC-2026-10-25-003"
+    "sources/SRC-2026-10-25-003",
+    "sources/SRC-2026-10-30-004"
   ],
   "concepts/web-animations-api-runtime-architecture": [
+    "concepts/backdrop-filter-backdrop-root",
     "concepts/css-custom-property-fallback-and-registration",
     "concepts/view-transitions-shared-element",
     "sources/SRC-2026-10-05-003",
@@ -301,11 +329,13 @@
     "sources/SRC-2026-10-25-006"
   ],
   "concepts/xss-sanitization-and-trusted-types": [
+    "concepts/content-security-policy-strict-deployment",
     "concepts/session-security-and-isolation",
     "entities/searcher-项目",
     "sources/SRC-2026-10-27-005",
     "sources/SRC-2026-10-27-006",
-    "sources/SRC-2026-10-29-001"
+    "sources/SRC-2026-10-29-001",
+    "sources/SRC-2026-10-30-003"
   ],
   "entities/deno-runtime": [
     "concepts/deno-native-serve-architecture",
@@ -434,6 +464,7 @@
     "concepts/dnd-kit-2d-grid-sorting-architecture",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/modal-layering-and-escape-dismissal",
+    "concepts/password-hashing-and-pbkdf2-parameters",
     "concepts/pointer-target-size",
     "concepts/pwa-service-worker-update-lifecycle",
     "concepts/route-level-code-splitting-dynamic-bundling",
@@ -791,7 +822,8 @@
   ],
   "sources/SRC-2026-10-27-006": [
     "concepts/xss-sanitization-and-trusted-types",
-    "sources/SRC-2026-10-27-005"
+    "sources/SRC-2026-10-27-005",
+    "sources/SRC-2026-10-30-003"
   ],
   "sources/SRC-2026-10-28-001": [
     "concepts/http-cache-and-service-worker-boundaries",
@@ -820,6 +852,7 @@
   ],
   "sources/SRC-2026-10-29-001": [
     "concepts/session-security-and-isolation",
+    "sources/SRC-2026-10-30-005",
     "sources/searcher-session-token-hash-is-not-salted"
   ],
   "sources/SRC-2026-10-29-002": [
@@ -829,6 +862,21 @@
   "sources/SRC-2026-10-29-003": [
     "concepts/sqlite-backup-and-recovery-boundaries",
     "entities/drizzle-sqlite-store"
+  ],
+  "sources/SRC-2026-10-30-001": [
+    "concepts/password-hashing-and-pbkdf2-parameters"
+  ],
+  "sources/SRC-2026-10-30-002": [
+    "concepts/css-container-queries"
+  ],
+  "sources/SRC-2026-10-30-003": [
+    "concepts/content-security-policy-strict-deployment"
+  ],
+  "sources/SRC-2026-10-30-004": [
+    "concepts/backdrop-filter-backdrop-root"
+  ],
+  "sources/SRC-2026-10-30-005": [
+    "concepts/session-security-and-isolation"
   ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
@@ -857,7 +905,9 @@
   "sources/obs-2026-09-28-ui-3": [
     "sources/obs-2026-10-23-superseded-obs-2026-09-28-ui-3"
   ],
-  "sources/obs-2026-09-30-widgets": [],
+  "sources/obs-2026-09-30-widgets": [
+    "concepts/css-container-queries"
+  ],
   "sources/obs-2026-09-30-widgets-spatial-desktop-bento-and-controllednotes-determinis": [],
   "sources/obs-2026-09-30-workspace-contract-regression-tests-and-non-modal-desktop-ve": [],
   "sources/obs-2026-10-01-ask-workspace-css-normalized-to-semantic-tokens": [],
@@ -933,6 +983,7 @@
   "sources/obs-2026-10-29-issue-338-a-main": [],
   "sources/obs-2026-10-29-issue-338-b": [],
   "sources/obs-2026-10-30-issue-338-c3-ai": [],
+  "sources/obs-2026-10-30-issue-340": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],

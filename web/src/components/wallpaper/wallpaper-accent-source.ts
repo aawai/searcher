@@ -9,13 +9,9 @@ import { formatWallpaperCss } from "./WallpaperSurface.tsx";
 
 /** Longest side of the downsampled image; enough for a hue histogram. */
 const SAMPLE_SIZE = 64;
-const CSS_COLOR =
-    /#[0-9a-f]{3,8}\b|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([^()]*\)/gi;
 
 export interface WallpaperSample {
     readonly pixels: WallpaperPixels;
-    /** Gradients have no photo subject: their stops vote as a whole. */
-    readonly kind: "image" | "gradient";
 }
 
 function context2d(width: number, height: number) {
@@ -46,25 +42,6 @@ async function sampleImage(url: string): Promise<WallpaperPixels> {
     };
 }
 
-/** One pixel per colour stop, resolved to sRGB through the browser's own CSS parser. */
-function sampleGradient(gradient: string): WallpaperPixels {
-    const probe = document.createElement("span");
-    probe.style.backgroundImage = gradient;
-    document.body.append(probe);
-    const computed = getComputedStyle(probe).backgroundImage;
-    probe.remove();
-    const stops = computed.match(CSS_COLOR) ?? [];
-    const context = context2d(1, 1);
-    const data = new Uint8ClampedArray(stops.length * 4);
-    stops.forEach((stop, index) => {
-        context.clearRect(0, 0, 1, 1);
-        context.fillStyle = stop;
-        context.fillRect(0, 0, 1, 1);
-        data.set(context.getImageData(0, 0, 1, 1).data, index * 4);
-    });
-    return { width: stops.length, height: 1, data };
-}
-
 /**
  * Pixels of a wallpaper source as the page renders it; null when there is no
  * wallpaper or the image cannot be read (decode failure, remote without CORS).
@@ -74,15 +51,8 @@ export async function sampleWallpaper(
 ): Promise<WallpaperSample | null> {
     const css = formatWallpaperCss(source);
     if (css === "none") return null;
-    if (!css.startsWith("url(")) {
-        const pixels = sampleGradient(css);
-        return pixels.width > 0 ? { pixels, kind: "gradient" } : null;
-    }
     try {
-        return {
-            pixels: await sampleImage(JSON.parse(css.slice(4, -1))),
-            kind: "image",
-        };
+        return { pixels: await sampleImage(JSON.parse(css.slice(4, -1))) };
     } catch {
         return null;
     }
@@ -114,10 +84,7 @@ export function useWallpaperAccent(
     return useMemo(
         () =>
             current
-                ? deriveWallpaperAccent(
-                    current.pixels,
-                    current.kind === "image" ? { focalX, focalY } : undefined,
-                )
+                ? deriveWallpaperAccent(current.pixels, { focalX, focalY })
                 : null,
         [current, focalX, focalY],
     );

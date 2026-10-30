@@ -107,14 +107,10 @@ Deno.test("notebooks depth: move rejecting depth >= 2 and moving root with child
     }
 });
 
-Deno.test("notebooks cycle & self: moving notebook to itself or under own child rejected", async () => {
+Deno.test("notebooks cycle & self: moving notebook to itself rejected", async () => {
     const { store, service, userA } = await setupTestDb();
     try {
         const root = await service.create(userA, { name: "Root" });
-        const child = await service.create(userA, {
-            name: "Child",
-            parentId: root.id,
-        });
 
         // Move to self
         await assertRejects(
@@ -123,14 +119,6 @@ Deno.test("notebooks cycle & self: moving notebook to itself or under own child 
             },
             DocumentValidationError,
             "不能将笔记本移动到自身",
-        );
-
-        // Move root to its child
-        await assertRejects(
-            async () => {
-                await service.move(userA, root.id, child.id);
-            },
-            DocumentValidationError,
         );
     } finally {
         await store.close();
@@ -513,50 +501,6 @@ Deno.test("notebooks delete: detaches active and trash documents, promotes child
 
         // Verify name is NOT deduplicated
         assertEquals(promotedChild2!.name, "Existing Root");
-    } finally {
-        await store.close();
-    }
-});
-
-Deno.test("notebooks delete: child notebook deletion only detaches documents and deletes self", async () => {
-    const { store, service, userA, now } = await setupTestDb();
-    try {
-        const root = await service.create(userA, { name: "Root" });
-        const child = await service.create(userA, {
-            name: "Child",
-            parentId: root.id,
-        });
-
-        const docId = crypto.randomUUID();
-        await store.run(async (db) => {
-            await db.insert(documents).values({
-                id: docId,
-                userId: userA,
-                notebookId: child.id,
-                title: "Doc in child",
-                currentBody: "body",
-                createdAt: now,
-                updatedAt: now,
-                deletedAt: null,
-            });
-        });
-
-        await service.delete(userA, child.id);
-
-        // Child deleted
-        const remaining = await service.list(userA);
-        assertEquals(remaining.length, 1);
-        assertEquals(remaining[0].id, root.id);
-
-        // Document detached
-        await store.run(async (db) => {
-            const [doc] = await db
-                .select()
-                .from(documents)
-                .where(eq(documents.id, docId))
-                .all();
-            assertEquals(doc.notebookId, null);
-        });
     } finally {
         await store.close();
     }

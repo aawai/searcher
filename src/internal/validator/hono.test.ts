@@ -1,9 +1,9 @@
 import { assert, assertEquals } from "@std/assert";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { bodyLimit } from "hono/body-limit";
 import { responseMiddleware } from "../hono/middleware/response.ts";
 import { errorResponse } from "../hono/error.ts";
-import { loggerMiddleware } from "../hono/middleware/logger.ts";
 import { Routes } from "../hono/routes.ts";
 import type { DefaultVariables } from "../hono/type.ts";
 import {
@@ -124,28 +124,6 @@ Deno.test("validator 保留 JSON false 值", async () => {
     assertEquals(body.data, { active: false });
 });
 
-Deno.test("validator JSON 不依赖 Content-Length", async () => {
-    const { app, routes } = createTestApp();
-    routes.public.post(
-        "/json-no-content-length",
-        validator({ active: json(v.boolean()) }),
-        (c, data) => c.success(data),
-    );
-    routes.mount(app);
-
-    const response = await app.fetch(
-        new Request("http://localhost/json-no-content-length", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ active: false }),
-        }),
-    );
-
-    assertEquals(response.status, 200);
-    const body = asRecord(await response.json());
-    assertEquals(body.data, { active: false });
-});
-
 Deno.test("validator malformed JSON 返回固定 400 envelope", async () => {
     const { app, routes } = createTestApp();
     routes.public.post(
@@ -256,39 +234,6 @@ Deno.test("validator JSON 类型失败返回 400 issue", async () => {
     assertEquals(body.code, 400);
     assertEquals(body.status, false);
     assertIssuePath(body, "active");
-});
-
-Deno.test("logger 与 validator 共享 JSON body cache", async () => {
-    const app = new Hono<DefaultVariables>();
-    app.use(responseMiddleware);
-    app.onError(errorResponse);
-    app.use(loggerMiddleware("console"));
-    const routes = new Routes<DefaultVariables>();
-    routes.public.post(
-        "/json-with-logger",
-        validator({ active: json(v.boolean()) }),
-        (c, data) => c.success(data),
-    );
-    routes.mount(app);
-
-    const response = await app.fetch(
-        new Request("http://localhost/json-with-logger", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ active: false }),
-        }),
-        {
-            remoteAddr: {
-                hostname: "127.0.0.1",
-                port: 1234,
-                transport: "tcp",
-            },
-        },
-    );
-
-    assertEquals(response.status, 200);
-    const body = asRecord(await response.json());
-    assertEquals(body.data, { active: false });
 });
 
 Deno.test("validator 校验 param 并传递字段数据", async () => {
@@ -408,30 +353,67 @@ Deno.test("validator 解析 FormData 失败时返回固定错误消息且不泄�
     });
 });
 
-Deno.test("validator 解析 catch 保留已有的 413 HTTPException", async () => {
-    const { app, routes } = createTestApp();
+Deno.test("validator 流式超限请求体经 bodyLimit 抛出的 413 不被包装为 400", async () => {
+    const app = new Hono<DefaultVariables>();
+    app.use(responseMiddleware);
+    app.onError(errorResponse);
+    app.use(bodyLimit({ maxSize: 8 }));
+    const routes = new Routes<DefaultVariables>();
+    let handlerCalled = false;
     routes.public.post(
-        "/json-large",
-        () => {
-            // 模拟前置请求体大小限制中间件抛出 413
-            throw new HTTPException(413, { message: "Payload Too Large" });
-        },
+        "/json-streamed",
         validator({ data: json(v.string()) }),
-        (c, data) => c.success(data),
+        (c, data) => {
+            handlerCalled = true;
+            return c.success(data);
+        },
     );
     routes.mount(app);
 
     const response = await app.fetch(
-        new Request("http://localhost/json-large", {
+        new Request("http://localhost/json-streamed", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ data: "too big" }),
+            body: JSON.stringify({ data: "too big for limit" }),
         }),
     );
 
     assertEquals(response.status, 413);
     const body = asRecord(await response.json());
     assertEquals(body.code, 413);
-    assertEquals(body.message, "Payload Too Large");
     assertEquals(body.status, false);
+    assertEquals(handlerCalled, false);
+});
+
+Deno.test("validator 保留 JSON 请求体读取阶段抛出的 HTTPException 状态码", async () => {
+    const { app, routes } = createTestApp();
+    let handlerCalled = false;
+    routes.public.post(
+        "/json-read-error",
+        validator({ data: json(v.string()) }),
+        (c, data) => {
+            handlerCalled = true;
+            return c.success(data);
+        },
+    );
+    routes.mount(app);
+
+    const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+            controller.error(
+                new HTTPException(413, { message: "Payload Too Large" }),
+            );
+        },
+    });
+    const response = await app.fetch(
+        new Request("http://localhost/json-read-error", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body,
+            duplex: "half",
+        } as RequestInit),
+    );
+
+    assertEquals(response.status, 413);
+    assertEquals(handlerCalled, false);
 });

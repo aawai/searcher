@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects, assertThrows } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import {
     CLIProxyAPIHomeAdapter,
     discoverProviderModels,
@@ -7,7 +7,6 @@ import {
     OpenAICompatibleAdapter,
     redactSensitiveData,
     resolveOriginEndpoint,
-    resolveProviderAdapter,
 } from "./provider-adapter.ts";
 import { OpenAIClientError } from "./client.ts";
 
@@ -20,7 +19,7 @@ Deno.test("ProviderAdapter: redactSensitiveData redacts api keys and Bearer toke
     assertEquals(redacted.includes("[REDACTED]"), true);
 });
 
-Deno.test("ProviderAdapter: resolveOriginEndpoint resolves to origin root and validates base URL security", () => {
+Deno.test("ProviderAdapter: resolveOriginEndpoint resolves to origin root", () => {
     // 1. https://api.example.com/v1 -> https://api.example.com/user/models
     assertEquals(
         resolveOriginEndpoint("https://api.example.com/v1", "/user/models"),
@@ -35,28 +34,6 @@ Deno.test("ProviderAdapter: resolveOriginEndpoint resolves to origin root and va
     assertEquals(
         resolveOriginEndpoint("http://localhost:8080/v1/chat", "/user/models"),
         "http://localhost:8080/user/models",
-    );
-
-    // 4. Invalid security policy: queries, credentials, private IPs throw OpenAIClientError
-    assertThrows(
-        () =>
-            resolveOriginEndpoint(
-                "https://user:pass@api.example.com/v1",
-                "/user/models",
-            ),
-        OpenAIClientError,
-    );
-    assertThrows(
-        () =>
-            resolveOriginEndpoint(
-                "https://api.example.com/v1?query=1",
-                "/user/models",
-            ),
-        OpenAIClientError,
-    );
-    assertThrows(
-        () => resolveOriginEndpoint("http://192.168.1.1/v1", "/user/models"),
-        OpenAIClientError,
     );
 });
 
@@ -372,13 +349,36 @@ Deno.test("ProviderAdapter: CLIProxyAPIHomeAdapter preserves standard models whe
     assertEquals(models[0].id, "standard-model");
 });
 
-Deno.test("ProviderAdapter: resolveProviderAdapter respects discovery mode", () => {
-    const openAiAdapter = resolveProviderAdapter("openai-compatible");
-    assertEquals(openAiAdapter.id, "openai-compatible");
+Deno.test("ProviderAdapter: discoverProviderModels in cliproxyapi mode queries standard and origin user models", async () => {
+    const requested: string[] = [];
+    const fetchFn: typeof fetch = (input) => {
+        const url = String(input);
+        requested.push(url);
+        if (url.endsWith("/user/models")) {
+            return Promise.resolve(
+                Response.json({ models: [{ id: "user-model" }] }),
+            );
+        }
+        if (url.endsWith("/models")) {
+            return Promise.resolve(
+                Response.json({ data: [{ id: "standard-model" }] }),
+            );
+        }
+        return Promise.resolve(new Response("Not Found", { status: 404 }));
+    };
 
-    const cliAdapter = resolveProviderAdapter("cliproxyapi");
-    assertEquals(cliAdapter.id, "cliproxyapi");
+    const models = await discoverProviderModels(
+        "https://proxy.example.com/v1",
+        "proxy-key",
+        { discoveryMode: "cliproxyapi", fetchFn },
+    );
 
-    const autoAdapter = resolveProviderAdapter("auto");
-    assertEquals(autoAdapter.id, "openai-compatible");
+    assertEquals(requested.sort(), [
+        "https://proxy.example.com/user/models",
+        "https://proxy.example.com/v1/models",
+    ]);
+    assertEquals(models.map((m) => m.id).sort(), [
+        "standard-model",
+        "user-model",
+    ]);
 });

@@ -98,9 +98,6 @@ const PAINTED: readonly {
     },
 ];
 
-const GRADIENT_SAMPLE =
-    "linear-gradient(135deg, rgb(246 211 101), rgb(253 160 133))";
-
 function paint(sample: (typeof PAINTED)[number]): string {
     const width = 320;
     const height = 180;
@@ -192,12 +189,8 @@ export default function AccentLab() {
             label: sample.label,
             source: paint(sample),
         }));
-        const all = [
-            ...painted,
-            { id: "gradient", label: "渐变", source: GRADIENT_SAMPLE },
-        ];
-        setSamples(all);
-        setSource(all[0].source);
+        setSamples(painted);
+        setSource(painted[0].source);
     }, []);
 
     useEffect(() => {

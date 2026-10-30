@@ -463,33 +463,6 @@ Deno.test("Ownership scanner - scanOwnership aggregates violations across files 
     }
 });
 
-Deno.test("Ownership scanner - clean directory passes with 0 violations", async () => {
-    const tempDir = await Deno.makeTempDir({ prefix: "ownership-clean-test-" });
-    try {
-        await Deno.mkdir(`${tempDir}/design-system`, { recursive: true });
-        await Deno.mkdir(`${tempDir}/components/ui`, { recursive: true });
-
-        await Deno.writeTextFile(
-            `${tempDir}/design-system/tokens.css`,
-            `:root { --accent: #333; }`,
-        );
-
-        await Deno.writeTextFile(
-            `${tempDir}/components/ui/button.tsx`,
-            `export function Button() { return <button className="btn">Click</button>; }`,
-        );
-
-        const result = await scanOwnership(tempDir, tempDir);
-        assertEquals(result.passed, true);
-        assertEquals(result.violations.length, 0);
-
-        const report = formatOwnershipReport(result);
-        assertEquals(report.includes("[PASS]"), true);
-    } finally {
-        await Deno.remove(tempDir, { recursive: true });
-    }
-});
-
 Deno.test("Ownership integration - runCheck fails when ownership violations exist", async () => {
     const tempDir = await Deno.makeTempDir({ prefix: "ownership-check-fail-" });
     const baselinePath = `${tempDir}/baseline.json`;
@@ -623,72 +596,41 @@ Deno.test("shared feedback cannot be redefined by a feature stylesheet", () => {
     ]);
 });
 
-Deno.test("Issue 80 P6 Negative Fixture: apps defining workspace (.workspace-foo) is denied by Rule F", () => {
-    const violations = checkRuleF_CssPrefixOwnership(
-        "web/src/features/workspace/apps-workspace.css",
-        ".workspace-foo { display: block; } .workspace-panel { padding: 8px; }",
-    );
-    assertEquals(violations.length, 2);
-    assertEquals(violations.map((v) => v.snippet), [
-        ".workspace-foo",
-        ".workspace-panel",
-    ]);
-    for (const v of violations) {
-        assertEquals(v.rule, "css-prefix-ownership");
-    }
-});
-
-Deno.test("Issue 80 P6 Negative Fixture: notes defining apps (.apps-workspace-foo) is denied by Rule F", () => {
-    const violations = checkRuleF_CssPrefixOwnership(
-        "web/src/features/workspace/notes-workspace.css",
-        ".apps-workspace-foo { display: block; } .apps-workspace-grid { margin: 0; }",
-    );
-    assertEquals(violations.length, 2);
-    assertEquals(violations.map((v) => v.snippet), [
-        ".apps-workspace-foo",
-        ".apps-workspace-grid",
-    ]);
-    for (const v of violations) {
-        assertEquals(v.rule, "css-prefix-ownership");
-    }
-});
-
-Deno.test("Issue 80 P6 Negative Fixture: global.css defining workspace (.workspace-foo) is denied by Rule A", () => {
-    const violations = checkRuleA_GlobalFeaturePrefix(
-        "web/src/styles/global.css",
-        ".workspace-foo { color: red; } .apps-workspace-bar { padding: 0; } .notes-workspace-baz { margin: 0; }",
-    );
-    assertEquals(violations.length, 3);
-    assertEquals(violations.map((v) => v.snippet), [
-        ".workspace-foo",
-        ".apps-workspace-bar",
-        ".notes-workspace-baz",
-    ]);
-    for (const v of violations) {
-        assertEquals(v.rule, "feature-selector-in-global");
-    }
-});
-
-Deno.test("Issue 80 P6 Negative Fixture: legacy apps workspace banner error and variants are denied by Rule E", () => {
-    const cssCode = `
-.apps-workspace-banner { display: flex; }
-.apps-workspace-banner--error { color: red; }
-.apps-workspace-banner--offline { color: orange; }
-.apps-workspace-banner--loading { color: gray; }
-.apps-workspace-banner-loading { color: gray; }
-.apps-workspace-banner-actions { display: flex; }
-.apps-workspace-banner--actions { display: flex; }
-`;
-    const cssViolations = checkRuleE_ForbiddenLegacyUiClass(
-        "web/src/features/workspace/apps-workspace.css",
-        cssCode,
-    );
-    assertEquals(cssViolations.length, 7);
-    for (const v of cssViolations) {
-        assertEquals(v.rule, "forbidden-legacy-ui-class");
-    }
-
-    const tsxCode = `
+Deno.test("Issue 80 negative fixtures: banned workspace selectors are flagged by their owning rule", () => {
+    const cases = [
+        {
+            label: "Rule F: apps stylesheet defining workspace selectors",
+            rule: "css-prefix-ownership",
+            violations: checkRuleF_CssPrefixOwnership(
+                "web/src/features/workspace/apps-workspace.css",
+                ".workspace-foo { display: block; } .workspace-panel { padding: 8px; }",
+            ),
+            snippets: [".workspace-foo", ".workspace-panel"],
+        },
+        {
+            label: "Rule F: notes stylesheet defining apps selectors",
+            rule: "css-prefix-ownership",
+            violations: checkRuleF_CssPrefixOwnership(
+                "web/src/features/workspace/notes-workspace.css",
+                ".apps-workspace-foo { display: block; } .apps-workspace-grid { margin: 0; }",
+            ),
+            snippets: [".apps-workspace-foo", ".apps-workspace-grid"],
+        },
+        {
+            label: "Rule A: global.css defining workspace selectors",
+            rule: "feature-selector-in-global",
+            violations: checkRuleA_GlobalFeaturePrefix(
+                "web/src/styles/global.css",
+                ".workspace-foo { color: red; } .apps-workspace-bar { padding: 0; }",
+            ),
+            snippets: [".workspace-foo", ".apps-workspace-bar"],
+        },
+        {
+            label: "Rule E: apps banner clones in TSX",
+            rule: "forbidden-legacy-ui-class",
+            violations: checkRuleE_ForbiddenLegacyUiClass(
+                "web/src/features/workspace/AppsWorkspace.tsx",
+                `
 export function LegacyBannerSample() {
     return (
         <div className="apps-workspace-banner apps-workspace-banner--error">
@@ -698,21 +640,20 @@ export function LegacyBannerSample() {
         </div>
     );
 }
-`;
-    const tsxViolations = checkRuleE_ForbiddenLegacyUiClass(
-        "web/src/features/workspace/AppsWorkspace.tsx",
-        tsxCode,
-    );
-    assertEquals(tsxViolations.length, 3);
-    assertEquals(tsxViolations.map((v) => v.snippet), [
-        "apps-workspace-banner",
-        "apps-workspace-banner--error",
-        "apps-workspace-banner-actions",
-    ]);
-});
-
-Deno.test("Issue 80 P6 Negative Fixture: workspace-empty and apps-workspace-empty are denied by Rule E", () => {
-    const tsxCode = `
+`,
+            ),
+            snippets: [
+                "apps-workspace-banner",
+                "apps-workspace-banner--error",
+                "apps-workspace-banner-actions",
+            ],
+        },
+        {
+            label: "Rule E: empty-state clones in TSX",
+            rule: "forbidden-legacy-ui-class",
+            violations: checkRuleE_ForbiddenLegacyUiClass(
+                "web/src/features/workspace/DocumentsWorkspace.tsx",
+                `
 export function NotesLegacyEmpty() {
     return (
         <div>
@@ -723,35 +664,20 @@ export function NotesLegacyEmpty() {
         </div>
     );
 }
-`;
-    const tsxViolations = checkRuleE_ForbiddenLegacyUiClass(
-        "web/src/features/workspace/DocumentsWorkspace.tsx",
-        tsxCode,
-    );
-    assertEquals(tsxViolations.length, 3);
-    assertEquals(tsxViolations.map((v) => v.snippet), [
-        "workspace-empty",
-        "apps-workspace-empty",
-        "apps-workspace-empty-title",
-    ]);
-
-    const cssCode = `
-.workspace-empty { text-align: center; }
-.apps-workspace-empty { display: flex; }
-.apps-workspace-empty-title { font-weight: bold; }
-`;
-    const cssViolations = checkRuleE_ForbiddenLegacyUiClass(
-        "web/src/features/workspace/apps-workspace.css",
-        cssCode,
-    );
-    assertEquals(cssViolations.length, 3);
-    for (const v of cssViolations) {
-        assertEquals(v.rule, "forbidden-legacy-ui-class");
-    }
-});
-
-Deno.test("Issue 80 P6 Negative Fixture: legacy section and count clones are denied by Rule E", () => {
-    const tsxCode = `
+`,
+            ),
+            snippets: [
+                "workspace-empty",
+                "apps-workspace-empty",
+                "apps-workspace-empty-title",
+            ],
+        },
+        {
+            label: "Rule E: section and count clones in TSX",
+            rule: "forbidden-legacy-ui-class",
+            violations: checkRuleE_ForbiddenLegacyUiClass(
+                "web/src/features/workspace/AppsRootView.tsx",
+                `
 export function LegacySectionSample() {
     return (
         <div className="apps-workspace-section">
@@ -765,131 +691,24 @@ export function LegacySectionSample() {
         </div>
     );
 }
-`;
-    const tsxViolations = checkRuleE_ForbiddenLegacyUiClass(
-        "web/src/features/workspace/AppsRootView.tsx",
-        tsxCode,
-    );
-    assertEquals(tsxViolations.length, 5);
-    assertEquals(tsxViolations.map((v) => v.snippet), [
-        "apps-workspace-section",
-        "apps-workspace-section-header",
-        "apps-workspace-section-title",
-        "apps-workspace-count-badge",
-        "apps-workspace-section-count-badge",
-    ]);
+`,
+            ),
+            snippets: [
+                "apps-workspace-section",
+                "apps-workspace-section-header",
+                "apps-workspace-section-title",
+                "apps-workspace-count-badge",
+                "apps-workspace-section-count-badge",
+            ],
+        },
+    ];
 
-    const cssCode = `
-.apps-workspace-section { display: flex; }
-.apps-workspace-section-header { justify-content: space-between; }
-.apps-workspace-section-title { font-size: 14px; }
-.apps-workspace-count-badge { border-radius: 999px; }
-.apps-workspace-section-count-badge { border-radius: 999px; }
-`;
-    const cssViolations = checkRuleE_ForbiddenLegacyUiClass(
-        "web/src/features/workspace/apps-workspace.css",
-        cssCode,
-    );
-    assertEquals(cssViolations.length, 5);
-    for (const v of cssViolations) {
-        assertEquals(v.rule, "forbidden-legacy-ui-class");
+    for (const c of cases) {
+        assertEquals(c.violations.map((v) => v.snippet), c.snippets, c.label);
+        for (const v of c.violations) {
+            assertEquals(v.rule, c.rule, c.label);
+        }
     }
-});
-
-Deno.test("Issue 80 P6 Positive Fixture: authorized workspace CSS prefixes pass Rule F", () => {
-    const workspaceCss = `
-.workspace-panel { display: flex; }
-.workspace-section { display: flex; flex-direction: column; }
-.workspace-header { align-items: center; }
-.workspace-root { flex: 1 0 auto; }
-.workspace-root-controls { display: flex; }
-.workspace-search-wrap { position: relative; }
-`;
-    assertEquals(
-        checkRuleF_CssPrefixOwnership(
-            "web/src/features/workspace/workspace.css",
-            workspaceCss,
-        ).length,
-        0,
-    );
-
-    const notesCss = `
-.notes-workspace-list { display: grid; }
-.notes-workspace-editor { height: 100%; }
-`;
-    assertEquals(
-        checkRuleF_CssPrefixOwnership(
-            "web/src/features/workspace/notes-workspace.css",
-            notesCss,
-        ).length,
-        0,
-    );
-});
-
-Deno.test("Issue 80 P6 Positive Fixture: shared feedback in workspace views passes ownership rules", () => {
-    const tsxCode = `
-export function CanonicalFeedbackSample() {
-    return (
-        <div className="workspace-panel">
-            <StatusBanner tone="error" density="compact">加载失败</StatusBanner>
-            <StatusBanner tone="warning" density="compact">当前离线</StatusBanner>
-            <EmptyState density="compact" title="暂无便签" />
-            <LoadingState density="compact" label="正在加载..." />
-        </div>
-    );
-}
-`;
-    assertEquals(
-        checkRuleE_ForbiddenLegacyUiClass(
-            "web/src/features/workspace/DocumentsWorkspace.tsx",
-            tsxCode,
-        ).length,
-        0,
-    );
-
-    const semanticCss = `
-.status-banner { display: flex; }
-.empty-state { text-align: center; }
-.loading-state { display: flex; }
-`;
-    assertEquals(
-        checkRuleF_CssPrefixOwnership(
-            "web/src/components/searcher/semantic.css",
-            semanticCss,
-        ).length,
-        0,
-    );
-});
-
-Deno.test("Issue 80 P6 Positive Fixture: domain-specific launcher and notes layout pass prefix ownership", () => {
-    const launcherCss = `
-.launcher-grid { display: grid; }
-.launcher-tile { width: 68px; height: 68px; }
-.launcher-folder-item { border-radius: var(--radius); }
-.webapp-tile { position: relative; }
-.webapp-icon { width: 32px; height: 32px; }
-`;
-    assertEquals(
-        checkRuleF_CssPrefixOwnership(
-            "web/src/components/searcher/launcher.css",
-            launcherCss,
-        ).length,
-        0,
-    );
-
-    const notesCss = `
-.notes-workspace .notes-workspace-list { display: grid; }
-.notes-workspace .note-preview { overflow-wrap: break-word; }
-.notes-workspace .note-drag { cursor: default; }
-.notes-workspace-editor .note-editor { min-height: 100%; }
-`;
-    assertEquals(
-        checkRuleF_CssPrefixOwnership(
-            "web/src/features/workspace/notes-workspace.css",
-            notesCss,
-        ).length,
-        0,
-    );
 });
 
 Deno.test("Issue 80 P6 Integration: scanOwnership detects workspace negative fixtures and passes clean workspace", async () => {
@@ -1332,4 +1151,52 @@ export function Composer() {
 
     const violations = checkRuleM_PrimitiveFeatureCascadeOrder(tsx, css);
     assertEquals(violations.length, 0);
+});
+
+Deno.test("Ownership integration: scanOwnership reports undefined CSS tokens (Rule C wiring)", async () => {
+    const dir = await Deno.makeTempDir({ prefix: "ownership-rule-c-" });
+    try {
+        await Deno.mkdir(`${dir}/design-system`, { recursive: true });
+        await Deno.mkdir(`${dir}/web/src/app`, { recursive: true });
+        await Deno.writeTextFile(
+            `${dir}/design-system/tokens.css`,
+            `:root { --accent: #3b82f6; }`,
+        );
+        await Deno.writeTextFile(
+            `${dir}/web/src/app/chat.css`,
+            `.chat { color: var(--accent); padding: var(--missing-padding); }`,
+        );
+
+        const result = await scanOwnership(dir, dir);
+        assertEquals(result.passed, false);
+        assertEquals(
+            result.byRule["undefined-css-token"].map((v) => v.snippet),
+            ["var(--missing-padding)"],
+        );
+    } finally {
+        await Deno.remove(dir, { recursive: true });
+    }
+});
+
+Deno.test("Ownership integration: scanOwnership reports bare feature class overriding primitive structure (Rule M wiring)", async () => {
+    const dir = await Deno.makeTempDir({ prefix: "ownership-rule-m-" });
+    try {
+        await Deno.mkdir(`${dir}/web/src/app`, { recursive: true });
+        await Deno.writeTextFile(
+            `${dir}/web/src/app/SettingsPage.tsx`,
+            `export function Settings() {\n    return <RadioGroup className="settings-example" />;\n}\n`,
+        );
+        await Deno.writeTextFile(
+            `${dir}/web/src/app/settings.css`,
+            `.settings-example {\n    display: grid;\n}\n`,
+        );
+
+        const result = await scanOwnership(dir, dir);
+        assertEquals(
+            result.byRule["primitive-feature-cascade-order"].map((v) => v.snippet),
+            [".settings-example"],
+        );
+    } finally {
+        await Deno.remove(dir, { recursive: true });
+    }
 });

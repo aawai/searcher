@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { pixels, shouldRelayout } from "./library-viewport.ts";
+import { shouldRelayout } from "./library-viewport.ts";
 
 const size = (width: number, height: number) => ({ width, height });
 
@@ -16,9 +16,4 @@ Deno.test("a soft-keyboard height change with an editable focused does not re-pl
     assertEquals(shouldRelayout(size(390, 844), size(390, 520), true), false);
     // Rotation changes the width, so it still re-plans even while typing.
     assertEquals(shouldRelayout(size(390, 844), size(844, 390), true), true);
-});
-
-Deno.test("pixel lengths parse computed values", () => {
-    assertEquals(pixels("84px"), 84);
-    assertEquals(Number.isNaN(pixels("")), true);
 });

@@ -3,7 +3,6 @@ import {
     checkFontSize,
     checkRadius,
     isRegisteredAccentFill,
-    loadVisualRegistry,
     parseVisualRegistry,
 } from "./registry.ts";
 import { FIXTURE_MARKDOWN, FIXTURE_REGISTRY } from "./test-registry.ts";
@@ -68,44 +67,6 @@ Deno.test("registry - breakpoint table fails closed on malformed or unordered bo
             FIXTURE_MARKDOWN.replace("**断点登记。**", "**未登记。**"),
         )
     );
-});
-
-Deno.test("registry - the committed Visual Language document parses and registers the known Tokens", async () => {
-    const registry = await loadVisualRegistry();
-    for (
-        const token of [
-            "--font-metadata-size",
-            "--font-input-touch-size",
-            "--font-brand-size",
-            "--font-launcher-micro",
-        ]
-    ) {
-        assert(registry.fontTokens.has(token), token);
-    }
-    for (
-        const token of [
-            "--control-radius",
-            "--multiline-radius",
-            "--radius-lg",
-            "--radius-launcher-icon",
-        ]
-    ) {
-        assert(registry.radiusTokens.has(token), token);
-    }
-    assert(registry.accentFills.length > 0);
-    for (
-        const utility of [
-            "font-medium",
-            "gap-2",
-            "gap-3",
-            "p-4",
-            "rounded-lg",
-            "shadow-none",
-            "icon-md",
-        ]
-    ) {
-        assert(registry.tailwindVisualUtilities.has(utility), utility);
-    }
 });
 
 Deno.test("registry - font-size accepts registered Tokens and relative keywords only", () => {

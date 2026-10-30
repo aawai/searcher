@@ -6,26 +6,6 @@ import { createApp } from "./app.ts";
 
 const ORIGIN = "http://localhost:8000";
 
-const OFFICIAL_PAGES = [
-    "/",
-    "/ask",
-    "/login",
-    "/register",
-    "/account",
-    "/trash",
-    "/share",
-    "/settings",
-    "/settings/appearance",
-    "/settings/ai",
-    "/settings/data",
-    "/admin",
-    "/admin/users",
-    "/admin/settings",
-    "/admin/audit",
-    "/admin/backup",
-    "/design-lab",
-] as const;
-
 async function setupTestApp() {
     const tempDir = await Deno.makeTempDir({ prefix: "searcher_app_test_" });
     const htmlContent =
@@ -56,40 +36,7 @@ async function setupTestApp() {
     };
 }
 
-Deno.test("SPA route integration: all official pages return SPA HTML shell", async () => {
-    const ctx = await setupTestApp();
-    try {
-        for (const page of OFFICIAL_PAGES) {
-            const res = await ctx.app.request(page);
-            assertEquals(
-                res.status,
-                200,
-                `Expected 200 for official page ${page}`,
-            );
-            const contentType = res.headers.get("content-type") ?? "";
-            assertStringIncludes(
-                contentType,
-                "text/html",
-                `Expected text/html content-type for ${page}`,
-            );
-            assertEquals(
-                res.headers.get("cache-control"),
-                "no-cache",
-                `Expected Cache-Control: no-cache for ${page}`,
-            );
-            const body = await res.text();
-            assertEquals(
-                body,
-                ctx.htmlContent,
-                `Expected HTML shell body for ${page}`,
-            );
-        }
-    } finally {
-        await ctx.cleanup();
-    }
-});
-
-Deno.test("SPA route integration: unknown regular page returns SPA shell for client 404", async () => {
+Deno.test("SPA route integration: unknown and React-routed regular pages return SPA shell", async () => {
     const ctx = await setupTestApp();
     try {
         const unknownPaths = [
@@ -97,6 +44,8 @@ Deno.test("SPA route integration: unknown regular page returns SPA shell for cli
             "/some/nested/unknown/route",
             "/settings/unknown-tab",
             "/admin/unknown-section",
+            "/settings/appearance",
+            "/admin/users",
         ];
 
         for (const path of unknownPaths) {
@@ -106,30 +55,6 @@ Deno.test("SPA route integration: unknown regular page returns SPA shell for cli
                 200,
                 `Expected 200 SPA shell for unknown page ${path}`,
             );
-            const contentType = res.headers.get("content-type") ?? "";
-            assertStringIncludes(contentType, "text/html");
-            assertEquals(res.headers.get("cache-control"), "no-cache");
-            const body = await res.text();
-            assertEquals(body, ctx.htmlContent);
-        }
-    } finally {
-        await ctx.cleanup();
-    }
-});
-
-Deno.test("SPA route integration: query parameters and query strings preserve SPA shell", async () => {
-    const ctx = await setupTestApp();
-    try {
-        const queryUrls = [
-            "/ask?q=searcher%20query&tab=all",
-            "/login?next=%2Fsettings%2Fappearance",
-            "/trash?page=1&sort=desc",
-            "/settings?mode=zen",
-        ];
-
-        for (const url of queryUrls) {
-            const res = await ctx.app.request(url);
-            assertEquals(res.status, 200, `Expected 200 for ${url}`);
             const contentType = res.headers.get("content-type") ?? "";
             assertStringIncludes(contentType, "text/html");
             assertEquals(res.headers.get("cache-control"), "no-cache");
@@ -370,31 +295,6 @@ Deno.test("PWA files: missing manifest, service worker or icon return static 404
     }
 });
 
-Deno.test("SPA route: existing static assets are served properly", async () => {
-    const ctx = await setupTestApp();
-    try {
-        const getRes = await ctx.app.request("/assets/bundle.js");
-        assertEquals(getRes.status, 200);
-        assertStringIncludes(
-            getRes.headers.get("content-type") ?? "",
-            "javascript",
-        );
-        assertEquals(await getRes.text(), ctx.jsContent);
-
-        const headRes = await ctx.app.request("/assets/bundle.js", {
-            method: "HEAD",
-        });
-        assertEquals(headRes.status, 200);
-        assertStringIncludes(
-            headRes.headers.get("content-type") ?? "",
-            "javascript",
-        );
-        assertEquals(await headRes.text(), "");
-    } finally {
-        await ctx.cleanup();
-    }
-});
-
 Deno.test("Static cache: hashed build assets preserve content, MIME and GET/HEAD headers", async () => {
     const ctx = await setupTestApp();
     try {
@@ -446,6 +346,23 @@ Deno.test("Static cache: hashed build assets preserve content, MIME and GET/HEAD
 Deno.test("Static cache: unversioned and unsupported files require revalidation", async () => {
     const ctx = await setupTestApp();
     try {
+        const bundle = await ctx.app.request("/assets/bundle.js");
+        assertEquals(bundle.status, 200);
+        assertEquals(bundle.headers.get("cache-control"), "no-cache");
+        assertStringIncludes(
+            bundle.headers.get("content-type") ?? "",
+            "javascript",
+        );
+        assertEquals(await bundle.text(), ctx.jsContent);
+        const bundleHead = await ctx.app.request("/assets/bundle.js", {
+            method: "HEAD",
+        });
+        assertEquals(bundleHead.status, 200);
+        assertStringIncludes(
+            bundleHead.headers.get("content-type") ?? "",
+            "javascript",
+        );
+        assertEquals(await bundleHead.text(), "");
         const paths = [
             "bundle.js?name=index-AbCd1234.js",
             "manual.css",

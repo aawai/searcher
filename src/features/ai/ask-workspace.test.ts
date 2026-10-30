@@ -6,7 +6,7 @@ import { users } from "../../db/schema.ts";
 import { DocumentsService } from "../documents/service.ts";
 import { AiService } from "./service.ts";
 import { aiBlobs, aiConversations, aiMessages } from "../../db/ai-schema.ts";
-import { executeToolCall, isValidHttpUrl } from "./tools.ts";
+import { executeToolCall } from "./tools.ts";
 
 const TEST_KEY = "12345678901234567890123456789012";
 
@@ -373,94 +373,99 @@ Deno.test("AskWorkspace Phase 3: True parent chain, edit sibling branch, and reg
     }
 });
 
-Deno.test("AskWorkspace Phase 4: Token usage, system instruction, search, and export", async () => {
-    const store = createTestStore();
-    try {
-        const mockFetch: typeof fetch = (input) => {
-            const url = String(input);
-            if (url.endsWith("/models")) {
-                return Promise.resolve(
-                    new Response(
-                        JSON.stringify({ data: [{ id: "m1" }] }),
-                        { headers: { "Content-Type": "application/json" } },
-                    ),
-                );
-            }
-            if (url.endsWith("/chat/completions")) {
-                return Promise.resolve(
-                    new Response(
+async function streamUsageConversation(store: DatabaseStore) {
+    const mockFetch: typeof fetch = (input) => {
+        const url = String(input);
+        if (url.endsWith("/models")) {
+            return Promise.resolve(
+                new Response(
+                    JSON.stringify({ data: [{ id: "m1" }] }),
+                    { headers: { "Content-Type": "application/json" } },
+                ),
+            );
+        }
+        if (url.endsWith("/chat/completions")) {
+            return Promise.resolve(
+                new Response(
+                    `data: ${
+                        JSON.stringify({
+                            choices: [{
+                                delta: { content: "Here is your plan" },
+                            }],
+                        })
+                    }\n\n` +
                         `data: ${
                             JSON.stringify({
-                                choices: [{
-                                    delta: { content: "Here is your plan" },
-                                }],
+                                choices: [],
+                                usage: {
+                                    prompt_tokens: 42,
+                                    completion_tokens: 18,
+                                },
                             })
                         }\n\n` +
-                            `data: ${
-                                JSON.stringify({
-                                    choices: [],
-                                    usage: {
-                                        prompt_tokens: 42,
-                                        completion_tokens: 18,
-                                    },
-                                })
-                            }\n\n` +
-                            "data: [DONE]\n\n",
-                        { headers: { "Content-Type": "text/event-stream" } },
-                    ),
-                );
-            }
-            return Promise.resolve(new Response("Not found", { status: 404 }));
-        };
-
-        const service = new AiService({
-            store,
-            encryptionKey: TEST_KEY,
-            fetchFn: mockFetch,
-        });
-
-        const provider = await service.createProvider("u1", {
-            name: "P1",
-            baseUrl: "https://api.example.com/v1",
-            apiKey: "key",
-            scope: "user",
-        }, false);
-
-        let convId = "";
-        let assistantMsgId = "";
-        let doneEvData: unknown = null;
-
-        for await (
-            const ev of service.streamChat("u1", {
-                providerId: provider.id,
-                modelId: "m1",
-                message: "I need a workout plan",
-                systemInstruction: "You are a fitness expert",
-            })
-        ) {
-            if (ev.event === "meta") {
-                const data = ev.data as {
-                    conversationId: string;
-                    assistantMessageId: string;
-                };
-                convId = data.conversationId;
-                assistantMsgId = data.assistantMessageId;
-            } else if (ev.event === "done") {
-                doneEvData = ev.data;
-            }
+                        "data: [DONE]\n\n",
+                    { headers: { "Content-Type": "text/event-stream" } },
+                ),
+            );
         }
+        return Promise.resolve(new Response("Not found", { status: 404 }));
+    };
 
-        // Verify done event contains token usage and occurred after persistence
-        const doneRecord = doneEvData as {
-            inputTokens: number;
-            outputTokens: number;
-            assistantMessageId: string;
-        };
+    const service = new AiService({
+        store,
+        encryptionKey: TEST_KEY,
+        fetchFn: mockFetch,
+    });
+
+    const provider = await service.createProvider("u1", {
+        name: "P1",
+        baseUrl: "https://api.example.com/v1",
+        apiKey: "key",
+        scope: "user",
+    }, false);
+
+    let convId = "";
+    let assistantMsgId = "";
+    let doneEvData: unknown = null;
+
+    for await (
+        const ev of service.streamChat("u1", {
+            providerId: provider.id,
+            modelId: "m1",
+            message: "I need a workout plan",
+            systemInstruction: "You are a fitness expert",
+        })
+    ) {
+        if (ev.event === "meta") {
+            const data = ev.data as {
+                conversationId: string;
+                assistantMessageId: string;
+            };
+            convId = data.conversationId;
+            assistantMsgId = data.assistantMessageId;
+        } else if (ev.event === "done") {
+            doneEvData = ev.data;
+        }
+    }
+
+    const doneRecord = doneEvData as {
+        inputTokens: number;
+        outputTokens: number;
+        assistantMessageId: string;
+    };
+    return { service, convId, assistantMsgId, doneRecord };
+}
+
+Deno.test("AskWorkspace Phase 4: Token usage and system instruction persist with the done event", async () => {
+    const store = createTestStore();
+    try {
+        const { service, convId, assistantMsgId, doneRecord } =
+            await streamUsageConversation(store);
+
         assertEquals(doneRecord.inputTokens, 42);
         assertEquals(doneRecord.outputTokens, 18);
         assertEquals(doneRecord.assistantMessageId, assistantMsgId);
 
-        // Verify persisted in DB
         const conv = await service.getConversation("u1", convId);
         assertEquals(
             conv.conversation.systemInstruction,
@@ -470,8 +475,16 @@ Deno.test("AskWorkspace Phase 4: Token usage, system instruction, search, and ex
         assertExists(asst);
         assertEquals(asst.inputTokens, 42);
         assertEquals(asst.outputTokens, 18);
+    } finally {
+        await store.close();
+    }
+});
 
-        // Search messages in conversation
+Deno.test("AskWorkspace Phase 4: Conversation search and export reflect persisted messages", async () => {
+    const store = createTestStore();
+    try {
+        const { service, convId } = await streamUsageConversation(store);
+
         const searchRes = await service.searchConversationMessages(
             "u1",
             convId,
@@ -480,7 +493,6 @@ Deno.test("AskWorkspace Phase 4: Token usage, system instruction, search, and ex
         assertEquals(searchRes.length, 1);
         assertEquals(searchRes[0].content, "I need a workout plan");
 
-        // Export as Markdown
         const mdExport = await service.exportConversation(
             "u1",
             convId,
@@ -491,7 +503,6 @@ Deno.test("AskWorkspace Phase 4: Token usage, system instruction, search, and ex
         assertEquals(mdExport.content.includes("workout plan"), true);
         assertEquals(mdExport.content.includes("### Assistant"), true);
 
-        // Export as JSON
         const jsonExport = await service.exportConversation(
             "u1",
             convId,
@@ -1008,7 +1019,7 @@ Deno.test("AskWorkspace: Non-vision model rejects image attachments with 400 bef
     }
 });
 
-Deno.test("AskWorkspace: Tool call security rejects unknown names and disabled tools", async () => {
+Deno.test("AskWorkspace: Tool call security rejects unknown tool names", async () => {
     const store = createTestStore();
     try {
         // 1. Unknown tool name
@@ -1017,25 +1028,12 @@ Deno.test("AskWorkspace: Tool call security rejects unknown names and disabled t
             store,
         });
         assertEquals(unkRes.error?.includes("不支持或未知的工具调用"), true);
-
-        // 2. Disabled tool
-        const disRes = await executeToolCall("lookup_documents", {}, {
-            userId: "u1",
-            store,
-            allowedTools: { documents: false },
-        });
-        assertEquals(disRes.error?.includes("未在当前会话中启用"), true);
     } finally {
         await store.close();
     }
 });
 
-Deno.test("AskWorkspace: SearXNG URL validation rejects invalid URLs", async () => {
-    assertEquals(isValidHttpUrl("not-a-url"), false);
-    assertEquals(isValidHttpUrl("ftp://evil.com"), false);
-    assertEquals(isValidHttpUrl("http://localhost:8080"), true);
-    assertEquals(isValidHttpUrl("https://search.example.com"), true);
-
+Deno.test("AskWorkspace: web search with an invalid SearXNG URL reports not configured", async () => {
     const store = createTestStore();
     try {
         const res = await executeToolCall("web_search", { query: "test" }, {

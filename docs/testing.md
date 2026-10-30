@@ -84,8 +84,9 @@ untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` �
 job 执行 `documents-core`、`pagination-short`、`pagination-manual`、
 `pagination-consecutive`、`pagination-mixed`、`routing`、`supplemental`。
 前五片无重无漏地组成完整 Documents：core 排除四个分页入口，每个分页片
-独占服务/内存数据库/资源目录/Browser/Context，串行执行 10 个场景，四片合计
-保留原有全部 40 场景及观察窗口、断言、视口和主题。
+独占服务/内存数据库/资源目录/Browser/Context，串行执行 6 个场景（5 种视口 ×
+默认动效，加 1440×900 reduced motion），四片合计 24 场景；版面与主题无关，
+不再按亮 / 暗重复，空闲观察窗与断言不变。
 每个 job 通过 `deno run -A scripts/e2e/run.ts <suite> --serial`
 先构建一次，再串行执行该片；七个 job 可独立并行，不另跑完整 documents。
 不设置 `E2E_TIMEOUT_MS`，保留测试 helper 的标准超时；job 上限为 60 分钟。
@@ -96,7 +97,8 @@ JUnit，已有诊断仍保留。
 
 原 Bundle 与 Notes workflow 中上述五个 Documents 文件的直接执行步骤已移除，
 由上述 Documents core + 四个分页 job 完整覆盖，避免重复执行；原 Bundle、Home papers、
-Workspace、Wallpaper 门禁及已有 job 名称保持不变。
+Wallpaper 门禁及已有 job 名称保持不变；Workspace 门禁改为 `workspace-a` /
+`workspace-b` 两个并行 matrix job（job 名带 shard 后缀），并集等于完整 `workspace`。
 
 本地完整 Documents 验收使用
 `DENO_JOBS=2 deno task test:documents --parallel`，只启动一个 Deno E2E

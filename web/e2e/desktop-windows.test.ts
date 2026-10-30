@@ -424,32 +424,50 @@ Deno.test("AI 窗口在明暗极端壁纸上保持文字可读", async () => {
                 app.origin + "/api/preferences",
                 {
                     headers: { Origin: app.origin },
-                    data: {
-                        theme,
-                        backgroundImage: `linear-gradient(${color}, ${color})`,
-                    },
+                    data: { theme },
                 },
             );
             assertEquals(response.status(), 200);
+            await page.goto(app.origin + "/settings/appearance");
+            const png = await page.evaluate((fill) => {
+                const canvas = document.createElement("canvas");
+                canvas.width = 1440;
+                canvas.height = 900;
+                const context = canvas.getContext("2d")!;
+                context.fillStyle = fill;
+                context.fillRect(0, 0, 1440, 900);
+                return canvas.toDataURL("image/png").split(",")[1];
+            }, color);
+            await page.getByTestId("wallpaper-file-input").setInputFiles({
+                name: `${color}.png`,
+                mimeType: "image/png",
+                buffer: Buffer.from(png, "base64"),
+            });
+            await page.getByTestId("wallpaper-toast").filter({
+                hasText: "已上传",
+            }).waitFor();
             await page.goto(app.origin + "/ask");
             const heading = page.locator(".ask-empty-hero__title");
             await heading.waitFor({ state: "visible" });
             await page.waitForFunction(
-                ({ theme, color }) => {
+                (theme) => {
+                    if (document.documentElement.dataset.theme !== theme) {
+                        return false;
+                    }
                     const wallpaper = document.querySelector<HTMLElement>(
                         ".wallpaper-surface__image",
                     );
-                    const value = color === "white"
-                        ? "255, 255, 255"
-                        : "0, 0, 0";
-                    return document.documentElement.dataset.theme === theme &&
-                        Boolean(
-                            wallpaper &&
-                                getComputedStyle(wallpaper).backgroundImage
-                                    .includes(value),
-                        );
+                    const url = /url\("?([^")]+)"?\)/.exec(
+                        wallpaper
+                            ? getComputedStyle(wallpaper).backgroundImage
+                            : "",
+                    )?.[1];
+                    if (!url) return false;
+                    const image = new Image();
+                    image.src = url;
+                    return image.decode().then(() => true, () => false);
                 },
-                { theme, color },
+                theme,
             );
             await page.evaluate(() =>
                 Promise.allSettled(

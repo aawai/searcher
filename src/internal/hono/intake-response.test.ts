@@ -9,12 +9,7 @@ import {
     type Handler,
     type HandlerData,
 } from "./request-intake.ts";
-import {
-    type AsyncValidatorFn,
-    isValidator,
-    query,
-    validator,
-} from "@internal/validator/hono.ts";
+import { isValidator, query, validator } from "@internal/validator/hono.ts";
 import * as v from "@valibot/valibot";
 import type { DefaultVariables } from "./type.ts";
 
@@ -202,16 +197,6 @@ Deno.test("validator 品牌与编译期类型保护", () => {
         });
 
     assertEquals(isValidator(unbrandedValidator), false);
-
-    // 编译期类型检查：未打品牌的函数不能赋值给 AsyncValidatorFn
-    (() => {
-        // @ts-expect-error unbrandedAsyncValidatorFn 缺少 [VALIDATOR_BRAND] 品牌属性
-        const _typedValidator: AsyncValidatorFn<{ name: string }> = () =>
-            Promise.resolve({
-                success: true as const,
-                data: { name: "alice" },
-            });
-    });
 });
 
 Deno.test("createRequestIntake 与 Handler/HandlerData 支持自定义 Env 和类型保护", async () => {
@@ -257,12 +242,4 @@ Deno.test("createRequestIntake 与 Handler/HandlerData 支持自定义 Env 和�
     assertEquals(Array.isArray(failJson.data?.issues), true);
     assertEquals(failJson.data.issues[0]?.path, ["page"]);
     assertEquals(typeof failJson.data.issues[0]?.message, "string");
-    // 类型级别保护验证
-    (() => {
-        // @ts-expect-error createRequestIntake 必须是二参数 (validator, callback)
-        createRequestIntake((c: unknown) => c);
-
-        // @ts-expect-error Handler 必须返回 Response 或 Promise<Response>，不能返回 void 或 number
-        const _invalidHandler: Handler = (_c) => 123;
-    });
 });

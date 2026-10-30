@@ -47,7 +47,7 @@ export const WALLPAPER_READABILITY_MASKS: Record<WallpaperReadability, number> =
         focus: 0.48,
     };
 
-export const MAX_REMOTE_OR_GRADIENT_PRESENTATIONS = 24;
+export const MAX_REMOTE_PRESENTATIONS = 24;
 const VALID_DATA_IMAGE_REGEX =
     /^data:image\/(?:png|jpeg|webp|avif);base64,[A-Za-z0-9+/=]+$/;
 
@@ -151,20 +151,7 @@ export function wallpaperPresentation(
     const key = parsed.value;
     const found = records?.[key];
     if (found) {
-        const normalized = normalizeWallpaperPresentation(found);
-        // Gradient always keeps center focal point
-        if (parsed.type === "gradient") {
-            normalized.composition = { focalX: 0.5, focalY: 0.5 };
-        }
-        return normalized;
-    }
-
-    // Unrecorded gradient default center composition
-    if (parsed.type === "gradient") {
-        return {
-            ...DEFAULT_WALLPAPER_PRESENTATION,
-            composition: { focalX: 0.5, focalY: 0.5 },
-        };
+        return normalizeWallpaperPresentation(found);
     }
 
     return { ...DEFAULT_WALLPAPER_PRESENTATION };
@@ -261,7 +248,7 @@ export function normalizeWallpaperPresentations(
         }
     }
 
-    // Retention enforcement: max 24 remote / gradient entries
+    // Retention enforcement: max 24 remote entries
     enforcePresentationRetention(records, options?.currentSource);
 
     return records;
@@ -279,22 +266,20 @@ function enforcePresentationRetention(
             }
         }
     }
-    // 2. Count remote / gradient entries
-    const remoteOrGradientKeys: string[] = [];
+    // 2. Count remote entries
+    const remoteKeys: string[] = [];
     for (const key of Object.keys(records)) {
         if (key.startsWith("data:")) continue;
-        const parsed = parseWallpaperSource(key);
-        if (parsed?.type === "remote" || parsed?.type === "gradient") {
-            remoteOrGradientKeys.push(key);
+        if (parseWallpaperSource(key)?.type === "remote") {
+            remoteKeys.push(key);
         }
     }
 
-    if (remoteOrGradientKeys.length > MAX_REMOTE_OR_GRADIENT_PRESENTATIONS) {
-        const excess = remoteOrGradientKeys.length -
-            MAX_REMOTE_OR_GRADIENT_PRESENTATIONS;
+    if (remoteKeys.length > MAX_REMOTE_PRESENTATIONS) {
+        const excess = remoteKeys.length - MAX_REMOTE_PRESENTATIONS;
         let removed = 0;
         // Evict oldest first (iteration order) skipping currentSource
-        for (const key of remoteOrGradientKeys) {
+        for (const key of remoteKeys) {
             if (removed >= excess) break;
             if (key === currentSource) continue;
             delete records[key];

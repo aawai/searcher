@@ -6,7 +6,7 @@ import {
     shouldConfirmLibraryAction,
 } from "./library-state.ts";
 
-Deno.test("opening a note is an overlay, not a home scene change", () => {
+Deno.test("opening a note opens the library on a documents root stack and leave closes it", () => {
     const opened = libraryReducer(initialLibraryState, {
         type: "select",
         selection: { kind: "notes" },

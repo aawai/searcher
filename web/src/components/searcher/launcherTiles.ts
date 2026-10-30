@@ -110,34 +110,6 @@ export function pinnedRootTiles(tiles: LauncherTile[]): LauncherTile[] {
     );
 }
 
-/** Normalized reordering of root tiles */
-export function reorderRootTiles(
-    tiles: LauncherTile[],
-    oldIndex: number,
-    newIndex: number,
-): {
-    reorderedTiles: LauncherTile[];
-    appUpdates: Array<{ id: string; sortOrder: number }>;
-    groupUpdates: Array<{ id: string; sortOrder: number }>;
-} {
-    const reorderedTiles = tiles.slice();
-    const [moved] = reorderedTiles.splice(oldIndex, 1);
-    reorderedTiles.splice(newIndex, 0, moved);
-
-    const appUpdates: Array<{ id: string; sortOrder: number }> = [];
-    const groupUpdates: Array<{ id: string; sortOrder: number }> = [];
-
-    reorderedTiles.forEach((tile, index) => {
-        if (tile.app) {
-            appUpdates.push({ id: tile.app.id, sortOrder: index });
-        } else if (tile.group) {
-            groupUpdates.push({ id: tile.group.id, sortOrder: index });
-        }
-    });
-
-    return { reorderedTiles, appUpdates, groupUpdates };
-}
-
 /** Reorder only visible slots; filtered-out apps retain their canonical positions. */
 export function mergeVisibleOrder(
     allIds: string[],

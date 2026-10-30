@@ -156,27 +156,22 @@ Deno.test("logger 优先使用直接连接地址且不信任代理头", async ()
     assertEquals(records[0].obj.ip, "172.16.0.5");
 });
 
-Deno.test("logger 规范化 options 不修改已冻结调用方对象", () => {
+Deno.test("logger 规范化 options 不修改已冻结调用方对象", async () => {
     const callerOptions: ConsoleOptions = Object.freeze({
         output: "console",
         consolePrettyOptions: Object.freeze({
             colorize: false,
         }),
     });
+    const snapshot = structuredClone(callerOptions);
 
-    const middleware = loggerMiddleware(callerOptions);
-    assertEquals(typeof middleware, "function");
-    assertEquals(callerOptions.output, "console");
-});
-
-Deno.test("logger 传入 false 明确禁用，直接穿透 next", async () => {
     const app = new Hono();
-    app.use(loggerMiddleware(false));
-    app.get("/disabled", (c) => c.text("ok"));
+    app.use(loggerMiddleware(callerOptions));
+    app.get("/frozen", (c) => c.text("ok"));
 
-    const response = await app.request("http://localhost/disabled");
+    const response = await app.request("http://localhost/frozen");
     assertEquals(response.status, 200);
-    assertEquals(await response.text(), "ok");
+    assertEquals(callerOptions, snapshot);
 });
 
 Deno.test("logger 不主动读取或解析 request body，保持 body 未读契约", async () => {

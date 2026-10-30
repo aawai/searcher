@@ -50,6 +50,25 @@ Deno.test("document partitions cover documents exactly once and full retains eve
     assertEquals(files.every((file) => full.includes(file)), true);
 });
 
+Deno.test("workspace shards cover workspace exactly once, in workspace order", () => {
+    const shards = [suiteFiles("workspace-a"), suiteFiles("workspace-b")];
+    const files = shards.flat();
+    assertEquals(files.length, new Set(files).size);
+    assertEquals(files.toSorted(), suiteFiles("workspace").toSorted());
+    for (const shard of shards) {
+        assertEquals(shard.length > 0, true);
+        assertEquals(
+            shard,
+            suiteFiles("workspace").filter((file) => shard.includes(file)),
+        );
+    }
+    // Shards keep the Workspace merge-gate default: explicit parallel only.
+    assertEquals(
+        parseRunOptions(["workspace-a", "--parallel"]),
+        run("workspace-a", true, false),
+    );
+});
+
 Deno.test("full can run in parallel and report every failure", () => {
     assertEquals(
         parseRunOptions(["full", "--parallel", "--no-fail-fast"]),

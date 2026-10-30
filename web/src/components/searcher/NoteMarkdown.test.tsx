@@ -16,12 +16,16 @@ Deno.test("NoteMarkdown: renders GFM task lists with disabled checkboxes", () =>
     const html = ReactDOMServer.renderToStaticMarkup(
         <NoteMarkdown body={markdown} />,
     );
-    assertEquals(html.includes('class="contains-task-list"'), true);
-    assertEquals(html.includes('class="task-list-item"'), true);
-    assertEquals(html.includes('type="checkbox"'), true);
-    assertEquals(html.includes('checked=""'), true);
-    assertEquals(html.includes("disabled="), true);
-    assertEquals(html.includes('readOnly=""'), true);
+    const checkboxes = html.match(/<input[^>]*type="checkbox"[^>]*>/g) ?? [];
+    assertEquals(checkboxes.length, 2);
+    assertEquals(
+        checkboxes.every((box) => /\sdisabled(=|\s|>)/.test(box)),
+        true,
+    );
+    assertEquals(
+        checkboxes.filter((box) => /\schecked(=|\s|>)/.test(box)).length,
+        1,
+    );
     assertEquals((html.match(/aria-label="[^"]+"/g) ?? []).length, 2);
 });
 

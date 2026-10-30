@@ -341,8 +341,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
 
             // Turn wallpaper ON on mobile
             await request("/api/preferences", "PATCH", {
-                backgroundImage:
-                    "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                backgroundImage: "https://example.com/wallpaper.jpg",
             });
             // Verify window surface boundary and readability with wallpaper
             const sheetWithWp = await sheet.evaluate((el) => {

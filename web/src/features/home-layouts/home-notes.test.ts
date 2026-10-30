@@ -1,7 +1,5 @@
 import { assertEquals } from "@std/assert";
 import {
-    defaultNoteLayout,
-    hasSavedCell,
     type HomeNoteItem,
     needsNoteRefresh,
     setNote,
@@ -86,37 +84,4 @@ Deno.test("setNote removes on null and keeps the newer local version on stale in
         setNote(notes, "c", note("c", 0)).map((item) => item.id),
         ["c", "a", "b"],
     );
-});
-
-Deno.test("a note needs a saved band, column and row to keep a cell", () => {
-    const layout = note("a", 1).layout;
-
-    assertEquals(hasSavedCell(note("a", 1)), false);
-    assertEquals(
-        hasSavedCell(note("a", 1, { layout: { ...layout, band: "left" } })),
-        false,
-    );
-    assertEquals(
-        hasSavedCell(note("a", 1, {
-            layout: { ...layout, band: "left", col: 4 },
-        })),
-        false,
-    );
-    assertEquals(
-        hasSavedCell(note("a", 1, { layout: { ...layout, col: 4, row: 1 } })),
-        false,
-    );
-    assertEquals(
-        hasSavedCell(note("a", 1, {
-            layout: { ...layout, band: "left", col: 4, row: 1 },
-        })),
-        true,
-    );
-    assertEquals(defaultNoteLayout(), {
-        band: null,
-        col: null,
-        row: null,
-        size: "s",
-        updatedAt: 0,
-    });
 });

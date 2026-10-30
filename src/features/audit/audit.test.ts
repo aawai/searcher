@@ -62,3 +62,40 @@ Deno.test("AuditService: logs and retrieves audit records", async () => {
 
     await store.close();
 });
+
+Deno.test("AuditService: log persists metadata without secrets", async () => {
+    const store = openDatabase(":memory:");
+    await migrateDatabase(store);
+    try {
+        const audit = new AuditService({
+            store,
+            now: () => 1000000,
+        });
+
+        await audit.log({
+            actorUserId: null,
+            action: "admin.user.create",
+            targetType: "user",
+            targetId: "target-456",
+            metadata: {
+                username: "dave",
+                password: "supersecretpassword",
+                token: "sessiontoken",
+                body: "note body content",
+            },
+        });
+
+        const { items } = await audit.list();
+        assertEquals(items.length, 1);
+        const metadataJson = items[0].metadataJson ?? "";
+        const stored = JSON.parse(metadataJson) as Record<string, unknown>;
+        assertEquals(stored.username, "dave");
+        assertEquals(stored.password, undefined);
+        assertEquals(stored.token, undefined);
+        assertEquals(stored.body, undefined);
+        assertEquals(metadataJson.includes("supersecretpassword"), false);
+        assertEquals(metadataJson.includes("sessiontoken"), false);
+    } finally {
+        await store.close();
+    }
+});
