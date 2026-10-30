@@ -138,20 +138,36 @@
     user-select: none;
 }
 
+/* No strip of its own: the mode switch and the document stats are pinned to the
+   bottom corners of the editor and the text scrolls beneath them. */
 .document-editor-status-bar {
+    position: absolute;
+    inset-inline: var(--space-4);
+    inset-block-end: 0;
+    z-index: var(--elevation-local-10);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-control-gap);
-    padding: var(--space-1) var(--space-3);
-    border-top: 1px solid var(--border-subtle);
-    flex-shrink: 0;
+    pointer-events: none;
 }
 
 .document-editor-status-actions {
     display: flex;
     align-items: center;
     gap: var(--space-1);
+}
+
+.document-editor-status-actions,
+.document-metadata-bar {
+    pointer-events: auto;
+    background: var(--surface-l3);
+    border-radius: var(--control-radius);
+}
+
+.document-metadata-bar {
+    padding-inline: var(--space-2);
+    min-height: var(--control-compact-height);
 }
 
 /* Mode trigger: the icon of the current mode; compact so the status bar stays slim. */
@@ -266,13 +282,32 @@
 
 /* Editor Scroll & Readable Container */
 .document-editor-scroll-area {
+    /* Room beneath the text for the status overlay pinned to the corners; the
+       text owns it (the readable wrapper shrinks to the viewport, so padding
+       on this box would not extend the scroll range). */
+    --document-status-clearance: calc(var(--control-height) + var(--space-3));
     display: flex;
     flex-direction: column;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     padding: var(--space-4) var(--space-page-inline);
+    scroll-padding-block-end: var(--document-status-clearance);
     scroll-behavior: smooth;
+}
+
+@media (any-pointer: coarse), (max-width: 639px) {
+    .document-editor-scroll-area {
+        --document-status-clearance: calc(
+            var(--control-touch-target) + var(--space-3)
+        );
+    }
+}
+
+/* Page view: the sheets are not part of the text flow, so the scroll area itself
+   ends below the last sheet, clear of the corner overlay. */
+.document-editor-scroll-area:has(.pagination-viewport[data-mode="page"][data-scroll-owner="outer"]) {
+    padding-block-end: calc(var(--space-4) + var(--document-status-clearance));
 }
 
 /* Reduced motion: programmatic and anchor scrolls jump instead of gliding. */
@@ -313,6 +348,7 @@
     color: var(--foreground);
     word-break: break-word;
     overflow-wrap: anywhere;
+    padding-block-end: var(--document-status-clearance);
 }
 
 .document-continuous-editor .ProseMirror p {
@@ -459,6 +495,14 @@
     min-width: 0;
     flex: 1;
 }
+/* The row is a flex box, so the paragraph margin cannot collapse through it:
+   without this the first line sits below the checkbox centred on --task-row-hit. */
+.document-continuous-editor li[data-item-type="task"] > .markdown-list-item-content > :first-child {
+    margin-block-start: 0;
+}
+.document-continuous-editor li[data-item-type="task"] > .markdown-list-item-content > :last-child {
+    margin-block-end: 0;
+}
 
 /* Source View (Plain text Markdown textarea) */
 .document-source-editor {
@@ -476,7 +520,7 @@
     font-family: var(--font-mono);
     font-size: var(--font-code-size);
     line-height: var(--font-code-line-height);
-    padding: var(--space-4);
+    padding: var(--space-4) var(--space-4) var(--document-status-clearance);
     background-color: var(--surface-soft);
     color: var(--foreground);
     border: none;

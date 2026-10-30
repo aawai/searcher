@@ -722,3 +722,62 @@ Deno.test("触屏点击任务栏活动图标：最小化，再点击恢复", asy
         await app.close();
     }
 });
+
+Deno.test("滚动条默认隐藏，滚动时显示并在停止后收起，无箭头按钮", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    try {
+        await loginAndVisit(page, app.origin, "/", user);
+        await page.evaluate(() => {
+            const box = document.createElement("div");
+            box.id = "scroll-probe";
+            box.style.cssText =
+                "position:fixed;top:0;left:0;width:200px;height:100px;overflow:auto";
+            box.innerHTML = '<div style="height:1000px"></div>';
+            document.body.append(box);
+        });
+        const thumb = () =>
+            page.evaluate(() => {
+                const box = document.getElementById("scroll-probe")!;
+                return {
+                    thumb: getComputedStyle(box, "::-webkit-scrollbar-thumb")
+                        .backgroundColor,
+                    button: getComputedStyle(box, "::-webkit-scrollbar-button")
+                        .display,
+                    marked: box.hasAttribute("data-scrolling"),
+                };
+            });
+        const idle = await thumb();
+        assertEquals(idle.thumb, "rgba(0, 0, 0, 0)");
+        assertEquals(idle.button, "none");
+        assertEquals(idle.marked, false);
+
+        await page.evaluate(() => {
+            document.getElementById("scroll-probe")!.scrollTop = 40;
+        });
+        await page.waitForFunction(() =>
+            document.getElementById("scroll-probe")!.hasAttribute(
+                "data-scrolling",
+            )
+        );
+        assert((await thumb()).thumb !== "rgba(0, 0, 0, 0)");
+
+        // 800ms after the last scroll event the bar goes away again.
+        await page.waitForFunction(
+            () =>
+                !document.getElementById("scroll-probe")!.hasAttribute(
+                    "data-scrolling",
+                ),
+            undefined,
+            { timeout: 3000 },
+        );
+        assertEquals((await thumb()).thumb, "rgba(0, 0, 0, 0)");
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});

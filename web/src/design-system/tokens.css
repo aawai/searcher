@@ -18,7 +18,8 @@
     --border-subtle: rgb(0 0 0 / 0.05);
     /* Standalone form control boundary: >=3:1 against surface and background. */
     --border-control: #86868B;
-    /* Scroll thumbs are quiet until their container is hovered; no contrast promise. */
+    /* Scroll thumbs are hidden until their area scrolls or the thumb is hovered; no contrast promise. */
+    --scrollbar-size: 10px;
     --scrollbar-thumb: rgb(0 0 0 / 0.18);
     --scrollbar-thumb-hover: rgb(0 0 0 / 0.38);
     --danger: #ae3e47;

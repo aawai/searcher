@@ -5,17 +5,49 @@
 html {
     min-width: 320px;
 }
-/* Every scroll container is thin with a quiet thumb that darkens while it is
-   hovered; the standard properties also drop the classic arrow buttons. */
-* {
-    scrollbar-width: thin;
+/* Scrollbars stay out of sight until their area scrolls (`data-scrolling`, set
+   by scroll-activity.ts and cleared after 800ms) or the pointer is on the thumb.
+   Chromium keeps arrow buttons when only the standard properties are set, so it
+   is styled through ::-webkit-scrollbar with the buttons removed; touch devices
+   keep their native overlay scrollbars. Browsers without the pseudo-element
+   (Firefox) use the standard properties and reveal the thumb while the area is
+   scrolled or hovered. */
+@supports selector(::-webkit-scrollbar) {
+    @media (any-pointer: fine) {
+        ::-webkit-scrollbar {
+            inline-size: var(--scrollbar-size);
+            block-size: var(--scrollbar-size);
+            background: transparent;
+        }
+        ::-webkit-scrollbar-button {
+            display: none;
+        }
+        ::-webkit-scrollbar-track,
+        ::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: transparent;
+            background-clip: padding-box;
+            border: var(--space-half) solid transparent;
+            border-radius: var(--radius-pill);
+        }
+        [data-scrolling]::-webkit-scrollbar-thumb {
+            background-color: var(--scrollbar-thumb);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--scrollbar-thumb-hover);
+        }
+    }
 }
-:root {
-    scrollbar-color: var(--scrollbar-thumb) transparent;
-}
-@media (hover: hover) {
+@supports not selector(::-webkit-scrollbar) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+    }
+    [data-scrolling],
     :where(*):hover {
-        scrollbar-color: var(--scrollbar-thumb-hover) transparent;
+        scrollbar-color: var(--scrollbar-thumb) transparent;
     }
 }
 body {
