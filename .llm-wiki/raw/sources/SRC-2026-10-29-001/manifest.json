@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-29-001",
+  "captured": "2026-10-29",
+  "packet_version": "1.0",
+  "title": "Secure cookie configuration",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/Cookies",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

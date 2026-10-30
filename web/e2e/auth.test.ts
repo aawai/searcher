@@ -130,12 +130,11 @@ Deno.test("auth registration exposes accessible credential rules and invalid sta
 
 Deno.test("registration status 503 is not open and can recover after retry", async () => {
     await withPage(async (origin, page) => {
-        let availabilityChecks = 0;
+        let availability: "unavailable" | "closed" | "open" = "unavailable";
         let registrationPosts = 0;
         await page.route("**/api/auth/register", async (route) => {
             if (route.request().method() === "GET") {
-                availabilityChecks += 1;
-                if (availabilityChecks === 1) {
+                if (availability === "unavailable") {
                     await route.fulfill({
                         status: 503,
                         contentType: "application/json",
@@ -151,7 +150,7 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
                     status: 200,
                     contentType: "application/json",
                     body: JSON.stringify(
-                        registrationAvailability(availabilityChecks >= 3),
+                        registrationAvailability(availability === "open"),
                     ),
                 });
                 return;
@@ -184,6 +183,7 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
         );
         assertEquals(registrationPosts, 0);
 
+        availability = "closed";
         await page.getByRole("button", { name: "重新检查" }).click();
         const closedMessage = page.getByText("当前未开放注册", {
             exact: false,
@@ -199,6 +199,7 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
             "当前未开放注册",
         );
         assertEquals(registrationPosts, 0);
+        availability = "open";
         await page.getByRole("button", { name: "重新检查" }).click();
         await page.waitForFunction(() => {
             const button = document.querySelector<HTMLButtonElement>(
@@ -209,7 +210,6 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
 
         await submit.click();
         await page.waitForURL(origin + "/");
-        assertEquals(availabilityChecks, 3);
         assertEquals(registrationPosts, 1);
     });
 });

@@ -61,12 +61,20 @@ async function pngFile(page: Page, path: string, color: string) {
 
 async function upload(page: Page, path: string) {
     const before = await derived(page);
+    const saved = page.waitForResponse((response) =>
+        response.url().endsWith("/api/preferences") &&
+        response.request().method() === "PATCH" && response.ok() &&
+        response.request().postData()?.includes('"backgroundImage"') === true
+    );
     await page.getByTestId("wallpaper-file-input").setInputFiles(path);
+    await saved;
     await page.waitForFunction(
-        (before) =>
-            document.documentElement.style.getPropertyValue(
+        (before) => {
+            const accent = document.documentElement.style.getPropertyValue(
                 "--wallpaper-accent",
-            ) !== before,
+            );
+            return accent !== "" && accent !== before;
+        },
         before,
     );
     return await derived(page);

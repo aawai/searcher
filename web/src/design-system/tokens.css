@@ -217,6 +217,21 @@
     --dock-inset-bottom: 0px;
     --dock-inset-left: 0px;
     --dock-inset-right: 0px;
+    /* Ordinary desktop window dimensions and minimum usable frame. */
+    --window-apps-width: 640px;
+    --window-apps-height: 640px;
+    --window-notes-width: 960px;
+    --window-notes-height: 720px;
+    --window-ai-width: 960px;
+    --window-ai-height: 720px;
+    --window-settings-width: 840px;
+    --window-settings-height: 680px;
+    --window-trash-width: 880px;
+    --window-trash-height: 640px;
+    --window-min-width: 320px;
+    --window-min-height: 240px;
+    /* Gap between a window and the viewport, Dock, and banner edges. */
+    --window-margin: var(--space-4);
     /* Motion: answers user actions only. */
     --motion-fast: 120ms;
     --motion-base: 200ms;
@@ -275,15 +290,11 @@
     --layout-sheet-max: 960px;
     --sheet-width: min(65vw, var(--layout-sheet-max));
     --workspace-width: 400px;
-    --workspace-panel-width: clamp(440px, 32vw, 560px);
-    --workspace-editor-expanded-width: 900px;
     --editor-readable-width: 720px;
     --document-outline-width: 260px;
     --document-outline-compact-height: 240px;
     --editor-min-content-height: 240px;
-    --workspace-inset: var(--space-3);
     --workspace-top-inset: calc(var(--control-height) + var(--space-6));
-    --workspace-mobile-height: 820px;
 }
 
 [data-theme="dark"] {
@@ -590,6 +601,15 @@
         /* iOS zooms focused inputs below 16px. */
         --font-search-input-size: 16px;
         --sheet-width: 100vw;
+        --window-margin: 0px;
+    }
+}
+
+/* Phones keep their windows edge to edge, and short wide viewports a hairline
+   of wallpaper, so the body stays usable. */
+@media (max-height: 480px) and (min-width: 768px) {
+    :root {
+        --window-margin: var(--space-1);
     }
 }
 

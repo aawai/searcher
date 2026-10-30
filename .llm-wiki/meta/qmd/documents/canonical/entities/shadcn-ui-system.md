@@ -3,7 +3,7 @@ type: entity
 title: shadcn UI System
 category: tool
 created: 2026-09-25
-updated: 2026-09-27
+updated: 2026-10-29
 sources:
   - sources/SRC-2026-09-25-001
   - sources/SRC-2026-09-25-002
@@ -11,6 +11,7 @@ sources:
   - sources/SRC-2026-09-26-001
   - sources/SRC-2026-09-27-001
   - sources/SRC-2026-09-27-002
+  - sources/SRC-2026-10-29-002
 ---
 
 # shadcn UI System
@@ -38,6 +39,7 @@ sources:
 ## 关联概念与架构
 
 - [[concepts/modal-layering-and-escape-dismissal]]
+- [Modal Dialog Focus and Semantics](/concepts/modal-dialog-focus-and-semantics.md)：W3C 对焦点、可访问名称和模态行为的通用模式；不代表组件已完成项目级验收。
 - [[concepts/tailwind-v4-css-first-architecture]]
 ## 关联架构与文档
 
@@ -53,3 +55,4 @@ sources:
 - [[sources/SRC-2026-09-26-001]]
 - [[sources/SRC-2026-09-27-001]]
 - [[sources/SRC-2026-09-27-002]]
+- [W3C APG Dialog (Modal) Pattern](/sources/SRC-2026-10-29-002.md)

@@ -3,7 +3,7 @@ type: entity
 category: tool
 title: "Drizzle SQLite Store"
 created: 2026-09-25
-updated: 2026-10-27
+updated: 2026-10-29
 sources: [
     sources/SRC-2026-09-25-001,
     sources/SRC-2026-09-25-002,
@@ -17,6 +17,7 @@ sources: [
     sources/SRC-2026-10-26-001,
     sources/SRC-2026-10-27-001,
     sources/SRC-2026-10-27-002,
+    sources/SRC-2026-10-29-003,
 ]
 ---
 
@@ -68,3 +69,4 @@ sources: [
 - [[sources/SRC-2026-09-25-017]]
 - [[sources/SRC-2026-09-25-028]]
 - [SQLite Isolation](/sources/SRC-2026-10-26-001.md)
+- [SQLite 文件损坏风险](/sources/SRC-2026-10-29-003.md)

@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-28-002",
+  "captured": "2026-10-28",
+  "packet_version": "1.0",
+  "title": "Cache",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/API/Cache",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

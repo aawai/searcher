@@ -3,6 +3,7 @@ import { createApp } from "./app.ts";
 import { openDatabase } from "./db/database.ts";
 import { migrateDatabase } from "./db/migrate.ts";
 import { AuthService } from "./features/auth/service.ts";
+import { AiService } from "./features/ai/service.ts";
 
 function appOrigin(): string {
     const value = Deno.env.get("APP_ORIGIN") ??
@@ -39,14 +40,18 @@ if (import.meta.main) {
         Deno.env.get("DATABASE_PATH") ?? "./data/searcher.sqlite",
     );
     let server: Deno.HttpServer | undefined;
+    let ai: AiService | undefined;
     try {
         await migrateDatabase(store);
         const auth = new AuthService({ store, origin });
         await auth.getDummyHash();
-        const app = createApp({ store, auth, origin });
+        ai = new AiService({ store });
+        ai.startTemporaryCleanup();
+        const app = createApp({ store, auth, origin, ai });
         server = Deno.serve({ port }, app.fetch);
         logger.info({ port }, "Searcher started");
     } catch (error) {
+        await ai?.stopTemporaryCleanup();
         await store.close();
         throw error;
     }
@@ -56,6 +61,7 @@ if (import.meta.main) {
         stopping ??= (async () => {
             try {
                 await server.shutdown();
+                await ai?.stopTemporaryCleanup();
                 await store.close();
                 await flushLogger();
                 Deno.exit(0);

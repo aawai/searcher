@@ -108,6 +108,8 @@ full 默认启用 Deno `--fail-fast`：首次失败后停止调度后续文件�
 
 `--timeout <ms>`（也支持 `--timeout=<ms>`）或 `E2E_TIMEOUT_MS` 设置 Playwright 的默认 action / wait 超时；CLI 优先。只能是正整数毫秒。不设置则保持原生 30s；显式传入 `timeout` 的调用、测试自己设置的超时和固定观测窗口都不变。可在 suite 后使用一个 `--` 分隔符。CI 不使用快速超时，快速模式输出明确的诊断警告，不代替正常超时的验收。
 
+`full` / `affected` 带 `--no-fail-fast` 却不带超时时启动即警告；有失败的运行结束后，runner 统计 JUnit 中耗时达到超时的失败用例（`failedCases`、`timeoutLikeFailures`、`timeoutLikeSeconds` 写入 `timings.json`，步骤嵌套故秒数为上界），未设超时且此类失败不少于 5 个时提示按根因归类并改用 `--timeout 5000` 摸底。流程见 [测试](../../docs/testing.md#摸底与失败处理)。
+
 E2E 的 `chromium` 统一从 `web/e2e/helpers/browser.ts` 获取；普通、独立 page、popup 与 persistent context 都继承默认超时。`check:e2e` 拒绝直接从 Playwright 导入 Chromium。helper 不改变测试的 Browser / Context / session 隔离。
 
 默认报告位于唯一的 `artifacts/e2e/<suite>-<timestamp>-<uuid>/`，包含原生

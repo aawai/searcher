@@ -1,27 +1,30 @@
 ---
 type: concept
 title: Offline-First 与 Local Draft 持久化架构
+domain: engineering
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-10-28
+sources:
+  - sources/SRC-2026-10-28-003
+  - sources/SRC-2026-10-28-005
 ---
 
 # Offline-First 与 Local Draft 持久化架构
 
-## 概述
+## 范围
 
-**Offline-First（离线优先）与 Local Draft 持久化** 是 [[entities/searcher-项目]]
-保障用户数据安全与提升加载性能的核心设计。在网络离线、弱网或者未登录状态下，用户的所有操作（包括便签编辑、草稿记录、离线偏好）均能无缝执行而不发生白屏崩溃。
+Offline-first 将应用外壳、业务数据与未同步草稿分别设计；外壳离线可用不意味着全部业务操作都可离线执行。Web 平台中 Cache Storage 适合网络资源，IndexedDB 适合结构化数据；本地写入可能失败或被浏览器清理，不能将其当作不可丢失的备份。见 [web.dev 离线数据](/sources/SRC-2026-10-28-005.md) 和 [存储配额](/sources/SRC-2026-10-28-003.md)。
 
-## 核心架构原则
+## Searcher 的具体边界
 
-1. **双层状态镜像（In-Memory + Async IndexedDB）**：
-   - 界面始终以内存中的响应式运行时状态为单一可信源；
-   - 将本地持久化作为异步备份镜像写入，彻底隔离无痕浏览模式或存储满额报错对 UI
-     的致命影响。
-2. **草稿防丢失与会话失效保护**：
-   - 便签编辑过程中每步变动先写入本地 IndexedDB 草稿仓；
-   - 当检测到服务端登录态失效时，自动弹窗保护未同步草稿，禁止粗暴清空，并在重新登录后走乐观锁版本对比与恢复。
-3. **避免主线程卡顿（Anti-Monolithic Storage）**：
-   - 不将整个单体状态树作为单个大对象写入，避免浏览器在主线程执行大量 Structured
-     Clone 引起界面掉帧；
-   - 按独立条目或分块原子写入。
+- [笔记契约](../../../docs/documents.md#保存)要求登录；网络失败保留 IndexedDB 设备草稿，重开可恢复或放弃，版本不一致须显式解决冲突。草稿按账号和笔记隔离；退出后重新登录同一账号可恢复，不是未登录访客也可编辑笔记。
+- [外观契约](../../../docs/appearance.md#偏好存储)中匿名外观保存在当前设备且不上传；登录用户偏好使用账号隔离的设备缓存和云端同步。设备写入失败不应被描述为无条件成功保存。
+- [Service Worker 路由](../../../web/src/pwa/sw-policy.ts)不拦截 API；其 shell 回退不提供离线 API，详见 [PWA Service Worker Update Lifecycle](/concepts/pwa-service-worker-update-lifecycle.md)。
+
+> 旧描述称访客可离线执行所有便签编辑并保证不丢失；这与当前笔记需登录的契约及浏览器存储清理边界不符，已更正。本轮没有实测离线或故障场景。
+
+## 关联
+
+- [Browser Storage Persistence and Eviction](/concepts/browser-storage-persistence-and-eviction.md)
+- [IndexedDB 本地存储引擎](/entities/indexeddb-本地存储引擎.md)
+- [HTTP Cache and Service Worker Boundaries](/concepts/http-cache-and-service-worker-boundaries.md)

@@ -16,6 +16,7 @@ import { Button } from "../ui/button.tsx";
 import { usePresence } from "../ui/presence.ts";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
 import { getLocal, setLocal } from "../../lib/local.ts";
+import { useAppState } from "../../app/state.tsx";
 import {
     formatShortcut,
     isEditableShortcutTarget,
@@ -61,6 +62,7 @@ export function SearcherSearchInput(
         onCheck,
         isChecking = false,
         disabled = false,
+        active = true,
         signedIn = false,
         aiAvailable = false,
         webApps = EMPTY_APPS,
@@ -85,6 +87,7 @@ export function SearcherSearchInput(
         onCheck?: () => void;
         isChecking?: boolean;
         disabled?: boolean;
+        active?: boolean;
         /** Personal groups (我的, 应用) and account commands need a signed-in user. */
         signedIn?: boolean;
         /** An enabled model exists: shows 问 AI, Alt+Enter and /ai. */
@@ -109,7 +112,9 @@ export function SearcherSearchInput(
         inputRef?: RefObject<HTMLInputElement | null>;
     },
 ) {
-    const [query, setQuery] = useState("");
+    const { searchContinuation } = useAppState();
+    const restored = useRef(searchContinuation.current);
+    const [query, setQuery] = useState(() => restored.current?.query ?? "");
     const [focused, setFocused] = useState(false);
     const [dismissed, setDismissed] = useState(false);
     const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -119,6 +124,46 @@ export function SearcherSearchInput(
     // IME 组合态：组合期间的方向键、Enter 属于输入法候选操作，不能驱动联想或提交。
     const composingRef = useRef(false);
     const capturingRef = useRef(false);
+
+    useLayoutEffect(() => {
+        const snapshot = restored.current;
+        if (!snapshot) return;
+        if (searchContinuation.current === snapshot) {
+            searchContinuation.current = null;
+        }
+        if (snapshot.focused && active && field.current) {
+            field.current.focus();
+            if (
+                snapshot.selectionStart !== null &&
+                snapshot.selectionEnd !== null
+            ) {
+                field.current.setSelectionRange(
+                    snapshot.selectionStart,
+                    snapshot.selectionEnd,
+                );
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!signedIn || !active) return;
+        const preserveSearch = () => {
+            const input = field.current;
+            if (!input) return;
+            searchContinuation.current = {
+                query: input.value,
+                focused: document.activeElement === input,
+                selectionStart: input.selectionStart,
+                selectionEnd: input.selectionEnd,
+            };
+        };
+        globalThis.addEventListener("searcher:auth-expired", preserveSearch);
+        return () =>
+            globalThis.removeEventListener(
+                "searcher:auth-expired",
+                preserveSearch,
+            );
+    }, [active, signedIn, searchContinuation]);
 
     const canAskAi = aiAvailable && signedIn && Boolean(onAskAi);
     const context = useMemo(
@@ -173,6 +218,7 @@ export function SearcherSearchInput(
 
     // Global keyboard shortcut focus (/ and Cmd/Ctrl+K)
     useEffect(() => {
+        if (!active) return;
         const focus = (event: KeyboardEvent) => {
             if (isEditableShortcutTarget(event.target)) return;
             if (
@@ -185,7 +231,7 @@ export function SearcherSearchInput(
         };
         document.addEventListener("keydown", focus);
         return () => document.removeEventListener("keydown", focus);
-    }, []);
+    }, [active]);
 
     function saveToLocalHistory(term: string) {
         if (!term.trim()) return;

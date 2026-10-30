@@ -14,7 +14,12 @@ import type {
     DocumentPageDto,
 } from "../../src/shared/documents.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { libraryPanel, openNotes } from "./helpers/library.ts";
+import {
+    closeLibrary,
+    libraryPanel,
+    libraryWindow,
+    openNotes,
+} from "./helpers/library.ts";
 
 // Documents workspace library contracts: scopes, search, row actions, create /
 // trash / restore, editor presentation (color + pin to home), save lifecycle,
@@ -65,7 +70,13 @@ Deno.test("production documents library workspace contracts", async (t) => {
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
-        await target.locator("main").waitFor({ state: "visible" });
+        await target.locator(
+            path === "/register"
+                ? "main:has(#auth-username)"
+                : path === "/trash"
+                ? ".trash-page"
+                : "main.home",
+        ).waitFor({ state: "visible" });
     }
 
     async function request<T>(
@@ -139,7 +150,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
         await page.waitForFunction(
             (expected) =>
                 document.querySelectorAll(
-                    ".workspace-panel [data-document-id]",
+                    '[data-library="notes"] [data-document-id]',
                 ).length === expected,
             count,
         );
@@ -171,7 +182,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
     await page.locator("#auth-password").fill(password);
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor({ state: "visible" });
+    await page.locator("main.home").waitFor({ state: "visible" });
     await request("/api/preferences", "PATCH", { theme: "system" });
     await visit("/");
 
@@ -180,13 +191,20 @@ Deno.test("production documents library workspace contracts", async (t) => {
         async () => {
             await openDocumentsRoot();
             const panel = workspace();
+            const frame = libraryWindow(page, "notes");
             assertEquals(
-                await panel.locator(".workspace-title").first().textContent(),
+                await frame.locator(".window-frame__title").textContent(),
                 "笔记",
             );
-            assertEquals(
-                await panel.getAttribute("data-presentation"),
-                "panel",
+            // The notes window opens at its 960x720 default inside the
+            // 1440x900 work area, above the unchanged home.
+            const box = await frame.boundingBox();
+            assert(box);
+            assert(
+                Math.abs(box.width - 960) <= 1 && box.height <= 721 &&
+                    box.x >= 0 && box.y >= 0 &&
+                    box.x + box.width <= 1440 && box.y + box.height <= 900,
+                JSON.stringify(box),
             );
 
             // 1. Initial zero-documents empty state
@@ -532,11 +550,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                     .getAttribute("data-color"),
                 "amber",
             );
-            await workspace().getByRole("button", {
-                name: "返回首页",
-                exact: true,
-            }).click();
-            await workspace().waitFor({ state: "detached" });
+            await closeLibrary(page);
             await page.locator("#search-query:not([inert])").waitFor();
             await homeNotesSettled();
             const paper = homePaper(title);
@@ -804,7 +818,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await reopenDocuments();
             await page.waitForFunction(() =>
                 document.querySelectorAll(
-                    ".workspace-panel [data-document-id]",
+                    '[data-library="notes"] [data-document-id]',
                 ).length >= 16
             );
 
@@ -824,10 +838,25 @@ Deno.test("production documents library workspace contracts", async (t) => {
                     );
                     const panel = workspace();
                     if (!(await panel.isVisible())) await openDocumentsRoot();
+                    // Wait for the window to settle on this viewport before
+                    // measuring its contents.
+                    await page.waitForFunction(
+                        (width) => {
+                            const frame = document.querySelector<HTMLElement>(
+                                '[data-window-id="notes"]',
+                            );
+                            if (!frame) return false;
+                            const rect = frame.getBoundingClientRect();
+                            return rect.width > 0 &&
+                                rect.right <= width + 0.5 &&
+                                (width >= 1024 || rect.width >= width - 40);
+                        },
+                        vp.width,
+                    );
                     const label = `${vp.width}x${vp.height} ${scheme}`;
 
                     // Header stays inside the viewport
-                    const header = panel.locator(".workspace-header");
+                    const header = panel.locator(".window-frame__titlebar");
                     await header.waitFor({ state: "visible" });
                     assert(
                         ((await header.boundingBox())?.y ?? -1) >= 0,
@@ -835,22 +864,27 @@ Deno.test("production documents library workspace contracts", async (t) => {
                     );
 
                     // Vertical scroll yes, horizontal overflow no
-                    const overflow = await panel.evaluate((el) => {
-                        const body = el.querySelector(".workspace-body");
-                        const list = el.querySelector(
-                            ".documents-workspace-list",
-                        );
-                        if (!body || !list) {
-                            throw new Error("Documents list or body missing");
-                        }
-                        return {
-                            horizontal:
-                                list.scrollWidth > list.clientWidth + 2 ||
-                                body.scrollWidth > body.clientWidth + 2 ||
-                                el.scrollWidth > el.clientWidth + 2,
-                            vertical: body.scrollHeight > body.clientHeight,
-                        };
-                    });
+                    // The window's resize handles overhang its frame by design,
+                    // so overflow is judged on the library body.
+                    const overflow = await panel.locator(".library-window")
+                        .evaluate((el) => {
+                            const body = el.querySelector(".workspace-body");
+                            const list = el.querySelector(
+                                ".documents-workspace-list",
+                            );
+                            if (!body || !list) {
+                                throw new Error(
+                                    "Documents list or body missing",
+                                );
+                            }
+                            return {
+                                horizontal:
+                                    list.scrollWidth > list.clientWidth + 2 ||
+                                    body.scrollWidth > body.clientWidth + 2 ||
+                                    el.scrollWidth > el.clientWidth + 2,
+                                vertical: body.scrollHeight > body.clientHeight,
+                            };
+                        });
                     assertEquals(
                         overflow.horizontal,
                         false,
@@ -875,13 +909,24 @@ Deno.test("production documents library workspace contracts", async (t) => {
                         `${label}: long title row must not overflow`,
                     );
 
-                    // Mobile sheets must be dismissed before the viewport changes
-                    if (vp.width < 768) {
-                        await panel.getByRole("button", {
-                            name: "返回首页",
-                            exact: true,
-                        }).click();
-                        await panel.waitFor({ state: "detached" });
+                    // The same window follows the viewport: it stays inside the
+                    // viewport and, below 1024px, is the single active window.
+                    const box = await libraryWindow(page, "notes")
+                        .boundingBox();
+                    assert(box, `${label}: notes window is rendered`);
+                    assert(
+                        box.x >= 0 && box.y >= 0 &&
+                            box.x + box.width <= vp.width + 0.5 &&
+                            box.y + box.height <= vp.height + 0.5,
+                        `${label}: window must stay inside the viewport`,
+                    );
+                    if (vp.width < 1024) {
+                        assertEquals(
+                            await page.locator("[data-window-id]:not([hidden])")
+                                .count(),
+                            1,
+                            `${label}: narrow viewport shows a single window`,
+                        );
                     }
                 }
             }
@@ -917,11 +962,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 ),
                 false,
             );
-            await workspace().getByRole("button", {
-                name: "返回首页",
-                exact: true,
-            }).click();
-            await workspace().waitFor({ state: "detached" });
+            await closeLibrary(page);
             await page.locator("#search-query:not([inert])").waitFor();
             await homeNotesSettled();
 

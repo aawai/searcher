@@ -12,6 +12,9 @@ export const suites = {
     workspace: [
         "workspace",
         "dock",
+        "desktop-windows",
+        "ai-window",
+        "library-windows",
         "workspace-shell",
         "library",
         "library-apps",

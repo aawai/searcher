@@ -50,6 +50,8 @@ import {
     AlertDialogTitle,
 } from "../../components/ui/alert-dialog.tsx";
 import { StatusBanner } from "../../components/searcher/semantic.tsx";
+import { useAppState } from "../../app/state.tsx";
+import { notifyTrashChange } from "../../app/trash-events.ts";
 
 export interface DocumentLibraryActionsProps {
     item: DocumentSummaryDto;
@@ -62,6 +64,7 @@ export function DocumentLibraryActions({
     notebooks,
     onChanged,
 }: DocumentLibraryActionsProps) {
+    const { authSession } = useAppState();
     const [renameOpen, setRenameOpen] = useState(false);
     const [titleInput, setTitleInput] = useState(item.title ?? "");
     const [isRenaming, setIsRenaming] = useState(false);
@@ -169,6 +172,13 @@ export function DocumentLibraryActions({
                 `/api/documents/${item.id}?version=${doc.version}`,
                 { method: "DELETE" },
             );
+            if (authSession.isCurrent() && authSession.userId) {
+                notifyTrashChange({
+                    userId: authSession.userId,
+                    domain: "documents",
+                    source: "desktop",
+                });
+            }
             setTrashOpen(false);
             onChanged();
         } catch (err) {

@@ -43,8 +43,14 @@ function createTestStore(): DatabaseStore {
         `CREATE TABLE ai_conversations (
             id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             title TEXT NOT NULL, history_enabled INTEGER NOT NULL DEFAULT 1,
+            temporary_delete_pending INTEGER NOT NULL DEFAULT 0,
             active_leaf_message_id TEXT, system_instruction TEXT, deleted_at INTEGER,
             created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
+        );`,
+        `CREATE TABLE ai_temporary_leases (
+            id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL REFERENCES ai_conversations(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL,
+            claimed INTEGER NOT NULL DEFAULT 0, released INTEGER NOT NULL DEFAULT 0
         );`,
         `CREATE TABLE ai_messages (
             id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL REFERENCES ai_conversations(id) ON DELETE CASCADE,

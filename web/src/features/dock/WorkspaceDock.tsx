@@ -10,7 +10,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
     AlertCircle,
     ArrowDown,
@@ -84,6 +84,7 @@ import {
 } from "../../components/ui/tooltip.tsx";
 import { MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
 import type { ExtendedWebApp } from "../app-library/library-types.ts";
+import { useWindowManager } from "../windowing/window-context.tsx";
 import { DOCK_SYSTEM_ITEMS } from "./DockOrderList.tsx";
 import { useDock } from "./DockProvider.tsx";
 import "./dock.css";
@@ -111,6 +112,7 @@ function SortableSystemItem({
     label,
     icon: Icon,
     isActive,
+    windowStatus,
     aiDisabled,
     onClick,
     onContextMenu,
@@ -119,6 +121,7 @@ function SortableSystemItem({
     label: string;
     icon: typeof Home;
     isActive: boolean;
+    windowStatus?: "visible" | "minimized";
     aiDisabled: boolean;
     onClick: () => void;
     onContextMenu: (event: ReactMouseEvent<HTMLButtonElement>) => void;
@@ -139,6 +142,14 @@ function SortableSystemItem({
 
     const tooltipText = id === "ai" && aiDisabled
         ? "AI 问答（暂无可用模型）"
+        : windowStatus
+        ? `${label}（${
+            isActive
+                ? "当前窗口"
+                : windowStatus === "minimized"
+                ? "已最小化"
+                : "已打开"
+        }）`
         : label;
 
     return (
@@ -156,8 +167,9 @@ function SortableSystemItem({
                         }`}
                         data-dock-id={id}
                         data-active={isActive ? "true" : undefined}
+                        data-window-status={windowStatus}
                         aria-current={isActive ? "page" : undefined}
-                        aria-label={label}
+                        aria-label={windowStatus ? tooltipText : label}
                         onClick={onClick}
                         onContextMenu={onContextMenu}
                     >
@@ -238,7 +250,7 @@ export function WorkspaceDock(
 ): ReactNode {
     const { user, appearance } = useAppState();
     const location = useLocation();
-    const navigate = useNavigate();
+    const windowManager = useWindowManager();
     const {
         preferences,
         apps,
@@ -257,6 +269,9 @@ export function WorkspaceDock(
     const modalActive = useEscapeLayerActive("overlay");
     const [keyboardOpen, setKeyboardOpen] = useState(false);
     const [managementOpen, setManagementOpen] = useState(false);
+    const windowListOpen = windowManager?.windowListOpen ?? false;
+    const setWindowListOpen = (open: boolean) =>
+        windowManager?.setWindowListOpen(open);
     const [appsOverflowing, setAppsOverflowing] = useState(false);
     const [itemMenu, setItemMenu] = useState<DockItemMenu | null>(null);
     const optionsRef = useRef<HTMLButtonElement | null>(null);
@@ -341,29 +356,22 @@ export function WorkspaceDock(
     const isHomePage = location.pathname === "/" ||
         location.pathname === routes.home;
     const isAiPage = location.pathname.startsWith(routes.ask);
-
+    const isWindowPage = location.pathname === routes.account ||
+        location.pathname === routes.trash ||
+        location.pathname === routes.settings() ||
+        location.pathname.startsWith(`${routes.settings()}/`);
     const isMounted = Boolean(user) &&
-        (isHomePage || isAiPage) &&
+        (isHomePage || isAiPage || isWindowPage) &&
         !suppressed &&
         !keyboardOpen &&
         ready;
 
-    // Derived active system entry from pathname and search query
-    const searchParams = useMemo(
-        () => new URLSearchParams(location.search),
-        [location.search],
-    );
-    const currentView = searchParams.get("view");
-
+    // The focused window, else the page the pathname shows.
     const activeSystemId: DockSystemId | null = useMemo(() => {
+        if (windowManager?.activeId) return windowManager.activeId;
         if (isAiPage) return "ai";
-        if (isHomePage) {
-            if (currentView === "apps") return "apps";
-            if (currentView === "notes") return "notes";
-            return "home";
-        }
-        return null;
-    }, [isAiPage, isHomePage, currentView]);
+        return isHomePage ? "home" : null;
+    }, [isAiPage, isHomePage, windowManager?.activeId]);
 
     const effectiveEdge: DockEdge = isMobile ? "bottom" : layout.edge;
     const isCollapsed = layout.collapsed;
@@ -567,19 +575,11 @@ export function WorkspaceDock(
     // Navigation handler
     const handleSystemNavigate = useCallback((id: DockSystemId) => {
         if (id === "home") {
-            if (location.pathname === "/" && !location.search) return;
-            navigate("/", { viewTransition: !isHomePage });
-        } else if (id === "apps") {
-            if (location.pathname === "/" && currentView === "apps") return;
-            navigate("/?view=apps", { viewTransition: !isHomePage });
-        } else if (id === "notes") {
-            if (location.pathname === "/" && currentView === "notes") return;
-            navigate("/?view=notes", { viewTransition: !isHomePage });
-        } else if (id === "ai") {
-            if (location.pathname.startsWith("/ask")) return;
-            navigate(routes.ask, { viewTransition: true });
+            windowManager?.showDesktop();
+        } else {
+            windowManager?.open(id);
         }
-    }, [location.pathname, location.search, currentView, navigate, isHomePage]);
+    }, [windowManager]);
 
     // App open handler
     const handleOpenApp = useCallback(
@@ -982,6 +982,13 @@ export function WorkspaceDock(
                                                     icon={config.icon}
                                                     isActive={activeSystemId ===
                                                         id}
+                                                    windowStatus={id !== "home"
+                                                        ? windowManager?.windows
+                                                            .find((item) =>
+                                                                item.id === id
+                                                            )
+                                                            ?.status
+                                                        : undefined}
                                                     aiDisabled={id === "ai" &&
                                                         !aiAvailable}
                                                     onClick={() =>
@@ -1076,6 +1083,11 @@ export function WorkspaceDock(
                                             aria-hidden="true"
                                         />
                                         管理
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => setWindowListOpen(true)}
+                                    >
+                                        窗口列表
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         aria-label="收起任务栏"
@@ -1299,6 +1311,86 @@ export function WorkspaceDock(
                     </DropdownMenuPortal>
                 </DropdownMenu>
             )}
+            <Dialog open={windowListOpen} onOpenChange={setWindowListOpen}>
+                <DialogContent
+                    aria-label="窗口列表"
+                    className="dock-management"
+                >
+                    <DialogHeader className="dock-management-header">
+                        <DialogTitle>窗口列表</DialogTitle>
+                        <DialogClose
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="关闭窗口列表"
+                                />
+                            }
+                        >
+                            <X
+                                size="1em"
+                                className="icon-md"
+                                aria-hidden="true"
+                            />
+                        </DialogClose>
+                    </DialogHeader>
+                    <div className="dock-management-content">
+                        {windowManager?.windows.length
+                            ? windowManager.windows.map((item) => {
+                                const label = DOCK_SYSTEM_ITEMS[item.id].label;
+                                const status =
+                                    (windowManager.activeId === item.id
+                                        ? "当前窗口"
+                                        : item.status === "minimized"
+                                        ? "已最小化"
+                                        : "已打开") +
+                                    (item.busy ? "，正在生成" : "");
+                                return (
+                                    <div
+                                        className="dock-window-row"
+                                        key={item.id}
+                                    >
+                                        <span>{label}（{status}）</span>
+                                        <div className="dock-window-actions">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                aria-label={`${
+                                                    item.status === "minimized"
+                                                        ? "恢复"
+                                                        : "激活"
+                                                } ${label}`}
+                                                onClick={() => {
+                                                    windowManager.activate(
+                                                        item.id,
+                                                    );
+                                                    setWindowListOpen(false);
+                                                }}
+                                            >
+                                                {item.status === "minimized"
+                                                    ? "恢复"
+                                                    : "激活"}
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                aria-label={`关闭 ${label}`}
+                                                onClick={() =>
+                                                    windowManager.close(
+                                                        item.id,
+                                                    )}
+                                            >
+                                                关闭
+                                            </Button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                            : <p>没有打开的窗口</p>}
+                    </div>
+                </DialogContent>
+            </Dialog>
             {/* Management Dialog */}
             <Dialog open={managementOpen} onOpenChange={setManagementOpen}>
                 <DialogContent

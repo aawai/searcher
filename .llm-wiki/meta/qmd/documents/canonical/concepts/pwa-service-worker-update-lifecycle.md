@@ -3,15 +3,17 @@ type: concept
 title: PWA Service Worker Update Lifecycle
 domain: engineering
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-10-28
 sources:
   - sources/SRC-2026-10-24-007
   - sources/SRC-2026-10-24-008
+  - sources/SRC-2026-10-28-001
+  - sources/SRC-2026-10-28-002
 ---
 
 # PWA Service Worker Update Lifecycle (PWA 外壳缓存与版本切换)
 
-[[entities/searcher-项目]] 的 PWA 层只缓存应用外壳与带指纹的静态资源，API 始终直连服务器；版本切换必须保证"同一页面只由一个构建版本服务"。
+[[entities/searcher-项目]] 的 PWA 层只缓存应用外壳与带指纹的静态资源，Service Worker 不拦截 API；版本切换必须保证"同一页面只由一个构建版本服务"。不拦截并不等于绕过浏览器 HTTP 缓存，见 [HTTP Cache and Service Worker Boundaries](/concepts/http-cache-and-service-worker-boundaries.md)。
 
 ## 1. 生命周期约束
 
@@ -30,7 +32,7 @@ sources:
 - `activate`：删除 `isStaleShellCache(name, __SW_VERSION__)` 判定的旧缓存，再 `clients.claim()`。
 - `message`：`{type: "activate"}` → `skipWaiting()`；`{type: "build"}` 通过 MessagePort 回报版本与资产清单。
 - 注册：`updateViaCache: "none"`，监听 `updatefound` / `controllerchange` / `visibilitychange`；已有 controller 且存在 `waiting` 时提示"新版本已就绪 · 刷新"。新打开的页面直接使用新版本。
-- 路由：资产 cache-first，页面 network-first、离线回退 shell；API 不经缓存。
+- 路由：资产 cache-first，页面 network-first、离线回退 shell；API 不由 Service Worker 缓存。
 
 ## 3. Web Share Target
 
@@ -46,4 +48,5 @@ sources:
 
 - [[concepts/offline-first-与-local-draft-持久化架构]]
 - [[concepts/route-level-code-splitting-dynamic-bundling]]
+- [Browser Storage Persistence and Eviction](/concepts/browser-storage-persistence-and-eviction.md)
 - [[entities/vite-bundler]]

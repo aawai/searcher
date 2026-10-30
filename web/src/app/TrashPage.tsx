@@ -1,13 +1,14 @@
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { api } from "../lib/api.ts";
+import { type PageHost, usePagePresenter } from "./page-host.tsx";
 import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { authPath } from "./routes.ts";
+import { notifyTrashChange, subscribeTrashChanges } from "./trash-events.ts";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
 import {
     EmptyState,
@@ -188,8 +189,12 @@ function TrashSection(
 }
 
 export function TrashPage() {
-    const { user } = useAppState();
-    const location = useLocation();
+    return <TrashContent host={usePagePresenter()} />;
+}
+
+export function TrashContent({ host }: { host: PageHost }) {
+    const { user, authSession } = useAppState();
+    const { location, Link } = host;
     const [tab, setTab] = useState<"webapps" | "documents">("webapps");
     const [webapps, setWebapps] = useState<TrashWebApp[]>([]);
     const [documents, setDocuments] = useState<TrashDocument[]>([]);
@@ -198,6 +203,14 @@ export function TrashPage() {
     const [error, setError] = useState("");
     const [status, setStatus] = useState("");
     const [actionId, setActionId] = useState<string | null>(null);
+    const session = useRef({ authSession, generation: 0, mounted: true });
+    if (session.current.authSession !== authSession) {
+        session.current = { authSession, generation: 0, mounted: true };
+    }
+    const currentSession = session.current;
+    const isCurrent = () =>
+        session.current === currentSession && currentSession.mounted &&
+        currentSession.authSession.isCurrent();
 
     const [deleteTarget, setDeleteTarget] = useState<
         | { type: "webapp"; id: string; name: string }
@@ -208,6 +221,7 @@ export function TrashPage() {
 
     async function loadTrash() {
         if (!user) return;
+        const generation = ++currentSession.generation;
         setLoading(true);
         setError("");
         try {
@@ -215,19 +229,47 @@ export function TrashPage() {
                 api<TrashWebApp[]>("/api/webapps/trash"),
                 api<{ items: TrashDocument[] }>("/api/documents/trash"),
             ]);
+            if (!isCurrent() || generation !== currentSession.generation) {
+                return;
+            }
             setWebapps(waList);
             setDocuments(docPage.items);
         } catch (e) {
-            setError(errorMessage(e));
+            if (isCurrent() && generation === currentSession.generation) {
+                setError(errorMessage(e));
+            }
         } finally {
-            setLoading(false);
-            setInitialized(true);
+            if (isCurrent() && generation === currentSession.generation) {
+                setLoading(false);
+                setInitialized(true);
+            }
         }
     }
 
     useEffect(() => {
+        currentSession.mounted = true;
+        setWebapps([]);
+        setDocuments([]);
+        setInitialized(false);
+        setError("");
+        setStatus("");
+        setActionId(null);
+        setDeleteTarget(null);
+        setDeleting(false);
         void loadTrash();
-    }, [user?.id]);
+        const unsubscribe = subscribeTrashChanges((change) => {
+            if (
+                isCurrent() && change.source === "desktop" &&
+                change.userId === currentSession.authSession.userId
+            ) {
+                void loadTrash();
+            }
+        });
+        return () => {
+            currentSession.mounted = false;
+            unsubscribe();
+        };
+    }, [currentSession]);
 
     async function restoreWebApp(id: string) {
         setActionId(id);
@@ -237,12 +279,22 @@ export function TrashPage() {
             await api(`/api/webapps/${encodeURIComponent(id)}/restore`, {
                 method: "POST",
             });
+            if (!isCurrent()) return;
+            ++currentSession.generation;
+            setLoading(false);
+            notifyTrashChange({
+                userId: user!.id,
+                domain: "webapps",
+                source: "trash",
+                itemId: id,
+            });
             setStatus("应用已恢复");
             setWebapps((prev) => prev.filter((item) => item.id !== id));
+            void loadTrash();
         } catch (e) {
-            setError(errorMessage(e));
+            if (isCurrent()) setError(errorMessage(e));
         } finally {
-            setActionId(null);
+            if (isCurrent()) setActionId(null);
         }
     }
 
@@ -262,6 +314,15 @@ export function TrashPage() {
                         method: "DELETE",
                     },
                 );
+                if (!isCurrent()) return;
+                ++currentSession.generation;
+                setLoading(false);
+                notifyTrashChange({
+                    userId: user!.id,
+                    domain: "webapps",
+                    source: "trash",
+                    itemId: deleteTarget.id,
+                });
                 setStatus("应用已彻底删除");
                 setWebapps((prev) =>
                     prev.filter((item) => item.id !== deleteTarget.id)
@@ -275,18 +336,32 @@ export function TrashPage() {
                         method: "DELETE",
                     },
                 );
+                if (!isCurrent()) return;
+                ++currentSession.generation;
+                setLoading(false);
+                notifyTrashChange({
+                    userId: user!.id,
+                    domain: "documents",
+                    source: "trash",
+                    itemId: deleteTarget.id,
+                });
                 setStatus("笔记已彻底删除");
                 setDocuments((prev) =>
                     prev.filter((item) => item.id !== deleteTarget.id)
                 );
             }
             setDeleteTarget(null);
+            void loadTrash();
         } catch (e) {
-            setError(errorMessage(e));
-            setDeleteTarget(null);
+            if (isCurrent()) {
+                setError(errorMessage(e));
+                setDeleteTarget(null);
+            }
         } finally {
-            setDeleting(false);
-            setActionId(null);
+            if (isCurrent()) {
+                setDeleting(false);
+                setActionId(null);
+            }
         }
     }
     async function restoreDocument(id: string) {
@@ -297,18 +372,32 @@ export function TrashPage() {
             await api(`/api/documents/${encodeURIComponent(id)}/restore`, {
                 method: "POST",
             });
+            if (!isCurrent()) return;
+            ++currentSession.generation;
+            setLoading(false);
+            notifyTrashChange({
+                userId: user!.id,
+                domain: "documents",
+                source: "trash",
+                itemId: id,
+            });
             setStatus("笔记已恢复");
             setDocuments((prev) => prev.filter((item) => item.id !== id));
+            void loadTrash();
         } catch (e) {
-            setError(errorMessage(e));
+            if (isCurrent()) setError(errorMessage(e));
         } finally {
-            setActionId(null);
+            if (isCurrent()) setActionId(null);
         }
     }
 
     if (!user) {
         return (
-            <PageShell archetype="management" className="trash-page">
+            <PageShell
+                archetype="management"
+                className="trash-page"
+                data-host-narrow={host.narrow ? "true" : undefined}
+            >
                 <PageHeader title="回收站" />
                 <EmptyState
                     className="trash-empty-state"
@@ -357,7 +446,12 @@ export function TrashPage() {
     const pending = !initialized || loading;
 
     return (
-        <PageShell archetype="management" className="trash-page">
+        <PageShell
+            as={host.inWindow ? "section" : "main"}
+            archetype="management"
+            className="trash-page"
+            data-host-narrow={host.narrow ? "true" : undefined}
+        >
             <PageHeader
                 title="回收站"
                 actions={
@@ -424,7 +518,7 @@ export function TrashPage() {
                 )}
 
             <AlertDialog
-                open={deleteTarget !== null}
+                open={host.active && deleteTarget !== null}
                 onOpenChange={(open) => {
                     if (!open && !deleting) setDeleteTarget(null);
                 }}

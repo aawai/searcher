@@ -35,6 +35,7 @@ interface SearcherAssistantRuntimeProps {
     draft: string;
     draftKey: number;
     onDraftChange: (text: string) => void;
+    onAttachmentCountChange?: (count: number) => void;
     onNewMessage: (
         text: string,
         attachments?: AttachmentInput[],
@@ -54,6 +55,7 @@ export function SearcherAssistantRuntimeProvider({
     draft,
     draftKey,
     onDraftChange,
+    onAttachmentCountChange,
     onNewMessage,
     onEditMessage,
     onReloadMessage,
@@ -194,8 +196,10 @@ export function SearcherAssistantRuntimeProvider({
 
     useEffect(() =>
         runtime.thread.composer.subscribe(() => {
-            onDraftChange(runtime.thread.composer.getState().text);
-        }), [runtime, onDraftChange]);
+            const state = runtime.thread.composer.getState();
+            onDraftChange(state.text);
+            onAttachmentCountChange?.(state.attachments.length);
+        }), [runtime, onDraftChange, onAttachmentCountChange]);
 
     const errorContextValue = useMemo(() => ({
         attachmentError,

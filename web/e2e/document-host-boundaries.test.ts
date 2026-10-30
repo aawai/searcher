@@ -3,7 +3,7 @@ import { chromium } from "./helpers/browser.ts";
 import type { Locator } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/library.ts";
+import { libraryWindow, openNotes } from "./helpers/library.ts";
 
 async function visiblePoint(locator: Locator, minimumHeight = 24) {
     await locator.scrollIntoViewIfNeeded();
@@ -142,6 +142,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                 await page.setViewportSize({ width, height });
                 await page.goto(app.origin + "/");
                 const host = await openNotes(page);
+                const frame = libraryWindow(page, "notes");
                 const row = host.locator(
                     `[data-document-id="${doc.id}"] h4 button`,
                 );
@@ -149,10 +150,23 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                 await host.getByRole("button", { name: "编辑", exact: true })
                     .click();
                 await host.locator(".ProseMirror").waitFor();
-                assertEquals(
-                    await host.getAttribute("data-presentation"),
-                    width < 768 ? "sheet" : "panel",
+                // The window stays inside the viewport; below 1024px it is
+                // the single active window filling the work area.
+                const box = await frame.boundingBox();
+                assert(box);
+                assert(
+                    box.x >= 0 && box.y >= 0 &&
+                        box.x + box.width <= width + 0.5 &&
+                        box.y + box.height <= height + 0.5,
+                    JSON.stringify({ box, width, height }),
                 );
+                if (width < 1024) {
+                    assertEquals(
+                        await page.locator("[data-window-id]:not([hidden])")
+                            .count(),
+                        1,
+                    );
+                }
                 await host.getByRole("button", { name: "分页", exact: true })
                     .click();
                 await page.waitForFunction(() =>
@@ -175,12 +189,12 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                 });
                 for (
                     const locator of [
-                        host.locator(".workspace-title"),
+                        frame.locator(".window-frame__title"),
                         host.getByRole("button", {
                             name: /返回笔记|返回上一级/,
                         }),
-                        host.getByRole("button", {
-                            name: "返回首页",
+                        frame.getByRole("button", {
+                            name: "关闭笔记",
                             exact: true,
                         }),
                         host.getByRole("button", { name: "链接", exact: true }),
@@ -322,8 +336,8 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                     document.querySelector<HTMLElement>(".workspace-body")!
                         .scrollTop > 0
                 );
-                await host.getByRole("button", {
-                    name: "返回首页",
+                await frame.getByRole("button", {
+                    name: "关闭笔记",
                     exact: true,
                 }).click();
                 await host.waitFor({ state: "detached" });

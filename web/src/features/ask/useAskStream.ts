@@ -55,6 +55,11 @@ export interface UseAskStreamOptions {
     toolsConfig: ToolsConfig;
     generationConfig: GenerationConfig;
     generationEpochRef?: React.MutableRefObject<number>;
+    onTemporaryLease?: (
+        conversationId: string,
+        lease: { id: string; expiresAt: number },
+        active: boolean,
+    ) => void;
 }
 
 export interface UseAskStreamResult {
@@ -111,6 +116,7 @@ export function applySseEvent(
             userMessageId: string;
             assistantMessageId: string;
             title?: unknown;
+            temporaryLease?: unknown;
         };
         acc.meta = {
             type: "meta",
@@ -118,6 +124,19 @@ export function applySseEvent(
             userMessageId: d.userMessageId,
             assistantMessageId: d.assistantMessageId,
             title: typeof d.title === "string" ? d.title : undefined,
+            ...(d.temporaryLease &&
+                    typeof d.temporaryLease === "object" &&
+                    "id" in d.temporaryLease &&
+                    typeof d.temporaryLease.id === "string" &&
+                    "expiresAt" in d.temporaryLease &&
+                    typeof d.temporaryLease.expiresAt === "number"
+                ? {
+                    temporaryLease: {
+                        id: d.temporaryLease.id,
+                        expiresAt: d.temporaryLease.expiresAt,
+                    },
+                }
+                : {}),
         };
     } else if (event === "token" && typeof data === "string") {
         acc.liveText += data;
@@ -409,6 +428,8 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
     toolsConfigRef.current = toolsConfig;
     const generationConfigRef = useRef(generationConfig);
     generationConfigRef.current = generationConfig;
+    const onTemporaryLeaseRef = useRef(options.onTemporaryLease);
+    onTemporaryLeaseRef.current = options.onTemporaryLease;
 
     const stop = useCallback(() => {
         abortRef.current?.abort();
@@ -523,6 +544,14 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
                     return;
                 }
                 applySseEvent(acc, parseResult.event, parseResult.data);
+                if (parseResult.event === "meta" && acc.meta?.temporaryLease) {
+                    onTemporaryLeaseRef.current?.(
+                        acc.meta.conversationId,
+                        acc.meta.temporaryLease,
+                        currentEpoch === epochRef.current &&
+                            !controller.signal.aborted,
+                    );
+                }
                 if (acc.errorMessage) {
                     setErrorRef.current(acc.errorMessage);
                 }
@@ -656,7 +685,9 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
                             setHistoryRef.current(items);
                         }
                     } catch (e) {
-                        setErrorRef.current(errorMessage(e));
+                        if (currentEpoch === epochRef.current) {
+                            setErrorRef.current(errorMessage(e));
+                        }
                     }
                 }
 

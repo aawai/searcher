@@ -104,7 +104,16 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             waitUntil: "domcontentloaded",
         });
         assertEquals(response?.status(), 200, `Visiting ${path} failed`);
-        await target.locator("main").waitFor({ state: "visible" });
+        const selector = path === "/"
+            ? "main.home"
+            : path.startsWith("/settings") || path === "/account"
+            ? '[data-window-id="settings"] .settings-layout'
+            : path === "/trash"
+            ? '[data-window-id="trash"] .trash-page'
+            : path.startsWith("/ask")
+            ? '[data-window-id="ai"] .ask-page-shell'
+            : 'main[data-archetype="management"]';
+        await target.locator(selector).waitFor({ state: "visible" });
     }
 
     async function updatePreferences(

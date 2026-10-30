@@ -7,6 +7,7 @@ import {
     closeLibrary,
     libraryPanel,
     libraryView,
+    libraryWindow,
     openApps,
     openNotes,
     workspaceAppsTrigger,
@@ -20,11 +21,19 @@ async function assertFocus(target: Locator) {
     );
 }
 
-async function assertHeaderFocus(page: Page) {
-    await page.waitForFunction(() =>
-        document.querySelector("[data-library] .workspace-header")
-            ?.contains(document.activeElement) === true
+/** Opening a window moves focus inside its frame (title bar or content). */
+async function assertWindowFocus(page: Page, view: "notes" | "apps") {
+    await page.waitForFunction(
+        (selector) =>
+            document.querySelector(selector)?.contains(
+                document.activeElement,
+            ) === true,
+        `[data-window-id="${view}"]`,
     );
+}
+
+function libraryBody(page: Page, view: "notes" | "apps"): Locator {
+    return page.locator(`[data-library="${view}"]`);
 }
 
 Deno.test("Workspace entries, responsive presentation, history and focus contracts #285", async (t) => {
@@ -160,59 +169,48 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                     const hero = await page.locator(".hero").boundingBox();
                     await entry.open();
                     await libraryView(page, entry.view).waitFor();
-                    await assertHeaderFocus(page);
+                    await assertWindowFocus(page, entry.view);
                     assertEquals(
-                        await libraryPanel(page).getAttribute(
-                            "data-presentation",
-                        ),
-                        width < 768 ? "sheet" : "panel",
+                        await libraryBody(page, entry.view).count(),
+                        1,
                     );
+                    await libraryWindow(page, entry.view).waitFor({
+                        state: "visible",
+                    });
                     if (
                         entry.name === "home note" ||
                         entry.name === "continue" ||
                         entry.name === "note suggestion"
                     ) {
-                        await libraryPanel(page).getByRole("textbox", {
-                            name: "笔记标题",
-                            exact: true,
-                        }).waitFor();
-                        assertEquals(
-                            await libraryPanel(page).getByRole("textbox", {
+                        const noteTitle = libraryBody(page, entry.view)
+                            .getByRole("textbox", {
                                 name: "笔记标题",
                                 exact: true,
-                            }).inputValue(),
-                            title,
-                        );
+                            });
+                        await noteTitle.waitFor();
+                        assertEquals(await noteTitle.inputValue(), title);
                     }
-                    if (width >= 768) {
-                        assertEquals(
-                            await page.locator(".hero").boundingBox(),
-                            hero,
-                        );
-                        assertEquals(
-                            await page.locator('[data-slot="sheet-backdrop"]')
-                                .count(),
-                            0,
-                        );
-                        await assertInteractiveHome(page);
-                    } else {
-                        // All widths are non-modal; no backdrop blocks home interaction
-                        assertEquals(
-                            await page.locator('[data-slot="sheet-backdrop"]')
-                                .count(),
-                            0,
-                        );
-                    }
+                    assertEquals(
+                        await page.locator(".hero").boundingBox(),
+                        hero,
+                    );
+                    assertEquals(
+                        await page.locator('[data-slot="sheet-backdrop"]')
+                            .count(),
+                        0,
+                    );
+                    await assertInteractiveHome(page);
                     await closeLibrary(page);
                     await assertFocus(entry.focus());
                 });
             }
 
             await t.step(
-                `${width}: Escape unwinds nested detail view, closes workspace and restores opener`,
+                `${width}: Escape unwinds nested detail view, minimizes the window and restores opener`,
                 async () => {
                     await page.goto(app.origin + "/");
                     await openNotes(page);
+                    const notes = libraryWindow(page, "notes");
                     // Open document into editor
                     const noteCard = libraryPanel(page).locator(
                         `[data-document-id] h4 button`,
@@ -223,13 +221,28 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                             "[data-workspace-editor]",
                         )
                             .waitFor();
+                        // The editor swallows Escape; the back button owns focus.
+                        await libraryPanel(page).getByRole("button", {
+                            name: /^返回/,
+                        }).focus();
                         // First Escape exits editor back to notes list
                         await page.keyboard.press("Escape");
                         await libraryView(page, "notes").waitFor();
+                        await notes.waitFor({ state: "visible" });
                     }
-                    // Next Escape closes the workspace panel
+                    // Next Escape minimizes the window: hidden, content kept.
                     await page.keyboard.press("Escape");
-                    await libraryPanel(page).waitFor({ state: "detached" });
+                    await notes.waitFor({ state: "hidden" });
+                    await page.waitForURL((url) =>
+                        !url.searchParams.has("view")
+                    );
+                    assertEquals(await libraryPanel(page).count(), 1);
+                    assertEquals(
+                        await workspaceNotesTrigger(page).getAttribute(
+                            "data-window-status",
+                        ),
+                        "minimized",
+                    );
                     await assertFocus(workspaceNotesTrigger(page));
                 },
             );
@@ -258,7 +271,12 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                     await page.waitForURL((url) =>
                         !url.searchParams.has("view")
                     );
-                    await libraryPanel(page).waitFor({ state: "detached" });
+                    await libraryWindow(page, "notes").waitFor({
+                        state: "hidden",
+                    });
+                    await libraryWindow(page, "apps").waitFor({
+                        state: "hidden",
+                    });
                 },
             );
 
@@ -268,14 +286,15 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                     async () => {
                         await page.goto(app.origin + "/");
                         await openNotes(page);
-                        const query = libraryPanel(page).getByRole(
+                        const notesBody = libraryBody(page, "notes");
+                        const query = notesBody.getByRole(
                             "searchbox",
                             {
                                 name: "搜索笔记",
                             },
                         );
                         await query.fill("Hidden pane refresh");
-                        await libraryPanel(page).getByText("没有匹配的笔记", {
+                        await notesBody.getByText("没有匹配的笔记", {
                             exact: true,
                         })
                             .waitFor();
@@ -296,7 +315,7 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                             await query.inputValue(),
                             "Hidden pane refresh",
                         );
-                        await libraryPanel(page).getByRole("button", {
+                        await notesBody.getByRole("button", {
                             name: "打开笔记：Hidden pane refresh",
                             exact: true,
                         }).waitFor();

@@ -9,7 +9,7 @@ import { registerAiRoutes } from "./ai.route.ts";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import type { UserDto } from "@shared/contracts.ts";
 import { eq } from "drizzle-orm";
-import { aiBlobs } from "../../db/ai-schema.ts";
+import { aiBlobs, aiConversations } from "../../db/ai-schema.ts";
 
 function createInMemoryStore(): DatabaseStore {
     const native = new DatabaseSync(":memory:");
@@ -72,11 +72,17 @@ function createInMemoryStore(): DatabaseStore {
             user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             title TEXT NOT NULL,
             history_enabled INTEGER NOT NULL DEFAULT 1,
+            temporary_delete_pending INTEGER NOT NULL DEFAULT 0,
             active_leaf_message_id TEXT,
             system_instruction TEXT,
             deleted_at INTEGER,
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL
+        );`,
+        `CREATE TABLE ai_temporary_leases (
+            id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL REFERENCES ai_conversations(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL,
+            claimed INTEGER NOT NULL DEFAULT 0, released INTEGER NOT NULL DEFAULT 0
         );`,
         `CREATE TABLE ai_messages (
             id TEXT PRIMARY KEY,
@@ -1528,6 +1534,77 @@ Deno.test("AI image protocol selection preserves model aliases and text chat", a
             assertEquals(events.some((e) => e.event === "done"), true);
             assertEquals(events.some((e) => e.event === "error"), false);
         }
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("temporary lease routes enforce ownership and protect another holder from legacy DELETE", async () => {
+    const user: UserDto = {
+        id: "user-1",
+        username: "testuser",
+        displayName: "Test User",
+        role: "user",
+    };
+    const other: UserDto = {
+        id: "user-2",
+        username: "testuser2",
+        displayName: "Test User 2",
+        role: "user",
+    };
+    const { app, store } = setupTestApp(user);
+    try {
+        await store.run(async (db) => {
+            await db.insert(aiConversations).values({
+                id: "route-temp",
+                userId: user.id,
+                title: "temporary",
+                historyEnabled: false,
+                createdAt: 1,
+                updatedAt: 1,
+            }).run();
+        });
+        const path = "/api/ai/conversations/route-temp/temporary";
+        const acquired = await app.request(`${path}/leases`, {
+            method: "POST",
+        });
+        assertEquals(acquired.status, 200);
+        const payload = await acquired.json() as {
+            data: { id: string; expiresAt: number };
+        };
+        const leaseId = payload.data.id;
+        assertEquals(typeof payload.data.expiresAt, "number");
+        const otherApp = setupTestApp(other, undefined, store).app;
+        assertEquals(
+            (await otherApp.request(`${path}/leases/${leaseId}`, {
+                method: "PUT",
+            })).status,
+            404,
+        );
+        assertEquals(
+            (await app.request(`${path}/leases/${leaseId}`, { method: "PUT" }))
+                .status,
+            200,
+        );
+        assertEquals(
+            (await app.request(path, { method: "DELETE" })).status,
+            200,
+        );
+        assertEquals(
+            (await app.request("/api/ai/conversations/route-temp")).status,
+            200,
+        );
+        assertEquals(
+            (await app.request(path, {
+                method: "DELETE",
+                headers: { "X-Searcher-Temporary-Lease": leaseId },
+            })).status,
+            200,
+        );
+        assertEquals(
+            (await app.request("/api/ai/conversations/route-temp")).status,
+            404,
+        );
     } finally {
         await store.close();
     }

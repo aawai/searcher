@@ -2,7 +2,12 @@
 type: concept
 title: SQLite Backup and Recovery Boundaries
 created: 2026-10-27
-updated: 2026-10-27
+updated: 2026-10-29
+sources:
+  - sources/SRC-2026-10-27-001
+  - sources/SRC-2026-10-27-002
+  - sources/SRC-2026-10-29-003
+  - sources/SRC-2026-09-25-010
 ---
 
 ## 数据库快照
@@ -10,6 +15,8 @@ updated: 2026-10-27
 [SQLite Online Backup API](/sources/SRC-2026-10-27-001.md)（[raw](../../raw/sources/SRC-2026-10-27-001/extracted.md)，第 33–83 行）支持将运行中的数据库增量复制成一致的数据库快照；源库只在读取步骤短暂持有锁，目标文件的原有内容会被替换。`VACUUM INTO` 是另一种生成独立数据库副本的方式，不能假定项目已使用哪种方式。
 
 [SQLite WAL 文档](/sources/SRC-2026-09-25-010.md)（[raw](../../raw/sources/SRC-2026-09-25-010/extracted.md)，第 368–375 行）明确 WAL 属于数据库持久状态；分离数据库与 WAL 可能丢失已提交事务或损坏数据库。不要将运行时仅复制主数据库文件当成备份，也不要推断同时复制文件必然构成一致快照。
+
+SQLite 官方还提醒：[运行时复制与文件锁风险](/sources/SRC-2026-10-29-003.md)（[原始 HTML](../../raw/sources/SRC-2026-10-29-003/original/source.html)，第 229–280、316–366 行）包括事务中直接复制产生不一致，以及在 Unix POSIX advisory lock 环境下同一进程绕过 SQLite 直接打开并关闭数据库文件可能解除其他连接的锁。3.51.0 引入的部分 WAL 多进程防御并非完整修复；不要将通用风险直接当作项目已存在的缺陷。
 
 ## 验证与应用边界
 

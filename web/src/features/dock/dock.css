@@ -203,7 +203,20 @@
 }
 
 @media (max-width: 767px) {
+    .dock-group--system {
+        flex-shrink: 1;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+    }
+
+    .dock-group--system::-webkit-scrollbar {
+        display: none;
+    }
+
     .dock-group--apps {
+        flex: 1 1 0;
         max-width: none;
     }
 }
@@ -271,6 +284,34 @@
 .dock-item[data-active="true"] {
     background: var(--accent-soft);
     color: var(--accent);
+}
+
+/* A solid square marks an open window; an outline marks a minimized one.
+   The active entry keeps its existing background and dot. */
+.dock-item[data-window-status]:not([data-active])::before {
+    content: "";
+    position: absolute;
+    top: var(--space-1);
+    right: var(--space-1);
+    width: var(--space-2);
+    height: var(--space-2);
+    border: var(--space-hairline) solid currentColor;
+    background: currentColor;
+}
+
+.dock-item[data-window-status="minimized"]:not([data-active])::before {
+    background: transparent;
+}
+
+.dock-item[data-window-status][data-active="true"]::before {
+    content: "";
+    position: absolute;
+    top: var(--space-1);
+    right: var(--space-1);
+    width: var(--space-2);
+    height: var(--space-2);
+    border: var(--space-hairline) solid currentColor;
+    transform: rotate(45deg);
 }
 
 .dock-item[data-active="true"]::after {
@@ -444,15 +485,6 @@
     opacity: 0.5;
 }
 
-/* Solid fallback on non-home pages (e.g. /ask) */
-.app-shell:not([data-home]) :is(.dock-bar, .dock-ball) {
-    background: var(--surface-l3);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    border: var(--space-hairline) solid var(--border);
-    box-shadow: var(--shadow-l2);
-}
-
 /* Error badge on dock */
 .dock-error-badge {
     position: absolute;
@@ -535,6 +567,18 @@
     max-height: 60vh;
     overflow-y: auto;
     padding: var(--space-1) 0;
+}
+
+.dock-window-row,
+.dock-window-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.dock-window-row {
+    justify-content: space-between;
+    flex-wrap: wrap;
 }
 
 .dock-management-layout {

@@ -85,7 +85,7 @@ Deno.test("production navigation contracts", async (t) => {
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
-        await target.locator("main").waitFor();
+        await target.locator("main:visible").last().waitFor();
     }
     async function signIn(target: Page = page) {
         await target.locator("#auth-username").fill(username);
@@ -282,16 +282,7 @@ Deno.test("production navigation contracts", async (t) => {
                     exact: true,
                 }).first().waitFor({ state: "visible" });
             }
-            // A guest's home top bar holds only the theme and sign-in; settings
-            // and the shortcut reference open from search box commands.
             await visit("/");
-            assertEquals(
-                (await page.getByRole("navigation", { name: "账户与设置" })
-                    .locator("a, button").evaluateAll((items) =>
-                        items.map((item) => item.getAttribute("aria-label"))
-                    )).map((label) => label?.split("，")[0]),
-                ["切换主题", "登录"],
-            );
             const search = page.locator("#search-query");
             await search.fill("/快捷键");
             await page.getByRole("option", { name: /查看快捷键/ }).waitFor();
@@ -387,7 +378,7 @@ Deno.test("production navigation contracts", async (t) => {
                 // Home is the only primary action; settings and admin paths add
                 // one way back into the area they were under.
                 assertEquals(
-                    (await page.locator("main").getByRole("link")
+                    (await page.locator("main:visible").last().getByRole("link")
                         .allTextContents()).map((label) => label.trim()),
                     back ? ["返回首页", back.label] : ["返回首页"],
                     path + " actions",

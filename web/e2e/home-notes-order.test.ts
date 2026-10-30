@@ -8,7 +8,7 @@ import {
     seedHomeApps,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
-import { libraryPanel } from "./helpers/library.ts";
+import { closeLibrary, libraryPanel } from "./helpers/library.ts";
 
 const BODY = "首页顺序决定单元落点，不按创建时间排列。";
 
@@ -63,17 +63,13 @@ Deno.test("home notes follow homeSortOrder, alternate sides and leave the search
             position: { x: 10, y: 10 },
         });
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "返回首页", exact: true })
-            .click();
-        await libraryPanel(page).waitFor({ state: "detached" });
+        await closeLibrary(page);
         await third.getByRole("button", { name: "顺序 2", exact: true })
             .click();
         await libraryPanel(page).waitFor();
 
         // Close the library and add three notes: the last one overflows.
-        await page.getByRole("button", { name: "返回首页", exact: true })
-            .click();
-        await libraryPanel(page).waitFor({ state: "detached" });
+        await closeLibrary(page);
         for (let index = 4; index < 7; index++) {
             await createHomeNote(page, {
                 title: `顺序 ${index}`,

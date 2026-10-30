@@ -11,6 +11,16 @@
     "entities/searcher-项目",
     "sources/SRC-2026-10-24-010"
   ],
+  "concepts/browser-storage-persistence-and-eviction": [
+    "concepts/http-cache-and-service-worker-boundaries",
+    "concepts/offline-first-与-local-draft-持久化架构",
+    "concepts/pwa-service-worker-update-lifecycle",
+    "entities/indexeddb-本地存储引擎",
+    "sources/SRC-2026-10-28-002",
+    "sources/SRC-2026-10-28-003",
+    "sources/SRC-2026-10-28-004",
+    "sources/SRC-2026-10-28-005"
+  ],
   "concepts/contract-first-testing": [
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/sqlite-table-recreation-migration",
@@ -30,7 +40,8 @@
     "concepts/session-security-and-isolation",
     "concepts/xss-sanitization-and-trusted-types",
     "sources/SRC-2026-10-26-003",
-    "sources/SRC-2026-10-27-006"
+    "sources/SRC-2026-10-27-006",
+    "sources/SRC-2026-10-29-001"
   ],
   "concepts/css-custom-property-fallback-and-registration": [
     "concepts/tailwind-v4-css-first-architecture",
@@ -99,20 +110,38 @@
   "concepts/hono-rpc-type-safe-client": [
     "sources/SRC-2026-09-26-003"
   ],
+  "concepts/http-cache-and-service-worker-boundaries": [
+    "concepts/browser-storage-persistence-and-eviction",
+    "concepts/offline-first-与-local-draft-持久化架构",
+    "concepts/pwa-service-worker-update-lifecycle",
+    "sources/SRC-2026-10-28-001",
+    "sources/SRC-2026-10-28-002",
+    "sources/service-worker-bypass-does-not-bypass-http-cache"
+  ],
+  "concepts/modal-dialog-focus-and-semantics": [
+    "concepts/modal-layering-and-escape-dismissal",
+    "entities/shadcn-ui-system",
+    "sources/SRC-2026-10-29-002"
+  ],
   "concepts/modal-layering-and-escape-dismissal": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/aria-combobox-grouped-suggestions",
+    "concepts/modal-dialog-focus-and-semantics",
     "concepts/tailwind-v4-css-first-architecture",
     "concepts/view-transitions-shared-element",
     "entities/searcher-项目",
     "entities/shadcn-ui-system",
     "sources/SRC-2026-09-27-001",
-    "sources/SRC-2026-10-24-010"
+    "sources/SRC-2026-10-24-010",
+    "sources/SRC-2026-10-29-002"
   ],
   "concepts/offline-first-与-local-draft-持久化架构": [
+    "concepts/browser-storage-persistence-and-eviction",
     "concepts/pwa-service-worker-update-lifecycle",
+    "entities/indexeddb-本地存储引擎",
     "sources/SRC-2026-09-25-037",
-    "sources/SRC-2026-10-24-007"
+    "sources/SRC-2026-10-24-007",
+    "sources/SRC-2026-10-28-005"
   ],
   "concepts/pointer-target-size": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
@@ -121,8 +150,13 @@
     "sources/SRC-2026-10-25-004"
   ],
   "concepts/pwa-service-worker-update-lifecycle": [
+    "concepts/browser-storage-persistence-and-eviction",
+    "concepts/http-cache-and-service-worker-boundaries",
+    "concepts/offline-first-与-local-draft-持久化架构",
+    "entities/indexeddb-本地存储引擎",
     "sources/SRC-2026-10-24-007",
-    "sources/SRC-2026-10-24-008"
+    "sources/SRC-2026-10-24-008",
+    "sources/SRC-2026-10-28-002"
   ],
   "concepts/react-19-actions-and-transitions": [
     "entities/react-19-framework",
@@ -145,6 +179,7 @@
     "concepts/csrf-defense-boundaries",
     "concepts/deno-permission-boundaries",
     "concepts/hono-middleware-pipeline-request-intake",
+    "concepts/http-cache-and-service-worker-boundaries",
     "concepts/pwa-service-worker-update-lifecycle",
     "concepts/xss-sanitization-and-trusted-types",
     "entities/hono-framework",
@@ -159,6 +194,9 @@
     "sources/SRC-2026-10-26-002",
     "sources/SRC-2026-10-26-003",
     "sources/SRC-2026-10-27-005",
+    "sources/SRC-2026-10-28-001",
+    "sources/SRC-2026-10-29-001",
+    "sources/searcher-session-token-hash-is-not-salted",
     "syntheses/searcher-system-architecture"
   ],
   "concepts/shortest-column-masonry-layout": [
@@ -205,7 +243,8 @@
     "entities/drizzle-sqlite-store",
     "entities/searcher-项目",
     "sources/SRC-2026-10-27-001",
-    "sources/SRC-2026-10-27-002"
+    "sources/SRC-2026-10-27-002",
+    "sources/SRC-2026-10-29-003"
   ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
@@ -215,7 +254,8 @@
   "concepts/sqlite-isolation-and-connection-boundaries": [
     "concepts/sqlite-backup-and-recovery-boundaries",
     "entities/drizzle-sqlite-store",
-    "sources/SRC-2026-10-26-001"
+    "sources/SRC-2026-10-26-001",
+    "sources/SRC-2026-10-29-003"
   ],
   "concepts/sqlite-table-recreation-migration": [
     "concepts/database-queue-serialization",
@@ -264,7 +304,8 @@
     "concepts/session-security-and-isolation",
     "entities/searcher-项目",
     "sources/SRC-2026-10-27-005",
-    "sources/SRC-2026-10-27-006"
+    "sources/SRC-2026-10-27-006",
+    "sources/SRC-2026-10-29-001"
   ],
   "entities/deno-runtime": [
     "concepts/deno-native-serve-architecture",
@@ -339,6 +380,7 @@
     "sources/SRC-2026-10-24-006",
     "sources/SRC-2026-10-26-001",
     "sources/SRC-2026-10-27-001",
+    "sources/SRC-2026-10-29-003",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -368,7 +410,11 @@
     "syntheses/searcher-system-architecture"
   ],
   "entities/indexeddb-本地存储引擎": [
-    "sources/SRC-2026-09-25-037"
+    "concepts/browser-storage-persistence-and-eviction",
+    "concepts/offline-first-与-local-draft-持久化架构",
+    "sources/SRC-2026-09-25-037",
+    "sources/SRC-2026-10-28-003",
+    "sources/SRC-2026-10-28-005"
   ],
   "entities/react-19-framework": [
     "concepts/react-19-actions-and-transitions",
@@ -388,7 +434,6 @@
     "concepts/dnd-kit-2d-grid-sorting-architecture",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/modal-layering-and-escape-dismissal",
-    "concepts/offline-first-与-local-draft-持久化架构",
     "concepts/pointer-target-size",
     "concepts/pwa-service-worker-update-lifecycle",
     "concepts/route-level-code-splitting-dynamic-bundling",
@@ -464,6 +509,7 @@
     "concepts/aria-combobox-grouped-suggestions",
     "concepts/css-custom-property-fallback-and-registration",
     "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "concepts/modal-dialog-focus-and-semantics",
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/tailwind-v4-css-first-architecture",
     "entities/dnd-kit-system",
@@ -482,6 +528,7 @@
     "sources/SRC-2026-09-27-001",
     "sources/SRC-2026-09-27-002",
     "sources/SRC-2026-10-24-010",
+    "sources/SRC-2026-10-29-002",
     "syntheses/searcher-system-architecture"
   ],
   "entities/valibot-schema-validator": [
@@ -718,7 +765,8 @@
   ],
   "sources/SRC-2026-10-26-003": [
     "concepts/csrf-defense-boundaries",
-    "concepts/session-security-and-isolation"
+    "concepts/session-security-and-isolation",
+    "sources/SRC-2026-10-29-001"
   ],
   "sources/SRC-2026-10-27-001": [
     "concepts/sqlite-backup-and-recovery-boundaries",
@@ -745,11 +793,50 @@
     "concepts/xss-sanitization-and-trusted-types",
     "sources/SRC-2026-10-27-005"
   ],
+  "sources/SRC-2026-10-28-001": [
+    "concepts/http-cache-and-service-worker-boundaries",
+    "sources/service-worker-bypass-does-not-bypass-http-cache"
+  ],
+  "sources/SRC-2026-10-28-002": [
+    "concepts/http-cache-and-service-worker-boundaries",
+    "sources/SRC-2026-10-28-001",
+    "sources/service-worker-bypass-does-not-bypass-http-cache"
+  ],
+  "sources/SRC-2026-10-28-003": [
+    "concepts/browser-storage-persistence-and-eviction",
+    "concepts/offline-first-与-local-draft-持久化架构",
+    "sources/SRC-2026-10-28-004",
+    "sources/SRC-2026-10-28-005"
+  ],
+  "sources/SRC-2026-10-28-004": [
+    "concepts/browser-storage-persistence-and-eviction",
+    "sources/SRC-2026-10-28-003"
+  ],
+  "sources/SRC-2026-10-28-005": [
+    "concepts/browser-storage-persistence-and-eviction",
+    "concepts/offline-first-与-local-draft-持久化架构",
+    "entities/indexeddb-本地存储引擎",
+    "sources/SRC-2026-10-28-004"
+  ],
+  "sources/SRC-2026-10-29-001": [
+    "concepts/session-security-and-isolation",
+    "sources/searcher-session-token-hash-is-not-salted"
+  ],
+  "sources/SRC-2026-10-29-002": [
+    "concepts/modal-dialog-focus-and-semantics",
+    "entities/shadcn-ui-system"
+  ],
+  "sources/SRC-2026-10-29-003": [
+    "concepts/sqlite-backup-and-recovery-boundaries",
+    "entities/drizzle-sqlite-store"
+  ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
   ],
+  "sources/dock-touch-context-and-dnd-readiness": [],
   "sources/e2e-native-parallel-speedup-vs-stability-167": [],
   "sources/e2e-parallel-default-enabled-171": [],
+  "sources/e2e-triage-needs-timeout-and-small-first": [],
   "sources/issue-174-data-router-session-leave-guard": [],
   "sources/issue-326-dock-effective-edge-responsive": [],
   "sources/obs-2026-09-25-ui-app": [],
@@ -836,9 +923,22 @@
   "sources/obs-2026-10-26-pr-317-main": [],
   "sources/obs-2026-10-26-q1-q19": [],
   "sources/obs-2026-10-26-q20-q25": [],
+  "sources/obs-2026-10-27-": [],
+  "sources/obs-2026-10-27-dock-simplification-review-requirements": [],
   "sources/obs-2026-10-27-issue-320-ui-guard-actions-pr-329-main": [],
   "sources/obs-2026-10-27-issue-322-327-ui-guard-token-pr-330": [],
   "sources/obs-2026-10-27-issue-325-ui-pr-331-main": [],
+  "sources/obs-2026-10-28-": [],
+  "sources/obs-2026-10-29-issue-338-a-c1": [],
+  "sources/obs-2026-10-29-issue-338-a-main": [],
+  "sources/obs-2026-10-29-issue-338-b": [],
+  "sources/obs-2026-10-30-issue-338-c3-ai": [],
+  "sources/searcher-session-token-hash-is-not-salted": [
+    "concepts/session-security-and-isolation"
+  ],
+  "sources/service-worker-bypass-does-not-bypass-http-cache": [
+    "concepts/http-cache-and-service-worker-boundaries"
+  ],
   "sources/sqlite-table-recreation-migration-zero-loss": [
     "concepts/sqlite-table-recreation-migration",
     "entities/drizzle-sqlite-store",

@@ -6,7 +6,7 @@ import {
     reloadHome,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
-import { libraryPanel } from "./helpers/library.ts";
+import { closeLibrary, libraryPanel } from "./helpers/library.ts";
 
 Deno.test("home-notes-document: 180px cell, Material card and no editor chunk on home", async () => {
     const fixture = await openHomeNotesFixture({
@@ -95,16 +95,12 @@ Deno.test("an untitled note shows its body once and opens from the card or keybo
             position: { x: 10, y: 10 },
         });
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "返回首页", exact: true })
-            .click();
-        await libraryPanel(page).waitFor({ state: "detached" });
+        await closeLibrary(page);
 
         await wrapper.focus();
         await page.keyboard.press("Enter");
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "返回首页", exact: true })
-            .click();
-        await libraryPanel(page).waitFor({ state: "detached" });
+        await closeLibrary(page);
     } finally {
         await fixture.close();
     }

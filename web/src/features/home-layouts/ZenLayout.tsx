@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { usePageHost } from "../../app/page-host.tsx";
 import type { SafeRect } from "./home-viewport.ts";
 import type { HomeLayoutProps } from "./types.ts";
 import { SearcherSearchInput } from "../../components/searcher/SearcherSearchInput.tsx";
@@ -7,7 +8,6 @@ import {
     type HomeAppLibraryHandle,
 } from "../app-library/HomeAppLibrary.tsx";
 import { InlineAnswerCard } from "../inline-ai/InlineAnswerCard.tsx";
-import { consumeSearchFocusRequest } from "../inline-ai/search-focus.ts";
 import { HomeCalm } from "../home-calm/HomeCalm.tsx";
 
 const HomeNotes = lazy(() =>
@@ -22,6 +22,7 @@ export function ZenLayout(
         availableRect?: SafeRect;
     },
 ) {
+    const { active } = usePageHost();
     const {
         user,
         engine,
@@ -55,19 +56,14 @@ export function ZenLayout(
     const heroRef = useRef<HTMLElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const { inlineAnswer } = props;
-    // Back from the expanded conversation: focus returns to the search box.
-    // Taken in an effect: a render React discards must not consume the request.
-    useEffect(() => {
-        if (consumeSearchFocusRequest()) searchInputRef.current?.focus();
-    }, []);
     // Closing the card, by button or Escape, returns focus to the search box.
     const answerWasOpen = useRef(false);
     useEffect(() => {
-        if (answerWasOpen.current && !inlineAnswer.open) {
+        if (active && answerWasOpen.current && !inlineAnswer.open) {
             searchInputRef.current?.focus();
         }
         answerWasOpen.current = inlineAnswer.open;
-    }, [inlineAnswer.open]);
+    }, [active, inlineAnswer.open]);
     const [gridElement, setGridElement] = useState<HTMLElement | null>(null);
 
     const libraryRef = useRef<HomeAppLibraryHandle>(null);
@@ -125,6 +121,7 @@ export function ZenLayout(
                     onOpenDocument={props.openDocument}
                 />
                 <SearcherSearchInput
+                    active={active}
                     engine={engine}
                     onEngineChange={setEngine}
                     inputRef={searchInputRef}

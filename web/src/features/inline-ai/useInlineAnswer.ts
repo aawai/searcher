@@ -55,10 +55,11 @@ export interface InlineAnswer {
  * searched first through the `documents` tool.
  */
 export function useInlineAnswer(
-    { user, models }: {
+    { user, models, active = true }: {
         user: { id: string } | null;
         /** Models the user can ask; the default one answers. */
         models: AiModelDto[];
+        active?: boolean;
     },
 ): InlineAnswer {
     const [open, setOpen] = useState(false);
@@ -172,7 +173,7 @@ export function useInlineAnswer(
     // Escape closes the card (and aborts the request) only once nothing above
     // it consumed the key: the suggestion list closes first and open menus or
     // dialogs outrank it in the shared Escape stack.
-    useEscapeLayer(open, close);
+    useEscapeLayer(open && active, close);
 
     const view: InlineAnswerView | null = useMemo(
         () =>

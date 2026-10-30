@@ -92,59 +92,57 @@
     outline-offset: 2px;
 }
 
-/* Narrow: /settings is the list; each item opens its own detail view. */
-@media (max-width: 767px) {
-    .settings-layout {
-        display: block;
-    }
-    .settings-nav {
-        position: static;
-    }
-    .settings-nav-title {
-        display: block;
-        margin: 0 0 var(--space-6);
-        font-size: var(--font-page-title-size);
-        line-height: var(--font-page-title-line-height);
-        font-weight: var(--font-title-weight);
-    }
-    .settings-nav-list {
-        gap: 0;
-        overflow: hidden;
-        border-radius: var(--radius);
-        background: var(--surface);
-    }
-    .settings-nav-item {
-        min-height: var(--row-min-height);
-        padding-inline: var(--space-card-padding);
-        border-radius: 0;
-        font-weight: var(--font-body-weight);
-    }
-    .settings-nav-list li + li .settings-nav-item::before {
-        content: "";
-        position: absolute;
-        inset-block-start: 0;
-        inset-inline: var(--space-card-padding) 0;
-        height: 1px;
-        background: var(--border);
-    }
-    .settings-nav-item[aria-current="page"] {
-        background: transparent;
-    }
-    .settings-nav-item[aria-current="page"] > svg:first-child {
-        color: var(--muted);
-    }
-    .settings-nav-chevron {
-        display: block;
-    }
-    .settings-layout[data-view="list"] .settings-panel {
-        display: none;
-    }
-    .settings-layout[data-view="detail"] .settings-nav {
-        display: none;
-    }
-    .settings-back {
-        display: inline-flex;
-    }
+/* The host supplies the same capacity decision for pages and embedded content. */
+.settings-layout[data-host-narrow="true"] {
+    display: block;
+}
+.settings-layout[data-host-narrow="true"] .settings-nav {
+    position: static;
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-title {
+    display: block;
+    margin: 0 0 var(--space-6);
+    font-size: var(--font-page-title-size);
+    line-height: var(--font-page-title-line-height);
+    font-weight: var(--font-title-weight);
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-list {
+    gap: 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-item {
+    min-height: var(--row-min-height);
+    padding-inline: var(--space-card-padding);
+    border-radius: 0;
+    font-weight: var(--font-body-weight);
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-list li + li .settings-nav-item::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: var(--space-card-padding) 0;
+    height: 1px;
+    background: var(--border);
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-item[aria-current="page"] {
+    background: transparent;
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-item[aria-current="page"] > svg:first-child {
+    color: var(--muted);
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-chevron {
+    display: block;
+}
+.settings-layout[data-host-narrow="true"][data-view="list"] .settings-panel {
+    display: none;
+}
+.settings-layout[data-host-narrow="true"][data-view="detail"] .settings-nav {
+    display: none;
+}
+.settings-layout[data-host-narrow="true"] .settings-back {
+    display: inline-flex;
 }
 
 /* Panel and content */
@@ -166,6 +164,21 @@
 .settings-choice-select {
     width: calc(var(--control-height) * 4 + var(--space-5));
     max-width: 100%;
+}
+.settings-swatch-set {
+    display: flex;
+    flex: none;
+    gap: var(--space-2);
+}
+@media (any-pointer: coarse), (hover: none) {
+    .settings-swatch-set {
+        gap: 0;
+    }
+}
+@media (max-width: 639px) {
+    .settings-swatch-set {
+        display: contents;
+    }
 }
 .settings-swatch-color {
     display: grid;

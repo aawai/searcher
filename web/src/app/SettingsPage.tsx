@@ -30,7 +30,6 @@ import {
     useState,
     useSyncExternalStore,
 } from "react";
-import { Link, useLocation } from "react-router-dom";
 import {
     ActionGroup,
     SettingsGroup,
@@ -68,11 +67,12 @@ import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperS
 import { api } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
 import { AiSettings } from "./AiSettings.tsx";
-import { NotFoundPage } from "./NotFoundPage.tsx";
+import { NotFoundContent } from "./NotFoundPage.tsx";
 import { routes, settingsTab } from "./routes.ts";
 import { SettingsShell } from "./SettingsShell.tsx";
 import "./settings.css";
 import { type Appearance, useAppState } from "./state.tsx";
+import { type PageHost, usePagePresenter } from "./page-host.tsx";
 
 const GLASS_CHOICES = [
     ["off", "关闭"],
@@ -148,21 +148,27 @@ function Choices<T extends string>(
                 onValueChange={(next) => select(next as T)}
                 aria-label={title}
             >
-                {values.map(([id, label]) => (
-                    <RadioGroupItem
-                        key={id}
-                        value={id}
-                        aria-label={label}
-                        title={label}
-                    >
-                        <span
-                            className="settings-swatch-color"
-                            data-accent={id}
-                            aria-hidden="true"
-                        >
-                            {swatchIcons?.[id]}
-                        </span>
-                    </RadioGroupItem>
+                {[values.slice(0, 5), values.slice(5)].filter((group) =>
+                    group.length > 0
+                ).map((group) => (
+                    <span className="settings-swatch-set" key={group[0][0]}>
+                        {group.map(([id, label]) => (
+                            <RadioGroupItem
+                                key={id}
+                                value={id}
+                                aria-label={label}
+                                title={label}
+                            >
+                                <span
+                                    className="settings-swatch-color"
+                                    data-accent={id}
+                                    aria-hidden="true"
+                                >
+                                    {swatchIcons?.[id]}
+                                </span>
+                            </RadioGroupItem>
+                        ))}
+                    </span>
                 ))}
             </RadioGroup>
         );
@@ -182,11 +188,28 @@ export interface WallpaperHistoryRecord {
 }
 
 export function SettingsPage() {
-    const { appearance, setAppearance, user, settleAppearanceSync } =
-        useAppState();
+    return <SettingsContent host={usePagePresenter()} />;
+}
+
+export function SettingsContent({ host }: { host: PageHost }) {
+    const { location, Link } = host;
+    const {
+        appearance,
+        setAppearance,
+        user,
+        authSession,
+        settleAppearanceSync,
+    } = useAppState();
     const isAdmin = user?.role === "admin";
     const reducedTransparency = useReducedTransparency();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const mounted = useRef(true);
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+        };
+    }, []);
     const [wallpaperHistory, setWallpaperHistory] = useState<
         WallpaperHistoryRecord[]
     >([]);
@@ -212,6 +235,7 @@ export function SettingsPage() {
     );
 
     const showToast = (msg: string) => {
+        if (!mounted.current || !authSession.isCurrent()) return;
         clearTimeout(toastTimerRef.current);
         setToastMessage(msg);
         toastTimerRef.current = setTimeout(() => {
@@ -321,7 +345,7 @@ export function SettingsPage() {
         return () => {
             cancelled = true;
         };
-    }, [user?.id]);
+    }, [authSession, user?.id]);
 
     async function handleWallpaperUpload(file: File) {
         if (file.size > 5 * 1024 * 1024) {
@@ -334,6 +358,7 @@ export function SettingsPage() {
             let id: string;
             if (user) {
                 await settleAppearanceSync();
+                if (!mounted.current || !authSession.isCurrent()) return;
                 const form = new FormData();
                 form.append("image", file);
                 const res = await api<{ url: string; id?: string }>(
@@ -358,6 +383,7 @@ export function SettingsPage() {
                 });
                 id = "guest-" + Date.now();
             }
+            if (!mounted.current || !authSession.isCurrent()) return;
             const newRecord: WallpaperHistoryRecord = {
                 id,
                 url,
@@ -381,6 +407,7 @@ export function SettingsPage() {
                 wallpaper: url,
                 wallpaperPresentations: nextRecords,
             });
+            if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((current) =>
                 [
                     newRecord,
@@ -393,7 +420,7 @@ export function SettingsPage() {
         } catch (error) {
             showToast(error instanceof Error ? error.message : "上传壁纸失败");
         } finally {
-            setUploadingWallpaper(false);
+            if (authSession.isCurrent()) setUploadingWallpaper(false);
         }
     }
 
@@ -422,9 +449,9 @@ export function SettingsPage() {
             });
             showToast("壁纸已更新");
         } catch {
-            setDraftError("同步壁纸失败，请重试");
+            if (authSession.isCurrent()) setDraftError("同步壁纸失败，请重试");
         } finally {
-            setIsApplyingDraft(false);
+            if (authSession.isCurrent()) setIsApplyingDraft(false);
         }
     }
 
@@ -491,6 +518,7 @@ export function SettingsPage() {
             );
             if (isUploadedAsset) {
                 await settleAppearanceSync();
+                if (!mounted.current || !authSession.isCurrent()) return;
                 const uuid = parsed.value.replace("/api/wallpaper/", "");
                 await api(`/api/wallpaper/${uuid}`, {
                     method: "PATCH",
@@ -500,6 +528,7 @@ export function SettingsPage() {
                     }),
                     headers: { "Content-Type": "application/json" },
                 });
+                if (!mounted.current || !authSession.isCurrent()) return;
                 await setAppearance(
                     { wallpaperPresentations: nextRecords },
                     { sync: false },
@@ -511,6 +540,7 @@ export function SettingsPage() {
                     { sync: isCurrent },
                 );
             }
+            if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((prev) =>
                 prev.map((item) =>
                     item.id === target.id
@@ -539,6 +569,7 @@ export function SettingsPage() {
             const isUploadedAsset = user && parsed?.type === "uploaded";
             if (isUploadedAsset) {
                 await settleAppearanceSync();
+                if (!mounted.current || !authSession.isCurrent()) return;
                 const uuid = parsed.value.replace("/api/wallpaper/", "");
                 await api(`/api/wallpaper/${uuid}`, {
                     method: "PATCH",
@@ -548,6 +579,7 @@ export function SettingsPage() {
                     }),
                     headers: { "Content-Type": "application/json" },
                 });
+                if (!mounted.current || !authSession.isCurrent()) return;
             }
             const targetPres = wallpaperPresentation(
                 target.url,
@@ -566,6 +598,7 @@ export function SettingsPage() {
                 wallpaper: target.url,
                 wallpaperPresentations: nextRecords,
             });
+            if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((prev) =>
                 prev.map((item) =>
                     item.id === target.id
@@ -595,9 +628,11 @@ export function SettingsPage() {
             const parsed = parseWallpaperSource(target.url);
             if (user && parsed?.type === "uploaded") {
                 await settleAppearanceSync();
+                if (!mounted.current || !authSession.isCurrent()) return;
                 const uuid = parsed.value.replace("/api/wallpaper/", "");
                 await api(`/api/wallpaper/${uuid}`, { method: "DELETE" });
             }
+            if (!mounted.current || !authSession.isCurrent()) return;
             const nextRecords = purgeWallpaperPresentation(
                 { ...appearance.wallpaperPresentations },
                 target.url,
@@ -615,6 +650,7 @@ export function SettingsPage() {
                 );
                 showToast("壁纸已删除");
             }
+            if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((prev) =>
                 prev.filter((item) => item.id !== target.id)
             );
@@ -624,10 +660,10 @@ export function SettingsPage() {
                 error instanceof Error ? error.message : "删除壁纸失败，请重试",
             );
         } finally {
-            setIsDeleting(false);
+            if (authSession.isCurrent()) setIsDeleting(false);
         }
     }
-    const location = useLocation();
+
     const tab = settingsTab(location.pathname);
 
     function set<K extends keyof Appearance>(key: K, value: Appearance[K]) {
@@ -636,13 +672,17 @@ export function SettingsPage() {
 
     if (!tab) {
         return (
-            <NotFoundPage parent={{ label: "设置", to: routes.settings() }} />
+            <NotFoundContent
+                parent={{ label: "设置", to: routes.settings() }}
+                location={host.location}
+                Link={host.Link}
+            />
         );
     }
 
     return (
         <>
-            <SettingsShell current={tab}>
+            <SettingsShell current={tab} host={host}>
                 {tab === "search" && (
                     <SettingsGroup>
                         <Choices
@@ -1133,7 +1173,7 @@ export function SettingsPage() {
                                 </Button>
                             </SettingsRow>
                         </SettingsGroup>
-                        <AiSettings />
+                        <AiSettings host={host} />
                     </>
                 )}
                 {tab === "data" && (
@@ -1207,7 +1247,7 @@ export function SettingsPage() {
                 {tab === "shortcuts" && <ShortcutsSettings />}
             </SettingsShell>
             <WallpaperCompositionDialog
-                open={compositionTarget !== null}
+                open={host.active && compositionTarget !== null}
                 onOpenChange={(open) => {
                     if (!open) setCompositionTarget(null);
                 }}
@@ -1231,7 +1271,7 @@ export function SettingsPage() {
                 onSetAsCurrent={handleSetCurrentWithFocal}
             />
             <AlertDialog
-                open={deleteTarget !== null}
+                open={host.active && deleteTarget !== null}
                 onOpenChange={(open) => {
                     if (!open && !isDeleting) setDeleteTarget(null);
                 }}
@@ -1272,7 +1312,7 @@ export function SettingsPage() {
             <StatusBanner
                 tone="success"
                 presentation="floating"
-                open={toastMessage !== null}
+                open={host.active && toastMessage !== null}
                 data-testid="wallpaper-toast"
             >
                 {toastMessage}

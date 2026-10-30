@@ -118,7 +118,7 @@ async function register(page: Page, origin: string, username: string) {
     await page.locator("#auth-password").fill("Apps-density-password-149!");
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor({ state: "visible" });
+    await page.locator("main.home").waitFor({ state: "visible" });
 }
 
 async function seedFixtures(page: Page): Promise<Fixtures> {

@@ -1,4 +1,3 @@
-import { MEDIA_QUERIES } from "../design-system/breakpoints.ts";
 import {
     ChevronLeft,
     ChevronRight,
@@ -10,12 +9,12 @@ import {
     Sparkles,
     UserRound,
 } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { type ReactNode } from "react";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { routes, type SettingsTab } from "./routes.ts";
 import { useAppState } from "./state.tsx";
+import type { PageHost } from "./page-host.tsx";
 import "./settings.css";
 
 export type SettingsSection = SettingsTab | "account";
@@ -48,32 +47,25 @@ const sections: Record<
  * back link. Pages render only their content.
  */
 export function SettingsShell(
-    { current, actions, children }: {
+    { current, actions, children, host }: {
         current: SettingsSection;
         actions?: ReactNode;
         children: ReactNode;
+        host: PageHost;
     },
 ) {
     const { user } = useAppState();
-    const location = useLocation();
-    const [mobile, setMobile] = useState(() =>
-        globalThis.matchMedia(MEDIA_QUERIES.belowMedium).matches
-    );
-    useEffect(() => {
-        const media = globalThis.matchMedia(MEDIA_QUERIES.belowMedium);
-        const change = () => setMobile(media.matches);
-        media.addEventListener("change", change);
-        return () => media.removeEventListener("change", change);
-    }, []);
+    const { location, narrow: mobile, Link } = host;
 
     const items = (Object.keys(sections) as SettingsSection[]).filter(
         (id) => id !== "account" || user,
     );
 
     return (
-        <PageShell archetype="utility">
+        <PageShell as={host.inWindow ? "section" : "main"} archetype="utility">
             <div
                 className="settings-layout"
+                data-host-narrow={mobile ? "true" : undefined}
                 data-view={location.pathname === routes.settings()
                     ? "list"
                     : "detail"}

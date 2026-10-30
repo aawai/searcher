@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { Link } from "react-router-dom";
+import { usePageHost } from "../../app/page-host.tsx";
 import type { HomeContinueDto } from "@shared/contracts.ts";
 import { routes } from "../../app/routes.ts";
 import {
@@ -102,6 +102,7 @@ function ContinueItem(
         onOpenDocument: (id: string) => void;
     },
 ) {
+    const { Link } = usePageHost();
     if (entry.kind === "conversation") {
         return (
             <Link

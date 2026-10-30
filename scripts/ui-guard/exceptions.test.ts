@@ -379,7 +379,6 @@ Deno.test("viewport and physical paper exceptions reject unrelated visual values
 
 Deno.test("taskbar inset exemption is restricted to registered dock consumers", () => {
     const shell = "web/src/components/searcher/semantic.css";
-    const workspace = "web/src/features/workspace/workspace.css";
     const homeLayouts = "web/src/features/home-layouts/home-layouts.css";
     const homeNotes = "web/src/features/home-layouts/home-notes.css";
     for (
@@ -399,16 +398,6 @@ Deno.test("taskbar inset exemption is restricted to registered dock consumers", 
                 homeLayouts,
                 "padding-block-end",
                 "calc(max(var(--space-7), var(--dock-inset-bottom, 0px) - var(--space-6)) + env(safe-area-inset-bottom, 0px))",
-            ],
-            [
-                workspace,
-                "inset-block-end",
-                "max(var(--workspace-inset), var(--dock-inset-bottom, 0px))",
-            ],
-            [
-                workspace,
-                "width",
-                "min(var(--workspace-target-width), calc(100vw - 2 * var(--workspace-inset) - var(--dock-inset-left, 0px)))",
             ],
         ]
     ) {

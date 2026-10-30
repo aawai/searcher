@@ -2,8 +2,8 @@ import type {
     AiGenerationDefaultsDto,
     PreferencesDto,
 } from "@shared/contracts.ts";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import { resolveModelSwitchGenerationConfig } from "../../../src/features/ai/reasoning.ts";
 import type {
     AiConversationDto,
@@ -27,17 +27,67 @@ import type {
     ToolsConfig,
 } from "../features/ask/types.ts";
 import { useAskStream } from "../features/ask/useAskStream.ts";
+import { TemporaryLeaseOwner } from "../features/ask/temporary-lease.ts";
 import { api, json } from "../lib/api.ts";
 import type { ExpandedAnswerState } from "../features/inline-ai/inline-answer.ts";
-import { requestSearchFocus } from "../features/inline-ai/search-focus.ts";
-import { authPath, routes } from "./routes.ts";
+import { askConversationId, authPath, routes } from "./routes.ts";
 import { errorMessage, useAppState } from "./state.tsx";
+import {
+    type PageHost,
+    PageHostProvider,
+    usePagePresenter,
+} from "./page-host.tsx";
+import {
+    DESTRUCTIVE_ACTION_KEY,
+    useNavigationGuard,
+} from "./navigation-guards.tsx";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../components/ui/alert-dialog.tsx";
+import {
+    type AskLeave,
+    type AskLoss,
+    LEAVE_ACTIONS,
+    LEAVE_TITLES,
+    lossDescriptions,
+    needsConfirmation,
+    warnsOnUnload,
+} from "../features/ask/leave-loss.ts";
+import { useWindowManager } from "../features/windowing/window-context.tsx";
+
+/** The conversation an AI address names: null for `/ask`, undefined for other pages. */
+function aiTarget(pathname: string): string | null | undefined {
+    if (pathname === routes.ask) return null;
+    return askConversationId(pathname) ?? undefined;
+}
 
 export function AskPage() {
+    const host = usePagePresenter();
+    const { id } = useParams<{ id: string }>();
+    return <AskContent host={host} routeId={id} />;
+}
+
+export function AskContent(props: { host: PageHost; routeId?: string }) {
     const { user } = useAppState();
-    const location = useLocation();
-    const navigate = useNavigate();
-    const { id: routeId } = useParams<{ id: string }>();
+    return (
+        <PageHostProvider host={props.host}>
+            <AskWorkspaceContent key={user?.id ?? "anonymous"} {...props} />
+        </PageHostProvider>
+    );
+}
+
+function AskWorkspaceContent(
+    { host, routeId }: { host: PageHost; routeId?: string },
+) {
+    const { user } = useAppState();
+    const { location, navigate, Link } = host;
     // The home answer card hands over its conversation so the first frame of the
     // shared-element transition already shows it; the server copy replaces it.
     const handedOver = (location.state as Partial<ExpandedAnswerState> | null)
@@ -83,6 +133,7 @@ export function AskPage() {
     // UI state
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [leaseOwner] = useState(() => new TemporaryLeaseOwner(setError));
     const [undoConversation, setUndoConversation] = useState<
         {
             id: string;
@@ -118,35 +169,125 @@ export function AskPage() {
         toolsConfig,
         generationConfig,
         generationEpochRef,
+        onTemporaryLease: (id, lease, active) => {
+            if (active) void leaseOwner.acquire(id, lease);
+            else leaseOwner.discard(id, lease);
+        },
     });
+
+    // What leaving would lose. Read when a decision is needed, never rendered.
+    const streamingRef = useRef(isStreaming);
+    streamingRef.current = isStreaming;
+    const inputRef = useRef(input);
+    inputRef.current = input;
+    const attachmentsRef = useRef(0);
+    const reportAttachments = useCallback((count: number) => {
+        attachmentsRef.current = count;
+    }, []);
+    const windowManager = useWindowManager();
+    const [closeRequested, setCloseRequested] = useState(false);
+    const leaveSettled = useRef(false);
+    function currentLoss(): AskLoss {
+        const current = convRef.current;
+        const key = current?.conversation.id ?? "new";
+        return {
+            streaming: streamingRef.current,
+            temporary: current !== null && !current.conversation.historyEnabled,
+            attachments: attachmentsRef.current > 0,
+            draft: inputRef.current.trim() !== "" ||
+                Object.entries(draftsRef.current).some(([draftKey, text]) =>
+                    draftKey !== key && text.trim() !== ""
+                ),
+        };
+    }
+    // Only replacing the shown conversation or signing out destroys this
+    // content: the window may be minimized, hidden, or left for other windows.
+    const blocked = useNavigationGuard({
+        blocks: (intent) => {
+            const next = intent.nextLocation;
+            if (next.key === DESTRUCTIVE_ACTION_KEY) {
+                return needsConfirmation(currentLoss(), "logout");
+            }
+            const target = aiTarget(next.pathname);
+            if (target === undefined) return false;
+            if (target === (convRef.current?.conversation.id ?? null)) {
+                return false;
+            }
+            return needsConfirmation(currentLoss(), "switch");
+        },
+        warnOnUnload: () => warnsOnUnload(currentLoss()),
+    });
+    // Closing the window asks first when something would be lost.
+    const registerCloseGuard = windowManager?.registerCloseGuard;
+    useEffect(() =>
+        registerCloseGuard?.("ai", () => {
+            if (!needsConfirmation(currentLoss(), "close")) return false;
+            setCloseRequested(true);
+            return true;
+        }), [registerCloseGuard]);
+    // The window list shows that an answer is being written in the background.
+    const setWindowBusy = windowManager?.setBusy;
+    useEffect(() => {
+        setWindowBusy?.("ai", isStreaming);
+        return () => setWindowBusy?.("ai", false);
+    }, [isStreaming, setWindowBusy]);
+    const leave: AskLeave | null = blocked
+        ? blocked.location.key === DESTRUCTIVE_ACTION_KEY ? "logout" : "switch"
+        : closeRequested
+        ? "close"
+        : null;
+    useEffect(() => {
+        if (leave) leaveSettled.current = false;
+    }, [leave]);
+    function cancelLeave() {
+        if (leaveSettled.current) return;
+        leaveSettled.current = true;
+        setCloseRequested(false);
+        blocked?.reset();
+    }
+    function confirmLeave() {
+        if (leaveSettled.current) return;
+        leaveSettled.current = true;
+        if (blocked) {
+            blocked.proceed();
+            return;
+        }
+        setCloseRequested(false);
+        windowManager?.close("ai", { confirmed: true });
+    }
 
     // Helper: purge temporary conversation on switch or teardown
     function purgeTemporaryIfNeeded(conv: ConversationFullData | null) {
         if (conv && !conv.conversation.historyEnabled) {
-            const convId = conv.conversation.id;
-            delete draftsRef.current[convId];
-            try {
-                fetch(
-                    "/api/ai/conversations/" + encodeURIComponent(convId) +
-                        "/temporary",
-                    { method: "DELETE", keepalive: true },
-                ).catch(() => {});
-            } catch {
-                // Ignore teardown errors
-            }
+            delete draftsRef.current[conv.conversation.id];
         }
+        leaseOwner.release();
     }
 
     // Teardown on unmount and pagehide
     useEffect(() => {
         const handlePageHide = () => {
+            generationEpochRef.current += 1;
+            stopStream();
             purgeTemporaryIfNeeded(convRef.current);
         };
+        const handlePageShow = (event: PageTransitionEvent) => {
+            const current = convRef.current;
+            if (
+                event.persisted && current &&
+                !current.conversation.historyEnabled
+            ) {
+                void leaseOwner.acquire(current.conversation.id);
+            }
+        };
+        globalThis.addEventListener("pageshow", handlePageShow);
         globalThis.addEventListener("pagehide", handlePageHide);
         return () => {
+            globalThis.removeEventListener("pageshow", handlePageShow);
             globalThis.removeEventListener("pagehide", handlePageHide);
-            purgeTemporaryIfNeeded(convRef.current);
+            generationEpochRef.current += 1;
             stopStream();
+            purgeTemporaryIfNeeded(convRef.current);
             if (undoConversation?.timer) {
                 clearTimeout(undoConversation.timer);
             }
@@ -233,11 +374,6 @@ export function AskPage() {
         }
     }, [shownConversationId]);
 
-    // Leaving for the home page puts focus back in its search box.
-    useLayoutEffect(() => () => {
-        if (globalThis.location.pathname === routes.home) requestSearchFocus();
-    }, []);
-
     // Handle model change and resolve reasoning level compatibility
     function handleSelectModel(newModelId: string) {
         setSelectedModelId(newModelId);
@@ -300,8 +436,9 @@ export function AskPage() {
     // Open existing conversation
     async function openConversation(id: string) {
         generationEpochRef.current += 1;
+        const epoch = generationEpochRef.current;
         resetStream();
-        if (conversation && conversation.conversation.id !== id) {
+        if (conversation?.conversation.id !== id) {
             purgeTemporaryIfNeeded(conversation);
         }
         switchDraft(id);
@@ -310,6 +447,8 @@ export function AskPage() {
             const data = await api<ConversationFullData>(
                 "/api/ai/conversations/" + encodeURIComponent(id),
             );
+            if (epoch !== generationEpochRef.current) return;
+            if (!data.conversation.historyEnabled) void leaseOwner.acquire(id);
             setConversation(data);
             const activeMessage = data.messages.find((message) =>
                 message.id === data.conversation.activeLeafMessageId
@@ -331,6 +470,7 @@ export function AskPage() {
             setDrawerOpen(false);
             setError(null);
         } catch (e) {
+            if (epoch !== generationEpochRef.current) return;
             setConversation(null);
             setError(errorMessage(e));
         }
@@ -424,18 +564,26 @@ export function AskPage() {
             setNewConvHistoryEnabled(historyEnabled);
             return;
         }
+        const epoch = generationEpochRef.current;
         try {
             const result = await api<AiConversationDto>(
                 "/api/ai/conversations/" +
                     encodeURIComponent(conversation.conversation.id),
                 json("PATCH", { historyEnabled }),
             );
-            setConversation({ ...conversation, conversation: result });
+            if (epoch !== generationEpochRef.current) return;
+            if (historyEnabled) leaseOwner.forget();
+            else void leaseOwner.acquire(result.id);
+            setConversation((current) =>
+                current?.conversation.id === result.id
+                    ? { ...current, conversation: result }
+                    : current
+            );
             setHistory((items) =>
                 items.map((it) => (it.id === result.id ? result : it))
             );
         } catch (e) {
-            setError(errorMessage(e));
+            if (epoch === generationEpochRef.current) setError(errorMessage(e));
         }
     }
 
@@ -507,7 +655,12 @@ export function AskPage() {
     }));
 
     return (
-        <PageShell archetype="workbench" className="ask-page-shell">
+        <PageShell
+            as={host.inWindow ? "section" : "main"}
+            archetype="workbench"
+            className="ask-page-shell"
+            data-host-narrow={host.narrow ? "true" : undefined}
+        >
             <div className="ask-workspace-layout">
                 <ConversationSidebar
                     history={history}
@@ -625,6 +778,7 @@ export function AskPage() {
                                         conversation.conversation.title,
                                     )
                                     : Promise.resolve()}
+                            onAttachmentCountChange={reportAttachments}
                             onToggleHistory={(enabled) =>
                                 toggleHistoryMode(enabled)}
                             onSaveSystemInstruction={saveSystemInstruction}
@@ -635,6 +789,35 @@ export function AskPage() {
                     )}
             </div>
 
+            <AlertDialog
+                open={leave !== null}
+                onOpenChange={(open) => {
+                    if (!open) cancelLeave();
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {leave ? LEAVE_TITLES[leave] : ""}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {leave
+                                ? lossDescriptions(currentLoss(), leave).join(
+                                    "",
+                                )
+                                : ""}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={cancelLeave}>
+                            取消
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmLeave}>
+                            {leave ? LEAVE_ACTIONS[leave] : ""}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <StatusBanner
                 open={Boolean(error)}
                 tone="error"

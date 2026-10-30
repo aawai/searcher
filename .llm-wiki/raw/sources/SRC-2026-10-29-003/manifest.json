@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-29-003",
+  "captured": "2026-10-29",
+  "packet_version": "1.0",
+  "title": "https://www.sqlite.org/howtocorrupt.html",
+  "url": "https://www.sqlite.org/howtocorrupt.html",
+  "format": "web",
+  "extractor": "none",
+  "extraction_status": "failed"
+}

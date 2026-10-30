@@ -1,7 +1,39 @@
 # Wiki Update Log
 
+## 2026-10-30
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-30-issue-338-c3-ai","title":"Issue 338 C3 AI 窗口与最终验收结果"}
+- **retro**: {"category":"devops","slug":"e2e-triage-needs-timeout-and-small-first","title":"E2E 摸底先小后大并限时"}
+
+## 2026-10-29
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-29-issue-338-a-main","title":"Issue 338 A 合入 main 会触发镜像发布"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-29-issue-338-a-c1","title":"Issue 338 阶段 A 工作区实现及 C1 发布门槛"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-29-issue-338-b","title":"Issue 338 阶段 B 表单导航确认未销毁"}
+- **retro**: {"category":"security","slug":"searcher-session-token-hash-is-not-salted","title":"Searcher 会话 Token 使用无盐 SHA-256"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/modal-dialog-focus-and-semantics","title":"Modal Dialog Focus and Semantics"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-29-003","url":"https://www.sqlite.org/howtocorrupt.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-29-002","url":"https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-29-001","url":"https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/Cookies"}
+
+## 2026-10-28
+
+- **observe**: {"relevance":"high","slug":"obs-2026-10-28-","title":"管理后台样式一致性实页审查发现"}
+- **retro**: {"category":"architecture","slug":"service-worker-bypass-does-not-bypass-http-cache","title":"Service Worker 直通与 HTTP 缓存边界"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/browser-storage-persistence-and-eviction","title":"Browser Storage Persistence and Eviction"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/http-cache-and-service-worker-boundaries","title":"HTTP Cache and Service Worker Boundaries"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-28-005","url":"https://web.dev/learn/pwa/offline-data"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-28-004","url":"https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-28-003","url":"https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-28-002","url":"https://developer.mozilla.org/en-US/docs/Web/API/Cache"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-28-001","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching"}
+
 ## 2026-10-27
 
+- **retro**: {"category":"frontend","slug":"dock-touch-context-and-dnd-readiness","title":"Dock touch context and keyboard drag readiness"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-27-dock-simplification-review-requirements","title":"Dock simplification review requirements"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-27-","title":"任务栏图标仅显示图形的视觉要求"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-27-","title":"任务栏配置精简与移动端手势新需求"}
 - **retro**: {"category":"frontend","slug":"issue-326-dock-effective-edge-responsive","title":"Dock 有效方向与响应式覆盖收敛"}
 - **retro**: {"category":"frontend","slug":"css-var-fallback-consumer-value-boundary","title":"CSS var() 回退不验证消费属性"}
 - **ensure\_page**: {"page_type":"concept","path":"concepts/xss-sanitization-and-trusted-types","title":"XSS Sanitization and Trusted Types"}

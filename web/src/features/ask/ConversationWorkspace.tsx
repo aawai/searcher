@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { usePageHost } from "../../app/page-host.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
 import type { ModelOption } from "../../components/searcher/ModelSelector.tsx";
 import type {
@@ -56,6 +57,8 @@ interface ConversationWorkspaceProps {
     isNewConversationTemporary?: boolean;
     newConversationInstruction?: string | null;
     platform?: ShortcutPlatform;
+    /** Reports how many attachments the composer holds but has not sent. */
+    onAttachmentCountChange?: (count: number) => void;
 }
 
 export function ConversationWorkspace({
@@ -90,7 +93,9 @@ export function ConversationWorkspace({
     isNewConversationTemporary = false,
     newConversationInstruction = null,
     platform,
+    onAttachmentCountChange,
 }: ConversationWorkspaceProps) {
+    const { active } = usePageHost();
     const [searchOpen, setSearchOpen] = useState(false);
 
     // Compute the active branch from the active leaf ID or latest messages
@@ -108,6 +113,7 @@ export function ConversationWorkspace({
 
     // Keyboard shortcut for conversation search (Cmd/Ctrl + F)
     useEffect(() => {
+        if (!active) return;
         function handleKeyDown(e: KeyboardEvent) {
             if (matchesShortcut(e, SHORTCUTS.askFind.binding)) {
                 e.preventDefault();
@@ -116,7 +122,7 @@ export function ConversationWorkspace({
         }
         globalThis.addEventListener("keydown", handleKeyDown);
         return () => globalThis.removeEventListener("keydown", handleKeyDown);
-    }, []);
+    }, [active]);
 
     // Handle switching branch when user clicks branch pager
     function handleSwitchBranch(siblingId: string) {
@@ -130,6 +136,7 @@ export function ConversationWorkspace({
             draft={draft}
             draftKey={draftKey}
             onDraftChange={onDraftChange}
+            onAttachmentCountChange={onAttachmentCountChange}
             messages={allMessages}
             activeLeafMessageId={conversation?.activeLeafMessageId}
             supportsVision={activeModel?.supportsVision ?? false}

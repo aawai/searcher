@@ -66,7 +66,7 @@ async function openShortcutDocument(
         if (!response.ok) throw new Error(await response.text());
     }, { title, body });
     await page.goto(origin);
-    await page.locator("main").waitFor({ state: "visible" });
+    await page.locator("main.home").waitFor({ state: "visible" });
     await openNotesByKeyboard(page);
     await page.locator("[data-document-id] h4 button").filter({
         hasText: title,
@@ -128,7 +128,7 @@ Deno.test("production shortcuts for Documents and Ask (#103)", async (t) => {
     await page.locator("#auth-password").fill(password);
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor({ state: "visible" });
+    await page.locator("main.home").waitFor({ state: "visible" });
 
     // Seed AI provider and model for test user so Ask composer is rendered
     await store.exclusiveNative((native) => {
@@ -253,7 +253,7 @@ Deno.test("production shortcuts for Documents and Ask (#103)", async (t) => {
         async () => {
             // First test on Home page (non-Ask): Control+F should NOT open Ask conversation search
             await page.goto(origin);
-            await page.locator("main").waitFor({ state: "visible" });
+            await page.locator("main.home").waitFor({ state: "visible" });
             await page.keyboard.press("Control+f");
             const dialogCountOnHome = await page.locator('[role="dialog"]')
                 .count();

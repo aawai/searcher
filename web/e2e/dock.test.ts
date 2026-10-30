@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { BrowserContext, Locator, Page } from "playwright";
 import { users } from "../../src/db/schema.ts";
 import { chromium } from "./helpers/browser.ts";
+import { closeLibrary, libraryWindow } from "./helpers/library.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 function dockNav(page: Page): Locator {
@@ -11,8 +12,11 @@ function dockNav(page: Page): Locator {
     );
 }
 
+/** A window entry's accessible name carries its state: "笔记（已打开）". */
 function dockSystemButton(page: Page, name: string): Locator {
-    return dockNav(page).getByRole("button", { name, exact: true });
+    return dockNav(page).getByRole("button", {
+        name: new RegExp(`^${name}(（[^）]*）)?$`),
+    });
 }
 
 function dockAppButton(page: Page, name: string): Locator {
@@ -108,7 +112,7 @@ async function createWebApp(
     return body.data;
 }
 
-Deno.test("workspace dock: guest has no dock, first login has four system items and no copied home apps", async (t) => {
+Deno.test("workspace dock: guest has no dock, first login has six system items and no copied home apps", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
@@ -139,7 +143,7 @@ Deno.test("workspace dock: guest has no dock, first login has four system items 
     });
 
     await t.step(
-        "first login displays 4 system items, no pinned apps and independent from home apps",
+        "first login displays six system items, no pinned apps and independent from home apps",
         async () => {
             const context = await browser.newContext({
                 viewport: { width: 1280, height: 800 },
@@ -163,7 +167,7 @@ Deno.test("workspace dock: guest has no dock, first login has four system items 
             const dock = dockNav(page);
             await dock.waitFor({ state: "visible" });
 
-            // Exactly four system entries present
+            // All six system entries are present
             assertEquals(
                 await dockSystemButton(page, "首页").isVisible(),
                 true,
@@ -180,6 +184,15 @@ Deno.test("workspace dock: guest has no dock, first login has four system items 
                 await dockSystemButton(page, "AI 问答").isVisible(),
                 true,
             );
+            assertEquals(
+                await dockSystemButton(page, "设置").isVisible(),
+                true,
+            );
+            assertEquals(
+                await dockSystemButton(page, "回收站").isVisible(),
+                true,
+            );
+            assertEquals(await dock.locator("button[data-dock-id]").count(), 6);
 
             // No app items pinned to dock initially
             assertEquals(
@@ -195,7 +208,14 @@ Deno.test("workspace dock: guest has no dock, first login has four system items 
             assert(prefRes.ok());
             const prefBody = await prefRes.json();
             assertEquals(prefBody.data.dock, {
-                systemOrder: ["home", "apps", "notes", "ai"],
+                systemOrder: [
+                    "home",
+                    "apps",
+                    "notes",
+                    "ai",
+                    "settings",
+                    "trash",
+                ],
                 hiddenSystemIds: [],
                 appIds: [],
             });
@@ -259,12 +279,13 @@ Deno.test("workspace dock: system navigation, nonmodal panels, and browser back/
     );
 
     await t.step(
-        "browser back restores notes panel, then back to home closes panel",
+        "browser back restores notes window, then back to home minimizes windows",
         async () => {
             await page.goBack();
             await page.waitForURL((url) =>
                 url.searchParams.get("view") === "notes"
             );
+            await libraryWindow(page, "notes").waitFor({ state: "visible" });
             await page.locator('[data-library="notes"]').waitFor({
                 state: "visible",
             });
@@ -273,12 +294,19 @@ Deno.test("workspace dock: system navigation, nonmodal panels, and browser back/
             await page.waitForURL((url) =>
                 url.pathname === "/" && !url.searchParams.has("view")
             );
-            await page.locator("[data-library]").waitFor({ state: "detached" });
+            for (const view of ["notes", "apps"] as const) {
+                await libraryWindow(page, view).waitFor({ state: "hidden" });
+                assertEquals(
+                    await dockNav(page).locator(`[data-dock-id="${view}"]`)
+                        .getAttribute("data-window-status"),
+                    "minimized",
+                );
+            }
         },
     );
 
     await t.step(
-        "panel close button with label '返回首页' closes panel and updates URL",
+        "window close button closes the apps window, destroys its content and updates URL",
         async () => {
             await dockSystemButton(page, "应用").click();
             await page.waitForURL((url) =>
@@ -288,38 +316,71 @@ Deno.test("workspace dock: system navigation, nonmodal panels, and browser back/
                 state: "visible",
             });
 
-            const closeBtn = page.getByRole("button", { name: "返回首页" });
+            const closeBtn = libraryWindow(page, "apps").getByRole("button", {
+                name: "关闭应用",
+            });
             await closeBtn.waitFor({ state: "visible" });
             await closeBtn.click();
 
+            await page.locator('[data-library="apps"]').waitFor({
+                state: "detached",
+            });
             await page.waitForURL((url) =>
                 url.pathname === "/" && !url.searchParams.has("view")
             );
-            await page.locator("[data-library]").waitFor({ state: "detached" });
+            assertEquals(
+                await dockNav(page).locator('[data-dock-id="apps"]')
+                    .getAttribute("data-window-status"),
+                null,
+            );
         },
     );
 
     await t.step(
-        "clicking dock '首页' button when panel is open closes panel",
+        "clicking dock '首页' button when a window is open minimizes it",
         async () => {
             await dockSystemButton(page, "笔记").click();
             await page.waitForURL((url) =>
                 url.searchParams.get("view") === "notes"
             );
-            await page.locator('[data-library="notes"]').waitFor({
-                state: "visible",
-            });
+            await libraryWindow(page, "notes").waitFor({ state: "visible" });
 
             await dockSystemButton(page, "首页").click();
             await page.waitForURL((url) =>
                 url.pathname === "/" && !url.searchParams.has("view")
             );
-            await page.locator("[data-library]").waitFor({ state: "detached" });
+            await libraryWindow(page, "notes").waitFor({ state: "hidden" });
+            assertEquals(
+                await dockNav(page).locator('[data-dock-id="notes"]')
+                    .getAttribute("data-window-status"),
+                "minimized",
+            );
+        },
+    );
+    await t.step(
+        "settings and trash keep the dock and desktop while opening windows",
+        async () => {
+            for (
+                const [label, path, id] of [
+                    ["设置", "/settings", "settings"],
+                    ["回收站", "/trash", "trash"],
+                ] as const
+            ) {
+                await dockSystemButton(page, label).click();
+                await page.waitForURL(app.origin + path);
+                const frame = page.locator(`[data-window-id="${id}"]`);
+                await frame.waitFor({ state: "visible" });
+                await dockNav(page).waitFor({ state: "visible" });
+                assertEquals(await page.locator("main.home").count(), 1);
+                await page.goBack();
+                await page.waitForURL(app.origin + "/");
+                await frame.waitFor({ state: "hidden" });
+            }
         },
     );
 
     await t.step(
-        "mobile viewport: notes panel does not obscure dock geometrically and dock switches to apps",
+        "mobile viewport: notes window does not obscure dock geometrically and dock switches to apps",
         async () => {
             await page.setViewportSize({ width: 390, height: 844 });
             await dockSystemButton(page, "笔记").click();
@@ -327,49 +388,62 @@ Deno.test("workspace dock: system navigation, nonmodal panels, and browser back/
                 url.searchParams.get("view") === "notes"
             );
 
-            const notesPanel = page.locator('[data-library="notes"]').first();
-            await notesPanel.waitFor({ state: "visible" });
+            const notesWindow = libraryWindow(page, "notes");
+            await notesWindow.waitFor({ state: "visible" });
             const dock = dockNav(page);
             await dock.waitFor({ state: "visible" });
             await page.waitForFunction(
                 () => {
-                    const panel = document.querySelector(
-                        '[data-library="notes"]',
+                    const frame = document.querySelector(
+                        '[data-window-id="notes"]',
                     );
                     const bar = document.querySelector("nav.dock-bar");
-                    if (!panel || !bar) return false;
-                    const panelRect = panel.getBoundingClientRect();
+                    if (!frame || !bar) return false;
+                    const frameRect = frame.getBoundingClientRect();
                     const dockRect = bar.getBoundingClientRect();
-                    return panelRect.height > 0 &&
-                        panelRect.bottom <= dockRect.top + 1;
+                    return frameRect.height > 0 &&
+                        frameRect.bottom <= dockRect.top + 1;
                 },
                 undefined,
                 { timeout: 5000 },
             );
 
-            const panelBox = (await notesPanel.boundingBox())!;
+            const windowBox = (await notesWindow.boundingBox())!;
             const dockBox = (await dock.boundingBox())!;
 
-            // Panel must not cover or obscure the dock: panel bottom edge must be above or at dock top edge
+            // Window must not cover or obscure the dock: its bottom edge must
+            // be above or at the dock top edge, and it stays inside the viewport.
             assert(
-                panelBox.y + panelBox.height <= dockBox.y + 1,
-                `mobile panel bottom (${
-                    panelBox.y + panelBox.height
+                windowBox.y + windowBox.height <= dockBox.y + 1,
+                `mobile window bottom (${
+                    windowBox.y + windowBox.height
                 }) must be <= dock top (${dockBox.y})`,
             );
+            assert(windowBox.x >= 0 && windowBox.x + windowBox.width <= 390);
+            assert(windowBox.y >= 0);
 
-            // Click 应用 button directly on dock while notes panel is open on mobile
+            // Click 应用 button directly on dock while notes window is open on mobile
             await dockSystemButton(page, "应用").click();
             await page.waitForURL((url) =>
                 url.searchParams.get("view") === "apps"
             );
 
-            const appsPanel = page.locator('[data-library="apps"]').first();
-            await appsPanel.waitFor({ state: "visible" });
+            // Single active window: apps replaces notes in the work area.
+            await libraryWindow(page, "apps").waitFor({ state: "visible" });
+            await page.locator('[data-library="apps"]').waitFor({
+                state: "visible",
+            });
+            await notesWindow.waitFor({ state: "hidden" });
 
-            // Restore desktop viewport
+            // Restore desktop viewport and close the apps window
             await page.setViewportSize({ width: 1280, height: 800 });
-            await page.getByRole("button", { name: "返回首页" }).click();
+            await libraryWindow(page, "apps").getByRole("button", {
+                name: "关闭应用",
+            }).click();
+            await page.locator('[data-library="apps"]').waitFor({
+                state: "detached",
+            });
+            await dockSystemButton(page, "首页").click();
             await page.waitForURL((url) =>
                 url.pathname === "/" && !url.searchParams.has("view")
             );
@@ -562,7 +636,7 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             await dockBtnA.waitFor({ state: "visible" });
 
             // Verify home fixed status of App Alpha is still false
-            await page.getByRole("button", { name: "返回首页" }).click();
+            await closeLibrary(page);
             await page.locator("main.home").waitFor({ state: "visible" });
             assertEquals(
                 await page.locator(
@@ -597,7 +671,7 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             await dockAppButton(page, "Dock App Beta").isVisible(),
             true,
         );
-        await page.getByRole("button", { name: "返回首页" }).click();
+        await closeLibrary(page);
     });
 
     await t.step(
@@ -612,7 +686,7 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             await page.getByRole("menuitem", { name: "管理任务栏" }).click();
             const modal = dockManagementModal(page);
             await modal.waitFor({ state: "visible" });
-            assertEquals(await modal.getByRole("switch").count(), 4);
+            assertEquals(await modal.getByRole("switch").count(), 6);
             assertEquals(
                 await modal.getByRole("radiogroup", { name: "任务栏位置" })
                     .count(),
@@ -628,8 +702,26 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
                 0,
             );
             await modal.getByRole("switch", { name: "显示 AI 问答" }).click();
+            await modal.getByRole("switch", { name: "显示 设置" }).click();
+            await modal.getByRole("switch", { name: "显示 回收站" }).click();
             await modal.getByRole("button", { name: "关闭" }).click();
             await modal.waitFor({ state: "hidden" });
+            assertEquals(
+                await dockNav(page).locator('[data-dock-id="settings"]')
+                    .count(),
+                0,
+            );
+            assertEquals(
+                await dockNav(page).locator('[data-dock-id="trash"]').count(),
+                0,
+            );
+            const restoreModal = await openDockManagement(page);
+            await restoreModal.getByRole("switch", { name: "显示 设置" })
+                .click();
+            await restoreModal.getByRole("switch", { name: "显示 回收站" })
+                .click();
+            await restoreModal.getByRole("button", { name: "关闭" }).click();
+            await restoreModal.waitFor({ state: "hidden" });
             assertEquals(
                 await dockNav(page).locator('[data-dock-id="ai"]').count(),
                 0,
@@ -693,7 +785,7 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             });
             await page.getByRole("menuitem", { name: "固定到任务栏" }).click();
             await dockAppButton(page, appB.name).waitFor({ state: "visible" });
-            await page.getByRole("button", { name: "返回首页" }).click();
+            await closeLibrary(page);
             await appsView.waitFor({ state: "detached" });
         },
     );
@@ -712,7 +804,7 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
                 Array.from(
                     document.querySelectorAll<HTMLElement>("[data-dock-id]"),
                     (item) => item.dataset.dockId,
-                ).join(",") === "home,notes,apps"
+                ).join(",") === "home,notes,apps,settings,trash"
             );
             assertEquals(new URL(page.url()).search, "");
             await page.waitForFunction(() =>
@@ -728,6 +820,17 @@ Deno.test("workspace dock: app menu pinning, independence from home, and managem
             );
         },
     );
+
+    await t.step("new system entries can be reordered", async () => {
+        await dockSystemButton(page, "回收站").click({ button: "right" });
+        await page.getByRole("menuitem", { name: "向左移动" }).click();
+        await page.waitForFunction(() =>
+            Array.from(
+                document.querySelectorAll<HTMLElement>("[data-dock-id]"),
+                (item) => item.dataset.dockId,
+            ).join(",") === "home,notes,apps,trash,settings"
+        );
+    });
 
     await t.step("settings no longer duplicates taskbar controls", async () => {
         await page.goto(app.origin + "/settings/appearance");
@@ -916,7 +1019,14 @@ Deno.test("workspace dock: four saved edges survive the 767/768 boundary with re
             headers: { Origin: app.origin },
             data: {
                 dock: {
-                    systemOrder: ["notes", "home", "apps", "ai"],
+                    systemOrder: [
+                        "notes",
+                        "home",
+                        "apps",
+                        "ai",
+                        "settings",
+                        "trash",
+                    ],
                     hiddenSystemIds: ["ai"],
                     appIds,
                 },
@@ -1001,7 +1111,13 @@ Deno.test("workspace dock: four saved edges survive the 767/768 boundary with re
             for (const other of ["top", "right", "bottom", "left"] as const) {
                 if (other !== edge) assertEquals(geometry.insets[other], 0);
             }
-            assertEquals(geometry.systemIds, ["notes", "home", "apps"]);
+            assertEquals(geometry.systemIds, [
+                "notes",
+                "home",
+                "apps",
+                "settings",
+                "trash",
+            ]);
 
             const apps = dockNav(page).locator(".dock-group--apps");
             const vertical = edge === "left" || edge === "right";
@@ -1078,7 +1194,14 @@ Deno.test("workspace dock: multi-context cloud sync and independent device layou
         headers: { Origin: app.origin },
         data: {
             dock: {
-                systemOrder: ["home", "apps", "notes", "ai"],
+                systemOrder: [
+                    "home",
+                    "apps",
+                    "notes",
+                    "ai",
+                    "settings",
+                    "trash",
+                ],
                 appIds: [cloudApp.id],
             },
         },
@@ -1156,7 +1279,14 @@ Deno.test("workspace dock: soft-deleted app is removed from dock and does not re
         headers: { Origin: app.origin },
         data: {
             dock: {
-                systemOrder: ["home", "apps", "notes", "ai"],
+                systemOrder: [
+                    "home",
+                    "apps",
+                    "notes",
+                    "ai",
+                    "settings",
+                    "trash",
+                ],
                 appIds: [ephemeralApp.id],
             },
         },
@@ -1312,7 +1442,7 @@ Deno.test("workspace dock: touch drag, long-press actions, and overflow manageme
     cleanup.defer(() => browser.close());
 
     const touchContext = await browser.newContext({
-        viewport: { width: 390, height: 844 },
+        viewport: { width: 600, height: 844 },
         hasTouch: true,
         isMobile: true,
     });
@@ -1337,7 +1467,14 @@ Deno.test("workspace dock: touch drag, long-press actions, and overflow manageme
         headers: { Origin: app.origin },
         data: {
             dock: {
-                systemOrder: ["home", "apps", "notes", "ai"],
+                systemOrder: [
+                    "home",
+                    "apps",
+                    "notes",
+                    "ai",
+                    "settings",
+                    "trash",
+                ],
                 appIds: [app1.id, app2.id],
             },
         },
@@ -1478,7 +1615,7 @@ Deno.test("workspace dock: touch drag, long-press actions, and overflow manageme
         Array.from(
             document.querySelectorAll<HTMLElement>("[data-dock-id]"),
             (item) => item.dataset.dockId,
-        ).join(",") === "home,notes,apps,ai"
+        ).join(",") === "home,notes,apps,ai,settings,trash"
     );
 
     const extraApps = [];
@@ -1502,6 +1639,7 @@ Deno.test("workspace dock: touch drag, long-press actions, and overflow manageme
         },
     );
     assert(update.ok());
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.reload();
     await dockNav(page).waitFor({ state: "visible" });
     await page.waitForFunction(() =>
@@ -1528,7 +1666,49 @@ function boxesOverlap(
         a.y + a.height > b.y + 0.5;
 }
 
-Deno.test("workspace dock: four-edge clearance for workspace panels, expanded note editor, home grid/notes, undo toast, and landscape mobile sheet", async (t) => {
+/** Closing the visible window destroys its content (unlike minimizing). */
+async function closeWindow(page: Page, view: "notes" | "apps"): Promise<void> {
+    await libraryWindow(page, view).getByRole("button", {
+        name: view === "notes" ? "关闭笔记" : "关闭应用",
+    }).click();
+    await page.locator(`[data-library="${view}"]`).waitFor({
+        state: "detached",
+    });
+}
+
+/** A library window stays in the viewport work area and never covers the Dock. */
+async function assertWindowClearsDock(
+    page: Page,
+    view: "notes" | "apps",
+    label: string,
+): Promise<void> {
+    const frame = libraryWindow(page, view);
+    await frame.waitFor({ state: "visible" });
+    await page.waitForFunction((id) => {
+        const win = document.querySelector(`[data-window-id="${id}"]`);
+        const bar = document.querySelector("nav.dock-bar");
+        if (!win || !bar) return false;
+        const w = win.getBoundingClientRect();
+        const d = bar.getBoundingClientRect();
+        const overlaps = w.left < d.right - 0.5 && w.right > d.left + 0.5 &&
+            w.top < d.bottom - 0.5 && w.bottom > d.top + 0.5;
+        return w.width > 0 && w.height > 0 && !overlaps &&
+            w.left >= -0.5 && w.top >= -0.5 &&
+            w.right <= innerWidth + 0.5 && w.bottom <= innerHeight + 0.5;
+    }, view);
+    const windowBox = (await frame.boundingBox())!;
+    const dockBox = (await dockNav(page).boundingBox())!;
+    const viewport = page.viewportSize()!;
+    assert(!boxesOverlap(windowBox, dockBox), `${label} overlaps the dock`);
+    assert(
+        windowBox.x >= -0.5 && windowBox.y >= -0.5 &&
+            windowBox.x + windowBox.width <= viewport.width + 0.5 &&
+            windowBox.y + windowBox.height <= viewport.height + 0.5,
+        `${label} leaves the viewport`,
+    );
+}
+
+Deno.test("workspace dock: four-edge clearance for library windows, open note window, home grid/notes, undo toast, and landscape mobile window", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
@@ -1615,7 +1795,7 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
     };
 
     await t.step(
-        "768x1024, 1024x900, and 1440x900 bottom dock: apps panel, notes panel, and expanded editor never overlap dock",
+        "768x1024, 1024x900, and 1440x900 bottom dock: apps window, notes window, and open note never overlap dock or leave the viewport",
         async () => {
             await setDockEdge("bottom");
             for (
@@ -1627,93 +1807,65 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
             ) {
                 await page.setViewportSize({ width, height });
                 await dockSystemButton(page, "应用").click();
-                const panel = page.locator(".workspace-panel").first();
-                await panel.waitFor({ state: "visible" });
-                await page.waitForFunction(() => {
-                    const p = document.querySelector(".workspace-panel");
-                    const d = document.querySelector("nav.dock-bar");
-                    if (!p || !d) return false;
-                    return p.getBoundingClientRect().bottom <=
-                        d.getBoundingClientRect().top + 1;
-                });
-                let panelBox = (await panel.boundingBox())!;
-                let dockBox = (await dockNav(page).boundingBox())!;
-                assert(
-                    !boxesOverlap(panelBox, dockBox),
-                    `${width}x${height} apps panel overlaps bottom dock`,
+                await assertWindowClearsDock(
+                    page,
+                    "apps",
+                    `${width}x${height} apps window`,
                 );
+                await closeWindow(page, "apps");
 
                 await dockSystemButton(page, "笔记").click();
-                await page.locator('[data-library="notes"]').waitFor({
-                    state: "visible",
-                });
-                panelBox = (await panel.boundingBox())!;
-                dockBox = (await dockNav(page).boundingBox())!;
-                assert(
-                    !boxesOverlap(panelBox, dockBox),
-                    `${width}x${height} notes panel overlaps bottom dock`,
+                await assertWindowClearsDock(
+                    page,
+                    "notes",
+                    `${width}x${height} notes window`,
                 );
 
-                await page.getByText("Left Band Note").first().click();
-                await page.locator(
-                    '.workspace-panel[data-workspace-expanded="true"]',
-                ).waitFor({ state: "visible" });
-                panelBox = (await panel.boundingBox())!;
-                dockBox = (await dockNav(page).boundingBox())!;
-                assert(
-                    !boxesOverlap(panelBox, dockBox),
-                    `${width}x${height} expanded editor overlaps bottom dock`,
+                await libraryWindow(page, "notes").getByText("Left Band Note")
+                    .first().click();
+                await libraryWindow(page, "notes").getByRole("button", {
+                    name: /^返回(笔记|上一级)$/,
+                }).waitFor({ state: "visible" });
+                await assertWindowClearsDock(
+                    page,
+                    "notes",
+                    `${width}x${height} open note window`,
                 );
 
-                await dockSystemButton(page, "首页").click();
-                await page.locator("[data-library]").waitFor({
-                    state: "detached",
-                });
+                await closeWindow(page, "notes");
             }
         },
     );
 
     await t.step(
-        "1440x900 left and right dock: note editor expands to 900px without overlapping dock",
+        "1440x900 left and right dock: open note window keeps its default size without overlapping dock",
         async () => {
             await page.setViewportSize({ width: 1440, height: 900 });
             for (const edge of ["left", "right"] as const) {
                 await setDockEdge(edge);
                 await dockSystemButton(page, "笔记").click();
-                await page.getByText("Left Band Note").first().click();
-                const expanded = page.locator(
-                    '.workspace-panel[data-workspace-expanded="true"]',
+                await libraryWindow(page, "notes").getByText("Left Band Note")
+                    .first().click();
+                await libraryWindow(page, "notes").getByRole("button", {
+                    name: /^返回(笔记|上一级)$/,
+                }).waitFor({ state: "visible" });
+                await assertWindowClearsDock(
+                    page,
+                    "notes",
+                    `1440x900 ${edge} dock open note window`,
                 );
-                await expanded.waitFor({ state: "visible" });
-                await page.waitForFunction(() => {
-                    const p = document.querySelector(
-                        '.workspace-panel[data-workspace-expanded="true"]',
-                    );
-                    const d = document.querySelector("nav.dock-bar");
-                    if (!p || !d) return false;
-                    const pr = p.getBoundingClientRect();
-                    const dr = d.getBoundingClientRect();
-                    const overlaps = pr.left < dr.right - 0.5 &&
-                        pr.right > dr.left + 0.5 &&
-                        pr.top < dr.bottom - 0.5 &&
-                        pr.bottom > dr.top + 0.5;
-                    return Math.round(pr.width) === 900 && !overlaps;
-                });
-                const panelBox = (await expanded.boundingBox())!;
-                const dockBox = (await dockNav(page).boundingBox())!;
+                // No expanded editor mode: the window keeps its default size
+                const windowBox = (await libraryWindow(page, "notes")
+                    .boundingBox())!;
                 assertEquals(
-                    Math.round(panelBox.width),
-                    900,
-                    `${edge} dock expanded editor width must be 900px`,
+                    [
+                        Math.round(windowBox.width),
+                        Math.round(windowBox.height),
+                    ],
+                    [960, 720],
+                    `${edge} dock open note window keeps the default notes size`,
                 );
-                assert(
-                    !boxesOverlap(panelBox, dockBox),
-                    `1440x900 ${edge} dock expanded editor overlaps dock`,
-                );
-                await dockSystemButton(page, "首页").click();
-                await page.locator("[data-library]").waitFor({
-                    state: "detached",
-                });
+                await closeWindow(page, "notes");
             }
         },
     );
@@ -1796,7 +1948,7 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
     );
 
     await t.step(
-        "desktop and mobile bottom dock: UndoToast and landscape mobile sheet clear the dock",
+        "desktop and mobile bottom dock: UndoToast and landscape mobile window clear the dock",
         async () => {
             await page.setViewportSize({ width: 1440, height: 900 });
             await setDockEdge("bottom");
@@ -1831,28 +1983,16 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                 }) overlaps dock (${dockBoxMobile.y})`,
             );
 
-            // Landscape mobile (<=480px height): mobile sheet avoids bottom dock
+            // Landscape mobile (<=480px height): the notes window fills the
+            // work area above the bottom dock instead of covering it
             await page.setViewportSize({ width: 667, height: 375 });
             await dockSystemButton(page, "笔记").click();
-            const mobileSheet = page.locator(".workspace-panel--mobile.sheet")
-                .first();
-            await mobileSheet.waitFor({ state: "visible" });
-            await page.waitForFunction(() => {
-                const s = document.querySelector(
-                    ".workspace-panel--mobile.sheet",
-                );
-                const d = document.querySelector("nav.dock-bar");
-                if (!s || !d) return false;
-                return s.getBoundingClientRect().bottom <=
-                    d.getBoundingClientRect().top + 0.1;
-            });
-            const sheetBox = (await mobileSheet.boundingBox())!;
-            const dockBoxLandscape = (await dockNav(page).boundingBox())!;
+            await assertWindowClearsDock(page, "notes", "landscape mobile");
+            const landscape = (await libraryWindow(page, "notes")
+                .boundingBox())!;
             assert(
-                !boxesOverlap(sheetBox, dockBoxLandscape),
-                `landscape mobile sheet (${
-                    sheetBox.y + sheetBox.height
-                }) overlaps dock (${dockBoxLandscape.y})`,
+                landscape.height > 0 && landscape.width >= 667 - 40,
+                `landscape notes window must fill the work area width (${landscape.width})`,
             );
         },
     );
@@ -1878,7 +2018,14 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                     headers: { Origin: app.origin },
                     data: {
                         dock: {
-                            systemOrder: ["home", "apps", "notes", "ai"],
+                            systemOrder: [
+                                "home",
+                                "apps",
+                                "notes",
+                                "ai",
+                                "settings",
+                                "trash",
+                            ],
                             appIds: pinnedIds,
                         },
                     },
@@ -1928,10 +2075,14 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                 `dock-glyph must include 1px inner rim shadow, got: ${homeStyles.glyphShadow}`,
             );
 
-            // 2. /ask page falls back to solid surface-l3 with no backdrop-filter
+            // 2. Over the AI window the desktop is still visible: the dock keeps
+            // its Floating material instead of a solid fallback.
             await dockSystemButton(page, "AI 问答").click();
             await page.waitForURL((url) => url.pathname.startsWith("/ask"));
-            await page.locator(".app-shell:not([data-home])").waitFor();
+            await page.locator('[data-window-id="ai"]').waitFor({
+                state: "visible",
+            });
+            await page.locator(".app-shell[data-home]").waitFor();
             await dockNav(page).waitFor({ state: "visible" });
             const askStyles = await page.evaluate(() => {
                 const bar = document.querySelector("nav.dock-bar")!;
@@ -1939,12 +2090,16 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                 return {
                     bgImage: cs.backgroundImage,
                     backdropFilter: cs.backdropFilter,
-                    borderTopWidth: cs.borderTopWidth,
                 };
             });
-            assertEquals(askStyles.bgImage, "none");
-            assertEquals(askStyles.backdropFilter, "none");
-            assertEquals(askStyles.borderTopWidth, "1px");
+            assert(
+                askStyles.bgImage.includes("linear-gradient"),
+                `dock over the AI window keeps the sheen, got: ${askStyles.bgImage}`,
+            );
+            assert(
+                askStyles.backdropFilter.includes("blur"),
+                `dock over the AI window keeps the blur, got: ${askStyles.backdropFilter}`,
+            );
 
             // Return to home
             await dockSystemButton(page, "首页").click();
@@ -1987,7 +2142,7 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
                     }`,
                 );
             }
-            assertEquals(mobileMetrics.labels.length, 4);
+            assertEquals(mobileMetrics.labels.length, 6);
             assert(
                 mobileMetrics.labels.every((width) => width <= 1),
                 "system labels must not be visibly rendered",
@@ -2008,6 +2163,23 @@ Deno.test("workspace dock: four-edge clearance for workspace panels, expanded no
             );
             await page.keyboard.press("Escape");
             await menu.waitFor({ state: "hidden" });
+            // At 360px the system group can scroll without hiding the options.
+            await page.setViewportSize({ width: 360, height: 844 });
+            const systemGroup = dockNav(page).locator(".dock-group--system");
+            await page.waitForFunction(() => {
+                const group = document.querySelector(".dock-group--system");
+                return Boolean(group && group.scrollWidth > group.clientWidth);
+            });
+            await systemGroup.evaluate((group) => {
+                group.scrollLeft = group.scrollWidth;
+            });
+            await dockSystemButton(page, "回收站").click();
+            await page.waitForURL(app.origin + "/trash");
+            await page.goBack();
+            await dockNav(page).waitFor({ state: "visible" });
+            await dockOptionsMenu(page).click();
+            await page.getByRole("menuitem", { name: "管理任务栏" }).waitFor();
+            await page.keyboard.press("Escape");
             // 4. prefers-reduced-motion: reduce uses pure opacity transition (translate: 0px)
             await page.setViewportSize({ width: 1440, height: 900 });
             await page.emulateMedia({ reducedMotion: "reduce" });

@@ -568,18 +568,31 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                         ),
                         "documents tool offered",
                     );
+                    const beforeSwitch = fake.abortCount();
+                    await page.locator('[data-dock-id="settings"]').click();
+                    await page.waitForURL(app.origin + "/settings");
+                    await page.locator('[data-window-id="settings"]').waitFor({
+                        state: "visible",
+                    });
+                    assertEquals(fake.abortCount(), beforeSwitch);
                     release();
                     await page.waitForFunction(
                         () =>
                             document.querySelector(".inline-ai-card")
                                 ?.getAttribute("data-status") === "done",
                     );
+                    await page.locator('[data-dock-id="home"]').click();
+                    await page.waitForURL(app.origin + "/");
+                    await answer.waitFor({ state: "visible" });
+                    assertEquals(fake.abortCount(), beforeSwitch);
                     await answer.getByText(LAST_TOKENS).waitFor();
                     assertEquals(
                         await answer.getByRole("button", { name: "展开" })
                             .isEnabled(),
                         true,
                     );
+                    await searchBox(page).press("Escape");
+                    await suggestions(page).waitFor({ state: "hidden" });
                     await page.getByRole("button", { name: "关闭回答" })
                         .click();
                     await card(page).waitFor({ state: "detached" });
@@ -709,7 +722,8 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                     await workspace.waitFor({ state: "visible" });
 
                     // History is the server's: question, then the very same answer.
-                    await page.locator(".ask-assistant-body").first().waitFor();
+                    await workspace.locator(".ask-assistant-body").first()
+                        .waitFor();
                     assertEquals(
                         (await page.locator(".ask-user-msg-container")
                             .allInnerTexts())
@@ -722,11 +736,11 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                             .includes(QUESTION),
                     );
                     assertEquals(
-                        (await page.locator(".ask-assistant-body").first()
+                        (await workspace.locator(".ask-assistant-body").first()
                             .innerText()).trim(),
                         answerText,
                     );
-                    const cards = await page.locator(".ask-source-card")
+                    const cards = await workspace.locator(".ask-source-card")
                         .allInnerTexts();
                     assertEquals(cards.length, 2);
                     assert(cards[0].includes("笔记"), "note first in Ask too");
@@ -779,7 +793,12 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                     await page.goBack();
                     await searchBox(page).waitFor({ state: "visible" });
                     await searchIsFocused(page);
-                    assertEquals(await card(page).count(), 0);
+                    await card(page).waitFor({ state: "visible" });
+                    assertEquals(
+                        (await card(page).locator(".inline-ai-body")
+                            .innerText()).trim(),
+                        answerText,
+                    );
                 },
             );
 
@@ -810,9 +829,13 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                 "/ask/:id is a deep link and /ask stays the conversation workspace",
                 async () => {
                     await page.goto(`${app.origin}/ask/${conversationId}`);
-                    await page.locator(".ask-assistant-body").first().waitFor();
+                    await page.locator(
+                        ".ask-workspace-layout .ask-assistant-body",
+                    ).first().waitFor();
                     assertEquals(
-                        (await page.locator(".ask-assistant-body").first()
+                        (await page.locator(
+                            ".ask-workspace-layout .ask-assistant-body",
+                        ).first()
                             .innerText()).trim(),
                         answerText,
                     );
@@ -995,7 +1018,9 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                             })
                                 .click();
                             await page.waitForURL(/\/ask\/[^/?]+$/);
-                            await page.locator(".ask-assistant-body").first()
+                            await page.locator(
+                                ".ask-workspace-layout .ask-assistant-body",
+                            ).first()
                                 .waitFor();
                             await page.waitForFunction(() =>
                                 document.getAnimations().length === 0

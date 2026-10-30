@@ -1,5 +1,10 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
-import { libraryPanel, openNotes } from "./helpers/library.ts";
+import {
+    closeLibrary,
+    libraryPanel,
+    libraryWindow,
+    openNotes,
+} from "./helpers/library.ts";
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
 import { type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
@@ -63,7 +68,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     async function visit(path: string, target: Page = page) {
         const response = await target.goto(origin + path);
         assertEquals(response?.status(), 200, path);
-        await target.locator("main").waitFor({ state: "visible" });
+        await target.locator(
+            path === "/register" ? "main:has(#auth-username)" : "main.home",
+        ).waitFor({ state: "visible" });
     }
 
     async function request<T>(
@@ -90,7 +97,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     await page.locator("#auth-password").fill("Matrix-password-92!");
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
-    await page.locator("main").waitFor({ state: "visible" });
+    await page.locator("main.home").waitFor({ state: "visible" });
 
     // Seed test data: 1 group, 2 webapps, 1 note
     const workGroup = await request<{ id: string }>(
@@ -126,14 +133,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     }
 
     async function closeWorkspace(target: Page = page) {
-        const detail = libraryPanel(target);
-        if (await detail.isVisible()) {
-            await detail.getByRole("button", {
-                name: "返回首页",
-                exact: true,
-            }).click();
-            await detail.waitFor({ state: "detached" });
-        }
+        if (await libraryPanel(target).count()) await closeLibrary(target);
     }
 
     interface Box {
@@ -262,15 +262,38 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                         });
                     }
 
-                    // 4. Presenter check: open and verify presenter type
+                    // 4. Window check: the window stays inside the viewport; narrow
+                    // viewports show one active window filling the work area.
                     await openWorkspace();
-                    if (vp.width < 768) {
-                        await libraryPanel(page).waitFor({ state: "visible" });
-                        await libraryPanel(page).getByRole("button", {
-                            name: "返回首页",
-                            exact: true,
-                        }).waitFor({ state: "visible" });
-                    } else {
+                    const frame = libraryWindow(page, "notes");
+                    await frame.waitFor({ state: "visible" });
+                    await frame.getByRole("button", {
+                        name: "关闭笔记",
+                        exact: true,
+                    }).waitFor({ state: "visible" });
+                    const wBox = await measure(frame);
+                    assert(
+                        wBox.x >= 0 && wBox.y >= 0 &&
+                            wBox.x + wBox.width <= vp.width + 1 &&
+                            wBox.y + wBox.height <= vp.height + 1,
+                        `Window ${
+                            JSON.stringify(wBox)
+                        } exceeds the viewport at ${vp.name}`,
+                    );
+                    if (vp.width < 1024) {
+                        assertEquals(
+                            await page.locator("[data-window-id]:visible")
+                                .count(),
+                            1,
+                        );
+                        assert(
+                            wBox.width >= vp.width - 40,
+                            `Narrow window must fill the work area at ${vp.name}: ${
+                                JSON.stringify(wBox)
+                            }`,
+                        );
+                    }
+                    if (vp.width >= 768) {
                         assertEquals(
                             await page.locator("#search-query").evaluate((el) =>
                                 Boolean(el.closest("[inert]"))
@@ -285,13 +308,13 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     );
 
     // =========================================================================
-    // Matrix B: Wallpaper material and sheet surface boundaries
+    // Matrix B: Wallpaper material and window surface boundaries
     // 390 wallpaper on/off, light theme
     // =========================================================================
     await t.step(
-        "Matrix B: Wallpaper material and sheet surface boundaries (390 mobile)",
+        "Matrix B: Wallpaper material and window surface boundaries (390 mobile)",
         async () => {
-            // Representative combination 1: 390x844 light theme (Sheet presenter)
+            // Representative combination 1: 390x844 light theme (single-window presentation)
             await page.setViewportSize({ width: 390, height: 844 });
             await request("/api/preferences", "PATCH", {
                 theme: "light",
@@ -300,7 +323,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
             await page.emulateMedia({ colorScheme: "light" });
 
             await openWorkspace();
-            const sheet = libraryPanel(page);
+            const sheet = libraryWindow(page, "notes");
             await sheet.waitFor({ state: "visible" });
 
             // Verify surface boundary without wallpaper
@@ -314,10 +337,10 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 backgroundImage:
                     "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
             });
-            // Verify sheet surface boundary and readability with wallpaper
+            // Verify window surface boundary and readability with wallpaper
             const sheetWithWp = await sheet.evaluate((el) => {
                 const style = getComputedStyle(el);
-                const title = el.querySelector(".workspace-title") as
+                const title = el.querySelector(".window-frame__title") as
                     | HTMLElement
                     | null;
                 const titleColor = title ? getComputedStyle(title).color : "";

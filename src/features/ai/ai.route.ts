@@ -161,7 +161,7 @@ export function registerAiRoutes(
     deps: AppDeps,
     serviceOverride?: AiService,
 ): void {
-    const service = serviceOverride ??
+    const service = serviceOverride ?? deps.ai ??
         new AiService({
             store: deps.store,
             now: deps.now,
@@ -615,7 +615,53 @@ export function registerAiRoutes(
         },
     );
 
-    // 11.6. DELETE /api/ai/conversations/:id/temporary - 彻底销毁 history-off 临时会话及消息（新建/关闭时触发）
+    routes.post(
+        "/api/ai/conversations/:id/temporary/leases",
+        validator({ id: param(IdParamSchema) }),
+        async (c, data) => {
+            try {
+                return c.success(
+                    await service.acquireTemporaryLease(
+                        c.get("user").id,
+                        data.id,
+                    ),
+                );
+            } catch (error) {
+                if (error instanceof AiServiceError) {
+                    return c.fail(
+                        error.statusCode as 400 | 403 | 404,
+                        error.message,
+                    );
+                }
+                throw error;
+            }
+        },
+    );
+    routes.put(
+        "/api/ai/conversations/:id/temporary/leases/:leaseId",
+        validator({ id: param(IdParamSchema), leaseId: param(IdParamSchema) }),
+        async (c, data) => {
+            try {
+                return c.success(
+                    await service.renewTemporaryLease(
+                        c.get("user").id,
+                        data.id,
+                        data.leaseId,
+                    ),
+                );
+            } catch (error) {
+                if (error instanceof AiServiceError) {
+                    return c.fail(
+                        error.statusCode as 400 | 403 | 404,
+                        error.message,
+                    );
+                }
+                throw error;
+            }
+        },
+    );
+
+    // Release the caller's temporary lease; other holders may keep the conversation.
     routes.delete(
         "/api/ai/conversations/:id/temporary",
         validator({
@@ -628,8 +674,9 @@ export function registerAiRoutes(
                 await service.purgeTemporaryConversation(
                     user.id,
                     conversationId,
+                    c.req.header("X-Searcher-Temporary-Lease"),
                 );
-                return c.success(null, "临时会话已销毁");
+                return c.success(null, "临时会话释放请求已处理");
             } catch (err: unknown) {
                 if (err instanceof AiServiceError) {
                     return c.fail(

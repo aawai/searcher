@@ -3,7 +3,12 @@ import type { Locator, Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { assertLargeFolderGeometry } from "./helpers/launcher-geometry.ts";
-import { closeLibrary, openApps } from "./helpers/library.ts";
+import {
+    closeLibrary,
+    libraryWindow,
+    openApps,
+    workspaceDock,
+} from "./helpers/library.ts";
 
 async function chooseMenu(page: Page, tile: Locator, name: string) {
     await tile.click({ button: "right" });
@@ -95,6 +100,9 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                 .getBoundingClientRect();
             const panel = node.closest("[data-library]")!
                 .getBoundingClientRect();
+            // The body inset is measured from the body, inside the frame border.
+            const body = node.closest(".workspace-body")!
+                .getBoundingClientRect();
             return {
                 columns: style.gridTemplateColumns.split(/\s+/).filter(
                     Boolean,
@@ -108,8 +116,8 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                 controlLeft: Math.round(box.left - controls.left),
                 controlRight: Math.round(box.right - controls.right),
                 panelWidth: Math.round(panel.width),
-                panelLeftInset: Math.round(box.left - panel.left),
-                panelRightInset: Math.round(panel.right - box.right),
+                panelLeftInset: Math.round(box.left - body.left),
+                panelRightInset: Math.round(body.right - box.right),
             };
         });
     }
@@ -126,24 +134,60 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
         );
     }
 
+    const frame = libraryWindow(page, "apps");
+    /** The window stays in the work area and never covers the Dock. */
+    async function assertAboveDock(target: Page) {
+        const windowBox = await libraryWindow(target, "apps").boundingBox();
+        const dockBox = await workspaceDock(target).boundingBox();
+        const viewport = target.viewportSize();
+        assert(windowBox && dockBox && viewport);
+        assert(
+            windowBox.x >= 0 && windowBox.y >= 0 &&
+                windowBox.x + windowBox.width <= viewport.width &&
+                windowBox.y + windowBox.height <= viewport.height,
+            JSON.stringify({ windowBox, viewport }),
+        );
+        assert(
+            windowBox.x + windowBox.width <= dockBox.x ||
+                dockBox.x + dockBox.width <= windowBox.x ||
+                windowBox.y + windowBox.height <= dockBox.y ||
+                dockBox.y + dockBox.height <= windowBox.y,
+            JSON.stringify({ windowBox, dockBox }),
+        );
+    }
+    async function windowWidth(target: Page) {
+        return Math.round(
+            (await libraryWindow(target, "apps").boundingBox())!.width,
+        );
+    }
+
     await t.step(
-        "grid centres equal gutters and fits five columns in the 390px Sheet",
+        "grid centres equal gutters and fits five columns in the 390px window",
         async () => {
             const desktop = await gridLayout();
+            assertEquals(await windowWidth(page), 640);
             assert(desktop.columns >= 4, JSON.stringify(desktop));
             assertCenteredGrid(desktop);
+            await assertAboveDock(page);
             await page.setViewportSize({ width: 768, height: 1024 });
-            await page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            ).waitFor();
+            // Below 1024px the single active window fills the work area.
+            await page.waitForFunction(
+                (selector) =>
+                    (document.querySelector(selector)?.getBoundingClientRect()
+                        .width ?? 0) > 640,
+                '[data-window-id="apps"]',
+            );
             const tablet = await gridLayout();
-            assertEquals(tablet.panelWidth, 440);
             assert(tablet.columns >= 4, JSON.stringify(tablet));
             assertCenteredGrid(tablet);
+            await assertAboveDock(page);
             await page.setViewportSize({ width: 390, height: 844 });
-            await page.locator(
-                '.workspace-panel--mobile[data-presentation="sheet"]',
-            ).waitFor();
+            await page.waitForFunction(
+                (selector) =>
+                    (document.querySelector(selector)?.getBoundingClientRect()
+                        .width ?? 0) < 400,
+                '[data-window-id="apps"]',
+            );
             const phone = await gridLayout();
             assertEquals(phone.columns, 5);
             assertEquals([phone.panelLeftInset, phone.panelRightInset], [
@@ -151,6 +195,7 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                 16,
             ]);
             assertCenteredGrid(phone);
+            await assertAboveDock(page);
             const touchContext = await browser.newContext({
                 viewport: { width: 390, height: 844 },
                 hasTouch: true,
@@ -171,13 +216,18 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                     [16, 16],
                 );
                 assertCenteredGrid(touch);
+                await assertAboveDock(touchPage);
             } finally {
                 await touchContext.close();
             }
             await page.setViewportSize({ width: 1440, height: 900 });
-            await page.locator(
-                'aside.workspace-panel[data-presentation="panel"]',
-            ).waitFor();
+            await page.waitForFunction(
+                (selector) =>
+                    (document.querySelector(selector)?.getBoundingClientRect()
+                        .width ?? 0) >= 400,
+                '[data-window-id="apps"]',
+            );
+            await frame.waitFor({ state: "visible" });
         },
     );
 

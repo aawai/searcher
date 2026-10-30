@@ -7,7 +7,7 @@ import {
     reloadHome,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
-import { libraryPanel } from "./helpers/library.ts";
+import { closeLibrary, libraryPanel } from "./helpers/library.ts";
 
 const LONG_BODY =
     "保留一个安静的入口，让重要的事情留在眼前。先走到窗边看看天气，再把今天的想法慢慢写下来。把复杂的事情拆成可以完成的小步，留一点空白给新的发现，也留一点时间给没有完成的部分。";
@@ -205,17 +205,13 @@ Deno.test("untitled flow notes keep one body and open from the card or keyboard"
         await item.focus();
         await page.keyboard.press("Enter");
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "返回首页", exact: true })
-            .click();
-        await libraryPanel(page).waitFor({ state: "detached" });
+        await closeLibrary(page);
 
         await card.locator(".home-note-body").click({
             position: { x: 10, y: 10 },
         });
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "返回首页", exact: true })
-            .click();
-        await libraryPanel(page).waitFor({ state: "detached" });
+        await closeLibrary(page);
 
         await createHomeNote(page, { title: null, body: "" });
         await reloadHome(page);

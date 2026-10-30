@@ -6,7 +6,10 @@ import {
     useEffect,
     useRef,
 } from "react";
-import { useBlocker } from "react-router-dom";
+import {
+    type NavigationIntent,
+    useNavigationGuard,
+} from "../../app/navigation-guards.tsx";
 import {
     type AppSession,
     type AppSessionOptions,
@@ -31,7 +34,12 @@ export interface AppSessionProviderProps {
     options: AppSessionOptions;
     navigationRef: RefObject<AppSessionNavigation | null>;
     onRouteBlocked: (intent: AppSessionRouteIntent | null) => void;
+    onRouteCommitted?: () => void;
     isExternalDirty?: () => boolean;
+    /** Whether a navigation destroys the app form; defaults to any move. */
+    willDestroyContent?: (intent: NavigationIntent) => boolean;
+    /** Whether a navigation destroys external content; defaults to the form's rule. */
+    externalDestroysContent?: (intent: NavigationIntent) => boolean;
     children: ReactNode;
 }
 
@@ -39,22 +47,38 @@ export function AppSessionProvider({
     options,
     navigationRef,
     onRouteBlocked,
+    onRouteCommitted,
     isExternalDirty,
+    willDestroyContent,
+    externalDestroysContent,
     children,
 }: AppSessionProviderProps) {
     const session = useAppSession(options);
-    const blocker = useBlocker(({ currentLocation, nextLocation }) => {
-        const urlChanged = currentLocation.pathname !== nextLocation.pathname ||
-            currentLocation.search !== nextLocation.search;
-        const appDirty = Boolean(options.sessionKey) &&
-            (session.isDirty || session.isSubmitting);
-        const externalDirty = Boolean(isExternalDirty?.());
-        return urlChanged && (appDirty || externalDirty);
+    const blocker = useNavigationGuard({
+        blocks: (intent) => {
+            const destroysForm = willDestroyContent
+                ? willDestroyContent(intent)
+                : intent.currentLocation.pathname !==
+                        intent.nextLocation.pathname ||
+                    intent.currentLocation.search !==
+                        intent.nextLocation.search;
+            const destroysExternal = externalDestroysContent
+                ? externalDestroysContent(intent)
+                : destroysForm;
+            return (destroysForm && Boolean(options.sessionKey)) ||
+                (destroysExternal && Boolean(isExternalDirty?.()));
+        },
+        warnOnUnload: () =>
+            (Boolean(options.sessionKey) && session.isDirty) ||
+            Boolean(isExternalDirty?.()),
+        onCommit: () => {
+            if (options.sessionKey) onRouteCommitted?.();
+        },
     });
     const reportedLocationKey = useRef<string | null>(null);
     navigationRef.current = session;
     useEffect(() => {
-        if (blocker.state !== "blocked") {
+        if (!blocker) {
             if (reportedLocationKey.current !== null) {
                 reportedLocationKey.current = null;
                 onRouteBlocked(null);
@@ -65,12 +89,12 @@ export function AppSessionProvider({
             !session.isSubmitting;
         const externalDirty = Boolean(isExternalDirty?.());
         const hasUnsaved = appDirty || externalDirty;
-        if (!hasUnsaved) {
-            if (reportedLocationKey.current !== null) {
-                reportedLocationKey.current = null;
-                onRouteBlocked(null);
-            }
+        if (session.isSubmitting && options.sessionKey) {
             blocker.reset();
+            return;
+        }
+        if (!hasUnsaved) {
+            blocker.proceed();
             return;
         }
         if (session.hasDialog) return;
@@ -100,20 +124,6 @@ export function AppSessionProvider({
         options.sessionKey,
         isExternalDirty,
     ]);
-    useEffect(() => {
-        if (typeof window === "undefined") return;
-        function preventUnload(event: BeforeUnloadEvent) {
-            if (
-                !(Boolean(options.sessionKey) && session.isDirty) &&
-                !isExternalDirty?.()
-            ) return;
-            event.preventDefault();
-            event.returnValue = "";
-        }
-        globalThis.addEventListener("beforeunload", preventUnload);
-        return () =>
-            globalThis.removeEventListener("beforeunload", preventUnload);
-    }, [session.isDirty, options.sessionKey, isExternalDirty]);
     useEffect(() => () => {
         navigationRef.current = null;
     }, [navigationRef]);

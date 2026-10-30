@@ -73,6 +73,10 @@ export const aiConversations = sqliteTable("ai_conversations", {
     title: text("title").notNull(),
     historyEnabled: integer("history_enabled", { mode: "boolean" }).notNull()
         .default(true),
+    temporaryDeletePending: integer("temporary_delete_pending", {
+        mode: "boolean",
+    })
+        .notNull().default(false),
     activeLeafMessageId: text("active_leaf_message_id"),
     systemInstruction: text("system_instruction"),
     deletedAt: integer("deleted_at"),
@@ -81,6 +85,22 @@ export const aiConversations = sqliteTable("ai_conversations", {
 }, (t) => [
     index("ai_conversations_user_idx").on(t.userId),
     index("ai_conversations_deleted_at_idx").on(t.deletedAt),
+]);
+
+export const aiTemporaryLeases = sqliteTable("ai_temporary_leases", {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id").notNull().references(
+        () => aiConversations.id,
+        { onDelete: "cascade" },
+    ),
+    userId: text("user_id").notNull().references(() => users.id, {
+        onDelete: "cascade",
+    }),
+    expiresAt: integer("expires_at").notNull(),
+    claimed: integer("claimed", { mode: "boolean" }).notNull().default(false),
+    released: integer("released", { mode: "boolean" }).notNull().default(false),
+}, (t) => [
+    index("ai_temporary_leases_conversation_idx").on(t.conversationId),
 ]);
 
 export const aiMessages = sqliteTable("ai_messages", {

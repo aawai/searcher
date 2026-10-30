@@ -21,7 +21,14 @@ Deno.test("shared/dock: normalizeDockPreferences preserves complete system order
         appIds: ["app1", "app2", "app1", "app3", ""],
     };
     const normalized = normalizeDockPreferences(custom);
-    assertEquals(normalized.systemOrder, ["ai", "notes", "apps", "home"]);
+    assertEquals(normalized.systemOrder, [
+        "ai",
+        "notes",
+        "apps",
+        "home",
+        "settings",
+        "trash",
+    ]);
     assertEquals(normalized.hiddenSystemIds, ["notes", "ai"]);
     assertEquals(normalized.appIds, ["app1", "app2", "app3"]);
 });
@@ -32,10 +39,33 @@ Deno.test("shared/dock: normalizeDockPreferences backfills missing system ids", 
         appIds: ["app1"],
     };
     const normalized = normalizeDockPreferences(partial);
-    assertEquals(normalized.systemOrder.length, 4);
+    assertEquals(normalized.systemOrder, [
+        "ai",
+        "apps",
+        "home",
+        "notes",
+        "settings",
+        "trash",
+    ]);
     for (const id of DOCK_SYSTEM_IDS) {
         assertEquals(normalized.systemOrder.includes(id), true);
     }
+});
+
+Deno.test("shared/dock: legacy duplicates and unknown ids are discarded without reordering", () => {
+    assertEquals(
+        normalizeDockPreferences({
+            systemOrder: ["notes", "invalid", "notes", "home", "ai", "apps"],
+            hiddenSystemIds: ["home", "apps", "notes", "ai"],
+            appIds: ["app2", "app1", "app2"],
+            obsolete: true,
+        }),
+        {
+            systemOrder: ["notes", "home", "ai", "apps", "settings", "trash"],
+            hiddenSystemIds: ["home", "apps", "notes", "ai"],
+            appIds: ["app2", "app1"],
+        },
+    );
 });
 
 Deno.test("shared/dock: normalizeDockLayout migrates legacy collapsible, preserves new collapsed state, and clamps ballY", () => {

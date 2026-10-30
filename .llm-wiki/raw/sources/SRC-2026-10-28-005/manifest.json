@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-28-005",
+  "captured": "2026-10-28",
+  "packet_version": "1.0",
+  "title": "Offline data Stay organized with collections Save and categorize content based on your preferences.",
+  "url": "https://web.dev/learn/pwa/offline-data",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

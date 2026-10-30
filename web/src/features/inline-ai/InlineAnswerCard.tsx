@@ -1,5 +1,5 @@
 import { lazy, Suspense, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { usePageHost } from "../../app/page-host.tsx";
 import { ExternalLink, Maximize2, X } from "lucide-react";
 import { routes } from "../../app/routes.ts";
 import { Button } from "../../components/ui/button.tsx";
@@ -34,7 +34,7 @@ export function InlineAnswerCard(
         onOpenDocument: (documentId: string) => void;
     },
 ) {
-    const navigate = useNavigate();
+    const { navigate } = usePageHost();
     const presence = usePresence<HTMLElement>(view !== null);
     const lastView = useRef(view);
     if (view) lastView.current = view;
