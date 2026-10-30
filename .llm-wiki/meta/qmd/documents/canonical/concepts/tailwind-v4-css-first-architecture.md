@@ -51,3 +51,4 @@ Tailwind v4 借助现代浏览器普遍支持的原生特性提升运行效率�
 - [CSS Custom Property Fallback and Registration](/concepts/css-custom-property-fallback-and-registration.md)：变量回退、注册和动画性能边界。
 - [[concepts/modal-layering-and-escape-dismissal]]: 利用动态视口高度单位与实底规范实现多视口弹出层适配。
 - [[sources/SRC-2026-09-27-002]]: Tailwind CSS v4 官方架构白皮书与升级指南。
+- [CSS Container Queries](/concepts/css-container-queries.md)：按容器而非视口响应的 CSS 机制与项目当前用法。

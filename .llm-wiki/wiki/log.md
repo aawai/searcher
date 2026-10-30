@@ -2,6 +2,11 @@
 
 ## 2026-10-30
 
+- **capture**: {"format":"web","source_id":"SRC-2026-10-30-005","url":"https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-30-004","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-30-003","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-30-002","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-30-001","url":"https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"}
 - **observe**: {"relevance":"high","slug":"obs-2026-10-30-issue-338-c3-ai","title":"Issue 338 C3 AI 窗口与最终验收结果"}
 - **retro**: {"category":"devops","slug":"e2e-triage-needs-timeout-and-small-first","title":"E2E 摸底先小后大并限时"}
 

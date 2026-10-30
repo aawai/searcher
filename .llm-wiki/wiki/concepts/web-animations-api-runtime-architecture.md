@@ -34,3 +34,4 @@ Web Animations API (WAAPI) 架构通过将底层引擎统一到浏览器合成�
 - [Searcher 项目](/entities/searcher-项目.md)
 - [The Web Animations API vs. CSS](/sources/SRC-2026-10-05-003.md)
 - [The Web Animation Performance Tier List](/sources/SRC-2026-10-05-004.md)
+- [Backdrop Filter Backdrop Root](/concepts/backdrop-filter-backdrop-root.md)：动画 `opacity` 使元素在动画期间满足 backdrop root 条件之一（`opacity` < 1）。

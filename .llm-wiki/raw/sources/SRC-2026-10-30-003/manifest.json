@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-30-003",
+  "captured": "2026-10-30",
+  "packet_version": "1.0",
+  "title": "Content Security Policy (CSP)",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

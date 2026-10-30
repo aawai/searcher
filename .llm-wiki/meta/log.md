@@ -629,3 +629,18 @@
 ## [2026-10-30T04:20:42.730Z] observe
 - slug: "obs-2026-10-30-issue-338-c3-ai", title: "Issue 338 C3 AI 窗口与最终验收结果", relevance: "high"
 
+## [2026-10-30T08:00:24.318Z] capture
+- source_id: "SRC-2026-10-30-001", url: "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html", format: "web"
+
+## [2026-10-30T08:00:26.322Z] capture
+- source_id: "SRC-2026-10-30-002", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries", format: "web"
+
+## [2026-10-30T08:00:27.813Z] capture
+- source_id: "SRC-2026-10-30-003", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP", format: "web"
+
+## [2026-10-30T08:00:30.591Z] capture
+- source_id: "SRC-2026-10-30-004", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter", format: "web"
+
+## [2026-10-30T08:00:32.451Z] capture
+- source_id: "SRC-2026-10-30-005", url: "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html", format: "web"
+

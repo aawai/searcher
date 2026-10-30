@@ -45,3 +45,4 @@ sources:
 - [[concepts/tailwind-v4-css-first-architecture]]（Token 层）
 - [[concepts/pointer-target-size]]（同属 `VISUAL_LANGUAGE.md` "底线"）
 - 原型：`/design-lab/accent`
+- [Backdrop Filter Backdrop Root](/concepts/backdrop-filter-backdrop-root.md)（玻璃材质的采样边界）

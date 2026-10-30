@@ -6,9 +6,12 @@
 
 - [[concepts/accessible-grid-drag-keyboard-and-announcements]] — Accessible Grid Drag — Keyboard and Announcements *(created: 2026-10-25)*
 - [[concepts/aria-combobox-grouped-suggestions]] — ARIA Combobox Grouped Suggestions *(created: 2026-10-24)*
+- [[concepts/backdrop-filter-backdrop-root]] — Backdrop Filter Backdrop Root *(created: 2026-10-30)*
 - [[concepts/browser-storage-persistence-and-eviction]] — Browser Storage Persistence and Eviction *(created: 2026-10-28)*
+- [[concepts/content-security-policy-strict-deployment]] — Content Security Policy Strict Deployment *(created: 2026-10-30)*
 - [[concepts/contract-first-testing]] — Contract First Testing *(created: 2026-09-25)*
 - [[concepts/csrf-defense-boundaries]] — CSRF Defense Boundaries *(created: 2026-10-26)*
+- [[concepts/css-container-queries]] — CSS Container Queries *(created: 2026-10-30)*
 - [[concepts/css-custom-property-fallback-and-registration]] — CSS Custom Property Fallback and Registration *(created: 2026-10-27)*
 - [[concepts/database-queue-serialization]] — Database Queue Serialization *(created: 2026-09-25)*
 - [[concepts/deno-native-serve-architecture]] — Deno Native Serve Architecture *(created: unknown)*
@@ -20,6 +23,7 @@
 - [[concepts/modal-dialog-focus-and-semantics]] — Modal Dialog Focus and Semantics *(created: 2026-10-29)*
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
+- [[concepts/password-hashing-and-pbkdf2-parameters]] — Password Hashing and PBKDF2 Parameters *(created: 2026-10-30)*
 - [[concepts/pointer-target-size]] — Pointer Target Size *(created: 2026-10-25)*
 - [[concepts/pwa-service-worker-update-lifecycle]] — PWA Service Worker Update Lifecycle *(created: 2026-10-24)*
 - [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
@@ -145,6 +149,7 @@
 - [[sources/obs-2026-10-29-issue-338-a-main]] — Observation: Issue 338 A 合入 main 会触发镜像发布 *(created: 2026-10-29)*
 - [[sources/obs-2026-10-29-issue-338-b]] — Observation: Issue 338 阶段 B 表单导航确认未销毁 *(created: 2026-10-29)*
 - [[sources/obs-2026-10-30-issue-338-c3-ai]] — Observation: Issue 338 C3 AI 窗口与最终验收结果 *(created: 2026-10-30)*
+- [[sources/obs-2026-10-30-issue-340]] — Observation: 笔记窗口侧栏布局计划 Issue 340 已创建 *(created: 2026-10-30)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -225,10 +230,15 @@
 - [[sources/SRC-2026-10-29-001]] — Secure cookie configuration *(created: unknown)*
 - [[sources/SRC-2026-10-29-002]] — Dialog (Modal) Pattern *(created: unknown)*
 - [[sources/SRC-2026-10-29-003]] — How To Corrupt An SQLite Database File *(created: unknown)*
+- [[sources/SRC-2026-10-30-001]] — OWASP Password Storage Cheat Sheet *(created: unknown)*
+- [[sources/SRC-2026-10-30-002]] — MDN CSS container queries *(created: unknown)*
+- [[sources/SRC-2026-10-30-003]] — MDN Content Security Policy (CSP) *(created: unknown)*
+- [[sources/SRC-2026-10-30-004]] — MDN backdrop-filter CSS property *(created: unknown)*
+- [[sources/SRC-2026-10-30-005]] — OWASP Session Management Cheat Sheet *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-30T04:20:42.773Z* | *Total pages: 216*
+*Last updated: 2026-10-30T08:03:51.101Z* | *Total pages: 226*

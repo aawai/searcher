@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-30-005",
+  "captured": "2026-10-30",
+  "packet_version": "1.0",
+  "title": "Session Management Cheat Sheet[¶](#session-management-cheat-sheet \"Permanent link\")",
+  "url": "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
