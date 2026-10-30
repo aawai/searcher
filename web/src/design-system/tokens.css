@@ -233,8 +233,10 @@
     --window-trash-height: 640px;
     --window-min-width: 320px;
     --window-min-height: 240px;
-    /* Gap between a window and the viewport, Dock, and banner edges. */
+    /* Gap between a window and the viewport and banner edges. */
     --window-margin: var(--space-4);
+    /* Gap between a window and the Dock or floating ball. */
+    --window-dock-gap: var(--window-margin);
     /* Motion: answers user actions only. */
     --motion-fast: 120ms;
     --motion-base: 200ms;
@@ -607,12 +609,14 @@
         /* iOS zooms focused inputs below 16px. */
         --font-search-input-size: 16px;
         --sheet-width: 100vw;
-        --window-margin: var(--space-2);
+        --window-margin: 0px;
+        --window-dock-gap: var(--space-2);
     }
 }
 
-/* Phones keep a small wallpaper margin so the window reads as a card above the
-   Dock, and short wide viewports a hairline of it, so the body stays usable. */
+/* Phones keep their windows edge to edge (the apps grid needs the full width
+   for five touch columns) but float one gap above the Dock, and short wide
+   viewports a hairline of wallpaper, so the body stays usable. */
 @media (max-height: 480px) and (min-width: 768px) {
     :root {
         --window-margin: var(--space-1);
