@@ -836,6 +836,7 @@
   "sources/dock-touch-context-and-dnd-readiness": [],
   "sources/e2e-native-parallel-speedup-vs-stability-167": [],
   "sources/e2e-parallel-default-enabled-171": [],
+  "sources/e2e-triage-needs-timeout-and-small-first": [],
   "sources/issue-174-data-router-session-leave-guard": [],
   "sources/issue-326-dock-effective-edge-responsive": [],
   "sources/obs-2026-09-25-ui-app": [],
@@ -931,6 +932,7 @@
   "sources/obs-2026-10-29-issue-338-a-c1": [],
   "sources/obs-2026-10-29-issue-338-a-main": [],
   "sources/obs-2026-10-29-issue-338-b": [],
+  "sources/obs-2026-10-30-issue-338-c3-ai": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],

@@ -994,6 +994,14 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/e2e-triage-needs-timeout-and-small-first.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/e2e-triage-needs-timeout-and-small-first.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/e2e-triage-needs-timeout-and-small-first",
+      "contentHash": "8d258452830608c6b6f129613548294122676c2773581aaebe6766237043724a",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/issue-174-data-router-session-leave-guard.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/issue-174-data-router-session-leave-guard.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -1671,6 +1679,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-10-29-issue-338-b",
       "contentHash": "67ffaa02b2625c44d9d3d5248fd987b6faf080c78100ef9f80fb07090d75d41c",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-30-issue-338-c3-ai.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-30-issue-338-c3-ai.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-30-issue-338-c3-ai",
+      "contentHash": "9961c56a5666e3326b4f6e7119480811d80c685f5b8036edd8fbfe3225b9e319",
       "role": "evidence",
       "type": "source"
     },

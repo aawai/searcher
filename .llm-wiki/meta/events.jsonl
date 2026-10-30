@@ -205,3 +205,5 @@
 {"slug":"obs-2026-10-29-issue-338-b","title":"Issue 338 阶段 B 表单导航确认未销毁","relevance":"high","timestamp":"2026-10-29T09:52:07.194Z","kind":"observe"}
 {"slug":"obs-2026-10-29-issue-338-a-c1","title":"Issue 338 阶段 A 工作区实现及 C1 发布门槛","relevance":"high","timestamp":"2026-10-29T09:53:29.084Z","kind":"observe"}
 {"slug":"obs-2026-10-29-issue-338-a-main","title":"Issue 338 A 合入 main 会触发镜像发布","relevance":"high","timestamp":"2026-10-29T09:56:07.290Z","kind":"observe"}
+{"slug":"e2e-triage-needs-timeout-and-small-first","title":"E2E 摸底先小后大并限时","category":"devops","timestamp":"2026-10-30T03:04:50.882Z","kind":"retro"}
+{"slug":"obs-2026-10-30-issue-338-c3-ai","title":"Issue 338 C3 AI 窗口与最终验收结果","relevance":"high","timestamp":"2026-10-30T04:20:42.730Z","kind":"observe"}

@@ -58,6 +58,7 @@
 - [[sources/dock-touch-context-and-dnd-readiness]] — Dock touch context and keyboard drag readiness *(created: 2026-10-27)*
 - [[sources/e2e-native-parallel-speedup-vs-stability-167]] — E2E原生并行提速存在但默认保留串行 *(created: 2026-10-15)*
 - [[sources/e2e-parallel-default-enabled-171]] — E2E并行默认启用及回退策略 *(created: 2026-10-15)*
+- [[sources/e2e-triage-needs-timeout-and-small-first]] — E2E 摸底先小后大并限时 *(created: 2026-10-30)*
 - [[sources/issue-174-data-router-session-leave-guard]] — Issue 174 data-router Apps leave guard merged via PR 183 *(created: 2026-10-16)*
 - [[sources/issue-326-dock-effective-edge-responsive]] — Dock 有效方向与响应式覆盖收敛 *(created: 2026-10-27)*
 - [[sources/obs-2026-09-25-ui-app]] — Observation: UI 精致化与交互优化：APP 命名对齐、壁纸复合输入、便签全屏与悬浮卡片空间优化 *(created: 2026-09-25)*
@@ -143,6 +144,7 @@
 - [[sources/obs-2026-10-29-issue-338-a-c1]] — Observation: Issue 338 阶段 A 工作区实现及 C1 发布门槛 *(created: 2026-10-29)*
 - [[sources/obs-2026-10-29-issue-338-a-main]] — Observation: Issue 338 A 合入 main 会触发镜像发布 *(created: 2026-10-29)*
 - [[sources/obs-2026-10-29-issue-338-b]] — Observation: Issue 338 阶段 B 表单导航确认未销毁 *(created: 2026-10-29)*
+- [[sources/obs-2026-10-30-issue-338-c3-ai]] — Observation: Issue 338 C3 AI 窗口与最终验收结果 *(created: 2026-10-30)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -229,4 +231,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-29T09:56:07.335Z* | *Total pages: 214*
+*Last updated: 2026-10-30T04:20:42.773Z* | *Total pages: 216*

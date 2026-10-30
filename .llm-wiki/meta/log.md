@@ -623,3 +623,9 @@
 ## [2026-10-29T09:56:07.290Z] observe
 - slug: "obs-2026-10-29-issue-338-a-main", title: "Issue 338 A 合入 main 会触发镜像发布", relevance: "high"
 
+## [2026-10-30T03:04:50.882Z] retro
+- slug: "e2e-triage-needs-timeout-and-small-first", title: "E2E 摸底先小后大并限时", category: "devops"
+
+## [2026-10-30T04:20:42.730Z] observe
+- slug: "obs-2026-10-30-issue-338-c3-ai", title: "Issue 338 C3 AI 窗口与最终验收结果", relevance: "high"
+

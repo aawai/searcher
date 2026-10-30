@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-29T09:56:07.335Z",
+  "last_updated": "2026-10-30T04:20:42.773Z",
   "pages": {
     "concepts/accessible-grid-drag-keyboard-and-announcements": {
       "type": "concept",
@@ -1185,6 +1185,15 @@
       "slug": "e2e-parallel-default-enabled-171",
       "created": "2026-10-15",
       "updated": "2026-10-15"
+    },
+    "sources/e2e-triage-needs-timeout-and-small-first": {
+      "type": "source",
+      "title": "E2E 摸底先小后大并限时",
+      "category": "devops",
+      "status": "insight",
+      "slug": "e2e-triage-needs-timeout-and-small-first",
+      "created": "2026-10-30",
+      "updated": "2026-10-30"
     },
     "sources/issue-174-data-router-session-leave-guard": {
       "type": "source",
@@ -2660,6 +2669,24 @@
       "source_context": "检查 issue #338 阶段 A、B 完成度",
       "created": "2026-10-29",
       "updated": "2026-10-29"
+    },
+    "sources/obs-2026-10-30-issue-338-c3-ai": {
+      "type": "source",
+      "title": "Observation: Issue 338 C3 AI 窗口与最终验收结果",
+      "tags": [
+        "issue338",
+        "C3",
+        "AI窗口",
+        "验收",
+        "WindowFrame"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-30-issue-338-c3-ai",
+      "relevance": "high",
+      "observed_at": "2026-10-30T04:20:42.729Z",
+      "source_context": "执行 issue 338 阶段 C3 和最终集成验收",
+      "created": "2026-10-30",
+      "updated": "2026-10-30"
     },
     "sources/searcher-session-token-hash-is-not-salted": {
       "type": "source",
