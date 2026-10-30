@@ -449,3 +449,88 @@ Deno.test("窄屏应用与笔记窗口为单活动窗口，窗口列表可恢复
         await app.close();
     }
 });
+
+Deno.test("笔记编辑器：任务复选框与首行文字居中，状态信息钉在底部角落且不占独立行", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    try {
+        await loginAndVisit(page, app.origin, "/?view=notes", user);
+        const frame = page.locator(NOTES);
+        await createNote(page, "任务与状态");
+        const editor = frame.locator(".ProseMirror");
+        await editor.click();
+        await page.keyboard.type("- [ ] 任务甲\n任务乙");
+        for (let i = 0; i < 40; i++) {
+            await page.keyboard.press("Enter");
+            await page.keyboard.type("行 " + i);
+        }
+        await page.waitForTimeout(600);
+
+        const rows = await page.evaluate(() =>
+            Array.from(
+                document.querySelectorAll<HTMLElement>(
+                    '.ProseMirror li[data-item-type="task"]',
+                ),
+            ).slice(0, 2).map((item) => {
+                const box = item.querySelector("input")!.getBoundingClientRect();
+                const text = item.querySelector(".markdown-list-item-content p")!;
+                const range = document.createRange();
+                range.selectNodeContents(text);
+                const line = range.getClientRects()[0];
+                return {
+                    box: box.top + box.height / 2,
+                    text: line.top + line.height / 2,
+                };
+            })
+        );
+        assertEquals(rows.length, 2);
+        for (const row of rows) {
+            assert(
+                Math.abs(row.box - row.text) <= 1,
+                `checkbox centre ${row.box} vs first line ${row.text}`,
+            );
+        }
+
+        const layout = await page.evaluate(() => {
+            const rect = (selector: string) =>
+                document.querySelector(selector)!.getBoundingClientRect();
+            const container = rect(".document-editor-container");
+            const scroller = rect(".document-editor-scroll-area");
+            const status = rect(".document-editor-status-bar");
+            const last = document.querySelector(".ProseMirror")!.lastElementChild!
+                .getBoundingClientRect();
+            return {
+                scrollerGap: container.bottom - scroller.bottom,
+                statusBottomInset: container.bottom - status.bottom,
+                statusLeftInset: status.left - container.left,
+                statusRightInset: container.right - status.right,
+                statusTop: status.top,
+                lastBottom: last.bottom,
+                strip: getComputedStyle(
+                    document.querySelector(".document-editor-status-bar")!,
+                ).borderTopWidth,
+            };
+        });
+        // The text area reaches the bottom edge: the status line is not a row.
+        assertEquals(layout.scrollerGap, 0, JSON.stringify(layout));
+        assertEquals(layout.strip, "0px");
+        assertEquals(
+            [
+                layout.statusBottomInset,
+                layout.statusLeftInset,
+                layout.statusRightInset,
+            ],
+            [0, 16, 16],
+            JSON.stringify(layout),
+        );
+        // At the end of a long note the last line stays above the corners.
+        assert(layout.lastBottom <= layout.statusTop, JSON.stringify(layout));
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
