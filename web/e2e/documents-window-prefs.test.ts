@@ -281,11 +281,12 @@ Deno.test("侧栏和大纲宽度拖拽、键盘调整后按设备保存", async 
     await page.getByRole("menuitem", { name: "调整左边" }).click();
     for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowRight");
     await page.keyboard.press("Enter");
-    const editorBox = await frame(page).locator(".documents-editor-pane")
-        .boundingBox();
-    assert(
-        editorBox && editorBox.width >= 718,
-        `editor width: ${editorBox?.width}`,
+    // The clamp follows the host's ResizeObserver, so wait for it to settle.
+    await page.waitForFunction(() =>
+        (document.querySelector(
+            '[data-window-id="notes"] .documents-editor-pane',
+        )
+            ?.getBoundingClientRect().width ?? 0) >= 718
     );
     const clampedBox = await frame(page).locator(".documents-sidebar")
         .boundingBox();
@@ -303,7 +304,11 @@ Deno.test("侧栏和大纲宽度拖拽、键盘调整后按设备保存", async 
     await frame(page).getByRole("button", { name: "笔记侧栏" }).click();
     const drawer = frame(page).locator(".documents-sidebar--drawer");
     await drawer.waitFor();
-    assertEquals(await drawer.evaluate((element) =>
-        getComputedStyle(element).getPropertyValue("--notes-sidebar-width").trim()
-    ), "240px");
+    assertEquals(
+        await drawer.evaluate((element) =>
+            getComputedStyle(element).getPropertyValue("--notes-sidebar-width")
+                .trim()
+        ),
+        "240px",
+    );
 });
