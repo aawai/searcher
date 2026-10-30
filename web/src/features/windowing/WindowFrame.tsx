@@ -60,13 +60,11 @@ export interface WindowFrameProps {
     open: boolean;
     minimized: boolean;
     active: boolean;
-    /** Dock item that the window opens beside until it is moved. */
+    /** Dock item the window first opens beside; a moved window keeps its place. */
     anchorTo?: string;
     onActivate: () => void;
     onMinimize: () => void;
     onClose: () => void;
-    /** The user moved, resized, or maximized the window. */
-    onDetach?: () => void;
     /** An apps or notes window: marks the frame while it is open. */
     libraryView?: "apps" | "notes";
     /** Receives the mount point for the view's own controls in the title bar. */
@@ -126,16 +124,13 @@ function initialRect(geometry: Geometry, area: Rect): Rect {
     const { rect, edge } = anchor;
     const gap = geometry.step;
     const alongX = rect.x + (rect.width - width) / 2;
-    const alongY = rect.y + (rect.height - height) / 2;
+    // Along a side Dock the window stays centered in the work area: aligning
+    // it with the icon would pin it to the top of the screen.
     if (edge === "top") {
         return { ...center, x: alongX, y: rect.y + rect.height + gap };
     }
-    if (edge === "left") {
-        return { ...center, x: rect.x + rect.width + gap, y: alongY };
-    }
-    if (edge === "right") {
-        return { ...center, x: rect.x - gap - width, y: alongY };
-    }
+    if (edge === "left") return { ...center, x: rect.x + rect.width + gap };
+    if (edge === "right") return { ...center, x: rect.x - gap - width };
     return { ...center, x: alongX, y: rect.y - gap - height };
 }
 
@@ -150,7 +145,6 @@ export function WindowFrame(
         onActivate,
         onMinimize,
         onClose,
-        onDetach,
         libraryView,
         toolbarRef,
         onHostWidthChange,
@@ -184,8 +178,6 @@ export function WindowFrame(
     const anchorRef = useRef(anchorTo);
     anchorRef.current = anchorTo;
     const measureRef = useRef<() => void>(() => {});
-    const detachRef = useRef(onDetach);
-    detachRef.current = onDetach;
 
     useLayoutEffect(() => {
         const measure = () => {
@@ -195,6 +187,7 @@ export function WindowFrame(
             const token = (name: string) =>
                 parseFloat(css.getPropertyValue(name)) || 0;
             const gap = token("--window-margin");
+            const dockGap = token("--window-dock-gap");
             let left = parseFloat(css.paddingLeft) + gap,
                 right = innerWidth - parseFloat(css.paddingRight) - gap;
             let top = parseFloat(css.paddingTop) + gap,
@@ -205,21 +198,31 @@ export function WindowFrame(
             const ball = document.querySelector<HTMLElement>(
                 ".dock-ball:not([inert])",
             );
-            const reserve = (element: HTMLElement, edge: string) => {
+            const reserve = (
+                element: HTMLElement,
+                edge: string,
+                clearance = gap,
+            ) => {
                 const rect = element.getBoundingClientRect();
                 if (
                     !rect.width || !rect.height ||
                     getComputedStyle(element).visibility === "hidden"
                 ) return;
-                if (edge === "left") left = Math.max(left, rect.right + gap);
-                if (edge === "right") right = Math.min(right, rect.left - gap);
-                if (edge === "top") top = Math.max(top, rect.bottom + gap);
+                if (edge === "left") {
+                    left = Math.max(left, rect.right + clearance);
+                }
+                if (edge === "right") {
+                    right = Math.min(right, rect.left - clearance);
+                }
+                if (edge === "top") {
+                    top = Math.max(top, rect.bottom + clearance);
+                }
                 if (edge === "bottom") {
-                    bottom = Math.min(bottom, rect.top - gap);
+                    bottom = Math.min(bottom, rect.top - clearance);
                 }
             };
-            if (dock) reserve(dock, dock.dataset.edge ?? "bottom");
-            if (ball) reserve(ball, ball.dataset.ballSide ?? "left");
+            if (dock) reserve(dock, dock.dataset.edge ?? "bottom", dockGap);
+            if (ball) reserve(ball, ball.dataset.ballSide ?? "left", dockGap);
             // A connection banner is chrome with its own action; keep it usable.
             const banner = document.querySelector<HTMLElement>(
                 ".connection-banner",
@@ -319,8 +322,6 @@ export function WindowFrame(
 
     useEffect(() => {
         if (!open) setMaximized(false);
-        // An anchored window reopens beside its icon, not where it was dragged.
-        else if (anchorRef.current) setBounds(null);
     }, [open]);
 
     useEffect(() => {
@@ -520,7 +521,9 @@ export function WindowFrame(
             !event.isPrimary || drag.current
         ) return;
         event.preventDefault();
-        detachRef.current?.();
+        // Pin the rectangle the user sees before the first move, so the frame
+        // never falls back to its initial placement between press and move.
+        setBounds((previous) => previous ?? rect);
         drag.current = {
             pointerId: event.pointerId,
             x: event.clientX,
@@ -531,7 +534,7 @@ export function WindowFrame(
     };
     const beginOperation = (kind: "move" | "resize", direction?: Direction) => {
         if (!rect || !geometry?.wide || maximized) return;
-        detachRef.current?.();
+        setBounds((previous) => previous ?? rect);
         setMenuOpen(false);
         setOperation({
             kind,
@@ -550,10 +553,7 @@ export function WindowFrame(
     };
     /** Maximizing keeps the normal rectangle so restoring returns to it. */
     const toggleMaximize = () => {
-        if (!maximized) {
-            if (rect) setBounds((previous) => previous ?? rect);
-            detachRef.current?.();
-        }
+        if (!maximized && rect) setBounds((previous) => previous ?? rect);
         setMaximized((value) => !value);
     };
     const style: CSSProperties | undefined = rect

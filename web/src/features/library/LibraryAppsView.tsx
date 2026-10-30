@@ -1,11 +1,12 @@
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Plus } from "lucide-react";
 import type {
     ExtendedWebApp,
     WebAppGroup,
 } from "../app-library/library-types.ts";
 import type { AppLibraryController } from "../app-library/useAppLibraryActions.ts";
 import {
+    ActionCell,
     AppTile,
     FolderTile,
     type LibraryTileActions,
@@ -51,6 +52,8 @@ export interface LibraryAppsViewProps {
     onOpenApp: (app: ExtendedWebApp) => void;
     onEditApp: (app: ExtendedWebApp) => void;
     onDeleteApp: (app: ExtendedWebApp) => void;
+    /** Opens the create form, in `groupId` when given. */
+    onAddApp: (groupId?: string) => void;
     showAppLabels: boolean;
 }
 
@@ -61,6 +64,7 @@ export function LibraryAppsView({
     onOpenApp,
     onEditApp,
     onDeleteApp,
+    onAddApp,
     showAppLabels,
 }: LibraryAppsViewProps) {
     const [query, setQuery] = useState("");
@@ -166,7 +170,8 @@ export function LibraryAppsView({
         onFolderSizeChange: (group, size) =>
             void library.actions.changeGroupSize(group, size),
     };
-    function renderGrid(tiles: LauncherTile[]) {
+    /** `onAdd` appends the "+" cell, which ends the grid like the Home grid's. */
+    function renderGrid(tiles: LauncherTile[], onAdd?: () => void) {
         return (
             <div
                 className="launcher-grid launcher-grid--library"
@@ -193,6 +198,15 @@ export function LibraryAppsView({
                                 actions={actions}
                             />
                         )
+                )}
+                {onAdd && (
+                    <ActionCell
+                        cellId="add"
+                        icon={<Plus size="1em" className="icon-lg" />}
+                        label="添加应用"
+                        showLabel={showAppLabels}
+                        onClick={onAdd}
+                    />
                 )}
             </div>
         );
@@ -447,21 +461,35 @@ export function LibraryAppsView({
                                     id: app.id,
                                     app,
                                 })),
+                                () => onAddApp(activeFolder.group.id),
                             )
                             : (
                                 <EmptyState
                                     headingLevel={3}
                                     density="compact"
                                     title="文件夹中还没有应用"
+                                    action={
+                                        <Button
+                                            onClick={() =>
+                                                onAddApp(activeFolder.group.id)}
+                                        >
+                                            添加应用
+                                        </Button>
+                                    }
                                 />
                             )
                         : rootTiles.length
-                        ? renderGrid(rootTiles)
+                        ? renderGrid(rootTiles, () => onAddApp())
                         : (
                             <EmptyState
                                 headingLevel={3}
                                 density="compact"
                                 title="还没有应用"
+                                action={
+                                    <Button onClick={() => onAddApp()}>
+                                        添加应用
+                                    </Button>
+                                }
                             />
                         )}
                 </ContextMenuTrigger>

@@ -6,11 +6,6 @@ export interface WindowRecord {
     id: WindowId;
     status: "visible" | "minimized";
     location: Location;
-    /**
-     * The apps window opens beside its Dock icon as a transient: it collapses
-     * when focus moves elsewhere until the user moves, resizes, or maximizes it.
-     */
-    anchored: boolean;
 }
 
 export interface WindowState {
@@ -64,13 +59,11 @@ export function locationUrl(
 /**
  * Window state after the address changed. The address decides the focused
  * window; a pending minimize or close completes once its destination commits.
- * With `wide`, an anchored window that loses focus is minimized.
  */
 export function stateForLocation(
     state: WindowState,
     location: Location,
     action: PendingWindowAction | null,
-    wide: boolean,
 ): WindowState {
     let windows = state.windows;
     if (
@@ -88,19 +81,8 @@ export function stateForLocation(
     const id = windowForLocation(location);
     if (id) {
         const previous = windows.find((window) => window.id === id);
-        const current: WindowRecord = {
-            id,
-            status: "visible",
-            location,
-            anchored: previous?.anchored ?? id === "apps",
-        };
-        const others = windows.filter((window) => window !== previous).map((
-            window,
-        ) => wide && window.anchored && window.status === "visible" &&
-                state.activeId === window.id
-            ? { ...window, status: "minimized" as const }
-            : window
-        );
+        const current: WindowRecord = { id, status: "visible", location };
+        const others = windows.filter((window) => window !== previous);
         return { windows: [...others, current], activeId: id };
     }
     if (location.pathname === routes.home) {

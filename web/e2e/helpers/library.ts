@@ -38,8 +38,23 @@ export function libraryView(
     return page.locator(`[data-library-view="${view}"]`);
 }
 
+/**
+ * The Dock icon toggles, so a window that is already focused must not be
+ * clicked. The address names the focused window, including right after a
+ * reload, before the frame has rendered.
+ */
+async function ensureActive(
+    page: Page,
+    view: "notes" | "apps",
+    trigger: Locator,
+): Promise<void> {
+    const url = new URL(page.url());
+    if (url.pathname === "/" && url.searchParams.get("view") === view) return;
+    await trigger.click();
+}
+
 export async function openNotes(page: Page): Promise<Locator> {
-    await workspaceNotesTrigger(page).click();
+    await ensureActive(page, "notes", workspaceNotesTrigger(page));
     await libraryView(page, "notes").waitFor();
     return libraryPanel(page);
 }
@@ -53,7 +68,7 @@ export async function openNoteRows(page: Page): Promise<Locator> {
 }
 
 export async function openApps(page: Page): Promise<Locator> {
-    await workspaceAppsTrigger(page).click();
+    await ensureActive(page, "apps", workspaceAppsTrigger(page));
     await libraryView(page, "apps").waitFor();
     return libraryPanel(page);
 }
@@ -99,6 +114,8 @@ export async function assertInteractiveHome(page: Page): Promise<void> {
 
 /** Closing destroys the window and its content, like leaving the old panel. */
 export async function closeLibrary(page: Page): Promise<void> {
-    await libraryPanel(page).locator('[data-window-dismiss][aria-label^="关闭"]').click();
+    await libraryPanel(page).locator(
+        '[data-window-dismiss][aria-label^="关闭"]',
+    ).click();
     await libraryPanel(page).waitFor({ state: "detached" });
 }

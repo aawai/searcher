@@ -5,7 +5,6 @@ import {
     Suspense,
     useCallback,
     useContext,
-    useEffect,
     useLayoutEffect,
     useMemo,
     useRef,
@@ -30,7 +29,6 @@ import {
 } from "../../app/RouteErrorBoundary.tsx";
 import { askConversationId, routes } from "../../app/routes.ts";
 import { useAppState } from "../../app/state.tsx";
-import { useEscapeLayerStack } from "../../components/ui/escape-layer-stack.tsx";
 import {
     BREAKPOINTS,
     hasPersistentNotesSidebar,
@@ -95,25 +93,7 @@ const DEFAULT_WIDTHS: Record<WindowId, number> = {
     trash: 880,
 };
 
-/** The history entry that opening the anchored apps window pushed. */
-interface OpenEntry {
-    key: string;
-    index: number | null;
-    fromUrl: string;
-}
-
 type DesktopFocus = "search" | "opener" | null;
-
-function historyIndex(): number | null {
-    const state: unknown = globalThis.history?.state;
-    if (!state || typeof state !== "object" || !("idx" in state)) return null;
-    return typeof state.idx === "number" ? state.idx : null;
-}
-
-/** Tablet and phone present one window at a time, so nothing is "outside". */
-function isWideViewport(): boolean {
-    return globalThis.innerWidth >= BREAKPOINTS.wide;
-}
 
 interface StageValue {
     host: PageHost;
@@ -167,13 +147,11 @@ function WindowSession(
     const { location, navigate } = host;
     const navigationType = useNavigationType();
     const navigationPending = useNavigationPending();
-    const escapeStack = useEscapeLayerStack();
     const [state, setState] = useState<WindowState>(() =>
         stateForLocation(
             { windows: [], activeId: null },
             location,
             null,
-            isWideViewport(),
         )
     );
     const [windowListOpen, setWindowListOpen] = useState(false);
@@ -197,13 +175,8 @@ function WindowSession(
     const previousLocation = useRef(location);
     const pending = useRef<PendingWindowAction | null>(null);
     const focusDesktop = useRef<DesktopFocus>(null);
-    const openEntry = useRef<OpenEntry | null>(null);
-    /** A history move is in flight; later activations wait for it to land. */
-    const moving = useRef(false);
-    const afterNavigation = useRef<(() => void) | null>(null);
     const closeGuards = useRef(new Map<WindowId, CloseGuard>());
     const desktopFocus = useRef<(() => HTMLElement | null) | null>(null);
-    const collapsing = useRef(false);
     /**
      * A conversation that got its id while its window was in the background
      * has no history entry of its own: remember which entry was current, so
@@ -216,17 +189,6 @@ function WindowSession(
         previousLocation.current = location;
         const action = pending.current;
         if (action && action.sourceKey !== location.key) pending.current = null;
-        if (
-            navigationType === "PUSH" &&
-            windowForLocation(location) === "apps" &&
-            windowForLocation(previous) !== "apps"
-        ) {
-            openEntry.current = {
-                key: location.key,
-                index: historyIndex(),
-                fromUrl: locationUrl(previous),
-            };
-        }
         const askEntry = navigationType === "POP" &&
                 windowForLocation(location) === "ai" &&
                 stateRef.current.windows.some((window) => window.id === "ai")
@@ -241,9 +203,7 @@ function WindowSession(
         const shown: Location = aligned
             ? { ...location, ...parsePath(aligned.to), state: null }
             : location;
-        setState((current) =>
-            stateForLocation(current, shown, action, isWideViewport())
-        );
+        setState((current) => stateForLocation(current, shown, action));
         // Back from the AI window by history or a link also lands in the search box.
         if (
             !focusDesktop.current && windowForLocation(previous) === "ai" &&
@@ -261,17 +221,7 @@ function WindowSession(
         } else if (location.pathname !== routes.home) {
             focusDesktop.current = null;
         }
-        moving.current = false;
-        const queued = afterNavigation.current;
-        afterNavigation.current = null;
-        queued?.();
     }, [location, navigationType]);
-
-    /** Run `action` now, or once an in-flight history move has landed. */
-    const whenIdle = useCallback((action: () => void) => {
-        if (moving.current) afterNavigation.current = action;
-        else action();
-    }, []);
 
     const destination = useCallback((id: WindowId) => {
         const record = stateRef.current.windows.find((window) =>
@@ -285,25 +235,20 @@ function WindowSession(
             navigationPending ||
             windowForLocation(locationRef.current) === id
         ) return;
-        whenIdle(() => {
-            pending.current = null;
-            navigate(destination(id));
-        });
-    }, [destination, navigate, navigationPending, whenIdle]);
+        pending.current = null;
+        navigate(destination(id));
+    }, [destination, navigate, navigationPending]);
 
     const showDesktop = useCallback(() => {
-        // A collapse in this same press already decided where to go.
-        if (navigationPending || collapsing.current) return;
+        if (navigationPending) return;
         const current = locationRef.current;
         if (
             current.pathname === routes.home && !current.search && !current.hash
         ) return;
-        whenIdle(() => {
-            pending.current = null;
-            focusDesktop.current = "search";
-            navigate(routes.home);
-        });
-    }, [navigate, navigationPending, whenIdle]);
+        pending.current = null;
+        focusDesktop.current = "search";
+        navigate(routes.home);
+    }, [navigate, navigationPending]);
 
     const leaveWindow = useCallback(
         (
@@ -339,24 +284,6 @@ function WindowSession(
                 sourceKey: locationRef.current.key,
             };
             focusDesktop.current = next ? null : focus;
-            // An anchored transient adds no history of its own: collapsing it
-            // undoes the entry that opened it when that entry is still on top,
-            // and otherwise replaces it.
-            if (record.anchored && id === "apps") {
-                const entry = openEntry.current;
-                openEntry.current = null;
-                if (
-                    entry && entry.key === locationRef.current.key &&
-                    entry.index !== null && entry.index === historyIndex() &&
-                    entry.fromUrl === target
-                ) {
-                    moving.current = true;
-                    navigate(-1);
-                    return;
-                }
-                navigate(target, { replace: true });
-                return;
-            }
             navigate(target);
         },
         [navigate, navigationPending],
@@ -373,35 +300,16 @@ function WindowSession(
         },
         [leaveWindow],
     );
+    /** Dock/command entry: the focused window collapses, any other is shown. */
     const open = useCallback((id: WindowId) => {
         const current = stateRef.current;
         const record = current.windows.find((window) => window.id === id);
-        if (
-            record?.anchored && record.status === "visible" &&
-            current.activeId === id && isWideViewport()
-        ) {
+        if (record?.status === "visible" && current.activeId === id) {
             minimize(id);
             return;
         }
         activate(id);
     }, [activate, minimize]);
-    const detach = useCallback((id: WindowId) => {
-        if (id === "apps") openEntry.current = null;
-        setState((previous) =>
-            previous.windows.some((window) =>
-                    window.id === id && window.anchored
-                )
-                ? {
-                    ...previous,
-                    windows: previous.windows.map((window) =>
-                        window.id === id
-                            ? { ...window, anchored: false }
-                            : window
-                    ),
-                }
-                : previous
-        );
-    }, []);
     const registerCloseGuard = useCallback(
         (id: WindowId, guard: CloseGuard) => {
             closeGuards.current.set(id, guard);
@@ -485,42 +393,6 @@ function WindowSession(
         );
     }, []);
 
-    // An anchored apps window behaves like a start menu: a press anywhere
-    // outside it collapses it. Dock entries and other windows decide by their
-    // own activation, and overlays opened from the window count as inside it.
-    useEffect(() => {
-        const collapse = (event: PointerEvent) => {
-            if (event.button !== 0 || !(event.target instanceof Element)) {
-                return;
-            }
-            const current = stateRef.current;
-            const record = current.windows.find((window) =>
-                window.id === "apps"
-            );
-            if (
-                current.activeId !== "apps" || record?.status !== "visible" ||
-                !record.anchored || !isWideViewport() ||
-                windowForLocation(locationRef.current) !== "apps" ||
-                escapeStack.hasLayer("overlay")
-            ) return;
-            if (
-                event.target.closest(
-                    ".window-frame, [data-dock-id], .undo-toast, .status-banner",
-                )
-            ) return;
-            // The desktop's own press handler sees this event next and must not
-            // also navigate: the collapse already decided where to go.
-            collapsing.current = true;
-            setTimeout(() => {
-                collapsing.current = false;
-            }, 0);
-            leaveWindow("apps", "minimize", null);
-        };
-        document.addEventListener("pointerdown", collapse, true);
-        return () =>
-            document.removeEventListener("pointerdown", collapse, true);
-    }, [escapeStack, leaveWindow]);
-
     const manager: WindowManager = {
         windows: state.windows.map(({ id, status }) => ({
             id,
@@ -535,7 +407,6 @@ function WindowSession(
         minimize,
         close,
         showDesktop,
-        detach,
         registerCloseGuard,
         registerDesktopFocus,
         setBusy,
@@ -610,7 +481,9 @@ function ActiveDesktopStage(
                             record.status === "visible",
                         narrow: widths[id] < BREAKPOINTS.medium,
                         hostWidth: widths[id],
-                        persistentSidebar: hasPersistentNotesSidebar(widths[id]),
+                        persistentSidebar: hasPersistentNotesSidebar(
+                            widths[id],
+                        ),
                     }
                     : null,
             ];
@@ -663,13 +536,10 @@ function ActiveDesktopStage(
                             open={Boolean(record)}
                             minimized={record?.status === "minimized"}
                             active={Boolean(active)}
-                            anchorTo={id === "apps" && record?.anchored
-                                ? "apps"
-                                : undefined}
+                            anchorTo={id === "apps" ? "apps" : undefined}
                             onActivate={() => manager.activate(id)}
                             onMinimize={() => manager.minimize(id)}
                             onClose={() => manager.close(id)}
-                            onDetach={() => manager.detach(id)}
                             onHostWidthChange={(width) => setWidth(id, width)}
                             libraryView={isLibraryWindow(id) ? id : undefined}
                             toolbarRef={isLibraryWindow(id)
