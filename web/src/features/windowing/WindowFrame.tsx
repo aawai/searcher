@@ -187,7 +187,6 @@ export function WindowFrame(
             const token = (name: string) =>
                 parseFloat(css.getPropertyValue(name)) || 0;
             const gap = token("--window-margin");
-            const dockGap = token("--window-dock-gap");
             let left = parseFloat(css.paddingLeft) + gap,
                 right = innerWidth - parseFloat(css.paddingRight) - gap;
             let top = parseFloat(css.paddingTop) + gap,
@@ -198,31 +197,27 @@ export function WindowFrame(
             const ball = document.querySelector<HTMLElement>(
                 ".dock-ball:not([inert])",
             );
-            const reserve = (
-                element: HTMLElement,
-                edge: string,
-                clearance = gap,
-            ) => {
+            const reserve = (element: HTMLElement, edge: string) => {
                 const rect = element.getBoundingClientRect();
                 if (
                     !rect.width || !rect.height ||
                     getComputedStyle(element).visibility === "hidden"
                 ) return;
                 if (edge === "left") {
-                    left = Math.max(left, rect.right + clearance);
+                    left = Math.max(left, rect.right + gap);
                 }
                 if (edge === "right") {
-                    right = Math.min(right, rect.left - clearance);
+                    right = Math.min(right, rect.left - gap);
                 }
                 if (edge === "top") {
-                    top = Math.max(top, rect.bottom + clearance);
+                    top = Math.max(top, rect.bottom + gap);
                 }
                 if (edge === "bottom") {
-                    bottom = Math.min(bottom, rect.top - clearance);
+                    bottom = Math.min(bottom, rect.top - gap);
                 }
             };
-            if (dock) reserve(dock, dock.dataset.edge ?? "bottom", dockGap);
-            if (ball) reserve(ball, ball.dataset.ballSide ?? "left", dockGap);
+            if (dock) reserve(dock, dock.dataset.edge ?? "bottom");
+            if (ball) reserve(ball, ball.dataset.ballSide ?? "left");
             // A connection banner is chrome with its own action; keep it usable.
             const banner = document.querySelector<HTMLElement>(
                 ".connection-banner",

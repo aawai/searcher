@@ -162,7 +162,7 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
     }
 
     await t.step(
-        "grid centres equal gutters and fits five columns in the 390px window",
+        "grid centres equal gutters and fits four columns in the inset phone window",
         async () => {
             const desktop = await gridLayout();
             assertEquals(await windowWidth(page), 640);
@@ -189,13 +189,38 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                 '[data-window-id="apps"]',
             );
             const phone = await gridLayout();
-            assertEquals(phone.columns, 5);
+            assertEquals(phone.columns, 4);
             assertEquals([phone.panelLeftInset, phone.panelRightInset], [
                 16,
                 16,
             ]);
             assertCenteredGrid(phone);
             await assertAboveDock(page);
+            // The window floats 8px inside the viewport on its left and right.
+            const phoneBox = await libraryWindow(page, "apps").boundingBox();
+            assert(phoneBox);
+            assertEquals(
+                [phoneBox.x, 390 - (phoneBox.x + phoneBox.width)],
+                [8, 8],
+            );
+            await page.setViewportSize({ width: 360, height: 800 });
+            await page.waitForFunction(
+                (selector) =>
+                    (document.querySelector(selector)?.getBoundingClientRect()
+                        .width ?? 0) < 350,
+                '[data-window-id="apps"]',
+            );
+            const narrowPhone = await gridLayout();
+            assertEquals(narrowPhone.columns, 4);
+            assertCenteredGrid(narrowPhone);
+            assert(
+                await page.evaluate(() =>
+                    document.documentElement.scrollWidth <=
+                        document.documentElement.clientWidth
+                ),
+                "no horizontal overflow at 360px",
+            );
+            await page.setViewportSize({ width: 390, height: 844 });
             const touchContext = await browser.newContext({
                 viewport: { width: 390, height: 844 },
                 hasTouch: true,
@@ -210,7 +235,7 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                 const touch = await gridLayout(
                     touchPage.locator("[data-library-apps-grid]"),
                 );
-                assertEquals(touch.columns, 5);
+                assertEquals(touch.columns, 4);
                 assertEquals(
                     [touch.panelLeftInset, touch.panelRightInset],
                     [16, 16],
