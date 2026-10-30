@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import type { Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
+import { ensureSidebarOpen } from "./helpers/library.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 const APPS = '[data-window-id="apps"]';
@@ -14,6 +15,7 @@ async function box(page: Page, selector: string) {
 
 /** A new note opens immediately and is persisted after the first input. */
 async function createNote(page: Page, title: string) {
+    await ensureSidebarOpen(page);
     const frame = page.locator(NOTES);
     await frame.getByRole("button", { name: /^新建笔记(?:（|$)/ }).click();
     const created = page.waitForResponse((response) =>
@@ -306,17 +308,28 @@ Deno.test("大纲在窗口调整时保留展开状态，覆盖层不阻止编辑
         // expanded state to the wide outline rather than losing it.
         await page.setViewportSize({ width: 390, height: 900 });
         await page.waitForFunction(() =>
-            document.querySelector('.documents-layout[data-outline-drawer="closed"]') !== null
+            document.querySelector(
+                '.documents-layout[data-outline-drawer="closed"]',
+            ) !== null
         );
-        const sidebarDismiss = frame.getByRole("button", { name: "关闭笔记侧栏", exact: true });
+        const sidebarDismiss = frame.getByRole("button", {
+            name: "关闭笔记侧栏",
+            exact: true,
+        });
         if (await sidebarDismiss.isVisible()) await sidebarDismiss.click();
         await outlineButton.click();
-        await frame.locator(".documents-outline-drawer").waitFor({ state: "visible" });
+        await frame.locator(".documents-outline-drawer").waitFor({
+            state: "visible",
+        });
         await page.setViewportSize({ width: 1600, height: 900 });
         await page.waitForFunction(() =>
-            document.querySelector(".documents-layout")?.getAttribute("data-outline-drawer") === null
+            document.querySelector(".documents-layout")?.getAttribute(
+                "data-outline-drawer",
+            ) === null
         );
-        await frame.locator(".document-outline-panel").waitFor({ state: "visible" });
+        await frame.locator(".document-outline-panel").waitFor({
+            state: "visible",
+        });
         assertEquals(await outlineButton.getAttribute("aria-pressed"), "true");
         assertEquals(await editor.textContent(), "覆盖层打开时仍可编辑");
     } finally {
@@ -344,12 +357,21 @@ Deno.test("窄窗口大纲右侧抽屉选择标题、关闭并与笔记侧栏互
 
         const layout = frame.locator(".documents-layout");
         const drawer = frame.locator(".documents-outline-drawer");
-        const outlineButton = frame.getByRole("button", { name: "大纲", exact: true });
-        const sidebarButton = frame.getByRole("button", { name: "笔记侧栏", exact: true });
+        const outlineButton = frame.getByRole("button", {
+            name: "大纲",
+            exact: true,
+        });
+        const sidebarButton = frame.getByRole("button", {
+            name: "笔记侧栏",
+            exact: true,
+        });
         await outlineButton.click();
-        await drawer.getByRole("button", { name: "抽屉标题", exact: true }).click();
+        await drawer.getByRole("button", { name: "抽屉标题", exact: true })
+            .click();
         await page.waitForFunction(() =>
-            document.querySelector('.documents-layout[data-outline-drawer="closed"]') !== null
+            document.querySelector(
+                '.documents-layout[data-outline-drawer="closed"]',
+            ) !== null
         );
         assertEquals(await outlineButton.getAttribute("aria-pressed"), "false");
         await page.waitForFunction(() =>
@@ -359,36 +381,61 @@ Deno.test("窄窗口大纲右侧抽屉选择标题、关闭并与笔记侧栏互
         await outlineButton.click();
         await drawer.waitFor({ state: "visible" });
         assertEquals(
-            await layout.locator(".documents-editor-pane").evaluate((el) => (el as HTMLElement).inert),
+            await layout.locator(".documents-editor-pane").evaluate((el) =>
+                (el as HTMLElement).inert
+            ),
             true,
         );
-        const heading = drawer.getByRole("button", { name: "抽屉标题", exact: true });
-        const dismiss = drawer.getByRole("button", { name: "关闭笔记大纲", exact: true });
+        const heading = drawer.getByRole("button", {
+            name: "抽屉标题",
+            exact: true,
+        });
+        const dismiss = drawer.getByRole("button", {
+            name: "关闭笔记大纲",
+            exact: true,
+        });
         await heading.focus();
         await page.keyboard.press("Tab");
-        assertEquals(await dismiss.evaluate((el) => el === document.activeElement), true);
+        assertEquals(
+            await dismiss.evaluate((el) => el === document.activeElement),
+            true,
+        );
         await page.keyboard.press("Shift+Tab");
-        assertEquals(await heading.evaluate((el) => el === document.activeElement), true);
+        assertEquals(
+            await heading.evaluate((el) => el === document.activeElement),
+            true,
+        );
         await page.waitForFunction(() => {
-            const layout = document.querySelector(".documents-layout")?.getBoundingClientRect();
-            const outline = document.querySelector(".documents-outline-drawer .document-outline-sidebar")
+            const layout = document.querySelector(".documents-layout")
                 ?.getBoundingClientRect();
-            return !!layout && !!outline && Math.abs(outline.right - layout.right) <= 1;
+            const outline = document.querySelector(
+                ".documents-outline-drawer .document-outline-sidebar",
+            )
+                ?.getBoundingClientRect();
+            return !!layout && !!outline &&
+                Math.abs(outline.right - layout.right) <= 1;
         });
         assertEquals(await layout.getAttribute("data-drawer"), "closed");
         // The transparent area over the exposed editor card dismisses the drawer.
-        await drawer.getByRole("button", { name: "关闭笔记大纲", exact: true }).click();
+        await drawer.getByRole("button", { name: "关闭笔记大纲", exact: true })
+            .click();
         await drawer.waitFor({ state: "hidden" });
         await outlineButton.click();
-        await drawer.getByRole("button", { name: "收起大纲", exact: true }).click();
+        await drawer.getByRole("button", { name: "收起大纲", exact: true })
+            .click();
         await drawer.waitFor({ state: "hidden" });
 
         await sidebarButton.click();
         await page.waitForFunction(() =>
-            document.querySelector('.documents-layout[data-drawer="open"]') !== null
+            document.querySelector('.documents-layout[data-drawer="open"]') !==
+                null
         );
-        assertEquals(await layout.getAttribute("data-outline-drawer"), "closed");
-        await frame.getByRole("button", { name: "关闭笔记侧栏", exact: true }).click();
+        assertEquals(
+            await layout.getAttribute("data-outline-drawer"),
+            "closed",
+        );
+        await frame.getByRole("button", { name: "关闭笔记侧栏", exact: true })
+            .click();
         await outlineButton.click();
         await drawer.waitFor({ state: "visible" });
         await page.keyboard.press("Escape");
@@ -404,11 +451,13 @@ Deno.test("窄窗口大纲右侧抽屉选择标题、关闭并与笔记侧栏互
         const before = await box(page, NOTES);
         await page.setViewportSize({ width: 450, height: 844 });
         await page.waitForFunction((width) => {
-            const rect = document.querySelector('[data-window-id="notes"]')?.getBoundingClientRect();
+            const rect = document.querySelector('[data-window-id="notes"]')
+                ?.getBoundingClientRect();
             return rect !== undefined && rect.width !== width;
         }, before.width);
         assertEquals(await layout.getAttribute("data-outline-drawer"), "open");
-        await drawer.getByRole("button", { name: "抽屉标题", exact: true }).waitFor();
+        await drawer.getByRole("button", { name: "抽屉标题", exact: true })
+            .waitFor();
     } finally {
         await browser.close();
         await app.close();
@@ -476,8 +525,11 @@ Deno.test("笔记编辑器：任务复选框与首行文字居中，状态信息
                     '.ProseMirror li[data-item-type="task"]',
                 ),
             ).slice(0, 2).map((item) => {
-                const box = item.querySelector("input")!.getBoundingClientRect();
-                const text = item.querySelector(".markdown-list-item-content p")!;
+                const box = item.querySelector("input")!
+                    .getBoundingClientRect();
+                const text = item.querySelector(
+                    ".markdown-list-item-content p",
+                )!;
                 const range = document.createRange();
                 range.selectNodeContents(text);
                 const line = range.getClientRects()[0];
@@ -501,7 +553,8 @@ Deno.test("笔记编辑器：任务复选框与首行文字居中，状态信息
             const container = rect(".document-editor-container");
             const scroller = rect(".document-editor-scroll-area");
             const status = rect(".document-editor-status-bar");
-            const last = document.querySelector(".ProseMirror")!.lastElementChild!
+            const last = document.querySelector(".ProseMirror")!
+                .lastElementChild!
                 .getBoundingClientRect();
             return {
                 scrollerGap: container.bottom - scroller.bottom,

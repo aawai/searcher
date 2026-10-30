@@ -258,6 +258,45 @@ export function registerDocumentsRoutes(
             ),
     );
     routes.get(
+        "/api/documents/last-opened",
+        (c) =>
+            documentResponse(
+                c,
+                async () =>
+                    c.success(await documents.lastOpened(c.get("user").id)),
+            ),
+    );
+    routes.put(
+        "/api/documents/:id/opened",
+        validator(entityParam),
+        (c, data) =>
+            documentResponse(c, async () => {
+                await documents.markOpened(c.get("user").id, data.id);
+                return c.success(null);
+            }),
+    );
+    routes.post(
+        "/api/documents/:id/position",
+        validator({
+            ...entityParam,
+            notebookId: json(v.nullable(Id)),
+            beforeId: json(v.optional(Id)),
+            afterId: json(v.optional(Id)),
+        }),
+        (c, data) =>
+            documentResponse(
+                c,
+                async () =>
+                    c.success(
+                        await documents.position(
+                            c.get("user").id,
+                            data.id,
+                            data,
+                        ),
+                    ),
+            ),
+    );
+    routes.get(
         "/api/documents/:id",
         validator(entityParam),
         (c, data) =>
@@ -274,7 +313,6 @@ export function registerDocumentsRoutes(
             version: json(Version),
             title: json(v.optional(Title)),
             body: json(v.optional(Body)),
-            notebookId: json(v.optional(v.nullable(Id))),
             isFavorite: json(v.optional(v.boolean())),
             color: json(v.optional(Color)),
             isHomeFixed: json(v.optional(v.boolean())),
@@ -532,7 +570,12 @@ export function registerDocumentsRoutes(
     );
     routes.post(
         "/api/document-notebooks/:id/move",
-        validator({ ...entityParam, parentId: json(v.nullable(Id)) }),
+        validator({
+            ...entityParam,
+            parentId: json(v.nullable(Id)),
+            beforeId: json(v.optional(Id)),
+            afterId: json(v.optional(Id)),
+        }),
         (c, data) =>
             documentResponse(c, async () =>
                 c.success(
@@ -540,6 +583,7 @@ export function registerDocumentsRoutes(
                         c.get("user").id,
                         data.id,
                         data.parentId,
+                        { beforeId: data.beforeId, afterId: data.afterId },
                     ),
                 )),
     );

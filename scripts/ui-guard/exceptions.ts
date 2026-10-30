@@ -227,6 +227,20 @@ export function isRuntimeLayoutGeometryException(
             )
         ) return true;
     }
+    // User-resized note panes: the clamped width feeds the token-owned
+    // variable that the sidebar, drawers and outline already consume.
+    if (path === "web/src/features/workspace/DocumentsWorkspace.tsx") {
+        if (
+            prop === "--notes-sidebar-width" &&
+            normValue === "`${effectiveSidebarWidth}px`"
+        ) return true;
+    }
+    if (path === "web/src/features/documents/DocumentEditor.tsx") {
+        if (
+            prop === "--document-outline-width" &&
+            normValue === "`${effectiveOutlineWidth}px`"
+        ) return true;
+    }
     if (!RUNTIME_LAYOUT_PROPS[prop] || !isRuntimeLayoutOwner(file)) {
         return false;
     }

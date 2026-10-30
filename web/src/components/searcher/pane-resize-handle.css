@@ -1,0 +1,31 @@
+.pane-resize-handle {
+    position: relative;
+    flex: 0 0 var(--space-2);
+    width: var(--space-2);
+    margin-inline-end: calc(-1 * var(--space-2));
+    z-index: var(--elevation-local-10);
+    cursor: col-resize;
+    touch-action: none;
+    outline: none;
+}
+.pane-resize-handle::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 2px;
+}
+.pane-resize-handle:hover::after {
+    background: var(--border);
+}
+.pane-resize-handle:focus-visible::after {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+@media (any-pointer: coarse) {
+    .pane-resize-handle {
+        flex-basis: var(--control-touch-target);
+        width: var(--control-touch-target);
+        margin-inline-end: calc(-1 * var(--control-touch-target));
+    }
+}

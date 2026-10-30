@@ -1,5 +1,6 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import {
+    ensureSidebarOpen,
     libraryPanel,
     libraryWindow,
     openNotesByKeyboard,
@@ -130,6 +131,7 @@ Deno.test("Notes window stays in the work area under shared chrome and preserves
     await openNotesByKeyboard(page);
     const panel = libraryPanel(page);
     await panel.waitFor({ state: "visible" });
+    await ensureSidebarOpen(page);
     const frame = libraryWindow(page, "notes");
     await frame.waitFor({ state: "visible" });
     const closeButton = frame.getByRole("button", {

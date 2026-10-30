@@ -8,7 +8,7 @@ import { AuthService } from "../../src/features/auth/service.ts";
 import { SystemSettingsStore } from "../../src/features/system/settings-store.ts";
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
-import { openNotesByKeyboard } from "./helpers/library.ts";
+import { ensureSidebarOpen, openNotesByKeyboard } from "./helpers/library.ts";
 import { visitAsk } from "./helpers/ask.ts";
 
 async function pressRepeatedly(page: Page, key: string, times: number) {
@@ -68,6 +68,7 @@ async function openShortcutDocument(
     await page.goto(origin);
     await page.locator("main.home").waitFor({ state: "visible" });
     await openNotesByKeyboard(page);
+    await ensureSidebarOpen(page);
     await page.getByRole("button", { name: "最近", exact: true }).click();
     await page.locator("[data-document-id] h4 button").filter({
         hasText: title,

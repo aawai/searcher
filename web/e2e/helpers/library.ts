@@ -59,9 +59,30 @@ export async function openNotes(page: Page): Promise<Locator> {
     return libraryPanel(page);
 }
 
+/**
+ * Shows the notes sidebar. Reopening the window restores the last opened
+ * note and leaves a narrow window's drawer closed; with nothing to restore
+ * the drawer opens by itself. Waiting for the sidebar or the editor means the
+ * restore has settled, so the drawer cannot open after the check.
+ */
+export async function ensureSidebarOpen(page: Page): Promise<void> {
+    const panel = libraryWindow(page, "notes");
+    const sidebar = panel.locator("#notes-sidebar");
+    const editor = panel.locator(".document-editor-container");
+    await sidebar.or(editor).filter({ visible: true }).first().waitFor();
+    if (await sidebar.isVisible()) return;
+    // The persistent sidebar's collapse button shares the name; only an
+    // opener that is collapsed may be clicked.
+    await panel.locator(
+        'button[aria-controls="notes-sidebar"][aria-expanded="false"]',
+    ).first().click();
+    await sidebar.waitFor({ state: "visible" });
+}
+
 /** Opens the notes window in the flat 最近 list, where every note is a row. */
 export async function openNoteRows(page: Page): Promise<Locator> {
     const panel = await openNotes(page);
+    await ensureSidebarOpen(page);
     await panel.getByRole("button", { name: "最近", exact: true }).click();
     await panel.locator("[data-sidebar-mode='list']").waitFor();
     return panel;

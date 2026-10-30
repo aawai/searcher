@@ -10,6 +10,7 @@ import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import {
     assertInteractiveHome,
+    ensureSidebarOpen,
     libraryPanel,
     libraryWindow,
     openNotes,
@@ -106,11 +107,13 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         );
     // Row contracts run in the flat 最近 list; the tree has its own e2e file.
     async function showRecent() {
+        await ensureSidebarOpen(page);
         await panel.getByRole("button", { name: "最近", exact: true }).click();
         await panel.locator("[data-sidebar-mode='list']").waitFor();
     }
     async function openDocs() {
         await openNotes(page);
+        await ensureSidebarOpen(page);
         await search().waitFor();
         await showRecent();
     }
@@ -158,6 +161,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     await page.locator(".hero").waitFor();
                     const hero = await page.locator(".hero").boundingBox();
                     await openNotesByKeyboard(page);
+                    await ensureSidebarOpen(page);
                     await search().waitFor();
                     await assertWindowInWorkArea(page, frame);
                     if (viewport.width === 1440 && viewport.height === 900) {
@@ -259,6 +263,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
             await openNotesByKeyboard(page);
+            await ensureSidebarOpen(page);
             const notesSearch = panel.getByRole("searchbox", {
                 name: "搜索笔记",
                 exact: true,
@@ -334,7 +339,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.keyboard.press("Enter");
                 await panel.locator("[data-workspace-editor]").waitFor();
                 if (width < 768) {
-                    await panel.getByRole("button", { name: "笔记侧栏", exact: true })
+                    await panel.getByRole("button", {
+                        name: "笔记侧栏",
+                        exact: true,
+                    })
                         .click();
                 }
                 await search().waitFor();
@@ -680,6 +688,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             for (const width of [390, 768, 1024, 1440]) {
                 await page.setViewportSize({ width, height: 900 });
                 await waitForWindowLayout(page);
+                // The reopened window restored a note, so narrow widths keep
+                // the drawer closed until it is opened.
+                await ensureSidebarOpen(page);
                 assertEquals(
                     await search().inputValue(),
                     "private documents query",
@@ -707,7 +718,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 }).inputValue(),
                 "Shell note",
             );
-            const sidebarToggle = panel.getByRole("button", { name: "笔记侧栏", exact: true });
+            const sidebarToggle = panel.getByRole("button", {
+                name: "笔记侧栏",
+                exact: true,
+            });
             if (await sidebarToggle.getAttribute("aria-expanded") === "false") {
                 await sidebarToggle.click();
             }
@@ -778,8 +792,12 @@ async function measureBodyInset(panelLocator: {
     evaluate: <R>(pageFunction: (element: HTMLElement) => R) => Promise<R>;
 }): Promise<InsetMetrics> {
     return await panelLocator.evaluate((panelEl: HTMLElement) => {
-        const body = panelEl.querySelector(".documents-workspace") as HTMLElement;
-        const searchWrap = body.querySelector(".documents-sidebar-header") as HTMLElement;
+        const body = panelEl.querySelector(
+            ".documents-workspace",
+        ) as HTMLElement;
+        const searchWrap = body.querySelector(
+            ".documents-sidebar-header",
+        ) as HTMLElement;
         const bodyRect = body.getBoundingClientRect();
         const searchRect = searchWrap.getBoundingClientRect();
         const searchRowRect = searchRect;

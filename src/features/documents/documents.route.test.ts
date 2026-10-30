@@ -19,11 +19,11 @@ import {
 import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
 
 const origin = "http://localhost:8000";
-async function setup() {
+async function setup(now?: () => number) {
     const store = openDatabase(":memory:");
     await migrateDatabase(store);
     const auth = new AuthService({ store, origin });
-    const app = createApp({ store, auth, origin });
+    const app = createApp({ store, auth, origin, now });
     const cookies: string[] = [];
     for (const username of ["documents_http_owner", "documents_http_other"]) {
         const response = await app.request("/api/auth/register", {
@@ -160,11 +160,15 @@ Deno.test("Documents HTTP: uncategorized scope paginates only the owner's active
             nextCursor: null,
         });
         const notebook = await data<DocumentNotebookDto>(
-            await env.request("/api/document-notebooks", "POST", { name: "Filed" }),
+            await env.request("/api/document-notebooks", "POST", {
+                name: "Filed",
+            }),
         );
-        await data<DocumentDto>(await env.request("/api/documents", "POST", {
-            notebookId: notebook.id,
-        }));
+        await data<DocumentDto>(
+            await env.request("/api/documents", "POST", {
+                notebookId: notebook.id,
+            }),
+        );
         const first = await data<DocumentDto>(
             await env.request("/api/documents", "POST", { title: "first" }),
         );
@@ -174,14 +178,19 @@ Deno.test("Documents HTTP: uncategorized scope paginates only the owner's active
         const deleted = await data<DocumentDto>(
             await env.request("/api/documents", "POST", { title: "deleted" }),
         );
-        assertEquals((await env.request(
-            `/api/documents/${deleted.id}?version=${deleted.version}`,
-            "DELETE",
-        )).status, 200);
+        assertEquals(
+            (await env.request(
+                `/api/documents/${deleted.id}?version=${deleted.version}`,
+                "DELETE",
+            )).status,
+            200,
+        );
         const other = await data<DocumentDto>(
             await env.request("/api/documents", "POST", { title: "other" }, 1),
         );
-        const page1 = await data<DocumentPageDto>(await env.request(`${path}&limit=1`));
+        const page1 = await data<DocumentPageDto>(
+            await env.request(`${path}&limit=1`),
+        );
         assert(page1.nextCursor);
         const cursor = encodeURIComponent(page1.nextCursor);
         const page2 = await data<DocumentPageDto>(
@@ -193,12 +202,22 @@ Deno.test("Documents HTTP: uncategorized scope paginates only the owner's active
         );
         assertEquals(page2.nextCursor, null);
         assertEquals(
-            (await data<DocumentPageDto>(await env.request(path, "GET", undefined, 1)))
+            (await data<DocumentPageDto>(
+                await env.request(path, "GET", undefined, 1),
+            ))
                 .items.map((item) => item.id),
             [other.id],
         );
-        assertEquals((await env.request(`${path}&cursor=${cursor}`, "GET", undefined, 1)).status, 400);
-        assertEquals((await env.request(`/api/documents?scope=recent&cursor=${cursor}`)).status, 400);
+        assertEquals(
+            (await env.request(`${path}&cursor=${cursor}`, "GET", undefined, 1))
+                .status,
+            400,
+        );
+        assertEquals(
+            (await env.request(`/api/documents?scope=recent&cursor=${cursor}`))
+                .status,
+            400,
+        );
     } finally {
         await env.store.close();
     }
@@ -913,6 +932,342 @@ Deno.test("Documents HTTP: batch layouts reject foreign ids and invalid batches"
             400,
         );
         assertEquals(await readLayoutOrNull(env, note.id), null);
+    } finally {
+        await env.store.close();
+    }
+});
+
+Deno.test("Documents HTTP: last opened is owner-isolated, ignores trash and does not edit or emit", async () => {
+    let clock = Date.now();
+    const env = await setup(() => clock);
+    const stream = await env.request("/api/documents/events");
+    const reader = stream.body!.getReader();
+    try {
+        await reader.read();
+        const lastOpened = async (owner = 0) => {
+            const response = await env.request(
+                "/api/documents/last-opened",
+                "GET",
+                undefined,
+                owner,
+            );
+            assertEquals(response.status, 200);
+            return (await response.json() as Envelope<{ id: string } | null>)
+                .data;
+        };
+        // This static route must win over /:id, even when there is no result.
+        assertEquals(await lastOpened(), null);
+        const first = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", { title: "first" }),
+        );
+        const second = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", { title: "second" }),
+        );
+        const foreign = await data<DocumentDto>(
+            await env.request(
+                "/api/documents",
+                "POST",
+                { title: "foreign" },
+                1,
+            ),
+        );
+        await reader.read();
+        await reader.read();
+        clock += 1000;
+        assertEquals(
+            (await env.request(`/api/documents/${first.id}/opened`, "PUT"))
+                .status,
+            200,
+        );
+        assertEquals(await lastOpened(), { id: first.id });
+        assertEquals(await lastOpened(1), null);
+        clock += 1000;
+        assertEquals(
+            (await env.request(`/api/documents/${second.id}/opened`, "PUT"))
+                .status,
+            200,
+        );
+        assertEquals(
+            (await env.request(
+                `/api/documents/${foreign.id}/opened`,
+                "PUT",
+                undefined,
+                1,
+            )).status,
+            200,
+        );
+        assertEquals(await lastOpened(), { id: second.id });
+        assertEquals(await lastOpened(1), { id: foreign.id });
+        assertEquals(
+            (await env.request(`/api/documents/${foreign.id}/opened`, "PUT"))
+                .status,
+            404,
+        );
+        assertEquals(
+            (await env.request("/api/documents/missing/opened", "PUT")).status,
+            404,
+        );
+        const unchanged = await data<DocumentDto>(
+            await env.request(`/api/documents/${second.id}`),
+        );
+        assertEquals(unchanged.version, second.version);
+        assertEquals(unchanged.updatedAt, second.updatedAt);
+
+        // The next event must be the actual edit, not either opened operation.
+        const edited = await data<DocumentDto>(
+            await env.request(`/api/documents/${first.id}`, "PATCH", {
+                version: first.version,
+                body: "event sentinel",
+            }),
+        );
+        const event = new TextDecoder().decode((await reader.read()).value);
+        assert(event.includes(`"documentId":"${first.id}"`));
+        assert(event.includes(`"version":${edited.version}`));
+        assertEquals(
+            (await env.request(
+                `/api/documents/${second.id}?version=${second.version}`,
+                "DELETE",
+            )).status,
+            200,
+        );
+        assertEquals(
+            (await env.request(`/api/documents/${second.id}/opened`, "PUT"))
+                .status,
+            404,
+        );
+        assertEquals(await lastOpened(), { id: first.id });
+        assertEquals(
+            (await env.request(
+                `/api/documents/${first.id}?version=${edited.version}`,
+                "DELETE",
+            )).status,
+            200,
+        );
+        assertEquals(await lastOpened(), null);
+        assertEquals(await lastOpened(1), { id: foreign.id });
+    } finally {
+        await reader.cancel();
+        await env.store.close();
+    }
+});
+
+Deno.test("Documents HTTP: position orders and moves documents without changing their content version", async () => {
+    const env = await setup();
+    try {
+        const notebook = await data<DocumentNotebookDto>(
+            await env.request("/api/document-notebooks", "POST", {
+                name: "Target",
+            }),
+        );
+        const otherNotebook = await data<DocumentNotebookDto>(
+            await env.request("/api/document-notebooks", "POST", {
+                name: "Other",
+            }),
+        );
+        const foreignNotebook = await data<DocumentNotebookDto>(
+            await env.request("/api/document-notebooks", "POST", {
+                name: "Foreign",
+            }, 1),
+        );
+        const a = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", { title: "a" }),
+        );
+        const b = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", { title: "b" }),
+        );
+        const c = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", {
+                title: "c",
+                notebookId: notebook.id,
+            }),
+        );
+        const foreign = await data<DocumentDto>(
+            await env.request(
+                "/api/documents",
+                "POST",
+                { title: "foreign" },
+                1,
+            ),
+        );
+        const list = async (path: string) =>
+            (await data<DocumentPageDto>(await env.request(path))).items.map((
+                item,
+            ) => item.id);
+        const root = "/api/documents?scope=uncategorized";
+        const target =
+            `/api/documents?scope=notebook&notebookId=${notebook.id}`;
+        const position = (id: string, body: unknown, owner = 0) =>
+            env.request(`/api/documents/${id}/position`, "POST", body, owner);
+        assertEquals(await list(root), [b.id, a.id]);
+        const stream = await env.request("/api/documents/events");
+        const reader = stream.body!.getReader();
+        await reader.read();
+
+        assertEquals(
+            (await position(a.id, { notebookId: null, beforeId: b.id })).status,
+            200,
+        );
+        const event = new TextDecoder().decode((await reader.read()).value);
+        assert(event.includes(`"documentId":"${a.id}"`));
+        await reader.cancel();
+        assertEquals(await list(root), [a.id, b.id]);
+        const page = await data<DocumentPageDto>(
+            await env.request(`${root}&limit=1`),
+        );
+        assertEquals(page.items.map((item) => item.id), [a.id]);
+        assert(page.nextCursor);
+        const next = await data<DocumentPageDto>(
+            await env.request(
+                `${root}&limit=1&cursor=${encodeURIComponent(page.nextCursor)}`,
+            ),
+        );
+        assertEquals(next.items.map((item) => item.id), [b.id]);
+        assertEquals(next.nextCursor, null);
+        assertEquals(
+            (await position(a.id, { notebookId: notebook.id, afterId: c.id }))
+                .status,
+            200,
+        );
+        assertEquals(await list(root), [b.id]);
+        assertEquals(await list(target), [c.id, a.id]);
+        assertEquals(
+            (await position(b.id, { notebookId: notebook.id })).status,
+            200,
+        );
+        assertEquals(await list(target), [b.id, c.id, a.id]);
+        const moved = await data<DocumentDto>(
+            await env.request(`/api/documents/${a.id}`),
+        );
+        assertEquals(moved.notebookId, notebook.id);
+        assertEquals(moved.version, a.version);
+        assertEquals(moved.updatedAt, a.updatedAt);
+
+        // PATCH may ignore the obsolete field, but must never move a document.
+        const patched = await data<DocumentDto>(
+            await env.request(`/api/documents/${a.id}`, "PATCH", {
+                version: moved.version,
+                notebookId: null,
+                title: "still filed",
+            }),
+        );
+        assertEquals(patched.notebookId, notebook.id);
+        assertEquals(await list(target), [b.id, c.id, a.id]);
+        for (
+            const body of [
+                {},
+                { notebookId: 123 },
+                { notebookId: notebook.id, beforeId: b.id, afterId: c.id },
+                { notebookId: notebook.id, beforeId: a.id },
+                { notebookId: otherNotebook.id, beforeId: b.id },
+            ]
+        ) {
+            assertEquals((await position(a.id, body)).status, 400);
+        }
+        for (
+            const body of [
+                { notebookId: "missing" },
+                { notebookId: foreignNotebook.id },
+                { notebookId: notebook.id, beforeId: "missing" },
+                { notebookId: notebook.id, beforeId: foreign.id },
+            ]
+        ) {
+            assertEquals((await position(a.id, body)).status, 404);
+        }
+        assertEquals(
+            (await position(foreign.id, { notebookId: null })).status,
+            404,
+        );
+        assertEquals(
+            (await position(a.id, { notebookId: null }, 1)).status,
+            404,
+        );
+        assertEquals(
+            (await env.request(
+                `/api/documents/${c.id}?version=${c.version}`,
+                "DELETE",
+            )).status,
+            200,
+        );
+        assertEquals(
+            (await position(a.id, { notebookId: notebook.id, beforeId: c.id }))
+                .status,
+            404,
+        );
+        assertEquals((await position(c.id, { notebookId: null })).status, 404);
+        assertEquals(await list(target), [b.id, a.id]);
+    } finally {
+        await env.store.close();
+    }
+});
+
+Deno.test("Documents HTTP: notebook move orders siblings and validates anchors", async () => {
+    const env = await setup();
+    try {
+        const create = async (
+            name: string,
+            parentId: string | null = null,
+            owner = 0,
+        ) => await data<DocumentNotebookDto>(
+            await env.request("/api/document-notebooks", "POST", {
+                name,
+                parentId,
+            }, owner),
+        );
+        const a = await create("a");
+        const b = await create("b");
+        const c = await create("c");
+        const child = await create("child", a.id);
+        const foreign = await create("foreign", null, 1);
+        const move = (id: string, body: unknown, owner = 0) =>
+            env.request(
+                `/api/document-notebooks/${id}/move`,
+                "POST",
+                body,
+                owner,
+            );
+        const siblings = async (parentId: string | null) =>
+            (await data<DocumentNotebookDto[]>(
+                await env.request("/api/document-notebooks"),
+            ))
+                .filter((item) => item.parentId === parentId).map((item) =>
+                    item.id
+                );
+        assertEquals(
+            (await move(c.id, { parentId: null, beforeId: a.id })).status,
+            200,
+        );
+        assertEquals(await siblings(null), [c.id, a.id, b.id]);
+        assertEquals(
+            (await move(c.id, { parentId: null, afterId: a.id })).status,
+            200,
+        );
+        assertEquals(await siblings(null), [a.id, c.id, b.id]);
+        assertEquals(
+            (await move(c.id, { parentId: a.id, beforeId: child.id })).status,
+            200,
+        );
+        assertEquals(await siblings(a.id), [c.id, child.id]);
+        assertEquals((await move(c.id, { parentId: null })).status, 200);
+        assertEquals(await siblings(null), [a.id, b.id, c.id]);
+        for (
+            const body of [
+                { parentId: null, beforeId: a.id, afterId: b.id },
+                { parentId: null, beforeId: c.id },
+                { parentId: null, beforeId: child.id },
+            ]
+        ) {
+            assertEquals((await move(c.id, body)).status, 400);
+        }
+        assertEquals(
+            (await move(c.id, { parentId: null, beforeId: foreign.id })).status,
+            404,
+        );
+        assertEquals(
+            (await move(c.id, { parentId: null, afterId: "missing" })).status,
+            404,
+        );
+        assertEquals((await move(c.id, { parentId: null }, 1)).status, 404);
+        assertEquals(await siblings(null), [a.id, b.id, c.id]);
     } finally {
         await env.store.close();
     }

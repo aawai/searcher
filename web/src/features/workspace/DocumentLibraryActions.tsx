@@ -1,5 +1,7 @@
 import { type FormEvent, useEffect, useId, useState } from "react";
 import {
+    ArrowDown,
+    ArrowUp,
     FolderInput,
     MoreHorizontal,
     Pencil,
@@ -60,6 +62,9 @@ export interface DocumentLibraryActionsProps {
     notebooks: DocumentNotebookDto[];
     onChanged: () => void;
     onTrashed?: (id: string) => void;
+    showReorderActions?: boolean;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
 }
 
 export function useDocumentActions({
@@ -67,6 +72,9 @@ export function useDocumentActions({
     notebooks,
     onChanged,
     onTrashed,
+    showReorderActions,
+    onMoveUp,
+    onMoveDown,
 }: DocumentLibraryActionsProps) {
     const { authSession } = useAppState();
     const [renameOpen, setRenameOpen] = useState(false);
@@ -149,13 +157,9 @@ export function useDocumentActions({
         setIsMoving(true);
         setMoveError(null);
         try {
-            const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
-            await api<DocumentDto>(
-                `/api/documents/${item.id}`,
-                json("PATCH", {
-                    version: doc.version,
-                    notebookId: targetNotebookId,
-                }),
+            await api(
+                `/api/documents/${item.id}/position`,
+                json("POST", { notebookId: targetNotebookId }),
             );
             setMoveOpen(false);
             onChanged();
@@ -368,7 +372,7 @@ export function useDocumentActions({
                                 disabled={isMoving}
                             >
                                 <NativeSelectOption value="">
-                                    (无笔记本)
+                                    根目录
                                 </NativeSelectOption>
                                 {notebooks.map((nb) => (
                                     <NativeSelectOption
@@ -482,6 +486,9 @@ export function useDocumentActions({
         dialogs,
         rename: () => setRenameOpen(true),
         move: () => setMoveOpen(true),
+        showReorderActions,
+        moveUp: onMoveUp,
+        moveDown: onMoveDown,
         trash: () => setTrashOpen(true),
         toggleFavorite: () => void handleToggleFavorite(),
         toggleHomeFixed: () => void handleToggleHomeFixed(),
@@ -529,6 +536,21 @@ export function DocumentActionMenuItems(
                 <FolderInput className="icon-md" />
                 <span>移动笔记本</span>
             </Item>
+            {actions.showReorderActions && (
+                <>
+                    <Item disabled={!actions.moveUp} onClick={actions.moveUp}>
+                        <ArrowUp className="icon-md" />
+                        <span>上移</span>
+                    </Item>
+                    <Item
+                        disabled={!actions.moveDown}
+                        onClick={actions.moveDown}
+                    >
+                        <ArrowDown className="icon-md" />
+                        <span>下移</span>
+                    </Item>
+                </>
+            )}
             <Separator />
             <DocumentColorItems
                 menu={menu}
@@ -567,7 +589,10 @@ export function DocumentLibraryActions(props: DocumentLibraryActionsProps) {
                     aria-label={label}
                 />
                 <DropdownMenuContent sideOffset={4}>
-                    <DocumentActionMenuItems actions={actions} menu="dropdown" />
+                    <DocumentActionMenuItems
+                        actions={actions}
+                        menu="dropdown"
+                    />
                 </DropdownMenuContent>
             </DropdownMenu>
             {actions.dialogs}

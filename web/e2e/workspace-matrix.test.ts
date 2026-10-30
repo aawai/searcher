@@ -1,6 +1,7 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import {
     closeLibrary,
+    ensureSidebarOpen,
     libraryPanel,
     libraryWindow,
     openNotes,
@@ -134,6 +135,7 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
 
     // The notes sidebar opens as a tree; document rows live in the 最近 list.
     async function showNoteRows(target: Page = page) {
+        await ensureSidebarOpen(target);
         await libraryPanel(target).getByRole("button", {
             name: "最近",
             exact: true,
@@ -457,8 +459,9 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                     await openWorkspace();
                     await showNoteRows();
                     const surface = getSurface();
+                    // The restored note's editor may load beside the list.
                     const loading = surface.locator(
-                        '.loading-state[role="status"]',
+                        '#notes-sidebar .loading-state[role="status"]',
                     );
                     await loading.waitFor({ state: "visible" });
 

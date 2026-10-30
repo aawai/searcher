@@ -281,6 +281,8 @@ export const documents = sqliteTable("documents", {
     isHomeFixed: integer("is_home_fixed", { mode: "boolean" }).notNull()
         .default(false),
     homeSortOrder: integer("home_sort_order").notNull().default(0),
+    sortOrder: integer("sort_order").notNull().default(0),
+    lastOpenedAt: integer("last_opened_at"),
     deletedAt: integer("deleted_at"),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
@@ -289,6 +291,12 @@ export const documents = sqliteTable("documents", {
     index("documents_notebook_idx").on(t.notebookId),
     index("documents_deleted_at_idx").on(t.deletedAt),
     index("documents_user_updated_idx").on(t.userId, t.updatedAt),
+    index("documents_user_last_opened_idx").on(t.userId, t.lastOpenedAt),
+    index("documents_user_notebook_sort_idx").on(
+        t.userId,
+        t.notebookId,
+        t.sortOrder,
+    ),
     check(
         "documents_color_check",
         sql`${t.color} in ('paper','amber','rose','sage','sky')`,

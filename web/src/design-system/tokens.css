@@ -299,6 +299,10 @@
     --editor-readable-width: 720px;
     --document-outline-width: 260px;
     --notes-sidebar-width: 240px;
+    --document-outline-width-min: 180px;
+    --document-outline-width-max: 400px;
+    --notes-sidebar-width-min: 180px;
+    --notes-sidebar-width-max: 400px;
     --editor-min-content-height: 240px;
     --workspace-top-inset: calc(var(--control-height) + var(--space-6));
 }

@@ -73,7 +73,10 @@ import {
     shouldConfirmLibraryAction,
 } from "../features/library/library-state.ts";
 import "../features/library/library.css";
-import { readSidebarCollapsed, writeSidebarCollapsed } from "../features/documents/device-preferences.ts";
+import {
+    readSidebarCollapsed,
+    writeSidebarCollapsed,
+} from "../features/documents/device-preferences.ts";
 import "../features/workspace/documents-workspace.css";
 import { HomeWorkspaceContent } from "../features/workspace/HomeWorkspaceContent.tsx";
 import {
@@ -180,7 +183,11 @@ const EMPTY_GROUPS: WebAppGroup[] = [];
 const EMPTY_HOME_NOTES: HomeNoteItem[] = [];
 
 type PendingAction =
-    | { kind: "library"; action: LibraryAction; resolve: (accepted: boolean) => void }
+    | {
+        kind: "library";
+        action: LibraryAction;
+        resolve: (accepted: boolean) => void;
+    }
     | { kind: "route"; intent: AppSessionRouteIntent }
     | { kind: "appForm" }
     | { kind: "closeNotes" };
@@ -295,6 +302,18 @@ export function DesktopHost(
     const windowManager = useWindowManager();
     const appsWindow = user ? libraryWindows.apps : null;
     const notesWindow = user ? libraryWindows.notes : null;
+    const notesOpen = notesWindow !== null;
+    const notesOpenRef = useRef(notesOpen);
+    notesOpenRef.current = notesOpen;
+    const locationRef = useRef(location);
+    locationRef.current = location;
+    const restoreIntentRef = useRef(0);
+    const [restoreSettledFor, setRestoreSettledFor] = useState<
+        {
+            userId: string;
+            session: typeof authSession;
+        } | null
+    >(null);
     const activeLibrary: LibraryWindowId | null = appsWindow?.active
         ? "apps"
         : notesWindow?.active
@@ -308,11 +327,14 @@ export function DesktopHost(
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [drawerOpen, setDrawerOpen] = useState(false);
     useEffect(() => {
-        setSidebarOpen(user ? !readSidebarCollapsed(localStorage, user.id) : true);
+        setSidebarOpen(
+            user ? !readSidebarCollapsed(localStorage, user.id) : true,
+        );
         setDrawerOpen(false);
     }, [user?.id]);
     const persistentSidebar = Boolean(notesWindow?.persistentSidebar);
-    const visibleSidebar = !noteFullScreen && (persistentSidebar ? sidebarOpen : drawerOpen);
+    const visibleSidebar = !noteFullScreen &&
+        (persistentSidebar ? sidebarOpen : drawerOpen);
     function changeSidebar(open: boolean) {
         if (persistentSidebar) {
             setSidebarOpen(open);
@@ -323,8 +345,19 @@ export function DesktopHost(
     }
     useEffect(() => {
         if (!notesWindow) setDrawerOpen(false);
-        else if (!persistentSidebar && libraryState.documents.route.view === "documents/root") setDrawerOpen(true);
-    }, [Boolean(notesWindow), persistentSidebar, libraryState.documents.route.view]);
+        else if (
+            restoreSettledFor?.userId === user?.id &&
+            restoreSettledFor?.session === authSession && !persistentSidebar &&
+            libraryState.documents.route.view === "documents/root"
+        ) setDrawerOpen(true);
+    }, [
+        Boolean(notesWindow),
+        persistentSidebar,
+        libraryState.documents.route.view,
+        restoreSettledFor,
+        user?.id,
+        authSession,
+    ]);
     const notesActive = Boolean(notesWindow?.active);
     useEffect(() => {
         // Full screen belongs to the focused note; leaving it restores the chrome.
@@ -381,6 +414,10 @@ export function DesktopHost(
     );
     function requestLibrary(action: LibraryAction): Promise<boolean> {
         if (pendingActionRef.current) return Promise.resolve(false);
+        if (
+            action.type === "select" ||
+            (action.type === "documents" && action.action.type === "navigate")
+        ) restoreIntentRef.current++;
         if (shouldConfirmLibraryAction(dirtyForm.current, action)) {
             const { promise, resolve } = Promise.withResolvers<boolean>();
             updatePendingAction({ kind: "library", action, resolve });
@@ -416,9 +453,13 @@ export function DesktopHost(
     ) {
         if (!currentUserIdRef.current) return;
         setIsManagingApps(false);
-        void requestLibrary({ type: "select", selection, route }).then((accepted) => {
-            if (accepted && activeLibrary !== selection.kind) navigate(`/?view=${selection.kind}`);
-        });
+        void requestLibrary({ type: "select", selection, route }).then(
+            (accepted) => {
+                if (accepted && activeLibrary !== selection.kind) {
+                    navigate(`/?view=${selection.kind}`);
+                }
+            },
+        );
     }
     /** A library window leaves the screen but keeps its content. */
     function minimizeLibrary() {
@@ -465,8 +506,12 @@ export function DesktopHost(
             !user || workspaceResetUserId !== user.id ||
             !ownsCurrentUserData
         ) return;
+        restoreIntentRef.current++;
         consumedDocumentNavigationRef.current = location.key;
-        navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state: null });
+        navigate(`${location.pathname}${location.search}${location.hash}`, {
+            replace: true,
+            state: null,
+        });
         openDocumentRef.current(documentId);
     }, [
         location.hash,
@@ -492,6 +537,7 @@ export function DesktopHost(
             !user || workspaceResetUserId !== user.id ||
             !ownsCurrentUserData
         ) return;
+        restoreIntentRef.current++;
         consumedShareNavigationRef.current = location.key;
         const note = routeState.sharedNote;
         navigate(`${location.pathname}${location.search}${location.hash}`, {
@@ -518,7 +564,6 @@ export function DesktopHost(
     }
     // Documents state follows the notes window: opening selects the notes
     // root, closing discards the open document.
-    const notesOpen = notesWindow !== null;
     useEffect(() => {
         if (!user || workspaceResetUserId !== user.id || !ownsCurrentUserData) {
             return;
@@ -537,6 +582,76 @@ export function DesktopHost(
             dispatchLibrary({ type: "leave" });
         }
     }, [notesOpen, user, workspaceResetUserId, ownsCurrentUserData]);
+    useEffect(() => {
+        if (!notesOpen) {
+            setRestoreSettledFor(null);
+            return;
+        }
+        if (!user || workspaceResetUserId !== user.id || !ownsCurrentUserData) {
+            setRestoreSettledFor(null);
+            return;
+        }
+        let active = true;
+        const ownerId = user.id;
+        const intent = restoreIntentRef.current;
+        const routeState: unknown = locationRef.current.state;
+        const pendingNavigation = routeState &&
+            typeof routeState === "object" &&
+            (("openDocumentId" in routeState &&
+                typeof routeState.openDocumentId === "string" &&
+                Boolean(routeState.openDocumentId)) ||
+                ("sharedNote" in routeState &&
+                    isSharedNote(routeState.sharedNote)));
+        if (
+            pendingNavigation ||
+            libraryRef.current.documents.route.view !== "documents/root"
+        ) {
+            setRestoreSettledFor({ userId: ownerId, session: authSession });
+            return;
+        }
+        setRestoreSettledFor(null);
+        void api<{ id: string } | null>("/api/documents/last-opened").then(
+            (last) => {
+                if (
+                    !active || !notesOpenRef.current ||
+                    !authSession.isCurrent() ||
+                    currentUserIdRef.current !== ownerId ||
+                    restoreIntentRef.current !== intent ||
+                    libraryRef.current.documents.route.view !== "documents/root"
+                ) return;
+                const state: unknown = locationRef.current.state;
+                if (
+                    state && typeof state === "object" &&
+                    ("openDocumentId" in state || "sharedNote" in state)
+                ) return;
+                if (last?.id) {
+                    dispatchLibrary({
+                        type: "documents",
+                        action: {
+                            type: "navigate",
+                            route: { view: "documents/edit", id: last.id },
+                        },
+                    });
+                }
+            },
+        ).catch(() => {}).finally(() => {
+            if (
+                active && authSession.isCurrent() &&
+                currentUserIdRef.current === ownerId
+            ) {
+                setRestoreSettledFor({ userId: ownerId, session: authSession });
+            }
+        });
+        return () => {
+            active = false;
+        };
+    }, [
+        notesOpen,
+        user?.id,
+        workspaceResetUserId,
+        ownsCurrentUserData,
+        authSession,
+    ]);
     useEffect(() => {
         dirtyForm.current = false;
         libraryOpener.current = null;
@@ -1482,20 +1597,23 @@ export function DesktopHost(
         const slot = libraryWindows[id];
         if (!user || !slot) return null;
         const isNotes = id === "notes";
-        const headerActions = !isNotes
-            ? undefined
-            : (
-                <>
-                    <Button variant="ghost" size="icon"
-                        aria-label={noteFullScreen ? "退出全屏" : "全屏编辑"}
-                        onClick={() => {
-                            if (!noteFullScreen) setDrawerOpen(false);
-                            setNoteFullScreen((prev) => !prev);
-                        }}>
-                        {noteFullScreen ? <Shrink size="1em" className="icon-md" /> : <Expand size="1em" className="icon-md" />}
-                    </Button>
-                </>
-            );
+        const headerActions = !isNotes ? undefined : (
+            <>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={noteFullScreen ? "退出全屏" : "全屏编辑"}
+                    onClick={() => {
+                        if (!noteFullScreen) setDrawerOpen(false);
+                        setNoteFullScreen((prev) => !prev);
+                    }}
+                >
+                    {noteFullScreen
+                        ? <Shrink size="1em" className="icon-md" />
+                        : <Expand size="1em" className="icon-md" />}
+                </Button>
+            </>
+        );
         return (
             <>
                 {slot.toolbar && createPortal(
@@ -1527,24 +1645,50 @@ export function DesktopHost(
                                         eventSubscriptions:
                                             authSession.documentEvents,
                                         state: libraryState.documents.route,
-                                        sidebarPersistent: slot.persistentSidebar,
+                                        sidebarPersistent:
+                                            slot.persistentSidebar,
                                         sidebarOpen: visibleSidebar,
                                         onSidebarOpenChange: changeSidebar,
                                         sidebarTriggerRef,
                                         fullScreen: noteFullScreen,
                                         narrow: slot.narrow,
-                                        onOpenTrash: () => navigate(routes.trash),
-                                        onNewDocument: (target) => requestLibrary({
-                                            type: "documents",
-                                            action: { type: "navigate", route: { view: "documents/new", target } },
-                                        }),
-                                        onCreated: (id) => dispatchLibrary({
-                                            type: "documents", action: { type: "created", id },
-                                        }),
+                                        onOpenTrash: () =>
+                                            navigate(routes.trash),
+                                        onNewDocument: (target) =>
+                                            requestLibrary({
+                                                type: "documents",
+                                                action: {
+                                                    type: "navigate",
+                                                    route: {
+                                                        view: "documents/new",
+                                                        target,
+                                                    },
+                                                },
+                                            }),
+                                        onCreated: (id) =>
+                                            dispatchLibrary({
+                                                type: "documents",
+                                                action: { type: "created", id },
+                                            }),
                                         onDocumentTrashed: (id) => {
-                                            const route = libraryRef.current.documents.route;
-                                            if (route.view === "documents/edit" && route.id === id) {
-                                                dispatchLibrary({ type: "documents", action: { type: "navigate", route: { view: "documents/root" } } });
+                                            const route =
+                                                libraryRef.current.documents
+                                                    .route;
+                                            if (
+                                                route.view ===
+                                                    "documents/edit" &&
+                                                route.id === id
+                                            ) {
+                                                dispatchLibrary({
+                                                    type: "documents",
+                                                    action: {
+                                                        type: "navigate",
+                                                        route: {
+                                                            view:
+                                                                "documents/root",
+                                                        },
+                                                    },
+                                                });
                                             }
                                         },
                                         onDirtyChange: (dirty) => {
