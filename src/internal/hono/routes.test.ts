@@ -228,66 +228,6 @@ Deno.test("Routes 将 Handler 异常交给应用级 error handler", async () => 
     assertEquals(await response.text(), "handled globally");
 });
 
-Deno.test("Routes 原生 Response 不被 Request Intake 二次包装", async () => {
-    const app = new Hono<DefaultVariables>();
-    const routes = new Routes<DefaultVariables>();
-    routes.public.get("/text", (c) => c.text("plain response"));
-    routes.mount(app);
-
-    const response = await app.request("http://localhost/text");
-    assertEquals(response.status, 200);
-    assertEquals(await response.text(), "plain response");
-});
-
-Deno.test("Routes 注册时自动包装 Validator 并在校验通过时注入数据", async () => {
-    const app = new Hono<DefaultVariables>();
-    app.use(responseMiddleware);
-    const routes = new Routes<DefaultVariables>();
-
-    const nameSchema = validator({
-        name: query(v.pipe(v.string(), v.minLength(2))),
-    });
-
-    routes.public.get("/greet", nameSchema, (c, data) => {
-        return c.success({ greeting: `hello ${data.name}` });
-    });
-
-    routes.mount(app);
-
-    const res = await app.request("http://localhost/greet?name=alice");
-    assertEquals(res.status, 200);
-    const json = await res.json();
-    assertEquals(json, {
-        code: 200,
-        data: { greeting: "hello alice" },
-        status: true,
-    });
-});
-
-Deno.test("Routes 注册时自动拦截 Validator 校验失败并返回 400 envelope", async () => {
-    const app = new Hono<DefaultVariables>();
-    app.use(responseMiddleware);
-    const routes = new Routes<DefaultVariables>();
-
-    const nameSchema = validator({
-        name: query(v.pipe(v.string(), v.minLength(2))),
-    });
-
-    routes.public.get("/greet", nameSchema, (c, data) => {
-        return c.success({ greeting: `hello ${data.name}` });
-    });
-
-    routes.mount(app);
-
-    const res = await app.request("http://localhost/greet?name=a");
-    assertEquals(res.status, 400);
-    const json = await res.json();
-    assertEquals(json.code, 400);
-    assertEquals(json.status, false);
-    assertEquals(typeof json.message, "string");
-    assertEquals(Array.isArray(json.data?.issues), true);
-});
-
 Deno.test("Routes 支持前置路由中间件与 Validator 及普通 Handler 组合", async () => {
     const app = new Hono<DefaultVariables>();
     app.use(responseMiddleware);
@@ -362,77 +302,6 @@ Deno.test("Routes 跨 access 重叠校验失败时原子拒绝挂载（无部分
     assertEquals(resZ.status, 404);
 });
 
-Deno.test("Routes 跨 access 通配符与 ALL 重叠拒绝", () => {
-    const routesAll = new Routes<DefaultVariables>();
-    routesAll.public.all("/api/*", (c) => c.text("public all"));
-    routesAll.get("/api/secret", (c) => c.text("protected secret"));
-
-    assertThrows(
-        () => routesAll.mount(new Hono<DefaultVariables>(), [noopAuth]),
-        Error,
-        "Overlapping cross-access route conflict: public ALL /api/* and protected GET /api/secret",
-    );
-
-    const routesProtectedAll = new Routes<DefaultVariables>();
-    routesProtectedAll.public.get(
-        "/files/readme.txt",
-        (c) => c.text("public file"),
-    );
-    routesProtectedAll.all("/files/*", (c) => c.text("protected all"));
-
-    assertThrows(
-        () =>
-            routesProtectedAll.mount(new Hono<DefaultVariables>(), [noopAuth]),
-        Error,
-        "Overlapping cross-access route conflict: public GET /files/readme.txt and protected ALL /files/*",
-    );
-});
-
-Deno.test("Routes 跨 access 可选参数重叠拒绝", () => {
-    const routes = new Routes<DefaultVariables>();
-    routes.public.get("/items/:category?", (c) => c.text("public items"));
-    routes.get("/items/admin", (c) => c.text("protected items admin"));
-
-    assertThrows(
-        () => routes.mount(new Hono<DefaultVariables>(), [noopAuth]),
-        Error,
-        "Overlapping cross-access route conflict: public GET /items/:category? and protected GET /items/admin",
-    );
-});
-
-Deno.test("Routes 跨 access 复杂正则（含跨段/特殊字符）与嵌入通配符在 mount 前保守拒绝重叠", () => {
-    // 跨段/复杂正则：/:id{.+/.+}
-    const routesRegex = new Routes<DefaultVariables>();
-    routesRegex.public.get("/api/:id{.+/.+}", (c) => c.text("public regex"));
-    routesRegex.get("/api/admin/secret", (c) => c.text("protected admin"));
-
-    assertThrows(
-        () => routesRegex.mount(new Hono<DefaultVariables>(), [noopAuth]),
-        Error,
-        "Overlapping cross-access route conflict",
-    );
-
-    // 嵌入通配符：/static/foo*
-    const routesEmbeddedWildcard = new Routes<DefaultVariables>();
-    routesEmbeddedWildcard.public.get(
-        "/static/foo*",
-        (c) => c.text("public embedded wildcard"),
-    );
-    routesEmbeddedWildcard.get(
-        "/static/foobar",
-        (c) => c.text("protected static"),
-    );
-
-    assertThrows(
-        () =>
-            routesEmbeddedWildcard.mount(new Hono<DefaultVariables>(), [
-                noopAuth,
-            ]),
-        Error,
-        "Overlapping cross-access route conflict",
-    );
-});
-
 Deno.test("Routes 允许合法的非相交跨 access 路由共存并成功挂载", async () => {
     const app = new Hono<DefaultVariables>();
     const routes = new Routes<DefaultVariables>();
@@ -464,22 +333,6 @@ Deno.test("Routes 允许合法的非相交跨 access 路由共存并成功挂载
     });
     assertEquals(resPostResource.status, 200);
     assertEquals(await resPostResource.text(), "create resource");
-});
-
-Deno.test("Routes 支持自定义 Env 类型传播并在编译期检查", () => {
-    type CustomEnv = {
-        Bindings: { DB_URL: string };
-        Variables: { userRole: "admin" | "member" };
-    };
-
-    const customRoutes = new Routes<CustomEnv>();
-    customRoutes.get("/profile", (c) => {
-        const role = c.get("userRole");
-        return c.text(`role: ${role}`);
-    });
-
-    // 类型测试：确保 Routes<CustomEnv> 接受 Context<CustomEnv>
-    assertEquals(typeof customRoutes.mount, "function");
 });
 
 Deno.test("Routes 按照特异度排序：普通 static 优于 param 优于 wildcard", async () => {

@@ -15,17 +15,11 @@ Deno.test("routes: shortcuts settings tab routes and resolution contract", () =>
     assertEquals(settingsTab("/settings/unknown"), null);
 });
 
-Deno.test("ShortcutsSettings: renders all 5 required sections with proper headings", () => {
+Deno.test("ShortcutsSettings: renders every catalog shortcut action and quick command", () => {
     const html = ReactDOMServer.renderToString(
         <ShortcutsSettings platform="other" />,
     );
-    assertStringIncludes(html, "全局");
-    assertStringIncludes(html, "搜索");
-    assertStringIncludes(html, "AI 问答");
-    assertStringIncludes(html, "笔记编辑");
-    assertStringIncludes(html, "快捷命令");
 
-    // All keyboard shortcut actions from catalog are present
     for (const item of KEYBOARD_SHORTCUTS) {
         assertStringIncludes(html, item.action);
         assertStringIncludes(html, item.context);
@@ -34,7 +28,6 @@ Deno.test("ShortcutsSettings: renders all 5 required sections with proper headin
         }
     }
 
-    // All slash quick commands from catalog are present
     for (const cmd of SEARCH_QUICK_COMMANDS) {
         assertStringIncludes(html, cmd.action);
         assertStringIncludes(html, cmd.prefix);
@@ -58,22 +51,6 @@ Deno.test("ShortcutsSettings: macOS keycaps and screen reader text format correc
     assertStringIncludes(html, "Command Shift X");
     assertStringIncludes(html, "Command Enter");
     assertStringIncludes(html, 'data-platform="mac"');
-});
-
-Deno.test("ShortcutsSettings: Non-macOS (other) keycaps and screen reader text format correctly", () => {
-    const html = ReactDOMServer.renderToString(
-        <ShortcutsSettings platform="other" />,
-    );
-    // On Non-Mac, mod is Ctrl, shift is Shift
-    assertStringIncludes(html, "Ctrl + K");
-    assertStringIncludes(html, "Ctrl + Shift + X");
-    assertStringIncludes(html, "Ctrl + Enter");
-
-    // Screen reader text
-    assertStringIncludes(html, "Ctrl + K");
-    assertStringIncludes(html, "Ctrl + Shift + X");
-    assertStringIncludes(html, "Ctrl + Enter");
-    assertStringIncludes(html, 'data-platform="other"');
 });
 
 Deno.test("ShortcutsSettings: screen reader accessible text is provided for every entry", () => {

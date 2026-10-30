@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { validateImageBytes } from "./validator.ts";
 
-Deno.test("validateImageBytes accepts valid PNG, JPEG, WebP, AVIF, and safe SVG", () => {
+Deno.test("validateImageBytes accepts PNG, JPEG, WebP, AVIF, ICO and safe SVG, rejects HTML", () => {
     // 1. PNG
     const png = new Uint8Array([
         0x89,
@@ -66,6 +66,28 @@ Deno.test("validateImageBytes accepts valid PNG, JPEG, WebP, AVIF, and safe SVG"
     const resIco = validateImageBytes(ico);
     assertEquals(resIco.valid, true);
     if (resIco.valid) assertEquals(resIco.contentType, "image/x-icon");
+
+    // WebP: RIFF container with WEBP form type
+    const webp = new TextEncoder().encode("RIFF\0\0\0\0WEBP");
+    const resWebp = validateImageBytes(webp);
+    assertEquals(resWebp.valid, true);
+    if (resWebp.valid) assertEquals(resWebp.contentType, "image/webp");
+
+    // AVIF: ISOBMFF ftyp box with avif major brand
+    const avif = new Uint8Array([
+        0x00,
+        0x00,
+        0x00,
+        0x1c,
+        ...new TextEncoder().encode("ftypavif"),
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+    ]);
+    const resAvif = validateImageBytes(avif);
+    assertEquals(resAvif.valid, true);
+    if (resAvif.valid) assertEquals(resAvif.contentType, "image/avif");
 
     // 5. Corrupt / HTML rejected
     const html = new TextEncoder().encode(

@@ -99,12 +99,47 @@ export const documentPartitions = {
     ...paginationSuites,
 } as const;
 
+// Workspace CI shards, balanced by per-file JUnit time (~233s summed per shard;
+// 124s wall for B at jobs=2 locally). B is listed; A is the remainder.
+const workspaceShardB = new Set<string>([
+    "apps-density",
+    "apps-session",
+    "workspace-shell",
+    "desktop-windows",
+    "ai-window",
+    "apps-pinning",
+    "color-hierarchy",
+    "home-composition",
+    "home-launcher-density",
+    "apps-interactions",
+    "workspace-contract",
+    "apps-ai-session",
+    "accent-contrast",
+]);
+
+export const workspacePartitions = {
+    "workspace-a": suites.workspace.filter((name) =>
+        !workspaceShardB.has(name)
+    ),
+    "workspace-b": suites.workspace.filter((name) => workspaceShardB.has(name)),
+} as const;
+
+const partitions: Record<string, readonly string[]> = {
+    ...documentPartitions,
+    ...workspacePartitions,
+};
+
 export type Suite =
     | keyof typeof suites
     | keyof typeof documentPartitions
+    | keyof typeof workspacePartitions
     | "full"
     | "apps"
     | "layout";
+
+export function isPartition(name: string): boolean {
+    return Object.hasOwn(partitions, name);
+}
 
 export function suiteFiles(suite: Suite): string[] {
     let names: readonly string[];
@@ -118,8 +153,8 @@ export function suiteFiles(suite: Suite): string[] {
         names = suites.workspace.filter((name) =>
             /^(workspace|home-launcher-|home-composition$)/.test(name)
         );
-    } else if (Object.hasOwn(documentPartitions, suite)) {
-        names = documentPartitions[suite as keyof typeof documentPartitions];
+    } else if (isPartition(suite)) {
+        names = partitions[suite];
     } else {
         names = suites[suite as keyof typeof suites];
     }

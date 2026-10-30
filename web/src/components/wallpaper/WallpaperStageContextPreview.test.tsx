@@ -7,10 +7,10 @@ Deno.test("WallpaperStageContextPreview: strictly non-interactive and aria-hidde
         <WallpaperStageContextPreview />,
     );
 
-    assert(html.includes('class="wallpaper-stage-context-preview"'));
     assert(html.includes('aria-hidden="true"'));
     assert(!html.includes("<form"));
     assert(!html.includes("<input"));
     assert(!html.includes('role="search"'));
+    assert(!/<(?:button|a|select|textarea)\b|tabindex=/.test(html));
     assert(!html.includes("id="));
 });

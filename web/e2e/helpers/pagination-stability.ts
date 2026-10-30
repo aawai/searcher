@@ -229,6 +229,9 @@ export function registerPaginationStabilityTest(
                 },
             );
         }
+        // Page layout is theme-independent (theme only recolors); contrast is
+        // owned by accent-contrast/color-hierarchy. Motion is the axis that
+        // can change layout behavior, so reduced motion runs at one viewport.
         const viewports = [
             [1440, 900],
             [1024, 768],
@@ -236,31 +239,23 @@ export function registerPaginationStabilityTest(
             [390, 844],
             [1024, 1552],
         ];
-        const scenarios = viewports.flatMap(([width, height]) =>
-            (["light", "dark"] as const).map((theme) => ({
+        const scenarios = [
+            ...viewports.map(([width, height]) => ({
                 width,
                 height,
-                theme,
-            }))
-        );
-        for (const { width, height, theme } of scenarios) {
-            const name = `${fixture.name}-${width}x${height}-${theme}`;
+                motion: "no-preference" as const,
+            })),
+            { width: 1440, height: 900, motion: "reduce" as const },
+        ];
+        for (const { width, height, motion } of scenarios) {
+            const name = `${fixture.name}-${width}x${height}-${motion}`;
             const passed = await t.step(name, async () => {
                 await page.setViewportSize({ width, height });
                 await page.emulateMedia({
-                    colorScheme: theme,
-                    reducedMotion: theme === "dark"
-                        ? "reduce"
-                        : "no-preference",
+                    colorScheme: "light",
+                    reducedMotion: motion,
                 });
-                const origin = app.origin;
-                await page.goto(origin + "/settings");
-                await request("/api/preferences", "PATCH", { theme });
-                await page.goto(origin + "/");
-                await page.waitForFunction(
-                    (theme) => document.documentElement.dataset.theme === theme,
-                    theme,
-                );
+                await page.goto(app.origin + "/");
                 await openNotes(page);
                 await page.locator(`[data-document-id="${doc.id}"] h4 button`)
                     .click();
@@ -276,7 +271,8 @@ export function registerPaginationStabilityTest(
                 page.on("request", listener);
                 await page.getByRole("button", { name: "分页", exact: true })
                     .click();
-                const initial = await sample(page, 5000);
+                // Only recorded as evidence; ready() owns the settle condition.
+                const initial = evidence ? await sample(page, 5000) : undefined;
                 await ready(page);
                 if (fixture.name === "mixed") {
                     const dimensions = await page.locator(

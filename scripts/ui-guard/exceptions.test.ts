@@ -75,7 +75,7 @@ Deno.test("runtime exceptions - image drag transform and denial of unrelated tra
     );
     assertEquals(
         isDragTransformException(
-            "web/src/components/searcher/WebAppLauncher.tsx",
+            "web/src/features/app-library/WebAppLauncher.tsx",
             "transform",
             "CSS.Translate.toString(transform)",
         ),
@@ -83,7 +83,7 @@ Deno.test("runtime exceptions - image drag transform and denial of unrelated tra
     );
     assertEquals(
         isDragTransformException(
-            "web/src/components/searcher/WebAppLauncher.tsx",
+            "web/src/features/app-library/WebAppLauncher.tsx",
             "transform",
             "isDragging ? undefined : CSS.Transform.toString(transform)",
         ),
@@ -109,7 +109,7 @@ Deno.test("runtime exceptions - image drag transform and denial of unrelated tra
     );
     assertEquals(
         isDragTransformException(
-            "web/src/components/searcher/WebAppLauncher.tsx",
+            "web/src/features/app-library/WebAppLauncher.tsx",
             "transition",
             "transform 200ms ease, opacity 200ms ease",
         ),
@@ -192,16 +192,6 @@ Deno.test("runtime exceptions - domain values and denial of arbitrary dynamic co
             "web/src/app/SettingsPage.tsx",
             "--item-accent",
             "accent.hex",
-        ),
-        true,
-    );
-
-    // Sheet dynamic mobile height CSS variable in ContentSheet
-    assertEquals(
-        isDomainValueException(
-            "web/src/components/searcher/ContentSheet.tsx",
-            "--sheet-mobile-height",
-            "sheetHeight + 'px'",
         ),
         true,
     );

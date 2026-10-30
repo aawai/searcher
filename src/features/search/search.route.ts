@@ -161,6 +161,7 @@ export function registerSearchRoutes(
             const id = c.req.param("id");
             if (!id) return c.fail(STATUS_CODE.BadRequest, "缺少 ID");
             const deleted = await service.deleteHistoryItem(user.id, id);
+            if (!deleted) return c.fail(STATUS_CODE.NotFound, "搜索历史不存在");
             return c.success({ deleted });
         },
     );

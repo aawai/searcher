@@ -466,7 +466,7 @@ Deno.test("Documents HTTP: assets bind owner/document, deny referenced deletion 
     }
 });
 
-Deno.test("Documents HTTP: home papers share nullable titles, metadata, layouts and account-isolated events", async () => {
+Deno.test("Documents HTTP: home papers share nullable titles, metadata and account-isolated events", async () => {
     const env = await setup();
     const ownerStream = await env.request("/api/documents/events");
     const otherStream = await env.request(
@@ -522,81 +522,6 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata, layouts 
         }
         assert(event.startsWith("event: document.updated\n"));
         assert(event.includes(`"documentId":"${document.id}"`));
-        assertEquals(
-            (await env.request(
-                `/api/documents/${document.id}/layout`,
-                "PATCH",
-                { band: "right", col: 0, row: 0, size: "w" },
-                1,
-            )).status,
-            404,
-        );
-        const layout = await data<DocumentLayoutDto>(
-            await env.request(`/api/documents/${document.id}/layout`, "PATCH", {
-                band: "right",
-                col: 0,
-                row: 0,
-                size: "w",
-            }),
-        );
-        assertEquals(layout.band, "right");
-        assertEquals(layout.col, 0);
-        assertEquals(layout.row, 0);
-        assertEquals(layout.size, "w");
-        assertEquals(
-            await data(
-                await env.request(`/api/documents/${document.id}/layout`),
-            ),
-            layout,
-        );
-        // A partial position or an out-of-range column is rejected before writing.
-        assertEquals(
-            (await env.request(
-                `/api/documents/${document.id}/layout`,
-                "PATCH",
-                {
-                    band: "right",
-                    col: 2,
-                    row: null,
-                },
-            )).status,
-            400,
-        );
-        assertEquals(
-            (await env.request(
-                `/api/documents/${document.id}/layout`,
-                "PATCH",
-                {
-                    band: "right",
-                    col: 999,
-                    row: 0,
-                },
-            )).status,
-            400,
-        );
-        // A home note cannot share a W footprint with another home note.
-        const overlap = await data<DocumentDto>(
-            await env.request("/api/documents", "POST", {
-                body: "Second pinned note",
-                isHomeFixed: true,
-            }),
-        );
-        assertEquals(
-            (await env.request(
-                `/api/documents/${overlap.id}/layout`,
-                "PATCH",
-                { band: "right", col: 1, row: 0, size: "w" },
-            )).status,
-            409,
-        );
-        assertEquals(
-            (await env.request(
-                `/api/documents/${overlap.id}/layout`,
-                "PATCH",
-                { band: "right", col: 3, row: 0 },
-            )).status,
-            200,
-        );
         assertEquals(
             (await env.request("/api/documents", "POST", { color: "invalid" }))
                 .status,

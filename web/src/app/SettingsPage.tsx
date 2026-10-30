@@ -432,7 +432,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
         const parsed = parseWallpaperSource(trimmed);
         if (!parsed) {
             setDraftError(
-                "请输入有效的图片链接（https，不含账号密码）或渐变背景",
+                "请输入有效的图片链接（https，不含账号密码）",
             );
             return;
         }
@@ -881,8 +881,8 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                             ? "wallpaper-source-error"
                                             : undefined}
                                         placeholder={currentSourceHidden
-                                            ? "替换为图片链接或渐变背景"
-                                            : "图片链接（https）或渐变背景"}
+                                            ? "替换为图片链接"
+                                            : "图片链接（https）"}
                                         value={wallpaperDraft}
                                         onChange={(e) => {
                                             setWallpaperDraft(

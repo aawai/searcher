@@ -246,6 +246,13 @@
       "when": 1792998582026,
       "tag": "0034_temporary_leases",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1792998582027,
+      "tag": "0035_remove_gradient_wallpaper",
+      "breakpoints": true
     }
   ]
 }

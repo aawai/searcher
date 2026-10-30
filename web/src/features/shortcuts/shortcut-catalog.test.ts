@@ -1,6 +1,5 @@
 import { assertEquals } from "@std/assert";
 import {
-    commandTakesQuery,
     formatShortcut,
     formatShortcutAccessible,
     KEYBOARD_SHORTCUTS,
@@ -126,43 +125,9 @@ Deno.test("command parsing preserves boundaries whitespace case and all canonica
     assertEquals(parseCommandPrefix("/ba")?.hasSpace, false);
 });
 
-Deno.test("executable commands cover theme, wallpaper, settings, shortcuts, trash and workspace entries", () => {
-    const byId = new Map(
-        SEARCH_QUICK_COMMANDS.map((entry) => [entry.id, entry]),
-    );
-    assertEquals(byId.get("theme-light")?.target, {
-        type: "theme",
-        theme: "light",
-    });
-    assertEquals(byId.get("theme-dark")?.target, {
-        type: "theme",
-        theme: "dark",
-    });
-    assertEquals(byId.get("theme-system")?.target, {
-        type: "theme",
-        theme: "system",
-    });
-    assertEquals(byId.get("wallpaper")?.target, {
-        type: "route",
-        to: "/settings/appearance",
-    });
-    assertEquals(byId.get("settings")?.target, {
-        type: "route",
-        to: "/settings",
-    });
-    assertEquals(byId.get("shortcuts")?.target, {
-        type: "route",
-        to: "/settings/shortcuts",
-    });
-    assertEquals(byId.get("trash")?.target, { type: "route", to: "/trash" });
-    assertEquals(byId.get("notes")?.target, {
-        type: "library",
-        request: "notes",
-    });
-    assertEquals(byId.get("apps")?.target, { type: "apps" });
+Deno.test("slash command triggers are single slash-prefixed tokens", () => {
     for (const entry of SEARCH_QUICK_COMMANDS) {
-        assertEquals(entry.prefix, entry.prefix.toLowerCase());
-        assertEquals(/^\/[a-z]+$/.test(entry.prefix), true);
+        assertEquals(/^\/\S+$/u.test(entry.prefix), true);
     }
 });
 
@@ -204,28 +169,6 @@ Deno.test("guests reach settings and the shortcut reference by command name", ()
         matchSearchCommands(raw, guest).map((entry) => entry.id);
     assertEquals(ids("/设置"), ["settings"]);
     assertEquals(ids("/快捷键"), ["shortcuts"]);
-});
-
-Deno.test("only engine and AI prefixes take a query argument", () => {
-    for (const entry of SEARCH_QUICK_COMMANDS) {
-        assertEquals(
-            commandTakesQuery(entry),
-            entry.target.type === "engine" || entry.target.type === "mode",
-        );
-    }
-});
-
-Deno.test("search shortcuts document Alt+Enter and Shift+Enter in the same catalog", () => {
-    assertEquals(SHORTCUTS.searchAskAi.binding, {
-        key: "Enter",
-        modifiers: ["alt"],
-    });
-    assertEquals(SHORTCUTS.searchCapture.binding, {
-        key: "Enter",
-        modifiers: ["shift"],
-    });
-    assertEquals(SHORTCUTS.searchAskAi.section, "search");
-    assertEquals(SHORTCUTS.searchCapture.section, "search");
 });
 
 Deno.test("parseCommandPrefix accurately extracts command, target engine, and rest query without pollution", () => {

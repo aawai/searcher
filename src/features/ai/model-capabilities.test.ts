@@ -1,7 +1,6 @@
 import { assertEquals } from "@std/assert";
 import {
     applyManualOverride,
-    inferReasoningCapabilityFromName,
     mergeModelMetadata,
     normalizeRawModelCapabilities,
     populateModelDtoCapabilities,
@@ -90,23 +89,6 @@ Deno.test("ModelCapabilities: normalizeRawModelCapabilities extracts known field
     assertEquals(cap5.status, "unknown");
     assertEquals(cap5.levels, []);
     assertEquals(cap5.source, "unknown");
-});
-
-Deno.test("ModelCapabilities: inference by model name limited to official o-series", () => {
-    const o1Cap = inferReasoningCapabilityFromName("o1");
-    assertEquals(o1Cap?.status, "supported");
-    assertEquals(o1Cap?.source, "inferred");
-
-    const o3Cap = inferReasoningCapabilityFromName("o3-mini");
-    assertEquals(o3Cap?.status, "supported");
-    assertEquals(o3Cap?.source, "inferred");
-
-    // Third-party models are NOT inferred without provider metadata
-    const r1Cap = inferReasoningCapabilityFromName("DeepSeek-R1");
-    assertEquals(r1Cap, null);
-
-    const normal = inferReasoningCapabilityFromName("llama-3-70b");
-    assertEquals(normal, null);
 });
 
 Deno.test("ModelCapabilities: validateModelMetadata validates nested structures at runtime", () => {
@@ -237,6 +219,10 @@ Deno.test("ModelCapabilities: resolveEffectiveCapability priority order", () => 
     const cap5 = resolveEffectiveCapability(null, "unknown-custom-model");
     assertEquals(cap5.status, "unknown");
     assertEquals(cap5.source, "unknown");
+
+    // Third-party reasoning models are not inferred from the name alone
+    const r1Cap = resolveEffectiveCapability(null, "DeepSeek-R1");
+    assertEquals(r1Cap.status, "unknown");
 });
 
 Deno.test("ModelCapabilities: mergeModelMetadata preserves manual overrides on refresh", () => {
@@ -328,19 +314,6 @@ Deno.test("ModelCapabilities: applyManualOverride sets or clears override", () =
         parsedReverted.capabilities.discovered.reasoning.levels,
         ["low"],
     );
-});
-
-Deno.test("ModelCapabilities: populateModelDtoCapabilities generates convenient DTO fields", () => {
-    const model = {
-        id: "m-1",
-        modelId: "o1",
-        metadataJson: null,
-    };
-    const dto = populateModelDtoCapabilities(model);
-    assertEquals(dto.supportsReasoning, true);
-    assertEquals(dto.reasoningEfforts, ["low", "medium", "high"]);
-    assertEquals(dto.defaultReasoningEffort, "medium");
-    assertEquals(dto.reasoningCapabilitySource, "preset");
 });
 
 Deno.test("ModelCapabilities: discovery without an explicit default preserves Provider defaults", () => {

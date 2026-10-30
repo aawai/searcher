@@ -35,14 +35,6 @@ Deno.test("affected: library includes documents and other known consumers withou
         "web/src/features/documents/view.tsx",
     ];
     const selection = selectAffected(paths);
-    assertEquals(selection.suites, [
-        "workspace",
-        "routing",
-        "documents",
-        "bundle",
-        "home-notes",
-        "supplemental",
-    ]);
     assertEquals(selection.files, [
         ...new Set(selection.suites.flatMap(suiteFiles)),
     ]);

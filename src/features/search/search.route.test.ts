@@ -216,3 +216,64 @@ Deno.test("search routes: history endpoints require auth and follow opt-in", asy
         await store.close();
     }
 });
+
+Deno.test("search routes: deleting another user's history item returns 404 and keeps it", async () => {
+    const { store, app } = await setupSearchTestApp();
+    try {
+        const register = async (username: string) => {
+            const res = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    Origin: ORIGIN,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    username,
+                    displayName: username,
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(res.status, 200);
+            return res.headers.get("set-cookie")!.split(";")[0];
+        };
+        const aliceCookie = await register("history_alice");
+        const bobCookie = await register("history_bob");
+        const json = (cookie: string) => ({
+            Origin: ORIGIN,
+            "Content-Type": "application/json",
+            Cookie: cookie,
+        });
+
+        const enable = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: json(aliceCookie),
+            body: JSON.stringify({ searchHistoryEnabled: true }),
+        });
+        assertEquals(enable.status, 200);
+        const created = await app.request("/api/search/history", {
+            method: "POST",
+            headers: json(aliceCookie),
+            body: JSON.stringify({ query: "private", engineId: "google" }),
+        });
+        const item = (await created.json() as Envelope<SearchHistoryItem>)
+            .data!;
+
+        const bobDelete = await app.request(
+            `/api/search/history/${item.id}`,
+            {
+                method: "DELETE",
+                headers: { Origin: ORIGIN, Cookie: bobCookie },
+            },
+        );
+        assertEquals(bobDelete.status, 404);
+
+        const aliceList = await app.request("/api/search/history", {
+            headers: { Origin: ORIGIN, Cookie: aliceCookie },
+        });
+        const items = (await aliceList.json() as Envelope<SearchHistoryItem[]>)
+            .data!;
+        assertEquals(items.map((i) => i.id), [item.id]);
+    } finally {
+        await store.close();
+    }
+});

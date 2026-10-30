@@ -263,16 +263,6 @@ export function isDomainValueException(
         }
     }
 
-    // Sheet dynamic mobile height CSS variable (scoped to ContentSheet)
-    if (p.endsWith("ContentSheet.tsx") || p.includes("/fixtures/sheet/")) {
-        if (prop === "--sheet-mobile-height") {
-            return !hasRawColor(
-                norm.replaceAll(/^['"`]|['"`]$/g, ""),
-                prop,
-            );
-        }
-    }
-
     // Dynamic accent color preview swatches (scoped strictly to swatch owners and runtime expressions)
     if (isSwatchOwner(file)) {
         if (hasRawColor(norm.replaceAll(/^['"`]|['"`]$/g, ""), prop)) {

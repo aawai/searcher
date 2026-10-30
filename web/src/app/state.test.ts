@@ -107,41 +107,15 @@ Deno.test("Appearance: legacy icon size fields are ignored without losing valid 
     }
 });
 
-Deno.test("Appearance: showHomeApps defaults on and only accepts booleans", () => {
-    assertEquals(normalizeAppearance(undefined).showHomeApps, true);
-    assertEquals(normalizeAppearance({}).showHomeApps, true);
-    assertEquals(
-        normalizeAppearance({ showHomeApps: false }).showHomeApps,
-        false,
-    );
-    assertEquals(
-        normalizeAppearance({ showHomeApps: true }).showHomeApps,
-        true,
-    );
-    for (const bad of ["false", 0, null, "off"]) {
-        assertEquals(
-            normalizeAppearance({ showHomeApps: bad }).showHomeApps,
-            true,
-        );
-    }
-});
-
-Deno.test("Appearance: showHomeAppPlate defaults on and only accepts booleans", () => {
-    assertEquals(normalizeAppearance(undefined).showHomeAppPlate, true);
-    assertEquals(normalizeAppearance({}).showHomeAppPlate, true);
-    assertEquals(
-        normalizeAppearance({ showHomeAppPlate: false }).showHomeAppPlate,
-        false,
-    );
-    assertEquals(
-        normalizeAppearance({ showHomeAppPlate: true }).showHomeAppPlate,
-        true,
-    );
-    for (const bad of ["false", 0, null, "off"]) {
-        assertEquals(
-            normalizeAppearance({ showHomeAppPlate: bad }).showHomeAppPlate,
-            true,
-        );
+Deno.test("Appearance: home app toggles default on and only accept booleans", () => {
+    for (const key of ["showHomeApps", "showHomeAppPlate"] as const) {
+        assertEquals(normalizeAppearance(undefined)[key], true);
+        assertEquals(normalizeAppearance({})[key], true);
+        assertEquals(normalizeAppearance({ [key]: false })[key], false);
+        assertEquals(normalizeAppearance({ [key]: true })[key], true);
+        for (const bad of ["false", 0, null, "off"]) {
+            assertEquals(normalizeAppearance({ [key]: bad })[key], true);
+        }
     }
 });
 
@@ -299,15 +273,15 @@ Deno.test("Appearance: device caches keep their accent; new or unreadable caches
 });
 
 Deno.test("Appearance store: anonymous local upload waits for IndexedDB commit and survives reload without redundant hydration writes", async () => {
-    const gradient = "linear-gradient(135deg, #204060, #80a0c0)";
+    const remoteWallpaper = "https://example.com/wallpaper.jpg";
     const uploadedPng = "data:image/png;base64,aGVsbG8=";
     const db = new Map<string, Appearance>();
     db.set(
         "appearance:anonymous",
         normalizeAppearance({
-            wallpaper: gradient,
+            wallpaper: remoteWallpaper,
             wallpaperPresentations: {
-                [gradient]: {
+                [remoteWallpaper]: {
                     composition: { focalX: 0.5, focalY: 0.5 },
                     readability: "balanced",
                 },
@@ -341,8 +315,8 @@ Deno.test("Appearance store: anonymous local upload waits for IndexedDB commit a
     assertEquals(ready, false);
     await store.hydrate();
     assertEquals(ready, true);
-    assertEquals(rendered.wallpaper, gradient);
-    // Hydration must not redundantly re-write the unchanged cached gradient.
+    assertEquals(rendered.wallpaper, remoteWallpaper);
+    // Hydration must not redundantly re-write the unchanged cached wallpaper.
     assertEquals(writes.length, 0);
 
     writeGate = Promise.withResolvers<void>();
@@ -350,7 +324,7 @@ Deno.test("Appearance store: anonymous local upload waits for IndexedDB commit a
     const uploadPromise = store.update({
         wallpaper: uploadedPng,
         wallpaperPresentations: {
-            [gradient]: {
+            [remoteWallpaper]: {
                 composition: { focalX: 0.5, focalY: 0.5 },
                 readability: "balanced",
             },
@@ -368,7 +342,7 @@ Deno.test("Appearance store: anonymous local upload waits for IndexedDB commit a
     assertEquals(rendered.wallpaper, uploadedPng);
     await Promise.resolve();
     assertEquals(uploadSettled, false);
-    assertEquals(db.get("appearance:anonymous")?.wallpaper, gradient);
+    assertEquals(db.get("appearance:anonymous")?.wallpaper, remoteWallpaper);
 
     writeGate.resolve();
     await uploadPromise;
@@ -408,7 +382,7 @@ Deno.test("Appearance store: anonymous local upload waits for IndexedDB commit a
 });
 
 Deno.test("Appearance store: early update during slow IndexedDB hydration merges onto cached appearance and awaits write completion", async () => {
-    const gradient = "linear-gradient(135deg, #204060, #80a0c0)";
+    const remoteWallpaper = "https://example.com/wallpaper.jpg";
     const uploadedPng = "data:image/png;base64,aGVsbG8=";
     const readGate = Promise.withResolvers<unknown>();
     const writeGate = Promise.withResolvers<void>();
@@ -449,10 +423,10 @@ Deno.test("Appearance store: early update during slow IndexedDB hydration merges
         updateSettled = true;
     });
 
-    // Late readLocal resolves with an existing dark theme + old gradient.
+    // Late readLocal resolves with an existing dark theme + old remote wallpaper.
     readGate.resolve({
         theme: "dark",
-        wallpaper: gradient,
+        wallpaper: remoteWallpaper,
     });
     await Promise.resolve();
     await Promise.resolve();

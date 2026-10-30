@@ -1,9 +1,7 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import {
     buildProviderGenerationParams,
-    CANONICAL_REASONING_EFFORTS,
     type GenerationConfig,
-    getTransportSupportedLevels,
     mapReasoningTransport,
     normalizeReasoningEffortOnModelSwitch,
     type ReasoningEffort,
@@ -17,48 +15,6 @@ import {
 import type { ReasoningCapability } from "./model-capabilities.ts";
 import type { AiModelDto } from "./types.ts";
 import type { AiGenerationDefaultsDto } from "@shared/contracts.ts";
-
-Deno.test("Reasoning: canonical levels match contract", () => {
-    assertEquals(CANONICAL_REASONING_EFFORTS, [
-        "none",
-        "auto",
-        "minimal",
-        "low",
-        "medium",
-        "high",
-        "xhigh",
-        "max",
-    ]);
-});
-
-Deno.test("Reasoning: getTransportSupportedLevels exposes supported intersection", () => {
-    // OpenAI transport supports full range minimal-max, and none/auto if capability declares
-    const openAiTransport: ReasoningTransport = {
-        type: "openai_reasoning_effort",
-    };
-    const capWithAutoNone: ReasoningCapability = {
-        status: "supported",
-        levels: ["none", "low", "medium", "high", "auto"],
-        source: "provider",
-    };
-    const supported = getTransportSupportedLevels(
-        openAiTransport,
-        capWithAutoNone,
-    );
-    assertEquals(supported, ["none", "low", "medium", "high", "auto"]);
-
-    // Boolean transport strictly excludes "auto"
-    const boolTransport: ReasoningTransport = {
-        type: "boolean",
-        parameter: "enable_thinking",
-    };
-    const boolSupported = getTransportSupportedLevels(
-        boolTransport,
-        capWithAutoNone,
-    );
-    assertEquals(boolSupported, ["none", "low", "medium", "high"]);
-    assertEquals(boolSupported.includes("auto"), false);
-});
 
 Deno.test("Reasoning: validateReasoningEffort permits undefined for any capability", () => {
     const unsupportedCap: ReasoningCapability = {

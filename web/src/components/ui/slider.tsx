@@ -2,7 +2,6 @@ import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 import { cn } from "../../lib/utils.ts";
 
 export interface SliderProps extends SliderPrimitive.Root.Props {
-    getAriaLabel?: (index: number) => string;
     getAriaValueText?: (
         formattedValue: string,
         value: number,
@@ -17,7 +16,6 @@ function Slider(
         value,
         min = 0,
         max = 100,
-        getAriaLabel,
         getAriaValueText,
         ...props
     }: SliderProps,
@@ -56,9 +54,7 @@ function Slider(
                 {Array.from(
                     { length: thumbCount },
                     (_, index) => {
-                        const thumbLabel = getAriaLabel
-                            ? getAriaLabel(index)
-                            : thumbCount > 1 && ariaLabel
+                        const thumbLabel = thumbCount > 1 && ariaLabel
                             ? `${ariaLabel} (${
                                 index === 0
                                     ? "最小值"

@@ -3,7 +3,10 @@ import { createApp } from "../../app.ts";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
 import type { Envelope, UserDto } from "@shared/contracts.ts";
-import type { PersonalSearchDto } from "@shared/personal-search.ts";
+import {
+    PERSONAL_SEARCH_DEFAULT_LIMIT,
+    type PersonalSearchDto,
+} from "@shared/personal-search.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
 import { BookmarksService } from "../bookmarks/service.ts";
 import { DocumentsService } from "../documents/service.ts";
@@ -203,7 +206,7 @@ Deno.test("personal search includes apps inside folders and requires every term"
 Deno.test("personal search caps each group at limit and validates input", async () => {
     const t = await setup();
     try {
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < PERSONAL_SEARCH_DEFAULT_LIMIT + 1; i++) {
             await t.documents.create(t.owner.id, { body: `笔记 ${i} 清单` });
             await t.apps.createWebApp(t.owner.id, {
                 name: `清单应用 ${i}`,
@@ -217,8 +220,10 @@ Deno.test("personal search caps each group at limit and validates input", async 
             "清单应用 0",
             "清单应用 1",
         ]);
-        // Default limit applies without the parameter.
-        assertEquals((await groups(await t.search("q=清单"))).apps.length, 4);
+        // Without the parameter, each group is capped at the default limit.
+        const defaulted = await groups(await t.search("q=清单"));
+        assertEquals(defaulted.apps.length, PERSONAL_SEARCH_DEFAULT_LIMIT);
+        assertEquals(defaulted.documents.length, PERSONAL_SEARCH_DEFAULT_LIMIT);
 
         for (
             const bad of [

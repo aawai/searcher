@@ -30,9 +30,7 @@ export function formatWallpaperCss(source: string | null | undefined): string {
     }
     const parsed = parseWallpaperSource(trimmed);
     if (!parsed) return "none";
-    return parsed.type === "gradient"
-        ? parsed.value
-        : `url(${JSON.stringify(parsed.value)})`;
+    return `url(${JSON.stringify(parsed.value)})`;
 }
 
 export function WallpaperSurface({
@@ -45,11 +43,7 @@ export function WallpaperSurface({
     children,
 }: WallpaperSurfaceProps) {
     const wallpaperCss = formatWallpaperCss(source);
-    const substrate = wallpaperCss === "none"
-        ? "canvas"
-        : wallpaperCss.startsWith("url(")
-        ? "image"
-        : "gradient";
+    const substrate = wallpaperCss === "none" ? "canvas" : "image";
     const intent = presentation ?? DEFAULT_WALLPAPER_PRESENTATION;
     // Chosen once per mount; the canvas never shifts tone while shown.
     const [daypart] = useState(() => daypartOf(new Date()));

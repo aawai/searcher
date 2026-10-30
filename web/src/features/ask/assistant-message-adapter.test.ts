@@ -172,129 +172,67 @@ Deno.test("assistant-message-adapter: ExportedMessageRepository preserves assist
     }]);
 });
 
-Deno.test("assistant-message-adapter: satisfies ExportedMessageRepository canonical branch repository contract and branch switching", () => {
-    // Tree topology:
-    // u1 (root user) -> a1 (root assistant)
-    //                \-> u2a (branch A) -> a2a (branch A leaf)
-    //                \-> u2b (branch B) -> a2b (branch B leaf)
-    const treeDtos: AiMessageDto[] = [
+Deno.test("assistant-message-adapter: converted messages keep their DTO ids so sibling branches resolve", () => {
+    const base = {
+        conversationId: "c-1",
+        providerId: null,
+        modelId: null,
+        status: "complete" as const,
+        variantGroupId: null,
+        inputTokens: null,
+        outputTokens: null,
+    };
+    // u1 -> a1 -> { u2a, u2b }
+    const dtos: AiMessageDto[] = [
         {
+            ...base,
             id: "u1",
-            conversationId: "c-1",
             parentMessageId: null,
             role: "user",
-            content: "Initial question",
-            status: "complete",
-            providerId: null,
-            modelId: null,
-            variantGroupId: null,
-            inputTokens: null,
-            outputTokens: null,
+            content: "Q",
             createdAt: 100,
         },
         {
+            ...base,
             id: "a1",
-            conversationId: "c-1",
             parentMessageId: "u1",
             role: "assistant",
-            content: "First answer",
-            status: "complete",
+            content: "A",
+            createdAt: 200,
             providerId: "p1",
             modelId: "m1",
-            variantGroupId: null,
-            inputTokens: null,
-            outputTokens: null,
-            createdAt: 200,
         },
         {
+            ...base,
             id: "u2a",
-            conversationId: "c-1",
             parentMessageId: "a1",
             role: "user",
-            content: "Clarification A",
-            status: "complete",
-            providerId: null,
-            modelId: null,
-            variantGroupId: null,
-            inputTokens: null,
-            outputTokens: null,
+            content: "QA",
             createdAt: 300,
         },
         {
-            id: "a2a",
-            conversationId: "c-1",
-            parentMessageId: "u2a",
-            role: "assistant",
-            content: "Branch A Answer",
-            status: "complete",
-            providerId: "p1",
-            modelId: "m1",
-            variantGroupId: null,
-            inputTokens: null,
-            outputTokens: null,
-            createdAt: 400,
-        },
-        {
+            ...base,
             id: "u2b",
-            conversationId: "c-1",
             parentMessageId: "a1",
             role: "user",
-            content: "Clarification B",
-            status: "complete",
-            providerId: null,
-            modelId: null,
-            variantGroupId: null,
-            inputTokens: null,
-            outputTokens: null,
-            createdAt: 500,
-        },
-        {
-            id: "a2b",
-            conversationId: "c-1",
-            parentMessageId: "u2b",
-            role: "assistant",
-            content: "Branch B Answer",
-            status: "complete",
-            providerId: "p1",
-            modelId: "m1",
-            variantGroupId: null,
-            inputTokens: null,
-            outputTokens: null,
-            createdAt: 600,
+            content: "QB",
+            createdAt: 400,
         },
     ];
 
-    const branchItems = treeDtos.map((m) => ({
-        message: convertAiMessageToThreadMessageLike(m),
-        parentId: m.parentMessageId,
-    }));
+    for (const dto of dtos) {
+        assertEquals(convertAiMessageToThreadMessageLike(dto).id, dto.id);
+    }
 
-    // Ingest with headId pointing to Branch A
-    const branchRepo = new MessageRepository();
-    branchRepo.import(
-        ExportedMessageRepository.fromBranchableArray(branchItems, {
-            headId: "a2a",
-        }),
+    const repo = new MessageRepository();
+    repo.import(
+        ExportedMessageRepository.fromBranchableArray(
+            dtos.map((m) => ({
+                message: convertAiMessageToThreadMessageLike(m),
+                parentId: m.parentMessageId,
+            })),
+            { headId: "u2a" },
+        ),
     );
-
-    assertEquals(branchRepo.headId, "a2a");
-    assertEquals(branchRepo.getMessages().map((m) => m.id), [
-        "u1",
-        "a1",
-        "u2a",
-        "a2a",
-    ]);
-
-    // Switching branch to a2b selects Branch B path
-    branchRepo.switchToBranch("a2b");
-    assertEquals(branchRepo.headId, "a2b");
-    assertEquals(branchRepo.getMessages().map((m) => m.id), [
-        "u1",
-        "a1",
-        "u2b",
-        "a2b",
-    ]);
-
-    // Fork inspection confirms branches at the junction
-    assertEquals(branchRepo.getBranches("u2a"), ["u2a", "u2b"]);
+    assertEquals(repo.getBranches("u2a"), ["u2a", "u2b"]);
 });

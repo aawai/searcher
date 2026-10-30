@@ -1,10 +1,7 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import type { DatabaseSync } from "node:sqlite";
 import { type DatabaseStore, openDatabase } from "./database.ts";
-import {
-    HOME_NOTE_REFERENCE_GRID,
-    migrateHomeNoteCells,
-} from "./home-note-cells-migration.ts";
+import { migrateHomeNoteCells } from "./home-note-cells-migration.ts";
 
 type JournalEntry = { idx: number; tag: string };
 
@@ -99,13 +96,6 @@ function readLayouts(native: DatabaseSync): LayoutRow[] {
 Deno.test("home note cell migration converts pixels, resolves conflicts and leaves unknown notes for default placement", async () => {
     const store = await prepare();
     try {
-        // The reference grid is part of the frozen migration contract.
-        assertEquals(HOME_NOTE_REFERENCE_GRID.rows, 2);
-        assertEquals(
-            HOME_NOTE_REFERENCE_GRID.columns.map((column) => column.band),
-            ["left", "right"],
-        );
-
         assertEquals(await migrateHomeNoteCells(store), 4);
         await store.exclusiveNative((native) => {
             assertEquals(readLayouts(native), [
@@ -114,7 +104,7 @@ Deno.test("home note cell migration converts pixels, resolves conflicts and leav
                 { id: "l-left", band: "left", col: 0, row: 0, size: "s" },
                 { id: "l-none", band: null, col: null, row: null, size: "w" },
                 { id: "l-out", band: "left", col: 0, row: 1, size: "s" },
-                // A W needs two columns; this side only has one, so it is S.
+                // Only desktop rows convert; the tablet row keeps its pixel layout and no cell.
                 { id: "l-tablet", band: null, col: null, row: null, size: "w" },
                 { id: "l-wide", band: "right", col: 0, row: 1, size: "s" },
             ]);

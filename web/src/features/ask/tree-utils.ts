@@ -74,62 +74,6 @@ export function getActiveBranchMessages(
 }
 
 /**
- * Returns siblings of a given message (messages sharing the same parent and role).
- * Also handles variantGroupId for assistant message variants.
- */
-export function getMessageSiblings(
-    allMessages: readonly AiMessageDto[],
-    messageId: string,
-): {
-    siblings: AiMessageDto[];
-    currentIndex: number;
-    count: number;
-} {
-    const target = allMessages.find((m) => m.id === messageId);
-    if (!target) {
-        return { siblings: [], currentIndex: 0, count: 0 };
-    }
-
-    let siblings: AiMessageDto[] = [];
-    const hasAnyParent = allMessages.some(
-        (m) => m.parentMessageId !== null && m.parentMessageId !== undefined,
-    );
-
-    if (target.role === "assistant" && target.variantGroupId) {
-        siblings = allMessages.filter(
-            (m) =>
-                m.role === "assistant" &&
-                m.variantGroupId === target.variantGroupId,
-        );
-    } else if (
-        target.parentMessageId !== null && target.parentMessageId !== undefined
-    ) {
-        siblings = allMessages.filter(
-            (m) =>
-                m.parentMessageId === target.parentMessageId &&
-                m.role === target.role,
-        );
-    } else if (hasAnyParent && target.role === "user") {
-        // Root user messages created by editing the initial prompt
-        siblings = allMessages.filter(
-            (m) => !m.parentMessageId && m.role === "user",
-        );
-    } else {
-        siblings = [target];
-    }
-
-    // Sort siblings by createdAt ascending
-    siblings.sort((a, b) => a.createdAt - b.createdAt);
-
-    const currentIndex = siblings.findIndex((m) => m.id === messageId);
-    return {
-        siblings,
-        currentIndex: currentIndex >= 0 ? currentIndex : 0,
-        count: siblings.length,
-    };
-}
-
-/**
  * When switching from a message to its sibling, finds the descendant leaf
  * in that sibling's subtree to activate.
  */

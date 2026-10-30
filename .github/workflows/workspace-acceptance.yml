@@ -38,9 +38,15 @@ jobs:
                   web/e2e/workspace-matrix.test.ts
 
     workspace-e2e:
-        name: Full production Workspace E2E
+        name: Full production Workspace E2E (${{ matrix.shard }})
         runs-on: ubuntu-latest
         timeout-minutes: 60
+        strategy:
+            fail-fast: false
+            matrix:
+                shard:
+                    - workspace-a
+                    - workspace-b
         steps:
             - uses: actions/checkout@v4
             - uses: denoland/setup-deno@v2
@@ -49,12 +55,13 @@ jobs:
             - name: Install dependencies
               run: deno install
             - name: Verify E2E runner option contracts
+              if: matrix.shard == 'workspace-a'
               run: deno test -A scripts/e2e/
             - name: Install Chromium
               run: npx --yes playwright@1.56.1 install chromium
-            - name: Run full Workspace production E2E
+            - name: Run ${{ matrix.shard }} production E2E
               env:
-                  E2E_REPORT_DIR: artifacts/e2e/workspace
+                  E2E_REPORT_DIR: artifacts/e2e/${{ matrix.shard }}
                   DENO_JOBS: "2"
               run: |
                   mkdir -p "$E2E_REPORT_DIR"
@@ -62,12 +69,13 @@ jobs:
                   { deno --version; uname -a; lscpu; free -m; } \
                     | tee "$E2E_REPORT_DIR/environment.txt"
                   /usr/bin/time -v -o "$E2E_REPORT_DIR/resources.txt" \
-                    deno task test:workspace 2>&1 | tee "$E2E_REPORT_DIR/stdout.log"
-            - name: Upload Workspace E2E reports
+                    deno run -A scripts/e2e/run.ts ${{ matrix.shard }} --parallel \
+                    2>&1 | tee "$E2E_REPORT_DIR/stdout.log"
+            - name: Upload ${{ matrix.shard }} E2E reports
               if: always()
               uses: actions/upload-artifact@v4
               with:
-                  name: workspace-e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
-                  path: artifacts/e2e/workspace/
+                  name: ${{ matrix.shard }}-e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: artifacts/e2e/${{ matrix.shard }}/
                   retention-days: 14
                   if-no-files-found: warn

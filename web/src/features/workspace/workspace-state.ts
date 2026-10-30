@@ -1,6 +1,5 @@
 export type DocumentsRoute =
     | { view: "documents/root" }
-    | { view: "documents/create" }
     | { view: "documents/edit"; id: string };
 
 export type DocumentsScope =
@@ -49,10 +48,6 @@ export function areWorkspaceRoutesEqual(
     return true;
 }
 
-export function parentWorkspaceRoute(_route: WorkspaceRoute): WorkspaceRoute {
-    return { view: "documents/root" };
-}
-
 export function domainWorkspaceReducer(
     state: DomainWorkspaceState,
     action: DomainWorkspaceAction,
@@ -73,7 +68,7 @@ export function domainWorkspaceReducer(
             }
             return {
                 ...state,
-                route: parentWorkspaceRoute(state.route),
+                route: { view: "documents/root" },
                 stack: [],
             };
         }

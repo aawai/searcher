@@ -32,8 +32,11 @@ Documents 的执行分区选择器为 `documents-core`、`pagination-short`、
 `pagination-manual`、`pagination-consecutive`、`pagination-mixed`，通过
 `deno run -A scripts/e2e/run.ts <selector>` 运行；它们不是新的 affected 业务域。
 `documents-core` 排除四个分页入口；每个分页入口独占 fixture（HTTP 服务、
-内存数据库、资源目录、Browser 和 Context），串行观察 10 个场景。四片合计保留
-全部 40 个默认场景、原观察窗口、断言、视口和主题，不重复运行。
+内存数据库、资源目录、Browser 和 Context），串行观察 6 个场景：5 种视口
+（1440×900、1024×768、768×1024、390×844、1024×1552）× 默认动效，外加 1440×900
+的 reduced motion。版面不随亮 / 暗主题变化（主题只改颜色，对比度由
+`accent-contrast` 等测试负责），故不再按主题重复；`initial` 的 5 秒采样仅在
+`E2E_EVIDENCE_DIR` 证据模式下执行。四片合计 24 个场景，空闲观察窗与断言不变，不重复运行。
 `test:documents` 仍包含 core 与四片，full 仍执行全部文件的去重并集。
 
 Coverage CI 以 `documents-core` + 四个 `pagination-*` job 组成完整 Documents
@@ -129,11 +132,15 @@ affected 另记 `affectedPaths`、`base`、`mergeBase`、`selectedSuites`、`sel
 正常完成后关闭/删除；证据目录有意保留供调试，本地确认无需保留后手动删除对应运行目录，
 CI artifact 保留 14 天。不要把保留的证据目录误报为 fixture 资源泄漏。
 
-现有 Workspace CI 固定报告目录 `artifacts/e2e/workspace/`，另保存完整
+Workspace CI 拆为 `workspace-a` / `workspace-b` 两个并行 matrix job，各自以
+`deno run -A scripts/e2e/run.ts <shard> --parallel`、`DENO_JOBS=2` 运行；两片按
+各文件 JUnit 顶层用例耗时之和均衡（每片用例耗时和约 233s；本机 jobs=2 下 workspace-b 实测测试段 124s）。`workspace-b` 显式列出，
+`workspace-a` 取余集，保证两片并集等于 `workspace` 且不重复（`options.test.ts` 断言）。
+报告目录与 artifact 名携带 shard：`artifacts/e2e/<shard>/`，另保存完整
 `stdout.log` 与 `/usr/bin/time -v` 的资源统计。`upload-artifact@v4`
 在失败时也上传，保留 14 天；安装失败而未产生目录时给出
-warning，不替代根本失败。Workspace job id/name、Deno 2.9.7、60/10 分钟
-timeout 与 PR concurrency 保持不变；完整 CI 集合分工见
+warning，不替代根本失败。Deno 2.9.7、60/10 分钟 timeout 与 PR concurrency
+保持不变；job 名变为 `Full production Workspace E2E (<shard>)`。完整 CI 集合分工见
 [测试 · CI 覆盖](../../docs/testing.md#ci-覆盖)。
 
 ## 诊断

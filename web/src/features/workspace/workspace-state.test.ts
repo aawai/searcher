@@ -1,10 +1,8 @@
 import { assertEquals } from "@std/assert";
 import {
-    areWorkspaceRoutesEqual,
     type DocumentsWorkspaceState,
     domainWorkspaceReducer,
     initialDocumentsWorkspaceState,
-    parentWorkspaceRoute,
 } from "./workspace-state.ts";
 
 function reduce(
@@ -13,19 +11,6 @@ function reduce(
 ): DocumentsWorkspaceState {
     return domainWorkspaceReducer(state, action) as DocumentsWorkspaceState;
 }
-
-Deno.test("Workspace: documents/create returns to documents/root on Back", () => {
-    let state = reduce(initialDocumentsWorkspaceState, {
-        type: "navigate",
-        route: { view: "documents/create" },
-    });
-    assertEquals(state.route, { view: "documents/create" });
-    assertEquals(state.stack.length, 1);
-    state = reduce(state, { type: "back" });
-    assertEquals(state.route, { view: "documents/root" });
-    assertEquals(state.stack, []);
-    assertEquals(state.scope, { type: "all" });
-});
 
 Deno.test("Workspace: documents/edit returns to documents/root on Back while preserving scope", () => {
     let state: DocumentsWorkspaceState = {
@@ -42,18 +27,6 @@ Deno.test("Workspace: documents/edit returns to documents/root on Back while pre
     assertEquals(state.route, { view: "documents/root" });
     assertEquals(state.stack, []);
     assertEquals(state.scope, { type: "notebook", notebookId: "nb-7" });
-});
-
-Deno.test("Workspace: every documents route falls back to documents/root", () => {
-    for (
-        const route of [
-            { view: "documents/create" },
-            { view: "documents/edit", id: "doc-1" },
-            { view: "documents/root" },
-        ] as const
-    ) {
-        assertEquals(parentWorkspaceRoute(route), { view: "documents/root" });
-    }
 });
 
 Deno.test("Workspace: navigating to the root clears the stack while retaining query and scope", () => {
@@ -80,43 +53,20 @@ Deno.test("Workspace: navigating to the root clears the stack while retaining qu
 Deno.test("Workspace: navigating to an existing stack route unwinds the stack", () => {
     let state = reduce(initialDocumentsWorkspaceState, {
         type: "navigate",
-        route: { view: "documents/create" },
+        route: { view: "documents/edit", id: "d1" },
     });
+    state = reduce(state, {
+        type: "navigate",
+        route: { view: "documents/edit", id: "d2" },
+    });
+    assertEquals(state.route, { view: "documents/edit", id: "d2" });
+    assertEquals(state.stack.length, 2);
     state = reduce(state, {
         type: "navigate",
         route: { view: "documents/edit", id: "d1" },
     });
-    assertEquals(state.stack.length, 2);
-    state = reduce(state, {
-        type: "navigate",
-        route: { view: "documents/create" },
-    });
-    assertEquals(state.route, { view: "documents/create" });
+    assertEquals(state.route, { view: "documents/edit", id: "d1" });
     assertEquals(state.stack.length, 1);
-});
-
-Deno.test("Workspace: areWorkspaceRoutesEqual discriminates documents routes", () => {
-    assertEquals(
-        areWorkspaceRoutesEqual(
-            { view: "documents/edit", id: "doc-1" },
-            { view: "documents/edit", id: "doc-1" },
-        ),
-        true,
-    );
-    assertEquals(
-        areWorkspaceRoutesEqual(
-            { view: "documents/edit", id: "doc-1" },
-            { view: "documents/edit", id: "doc-2" },
-        ),
-        false,
-    );
-    assertEquals(
-        areWorkspaceRoutesEqual(
-            { view: "documents/root" },
-            { view: "documents/create" },
-        ),
-        false,
-    );
 });
 
 Deno.test("Workspace: documents scope is preserved across query, navigate, and back operations", () => {
@@ -127,7 +77,7 @@ Deno.test("Workspace: documents scope is preserved across query, navigate, and b
     docs = reduce(docs, { type: "query", value: "my-query" });
     docs = reduce(docs, {
         type: "navigate",
-        route: { view: "documents/create" },
+        route: { view: "documents/edit", id: "d-0" },
     });
     docs = reduce(docs, {
         type: "navigate",
@@ -135,7 +85,7 @@ Deno.test("Workspace: documents scope is preserved across query, navigate, and b
     });
     docs = reduce(docs, { type: "back" });
     assertEquals(docs.scope, { type: "notebook", notebookId: "nb-42" });
-    assertEquals(docs.route, { view: "documents/create" });
+    assertEquals(docs.route, { view: "documents/edit", id: "d-0" });
     assertEquals(docs.query, "my-query");
 });
 

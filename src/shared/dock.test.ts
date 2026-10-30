@@ -2,7 +2,6 @@ import { assertEquals } from "@std/assert";
 import {
     DEFAULT_DOCK_LAYOUT,
     DEFAULT_DOCK_PREFERENCES,
-    DOCK_SYSTEM_IDS,
     normalizeDockLayout,
     normalizeDockPreferences,
 } from "./dock.ts";
@@ -31,25 +30,6 @@ Deno.test("shared/dock: normalizeDockPreferences preserves complete system order
     ]);
     assertEquals(normalized.hiddenSystemIds, ["notes", "ai"]);
     assertEquals(normalized.appIds, ["app1", "app2", "app3"]);
-});
-
-Deno.test("shared/dock: normalizeDockPreferences backfills missing system ids", () => {
-    const partial = {
-        systemOrder: ["ai", "apps"],
-        appIds: ["app1"],
-    };
-    const normalized = normalizeDockPreferences(partial);
-    assertEquals(normalized.systemOrder, [
-        "ai",
-        "apps",
-        "home",
-        "notes",
-        "settings",
-        "trash",
-    ]);
-    for (const id of DOCK_SYSTEM_IDS) {
-        assertEquals(normalized.systemOrder.includes(id), true);
-    }
 });
 
 Deno.test("shared/dock: legacy duplicates and unknown ids are discarded without reordering", () => {

@@ -42,51 +42,6 @@ Deno.test("css-scanner - detects raw box-shadow", () => {
     assertEquals(shadowViolations[0].property, "box-shadow");
 });
 
-Deno.test("css-scanner - detects raw font-size", () => {
-    const css = `
-        .title {
-            font-size: 24px;
-        }
-        .subtitle {
-            font-size: 1.25rem;
-        }
-        .valid-title {
-            font-size: var(--font-page-title-size);
-        }
-        .inherited {
-            font-size: inherit;
-        }
-    `;
-    const violations = scanCssCode("web/src/features/title.css", css);
-    const fontViolations = violations.filter((v: { rule: string }) =>
-        v.rule === "raw-font-size"
-    );
-    assertEquals(fontViolations.length, 2);
-});
-
-Deno.test("css-scanner - detects raw border-radius", () => {
-    const css = `
-        .badge {
-            border-radius: 8px;
-        }
-        .pill {
-            border-radius: 999px;
-        }
-        .circle {
-            border-radius: 50%;
-        }
-        .token-radius {
-            border-radius: var(--radius);
-        }
-    `;
-    const violations = scanCssCode("web/src/features/badge.css", css);
-    const radiusViolations = violations.filter((v: { rule: string }) =>
-        v.rule === "raw-border-radius"
-    );
-    assertEquals(radiusViolations.length, 1);
-    assertEquals(radiusViolations[0].property, "border-radius");
-});
-
 Deno.test("css-scanner - detects raw spacing literals in presentation CSS", () => {
     const css = `
         .panel {
@@ -179,6 +134,7 @@ Deno.test("css-scanner - border-radius only accepts registered Tokens and Token 
         .ok { border-radius: var(--radius); }
         .inset { border-radius: calc(var(--control-radius) - 2px); }
         .sides { border-radius: var(--radius) var(--radius) 0 0; }
+        .circle { border-radius: 50%; }
         .unregistered { border-radius: var(--radius-card); }
         .scaled { border-radius: calc(56px * var(--radius)); }
         .raw { border-top-left-radius: 10px; }

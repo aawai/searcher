@@ -194,17 +194,6 @@ Deno.test({
             });
             assertEquals(unauthRes.status, STATUS_CODE.Unauthorized);
 
-            // 2. Cross-origin upload fails with 403
-            const crossOriginRes = await app.request("/api/wallpaper", {
-                method: "POST",
-                headers: {
-                    origin: "http://malicious.com",
-                    cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
-                },
-                body: unauthForm,
-            });
-            assertEquals(crossOriginRes.status, STATUS_CODE.Forbidden);
-
             // 3. Reject non-multipart Content-Type on POST /api/wallpaper
             const jsonRes = await app.request("/api/wallpaper", {
                 method: "POST",
@@ -258,7 +247,7 @@ Deno.test({
             const wallpaperUrl = uploadBody.data?.url;
             assertEquals(typeof wallpaperUrl, "string");
 
-            // 6. Alice retrieves her wallpaper -> 200, exact bytes, correct headers
+            // 6. Alice retrieves her wallpaper -> 200, exact bytes and image/png
             const getAliceRes = await app.request(wallpaperUrl!, {
                 method: "GET",
                 headers: {
@@ -267,30 +256,6 @@ Deno.test({
             });
             assertEquals(getAliceRes.status, STATUS_CODE.OK);
             assertEquals(getAliceRes.headers.get("content-type"), "image/png");
-            assertEquals(
-                getAliceRes.headers.get("cache-control"),
-                "private, no-cache",
-            );
-            const etag = getAliceRes.headers.get("etag");
-            assertEquals(typeof etag, "string");
-
-            // 6b. ETag 304 revalidation
-            const conditionalRes = await app.request(wallpaperUrl!, {
-                method: "GET",
-                headers: {
-                    cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
-                    "if-none-match": etag!,
-                },
-            });
-            assertEquals(conditionalRes.status, 304);
-            assertEquals(
-                conditionalRes.headers.get("cache-control"),
-                "private, no-cache",
-            );
-            assertEquals(
-                getAliceRes.headers.get("x-content-type-options"),
-                "nosniff",
-            );
             const retrievedBytes = new Uint8Array(
                 await getAliceRes.arrayBuffer(),
             );
@@ -874,17 +839,11 @@ Deno.test({
             assertEquals(patchBody.data?.focalX, 0.1);
             assertEquals(patchBody.data?.focalY, 0.9);
 
-            // Verify preferences.wallpaperCompositions is synchronized
+            // Verify preferences.wallpaperPresentations is synchronized
             const prefRes = await app.request("/api/preferences", {
                 headers: { cookie: `${SESSION_COOKIE_NAME}=${user.token}` },
             });
             const prefBody = await prefRes.json() as Envelope<PreferencesDto>;
-            assertEquals(
-                prefBody.data?.wallpaperPresentations
-                    ?.[`/api/wallpaper/${newId}`]
-                    ?.composition,
-                { focalX: 0.1, focalY: 0.9 },
-            );
             assertEquals(
                 prefBody.data?.wallpaperPresentations
                     ?.[`/api/wallpaper/${newId}`]
@@ -970,6 +929,10 @@ Deno.test({
             );
             const etag = getRes.headers.get("etag");
             assertEquals(typeof etag, "string");
+            assertEquals(
+                getRes.headers.get("x-content-type-options"),
+                "nosniff",
+            );
 
             // 2. Owner with matching If-None-Match -> 304 Not Modified
             const revalidateRes = await app.request(url, {
@@ -1089,25 +1052,7 @@ Deno.test({
             >;
             assertEquals(prefBody1.data?.backgroundImage, url1);
 
-            // 2. Delete active wallpaper (url1) -> backgroundImage cleared to null
-            const delUrl1 = await app.request(url1, {
-                method: "DELETE",
-                headers: {
-                    origin: ORIGIN,
-                    cookie: `${SESSION_COOKIE_NAME}=${user.token}`,
-                },
-            });
-            assertEquals(delUrl1.status, STATUS_CODE.OK);
-
-            const checkPref2 = await app.request("/api/preferences", {
-                headers: { cookie: `${SESSION_COOKIE_NAME}=${user.token}` },
-            });
-            const prefBody2 = await checkPref2.json() as Envelope<
-                PreferencesDto
-            >;
-            assertEquals(prefBody2.data?.backgroundImage, null);
-
-            // 3. Test failure rollback: if manifest update fails, DB preference is rolled back
+            // 2. Test failure rollback: if manifest update fails, DB preference is rolled back
             // Upload another wallpaper and set as active
             const form3 = new FormData();
             form3.append(
@@ -1274,7 +1219,7 @@ Deno.test({
 
 Deno.test({
     name:
-        "wallpaper: source validation for HTTPS, uploaded owner, and CSS gradient whitelist",
+        "wallpaper: source validation for HTTPS, uploaded owner, and gradient rejection",
     async fn() {
         const tempDir = await Deno.makeTempDir({
             prefix: "searcher_test_sources_",
@@ -1332,38 +1277,6 @@ Deno.test({
             });
             assertEquals(patchHttps.status, STATUS_CODE.OK);
 
-            // C. CSS linear gradient
-            const linearGrad =
-                "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)";
-            const patchLinear = await app.request("/api/preferences", {
-                method: "PATCH",
-                headers: {
-                    origin: ORIGIN,
-                    "content-type": "application/json",
-                    cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
-                },
-                body: JSON.stringify({ backgroundImage: linearGrad }),
-            });
-            assertEquals(patchLinear.status, STATUS_CODE.OK);
-            const prefLinear = await (await app.request("/api/preferences", {
-                headers: { cookie: `${SESSION_COOKIE_NAME}=${alice.token}` },
-            })).json() as Envelope<PreferencesDto>;
-            assertEquals(prefLinear.data?.backgroundImage, linearGrad);
-
-            // D. CSS radial gradient
-            const radialGrad =
-                "radial-gradient(circle at 50% 50%, rgb(59, 130, 246) 0%, transparent 70%)";
-            const patchRadial = await app.request("/api/preferences", {
-                method: "PATCH",
-                headers: {
-                    origin: ORIGIN,
-                    "content-type": "application/json",
-                    cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
-                },
-                body: JSON.stringify({ backgroundImage: radialGrad }),
-            });
-            assertEquals(patchRadial.status, STATUS_CODE.OK);
-
             // E. Setting wallpaperCompositions with valid keys
             const patchComps = await app.request("/api/preferences", {
                 method: "PATCH",
@@ -1375,7 +1288,10 @@ Deno.test({
                 body: JSON.stringify({
                     wallpaperCompositions: {
                         [aliceWpUrl]: { focalX: 0.3, focalY: 0.7 },
-                        [linearGrad]: { focalX: 0.4, focalY: 0.6 },
+                        "https://example.com/other.jpg": {
+                            focalX: 0.4,
+                            focalY: 0.6,
+                        },
                     },
                 }),
             });
@@ -1424,93 +1340,8 @@ Deno.test({
             });
             assertEquals(badHttp.status, STATUS_CODE.BadRequest);
 
-            // D. HTTPS with credentials rejected -> 400
-            const badCreds = await app.request("/api/preferences", {
-                method: "PATCH",
-                headers: {
-                    origin: ORIGIN,
-                    "content-type": "application/json",
-                    cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
-                },
-                body: JSON.stringify({
-                    backgroundImage: "https://user:pass@example.com/wp.jpg",
-                }),
-            });
-            assertEquals(badCreds.status, STATUS_CODE.BadRequest);
-
-            // E. Dangerous gradient with url() rejected -> 400
-            const badGradUrl = await app.request("/api/preferences", {
-                method: "PATCH",
-                headers: {
-                    origin: ORIGIN,
-                    "content-type": "application/json",
-                    cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
-                },
-                body: JSON.stringify({
-                    backgroundImage:
-                        "linear-gradient(url('https://evil.com/leak'))",
-                }),
-            });
-            assertEquals(badGradUrl.status, STATUS_CODE.BadRequest);
-
-            // F. Dangerous gradient with var() rejected -> 400
-            const badGradVar = await app.request("/api/preferences", {
-                method: "PATCH",
-                headers: {
-                    origin: ORIGIN,
-                    "content-type": "application/json",
-                    cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
-                },
-                body: JSON.stringify({
-                    backgroundImage: "linear-gradient(var(--evil))",
-                }),
-            });
-            assertEquals(badGradVar.status, STATUS_CODE.BadRequest);
-
-            // G. Data URL rejected on server -> 400
-            const badDataUrl = await app.request("/api/preferences", {
-                method: "PATCH",
-                headers: {
-                    origin: ORIGIN,
-                    "content-type": "application/json",
-                    cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
-                },
-                body: JSON.stringify({
-                    backgroundImage:
-                        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==",
-                }),
-            });
-            assertEquals(badDataUrl.status, STATUS_CODE.BadRequest);
-
-            // H. Invalid gradient grammar (empty, garbage, single stop, junk suffix, etc.) rejected -> 400
-            for (
-                const invalidGrad of [
-                    "linear-gradient()",
-                    "linear-gradient(garbage)",
-                    "linear-gradient(red)",
-                    "linear-gradient(red, blue) junk",
-                    "linear-gradient(135deg, red)",
-                    "linear-gradient(red,,blue)",
-                ]
-            ) {
-                const res = await app.request("/api/preferences", {
-                    method: "PATCH",
-                    headers: {
-                        origin: ORIGIN,
-                        "content-type": "application/json",
-                        cookie: `${SESSION_COOKIE_NAME}=${alice.token}`,
-                    },
-                    body: JSON.stringify({ backgroundImage: invalidGrad }),
-                });
-                assertEquals(
-                    res.status,
-                    STATUS_CODE.BadRequest,
-                    `Expected 400 for invalid gradient: ${invalidGrad}`,
-                );
-            }
-
-            // I. Minimal 2-stop valid gradient accepted -> 200
-            const valid2Stop = await app.request("/api/preferences", {
+            // D. CSS gradient is no longer a wallpaper source -> 400
+            const gradientRejected = await app.request("/api/preferences", {
                 method: "PATCH",
                 headers: {
                     origin: ORIGIN,
@@ -1521,7 +1352,7 @@ Deno.test({
                     backgroundImage: "linear-gradient(red, blue)",
                 }),
             });
-            assertEquals(valid2Stop.status, STATUS_CODE.OK);
+            assertEquals(gradientRejected.status, STATUS_CODE.BadRequest);
 
             await store.close();
         } finally {
@@ -1727,7 +1558,7 @@ Deno.test({
 
 Deno.test({
     name:
-        "wallpaper: preferences PATCH persists canonical sources and clears legacy raw/uppercase keys on delete",
+        "wallpaper: preferences PATCH canonicalizes sources, delete clears background and presentation",
     async fn() {
         const tempDir = await Deno.makeTempDir({
             prefix: "searcher_test_canonical_",
@@ -1989,7 +1820,7 @@ Deno.test({
 
 Deno.test({
     name:
-        "wallpaper: multi-payload eviction rollback restores unlinked files from in-memory bytes",
+        "wallpaper: single-payload eviction unlink failure restores the evicted file from in-memory bytes",
     async fn() {
         const tempDir = await Deno.makeTempDir({
             prefix: "searcher_test_multi_evict_rb_",

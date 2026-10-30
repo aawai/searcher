@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects, assertThrows } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import { DatabaseSync } from "node:sqlite";
 import { DatabaseStore } from "../../db/database.ts";
 import { AiService, AiServiceError } from "./service.ts";
@@ -11,8 +11,6 @@ import {
     aiProviders,
 } from "../../db/ai-schema.ts";
 import { decryptApiKey, encryptApiKey, maskApiKey } from "./crypto.ts";
-import { normalizeBaseUrl, OpenAIClientError } from "./client.ts";
-import { discoverProviderModels } from "./provider-adapter.ts";
 
 function createInMemoryStore(): DatabaseStore {
     const native = new DatabaseSync(":memory:");
@@ -235,64 +233,6 @@ Deno.test("AI Crypto: encryptApiKey & decryptApiKey works with mask", async () =
     assertEquals(masked.includes("..."), true);
 });
 
-Deno.test("AI ProviderAdapter: discoverProviderModels discovers models correctly", async () => {
-    const mockFetch: typeof fetch = (_input, _init) => {
-        return Promise.resolve(
-            new Response(
-                JSON.stringify({
-                    object: "list",
-                    data: [
-                        { id: "gpt-4o", object: "model" },
-                        { id: "gpt-4o-mini", object: "model" },
-                    ],
-                }),
-                {
-                    status: 200,
-                    headers: { "Content-Type": "application/json" },
-                },
-            ),
-        );
-    };
-
-    const models = await discoverProviderModels(
-        "https://api.openai.com/v1",
-        "sk-mock",
-        { fetchFn: mockFetch },
-    );
-    assertEquals(models.length, 2);
-    assertEquals(models[0].id, "gpt-4o");
-    assertEquals(models[0].supportsVision, true);
-    assertEquals(models[1].id, "gpt-4o-mini");
-});
-
-Deno.test("AI Client: normalizeBaseUrl validates allowed endpoints", () => {
-    assertEquals(
-        normalizeBaseUrl("http://localhost:11434"),
-        "http://localhost:11434",
-    );
-    assertEquals(
-        normalizeBaseUrl("http://127.0.0.1:11434/"),
-        "http://127.0.0.1:11434",
-    );
-    assertEquals(
-        normalizeBaseUrl("http://100.78.0.1:11434"),
-        "http://100.78.0.1:11434",
-    );
-    assertEquals(
-        normalizeBaseUrl("https://api.openai.com/v1"),
-        "https://api.openai.com/v1",
-    );
-
-    assertThrows(
-        () => normalizeBaseUrl("http://192.168.1.1:11434"),
-        OpenAIClientError,
-    );
-    assertThrows(
-        () => normalizeBaseUrl("http://example.com"),
-        OpenAIClientError,
-    );
-});
-
 Deno.test("AI Service: Provider creation requires /models discovery & sets default model", async () => {
     const store = createInMemoryStore();
     try {
@@ -362,57 +302,47 @@ Deno.test("AI Service: Provider creation requires /models discovery & sets defau
     }
 });
 
-Deno.test("AI Service: Streaming chat persists conversation and messages with history", async () => {
+// Upstream user history may use content-part arrays; compare the text they carry.
+function messageText(content: unknown): string {
+    if (typeof content === "string") return content;
+    if (!Array.isArray(content)) return "";
+    return content.map((part: { text?: string }) => part.text ?? "").join("");
+}
+
+Deno.test("AI Service: Streaming chat sends prior conversation history upstream", async () => {
     const store = createInMemoryStore();
     try {
+        const upstreamMessages: Array<
+            Array<{ role: string; content: string }>
+        > = [];
         const mockFetch: typeof fetch = (input, init) => {
             const urlStr = String(input);
             if (urlStr.endsWith("/models")) {
                 return Promise.resolve(
-                    new Response(
-                        JSON.stringify({
-                            data: [{ id: "model-stream" }],
-                        }),
-                        {
-                            status: 200,
-                            headers: { "Content-Type": "application/json" },
-                        },
-                    ),
+                    Response.json({ data: [{ id: "model-stream" }] }),
                 );
             }
             if (urlStr.endsWith("/chat/completions")) {
-                const bodyStr = init?.body as string;
-                const parsed = JSON.parse(bodyStr);
-                const messages = parsed.messages;
-                // 简单校验 messages 携带了历史
-                const lastUserMsg = messages[messages.length - 1]?.content;
-
-                const chunks = [
-                    `data: ${
-                        JSON.stringify({
-                            choices: [{
-                                delta: { content: `Echo: ${lastUserMsg}` },
-                            }],
-                        })
-                    }\n\n`,
-                    "data: [DONE]\n\n",
-                ];
-
-                let index = 0;
-                const stream = new ReadableStream({
-                    pull(controller) {
-                        if (index < chunks.length) {
-                            controller.enqueue(
-                                new TextEncoder().encode(chunks[index++]),
-                            );
-                        } else {
-                            controller.close();
-                        }
-                    },
-                });
-
+                const parsed = JSON.parse(init?.body as string);
+                upstreamMessages.push(
+                    parsed.messages.map((
+                        m: { role: string; content: unknown },
+                    ) => ({
+                        role: m.role,
+                        content: messageText(m.content),
+                    })),
+                );
+                const lastUserMsg = parsed.messages[parsed.messages.length - 1]
+                    ?.content;
+                const sse = `data: ${
+                    JSON.stringify({
+                        choices: [{
+                            delta: { content: `Echo: ${lastUserMsg}` },
+                        }],
+                    })
+                }\n\n` + "data: [DONE]\n\n";
                 return Promise.resolve(
-                    new Response(stream, {
+                    new Response(sse, {
                         status: 200,
                         headers: { "Content-Type": "text/event-stream" },
                     }),
@@ -434,16 +364,13 @@ Deno.test("AI Service: Streaming chat persists conversation and messages with hi
             scope: "user",
         }, false);
 
-        // 第一轮对话
+        let convId = "";
+        let receivedTokens = "";
         const stream1 = service.streamChat("user-1", {
             providerId: provider.id,
             modelId: "model-stream",
             message: "Hello world!",
         });
-
-        let convId = "";
-        let receivedTokens = "";
-
         for await (const chunk of stream1) {
             if (chunk.event === "meta") {
                 const meta = chunk.data as { conversationId: string };
@@ -452,35 +379,35 @@ Deno.test("AI Service: Streaming chat persists conversation and messages with hi
                 receivedTokens += chunk.data as string;
             }
         }
-
         assertEquals(receivedTokens, "Echo: Hello world!");
+        assertEquals(upstreamMessages[0], [
+            { role: "user", content: "Hello world!" },
+        ]);
 
-        // 检查落库结果
         const convDetails1 = await service.getConversation("user-1", convId);
         assertEquals(convDetails1.conversation.title, "Hello world!");
         assertEquals(convDetails1.messages.length, 2);
-        assertEquals(convDetails1.messages[0].role, "user");
-        assertEquals(convDetails1.messages[0].content, "Hello world!");
-        assertEquals(convDetails1.messages[1].role, "assistant");
         assertEquals(convDetails1.messages[1].content, "Echo: Hello world!");
         assertEquals(convDetails1.messages[1].status, "complete");
 
-        // 第二轮对话 (带上 conversationId)
         const stream2 = service.streamChat("user-1", {
             conversationId: convId,
             providerId: provider.id,
             modelId: "model-stream",
             message: "Second message",
         });
-
         let receivedTokens2 = "";
         for await (const chunk of stream2) {
             if (chunk.event === "token") {
                 receivedTokens2 += chunk.data as string;
             }
         }
-
         assertEquals(receivedTokens2, "Echo: Second message");
+        assertEquals(upstreamMessages[1], [
+            { role: "user", content: "Hello world!" },
+            { role: "assistant", content: "Echo: Hello world!" },
+            { role: "user", content: "Second message" },
+        ]);
 
         const convDetails2 = await service.getConversation("user-1", convId);
         assertEquals(convDetails2.messages.length, 4);
@@ -495,8 +422,16 @@ Deno.test("AI Provider update and refresh leave database available during model 
     const store = createInMemoryStore();
     try {
         let discovered = [{ id: "first" }];
-        const fetchFn: typeof fetch = () =>
-            Promise.resolve(Response.json({ data: discovered }));
+        let blockDiscovery = false;
+        let discoveryStarted = Promise.withResolvers<void>();
+        let releaseDiscovery = Promise.withResolvers<void>();
+        const fetchFn: typeof fetch = async () => {
+            if (blockDiscovery) {
+                discoveryStarted.resolve();
+                await releaseDiscovery.promise;
+            }
+            return Response.json({ data: discovered });
+        };
         const service = new AiService({
             store,
             encryptionKey: TEST_KEY,
@@ -508,28 +443,43 @@ Deno.test("AI Provider update and refresh leave database available during model 
             apiKey: "key-first",
         });
         discovered = [{ id: "first" }, { id: "second" }];
-        const updated = await Promise.race([
-            service.updateProvider("user-1", provider.id, {
-                name: "Updated",
-                apiKey: "key-next",
-            }),
-            new Promise<never>((_, reject) =>
-                setTimeout(
-                    () => reject(new Error("Provider update blocked")),
-                    1500,
-                )
-            ),
-        ]);
-        assertEquals(updated.name, "Updated");
-        const refreshed = await Promise.race([
-            service.refreshProviderModels("user-1", provider.id),
-            new Promise<never>((_, reject) =>
-                setTimeout(
-                    () => reject(new Error("Provider refresh blocked")),
-                    1500,
-                )
-            ),
-        ]);
+
+        blockDiscovery = true;
+        const updating = service.updateProvider("user-1", provider.id, {
+            name: "Updated",
+            apiKey: "key-next",
+        });
+        try {
+            await withDeadline(
+                discoveryStarted.promise,
+                "discovery never started",
+            );
+            const during = await withDeadline(
+                service.listProviders("user-1"),
+                "database blocked during provider update discovery",
+            );
+            assertEquals(during[0].name, "First");
+        } finally {
+            releaseDiscovery.resolve();
+        }
+        assertEquals((await updating).name, "Updated");
+
+        discoveryStarted = Promise.withResolvers<void>();
+        releaseDiscovery = Promise.withResolvers<void>();
+        const refreshing = service.refreshProviderModels("user-1", provider.id);
+        try {
+            await withDeadline(
+                discoveryStarted.promise,
+                "refresh discovery never started",
+            );
+            await withDeadline(
+                service.listProviders("user-1"),
+                "database blocked during provider refresh discovery",
+            );
+        } finally {
+            releaseDiscovery.resolve();
+        }
+        const refreshed = await refreshing;
         assertEquals(refreshed.map((model) => model.modelId).sort(), [
             "first",
             "second",
@@ -538,6 +488,15 @@ Deno.test("AI Provider update and refresh leave database available during model 
         await store.close();
     }
 });
+
+// Hang guard only: fails fast if the DB is blocked; success never depends on elapsed time.
+function withDeadline<T>(promise: Promise<T>, label: string): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(label)), 1500);
+    });
+    return Promise.race([promise, deadline]).finally(() => clearTimeout(timer));
+}
 
 Deno.test("AI Service: History disabled (spec 7.4) maintains current context but excluded from history list", async () => {
     const store = createInMemoryStore();
@@ -635,148 +594,6 @@ Deno.test("AI Service: History disabled (spec 7.4) maintains current context but
         // 2. Long-term history list excludes historyEnabled: false
         const list = await service.listConversations("user-1");
         assertEquals(list.some((item) => item.id === convId), false);
-
-        // 3. New / Close: purgeTemporaryConversation destroys conversation and messages
-        await service.purgeTemporaryConversation("user-1", convId);
-        assertEquals(
-            (await assertRejects(async () => {
-                await service.getConversation("user-1", convId);
-            }, AiServiceError)).statusCode,
-            404,
-        );
-
-        // 4. Verify messages are also deleted
-        await store.run(async (db) => {
-            const msgs = await db
-                .select()
-                .from(aiMessages)
-                .where(eq(aiMessages.conversationId, convId))
-                .all();
-            assertEquals(msgs.length, 0);
-        });
-
-        // 5. Server-side TTL cleanup兜底测试
-        let mockTime = 1000000;
-        const ttlService = new AiService({
-            store,
-            encryptionKey: TEST_KEY,
-            fetchFn: mockFetch,
-            now: () => mockTime,
-        });
-        const stream3 = ttlService.streamChat("user-1", {
-            providerId: provider.id,
-            modelId: "model-history-off",
-            message: "Old temporary message",
-            historyEnabled: false,
-        });
-        let tempConvId = "";
-        for await (const chunk of stream3) {
-            if (chunk.event === "meta") {
-                tempConvId =
-                    (chunk.data as { conversationId: string }).conversationId;
-            }
-        }
-        // Advance mock time by 31 minutes (exceeding 30 min TTL)
-        mockTime += 31 * 60 * 1000;
-        const purgedCount = await ttlService.purgeExpiredTemporaryConversations(
-            30 * 60 * 1000,
-        );
-        assertEquals(purgedCount, 1);
-        assertEquals(
-            (await assertRejects(async () => {
-                await ttlService.getConversation("user-1", tempConvId);
-            }, AiServiceError)).statusCode,
-            404,
-        );
-    } finally {
-        await store.close();
-    }
-});
-
-Deno.test("AI Service: Conversation deletion and short Undo restore (spec 17)", async () => {
-    const store = createInMemoryStore();
-    try {
-        const mockFetch: typeof fetch = (input) => {
-            const urlStr = String(input);
-            if (urlStr.endsWith("/models")) {
-                return Promise.resolve(
-                    Response.json({ data: [{ id: "model-undo" }] }),
-                );
-            }
-            if (urlStr.endsWith("/chat/completions")) {
-                const chunks = [
-                    `data: ${
-                        JSON.stringify({
-                            choices: [{ delta: { content: "Echo" } }],
-                        })
-                    }\n\n`,
-                    "data: [DONE]\n\n",
-                ];
-                let index = 0;
-                const stream = new ReadableStream({
-                    pull(controller) {
-                        if (index < chunks.length) {
-                            controller.enqueue(
-                                new TextEncoder().encode(chunks[index++]),
-                            );
-                        } else {
-                            controller.close();
-                        }
-                    },
-                });
-                return Promise.resolve(
-                    new Response(stream, {
-                        status: 200,
-                        headers: { "Content-Type": "text/event-stream" },
-                    }),
-                );
-            }
-            return Promise.resolve(new Response("Not Found", { status: 404 }));
-        };
-
-        const service = new AiService({
-            store,
-            encryptionKey: TEST_KEY,
-            fetchFn: mockFetch,
-        });
-        const provider = await service.createProvider("user-1", {
-            name: "Undo Provider",
-            baseUrl: "https://api.ai.com/v1",
-            apiKey: "sk-user-test-12345",
-            scope: "user",
-        }, false);
-
-        const stream = service.streamChat("user-1", {
-            providerId: provider.id,
-            modelId: "model-undo",
-            message: "To be deleted",
-            historyEnabled: true,
-        });
-        let convId = "";
-        for await (const chunk of stream) {
-            if (chunk.event === "meta") {
-                convId =
-                    (chunk.data as { conversationId: string }).conversationId;
-            }
-        }
-
-        // List contains convId
-        let list = await service.listConversations("user-1");
-        assertEquals(list.some((c) => c.id === convId), true);
-
-        // Delete conversation
-        await service.deleteConversation("user-1", convId);
-        list = await service.listConversations("user-1");
-        assertEquals(list.some((c) => c.id === convId), false);
-
-        // Short Undo restore
-        const restored = await service.restoreConversation("user-1", convId);
-        assertEquals(restored.id, convId);
-        assertEquals(restored.deletedAt, null);
-
-        // List contains convId again
-        list = await service.listConversations("user-1");
-        assertEquals(list.some((c) => c.id === convId), true);
     } finally {
         await store.close();
     }

@@ -42,9 +42,3 @@ export function defaultNoteLayout(): DocumentLayoutDto {
         updatedAt: 0,
     };
 }
-
-/** Band, column and row are one position: a cell exists only with all three. */
-export function hasSavedCell(note: HomeNoteItem): boolean {
-    return note.layout.band !== null && note.layout.col !== null &&
-        note.layout.row !== null;
-}

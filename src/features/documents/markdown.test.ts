@@ -60,11 +60,7 @@ Deno.test("documentPlainText - strips HTML tags safely", () => {
         `Hello <script>alert('xss')</script> world! <div class="box">Inside box</div>`;
     const plain = documentPlainText(md);
     // Raw HTML tags stripped, text content preserved without tags
-    assertEquals(plain.includes("<script>"), false);
-    assertEquals(plain.includes("</script>"), false);
-    assertEquals(plain.includes("<div"), false);
-    assertEquals(plain.includes("alert('xss')"), true);
-    assertEquals(plain.includes("Inside box"), true);
+    assertEquals(plain, "Hello alert('xss') world! Inside box");
 });
 
 Deno.test("documentPlainText - handles lists, blockquotes, tables, and code blocks", () => {
@@ -82,12 +78,10 @@ const answer = 42;
 \`\`\`
 `;
     const plain = documentPlainText(md);
-    assertEquals(plain.includes("Blockquote line"), true);
-    assertEquals(plain.includes("Item 1"), true);
-    assertEquals(plain.includes("Item 2"), true);
-    assertEquals(plain.includes("Cell 1"), true);
-    assertEquals(plain.includes("Cell 2"), true);
-    assertEquals(plain.includes("const answer = 42;"), true);
+    assertEquals(
+        plain,
+        "Blockquote line\nItem 1\nItem 2\nHeader A\nHeader B\nCell 1\nCell 2\nconst answer = 42;",
+    );
 });
 
 Deno.test("documentSnippet - normalizes whitespace and respects maxLength", () => {

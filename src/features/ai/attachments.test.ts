@@ -92,6 +92,27 @@ Deno.test("Attachments: validateAttachments rejects image with invalid magic byt
     );
 });
 
+Deno.test("Attachments: validateAttachments rejects image larger than 5 MiB", () => {
+    const pngBase64 =
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    assertThrows(
+        () =>
+            validateAttachments([
+                {
+                    id: "1",
+                    name: "big.png",
+                    type: "image",
+                    mimeType: "image/png",
+                    data: `data:image/png;base64,${
+                        btoa(atob(pngBase64) + "\0".repeat(6 * 1024 * 1024))
+                    }`,
+                },
+            ]),
+        AttachmentValidationError,
+        "图片附件 big.png 大小超过 5 MiB 上限",
+    );
+});
+
 Deno.test("Attachments: validateAttachments rejects mismatched declared vs detected MIME type", () => {
     assertThrows(
         () =>

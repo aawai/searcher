@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
-    MAX_REMOTE_OR_GRADIENT_PRESENTATIONS,
+    MAX_REMOTE_PRESENTATIONS,
     migrateLegacyWallpaperPresentation,
     normalizeWallpaperPresentation,
     normalizeWallpaperPresentations,
@@ -131,10 +131,6 @@ Deno.test("wallpaper-presentation: wallpaperPresentation lookup and defaults", (
             composition: { focalX: 0.1, focalY: 0.9 },
             readability: "quiet",
         },
-        "linear-gradient(to right, red, blue)": {
-            composition: { focalX: 0.2, focalY: 0.8 },
-            readability: "focus",
-        },
     };
 
     // 1. Empty / null / undefined -> canonical defaults
@@ -157,32 +153,14 @@ Deno.test("wallpaper-presentation: wallpaperPresentation lookup and defaults", (
         records["https://images.example.com/photo.jpg"],
     );
 
-    // 3. Gradient source always centers focal composition
-    const gradient = wallpaperPresentation(
-        "linear-gradient(to right, red, blue)",
-        records,
-    );
-    assertEquals(gradient.composition, { focalX: 0.5, focalY: 0.5 });
-    assertEquals(gradient.readability, "focus");
-
-    // 4. Unrecorded gradient defaults to canonical presentation with center focal point
-    const unrecordedGradient = wallpaperPresentation(
-        "linear-gradient(to bottom, #111, #222)",
-        records,
-    );
-    assertEquals(unrecordedGradient, {
-        ...DEFAULT_WALLPAPER_PRESENTATION,
-        composition: { focalX: 0.5, focalY: 0.5 },
-    });
-
-    // 5. Unrecorded remote source returns canonical defaults
+    // 3. Unrecorded remote source returns canonical defaults
     const unrecordedRemote = wallpaperPresentation(
         "https://example.com/unrecorded.jpg",
         records,
     );
     assertEquals(unrecordedRemote, DEFAULT_WALLPAPER_PRESENTATION);
 
-    // 6. Rejection of __base__, insecure http, and invalid data URLs
+    // 4. Rejection of __base__, insecure http, and invalid data URLs
     assertEquals(
         wallpaperPresentation("__base__", records),
         DEFAULT_WALLPAPER_PRESENTATION,
@@ -262,7 +240,7 @@ Deno.test("wallpaper-presentation: normalizeWallpaperPresentations migration and
         false,
     );
 
-    // 5. Retention: max 24 remote / gradient entries; current never evicted; uploaded excluded from quota
+    // 5. Retention: max 24 remote entries; current never evicted; uploaded excluded from quota
     const recordsToPrune: Record<string, WallpaperPresentation> = {};
     for (let i = 0; i < 30; i++) {
         recordsToPrune[`https://images.example.com/photo-${i}.jpg`] = {
@@ -301,7 +279,7 @@ Deno.test("wallpaper-presentation: normalizeWallpaperPresentations migration and
     const remainingRemotes = Object.keys(pruned).filter((k) =>
         k.startsWith("https://")
     );
-    assertEquals(remainingRemotes.length, MAX_REMOTE_OR_GRADIENT_PRESENTATIONS);
+    assertEquals(remainingRemotes.length, MAX_REMOTE_PRESENTATIONS);
 });
 
 Deno.test("wallpaper-presentation: touchWallpaperPresentation and purgeWallpaperPresentation", () => {

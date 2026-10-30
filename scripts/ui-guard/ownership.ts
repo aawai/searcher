@@ -56,13 +56,9 @@ export const GLOBAL_FEATURE_PREFIXES: readonly string[] = [
     "settings-",
     "workspace-",
     "apps-workspace-",
-    "notes-workspace-",
     "webapp-",
     "launcher-",
-    "widgets-",
-    "zen-",
     "dock-",
-    "window-frame-",
 ] as const;
 
 /**
@@ -224,16 +220,12 @@ export const CSS_PREFIX_OWNER_MAP: Record<string, readonly string[]> = {
     "inline-ai-": ["web/src/features/inline-ai/inline-ai.css"],
     "workspace-": ["web/src/features/workspace/workspace.css"],
     "apps-workspace-": [],
-    "notes-workspace-": ["web/src/features/workspace/notes-workspace.css"],
     "launcher-": ["web/src/components/searcher/launcher.css"],
     "webapp-": ["web/src/components/searcher/launcher.css"],
     "trash-": ["web/src/app/trash.css"],
-    "widgets-": ["web/src/features/home-layouts/home-layouts.css"],
-    "zen-": ["web/src/features/home-layouts/home-layouts.css"],
     "auth-": ["web/src/app/auth.css"],
     "design-lab-": ["web/src/design-lab/design-lab.css"],
     "dock-": ["web/src/features/dock/dock.css"],
-    "window-frame-": ["web/src/features/windowing/window-frame.css"],
 };
 
 /**
