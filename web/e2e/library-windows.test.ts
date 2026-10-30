@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import type { Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
+import { ensureSidebarOpen } from "./helpers/library.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 const APPS = '[data-window-id="apps"]';
@@ -14,6 +15,7 @@ async function box(page: Page, selector: string) {
 
 /** A new note opens immediately and is persisted after the first input. */
 async function createNote(page: Page, title: string) {
+    await ensureSidebarOpen(page);
     const frame = page.locator(NOTES);
     await frame.getByRole("button", { name: /^新建笔记(?:（|$)/ }).click();
     const created = page.waitForResponse((response) =>

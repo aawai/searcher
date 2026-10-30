@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import type { Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
+import { ensureSidebarOpen } from "./helpers/library.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 const NOTES = '[data-window-id="notes"]';
@@ -210,7 +211,7 @@ Deno.test("笔记窗口控件：抽屉模式的标题行按钮打开抽屉，关
             name: "笔记侧栏",
             exact: true,
         });
-        await frame.locator(".documents-layout[data-drawer='open']").waitFor();
+        await ensureSidebarOpen(page);
         await frame.getByRole("button", { name: "最近", exact: true }).click();
         await frame.getByRole("button", { name: /打开笔记：抽屉笔记/ }).click();
         await frame.locator(".documents-layout[data-drawer='closed']")
@@ -231,6 +232,12 @@ Deno.test("笔记窗口控件：抽屉模式的标题行按钮打开抽屉，关
         await page.keyboard.press("Escape");
         await frame.locator(".documents-layout[data-drawer='closed']")
             .waitFor();
+        await page.waitForFunction(() => {
+            const toggle = document.querySelector(
+                '[data-window-id="notes"] .document-editor-header button[aria-label="笔记侧栏"]',
+            );
+            return toggle === document.activeElement;
+        });
         assert(await toggle.evaluate((el) => el === document.activeElement));
 
         // Coarse pointers keep the visual size and reach the touch target through the hit area.
@@ -241,6 +248,7 @@ Deno.test("笔记窗口控件：抽屉模式的标题行按钮打开抽屉，关
         });
         const touchPage = await coarse.newPage();
         await loginAndVisit(touchPage, app.origin, "/?view=notes", user);
+        await ensureSidebarOpen(touchPage);
         const create = touchPage.locator(NOTES).locator(
             ".documents-notebooks-row",
         ).getByRole("button", { name: "新建笔记", exact: true });

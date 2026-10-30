@@ -287,7 +287,10 @@
 .documents-tree-row[data-dragging] {
     opacity: 0.4;
 }
+/* The preview trails the pointer by one row so the insertion line or the
+   highlighted target under the pointer stays visible. */
 .documents-tree-drag-overlay {
+    translate: var(--space-4) var(--control-compact-height);
     background: var(--surface-solid);
     box-shadow: var(--shadow-l2);
     padding-inline: var(--space-2);

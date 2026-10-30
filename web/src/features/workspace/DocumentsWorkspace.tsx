@@ -25,9 +25,12 @@ import {
     SIDEBAR_WIDTH,
     writeSidebarWidth,
 } from "../documents/device-preferences.ts";
-
+import { BREAKPOINTS } from "../../design-system/breakpoints.ts";
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
 import { WorkspaceActivity } from "./WorkspaceActivity.ts";
+
+/** A wider sidebar never leaves the editor narrower than at the persistent threshold. */
+const MIN_EDITOR_WIDTH = BREAKPOINTS.notesSidebar - SIDEBAR_WIDTH.default;
 function deviceStorage(): Storage | null {
     try {
         return globalThis.localStorage;
@@ -82,7 +85,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
     const effectiveSidebarWidth = effectivePaneWidth(
         sidebarWidth,
         hostWidth,
-        718,
+        MIN_EDITOR_WIDTH,
         SIDEBAR_WIDTH,
     );
     const [restoreDrawerFocus, setRestoreDrawerFocus] = useState(true);
@@ -287,7 +290,10 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                     max={hostWidth > 0
                         ? Math.max(
                             SIDEBAR_WIDTH.min,
-                            Math.min(SIDEBAR_WIDTH.max, hostWidth - 718),
+                            Math.min(
+                                SIDEBAR_WIDTH.max,
+                                hostWidth - MIN_EDITOR_WIDTH,
+                            ),
                         )
                         : SIDEBAR_WIDTH.max}
                     defaultValue={SIDEBAR_WIDTH.default}

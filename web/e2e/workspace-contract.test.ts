@@ -1,5 +1,10 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { libraryPanel, libraryWindow, openNotes } from "./helpers/library.ts";
+import {
+    ensureSidebarOpen,
+    libraryPanel,
+    libraryWindow,
+    openNotes,
+} from "./helpers/library.ts";
 import { type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { createApp } from "../../src/app.ts";
@@ -88,6 +93,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
     // Document rows and list states live in the flat 最近 list; the sidebar opens as a tree.
     async function showRecent() {
+        await ensureSidebarOpen(page);
         await getWorkspace().getByRole("button", { name: "最近", exact: true })
             .click();
     }

@@ -5,6 +5,7 @@ import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import {
     assertInteractiveHome,
     closeLibrary,
+    ensureSidebarOpen,
     libraryPanel,
     libraryView,
     libraryWindow,
@@ -210,6 +211,7 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                 async () => {
                     await page.goto(app.origin + "/");
                     await openNotes(page);
+                    await ensureSidebarOpen(page);
                     const notes = libraryWindow(page, "notes");
                     // Open document into editor
                     const noteCard = libraryPanel(page).locator(
@@ -303,6 +305,7 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                     async () => {
                         await page.goto(app.origin + "/");
                         await openNotes(page);
+                        await ensureSidebarOpen(page);
                         const notesBody = libraryBody(page, "notes");
                         const query = notesBody.getByRole(
                             "searchbox",

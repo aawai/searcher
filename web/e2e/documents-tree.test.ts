@@ -2,6 +2,7 @@ import { assert, assertEquals, assertMatch } from "@std/assert";
 import type { Locator, Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { ensureSidebarOpen } from "./helpers/library.ts";
 
 const NOTES = '[data-window-id="notes"]';
 
@@ -102,6 +103,7 @@ Deno.test("笔记本树：结构、键盘、懒加载、根目录与图钉标记
         await loginAndVisit(page, app.origin, "/", user);
         const ids = await seed(page, app.origin);
         await page.goto(app.origin + "/?view=notes");
+        await ensureSidebarOpen(page);
         const ui = sidebar(page);
         await ui.tree.waitFor();
 
@@ -252,6 +254,7 @@ Deno.test("笔记本树：根目录分页", async () => {
             assert(response.ok());
         }
         await page.goto(app.origin + "/?view=notes");
+        await ensureSidebarOpen(page);
         const ui = sidebar(page);
         await ui.item("根笔记25").waitFor();
         assertEquals(await ui.item(/^根笔记\d\d$/).count(), 20);
@@ -277,6 +280,7 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         await loginAndVisit(page, app.origin, "/", user);
         await seed(page, app.origin);
         await page.goto(app.origin + "/?view=notes");
+        await ensureSidebarOpen(page);
         const ui = sidebar(page);
         await ui.tree.waitFor();
         const menu = page.getByRole("menu");
@@ -534,8 +538,9 @@ Deno.test("笔记本树：触屏长按打开同一份菜单，松手不触发节
         await loginAndVisit(page, app.origin, "/", user);
         await seed(page, app.origin);
         await page.goto(app.origin + "/?view=notes");
+        await ensureSidebarOpen(page);
         const ui = sidebar(page);
-        await ui.tree.waitFor(); // the drawer is open without a selection
+        await ui.tree.waitFor();
         const session = await context.newCDPSession(page);
         const longPress = async (target: Locator) => {
             const box = (await target.boundingBox())!;

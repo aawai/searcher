@@ -21,6 +21,7 @@ import type {
 import { waitForDocument } from "./helpers/document-state.ts";
 import {
     closeLibrary,
+    ensureSidebarOpen,
     libraryPanel,
     libraryWindow,
     openNotes,
@@ -119,21 +120,8 @@ Deno.test("production documents library workspace contracts", async (t) => {
         await showRecentList();
     }
 
-    // Narrow windows restore the last note without opening the drawer; the
-    // persistent sidebar's own collapse button shares the trigger's name, so
-    // only a collapsed trigger (aria-expanded=false) is ever clicked.
-    async function ensureSidebarOpen() {
-        const sidebar = workspace().locator("#notes-sidebar");
-        const opener = workspace().locator(
-            'button[aria-controls="notes-sidebar"][aria-expanded="false"]',
-        );
-        await sidebar.or(opener).filter({ visible: true }).first().waitFor();
-        if (!(await sidebar.isVisible())) await opener.click();
-        await sidebar.waitFor({ state: "visible" });
-    }
-
     async function showRecentList() {
-        await ensureSidebarOpen();
+        await ensureSidebarOpen(page);
         await workspace().getByRole("button", { name: "最近", exact: true })
             .click();
         await workspace().locator("[data-sidebar-mode='list']").waitFor();
@@ -146,6 +134,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
     }
 
     async function backToLibrary() {
+        await ensureSidebarOpen(page);
         await workspace().locator("input[data-workspace-search]:visible")
             .waitFor({ state: "visible" });
     }
@@ -589,6 +578,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             );
             await visit("/");
             await openNotes(page);
+            await ensureSidebarOpen(page);
             const panel = workspace();
             const create = panel.getByRole("button", {
                 name: "新建笔记",
@@ -1057,7 +1047,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                         },
                         vp.width,
                     );
-                    await ensureSidebarOpen();
+                    await ensureSidebarOpen(page);
                     const label = `${vp.width}x${vp.height} ${scheme}`;
 
                     // Header stays inside the viewport

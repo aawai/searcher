@@ -1086,9 +1086,20 @@ export function DocumentsSidebar({
                                             target,
                                             zone,
                                         );
-                                        if (result.valid) {
-                                            void moveTreeItem(result);
+                                        if (!result.valid) return;
+                                        // The moved item stays in view: its
+                                        // destination notebook opens.
+                                        const destination =
+                                            result.kind === "note"
+                                                ? result.notebookId
+                                                : result.parentId;
+                                        if (destination !== null) {
+                                            setExpanded(
+                                                notebookKey(destination),
+                                                true,
+                                            );
                                         }
+                                        void moveTreeItem(result);
                                     }}
                                     onDragHoverExpand={(entry) => {
                                         if (

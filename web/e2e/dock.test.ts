@@ -3,7 +3,11 @@ import { eq } from "drizzle-orm";
 import type { BrowserContext, Locator, Page } from "playwright";
 import { users } from "../../src/db/schema.ts";
 import { chromium } from "./helpers/browser.ts";
-import { closeLibrary, libraryWindow } from "./helpers/library.ts";
+import {
+    closeLibrary,
+    ensureSidebarOpen,
+    libraryWindow,
+} from "./helpers/library.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 function dockNav(page: Page): Locator {
@@ -1821,6 +1825,7 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                     `${width}x${height} notes window`,
                 );
 
+                await ensureSidebarOpen(page);
                 await libraryWindow(page, "notes").getByRole("button", {
                     name: "最近",
                     exact: true,
@@ -1849,6 +1854,7 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
             for (const edge of ["left", "right"] as const) {
                 await setDockEdge(edge);
                 await dockSystemButton(page, "笔记").click();
+                await ensureSidebarOpen(page);
                 await libraryWindow(page, "notes").getByRole("button", {
                     name: "最近",
                     exact: true,

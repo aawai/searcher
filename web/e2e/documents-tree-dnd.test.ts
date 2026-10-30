@@ -2,6 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import type { Locator, Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { ensureSidebarOpen } from "./helpers/library.ts";
 
 const NOTES = '[data-window-id="notes"]';
 
@@ -76,6 +77,7 @@ Deno.test("笔记本树拖拽：笔记排序、跨笔记本移动、取消与失
         await loginAndVisit(page, app.origin, "/", user);
         const ids = await seed(page, app.origin);
         await page.goto(app.origin + "/?view=notes");
+        await ensureSidebarOpen(page);
         const ui = tree(page);
         await ui.item("根一").waitFor();
         await ui.item("甲").click();
@@ -105,6 +107,7 @@ Deno.test("笔记本树拖拽：笔记排序、跨笔记本移动、取消与失
             return labels.indexOf("甲一") < labels.indexOf("甲二");
         });
         await page.reload();
+        await ensureSidebarOpen(page);
         await ui.item("甲").waitFor();
         if (await ui.item("甲").getAttribute("aria-expanded") !== "true") {
             await ui.item("甲").click();
@@ -187,6 +190,7 @@ Deno.test("笔记本树拖拽：笔记本层级、非法落点与键盘移动", 
         await loginAndVisit(page, app.origin, "/", user);
         const ids = await seed(page, app.origin);
         await page.goto(app.origin + "/?view=notes");
+        await ensureSidebarOpen(page);
         const ui = tree(page);
         await ui.item("根一").waitFor();
         await ui.item("甲").click();
@@ -277,6 +281,7 @@ Deno.test("笔记本树拖拽：触屏长按后移动笔记", async () => {
         await loginAndVisit(page, app.origin, "/", user);
         const ids = await seed(page, app.origin);
         await page.goto(app.origin + "/?view=notes");
+        await ensureSidebarOpen(page);
         const ui = tree(page);
         await ui.item("根一").waitFor();
         const session = await context.newCDPSession(page);
@@ -346,6 +351,7 @@ Deno.test("笔记本树拖拽：触屏快速滑动节点滚动侧栏而不拖拽
             assert(response.ok());
         }
         await page.goto(app.origin + "/?view=notes");
+        await ensureSidebarOpen(page);
         const ui = tree(page);
         await ui.item("滑动笔记本0").waitFor();
         const scroll = ui.frame.locator(".documents-sidebar > nav");
@@ -408,6 +414,7 @@ Deno.test("笔记本树拖拽：同级重排、跨父级插入及编辑中移动
         );
         assert(extra.ok());
         await page.goto(app.origin + "/?view=notes");
+        await ensureSidebarOpen(page);
         const ui = tree(page);
         await ui.item("根一").waitFor();
         const reorder = page.waitForResponse((response) =>
@@ -449,9 +456,9 @@ Deno.test("笔记本树拖拽：同级重排、跨父级插入及编辑中移动
         );
         await page.mouse.up();
         assert((await nest).ok());
-        if (await ui.item("乙").getAttribute("aria-expanded") !== "true") {
-            await ui.item("乙").click();
-        }
+        // A drop opens its destination notebook so the moved item stays visible.
+        await ui.item("乙").and(page.locator('[aria-expanded="true"]'))
+            .waitFor();
         await ui.item("丙").waitFor();
         await ui.item("甲").click();
         await ui.item("甲子").waitFor();
