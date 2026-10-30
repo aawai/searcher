@@ -154,7 +154,7 @@
     pointer-events: none;
 }
 
-@media (any-pointer: coarse) {
+@media (any-pointer: coarse), (max-width: 639px) {
     .document-editor-status-bar {
         block-size: var(--control-touch-target);
     }
@@ -178,12 +178,22 @@
     min-height: var(--control-compact-height);
 }
 
-/* Mode trigger: the icon of the current mode; compact so the status bar stays slim. */
-[data-slot="button"].document-mode-trigger {
+/* Mode trigger: the icon of the current mode, exactly as tall as the status row
+   so it never extends the editor's scroll range. */
+.document-editor-status-bar .document-mode-trigger {
     width: var(--control-compact-height);
     min-width: var(--control-compact-height);
     height: var(--control-compact-height);
     min-height: var(--control-compact-height);
+}
+
+@media (any-pointer: coarse), (max-width: 639px) {
+    .document-editor-status-bar .document-mode-trigger {
+        width: var(--control-touch-target);
+        min-width: var(--control-touch-target);
+        height: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+    }
 }
 
 /* Toolbar container: the toolbar plus the collapse chevron at its first row's end. */
