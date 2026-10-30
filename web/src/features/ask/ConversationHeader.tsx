@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { ArrowLeft, Menu, MoreHorizontal, Pencil, Search } from "lucide-react";
-import { usePageHost } from "../../app/page-host.tsx";
-import { routes } from "../../app/routes.ts";
-import { Button, buttonVariants } from "../../components/ui/button.tsx";
+import { Menu, MoreHorizontal, Pencil, Search } from "lucide-react";
+import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -47,7 +45,6 @@ export function ConversationHeader({
     newConversationInstruction = null,
     platform,
 }: ConversationHeaderProps) {
-    const { Link } = usePageHost();
     const [renameOpen, setRenameOpen] = useState(false);
     const [instructionOpen, setInstructionOpen] = useState(false);
 
@@ -96,18 +93,6 @@ export function ConversationHeader({
     return (
         <header className="ask-header" aria-label="对话标题与操作">
             <div className="ask-header__left">
-                <Link
-                    to={routes.home}
-                    aria-label="返回首页"
-                    data-slot="button"
-                    className={buttonVariants({
-                        variant: "ghost",
-                        size: "icon",
-                        className: "ask-header__home",
-                    })}
-                >
-                    <ArrowLeft size="1em" className="icon-md" />
-                </Link>
                 <Button
                     variant="ghost"
                     size="icon"

@@ -10,7 +10,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
     AlertCircle,
     ArrowDown,
@@ -250,7 +250,6 @@ export function WorkspaceDock(
 ): ReactNode {
     const { user, appearance } = useAppState();
     const location = useLocation();
-    const navigate = useNavigate();
     const windowManager = useWindowManager();
     const {
         preferences,
@@ -577,13 +576,10 @@ export function WorkspaceDock(
     const handleSystemNavigate = useCallback((id: DockSystemId) => {
         if (id === "home") {
             windowManager?.showDesktop();
-        } else if (id === "ai") {
-            if (location.pathname.startsWith("/ask")) return;
-            navigate(routes.ask, { viewTransition: true });
         } else {
             windowManager?.open(id);
         }
-    }, [location.pathname, navigate, windowManager]);
+    }, [windowManager]);
 
     // App open handler
     const handleOpenApp = useCallback(
@@ -986,11 +982,7 @@ export function WorkspaceDock(
                                                     icon={config.icon}
                                                     isActive={activeSystemId ===
                                                         id}
-                                                    windowStatus={id ===
-                                                                "apps" ||
-                                                            id === "notes" ||
-                                                            id === "settings" ||
-                                                            id === "trash"
+                                                    windowStatus={id !== "home"
                                                         ? windowManager?.windows
                                                             .find((item) =>
                                                                 item.id === id
@@ -1348,11 +1340,12 @@ export function WorkspaceDock(
                             ? windowManager.windows.map((item) => {
                                 const label = DOCK_SYSTEM_ITEMS[item.id].label;
                                 const status =
-                                    windowManager.activeId === item.id
+                                    (windowManager.activeId === item.id
                                         ? "当前窗口"
                                         : item.status === "minimized"
                                         ? "已最小化"
-                                        : "已打开";
+                                        : "已打开") +
+                                    (item.busy ? "，正在生成" : "");
                                 return (
                                     <div
                                         className="dock-window-row"

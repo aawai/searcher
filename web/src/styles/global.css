@@ -100,15 +100,6 @@ a {
     background: var(--surface-l0);
     opacity: var(--wallpaper-mask);
 }
-.app-shell[data-ask] .wallpaper-surface::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: var(--elevation-local-3);
-    background: var(--canvas-derived);
-    -webkit-backdrop-filter: var(--canvas-derived-filter);
-    backdrop-filter: var(--canvas-derived-filter);
-}
 .topbar {
     height: 56px;
     display: flex;

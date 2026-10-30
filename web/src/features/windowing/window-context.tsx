@@ -1,10 +1,12 @@
 import { createContext, useContext } from "react";
 
-export type WindowId = "apps" | "notes" | "settings" | "trash";
+export type WindowId = "apps" | "notes" | "ai" | "settings" | "trash";
 
 export interface WindowItem {
     id: WindowId;
     status: "visible" | "minimized";
+    /** The window is working in the background, for example generating an answer. */
+    busy: boolean;
 }
 
 /** Returns true when it takes over closing (for example to ask first). */
@@ -28,6 +30,8 @@ export interface WindowManager {
     registerCloseGuard: (id: WindowId, guard: CloseGuard) => () => void;
     /** The desktop owner picks where focus lands when a library window leaves. */
     registerDesktopFocus: (target: () => HTMLElement | null) => () => void;
+    /** A window reports ongoing work so the window list can show it. */
+    setBusy: (id: WindowId, busy: boolean) => void;
 }
 
 export const WindowManagerContext = createContext<WindowManager | null>(null);

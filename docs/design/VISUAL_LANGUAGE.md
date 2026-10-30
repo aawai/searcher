@@ -19,7 +19,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 前提（使用频率，由高到低）：搜索 / 输入网址 → 打开常用应用 → 查看与勾选固定到首页的笔记 → 写或找笔记、问 AI → 设置、回收站、管理。频率决定距离；前提变化时先修订本节。
 
 1. **输入即意图。** 用户在统一输入框里键入的内容决定去向，不要求先选模式。归属：统一输入框（#237）、捕获入口（#238）。
-2. **只有一个场景。** 首页就是桌面。应用、笔记、设置 / 账户与回收站是叠在首页上的桌面窗口，AI 问答仍是独立页面；不另建第二张桌面或资料库总览。首页应用库顺序与任务栏固定顺序相互独立。
+2. **只有一个场景。** 首页就是桌面。应用、笔记、AI 问答、设置 / 账户与回收站是叠在首页上的桌面窗口；不另建第二张桌面或资料库总览。首页应用库顺序与任务栏固定顺序相互独立。
 3. **频率决定距离。** 高频内容在首页表面；登录用户通过任务栏进入首页、全部应用、全部笔记、AI 问答、设置与回收站。首页只显示固定子集，应用与笔记窗口保留全部对象；账户、设置与回收站也可由头像菜单进入。
 4. **一套材质。** 壁纸是画布；首页物体（搜索框、应用底板、固定到首页的笔记）同为 Material，菜单与建议等浮层为 Floating，承载阅读与编辑的叠层（窗口、侧栏、Sheet、对话框）为 Overlay 实色，内容页为实色；不引入单独的拟物材质。归属：#285 Y3、Y4。
 5. **一套网格。** 首页物体吸附同一网格，共用中轴与断点；拖动整理在网格上进行，物体之间不叠放。归属：#285 Y2、Y3。
@@ -124,7 +124,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 - 间距：4 的倍数，`--space-1`…`--space-10` = 4/8/12/16/20/24/32/36/48/64；`--space-half`（2）只用于分段控件内衬等紧贴间隙，`--space-hairline`（1）只用于共享表面的网格分隔线。
 - 圆角按层级同心：`--control-radius` 8（按钮、输入、分段控件）·`--radius` 12（分组列表、卡片、菜单）·`--radius-lg` 16（对话框、窗口、Sheet、搜索框）·`--radius-pill`（徽标）。应用图标使用 `launcher.css` 的 `--radius-launcher-icon`（约 23% 边长的圆角方形）；复选框与行内代码用 `--radius-sm` 4。其余专用角色与别名见下表。
 - 控件高度：`--control-height` 36、`--control-compact-height` 28、粗指针命中区 `--control-touch-target` 44；列表行最小高度 `--row-min-height` 44。
-- 窗口尺寸：`--window-apps-width/height`（640×640）、`--window-notes-width/height`（960×720）、`--window-settings-width/height`、`--window-trash-width/height` 为 1440×900 下的桌面初始矩形，见 [C1 / C2](#c1设置与回收站窗口)；`--workspace-width`（400）只作为提示与菜单文本的宽度上限。
+- 窗口尺寸：`--window-apps-width/height`（640×640）、`--window-notes-width/height`（960×720）、`--window-ai-width/height`（960×720）、`--window-settings-width/height`、`--window-trash-width/height` 为 1440×900 下的桌面初始矩形，见 [C1 / C2 / C3](#c1设置与回收站窗口)；`--workspace-width`（400）只作为提示与菜单文本的宽度上限。
 - 图标：`--icon-sm/md/lg` = 14/16/20，Lucide 默认描边。
 
 **圆角阶梯登记。** `border-radius` 只能引用本表的 Token，或 `0`、`999px`、`50%`、`inherit`；允许 `calc(<登记 Token> ± Npx)` 表达同心内缩，其他 `calc()` 不允许。名称为 `--radius`、`--radius-*` 或 `--*-radius` 的 Token 必须登记于此，在哪个 CSS 文件定义都一样。别名与其目标同值，新代码优先使用目标 Token。
@@ -311,9 +311,9 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 ### 材质与画布原则
 
-**材质只出现在壁纸之上。** 搜索框、应用底板与首页笔记使用 Material；菜单、Popover、建议列表及悬浮任务栏使用 Floating 厚材质，消费全局玻璃档位。应用 / 笔记窗口承载阅读与编辑，使用 Overlay 实色，不改变首页壁纸。AI 页任务栏使用实色回退，避免在实色内容页额外透出内容。
+**材质只出现在壁纸之上。** 搜索框、应用底板与首页笔记使用 Material；菜单、Popover、建议列表及悬浮任务栏使用 Floating 厚材质，消费全局玻璃档位。应用 / 笔记 / AI 窗口承载阅读、编辑与对话，使用 Overlay 实色，不改变首页壁纸；任务栏在所有窗口之上保持 Floating 材质。
 
-**设置等页面可以使用壁纸派生画布，内容层仍为实色。** 壁纸派生画布是同一张壁纸（或默认 mesh 画布）经 `--canvas-derived-filter` 模糊、再盖一层 `--canvas-derived`（`--background` 按 `--canvas-derived-mix` 混合，浅色 94%、深色 84%）后的画布，允许设置、账户、管理等独立页面使用；C1 的 AI 独立覆盖页也使用该画布，避免文字直接落在任意壁纸上。分组列表、表格、面板、对话框等内容层保持实色（`--surface` / `--surface-l3`），不得改为材质。直接放在派生画布上的文字（页面标题、分组标题与脚注）按正文要求：`--foreground` 与 `--muted` 在深 / 浅照片极值与饱和色背景上均 ≥ 4.5:1，由 `design-system/glass-contrast.test.ts` 检验，低于下限的混合比例不得合入。`prefers-reduced-transparency: reduce` 或不支持 `backdrop-filter` 时派生画布为实色 `--background`。
+**设置等页面可以使用壁纸派生画布，内容层仍为实色。** 壁纸派生画布是同一张壁纸（或默认 mesh 画布）经 `--canvas-derived-filter` 模糊、再盖一层 `--canvas-derived`（`--background` 按 `--canvas-derived-mix` 混合，浅色 94%、深色 84%）后的画布，允许设置、账户、管理等独立页面使用，避免文字直接落在任意壁纸上；目前没有页面使用它（登录用户的设置、账户、AI 与回收站均是实色窗口）。分组列表、表格、面板、对话框等内容层保持实色（`--surface` / `--surface-l3`），不得改为材质。直接放在派生画布上的文字（页面标题、分组标题与脚注）按正文要求：`--foreground` 与 `--muted` 在深 / 浅照片极值与饱和色背景上均 ≥ 4.5:1，由 `design-system/glass-contrast.test.ts` 检验，低于下限的混合比例不得合入。`prefers-reduced-transparency: reduce` 或不支持 `backdrop-filter` 时派生画布为实色 `--background`。
 
 ### 玻璃效果
 
@@ -440,13 +440,13 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 ## C1：设置与回收站窗口
 
-登录用户的设置 / 账户与回收站是非模态窗口，首页仍为唯一桌面；应用与笔记自 C2 起同样是窗口（见下节），AI 保留独立页。窗口消费 Overlay 实色 `--surface-l3` 与 `--shadow-l3`，MRU 通过同层 DOM 顺序置顶，窗口层使用 `--elevation-workspace`，任务栏及真正模态、菜单和提示继续消费各自全局层级。背景窗口不进入 Tab 顺序，首个指针操作同时激活和作用于目标；设置与回收站不响应窗口层 Escape。
+登录用户的设置 / 账户与回收站是非模态窗口，首页仍为唯一桌面；应用与笔记自 C2、AI 自 C3 起同样是窗口（见下节）。窗口消费 Overlay 实色 `--surface-l3` 与 `--shadow-l3`，MRU 通过同层 DOM 顺序置顶，窗口层使用 `--elevation-workspace`，任务栏及真正模态、菜单和提示继续消费各自全局层级。背景窗口不进入 Tab 顺序，首个指针操作同时激活和作用于目标；设置、回收站与 AI 不响应窗口层 Escape。
 
 `tokens.css` 拥有 `--window-settings-width/height`（840×680）、`--window-trash-width/height`（880×640）和 `--window-min-width/height`（320×240），以及工作区边距 `--window-margin`：默认 `--space-4`（16px），<768px 为 0（窗口贴边，1px 边框），高度 ≤480px 且宽度 ≥768px 为 `--space-1`（4px），四边均适用，含任务栏 / 悬浮球一侧，工作区从可见连接提示条下沿开始。标题操作消费 `--control-touch-target`，键盘步长消费 `--space-4`，Shift 微调消费 `--space-1`。`features/windowing/WindowFrame.tsx` 是几何 owner：按实测任务栏 / 悬浮球、安全区和视口投影普通矩形，保存矩形不因临时夹取而改写；<1024px 或空间不足时为单活动大窗口，此时标题栏只有窗口列表、最小化与关闭，操作菜单“⋯”仅在自由窗口生效时出现。Host 实测宽度决定设置与回收站的紧凑布局。精细指针可拖动边角；触屏通过窗口菜单选择边角后拖动标题栏，抬起提交、系统取消触摸还原，操作栏的取消 / 完成按钮使用共享 Button 和 44px 命中区。键盘调整可提交或撤销，且不截取编辑控件按键。
 
 `scripts/ui-guard/exceptions.ts` 只允许生产 `WindowFrame.tsx` 将运行时投影 `rect.x`、`rect.y`、`rect.width`、`rect.height` 分别用于 `left`、`top`、`width`、`height`；其他 owner、静态值及属性错配不豁免。以真实 Host、四边任务栏、悬浮球、窗口尺寸变化和键盘操作验证；实验原型不是生产验收证据。
 
-当前混合状态（仅 AI 仍为独立页）的导航、恢复与保护规则见 [首页与桌面](../workspace.md#当前混合状态)；访客设置继续使用独立页。
+窗口的导航、恢复与保护规则见 [首页与桌面 · 窗口系统](../workspace.md#窗口系统)；访客设置继续使用独立页。
 
 ## C2：应用与笔记窗口
 
@@ -454,9 +454,15 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 应用窗口在桌面（≥1024px）为锚定瞬时窗口：按任务栏方向在“应用”图标旁展开（底部在上方居中，顶部在下方，左侧在右方，右侧在左方，限制在安全工作区，图标隐藏或任务栏收起时居中）；在桌面、悬浮球、非系统任务栏控件上按下，或激活其他窗口 / 系统入口时最小化（不销毁），任务栏“应用”图标可切换。浏览器失焦、窗口自身浮层与全局应用表单、拖动 / 调整、IME 与平板 / 手机呈现不触发收起；拖动、调整或最大化后脱锚，关闭重开重新锚定。历史采用方案 A（打开 push，收起撤销或 replace）。完整契约见 [首页与桌面 · 应用与笔记窗口](../workspace.md#应用与笔记窗口)。窗口层 Escape 在内部视图之后最小化应用 / 笔记窗口；AI、设置与回收站不响应。
 
-## 阶段 0：后续窗口设计提案（#338）
+## C3：AI 窗口
 
-本节保留 AI 后续窗口化的审查提案（C3，尚未实现）；设置、回收站、应用与笔记的现行契约以上两节为准，其余行与应用 / 笔记相关的提案文字仅作历史审查参考。`/design-lab/windows` 是隔离视觉实验，不能作为生产验收证据。
+AI 问答是由同一 `WindowFrame` 呈现的窗口（`data-window-id="ai"`，标题“AI 问答”）；`/ask`、`/ask/:id` 是它的 canonical 地址，访客直达仍是登录引导页。`tokens.css` 拥有 `--window-ai-width/height`（960×720，1440×900 下的初始矩形）。窗口内容 `AskContent` 填满内容区：会话列表与消息区各自滚动，会话列表按窗口实测宽度（<768px）收进历史抽屉；内容区位于 Overlay 实色之上，不再使用壁纸派生画布，也没有页面内“返回首页”，由标题栏的最小化 / 关闭和任务栏“首页”承担。任务栏在 AI 窗口之上继续使用 Floating 材质，不再有实色回退。`ask-workspace.css` 拥有窗口内布局（`.window-frame__content > .ask-page-shell`）与抽屉切换；窗口层 Escape 不处理，只有菜单、对话框和会话内搜索等内部层。
+
+离开保护使用共享 AlertDialog（`AskPage.tsx`，规则与后果文案见 [AI · 离开保护](../ai.md#离开保护)）；窗口列表对仍在生成的 AI 标注“正在生成”。验证：`web/e2e/ai-window.test.ts`、`desktop-windows.test.ts`、`dock.test.ts`，以及 390 / 768 / 1440 × light / dark 实页。
+
+## 阶段 0：窗口设计提案（#338，审查记录）
+
+本节保留审查期的整体设计提案；五个窗口均已上线，现行契约以上面的 C1 / C2 / C3 三节及[首页与桌面](../workspace.md#窗口系统)为准，本节与之重复或不同之处仅作历史审查参考。`/design-lab/windows` 是隔离视觉实验，不能作为生产验收证据。
 
 ### 页面、导航与保护
 

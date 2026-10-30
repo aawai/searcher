@@ -12,6 +12,7 @@ import {
     openSeededAskConversation,
     startProductionApp,
 } from "./helpers/production-app.ts";
+import { maximizeAskWindow } from "./helpers/ask.ts";
 
 // Helper for client-side SPA navigation within the same document
 async function spaNavigate(page: Page, path: string) {
@@ -205,6 +206,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             // SPA navigate to /ask
             await spaNavigate(page, "/ask");
             await openSeededAskConversation(page);
+            await maximizeAskWindow(page);
 
             // Record Ask 1440 metrics
             const pageShellBox = await page.locator(".ask-page-shell:visible")
@@ -226,10 +228,12 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                     userMsgBox && composerBox,
             );
 
-            assertEquals(
-                Math.round(pageShellBox.width),
-                1280,
-                "PageShell width at 1440 must be 1280 ± 1px",
+            const frameBox = await page.locator('[data-window-id="ai"]')
+                .boundingBox();
+            assert(frameBox);
+            assert(
+                Math.abs(pageShellBox.width - (frameBox.width - 2)) <= 1,
+                `PageShell must fill the maximized AI window (shell ${pageShellBox.width}, window ${frameBox.width})`,
             );
             assertEquals(
                 Math.round(sidebarBox.width),
@@ -343,6 +347,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
 
             await loginAndVisit(page, app.origin, "/ask", user);
             await openSeededAskConversation(page);
+            await maximizeAskWindow(page);
 
             const pageShellBox = await page.locator(".ask-page-shell:visible")
                 .boundingBox();
@@ -364,9 +369,12 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             );
 
             // Exact tolerance assertions for 2048px
+            const frameBox = await page.locator('[data-window-id="ai"]')
+                .boundingBox();
+            assert(frameBox);
             assert(
-                Math.abs(pageShellBox.width - 1679) <= 2,
-                `Ask PageShell width at 2048 must be 1679 ± 2px (got ${pageShellBox.width})`,
+                Math.abs(pageShellBox.width - (frameBox.width - 2)) <= 2,
+                `Ask PageShell must fill the maximized AI window at 2048 (shell ${pageShellBox.width}, window ${frameBox.width})`,
             );
             assertEquals(
                 Math.round(sidebarBox.width),

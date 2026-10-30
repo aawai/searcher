@@ -12,6 +12,20 @@
     --page-shell-workbench-max: var(--layout-ask-workbench-max);
 }
 
+/* In the AI window the workspace fills the frame and its thread scrolls inside it. */
+.window-frame[data-window-id="ai"] .window-frame__content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.window-frame__content > .ask-page-shell {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
 .ask-guest__content {
     display: flex;
     flex-direction: column;
@@ -249,9 +263,6 @@
     font: inherit;
 }
 
-.ask-header [data-slot="button"].ask-header__home {
-    display: none;
-}
 .ask-header [data-slot="button"].ask-header__drawer-toggle {
     display: none;
 }
@@ -368,7 +379,7 @@
     right: 0;
     left: 0;
     height: var(--space-7);
-    background: linear-gradient(to top, var(--background) 30%, transparent);
+    background: linear-gradient(to top, var(--surface-l3) 30%, transparent);
     pointer-events: none;
 }
 
@@ -1445,16 +1456,8 @@
 }
 
 @media (max-width: 767px) {
-    .app-shell:has(.ask-workspace-layout) > .topbar {
-        display: none;
-    }
-
     .ask-header {
         min-height: var(--control-touch-target);
-    }
-
-    .ask-header [data-slot="button"].ask-header__home {
-        display: inline-flex;
     }
 
     .ask-header :is([data-slot="button"], [data-slot="dropdown-menu-trigger"]) {

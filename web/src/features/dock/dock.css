@@ -485,15 +485,6 @@
     opacity: 0.5;
 }
 
-/* Solid fallback on non-home pages (e.g. /ask) */
-.app-shell:not([data-home]) :is(.dock-bar, .dock-ball) {
-    background: var(--surface-l3);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    border: var(--space-hairline) solid var(--border);
-    box-shadow: var(--shadow-l2);
-}
-
 /* Error badge on dock */
 .dock-error-badge {
     position: absolute;

@@ -405,7 +405,7 @@ Deno.test("首击关闭或最小化后台窗口不改变活动窗口与历史", 
     }
 });
 
-Deno.test("AI 覆盖页在明暗极端壁纸上保持文字可读", async () => {
+Deno.test("AI 窗口在明暗极端壁纸上保持文字可读", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });

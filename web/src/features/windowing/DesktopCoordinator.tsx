@@ -11,7 +11,15 @@ import {
     useRef,
     useState,
 } from "react";
-import { Link, useNavigationType } from "react-router-dom";
+import {
+    Link,
+    type Location,
+    type NavigateFunction,
+    type NavigateOptions,
+    parsePath,
+    type To,
+    useNavigationType,
+} from "react-router-dom";
 import { DesktopHost } from "../../app/SearchHome.tsx";
 import type { AppOutletContext } from "../../app/outlet-context.ts";
 import { useNavigationPending } from "../../app/navigation-guards.tsx";
@@ -20,7 +28,7 @@ import {
     RouteErrorBoundary,
     RouteLoadingFallback,
 } from "../../app/RouteErrorBoundary.tsx";
-import { routes } from "../../app/routes.ts";
+import { askConversationId, routes } from "../../app/routes.ts";
 import { useAppState } from "../../app/state.tsx";
 import { useEscapeLayerStack } from "../../components/ui/escape-layer-stack.tsx";
 import { BREAKPOINTS } from "../../design-system/breakpoints.ts";
@@ -56,17 +64,30 @@ const TrashContent = lazy(() =>
         default: module.TrashContent,
     }))
 );
+const AskContent = lazy(() =>
+    import("../../app/AskPage.tsx").then((module) => ({
+        default: module.AskContent,
+    }))
+);
 
-const WINDOW_IDS: readonly WindowId[] = ["apps", "notes", "settings", "trash"];
+const WINDOW_IDS: readonly WindowId[] = [
+    "apps",
+    "notes",
+    "ai",
+    "settings",
+    "trash",
+];
 const WINDOW_TITLES: Record<WindowId, string> = {
     apps: "应用",
     notes: "笔记",
+    ai: "AI 问答",
     settings: "设置",
     trash: "回收站",
 };
 const DEFAULT_WIDTHS: Record<WindowId, number> = {
     apps: 640,
     notes: 960,
+    ai: 960,
     settings: 840,
     trash: 880,
 };
@@ -98,6 +119,8 @@ interface StageValue {
     manager: WindowManager;
     widths: Record<WindowId, number>;
     setWidth: (id: WindowId, width: number) => void;
+    /** Navigation for a window's content; see `WindowSession.navigateWindow`. */
+    navigateWindow: (id: WindowId) => NavigateFunction;
 }
 
 const StageContext = createContext<StageValue | null>(null);
@@ -151,6 +174,16 @@ function WindowSession(
         )
     );
     const [windowListOpen, setWindowListOpen] = useState(false);
+    const [busy, setBusyWindows] = useState<readonly WindowId[]>([]);
+    const setBusy = useCallback((id: WindowId, working: boolean) => {
+        setBusyWindows((previous) =>
+            previous.includes(id) === working
+                ? previous
+                : working
+                ? [...previous, id]
+                : previous.filter((item) => item !== id)
+        );
+    }, []);
     const [widths, setWidths] = useState<Record<WindowId, number>>(
         DEFAULT_WIDTHS,
     );
@@ -168,6 +201,12 @@ function WindowSession(
     const closeGuards = useRef(new Map<WindowId, CloseGuard>());
     const desktopFocus = useRef<(() => HTMLElement | null) | null>(null);
     const collapsing = useRef(false);
+    /**
+     * A conversation that got its id while its window was in the background
+     * has no history entry of its own: remember which entry was current, so
+     * returning to it by Back or Forward lands on the conversation again.
+     */
+    const askEntries = useRef(new Map<string, { from: string; to: string }>());
 
     useLayoutEffect(() => {
         const previous = previousLocation.current;
@@ -185,9 +224,28 @@ function WindowSession(
                 fromUrl: locationUrl(previous),
             };
         }
+        const askEntry = navigationType === "POP" &&
+                windowForLocation(location) === "ai" &&
+                stateRef.current.windows.some((window) => window.id === "ai")
+            ? askEntries.current.get(location.key)
+            : undefined;
+        // Returning to the entry where a background conversation was named:
+        // show that conversation at once, so the window never flashes a new one.
+        const aligned = askEntry && askEntry.from === locationUrl(location)
+            ? askEntry
+            : undefined;
+        if (aligned) navigate(aligned.to, { replace: true });
+        const shown: Location = aligned
+            ? { ...location, ...parsePath(aligned.to), state: null }
+            : location;
         setState((current) =>
-            stateForLocation(current, location, action, isWideViewport())
+            stateForLocation(current, shown, action, isWideViewport())
         );
+        // Back from the AI window by history or a link also lands in the search box.
+        if (
+            !focusDesktop.current && windowForLocation(previous) === "ai" &&
+            location.pathname === routes.home && !location.search
+        ) focusDesktop.current = "search";
         const focus = focusDesktop.current;
         if (focus && location.pathname === routes.home && !location.search) {
             focusDesktop.current = null;
@@ -352,6 +410,61 @@ function WindowSession(
         },
         [],
     );
+    /**
+     * A window's own navigation. A conversation that is named while the AI
+     * window is in the background only updates that window's local address:
+     * it must not change the page address or take the focus.
+     */
+    const windowNavigation = useMemo(() => {
+        const make =
+            (id: WindowId): NavigateFunction =>
+            (to: To | number, options?: NavigateOptions) => {
+                if (typeof to === "number") return navigate(to);
+                const record = stateRef.current.windows.find((window) =>
+                    window.id === id
+                );
+                if (
+                    id !== "ai" || !record || !options?.replace ||
+                    windowForLocation(locationRef.current) === id
+                ) return navigate(to, options);
+                const target = typeof to === "string" ? parsePath(to) : to;
+                const next: Location = {
+                    ...record.location,
+                    pathname: target.pathname ?? record.location.pathname,
+                    search: target.search ?? "",
+                    hash: target.hash ?? "",
+                    state: options.state ?? null,
+                };
+                if (windowForLocation(next) !== id) {
+                    return navigate(to, options);
+                }
+                const key = record.location.key;
+                askEntries.current.set(key, {
+                    from: askEntries.current.get(key)?.from ??
+                        locationUrl(record.location),
+                    to: locationUrl(next),
+                });
+                setState((current) => ({
+                    ...current,
+                    windows: current.windows.map((window) =>
+                        window.id === id
+                            ? { ...window, location: next }
+                            : window
+                    ),
+                }));
+            };
+        return {
+            apps: make("apps"),
+            notes: make("notes"),
+            ai: make("ai"),
+            settings: make("settings"),
+            trash: make("trash"),
+        } satisfies Record<WindowId, NavigateFunction>;
+    }, [navigate]);
+    const navigateWindow = useCallback(
+        (id: WindowId) => windowNavigation[id],
+        [windowNavigation],
+    );
     const registerDesktopFocus = useCallback(
         (target: () => HTMLElement | null) => {
             desktopFocus.current = target;
@@ -406,7 +519,11 @@ function WindowSession(
     }, [escapeStack, leaveWindow]);
 
     const manager: WindowManager = {
-        windows: state.windows.map(({ id, status }) => ({ id, status })),
+        windows: state.windows.map(({ id, status }) => ({
+            id,
+            status,
+            busy: busy.includes(id),
+        })),
         activeId: state.activeId,
         windowListOpen,
         setWindowListOpen,
@@ -418,11 +535,20 @@ function WindowSession(
         detach,
         registerCloseGuard,
         registerDesktopFocus,
+        setBusy,
     };
     return (
         <WindowManagerContext value={manager}>
             <StageContext
-                value={{ host, aiModels, state, manager, widths, setWidth }}
+                value={{
+                    host,
+                    aiModels,
+                    state,
+                    manager,
+                    widths,
+                    setWidth,
+                    navigateWindow,
+                }}
             >
                 {children}
             </StageContext>
@@ -438,7 +564,15 @@ export function DesktopStage() {
 }
 
 function ActiveDesktopStage(
-    { host, aiModels, state, manager, widths, setWidth }: StageValue,
+    {
+        host,
+        aiModels,
+        state,
+        manager,
+        widths,
+        setWidth,
+        navigateWindow,
+    }: StageValue,
 ) {
     const { location } = host;
     const currentId = windowForLocation(location);
@@ -510,6 +644,7 @@ function ActiveDesktopStage(
                     const localHost: PageHost = {
                         ...host,
                         inWindow: true,
+                        navigate: navigateWindow(id),
                         location: record?.location ?? location,
                         Link,
                         narrow: widths[id] < BREAKPOINTS.medium,
@@ -545,8 +680,9 @@ function ActiveDesktopStage(
                                 )
                                 : (
                                     <RouteErrorBoundary
-                                        locationKey={localHost.location
-                                            .pathname}
+                                        locationKey={id === "ai"
+                                            ? id
+                                            : localHost.location.pathname}
                                     >
                                         <Suspense
                                             fallback={<RouteLoadingFallback />}
@@ -555,6 +691,16 @@ function ActiveDesktopStage(
                                                 ? (
                                                     <TrashContent
                                                         host={localHost}
+                                                    />
+                                                )
+                                                : id === "ai"
+                                                ? (
+                                                    <AskContent
+                                                        host={localHost}
+                                                        routeId={askConversationId(
+                                                            localHost.location
+                                                                .pathname,
+                                                        ) ?? undefined}
                                                     />
                                                 )
                                                 : localHost.location

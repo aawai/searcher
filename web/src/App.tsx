@@ -28,18 +28,15 @@ import {
     wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
-import {
-    askConversationId,
-    authPath,
-    routes,
-    settingsTab,
-} from "./app/routes.ts";
+import { authPath, routes, settingsTab } from "./app/routes.ts";
 import { DockProvider } from "./features/dock/DockProvider.tsx";
 import { WorkspaceDock } from "./features/dock/WorkspaceDock.tsx";
 import {
     DesktopCoordinator,
     DesktopStage,
 } from "./features/windowing/DesktopCoordinator.tsx";
+import { useWindowManager } from "./features/windowing/window-context.tsx";
+import { windowForLocation } from "./features/windowing/window-state.ts";
 import {
     NavigationGuardProvider,
     useDestructiveAction,
@@ -115,12 +112,36 @@ const NotFoundPage = lazy(() =>
     import("./app/NotFoundPage.tsx").then((m) => ({ default: m.NotFoundPage }))
 );
 
+/** The top bar's AI entry activates the single AI window instead of starting a new page. */
+function AiTopbarLink({ pathname }: { pathname: string }) {
+    const windowManager = useWindowManager();
+    const active = windowManager
+        ? windowManager.activeId === "ai"
+        : pathname === routes.ask;
+    return (
+        <Link
+            to={routes.ask}
+            viewTransition
+            className={active
+                ? "topbar-link topbar-link--active"
+                : "topbar-link"}
+            aria-label="AI 问答"
+            title="AI 问答"
+            onClick={(event) => {
+                if (!windowManager) return;
+                event.preventDefault();
+                windowManager.open("ai");
+            }}
+        >
+            <Sparkles size="1em" className="icon-lg" />
+        </Link>
+    );
+}
+
 function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
     const isHomePage = location.pathname === routes.home;
-    const isAskPage = location.pathname === routes.ask ||
-        askConversationId(location.pathname) !== null;
     const isAuthPage = location.pathname === routes.login ||
         location.pathname === routes.register;
     // The account page shares the settings shell, so it keeps the icon active.
@@ -138,20 +159,8 @@ function Layout() {
         connectionError,
         retryConnection,
     } = useAppState();
-    const hasDesktopCanvas = isHomePage || Boolean(
-        user && (
-            isAskPage || settingsTab(location.pathname) !== null ||
-            location.pathname === routes.account ||
-            location.pathname === routes.trash
-        ),
-    );
-    const hasVisibleDesktop = isHomePage || Boolean(
-        user && (
-            settingsTab(location.pathname) !== null ||
-            location.pathname === routes.account ||
-            location.pathname === routes.trash
-        ),
-    );
+    const hasVisibleDesktop = isHomePage ||
+        Boolean(user && windowForLocation(location) !== null);
     const online = useOnline();
     const serviceWorker = useServiceWorkerUpdate();
     // Coming back online re-checks the session the offline start could not.
@@ -248,12 +257,11 @@ function Layout() {
             <div
                 className="app-shell"
                 data-home={hasVisibleDesktop ? "true" : undefined}
-                data-ask={user && isAskPage ? "true" : undefined}
                 data-wallpaper-image={hasVisibleDesktop && imageSource
                     ? "true"
                     : undefined}
             >
-                {hasDesktopCanvas && (
+                {hasVisibleDesktop && (
                     <WallpaperSurface
                         source={appearance.wallpaper}
                         presentation={presentation}
@@ -275,17 +283,7 @@ function Layout() {
                         are reached from the search box commands and the user menu. */
                         }
                         {!isHomePage && !isAuthPage && aiModels.length > 0 && (
-                            <Link
-                                to={routes.ask}
-                                viewTransition
-                                className={isAskPage
-                                    ? "topbar-link topbar-link--active"
-                                    : "topbar-link"}
-                                aria-label="AI 问答"
-                                title="AI 问答"
-                            >
-                                <Sparkles size="1em" className="icon-lg" />
-                            </Link>
+                            <AiTopbarLink pathname={location.pathname} />
                         )}
                         <button
                             type="button"
@@ -525,6 +523,11 @@ function HomeRoute() {
     return user ? null : <SearchHome />;
 }
 
+function AskRoute() {
+    const { user } = useAppState();
+    return user ? null : <AskPage />;
+}
+
 function SettingsRoute() {
     const { user } = useAppState();
     const { pathname } = useLocation();
@@ -575,9 +578,9 @@ export function App() {
                         path: `${routes.settings()}/*`,
                         element: <SettingsRoute />,
                     },
-                    // One route for /ask and /ask/:id keeps the page mounted when
-                    // a started conversation gets its own URL.
-                    { path: `${routes.ask}/:id?`, element: <AskPage /> },
+                    // Signed-in users see /ask and /ask/:id as the AI window; the
+                    // route only renders the guest sign-in prompt.
+                    { path: `${routes.ask}/:id?`, element: <AskRoute /> },
                     { path: routes.account, element: <AccountRoute /> },
                     { path: `${routes.admin()}/*`, element: <AdminPage /> },
                     { path: routes.trash, element: <TrashRoute /> },

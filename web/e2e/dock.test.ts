@@ -2075,10 +2075,14 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                 `dock-glyph must include 1px inner rim shadow, got: ${homeStyles.glyphShadow}`,
             );
 
-            // 2. /ask page falls back to solid surface-l3 with no backdrop-filter
+            // 2. Over the AI window the desktop is still visible: the dock keeps
+            // its Floating material instead of a solid fallback.
             await dockSystemButton(page, "AI 问答").click();
             await page.waitForURL((url) => url.pathname.startsWith("/ask"));
-            await page.locator(".app-shell:not([data-home])").waitFor();
+            await page.locator('[data-window-id="ai"]').waitFor({
+                state: "visible",
+            });
+            await page.locator(".app-shell[data-home]").waitFor();
             await dockNav(page).waitFor({ state: "visible" });
             const askStyles = await page.evaluate(() => {
                 const bar = document.querySelector("nav.dock-bar")!;
@@ -2086,12 +2090,16 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                 return {
                     bgImage: cs.backgroundImage,
                     backdropFilter: cs.backdropFilter,
-                    borderTopWidth: cs.borderTopWidth,
                 };
             });
-            assertEquals(askStyles.bgImage, "none");
-            assertEquals(askStyles.backdropFilter, "none");
-            assertEquals(askStyles.borderTopWidth, "1px");
+            assert(
+                askStyles.bgImage.includes("linear-gradient"),
+                `dock over the AI window keeps the sheen, got: ${askStyles.bgImage}`,
+            );
+            assert(
+                askStyles.backdropFilter.includes("blur"),
+                `dock over the AI window keeps the blur, got: ${askStyles.backdropFilter}`,
+            );
 
             // Return to home
             await dockSystemButton(page, "首页").click();

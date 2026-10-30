@@ -50,6 +50,8 @@ type Operation = {
     direction?: Direction;
     before: Rect;
     saved: Rect | null;
+    /** `performance.now()` when the operation began. */
+    startedAt: number;
 };
 
 export interface WindowFrameProps {
@@ -404,6 +406,8 @@ export function WindowFrame(
         const keydown = (event: KeyboardEvent) => {
             if (
                 event.isComposing || stack.hasLayer("overlay") ||
+                // The key press that chose the operation must not also commit it.
+                event.timeStamp <= operation.startedAt ||
                 isEditableShortcutTarget(event.target) ||
                 (event.target instanceof Element &&
                     event.target.closest(".window-frame__operation"))
@@ -529,7 +533,13 @@ export function WindowFrame(
         if (!rect || !geometry?.wide || maximized) return;
         detachRef.current?.();
         setMenuOpen(false);
-        setOperation({ kind, direction, before: rect, saved: bounds });
+        setOperation({
+            kind,
+            direction,
+            before: rect,
+            saved: bounds,
+            startedAt: performance.now(),
+        });
         setAnnouncement(
             `${
                 kind === "move"

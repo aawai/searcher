@@ -70,7 +70,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             : path === "/account" || path.startsWith("/settings")
             ? ".settings-layout"
             : path === "/ask"
-            ? "main.ask-page-shell"
+            ? '[data-window-id="ai"] .ask-page-shell'
             : "main.home";
         await page.locator(selector).waitFor({ state: "visible" });
     }

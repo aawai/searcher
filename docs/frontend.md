@@ -140,7 +140,7 @@ deno task check:ui --update
 
 前端路径统一由 `web/src/app/routes.ts` 维护。
 
-- `/ask` 是对话工作区（空状态），`/ask/:id` 是会话深链；同一路由元素承载两者，在 `/ask` 发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push。登录用户由任务栏进入 AI 问答；无模型时保留入口并显示不可用原因，访客不显示任务栏。
+- `/ask` 是 AI 窗口的空会话，`/ask/:id` 是会话深链；同一窗口承载两者，在 `/ask` 发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push；窗口在后台时拿到 id 只更新窗口的局部地址，不改变页面地址，回到该历史条目时再 replace 对齐。登录用户由任务栏、顶栏或链接打开 AI 窗口；无模型时保留入口并显示不可用原因，访客不显示任务栏，直达 `/ask` 保留登录引导页。
 - `/?view=apps` 与 `/?view=notes` 打开或激活首页上的应用、笔记窗口；普通窗口切换 push 浏览器历史，锚定应用窗口的收起按[历史契约](workspace.md#导航关闭与状态)撤销或 replace，重复点击当前入口不重置，关闭未保存笔记窗口须确认，浏览器返回 / 前进不提示。不再有资料库根视图或头像内的应用 / 笔记 / AI 导航。
 - `/settings` 与 `/settings/search` 均解析为 `search` 分类，不互相重定向；登录用户的设置和 `/account` 同属一个窗口，回收站为另一个窗口。设置内容按 Host 宽度（访客独立页按视口）选择布局：≥768px 双栏，<768px 的 `/settings` 为列表，分类与 `/account` 为详情并提供返回设置的链接。未知 Settings/Admin 子路径保持 404。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。成功后由
@@ -152,8 +152,8 @@ deno task check:ui --update
   `viewTransition`；设置、管理内部 Tab 与工作区不使用。首页回答卡片展开为 `/ask/:id`
   使用共享元素过渡（`web/src/lib/shared-element.ts`），不经过 React Router 的
   `viewTransition`。
-- 登录用户的 `DesktopHost` 在当前账号 session 中只有一份，唯一持有应用库数据、笔记会话与应用表单；应用、笔记、设置 / 账户与回收站由窗口 Host（portal 目标）提供各自的局部位置和实测宽度，最小化不卸载，关闭才销毁。独立路由暂时隐藏桌面并保留实例。访客设置继续使用独立 Presenter。AI 仍按[混合状态](workspace.md#当前混合状态)作为独立页面运行。
-- `NavigationGuardProvider` 拥有唯一 Router blocker，按是否销毁内容聚合 owner 与 `beforeunload`；确认前冻结首个目标，竞争 POP 时校验 Router 管理的 history key、index、长度和 guard 集合后重放，无法核实时不放行。笔记 guard 只拦截身份变化（退出登录 / 切换账号，经 `useDestructiveAction`），关闭笔记窗口的未保存确认由窗口关闭流程发起；应用表单（全局模态）打开时拦截任何改变 pathname / search 的导航，在目标实际提交后关闭；取消保持原地址与内容。`beforeunload` 对最小化窗口中的未保存笔记与表单仍然生效。退出登录先检查本地未同步草稿，再通过相同的保护协调销毁账号内容。
+- 登录用户的 `DesktopHost` 在当前账号 session 中只有一份，唯一持有应用库数据、笔记会话与应用表单；应用、笔记、AI、设置 / 账户与回收站由窗口 Host（portal 目标或窗口内容）提供各自的局部位置和实测宽度，最小化不卸载，关闭才销毁。独立路由暂时隐藏桌面并保留实例。访客设置继续使用独立 Presenter。AI 窗口内容（`AskContent`）自己持有会话、流与租约，后台窗口通过协调器提供的窗口局部 `navigate` 更新地址，不消费全局 `useLocation` / `useParams`。
+- `NavigationGuardProvider` 拥有唯一 Router blocker，按是否销毁内容聚合 owner 与 `beforeunload`；确认前冻结首个目标，竞争 POP 时校验 Router 管理的 history key、index、长度和 guard 集合后重放，无法核实时不放行。笔记 guard 只拦截身份变化（退出登录 / 切换账号，经 `useDestructiveAction`），关闭笔记窗口的未保存确认由窗口关闭流程发起；AI guard 只拦截替换当前会话的导航（含浏览器后退到另一个 `/ask/:id`）与退出登录，关闭窗口由窗口关闭流程发起，窗口切换、最小化和前往其他窗口不拦截，规则见 [AI · 离开保护](ai.md#离开保护)；应用表单（全局模态）打开时拦截任何改变 pathname / search 的导航，在目标实际提交后关闭；取消保持原地址与内容。`beforeunload` 对最小化窗口中的未保存笔记、表单与 AI 的进行中生成 / 未发送内容仍然生效。退出登录先检查本地未同步草稿，再通过相同的保护协调销毁账号内容。
 - 返回桌面时焦点回搜索框；窗口重新激活优先恢复仍可用的上次焦点，焦点目标不可用时回到窗口标题栏。
 - 账户资料更新不更换登录 session 或销毁窗口。会话因 401 失效时立即清除账号内容；正在使用的首页搜索保留当前输入和焦点，但不保留个人搜索结果。
 

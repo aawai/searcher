@@ -21,6 +21,9 @@ import {
 /** A guard decides whether this particular navigation destroys its content. */
 export type NavigationIntent = Parameters<BlockerFunction>[0];
 
+/** The location key of the synthetic intent that stands for signing out. */
+export const DESTRUCTIVE_ACTION_KEY = "destructive-action";
+
 export interface NavigationGuard {
     blocks: (intent: NavigationIntent) => boolean;
     warnOnUnload: () => boolean;
@@ -329,7 +332,7 @@ export function NavigationGuardProvider({ children }: { children: ReactNode }) {
                 search: "",
                 hash: "",
                 state: null,
-                key: "destructive-action",
+                key: DESTRUCTIVE_ACTION_KEY,
             },
             historyAction: NavigationType.Push,
         };

@@ -57,6 +57,8 @@ interface ConversationWorkspaceProps {
     isNewConversationTemporary?: boolean;
     newConversationInstruction?: string | null;
     platform?: ShortcutPlatform;
+    /** Reports how many attachments the composer holds but has not sent. */
+    onAttachmentCountChange?: (count: number) => void;
 }
 
 export function ConversationWorkspace({
@@ -91,6 +93,7 @@ export function ConversationWorkspace({
     isNewConversationTemporary = false,
     newConversationInstruction = null,
     platform,
+    onAttachmentCountChange,
 }: ConversationWorkspaceProps) {
     const { active } = usePageHost();
     const [searchOpen, setSearchOpen] = useState(false);
@@ -133,6 +136,7 @@ export function ConversationWorkspace({
             draft={draft}
             draftKey={draftKey}
             onDraftChange={onDraftChange}
+            onAttachmentCountChange={onAttachmentCountChange}
             messages={allMessages}
             activeLeafMessageId={conversation?.activeLeafMessageId}
             supportsVision={activeModel?.supportsVision ?? false}

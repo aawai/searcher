@@ -324,13 +324,21 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
         await composer.waitFor({ state: "visible" });
         assertEquals(await composer.inputValue(), "");
         await composer.fill("用一个生活化例子解释机器学习");
-        assertEquals(await page.locator(".topbar").isVisible(), false);
-        await page.getByRole("link", { name: "返回首页", exact: true })
-            .waitFor();
+        // The window's own title bar replaces the page's return-home control.
+        assertEquals(
+            await page.getByRole("link", { name: "返回首页", exact: true })
+                .count(),
+            0,
+        );
         for (
             const target of [
                 page.getByRole("button", { name: "打开历史对话", exact: true }),
-                page.getByRole("link", { name: "返回首页", exact: true }),
+                page.getByRole("button", { name: "窗口列表", exact: true }),
+                page.getByRole("button", {
+                    name: "最小化AI 问答",
+                    exact: true,
+                }),
+                page.getByRole("button", { name: "关闭AI 问答", exact: true }),
             ]
         ) {
             const box = await target.boundingBox();

@@ -27,7 +27,7 @@ export interface PendingWindowAction {
     sourceKey: string;
 }
 
-/** The window an address shows; `/` and AI show none. */
+/** The window an address shows; `/` shows none. */
 export function windowForLocation(
     location: Pick<Location, "pathname" | "search">,
 ): WindowId | null {
@@ -39,6 +39,9 @@ export function windowForLocation(
     if (pathname === routes.account || settingsTab(pathname) !== null) {
         return "settings";
     }
+    if (pathname === routes.ask || askConversationId(pathname) !== null) {
+        return "ai";
+    }
     return pathname === routes.trash ? "trash" : null;
 }
 
@@ -47,6 +50,8 @@ export function windowUrl(id: WindowId): string {
         ? routes.settings()
         : id === "trash"
         ? routes.trash
+        : id === "ai"
+        ? routes.ask
         : `${routes.home}?view=${id}`;
 }
 
@@ -54,10 +59,6 @@ export function locationUrl(
     location: Pick<Location, "pathname" | "search" | "hash">,
 ): string {
     return `${location.pathname}${location.search}${location.hash}`;
-}
-
-function isAsk(pathname: string): boolean {
-    return pathname === routes.ask || askConversationId(pathname) !== null;
 }
 
 /**
@@ -102,7 +103,7 @@ export function stateForLocation(
         );
         return { windows: [...others, current], activeId: id };
     }
-    if (location.pathname === routes.home || isAsk(location.pathname)) {
+    if (location.pathname === routes.home) {
         return {
             windows: windows.map((window) => ({
                 ...window,

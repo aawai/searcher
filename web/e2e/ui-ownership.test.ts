@@ -111,7 +111,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             : path === "/trash"
             ? '[data-window-id="trash"] .trash-page'
             : path.startsWith("/ask")
-            ? "main.ask-page-shell"
+            ? '[data-window-id="ai"] .ask-page-shell'
             : 'main[data-archetype="management"]';
         await target.locator(selector).waitFor({ state: "visible" });
     }

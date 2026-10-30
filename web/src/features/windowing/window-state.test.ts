@@ -41,7 +41,9 @@ Deno.test("each address shows at most one window", () => {
             ["/trash", "trash"],
             ["/", null],
             ["/?view=unknown", null],
-            ["/ask/abc", null],
+            ["/ask", "ai"],
+            ["/ask/abc", "ai"],
+            ["/ask/abc/extra", null],
         ] as const
     ) {
         assertEquals(windowForLocation(at(path)), id, path);
@@ -74,14 +76,48 @@ Deno.test("a window that is no longer anchored stays visible behind the next one
     });
 });
 
-Deno.test("the desktop and AI minimize every window without destroying it", () => {
+Deno.test("the desktop minimizes every window without destroying it", () => {
     const state = open(open(EMPTY, "/trash"), "/?view=notes");
-    for (const path of ["/", "/ask", "/ask/abc"]) {
-        assertEquals(summary(open(state, path)), {
-            active: null,
-            windows: [["trash", "minimized"], ["notes", "minimized"]],
-        }, path);
-    }
+    assertEquals(summary(open(state, "/")), {
+        active: null,
+        windows: [["trash", "minimized"], ["notes", "minimized"]],
+    });
+});
+
+Deno.test("the AI window is an ordinary window that keeps the others where they are", () => {
+    const state = open(open(EMPTY, "/trash"), "/?view=notes");
+    const next = open(state, "/ask/abc");
+    assertEquals(summary(next), {
+        active: "ai",
+        windows: [["trash", "visible"], ["notes", "visible"], [
+            "ai",
+            "visible",
+        ]],
+    });
+    assertEquals(next.windows[2].anchored, false);
+    // Switching away leaves it visible behind the next window, still open.
+    assertEquals(summary(open(next, "/trash")), {
+        active: "trash",
+        windows: [["notes", "visible"], ["ai", "visible"], [
+            "trash",
+            "visible",
+        ]],
+    });
+});
+
+Deno.test("the AI window keeps its own conversation address while another window is active", () => {
+    let state = open(EMPTY, "/ask/one");
+    state = open(state, "/settings/appearance");
+    state = open(state, "/ask/two");
+    assertEquals(
+        state.windows.find((window) => window.id === "ai")?.location.pathname,
+        "/ask/two",
+    );
+    state = open(state, "/trash");
+    assertEquals(
+        state.windows.find((window) => window.id === "ai")?.location.pathname,
+        "/ask/two",
+    );
 });
 
 Deno.test("independent pages hide the desktop but keep window state", () => {

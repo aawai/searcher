@@ -8,7 +8,6 @@ import {
     type HomeAppLibraryHandle,
 } from "../app-library/HomeAppLibrary.tsx";
 import { InlineAnswerCard } from "../inline-ai/InlineAnswerCard.tsx";
-import { consumeSearchFocusRequest } from "../inline-ai/search-focus.ts";
 import { HomeCalm } from "../home-calm/HomeCalm.tsx";
 
 const HomeNotes = lazy(() =>
@@ -57,13 +56,6 @@ export function ZenLayout(
     const heroRef = useRef<HTMLElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const { inlineAnswer } = props;
-    // Back from the expanded conversation: focus returns to the search box.
-    // Taken in an effect: a render React discards must not consume the request.
-    useEffect(() => {
-        if (active && consumeSearchFocusRequest()) {
-            searchInputRef.current?.focus();
-        }
-    }, [active]);
     // Closing the card, by button or Escape, returns focus to the search box.
     const answerWasOpen = useRef(false);
     useEffect(() => {
