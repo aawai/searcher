@@ -31,7 +31,10 @@ import {
 import { askConversationId, routes } from "../../app/routes.ts";
 import { useAppState } from "../../app/state.tsx";
 import { useEscapeLayerStack } from "../../components/ui/escape-layer-stack.tsx";
-import { BREAKPOINTS } from "../../design-system/breakpoints.ts";
+import {
+    BREAKPOINTS,
+    hasPersistentNotesSidebar,
+} from "../../design-system/breakpoints.ts";
 import { WindowFrame } from "./WindowFrame.tsx";
 import { isLibraryWindow, type LibraryWindows } from "./library-windows.ts";
 import {
@@ -606,6 +609,8 @@ function ActiveDesktopStage(
                         active: visible && currentId === id &&
                             record.status === "visible",
                         narrow: widths[id] < BREAKPOINTS.medium,
+                        hostWidth: widths[id],
+                        persistentSidebar: hasPersistentNotesSidebar(widths[id]),
                     }
                     : null,
             ];

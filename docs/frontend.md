@@ -60,9 +60,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   的顺序加载，保持公共交互状态和网格覆盖的级联关系。
 - 页面横向留白在 767px 以下为 16px，通用卡片内边距在 640px 以下为
   16px；触屏常规控件使用 44px 点击目标。不要把不同用途的尺寸合并成同一个 Token。
-- 布局断点只用 Visual Language 登记的 640 / 768 / 1024，`max-width` 使用前一像素；
-  640px 起进入小档，不再同时命中窄档。JS / TSX 引用 `design-system/breakpoints.ts`，
-  不在组件中写数字媒体查询；触屏能力使用 `any-pointer: coarse`。
+- 通用布局断点为 Visual Language 登记的 640 / 768 / 1024；笔记侧栏另按窗口 Host 的 `BREAKPOINTS.notesSidebar` 分档。`max-width` 使用前一像素；JS / TSX 引用 `design-system/breakpoints.ts`，不在组件中写数字媒体查询；触屏能力使用 `any-pointer: coarse`。
 - 首页 `tokens.css` 的 `--home-grid-*` 拥有应用方格、间距、中轴与搜索框 / 应用底板外缘对齐线，
   `--home-note-*` 拥有与应用方格脱钩的笔记单元与间距；Launcher 消费前者，首页笔记消费后者。
   `home-grid.ts` 的 `HOME_GRID` / `HOME_NOTE_GRID` 是数值镜像，由单元测试保护。首页笔记的分带网格数学（两侧负行、底板下方 shelf、
@@ -123,9 +121,7 @@ deno task check:ui --update
 对比度、焦点环与触控目标的数值底线见
 [Visual Language](design/VISUAL_LANGUAGE.md#一底线)。以下为代码必须保持的行为：
 
-- Escape 由 `components/ui/escape-layer-stack.tsx`
-  统一裁决，每次只消费最上层的菜单、弹窗或工作区（host 层依次为全屏笔记、打开的笔记、应用 / 笔记窗口最小化）；输入法合成中不分发；注销层不得穿透到
-  window。关闭后焦点回到触发控件。
+- Escape 由 `components/ui/escape-layer-stack.tsx` 统一裁决，每次只消费最上层；笔记窗口依次处理菜单 / 弹窗、焦点在内的大纲 Overlay、窗口内抽屉、全屏和窗口最小化。输入法合成中不分发；注销层不得穿透到 window。关闭后焦点回到触发控件。
 - 删除、覆盖、放弃未保存修改等不可逆操作使用 AlertDialog。取消与 Escape
   不执行动作；pending 时禁用确认与取消。
 - 禁止 `confirm()`、`window.confirm()` 等原生确认（`check:ui` 的
@@ -142,6 +138,7 @@ deno task check:ui --update
 
 - `/ask` 是 AI 窗口的空会话，`/ask/:id` 是会话深链；同一窗口承载两者，在 `/ask` 发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push；窗口在后台时拿到 id 只更新窗口的局部地址，不改变页面地址，回到该历史条目时再 replace 对齐。登录用户由任务栏、顶栏或链接打开 AI 窗口；无模型时保留入口并显示不可用原因，访客不显示任务栏，直达 `/ask` 保留登录引导页。
 - `/?view=apps` 与 `/?view=notes` 打开或激活首页上的应用、笔记窗口；普通窗口切换 push 浏览器历史，锚定应用窗口的收起按[历史契约](workspace.md#导航关闭与状态)撤销或 replace，重复点击当前入口不重置，关闭未保存笔记窗口须确认，浏览器返回 / 前进不提示。不再有资料库根视图或头像内的应用 / 笔记 / AI 导航。
+- 笔记窗口内部路由为 `documents/root`（无选中）、`documents/new`（含创建目标）和 `documents/edit`（含 id）；选中替换当前路由，不维护返回栈或将选中笔记写入 URL。所有打开笔记入口共用离开保护；新建成功后 replace 为编辑路由而不重挂载编辑器。
 - `/settings` 与 `/settings/search` 均解析为 `search` 分类，不互相重定向；登录用户的设置和 `/account` 同属一个窗口，回收站为另一个窗口。设置内容按 Host 宽度（访客独立页按视口）选择布局：≥768px 双栏，<768px 的 `/settings` 为列表，分类与 `/account` 为详情并提供返回设置的链接。未知 Settings/Admin 子路径保持 404。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。成功后由
   页面上“已登录”状态这一处 replace 到目标，只导航一次（`/share` 这类一次性入口依赖它）。

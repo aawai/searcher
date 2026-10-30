@@ -6,6 +6,7 @@ import {
     useId,
     useRef,
     useState,
+    type RefObject,
 } from "react";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
 import type {
@@ -23,7 +24,8 @@ import {
 import { Button } from "../../components/ui/button.tsx";
 import { DocumentNotebookNavigation } from "./DocumentNotebookNavigation.tsx";
 import { DocumentLibraryActions } from "./DocumentLibraryActions.tsx";
-import { Star } from "lucide-react";
+import { Plus, Star } from "lucide-react";
+import { WindowOverlay } from "../../components/ui/window-overlay.tsx";
 
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
 import { noteListSnippet } from "./note-list-snippet.ts";
@@ -36,7 +38,15 @@ export interface DocumentsWorkspaceProps {
     onQueryChange: (query: string) => void;
     scope: DocumentsScope;
     onScopeChange: (scope: DocumentsScope) => void;
-    onOpenDocument: (id: string) => void;
+    onDocumentTrashed: (id: string) => void;
+    onOpenDocument: (id: string) => Promise<boolean>;
+    onNewDocument: (target: { notebookId: string | null; isHomeFixed: boolean }) => Promise<boolean>;
+    onCreated: (id: string) => void;
+    sidebarPersistent: boolean;
+    sidebarOpen: boolean;
+    onSidebarOpenChange: (open: boolean) => void;
+    sidebarTriggerRef: RefObject<HTMLElement | null>;
+    narrow: boolean;
     onDirtyChange?: (dirty: boolean) => void;
     eventSubscriptions?: DocumentEventSubscriptions;
 }
@@ -48,12 +58,16 @@ function DocumentSummaryRow(
         scope,
         onChanged,
         onOpenDocument,
+        selected,
+        onTrashed,
     }: {
         item: DocumentSummaryDto;
         notebooks: DocumentNotebookDto[];
         scope: DocumentsScope;
         onChanged: () => void;
         onOpenDocument: (id: string) => void;
+        selected: boolean;
+        onTrashed: (id: string) => void;
     },
 ) {
     const displayTitle = item.displayTitle;
@@ -77,6 +91,7 @@ function DocumentSummaryRow(
                         onClick={() =>
                             onOpenDocument(item.id)}
                         aria-label={`打开笔记：${displayTitle}`}
+                        aria-current={selected ? "page" : undefined}
                     >
                         <span
                             className="documents-color-dot"
@@ -97,6 +112,7 @@ function DocumentSummaryRow(
                 </h4>
                 <DocumentLibraryActions
                     item={item}
+                    onTrashed={onTrashed}
                     notebooks={notebooks}
                     onChanged={onChanged}
                 />
@@ -130,37 +146,98 @@ function DocumentSummaryRow(
 }
 
 export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
-    if (props.state.view === "documents/edit") {
-        return (
-            <Suspense
-                fallback={
-                    <LoadingState density="compact">
-                        正在加载编辑器…
-                    </LoadingState>
-                }
+    const active = useContext(WorkspaceActivity);
+    const [revision, setRevision] = useState(0);
+    const [focusTitleSignal, setFocusTitleSignal] = useState(0);
+    const [restoreDrawerFocus, setRestoreDrawerFocus] = useState(true);
+    const [newSession, setNewSession] = useState(0);
+    const createdId = useRef<string | null>(null);
+    const refresh = () => setRevision((value) => value + 1);
+    useEffect(() => {
+        if (props.sidebarOpen) setRestoreDrawerFocus(true);
+    }, [props.sidebarOpen]);
+    const openDocument = async (id: string) => {
+        if (await props.onOpenDocument(id)) {
+            if (!props.sidebarPersistent) { setRestoreDrawerFocus(false); props.onSidebarOpenChange(false); }
+            setFocusTitleSignal((value) => value + 1);
+        }
+    };
+    const newDocument = async (target: { notebookId: string | null; isHomeFixed: boolean }) => {
+        if (props.state.view === "documents/new") {
+            if (!props.sidebarPersistent) {
+                setRestoreDrawerFocus(false);
+                props.onSidebarOpenChange(false);
+            }
+            setFocusTitleSignal((value) => value + 1);
+            return;
+        }
+        if (await props.onNewDocument(target)) {
+            setNewSession((value) => value + 1);
+            if (!props.sidebarPersistent) { setRestoreDrawerFocus(false); props.onSidebarOpenChange(false); }
+            setFocusTitleSignal((value) => value + 1);
+        }
+    };
+    const editorKey = props.state.view === "documents/new" ||
+            (props.state.view === "documents/edit" && props.state.id === createdId.current)
+        ? `new:${newSession}`
+        : props.state.view === "documents/edit" ? props.state.id : "root";
+    return (
+        <div className="documents-layout" data-workspace-content="documents">
+            <WindowOverlay
+                open={props.sidebarOpen}
+                modal={!props.sidebarPersistent}
+                active={active}
+                role="region"
+                onOpenChange={(open) => { setRestoreDrawerFocus(true); props.onSidebarOpenChange(open); }}
+                restoreFocus={restoreDrawerFocus}
+                restoreFocusRef={props.sidebarTriggerRef}
+                label="笔记侧栏"
+                className={props.sidebarPersistent ? "documents-sidebar" : "documents-sidebar documents-sidebar--drawer"}
             >
-                <DocumentEditor
-                    key={props.state.id}
-                    documentId={props.state.id}
-                    userId={props.userId}
-                    onOpenDocument={props.onOpenDocument}
-                    onDirtyChange={props.onDirtyChange}
-                    eventSubscriptions={props.eventSubscriptions}
-                />
-            </Suspense>
-        );
-    }
-    return <DocumentsLibrary {...props} />;
+                <nav aria-label="笔记侧栏" id="notes-sidebar">
+                    <DocumentsLibrary {...props} revision={revision} onOpenDocument={openDocument} onNewDocument={newDocument} />
+                </nav>
+                {!props.sidebarPersistent && <button type="button" className="documents-drawer-dismiss" aria-label="关闭笔记侧栏" onClick={() => { setRestoreDrawerFocus(true); props.onSidebarOpenChange(false); }} />}
+            </WindowOverlay>
+            <main className="documents-editor-pane">
+                {props.state.view === "documents/root"
+                    ? <EmptyState title="选择或新建笔记" />
+                    : <Suspense fallback={<LoadingState density="compact">正在加载编辑器…</LoadingState>}>
+                        <DocumentEditor
+                            key={editorKey}
+                            documentId={props.state.view === "documents/edit" ? props.state.id : undefined}
+                            target={props.state.view === "documents/new" ? props.state.target : undefined}
+                            onCreated={(id) => { createdId.current = id; props.onCreated(id); refresh(); }}
+                            userId={props.userId}
+                            onOpenDocument={(id) => { void openDocument(id); }}
+                            onDirtyChange={props.onDirtyChange}
+                            onChanged={refresh}
+                            narrow={props.narrow}
+                            focusTitleSignal={focusTitleSignal}
+                            eventSubscriptions={props.eventSubscriptions}
+                        />
+                    </Suspense>}
+            </main>
+        </div>
+    );
 }
 function DocumentsLibrary({
+    revision,
+    eventSubscriptions,
+    onNewDocument,
     state,
+    onDocumentTrashed,
     userId,
     query,
     onQueryChange,
     scope,
     onScopeChange,
     onOpenDocument,
-}: DocumentsWorkspaceProps) {
+}: Omit<DocumentsWorkspaceProps, "onOpenDocument" | "onNewDocument"> & {
+    revision: number;
+    onOpenDocument: (id: string) => void;
+    onNewDocument: (target: { notebookId: string | null; isHomeFixed: boolean }) => void;
+}) {
     const listHeadingId = useId();
     const loadedListKey = useRef<string | null>(null);
     const trimmedQuery = query.trim();
@@ -187,6 +264,8 @@ function DocumentsLibrary({
         if (active && !wasActive.current) refresh();
         wasActive.current = active;
     }, [active]);
+    useEffect(() => eventSubscriptions?.subscribeAll(refresh), [eventSubscriptions]);
+    useEffect(() => { refresh(); }, [revision]);
     useEffect(() => {
         const controller = new AbortController();
         setNotebookError(null);
@@ -312,7 +391,6 @@ function DocumentsLibrary({
         }
     };
 
-    if (state.view !== "documents/root") return null;
 
     const listLabel = isSearching
         ? "搜索结果"
@@ -347,6 +425,16 @@ function DocumentsLibrary({
                 notebooks={notebooks}
                 scope={scope}
                 onScopeChange={onScopeChange}
+                header={
+                    <div className="documents-list-toolbar">
+                        <WorkspaceSearch ariaLabel="搜索笔记" placeholder="搜索笔记" value={query} onChange={onQueryChange} />
+                        <Button variant="ghost" size="icon" aria-label="新建笔记"
+                            title={scope.type === "notebook" ? `新建笔记（在「${notebooks.find((item) => item.id === scope.notebookId)?.name ?? "笔记本"}」）` : scope.type === "home" ? "新建笔记（固定到首页）" : "新建笔记（未分类）"}
+                            onClick={() => onNewDocument({ notebookId: scope.type === "notebook" ? scope.notebookId : null, isHomeFixed: scope.type === "home" })}>
+                            <Plus className="icon-md" />
+                        </Button>
+                    </div>
+                }
                 onChanged={refresh}
             />
             {/* The segmented control already names the scope on screen. */}
@@ -357,19 +445,6 @@ function DocumentsLibrary({
                 <h3 id={listHeadingId} className="sr-only">
                     {listLabel}
                 </h3>
-                <div className="documents-list-toolbar">
-                    <WorkspaceSearch
-                        ariaLabel="搜索笔记"
-                        placeholder="搜索笔记标题或内容"
-                        value={query}
-                        onChange={onQueryChange}
-                    />
-                    {!loading && !error && (
-                        <span className="documents-list-count">
-                            {items.length} 条
-                        </span>
-                    )}
-                </div>
                 {loading && (
                     <LoadingState density="compact">
                         正在加载笔记…
@@ -429,10 +504,14 @@ function DocumentsLibrary({
                             <DocumentSummaryRow
                                 key={item.id}
                                 item={item}
+                                selected={state.view === "documents/edit" && state.id === item.id}
                                 notebooks={notebooks}
                                 scope={isSearching ? { type: "all" } : scope}
                                 onChanged={refresh}
                                 onOpenDocument={onOpenDocument}
+                                onTrashed={(id) => {
+                                    if (state.view === "documents/edit" && state.id === id) onDocumentTrashed(id);
+                                }}
                             />
                         ))}
                     </div>

@@ -14,6 +14,10 @@ export interface LibraryWindowSlot {
     active: boolean;
     /** Host width is below the medium breakpoint. */
     narrow: boolean;
+    /** Measured width of the window content host. */
+    hostWidth: number;
+    /** The notes sidebar can be presented persistently at this width. */
+    persistentSidebar: boolean;
 }
 
 /** `null` means the window is closed, so its content is destroyed. */

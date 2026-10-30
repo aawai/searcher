@@ -57,6 +57,7 @@ export interface DocumentNotebookNavigationProps {
     scope: DocumentsScope;
     onScopeChange: (scope: DocumentsScope) => void;
     onChanged: () => void;
+    header: React.ReactNode;
 }
 
 /** The four fixed filters share one segmented control; notebooks refine it. */
@@ -74,6 +75,7 @@ export function DocumentNotebookNavigation({
     scope,
     onScopeChange,
     onChanged,
+    header,
 }: DocumentNotebookNavigationProps) {
     // Dialog state
     const [createOpen, setCreateOpen] = useState(false);
@@ -285,50 +287,19 @@ export function DocumentNotebookNavigation({
 
     return (
         <nav className="documents-notebook-navigation" aria-label="笔记导航">
-            <RadioGroup
-                variant="segmented"
-                className="documents-filter-group"
-                aria-label="筛选笔记"
-                value={scope.type === "notebook" ? null : scope.type}
-                onValueChange={(next) => {
-                    if (typeof next === "string") {
-                        onScopeChange({ type: next as FilterId });
-                    }
-                }}
-            >
-                {FILTERS.map((filter) => (
-                    <RadioGroupItem key={filter.id} value={filter.id}>
-                        {filter.label}
-                    </RadioGroupItem>
-                ))}
-            </RadioGroup>
-
-            <div className="documents-notebook-picker">
-                <NativeSelect
-                    className="documents-notebook-select"
-                    aria-label="按笔记本筛选"
-                    value={selectedItem?.notebook.id ?? ""}
-                    onChange={(event) => {
-                        const notebookId = event.target.value;
-                        onScopeChange(
-                            notebookId
-                                ? { type: "notebook", notebookId }
-                                : { type: "all" },
-                        );
-                    }}
+            <div className="documents-sidebar-header">
+                {header}
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="新建笔记本"
+                    title="新建笔记本"
+                    disabled={isPending}
+                    onClick={() => openCreate("")}
                 >
-                    <NativeSelectOption value="">
-                        全部笔记本
-                    </NativeSelectOption>
-                    {options.map((option) => (
-                        <NativeSelectOption
-                            key={option.id}
-                            value={option.id}
-                        >
-                            {option.label}
-                        </NativeSelectOption>
-                    ))}
-                </NativeSelect>
+                    <FolderPlus className="icon-md" />
+                </Button>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger
@@ -428,6 +399,51 @@ export function DocumentNotebookNavigation({
                         )}
                     </DropdownMenuContent>
                 </DropdownMenu>
+            </div>
+            <RadioGroup
+                variant="segmented"
+                className="documents-filter-group"
+                aria-label="筛选笔记"
+                value={scope.type === "notebook" ? null : scope.type}
+                onValueChange={(next) => {
+                    if (typeof next === "string") {
+                        onScopeChange({ type: next as FilterId });
+                    }
+                }}
+            >
+                {FILTERS.map((filter) => (
+                    <RadioGroupItem key={filter.id} value={filter.id}>
+                        {filter.label}
+                    </RadioGroupItem>
+                ))}
+            </RadioGroup>
+
+            <div className="documents-notebook-picker">
+                <NativeSelect
+                    className="documents-notebook-select"
+                    aria-label="按笔记本筛选"
+                    value={selectedItem?.notebook.id ?? ""}
+                    onChange={(event) => {
+                        const notebookId = event.target.value;
+                        onScopeChange(
+                            notebookId
+                                ? { type: "notebook", notebookId }
+                                : { type: "all" },
+                        );
+                    }}
+                >
+                    <NativeSelectOption value="">
+                        全部笔记本
+                    </NativeSelectOption>
+                    {options.map((option) => (
+                        <NativeSelectOption
+                            key={option.id}
+                            value={option.id}
+                        >
+                            {option.label}
+                        </NativeSelectOption>
+                    ))}
+                </NativeSelect>
             </div>
 
             {/* Reorder error banner if inline operation fails */}

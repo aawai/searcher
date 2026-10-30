@@ -91,6 +91,6 @@ export async function assertInteractiveHome(page: Page): Promise<void> {
 
 /** Closing destroys the window and its content, like leaving the old panel. */
 export async function closeLibrary(page: Page): Promise<void> {
-    await libraryPanel(page).getByRole("button", { name: /^关闭/ }).click();
+    await libraryPanel(page).locator('[data-window-dismiss][aria-label^="关闭"]').click();
     await libraryPanel(page).waitFor({ state: "detached" });
 }

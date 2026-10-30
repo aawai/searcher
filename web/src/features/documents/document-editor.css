@@ -7,7 +7,8 @@
     flex-direction: column;
     height: 100%;
     min-height: 0;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     width: 100%;
     background-color: transparent;
     container-type: inline-size;
@@ -188,9 +189,13 @@
         min-width: var(--control-touch-target);
         padding: var(--space-2);
     }
-    .document-editor-toolbar {
+    .document-toolbar-container {
         position: sticky;
         top: 0;
+        z-index: var(--elevation-local-5);
+    }
+    .document-editor-toolbar {
+        position: static;
         flex-wrap: nowrap;
         overflow-x: auto;
         overflow-y: hidden;
@@ -213,7 +218,7 @@
 .document-editor-content-layout {
     display: flex;
     flex: 1;
-    min-height: 0;
+    min-height: var(--editor-min-content-height);
     position: relative;
     overflow: hidden;
 }
@@ -447,16 +452,47 @@
 }
 
 /* Outline Panel (Headings tree) */
+.document-outline-panel {
+    width: var(--document-outline-width);
+    flex-shrink: 0;
+    min-height: 0;
+}
+
+.document-outline-panel--overlay {
+    position: absolute;
+    inset: 0 0 0 auto;
+    z-index: var(--elevation-local-10);
+}
+
+.document-outline-sheet {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: var(--elevation-local-10);
+    max-height: 100%;
+    overflow: auto;
+    background: var(--surface-l3);
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+}
+
+.document-outline-sheet .document-outline-sidebar {
+    width: 100%;
+    max-height: var(--document-outline-compact-height);
+    border-left: 0;
+    background: var(--surface-l3);
+}
+
 .document-outline-sidebar {
     width: var(--document-outline-width);
     flex-shrink: 0;
     border-left: 1px solid var(--border-subtle);
-    background-color: var(--surface);
+    background-color: var(--surface-l3);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     padding: var(--space-3);
     gap: var(--space-control-gap);
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .document-outline-title {
@@ -501,16 +537,6 @@
     text-overflow: ellipsis;
 }
 @container (max-width: 639px) {
-    .document-editor-content-layout {
-        flex-direction: column;
-        overflow: auto;
-    }
-    .document-outline-sidebar {
-        width: 100%;
-        max-height: var(--document-outline-compact-height);
-        border-left: 0;
-        border-top: 1px solid var(--border-subtle);
-    }
     .document-draft-offer-banner {
         flex-wrap: wrap;
     }

@@ -27,7 +27,7 @@ export const initialLibraryState: LibraryState = {
     documents: initialDocumentsWorkspaceState,
 };
 function root(documents: DocumentsWorkspaceState): DocumentsWorkspaceState {
-    return { ...documents, route: { view: "documents/root" }, stack: [] };
+    return { ...documents, route: { view: "documents/root" } };
 }
 export function libraryReducer(
     state: LibraryState,
@@ -53,7 +53,6 @@ export function libraryReducer(
                         ? {
                             ...state.documents,
                             route: action.route,
-                            stack: [{ view: "documents/root" }],
                         }
                         : root(state.documents),
             };

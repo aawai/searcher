@@ -1,22 +1,18 @@
-import { type FormEvent, useEffect, useId, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useId, useState } from "react";
 import {
     FolderInput,
     Home,
     MoreHorizontal,
     Pencil,
-    Plus,
     Star,
     Trash2,
 } from "lucide-react";
 import {
-    type CreateDocumentInput,
     DOCUMENT_TITLE_MAX_LENGTH,
     type DocumentDto,
     type DocumentNotebookDto,
     type DocumentSummaryDto,
 } from "@shared/documents.ts";
-import type { DocumentsScope } from "./workspace-state.ts";
-import { documentNotebookTree } from "./document-notebooks.ts";
 import { api, json } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
@@ -57,12 +53,14 @@ export interface DocumentLibraryActionsProps {
     item: DocumentSummaryDto;
     notebooks: DocumentNotebookDto[];
     onChanged: () => void;
+    onTrashed?: (id: string) => void;
 }
 
 export function DocumentLibraryActions({
     item,
     notebooks,
     onChanged,
+    onTrashed,
 }: DocumentLibraryActionsProps) {
     const { authSession } = useAppState();
     const [renameOpen, setRenameOpen] = useState(false);
@@ -181,6 +179,7 @@ export function DocumentLibraryActions({
             }
             setTrashOpen(false);
             onChanged();
+            onTrashed?.(item.id);
         } catch (err) {
             setTrashError(err instanceof Error ? err.message : String(err));
         } finally {
@@ -514,211 +513,3 @@ export function DocumentLibraryActions({
     );
 }
 
-export interface CreateLibraryDocumentProps {
-    scope: DocumentsScope;
-    onCreated?: (document: DocumentDto) => void;
-}
-
-/** The library header's single primary action; notebooks load when it opens. */
-export function CreateLibraryDocument({
-    scope,
-    onCreated,
-}: CreateLibraryDocumentProps) {
-    const [open, setOpen] = useState(false);
-    const [title, setTitle] = useState("");
-    const [selectedNotebookId, setSelectedNotebookId] = useState<string | null>(
-        scope.type === "notebook" ? scope.notebookId : null,
-    );
-    const [notebooks, setNotebooks] = useState<DocumentNotebookDto[] | null>(
-        null,
-    );
-    const [notebooksError, setNotebooksError] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const notebookOptions = useMemo(
-        () => documentNotebookTree(notebooks ?? []).options,
-        [notebooks],
-    );
-
-    const titleId = useId();
-    const notebookId = useId();
-
-    useEffect(() => {
-        if (open) {
-            setTitle("");
-            setSelectedNotebookId(
-                scope.type === "notebook" ? scope.notebookId : null,
-            );
-            setError(null);
-            setIsSubmitting(false);
-        }
-    }, [open, scope]);
-
-    useEffect(() => {
-        if (!open) return;
-        const controller = new AbortController();
-        setNotebooksError(null);
-        api<DocumentNotebookDto[]>("/api/document-notebooks", {
-            signal: controller.signal,
-        })
-            .then((data) => {
-                if (!controller.signal.aborted) setNotebooks(data);
-            })
-            .catch((err: unknown) => {
-                if (controller.signal.aborted) return;
-                // Creating without a notebook stays possible.
-                setNotebooks([]);
-                setNotebooksError(
-                    err instanceof Error ? err.message : "加载笔记本失败",
-                );
-            });
-        return () => controller.abort();
-    }, [open]);
-
-    async function handleCreateSubmit(e: FormEvent) {
-        e.preventDefault();
-        if (isSubmitting) return;
-        if (title.length > DOCUMENT_TITLE_MAX_LENGTH) {
-            setError(`标题长度不能超过 ${DOCUMENT_TITLE_MAX_LENGTH} 个字符`);
-            return;
-        }
-        setIsSubmitting(true);
-        setError(null);
-        try {
-            const trimmed = title.trim();
-            const payload: CreateDocumentInput = {
-                ...(trimmed ? { title: trimmed } : {}),
-                notebookId: selectedNotebookId || null,
-                isHomeFixed: scope.type === "home",
-            };
-            const document = await api<DocumentDto>(
-                "/api/documents",
-                json("POST", payload),
-            );
-            setOpen(false);
-            setTitle("");
-            onCreated?.(document);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : String(err));
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    return (
-        <>
-            <Button
-                variant="default"
-                onClick={() => setOpen(true)}
-            >
-                <Plus className="icon-md" />
-                <span>新建笔记</span>
-            </Button>
-
-            <Dialog
-                open={open}
-                onOpenChange={(next) => {
-                    if (!isSubmitting) setOpen(next);
-                }}
-            >
-                <DialogContent>
-                    <form
-                        className="documents-dialog-form"
-                        onSubmit={handleCreateSubmit}
-                    >
-                        <DialogHeader>
-                            <DialogTitle>新建笔记</DialogTitle>
-                        </DialogHeader>
-
-                        {error && (
-                            <StatusBanner
-                                tone="error"
-                                density="compact"
-                            >
-                                {error}
-                            </StatusBanner>
-                        )}
-
-                        <div className="documents-dialog-fields">
-                            <div className="documents-dialog-field">
-                                <label
-                                    htmlFor={titleId}
-                                    className="documents-dialog-label"
-                                >
-                                    笔记标题
-                                </label>
-                                <Input
-                                    id={titleId}
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    maxLength={DOCUMENT_TITLE_MAX_LENGTH}
-                                    placeholder="无标题笔记（可选）"
-                                    disabled={isSubmitting}
-                                    autoFocus
-                                />
-                                <span className="documents-dialog-counter">
-                                    {title.length} / {DOCUMENT_TITLE_MAX_LENGTH}
-                                </span>
-                            </div>
-
-                            <div className="documents-dialog-field">
-                                <label
-                                    htmlFor={notebookId}
-                                    className="documents-dialog-label"
-                                >
-                                    所属笔记本
-                                </label>
-                                <NativeSelect
-                                    id={notebookId}
-                                    value={selectedNotebookId ?? ""}
-                                    onChange={(e) =>
-                                        setSelectedNotebookId(
-                                            e.target.value || null,
-                                        )}
-                                    disabled={isSubmitting ||
-                                        notebooks === null}
-                                >
-                                    <NativeSelectOption value="">
-                                        (无笔记本)
-                                    </NativeSelectOption>
-                                    {notebookOptions.map((option) => (
-                                        <NativeSelectOption
-                                            key={option.id}
-                                            value={option.id}
-                                        >
-                                            {option.label}
-                                        </NativeSelectOption>
-                                    ))}
-                                </NativeSelect>
-                                {notebooksError && (
-                                    <span className="documents-dialog-hint">
-                                        {notebooksError}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setOpen(false)}
-                                disabled={isSubmitting}
-                            >
-                                取消
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="default"
-                                disabled={isSubmitting ||
-                                    title.length > DOCUMENT_TITLE_MAX_LENGTH}
-                            >
-                                {isSubmitting ? "创建中…" : "创建"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-        </>
-    );
-}

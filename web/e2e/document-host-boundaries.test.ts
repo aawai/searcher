@@ -148,7 +148,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                 );
                 await row.click();
                 await host.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                await host.getByRole("button", { name: "编辑", exact: true })
+                await page.getByRole("button", { name: "编辑", exact: true })
                     .click();
                 await host.locator(".ProseMirror").waitFor();
                 // The window stays inside the viewport; below 1024px it is
@@ -169,7 +169,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                     );
                 }
                 await host.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                await host.getByRole("button", { name: "分页", exact: true })
+                await page.getByRole("button", { name: "分页", exact: true })
                     .click();
                 await page.waitForFunction(() =>
                     Number(
@@ -189,11 +189,19 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                         ),
                     );
                 });
+                const format = host.getByRole("button", {
+                    name: "格式工具栏",
+                    exact: true,
+                });
+                if (await format.getAttribute("aria-pressed") === "false") {
+                    await format.click();
+                }
                 for (
                     const locator of [
                         frame.locator(".window-frame__title"),
-                        host.getByRole("button", {
-                            name: /返回笔记|返回上一级/,
+                        frame.getByRole("button", {
+                            name: "笔记侧栏",
+                            exact: true,
                         }),
                         frame.getByRole("button", {
                             name: "关闭笔记",
@@ -303,7 +311,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                     10,
                 );
                 await host.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                await host.getByRole("button", {
+                await page.getByRole("button", {
                     name: "Markdown 源码",
                     exact: true,
                 })
@@ -324,20 +332,27 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                         source.scrollTop > 0;
                 });
                 await visiblePoint(source);
-                await host.getByRole("button", {
-                    name: "返回上一级",
+                const sidebar = frame.getByRole("button", {
+                    name: "笔记侧栏",
                     exact: true,
-                }).click();
+                });
+                if (await sidebar.getAttribute("aria-expanded") === "false") {
+                    await sidebar.click();
+                }
                 await host.locator(
                     ".documents-workspace-list [data-document-id]",
                 ).nth(32).waitFor();
-                const libraryScroll = host.locator(".workspace-body");
+                const libraryScroll = host.getByRole("navigation", {
+                    name: "笔记侧栏",
+                    exact: true,
+                });
                 const libraryPoint = await visiblePoint(libraryScroll);
                 await page.mouse.move(libraryPoint.x, libraryPoint.y);
                 await page.mouse.wheel(0, 300);
                 await page.waitForFunction(() =>
-                    document.querySelector<HTMLElement>(".workspace-body")!
-                        .scrollTop > 0
+                    document.querySelector<HTMLElement>(
+                        'nav[aria-label="笔记侧栏"]',
+                    )!.scrollTop > 0
                 );
                 await frame.getByRole("button", {
                     name: "关闭笔记",

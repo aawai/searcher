@@ -1823,8 +1823,9 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
 
                 await libraryWindow(page, "notes").getByText("Left Band Note")
                     .first().click();
-                await libraryWindow(page, "notes").getByRole("button", {
-                    name: /^返回(笔记|上一级)$/,
+                await libraryWindow(page, "notes").getByRole("textbox", {
+                    name: "笔记标题",
+                    exact: true,
                 }).waitFor({ state: "visible" });
                 await assertWindowClearsDock(
                     page,
@@ -1846,8 +1847,9 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                 await dockSystemButton(page, "笔记").click();
                 await libraryWindow(page, "notes").getByText("Left Band Note")
                     .first().click();
-                await libraryWindow(page, "notes").getByRole("button", {
-                    name: /^返回(笔记|上一级)$/,
+                await libraryWindow(page, "notes").getByRole("textbox", {
+                    name: "笔记标题",
+                    exact: true,
                 }).waitFor({ state: "visible" });
                 await assertWindowClearsDock(
                     page,

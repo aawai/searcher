@@ -13,7 +13,7 @@ Deno.test("opening a note is an overlay, not a home scene change", () => {
         route: { view: "documents/edit", id: "note" },
     });
     assertEquals(opened.open, true);
-    assertEquals(opened.documents.stack, [{ view: "documents/root" }]);
+    assertEquals(opened.documents.route, { view: "documents/edit", id: "note" });
     assertEquals(libraryReducer(opened, { type: "leave" }).open, false);
 });
 
@@ -34,6 +34,13 @@ Deno.test("closing a dirty note requires confirmation, clean and filter actions 
         }),
         false,
     );
+    assertEquals(
+        shouldConfirmLibraryAction(true, {
+            type: "documents",
+            action: { type: "navigate", route: { view: "documents/edit", id: "other" } },
+        }),
+        true,
+    );
 });
 
 Deno.test("close returns to its trigger, detached trigger falls back to search", () => {
@@ -45,7 +52,7 @@ Deno.test("close returns to its trigger, detached trigger falls back to search",
     assertEquals(libraryFocusTarget(null, search), search);
 });
 
-Deno.test("logout clears selection, route stack, search and scopes", () => {
+Deno.test("logout clears selection, route, search and scopes", () => {
     const open = libraryReducer(initialLibraryState, {
         type: "select",
         selection: { kind: "notes" },
@@ -75,13 +82,12 @@ Deno.test("new note creation replaces its route without adding to navigation his
         type: "documents",
         action: { type: "navigate", route },
     });
-    assertEquals(same.documents.stack, opened.documents.stack);
+    assertEquals(same.documents.route, route);
     const created = libraryReducer(same, {
         type: "documents",
         action: { type: "created", id: "new-note" },
     });
     assertEquals(created.documents.route, { view: "documents/edit", id: "new-note" });
-    assertEquals(created.documents.stack, opened.documents.stack);
     const different = libraryReducer(opened, {
         type: "documents",
         action: {
@@ -89,5 +95,5 @@ Deno.test("new note creation replaces its route without adding to navigation his
             route: { view: "documents/new", target: { ...route.target, isHomeFixed: true } },
         },
     });
-    assertEquals(different.documents.stack.length, opened.documents.stack.length + 1);
+    assertEquals(different.documents.route, { view: "documents/new", target: { ...route.target, isHomeFixed: true } });
 });

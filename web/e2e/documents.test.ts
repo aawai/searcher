@@ -257,6 +257,13 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     name: "编辑",
                     exact: true,
                 }).click();
+                const formatToggle = page.getByRole("button", {
+                    name: "格式工具栏",
+                    exact: true,
+                });
+                if (await formatToggle.getAttribute("aria-pressed") === "false") {
+                    await formatToggle.click();
+                }
                 const toolbar = page.getByRole("toolbar", {
                     name: "笔记编辑格式工具栏",
                     exact: true,
@@ -318,8 +325,8 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     "coarse-width header buttons must meet the shared touch target",
                 );
 
-                await page.getByRole("textbox", {
-                    name: "笔记标题",
+                await page.getByRole("button", {
+                    name: "更多笔记操作",
                     exact: true,
                 }).focus();
                 await page.keyboard.press("Tab");
@@ -663,15 +670,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             async () => {
                 await page.setViewportSize({ width: 1440, height: 900 });
                 await resetHome("light");
-                // Close the existing editor before seeding a separate long document.
-                await page.getByRole("button", {
-                    name: "返回上一级",
-                    exact: true,
-                }).click();
-                await page.getByRole("textbox", {
-                    name: "笔记标题",
-                    exact: true,
-                }).waitFor({ state: "detached" });
+                // The persistent sidebar can open the next document directly.
                 const large = await request<DocumentDto>(
                     "/api/documents",
                     "POST",

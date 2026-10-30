@@ -651,9 +651,12 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     );
     assert(afterImage.marker);
     assert(
-        Math.abs(afterImage.marker.y - beforeImage.marker.y) > 24 ||
+        Math.abs(afterImage.marker.y - beforeImage.marker.y) >
+                24 * afterImage.scale ||
             afterImage.marker.lines !== beforeImage.marker.lines,
-        "decoded image dimensions change downstream content geometry",
+        `decoded image dimensions change downstream content geometry: ${
+            JSON.stringify({ beforeImage, afterImage })
+        }`,
     );
 
     const fontBeforeSamples = await captureLayoutFrames(

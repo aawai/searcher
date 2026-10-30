@@ -60,11 +60,7 @@ Deno.test("document editor opens share events and preserve conflict drafts", asy
     });
     await page.reload();
     await openNotes(page);
-    for (const [index, item] of seeded.entries()) {
-        if (index > 0) {
-            await page.getByRole("button", { name: "返回上一级", exact: true })
-                .click();
-        }
+    for (const item of seeded) {
         await page.locator(`[data-document-id="${item.id}"] h4 button`).click();
         await page.waitForFunction(
             (title) =>
@@ -171,9 +167,7 @@ Deno.test("document editor opens share events and preserve conflict drafts", asy
         original: "另一设备的新正文",
         copy: localMarkdown,
     });
-    await page.getByRole("button", { name: "返回上一级", exact: true })
-        .click();
-    // Closing the editor keeps the one shared stream: Home papers stay live.
+    // Switching notes keeps the one shared stream: Home papers stay live.
     await page.waitForFunction(() => {
         const live = globalThis.__documentStreams.filter((stream) =>
             stream.readyState !== EventSource.CLOSED

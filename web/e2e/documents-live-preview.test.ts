@@ -57,7 +57,7 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
         }).inputValue(),
         body,
     );
-    await page.getByRole("button", { name: "切换编辑模式，当前：Markdown 源码", exact: true }).click();
+    await page.getByRole("button", { name: "切换编辑模式，当前：源码", exact: true }).click();
     await page.getByRole("button", { name: "编辑", exact: true }).click();
     await page.locator('.document-editor-scroll-area [contenteditable="true"]')
         .waitFor();

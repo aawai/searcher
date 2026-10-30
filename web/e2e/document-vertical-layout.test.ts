@@ -251,7 +251,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         }
     });
     await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await win.getByRole("button", { name: "分页", exact: true }).click();
+    await page.getByRole("button", { name: "分页", exact: true }).click();
     await page.waitForFunction(() =>
         document.querySelector(".pagination-viewport")
             ?.getAttribute("data-page-count") === "3"
@@ -1032,7 +1032,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
             range.setStart(node, offset);
             range.setEnd(node, offset + "THIRDPAGEGLYPH147".length);
             const rect = range.getBoundingClientRect();
-            return { x: rect.right - 2, y: rect.y + rect.height / 2 };
+            return { x: rect.right + 2, y: rect.y + rect.height / 2 };
         }
         return null;
     });
@@ -1088,7 +1088,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         repeatedTallCell.repeat(160) +
         " |\n| NEXT_ROW_147 | Text after the tall row |\n\nEND_DOCUMENT_147";
     await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await win.getByRole("button", { name: "Markdown 源码", exact: true })
+    await page.getByRole("button", { name: "Markdown 源码", exact: true })
         .click();
     const source = win.getByRole("textbox", {
         name: "Markdown 源码正文",
@@ -1097,7 +1097,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     await source.waitFor();
     await source.fill(tallRowBody);
     await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await win.getByRole("button", { name: "分页", exact: true }).click();
+    await page.getByRole("button", { name: "分页", exact: true }).click();
     await page.waitForFunction(() =>
         !!document.querySelector(
             '[data-pagination-mode="page"][data-page-count]',
@@ -1189,7 +1189,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
 
     async function sourceFixture(markdown: string, expectedPages: number) {
         await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-        await win.getByRole("button", { name: "Markdown 源码", exact: true })
+        await page.getByRole("button", { name: "Markdown 源码", exact: true })
             .click();
         const markdownBody = win.getByRole("textbox", {
             name: "Markdown 源码正文",
@@ -1198,7 +1198,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         await markdownBody.waitFor();
         await markdownBody.fill(markdown);
         await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-        await win.getByRole("button", { name: "分页", exact: true }).click();
+        await page.getByRole("button", { name: "分页", exact: true }).click();
         await page.waitForFunction((pages) => {
             const viewport = document.querySelector<HTMLElement>(
                 ".pagination-viewport",

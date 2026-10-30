@@ -2,8 +2,10 @@ import { assertEquals } from "@std/assert";
 import {
     type DevicePreferenceStorage,
     readDevicePreferences,
+    readSidebarCollapsed,
     resolveToolbarCollapsed,
     writeOutlineOpen,
+    writeSidebarCollapsed,
     writeToolbarCollapsed,
 } from "./device-preferences.ts";
 
@@ -44,6 +46,19 @@ Deno.test("device preferences: choices persist independently per account and dev
     assertEquals(readDevicePreferences(otherDevice, "alice"), { toolbarCollapsed: null, outlineOpen: false });
     writeOutlineOpen(device, "alice", false);
     assertEquals(readDevicePreferences(device, "alice"), { toolbarCollapsed: true, outlineOpen: false });
+});
+
+Deno.test("sidebar preference defaults open and is isolated by account and device", () => {
+    const device = memoryStorage();
+    const otherDevice = memoryStorage();
+    assertEquals(readSidebarCollapsed(device, "alice"), false);
+    writeSidebarCollapsed(device, "alice", true);
+    assertEquals(readSidebarCollapsed(device, "alice"), true);
+    assertEquals(readSidebarCollapsed(device, "bob"), false);
+    assertEquals(readSidebarCollapsed(otherDevice, "alice"), false);
+    writeSidebarCollapsed(device, "alice", false);
+    assertEquals(readSidebarCollapsed(device, "alice"), false);
+    assertEquals(readSidebarCollapsed(null, "alice"), false);
 });
 
 Deno.test("device preferences: invalid values and unavailable storage use defaults", () => {

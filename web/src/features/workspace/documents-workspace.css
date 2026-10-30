@@ -1,6 +1,66 @@
+.documents-layout {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+.documents-sidebar {
+    flex: 0 0 var(--notes-sidebar-width);
+    min-width: 0;
+    min-height: 0;
+    background: var(--surface-l3);
+    border-inline-end: var(--space-hairline) solid var(--border);
+}
+.documents-sidebar[hidden] { display: none; }
+.documents-sidebar > nav {
+    height: 100%;
+    overflow: auto;
+}
+.documents-sidebar--drawer {
+    position: absolute;
+    inset: 0;
+    z-index: var(--elevation-local-10);
+    display: flex;
+    border: 0;
+    background: transparent;
+}
+.documents-sidebar--drawer > nav {
+    flex: 0 0 min(var(--notes-sidebar-width), 80%);
+    background: var(--surface-l3);
+}
+.documents-drawer-dismiss {
+    flex: 1;
+    border: 0;
+    background: var(--surface-l3);
+    cursor: pointer;
+}
+.documents-editor-pane {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
 /* The library's notes view: one navigation row, one search row, flat rows. */
 .documents-workspace {
     gap: var(--space-4);
+}
+.documents-sidebar-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+}
+.documents-sidebar-header .documents-list-toolbar {
+    flex: 1;
+    min-width: 0;
+    gap: 0;
+}
+.documents-sidebar-header > [data-slot="button"] {
+    flex: none;
 }
 
 /* Filters, notebook picker and notebook management share one control row. */
@@ -78,6 +138,9 @@
     transition: background var(--motion-fast) var(--ease-standard);
 }
 .documents-summary-row:is(:hover, :focus-within) {
+    background: var(--surface-soft);
+}
+.documents-summary-row:has([aria-current="page"]) {
     background: var(--surface-soft);
 }
 .documents-summary-header {

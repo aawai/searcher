@@ -1,4 +1,4 @@
-import { MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
+import { BREAKPOINTS, MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
 import {
     type ChangeEvent,
     type FocusEvent,
@@ -24,6 +24,8 @@ import { DocumentPaperSettingsDialog } from "./DocumentPaperSettingsDialog.tsx";
 import { prepareDocumentPrint } from "./document-print.ts";
 import { api, ApiError } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
+import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
+import { WindowOverlay } from "../../components/ui/window-overlay.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -241,6 +243,8 @@ export interface DocumentEditorProps {
     onOpenDocument?: (id: string) => void;
     onChanged?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
+    narrow?: boolean;
+    focusTitleSignal?: number;
     eventSubscriptions?: DocumentEventSubscriptions;
 }
 
@@ -252,6 +256,8 @@ export function DocumentEditor({
     onOpenDocument,
     onChanged,
     onDirtyChange,
+    narrow = false,
+    focusTitleSignal,
     eventSubscriptions,
 }: DocumentEditorProps) {
     // 1. Session Setup & useSyncExternalStore
@@ -334,15 +340,21 @@ export function DocumentEditor({
     const [devicePreferences, setDevicePreferences] = useState(() =>
         readDevicePreferences(deviceStorage(), userId)
     );
-    const [editorWidth, setEditorWidth] = useState(() => globalThis.innerWidth);
     const [coarsePointer, setCoarsePointer] = useState(() =>
         globalThis.matchMedia("(any-pointer: coarse)").matches
     );
     const editorContainerRef = useRef<HTMLDivElement>(null);
+    const titleInputRef = useRef<HTMLInputElement>(null);
+    const outlineButtonRef = useRef<HTMLButtonElement>(null);
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const [sheetRestoreFocus, setSheetRestoreFocus] = useState(true);
+    const [outlineHasFocus, setOutlineHasFocus] = useState(false);
+    const [outlineFits, setOutlineFits] = useState(false);
     const showOutline = devicePreferences.outlineOpen;
+    const visibleOutline = narrow ? sheetOpen : showOutline;
     const showToolbar = !resolveToolbarCollapsed(
         devicePreferences.toolbarCollapsed,
-        editorWidth,
+        narrow ? 0 : BREAKPOINTS.medium,
         coarsePointer,
     );
     const [modeOpen, setModeOpen] = useState(false);
@@ -354,32 +366,57 @@ export function DocumentEditor({
         const observer = new ResizeObserver((entries) => {
             const width = entries[0]?.contentRect.width;
             if (width !== undefined && width > 0) {
-                if (
-                    resolveToolbarCollapsed(devicePreferences.toolbarCollapsed, width, coarsePointer) &&
-                    toolbarContainerRef.current?.contains(document.activeElement)
-                ) formatButtonRef.current?.focus();
-                setEditorWidth(width);
+                const outlineWidth = Number.parseFloat(
+                    getComputedStyle(container).getPropertyValue("--document-outline-width"),
+                );
+                setOutlineFits(width >= BREAKPOINTS.small + outlineWidth);
             }
         });
         observer.observe(container);
         return () => observer.disconnect();
-    }, [snapshot.document, devicePreferences.toolbarCollapsed, coarsePointer]);
+    }, [snapshot.document]);
     useEffect(() => {
         const media = globalThis.matchMedia("(any-pointer: coarse)");
         const onChange = () => {
             if (
-                resolveToolbarCollapsed(devicePreferences.toolbarCollapsed, editorWidth, media.matches) &&
+                resolveToolbarCollapsed(devicePreferences.toolbarCollapsed, narrow ? 0 : BREAKPOINTS.medium, media.matches) &&
                 toolbarContainerRef.current?.contains(document.activeElement)
             ) formatButtonRef.current?.focus();
             setCoarsePointer(media.matches);
         };
         media.addEventListener("change", onChange);
         return () => media.removeEventListener("change", onChange);
-    }, [devicePreferences.toolbarCollapsed, editorWidth]);
+    }, [devicePreferences.toolbarCollapsed, narrow]);
+    useEffect(() => {
+        if (
+            !showToolbar &&
+            toolbarContainerRef.current?.contains(document.activeElement)
+        ) formatButtonRef.current?.focus();
+    }, [showToolbar]);
+    useEffect(() => {
+        if (focusTitleSignal !== undefined) titleInputRef.current?.focus();
+    }, [focusTitleSignal, snapshot.loading]);
+    useEffect(() => {
+        if (!narrow || !richMode) setSheetOpen(false);
+    }, [narrow, richMode]);
     const updateOutline = (open: boolean) => {
         writeOutlineOpen(deviceStorage(), userId, open);
         setDevicePreferences((previous) => ({ ...previous, outlineOpen: open }));
     };
+    const closeOutline = () => {
+        if (narrow) {
+            setSheetRestoreFocus(true);
+            setSheetOpen(false);
+        } else {
+            updateOutline(false);
+            outlineButtonRef.current?.focus();
+        }
+    };
+    useEscapeLayer(
+        !narrow && showOutline && !outlineFits && outlineHasFocus && richMode,
+        closeOutline,
+        "overlay",
+    );
     const toggleToolbar = () => {
         const collapsed = showToolbar;
         if (collapsed && toolbarContainerRef.current?.contains(document.activeElement)) {
@@ -980,6 +1017,15 @@ export function DocumentEditor({
 
     // 13. Outline click focus
     const handleOutlineSelectHeading = (index: number) => {
+        if (narrow) {
+            setSheetRestoreFocus(false);
+            setSheetOpen(false);
+            requestAnimationFrame(() => focusOutlineHeading(index));
+            return;
+        }
+        focusOutlineHeading(index);
+    };
+    const focusOutlineHeading = (index: number) => {
         if (richMode) {
             const headings = editorRootRef.current?.querySelectorAll(
                 "h1, h2, h3, h4, h5, h6",
@@ -1191,6 +1237,7 @@ export function DocumentEditor({
                 {/* Document Title Input */}
                 <div className="document-title-wrapper">
                     <input
+                        ref={titleInputRef}
                         type="text"
                         className="document-title-input"
                         placeholder="未命名笔记…"
@@ -1223,14 +1270,22 @@ export function DocumentEditor({
 
                     <div className="document-editor-header-actions">
                         <Button
+                            ref={outlineButtonRef}
                             type="button"
                             variant="ghost"
                             size="icon"
                             aria-label="大纲"
                             title="大纲"
-                            aria-pressed={showOutline}
+                            aria-pressed={visibleOutline}
                             disabled={viewMode === "source"}
-                            onClick={() => updateOutline(!showOutline)}
+                            onClick={() => {
+                                if (narrow) {
+                                    setSheetRestoreFocus(true);
+                                    setSheetOpen(!sheetOpen);
+                                } else {
+                                    updateOutline(!showOutline);
+                                }
+                            }}
                         >
                             <BookOpen size="1em" className="icon-sm" />
                         </Button>
@@ -1369,7 +1424,7 @@ export function DocumentEditor({
 
             {/* Toolbar: Formatting disabled in source mode per §32 */}
             {showToolbar && (
-                <div ref={toolbarContainerRef}>
+                <div ref={toolbarContainerRef} className="document-toolbar-container">
                     <DocumentToolbar
                         disabled={viewMode === "source" || isUploading}
                         activeCommands={viewMode === "source"
@@ -1438,21 +1493,24 @@ export function DocumentEditor({
                     </div>
                 </div>
 
-                {/* Outline Panel */}
-                {showOutline && richMode && (
-                    <Suspense
-                        fallback={
-                            <LoadingState density="compact">
-                                正在加载大纲…
-                            </LoadingState>
-                        }
+                {!narrow && showOutline && richMode && (
+                    <div
+                        className={outlineFits ? "document-outline-panel" : "document-outline-panel document-outline-panel--overlay"}
+                        onFocus={() => setOutlineHasFocus(true)}
+                        onBlur={(event) => {
+                            if (!event.currentTarget.contains(event.relatedTarget)) {
+                                setOutlineHasFocus(false);
+                            }
+                        }}
                     >
-                        <DocumentOutline
-                            outline={analysis.outline}
-                            onSelectHeading={handleOutlineSelectHeading}
-                            onClose={() => updateOutline(false)}
-                        />
-                    </Suspense>
+                        <Suspense fallback={<LoadingState density="compact">正在加载大纲…</LoadingState>}>
+                            <DocumentOutline
+                                outline={analysis.outline}
+                                onSelectHeading={handleOutlineSelectHeading}
+                                onClose={closeOutline}
+                            />
+                        </Suspense>
+                    </div>
                 )}
             </div>
             <div className="document-editor-status-bar">
@@ -1511,6 +1569,22 @@ export function DocumentEditor({
                     </span>
                 </div>
             </div>
+            <WindowOverlay
+                open={narrow && sheetOpen && richMode}
+                onOpenChange={setSheetOpen}
+                label="笔记大纲"
+                className="document-outline-sheet"
+                restoreFocusRef={outlineButtonRef}
+                restoreFocus={sheetRestoreFocus}
+            >
+                <Suspense fallback={<LoadingState density="compact">正在加载大纲…</LoadingState>}>
+                    <DocumentOutline
+                        outline={analysis.outline}
+                        onSelectHeading={handleOutlineSelectHeading}
+                        onClose={closeOutline}
+                    />
+                </Suspense>
+            </WindowOverlay>
 
             <DocumentPaperSettingsDialog
                 documentId={documentId}

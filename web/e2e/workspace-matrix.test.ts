@@ -391,11 +391,12 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
                 ".document-editor-container, [data-workspace-editor]",
             ).first();
             await docEditor.waitFor({ state: "visible" });
-            const mobileDocBack = documentsPanel.getByRole("button", {
-                name: /返回笔记|返回上一级/,
-            }).first();
-            await mobileDocBack.waitFor({ state: "visible" });
-            await mobileDocBack.click();
+            const sidebar = documentsPanel.getByRole("button", {
+                name: "笔记侧栏",
+                exact: true,
+            });
+            assertEquals(await sidebar.getAttribute("aria-expanded"), "false");
+            await sidebar.click();
             await documentsPanel.locator("[data-document-id]").first()
                 .waitFor({ state: "visible" });
 

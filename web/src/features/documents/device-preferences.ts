@@ -65,6 +65,21 @@ export function writeOutlineOpen(
     writeBoolean(storage, preferenceKey(userId, "outline"), open);
 }
 
+export function readSidebarCollapsed(
+    storage: DevicePreferenceStorage | null,
+    userId: string,
+): boolean {
+    return readBoolean(storage, preferenceKey(userId, "sidebar")) ?? false;
+}
+
+export function writeSidebarCollapsed(
+    storage: DevicePreferenceStorage | null,
+    userId: string,
+    collapsed: boolean,
+): void {
+    writeBoolean(storage, preferenceKey(userId, "sidebar"), collapsed);
+}
+
 export function resolveToolbarCollapsed(
     preference: boolean | null,
     width: number,
