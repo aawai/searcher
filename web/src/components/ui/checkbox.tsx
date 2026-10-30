@@ -6,6 +6,8 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
     return (
         <CheckboxPrimitive.Root
             data-slot="checkbox"
+            nativeButton
+            render={<button type="button" />}
             className={cn("peer", className)}
             {...props}
         >

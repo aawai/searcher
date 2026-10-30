@@ -86,6 +86,22 @@
     min-height: 0;
     overflow: hidden;
 }
+/* The empty state lives in the shell chunk; the editor chunk is not loaded yet. */
+.documents-editor-empty {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+}
+.documents-editor-empty > .document-editor-header--bare {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
 
 /* The library's notes view: one navigation row, one search row, flat rows. */
 .documents-workspace {

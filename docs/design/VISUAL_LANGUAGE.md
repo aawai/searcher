@@ -80,6 +80,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--background`                     | `#F4F4F5`                       | `#111113`                 | 页面画布                                         |
 | `--surface` / `--surface-solid`    | `#FFFFFF`                       | `#1C1C1F`                 | 分组列表、面板、对话框                           |
 | `--surface-soft`                   | `#EBEBEE`                       | `#2A2A2E`                 | 控件填充、hover、用户气泡                        |
+| `--surface-grouped-canvas`         | `--background`                  | `--surface-l3`            | Overlay（设置窗口）内分组列表背后的画布；亮色下 `--surface` 与 Overlay 同为白色，没有该画布分组卡片不可见，owner `window-frame.css` |
 | `--foreground`                     | `#1D1D1F`                       | `#F5F5F7`                 | 正文与标题                                       |
 | `--muted`                          | `#66666B`                       | `#A1A1A6`                 | 次要文字（≥4.5:1，含填充底）                     |
 | `--border`                         | `rgb(0 0 0 / 0.09)`             | `rgb(255 255 255 / 0.10)` | 细线分隔                                         |
@@ -204,6 +205,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 
 - **Button**：省略 `variant` 时默认 `outline`（`.button--subtle`，`--surface-soft` 填充、无描边，作为次要操作与安全默认，避免未传参误建多个主按钮）；显式 `variant="default"` 为 primary（`.button--primary`，强调色填充，每区域最多一个）；`ghost`（`.button--ghost`，透明，工具栏与图标按钮）；`destructive`（`.button--danger`，普通态为危险文字色配 12% 危险色浅底，仅在 `AlertDialog` 确认对话框内实色填充 `--danger`）；`link`（`.button--link`，强调色文字、无内边距，粗指针命中高 ≥ 44px）；`content`（`.button--content`，块级透明、继承字号与字色、允许换行、最小 44×44 命中区，用于会话列表项与搜索结果等内容消费触发器，而非传统动作按钮）。常规按钮的 `size` 是单选：`default` 高 36、`sm` 高 28、`icon` 为 36 方形；粗指针命中区 ≥ 44×44。`link` 与 `content` 的尺寸另按上述变体规则覆盖。
 - **Input / Textarea / Select**：独立表单与纵向分组行中使用 surface 背景 + `--border-control` 细边；在横向分组行内使用无边框、透明底、值右对齐的行内输入，hover 显示 `--surface-soft` 底，键盘焦点显示焦点环。
+- **Checkbox / RadioGroup / Switch / Slider**：只使用 `components/ui` 的组件，业务代码禁止直接写 `<input type="checkbox|radio|range">`（`check:ui` 规则 `native-form-control`；唯一例外是渲染 Markdown 任务列表的 `NoteMarkdown.tsx`，它是文档内容而非界面控件）。Checkbox 渲染为原生 `<button role="checkbox">`，保证 Tab 可聚焦。RadioGroup 的 `default` 变体是带文字的行内单选（紧凑高度、无底色、粗指针 ≥44px）；`rows` 变体让一组单选分布在不同的分组行里，容器本身 `display: contents`，不产生盒子也不打断行间分隔线。
 - **分组列表（Grouped List）**：设置、账户、管理页的基本单元。圆角 `--radius` 的 `--surface` 容器；行高 ≥ 44，左侧标签，右侧控件或值；行间为左侧内缩的细线；分组标题（14 / 600、前景色）在容器外上方，脚注（metadata、`--muted`）在容器外下方。
   - **容量与堆叠**：`semantic.css` 拥有 `SettingsRow` 布局。普通单值行保留右对齐值与 Input / Select；标签以局部语义 Token `--settings-row-label-min: 8em` 保留约八个正文字符的阅读容量，下限不超过行可用宽度，容量不足时控件先换到下一行并保持右对齐，不把短标签压成字列。长用户标题、metadata 与值允许在行内换行，不使用全局 nowrap 或 max-content 下限。
   - **复合管理行**：模型的多项开关与操作、备份文件的选择 / 文件名 / 预检等复合内容使用既有 `.settings-row--vertical`，标签与 metadata 在上，控制组在下左对齐；控制组按 DOM 顺序换行，文件名完整换行，不以裁切、隐藏操作或缩小命中区换取容量。纵向行不将标签的横向 flex-basis 用作高度。

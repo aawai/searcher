@@ -1426,7 +1426,7 @@ Deno.test(
                             const rowRect = row.getBoundingClientRect();
                             const controls = Array.from(
                                 row.querySelectorAll<HTMLElement>(
-                                    ".ai-model-toggle, .ai-model-controls button",
+                                    ".ai-model-toggle, .ai-model-controls > button",
                                 ),
                             );
                             return controls.map((el) => {
@@ -1920,19 +1920,17 @@ Deno.test(
 
                 assertEquals(await visibleCheckbox.isChecked(), true);
                 await visibleCheckbox.click();
-                await page.waitForFunction(() => {
-                    const el = document.querySelector<HTMLInputElement>(
-                        'input[aria-label="可见 标准稳定模型"]',
-                    );
-                    return el && !el.checked;
-                });
+                await page.waitForFunction(() =>
+                    document.querySelector(
+                        '[role="checkbox"][aria-label="可见 标准稳定模型"]',
+                    )?.getAttribute("aria-checked") === "false"
+                );
                 await visibleCheckbox.click();
-                await page.waitForFunction(() => {
-                    const el = document.querySelector<HTMLInputElement>(
-                        'input[aria-label="可见 标准稳定模型"]',
-                    );
-                    return el && el.checked;
-                });
+                await page.waitForFunction(() =>
+                    document.querySelector(
+                        '[role="checkbox"][aria-label="可见 标准稳定模型"]',
+                    )?.getAttribute("aria-checked") === "true"
+                );
                 assertEquals(await defaultRadio.isChecked(), true);
 
                 await reasoningBtn.click();
