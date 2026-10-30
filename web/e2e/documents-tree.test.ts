@@ -123,9 +123,10 @@ Deno.test("笔记本树：结构、键盘、懒加载、未分类与图钉标记
         const more = ui.item("加载更多");
         await more.focus();
         await page.keyboard.press("Enter");
+        // The node's 加载更多 disappears only once the last page is committed.
+        await ui.item("加载更多").waitFor({ state: "detached" });
         await ui.item("读书25").waitFor();
         assertEquals(await ui.item(/^读书\d\d$/).count(), 25);
-        assertEquals(await ui.item("加载更多").count(), 0);
 
         // 未分类 (scope=uncategorized) with favorite and pin markers.
         await ui.item("未分类").click();
@@ -257,8 +258,13 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         await ui.frame.getByRole("button", { name: "打开笔记：散记置顶" }).waitFor();
         assertEquals(await ui.frame.getByRole("button", { name: "收藏", exact: true }).getAttribute("aria-pressed"), "true");
 
-        // The 笔记本 heading returns to the tree, keeping its expansion and selection.
-        await ui.frame.getByRole("button", { name: "笔记本", exact: true }).click();
+        // In list mode the heading row shows the scope name and keeps the create buttons;
+        // it returns to the tree, keeping its expansion and selection.
+        const backToTree = ui.frame.getByRole("button", { name: /^返回笔记本/ });
+        assertEquals(await backToTree.textContent(), "收藏");
+        await ui.newNote.waitFor();
+        await ui.newNotebook.waitFor();
+        await backToTree.click();
         await ui.tree.waitFor();
         assertEquals(await ui.mode(), "tree");
         assertEquals(await expanded(ui.item("阅读")), "true");
@@ -267,6 +273,11 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         // Opening a note from the list reveals it in the tree.
         await ui.search.fill("工作笔记");
         await ui.frame.getByRole("button", { name: "打开笔记：工作笔记" }).click();
+        // The open has completed once the editor shows the note; only then clear the search.
+        await page.waitForFunction(
+            (name) => document.querySelector<HTMLInputElement>('[data-window-id="notes"] input[aria-label="笔记标题"]')?.value === name,
+            "工作笔记",
+        );
         await ui.search.fill("");
         await ui.frame.getByRole("button", { name: "笔记本", exact: true }).click();
         await ui.item("工作笔记").waitFor();

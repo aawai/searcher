@@ -48,6 +48,7 @@ export const suites = {
         "documents-live-editing",
         "documents-ux",
         "documents-tree",
+        "documents-chrome",
         "documents-drawer-motion",
         "documents-drafts",
         "document-vertical-layout",

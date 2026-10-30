@@ -1,5 +1,6 @@
 import {
     type MutableRefObject,
+    type RefObject,
     useContext,
     useEffect,
     useId,
@@ -11,11 +12,13 @@ import {
     ArrowDown,
     ArrowUp,
     ChevronDown,
+    ChevronLeft,
     ChevronRight,
     Clock,
     FolderInput,
     FolderPlus,
     Inbox,
+    PanelLeftClose,
     Pencil,
     Pin,
     Plus,
@@ -88,6 +91,9 @@ export interface DocumentsSidebarProps {
     onOpenTrash: () => void;
     /** Notebook of notes the sidebar has not loaded, e.g. a note just created. */
     noteNotebooks: MutableRefObject<Map<string, string | null>>;
+    /** Persistent sidebars carry their own collapse button; drawers dismiss through the scrim. */
+    onCollapse?: () => void;
+    collapseRef?: RefObject<HTMLButtonElement | null>;
 }
 
 const errorText = (cause: unknown, fallback: string) =>
@@ -170,8 +176,9 @@ export function DocumentsSidebar({
     onDocumentTrashed,
     onOpenTrash,
     noteNotebooks,
+    onCollapse,
+    collapseRef,
 }: DocumentsSidebarProps) {
-    const notebooksHeadingId = useId();
     const listHeadingId = useId();
     const trimmedQuery = query.trim();
     const isSearching = trimmedQuery.length > 0;
@@ -597,34 +604,33 @@ export function DocumentsSidebar({
         }
     };
 
+    // Only the tree's label is a heading; a list names itself through its own (hidden) heading.
+    const HeadingTag = treeMode ? "h3" : "div";
     const listLabel = isSearching ? "搜索结果" : scope.type === "recent" ? "最近笔记" : "收藏笔记";
+    const scopeName = isSearching ? "搜索结果" : scope.type === "recent" ? "最近" : "收藏";
 
     return (
         <div className="workspace-root documents-workspace" data-workspace-content="documents" data-sidebar-mode={treeMode ? "tree" : "list"}>
             <div className="documents-sidebar-header">
                 <div className="documents-list-toolbar">
                     <WorkspaceSearch ariaLabel="搜索笔记" placeholder="搜索笔记" value={query} onChange={onQueryChange} />
+                </div>
+                {onCollapse && (
                     <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="新建笔记"
-                        title={createTargetTitle(createTarget)}
-                        onClick={() => newNote(createTarget.notebookId)}
-                    >
-                        <Plus className="icon-md" />
-                    </Button>
-                    <Button
+                        ref={collapseRef}
                         type="button"
                         variant="ghost"
                         size="icon"
-                        aria-label="新建笔记本"
-                        title={parentName ? `新建子笔记本（在「${parentName}」下）` : "新建笔记本"}
-                        disabled={ops.isPending}
-                        onClick={() => ops.createNotebook(newNotebookParent ?? "")}
+                        aria-label="笔记侧栏"
+                        title="收起笔记侧栏"
+                        aria-expanded={true}
+                        aria-pressed={true}
+                        aria-controls="notes-sidebar"
+                        onClick={onCollapse}
                     >
-                        <FolderPlus className="icon-md" />
+                        <PanelLeftClose className="icon-md" />
                     </Button>
-                </div>
+                )}
             </div>
             <div className="documents-sidebar-scroll">
                 {notebookError && (
@@ -655,17 +661,48 @@ export function DocumentsSidebar({
                         <span>收藏</span>
                     </Button>
                 </div>
-                <section className="documents-notebook-area" aria-labelledby={notebooksHeadingId}>
-                    <h3 id={notebooksHeadingId} className="documents-notebooks-heading">
+                <section className="documents-notebook-area" aria-label="笔记本">
+                    <div className="documents-notebooks-row">
+                        <HeadingTag className="documents-notebooks-heading">
+                            <Button
+                                variant="ghost"
+                                className="documents-entry"
+                                aria-current={treeMode ? "true" : undefined}
+                                aria-label={treeMode ? undefined : `返回笔记本，当前：${scopeName}`}
+                                title={treeMode ? undefined : "返回笔记本"}
+                                onClick={showTree}
+                            >
+                                {treeMode ? "笔记本" : (
+                                    <>
+                                        <ChevronLeft className="icon-sm" aria-hidden="true" />
+                                        <span>{scopeName}</span>
+                                    </>
+                                )}
+                            </Button>
+                        </HeadingTag>
                         <Button
                             variant="ghost"
-                            className="documents-entry"
-                            aria-current={treeMode ? "true" : undefined}
-                            onClick={showTree}
+                            size="icon"
+                            className="documents-heading-action"
+                            aria-label="新建笔记"
+                            title={createTargetTitle(createTarget)}
+                            onClick={() => newNote(createTarget.notebookId)}
                         >
-                            笔记本
+                            <Plus className="icon-md" />
                         </Button>
-                    </h3>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="documents-heading-action"
+                            aria-label="新建笔记本"
+                            title={parentName ? `新建子笔记本（在「${parentName}」下）` : "新建笔记本"}
+                            disabled={ops.isPending}
+                            onClick={() => ops.createNotebook(newNotebookParent ?? "")}
+                        >
+                            <FolderPlus className="icon-md" />
+                        </Button>
+                    </div>
                     {treeMode
                         ? (
                             <div ref={treeRoot}>

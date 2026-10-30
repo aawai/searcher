@@ -258,12 +258,10 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     exact: true,
                 }).click();
                 const formatToggle = page.getByRole("button", {
-                    name: "格式工具栏",
+                    name: "显示格式工具栏",
                     exact: true,
                 });
-                if (await formatToggle.getAttribute("aria-pressed") === "false") {
-                    await formatToggle.click();
-                }
+                if (await formatToggle.count()) await formatToggle.click();
                 const toolbar = page.getByRole("toolbar", {
                     name: "笔记编辑格式工具栏",
                     exact: true,

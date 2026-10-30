@@ -8,7 +8,9 @@ import {
     useState,
 } from "react";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
+import { PanelLeftOpen } from "lucide-react";
 import { EmptyState, LoadingState } from "../../components/searcher/semantic.tsx";
+import { Button } from "../../components/ui/button.tsx";
 import { DocumentsSidebar } from "./DocumentsSidebar.tsx";
 import { WindowOverlay } from "../../components/ui/window-overlay.tsx";
 
@@ -29,7 +31,9 @@ export interface DocumentsWorkspaceProps {
     sidebarPersistent: boolean;
     sidebarOpen: boolean;
     onSidebarOpenChange: (open: boolean) => void;
-    sidebarTriggerRef: RefObject<HTMLElement | null>;
+    sidebarTriggerRef: RefObject<HTMLButtonElement | null>;
+    /** Full screen hides the navigation and every control that opens it. */
+    fullScreen?: boolean;
     onOpenTrash: () => void;
     narrow: boolean;
     onDirtyChange?: (dirty: boolean) => void;
@@ -46,6 +50,38 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
     // Where notes the sidebar has not loaded live; a new note's notebook is known here.
     const noteNotebooks = useRef(new Map<string, string | null>());
     const refresh = () => setRevision((value) => value + 1);
+    const collapseRef = useRef<HTMLButtonElement>(null);
+    // The collapse and expand buttons replace each other; focus follows the toggle.
+    const toggleFocus = useRef<"expand" | "collapse" | null>(null);
+    useEffect(() => {
+        if (!props.sidebarPersistent) return;
+        const target = toggleFocus.current;
+        toggleFocus.current = null;
+        if (target === "expand" && props.sidebarOpen) collapseRef.current?.focus();
+        else if (target === "collapse" && !props.sidebarOpen) props.sidebarTriggerRef.current?.focus();
+    }, [props.sidebarOpen, props.sidebarPersistent, props.sidebarTriggerRef]);
+    const sidebarToggle = props.fullScreen || (props.sidebarPersistent && props.sidebarOpen)
+        ? null
+        : (
+            <Button
+                ref={props.sidebarTriggerRef}
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="笔记侧栏"
+                title="展开笔记侧栏"
+                aria-expanded={props.sidebarOpen}
+                aria-pressed={props.sidebarOpen}
+                aria-controls="notes-sidebar"
+                onClick={() => {
+                    setRestoreDrawerFocus(true);
+                    toggleFocus.current = "expand";
+                    props.onSidebarOpenChange(!props.sidebarOpen);
+                }}
+            >
+                <PanelLeftOpen size="1em" className="icon-md" />
+            </Button>
+        );
     useEffect(() => {
         if (props.sidebarOpen) setRestoreDrawerFocus(true);
     }, [props.sidebarOpen]);
@@ -104,16 +140,29 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                         onDocumentTrashed={props.onDocumentTrashed}
                         onOpenTrash={props.onOpenTrash}
                         noteNotebooks={noteNotebooks}
+                        onCollapse={props.sidebarPersistent
+                            ? () => {
+                                toggleFocus.current = "collapse";
+                                props.onSidebarOpenChange(false);
+                            }
+                            : undefined}
+                        collapseRef={collapseRef}
                     />
                 </nav>
                 {!props.sidebarPersistent && <button type="button" className="documents-drawer-dismiss" aria-label="关闭笔记侧栏" onClick={() => { setRestoreDrawerFocus(true); props.onSidebarOpenChange(false); }} />}
             </WindowOverlay>
             <main className="documents-editor-pane">
                 {props.state.view === "documents/root"
-                    ? <EmptyState title="选择或新建笔记" headingLevel={3} density="compact" />
+                    ? (
+                        <div className="documents-editor-empty">
+                            {sidebarToggle && <div className="document-editor-header document-editor-header--bare">{sidebarToggle}</div>}
+                            <EmptyState title="选择或新建笔记" headingLevel={3} density="compact" />
+                        </div>
+                    )
                     : <Suspense fallback={<LoadingState density="compact">正在加载编辑器…</LoadingState>}>
                         <DocumentEditor
                             key={editorKey}
+                            leading={sidebarToggle}
                             documentId={props.state.view === "documents/edit" ? props.state.id : undefined}
                             target={props.state.view === "documents/new" ? props.state.target : undefined}
                             onCreated={(id) => {

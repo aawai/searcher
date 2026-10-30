@@ -190,12 +190,10 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                     );
                 });
                 const format = host.getByRole("button", {
-                    name: "格式工具栏",
+                    name: "显示格式工具栏",
                     exact: true,
                 });
-                if (await format.getAttribute("aria-pressed") === "false") {
-                    await format.click();
-                }
+                if (await format.count()) await format.click();
                 for (
                     const locator of [
                         frame.locator(".window-frame__title"),

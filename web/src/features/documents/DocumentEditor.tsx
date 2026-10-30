@@ -4,6 +4,7 @@ import {
     type FocusEvent,
     type KeyboardEvent,
     lazy,
+    type ReactNode,
     Suspense,
     useCallback,
     useEffect,
@@ -55,7 +56,7 @@ import {
     Check,
     CodeXml,
     FileText,
-    PanelTop,
+    ChevronUp,
     Pencil,
     Copy,
     Download,
@@ -64,6 +65,7 @@ import {
     Printer,
     RefreshCw,
     Settings,
+    Type,
 } from "lucide-react";
 
 import type {
@@ -246,6 +248,8 @@ export interface DocumentEditorProps {
     narrow?: boolean;
     focusTitleSignal?: number;
     eventSubscriptions?: DocumentEventSubscriptions;
+    /** Leads the header row, before the title: the host's navigation toggle. */
+    leading?: ReactNode;
 }
 
 export function DocumentEditor({
@@ -258,6 +262,7 @@ export function DocumentEditor({
     onDirtyChange,
     narrow = false,
     focusTitleSignal,
+    leading,
     eventSubscriptions,
 }: DocumentEditorProps) {
     // 1. Session Setup & useSyncExternalStore
@@ -359,6 +364,9 @@ export function DocumentEditor({
     );
     const [modeOpen, setModeOpen] = useState(false);
     const formatButtonRef = useRef<HTMLButtonElement>(null);
+    const toolbarCollapseRef = useRef<HTMLButtonElement>(null);
+    // The collapse chevron and the header toggle replace each other; focus follows.
+    const toolbarFocusTarget = useRef<"format" | "collapse" | null>(null);
     const toolbarContainerRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const container = editorContainerRef.current;
@@ -381,17 +389,17 @@ export function DocumentEditor({
             if (
                 resolveToolbarCollapsed(devicePreferences.toolbarCollapsed, narrow ? 0 : BREAKPOINTS.medium, media.matches) &&
                 toolbarContainerRef.current?.contains(document.activeElement)
-            ) formatButtonRef.current?.focus();
+            ) toolbarFocusTarget.current = "format";
             setCoarsePointer(media.matches);
         };
         media.addEventListener("change", onChange);
         return () => media.removeEventListener("change", onChange);
     }, [devicePreferences.toolbarCollapsed, narrow]);
     useEffect(() => {
-        if (
-            !showToolbar &&
-            toolbarContainerRef.current?.contains(document.activeElement)
-        ) formatButtonRef.current?.focus();
+        const target = toolbarFocusTarget.current;
+        toolbarFocusTarget.current = null;
+        if (target === "format" && !showToolbar) formatButtonRef.current?.focus();
+        else if (target === "collapse" && showToolbar) toolbarCollapseRef.current?.focus();
     }, [showToolbar]);
     useEffect(() => {
         if (focusTitleSignal !== undefined) titleInputRef.current?.focus();
@@ -419,9 +427,9 @@ export function DocumentEditor({
     );
     const toggleToolbar = () => {
         const collapsed = showToolbar;
-        if (collapsed && toolbarContainerRef.current?.contains(document.activeElement)) {
-            formatButtonRef.current?.focus();
-        }
+        toolbarFocusTarget.current = collapsed
+            ? toolbarContainerRef.current?.contains(document.activeElement) ? "format" : null
+            : "collapse";
         writeToolbarCollapsed(deviceStorage(), userId, collapsed);
         setDevicePreferences((previous) => ({ ...previous, toolbarCollapsed: collapsed }));
     };
@@ -1086,6 +1094,7 @@ export function DocumentEditor({
     if (!isNewSession && !snapshot.document && !snapshot.error) {
         return (
             <div className="document-editor-container document-editor-state">
+                {leading && <div className="document-editor-header document-editor-header--bare">{leading}</div>}
                 <LoadingState density="default">正在加载笔记…</LoadingState>
             </div>
         );
@@ -1094,6 +1103,7 @@ export function DocumentEditor({
     if (!isNewSession && snapshot.error && !snapshot.document) {
         return (
             <div className="document-editor-container document-editor-state">
+                {leading && <div className="document-editor-header document-editor-header--bare">{leading}</div>}
                 <div className="document-editor-state-body">
                     <p className="document-load-error">
                         {snapshot.error}
@@ -1234,6 +1244,7 @@ export function DocumentEditor({
             )}
             {/* Header & Controls */}
             <header className="document-editor-header">
+                {leading}
                 {/* Document Title Input */}
                 <div className="document-title-wrapper">
                     <input
@@ -1269,6 +1280,20 @@ export function DocumentEditor({
                     )}
 
                     <div className="document-editor-header-actions">
+                        {!showToolbar && (
+                            <Button
+                                ref={formatButtonRef}
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label="显示格式工具栏"
+                                title="显示格式工具栏"
+                                aria-pressed={false}
+                                onClick={toggleToolbar}
+                            >
+                                <Type size="1em" className="icon-sm" />
+                            </Button>
+                        )}
                         <Button
                             ref={outlineButtonRef}
                             type="button"
@@ -1444,6 +1469,19 @@ export function DocumentEditor({
                         onInsertPageBreak={handleInsertPageBreak}
                         onUploadImage={handleUploadImageClick}
                     />
+                    <Button
+                        ref={toolbarCollapseRef}
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="document-toolbar-collapse"
+                        aria-label="隐藏格式工具栏"
+                        title="隐藏格式工具栏"
+                        aria-pressed={true}
+                        onClick={toggleToolbar}
+                    >
+                        <ChevronUp size="1em" className="icon-md" />
+                    </Button>
                 </div>
             )}
 
@@ -1524,12 +1562,14 @@ export function DocumentEditor({
                                     size="icon"
                                     aria-label={`切换编辑模式，当前：${viewMode === "continuous" ? "编辑" : viewMode === "page" ? "分页" : "源码"}`}
                                     title="切换编辑模式"
+                                    className="document-mode-trigger"
                                 >
                                     {viewMode === "continuous"
                                         ? <Pencil className="icon-sm" />
                                         : viewMode === "page"
                                         ? <FileText className="icon-sm" />
                                         : <CodeXml className="icon-sm" />}
+                                    <ChevronUp className="icon-sm document-mode-chevron" aria-hidden="true" />
                                 </Button>
                             }
                         />
@@ -1547,18 +1587,6 @@ export function DocumentEditor({
                             </div>
                         </PopoverContent>
                     </Popover>
-                    <Button
-                        ref={formatButtonRef}
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label="格式工具栏"
-                        title="格式工具栏"
-                        aria-pressed={showToolbar}
-                        onClick={toggleToolbar}
-                    >
-                        <PanelTop className="icon-sm" />
-                    </Button>
                 </div>
                 <div className="document-metadata-bar">
                     <span>{analysis.wordCount > 0 ? `${analysis.wordCount} 字 · 约 ${analysis.readingMinutes} 分钟` : "0 字"}</span>
