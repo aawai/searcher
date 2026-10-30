@@ -531,3 +531,194 @@ Deno.test("AI 窗口在明暗极端壁纸上保持文字可读", async () => {
         await app.close();
     }
 });
+
+Deno.test("标题栏焦点环：鼠标打开窗口不显示，键盘打开显示", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    try {
+        await loginAndVisit(page, app.origin, "/", user);
+        const icon = page.locator('[data-dock-id="apps"]');
+        const titlebar = page.locator(
+            '[data-window-id="apps"] .window-frame__titlebar',
+        );
+        const ring = () =>
+            titlebar.evaluate((node) => ({
+                focused: document.activeElement === node,
+                focusVisible: node.matches(":focus-visible"),
+                outline: getComputedStyle(node).outlineStyle,
+            }));
+        const settled = () =>
+            page.waitForFunction(() =>
+                document.activeElement?.classList.contains(
+                    "window-frame__titlebar",
+                )
+            );
+
+        // A pointer click on the Dock icon moves focus into the title bar
+        // without drawing a keyboard ring.
+        await icon.hover();
+        const iconBox = await icon.boundingBox();
+        assert(iconBox);
+        await page.mouse.click(
+            iconBox.x + iconBox.width / 2,
+            iconBox.y + iconBox.height / 2,
+        );
+        await settled();
+        const byMouse = await ring();
+        assertEquals(byMouse.focused, true);
+        assertEquals(byMouse.focusVisible, false, JSON.stringify(byMouse));
+        assertEquals(byMouse.outline, "none", JSON.stringify(byMouse));
+
+        // Minimize, then open the same window from the keyboard.
+        await page.mouse.click(
+            iconBox.x + iconBox.width / 2,
+            iconBox.y + iconBox.height / 2,
+        );
+        await titlebar.waitFor({ state: "hidden" });
+        await icon.focus();
+        await page.keyboard.press("Tab");
+        await page.keyboard.press("Shift+Tab");
+        await page.keyboard.press("Enter");
+        await titlebar.waitFor({ state: "visible" });
+        await settled();
+        const byKeyboard = await ring();
+        assertEquals(byKeyboard.focused, true);
+        assertEquals(byKeyboard.focusVisible, true, JSON.stringify(byKeyboard));
+        assert(byKeyboard.outline !== "none", JSON.stringify(byKeyboard));
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("首次拖动应用窗口：按下到首次移动的每一帧矩形不闪烁", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    try {
+        await loginAndVisit(page, app.origin, "/", user);
+        const icon = page.locator('[data-dock-id="apps"]');
+        await icon.click();
+        const frame = page.locator('[data-window-id="apps"]');
+        await frame.waitFor({ state: "visible" });
+        // Sample the rectangle on every animation frame for the whole gesture.
+        await page.evaluate(() => {
+            const samples: { x: number; y: number; w: number; h: number }[] =
+                [];
+            (globalThis as unknown as { __rects: typeof samples }).__rects =
+                samples;
+            const node = document.querySelector('[data-window-id="apps"]')!;
+            const tick = () => {
+                const rect = node.getBoundingClientRect();
+                samples.push({
+                    x: rect.x,
+                    y: rect.y,
+                    w: rect.width,
+                    h: rect.height,
+                });
+                requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        });
+        const frames = () =>
+            page.evaluate(() =>
+                (globalThis as unknown as { __rects: unknown[] }).__rects
+                    .length
+            );
+        const waitFrames = async (count: number) => {
+            const from = await frames();
+            await page.waitForFunction(
+                ([start, wanted]) =>
+                    (globalThis as unknown as { __rects: unknown[] }).__rects
+                        .length >= start + wanted,
+                [from, count],
+            );
+        };
+        await waitFrames(5);
+        const title = frame.locator(".window-frame__title");
+        const titleBox = await title.boundingBox();
+        assert(titleBox);
+        const startX = titleBox.x + 4;
+        const startY = titleBox.y + 4;
+        await page.mouse.move(startX, startY);
+        const before = await frame.boundingBox();
+        assert(before);
+
+        const pressed = await frames();
+        await page.mouse.down();
+        await waitFrames(12);
+        const moveAt = await frames();
+        const dx = -120;
+        await page.mouse.move(startX + dx, startY);
+        await waitFrames(4);
+        await page.mouse.up();
+
+        const rects = await page.evaluate(() =>
+            (globalThis as unknown as {
+                __rects: { x: number; y: number; w: number; h: number }[];
+            }).__rects
+        );
+        for (let i = pressed; i < moveAt; i++) {
+            assertEquals(
+                rects[i],
+                { x: before.x, y: before.y, w: before.width, h: before.height },
+                `frame ${i - pressed} after pointerdown`,
+            );
+        }
+        // After the first move the window only follows the pointer.
+        for (let i = moveAt; i < rects.length; i++) {
+            const { x, y, w, h } = rects[i];
+            assertEquals([y, w, h], [before.y, before.width, before.height]);
+            assert(
+                x === before.x || x === before.x + dx,
+                `x jumped to ${x} on frame ${i - moveAt}`,
+            );
+        }
+        assertEquals(rects.at(-1)?.x, before.x + dx);
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("触屏点击任务栏活动图标：最小化，再点击恢复", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const context = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
+        isMobile: true,
+    });
+    const page = await context.newPage();
+    try {
+        await loginAndVisit(page, app.origin, "/", user);
+        const icon = page.locator('[data-dock-id="apps"]');
+        const frame = page.locator('[data-window-id="apps"]');
+        await icon.tap();
+        await page.waitForURL(app.origin + "/?view=apps");
+        await frame.waitFor({ state: "visible" });
+        assertEquals(await icon.getAttribute("data-window-status"), "visible");
+        await icon.tap();
+        await frame.waitFor({ state: "hidden" });
+        await page.waitForURL(app.origin + "/");
+        assertEquals(
+            await icon.getAttribute("data-window-status"),
+            "minimized",
+        );
+        await icon.tap();
+        await page.waitForURL(app.origin + "/?view=apps");
+        await frame.waitFor({ state: "visible" });
+        assertEquals(await icon.getAttribute("data-window-status"), "visible");
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});

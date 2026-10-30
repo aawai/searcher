@@ -56,7 +56,6 @@
 .inline-ai-body {
     max-height: min(50dvh, 360px);
     overflow-y: auto;
-    scrollbar-width: thin;
     overflow-wrap: anywhere;
 }
 
