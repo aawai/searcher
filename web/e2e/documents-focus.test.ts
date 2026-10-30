@@ -74,8 +74,7 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
             await title.focus();
             await prosemirror.focus();
             await editor.getByRole("button", {
-                name: "Markdown 源码",
-                exact: true,
+                name: /^切换编辑模式，当前：/,
             }).focus();
             await assertRejects(
                 () =>

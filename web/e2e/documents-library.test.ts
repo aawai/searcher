@@ -136,6 +136,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
     }
 
     async function openSource() {
+        await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
         await page.getByRole("button", { name: "Markdown 源码", exact: true })
             .click();
         const source = page.getByRole("textbox", {

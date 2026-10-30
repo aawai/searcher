@@ -284,6 +284,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 const editorLoads = requestedJs.filter((file) =>
                     file === editorVendorChunk || file === sharedRuntimeChunk
                 );
+                await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
                 await page.getByRole("button", {
                     name: "Markdown 源码",
                     exact: true,

@@ -34,6 +34,7 @@ Deno.test("Document history flush, restore and failure preserve real server cont
     }).click();
     const editor = page.locator(".document-editor-container");
     await editor.locator(".ProseMirror").waitFor();
+    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
     await page.getByRole("button", { name: "Markdown 源码", exact: true })
         .click();
     const source = page.getByRole("textbox", {

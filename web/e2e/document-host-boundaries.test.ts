@@ -147,6 +147,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                     `[data-document-id="${doc.id}"] h4 button`,
                 );
                 await row.click();
+                await host.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
                 await host.getByRole("button", { name: "编辑", exact: true })
                     .click();
                 await host.locator(".ProseMirror").waitFor();
@@ -167,6 +168,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                         1,
                     );
                 }
+                await host.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
                 await host.getByRole("button", { name: "分页", exact: true })
                     .click();
                 await page.waitForFunction(() =>
@@ -300,6 +302,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
                     }),
                     10,
                 );
+                await host.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
                 await host.getByRole("button", {
                     name: "Markdown 源码",
                     exact: true,

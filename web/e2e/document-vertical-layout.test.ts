@@ -250,6 +250,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
             contentPatches.push(request.postData() ?? "");
         }
     });
+    await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
     await win.getByRole("button", { name: "分页", exact: true }).click();
     await page.waitForFunction(() =>
         document.querySelector(".pagination-viewport")
@@ -761,6 +762,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         await matrixPage.locator(`[data-document-id="${doc.id}"] h4 button`)
             .click();
         await matrixPage.locator(".ProseMirror").waitFor();
+        await matrixPage.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
         await matrixPage.getByRole("button", { name: "分页", exact: true })
             .click();
         await stableLayout(matrixPage);
@@ -1085,6 +1087,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         "# One tall editable row\n\n| Short | Tall |\n| --- | --- |\n| Short cell | " +
         repeatedTallCell.repeat(160) +
         " |\n| NEXT_ROW_147 | Text after the tall row |\n\nEND_DOCUMENT_147";
+    await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
     await win.getByRole("button", { name: "Markdown 源码", exact: true })
         .click();
     const source = win.getByRole("textbox", {
@@ -1093,6 +1096,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     });
     await source.waitFor();
     await source.fill(tallRowBody);
+    await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
     await win.getByRole("button", { name: "分页", exact: true }).click();
     await page.waitForFunction(() =>
         !!document.querySelector(
@@ -1184,6 +1188,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     }
 
     async function sourceFixture(markdown: string, expectedPages: number) {
+        await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
         await win.getByRole("button", { name: "Markdown 源码", exact: true })
             .click();
         const markdownBody = win.getByRole("textbox", {
@@ -1192,6 +1197,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         });
         await markdownBody.waitFor();
         await markdownBody.fill(markdown);
+        await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
         await win.getByRole("button", { name: "分页", exact: true }).click();
         await page.waitForFunction((pages) => {
             const viewport = document.querySelector<HTMLElement>(

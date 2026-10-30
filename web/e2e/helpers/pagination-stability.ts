@@ -274,6 +274,7 @@ export function registerPaginationStabilityTest(
                     ) patches.push(req.postData() ?? "");
                 };
                 page.on("request", listener);
+                await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
                 await page.getByRole("button", { name: "分页", exact: true })
                     .click();
                 const initial = await sample(page, 5000);

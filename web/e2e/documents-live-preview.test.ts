@@ -41,13 +41,15 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
     });
     await page.locator('.document-editor-scroll-area [contenteditable="true"]')
         .waitFor();
-    assertEquals(
-        await page.getByRole("button", { name: "编辑", exact: true })
-            .getAttribute("aria-pressed"),
-        "true",
-    );
+    await page.getByRole("button", {
+        name: "切换编辑模式，当前：编辑",
+        exact: true,
+    }).waitFor({ state: "visible" });
+    await page.getByRole("button", { name: "切换编辑模式，当前：编辑", exact: true }).click();
     await page.getByRole("button", { name: "Markdown 源码", exact: true })
         .click();
+    await page.getByRole("button", { name: "编辑", exact: true })
+        .waitFor({ state: "hidden" });
     assertEquals(
         await page.getByRole("textbox", {
             name: "Markdown 源码正文",
@@ -55,6 +57,7 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
         }).inputValue(),
         body,
     );
+    await page.getByRole("button", { name: "切换编辑模式，当前：Markdown 源码", exact: true }).click();
     await page.getByRole("button", { name: "编辑", exact: true }).click();
     await page.locator('.document-editor-scroll-area [contenteditable="true"]')
         .waitFor();

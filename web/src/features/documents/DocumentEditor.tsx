@@ -31,6 +31,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "../../components/ui/popover.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import { Textarea } from "../../components/ui/textarea.tsx";
 import { type EditorState, TextSelection } from "@milkdown/prose/state";
@@ -46,6 +51,10 @@ import { LoadingState } from "../../components/searcher/semantic.tsx";
 import {
     BookOpen,
     Check,
+    CodeXml,
+    FileText,
+    PanelTop,
+    Pencil,
     Copy,
     Download,
     History,
@@ -67,6 +76,20 @@ import {
     uploadAndInsertDocumentImage,
     VALID_IMAGE_MIME_TYPES,
 } from "./editor-extensions.ts";
+import {
+    readDevicePreferences,
+    resolveToolbarCollapsed,
+    writeOutlineOpen,
+    writeToolbarCollapsed,
+} from "./device-preferences.ts";
+
+function deviceStorage(): Storage | null {
+    try {
+        return globalThis.localStorage;
+    } catch {
+        return null;
+    }
+}
 import { analyzeDocumentMarkdown } from "./editor-content.ts";
 import { DocumentToolbar } from "./DocumentToolbar.tsx";
 // Outline UI is loaded only when requested; it must not inflate the editor's initial chunk.
@@ -287,7 +310,63 @@ export function DocumentEditor({
     // 3. UI states (outline toggle, history dialog, copy status, errors)
     const [linkOpen, setLinkOpen] = useState(false);
     const [linkHref, setLinkHref] = useState("");
-    const [showOutline, setShowOutline] = useState(false);
+    const [devicePreferences, setDevicePreferences] = useState(() =>
+        readDevicePreferences(deviceStorage(), userId)
+    );
+    const [editorWidth, setEditorWidth] = useState(() => globalThis.innerWidth);
+    const [coarsePointer, setCoarsePointer] = useState(() =>
+        globalThis.matchMedia("(any-pointer: coarse)").matches
+    );
+    const editorContainerRef = useRef<HTMLDivElement>(null);
+    const showOutline = devicePreferences.outlineOpen;
+    const showToolbar = !resolveToolbarCollapsed(
+        devicePreferences.toolbarCollapsed,
+        editorWidth,
+        coarsePointer,
+    );
+    const [modeOpen, setModeOpen] = useState(false);
+    const formatButtonRef = useRef<HTMLButtonElement>(null);
+    const toolbarContainerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const container = editorContainerRef.current;
+        if (!container) return;
+        const observer = new ResizeObserver((entries) => {
+            const width = entries[0]?.contentRect.width;
+            if (width !== undefined && width > 0) {
+                if (
+                    resolveToolbarCollapsed(devicePreferences.toolbarCollapsed, width, coarsePointer) &&
+                    toolbarContainerRef.current?.contains(document.activeElement)
+                ) formatButtonRef.current?.focus();
+                setEditorWidth(width);
+            }
+        });
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [snapshot.document, devicePreferences.toolbarCollapsed, coarsePointer]);
+    useEffect(() => {
+        const media = globalThis.matchMedia("(any-pointer: coarse)");
+        const onChange = () => {
+            if (
+                resolveToolbarCollapsed(devicePreferences.toolbarCollapsed, editorWidth, media.matches) &&
+                toolbarContainerRef.current?.contains(document.activeElement)
+            ) formatButtonRef.current?.focus();
+            setCoarsePointer(media.matches);
+        };
+        media.addEventListener("change", onChange);
+        return () => media.removeEventListener("change", onChange);
+    }, [devicePreferences.toolbarCollapsed, editorWidth]);
+    const updateOutline = (open: boolean) => {
+        writeOutlineOpen(deviceStorage(), userId, open);
+        setDevicePreferences((previous) => ({ ...previous, outlineOpen: open }));
+    };
+    const toggleToolbar = () => {
+        const collapsed = showToolbar;
+        if (collapsed && toolbarContainerRef.current?.contains(document.activeElement)) {
+            formatButtonRef.current?.focus();
+        }
+        writeToolbarCollapsed(deviceStorage(), userId, collapsed);
+        setDevicePreferences((previous) => ({ ...previous, toolbarCollapsed: collapsed }));
+    };
     const [historyOpen, setHistoryOpen] = useState(false);
     const [activeCommands, setActiveCommands] = useState<
         DocumentToolbarActiveCommands
@@ -383,7 +462,7 @@ export function DocumentEditor({
             const scrollArea = container.querySelector<HTMLElement>(
                 ".document-editor-scroll-area",
             );
-            if (!toolbar || !scrollArea) return;
+            if (!scrollArea) return;
 
             const view = editorHandleRef.current?.view;
             const hasEditorFocus = Boolean(
@@ -398,15 +477,16 @@ export function DocumentEditor({
                 const viewportBottom = viewportTop +
                     (viewport?.height ?? globalThis.innerHeight);
                 const containerRect = container.getBoundingClientRect();
-                const toolbarRect = toolbar.getBoundingClientRect();
+                const toolbarRect = toolbar?.getBoundingClientRect();
                 const toolbarTop = Math.max(containerRect.top, viewportTop);
                 const toolbarBottom = Math.min(
                     containerRect.bottom,
                     viewportBottom,
                 );
                 if (
-                    toolbarRect.top < toolbarTop - 1 ||
-                    toolbarRect.bottom > toolbarBottom + 1
+                    toolbarRect &&
+                    (toolbarRect.top < toolbarTop - 1 ||
+                        toolbarRect.bottom > toolbarBottom + 1)
                 ) {
                     container.scrollTop += toolbarRect.top - toolbarTop;
                 }
@@ -416,12 +496,12 @@ export function DocumentEditor({
                 const getVisibleContentBounds = () => {
                     const rootRect = container.getBoundingClientRect();
                     const areaRect = scrollArea.getBoundingClientRect();
-                    const currentToolbarRect = toolbar.getBoundingClientRect();
+                    const currentToolbarRect = toolbar?.getBoundingClientRect();
                     return {
                         top: Math.max(
                             rootRect.top,
                             areaRect.top,
-                            currentToolbarRect.bottom,
+                            currentToolbarRect?.bottom ?? rootRect.top,
                             viewportTop,
                         ),
                         bottom: Math.min(
@@ -964,6 +1044,7 @@ export function DocumentEditor({
 
     return (
         <div
+            ref={editorContainerRef}
             className="document-editor-container"
             data-workspace-editor
             onKeyDown={handleContainerKeyDown}
@@ -1077,84 +1158,38 @@ export function DocumentEditor({
             )}
             {/* Header & Controls */}
             <header className="document-editor-header">
+                {/* Document Title Input */}
+                <div className="document-title-wrapper">
+                    <input
+                        type="text"
+                        className="document-title-input"
+                        placeholder="未命名笔记…"
+                        aria-label="笔记标题"
+                        value={snapshot.title}
+                        onChange={(e) =>
+                            session.edit({ title: e.target.value })}
+                        onCompositionStart={() => session.setComposing(true)}
+                        onCompositionEnd={() => session.setComposing(false)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                if (e.nativeEvent.isComposing) return;
+                                e.preventDefault();
+                                if (richMode) editorHandleRef.current?.focus();
+                            }
+                        }}
+                    />
+                </div>
                 <div className="document-editor-header-main">
-                    {/* One document, three presentations. */}
-                    <div
-                        className="document-view-switch"
-                        role="group"
-                        aria-label="视图模式"
-                    >
+                    {hasConflict && conflictDismissed && (
                         <Button
                             type="button"
-                            variant={viewMode === "continuous"
-                                ? "outline"
-                                : "ghost"}
+                            variant="outline"
                             size="sm"
-                            aria-label="编辑"
-                            title="编辑"
-                            aria-pressed={viewMode === "continuous"}
-                            onClick={() => handleViewChange("continuous")}
+                            onClick={() => setConflictDismissed(false)}
                         >
-                            编辑
+                            处理冲突
                         </Button>
-                        <Button
-                            type="button"
-                            variant={viewMode === "page" ? "outline" : "ghost"}
-                            size="sm"
-                            aria-label="分页"
-                            title="分页"
-                            aria-pressed={viewMode === "page"}
-                            disabled={snapshot.loading}
-                            onClick={() => handleViewChange("page")}
-                        >
-                            分页
-                        </Button>
-                        <Button
-                            type="button"
-                            variant={viewMode === "source"
-                                ? "outline"
-                                : "ghost"}
-                            size="sm"
-                            aria-label="Markdown 源码"
-                            title="Markdown 源码"
-                            aria-pressed={viewMode === "source"}
-                            onClick={() => handleViewChange("source")}
-                        >
-                            源码
-                        </Button>
-                    </div>
-                    {/* Metadata & Word Count */}
-                    <div className="document-metadata-bar">
-                        {viewMode === "page" && <span>{pageCount} 页</span>}
-                        <span>
-                            {analysis.wordCount > 0
-                                ? `${analysis.wordCount} 字 · 约 ${analysis.readingMinutes} 分钟`
-                                : "0 字"}
-                        </span>
-                        <span
-                            className="document-save-status"
-                            data-status={snapshot.saveStatus}
-                            role="status"
-                        >
-                            {snapshot.saveStatus === "saving" && (
-                                <RefreshCw
-                                    size="1em"
-                                    className="icon-sm animate-spin"
-                                />
-                            )}
-                            {saveStatusLabel}
-                        </span>
-                        {hasConflict && conflictDismissed && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setConflictDismissed(false)}
-                            >
-                                处理冲突
-                            </Button>
-                        )}
-                    </div>
+                    )}
 
                     <div className="document-editor-header-actions">
                         <Button
@@ -1165,7 +1200,7 @@ export function DocumentEditor({
                             title="大纲"
                             aria-pressed={showOutline}
                             disabled={viewMode === "source"}
-                            onClick={() => setShowOutline(!showOutline)}
+                            onClick={() => updateOutline(!showOutline)}
                         >
                             <BookOpen size="1em" className="icon-sm" />
                         </Button>
@@ -1300,49 +1335,32 @@ export function DocumentEditor({
                     </div>
                 </div>
 
-                {/* Document Title Input */}
-                <div className="document-title-wrapper">
-                    <input
-                        type="text"
-                        className="document-title-input"
-                        placeholder="未命名笔记…"
-                        aria-label="笔记标题"
-                        value={snapshot.title}
-                        onChange={(e) =>
-                            session.edit({ title: e.target.value })}
-                        onCompositionStart={() => session.setComposing(true)}
-                        onCompositionEnd={() => session.setComposing(false)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                if (e.nativeEvent.isComposing) return;
-                                e.preventDefault();
-                                if (richMode) editorHandleRef.current?.focus();
-                            }
-                        }}
-                    />
-                </div>
             </header>
 
             {/* Toolbar: Formatting disabled in source mode per §32 */}
-            <DocumentToolbar
-                disabled={viewMode === "source" || isUploading}
-                activeCommands={viewMode === "source"
-                    ? undefined
-                    : activeCommands}
-                onUndo={() => {
-                    if (richMode && editorHandleRef.current) {
-                        editorHandleRef.current.undo();
-                    }
-                }}
-                onRedo={() => {
-                    if (richMode && editorHandleRef.current) {
-                        editorHandleRef.current.redo();
-                    }
-                }}
-                onCommand={handleToolbarCommand}
-                onInsertPageBreak={handleInsertPageBreak}
-                onUploadImage={handleUploadImageClick}
-            />
+            {showToolbar && (
+                <div ref={toolbarContainerRef}>
+                    <DocumentToolbar
+                        disabled={viewMode === "source" || isUploading}
+                        activeCommands={viewMode === "source"
+                            ? undefined
+                            : activeCommands}
+                        onUndo={() => {
+                            if (richMode && editorHandleRef.current) {
+                                editorHandleRef.current.undo();
+                            }
+                        }}
+                        onRedo={() => {
+                            if (richMode && editorHandleRef.current) {
+                                editorHandleRef.current.redo();
+                            }
+                        }}
+                        onCommand={handleToolbarCommand}
+                        onInsertPageBreak={handleInsertPageBreak}
+                        onUploadImage={handleUploadImageClick}
+                    />
+                </div>
+            )}
 
             {/* Workspace Content Area: Editor + Outline */}
             <div className="document-editor-content-layout">
@@ -1402,10 +1420,66 @@ export function DocumentEditor({
                         <DocumentOutline
                             outline={analysis.outline}
                             onSelectHeading={handleOutlineSelectHeading}
-                            onClose={() => setShowOutline(false)}
+                            onClose={() => updateOutline(false)}
                         />
                     </Suspense>
                 )}
+            </div>
+            <div className="document-editor-status-bar">
+                <div className="document-editor-status-actions">
+                    <Popover open={modeOpen} onOpenChange={setModeOpen}>
+                        <PopoverTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`切换编辑模式，当前：${viewMode === "continuous" ? "编辑" : viewMode === "page" ? "分页" : "源码"}`}
+                                    title="切换编辑模式"
+                                >
+                                    {viewMode === "continuous"
+                                        ? <Pencil className="icon-sm" />
+                                        : viewMode === "page"
+                                        ? <FileText className="icon-sm" />
+                                        : <CodeXml className="icon-sm" />}
+                                </Button>
+                            }
+                        />
+                        <PopoverContent data-document-editor-owner={documentEditorOwner}>
+                            <div className="document-view-switch" role="group" aria-label="视图模式">
+                                <Button type="button" variant={viewMode === "continuous" ? "outline" : "ghost"} size="icon" aria-label="编辑" title="编辑" aria-pressed={viewMode === "continuous"} onClick={() => { handleViewChange("continuous"); setModeOpen(false); }}>
+                                    <Pencil className="icon-sm" />
+                                </Button>
+                                <Button type="button" variant={viewMode === "page" ? "outline" : "ghost"} size="icon" aria-label="分页" title="分页" aria-pressed={viewMode === "page"} disabled={snapshot.loading} onClick={() => { handleViewChange("page"); setModeOpen(false); }}>
+                                    <FileText className="icon-sm" />
+                                </Button>
+                                <Button type="button" variant={viewMode === "source" ? "outline" : "ghost"} size="icon" aria-label="Markdown 源码" title="Markdown 源码" aria-pressed={viewMode === "source"} onClick={() => { handleViewChange("source"); setModeOpen(false); }}>
+                                    <CodeXml className="icon-sm" />
+                                </Button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                    <Button
+                        ref={formatButtonRef}
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="格式工具栏"
+                        title="格式工具栏"
+                        aria-pressed={showToolbar}
+                        onClick={toggleToolbar}
+                    >
+                        <PanelTop className="icon-sm" />
+                    </Button>
+                </div>
+                <div className="document-metadata-bar">
+                    <span>{analysis.wordCount > 0 ? `${analysis.wordCount} 字 · 约 ${analysis.readingMinutes} 分钟` : "0 字"}</span>
+                    {viewMode === "page" && <span>{pageCount} 页</span>}
+                    <span className="document-save-status" data-status={snapshot.saveStatus} role="status">
+                        {snapshot.saveStatus === "saving" && <RefreshCw size="1em" className="icon-sm animate-spin" />}
+                        {saveStatusLabel}
+                    </span>
+                </div>
             </div>
 
             <DocumentPaperSettingsDialog
