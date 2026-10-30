@@ -26,6 +26,14 @@
     display: none;
 }
 
+/* A phone window sits one gap above the Dock: a lighter shadow keeps it from
+   washing the Dock's material. */
+@media (max-width: 767px) {
+    .window-frame {
+        box-shadow: var(--shadow-l2);
+    }
+}
+
 .window-frame__titlebar {
     display: flex;
     align-items: center;

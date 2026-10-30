@@ -1483,7 +1483,7 @@ export function DesktopHost(
         if (!user || !slot) return null;
         const isNotes = id === "notes";
         const headerActions = !isNotes
-            ? <Button onClick={() => openCreateApp()}>添加应用</Button>
+            ? undefined
             : (
                 <>
                     <Button variant="ghost" size="icon"
@@ -1593,6 +1593,7 @@ export function DesktopHost(
                                         onOpenApp: openApp,
                                         onEditApp: openEditApp,
                                         onDeleteApp: softDeleteApp,
+                                        onAddApp: openCreateApp,
                                         showAppLabels: appearance.showAppLabels,
                                     }}
                                 />

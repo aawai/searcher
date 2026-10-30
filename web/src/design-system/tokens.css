@@ -18,6 +18,9 @@
     --border-subtle: rgb(0 0 0 / 0.05);
     /* Standalone form control boundary: >=3:1 against surface and background. */
     --border-control: #86868B;
+    /* Scroll thumbs are quiet until their container is hovered; no contrast promise. */
+    --scrollbar-thumb: rgb(0 0 0 / 0.18);
+    --scrollbar-thumb-hover: rgb(0 0 0 / 0.38);
     --danger: #ae3e47;
     --success: #247c5b;
     --warning: #946200;
@@ -311,6 +314,8 @@
     --border: rgb(255 255 255 / 0.10);
     --border-subtle: rgb(255 255 255 / 0.06);
     --border-control: #747479;
+    --scrollbar-thumb: rgb(255 255 255 / 0.22);
+    --scrollbar-thumb-hover: rgb(255 255 255 / 0.42);
     --danger: #f2929c;
     --success: #87d9b2;
     --warning: #f6cc75;
@@ -602,12 +607,12 @@
         /* iOS zooms focused inputs below 16px. */
         --font-search-input-size: 16px;
         --sheet-width: 100vw;
-        --window-margin: 0px;
+        --window-margin: var(--space-2);
     }
 }
 
-/* Phones keep their windows edge to edge, and short wide viewports a hairline
-   of wallpaper, so the body stays usable. */
+/* Phones keep a small wallpaper margin so the window reads as a card above the
+   Dock, and short wide viewports a hairline of it, so the body stays usable. */
 @media (max-height: 480px) and (min-width: 768px) {
     :root {
         --window-margin: var(--space-1);

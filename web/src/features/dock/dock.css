@@ -286,60 +286,49 @@
     color: var(--accent);
 }
 
-/* A solid square marks an open window; an outline marks a minimized one.
-   The active entry keeps its existing background and dot. */
-.dock-item[data-window-status]:not([data-active])::before {
-    content: "";
-    position: absolute;
-    top: var(--space-1);
-    right: var(--space-1);
-    width: var(--space-2);
-    height: var(--space-2);
-    border: var(--space-hairline) solid currentColor;
-    background: currentColor;
+/* One bar under (beside, on a side Dock) the icon carries the window state, as
+   on a Windows taskbar. Length rather than colour tells the states apart: a
+   long bar is the focused entry, a short bar an open window, a shorter one a
+   minimized window. */
+.dock-item[data-window-status],
+.dock-item[data-active="true"] {
+    --dock-mark-length: var(--space-2);
 }
 
-.dock-item[data-window-status="minimized"]:not([data-active])::before {
-    background: transparent;
+.dock-item[data-window-status="minimized"]:not([data-active="true"]) {
+    --dock-mark-length: var(--space-1);
 }
 
-.dock-item[data-window-status][data-active="true"]::before {
-    content: "";
-    position: absolute;
-    top: var(--space-1);
-    right: var(--space-1);
-    width: var(--space-2);
-    height: var(--space-2);
-    border: var(--space-hairline) solid currentColor;
-    transform: rotate(45deg);
+.dock-item[data-active="true"] {
+    --dock-mark-length: var(--space-4);
 }
 
+.dock-item[data-window-status]::after,
 .dock-item[data-active="true"]::after {
     content: "";
     position: absolute;
-    width: var(--space-1);
-    height: var(--space-1);
-    border-radius: 50%;
-    background: var(--accent);
     bottom: var(--space-half);
+    width: var(--dock-mark-length);
+    height: var(--space-half);
+    border-radius: var(--radius-pill);
+    background: currentColor;
+    transition: width var(--motion-fast) var(--ease-standard),
+        height var(--motion-fast) var(--ease-standard);
 }
 
-.dock-container[data-edge="left"] .dock-item[data-active="true"]::after {
+.dock-container:is([data-edge="left"], [data-edge="right"]) .dock-item:is([data-window-status], [data-active="true"])::after {
     bottom: auto;
+    top: calc(50% - var(--dock-mark-length) / 2);
+    width: var(--space-half);
+    height: var(--dock-mark-length);
+}
+
+.dock-container[data-edge="left"] .dock-item:is([data-window-status], [data-active="true"])::after {
     right: var(--space-half);
-    top: calc(50% - var(--space-half));
 }
 
-.dock-container[data-edge="right"] .dock-item[data-active="true"]::after {
-    bottom: auto;
+.dock-container[data-edge="right"] .dock-item:is([data-window-status], [data-active="true"])::after {
     left: var(--space-half);
-    top: calc(50% - var(--space-half));
-}
-
-@media (max-width: 767px) {
-    .dock-item[data-active="true"]::after {
-        display: none;
-    }
 }
 
 /* Labels remain available to assistive technology. */
