@@ -134,7 +134,10 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
 
     // The notes sidebar opens as a tree; document rows live in the 最近 list.
     async function showNoteRows(target: Page = page) {
-        await libraryPanel(target).getByRole("button", { name: "最近", exact: true }).click();
+        await libraryPanel(target).getByRole("button", {
+            name: "最近",
+            exact: true,
+        }).click();
     }
     async function closeWorkspace(target: Page = page) {
         if (await libraryPanel(target).count()) await closeLibrary(target);
