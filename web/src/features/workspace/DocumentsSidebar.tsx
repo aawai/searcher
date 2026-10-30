@@ -621,6 +621,7 @@ export function DocumentsSidebar({
                         type="button"
                         variant="ghost"
                         size="icon"
+                        className="documents-heading-action"
                         aria-label="笔记侧栏"
                         title="收起笔记侧栏"
                         aria-expanded={true}

@@ -16,7 +16,8 @@
 .documents-sidebar[hidden] { display: none; }
 .documents-sidebar > nav {
     height: 100%;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 /* Drawer: the editor shrinks into a rounded card and slides right, revealing
    the navigation underneath. The overlay stays rendered while closed
@@ -135,7 +136,7 @@
 .documents-notebooks-row {
     display: flex;
     align-items: center;
-    gap: var(--space-1);
+    gap: 0;
     min-width: 0;
 }
 .documents-notebooks-row > .documents-notebooks-heading {
