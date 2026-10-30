@@ -366,6 +366,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 - 出现与消失成对：浮层（菜单、Tooltip、Popover、对话框、Sheet、窗口、任务栏、撤销提示）进入与退出都有过渡；退出期间元素 `inert`，不再接收焦点与 Escape。Base UI 浮层用 `data-starting-style` / `data-ending-style`；自管挂载的元素用 `components/ui/presence.ts` 的 `usePresence`，在元素自身的动画结束后再卸载。
 - 入场位移不超过 8px；唯一例外是底部 Sheet 从视口底边滑入、滑出。禁止装饰性位移、视差、交错（staggered）或循环动画，以及对无关元素的缩放；同一对象的几何变化仅按下述共享元素契约允许，不是入场位移例外。
+- **笔记抽屉**：窗口内抽屉使用卡片缩放位移（见笔记窗口一节），是此处「窗口不使用整层缩放」的局部例外：只作用于笔记窗口内容区，窗口本身与首页不缩放。
 - **窗口与 Sheet**：应用 / 笔记 / 设置 / 回收站窗口不使用整层缩放表达场景切换，首页层保持原样，不参与缩放或透明度变化；平板与手机上应用、笔记不再使用底部 Sheet，其他仍使用 Sheet 的局部抽屉沿用底部滑入滑出。减少动态效果时 Sheet 改为同时长的纯透明度变化。
 - 顶层页面切换（首页、设置、AI 问答、回收站等之间）使用 View Transition 的纯透明度交叉淡入；`prefers-reduced-motion: reduce` 下不做页面过渡；设置、管理内部切换不使用过渡。
 - **共享元素过渡（shared-element transition）**：仅允许**同一个对象改变容器 / 状态**时使用（例如行内卡片展开为完整视图，再收回卡片）。实现使用 `document.startViewTransition`，每次生成唯一的 `view-transition-name`；旧快照恰好一个 source、新快照恰好一个 target 使用该名称，不得同帧重名。React 的 DOM 更新在 transition callback 内用 `flushSync` 同步提交。仅该对象可做 geometry morph，持续 `--motion-panel`（280ms），缓动 `--ease-out-expo`；无关元素不参与几何动画。
@@ -456,7 +457,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 应用与笔记由同一 `WindowFrame` 呈现（`data-window-id` 为 `apps`、`notes`），正文位于标题栏下方并占满剩余高度。`tokens.css` 拥有 `--window-apps-width/height`（640×640）与 `--window-notes-width/height`（960×720）。平板与手机沿用单活动窗口；内容按窗口实测宽度而非视口选择布局。
 
-笔记标题栏为侧栏开关、标题、全屏与窗口按钮，不提供返回或创建；创建 icon 和笔记本管理位于侧栏头部的列表工具栏。I2 沿用全部 / 最近 / 首页 / 收藏分段、笔记本下拉、搜索与分页列表，尚非笔记本树。≥ `BREAKPOINTS.notesSidebar` 为可折叠常驻侧栏，宽度为 `--notes-sidebar-width`；更窄为窗口内容区内的左抽屉，<768px 大纲为窗口内底部 Sheet。抽屉与 Sheet 使用 Overlay 实色，不覆盖窗口外内容；打开时约束焦点并使其余编辑区 inert，关闭后返回触发控件。I2 不引入抽屉缩放位移动效。
+笔记标题栏为侧栏开关、标题、全屏与窗口按钮，不提供返回或创建；创建 icon 和笔记本管理位于侧栏头部的列表工具栏。侧栏自上而下为搜索 + 创建、固定入口（最近 / 收藏）、笔记本区与底部回收站；笔记本区为 `role="tree"` 笔记本树（两层、笔记为叶子、末尾“未分类”），点击固定入口或搜索时替换为平铺列表。树节点行高为 `--control-compact-height`（粗指针 `--control-touch-target`），缩进为 `--space-4` 每层，选中与悬停使用 `--surface-soft`，色点 / 星标 / 图钉标记沿用同一套（图钉与星标同属 muted 图标，菜单内图钉为强调色）；⋯ 在细指针下悬停 / 聚焦才显示，触屏常驻。节点菜单使用 ContextMenu 基础组件（右键、长按、⋯、ContextMenu 键同一份）。≥ `BREAKPOINTS.notesSidebar` 为可折叠常驻侧栏，宽度为 `--notes-sidebar-width`；更窄为窗口内容区内的左抽屉，<768px 大纲为窗口内底部 Sheet。抽屉与 Sheet 使用 Overlay 实色，不覆盖窗口外内容；打开时约束焦点并使其余编辑区 inert，关闭后返回触发控件。抽屉打开时编辑区缩成 `--radius-sheet` 圆角卡片（`scale(.94)`，使用既有 `--shadow-l2`，不新增阴影档位）并向右位移 `min(--notes-sidebar-width, 80%)`，露出实色抽屉；卡片 inert，点击卡片关闭。位移、缩放与抽屉淡入均为 `--motion-base` / `--ease-out-expo`，关闭时抽屉保持渲染到动效结束（`visibility` 延迟）；`prefers-reduced-motion: reduce` 下编辑区不位移、不缩放、无圆角，抽屉仅做同时长的透明度变化。焦点、`inert` 与 Escape 层级不随动效变化。
 
 ≥768px 的大纲：编辑区至少能容纳 640px 正文与 `--document-outline-width` 时并排，否则在编辑区右缘以 Overlay 实色悬浮，不改变正文排版。右缘 Overlay 非模态、无遮罩或焦点圈定，点击标题定位后保持打开；仅焦点在面板内时 Escape 关闭并归还焦点。窗口缩放切换呈现时保持展开状态，不收起侧栏。全屏隐藏侧栏、触发、标题文字、窗口按钮、缩放手柄、任务栏与悬浮球，标题栏只保留退出全屏。
 

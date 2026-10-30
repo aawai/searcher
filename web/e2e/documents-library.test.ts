@@ -107,8 +107,16 @@ Deno.test("production documents library workspace contracts", async (t) => {
     const row = (id: string) =>
         workspace().locator(`[data-document-id="${id}"]`);
 
+    // The sidebar opens as a notebook tree; row contracts run in the flat
+    // 最近 list, which holds every active note.
     async function openDocumentsRoot() {
         await openNotes(page);
+        await showRecentList();
+    }
+
+    async function showRecentList() {
+        await workspace().getByRole("button", { name: "最近", exact: true }).click();
+        await workspace().locator("[data-sidebar-mode='list']").waitFor();
     }
 
     // Fresh page load so the library refetches rows seeded through the API.
@@ -208,8 +216,8 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 exact: true,
             }).locator(".empty-state");
             await empty.waitFor({ state: "visible" });
-            assertStringIncludes(await empty.textContent() ?? "", "还没有笔记");
-            await panel.getByRole("heading", { name: "全部笔记", level: 3 })
+            assertStringIncludes(await empty.textContent() ?? "", "暂无最近笔记");
+            await panel.getByRole("heading", { name: "最近笔记", level: 3, exact: true })
                 .waitFor({ state: "visible" });
             await panel.getByRole("button", { name: "新建笔记", exact: true })
                 .waitFor({ state: "visible" });
@@ -286,24 +294,18 @@ Deno.test("production documents library workspace contracts", async (t) => {
             const panel = workspace();
             await waitForRowCount(4);
 
-            const scope = (name: string) =>
-                panel.getByRole("radio", { name, exact: true });
+            const entry = (name: string) =>
+                panel.getByRole("button", { name, exact: true });
             const section = (name: string) =>
                 panel.getByRole("heading", { name, level: 3 });
 
-            await scope("首页").click();
-            await section("首页笔记").waitFor({ state: "visible" });
-            await waitForRowCount(2);
-            let text = await panel.textContent() ?? "";
-            assertStringIncludes(text, "Alpha Document");
-            assertStringIncludes(text, "Gamma Document");
-            assertEquals(text.includes("Beta Document"), false);
-            assertEquals(
-                await scope("首页").getAttribute("aria-checked"),
-                "true",
-            );
+            // Pinned notes carry a marker in list rows; there is no 首页 list.
+            await section("最近笔记").waitFor({ state: "visible" });
+            await waitForRowCount(4);
+            assertEquals(await panel.locator("[data-document-id] [data-pinned]").count(), 2);
+            assertEquals(await panel.getByRole("radio").count(), 0);
 
-            await scope("收藏").click();
+            await entry("收藏").click();
             await section("收藏笔记").waitFor({ state: "visible" });
             // Both scopes contain two rows; wait for the new scope's content, not stale counts.
             await panel.getByRole("button", {
@@ -312,17 +314,23 @@ Deno.test("production documents library workspace contracts", async (t) => {
             })
                 .waitFor({ state: "visible" });
             await waitForRowCount(2);
-            text = await panel.textContent() ?? "";
+            const text = await panel.textContent() ?? "";
             assertStringIncludes(text, "Beta Document");
             assertStringIncludes(text, "Gamma Document");
             assertEquals(text.includes("Delta Document"), false);
+            assertEquals(await entry("收藏").getAttribute("aria-pressed"), "true");
 
-            await scope("最近").click();
+            await entry("最近").click();
             await section("最近笔记").waitFor({ state: "visible" });
             await waitForRowCount(4);
 
-            await scope("全部").click();
-            await section("全部笔记").waitFor({ state: "visible" });
+            // The tree reaches every note through 未分类 (none are filed here).
+            await entry("笔记本").click();
+            const tree = panel.getByRole("tree", { name: "笔记本", exact: true });
+            await tree.getByRole("treeitem", { name: "未分类", exact: true }).click();
+            await tree.getByRole("treeitem", { name: "Delta Document" }).waitFor();
+            assertEquals(await tree.getByRole("treeitem", { name: /Document/ }).count(), 4);
+            await entry("最近").click();
             await waitForRowCount(4);
 
             // Search spans every scope and drops the scope heading
@@ -339,7 +347,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await search.fill("Document");
             await waitForRowCount(4);
             await search.fill("");
-            await section("全部笔记").waitFor({ state: "visible" });
+            await section("最近笔记").waitFor({ state: "visible" });
             await waitForRowCount(4);
         },
     );
@@ -379,10 +387,10 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 state: "visible",
             });
             assertEquals(await editor().count(), 0);
-            await panel.getByRole("radio", { name: "收藏", exact: true })
+            await panel.getByRole("button", { name: "收藏", exact: true })
                 .click();
             await target.waitFor({ state: "visible" });
-            await panel.getByRole("radio", { name: "全部", exact: true })
+            await panel.getByRole("button", { name: "最近", exact: true })
                 .click();
             await target.waitFor({ state: "visible" });
 
@@ -516,17 +524,19 @@ Deno.test("production documents library workspace contracts", async (t) => {
         },
     );
     await t.step(
-        "New note targets follow the transitional notebook and home scopes",
+        "New note targets follow the selected tree node, never pin to home",
         async () => {
             const notebook = await request<{ id: string }>(
                 "/api/document-notebooks",
                 "POST",
                 { name: "创建目标笔记本", parentId: null },
             );
-            await reopenDocuments();
+            await visit("/");
+            await openNotes(page);
             const panel = workspace();
             const create = panel.getByRole("button", { name: "新建笔记", exact: true });
             const title = editor().getByRole("textbox", { name: "笔记标题", exact: true });
+            const tree = panel.getByRole("tree", { name: "笔记本", exact: true });
             const saveNew = async (text: string) => {
                 await create.click();
                 const response = page.waitForResponse((res) =>
@@ -534,23 +544,20 @@ Deno.test("production documents library workspace contracts", async (t) => {
                     new URL(res.url()).pathname === "/api/documents" && res.ok()
                 );
                 await title.fill(text);
-                const created = (await (await response).json()).data as DocumentDto;
-                await panel.locator(`[data-document-id="${created.id}"]`).waitFor();
-                return created;
+                return (await (await response).json()).data as DocumentDto;
             };
-            await panel.getByRole("combobox", { name: "按笔记本筛选" })
-                .selectOption(notebook.id);
+            await tree.getByRole("treeitem", { name: "创建目标笔记本", exact: true }).click();
+            assertEquals(await create.getAttribute("title"), "新建笔记（在「创建目标笔记本」）");
             const inNotebook = await saveNew("笔记本目标");
             assertEquals(inNotebook.notebookId, notebook.id);
             assertEquals(inNotebook.isHomeFixed, false);
-            await panel.getByRole("radio", { name: "首页", exact: true }).click();
-            const inHome = await saveNew("首页目标");
-            assertEquals(inHome.notebookId, null);
-            assertEquals(inHome.isHomeFixed, true);
-            await panel.getByRole("radio", { name: "最近", exact: true }).click();
+            await tree.getByRole("treeitem", { name: "笔记本目标" }).waitFor();
+            await showRecentList();
+            assertEquals(await create.getAttribute("title"), "新建笔记（未分类）");
             const recent = await saveNew("最近目标");
             assertEquals(recent.notebookId, null);
             assertEquals(recent.isHomeFixed, false);
+            await panel.locator(`[data-document-id="${recent.id}"]`).waitFor();
         },
     );
 

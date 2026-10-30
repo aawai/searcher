@@ -29,13 +29,6 @@ Deno.test("Notebook tree lists roots and their children in picker order", () => 
         "摘录",
     ]);
     assertEquals(tree.nodes.map((node) => node.depth), [0, 1, 1, 0, 1]);
-    assertEquals(tree.options, [
-        { id: "a", label: "工作" },
-        { id: "a-child-2", label: "工作 › 纪要" },
-        { id: "a-child", label: "工作 › 周报" },
-        { id: "b", label: "读书" },
-        { id: "b-child", label: "读书 › 摘录" },
-    ]);
 });
 
 Deno.test("Notebook tree exposes sibling order and child presence", () => {
@@ -72,10 +65,9 @@ Deno.test("Notebook tree ties equal sort orders by id and tolerates emptiness", 
         notebook("z", "乙", 0),
         notebook("a", "甲", 0),
     ]);
-    assertEquals(tree.options.map((option) => option.id), ["a", "z"]);
+    assertEquals(tree.roots.map((root) => root.id), ["a", "z"]);
     assertEquals(documentNotebookTree([]), {
         roots: [],
         nodes: [],
-        options: [],
     });
 });

@@ -217,8 +217,12 @@ Deno.test("production workspace contracts", async (t) => {
                 JSON.stringify({ windowBox, dockBox }),
             );
 
-            // Escape (no inner view open) minimizes: hidden, content kept, and
+            // The drawer is open without a selection: Escape closes it first,
+            // then (no inner layer open) minimizes: hidden, content kept, and
             // focus returns to the Dock trigger.
+            await page.keyboard.press("Escape");
+            await frame.locator(".documents-layout[data-drawer='closed']").waitFor();
+            assertEquals(await frame.isVisible(), true);
             await page.keyboard.press("Escape");
             await frame.waitFor({ state: "hidden" });
             await page.waitForURL((url) => !url.searchParams.has("view"));

@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import { type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/library.ts";
+import { openNoteRows } from "./helpers/library.ts";
 
 type StoredDraft = {
     userId: string;
@@ -196,7 +196,7 @@ async function requestLogout(page: Page) {
 }
 
 async function openFromLibrary(page: Page, title: string) {
-    await openNotes(page);
+    await openNoteRows(page);
     await page.locator("[data-document-id] h4 button").filter({
         hasText: title,
     }).click();

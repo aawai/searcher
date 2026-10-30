@@ -47,6 +47,8 @@ export const suites = {
         "documents-focus",
         "documents-live-editing",
         "documents-ux",
+        "documents-tree",
+        "documents-drawer-motion",
         "documents-drafts",
         "document-vertical-layout",
         ...Object.values(paginationSuites).flat(),

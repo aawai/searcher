@@ -1539,6 +1539,7 @@ export function DesktopHost(
                                         onSidebarOpenChange: changeSidebar,
                                         sidebarTriggerRef,
                                         narrow: slot.narrow,
+                                        onOpenTrash: () => navigate(routes.trash),
                                         onNewDocument: (target) => requestLibrary({
                                             type: "documents",
                                             action: { type: "navigate", route: { view: "documents/new", target } },

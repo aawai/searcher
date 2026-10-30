@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";
 import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 import { cn } from "../../lib/utils.ts";
@@ -95,10 +96,37 @@ function ContextMenuSeparator(
     );
 }
 
+function ContextMenuRadioGroup(props: ContextMenuPrimitive.RadioGroup.Props) {
+    return <ContextMenuPrimitive.RadioGroup {...props} />;
+}
+
+function ContextMenuRadioItem(
+    { className, children, ...props }: ContextMenuPrimitive.RadioItem.Props,
+) {
+    return (
+        <ContextMenuPrimitive.RadioItem
+            data-slot="context-menu-item"
+            className={cn("menu-item", className)}
+            {...props}
+        >
+            {children}
+            <ContextMenuPrimitive.RadioItemIndicator
+                keepMounted
+                className="menu-item-indicator"
+                aria-hidden="true"
+            >
+                <Check size="1em" className="icon-md" />
+            </ContextMenuPrimitive.RadioItemIndicator>
+        </ContextMenuPrimitive.RadioItem>
+    );
+}
+
 export {
     ContextMenu,
     ContextMenuContent,
     ContextMenuItem,
+    ContextMenuRadioGroup,
+    ContextMenuRadioItem,
     ContextMenuSeparator,
     ContextMenuTrigger,
 };

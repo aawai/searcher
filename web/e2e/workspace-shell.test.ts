@@ -104,9 +104,15 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         page.waitForFunction(() =>
             document.querySelector(".home")?.getAnimations().length === 0
         );
+    // Row contracts run in the flat 最近 list; the tree has its own e2e file.
+    async function showRecent() {
+        await panel.getByRole("button", { name: "最近", exact: true }).click();
+        await panel.locator("[data-sidebar-mode='list']").waitFor();
+    }
     async function openDocs() {
         await openNotes(page);
         await search().waitFor();
+        await showRecent();
     }
 
     for (let index = 0; index < 35; index++) {
@@ -317,6 +323,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await openNotesByKeyboard(page);
                 await panel.waitFor();
                 await assertWindowInWorkArea(page, frame);
+                await showRecent();
 
                 // Selecting a note keeps the editor and sidebar in one window.
                 const noteOpen = panel.getByRole("button", {

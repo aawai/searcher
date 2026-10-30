@@ -3,12 +3,11 @@ export type DocumentsRoute =
     | { view: "documents/new"; target: { notebookId: string | null; isHomeFixed: boolean } }
     | { view: "documents/edit"; id: string };
 
+/** What the notes sidebar shows: the notebook tree, or the flat list of a fixed entry. */
 export type DocumentsScope =
-    | { type: "all" }
-    | { type: "home" }
+    | { type: "tree" }
     | { type: "recent" }
-    | { type: "favorite" }
-    | { type: "notebook"; notebookId: string };
+    | { type: "favorite" };
 
 export type WorkspaceRoute = DocumentsRoute;
 
@@ -27,7 +26,7 @@ export interface DocumentsWorkspaceState
 export const initialDocumentsWorkspaceState: DocumentsWorkspaceState = {
     route: { view: "documents/root" },
     query: "",
-    scope: { type: "all" },
+    scope: { type: "tree" },
 };
 
 export type DomainWorkspaceAction<Route = WorkspaceRoute> =

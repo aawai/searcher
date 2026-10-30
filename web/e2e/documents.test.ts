@@ -5,7 +5,7 @@ import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { largeDocumentMarkdown } from "./fixtures/document.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { openNotes } from "./helpers/library.ts";
+import { openNoteRows } from "./helpers/library.ts";
 
 Deno.test("Documents production responsive modes and large-document integrity (#102 M7)", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -82,7 +82,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
         await t.step(
             "Documents Library stays body-free and does not load editor runtime",
             async () => {
-                await openNotes(page);
+                await openNoteRows(page);
                 await page.locator("[data-document-id]").waitFor();
                 const summaries = await request<
                     { items: Array<Record<string, unknown>> }
@@ -114,7 +114,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             (theme) => document.documentElement.dataset.theme === theme,
             theme,
         );
-        await openNotes(page);
+        await openNoteRows(page);
         await page.locator(`[data-document-id="${doc.id}"] h4 button`).click();
         await page.getByRole("textbox", { name: "笔记标题", exact: true })
             .waitFor();
@@ -702,7 +702,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     version: large.version,
                 });
                 await page.reload();
-                await openNotes(page);
+                await openNoteRows(page);
                 await page.locator(`[data-document-id="${large.id}"] h4 button`)
                     .click();
                 const editor = page.locator(".ProseMirror");

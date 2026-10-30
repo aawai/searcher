@@ -138,7 +138,7 @@ deno task check:ui --update
 
 - `/ask` 是 AI 窗口的空会话，`/ask/:id` 是会话深链；同一窗口承载两者，在 `/ask` 发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push；窗口在后台时拿到 id 只更新窗口的局部地址，不改变页面地址，回到该历史条目时再 replace 对齐。登录用户由任务栏、顶栏或链接打开 AI 窗口；无模型时保留入口并显示不可用原因，访客不显示任务栏，直达 `/ask` 保留登录引导页。
 - `/?view=apps` 与 `/?view=notes` 打开或激活首页上的应用、笔记窗口；普通窗口切换 push 浏览器历史，锚定应用窗口的收起按[历史契约](workspace.md#导航关闭与状态)撤销或 replace，重复点击当前入口不重置，关闭未保存笔记窗口须确认，浏览器返回 / 前进不提示。不再有资料库根视图或头像内的应用 / 笔记 / AI 导航。
-- 笔记窗口内部路由为 `documents/root`（无选中）、`documents/new`（含创建目标）和 `documents/edit`（含 id）；选中替换当前路由，不维护返回栈或将选中笔记写入 URL。所有打开笔记入口共用离开保护；新建成功后 replace 为编辑路由而不重挂载编辑器。
+- 笔记窗口内部路由为 `documents/root`（无选中）、`documents/new`（含创建目标）和 `documents/edit`（含 id）；选中替换当前路由，不维护返回栈或将选中笔记写入 URL。侧栏的模式（`DocumentsScope`：`tree` / `recent` / `favorite`，搜索非空时为列表）保存在库状态中，树展开、选中节点与按笔记本懒加载的页面是 `DocumentsSidebar` 的局部状态；树语义组件 `NotesTree` 的键盘模型是纯函数（`tree-keyboard.ts`），创建目标解析与树条目构造在 `notes-tree-model.ts`，均有单测。节点菜单复用 `components/ui/context-menu.tsx`，⋯ 按钮向节点派发同一个 `contextmenu` 事件而不另建菜单。所有打开笔记入口共用离开保护；新建成功后 replace 为编辑路由而不重挂载编辑器。
 - `/settings` 与 `/settings/search` 均解析为 `search` 分类，不互相重定向；登录用户的设置和 `/account` 同属一个窗口，回收站为另一个窗口。设置内容按 Host 宽度（访客独立页按视口）选择布局：≥768px 双栏，<768px 的 `/settings` 为列表，分类与 `/account` 为详情并提供返回设置的链接。未知 Settings/Admin 子路径保持 404。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。成功后由
   页面上“已登录”状态这一处 replace 到目标，只导航一次（`/share` 这类一次性入口依赖它）。

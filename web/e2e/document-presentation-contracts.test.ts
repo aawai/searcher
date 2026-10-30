@@ -7,7 +7,7 @@ import type {
 } from "../../src/shared/documents.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { libraryWindow, openNotes } from "./helpers/library.ts";
+import { libraryWindow, openNoteRows } from "./helpers/library.ts";
 
 interface Rect {
     x: number;
@@ -518,7 +518,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     });
 
     await page.reload();
-    await openNotes(page);
+    await openNoteRows(page);
     const panel = libraryWindow(page, "notes");
     await panel.waitFor({ state: "visible" });
     await page.locator(`[data-document-id="${fixtureDocument.id}"] h4 button`)

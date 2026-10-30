@@ -1,14 +1,15 @@
 import { type FormEvent, useEffect, useId, useState } from "react";
 import {
     FolderInput,
-    Home,
     MoreHorizontal,
     Pencil,
+    Pin,
     Star,
     Trash2,
 } from "lucide-react";
 import {
     DOCUMENT_TITLE_MAX_LENGTH,
+    type DocumentColor,
     type DocumentDto,
     type DocumentNotebookDto,
     type DocumentSummaryDto,
@@ -45,6 +46,11 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../../components/ui/alert-dialog.tsx";
+import {
+    ContextMenuItem,
+    ContextMenuSeparator,
+} from "../../components/ui/context-menu.tsx";
+import { DocumentColorItems } from "../../components/searcher/DocumentColorMenu.tsx";
 import { StatusBanner } from "../../components/searcher/semantic.tsx";
 import { useAppState } from "../../app/state.tsx";
 import { notifyTrashChange } from "../../app/trash-events.ts";
@@ -56,7 +62,7 @@ export interface DocumentLibraryActionsProps {
     onTrashed?: (id: string) => void;
 }
 
-export function DocumentLibraryActions({
+export function useDocumentActions({
     item,
     notebooks,
     onChanged,
@@ -208,6 +214,24 @@ export function DocumentLibraryActions({
         }
     }
 
+    async function handleColor(color: DocumentColor) {
+        if (isFavoriting || color === item.color) return;
+        setIsFavoriting(true);
+        setFavoriteError(null);
+        try {
+            const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
+            await api<DocumentDto>(
+                `/api/documents/${item.id}`,
+                json("PATCH", { version: doc.version, color }),
+            );
+            onChanged();
+        } catch (err) {
+            setFavoriteError(err instanceof Error ? err.message : String(err));
+        } finally {
+            setIsFavoriting(false);
+        }
+    }
+
     async function handleToggleHomeFixed() {
         if (isFavoriting) return;
         setIsFavoriting(true);
@@ -229,68 +253,8 @@ export function DocumentLibraryActions({
         }
     }
 
-    return (
+    const dialogs = (
         <>
-            <DropdownMenu>
-                <DropdownMenuTrigger
-                    render={
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="documents-row-action"
-                            aria-label={`笔记操作：${item.displayTitle}`}
-                            title={`笔记操作：${item.displayTitle}`}
-                        >
-                            <MoreHorizontal className="icon-md" />
-                        </Button>
-                    }
-                    aria-label={`笔记操作：${item.displayTitle}`}
-                />
-                <DropdownMenuContent sideOffset={4}>
-                    <DropdownMenuItem
-                        onClick={() => setRenameOpen(true)}
-                    >
-                        <Pencil className="icon-md" />
-                        <span>重命名</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        disabled={isFavoriting}
-                        onClick={() => void handleToggleFavorite()}
-                    >
-                        <Star
-                            className={item.isFavorite
-                                ? "icon-md documents-favorite-icon"
-                                : "icon-md"}
-                        />
-                        <span>{item.isFavorite ? "取消收藏" : "收藏"}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        disabled={isFavoriting}
-                        onClick={() => void handleToggleHomeFixed()}
-                    >
-                        <Home className="icon-md" />
-                        <span>
-                            {item.isHomeFixed ? "移出首页" : "固定到首页"}
-                        </span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        onClick={() => setMoveOpen(true)}
-                    >
-                        <FolderInput className="icon-md" />
-                        <span>移动笔记本</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => setTrashOpen(true)}
-                    >
-                        <Trash2 className="icon-md" />
-                        <span>移至回收站</span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-
             {/* Rename Dialog */}
             <Dialog
                 open={renameOpen}
@@ -489,7 +453,7 @@ export function DocumentLibraryActions({
                     <AlertDialogHeader>
                         <AlertDialogTitle>操作失败</AlertDialogTitle>
                         <AlertDialogDescription>
-                            无法更新笔记收藏状态。
+                            无法更新笔记。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
@@ -511,5 +475,102 @@ export function DocumentLibraryActions({
             </AlertDialog>
         </>
     );
+
+    return {
+        item,
+        isBusy: isFavoriting,
+        dialogs,
+        rename: () => setRenameOpen(true),
+        move: () => setMoveOpen(true),
+        trash: () => setTrashOpen(true),
+        toggleFavorite: () => void handleToggleFavorite(),
+        toggleHomeFixed: () => void handleToggleHomeFixed(),
+        setColor: (color: DocumentColor) => void handleColor(color),
+    };
 }
 
+type MenuKind = "dropdown" | "context";
+
+/** One item list for every note menu; the host picks the primitive family. */
+export function DocumentActionMenuItems(
+    { actions, menu }: {
+        actions: ReturnType<typeof useDocumentActions>;
+        menu: MenuKind;
+    },
+) {
+    const Item = menu === "context" ? ContextMenuItem : DropdownMenuItem;
+    const Separator = menu === "context"
+        ? ContextMenuSeparator
+        : DropdownMenuSeparator;
+    const { item } = actions;
+    return (
+        <>
+            <Item onClick={actions.rename}>
+                <Pencil className="icon-md" />
+                <span>重命名</span>
+            </Item>
+            <Item disabled={actions.isBusy} onClick={actions.toggleFavorite}>
+                <Star
+                    className={item.isFavorite
+                        ? "icon-md documents-favorite-icon"
+                        : "icon-md"}
+                />
+                <span>{item.isFavorite ? "取消收藏" : "收藏"}</span>
+            </Item>
+            <Item disabled={actions.isBusy} onClick={actions.toggleHomeFixed}>
+                <Pin
+                    className={item.isHomeFixed
+                        ? "icon-md documents-pin-icon"
+                        : "icon-md"}
+                />
+                <span>{item.isHomeFixed ? "移出首页" : "固定到首页"}</span>
+            </Item>
+            <Item onClick={actions.move}>
+                <FolderInput className="icon-md" />
+                <span>移动笔记本</span>
+            </Item>
+            <Separator />
+            <DocumentColorItems
+                menu={menu}
+                color={item.color}
+                onChange={actions.setColor}
+            />
+            <Separator />
+            <Item variant="destructive" onClick={actions.trash}>
+                <Trash2 className="icon-md" />
+                <span>移至回收站</span>
+            </Item>
+        </>
+    );
+}
+
+/** The visible ⋯ trigger of a list row. */
+export function DocumentLibraryActions(props: DocumentLibraryActionsProps) {
+    const actions = useDocumentActions(props);
+    const label = `笔记操作：${props.item.displayTitle}`;
+    return (
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger
+                    render={
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="documents-row-action"
+                            aria-label={label}
+                            title={label}
+                        >
+                            <MoreHorizontal className="icon-md" />
+                        </Button>
+                    }
+                    aria-label={label}
+                />
+                <DropdownMenuContent sideOffset={4}>
+                    <DocumentActionMenuItems actions={actions} menu="dropdown" />
+                </DropdownMenuContent>
+            </DropdownMenu>
+            {actions.dialogs}
+        </>
+    );
+}

@@ -5,7 +5,7 @@ import { chromium } from "./helpers/browser.ts";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { libraryPanel, openNotes } from "./helpers/library.ts";
+import { libraryPanel, openNoteRows } from "./helpers/library.ts";
 
 type PaperSize = "a4" | "letter";
 type Orientation = "portrait" | "landscape";
@@ -234,7 +234,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     );
 
     await page.reload();
-    await openNotes(page);
+    await openNoteRows(page);
     await page.locator(`[data-document-id="${doc.id}"] h4 button`).click();
     const win = libraryPanel(page);
     const editor = win.locator(".ProseMirror");
@@ -758,7 +758,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         cleanup.defer(() => isolatedContext.close());
         matrixPage = await isolatedContext.newPage();
         await matrixPage.goto(app.origin + "/");
-        await openNotes(matrixPage);
+        await openNoteRows(matrixPage);
         await matrixPage.locator(`[data-document-id="${doc.id}"] h4 button`)
             .click();
         await matrixPage.locator(".ProseMirror").waitFor();

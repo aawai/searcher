@@ -3,7 +3,7 @@ import { chromium } from "./helpers/browser.ts";
 import type { Locator } from "playwright";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
-import { libraryWindow, openNotes } from "./helpers/library.ts";
+import { libraryWindow, openNoteRows } from "./helpers/library.ts";
 
 async function visiblePoint(locator: Locator, minimumHeight = 24) {
     await locator.scrollIntoViewIfNeeded();
@@ -141,7 +141,7 @@ Deno.test("#158 Zen body owner, short-host access and unrelated lists", async (t
             await t.step(`${width}x${height}`, async () => {
                 await page.setViewportSize({ width, height });
                 await page.goto(app.origin + "/");
-                const host = await openNotes(page);
+                const host = await openNoteRows(page);
                 const frame = libraryWindow(page, "notes");
                 const row = host.locator(
                     `[data-document-id="${doc.id}"] h4 button`,
