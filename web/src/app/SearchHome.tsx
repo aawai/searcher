@@ -9,7 +9,7 @@ import {
     type EngineId,
     SEARCH_ENGINES,
 } from "@shared/engines.ts";
-import { Expand, Menu, Shrink, X } from "lucide-react";
+import { Expand, Shrink, X } from "lucide-react";
 import {
     useCallback,
     useEffect,
@@ -1486,13 +1486,6 @@ export function DesktopHost(
             ? <Button onClick={() => openCreateApp()}>添加应用</Button>
             : (
                 <>
-                    {!noteFullScreen && (
-                        <Button ref={sidebarTriggerRef} className="notes-sidebar-trigger" variant="ghost" size="icon"
-                            aria-label="笔记侧栏" aria-expanded={visibleSidebar} aria-pressed={visibleSidebar}
-                            aria-controls="notes-sidebar" onClick={() => changeSidebar(!visibleSidebar)}>
-                            <Menu size="1em" className="icon-md" />
-                        </Button>
-                    )}
                     <Button variant="ghost" size="icon"
                         aria-label={noteFullScreen ? "退出全屏" : "全屏编辑"}
                         onClick={() => {
@@ -1538,6 +1531,7 @@ export function DesktopHost(
                                         sidebarOpen: visibleSidebar,
                                         onSidebarOpenChange: changeSidebar,
                                         sidebarTriggerRef,
+                                        fullScreen: noteFullScreen,
                                         narrow: slot.narrow,
                                         onOpenTrash: () => navigate(routes.trash),
                                         onNewDocument: (target) => requestLibrary({

@@ -257,8 +257,13 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         await ui.frame.getByRole("button", { name: "打开笔记：散记置顶" }).waitFor();
         assertEquals(await ui.frame.getByRole("button", { name: "收藏", exact: true }).getAttribute("aria-pressed"), "true");
 
-        // The 笔记本 heading returns to the tree, keeping its expansion and selection.
-        await ui.frame.getByRole("button", { name: "笔记本", exact: true }).click();
+        // In list mode the heading row shows the scope name and keeps the create buttons;
+        // it returns to the tree, keeping its expansion and selection.
+        const backToTree = ui.frame.getByRole("button", { name: /^返回笔记本/ });
+        assertEquals(await backToTree.textContent(), "收藏");
+        await ui.newNote.waitFor();
+        await ui.newNotebook.waitFor();
+        await backToTree.click();
         await ui.tree.waitFor();
         assertEquals(await ui.mode(), "tree");
         assertEquals(await expanded(ui.item("阅读")), "true");

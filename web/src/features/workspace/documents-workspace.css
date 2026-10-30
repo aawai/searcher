@@ -132,6 +132,31 @@
     gap: var(--space-1);
     min-width: 0;
 }
+.documents-notebooks-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+}
+.documents-notebooks-row > .documents-notebooks-heading {
+    flex: 1;
+    min-width: 0;
+}
+/* Create actions: compact visual size; coarse pointers get the touch target
+   from an enlarged hit area, so the row does not grow. */
+[data-slot="button"].documents-heading-action {
+    position: relative;
+    flex: none;
+    width: var(--control-compact-height);
+    min-width: var(--control-compact-height);
+    height: var(--control-compact-height);
+    min-height: var(--control-compact-height);
+}
+[data-slot="button"].documents-heading-action::after {
+    content: "";
+    position: absolute;
+    inset: calc((var(--control-compact-height) - var(--control-touch-target)) / 2);
+}
 .documents-notebooks-heading {
     margin: 0;
     font-size: var(--font-metadata-size);

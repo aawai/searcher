@@ -325,7 +325,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await waitForRowCount(4);
 
             // The tree reaches every note through 未分类 (none are filed here).
-            await entry("笔记本").click();
+            await panel.getByRole("button", { name: "返回笔记本，当前：最近" }).click();
             const tree = panel.getByRole("tree", { name: "笔记本", exact: true });
             await tree.getByRole("treeitem", { name: "未分类", exact: true }).click();
             await tree.getByRole("treeitem", { name: "Delta Document" }).waitFor();

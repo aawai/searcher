@@ -32,14 +32,6 @@
     width: 100%;
     min-width: 0;
 }
-/* Notes navigation precedes the window title; other controls follow it. */
-.window-frame__toolbar:has(.notes-sidebar-trigger),
-.window-frame__toolbar:has(.notes-sidebar-trigger) .workspace-toolbar-actions {
-    display: contents;
-}
-.notes-sidebar-trigger {
-    order: -1;
-}
 .window-frame:has(.library-window[data-window-fullscreen]) .window-frame__title,
 .window-frame:has(.library-window[data-window-fullscreen]) .window-frame__actions {
     display: none;
