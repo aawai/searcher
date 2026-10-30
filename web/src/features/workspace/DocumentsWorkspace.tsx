@@ -45,6 +45,10 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
     const [revision, setRevision] = useState(0);
     const [focusTitleSignal, setFocusTitleSignal] = useState(0);
     const [restoreDrawerFocus, setRestoreDrawerFocus] = useState(true);
+    const [outlineOpen, setOutlineOpen] = useState(false);
+    const [outlineRestoreFocus, setOutlineRestoreFocus] = useState(true);
+    const [outlineMount, setOutlineMount] = useState<HTMLDivElement | null>(null);
+    const outlineTriggerRef = useRef<HTMLButtonElement>(null);
     const [newSession, setNewSession] = useState(0);
     const createdId = useRef<string | null>(null);
     // Where notes the sidebar has not loaded live; a new note's notebook is known here.
@@ -76,6 +80,10 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                 onClick={() => {
                     setRestoreDrawerFocus(true);
                     toggleFocus.current = "expand";
+                    if (!props.sidebarOpen) {
+                        setOutlineRestoreFocus(false);
+                        setOutlineOpen(false);
+                    }
                     props.onSidebarOpenChange(!props.sidebarOpen);
                 }}
             >
@@ -85,6 +93,15 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
     useEffect(() => {
         if (props.sidebarOpen) setRestoreDrawerFocus(true);
     }, [props.sidebarOpen]);
+    useEffect(() => {
+        if (props.sidebarOpen && !props.sidebarPersistent) {
+            setOutlineRestoreFocus(false);
+            setOutlineOpen(false);
+        }
+    }, [props.sidebarOpen, props.sidebarPersistent]);
+    useEffect(() => {
+        if (!props.narrow) setOutlineOpen(false);
+    }, [props.narrow]);
     const openDocument = async (id: string) => {
         const opened = await props.onOpenDocument(id);
         if (opened) {
@@ -112,8 +129,11 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
             (props.state.view === "documents/edit" && props.state.id === createdId.current)
         ? `new:${newSession}`
         : props.state.view === "documents/edit" ? props.state.id : "root";
+    useEffect(() => {
+        setOutlineOpen(false);
+    }, [editorKey]);
     return (
-        <div className="documents-layout" data-workspace-content="documents" data-drawer={props.sidebarPersistent ? undefined : props.sidebarOpen ? "open" : "closed"}>
+        <div className="documents-layout" data-workspace-content="documents" data-drawer={props.sidebarPersistent ? undefined : props.sidebarOpen ? "open" : "closed"} data-outline-drawer={props.narrow ? outlineOpen ? "open" : "closed" : undefined}>
             <WindowOverlay
                 open={props.sidebarOpen}
                 modal={!props.sidebarPersistent}
@@ -151,6 +171,18 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                 </nav>
                 {!props.sidebarPersistent && <button type="button" className="documents-drawer-dismiss" aria-label="关闭笔记侧栏" onClick={() => { setRestoreDrawerFocus(true); props.onSidebarOpenChange(false); }} />}
             </WindowOverlay>
+            <WindowOverlay
+                open={props.narrow && outlineOpen}
+                active={active}
+                onOpenChange={(open) => { setOutlineRestoreFocus(true); setOutlineOpen(open); }}
+                restoreFocus={outlineRestoreFocus}
+                restoreFocusRef={outlineTriggerRef}
+                label="笔记大纲"
+                className="documents-outline-drawer"
+            >
+                <button type="button" className="documents-drawer-dismiss" aria-label="关闭笔记大纲" onClick={() => { setOutlineRestoreFocus(true); setOutlineOpen(false); }} />
+                <div ref={setOutlineMount} className="documents-outline-drawer-content" />
+            </WindowOverlay>
             <main className="documents-editor-pane">
                 {props.state.view === "documents/root"
                     ? (
@@ -178,6 +210,17 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                             onDirtyChange={props.onDirtyChange}
                             onChanged={refresh}
                             narrow={props.narrow}
+                            outlineDrawerOpen={outlineOpen}
+                            outlineDrawerMount={outlineMount}
+                            outlineButtonRef={outlineTriggerRef}
+                            onOutlineDrawerChange={(open, restoreFocus = true) => {
+                                setOutlineRestoreFocus(restoreFocus);
+                                if (open && !props.sidebarPersistent) {
+                                    setRestoreDrawerFocus(false);
+                                    props.onSidebarOpenChange(false);
+                                }
+                                setOutlineOpen(open);
+                            }}
                             focusTitleSignal={focusTitleSignal}
                             eventSubscriptions={props.eventSubscriptions}
                         />

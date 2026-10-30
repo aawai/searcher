@@ -300,7 +300,6 @@
     --editor-readable-width: 720px;
     --document-outline-width: 260px;
     --notes-sidebar-width: 240px;
-    --document-outline-compact-height: 240px;
     --editor-min-content-height: 240px;
     --workspace-top-inset: calc(var(--control-height) + var(--space-6));
 }

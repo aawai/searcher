@@ -32,9 +32,22 @@ export function WindowOverlay({
             .filter((element): element is HTMLElement => element instanceof HTMLElement && element !== overlay);
         const previous = siblings.map((element) => element.inert);
         siblings.forEach((element) => { element.inert = true; });
+        // Portalled children bubble through their React owner, not this overlay.
+        // Listen on the DOM node so they participate in the same focus trap.
+        const trapFocus = (event: KeyboardEvent) => {
+            if (event.key !== "Tab") return;
+            const elements = Array.from(overlay.querySelectorAll<HTMLElement>(FOCUSABLE))
+                .filter((element) => element.getClientRects().length > 0);
+            if (!elements.length) { event.preventDefault(); overlay.focus(); return; }
+            const index = elements.indexOf(document.activeElement as HTMLElement);
+            if (event.shiftKey && index <= 0) { event.preventDefault(); elements[elements.length - 1].focus(); }
+            else if (!event.shiftKey && (index < 0 || index === elements.length - 1)) { event.preventDefault(); elements[0].focus(); }
+        };
+        overlay.addEventListener("keydown", trapFocus);
         const first = overlay.querySelector<HTMLElement>(FOCUSABLE);
         (first ?? overlay).focus();
         return () => {
+            overlay.removeEventListener("keydown", trapFocus);
             siblings.forEach((element, index) => { element.inert = previous[index]; });
             if (restoreRef.current) restoreFocusRef?.current?.focus();
         };
@@ -47,15 +60,6 @@ export function WindowOverlay({
             role={modal ? role : undefined}
             aria-label={modal ? label : undefined}
             tabIndex={-1}
-            onKeyDown={(event) => {
-                if (!modal || event.key !== "Tab") return;
-                const elements = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE))
-                    .filter((element) => element.getClientRects().length > 0);
-                if (!elements.length) { event.preventDefault(); event.currentTarget.focus(); return; }
-                const index = elements.indexOf(document.activeElement as HTMLElement);
-                if (event.shiftKey && index <= 0) { event.preventDefault(); elements[elements.length - 1].focus(); }
-                else if (!event.shiftKey && (index < 0 || index === elements.length - 1)) { event.preventDefault(); elements[0].focus(); }
-            }}
         >
             {children}
         </div>

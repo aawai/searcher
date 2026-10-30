@@ -302,6 +302,113 @@ Deno.test("大纲在窗口调整时保留展开状态，覆盖层不阻止编辑
         for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowRight");
         await page.keyboard.press("Enter");
         await overlay.waitFor({ state: "visible" });
+        // Crossing the host breakpoint with the drawer open transfers its
+        // expanded state to the wide outline rather than losing it.
+        await page.setViewportSize({ width: 390, height: 900 });
+        await page.waitForFunction(() =>
+            document.querySelector('.documents-layout[data-outline-drawer="closed"]') !== null
+        );
+        const sidebarDismiss = frame.getByRole("button", { name: "关闭笔记侧栏", exact: true });
+        if (await sidebarDismiss.isVisible()) await sidebarDismiss.click();
+        await outlineButton.click();
+        await frame.locator(".documents-outline-drawer").waitFor({ state: "visible" });
+        await page.setViewportSize({ width: 1600, height: 900 });
+        await page.waitForFunction(() =>
+            document.querySelector(".documents-layout")?.getAttribute("data-outline-drawer") === null
+        );
+        await frame.locator(".document-outline-panel").waitFor({ state: "visible" });
+        assertEquals(await outlineButton.getAttribute("aria-pressed"), "true");
+        assertEquals(await editor.textContent(), "覆盖层打开时仍可编辑");
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("窄窗口大纲右侧抽屉选择标题、关闭并与笔记侧栏互斥", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 390, height: 844 },
+    });
+    try {
+        await loginAndVisit(page, app.origin, "/?view=notes", user);
+        const frame = page.locator(NOTES);
+        await createNote(page, "抽屉大纲测试");
+        const editor = frame.locator(".ProseMirror");
+        await editor.click();
+        await page.keyboard.type("# ");
+        await page.keyboard.type("抽屉标题");
+        await editor.locator("h1").filter({ hasText: "抽屉标题" }).waitFor();
+
+        const layout = frame.locator(".documents-layout");
+        const drawer = frame.locator(".documents-outline-drawer");
+        const outlineButton = frame.getByRole("button", { name: "大纲", exact: true });
+        const sidebarButton = frame.getByRole("button", { name: "笔记侧栏", exact: true });
+        await outlineButton.click();
+        await drawer.getByRole("button", { name: "抽屉标题", exact: true }).click();
+        await page.waitForFunction(() =>
+            document.querySelector('.documents-layout[data-outline-drawer="closed"]') !== null
+        );
+        assertEquals(await outlineButton.getAttribute("aria-pressed"), "false");
+        await page.waitForFunction(() =>
+            document.activeElement?.classList.contains("ProseMirror")
+        );
+
+        await outlineButton.click();
+        await drawer.waitFor({ state: "visible" });
+        assertEquals(
+            await layout.locator(".documents-editor-pane").evaluate((el) => (el as HTMLElement).inert),
+            true,
+        );
+        const heading = drawer.getByRole("button", { name: "抽屉标题", exact: true });
+        const dismiss = drawer.getByRole("button", { name: "关闭笔记大纲", exact: true });
+        await heading.focus();
+        await page.keyboard.press("Tab");
+        assertEquals(await dismiss.evaluate((el) => el === document.activeElement), true);
+        await page.keyboard.press("Shift+Tab");
+        assertEquals(await heading.evaluate((el) => el === document.activeElement), true);
+        await page.waitForFunction(() => {
+            const layout = document.querySelector(".documents-layout")?.getBoundingClientRect();
+            const outline = document.querySelector(".documents-outline-drawer .document-outline-sidebar")
+                ?.getBoundingClientRect();
+            return !!layout && !!outline && Math.abs(outline.right - layout.right) <= 1;
+        });
+        assertEquals(await layout.getAttribute("data-drawer"), "closed");
+        // The transparent area over the exposed editor card dismisses the drawer.
+        await drawer.getByRole("button", { name: "关闭笔记大纲", exact: true }).click();
+        await drawer.waitFor({ state: "hidden" });
+        await outlineButton.click();
+        await drawer.getByRole("button", { name: "收起大纲", exact: true }).click();
+        await drawer.waitFor({ state: "hidden" });
+
+        await sidebarButton.click();
+        await page.waitForFunction(() =>
+            document.querySelector('.documents-layout[data-drawer="open"]') !== null
+        );
+        assertEquals(await layout.getAttribute("data-outline-drawer"), "closed");
+        await frame.getByRole("button", { name: "关闭笔记侧栏", exact: true }).click();
+        await outlineButton.click();
+        await drawer.waitFor({ state: "visible" });
+        await page.keyboard.press("Escape");
+        await drawer.waitFor({ state: "hidden" });
+        await page.waitForFunction(() =>
+            document.activeElement?.getAttribute("aria-label") === "大纲"
+        );
+        assert(await frame.isVisible());
+
+        // A host width change keeps an open narrow drawer and its content intact.
+        await outlineButton.click();
+        await drawer.waitFor({ state: "visible" });
+        const before = await box(page, NOTES);
+        await page.setViewportSize({ width: 450, height: 844 });
+        await page.waitForFunction((width) => {
+            const rect = document.querySelector('[data-window-id="notes"]')?.getBoundingClientRect();
+            return rect !== undefined && rect.width !== width;
+        }, before.width);
+        assertEquals(await layout.getAttribute("data-outline-drawer"), "open");
+        await drawer.getByRole("button", { name: "抽屉标题", exact: true }).waitFor();
     } finally {
         await browser.close();
         await app.close();

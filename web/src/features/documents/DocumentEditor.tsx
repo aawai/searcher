@@ -5,6 +5,7 @@ import {
     type KeyboardEvent,
     lazy,
     type ReactNode,
+    type RefObject,
     Suspense,
     useCallback,
     useEffect,
@@ -14,6 +15,7 @@ import {
     useState,
     useSyncExternalStore,
 } from "react";
+import { createPortal } from "react-dom";
 import type {
     DocumentAssetDto,
     DocumentSettingsDto,
@@ -26,7 +28,6 @@ import { prepareDocumentPrint } from "./document-print.ts";
 import { api, ApiError } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
-import { WindowOverlay } from "../../components/ui/window-overlay.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -246,6 +247,10 @@ export interface DocumentEditorProps {
     onChanged?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
     narrow?: boolean;
+    outlineDrawerOpen: boolean;
+    outlineDrawerMount: HTMLElement | null;
+    outlineButtonRef: RefObject<HTMLButtonElement | null>;
+    onOutlineDrawerChange: (open: boolean, restoreFocus?: boolean) => void;
     focusTitleSignal?: number;
     eventSubscriptions?: DocumentEventSubscriptions;
     /** Leads the header row, before the title: the host's navigation toggle. */
@@ -261,6 +266,10 @@ export function DocumentEditor({
     onChanged,
     onDirtyChange,
     narrow = false,
+    outlineDrawerOpen,
+    outlineDrawerMount,
+    outlineButtonRef,
+    onOutlineDrawerChange,
     focusTitleSignal,
     leading,
     eventSubscriptions,
@@ -350,13 +359,10 @@ export function DocumentEditor({
     );
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const titleInputRef = useRef<HTMLInputElement>(null);
-    const outlineButtonRef = useRef<HTMLButtonElement>(null);
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const [sheetRestoreFocus, setSheetRestoreFocus] = useState(true);
     const [outlineHasFocus, setOutlineHasFocus] = useState(false);
     const [outlineFits, setOutlineFits] = useState(false);
     const showOutline = devicePreferences.outlineOpen;
-    const visibleOutline = narrow ? sheetOpen : showOutline;
+    const visibleOutline = narrow ? outlineDrawerOpen : showOutline;
     const showToolbar = !resolveToolbarCollapsed(
         devicePreferences.toolbarCollapsed,
         narrow ? 0 : BREAKPOINTS.medium,
@@ -405,7 +411,11 @@ export function DocumentEditor({
         if (focusTitleSignal !== undefined) titleInputRef.current?.focus();
     }, [focusTitleSignal, snapshot.loading]);
     useEffect(() => {
-        if (!narrow || !richMode) setSheetOpen(false);
+        if (!narrow && outlineDrawerOpen) {
+            writeOutlineOpen(deviceStorage(), userId, true);
+            setDevicePreferences((previous) => ({ ...previous, outlineOpen: true }));
+        }
+        if (!narrow || !richMode) onOutlineDrawerChange(false);
     }, [narrow, richMode]);
     const updateOutline = (open: boolean) => {
         writeOutlineOpen(deviceStorage(), userId, open);
@@ -413,8 +423,7 @@ export function DocumentEditor({
     };
     const closeOutline = () => {
         if (narrow) {
-            setSheetRestoreFocus(true);
-            setSheetOpen(false);
+            onOutlineDrawerChange(false);
         } else {
             updateOutline(false);
             outlineButtonRef.current?.focus();
@@ -1026,8 +1035,7 @@ export function DocumentEditor({
     // 13. Outline click focus
     const handleOutlineSelectHeading = (index: number) => {
         if (narrow) {
-            setSheetRestoreFocus(false);
-            setSheetOpen(false);
+            onOutlineDrawerChange(false, false);
             requestAnimationFrame(() => focusOutlineHeading(index));
             return;
         }
@@ -1305,8 +1313,7 @@ export function DocumentEditor({
                             disabled={viewMode === "source"}
                             onClick={() => {
                                 if (narrow) {
-                                    setSheetRestoreFocus(true);
-                                    setSheetOpen(!sheetOpen);
+                                    onOutlineDrawerChange(!outlineDrawerOpen);
                                 } else {
                                     updateOutline(!showOutline);
                                 }
@@ -1596,22 +1603,16 @@ export function DocumentEditor({
                     </span>
                 </div>
             </div>
-            <WindowOverlay
-                open={narrow && sheetOpen && richMode}
-                onOpenChange={setSheetOpen}
-                label="笔记大纲"
-                className="document-outline-sheet"
-                restoreFocusRef={outlineButtonRef}
-                restoreFocus={sheetRestoreFocus}
-            >
+            {narrow && outlineDrawerOpen && richMode && outlineDrawerMount && createPortal(
                 <Suspense fallback={<LoadingState density="compact">正在加载大纲…</LoadingState>}>
                     <DocumentOutline
                         outline={analysis.outline}
                         onSelectHeading={handleOutlineSelectHeading}
                         onClose={closeOutline}
                     />
-                </Suspense>
-            </WindowOverlay>
+                </Suspense>,
+                outlineDrawerMount,
+            )}
 
             <DocumentPaperSettingsDialog
                 documentId={documentId}
