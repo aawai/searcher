@@ -512,7 +512,6 @@
     color: var(--foreground);
     font-size: var(--font-body-size);
     outline: none;
-    scrollbar-width: thin;
     z-index: var(--elevation-menu);
     transform-origin: var(--transform-origin);
     transition: opacity var(--motion-fast) var(--ease-standard),
@@ -990,7 +989,6 @@
     width: min(calc(100vw - var(--space-6)), 480px);
     max-height: calc(100dvh - var(--space-7));
     overflow-y: auto;
-    scrollbar-width: thin;
     padding: var(--space-6);
     border-radius: var(--radius-lg);
     background: var(--surface-l3);

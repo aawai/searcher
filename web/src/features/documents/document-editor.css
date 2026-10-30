@@ -18,11 +18,6 @@
     box-sizing: border-box;
 }
 
-.document-editor-container,
-.document-editor-container :where(*) {
-    scrollbar-width: thin;
-}
-
 /* Header & Top Bar */
 .document-editor-header {
     display: flex;

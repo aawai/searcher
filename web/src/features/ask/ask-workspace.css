@@ -672,7 +672,6 @@
     gap: var(--space-3);
     max-height: min(70dvh, 440px);
     overflow-y: auto;
-    scrollbar-width: thin;
 }
 
 .ask-composer__tools-panel h3 {
@@ -1260,7 +1259,6 @@
     margin-inline: calc(var(--space-2) * -1);
     padding-inline: var(--space-2);
     overflow-y: auto;
-    scrollbar-width: thin;
 }
 
 .ask-search-dialog__results [data-slot="button"].ask-search-result {
