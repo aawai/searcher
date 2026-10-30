@@ -38,6 +38,13 @@ fallback 字体的 Linux 环境中也实际超过 A4 单页高度；不通过安
 
 本地摸底可用 `DENO_JOBS=2 deno task test:e2e:full --parallel --no-fail-fast --timeout 5000`，一次收集失败并缩短隐式等待。`--timeout` / `E2E_TIMEOUT_MS` 仅用于诊断，正常验收与 CI 保持默认超时；参数、优先级与报告字段见 [Production E2E](../scripts/e2e/README.md#本地快速超时)。
 
+### 摸底与失败处理
+
+- **先小后大**：修改共享 helper、公共选择器或删除 / 重构被 E2E 依赖的组件后，先单跑 2–3 个有代表性的文件（`NODE_ENV=test deno test -A --no-check <file>`，需先 `deno task build`），确认 helper 与选择器可用，再跑整套摸底。
+- **摸底必须限时**：`full` / `affected` 使用 `--no-fail-fast` 时必须同时传 `--timeout 5000`。破坏性改动后的失败是确定性的，每个找不到元素的定位器都会等满 30s，且同一用例后续步骤会在坏状态上继续等待。不带 `--timeout` 时 runner 会打印警告。
+- **先归类再重跑**：按 `Call log` 把错误归并为共同根因（helper、选择器、重命名 DOM、语义变化），修复根因后只重跑受影响文件；摸底结果只用于定位，不作为通过证据。验收去掉 `--timeout`，以默认超时重跑受影响集合。
+- **runner 自动提示**：失败的运行结束后，runner 读取 JUnit 统计耗时达到超时的失败用例，写入 `timings.json` 的 `failedCases`、`timeoutLikeFailures`、`timeoutLikeSeconds`（步骤嵌套在测试内，秒数为上界）；未设超时且此类失败不少于 5 个时输出归类与限时的建议。
+
 ### Affected 局部诊断
 
 ```sh

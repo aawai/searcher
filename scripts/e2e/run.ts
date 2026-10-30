@@ -1,6 +1,7 @@
 import { checkSuites, selectAffected, suiteFiles } from "./suites.ts";
 import { parseRunOptions } from "./options.ts";
 import { collectAffectedPaths } from "./affected.ts";
+import { summarizeJunit, triageAdvice } from "./junit-summary.ts";
 
 // Deliberately delegates scheduling, checking and reporting to Deno test.
 const options = parseRunOptions(Deno.args, Deno.env.get("E2E_TIMEOUT_MS"));
@@ -104,6 +105,15 @@ if (!skip && timeoutMs !== null) {
         `Triage run: implicit Playwright timeout ${timeoutMs}ms; not a merge gate.`,
     );
 }
+if (
+    !skip && !failFast && timeoutMs === null &&
+    (suite === "full" || suite === "affected")
+) {
+    console.warn(
+        "No-fail-fast run without --timeout: every failing locator waits the " +
+            "full 30s. Use --timeout 5000 to triage; acceptance reruns omit it.",
+    );
+}
 let code = 1;
 try {
     if (skip) {
@@ -127,6 +137,17 @@ try {
             ]);
             // A successful run without its promised report is an acceptance failure.
             if (code === 0 && !(await Deno.stat(junit)).isFile) code = 1;
+            if (code !== 0) {
+                const report = await Deno.readTextFile(junit).catch(() => "");
+                const summary = summarizeJunit(report, timeoutMs);
+                timings.failedCases = summary.failed;
+                timings.timeoutLikeFailures = summary.timeoutLike;
+                timings.timeoutLikeSeconds = Math.round(
+                    summary.timeoutLikeSeconds,
+                );
+                const advice = triageAdvice(summary, timeoutMs);
+                if (advice) console.warn(advice);
+            }
         }
     }
 } finally {
