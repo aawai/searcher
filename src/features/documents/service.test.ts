@@ -546,7 +546,10 @@ Deno.test("DocumentsService - uncategorized scope isolates active documents and 
             items: [],
             nextCursor: null,
         });
-        const older = await service.create("user-1", { title: "older", isFavorite: true });
+        const older = await service.create("user-1", {
+            title: "older",
+            isFavorite: true,
+        });
         advanceTime(1);
         const tiedA = await service.create("user-1", { title: "tied A" });
         const tiedB = await service.create("user-1", { title: "tied B" });
@@ -556,7 +559,10 @@ Deno.test("DocumentsService - uncategorized scope isolates active documents and 
         await service.softDelete("user-1", deleted.id, deleted.version);
 
         const first = await service.list("user-1", { scope, limit: 1 });
-        assertEquals(first.items.map((item) => item.id), [tiedA.id, tiedB.id].sort().reverse().slice(0, 1));
+        assertEquals(
+            first.items.map((item) => item.id),
+            [tiedA.id, tiedB.id].sort().reverse().slice(0, 1),
+        );
         if (!first.nextCursor) throw new Error("Expected a next cursor");
         const second = await service.list("user-1", {
             scope,
@@ -573,7 +579,11 @@ Deno.test("DocumentsService - uncategorized scope isolates active documents and 
             DocumentValidationError,
         );
         await assertRejects(
-            () => service.list("user-1", { scope: { type: "recent" }, cursor: first.nextCursor! }),
+            () =>
+                service.list("user-1", {
+                    scope: { type: "recent" },
+                    cursor: first.nextCursor!,
+                }),
             DocumentValidationError,
         );
     } finally {

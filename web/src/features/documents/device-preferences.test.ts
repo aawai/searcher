@@ -22,17 +22,40 @@ function memoryStorage(): DevicePreferenceStorage {
 Deno.test("device preferences: unset toolbar follows width and pointer; outline defaults closed", () => {
     const preferences = readDevicePreferences(memoryStorage(), "alice");
     assertEquals(preferences, { toolbarCollapsed: null, outlineOpen: false });
-    assertEquals(resolveToolbarCollapsed(preferences.toolbarCollapsed, 767, false), true);
-    assertEquals(resolveToolbarCollapsed(preferences.toolbarCollapsed, 768, false), false);
-    assertEquals(resolveToolbarCollapsed(preferences.toolbarCollapsed, 1440, true), true);
+    assertEquals(
+        resolveToolbarCollapsed(preferences.toolbarCollapsed, 767, false),
+        true,
+    );
+    assertEquals(
+        resolveToolbarCollapsed(preferences.toolbarCollapsed, 768, false),
+        false,
+    );
+    assertEquals(
+        resolveToolbarCollapsed(preferences.toolbarCollapsed, 1440, true),
+        true,
+    );
 });
 
 Deno.test("device preferences: explicit toolbar choice overrides device defaults", () => {
     const storage = memoryStorage();
     writeToolbarCollapsed(storage, "alice", false);
-    assertEquals(resolveToolbarCollapsed(readDevicePreferences(storage, "alice").toolbarCollapsed, 390, true), false);
+    assertEquals(
+        resolveToolbarCollapsed(
+            readDevicePreferences(storage, "alice").toolbarCollapsed,
+            390,
+            true,
+        ),
+        false,
+    );
     writeToolbarCollapsed(storage, "alice", true);
-    assertEquals(resolveToolbarCollapsed(readDevicePreferences(storage, "alice").toolbarCollapsed, 1440, false), true);
+    assertEquals(
+        resolveToolbarCollapsed(
+            readDevicePreferences(storage, "alice").toolbarCollapsed,
+            1440,
+            false,
+        ),
+        true,
+    );
 });
 
 Deno.test("device preferences: choices persist independently per account and device", () => {
@@ -41,11 +64,23 @@ Deno.test("device preferences: choices persist independently per account and dev
     writeToolbarCollapsed(device, "alice", true);
     writeOutlineOpen(device, "alice", true);
     writeToolbarCollapsed(device, "bob", false);
-    assertEquals(readDevicePreferences(device, "alice"), { toolbarCollapsed: true, outlineOpen: true });
-    assertEquals(readDevicePreferences(device, "bob"), { toolbarCollapsed: false, outlineOpen: false });
-    assertEquals(readDevicePreferences(otherDevice, "alice"), { toolbarCollapsed: null, outlineOpen: false });
+    assertEquals(readDevicePreferences(device, "alice"), {
+        toolbarCollapsed: true,
+        outlineOpen: true,
+    });
+    assertEquals(readDevicePreferences(device, "bob"), {
+        toolbarCollapsed: false,
+        outlineOpen: false,
+    });
+    assertEquals(readDevicePreferences(otherDevice, "alice"), {
+        toolbarCollapsed: null,
+        outlineOpen: false,
+    });
     writeOutlineOpen(device, "alice", false);
-    assertEquals(readDevicePreferences(device, "alice"), { toolbarCollapsed: true, outlineOpen: false });
+    assertEquals(readDevicePreferences(device, "alice"), {
+        toolbarCollapsed: true,
+        outlineOpen: false,
+    });
 });
 
 Deno.test("sidebar preference defaults open and is isolated by account and device", () => {
@@ -64,15 +99,30 @@ Deno.test("sidebar preference defaults open and is isolated by account and devic
 Deno.test("device preferences: invalid values and unavailable storage use defaults", () => {
     const storage: DevicePreferenceStorage = {
         getItem: () => "invalid",
-        setItem: () => { throw new Error("unavailable"); },
+        setItem: () => {
+            throw new Error("unavailable");
+        },
     };
-    assertEquals(readDevicePreferences(storage, "alice"), { toolbarCollapsed: null, outlineOpen: false });
+    assertEquals(readDevicePreferences(storage, "alice"), {
+        toolbarCollapsed: null,
+        outlineOpen: false,
+    });
     writeToolbarCollapsed(storage, "alice", true);
     writeOutlineOpen(storage, "alice", true);
     const unavailable: DevicePreferenceStorage = {
-        getItem: () => { throw new Error("unavailable"); },
-        setItem: () => { throw new Error("unavailable"); },
+        getItem: () => {
+            throw new Error("unavailable");
+        },
+        setItem: () => {
+            throw new Error("unavailable");
+        },
     };
-    assertEquals(readDevicePreferences(unavailable, "alice"), { toolbarCollapsed: null, outlineOpen: false });
-    assertEquals(readDevicePreferences(null, "alice"), { toolbarCollapsed: null, outlineOpen: false });
+    assertEquals(readDevicePreferences(unavailable, "alice"), {
+        toolbarCollapsed: null,
+        outlineOpen: false,
+    });
+    assertEquals(readDevicePreferences(null, "alice"), {
+        toolbarCollapsed: null,
+        outlineOpen: false,
+    });
 });

@@ -160,11 +160,15 @@ Deno.test("Documents HTTP: uncategorized scope paginates only the owner's active
             nextCursor: null,
         });
         const notebook = await data<DocumentNotebookDto>(
-            await env.request("/api/document-notebooks", "POST", { name: "Filed" }),
+            await env.request("/api/document-notebooks", "POST", {
+                name: "Filed",
+            }),
         );
-        await data<DocumentDto>(await env.request("/api/documents", "POST", {
-            notebookId: notebook.id,
-        }));
+        await data<DocumentDto>(
+            await env.request("/api/documents", "POST", {
+                notebookId: notebook.id,
+            }),
+        );
         const first = await data<DocumentDto>(
             await env.request("/api/documents", "POST", { title: "first" }),
         );
@@ -174,14 +178,19 @@ Deno.test("Documents HTTP: uncategorized scope paginates only the owner's active
         const deleted = await data<DocumentDto>(
             await env.request("/api/documents", "POST", { title: "deleted" }),
         );
-        assertEquals((await env.request(
-            `/api/documents/${deleted.id}?version=${deleted.version}`,
-            "DELETE",
-        )).status, 200);
+        assertEquals(
+            (await env.request(
+                `/api/documents/${deleted.id}?version=${deleted.version}`,
+                "DELETE",
+            )).status,
+            200,
+        );
         const other = await data<DocumentDto>(
             await env.request("/api/documents", "POST", { title: "other" }, 1),
         );
-        const page1 = await data<DocumentPageDto>(await env.request(`${path}&limit=1`));
+        const page1 = await data<DocumentPageDto>(
+            await env.request(`${path}&limit=1`),
+        );
         assert(page1.nextCursor);
         const cursor = encodeURIComponent(page1.nextCursor);
         const page2 = await data<DocumentPageDto>(
@@ -193,12 +202,22 @@ Deno.test("Documents HTTP: uncategorized scope paginates only the owner's active
         );
         assertEquals(page2.nextCursor, null);
         assertEquals(
-            (await data<DocumentPageDto>(await env.request(path, "GET", undefined, 1)))
+            (await data<DocumentPageDto>(
+                await env.request(path, "GET", undefined, 1),
+            ))
                 .items.map((item) => item.id),
             [other.id],
         );
-        assertEquals((await env.request(`${path}&cursor=${cursor}`, "GET", undefined, 1)).status, 400);
-        assertEquals((await env.request(`/api/documents?scope=recent&cursor=${cursor}`)).status, 400);
+        assertEquals(
+            (await env.request(`${path}&cursor=${cursor}`, "GET", undefined, 1))
+                .status,
+            400,
+        );
+        assertEquals(
+            (await env.request(`/api/documents?scope=recent&cursor=${cursor}`))
+                .status,
+            400,
+        );
     } finally {
         await env.store.close();
     }

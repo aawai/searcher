@@ -55,14 +55,14 @@ import { LoadingState } from "../../components/searcher/semantic.tsx";
 import {
     BookOpen,
     Check,
-    CodeXml,
-    FileText,
     ChevronUp,
-    Pencil,
+    CodeXml,
     Copy,
     Download,
+    FileText,
     History,
     MoreHorizontal,
+    Pencil,
     Printer,
     RefreshCw,
     Settings,
@@ -288,16 +288,23 @@ export function DocumentEditor({
     }
     const notebookId = targetRef.current?.notebookId ?? null;
     const isHomeFixed = targetRef.current?.isHomeFixed ?? false;
-    const session = useMemo(() => createDocumentSession({
+    const session = useMemo(() =>
+        createDocumentSession({
+            userId,
+            documentId: sessionDocumentId,
+            target: { notebookId, isHomeFixed },
+            onCreated: (id) => {
+                createdIdRef.current = id;
+                onCreatedRef.current?.(id);
+            },
+            events: eventSubscriptions,
+        }), [
         userId,
-        documentId: sessionDocumentId,
-        target: { notebookId, isHomeFixed },
-        onCreated: (id) => {
-            createdIdRef.current = id;
-            onCreatedRef.current?.(id);
-        },
-        events: eventSubscriptions,
-    }), [userId, sessionDocumentId, notebookId, isHomeFixed, eventSubscriptions]);
+        sessionDocumentId,
+        notebookId,
+        isHomeFixed,
+        eventSubscriptions,
+    ]);
 
     const snapshot = useSyncExternalStore(
         session.subscribe,
@@ -381,7 +388,9 @@ export function DocumentEditor({
             const width = entries[0]?.contentRect.width;
             if (width !== undefined && width > 0) {
                 const outlineWidth = Number.parseFloat(
-                    getComputedStyle(container).getPropertyValue("--document-outline-width"),
+                    getComputedStyle(container).getPropertyValue(
+                        "--document-outline-width",
+                    ),
                 );
                 setOutlineFits(width >= BREAKPOINTS.small + outlineWidth);
             }
@@ -393,7 +402,11 @@ export function DocumentEditor({
         const media = globalThis.matchMedia("(any-pointer: coarse)");
         const onChange = () => {
             if (
-                resolveToolbarCollapsed(devicePreferences.toolbarCollapsed, narrow ? 0 : BREAKPOINTS.medium, media.matches) &&
+                resolveToolbarCollapsed(
+                    devicePreferences.toolbarCollapsed,
+                    narrow ? 0 : BREAKPOINTS.medium,
+                    media.matches,
+                ) &&
                 toolbarContainerRef.current?.contains(document.activeElement)
             ) toolbarFocusTarget.current = "format";
             setCoarsePointer(media.matches);
@@ -404,8 +417,11 @@ export function DocumentEditor({
     useEffect(() => {
         const target = toolbarFocusTarget.current;
         toolbarFocusTarget.current = null;
-        if (target === "format" && !showToolbar) formatButtonRef.current?.focus();
-        else if (target === "collapse" && showToolbar) toolbarCollapseRef.current?.focus();
+        if (target === "format" && !showToolbar) {
+            formatButtonRef.current?.focus();
+        } else if (target === "collapse" && showToolbar) {
+            toolbarCollapseRef.current?.focus();
+        }
     }, [showToolbar]);
     useEffect(() => {
         if (focusTitleSignal !== undefined) titleInputRef.current?.focus();
@@ -413,13 +429,19 @@ export function DocumentEditor({
     useEffect(() => {
         if (!narrow && outlineDrawerOpen) {
             writeOutlineOpen(deviceStorage(), userId, true);
-            setDevicePreferences((previous) => ({ ...previous, outlineOpen: true }));
+            setDevicePreferences((previous) => ({
+                ...previous,
+                outlineOpen: true,
+            }));
         }
         if (!narrow || !richMode) onOutlineDrawerChange(false);
     }, [narrow, richMode]);
     const updateOutline = (open: boolean) => {
         writeOutlineOpen(deviceStorage(), userId, open);
-        setDevicePreferences((previous) => ({ ...previous, outlineOpen: open }));
+        setDevicePreferences((previous) => ({
+            ...previous,
+            outlineOpen: open,
+        }));
     };
     const closeOutline = () => {
         if (narrow) {
@@ -437,10 +459,15 @@ export function DocumentEditor({
     const toggleToolbar = () => {
         const collapsed = showToolbar;
         toolbarFocusTarget.current = collapsed
-            ? toolbarContainerRef.current?.contains(document.activeElement) ? "format" : null
+            ? toolbarContainerRef.current?.contains(document.activeElement)
+                ? "format"
+                : null
             : "collapse";
         writeToolbarCollapsed(deviceStorage(), userId, collapsed);
-        setDevicePreferences((previous) => ({ ...previous, toolbarCollapsed: collapsed }));
+        setDevicePreferences((previous) => ({
+            ...previous,
+            toolbarCollapsed: collapsed,
+        }));
     };
     const [historyOpen, setHistoryOpen] = useState(false);
     const [activeCommands, setActiveCommands] = useState<
@@ -673,7 +700,8 @@ export function DocumentEditor({
             snapshot.saveStatus === "error" || hasConflict;
         const hasUnsafePersist = isUnsaved &&
             (Boolean(snapshot.localDraftError) ||
-                (isNewSession && !snapshot.document && snapshot.saveStatus === "error"));
+                (isNewSession && !snapshot.document &&
+                    snapshot.saveStatus === "error"));
         onDirtyChange?.(hasUnsafePersist);
         return () => {
             onDirtyChange?.(false);
@@ -697,7 +725,10 @@ export function DocumentEditor({
                 hasConflict
             ) {
                 if (!hasConflict) void session.save("autosave");
-                if (snapshot.localDraftError || (isNewSession && !snapshot.document)) {
+                if (
+                    snapshot.localDraftError ||
+                    (isNewSession && !snapshot.document)
+                ) {
                     event.preventDefault();
                     event.returnValue = "";
                 }
@@ -707,7 +738,14 @@ export function DocumentEditor({
         return () => {
             globalThis.removeEventListener("beforeunload", handleBeforeUnload);
         };
-    }, [session, snapshot.saveStatus, snapshot.localDraftError, snapshot.document, hasConflict, isNewSession]);
+    }, [
+        session,
+        snapshot.saveStatus,
+        snapshot.localDraftError,
+        snapshot.document,
+        hasConflict,
+        isNewSession,
+    ]);
 
     // 6. Asset upload handler (POST /api/documents/:id/assets multipart)
     const handleUpload = useCallback(async (file: File): Promise<string> => {
@@ -738,7 +776,8 @@ export function DocumentEditor({
 
     // 7. Dynamic import and mount of Milkdown (#110 createMarkdownEditor) in continuous mode
     // Gated on isDocumentReady so it reliably mounts after initial loading finishes
-    const isDocumentReady = !snapshot.loading && (Boolean(snapshot.document) || isNewSession) &&
+    const isDocumentReady = !snapshot.loading &&
+        (Boolean(snapshot.document) || isNewSession) &&
         (!needsPagination || !documentId || Boolean(paperSettings));
 
     useEffect(() => {
@@ -1102,7 +1141,11 @@ export function DocumentEditor({
     if (!isNewSession && !snapshot.document && !snapshot.error) {
         return (
             <div className="document-editor-container document-editor-state">
-                {leading && <div className="document-editor-header document-editor-header--bare">{leading}</div>}
+                {leading && (
+                    <div className="document-editor-header document-editor-header--bare">
+                        {leading}
+                    </div>
+                )}
                 <LoadingState density="default">正在加载笔记…</LoadingState>
             </div>
         );
@@ -1111,7 +1154,11 @@ export function DocumentEditor({
     if (!isNewSession && snapshot.error && !snapshot.document) {
         return (
             <div className="document-editor-container document-editor-state">
-                {leading && <div className="document-editor-header document-editor-header--bare">{leading}</div>}
+                {leading && (
+                    <div className="document-editor-header document-editor-header--bare">
+                        {leading}
+                    </div>
+                )}
                 <div className="document-editor-state-body">
                     <p className="document-load-error">
                         {snapshot.error}
@@ -1451,12 +1498,14 @@ export function DocumentEditor({
                         )}
                     </div>
                 </div>
-
             </header>
 
             {/* Toolbar: Formatting disabled in source mode per §32 */}
             {showToolbar && (
-                <div ref={toolbarContainerRef} className="document-toolbar-container">
+                <div
+                    ref={toolbarContainerRef}
+                    className="document-toolbar-container"
+                >
                     <DocumentToolbar
                         disabled={viewMode === "source" || isUploading}
                         activeCommands={viewMode === "source"
@@ -1540,15 +1589,27 @@ export function DocumentEditor({
 
                 {!narrow && showOutline && richMode && (
                     <div
-                        className={outlineFits ? "document-outline-panel" : "document-outline-panel document-outline-panel--overlay"}
+                        className={outlineFits
+                            ? "document-outline-panel"
+                            : "document-outline-panel document-outline-panel--overlay"}
                         onFocus={() => setOutlineHasFocus(true)}
                         onBlur={(event) => {
-                            if (!event.currentTarget.contains(event.relatedTarget)) {
+                            if (
+                                !event.currentTarget.contains(
+                                    event.relatedTarget,
+                                )
+                            ) {
                                 setOutlineHasFocus(false);
                             }
                         }}
                     >
-                        <Suspense fallback={<LoadingState density="compact">正在加载大纲…</LoadingState>}>
+                        <Suspense
+                            fallback={
+                                <LoadingState density="compact">
+                                    正在加载大纲…
+                                </LoadingState>
+                            }
+                        >
                             <DocumentOutline
                                 outline={analysis.outline}
                                 onSelectHeading={handleOutlineSelectHeading}
@@ -1567,7 +1628,13 @@ export function DocumentEditor({
                                     type="button"
                                     variant="ghost"
                                     size="icon"
-                                    aria-label={`切换编辑模式，当前：${viewMode === "continuous" ? "编辑" : viewMode === "page" ? "分页" : "源码"}`}
+                                    aria-label={`切换编辑模式，当前：${
+                                        viewMode === "continuous"
+                                            ? "编辑"
+                                            : viewMode === "page"
+                                            ? "分页"
+                                            : "源码"
+                                    }`}
                                     title="切换编辑模式"
                                     className="document-mode-trigger"
                                 >
@@ -1579,15 +1646,61 @@ export function DocumentEditor({
                                 </Button>
                             }
                         />
-                        <PopoverContent data-document-editor-owner={documentEditorOwner}>
-                            <div className="document-view-switch" role="group" aria-label="视图模式">
-                                <Button type="button" variant={viewMode === "continuous" ? "outline" : "ghost"} size="icon" aria-label="编辑" title="编辑" aria-pressed={viewMode === "continuous"} onClick={() => { handleViewChange("continuous"); setModeOpen(false); }}>
+                        <PopoverContent
+                            data-document-editor-owner={documentEditorOwner}
+                        >
+                            <div
+                                className="document-view-switch"
+                                role="group"
+                                aria-label="视图模式"
+                            >
+                                <Button
+                                    type="button"
+                                    variant={viewMode === "continuous"
+                                        ? "outline"
+                                        : "ghost"}
+                                    size="icon"
+                                    aria-label="编辑"
+                                    title="编辑"
+                                    aria-pressed={viewMode === "continuous"}
+                                    onClick={() => {
+                                        handleViewChange("continuous");
+                                        setModeOpen(false);
+                                    }}
+                                >
                                     <Pencil className="icon-sm" />
                                 </Button>
-                                <Button type="button" variant={viewMode === "page" ? "outline" : "ghost"} size="icon" aria-label="分页" title="分页" aria-pressed={viewMode === "page"} disabled={snapshot.loading} onClick={() => { handleViewChange("page"); setModeOpen(false); }}>
+                                <Button
+                                    type="button"
+                                    variant={viewMode === "page"
+                                        ? "outline"
+                                        : "ghost"}
+                                    size="icon"
+                                    aria-label="分页"
+                                    title="分页"
+                                    aria-pressed={viewMode === "page"}
+                                    disabled={snapshot.loading}
+                                    onClick={() => {
+                                        handleViewChange("page");
+                                        setModeOpen(false);
+                                    }}
+                                >
                                     <FileText className="icon-sm" />
                                 </Button>
-                                <Button type="button" variant={viewMode === "source" ? "outline" : "ghost"} size="icon" aria-label="Markdown 源码" title="Markdown 源码" aria-pressed={viewMode === "source"} onClick={() => { handleViewChange("source"); setModeOpen(false); }}>
+                                <Button
+                                    type="button"
+                                    variant={viewMode === "source"
+                                        ? "outline"
+                                        : "ghost"}
+                                    size="icon"
+                                    aria-label="Markdown 源码"
+                                    title="Markdown 源码"
+                                    aria-pressed={viewMode === "source"}
+                                    onClick={() => {
+                                        handleViewChange("source");
+                                        setModeOpen(false);
+                                    }}
+                                >
                                     <CodeXml className="icon-sm" />
                                 </Button>
                             </div>
@@ -1595,24 +1708,44 @@ export function DocumentEditor({
                     </Popover>
                 </div>
                 <div className="document-metadata-bar">
-                    <span>{analysis.wordCount > 0 ? `${analysis.wordCount} 字 · 约 ${analysis.readingMinutes} 分钟` : "0 字"}</span>
+                    <span>
+                        {analysis.wordCount > 0
+                            ? `${analysis.wordCount} 字 · 约 ${analysis.readingMinutes} 分钟`
+                            : "0 字"}
+                    </span>
                     {viewMode === "page" && <span>{pageCount} 页</span>}
-                    <span className="document-save-status" data-status={snapshot.saveStatus} role="status">
-                        {snapshot.saveStatus === "saving" && <RefreshCw size="1em" className="icon-sm animate-spin" />}
+                    <span
+                        className="document-save-status"
+                        data-status={snapshot.saveStatus}
+                        role="status"
+                    >
+                        {snapshot.saveStatus === "saving" && (
+                            <RefreshCw
+                                size="1em"
+                                className="icon-sm animate-spin"
+                            />
+                        )}
                         {saveStatusLabel}
                     </span>
                 </div>
             </div>
-            {narrow && outlineDrawerOpen && richMode && outlineDrawerMount && createPortal(
-                <Suspense fallback={<LoadingState density="compact">正在加载大纲…</LoadingState>}>
-                    <DocumentOutline
-                        outline={analysis.outline}
-                        onSelectHeading={handleOutlineSelectHeading}
-                        onClose={closeOutline}
-                    />
-                </Suspense>,
-                outlineDrawerMount,
-            )}
+            {narrow && outlineDrawerOpen && richMode && outlineDrawerMount &&
+                createPortal(
+                    <Suspense
+                        fallback={
+                            <LoadingState density="compact">
+                                正在加载大纲…
+                            </LoadingState>
+                        }
+                    >
+                        <DocumentOutline
+                            outline={analysis.outline}
+                            onSelectHeading={handleOutlineSelectHeading}
+                            onClose={closeOutline}
+                        />
+                    </Suspense>,
+                    outlineDrawerMount,
+                )}
 
             <DocumentPaperSettingsDialog
                 documentId={documentId}

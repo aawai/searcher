@@ -58,9 +58,9 @@ import {
     buildTreeEntries,
     createTargetTitle,
     indexNoteNotebooks,
-    noteItemId,
-    notebookKey,
     type NodePage,
+    notebookKey,
+    noteItemId,
     resolveCreateTarget,
     resolveNewNotebookParent,
     type SidebarSelection,
@@ -86,7 +86,9 @@ export interface DocumentsSidebarProps {
     revision: number;
     eventSubscriptions?: DocumentEventSubscriptions;
     onOpenDocument: (id: string) => Promise<boolean>;
-    onNewDocument: (target: { notebookId: string | null; isHomeFixed: boolean }) => void;
+    onNewDocument: (
+        target: { notebookId: string | null; isHomeFixed: boolean },
+    ) => void;
     onDocumentTrashed: (id: string) => void;
     onOpenTrash: () => void;
     /** Notebook of notes the sidebar has not loaded, e.g. a note just created. */
@@ -99,19 +101,25 @@ export interface DocumentsSidebarProps {
 const errorText = (cause: unknown, fallback: string) =>
     cause instanceof Error ? cause.message : fallback;
 
-function DocumentSummaryRow({ item, notebooks, onChanged, onOpenDocument, selected, onTrashed }: {
-    item: DocumentSummaryDto;
-    notebooks: DocumentNotebookDto[];
-    onChanged: () => void;
-    onOpenDocument: (id: string) => void;
-    selected: boolean;
-    onTrashed: (id: string) => void;
-}) {
+function DocumentSummaryRow(
+    { item, notebooks, onChanged, onOpenDocument, selected, onTrashed }: {
+        item: DocumentSummaryDto;
+        notebooks: DocumentNotebookDto[];
+        onChanged: () => void;
+        onOpenDocument: (id: string) => void;
+        selected: boolean;
+        onTrashed: (id: string) => void;
+    },
+) {
     const displayTitle = item.displayTitle;
     const snippet = noteListSnippet(item);
     const timestamp = item.updatedAt || item.createdAt;
     const formattedDate = timestamp && !isNaN(timestamp)
-        ? new Date(timestamp).toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })
+        ? new Date(timestamp).toLocaleDateString("zh-CN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+        })
         : "";
     return (
         <article className="documents-summary-row" data-document-id={item.id}>
@@ -120,25 +128,48 @@ function DocumentSummaryRow({ item, notebooks, onChanged, onOpenDocument, select
                     <Button
                         variant="ghost"
                         className="documents-summary-open"
-                        onClick={() => onOpenDocument(item.id)}
+                        onClick={() =>
+                            onOpenDocument(item.id)}
                         aria-label={`打开笔记：${displayTitle}`}
                         aria-current={selected ? "page" : undefined}
                     >
-                        <span className="documents-color-dot" data-color={item.color} aria-hidden="true" />
-                        <span className="documents-summary-title-text">{displayTitle}</span>
+                        <span
+                            className="documents-color-dot"
+                            data-color={item.color}
+                            aria-hidden="true"
+                        />
+                        <span className="documents-summary-title-text">
+                            {displayTitle}
+                        </span>
                         <NoteMarkers item={item} />
                     </Button>
                 </h4>
-                <DocumentLibraryActions item={item} onTrashed={onTrashed} notebooks={notebooks} onChanged={onChanged} />
+                <DocumentLibraryActions
+                    item={item}
+                    onTrashed={onTrashed}
+                    notebooks={notebooks}
+                    onChanged={onChanged}
+                />
             </div>
             <div className="documents-summary-line">
                 {item.notebookName && (
-                    <span className="documents-summary-notebook">{item.notebookName}</span>
+                    <span className="documents-summary-notebook">
+                        {item.notebookName}
+                    </span>
                 )}
-                {snippet ? <span className="documents-summary-snippet">{snippet}</span> : null}
+                {snippet
+                    ? (
+                        <span className="documents-summary-snippet">
+                            {snippet}
+                        </span>
+                    )
+                    : null}
                 {formattedDate
                     ? (
-                        <time className="documents-summary-date" dateTime={new Date(timestamp).toISOString()}>
+                        <time
+                            className="documents-summary-date"
+                            dateTime={new Date(timestamp).toISOString()}
+                        >
                             {formattedDate}
                         </time>
                     )
@@ -153,10 +184,18 @@ function NoteMarkers({ item }: { item: DocumentSummaryDto }) {
     return (
         <>
             {item.isFavorite && (
-                <Star className="icon-sm documents-favorite-icon" data-favorite="" aria-hidden="true" />
+                <Star
+                    className="icon-sm documents-favorite-icon"
+                    data-favorite=""
+                    aria-hidden="true"
+                />
             )}
             {item.isHomeFixed && (
-                <Pin className="icon-sm documents-pin-icon" data-pinned="" aria-hidden="true" />
+                <Pin
+                    className="icon-sm documents-pin-icon"
+                    data-pinned=""
+                    aria-hidden="true"
+                />
             )}
         </>
     );
@@ -199,20 +238,28 @@ export function DocumentsSidebar({
         if (active && !wasActive.current) refresh();
         wasActive.current = active;
     }, [active]);
-    useEffect(() => eventSubscriptions?.subscribeAll(refresh), [eventSubscriptions]);
-    useEffect(() => { refresh(); }, [revision]);
+    useEffect(() => eventSubscriptions?.subscribeAll(refresh), [
+        eventSubscriptions,
+    ]);
+    useEffect(() => {
+        refresh();
+    }, [revision]);
 
     useEffect(() => {
         const controller = new AbortController();
         setNotebookError(null);
-        api<DocumentNotebookDto[]>("/api/document-notebooks", { signal: controller.signal })
+        api<DocumentNotebookDto[]>("/api/document-notebooks", {
+            signal: controller.signal,
+        })
             .then((data) => {
                 if (controller.signal.aborted) return;
                 setNotebooks(data);
                 setNotebooksLoaded(true);
             })
             .catch((cause: unknown) => {
-                if (!controller.signal.aborted) setNotebookError(errorText(cause, "加载笔记本失败"));
+                if (!controller.signal.aborted) {
+                    setNotebookError(errorText(cause, "加载笔记本失败"));
+                }
             });
         return () => controller.abort();
     }, [userId, retryCount]);
@@ -222,9 +269,12 @@ export function DocumentsSidebar({
     // ---- Selection: one node, single source for the create target.
     const [selection, setSelection] = useState<SidebarSelection>(null);
     useEffect(() => {
-        if (routeNoteId !== null) setSelection({ kind: "note", id: routeNoteId });
-        else if (state.view === "documents/root") {
-            setSelection((current) => current?.kind === "note" ? null : current);
+        if (routeNoteId !== null) {
+            setSelection({ kind: "note", id: routeNoteId });
+        } else if (state.view === "documents/root") {
+            setSelection((current) =>
+                current?.kind === "note" ? null : current
+            );
         }
     }, [routeNoteId, state.view]);
 
@@ -236,7 +286,9 @@ export function DocumentsSidebar({
     const alive = useRef(true);
     useEffect(() => {
         alive.current = true;
-        return () => { alive.current = false; };
+        return () => {
+            alive.current = false;
+        };
     }, []);
     const commitPage = (key: string, page: NodePage | null) => {
         const next = new Map(pagesRef.current);
@@ -252,7 +304,9 @@ export function DocumentsSidebar({
     const queues = useRef(new Map<string, Promise<unknown>>());
     /** Operations on one node run in order, so each one sees the previous result. */
     const enqueue = (key: string, operation: () => Promise<void>) => {
-        const next = (queues.current.get(key) ?? Promise.resolve()).then(operation).catch(() => {});
+        const next = (queues.current.get(key) ?? Promise.resolve()).then(
+            operation,
+        ).catch(() => {});
         queues.current.set(key, next);
         return next;
     };
@@ -279,41 +333,89 @@ export function DocumentsSidebar({
                         const data = await fetchPage(
                             key,
                             cursor,
-                            Math.min(Math.max(wanted - items.length, TREE_PAGE_SIZE), DOCUMENT_PAGE_MAX_LIMIT),
+                            Math.min(
+                                Math.max(wanted - items.length, TREE_PAGE_SIZE),
+                                DOCUMENT_PAGE_MAX_LIMIT,
+                            ),
                         );
                         items.push(...data.items);
                         cursor = data.nextCursor;
                     } while (cursor && items.length < wanted);
-                    commitPage(key, { items, nextCursor: cursor, status: "loaded", error: null, loadingMore: false, loadMoreError: null });
+                    commitPage(key, {
+                        items,
+                        nextCursor: cursor,
+                        status: "loaded",
+                        error: null,
+                        loadingMore: false,
+                        loadMoreError: null,
+                    });
                 } catch { /* the stale page stays until the next refresh */ }
                 return;
             }
-            commitPage(key, { items: [], nextCursor: null, status: "loading", error: null, loadingMore: false, loadMoreError: null });
+            commitPage(key, {
+                items: [],
+                nextCursor: null,
+                status: "loading",
+                error: null,
+                loadingMore: false,
+                loadMoreError: null,
+            });
             try {
                 const data = await fetchPage(key, null, TREE_PAGE_SIZE);
-                commitPage(key, { items: data.items, nextCursor: data.nextCursor, status: "loaded", error: null, loadingMore: false, loadMoreError: null });
+                commitPage(key, {
+                    items: data.items,
+                    nextCursor: data.nextCursor,
+                    status: "loaded",
+                    error: null,
+                    loadingMore: false,
+                    loadMoreError: null,
+                });
             } catch (cause) {
-                commitPage(key, { items: [], nextCursor: null, status: "error", error: errorText(cause, "加载笔记失败"), loadingMore: false, loadMoreError: null });
+                commitPage(key, {
+                    items: [],
+                    nextCursor: null,
+                    status: "error",
+                    error: errorText(cause, "加载笔记失败"),
+                    loadingMore: false,
+                    loadMoreError: null,
+                });
             }
         });
     const loadMoreNode = (key: string) =>
         enqueue(key, async () => {
             const page = pagesRef.current.get(key);
-            if (!page || page.status !== "loaded" || page.nextCursor === null) return;
-            commitPage(key, { ...page, loadingMore: true, loadMoreError: null });
+            if (
+                !page || page.status !== "loaded" || page.nextCursor === null
+            ) return;
+            commitPage(key, {
+                ...page,
+                loadingMore: true,
+                loadMoreError: null,
+            });
             try {
-                const data = await fetchPage(key, page.nextCursor, TREE_PAGE_SIZE);
+                const data = await fetchPage(
+                    key,
+                    page.nextCursor,
+                    TREE_PAGE_SIZE,
+                );
                 const current = pagesRef.current.get(key) ?? page;
                 const known = new Set(current.items.map((item) => item.id));
                 commitPage(key, {
                     ...current,
-                    items: [...current.items, ...data.items.filter((item) => !known.has(item.id))],
+                    items: [
+                        ...current.items,
+                        ...data.items.filter((item) => !known.has(item.id)),
+                    ],
                     nextCursor: data.nextCursor,
                     loadingMore: false,
                 });
             } catch (cause) {
                 const current = pagesRef.current.get(key) ?? page;
-                commitPage(key, { ...current, loadingMore: false, loadMoreError: errorText(cause, "加载更多失败") });
+                commitPage(key, {
+                    ...current,
+                    loadingMore: false,
+                    loadMoreError: errorText(cause, "加载更多失败"),
+                });
             }
         });
     const setExpanded = (key: string, open: boolean) => {
@@ -331,7 +433,8 @@ export function DocumentsSidebar({
     // ---- Reveal: opening a note expands its notebook, selects it and scrolls it into view.
     const [scrollTarget, setScrollTarget] = useState<string | null>(null);
     const noteIndex = useMemo(() => indexNoteNotebooks(pages), [pages]);
-    const noteNotebookId = (id: string) => noteIndex.get(id) ?? noteNotebooks.current.get(id);
+    const noteNotebookId = (id: string) =>
+        noteIndex.get(id) ?? noteNotebooks.current.get(id);
     const selectedNoteId = selection?.kind === "note" ? selection.id : null;
     useEffect(() => {
         if (!treeMode || !notebooksLoaded || selectedNoteId === null) return;
@@ -340,28 +443,48 @@ export function DocumentsSidebar({
             let notebookId = noteNotebookId(selectedNoteId);
             if (notebookId === undefined) {
                 try {
-                    notebookId = (await api<DocumentDto>(`/api/documents/${selectedNoteId}`)).notebookId;
+                    notebookId = (await api<DocumentDto>(
+                        `/api/documents/${selectedNoteId}`,
+                    )).notebookId;
                     noteNotebooks.current.set(selectedNoteId, notebookId);
-                } catch { return; }
+                } catch {
+                    return;
+                }
             }
             if (cancelled) return;
-            const key = notebookId === null ? UNCATEGORIZED_KEY : notebookKey(notebookId);
-            const parentId = notebooks.find((item) => item.id === notebookId)?.parentId;
-            for (const open of parentId ? [notebookKey(parentId), key] : [key]) {
+            const key = notebookId === null
+                ? UNCATEGORIZED_KEY
+                : notebookKey(notebookId);
+            const parentId = notebooks.find((item) => item.id === notebookId)
+                ?.parentId;
+            for (
+                const open of parentId ? [notebookKey(parentId), key] : [key]
+            ) {
                 if (!expandedRef.current.has(open)) setExpanded(open, true);
             }
             await loadNode(key);
             let refreshed = false;
-            for (let attempt = 0; attempt < REVEAL_PAGE_LIMIT && !cancelled; attempt++) {
+            for (
+                let attempt = 0;
+                attempt < REVEAL_PAGE_LIMIT && !cancelled;
+                attempt++
+            ) {
                 const page = pagesRef.current.get(key);
-                if (!page || page.items.some((item) => item.id === selectedNoteId)) break;
+                if (
+                    !page ||
+                    page.items.some((item) => item.id === selectedNoteId)
+                ) break;
                 if (page.nextCursor !== null) await loadMoreNode(key);
-                else if (!refreshed) { refreshed = true; await loadNode(key); }
-                else break;
+                else if (!refreshed) {
+                    refreshed = true;
+                    await loadNode(key);
+                } else break;
             }
             if (!cancelled) setScrollTarget(noteItemId(selectedNoteId));
         })();
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
     }, [treeMode, notebooksLoaded, selectedNoteId]);
 
     // ---- List mode: the flat list of a fixed entry or of the search results.
@@ -408,7 +531,11 @@ export function DocumentsSidebar({
                 setLoading(false);
             })
             .catch((cause: unknown) => {
-                if (cancelled || controller.signal.aborted || (cause instanceof DOMException && cause.name === "AbortError")) return;
+                if (
+                    cancelled || controller.signal.aborted ||
+                    (cause instanceof DOMException &&
+                        cause.name === "AbortError")
+                ) return;
                 setError(errorText(cause, "加载笔记失败"));
                 setLoading(false);
             });
@@ -420,7 +547,10 @@ export function DocumentsSidebar({
 
     const handleLoadMore = async () => {
         const controller = activeRequestRef.current;
-        if (!nextCursor || loadingMore || !controller || controller.signal.aborted) return;
+        if (
+            !nextCursor || loadingMore || !controller ||
+            controller.signal.aborted
+        ) return;
         setLoadingMore(true);
         setLoadMoreError(null);
         const params = new URLSearchParams({ cursor: nextCursor });
@@ -443,9 +573,17 @@ export function DocumentsSidebar({
     };
 
     // ---- Commands
-    const createTarget = resolveCreateTarget({ selection, treeMode, notebooks, noteNotebookId });
-    const newNotebookParent = treeMode ? resolveNewNotebookParent(selection, notebooks) : null;
-    const parentName = notebooks.find((item) => item.id === newNotebookParent)?.name;
+    const createTarget = resolveCreateTarget({
+        selection,
+        treeMode,
+        notebooks,
+        noteNotebookId,
+    });
+    const newNotebookParent = treeMode
+        ? resolveNewNotebookParent(selection, notebooks)
+        : null;
+    const parentName = notebooks.find((item) => item.id === newNotebookParent)
+        ?.name;
     const ops = useDocumentNotebookOperations({
         notebooks,
         onChanged: refresh,
@@ -454,13 +592,18 @@ export function DocumentsSidebar({
             next.delete(notebookKey(id));
             commitExpanded(next);
             commitPage(notebookKey(id), null);
-            setSelection((current) => current?.kind === "notebook" && current.id === id ? null : current);
+            setSelection((current) =>
+                current?.kind === "notebook" && current.id === id
+                    ? null
+                    : current
+            );
         },
         onNotebookCreated: (parentId) => {
             if (parentId !== null) setExpanded(notebookKey(parentId), true);
         },
     });
-    const newNote = (notebookId: string | null) => onNewDocument({ notebookId, isHomeFixed: false });
+    const newNote = (notebookId: string | null) =>
+        onNewDocument({ notebookId, isHomeFixed: false });
     const openNote = async (id: string) => {
         if (await onOpenDocument(id)) {
             setSelection({ kind: "note", id });
@@ -477,7 +620,11 @@ export function DocumentsSidebar({
     };
 
     // ---- Tree rendering state
-    const entries = useMemo(() => buildTreeEntries(tree, expanded, pages), [tree, expanded, pages]);
+    const entries = useMemo(() => buildTreeEntries(tree, expanded, pages), [
+        tree,
+        expanded,
+        pages,
+    ]);
     const selectedTreeId = selection === null
         ? null
         : selection.kind === "note"
@@ -490,7 +637,9 @@ export function DocumentsSidebar({
     const treeRoot = useRef<HTMLDivElement>(null);
     useEffect(() => {
         if (scrollTarget === null) return;
-        const element = treeRoot.current?.querySelector<HTMLElement>(`[data-tree-id="${CSS.escape(scrollTarget)}"]`);
+        const element = treeRoot.current?.querySelector<HTMLElement>(
+            `[data-tree-id="${CSS.escape(scrollTarget)}"]`,
+        );
         if (!element) return;
         element.scrollIntoView({ block: "nearest" });
         setScrollTarget(null);
@@ -498,7 +647,11 @@ export function DocumentsSidebar({
 
     const activateEntry = (entry: TreeEntry) => {
         if (entry.kind === "notebook" || entry.kind === "uncategorized") {
-            setSelection(entry.kind === "notebook" ? { kind: "notebook", id: entry.node.notebook.id } : { kind: "uncategorized" });
+            setSelection(
+                entry.kind === "notebook"
+                    ? { kind: "notebook", id: entry.node.notebook.id }
+                    : { kind: "uncategorized" },
+            );
             setExpanded(entry.nodeKey, !expandedRef.current.has(entry.nodeKey));
         } else if (entry.kind === "note") void openNote(entry.note.id);
         else if (entry.kind === "more") void loadMoreNode(entry.nodeKey);
@@ -508,7 +661,8 @@ export function DocumentsSidebar({
     const renderEntry = (entry: TreeEntry) => {
         switch (entry.kind) {
             case "notebook": {
-                const { notebook, depth, hasChildren, siblingIndex, siblings } = entry.node;
+                const { notebook, depth, hasChildren, siblingIndex, siblings } =
+                    entry.node;
                 return (
                     <NotesTreeRow
                         key={entry.id}
@@ -517,34 +671,56 @@ export function DocumentsSidebar({
                         actionLabel={`笔记本操作：${notebook.name}`}
                         menu={
                             <>
-                                <ContextMenuItem onClick={() => newNote(notebook.id)}>
+                                <ContextMenuItem
+                                    onClick={() => newNote(notebook.id)}
+                                >
                                     <Plus className="icon-md" />
                                     <span>新建笔记</span>
                                 </ContextMenuItem>
                                 {depth === 0 && (
-                                    <ContextMenuItem onClick={() => ops.createNotebook(notebook.id)}>
+                                    <ContextMenuItem
+                                        onClick={() =>
+                                            ops.createNotebook(notebook.id)}
+                                    >
                                         <FolderPlus className="icon-md" />
                                         <span>新建子笔记本</span>
                                     </ContextMenuItem>
                                 )}
-                                <ContextMenuItem onClick={() => ops.rename(notebook)}>
+                                <ContextMenuItem
+                                    onClick={() => ops.rename(notebook)}
+                                >
                                     <Pencil className="icon-md" />
                                     <span>重命名</span>
                                 </ContextMenuItem>
-                                <ContextMenuItem disabled={hasChildren} onClick={() => ops.move(notebook)}>
+                                <ContextMenuItem
+                                    disabled={hasChildren}
+                                    onClick={() => ops.move(notebook)}
+                                >
                                     <FolderInput className="icon-md" />
                                     <span>移动到…</span>
                                 </ContextMenuItem>
-                                <ContextMenuItem disabled={siblingIndex === 0} onClick={() => ops.reorder(entry.node, "up")}>
+                                <ContextMenuItem
+                                    disabled={siblingIndex === 0}
+                                    onClick={() =>
+                                        ops.reorder(entry.node, "up")}
+                                >
                                     <ArrowUp className="icon-md" />
                                     <span>上移</span>
                                 </ContextMenuItem>
-                                <ContextMenuItem disabled={siblingIndex === siblings.length - 1} onClick={() => ops.reorder(entry.node, "down")}>
+                                <ContextMenuItem
+                                    disabled={siblingIndex ===
+                                        siblings.length - 1}
+                                    onClick={() =>
+                                        ops.reorder(entry.node, "down")}
+                                >
                                     <ArrowDown className="icon-md" />
                                     <span>下移</span>
                                 </ContextMenuItem>
                                 <ContextMenuSeparator />
-                                <ContextMenuItem variant="destructive" onClick={() => ops.remove(notebook)}>
+                                <ContextMenuItem
+                                    variant="destructive"
+                                    onClick={() => ops.remove(notebook)}
+                                >
                                     <Trash2 className="icon-md" />
                                     <span>删除笔记本</span>
                                 </ContextMenuItem>
@@ -552,7 +728,9 @@ export function DocumentsSidebar({
                         }
                     >
                         <Chevron expanded={entry.expanded} />
-                        <span className="documents-tree-label">{notebook.name}</span>
+                        <span className="documents-tree-label">
+                            {notebook.name}
+                        </span>
                     </NotesTreeRow>
                 );
             }
@@ -571,7 +749,10 @@ export function DocumentsSidebar({
                         }
                     >
                         <Chevron expanded={entry.expanded} />
-                        <Inbox className="icon-sm documents-tree-icon" aria-hidden="true" />
+                        <Inbox
+                            className="icon-sm documents-tree-icon"
+                            aria-hidden="true"
+                        />
                         <span className="documents-tree-label">未分类</span>
                     </NotesTreeRow>
                 );
@@ -583,7 +764,10 @@ export function DocumentsSidebar({
                         notebooks={notebooks}
                         onChanged={refresh}
                         onTrashed={(id) => {
-                            if (state.view === "documents/edit" && state.id === id) onDocumentTrashed(id);
+                            if (
+                                state.view === "documents/edit" &&
+                                state.id === id
+                            ) onDocumentTrashed(id);
                         }}
                     />
                 );
@@ -591,14 +775,24 @@ export function DocumentsSidebar({
                 return (
                     <NotesTreeRow key={entry.id} entry={entry} label="加载更多">
                         <span className="documents-tree-more">
-                            {entry.loading ? "正在加载更多…" : entry.error ? `${entry.error}，重试` : "加载更多"}
+                            {entry.loading
+                                ? "正在加载更多…"
+                                : entry.error
+                                ? `${entry.error}，重试`
+                                : "加载更多"}
                         </span>
                     </NotesTreeRow>
                 );
             case "status":
                 return (
-                    <NotesTreeRow key={entry.id} entry={entry} label={entry.text}>
-                        <span className="documents-tree-status">{entry.text}</span>
+                    <NotesTreeRow
+                        key={entry.id}
+                        entry={entry}
+                        label={entry.text}
+                    >
+                        <span className="documents-tree-status">
+                            {entry.text}
+                        </span>
                     </NotesTreeRow>
                 );
         }
@@ -606,14 +800,31 @@ export function DocumentsSidebar({
 
     // Only the tree's label is a heading; a list names itself through its own (hidden) heading.
     const HeadingTag = treeMode ? "h3" : "div";
-    const listLabel = isSearching ? "搜索结果" : scope.type === "recent" ? "最近笔记" : "收藏笔记";
-    const scopeName = isSearching ? "搜索结果" : scope.type === "recent" ? "最近" : "收藏";
+    const listLabel = isSearching
+        ? "搜索结果"
+        : scope.type === "recent"
+        ? "最近笔记"
+        : "收藏笔记";
+    const scopeName = isSearching
+        ? "搜索结果"
+        : scope.type === "recent"
+        ? "最近"
+        : "收藏";
 
     return (
-        <div className="workspace-root documents-workspace" data-workspace-content="documents" data-sidebar-mode={treeMode ? "tree" : "list"}>
+        <div
+            className="workspace-root documents-workspace"
+            data-workspace-content="documents"
+            data-sidebar-mode={treeMode ? "tree" : "list"}
+        >
             <div className="documents-sidebar-header">
                 <div className="documents-list-toolbar">
-                    <WorkspaceSearch ariaLabel="搜索笔记" placeholder="搜索笔记" value={query} onChange={onQueryChange} />
+                    <WorkspaceSearch
+                        ariaLabel="搜索笔记"
+                        placeholder="搜索笔记"
+                        value={query}
+                        onChange={onQueryChange}
+                    />
                 </div>
                 {onCollapse && (
                     <Button
@@ -638,11 +849,21 @@ export function DocumentsSidebar({
                     <StatusBanner tone="error" density="compact">
                         <div className="documents-status-row">
                             <span>{notebookError}</span>
-                            <Button variant="outline" size="sm" onClick={refresh}>重试</Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={refresh}
+                            >
+                                重试
+                            </Button>
                         </div>
                     </StatusBanner>
                 )}
-                <div className="documents-fixed-entries" role="group" aria-label="固定入口">
+                <div
+                    className="documents-fixed-entries"
+                    role="group"
+                    aria-label="固定入口"
+                >
                     <Button
                         variant="ghost"
                         className="documents-entry"
@@ -662,20 +883,28 @@ export function DocumentsSidebar({
                         <span>收藏</span>
                     </Button>
                 </div>
-                <section className="documents-notebook-area" aria-label="笔记本">
+                <section
+                    className="documents-notebook-area"
+                    aria-label="笔记本"
+                >
                     <div className="documents-notebooks-row">
                         <HeadingTag className="documents-notebooks-heading">
                             <Button
                                 variant="ghost"
                                 className="documents-entry"
                                 aria-current={treeMode ? "true" : undefined}
-                                aria-label={treeMode ? undefined : `返回笔记本，当前：${scopeName}`}
+                                aria-label={treeMode
+                                    ? undefined
+                                    : `返回笔记本，当前：${scopeName}`}
                                 title={treeMode ? undefined : "返回笔记本"}
                                 onClick={showTree}
                             >
                                 {treeMode ? "笔记本" : (
                                     <>
-                                        <ChevronLeft className="icon-sm" aria-hidden="true" />
+                                        <ChevronLeft
+                                            className="icon-sm"
+                                            aria-hidden="true"
+                                        />
                                         <span>{scopeName}</span>
                                     </>
                                 )}
@@ -697,9 +926,12 @@ export function DocumentsSidebar({
                             size="icon"
                             className="documents-heading-action"
                             aria-label="新建笔记本"
-                            title={parentName ? `新建子笔记本（在「${parentName}」下）` : "新建笔记本"}
+                            title={parentName
+                                ? `新建子笔记本（在「${parentName}」下）`
+                                : "新建笔记本"}
                             disabled={ops.isPending}
-                            onClick={() => ops.createNotebook(newNotebookParent ?? "")}
+                            onClick={() =>
+                                ops.createNotebook(newNotebookParent ?? "")}
                         >
                             <FolderPlus className="icon-md" />
                         </Button>
@@ -713,7 +945,8 @@ export function DocumentsSidebar({
                                     activeId={rovingId}
                                     selectedId={selectedTreeId}
                                     onActiveChange={setActiveId}
-                                    onToggle={(id, open) => setExpanded(id, open)}
+                                    onToggle={(id, open) =>
+                                        setExpanded(id, open)}
                                     onActivate={activateEntry}
                                 >
                                     {renderEntry}
@@ -721,14 +954,32 @@ export function DocumentsSidebar({
                             </div>
                         )
                         : (
-                            <section className="documents-list" aria-labelledby={listHeadingId}>
-                                <h3 id={listHeadingId} className="sr-only">{listLabel}</h3>
-                                {loading && <LoadingState density="compact">正在加载笔记…</LoadingState>}
+                            <section
+                                className="documents-list"
+                                aria-labelledby={listHeadingId}
+                            >
+                                <h3 id={listHeadingId} className="sr-only">
+                                    {listLabel}
+                                </h3>
+                                {loading && (
+                                    <LoadingState density="compact">
+                                        正在加载笔记…
+                                    </LoadingState>
+                                )}
                                 {error && (
-                                    <StatusBanner tone="error" density="compact">
+                                    <StatusBanner
+                                        tone="error"
+                                        density="compact"
+                                    >
                                         <div className="documents-status-row">
                                             <span>{error}</span>
-                                            <Button variant="outline" size="sm" onClick={refresh}>重试</Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={refresh}
+                                            >
+                                                重试
+                                            </Button>
                                         </div>
                                     </StatusBanner>
                                 )}
@@ -739,14 +990,25 @@ export function DocumentsSidebar({
                                                 headingLevel={3}
                                                 density="compact"
                                                 title="没有匹配的笔记"
-                                                action={<Button variant="outline" size="sm" onClick={() => onQueryChange("")}>清空搜索</Button>}
+                                                action={
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            onQueryChange("")}
+                                                    >
+                                                        清空搜索
+                                                    </Button>
+                                                }
                                             />
                                         )
                                         : (
                                             <EmptyState
                                                 headingLevel={3}
                                                 density="compact"
-                                                title={scope.type === "recent" ? "暂无最近笔记" : "暂无收藏笔记"}
+                                                title={scope.type === "recent"
+                                                    ? "暂无最近笔记"
+                                                    : "暂无收藏笔记"}
                                             />
                                         )
                                 )}
@@ -756,29 +1018,55 @@ export function DocumentsSidebar({
                                             <DocumentSummaryRow
                                                 key={item.id}
                                                 item={item}
-                                                selected={state.view === "documents/edit" && state.id === item.id}
+                                                selected={state.view ===
+                                                        "documents/edit" &&
+                                                    state.id === item.id}
                                                 notebooks={notebooks}
                                                 onChanged={refresh}
-                                                onOpenDocument={(id) => void openNote(id)}
+                                                onOpenDocument={(id) =>
+                                                    void openNote(id)}
                                                 onTrashed={(id) => {
-                                                    if (state.view === "documents/edit" && state.id === id) onDocumentTrashed(id);
+                                                    if (
+                                                        state.view ===
+                                                            "documents/edit" &&
+                                                        state.id === id
+                                                    ) onDocumentTrashed(id);
                                                 }}
                                             />
                                         ))}
                                     </div>
                                 )}
                                 {loadMoreError && (
-                                    <StatusBanner tone="error" density="compact">
+                                    <StatusBanner
+                                        tone="error"
+                                        density="compact"
+                                    >
                                         <div className="documents-status-row">
                                             <span>{loadMoreError}</span>
-                                            <Button variant="outline" size="sm" onClick={handleLoadMore}>重试</Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handleLoadMore}
+                                            >
+                                                重试
+                                            </Button>
                                         </div>
                                     </StatusBanner>
                                 )}
-                                {loadingMore && <LoadingState density="compact">正在加载更多笔记…</LoadingState>}
+                                {loadingMore && (
+                                    <LoadingState density="compact">
+                                        正在加载更多笔记…
+                                    </LoadingState>
+                                )}
                                 {!loading && !loadingMore && nextCursor && (
                                     <div className="documents-workspace-more">
-                                        <Button variant="outline" size="sm" onClick={handleLoadMore}>加载更多</Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleLoadMore}
+                                        >
+                                            加载更多
+                                        </Button>
                                     </div>
                                 )}
                             </section>
@@ -786,7 +1074,11 @@ export function DocumentsSidebar({
                 </section>
             </div>
             <div className="documents-sidebar-footer">
-                <Button variant="ghost" className="documents-entry" onClick={onOpenTrash}>
+                <Button
+                    variant="ghost"
+                    className="documents-entry"
+                    onClick={onOpenTrash}
+                >
                     <Trash2 className="icon-md" aria-hidden="true" />
                     <span>回收站</span>
                 </Button>
@@ -798,7 +1090,9 @@ export function DocumentsSidebar({
 
 function Chevron({ expanded }: { expanded: boolean }) {
     const Icon = expanded ? ChevronDown : ChevronRight;
-    return <Icon className="icon-sm documents-tree-chevron" aria-hidden="true" />;
+    return (
+        <Icon className="icon-sm documents-tree-chevron" aria-hidden="true" />
+    );
 }
 
 /** A note node: its own row, the shared note menu and the dialogs those actions open. */
@@ -809,16 +1103,27 @@ function TreeNoteRow({ entry, notebooks, onChanged, onTrashed }: {
     onTrashed: (id: string) => void;
 }) {
     const item = entry.note;
-    const actions = useDocumentActions({ item, notebooks, onChanged, onTrashed });
+    const actions = useDocumentActions({
+        item,
+        notebooks,
+        onChanged,
+        onTrashed,
+    });
     return (
         <NotesTreeRow
             entry={entry}
-            label={`${item.displayTitle}${item.isFavorite ? "，已收藏" : ""}${item.isHomeFixed ? "，已固定到首页" : ""}`}
+            label={`${item.displayTitle}${item.isFavorite ? "，已收藏" : ""}${
+                item.isHomeFixed ? "，已固定到首页" : ""
+            }`}
             actionLabel={`笔记操作：${item.displayTitle}`}
             menu={<DocumentActionMenuItems actions={actions} menu="context" />}
             after={actions.dialogs}
         >
-            <span className="documents-color-dot" data-color={item.color} aria-hidden="true" />
+            <span
+                className="documents-color-dot"
+                data-color={item.color}
+                aria-hidden="true"
+            />
             <span className="documents-tree-label">{item.displayTitle}</span>
             <NoteMarkers item={item} />
         </NotesTreeRow>

@@ -58,7 +58,11 @@ export function NotesTree({
         const row = (event.target as HTMLElement).closest("[data-tree-id]");
         if (!row || row !== event.target) return;
         if (event.ctrlKey || event.metaKey || event.altKey) return;
-        const action = treeKeyAction(entries, row.getAttribute("data-tree-id"), event.key);
+        const action = treeKeyAction(
+            entries,
+            row.getAttribute("data-tree-id"),
+            event.key,
+        );
         if (!action) return;
         event.preventDefault();
         if (action.type === "focus") focusItem(action.id);
@@ -71,7 +75,12 @@ export function NotesTree({
     };
     return (
         <TreeContext.Provider
-            value={{ activeId, selectedId, activate: onActivate, setActive: onActiveChange }}
+            value={{
+                activeId,
+                selectedId,
+                activate: onActivate,
+                setActive: onActiveChange,
+            }}
         >
             <div
                 ref={container}
@@ -139,7 +148,9 @@ export function NotesTreeRow({
             if (event.target === event.currentTarget) tree.setActive(entry.id);
         },
         onClick: (event: ReactMouseEvent<HTMLElement>) => {
-            if ((event.target as HTMLElement).closest("[data-tree-action]")) return;
+            if ((event.target as HTMLElement).closest("[data-tree-action]")) {
+                return;
+            }
             tree.setActive(entry.id);
             tree.activate(entry);
         },
@@ -161,7 +172,12 @@ export function NotesTreeRow({
         </Button>
     );
     if (!menu) {
-        return <><div {...rowProps}>{children}</div>{after}</>;
+        return (
+            <>
+                <div {...rowProps}>{children}</div>
+                {after}
+            </>
+        );
     }
     return (
         <>
@@ -170,7 +186,9 @@ export function NotesTreeRow({
                     {children}
                     {action}
                 </ContextMenuTrigger>
-                <ContextMenuContent aria-label={actionLabel}>{menu}</ContextMenuContent>
+                <ContextMenuContent aria-label={actionLabel}>
+                    {menu}
+                </ContextMenuContent>
             </ContextMenu>
             {after}
         </>

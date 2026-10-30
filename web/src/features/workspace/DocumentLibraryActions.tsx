@@ -567,7 +567,10 @@ export function DocumentLibraryActions(props: DocumentLibraryActionsProps) {
                     aria-label={label}
                 />
                 <DropdownMenuContent sideOffset={4}>
-                    <DocumentActionMenuItems actions={actions} menu="dropdown" />
+                    <DocumentActionMenuItems
+                        actions={actions}
+                        menu="dropdown"
+                    />
                 </DropdownMenuContent>
             </DropdownMenu>
             {actions.dialogs}

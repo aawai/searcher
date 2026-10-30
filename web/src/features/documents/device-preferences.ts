@@ -43,7 +43,10 @@ export function readDevicePreferences(
     userId: string,
 ): DevicePreferences {
     return {
-        toolbarCollapsed: readBoolean(storage, preferenceKey(userId, "toolbar")),
+        toolbarCollapsed: readBoolean(
+            storage,
+            preferenceKey(userId, "toolbar"),
+        ),
         outlineOpen: readBoolean(storage, preferenceKey(userId, "outline")) ??
             false,
     };

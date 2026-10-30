@@ -568,7 +568,6 @@
     z-index: var(--elevation-local-10);
 }
 
-
 .document-outline-sidebar {
     width: var(--document-outline-width);
     flex-shrink: 0;
@@ -629,7 +628,6 @@
         flex-wrap: wrap;
     }
 }
-
 
 .document-outline-item-btn[data-level="1"] {
     padding-left: var(--space-2);
