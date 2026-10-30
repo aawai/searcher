@@ -5,23 +5,30 @@ export function workspaceDock(page: Page): Locator {
     return page.getByRole("navigation", { name: "工作区任务栏", exact: true });
 }
 
+/** A window entry's name carries its open state, so address it by identity. */
 export function workspaceNotesTrigger(page: Page): Locator {
-    return workspaceDock(page).getByRole("button", {
-        name: "笔记",
-        exact: true,
-    });
+    return workspaceDock(page).locator('[data-dock-id="notes"]');
 }
 
 export function workspaceAppsTrigger(page: Page): Locator {
-    return workspaceDock(page).getByRole("button", {
-        name: "应用",
-        exact: true,
-    });
+    return workspaceDock(page).locator('[data-dock-id="apps"]');
 }
 
-/** Shared surface: nonmodal right panel at >=768px, bottom sheet below (nonmodal in all widths). */
+/**
+ * The apps or notes window while it is open, minimized or not (the marker is
+ * absent once closed): title bar controls, the view's actions, and the body.
+ * Both views match when both are open; scope by view then.
+ */
 export function libraryPanel(page: Page): Locator {
     return page.locator("[data-library]");
+}
+
+/** The window frame whether or not it is open. */
+export function libraryWindow(
+    page: Page,
+    view: "notes" | "apps" = "notes",
+): Locator {
+    return page.locator(`[data-window-id="${view}"]`);
 }
 
 export function libraryView(
@@ -82,10 +89,8 @@ export async function assertInteractiveHome(page: Page): Promise<void> {
     await search.fill("");
 }
 
+/** Closing destroys the window and its content, like leaving the old panel. */
 export async function closeLibrary(page: Page): Promise<void> {
-    await libraryPanel(page).getByRole("button", {
-        name: "返回首页",
-        exact: true,
-    }).click();
+    await libraryPanel(page).getByRole("button", { name: /^关闭/ }).click();
     await libraryPanel(page).waitFor({ state: "detached" });
 }

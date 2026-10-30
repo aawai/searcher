@@ -36,7 +36,10 @@ export interface AppSessionProviderProps {
     onRouteBlocked: (intent: AppSessionRouteIntent | null) => void;
     onRouteCommitted?: () => void;
     isExternalDirty?: () => boolean;
+    /** Whether a navigation destroys the app form; defaults to any move. */
     willDestroyContent?: (intent: NavigationIntent) => boolean;
+    /** Whether a navigation destroys external content; defaults to the form's rule. */
+    externalDestroysContent?: (intent: NavigationIntent) => boolean;
     children: ReactNode;
 }
 
@@ -47,20 +50,23 @@ export function AppSessionProvider({
     onRouteCommitted,
     isExternalDirty,
     willDestroyContent,
+    externalDestroysContent,
     children,
 }: AppSessionProviderProps) {
     const session = useAppSession(options);
     const blocker = useNavigationGuard({
         blocks: (intent) => {
-            const destroysContent = willDestroyContent
+            const destroysForm = willDestroyContent
                 ? willDestroyContent(intent)
                 : intent.currentLocation.pathname !==
                         intent.nextLocation.pathname ||
                     intent.currentLocation.search !==
                         intent.nextLocation.search;
-            const appDirty = Boolean(options.sessionKey);
-            return destroysContent &&
-                (appDirty || Boolean(isExternalDirty?.()));
+            const destroysExternal = externalDestroysContent
+                ? externalDestroysContent(intent)
+                : destroysForm;
+            return (destroysForm && Boolean(options.sessionKey)) ||
+                (destroysExternal && Boolean(isExternalDirty?.()));
         },
         warnOnUnload: () =>
             (Boolean(options.sessionKey) && session.isDirty) ||

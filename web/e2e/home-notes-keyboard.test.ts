@@ -9,7 +9,7 @@ import {
     reloadHome,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
-import { libraryPanel } from "./helpers/library.ts";
+import { closeLibrary, libraryPanel } from "./helpers/library.ts";
 
 Deno.test("a focused home note moves by cell with arrows, Enter confirms and Escape cancels", async () => {
     const fixture = await openHomeNotesFixture({
@@ -194,9 +194,7 @@ Deno.test("the note wrapper joins the Tab order and Enter opens the note", async
         await page.keyboard.press("Shift+Tab");
         await page.keyboard.press("Enter");
         await libraryPanel(page).waitFor();
-        await page.getByRole("button", { name: "返回首页", exact: true })
-            .click();
-        await libraryPanel(page).waitFor({ state: "detached" });
+        await closeLibrary(page);
     } finally {
         await fixture.close();
     }

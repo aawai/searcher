@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { aiConversations, aiMessages } from "../../src/db/ai-schema.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
-const PANEL = "aside.workspace-panel:not([data-ending-style])";
+const NOTES_WINDOW = '[data-window-id="notes"]';
 const TIMEZONE = "Asia/Shanghai";
 const clockText = (page: Page) =>
     page.getByTestId("home-calm-clock").textContent();
@@ -290,7 +290,7 @@ Deno.test("home calm layer: date, optional time, 继续 and the time-of-day canv
                     await continueNav.getByRole("button", {
                         name: "继续编辑 周报草稿",
                     }).click();
-                    await page.locator(PANEL).waitFor();
+                    await page.locator(NOTES_WINDOW).waitFor();
                     await page.waitForFunction(() =>
                         (document.querySelector(".document-title-input") as
                             | HTMLInputElement
@@ -302,7 +302,7 @@ Deno.test("home calm layer: date, optional time, 继续 and the time-of-day canv
                         name: "首页 2 项待办",
                     })
                         .click();
-                    await page.locator(PANEL).waitFor();
+                    await page.locator(NOTES_WINDOW).waitFor();
                     await page.waitForFunction(() =>
                         (document.querySelector(".document-title-input") as
                             | HTMLInputElement

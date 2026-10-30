@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
-import { type Page } from "playwright";
+import { type Locator, type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
@@ -9,9 +9,12 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import {
+    assertInteractiveHome,
     libraryPanel,
+    libraryWindow,
     openNotes,
     openNotesByKeyboard,
+    workspaceDock,
     workspaceNotesTrigger,
 } from "./helpers/library.ts";
 
@@ -72,13 +75,19 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         assertEquals(response?.status(), 200, path);
         await target.locator("main").waitFor();
     }
-    const closeButton = (target: Page = page) =>
-        libraryPanel(target).getByRole("button", {
-            name: "返回首页",
-        });
+    const frame = libraryWindow(page, "notes");
+    const closeButton = () =>
+        frame.getByRole("button", { name: "关闭笔记", exact: true });
+    /** Close destroys the window; a minimized one is restored first. */
     async function closeAllWorkspaces(target: Page = page) {
-        if (await libraryPanel(target).first().isVisible()) {
-            await closeButton(target).click();
+        if (await libraryPanel(target).count()) {
+            if (!(await libraryWindow(target, "notes").isVisible())) {
+                await workspaceNotesTrigger(target).click();
+            }
+            await libraryWindow(target, "notes").getByRole("button", {
+                name: "关闭笔记",
+                exact: true,
+            }).click();
         }
         await libraryPanel(target).first().waitFor({ state: "detached" });
     }
@@ -144,28 +153,34 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     const hero = await page.locator(".hero").boundingBox();
                     await openNotesByKeyboard(page);
                     await search().waitFor();
+                    await assertWindowInWorkArea(page, frame);
+                    if (viewport.width === 1440 && viewport.height === 900) {
+                        await assertDefaultNotesSize(frame);
+                    }
                     assertEquals(
-                        await panel.getAttribute("data-presentation"),
-                        viewport.width < 768 ? "sheet" : "panel",
+                        await frame.locator(".window-frame__title")
+                            .textContent(),
+                        "笔记",
                     );
-                    assert(await search().getAttribute("aria-label"));
+                    // The window is the landmark named by its title.
                     assertEquals(
-                        await panel.getByRole("heading", {
+                        await page.getByRole("region", {
                             name: "笔记",
                             exact: true,
                         }).isVisible(),
                         true,
                     );
+                    assert(await search().getAttribute("aria-label"));
                     // The open transition is one-shot (design rule 6); the shell
                     // must never loop an animation.
                     assert(
-                        await panel.evaluate((el) =>
+                        await frame.evaluate((el) =>
                             getComputedStyle(el).animationIterationCount !==
                                 "infinite"
                         ),
-                        "workspace panel must not loop an animation",
+                        "workspace window must not loop an animation",
                     );
-                    await assertChromeInViewport(page);
+                    await assertChromeInWorkArea(page);
                     const before = await chromeBounds(page);
                     await panel.locator(".workspace-body").evaluate(
                         (el) => {
@@ -291,26 +306,23 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         "Zen panel and sheet: nested Back, overlay Escape precedence, and actual opener restoration",
         async () => {
             for (
-                const { width, height, presentation: expectedPresentation } of [
-                    { width: 1440, height: 900, presentation: "panel" },
-                    { width: 390, height: 844, presentation: "sheet" },
+                const { width, height } of [
+                    { width: 1440, height: 900 },
+                    { width: 390, height: 844 },
                 ] as const
             ) {
                 await page.setViewportSize({ width, height });
                 await visit("/");
 
-                // Dock trigger restores focus when workspace closes.
+                // Dock trigger restores focus when the window leaves.
                 const trigger = workspaceNotesTrigger(page);
                 await trigger.waitFor();
                 const opener = await trigger.elementHandle();
                 await openNotesByKeyboard(page);
                 await panel.waitFor();
-                assertEquals(
-                    await panel.getAttribute("data-presentation"),
-                    expectedPresentation,
-                );
+                await assertWindowInWorkArea(page, frame);
 
-                // Nested Back behavior in Zen panel/sheet
+                // Nested Back behavior inside the window
                 const noteOpen = panel.getByRole("button", {
                     name: "打开笔记：Shell note",
                     exact: true,
@@ -324,7 +336,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 }).click();
                 await search().waitFor();
 
-                // Overlay Escape precedence in Zen panel/sheet
+                // Overlay Escape precedence inside the window
                 const actions = panel.getByRole("button", {
                     name: "笔记操作：Shell note",
                     exact: true,
@@ -337,13 +349,19 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         '[role="menu"]',
                     )?.contains(document.activeElement)
                 );
-                // First Escape closes menu overlay, Zen surface remains visible
+                // First Escape closes menu overlay, the window remains visible
                 await page.keyboard.press("Escape");
                 await page.getByRole("menu").waitFor({ state: "detached" });
                 assertEquals(await panel.isVisible(), true);
-                // Next Escape closes workspace surface directly (no root view)
+                // Next Escape minimizes the window (no root view); content is kept
                 await page.keyboard.press("Escape");
-                await panel.first().waitFor({ state: "detached" });
+                await frame.waitFor({ state: "hidden" });
+                await page.waitForURL(origin + "/");
+                assertEquals(
+                    await trigger.getAttribute("data-window-status"),
+                    "minimized",
+                );
+                assertEquals(await panel.count(), 1);
                 await page.waitForFunction(
                     (element) =>
                         document.activeElement ===
@@ -378,19 +396,13 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     await page.locator(".hero").waitFor();
                     await openDocs();
                     await panel.locator(".documents-workspace").waitFor();
-                    await assertChromeInViewport(page);
+                    await assertChromeInWorkArea(page);
                     const noteInset = await measureBodyInset(panel);
                     assertNear(noteInset.searchLeftDiff, 0, 2);
                     assertNear(noteInset.searchRightDiff, 0, 2);
-                    if (width >= 768) {
-                        await assertLibraryLayout();
-                        assertEquals(
-                            await page.locator(
-                                'aside.workspace-panel[data-presentation="panel"]',
-                            ).count(),
-                            1,
-                        );
-                    }
+                    await assertWindowInWorkArea(page, frame);
+                    if (width === 1440) await assertDefaultNotesSize(frame);
+                    if (width >= 768) await assertLibraryLayout();
                     await closeAllWorkspaces();
                 }
             }
@@ -404,13 +416,13 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             // 1. Focus visibility and blur without shift
             await homeSettled();
             await page.waitForFunction(() =>
-                document.querySelector("aside.workspace-panel")?.getAnimations()
-                    .length === 0
+                document.querySelector('[data-window-id="notes"]')
+                    ?.getAnimations().length === 0
             );
             await search().evaluate(async (el) => {
                 await Promise.all(el.getAnimations().map((a) => a.finished));
             });
-            const panelBaseline = await measureBox(panel);
+            const panelBaseline = await measureBox(frame);
             const bodyBaseline = await measureBox(
                 panel.locator(".workspace-body"),
             );
@@ -440,7 +452,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
             assertEquals(focusStyle.focusVisible, true);
 
-            const panelFocused = await measureBox(panel);
+            const panelFocused = await measureBox(frame);
             const bodyFocused = await measureBox(
                 panel.locator(".workspace-body"),
             );
@@ -453,7 +465,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await search().evaluate(async (el) => {
                 await Promise.all(el.getAnimations().map((a) => a.finished));
             });
-            const panelAfterBlur = await measureBox(panel);
+            const panelAfterBlur = await measureBox(frame);
             const bodyAfterBlur = await measureBox(
                 panel.locator(".workspace-body"),
             );
@@ -532,7 +544,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 exact: true,
             })
                 .waitFor({ state: "attached" });
-            await assertChromeInViewport(page);
+            await assertChromeInWorkArea(page);
 
             await request(
                 `/api/documents/${longNote.id}?version=${longNote.version}`,
@@ -563,8 +575,16 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     await page.keyboard.press("Escape");
                     await search().waitFor();
                     await page.keyboard.press("Escape");
-                    await panel.waitFor({ state: "detached" });
-                    assertEquals(await libraryPanel(page).count(), 0);
+                    await frame.waitFor({ state: "hidden" });
+                    await page.waitForURL(origin + "/");
+                    // Minimizing keeps the window mounted, only hidden.
+                    assertEquals(await libraryPanel(page).count(), 1);
+                    assertEquals(
+                        await workspaceNotesTrigger(page).getAttribute(
+                            "data-window-status",
+                        ),
+                        "minimized",
+                    );
                     await page.waitForFunction(
                         (el) =>
                             document.activeElement ===
@@ -586,6 +606,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         false,
                         "a closed detail must no longer own Escape",
                     );
+                    // Restoring the minimized window keeps the list route and query.
                     await openDocs();
                     assertEquals(
                         await panel.locator("[data-workspace-editor]").count(),
@@ -608,6 +629,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.locator(".hero").waitFor();
                 const hero = await page.locator(".hero").boundingBox();
                 await openDocs();
+                await assertInteractiveHome(page);
                 await assertLibraryLayout();
                 await closeAllWorkspaces();
                 await homeSettled();
@@ -617,7 +639,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "mobile Sheet detaches and restores its opener or search fallback",
+        "mobile window closes, detaches and restores its opener or search fallback",
         async () => {
             await page.setViewportSize({ width: 390, height: 844 });
             await visit("/");
@@ -625,10 +647,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await trigger.waitFor();
             const opener = await trigger.elementHandle();
             await openDocs();
+            await assertWindowInWorkArea(page, frame);
             await closeButton().click();
-            await page.locator(".workspace-panel--mobile").waitFor({
-                state: "detached",
-            });
+            await panel.waitFor({ state: "detached" });
+            await frame.waitFor({ state: "hidden" });
             await trigger.waitFor();
             await page.waitForFunction(
                 (element) =>
@@ -639,7 +661,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 opener,
             ).catch(async (cause) => {
                 throw new Error(
-                    `Sheet close focus: ${await page.evaluate(() =>
+                    `Window close focus: ${await page.evaluate(() =>
                         document.activeElement?.outerHTML
                     )}; opener connected: ${await opener?.evaluate(
                         (el: Element) => el.isConnected,
@@ -650,7 +672,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         },
     );
     await t.step(
-        "presentation changes preserve Core queries and nested Back; logout clears transient state",
+        "window presentation changes preserve Core queries and nested Back; logout clears transient state",
         async () => {
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
@@ -658,26 +680,17 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await search().fill("private documents query");
             for (const width of [390, 768, 1024, 1440]) {
                 await page.setViewportSize({ width, height: 900 });
-                await page.waitForFunction(
-                    (expected) =>
-                        document.querySelector(
-                            ".workspace-panel--mobile, aside.workspace-panel",
-                        )
-                            ?.getAttribute("data-presentation") === expected,
-                    width < 768 ? "sheet" : "panel",
-                );
+                await waitForWindowLayout(page);
                 assertEquals(
                     await search().inputValue(),
                     "private documents query",
                 );
                 assertEquals(
-                    await panel.getByRole("heading", {
-                        name: "笔记",
-                        exact: true,
-                    }).isVisible(),
-                    true,
+                    await frame.locator(".window-frame__title").textContent(),
+                    "笔记",
                 );
-                await assertChromeInViewport(page);
+                await assertWindowInWorkArea(page, frame);
+                await assertChromeInWorkArea(page);
             }
             await search().fill("Shell");
             await panel.getByRole("button", {
@@ -686,9 +699,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             }).click();
             await panel.locator("[data-workspace-editor]").waitFor();
             await page.setViewportSize({ width: 390, height: 900 });
-            await page.locator(
-                '[data-presentation="sheet"] [data-workspace-editor]',
-            ).waitFor();
+            await waitForWindowLayout(page);
+            await frame.locator("[data-workspace-editor]").waitFor();
             assertEquals(
                 await panel.getByRole("textbox", {
                     name: "笔记标题",
@@ -708,10 +720,8 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await page.getByRole("menuitem", { name: "退出登录", exact: true })
                 .click();
             await panel.waitFor({ state: "detached" });
-            await page.locator("[data-workspace]").first().waitFor({
-                state: "detached",
-            });
-            assertEquals(await page.locator("[data-workspace]").count(), 0);
+            await frame.waitFor({ state: "detached" });
+            assertEquals(await page.locator("[data-window-id]").count(), 0);
             await page.goto(origin + "/login");
             await page.locator("#auth-username").fill("shell44");
             await page.locator("#auth-password").fill(
@@ -804,11 +814,8 @@ async function measureBodyInset(panelLocator: {
 }
 
 async function chromeBounds(page: Page) {
-    return await page.locator(
-        ".workspace-panel--mobile, aside.workspace-panel",
-    ).evaluate((el) => {
-        const box = (selector: string) => {
-            const target = el.querySelector(selector);
+    return await page.locator('[data-window-id="notes"]').evaluate((el) => {
+        const box = (target: Element | null) => {
             if (!target) return null;
             const rect = target.getBoundingClientRect();
             return {
@@ -819,15 +826,67 @@ async function chromeBounds(page: Page) {
             };
         };
         return {
-            header: box(".workspace-header"),
+            window: box(el),
+            header: box(el.querySelector(".window-frame__titlebar")),
         };
     });
 }
 
-async function assertChromeInViewport(page: Page) {
+/** The window lies inside the viewport and clear of every Dock entry. */
+async function assertWindowInWorkArea(page: Page, frame: Locator) {
+    const viewport = page.viewportSize()!;
+    const rect = await frame.boundingBox();
+    assert(rect, "the window is laid out");
+    assert(
+        rect.x >= 0 && rect.y >= 0 &&
+            rect.x + rect.width <= viewport.width + 1 &&
+            rect.y + rect.height <= viewport.height + 1,
+        `window outside viewport: ${JSON.stringify(rect)}`,
+    );
+    for (
+        const item of await workspaceDock(page).locator("[data-dock-id]").all()
+    ) {
+        const dock = await item.boundingBox();
+        if (!dock) continue;
+        assert(
+            !(rect.x < dock.x + dock.width && dock.x < rect.x + rect.width &&
+                rect.y < dock.y + dock.height && dock.y < rect.y + rect.height),
+            `window overlaps the Dock: ${JSON.stringify({ rect, dock })}`,
+        );
+    }
+    if (viewport.width < 1024) {
+        // Single active window filling the work area.
+        assertEquals(await page.locator("[data-window-id]:visible").count(), 1);
+        assert(
+            rect.width >= viewport.width - 40,
+            `narrow window must fill the work area: ${JSON.stringify(rect)}`,
+        );
+    }
+}
+
+/** Notes default to 960x720 at 1440x900 (clamped to the work area). */
+async function assertDefaultNotesSize(frame: Locator) {
+    const rect = await frame.boundingBox();
+    assert(rect, "the window is laid out");
+    assertNear(rect.width, 960, 1);
+    assertNear(rect.height, 720, 1);
+}
+
+/** Wait for a resize to be reflected by the window geometry. */
+async function waitForWindowLayout(page: Page) {
+    await page.waitForFunction(() => {
+        const rect = document.querySelector('[data-window-id="notes"]')
+            ?.getBoundingClientRect();
+        return Boolean(rect) && rect!.right <= innerWidth + 1 &&
+            rect!.bottom <= innerHeight + 1 &&
+            (innerWidth >= 1024 || rect!.width >= innerWidth - 40);
+    });
+}
+
+async function assertChromeInWorkArea(page: Page) {
     const bounds = await chromeBounds(page);
     const viewport = page.viewportSize()!;
-    for (const rect of [bounds.header]) {
+    for (const rect of [bounds.window, bounds.header]) {
         if (!rect) continue;
         assert(
             rect.y >= 0 && rect.y + rect.height <= viewport.height + 1,
@@ -845,9 +904,8 @@ async function assertChromeInViewport(page: Page) {
         true,
     );
     assertEquals(
-        await page.locator(
-            ".workspace-panel--mobile .workspace-body, aside.workspace-panel .workspace-body",
-        ).evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+        await page.locator('[data-window-id="notes"] .workspace-body')
+            .evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
         true,
     );
 }

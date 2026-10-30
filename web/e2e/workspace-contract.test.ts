@@ -1,5 +1,5 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { libraryPanel, openNotes } from "./helpers/library.ts";
+import { libraryPanel, libraryWindow, openNotes } from "./helpers/library.ts";
 import { type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { createApp } from "../../src/app.ts";
@@ -86,19 +86,41 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
         await getWorkspace().waitFor({ state: "visible" });
     }
 
-    // 1. Heading hierarchy contract: h2 panel -> h3 subsection with accessible regions
+    // 1. Heading hierarchy contract: the window is a landmark named by its title
+    // bar (not a heading); sections inside it are h3 and no level is skipped.
     await t.step(
-        "Heading hierarchy contract: h2 panel -> h3 subsection with accessible regions (no skipping levels)",
+        "Heading hierarchy contract: window landmark (title bar) -> h3 subsection with accessible regions (no skipping levels)",
         async () => {
             await openWorkspace();
             const documentsPanel = getWorkspace();
             await documentsPanel.waitFor({ state: "visible" });
 
-            const documentsTitle = documentsPanel.locator(
-                ".workspace-title, h2",
+            // The window landmark is section[aria-label=title] (role region).
+            const windowRegion = page.getByRole("region", {
+                name: "笔记",
+                exact: true,
+            });
+            await windowRegion.waitFor({ state: "visible" });
+            assertEquals(
+                await windowRegion.evaluate((el) => ({
+                    tag: el.tagName.toLowerCase(),
+                    windowId: el.getAttribute("data-window-id"),
+                })),
+                { tag: "section", windowId: "notes" },
             );
-            await documentsTitle.first().waitFor({ state: "visible" });
-            assertEquals(await documentsTitle.first().textContent(), "笔记");
+            const windowTitle = libraryWindow(page, "notes").locator(
+                ".window-frame__title",
+            );
+            assertEquals(await windowTitle.textContent(), "笔记");
+            // The title bar replaces the body title: the body repeats none.
+            assertEquals(
+                await documentsPanel.locator(".workspace-title, h1, h2")
+                    .evaluateAll((nodes) =>
+                        nodes.filter((node) => node.textContent?.trim())
+                            .length
+                    ),
+                0,
+            );
 
             const documentsSubH3 = documentsPanel.getByRole("heading", {
                 name: "全部笔记",
@@ -112,8 +134,8 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             });
             await documentsRegion.waitFor({ state: "visible" });
 
-            // Verify strict heading levels in documents panel
-            const documentsHeadings = await documentsPanel.evaluate((el) =>
+            // Verify strict heading levels in the whole window region
+            const documentsHeadings = await windowRegion.evaluate((el) =>
                 Array.from(el.querySelectorAll("h1, h2, h3, h4, h5, h6")).map((
                     h,
                 ) => ({
@@ -123,6 +145,7 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                 }))
             );
             assertEquals(documentsHeadings.some((h) => h.tag === "h1"), false);
+            assertEquals(documentsHeadings.some((h) => h.tag === "h2"), false);
             assertEquals(documentsHeadings.some((h) => h.tag === "h4"), false);
             assertEquals(documentsHeadings.some((h) => h.tag === "h5"), false);
             assertEquals(

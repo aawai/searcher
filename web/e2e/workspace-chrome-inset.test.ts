@@ -1,6 +1,7 @@
 import { createEvidenceDirectory } from "./helpers/evidence.ts";
 import {
     libraryPanel,
+    libraryWindow,
     openNotesByKeyboard,
     workspaceNotesTrigger,
 } from "./helpers/library.ts";
@@ -14,7 +15,7 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 
-Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds", async () => {
+Deno.test("Notes window stays in the work area under shared chrome and preserves focused scroll bounds", async () => {
     await using cleanup = new AsyncDisposableStack();
     const files = await Deno.makeTempDir({ prefix: "searcher-chrome-inset-" });
     cleanup.defer(() => Deno.remove(files, { recursive: true }));
@@ -129,9 +130,10 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await openNotesByKeyboard(page);
     const panel = libraryPanel(page);
     await panel.waitFor({ state: "visible" });
-    assertEquals(await panel.getAttribute("data-presentation"), "panel");
-    const closeButton = panel.getByRole("button", {
-        name: "返回首页",
+    const frame = libraryWindow(page, "notes");
+    await frame.waitFor({ state: "visible" });
+    const closeButton = frame.getByRole("button", {
+        name: "关闭笔记",
         exact: true,
     });
     await closeButton.waitFor({ state: "visible" });
@@ -147,14 +149,15 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
         "opening the panel should place keyboard focus inside its content",
     );
 
-    const panelTop = () =>
-        panel.evaluate((element) => element.getBoundingClientRect().top);
+    const windowTop = () =>
+        frame.evaluate((element) => element.getBoundingClientRect().top);
 
-    // `--workspace-top-inset` is a token (control-height + space-6), not a literal.
-    const topInset = await page.evaluate(() => {
+    // The work area starts below the safe area at the window margin
+    // (`--space-4`) and below any connection banner.
+    const workAreaTop = await page.evaluate(() => {
         const probe = document.createElement("div");
         probe.style.cssText =
-            "position:fixed;visibility:hidden;inset-block-start:var(--workspace-top-inset);";
+            "position:fixed;visibility:hidden;inset-block-start:var(--space-4);";
         document.body.append(probe);
         const top = probe.getBoundingClientRect().top;
         probe.remove();
@@ -181,16 +184,16 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
         hitTest.receivesPointer,
         `banner Retry is occluded at its center by ${hitTest.target}`,
     );
-    const expectedTop = await page.evaluate((inset) => {
-        const bannerElement = document.querySelector(
-            ".connection-banner",
-        ) as HTMLElement;
-        return Math.max(inset, bannerElement.getBoundingClientRect().bottom);
-    }, topInset);
-    const actualTop = await panelTop();
+    // The banner is chrome with its own action: the work area starts a margin
+    // below it, so the window never covers Retry.
+    const bannerBottom = await banner.evaluate((element) =>
+        element.getBoundingClientRect().bottom
+    );
+    const expectedTop = Math.max(workAreaTop, bannerBottom + workAreaTop);
+    const actualTop = await windowTop();
     assert(
         Math.abs(actualTop - expectedTop) <= 1,
-        `Zen panel top should follow chrome bottom (${expectedTop}px), got ${actualTop}px`,
+        `window top should clear the banner (${expectedTop}px), got ${actualTop}px`,
     );
 
     const recovered = page.waitForResponse((response) =>
@@ -202,19 +205,19 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await banner.waitFor({ state: "detached" });
     await page.getByRole("button", { name: "用户菜单：Chrome Inset" })
         .waitFor({ state: "visible" });
-    await page.waitForFunction((inset) => {
-        const panelElement = document.querySelector(
-            "aside.workspace-panel",
+    await page.waitForFunction((top) => {
+        const frameElement = document.querySelector(
+            '[data-window-id="notes"]',
         );
-        return panelElement !== null &&
-            Math.abs(panelElement.getBoundingClientRect().top - inset) <= 1;
-    }, topInset);
+        return frameElement !== null &&
+            Math.abs(frameElement.getBoundingClientRect().top - top) <= 1;
+    }, workAreaTop);
     assert(
-        Math.abs((await panelTop()) - topInset) <= 1,
-        `without a banner the Zen panel must start at the top inset (${topInset}px), got ${await panelTop()}px`,
+        Math.abs((await windowTop()) - workAreaTop) <= 1,
+        `without a banner the window must still start at the work-area top (${workAreaTop}px), got ${await windowTop()}px`,
     );
     if (evidence) {
-        await page.screenshot({ path: `${evidence}/recovered-panel.png` });
+        await page.screenshot({ path: `${evidence}/recovered-window.png` });
     }
 
     const body = panel.locator(".workspace-body");
@@ -228,22 +231,27 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
             JSON.stringify(bodyMetrics)
         }`,
     );
-    const chromeBeforeScroll = await panel.evaluate((element) => {
-        const bounds = (selector: string) => {
-            const target = element.querySelector(selector);
-            if (!target) throw new Error(`Missing ${selector}`);
-            const rect = target.getBoundingClientRect();
-            return {
-                x: rect.x,
-                y: rect.y,
-                width: rect.width,
-                height: rect.height,
+    const chromeBounds = () =>
+        frame.evaluate((element) => {
+            const bounds = (selector: string | null) => {
+                const target = selector
+                    ? element.querySelector(selector)
+                    : element;
+                if (!target) throw new Error(`Missing ${selector}`);
+                const rect = target.getBoundingClientRect();
+                return {
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                };
             };
-        };
-        return {
-            header: bounds(".workspace-header"),
-        };
-    });
+            return {
+                window: bounds(null),
+                titlebar: bounds(".window-frame__titlebar"),
+            };
+        });
+    const chromeBeforeScroll = await chromeBounds();
     await search.focus();
     const bodyBounds = await body.boundingBox();
     assert(bodyBounds);
@@ -254,7 +262,7 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     await page.mouse.wheel(0, 700);
     await page.waitForFunction(() => {
         const bodyElement = document.querySelector(
-            "aside.workspace-panel .workspace-body",
+            '[data-window-id="notes"] .workspace-body',
         );
         return bodyElement !== null && bodyElement.scrollTop > 0;
     });
@@ -269,32 +277,17 @@ Deno.test("Zen panel follows shared chrome and preserves focused scroll bounds",
     assertEquals(
         await search.evaluate((element) => element === document.activeElement),
         true,
-        "scrolling panel content should preserve its focused control",
+        "scrolling window content should preserve its focused control",
     );
     assertEquals(
-        await panel.evaluate((element) => {
-            const bounds = (selector: string) => {
-                const target = element.querySelector(selector);
-                if (!target) throw new Error(`Missing ${selector}`);
-                const rect = target.getBoundingClientRect();
-                return {
-                    x: rect.x,
-                    y: rect.y,
-                    width: rect.width,
-                    height: rect.height,
-                };
-            };
-            return {
-                header: bounds(".workspace-header"),
-            };
-        }),
+        await chromeBounds(),
         chromeBeforeScroll,
-        "internal scrolling must leave the panel header fixed",
+        "internal scrolling must leave the window and its header fixed",
     );
 
     await closeButton.focus();
     await page.keyboard.press("Enter");
-    await panel.waitFor({ state: "hidden" });
+    await panel.waitFor({ state: "detached" });
     await page.waitForFunction(
         (element) =>
             document.activeElement ===

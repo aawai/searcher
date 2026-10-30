@@ -162,7 +162,6 @@ function DocumentsLibrary({
     onOpenDocument,
 }: DocumentsWorkspaceProps) {
     const listHeadingId = useId();
-    const active = useContext(WorkspaceActivity);
     const loadedListKey = useRef<string | null>(null);
     const trimmedQuery = query.trim();
     const isSearching = trimmedQuery.length > 0;
@@ -180,8 +179,15 @@ function DocumentsLibrary({
     const [notebooks, setNotebooks] = useState<DocumentNotebookDto[]>([]);
     const [notebookError, setNotebookError] = useState<string | null>(null);
     const refresh = () => setRetryCount((count) => count + 1);
+    // The window stays mounted while another one has focus; returning to it
+    // re-reads the list, keeping the query and scope.
+    const active = useContext(WorkspaceActivity);
+    const wasActive = useRef(active);
     useEffect(() => {
-        if (!active) return;
+        if (active && !wasActive.current) refresh();
+        wasActive.current = active;
+    }, [active]);
+    useEffect(() => {
         const controller = new AbortController();
         setNotebookError(null);
         api<DocumentNotebookDto[]>("/api/document-notebooks", {
@@ -200,12 +206,11 @@ function DocumentsLibrary({
                 }
             });
         return () => controller.abort();
-    }, [userId, retryCount, active]);
+    }, [userId, retryCount]);
 
     const activeRequestRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
-        if (!active) return;
         if (!userId) {
             setItems([]);
             setNextCursor(null);
@@ -271,7 +276,7 @@ function DocumentsLibrary({
             cancelled = true;
             controller.abort();
         };
-    }, [userId, trimmedQuery, scopeKey, retryCount, active]);
+    }, [userId, trimmedQuery, scopeKey, retryCount]);
 
     const handleLoadMore = async () => {
         const controller = activeRequestRef.current;

@@ -367,23 +367,12 @@ export function WorkspaceDock(
         !keyboardOpen &&
         ready;
 
-    // Derived active system entry from pathname and search query
-    const searchParams = useMemo(
-        () => new URLSearchParams(location.search),
-        [location.search],
-    );
-    const currentView = searchParams.get("view");
-
+    // The focused window, else the page the pathname shows.
     const activeSystemId: DockSystemId | null = useMemo(() => {
         if (windowManager?.activeId) return windowManager.activeId;
         if (isAiPage) return "ai";
-        if (isHomePage) {
-            if (currentView === "apps") return "apps";
-            if (currentView === "notes") return "notes";
-            return "home";
-        }
-        return null;
-    }, [isAiPage, isHomePage, currentView, windowManager?.activeId]);
+        return isHomePage ? "home" : null;
+    }, [isAiPage, isHomePage, windowManager?.activeId]);
 
     const effectiveEdge: DockEdge = isMobile ? "bottom" : layout.edge;
     const isCollapsed = layout.collapsed;
@@ -588,19 +577,13 @@ export function WorkspaceDock(
     const handleSystemNavigate = useCallback((id: DockSystemId) => {
         if (id === "home") {
             windowManager?.showDesktop();
-        } else if (id === "apps") {
-            if (location.pathname === "/" && currentView === "apps") return;
-            navigate("/?view=apps", { viewTransition: !isHomePage });
-        } else if (id === "notes") {
-            if (location.pathname === "/" && currentView === "notes") return;
-            navigate("/?view=notes", { viewTransition: !isHomePage });
         } else if (id === "ai") {
             if (location.pathname.startsWith("/ask")) return;
             navigate(routes.ask, { viewTransition: true });
-        } else if (id === "settings" || id === "trash") {
+        } else {
             windowManager?.open(id);
         }
-    }, [location.pathname, currentView, navigate, isHomePage, windowManager]);
+    }, [location.pathname, navigate, windowManager]);
 
     // App open handler
     const handleOpenApp = useCallback(
@@ -1004,7 +987,9 @@ export function WorkspaceDock(
                                                     isActive={activeSystemId ===
                                                         id}
                                                     windowStatus={id ===
-                                                                "settings" ||
+                                                                "apps" ||
+                                                            id === "notes" ||
+                                                            id === "settings" ||
                                                             id === "trash"
                                                         ? windowManager?.windows
                                                             .find((item) =>

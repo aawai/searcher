@@ -136,10 +136,27 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                             reducedMotion: "reduce",
                         });
                         await resetHome(theme);
-                        await page.locator("[data-library]").waitFor();
+                        await page.locator('[data-library="notes"]').waitFor();
                         if (width < 768) {
-                            await page.locator('[role="dialog"][data-library]')
-                                .waitFor();
+                            const frame = page.locator(
+                                '[data-window-id="notes"]',
+                            );
+                            await frame.waitFor({ state: "visible" });
+                            assertEquals(
+                                await page.locator(
+                                    "[data-window-id]:not([hidden])",
+                                ).count(),
+                                1,
+                                "a narrow viewport shows a single active window",
+                            );
+                            const box = await frame.boundingBox();
+                            assert(box);
+                            assert(
+                                box.x >= 0 && box.y >= 0 &&
+                                    box.x + box.width <= width &&
+                                    box.y + box.height <= height,
+                                "the narrow window stays inside the viewport",
+                            );
                         } else {
                             assertEquals(
                                 await page.locator("#search-query").evaluate((
@@ -400,15 +417,13 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                 await page.waitForFunction(() => {
                     const viewport = globalThis.visualViewport;
                     const workspace = document.querySelector<HTMLElement>(
-                        ".workspace-panel--mobile",
+                        '[data-window-id="notes"]',
                     );
                     if (!viewport || !workspace) return false;
-                    const height = Number.parseFloat(
-                        getComputedStyle(workspace).getPropertyValue(
-                            "--workspace-visible-height",
-                        ),
-                    );
-                    return Math.abs(height - viewport.height) <= 1;
+                    const rect = workspace.getBoundingClientRect();
+                    return rect.height > 0 &&
+                        rect.top >= viewport.offsetTop - 1 &&
+                        rect.bottom <= viewport.offsetTop + viewport.height + 1;
                 });
                 const viewportGeometryIsReady = () => {
                     const toolbar = document.querySelector<HTMLElement>(
@@ -452,7 +467,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                             )
                             : null;
                         const selectors = [
-                            ".workspace-panel--mobile",
+                            '[data-window-id="notes"]',
                             ".workspace-body",
                             ".document-editor-container",
                             ".document-editor-header",
@@ -528,12 +543,13 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         ? selection.getRangeAt(0).getBoundingClientRect()
                         : null;
                     const workspace = document.querySelector<HTMLElement>(
-                        ".workspace-panel--mobile",
+                        '[data-window-id="notes"]',
                     );
                     if (!toolbar || !viewport || !caret || !workspace) {
                         return null;
                     }
                     const toolbarRect = toolbar.getBoundingClientRect();
+                    const windowRect = workspace.getBoundingClientRect();
                     return {
                         visualTop: viewport.offsetTop,
                         visualBottom: viewport.offsetTop + viewport.height,
@@ -541,19 +557,18 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         toolbarBottom: toolbarRect.bottom,
                         caretTop: caret.top,
                         caretBottom: caret.bottom,
-                        workspaceHeight: Number.parseFloat(
-                            getComputedStyle(workspace).getPropertyValue(
-                                "--workspace-visible-height",
-                            ),
-                        ),
+                        windowTop: windowRect.top,
+                        windowBottom: windowRect.bottom,
                         visualHeight: viewport.height,
                     };
                 });
                 assert(visibleGeometry);
                 assert(
-                    visibleGeometry.workspaceHeight <=
-                        visibleGeometry.visualHeight + 1,
-                    "mobile workspace height should follow the visual viewport",
+                    visibleGeometry.windowTop >=
+                            visibleGeometry.visualTop - 1 &&
+                        visibleGeometry.windowBottom <=
+                            visibleGeometry.visualBottom + 1,
+                    "the notes window should stay inside the visual viewport",
                 );
                 assert(
                     visibleGeometry.toolbarTop >=

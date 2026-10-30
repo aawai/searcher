@@ -41,6 +41,8 @@ type Geometry = {
     minHeight: number;
     defaultWidth: number;
     defaultHeight: number;
+    /** The Dock icon an anchored window opens beside, when it is visible. */
+    anchor: { rect: Rect; edge: string } | null;
 };
 type Direction = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 type Operation = {
@@ -56,9 +58,17 @@ export interface WindowFrameProps {
     open: boolean;
     minimized: boolean;
     active: boolean;
+    /** Dock item that the window opens beside until it is moved. */
+    anchorTo?: string;
     onActivate: () => void;
     onMinimize: () => void;
     onClose: () => void;
+    /** The user moved, resized, or maximized the window. */
+    onDetach?: () => void;
+    /** An apps or notes window: marks the frame while it is open. */
+    libraryView?: "apps" | "notes";
+    /** Receives the mount point for the view's own controls in the title bar. */
+    toolbarRef?: (node: HTMLElement | null) => void;
     onHostWidthChange: (width: number) => void;
     children: ReactNode;
 }
@@ -100,6 +110,33 @@ function resize(
     return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
+/** Centered, or beside the anchoring Dock icon on the side it faces. */
+function initialRect(geometry: Geometry, area: Rect): Rect {
+    const width = geometry.defaultWidth, height = geometry.defaultHeight;
+    const center = {
+        x: area.x + (area.width - width) / 2,
+        y: area.y + (area.height - height) / 2,
+        width,
+        height,
+    };
+    const anchor = geometry.anchor;
+    if (!anchor) return center;
+    const { rect, edge } = anchor;
+    const gap = geometry.step;
+    const alongX = rect.x + (rect.width - width) / 2;
+    const alongY = rect.y + (rect.height - height) / 2;
+    if (edge === "top") {
+        return { ...center, x: alongX, y: rect.y + rect.height + gap };
+    }
+    if (edge === "left") {
+        return { ...center, x: rect.x + rect.width + gap, y: alongY };
+    }
+    if (edge === "right") {
+        return { ...center, x: rect.x - gap - width, y: alongY };
+    }
+    return { ...center, x: alongX, y: rect.y - gap - height };
+}
+
 export function WindowFrame(
     {
         id,
@@ -107,9 +144,13 @@ export function WindowFrame(
         open,
         minimized,
         active,
+        anchorTo,
         onActivate,
         onMinimize,
         onClose,
+        onDetach,
+        libraryView,
+        toolbarRef,
         onHostWidthChange,
         children,
     }: WindowFrameProps,
@@ -138,6 +179,11 @@ export function WindowFrame(
     const [announcement, setAnnouncement] = useState("");
     const windowManager = useWindowManager();
     const stack = useEscapeLayerStack();
+    const anchorRef = useRef(anchorTo);
+    anchorRef.current = anchorTo;
+    const measureRef = useRef<() => void>(() => {});
+    const detachRef = useRef(onDetach);
+    detachRef.current = onDetach;
 
     useLayoutEffect(() => {
         const measure = () => {
@@ -146,7 +192,7 @@ export function WindowFrame(
             const css = getComputedStyle(node);
             const token = (name: string) =>
                 parseFloat(css.getPropertyValue(name)) || 0;
-            const gap = token("--space-4");
+            const gap = token("--window-margin");
             let left = parseFloat(css.paddingLeft) + gap,
                 right = innerWidth - parseFloat(css.paddingRight) - gap;
             let top = parseFloat(css.paddingTop) + gap,
@@ -172,6 +218,31 @@ export function WindowFrame(
             };
             if (dock) reserve(dock, dock.dataset.edge ?? "bottom");
             if (ball) reserve(ball, ball.dataset.ballSide ?? "left");
+            // A connection banner is chrome with its own action; keep it usable.
+            const banner = document.querySelector<HTMLElement>(
+                ".connection-banner",
+            );
+            if (banner) reserve(banner, "top");
+            const anchorItem = anchorRef.current
+                ? document.querySelector<HTMLElement>(
+                    `[data-dock-id="${anchorRef.current}"]`,
+                )
+                : null;
+            const anchorRect = anchorItem && dock?.contains(anchorItem) &&
+                    !anchorItem.closest("[inert]")
+                ? anchorItem.getBoundingClientRect()
+                : null;
+            const anchor = anchorRect && anchorRect.width && anchorRect.height
+                ? {
+                    rect: {
+                        x: anchorRect.x,
+                        y: anchorRect.y,
+                        width: anchorRect.width,
+                        height: anchorRect.height,
+                    },
+                    edge: dock?.dataset.edge ?? "bottom",
+                }
+                : null;
             const minWidth = token("--window-min-width");
             const minHeight = token("--window-min-height");
             const area = {
@@ -184,12 +255,13 @@ export function WindowFrame(
                 area,
                 wide: innerWidth >= BREAKPOINTS.wide &&
                     area.width >= minWidth && area.height >= minHeight,
-                step: gap,
+                step: token("--space-4"),
                 fine: token("--space-1"),
                 minWidth,
                 minHeight,
                 defaultWidth: token(`--window-${id}-width`),
                 defaultHeight: token(`--window-${id}-height`),
+                anchor,
             };
             setGeometry((previous) =>
                 previous && previous.area.x === area.x &&
@@ -202,19 +274,25 @@ export function WindowFrame(
                     previous.minWidth === minWidth &&
                     previous.minHeight === minHeight &&
                     previous.defaultWidth === next.defaultWidth &&
-                    previous.defaultHeight === next.defaultHeight
+                    previous.defaultHeight === next.defaultHeight &&
+                    previous.anchor?.edge === anchor?.edge &&
+                    previous.anchor?.rect.x === anchor?.rect.x &&
+                    previous.anchor?.rect.y === anchor?.rect.y &&
+                    previous.anchor?.rect.width === anchor?.rect.width &&
+                    previous.anchor?.rect.height === anchor?.rect.height
                     ? previous
                     : next
             );
         };
+        measureRef.current = measure;
         measure();
         globalThis.addEventListener("resize", measure);
         const resizeObserver = new ResizeObserver(measure);
         const observeDock = () => {
             resizeObserver.disconnect();
-            document.querySelectorAll(".dock-container, .dock-ball").forEach(
-                (node) => resizeObserver.observe(node),
-            );
+            document.querySelectorAll(
+                ".dock-container, .dock-ball, .connection-banner",
+            ).forEach((node) => resizeObserver.observe(node));
             measure();
         };
         observeDock();
@@ -232,8 +310,15 @@ export function WindowFrame(
         };
     }, [id]);
 
+    // The Dock may have moved its icon while the window was away.
+    useLayoutEffect(() => {
+        measureRef.current();
+    }, [open, minimized, anchorTo]);
+
     useEffect(() => {
         if (!open) setMaximized(false);
+        // An anchored window reopens beside its icon, not where it was dragged.
+        else if (anchorRef.current) setBounds(null);
     }, [open]);
 
     useEffect(() => {
@@ -416,14 +501,7 @@ export function WindowFrame(
     }, [geometry, operation]);
 
     const area = geometry?.area;
-    const initial = geometry && area
-        ? {
-            x: area.x + (area.width - geometry.defaultWidth) / 2,
-            y: area.y + (area.height - geometry.defaultHeight) / 2,
-            width: geometry.defaultWidth,
-            height: geometry.defaultHeight,
-        }
-        : null;
+    const initial = geometry && area ? initialRect(geometry, area) : null;
     const rect = geometry && area && initial
         ? (!geometry.wide || maximized
             ? area
@@ -438,6 +516,7 @@ export function WindowFrame(
             !event.isPrimary || drag.current
         ) return;
         event.preventDefault();
+        detachRef.current?.();
         drag.current = {
             pointerId: event.pointerId,
             x: event.clientX,
@@ -448,6 +527,7 @@ export function WindowFrame(
     };
     const beginOperation = (kind: "move" | "resize", direction?: Direction) => {
         if (!rect || !geometry?.wide || maximized) return;
+        detachRef.current?.();
         setMenuOpen(false);
         setOperation({ kind, direction, before: rect, saved: bounds });
         setAnnouncement(
@@ -457,6 +537,14 @@ export function WindowFrame(
                     : "调整大小"
             }：拖动标题栏或方向键调整，Shift 微调，Enter 提交，Escape 取消`,
         );
+    };
+    /** Maximizing keeps the normal rectangle so restoring returns to it. */
+    const toggleMaximize = () => {
+        if (!maximized) {
+            if (rect) setBounds((previous) => previous ?? rect);
+            detachRef.current?.();
+        }
+        setMaximized((value) => !value);
     };
     const style: CSSProperties | undefined = rect
         ? { left: rect.x, top: rect.y, width: rect.width, height: rect.height }
@@ -474,6 +562,7 @@ export function WindowFrame(
                 className="window-frame"
                 data-window-id={id}
                 data-active={active || undefined}
+                data-library={open ? libraryView : undefined}
                 hidden={!open || minimized || !rect ||
                     (!geometry?.wide && !active)}
                 style={style}
@@ -519,62 +608,73 @@ export function WindowFrame(
                         }
                     }}
                     onDoubleClick={() => {
-                        if (geometry?.wide && !operation) {
-                            setMaximized((value) => !value);
-                        }
+                        if (geometry?.wide && !operation) toggleMaximize();
                     }}
                 >
                     <span className="window-frame__title">{title}</span>
+                    {toolbarRef && (
+                        <div
+                            ref={toolbarRef}
+                            className="window-frame__toolbar"
+                            onDoubleClick={(event) => event.stopPropagation()}
+                        />
+                    )}
                     <div
                         className="window-frame__actions"
                         onDoubleClick={(event) => event.stopPropagation()}
                     >
-                        <DropdownMenu
-                            open={menuOpen}
-                            onOpenChange={setMenuOpen}
-                        >
-                            <DropdownMenuTrigger
-                                render={
-                                    <button
-                                        type="button"
-                                        className="window-frame__button"
-                                        aria-label={`${title}窗口菜单`}
-                                    />
-                                }
+                        {geometry?.wide && (
+                            <DropdownMenu
+                                open={menuOpen}
+                                onOpenChange={setMenuOpen}
                             >
-                                <MoreHorizontal
-                                    size="1em"
-                                    className="icon-md"
-                                />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem
-                                    disabled={!geometry?.wide || maximized}
-                                    onClick={() => beginOperation("move")}
+                                <DropdownMenuTrigger
+                                    render={
+                                        <button
+                                            type="button"
+                                            className="window-frame__button"
+                                            aria-label={`${title}窗口菜单`}
+                                        />
+                                    }
                                 >
-                                    移动窗口
-                                </DropdownMenuItem>
-                                {([
-                                    ["n", "上边"],
-                                    ["s", "下边"],
-                                    ["w", "左边"],
-                                    ["e", "右边"],
-                                    ["nw", "左上角"],
-                                    ["ne", "右上角"],
-                                    ["sw", "左下角"],
-                                    ["se", "右下角"],
-                                ] as const).map(([direction, label]) => (
+                                    <MoreHorizontal
+                                        size="1em"
+                                        className="icon-md"
+                                    />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
                                     <DropdownMenuItem
-                                        key={direction}
                                         disabled={!geometry?.wide || maximized}
-                                        onClick={() =>
-                                            beginOperation("resize", direction)}
+                                        onClick={() => beginOperation("move")}
                                     >
-                                        调整{label}
+                                        移动窗口
                                     </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    {([
+                                        ["n", "上边"],
+                                        ["s", "下边"],
+                                        ["w", "左边"],
+                                        ["e", "右边"],
+                                        ["nw", "左上角"],
+                                        ["ne", "右上角"],
+                                        ["sw", "左下角"],
+                                        ["se", "右下角"],
+                                    ] as const).map(([direction, label]) => (
+                                        <DropdownMenuItem
+                                            key={direction}
+                                            disabled={!geometry?.wide ||
+                                                maximized}
+                                            onClick={() =>
+                                                beginOperation(
+                                                    "resize",
+                                                    direction,
+                                                )}
+                                        >
+                                            调整{label}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
                         {geometry && !geometry.wide && (
                             <button
                                 type="button"
@@ -602,7 +702,7 @@ export function WindowFrame(
                                 aria-label={`${
                                     maximized ? "还原" : "最大化"
                                 }${title}`}
-                                onClick={() => setMaximized((value) => !value)}
+                                onClick={toggleMaximize}
                             >
                                 {maximized
                                     ? (

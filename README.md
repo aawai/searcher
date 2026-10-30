@@ -24,7 +24,7 @@
 | 功能 | 概要 | 详细说明 |
 | --- | --- | --- |
 | 搜索 | 多搜索引擎、搜索联想与快捷命令；访客即可使用 | [docs/workspace.md](docs/workspace.md#搜索框) |
-| 首页与工作区 | 单一 Zen（极简）首页：搜索框为主操作，下方为应用库（应用与文件夹）与固定到首页的笔记（纸张）；笔记在非模态右侧 Panel 中打开，移动端使用底部 Sheet | [docs/workspace.md](docs/workspace.md) |
+| 首页与工作区 | 单一 Zen（极简）首页：搜索框为主操作，下方为应用库（应用与文件夹）与固定到首页的笔记（纸张）；应用、笔记、设置与回收站以页面内窗口打开（桌面可拖动与调整，平板与手机为单活动窗口） | [docs/workspace.md](docs/workspace.md) |
 | 应用 | 首页即应用库：网址快捷方式与文件夹、拖拽整理、可用 AI 生成图标 | [docs/apps.md](docs/apps.md) |
 | 笔记 | Markdown 笔记，Live Preview / 源码模式，固定到首页的纸张形态、颜色、笔记本、图片、分页与打印、收藏、回收站、自动保存、实时同步、冲突处理与版本历史 | [docs/documents.md](docs/documents.md) |
 | AI 问答 | `/ask` 多模型对话、分支历史、附件、只读工具与 SearXNG 联网搜索；Provider 使用 OpenAI-compatible API | [docs/ai.md](docs/ai.md) |

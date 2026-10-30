@@ -258,7 +258,7 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
                 });
                 await openNotes(page);
                 const documentItem = page.locator(
-                    ".workspace-panel [data-document-id] h4 button",
+                    '[data-library="notes"] [data-document-id] h4 button',
                 ).filter({ hasText: "加载隔离笔记" }).first();
                 await documentItem.waitFor({ state: "visible" });
                 assert(

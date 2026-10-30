@@ -3,7 +3,7 @@ import { type Dialog, type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { openSettings } from "./helpers/settings.ts";
-import { openNotes } from "./helpers/library.ts";
+import { libraryPanel, libraryWindow, openNotes } from "./helpers/library.ts";
 
 const PASSWORD = "Apps-route-guard-password-174!";
 
@@ -97,6 +97,22 @@ async function openAddForm(
     if (draft?.name !== undefined) {
         await page.locator("#app-name-input").fill(draft.name);
     }
+}
+
+/**
+ * Opens the notes window and minimizes it, which leaves a `/?view=notes`
+ * history entry behind the visible desktop so the home form (reachable only
+ * once the window is out of the way) has a same-home entry to go Back to.
+ */
+async function openNotesThenMinimize(page: Page, origin: string) {
+    await openNotes(page);
+    await page.waitForURL(origin + "/?view=notes");
+    await libraryWindow(page, "notes").getByRole("button", {
+        name: "最小化笔记",
+        exact: true,
+    }).click();
+    await page.waitForURL(origin + "/");
+    await libraryPanel(page).waitFor({ state: "hidden" });
 }
 
 async function goHome(page: Page, origin: string) {
@@ -315,8 +331,7 @@ Deno.test("discarding app drafts on same-home history navigation closes the form
     const { page, origin } = fixture;
     const leaveDialog = page.getByRole("alertdialog");
     try {
-        await openNotes(page);
-        await page.waitForURL(origin + "/?view=notes");
+        await openNotesThenMinimize(page, origin);
         await openAddForm(page, { name: "Back draft" });
 
         const cancelled = page.goBack();
@@ -324,7 +339,7 @@ Deno.test("discarding app drafts on same-home history navigation closes the form
         await leaveDialog.getByRole("button", { name: "继续编辑", exact: true })
             .click();
         await cancelled;
-        assertEquals(new URL(page.url()).search, "?view=notes");
+        assertEquals(new URL(page.url()).search, "");
         assertEquals(
             await page.locator("#app-name-input").inputValue(),
             "Back draft",
@@ -334,10 +349,14 @@ Deno.test("discarding app drafts on same-home history navigation closes the form
         await leaveDialog.waitFor({ state: "visible" });
         await leaveDialog.getByRole("button", { name: "放弃修改", exact: true })
             .click();
-        await page.waitForURL(origin + "/");
+        await page.waitForURL(origin + "/?view=notes");
         await back;
         await page.locator(".app-form-dialog").waitFor({ state: "detached" });
 
+        // The notes window is on screen again; Back reaches the clean desktop.
+        await page.goBack();
+        await page.waitForURL(origin + "/");
+        await libraryPanel(page).waitFor({ state: "hidden" });
         await openAddForm(page, { name: "Forward draft" });
         const cancelledForward = page.goForward();
         await leaveDialog.waitFor({ state: "visible" });
@@ -372,8 +391,7 @@ Deno.test("a competing history jump cannot replace the first blocked destination
     const { page, origin } = fixture;
     const leaveDialog = page.getByRole("alertdialog");
     try {
-        await openNotes(page);
-        await page.waitForURL(origin + "/?view=notes");
+        await openNotesThenMinimize(page, origin);
         await openAddForm(page, { name: "Original destination draft" });
         const back = page.goBack();
         await leaveDialog.waitFor({ state: "visible" });
@@ -400,10 +418,10 @@ Deno.test("a competing history jump cannot replace the first blocked destination
         );
         await leaveDialog.getByRole("button", { name: "放弃修改", exact: true })
             .click();
-        await page.waitForURL(origin + "/");
+        await page.waitForURL(origin + "/?view=notes");
         await back;
         await page.locator(".app-form-dialog").waitFor({ state: "detached" });
-        assertEquals(new URL(page.url()).search, "");
+        assertEquals(new URL(page.url()).search, "?view=notes");
     } finally {
         await fixture.close();
     }

@@ -7,7 +7,7 @@ import type {
 } from "../../src/shared/documents.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { openNotes } from "./helpers/library.ts";
+import { libraryWindow, openNotes } from "./helpers/library.ts";
 
 interface Rect {
     x: number;
@@ -519,9 +519,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
 
     await page.reload();
     await openNotes(page);
-    const panel = page.locator(
-        'aside.workspace-panel[data-presentation="panel"]',
-    );
+    const panel = libraryWindow(page, "notes");
     await panel.waitFor({ state: "visible" });
     await page.locator(`[data-document-id="${fixtureDocument.id}"] h4 button`)
         .click();
@@ -773,9 +771,18 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
 
     const beforeResize = afterPaper;
     await page.setViewportSize({ width: 390, height: 844 });
-    // Changing presentation remounts the editor into the Sheet portal. Wait for
-    // its real pagination initialization before collecting animations or frames.
-    await page.locator('.workspace-panel[data-presentation="sheet"]').waitFor();
+    // The same notes window follows the viewport: below 1024px it fills the
+    // work area as the single active window. Wait for its real pagination
+    // initialization before collecting animations or frames.
+    await page.waitForFunction(() => {
+        const frame = document.querySelector<HTMLElement>(
+            '[data-window-id="notes"]',
+        );
+        if (!frame) return false;
+        const rect = frame.getBoundingClientRect();
+        return rect.width > 0 && rect.width <= innerWidth &&
+            rect.right <= innerWidth + 0.5;
+    });
     await waitForPaginationMode(page, "page");
     await page.locator(".document-editor-scroll-area .ProseMirror").waitFor();
     await finishFiniteAnimations(page);
@@ -794,7 +801,12 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     );
     const beforeWideResize = narrowLayout;
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.locator('.workspace-panel[data-presentation="panel"]').waitFor();
+    await page.waitForFunction(() => {
+        const frame = document.querySelector<HTMLElement>(
+            '[data-window-id="notes"]',
+        );
+        return frame !== null && frame.getBoundingClientRect().width > 600;
+    });
     await waitForPaginationMode(page, "page");
     await page.locator(".document-editor-scroll-area .ProseMirror").waitFor();
     await finishFiniteAnimations(page);

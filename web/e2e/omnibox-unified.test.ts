@@ -2,7 +2,12 @@ import { assert, assertEquals } from "@std/assert";
 import { type BrowserContext, type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { libraryPanel, libraryView } from "./helpers/library.ts";
+import {
+    libraryPanel,
+    libraryView,
+    libraryWindow,
+    workspaceDock,
+} from "./helpers/library.ts";
 
 const SUGGESTIONS = /\/api\/search\/suggestions\?/;
 const PERSONAL = /\/api\/search\/personal\?/;
@@ -560,10 +565,10 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
                 await page.getByRole("option", { name: /\/notes/ }).waitFor();
                 await search.press("ArrowDown");
                 await search.press("Enter");
-                await libraryPanel(page).getByRole("heading", {
-                    name: "笔记",
-                    exact: true,
-                }).waitFor();
+                await libraryWindow(page, "notes").locator(
+                    ".window-frame__title",
+                    { hasText: /^笔记$/ },
+                ).waitFor();
                 await libraryView(page, "notes").waitFor();
                 assertEquals(
                     await search.evaluate((el) =>
@@ -576,7 +581,12 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
                     "false",
                 );
                 await page.keyboard.press("Escape");
-                await libraryPanel(page).waitFor({ state: "detached" });
+                await libraryWindow(page, "notes").waitFor({ state: "hidden" });
+                await workspaceDock(page).locator(
+                    '[data-dock-id="notes"][data-window-status="minimized"]',
+                ).waitFor();
+                assertEquals(new URL(page.url()).pathname, "/");
+                assertEquals(new URL(page.url()).search, "");
                 await page.waitForFunction(() =>
                     document.activeElement?.id === "search-query"
                 );
@@ -717,7 +727,10 @@ Deno.test("focusing an empty search never opens suggestions", async () => {
         await search.focus();
         assertEquals(await search.getAttribute("aria-expanded"), "false");
         await search.press("Escape");
-        await libraryPanel(page).waitFor({ state: "detached" });
+        await libraryWindow(page, "notes").waitFor({ state: "hidden" });
+        await workspaceDock(page).locator(
+            '[data-dock-id="notes"][data-window-status="minimized"]',
+        ).waitFor();
         await page.waitForFunction(() =>
             document.activeElement?.id === "search-query"
         );

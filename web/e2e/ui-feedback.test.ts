@@ -10,7 +10,7 @@ import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import { documents, users, webapps } from "../../src/db/schema.ts";
 import { aiConversations, aiProviders } from "../../src/db/ai-schema.ts";
-import { openNotes } from "./helpers/library.ts";
+import { libraryWindow, openNotes } from "./helpers/library.ts";
 
 // Focused regression test suite for UI Feedback, Confirmation Dialogs, UndoToasts, and Loading/Error/Empty States
 // Run with: NODE_ENV=test deno test -A web/e2e/ui-feedback.test.ts
@@ -1474,9 +1474,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await visit("/", documentsTestPage);
             await openNotes(documentsTestPage);
 
-            const documentsAside = documentsTestPage.locator(
-                ".workspace-panel--mobile, aside.workspace-panel",
-            );
+            const documentsAside = libraryWindow(documentsTestPage, "notes");
             await documentsAside.waitFor({ state: "visible" });
 
             // While in flight: LoadingState is visible, EmptyState is NOT visible (no flicker!)

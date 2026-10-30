@@ -21,8 +21,8 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   `LoadingState`、`UndoToast`、`LocalNavigation`、`ManagementTable`
   等共享语义组件。Feature 不另建同名反馈或分组容器。
 - 标题层级：独立内容页保持单一可见 `h1`（首页 `/` 不设页面 `h1`，以命名
-  landmark 组织区域；首页工作面板 `/?view=apps`、`/?view=notes` 标题为 `h2` /
-  `SheetTitle`，面板内分组与 `EmptyState` 使用 `headingLevel={3}`）。设置与账户
+  landmark 组织区域；应用 / 笔记窗口 `/?view=apps`、`/?view=notes` 的标题位于窗口标题栏，
+  窗口内分组与 `EmptyState` 使用 `headingLevel={3}`）。设置与账户
   共用 `SettingsShell`：`<nav aria-label="设置分类">` 含 `.settings-nav-title`
   （`h1`“设置”），`<section class="settings-panel">` 含当前分类的 `PageHeader`
   （`h1`：“账户与安全”、“搜索”、“外观”、“AI 问答”、“数据与同步”、“快捷键”）。
@@ -70,7 +70,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   `HomeNotes.tsx` 和 `home-notes.css` 唯一管理。768–1023px 的两列流式与 <768px 纵向堆叠
   是该组件的正常流分支，不再单独维护 220px 笔记行。
 - 稳定布局与交互状态使用语义 class 或 Tailwind 布局 / 状态 utility；视觉尺度（字重、间距、圆角、无阴影、图标尺寸）只使用 [Visual Language](design/VISUAL_LANGUAGE.md) 登记并在 `tokens.css` 以 `@utility` 绑定正式 Token 的工具类，响应式前缀只使用已登记的 `sm:` / `md:` / `lg:`。字号与行高统一由语义 CSS 消费登记 Token，不使用 `text-xs`、`text-sm`、`text-xl` 等默认文字尺度。壁纸、拖拽变换等 runtime 值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何由组件维护。
-- 样式调整后构建前端，实页检查首页、设置、登录和笔记面板的浅深色与壁纸组合。
+- 样式调整后构建前端，实页检查首页、设置、登录和笔记窗口的浅深色与壁纸组合。
 
 ## UI 门禁
 
@@ -124,7 +124,7 @@ deno task check:ui --update
 [Visual Language](design/VISUAL_LANGUAGE.md#一底线)。以下为代码必须保持的行为：
 
 - Escape 由 `components/ui/escape-layer-stack.tsx`
-  统一裁决，每次只消费最上层的菜单、弹窗或工作区；输入法合成中不分发；注销层不得穿透到
+  统一裁决，每次只消费最上层的菜单、弹窗或工作区（host 层依次为全屏笔记、打开的笔记、应用 / 笔记窗口最小化）；输入法合成中不分发；注销层不得穿透到
   window。关闭后焦点回到触发控件。
 - 删除、覆盖、放弃未保存修改等不可逆操作使用 AlertDialog。取消与 Escape
   不执行动作；pending 时禁用确认与取消。
@@ -141,7 +141,7 @@ deno task check:ui --update
 前端路径统一由 `web/src/app/routes.ts` 维护。
 
 - `/ask` 是对话工作区（空状态），`/ask/:id` 是会话深链；同一路由元素承载两者，在 `/ask` 发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push。登录用户由任务栏进入 AI 问答；无模型时保留入口并显示不可用原因，访客不显示任务栏。
-- `/?view=apps` 与 `/?view=notes` 是首页上的应用、笔记工作面板；功能切换 push 浏览器历史，重复点击当前入口不重置，浏览器返回保留未保存保护。不再有资料库根视图或头像内的应用 / 笔记 / AI 导航。
+- `/?view=apps` 与 `/?view=notes` 打开或激活首页上的应用、笔记窗口；普通窗口切换 push 浏览器历史，锚定应用窗口的收起按[历史契约](workspace.md#导航关闭与状态)撤销或 replace，重复点击当前入口不重置，关闭未保存笔记窗口须确认，浏览器返回 / 前进不提示。不再有资料库根视图或头像内的应用 / 笔记 / AI 导航。
 - `/settings` 与 `/settings/search` 均解析为 `search` 分类，不互相重定向；登录用户的设置和 `/account` 同属一个窗口，回收站为另一个窗口。设置内容按 Host 宽度（访客独立页按视口）选择布局：≥768px 双栏，<768px 的 `/settings` 为列表，分类与 `/account` 为详情并提供返回设置的链接。未知 Settings/Admin 子路径保持 404。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。成功后由
   页面上“已登录”状态这一处 replace 到目标，只导航一次（`/share` 这类一次性入口依赖它）。
@@ -152,8 +152,8 @@ deno task check:ui --update
   `viewTransition`；设置、管理内部 Tab 与工作区不使用。首页回答卡片展开为 `/ask/:id`
   使用共享元素过渡（`web/src/lib/shared-element.ts`），不经过 React Router 的
   `viewTransition`。
-- 登录用户的 `DesktopHost` 在当前账号 session 中只有一份；设置 / 账户与回收站由窗口 Host 提供各自的局部位置和实测宽度，最小化不卸载，关闭才销毁。独立路由暂时隐藏桌面并保留实例。访客设置继续使用独立 Presenter。应用、笔记面板和 AI 仍按[混合状态](workspace.md#当前混合状态)的旧呈现运行。
-- `NavigationGuardProvider` 拥有唯一 Router blocker，按是否销毁内容聚合 owner 与 `beforeunload`；确认前冻结首个目标，竞争 POP 时校验 Router 管理的 history key、index、长度和 guard 集合后重放，无法核实时不放行。应用表单在目标实际提交后关闭；取消保持原地址与内容。退出登录先检查本地未同步草稿，再通过相同的保护协调销毁账号内容。
+- 登录用户的 `DesktopHost` 在当前账号 session 中只有一份，唯一持有应用库数据、笔记会话与应用表单；应用、笔记、设置 / 账户与回收站由窗口 Host（portal 目标）提供各自的局部位置和实测宽度，最小化不卸载，关闭才销毁。独立路由暂时隐藏桌面并保留实例。访客设置继续使用独立 Presenter。AI 仍按[混合状态](workspace.md#当前混合状态)作为独立页面运行。
+- `NavigationGuardProvider` 拥有唯一 Router blocker，按是否销毁内容聚合 owner 与 `beforeunload`；确认前冻结首个目标，竞争 POP 时校验 Router 管理的 history key、index、长度和 guard 集合后重放，无法核实时不放行。笔记 guard 只拦截身份变化（退出登录 / 切换账号，经 `useDestructiveAction`），关闭笔记窗口的未保存确认由窗口关闭流程发起；应用表单（全局模态）打开时拦截任何改变 pathname / search 的导航，在目标实际提交后关闭；取消保持原地址与内容。`beforeunload` 对最小化窗口中的未保存笔记与表单仍然生效。退出登录先检查本地未同步草稿，再通过相同的保护协调销毁账号内容。
 - 返回桌面时焦点回搜索框；窗口重新激活优先恢复仍可用的上次焦点，焦点目标不可用时回到窗口标题栏。
 - 账户资料更新不更换登录 session 或销毁窗口。会话因 401 失效时立即清除账号内容；正在使用的首页搜索保留当前输入和焦点，但不保留个人搜索结果。
 
