@@ -217,35 +217,261 @@ Deno.test("DocumentsService - update: optimistic version conflict detection", as
     );
 });
 
-Deno.test("DocumentsService - update: notebook validation and unlinking", async () => {
-    const { service } = await setupTestContext();
+Deno.test("DocumentsService - position: notebook validation and moving to root", async () => {
+    const { service, store } = await setupTestContext();
+    try {
+        const doc = await service.create("user-1", {
+            title: "Doc with Notebook",
+            notebookId: "nb-u1-1",
+        });
+        await assertRejects(
+            () => service.position("user-1", doc.id, { notebookId: "nb-u2-1" }),
+            DocumentNotFoundError,
+        );
+        await service.position("user-1", doc.id, { notebookId: null });
+        const moved = await service.get("user-1", doc.id);
+        assertEquals(moved.notebookId, null);
+        assertEquals(moved.version, doc.version);
+    } finally {
+        store.close();
+    }
+});
 
-    const doc = await service.create("user-1", {
-        title: "Doc with Notebook",
-        notebookId: "nb-u1-1",
-    });
-    assertEquals(doc.notebookId, "nb-u1-1");
+Deno.test("DocumentsService - position orders root and notebook pages without changing content metadata", async () => {
+    const { service, store, advanceTime } = await setupTestContext();
+    try {
+        const root = { type: "uncategorized" } as const;
+        const notebook = { type: "notebook", notebookId: "nb-u1-1" } as const;
+        const ids = async (scope: typeof root | typeof notebook) => {
+            const result: string[] = [];
+            let cursor: string | undefined;
+            do {
+                const page = await service.list("user-1", {
+                    scope,
+                    limit: 1,
+                    cursor,
+                });
+                result.push(...page.items.map((item) => item.id));
+                cursor = page.nextCursor ?? undefined;
+            } while (cursor);
+            return result;
+        };
+        const a = await service.create("user-1", { title: "a" });
+        advanceTime(1);
+        const b = await service.create("user-1", { title: "b" });
+        advanceTime(1);
+        const c = await service.create("user-1", { title: "c" });
+        const n1 = await service.create("user-1", { notebookId: "nb-u1-1" });
+        const n2 = await service.create("user-1", { notebookId: "nb-u1-1" });
+        assertEquals(await ids(root), [c.id, b.id, a.id]);
+        assertEquals(await ids(notebook), [n2.id, n1.id]);
 
-    // Try linking to user-2 notebook
-    // Try linking to user-2 notebook -> 404 owner hiding
-    await assertRejects(
-        () =>
-            service.update("user-1", doc.id, {
-                version: 1,
-                notebookId: "nb-u2-1",
-            }),
-        DocumentNotFoundError,
-        "笔记本不存在或无权访问",
-    );
+        const recentBefore =
+            (await service.list("user-1", { scope: { type: "recent" } }))
+                .items.map((item) => item.id);
+        advanceTime(100);
+        await service.position("user-1", a.id, {
+            notebookId: null,
+            beforeId: b.id,
+        });
+        assertEquals(await ids(root), [c.id, a.id, b.id]);
+        await service.position("user-1", c.id, {
+            notebookId: null,
+            afterId: b.id,
+        });
+        assertEquals(await ids(root), [a.id, b.id, c.id]);
+        await service.position("user-1", c.id, { notebookId: null });
+        assertEquals(await ids(root), [c.id, a.id, b.id]);
+        await service.position("user-1", c.id, {
+            notebookId: null,
+            afterId: b.id,
+        });
+        assertEquals(await ids(root), [a.id, b.id, c.id]);
+        await service.position("user-1", b.id, {
+            notebookId: "nb-u1-1",
+            beforeId: n1.id,
+        });
+        assertEquals(await ids(root), [a.id, c.id]);
+        assertEquals(await ids(notebook), [n2.id, b.id, n1.id]);
+        await service.position("user-1", n1.id, {
+            notebookId: "nb-u1-1",
+            beforeId: n2.id,
+        });
+        assertEquals(await ids(notebook), [n1.id, n2.id, b.id]);
+        await service.position("user-1", n1.id, {
+            notebookId: null,
+            afterId: c.id,
+        });
+        assertEquals(await ids(root), [a.id, c.id, n1.id]);
+        assertEquals(await ids(notebook), [n2.id, b.id]);
+        for (const original of [a, b, c, n1, n2]) {
+            const current = await service.get("user-1", original.id);
+            assertEquals([current.version, current.updatedAt], [
+                original.version,
+                original.updatedAt,
+            ]);
+        }
+        assertEquals(
+            (await service.list("user-1", { scope: { type: "recent" } }))
+                .items.map((item) => item.id),
+            recentBefore,
+        );
 
-    // Unlink notebook (notebookId: null)
-    const updated = await service.update("user-1", doc.id, {
-        version: 1,
-        notebookId: null,
-    });
-    assertEquals(updated.notebookId, null);
-    assertEquals(updated.notebookName, undefined);
-    assertEquals(updated.version, 2);
+        const rootPage = await service.list("user-1", {
+            scope: root,
+            limit: 1,
+        });
+        await assertRejects(
+            () =>
+                service.list("user-1", {
+                    scope: notebook,
+                    cursor: rootPage.nextCursor!,
+                }),
+            DocumentValidationError,
+        );
+        const notebookPage = await service.list("user-1", {
+            scope: notebook,
+            limit: 1,
+        });
+        await assertRejects(
+            () =>
+                service.list("user-2", {
+                    scope: notebook,
+                    cursor: notebookPage.nextCursor!,
+                }),
+            DocumentValidationError,
+        );
+    } finally {
+        store.close();
+    }
+});
+
+Deno.test("DocumentsService - position rejects missing, foreign, deleted and wrong-scope targets", async () => {
+    const { service, store } = await setupTestContext();
+    try {
+        const root = await service.create("user-1", {});
+        const anchor = await service.create("user-1", {});
+        const notebook = await service.create("user-1", {
+            notebookId: "nb-u1-1",
+        });
+        const foreign = await service.create("user-2", {});
+        const deleted = await service.create("user-1", {});
+        await service.softDelete("user-1", deleted.id, deleted.version);
+        for (const id of ["missing", foreign.id, deleted.id]) {
+            await assertRejects(
+                () => service.position("user-1", id, { notebookId: null }),
+                DocumentNotFoundError,
+            );
+        }
+        for (const notebookId of ["missing", "nb-u2-1"]) {
+            await assertRejects(
+                () => service.position("user-1", root.id, { notebookId }),
+                DocumentNotFoundError,
+            );
+        }
+        for (const beforeId of ["missing", foreign.id, deleted.id]) {
+            await assertRejects(
+                () =>
+                    service.position("user-1", root.id, {
+                        notebookId: null,
+                        beforeId,
+                    }),
+                DocumentNotFoundError,
+            );
+        }
+        await assertRejects(
+            () =>
+                service.position("user-1", root.id, {
+                    notebookId: null,
+                    beforeId: notebook.id,
+                }),
+            DocumentValidationError,
+        );
+        await assertRejects(
+            () =>
+                service.position("user-1", root.id, {
+                    notebookId: null,
+                    beforeId: anchor.id,
+                    afterId: anchor.id,
+                }),
+            DocumentValidationError,
+        );
+        assertEquals((await service.get("user-1", root.id)).notebookId, null);
+    } finally {
+        store.close();
+    }
+});
+
+Deno.test("DocumentsService - restore places a note at the top of its original scope", async () => {
+    const { service, store } = await setupTestContext();
+    try {
+        for (const notebookId of [null, "nb-u1-1"]) {
+            const first = await service.create("user-1", { notebookId });
+            const second = await service.create("user-1", { notebookId });
+            await service.softDelete("user-1", first.id, first.version);
+            const third = await service.create("user-1", { notebookId });
+            await service.restore("user-1", first.id);
+            const scope = notebookId
+                ? { type: "notebook" as const, notebookId }
+                : { type: "uncategorized" as const };
+            assertEquals(
+                (await service.list("user-1", { scope })).items.map((item) =>
+                    item.id
+                ),
+                [first.id, third.id, second.id],
+            );
+        }
+    } finally {
+        store.close();
+    }
+});
+
+Deno.test("DocumentsService - last opened is owner isolated, skips trash, and does not modify content metadata", async () => {
+    const { service, store, advanceTime } = await setupTestContext();
+    try {
+        assertEquals(await service.lastOpened("user-1"), null);
+        const first = await service.create("user-1", {});
+        advanceTime(1);
+        const second = await service.create("user-1", {});
+        const foreign = await service.create("user-2", {});
+        const recentBefore =
+            (await service.list("user-1", { scope: { type: "recent" } }))
+                .items.map((item) => item.id);
+        advanceTime(1);
+        await service.markOpened("user-1", first.id);
+        advanceTime(1);
+        await service.markOpened("user-1", second.id);
+        await service.markOpened("user-2", foreign.id);
+        assertEquals(await service.lastOpened("user-1"), { id: second.id });
+        assertEquals(await service.lastOpened("user-2"), { id: foreign.id });
+        const opened = await service.get("user-1", first.id);
+        assertEquals([opened.version, opened.updatedAt], [
+            first.version,
+            first.updatedAt,
+        ]);
+        assertEquals(
+            (await service.list("user-1", { scope: { type: "recent" } }))
+                .items.map((item) => item.id),
+            recentBefore,
+        );
+        for (const id of ["missing", foreign.id]) {
+            await assertRejects(
+                () => service.markOpened("user-1", id),
+                DocumentNotFoundError,
+            );
+        }
+        await service.softDelete("user-1", second.id, second.version);
+        await assertRejects(
+            () => service.markOpened("user-1", second.id),
+            DocumentNotFoundError,
+        );
+        assertEquals(await service.lastOpened("user-1"), { id: first.id });
+        await service.softDelete("user-1", first.id, first.version);
+        assertEquals(await service.lastOpened("user-1"), null);
+        assertEquals(await service.lastOpened("user-2"), { id: foreign.id });
+    } finally {
+        store.close();
+    }
 });
 
 Deno.test("DocumentsService - snapshot throttling: autosave < 10min skips, >= 10min inserts snapshot", async () => {
@@ -559,10 +785,7 @@ Deno.test("DocumentsService - uncategorized scope isolates active documents and 
         await service.softDelete("user-1", deleted.id, deleted.version);
 
         const first = await service.list("user-1", { scope, limit: 1 });
-        assertEquals(
-            first.items.map((item) => item.id),
-            [tiedA.id, tiedB.id].sort().reverse().slice(0, 1),
-        );
+        assertEquals(first.items.map((item) => item.id), [tiedB.id]);
         if (!first.nextCursor) throw new Error("Expected a next cursor");
         const second = await service.list("user-1", {
             scope,
@@ -571,7 +794,7 @@ Deno.test("DocumentsService - uncategorized scope isolates active documents and 
         });
         assertEquals(
             [...first.items, ...second.items].map((item) => item.id),
-            [...[tiedA.id, tiedB.id].sort().reverse(), older.id],
+            [tiedB.id, tiedA.id, older.id],
         );
         assertEquals(second.nextCursor, null);
         await assertRejects(
@@ -645,7 +868,7 @@ Deno.test("DocumentsService - list: deterministic ordering across scopes and no 
     const nbPage = await service.list("user-1", {
         scope: { type: "notebook", notebookId: "nb-u1-1" },
     });
-    assertEquals(nbPage.items.map((i) => i.id), [d1.id, d2.id]);
+    assertEquals(nbPage.items.map((i) => i.id), [d2.id, d1.id]);
 });
 
 Deno.test("DocumentsService - list: opaque cursor pagination stability across pages", async () => {

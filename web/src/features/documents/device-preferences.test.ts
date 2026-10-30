@@ -1,11 +1,18 @@
 import { assertEquals } from "@std/assert";
 import {
     type DevicePreferenceStorage,
+    effectivePaneWidth,
+    OUTLINE_WIDTH,
     readDevicePreferences,
+    readOutlineWidth,
     readSidebarCollapsed,
+    readSidebarWidth,
     resolveToolbarCollapsed,
+    SIDEBAR_WIDTH,
     writeOutlineOpen,
+    writeOutlineWidth,
     writeSidebarCollapsed,
+    writeSidebarWidth,
     writeToolbarCollapsed,
 } from "./device-preferences.ts";
 
@@ -125,4 +132,51 @@ Deno.test("device preferences: invalid values and unavailable storage use defaul
         toolbarCollapsed: null,
         outlineOpen: false,
     });
+});
+
+Deno.test("pane widths persist per account and device and clamp invalid bounds", () => {
+    const storage = memoryStorage();
+    const other = memoryStorage();
+    assertEquals(readSidebarWidth(storage, "alice"), 240);
+    assertEquals(readOutlineWidth(storage, "alice"), 260);
+    writeSidebarWidth(storage, "alice", 500);
+    writeOutlineWidth(storage, "alice", 100);
+    assertEquals(readSidebarWidth(storage, "alice"), 400);
+    assertEquals(readOutlineWidth(storage, "alice"), 180);
+    assertEquals(readSidebarWidth(storage, "bob"), 240);
+    assertEquals(readOutlineWidth(other, "alice"), 260);
+    storage.setItem("document:device:alice:sidebarWidth", "NaN");
+    assertEquals(readSidebarWidth(storage, "alice"), 240);
+    storage.setItem("document:device:alice:outlineWidth", "999");
+    assertEquals(readOutlineWidth(storage, "alice"), 400);
+    assertEquals(readSidebarWidth(null, "alice"), 240);
+});
+
+Deno.test("effective pane width respects available space without changing the saved width", () => {
+    assertEquals(effectivePaneWidth(400, 0, 718, SIDEBAR_WIDTH), 400);
+    assertEquals(effectivePaneWidth(400, 1118, 718, SIDEBAR_WIDTH), 400);
+    assertEquals(effectivePaneWidth(400, 958, 718, SIDEBAR_WIDTH), 240);
+    assertEquals(effectivePaneWidth(400, 898, 718, SIDEBAR_WIDTH), 180);
+    assertEquals(effectivePaneWidth(400, 800, 718, SIDEBAR_WIDTH), 180);
+    assertEquals(effectivePaneWidth(260, 900, 640, OUTLINE_WIDTH), 260);
+    assertEquals(effectivePaneWidth(260, 819, 640, OUTLINE_WIDTH), 180);
+    assertEquals(effectivePaneWidth(260, 1200, 640, OUTLINE_WIDTH), 260);
+});
+
+Deno.test("pane width constants mirror design tokens", async () => {
+    const css = await Deno.readTextFile(
+        new URL("../../design-system/tokens.css", import.meta.url),
+    );
+    for (
+        const [name, value] of [
+            ["notes-sidebar-width", SIDEBAR_WIDTH.default],
+            ["notes-sidebar-width-min", SIDEBAR_WIDTH.min],
+            ["notes-sidebar-width-max", SIDEBAR_WIDTH.max],
+            ["document-outline-width", OUTLINE_WIDTH.default],
+            ["document-outline-width-min", OUTLINE_WIDTH.min],
+            ["document-outline-width-max", OUTLINE_WIDTH.max],
+        ] as const
+    ) {
+        assertEquals(css.includes(`--${name}: ${value}px;`), true);
+    }
 });

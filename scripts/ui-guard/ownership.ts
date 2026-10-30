@@ -199,6 +199,9 @@ export const CANONICAL_SEMANTIC_CLASS_OWNERS: Record<
     "settings-group-header": ["web/src/components/searcher/semantic.css"],
     "settings-group-title": ["web/src/components/searcher/semantic.css"],
     "settings-group-footer": ["web/src/components/searcher/semantic.css"],
+    "pane-resize-handle": [
+        "web/src/components/searcher/pane-resize-handle.css",
+    ],
     // Presenter single-owner classes (Issue #92)
     "workspace-surface": ["web/src/features/workspace/workspace.css"],
     "workspace-panel": ["web/src/features/workspace/workspace.css"],

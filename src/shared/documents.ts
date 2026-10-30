@@ -104,6 +104,12 @@ export interface DocumentDto extends DocumentSummaryDto {
     body: string;
     version: number;
 }
+export type DocumentLastOpenedDto = { id: string } | null;
+export interface PositionDocumentInput {
+    notebookId: string | null;
+    beforeId?: string;
+    afterId?: string;
+}
 export interface DocumentPageDto {
     items: DocumentSummaryDto[];
     nextCursor: string | null;
@@ -126,7 +132,6 @@ export interface UpdateDocumentInput {
     version: number;
     title?: string | null;
     body?: string;
-    notebookId?: string | null;
     isFavorite?: boolean;
     color?: DocumentColor;
     isHomeFixed?: boolean;

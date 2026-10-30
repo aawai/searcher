@@ -1,6 +1,7 @@
 import { BREAKPOINTS, MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
 import {
     type ChangeEvent,
+    type CSSProperties,
     type FocusEvent,
     type KeyboardEvent,
     lazy,
@@ -52,6 +53,7 @@ import {
     DialogTitle,
 } from "../../components/ui/dialog.tsx";
 import { LoadingState } from "../../components/searcher/semantic.tsx";
+import { PaneResizeHandle } from "../../components/searcher/PaneResizeHandle.tsx";
 import {
     BookOpen,
     Check,
@@ -82,9 +84,13 @@ import {
     VALID_IMAGE_MIME_TYPES,
 } from "./editor-extensions.ts";
 import {
+    effectivePaneWidth,
+    OUTLINE_WIDTH,
     readDevicePreferences,
+    readOutlineWidth,
     resolveToolbarCollapsed,
     writeOutlineOpen,
+    writeOutlineWidth,
     writeToolbarCollapsed,
 } from "./device-preferences.ts";
 
@@ -313,6 +319,15 @@ export function DocumentEditor({
     );
     const documentId = snapshot.document?.id ?? requestedDocumentId ?? "";
     const isNewSession = sessionDocumentId === undefined;
+    const openedIdRef = useRef<string | undefined>(undefined);
+    useEffect(() => {
+        const id = snapshot.document?.id;
+        if (!id || snapshot.loading || openedIdRef.current === id) return;
+        openedIdRef.current = id;
+        void api(`/api/documents/${encodeURIComponent(id)}/opened`, {
+            method: "PUT",
+        }).catch(() => {});
+    }, [snapshot.document?.id, snapshot.loading]);
 
     useEffect(() => {
         void session.load().catch((error: unknown) => {
@@ -366,8 +381,27 @@ export function DocumentEditor({
     );
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const titleInputRef = useRef<HTMLInputElement>(null);
+    const pendingTitleFocus = useRef(false);
+    const setTitleInput = useCallback((input: HTMLInputElement | null) => {
+        titleInputRef.current = input;
+        if (input && pendingTitleFocus.current) {
+            pendingTitleFocus.current = false;
+            input.focus();
+        }
+    }, []);
+    const [outlineWidth, setOutlineWidth] = useState(() =>
+        readOutlineWidth(deviceStorage(), userId)
+    );
+    const [editorWidth, setEditorWidth] = useState(0);
+    const effectiveOutlineWidth = effectivePaneWidth(
+        outlineWidth,
+        editorWidth,
+        BREAKPOINTS.small,
+        OUTLINE_WIDTH,
+    );
     const [outlineHasFocus, setOutlineHasFocus] = useState(false);
-    const [outlineFits, setOutlineFits] = useState(false);
+    const outlineFits =
+        editorWidth >= BREAKPOINTS.small + effectiveOutlineWidth;
     const showOutline = devicePreferences.outlineOpen;
     const visibleOutline = narrow ? outlineDrawerOpen : showOutline;
     const showToolbar = !resolveToolbarCollapsed(
@@ -386,18 +420,11 @@ export function DocumentEditor({
         if (!container) return;
         const observer = new ResizeObserver((entries) => {
             const width = entries[0]?.contentRect.width;
-            if (width !== undefined && width > 0) {
-                const outlineWidth = Number.parseFloat(
-                    getComputedStyle(container).getPropertyValue(
-                        "--document-outline-width",
-                    ),
-                );
-                setOutlineFits(width >= BREAKPOINTS.small + outlineWidth);
-            }
+            if (width !== undefined && width > 0) setEditorWidth(width);
         });
         observer.observe(container);
         return () => observer.disconnect();
-    }, [snapshot.document]);
+    }, [snapshot.document?.id, isNewSession]);
     useEffect(() => {
         const media = globalThis.matchMedia("(any-pointer: coarse)");
         const onChange = () => {
@@ -424,8 +451,13 @@ export function DocumentEditor({
         }
     }, [showToolbar]);
     useEffect(() => {
-        if (focusTitleSignal !== undefined) titleInputRef.current?.focus();
-    }, [focusTitleSignal, snapshot.loading]);
+        if (focusTitleSignal === undefined) return;
+        pendingTitleFocus.current = true;
+        if (titleInputRef.current) {
+            pendingTitleFocus.current = false;
+            titleInputRef.current.focus();
+        }
+    }, [focusTitleSignal]);
     useEffect(() => {
         if (!narrow && outlineDrawerOpen) {
             writeOutlineOpen(deviceStorage(), userId, true);
@@ -1187,6 +1219,9 @@ export function DocumentEditor({
         <div
             ref={editorContainerRef}
             className="document-editor-container"
+            style={{
+                "--document-outline-width": `${effectiveOutlineWidth}px`,
+            } as CSSProperties}
             data-workspace-editor
             onKeyDown={handleContainerKeyDown}
             onBlur={handleContainerBlur}
@@ -1303,7 +1338,7 @@ export function DocumentEditor({
                 {/* Document Title Input */}
                 <div className="document-title-wrapper">
                     <input
-                        ref={titleInputRef}
+                        ref={setTitleInput}
                         type="text"
                         className="document-title-input"
                         placeholder="未命名笔记…"
@@ -1533,7 +1568,7 @@ export function DocumentEditor({
                         className="document-toolbar-collapse"
                         aria-label="隐藏格式工具栏"
                         title="隐藏格式工具栏"
-                        aria-pressed={true}
+                        aria-pressed
                         onClick={toggleToolbar}
                     >
                         <ChevronUp size="1em" className="icon-md" />
@@ -1603,6 +1638,30 @@ export function DocumentEditor({
                             }
                         }}
                     >
+                        <PaneResizeHandle
+                            className="document-outline-resize"
+                            label="调整大纲宽度"
+                            value={effectiveOutlineWidth}
+                            min={OUTLINE_WIDTH.min}
+                            max={editorWidth > 0
+                                ? Math.max(
+                                    OUTLINE_WIDTH.min,
+                                    Math.min(
+                                        OUTLINE_WIDTH.max,
+                                        editorWidth - BREAKPOINTS.small,
+                                    ),
+                                )
+                                : OUTLINE_WIDTH.max}
+                            defaultValue={OUTLINE_WIDTH.default}
+                            direction={-1}
+                            onChange={setOutlineWidth}
+                            onCommit={(value) =>
+                                writeOutlineWidth(
+                                    deviceStorage(),
+                                    userId,
+                                    value,
+                                )}
+                        />
                         <Suspense
                             fallback={
                                 <LoadingState density="compact">

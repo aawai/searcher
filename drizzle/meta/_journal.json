@@ -253,6 +253,13 @@
       "when": 1792998582027,
       "tag": "0035_remove_gradient_wallpaper",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1793376127211,
+      "tag": "0036_damp_stardust",
+      "breakpoints": true
     }
   ]
 }

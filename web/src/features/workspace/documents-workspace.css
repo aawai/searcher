@@ -258,6 +258,43 @@
     user-select: none;
     transition: background var(--motion-fast) var(--ease-standard);
 }
+.documents-tree-row[data-drop-zone] {
+    position: relative;
+}
+.documents-tree-row[data-drop-zone="inside"]:not([data-drop-invalid]) {
+    background: var(--surface-soft);
+    outline: var(--space-half) solid var(--ring);
+    outline-offset: calc(var(--space-half) * -1);
+}
+.documents-tree-row[data-drop-zone="before"]:not([data-drop-invalid])::before,
+.documents-tree-row[data-drop-zone="after"]:not([data-drop-invalid])::after {
+    content: "";
+    position: absolute;
+    inset-inline: var(--space-2);
+    height: var(--space-half);
+    background: var(--ring);
+    border-radius: var(--control-radius);
+}
+.documents-tree-row[data-drop-zone="before"]::before {
+    top: 0;
+}
+.documents-tree-row[data-drop-zone="after"]::after {
+    bottom: 0;
+}
+.documents-tree-row[data-drop-invalid] {
+    cursor: not-allowed;
+}
+.documents-tree-row[data-dragging] {
+    opacity: 0.4;
+}
+.documents-tree-drag-overlay {
+    background: var(--surface-solid);
+    box-shadow: var(--shadow-l2);
+    padding-inline: var(--space-2);
+}
+.documents-tree-drag-overlay[data-drop-invalid] {
+    opacity: 0.6;
+}
 .documents-tree-row:is(:hover, :focus-within),
 .documents-tree-row[data-selected] {
     background: var(--surface-soft);

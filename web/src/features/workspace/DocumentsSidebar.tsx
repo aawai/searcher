@@ -17,7 +17,6 @@ import {
     Clock,
     FolderInput,
     FolderPlus,
-    Inbox,
     PanelLeftClose,
     Pencil,
     Pin,
@@ -32,7 +31,7 @@ import {
     type DocumentPageDto,
     type DocumentSummaryDto,
 } from "@shared/documents.ts";
-import { api } from "../../lib/api.ts";
+import { api, json } from "../../lib/api.ts";
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
@@ -63,12 +62,17 @@ import {
     noteItemId,
     resolveCreateTarget,
     resolveNewNotebookParent,
+    ROOT_KEY,
     type SidebarSelection,
     type TreeEntry,
-    UNCATEGORIZED_KEY,
 } from "./notes-tree-model.ts";
 import { resolveActiveId } from "./tree-keyboard.ts";
 import { noteListSnippet } from "./note-list-snippet.ts";
+import {
+    resolveTreeDrop,
+    type TreeDropResult,
+    type TreeDropZone,
+} from "./notes-tree-drop.ts";
 import { WorkspaceActivity } from "./WorkspaceActivity.ts";
 
 /** Notes fetched per tree node request; further pages come from the node's own 加载更多. */
@@ -95,6 +99,7 @@ export interface DocumentsSidebarProps {
     noteNotebooks: MutableRefObject<Map<string, string | null>>;
     /** Persistent sidebars carry their own collapse button; drawers dismiss through the scrim. */
     onCollapse?: () => void;
+    dragDisabled?: boolean;
     collapseRef?: RefObject<HTMLButtonElement | null>;
 }
 
@@ -217,6 +222,7 @@ export function DocumentsSidebar({
     noteNotebooks,
     onCollapse,
     collapseRef,
+    dragDisabled = false,
 }: DocumentsSidebarProps) {
     const listHeadingId = useId();
     const trimmedQuery = query.trim();
@@ -312,7 +318,7 @@ export function DocumentsSidebar({
     };
     const fetchPage = (key: string, cursor: string | null, limit: number) => {
         const params = new URLSearchParams({ limit: String(limit) });
-        if (key === UNCATEGORIZED_KEY) params.set("scope", "uncategorized");
+        if (key === ROOT_KEY) params.set("scope", "uncategorized");
         else {
             params.set("scope", "notebook");
             params.set("notebookId", key.slice("nb:".length));
@@ -427,6 +433,7 @@ export function DocumentsSidebar({
     };
     // Every refresh re-reads the open nodes; closed ones reload when reopened.
     useEffect(() => {
+        void loadNode(ROOT_KEY);
         for (const key of expandedRef.current) void loadNode(key);
     }, [retryCount]);
 
@@ -434,7 +441,7 @@ export function DocumentsSidebar({
     const [scrollTarget, setScrollTarget] = useState<string | null>(null);
     const noteIndex = useMemo(() => indexNoteNotebooks(pages), [pages]);
     const noteNotebookId = (id: string) =>
-        noteIndex.get(id) ?? noteNotebooks.current.get(id);
+        noteIndex.has(id) ? noteIndex.get(id) : noteNotebooks.current.get(id);
     const selectedNoteId = selection?.kind === "note" ? selection.id : null;
     useEffect(() => {
         if (!treeMode || !notebooksLoaded || selectedNoteId === null) return;
@@ -453,12 +460,16 @@ export function DocumentsSidebar({
             }
             if (cancelled) return;
             const key = notebookId === null
-                ? UNCATEGORIZED_KEY
+                ? ROOT_KEY
                 : notebookKey(notebookId);
             const parentId = notebooks.find((item) => item.id === notebookId)
                 ?.parentId;
             for (
-                const open of parentId ? [notebookKey(parentId), key] : [key]
+                const open of notebookId === null
+                    ? []
+                    : parentId
+                    ? [notebookKey(parentId), key]
+                    : [key]
             ) {
                 if (!expandedRef.current.has(open)) setExpanded(open, true);
             }
@@ -625,13 +636,122 @@ export function DocumentsSidebar({
         expanded,
         pages,
     ]);
+    const [moveError, setMoveError] = useState<string | null>(null);
+    const moveTreeItem = async (
+        move: Extract<TreeDropResult, { valid: true }>,
+    ) => {
+        setMoveError(null);
+        const oldPages = pagesRef.current;
+        const oldNotebooks = notebooks;
+        const oldIndex = new Map(noteNotebooks.current);
+        if (move.kind === "note") {
+            const next = new Map(oldPages);
+            let moving: DocumentSummaryDto | undefined;
+            for (const [key, page] of next) {
+                const found = page.items.find((item) => item.id === move.id);
+                if (found) moving = found;
+                next.set(key, {
+                    ...page,
+                    items: page.items.filter((item) => item.id !== move.id),
+                });
+            }
+            const key = move.notebookId === null
+                ? ROOT_KEY
+                : notebookKey(move.notebookId);
+            const target = next.get(key);
+            if (target && moving) {
+                const items = [...target.items];
+                const anchor = move.beforeId ?? move.afterId;
+                const index = anchor
+                    ? items.findIndex((item) => item.id === anchor)
+                    : 0;
+                items.splice(
+                    index < 0 ? items.length : index + (move.afterId ? 1 : 0),
+                    0,
+                    { ...moving, notebookId: move.notebookId },
+                );
+                next.set(key, { ...target, items });
+            }
+            pagesRef.current = next;
+            setPages(next);
+            noteNotebooks.current.set(move.id, move.notebookId);
+        } else {
+            const moving = notebooks.find((item) => item.id === move.id);
+            if (moving) {
+                const siblings = notebooks.filter((item) =>
+                    item.parentId === move.parentId && item.id !== move.id
+                )
+                    .sort((a, b) =>
+                        a.sortOrder - b.sortOrder || a.id.localeCompare(b.id)
+                    );
+                const anchor = move.beforeId ?? move.afterId;
+                const index = anchor
+                    ? siblings.findIndex((item) => item.id === anchor)
+                    : siblings.length;
+                siblings.splice(
+                    index < 0
+                        ? siblings.length
+                        : index + (move.afterId ? 1 : 0),
+                    0,
+                    { ...moving, parentId: move.parentId },
+                );
+                const updated = new Map(
+                    siblings.map((
+                        item,
+                        sortOrder,
+                    ) => [item.id, { ...item, sortOrder }]),
+                );
+                setNotebooks(
+                    notebooks.map((item) => updated.get(item.id) ?? item),
+                );
+            }
+        }
+        try {
+            if (move.kind === "note") {
+                await api(
+                    `/api/documents/${move.id}/position`,
+                    json("POST", {
+                        notebookId: move.notebookId,
+                        beforeId: move.beforeId,
+                        afterId: move.afterId,
+                    }),
+                );
+            } else {
+                await api(
+                    `/api/document-notebooks/${move.id}/move`,
+                    json("POST", {
+                        parentId: move.parentId,
+                        beforeId: move.beforeId,
+                        afterId: move.afterId,
+                    }),
+                );
+            }
+            refresh();
+        } catch (cause) {
+            pagesRef.current = oldPages;
+            setPages(oldPages);
+            setNotebooks(oldNotebooks);
+            noteNotebooks.current = oldIndex;
+            setMoveError(errorText(cause, "移动失败"));
+            refresh();
+        }
+    };
+    const resolveDrop = (
+        source: TreeEntry,
+        target: TreeEntry,
+        zone: TreeDropZone,
+    ) => resolveTreeDrop({
+        active: source,
+        over: target,
+        zone,
+        entries,
+        notebooks,
+    });
     const selectedTreeId = selection === null
         ? null
         : selection.kind === "note"
         ? noteItemId(selection.id)
-        : selection.kind === "notebook"
-        ? notebookKey(selection.id)
-        : UNCATEGORIZED_KEY;
+        : notebookKey(selection.id);
     const [activeId, setActiveId] = useState<string | null>(null);
     const rovingId = resolveActiveId(entries, activeId, selectedTreeId);
     const treeRoot = useRef<HTMLDivElement>(null);
@@ -646,12 +766,8 @@ export function DocumentsSidebar({
     }, [scrollTarget, entries]);
 
     const activateEntry = (entry: TreeEntry) => {
-        if (entry.kind === "notebook" || entry.kind === "uncategorized") {
-            setSelection(
-                entry.kind === "notebook"
-                    ? { kind: "notebook", id: entry.node.notebook.id }
-                    : { kind: "uncategorized" },
-            );
+        if (entry.kind === "notebook") {
+            setSelection({ kind: "notebook", id: entry.node.notebook.id });
             setExpanded(entry.nodeKey, !expandedRef.current.has(entry.nodeKey));
         } else if (entry.kind === "note") void openNote(entry.note.id);
         else if (entry.kind === "more") void loadMoreNode(entry.nodeKey);
@@ -734,34 +850,41 @@ export function DocumentsSidebar({
                     </NotesTreeRow>
                 );
             }
-            case "uncategorized":
-                return (
-                    <NotesTreeRow
-                        key={entry.id}
-                        entry={entry}
-                        label="未分类"
-                        actionLabel="未分类操作"
-                        menu={
-                            <ContextMenuItem onClick={() => newNote(null)}>
-                                <Plus className="icon-md" />
-                                <span>新建笔记</span>
-                            </ContextMenuItem>
-                        }
-                    >
-                        <Chevron expanded={entry.expanded} />
-                        <Inbox
-                            className="icon-sm documents-tree-icon"
-                            aria-hidden="true"
-                        />
-                        <span className="documents-tree-label">未分类</span>
-                    </NotesTreeRow>
+            case "note": {
+                const key = entry.note.notebookId === null
+                    ? ROOT_KEY
+                    : notebookKey(entry.note.notebookId);
+                const siblings = pages.get(key)?.items ?? [];
+                const index = siblings.findIndex((item) =>
+                    item.id === entry.note.id
                 );
-            case "note":
+                const up = index > 0 ? siblings[index - 1] : undefined;
+                const down = index >= 0 ? siblings[index + 1] : undefined;
                 return (
                     <TreeNoteRow
                         key={entry.id}
                         entry={entry}
                         notebooks={notebooks}
+                        onMoveUp={up
+                            ? () =>
+                                void moveTreeItem({
+                                    valid: true,
+                                    kind: "note",
+                                    id: entry.note.id,
+                                    notebookId: entry.note.notebookId,
+                                    beforeId: up.id,
+                                })
+                            : undefined}
+                        onMoveDown={down
+                            ? () =>
+                                void moveTreeItem({
+                                    valid: true,
+                                    kind: "note",
+                                    id: entry.note.id,
+                                    notebookId: entry.note.notebookId,
+                                    afterId: down.id,
+                                })
+                            : undefined}
                         onChanged={refresh}
                         onTrashed={(id) => {
                             if (
@@ -771,6 +894,7 @@ export function DocumentsSidebar({
                         }}
                     />
                 );
+            }
             case "more":
                 return (
                     <NotesTreeRow key={entry.id} entry={entry} label="加载更多">
@@ -835,8 +959,8 @@ export function DocumentsSidebar({
                         className="documents-heading-action"
                         aria-label="笔记侧栏"
                         title="收起笔记侧栏"
-                        aria-expanded={true}
-                        aria-pressed={true}
+                        aria-expanded
+                        aria-pressed
                         aria-controls="notes-sidebar"
                         onClick={onCollapse}
                     >
@@ -857,6 +981,11 @@ export function DocumentsSidebar({
                                 重试
                             </Button>
                         </div>
+                    </StatusBanner>
+                )}
+                {moveError && (
+                    <StatusBanner tone="error" density="compact">
+                        {moveError}
                     </StatusBanner>
                 )}
                 <div
@@ -948,6 +1077,25 @@ export function DocumentsSidebar({
                                     onToggle={(id, open) =>
                                         setExpanded(id, open)}
                                     onActivate={activateEntry}
+                                    onClearSelection={() => setSelection(null)}
+                                    resolveDrop={resolveDrop}
+                                    disabled={dragDisabled}
+                                    onDrop={(source, target, zone) => {
+                                        const result = resolveDrop(
+                                            source,
+                                            target,
+                                            zone,
+                                        );
+                                        if (result.valid) {
+                                            void moveTreeItem(result);
+                                        }
+                                    }}
+                                    onDragHoverExpand={(entry) => {
+                                        if (
+                                            entry.kind === "notebook" &&
+                                            !entry.expanded
+                                        ) setExpanded(entry.nodeKey, true);
+                                    }}
                                 >
                                     {renderEntry}
                                 </NotesTree>
@@ -1096,18 +1244,25 @@ function Chevron({ expanded }: { expanded: boolean }) {
 }
 
 /** A note node: its own row, the shared note menu and the dialogs those actions open. */
-function TreeNoteRow({ entry, notebooks, onChanged, onTrashed }: {
-    entry: Extract<TreeEntry, { kind: "note" }>;
-    notebooks: DocumentNotebookDto[];
-    onChanged: () => void;
-    onTrashed: (id: string) => void;
-}) {
+function TreeNoteRow(
+    { entry, notebooks, onChanged, onTrashed, onMoveUp, onMoveDown }: {
+        entry: Extract<TreeEntry, { kind: "note" }>;
+        notebooks: DocumentNotebookDto[];
+        onChanged: () => void;
+        onTrashed: (id: string) => void;
+        onMoveUp?: () => void;
+        onMoveDown?: () => void;
+    },
+) {
     const item = entry.note;
     const actions = useDocumentActions({
         item,
         notebooks,
         onChanged,
         onTrashed,
+        showReorderActions: true,
+        onMoveUp,
+        onMoveDown,
     });
     return (
         <NotesTreeRow

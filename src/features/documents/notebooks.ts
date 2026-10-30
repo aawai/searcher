@@ -9,6 +9,11 @@ export interface CreateNotebookInput {
     parentId?: string | null;
 }
 
+export interface MoveNotebookPosition {
+    beforeId?: string;
+    afterId?: string;
+}
+
 export class DocumentNotebooksService {
     constructor(
         private readonly store: DatabaseStore,
@@ -213,11 +218,8 @@ export class DocumentNotebooksService {
         userId: string,
         id: string,
         parentId: string | null,
+        position: MoveNotebookPosition = {},
     ): Promise<DocumentNotebookDto> {
-        if (parentId === id) {
-            throw new DocumentValidationError("不能将笔记本移动到自身");
-        }
-
         return await this.store.run(async (db) => {
             return await db.transaction(async (tx) => {
                 const [target] = await tx
@@ -234,6 +236,20 @@ export class DocumentNotebooksService {
 
                 if (!target) {
                     throw new DocumentNotFoundError("笔记本不存在");
+                }
+
+                if (parentId === id) {
+                    throw new DocumentValidationError("不能将笔记本移动到自身");
+                }
+                if (
+                    position.beforeId !== undefined &&
+                    position.afterId !== undefined
+                ) {
+                    throw new DocumentValidationError("不能同时指定前后位置");
+                }
+                const anchorId = position.beforeId ?? position.afterId;
+                if (anchorId === id) {
+                    throw new DocumentValidationError("不能相对自身排序");
                 }
 
                 if (parentId !== null) {
@@ -276,19 +292,8 @@ export class DocumentNotebooksService {
                     }
                 }
 
-                if (target.parentId === parentId) {
-                    return {
-                        id: target.id,
-                        parentId: target.parentId,
-                        name: target.name,
-                        sortOrder: target.sortOrder,
-                        createdAt: target.createdAt,
-                        updatedAt: target.updatedAt,
-                    };
-                }
-
-                const maxRow = await tx
-                    .select({ maxOrder: max(documentNotebooks.sortOrder) })
+                const siblings = await tx
+                    .select()
                     .from(documentNotebooks)
                     .where(
                         and(
@@ -296,27 +301,50 @@ export class DocumentNotebooksService {
                             parentId === null
                                 ? isNull(documentNotebooks.parentId)
                                 : eq(documentNotebooks.parentId, parentId),
+                            ne(documentNotebooks.id, id),
                         ),
+                    )
+                    .orderBy(
+                        asc(documentNotebooks.sortOrder),
+                        asc(documentNotebooks.id),
                     )
                     .all();
 
-                const nextSortOrder = (maxRow[0]?.maxOrder ?? -1) + 1;
+                let insertAt = siblings.length;
+                if (anchorId !== undefined) {
+                    const [anchor] = await tx.select().from(documentNotebooks)
+                        .where(eq(documentNotebooks.id, anchorId)).limit(1)
+                        .all();
+                    if (!anchor || anchor.userId !== userId) {
+                        throw new DocumentNotFoundError("笔记本不存在");
+                    }
+                    const index = siblings.findIndex((sibling) =>
+                        sibling.id === anchorId
+                    );
+                    if (index < 0) {
+                        throw new DocumentValidationError(
+                            "排序目标不属于目标层级",
+                        );
+                    }
+                    insertAt = index + (position.afterId !== undefined ? 1 : 0);
+                }
+                siblings.splice(insertAt, 0, target);
+                const nextSortOrder = insertAt;
                 const currentTime = this.now();
 
-                await tx
-                    .update(documentNotebooks)
-                    .set({
-                        parentId,
-                        sortOrder: nextSortOrder,
-                        updatedAt: currentTime,
-                    })
-                    .where(
-                        and(
-                            eq(documentNotebooks.id, id),
+                for (let i = 0; i < siblings.length; i++) {
+                    await tx.update(documentNotebooks)
+                        .set({
+                            parentId,
+                            sortOrder: i,
+                            updatedAt: currentTime,
+                        })
+                        .where(and(
+                            eq(documentNotebooks.id, siblings[i].id),
                             eq(documentNotebooks.userId, userId),
-                        ),
-                    )
-                    .run();
+                        ))
+                        .run();
+                }
 
                 return {
                     id: target.id,
@@ -440,17 +468,44 @@ export class DocumentNotebooksService {
                     throw new DocumentNotFoundError("笔记本不存在");
                 }
 
-                // 1. Detach all documents in this notebook (active and trash)
-                await tx
-                    .update(documents)
-                    .set({ notebookId: null })
+                // Append detached documents in their existing scope order, including trash.
+                const [rootMax] = await tx.select({
+                    maxOrder: max(documents.sortOrder),
+                })
+                    .from(documents)
+                    .where(
+                        and(
+                            eq(documents.userId, userId),
+                            isNull(documents.notebookId),
+                        ),
+                    )
+                    .all();
+                const detached = await tx.select({ id: documents.id }).from(
+                    documents,
+                )
                     .where(
                         and(
                             eq(documents.notebookId, id),
                             eq(documents.userId, userId),
                         ),
                     )
-                    .run();
+                    .orderBy(asc(documents.sortOrder), asc(documents.id))
+                    .all();
+                let nextDocumentOrder = (rootMax?.maxOrder ?? -1) + 1;
+                for (const document of detached) {
+                    await tx.update(documents)
+                        .set({
+                            notebookId: null,
+                            sortOrder: nextDocumentOrder++,
+                        })
+                        .where(
+                            and(
+                                eq(documents.id, document.id),
+                                eq(documents.userId, userId),
+                            ),
+                        )
+                        .run();
+                }
 
                 // 2. If target is root, promote its children to root
                 if (target.parentId === null) {

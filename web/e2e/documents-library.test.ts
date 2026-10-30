@@ -119,7 +119,21 @@ Deno.test("production documents library workspace contracts", async (t) => {
         await showRecentList();
     }
 
+    // Narrow windows restore the last note without opening the drawer; the
+    // persistent sidebar's own collapse button shares the trigger's name, so
+    // only a collapsed trigger (aria-expanded=false) is ever clicked.
+    async function ensureSidebarOpen() {
+        const sidebar = workspace().locator("#notes-sidebar");
+        const opener = workspace().locator(
+            'button[aria-controls="notes-sidebar"][aria-expanded="false"]',
+        );
+        await sidebar.or(opener).filter({ visible: true }).first().waitFor();
+        if (!(await sidebar.isVisible())) await opener.click();
+        await sidebar.waitFor({ state: "visible" });
+    }
+
     async function showRecentList() {
+        await ensureSidebarOpen();
         await workspace().getByRole("button", { name: "最近", exact: true })
             .click();
         await workspace().locator("[data-sidebar-mode='list']").waitFor();
@@ -344,15 +358,13 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await section("最近笔记").waitFor({ state: "visible" });
             await waitForRowCount(4);
 
-            // The tree reaches every note through 未分类 (none are filed here).
+            // Root notes are visible directly in the tree.
             await panel.getByRole("button", { name: "返回笔记本，当前：最近" })
                 .click();
             const tree = panel.getByRole("tree", {
                 name: "笔记本",
                 exact: true,
             });
-            await tree.getByRole("treeitem", { name: "未分类", exact: true })
-                .click();
             await tree.getByRole("treeitem", { name: "Delta Document" })
                 .waitFor();
             assertEquals(
@@ -614,7 +626,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await showRecentList();
             assertEquals(
                 await create.getAttribute("title"),
-                "新建笔记（未分类）",
+                "新建笔记（根目录）",
             );
             const recent = await saveNew("最近目标");
             assertEquals(recent.notebookId, null);
@@ -1045,6 +1057,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                         },
                         vp.width,
                     );
+                    await ensureSidebarOpen();
                     const label = `${vp.width}x${vp.height} ${scheme}`;
 
                     // Header stays inside the viewport

@@ -1,7 +1,9 @@
 import {
+    type CSSProperties,
     lazy,
     type RefObject,
     Suspense,
+    useCallback,
     useContext,
     useEffect,
     useRef,
@@ -16,9 +18,23 @@ import {
 import { Button } from "../../components/ui/button.tsx";
 import { DocumentsSidebar } from "./DocumentsSidebar.tsx";
 import { WindowOverlay } from "../../components/ui/window-overlay.tsx";
+import { PaneResizeHandle } from "../../components/searcher/PaneResizeHandle.tsx";
+import {
+    effectivePaneWidth,
+    readSidebarWidth,
+    SIDEBAR_WIDTH,
+    writeSidebarWidth,
+} from "../documents/device-preferences.ts";
 
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
 import { WorkspaceActivity } from "./WorkspaceActivity.ts";
+function deviceStorage(): Storage | null {
+    try {
+        return globalThis.localStorage;
+    } catch {
+        return null;
+    }
+}
 const DocumentEditor = lazy(() => import("../documents/DocumentEditor.tsx"));
 export interface DocumentsWorkspaceProps {
     state: DocumentsRoute;
@@ -48,7 +64,27 @@ export interface DocumentsWorkspaceProps {
 export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
     const active = useContext(WorkspaceActivity);
     const [revision, setRevision] = useState(0);
-    const [focusTitleSignal, setFocusTitleSignal] = useState(0);
+    const [focusTitleSignal, setFocusTitleSignal] = useState<number>();
+    const [sidebarWidth, setSidebarWidth] = useState(() =>
+        readSidebarWidth(deviceStorage(), props.userId)
+    );
+    const [hostWidth, setHostWidth] = useState(0);
+    const layoutRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const host = layoutRef.current;
+        if (!host) return;
+        const observer = new ResizeObserver((entries) =>
+            setHostWidth(entries[0]?.contentRect.width ?? 0)
+        );
+        observer.observe(host);
+        return () => observer.disconnect();
+    }, []);
+    const effectiveSidebarWidth = effectivePaneWidth(
+        sidebarWidth,
+        hostWidth,
+        718,
+        SIDEBAR_WIDTH,
+    );
     const [restoreDrawerFocus, setRestoreDrawerFocus] = useState(true);
     const [outlineOpen, setOutlineOpen] = useState(false);
     const [outlineRestoreFocus, setOutlineRestoreFocus] = useState(true);
@@ -64,6 +100,23 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
     const collapseRef = useRef<HTMLButtonElement>(null);
     // The collapse and expand buttons replace each other; focus follows the toggle.
     const toggleFocus = useRef<"expand" | "collapse" | null>(null);
+    const triggerFocusPending = useRef(false);
+    const setSidebarTrigger = useCallback(
+        (element: HTMLButtonElement | null) => {
+            if (
+                !element &&
+                props.sidebarTriggerRef.current === document.activeElement
+            ) {
+                triggerFocusPending.current = true;
+            }
+            props.sidebarTriggerRef.current = element;
+            if (element && triggerFocusPending.current) {
+                triggerFocusPending.current = false;
+                if (document.activeElement === document.body) element.focus();
+            }
+        },
+        [props.sidebarTriggerRef],
+    );
     useEffect(() => {
         if (!props.sidebarPersistent) return;
         const target = toggleFocus.current;
@@ -79,7 +132,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
             ? null
             : (
                 <Button
-                    ref={props.sidebarTriggerRef}
+                    ref={setSidebarTrigger}
                     type="button"
                     variant="ghost"
                     size="icon"
@@ -117,10 +170,9 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
         const opened = await props.onOpenDocument(id);
         if (opened) {
             if (!props.sidebarPersistent) {
-                setRestoreDrawerFocus(false);
+                setRestoreDrawerFocus(true);
                 props.onSidebarOpenChange(false);
             }
-            setFocusTitleSignal((value) => value + 1);
         }
         return opened;
     };
@@ -132,7 +184,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                 setRestoreDrawerFocus(false);
                 props.onSidebarOpenChange(false);
             }
-            setFocusTitleSignal((value) => value + 1);
+            setFocusTitleSignal((value) => (value ?? 0) + 1);
             return;
         }
         if (await props.onNewDocument(target)) {
@@ -141,7 +193,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                 setRestoreDrawerFocus(false);
                 props.onSidebarOpenChange(false);
             }
-            setFocusTitleSignal((value) => value + 1);
+            setFocusTitleSignal((value) => (value ?? 0) + 1);
         }
     };
     const editorKey = props.state.view === "documents/new" ||
@@ -156,7 +208,13 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
     }, [editorKey]);
     return (
         <div
+            ref={layoutRef}
             className="documents-layout"
+            style={props.sidebarPersistent
+                ? {
+                    "--notes-sidebar-width": `${effectiveSidebarWidth}px`,
+                } as CSSProperties
+                : undefined}
             data-workspace-content="documents"
             data-drawer={props.sidebarPersistent
                 ? undefined
@@ -186,6 +244,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                 <nav aria-label="笔记侧栏" id="notes-sidebar">
                     <DocumentsSidebar
                         state={props.state}
+                        dragDisabled={props.fullScreen}
                         userId={props.userId}
                         query={props.query}
                         onQueryChange={props.onQueryChange}
@@ -219,6 +278,25 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                     />
                 )}
             </WindowOverlay>
+            {props.sidebarPersistent && props.sidebarOpen &&
+                !props.fullScreen && (
+                <PaneResizeHandle
+                    label="调整侧栏宽度"
+                    value={effectiveSidebarWidth}
+                    min={SIDEBAR_WIDTH.min}
+                    max={hostWidth > 0
+                        ? Math.max(
+                            SIDEBAR_WIDTH.min,
+                            Math.min(SIDEBAR_WIDTH.max, hostWidth - 718),
+                        )
+                        : SIDEBAR_WIDTH.max}
+                    defaultValue={SIDEBAR_WIDTH.default}
+                    direction={1}
+                    onChange={setSidebarWidth}
+                    onCommit={(value) =>
+                        writeSidebarWidth(deviceStorage(), props.userId, value)}
+                />
+            )}
             <WindowOverlay
                 open={props.narrow && outlineOpen}
                 active={active}
@@ -264,9 +342,16 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                     : (
                         <Suspense
                             fallback={
-                                <LoadingState density="compact">
-                                    正在加载编辑器…
-                                </LoadingState>
+                                <div className="documents-editor-empty">
+                                    {sidebarToggle && (
+                                        <div className="document-editor-header document-editor-header--bare">
+                                            {sidebarToggle}
+                                        </div>
+                                    )}
+                                    <LoadingState density="compact">
+                                        正在加载编辑器…
+                                    </LoadingState>
+                                </div>
                             }
                         >
                             <DocumentEditor
@@ -311,7 +396,10 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                                     }
                                     setOutlineOpen(open);
                                 }}
-                                focusTitleSignal={focusTitleSignal}
+                                focusTitleSignal={props.state.view ===
+                                        "documents/new"
+                                    ? focusTitleSignal
+                                    : undefined}
                                 eventSubscriptions={props.eventSubscriptions}
                             />
                         </Suspense>

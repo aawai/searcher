@@ -627,7 +627,7 @@ function DeleteNotebookDialog(
                     <AlertDialogTitle>删除笔记本</AlertDialogTitle>
                     <AlertDialogDescription>
                         “{target
-                            ?.name}”中的笔记会移至未分类，子笔记本会提升为根笔记本。
+                            ?.name}”中的笔记会移至根目录，子笔记本会提升为根笔记本。
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 

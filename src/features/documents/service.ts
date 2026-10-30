@@ -21,6 +21,7 @@ import {
     type DocumentSummaryDto,
     type DocumentVersionDto,
     type DocumentVersionReason,
+    type PositionDocumentInput,
     type UpdateDocumentInput,
 } from "../../shared/documents.ts";
 import {
@@ -42,6 +43,7 @@ interface ListCursorPayload {
         readonly fav?: number;
         readonly home?: number;
         readonly created?: number;
+        readonly sort?: number;
         readonly upd: number;
         readonly id: string;
     };
@@ -256,6 +258,159 @@ export class DocumentsService {
         });
     }
 
+    async markOpened(userId: string, id: string): Promise<void> {
+        await this.store.run(async (db) => {
+            const rows = await db.select({ id: documents.id }).from(documents)
+                .where(
+                    and(
+                        eq(documents.id, id),
+                        eq(documents.userId, userId),
+                        sql`${documents.deletedAt} IS NULL`,
+                    ),
+                ).limit(1);
+            if (!rows.length) throw new DocumentNotFoundError();
+            await db.update(documents).set({ lastOpenedAt: this.now() })
+                .where(and(eq(documents.id, id), eq(documents.userId, userId)))
+                .run();
+        });
+    }
+
+    async lastOpened(userId: string): Promise<{ id: string } | null> {
+        return await this.store.run(async (db) => {
+            const rows = await db.select({ id: documents.id }).from(documents)
+                .where(
+                    and(
+                        eq(documents.userId, userId),
+                        sql`${documents.deletedAt} IS NULL`,
+                        sql`${documents.lastOpenedAt} IS NOT NULL`,
+                    ),
+                )
+                .orderBy(desc(documents.lastOpenedAt), desc(documents.id))
+                .limit(1);
+            return rows[0] ?? null;
+        });
+    }
+
+    async position(
+        userId: string,
+        id: string,
+        input: PositionDocumentInput,
+    ): Promise<DocumentSummaryDto> {
+        if (input.beforeId !== undefined && input.afterId !== undefined) {
+            throw new DocumentValidationError("不能同时指定前后位置");
+        }
+        const result = await this.store.run(async (db) =>
+            await db.transaction(async (tx) => {
+                const rows = await tx.select().from(documents)
+                    .where(
+                        and(
+                            eq(documents.id, id),
+                            eq(documents.userId, userId),
+                            sql`${documents.deletedAt} IS NULL`,
+                        ),
+                    ).limit(1);
+                const current = rows[0];
+                if (!current) throw new DocumentNotFoundError();
+                let notebookName: string | null = null;
+                if (input.notebookId !== null) {
+                    const notebooks = await tx.select({
+                        name: documentNotebooks.name,
+                    })
+                        .from(documentNotebooks).where(
+                            and(
+                                eq(documentNotebooks.id, input.notebookId),
+                                eq(documentNotebooks.userId, userId),
+                            ),
+                        ).limit(1);
+                    if (!notebooks.length) {
+                        throw new DocumentNotFoundError(
+                            "笔记本不存在或无权访问",
+                        );
+                    }
+                    notebookName = notebooks[0].name;
+                }
+                const anchor = input.beforeId ?? input.afterId;
+                if (anchor !== undefined) {
+                    const anchors = await tx.select({
+                        id: documents.id,
+                        notebookId: documents.notebookId,
+                    })
+                        .from(documents).where(
+                            and(
+                                eq(documents.id, anchor),
+                                eq(documents.userId, userId),
+                                sql`${documents.deletedAt} IS NULL`,
+                            ),
+                        ).limit(1);
+                    if (!anchors.length) throw new DocumentNotFoundError();
+                    if (
+                        anchors[0].notebookId !== input.notebookId ||
+                        anchor === id
+                    ) {
+                        throw new DocumentValidationError(
+                            "目标笔记不在目标目录",
+                        );
+                    }
+                }
+                const siblings = await tx.select({
+                    id: documents.id,
+                    sortOrder: documents.sortOrder,
+                }).from(documents)
+                    .where(
+                        and(
+                            eq(documents.userId, userId),
+                            sql`${documents.deletedAt} IS NULL`,
+                            input.notebookId === null
+                                ? sql`${documents.notebookId} IS NULL`
+                                : eq(documents.notebookId, input.notebookId),
+                        ),
+                    )
+                    .orderBy(asc(documents.sortOrder), asc(documents.id)).all();
+                const previous = new Map(
+                    siblings.map((row) => [row.id, row.sortOrder]),
+                );
+                const ids = siblings.map((row) => row.id).filter((siblingId) =>
+                    siblingId !== id
+                );
+                const index = anchor === undefined ? 0 : ids.indexOf(anchor) +
+                    (input.afterId !== undefined ? 1 : 0);
+                ids.splice(index, 0, id);
+                for (const [sortOrder, siblingId] of ids.entries()) {
+                    const moved = siblingId === id;
+                    if (!moved && previous.get(siblingId) === sortOrder) {
+                        continue;
+                    }
+                    await tx.update(documents).set(
+                        moved
+                            ? { notebookId: input.notebookId, sortOrder }
+                            : { sortOrder },
+                    )
+                        .where(
+                            and(
+                                eq(documents.userId, userId),
+                                eq(documents.id, siblingId),
+                            ),
+                        ).run();
+                }
+                return {
+                    summary: this.toSummaryDto({
+                        ...current,
+                        notebookId: input.notebookId,
+                        notebookName,
+                        bodyPreview: current.currentBody,
+                    }),
+                    version: current.currentVersion,
+                };
+            })
+        );
+        this.events.emit(userId, {
+            documentId: id,
+            version: result.version,
+            updatedAt: result.summary.updatedAt,
+        });
+        return result.summary;
+    }
+
     async create(
         userId: string,
         input: CreateDocumentInput,
@@ -292,6 +447,17 @@ export class DocumentsService {
                     }
                     notebookName = nbRows[0].name;
                 }
+                const scope = input.notebookId ?? null;
+                const first = await tx.select({ sort: documents.sortOrder })
+                    .from(documents)
+                    .where(and(
+                        eq(documents.userId, userId),
+                        scope === null
+                            ? sql`${documents.notebookId} IS NULL`
+                            : eq(documents.notebookId, scope),
+                        sql`${documents.deletedAt} IS NULL`,
+                    )).orderBy(asc(documents.sortOrder)).limit(1);
+                const sortOrder = (first[0]?.sort ?? 0) - 1;
 
                 const docRow: typeof documents.$inferInsert = {
                     id: documentId,
@@ -304,6 +470,7 @@ export class DocumentsService {
                     color: input.color ?? "paper",
                     isHomeFixed: input.isHomeFixed ?? false,
                     homeSortOrder: input.homeSortOrder ?? 0,
+                    sortOrder,
                     deletedAt: null,
                     createdAt: currentTime,
                     updatedAt: currentTime,
@@ -334,6 +501,8 @@ export class DocumentsService {
                         color: input.color ?? "paper",
                         isHomeFixed: input.isHomeFixed ?? false,
                         homeSortOrder: input.homeSortOrder ?? 0,
+                        sortOrder,
+                        lastOpenedAt: null,
                         deletedAt: null,
                         createdAt: currentTime,
                         updatedAt: currentTime,
@@ -399,34 +568,6 @@ export class DocumentsService {
                     );
                 }
 
-                let nextNotebookId = current.notebookId;
-                let nextNotebookName = currentNotebookName;
-
-                if (input.notebookId !== undefined) {
-                    if (input.notebookId === null) {
-                        nextNotebookId = null;
-                        nextNotebookName = null;
-                    } else if (input.notebookId !== current.notebookId) {
-                        const nbRows = await tx
-                            .select({ name: documentNotebooks.name })
-                            .from(documentNotebooks)
-                            .where(
-                                and(
-                                    eq(documentNotebooks.id, input.notebookId),
-                                    eq(documentNotebooks.userId, userId),
-                                ),
-                            )
-                            .limit(1);
-                        if (nbRows.length === 0) {
-                            throw new DocumentNotFoundError(
-                                "笔记本不存在或无权访问",
-                            );
-                        }
-                        nextNotebookId = input.notebookId;
-                        nextNotebookName = nbRows[0].name;
-                    }
-                }
-
                 const currentTime = this.now();
                 const nextVersion = current.currentVersion + 1;
                 const updatedTitle = input.title !== undefined
@@ -444,7 +585,6 @@ export class DocumentsService {
                     .set({
                         title: updatedTitle,
                         currentBody: updatedBody,
-                        notebookId: nextNotebookId,
                         isFavorite: updatedIsFavorite,
                         color: input.color ?? current.color,
                         isHomeFixed: input.isHomeFixed ?? current.isHomeFixed,
@@ -528,7 +668,6 @@ export class DocumentsService {
                         ...current,
                         title: updatedTitle,
                         currentBody: updatedBody,
-                        notebookId: nextNotebookId,
                         isFavorite: updatedIsFavorite,
                         color: input.color ?? current.color,
                         isHomeFixed: input.isHomeFixed ?? current.isHomeFixed,
@@ -537,7 +676,7 @@ export class DocumentsService {
                         currentVersion: nextVersion,
                         updatedAt: currentTime,
                     },
-                    nextNotebookName,
+                    currentNotebookName,
                 );
             });
         });
@@ -671,6 +810,16 @@ export class DocumentsService {
                         finalNotebookName = nbRows[0].name;
                     }
                 }
+                const first = await tx.select({ sort: documents.sortOrder })
+                    .from(documents)
+                    .where(and(
+                        eq(documents.userId, userId),
+                        finalNotebookId === null
+                            ? sql`${documents.notebookId} IS NULL`
+                            : eq(documents.notebookId, finalNotebookId),
+                        sql`${documents.deletedAt} IS NULL`,
+                    )).orderBy(asc(documents.sortOrder)).limit(1);
+                const sortOrder = (first[0]?.sort ?? 0) - 1;
 
                 const currentTime = this.now();
                 await tx
@@ -678,6 +827,7 @@ export class DocumentsService {
                     .set({
                         deletedAt: null,
                         notebookId: finalNotebookId,
+                        sortOrder,
                         updatedAt: currentTime,
                         currentVersion: current.currentVersion + 1,
                     })
@@ -694,6 +844,7 @@ export class DocumentsService {
                         ...current,
                         deletedAt: null,
                         notebookId: finalNotebookId,
+                        sortOrder,
                         updatedAt: currentTime,
                         currentVersion: current.currentVersion + 1,
                     },
@@ -977,6 +1128,12 @@ export class DocumentsService {
             ) {
                 throw new DocumentValidationError("无效的游标");
             }
+            if (
+                (scope.type === "notebook" || scope.type === "uncategorized") &&
+                typeof cursorPayload.v.sort !== "number"
+            ) {
+                throw new DocumentValidationError("无效的游标");
+            }
         }
 
         return await this.store.run(async (db) => {
@@ -997,8 +1154,19 @@ export class DocumentsService {
 
             let cursorCondition = undefined;
             if (cursorPayload) {
-                const { fav, home, created, upd, id } = cursorPayload.v;
+                const { fav, home, created, upd, id, sort } = cursorPayload.v;
                 if (
+                    (scope.type === "notebook" ||
+                        scope.type === "uncategorized") && sort !== undefined
+                ) {
+                    cursorCondition = or(
+                        gt(documents.sortOrder, sort),
+                        and(
+                            eq(documents.sortOrder, sort),
+                            gt(documents.id, id),
+                        ),
+                    );
+                } else if (
                     scope.type === "home" && home !== undefined &&
                     created !== undefined
                 ) {
@@ -1058,6 +1226,7 @@ export class DocumentsService {
                     color: documents.color,
                     isHomeFixed: documents.isHomeFixed,
                     homeSortOrder: documents.homeSortOrder,
+                    sortOrder: documents.sortOrder,
                     createdAt: documents.createdAt,
                     updatedAt: documents.updatedAt,
                     bodyPreview: sql<
@@ -1080,6 +1249,8 @@ export class DocumentsService {
                     asc(documents.createdAt),
                     asc(documents.id),
                 ]
+                : scope.type === "notebook" || scope.type === "uncategorized"
+                ? [asc(documents.sortOrder), asc(documents.id)]
                 : [
                     ...(scope.type === "all"
                         ? [desc(documents.isFavorite)]
@@ -1109,6 +1280,10 @@ export class DocumentsService {
                                 home: last.homeSortOrder,
                                 created: last.createdAt,
                             }
+                            : {}),
+                        ...(scope.type === "notebook" ||
+                                scope.type === "uncategorized"
+                            ? { sort: last.sortOrder }
                             : {}),
                         upd: last.updatedAt,
                         id: last.id,

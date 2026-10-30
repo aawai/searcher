@@ -8,10 +8,9 @@ import type {
 } from "./document-notebooks.ts";
 import type { TreeKeyItem } from "./tree-keyboard.ts";
 
-/** The one selected tree node: a notebook or 未分类 (after a click) or the open note. */
+/** The selected notebook or open note, if any. */
 export type SidebarSelection =
     | { kind: "notebook"; id: string }
-    | { kind: "uncategorized" }
     | { kind: "note"; id: string }
     | null;
 
@@ -22,7 +21,7 @@ export interface CreateTarget {
     notebookName: string | null;
 }
 
-/** Where 「新建笔记」 lands: the selected notebook, the selected note's notebook, else 未分类. */
+/** Where 「新建笔记」 lands: the selected notebook, the selected note's notebook, else the root. */
 export function resolveCreateTarget(input: {
     selection: SidebarSelection;
     /** False in list mode (最近 / 收藏 / search). */
@@ -31,15 +30,13 @@ export function resolveCreateTarget(input: {
     /** Notebook of a known note; undefined when the note is not known. */
     noteNotebookId: (noteId: string) => string | null | undefined;
 }): CreateTarget {
-    const uncategorized: CreateTarget = {
+    const root: CreateTarget = {
         notebookId: null,
         isHomeFixed: false,
         notebookName: null,
     };
     const { selection } = input;
-    if (!input.treeMode || !selection || selection.kind === "uncategorized") {
-        return uncategorized;
-    }
+    if (!input.treeMode || !selection) return root;
     const notebookId = selection.kind === "notebook"
         ? selection.id
         : input.noteNotebookId(selection.id) ?? null;
@@ -52,12 +49,12 @@ export function resolveCreateTarget(input: {
             isHomeFixed: false,
             notebookName: notebook.name,
         }
-        : uncategorized;
+        : root;
 }
 
 export function createTargetTitle(target: CreateTarget): string {
     return target.notebookName === null
-        ? "新建笔记（未分类）"
+        ? "新建笔记（根目录）"
         : `新建笔记（在「${target.notebookName}」）`;
 }
 
@@ -71,11 +68,11 @@ export function resolveNewNotebookParent(
     return notebook && notebook.parentId === null ? notebook.id : null;
 }
 
-export const UNCATEGORIZED_KEY = "uncat";
+export const ROOT_KEY = "root";
 export const notebookKey = (id: string) => `nb:${id}`;
 export const noteItemId = (id: string) => `note:${id}`;
 
-/** Loaded state of the notes directly inside one notebook (or 未分类). */
+/** Loaded state of the notes directly inside one notebook or the root. */
 export interface NodePage {
     items: DocumentSummaryDto[];
     nextCursor: string | null;
@@ -90,7 +87,6 @@ export type TreeEntry =
     & { level: number; setSize: number; posInSet: number }
     & (
         | { kind: "notebook"; nodeKey: string; node: DocumentNotebookNode }
-        | { kind: "uncategorized"; nodeKey: string }
         | { kind: "note"; note: DocumentSummaryDto }
         | {
             kind: "more";
@@ -106,7 +102,6 @@ type Draft =
     & { level: number }
     & (
         | { kind: "notebook"; nodeKey: string; node: DocumentNotebookNode }
-        | { kind: "uncategorized"; nodeKey: string }
         | { kind: "note"; note: DocumentSummaryDto }
         | {
             kind: "more";
@@ -117,7 +112,7 @@ type Draft =
         | { kind: "status"; nodeKey: string; text: string; retry: boolean }
     );
 
-/** Flattens the visible tree: notebooks, their sub-notebooks, then their notes; 未分类 last. */
+/** Flattens visible notebooks and their contents, followed by root notes. */
 export function buildTreeEntries(
     tree: DocumentNotebookTree,
     expanded: ReadonlySet<string>,
@@ -129,7 +124,7 @@ export function buildTreeEntries(
 
     const contents = (
         nodeKey: string,
-        parentId: string,
+        parentId: string | null,
         level: number,
         hasChildNotebooks: boolean,
     ) => {
@@ -225,23 +220,9 @@ export function buildTreeEntries(
         contents(nodeKey, nodeKey, level + 1, kids.length > 0);
     };
 
-    for (const root of tree.nodes.filter((node) => node.depth === 0)) {
-        notebook(root, 1, null);
-    }
-
-    const uncategorizedOpen = expanded.has(UNCATEGORIZED_KEY);
-    drafts.push({
-        id: UNCATEGORIZED_KEY,
-        parentId: null,
-        expandable: true,
-        expanded: uncategorizedOpen,
-        level: 1,
-        kind: "uncategorized",
-        nodeKey: UNCATEGORIZED_KEY,
-    });
-    if (uncategorizedOpen) {
-        contents(UNCATEGORIZED_KEY, UNCATEGORIZED_KEY, 2, false);
-    }
+    const roots = tree.nodes.filter((node) => node.depth === 0);
+    for (const root of roots) notebook(root, 1, null);
+    contents(ROOT_KEY, null, 1, roots.length > 0);
 
     const sizes = new Map<string | null, number>();
     for (const draft of drafts) {
@@ -265,7 +246,7 @@ export function indexNoteNotebooks(
 ): Map<string, string | null> {
     const index = new Map<string, string | null>();
     for (const [nodeKey, page] of pages) {
-        const notebookId = nodeKey === UNCATEGORIZED_KEY
+        const notebookId = nodeKey === ROOT_KEY
             ? null
             : nodeKey.slice("nb:".length);
         for (const note of page.items) index.set(note.id, notebookId);

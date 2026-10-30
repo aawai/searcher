@@ -11,6 +11,7 @@ import {
     type NodePage,
     resolveCreateTarget,
     resolveNewNotebookParent,
+    ROOT_KEY,
     type SidebarSelection,
 } from "./notes-tree-model.ts";
 
@@ -67,7 +68,7 @@ const create = (selection: SidebarSelection, treeMode = true) =>
         noteNotebookId: (id) => known.get(id),
     });
 
-Deno.test("create target: selected notebook, selected note's notebook, otherwise 未分类", () => {
+Deno.test("create target: selected notebook, selected note's notebook, otherwise root", () => {
     assertEquals(create({ kind: "notebook", id: "r" }), {
         notebookId: "r",
         isHomeFixed: false,
@@ -78,7 +79,6 @@ Deno.test("create target: selected notebook, selected note's notebook, otherwise
     assertEquals(create({ kind: "note", id: "n-none" }).notebookId, null);
     assertEquals(create({ kind: "note", id: "unknown" }).notebookId, null);
     assertEquals(create(null).notebookId, null);
-    assertEquals(create({ kind: "uncategorized" }).notebookId, null);
     assertEquals(create({ kind: "notebook", id: "deleted" }).notebookId, null);
 });
 
@@ -92,7 +92,7 @@ Deno.test("create target: list mode ignores the selection and never pins to home
         createTargetTitle(create({ kind: "notebook", id: "w" })),
         "新建笔记（在「工作」）",
     );
-    assertEquals(createTargetTitle(create(null)), "新建笔记（未分类）");
+    assertEquals(createTargetTitle(create(null)), "新建笔记（根目录）");
 });
 
 Deno.test("new notebook parent: only a selected root notebook, never a third level", () => {
@@ -110,33 +110,44 @@ Deno.test("new notebook parent: only a selected root notebook, never a third lev
     );
     assertEquals(resolveNewNotebookParent(null, notebooks), null);
     assertEquals(
-        resolveNewNotebookParent({ kind: "uncategorized" }, notebooks),
-        null,
-    );
-    assertEquals(
         resolveNewNotebookParent({ kind: "notebook", id: "gone" }, notebooks),
         null,
     );
 });
 
-Deno.test("tree entries: collapsed tree lists roots then 未分类 with levels and positions", () => {
+Deno.test("tree entries: root notebooks precede root notes and share positions", () => {
     const entries = buildTreeEntries(
         documentNotebookTree(notebooks),
         new Set(),
-        new Map(),
+        new Map([
+            [
+                ROOT_KEY,
+                page([note("u", null), note("v", null)], { nextCursor: "c" }),
+            ],
+        ]),
     );
     assertEquals(
         entries.map((
             entry,
-        ) => [entry.id, entry.level, entry.posInSet, entry.setSize]),
+        ) => [
+            entry.id,
+            entry.level,
+            entry.parentId,
+            entry.posInSet,
+            entry.setSize,
+        ]),
         [
-            ["nb:w", 1, 1, 3],
-            ["nb:r", 1, 2, 3],
-            ["uncat", 1, 3, 3],
+            ["nb:w", 1, null, 1, 5],
+            ["nb:r", 1, null, 2, 5],
+            ["note:u", 1, null, 3, 5],
+            ["note:v", 1, null, 4, 5],
+            ["more:root", 1, null, 5, 5],
         ],
     );
     assertEquals(
-        entries.every((entry) => entry.expandable && !entry.expanded),
+        entries.slice(0, 2).every((entry) =>
+            entry.expandable && !entry.expanded
+        ),
         true,
     );
 });
@@ -145,6 +156,7 @@ Deno.test("tree entries: expanded root shows sub-notebooks, then notes, then loa
     const pages = new Map([
         ["nb:w", page([note("a", "w")], { nextCursor: "c" })],
         ["nb:w1", page([note("b", "w1")])],
+        [ROOT_KEY, page([])],
     ]);
     const entries = buildTreeEntries(
         documentNotebookTree(notebooks),
@@ -158,7 +170,6 @@ Deno.test("tree entries: expanded root shows sub-notebooks, then notes, then loa
         "2:note:a",
         "2:more:nb:w",
         "1:nb:r",
-        "1:uncat",
     ]);
     assertEquals(
         entries.find((entry) => entry.id === "note:b")?.parentId,
@@ -193,10 +204,75 @@ Deno.test("tree entries: loading, error, empty and load-more failures are rows",
     assertEquals(more.map((entry) => entry.kind), ["note", "more"]);
 });
 
-Deno.test("note index maps loaded notes to their notebook or 未分类", () => {
+Deno.test("root page status and load-more rows appear at root level", () => {
+    const tree = documentNotebookTree(notebooks);
+    const rows = (pages: Map<string, NodePage>) =>
+        buildTreeEntries(tree, new Set(), pages).filter((entry) =>
+            entry.parentId === null
+        );
+    const loading = rows(new Map());
+    assertEquals(
+        loading.map((
+            entry,
+        ) => [entry.id, entry.level, entry.posInSet, entry.setSize]),
+        [
+            ["nb:w", 1, 1, 3],
+            ["nb:r", 1, 2, 3],
+            ["status:root", 1, 3, 3],
+        ],
+    );
+    assertEquals(loading[2].kind === "status" && loading[2].text, "正在加载…");
+    const failed = rows(
+        new Map([[
+            ROOT_KEY,
+            page([], { status: "error", error: "网络错误" }),
+        ]]),
+    )[2];
+    assertEquals(
+        failed.kind === "status" && [failed.nodeKey, failed.retry, failed.text],
+        [ROOT_KEY, true, "网络错误，重试"],
+    );
+    assertEquals(
+        rows(new Map([[ROOT_KEY, page([])]])).map((entry) => entry.id),
+        ["nb:w", "nb:r"],
+    );
+    const empty = buildTreeEntries(
+        documentNotebookTree([]),
+        new Set(),
+        new Map([[ROOT_KEY, page([])]]),
+    );
+    assertEquals(
+        empty.map((entry) =>
+            entry.kind === "status" &&
+            [entry.text, entry.level, entry.posInSet, entry.setSize]
+        ),
+        [
+            ["没有笔记", 1, 1, 1],
+        ],
+    );
+    const more = rows(
+        new Map([[
+            ROOT_KEY,
+            page([note("u", null)], { loadMoreError: "失败" }),
+        ]]),
+    )[3];
+    assertEquals(
+        more.kind === "more" &&
+            [more.nodeKey, more.error, more.level, more.posInSet, more.setSize],
+        [
+            ROOT_KEY,
+            "失败",
+            1,
+            4,
+            4,
+        ],
+    );
+});
+
+Deno.test("note index maps loaded notes to their notebook or root", () => {
     const index = indexNoteNotebooks(
         new Map([["nb:w", page([note("a", "w")])], [
-            "uncat",
+            ROOT_KEY,
             page([note("u", null)]),
         ]]),
     );

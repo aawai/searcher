@@ -379,6 +379,143 @@ Deno.test("notebooks move: independent mutation, append to parent scope sortOrde
     }
 });
 
+Deno.test("notebooks move: positions within and across scopes and rejects invalid anchors atomically", async () => {
+    const { store, service, userA, userB } = await setupTestDb();
+    try {
+        const a = await service.create(userA, { name: "A" });
+        const b = await service.create(userA, { name: "B" });
+        const c = await service.create(userA, { name: "C" });
+        const child = await service.create(userA, {
+            name: "Child",
+            parentId: a.id,
+        });
+        const foreign = await service.create(userB, { name: "Foreign" });
+        const roots = async () =>
+            (await service.list(userA)).filter((n) => n.parentId === null)
+                .map((n) => n.id);
+
+        await service.move(userA, c.id, null, { beforeId: a.id });
+        assertEquals(await roots(), [c.id, a.id, b.id]);
+        await service.move(userA, c.id, null, { afterId: a.id });
+        assertEquals(await roots(), [a.id, c.id, b.id]);
+        await service.move(userA, a.id, null);
+        assertEquals(await roots(), [c.id, b.id, a.id]);
+        await service.move(userA, b.id, a.id, { beforeId: child.id });
+        assertEquals(
+            (await service.list(userA)).filter((n) => n.parentId === a.id).map((
+                n,
+            ) => n.id),
+            [b.id, child.id],
+        );
+        const before = await service.list(userA);
+        for (
+            const position of [
+                { beforeId: child.id, afterId: b.id },
+                { beforeId: b.id },
+                { beforeId: c.id },
+            ]
+        ) {
+            await assertRejects(
+                () => service.move(userA, b.id, a.id, position),
+                DocumentValidationError,
+            );
+        }
+        for (const anchor of [foreign.id, crypto.randomUUID()]) {
+            await assertRejects(
+                () => service.move(userA, b.id, a.id, { afterId: anchor }),
+                DocumentNotFoundError,
+            );
+        }
+        assertEquals(await service.list(userA), before);
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("notebooks delete: appends documents to root in scope order without changing metadata", async () => {
+    const { store, service, userA, userB, now } = await setupTestDb();
+    try {
+        const notebook = await service.create(userA, { name: "Notebook" });
+        const rootId = "root";
+        const firstId = "first";
+        const secondId = "second";
+        const trashId = "trash";
+        const foreignId = "foreign";
+        await store.run(async (db) => {
+            await db.insert(documents).values([
+                {
+                    id: rootId,
+                    userId: userA,
+                    title: "root",
+                    currentBody: "",
+                    sortOrder: 10,
+                    createdAt: now,
+                    updatedAt: now,
+                },
+                {
+                    id: secondId,
+                    userId: userA,
+                    notebookId: notebook.id,
+                    title: "second",
+                    currentBody: "",
+                    sortOrder: 4,
+                    createdAt: now,
+                    updatedAt: now,
+                },
+                {
+                    id: firstId,
+                    userId: userA,
+                    notebookId: notebook.id,
+                    title: "first",
+                    currentBody: "",
+                    sortOrder: 2,
+                    createdAt: now,
+                    updatedAt: now,
+                },
+                {
+                    id: trashId,
+                    userId: userA,
+                    notebookId: notebook.id,
+                    title: "trash",
+                    currentBody: "",
+                    sortOrder: 3,
+                    createdAt: now,
+                    updatedAt: now,
+                    deletedAt: now,
+                },
+                {
+                    id: foreignId,
+                    userId: userB,
+                    title: "foreign",
+                    currentBody: "",
+                    sortOrder: 99,
+                    createdAt: now,
+                    updatedAt: now,
+                },
+            ]);
+        });
+        await service.delete(userA, notebook.id);
+        await store.run(async (db) => {
+            const rows = await db.select().from(documents).all();
+            const byId = new Map(rows.map((row) => [row.id, row]));
+            assertEquals(
+                [rootId, firstId, trashId, secondId].map((id) =>
+                    byId.get(id)!.sortOrder
+                ),
+                [10, 11, 12, 13],
+            );
+            for (const id of [firstId, trashId, secondId]) {
+                assertEquals(byId.get(id)!.notebookId, null);
+                assertEquals(byId.get(id)!.updatedAt, now);
+            }
+            assertEquals(byId.get(trashId)!.deletedAt, now);
+            assertEquals(byId.get(foreignId)!.sortOrder, 99);
+        });
+    } finally {
+        await store.close();
+    }
+});
+
 Deno.test("notebooks delete: detaches active and trash documents, promotes children, preserves sortOrder without deduplication", async () => {
     const { store, service, userA, now } = await setupTestDb();
     try {

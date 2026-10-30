@@ -84,7 +84,7 @@ function sidebar(page: Page) {
 
 const expanded = (locator: Locator) => locator.getAttribute("aria-expanded");
 
-Deno.test("笔记本树：结构、键盘、懒加载、未分类与图钉标记", async () => {
+Deno.test("笔记本树：结构、键盘、懒加载、根目录与图钉标记", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
@@ -123,17 +123,24 @@ Deno.test("笔记本树：结构、键盘、懒加载、未分类与图钉标记
             await ui.frame.getByRole("button", { name: "管理笔记本" }).count(),
             0,
         );
+        await ui.item("散记置顶，已收藏，已固定到首页").waitFor();
         assertEquals(
             await ui.tree.getByRole("treeitem").evaluateAll((items) =>
                 items.map((item) => item.getAttribute("aria-label"))
             ),
-            ["工作", "读书", "未分类"],
+            ["工作", "读书", "散记二", "散记置顶，已收藏，已固定到首页"],
         );
         assertEquals(
             listRequests.filter((search) => search.includes("scope=notebook"))
                 .length,
             0,
-            "nothing loads before a node opens",
+            "notebooks load only when opened",
+        );
+        assert(
+            listRequests.some((search) =>
+                search.includes("scope=uncategorized")
+            ),
+            "root notes load on mount",
         );
 
         // Keyboard: one tab stop, arrows, expand/collapse, Home/End, Enter.
@@ -160,7 +167,7 @@ Deno.test("笔记本树：结构、键盘、懒加载、未分类与图钉标记
         );
         await page.keyboard.press("End");
         assert(
-            await ui.item("未分类").evaluate((el) =>
+            await ui.item("散记置顶，已收藏，已固定到首页").evaluate((el) =>
                 el === document.activeElement
             ),
         );
@@ -193,7 +200,7 @@ Deno.test("笔记本树：结构、键盘、懒加载、未分类与图钉标记
             0,
         );
         await ui.item("读书").click();
-        await ui.item("读书20").waitFor();
+        await ui.item("读书25").waitFor();
         assertEquals(await ui.item(/^读书\d\d$/).count(), 20);
         assert(listRequests.some((search) => search.includes(ids.reading)));
         const more = ui.item("加载更多");
@@ -201,11 +208,10 @@ Deno.test("笔记本树：结构、键盘、懒加载、未分类与图钉标记
         await page.keyboard.press("Enter");
         // The node's 加载更多 disappears only once the last page is committed.
         await ui.item("加载更多").waitFor({ state: "detached" });
-        await ui.item("读书25").waitFor();
+        await ui.item("读书01").waitFor();
         assertEquals(await ui.item(/^读书\d\d$/).count(), 25);
 
-        // 未分类 (scope=uncategorized) with favorite and pin markers.
-        await ui.item("未分类").click();
+        // Root notes are visible without expanding a synthetic notebook.
         const pinned = ui.item(/^散记置顶/);
         await pinned.waitFor();
         await ui.item("散记二").waitFor();
@@ -215,14 +221,45 @@ Deno.test("笔记本树：结构、键盘、懒加载、未分类与图钉标记
             await ui.item("散记二").locator("[data-pinned]").count(),
             0,
         );
-        assert(
-            listRequests.some((search) =>
-                search.includes("scope=uncategorized")
-            ),
-        );
-        // Collapsing and re-expanding keeps working.
-        await ui.item("未分类").click();
-        await ui.item("散记二").waitFor({ state: "detached" });
+        assertEquals(await pinned.getAttribute("aria-level"), "1");
+        assertEquals(await ui.item("未分类").count(), 0);
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("笔记本树：根目录分页", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    try {
+        await loginAndVisit(page, app.origin, "/", user);
+        for (let index = 1; index <= 25; index++) {
+            const response = await page.request.post(
+                app.origin + "/api/documents",
+                {
+                    headers: { Origin: app.origin },
+                    data: {
+                        title: `根笔记${String(index).padStart(2, "0")}`,
+                        body: "root",
+                    },
+                },
+            );
+            assert(response.ok());
+        }
+        await page.goto(app.origin + "/?view=notes");
+        const ui = sidebar(page);
+        await ui.item("根笔记25").waitFor();
+        assertEquals(await ui.item(/^根笔记\d\d$/).count(), 20);
+        assertEquals(await ui.item("加载更多").getAttribute("aria-level"), "1");
+        await ui.item("加载更多").click();
+        await ui.item("根笔记01").waitFor();
+        assertEquals(await ui.item(/^根笔记\d\d$/).count(), 25);
+        assertEquals(await ui.item("加载更多").count(), 0);
     } finally {
         await browser.close();
         await app.close();
@@ -303,6 +340,8 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
             "收藏",
             "固定到首页",
             "移动笔记本",
+            "上移",
+            "下移",
             "移至回收站",
         ]);
         assertEquals(
@@ -373,7 +412,7 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         await ui.selected("新读书笔记");
         assertEquals(await expanded(ui.item("阅读")), "true");
 
-        // List mode: fixed entries replace the tree; create target falls back to 未分类.
+        // List mode: fixed entries replace the tree; create target falls back to root.
         await ui.frame.getByRole("button", { name: "最近", exact: true })
             .click();
         assertEquals(await ui.mode(), "list");
@@ -387,7 +426,7 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
             .waitFor();
         assertEquals(
             await ui.newNote.getAttribute("title"),
-            "新建笔记（未分类）",
+            "新建笔记（根目录）",
         );
         await ui.frame.getByRole("button", { name: "收藏", exact: true })
             .click();
@@ -410,7 +449,7 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         assertEquals(await ui.mode(), "list");
         assertEquals(
             await ui.newNote.getAttribute("title"),
-            "新建笔记（未分类）",
+            "新建笔记（根目录）",
         );
         await ui.search.fill("");
         await ui.frame.getByRole("button", { name: "打开笔记：散记置顶" })
@@ -453,11 +492,24 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         await ui.item("工作笔记").waitFor();
         await ui.selected("工作笔记");
 
-        // 未分类 is the target with nothing selected; 回收站 opens the trash window.
-        await ui.item("未分类").click();
+        // Clicking tree whitespace clears selection and resets the create target to root.
+        const treeBox = (await ui.tree.boundingBox())!;
+        const firstBox = (await ui.item("工作").boundingBox())!;
+        const secondBox = (await ui.item("周报").boundingBox())!;
+        await ui.tree.click({
+            position: {
+                x: 10,
+                y: (firstBox.y + firstBox.height + secondBox.y) / 2 - treeBox.y,
+            },
+        });
+        assertEquals(
+            await ui.tree.locator('[role="treeitem"][aria-selected="true"]')
+                .count(),
+            0,
+        );
         assertEquals(
             await ui.newNote.getAttribute("title"),
-            "新建笔记（未分类）",
+            "新建笔记（根目录）",
         );
         await ui.frame.getByRole("button", { name: "回收站", exact: true })
             .click();

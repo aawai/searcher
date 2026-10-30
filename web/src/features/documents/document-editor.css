@@ -557,9 +557,15 @@
 
 /* Outline Panel (Headings tree) */
 .document-outline-panel {
+    position: relative;
     width: var(--document-outline-width);
     flex-shrink: 0;
     min-height: 0;
+}
+.document-outline-resize {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 100%;
 }
 
 .document-outline-panel--overlay {
