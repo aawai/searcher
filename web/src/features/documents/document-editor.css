@@ -149,7 +149,15 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-control-gap);
+    /* The same row height as the sidebar footer beside it, so both centre on one line. */
+    block-size: var(--control-compact-height);
     pointer-events: none;
+}
+
+@media (any-pointer: coarse) {
+    .document-editor-status-bar {
+        block-size: var(--control-touch-target);
+    }
 }
 
 .document-editor-status-actions {
