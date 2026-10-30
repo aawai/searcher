@@ -505,22 +505,6 @@
     z-index: var(--elevation-local-10);
 }
 
-.document-outline-sheet {
-    position: absolute;
-    inset: auto 0 0;
-    z-index: var(--elevation-local-10);
-    max-height: 100%;
-    overflow: auto;
-    background: var(--surface-l3);
-    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-}
-
-.document-outline-sheet .document-outline-sidebar {
-    width: 100%;
-    max-height: var(--document-outline-compact-height);
-    border-left: 0;
-    background: var(--surface-l3);
-}
 
 .document-outline-sidebar {
     width: var(--document-outline-width);

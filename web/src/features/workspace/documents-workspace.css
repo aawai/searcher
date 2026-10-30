@@ -22,15 +22,21 @@
 /* Drawer: the editor shrinks into a rounded card and slides right, revealing
    the navigation underneath. The overlay stays rendered while closed
    (visibility, not display) so both directions animate. */
-.documents-layout[data-drawer] {
+.documents-layout[data-drawer],
+.documents-layout[data-outline-drawer] {
     --documents-drawer-width: min(var(--notes-sidebar-width), 80%);
     transition: background-color 0s linear var(--motion-base);
 }
-.documents-layout[data-drawer="open"] {
+.documents-layout[data-outline-drawer] {
+    --documents-outline-drawer-width: min(var(--document-outline-width), 80%);
+}
+.documents-layout[data-drawer="open"],
+.documents-layout[data-outline-drawer="open"] {
     background-color: var(--surface-l3);
     transition-delay: 0s;
 }
-.documents-sidebar--drawer {
+.documents-sidebar--drawer,
+.documents-outline-drawer {
     position: absolute;
     inset: 0;
     z-index: var(--elevation-local-10);
@@ -40,7 +46,8 @@
     opacity: 1;
     transition: opacity var(--motion-base) var(--ease-out-expo), visibility 0s linear 0s;
 }
-.documents-sidebar--drawer[hidden] {
+.documents-sidebar--drawer[hidden],
+.documents-outline-drawer[hidden] {
     display: flex;
     visibility: hidden;
     opacity: 0;
@@ -50,13 +57,23 @@
     flex: 0 0 var(--documents-drawer-width);
     background: var(--surface-l3);
 }
+.documents-outline-drawer-content {
+    flex: 0 0 var(--documents-outline-drawer-width);
+    min-width: 0;
+    background: var(--surface-l3);
+}
+.documents-outline-drawer-content .document-outline-sidebar {
+    width: 100%;
+    border: 0;
+}
 .documents-drawer-dismiss {
     flex: 1;
     border: 0;
     background: transparent;
     cursor: pointer;
 }
-.documents-layout[data-drawer] > .documents-editor-pane {
+.documents-layout[data-drawer] > .documents-editor-pane,
+.documents-layout[data-outline-drawer] > .documents-editor-pane {
     background: var(--surface);
     transform-origin: left center;
     transition:
@@ -64,15 +81,26 @@
         border-radius var(--motion-base) var(--ease-out-expo),
         box-shadow var(--motion-base) var(--ease-out-expo);
 }
+.documents-layout[data-outline-drawer] > .documents-editor-pane {
+    transform-origin: right center;
+}
 .documents-layout[data-drawer="open"] > .documents-editor-pane {
     transform: translateX(var(--documents-drawer-width)) scale(.94);
+    border-radius: var(--radius-sheet);
+    box-shadow: var(--shadow-l2);
+}
+.documents-layout[data-outline-drawer="open"] > .documents-editor-pane {
+    transform-origin: right center;
+    transform: translateX(calc(-1 * var(--documents-outline-drawer-width))) scale(.94);
     border-radius: var(--radius-sheet);
     box-shadow: var(--shadow-l2);
 }
 /* Reduced motion: the same duration as an opacity change, no translate or scale. */
 @media (prefers-reduced-motion: reduce) {
     .documents-layout[data-drawer] > .documents-editor-pane,
-    .documents-layout[data-drawer="open"] > .documents-editor-pane {
+    .documents-layout[data-drawer="open"] > .documents-editor-pane,
+    .documents-layout[data-outline-drawer] > .documents-editor-pane,
+    .documents-layout[data-outline-drawer="open"] > .documents-editor-pane {
         transform: none;
         border-radius: 0;
         box-shadow: none;
