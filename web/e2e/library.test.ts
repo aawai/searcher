@@ -230,9 +230,15 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                         name: "笔记侧栏",
                         exact: true,
                     });
-                    if (await sidebar.getAttribute("aria-expanded") === "true" && width < 1024) {
+                    if (
+                        await sidebar.getAttribute("aria-expanded") ===
+                            "true" && width < 1024
+                    ) {
                         await page.keyboard.press("Escape");
-                        assertEquals(await sidebar.getAttribute("aria-expanded"), "false");
+                        assertEquals(
+                            await sidebar.getAttribute("aria-expanded"),
+                            "false",
+                        );
                     }
                     // Escape minimizes the window: hidden, content kept.
                     await page.keyboard.press("Escape");
@@ -263,7 +269,9 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                         name: "关闭笔记侧栏",
                         exact: true,
                     });
-                    if (await drawerDismiss.isVisible()) await drawerDismiss.click();
+                    if (await drawerDismiss.isVisible()) {
+                        await drawerDismiss.click();
+                    }
 
                     await openApps(page);
                     await page.waitForURL((url) =>

@@ -88,7 +88,8 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
 
     // Document rows and list states live in the flat 最近 list; the sidebar opens as a tree.
     async function showRecent() {
-        await getWorkspace().getByRole("button", { name: "最近", exact: true }).click();
+        await getWorkspace().getByRole("button", { name: "最近", exact: true })
+            .click();
     }
 
     // 1. Heading hierarchy contract: the window is a landmark named by its title
@@ -217,7 +218,10 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             });
             await documentsRegion.waitFor({ state: "visible" });
             await page.waitForFunction(
-                () => document.querySelectorAll('[data-library] [data-document-id]').length === 2,
+                () =>
+                    document.querySelectorAll(
+                        "[data-library] [data-document-id]",
+                    ).length === 2,
             );
 
             // Perform search in Documents
@@ -236,7 +240,11 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
                     .count(),
                 0,
             );
-            assertEquals(await documentsSearchRegion.locator("[data-document-id]").count(), 1);
+            assertEquals(
+                await documentsSearchRegion.locator("[data-document-id]")
+                    .count(),
+                1,
+            );
             assertStringIncludes(
                 await documentsSearchRegion.textContent() ?? "",
                 "Beta Document",
@@ -246,7 +254,10 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             await documentsSearchInput.fill("");
             await documentsRegion.waitFor({ state: "visible" });
             await page.waitForFunction(
-                () => document.querySelectorAll('[data-library] [data-document-id]').length === 2,
+                () =>
+                    document.querySelectorAll(
+                        "[data-library] [data-document-id]",
+                    ).length === 2,
             );
         },
     );

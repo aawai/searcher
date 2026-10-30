@@ -334,7 +334,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.keyboard.press("Enter");
                 await panel.locator("[data-workspace-editor]").waitFor();
                 if (width < 768) {
-                    await panel.getByRole("button", { name: "笔记侧栏", exact: true })
+                    await panel.getByRole("button", {
+                        name: "笔记侧栏",
+                        exact: true,
+                    })
                         .click();
                 }
                 await search().waitFor();
@@ -707,7 +710,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 }).inputValue(),
                 "Shell note",
             );
-            const sidebarToggle = panel.getByRole("button", { name: "笔记侧栏", exact: true });
+            const sidebarToggle = panel.getByRole("button", {
+                name: "笔记侧栏",
+                exact: true,
+            });
             if (await sidebarToggle.getAttribute("aria-expanded") === "false") {
                 await sidebarToggle.click();
             }
@@ -778,8 +784,12 @@ async function measureBodyInset(panelLocator: {
     evaluate: <R>(pageFunction: (element: HTMLElement) => R) => Promise<R>;
 }): Promise<InsetMetrics> {
     return await panelLocator.evaluate((panelEl: HTMLElement) => {
-        const body = panelEl.querySelector(".documents-workspace") as HTMLElement;
-        const searchWrap = body.querySelector(".documents-sidebar-header") as HTMLElement;
+        const body = panelEl.querySelector(
+            ".documents-workspace",
+        ) as HTMLElement;
+        const searchWrap = body.querySelector(
+            ".documents-sidebar-header",
+        ) as HTMLElement;
         const bodyRect = body.getBoundingClientRect();
         const searchRect = searchWrap.getBoundingClientRect();
         const searchRowRect = searchRect;
