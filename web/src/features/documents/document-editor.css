@@ -159,14 +159,12 @@
     gap: var(--space-1);
 }
 
-/* Mode trigger: the icon of the current mode and a chevron for its popover. */
+/* Mode trigger: the icon of the current mode; compact so the status bar stays slim. */
 [data-slot="button"].document-mode-trigger {
-    width: auto;
-    gap: var(--space-half);
-    padding-inline: var(--space-2);
-}
-.document-mode-chevron {
-    color: var(--muted);
+    width: var(--control-compact-height);
+    min-width: var(--control-compact-height);
+    height: var(--control-compact-height);
+    min-height: var(--control-compact-height);
 }
 
 /* Toolbar container: the toolbar plus the collapse chevron at its first row's end. */

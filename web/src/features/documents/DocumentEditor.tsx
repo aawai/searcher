@@ -1569,7 +1569,6 @@ export function DocumentEditor({
                                         : viewMode === "page"
                                         ? <FileText className="icon-sm" />
                                         : <CodeXml className="icon-sm" />}
-                                    <ChevronUp className="icon-sm document-mode-chevron" aria-hidden="true" />
                                 </Button>
                             }
                         />
