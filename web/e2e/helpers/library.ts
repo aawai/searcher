@@ -44,6 +44,14 @@ export async function openNotes(page: Page): Promise<Locator> {
     return libraryPanel(page);
 }
 
+/** Opens the notes window in the flat 最近 list, where every note is a row. */
+export async function openNoteRows(page: Page): Promise<Locator> {
+    const panel = await openNotes(page);
+    await panel.getByRole("button", { name: "最近", exact: true }).click();
+    await panel.locator("[data-sidebar-mode='list']").waitFor();
+    return panel;
+}
+
 export async function openApps(page: Page): Promise<Locator> {
     await workspaceAppsTrigger(page).click();
     await libraryView(page, "apps").waitFor();
@@ -91,6 +99,6 @@ export async function assertInteractiveHome(page: Page): Promise<void> {
 
 /** Closing destroys the window and its content, like leaving the old panel. */
 export async function closeLibrary(page: Page): Promise<void> {
-    await libraryPanel(page).getByRole("button", { name: /^关闭/ }).click();
+    await libraryPanel(page).locator('[data-window-dismiss][aria-label^="关闭"]').click();
     await libraryPanel(page).waitFor({ state: "detached" });
 }

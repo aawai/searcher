@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import { type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/library.ts";
+import { openNoteRows } from "./helpers/library.ts";
 
 type StoredDraft = {
     userId: string;
@@ -196,7 +196,7 @@ async function requestLogout(page: Page) {
 }
 
 async function openFromLibrary(page: Page, title: string) {
-    await openNotes(page);
+    await openNoteRows(page);
     await page.locator("[data-document-id] h4 button").filter({
         hasText: title,
     }).click();
@@ -275,7 +275,7 @@ Deno.test(
         );
         await editorTitle(page).press("Escape");
         await failedFlush;
-        await editor.waitFor({ state: "detached" });
+        await page.locator('[data-window-id="notes"]').waitFor({ state: "hidden" });
 
         await waitForDraftCommit(page, key, {
             body: doc.body,
@@ -693,8 +693,11 @@ Deno.test(
         await conflict.getByRole("button", { name: "暂不处理", exact: true })
             .click();
         const editor = page.locator(".document-editor-container");
-        await editorTitle(page).click();
-        await page.keyboard.press("Escape");
+        await page.getByRole("button", { name: "关闭笔记", exact: true }).click();
+        const leave = page.getByRole("alertdialog");
+        if (await leave.isVisible()) {
+            await leave.getByRole("button", { name: "放弃修改", exact: true }).click();
+        }
         await editor.waitFor({ state: "detached" });
         await waitForDraftCommit(page, key, {
             body: localBody,

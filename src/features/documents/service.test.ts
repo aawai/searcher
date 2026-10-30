@@ -538,6 +538,49 @@ Deno.test("DocumentsService - softDelete, restore, and permanentDelete lifecycle
     );
 });
 
+Deno.test("DocumentsService - uncategorized scope isolates active documents and paginates in notebook order", async () => {
+    const { service, store, advanceTime } = await setupTestContext();
+    try {
+        const scope = { type: "uncategorized" } as const;
+        assertEquals(await service.list("user-1", { scope }), {
+            items: [],
+            nextCursor: null,
+        });
+        const older = await service.create("user-1", { title: "older", isFavorite: true });
+        advanceTime(1);
+        const tiedA = await service.create("user-1", { title: "tied A" });
+        const tiedB = await service.create("user-1", { title: "tied B" });
+        await service.create("user-1", { notebookId: "nb-u1-1" });
+        await service.create("user-2", { title: "other user" });
+        const deleted = await service.create("user-1", { title: "deleted" });
+        await service.softDelete("user-1", deleted.id, deleted.version);
+
+        const first = await service.list("user-1", { scope, limit: 1 });
+        assertEquals(first.items.map((item) => item.id), [tiedA.id, tiedB.id].sort().reverse().slice(0, 1));
+        if (!first.nextCursor) throw new Error("Expected a next cursor");
+        const second = await service.list("user-1", {
+            scope,
+            limit: 2,
+            cursor: first.nextCursor,
+        });
+        assertEquals(
+            [...first.items, ...second.items].map((item) => item.id),
+            [...[tiedA.id, tiedB.id].sort().reverse(), older.id],
+        );
+        assertEquals(second.nextCursor, null);
+        await assertRejects(
+            () => service.list("user-2", { scope, cursor: first.nextCursor! }),
+            DocumentValidationError,
+        );
+        await assertRejects(
+            () => service.list("user-1", { scope: { type: "recent" }, cursor: first.nextCursor! }),
+            DocumentValidationError,
+        );
+    } finally {
+        store.close();
+    }
+});
+
 Deno.test("DocumentsService - list: deterministic ordering across scopes and no body in projection", async () => {
     const { service, setTime } = await setupTestContext();
 

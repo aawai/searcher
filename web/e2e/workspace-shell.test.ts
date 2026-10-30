@@ -104,9 +104,15 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         page.waitForFunction(() =>
             document.querySelector(".home")?.getAnimations().length === 0
         );
+    // Row contracts run in the flat 最近 list; the tree has its own e2e file.
+    async function showRecent() {
+        await panel.getByRole("button", { name: "最近", exact: true }).click();
+        await panel.locator("[data-sidebar-mode='list']").waitFor();
+    }
     async function openDocs() {
         await openNotes(page);
         await search().waitFor();
+        await showRecent();
     }
 
     for (let index = 0; index < 35; index++) {
@@ -248,7 +254,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "keyboard-only open/search/menu/Back/Close; overlay Escape takes priority",
+        "keyboard-only open/search/menu and editor; overlay Escape takes priority",
         async () => {
             await page.setViewportSize({ width: 1440, height: 900 });
             await visit("/");
@@ -291,19 +297,15 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             }).focus();
             await page.keyboard.press("Enter");
             await panel.locator("[data-workspace-editor]").waitFor();
-            await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("aria-label") ===
-                    "返回上一级"
-            );
-            await page.keyboard.press("Enter");
-            await search().waitFor();
+            await panel.getByRole("textbox", { name: "笔记标题", exact: true })
+                .waitFor();
             assertEquals(await search().inputValue(), "Shell");
             await closeAllWorkspaces();
         },
     );
 
     await t.step(
-        "Zen panel and sheet: nested Back, overlay Escape precedence, and actual opener restoration",
+        "Sidebar and drawer: overlay Escape precedence and opener restoration",
         async () => {
             for (
                 const { width, height } of [
@@ -321,8 +323,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await openNotesByKeyboard(page);
                 await panel.waitFor();
                 await assertWindowInWorkArea(page, frame);
+                await showRecent();
 
-                // Nested Back behavior inside the window
+                // Selecting a note keeps the editor and sidebar in one window.
                 const noteOpen = panel.getByRole("button", {
                     name: "打开笔记：Shell note",
                     exact: true,
@@ -330,10 +333,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await noteOpen.focus();
                 await page.keyboard.press("Enter");
                 await panel.locator("[data-workspace-editor]").waitFor();
-                // Back returns to notes list
-                await panel.getByRole("button", {
-                    name: /返回笔记|返回上一级/,
-                }).click();
+                if (width < 768) {
+                    await panel.getByRole("button", { name: "笔记侧栏", exact: true })
+                        .click();
+                }
                 await search().waitFor();
 
                 // Overlay Escape precedence inside the window
@@ -353,7 +356,11 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 await page.keyboard.press("Escape");
                 await page.getByRole("menu").waitFor({ state: "detached" });
                 assertEquals(await panel.isVisible(), true);
-                // Next Escape minimizes the window (no root view); content is kept
+                if (width < 768) {
+                    await page.keyboard.press("Escape");
+                    assertEquals(await panel.isVisible(), true);
+                }
+                // Escape now minimizes the window; content is kept.
                 await page.keyboard.press("Escape");
                 await frame.waitFor({ state: "hidden" });
                 await page.waitForURL(origin + "/");
@@ -492,11 +499,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             );
             await search().fill("");
 
-            // 3. Nested views: no library create action; Back restores it
+            // 3. The sidebar create action remains available while editing.
             assertEquals(
                 await panel.getByRole("button", {
-                    name: "新建笔记",
-                    exact: true,
+                    name: /^新建笔记(?:（|$)/,
                 })
                     .count(),
                 1,
@@ -508,19 +514,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
             await panel.locator("[data-workspace-editor]").waitFor();
             assertEquals(
                 await panel.getByRole("button", {
-                    name: "新建笔记",
-                    exact: true,
-                })
-                    .count(),
-                0,
-            );
-            await panel.getByRole("button", { name: "返回上一级", exact: true })
-                .click();
-            await search().waitFor();
-            assertEquals(
-                await panel.getByRole("button", {
-                    name: "新建笔记",
-                    exact: true,
+                    name: /^新建笔记(?:（|$)/,
                 })
                     .count(),
                 1,
@@ -555,7 +549,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "Escape unwinds nested pages and reopening resets the route but keeps the query",
+        "Escape minimizes the editor and reopening keeps selection and query",
         async () => {
             for (const reducedMotion of ["no-preference", "reduce"] as const) {
                 await page.emulateMedia({ reducedMotion });
@@ -569,11 +563,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         exact: true,
                     }).click();
                     await panel.locator("[data-workspace-editor]").waitFor();
-                    await panel.getByRole("button", {
-                        name: /返回笔记|返回上一级/,
+                    await panel.getByRole("textbox", {
+                        name: "笔记标题",
+                        exact: true,
                     }).focus();
-                    await page.keyboard.press("Escape");
-                    await search().waitFor();
                     await page.keyboard.press("Escape");
                     await frame.waitFor({ state: "hidden" });
                     await page.waitForURL(origin + "/");
@@ -606,12 +599,18 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         false,
                         "a closed detail must no longer own Escape",
                     );
-                    // Restoring the minimized window keeps the list route and query.
-                    await openDocs();
+                    // Restoring the minimized window keeps the editor and query.
+                    await openNotes(page);
                     assertEquals(
                         await panel.locator("[data-workspace-editor]").count(),
-                        0,
+                        1,
                     );
+                    if (width < 768) {
+                        await panel.getByRole("button", {
+                            name: "笔记侧栏",
+                            exact: true,
+                        }).click();
+                    }
                     assertEquals(await search().inputValue(), "Shell");
                     await closeAllWorkspaces();
                 }
@@ -708,8 +707,10 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 }).inputValue(),
                 "Shell note",
             );
-            await panel.getByRole("button", { name: "返回上一级", exact: true })
-                .click();
+            const sidebarToggle = panel.getByRole("button", { name: "笔记侧栏", exact: true });
+            if (await sidebarToggle.getAttribute("aria-expanded") === "false") {
+                await sidebarToggle.click();
+            }
             await search().waitFor();
             assertEquals(await search().inputValue(), "Shell");
             await page.setViewportSize({ width: 1440, height: 900 });
@@ -771,26 +772,17 @@ function assertNear(actual: number, expected: number, tolerance: number) {
 interface InsetMetrics {
     searchLeftDiff: number;
     searchRightDiff: number;
-    contentLeftDiff: number;
-    contentRightDiff: number;
 }
 
 async function measureBodyInset(panelLocator: {
     evaluate: <R>(pageFunction: (element: HTMLElement) => R) => Promise<R>;
 }): Promise<InsetMetrics> {
     return await panelLocator.evaluate((panelEl: HTMLElement) => {
-        const body = panelEl.querySelector(".workspace-body") as HTMLElement;
-        const contentRoot = body.firstElementChild as HTMLElement;
-        const searchWrap = contentRoot.querySelector(
-            ".workspace-search-wrap",
-        ) as HTMLElement;
+        const body = panelEl.querySelector(".documents-workspace") as HTMLElement;
+        const searchWrap = body.querySelector(".documents-sidebar-header") as HTMLElement;
         const bodyRect = body.getBoundingClientRect();
-        const contentRect = contentRoot.getBoundingClientRect();
         const searchRect = searchWrap.getBoundingClientRect();
-        // The notes search shares one row with the item count (#285 Y6.1);
-        // that row, not the field, spans the content box.
-        const searchRowRect = (searchWrap.closest(".documents-list-toolbar") ??
-            searchWrap).getBoundingClientRect();
+        const searchRowRect = searchRect;
         const bodyStyle = getComputedStyle(body);
         const padLeft = parseFloat(bodyStyle.paddingLeft);
         const padRight = parseFloat(bodyStyle.paddingRight);
@@ -800,14 +792,6 @@ async function measureBodyInset(panelLocator: {
             ),
             searchRightDiff: Math.round(
                 (bodyRect.right - searchRowRect.right) - padRight,
-            ),
-            contentLeftDiff: Math.round(
-                (contentRoot ? (contentRect.left - bodyRect.left) : 0) -
-                    padLeft,
-            ),
-            contentRightDiff: Math.round(
-                (contentRoot ? (bodyRect.right - contentRect.right) : 0) -
-                    padRight,
             ),
         };
     });

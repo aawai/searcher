@@ -32,9 +32,9 @@
     width: 100%;
     min-width: 0;
 }
-/* Items of the window title bar row: the back control leads the title. */
-.workspace-toolbar-back {
-    order: -1;
+.window-frame:has(.library-window[data-window-fullscreen]) .window-frame__title,
+.window-frame:has(.library-window[data-window-fullscreen]) .window-frame__actions {
+    display: none;
 }
 .workspace-toolbar-actions {
     display: flex;

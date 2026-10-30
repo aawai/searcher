@@ -1,7 +1,12 @@
-import type { ComponentProps } from "react";
+import { type ComponentProps, lazy, Suspense } from "react";
 import { LibraryAppsView } from "../library/LibraryAppsView.tsx";
-import { DocumentsWorkspace } from "./DocumentsWorkspace.tsx";
+import { LoadingState } from "../../components/searcher/semantic.tsx";
+import type { DocumentsWorkspace as DocumentsWorkspaceComponent } from "./DocumentsWorkspace.tsx";
 import { WorkspaceActivity } from "./WorkspaceActivity.ts";
+
+const DocumentsWorkspace = lazy(async () => ({
+    default: (await import("./DocumentsWorkspace.tsx")).DocumentsWorkspace,
+}));
 
 /** Content is independent of the URL and of the window that presents it.
  * The owner supplies the existing library state and document subscriptions;
@@ -16,7 +21,7 @@ export type HomeWorkspaceContentProps =
     | {
         view: "notes";
         active: boolean;
-        notes: ComponentProps<typeof DocumentsWorkspace>;
+        notes: ComponentProps<typeof DocumentsWorkspaceComponent>;
     };
 
 export function HomeWorkspaceContent(props: HomeWorkspaceContentProps) {
@@ -39,7 +44,18 @@ export function HomeWorkspaceContent(props: HomeWorkspaceContentProps) {
             data-active={props.active ? "true" : undefined}
         >
             <WorkspaceActivity value={props.active}>
-                <DocumentsWorkspace key={props.notes.userId} {...props.notes} />
+                <Suspense
+                    fallback={
+                        <LoadingState density="compact">
+                            正在加载笔记…
+                        </LoadingState>
+                    }
+                >
+                    <DocumentsWorkspace
+                        key={props.notes.userId}
+                        {...props.notes}
+                    />
+                </Suspense>
             </WorkspaceActivity>
         </div>
     );

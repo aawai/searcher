@@ -68,10 +68,10 @@ async function openShortcutDocument(
     await page.goto(origin);
     await page.locator("main.home").waitFor({ state: "visible" });
     await openNotesByKeyboard(page);
+    await page.getByRole("button", { name: "最近", exact: true }).click();
     await page.locator("[data-document-id] h4 button").filter({
         hasText: title,
     }).first().click();
-    await page.getByRole("button", { name: "编辑", exact: true }).click();
     const editor = page.locator(
         ".document-editor-scroll-area .ProseMirror[contenteditable='true']",
     ).filter({ hasText: body });

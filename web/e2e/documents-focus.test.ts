@@ -2,7 +2,7 @@ import { assertEquals, assertRejects } from "@std/assert";
 import { errors } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/library.ts";
+import { openNoteRows } from "./helpers/library.ts";
 
 Deno.test("Documents focus boundaries, IME composition and leave flush contracts", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -38,7 +38,7 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
     });
 
     await page.reload();
-    await openNotes(page);
+    await openNoteRows(page);
     await page.locator(`[data-document-id="${doc.id}"] h4 button`).click();
 
     const editor = page.locator(".document-editor-container");
@@ -74,8 +74,7 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
             await title.focus();
             await prosemirror.focus();
             await editor.getByRole("button", {
-                name: "Markdown 源码",
-                exact: true,
+                name: /^切换编辑模式，当前：/,
             }).focus();
             await assertRejects(
                 () =>
@@ -101,7 +100,7 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
             const countBefore = writes.length;
             await title.fill("失去焦点自动保存标题");
 
-            // Focus outside editor container (e.g. click workspace navigation back button)
+            // Moving focus into the persistent sidebar flushes the editor.
             const patchPromise = page.waitForResponse(
                 (res) =>
                     res.request().method() === "PATCH" &&
@@ -109,12 +108,8 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
                     res.status() === 200,
             );
 
-            await page.getByRole("button", { name: "返回上一级", exact: true })
-                .click();
+            await page.locator("input[data-workspace-search]:visible").click();
             await patchPromise;
-            await editor.waitFor({ state: "detached" });
-            await page.locator("input[data-workspace-search]:visible")
-                .waitFor();
 
             assertEquals(
                 writes.length,
@@ -122,10 +117,7 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
                 "Leaving editor must flush dirty content exactly once",
             );
 
-            // Reopen editor to continue tests
-            await page.locator(`[data-document-id="${doc.id}"] h4 button`)
-                .click();
-            await title.waitFor({ state: "visible" });
+            // The editor remains mounted alongside the sidebar.
             assertEquals(await title.inputValue(), "失去焦点自动保存标题");
         },
     );

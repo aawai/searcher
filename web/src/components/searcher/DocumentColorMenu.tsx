@@ -3,6 +3,10 @@ import {
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
 } from "../ui/dropdown-menu.tsx";
+import {
+    ContextMenuRadioGroup,
+    ContextMenuRadioItem,
+} from "../ui/context-menu.tsx";
 
 export const DOCUMENT_COLORS: readonly DocumentColor[] = [
     "paper",
@@ -25,13 +29,21 @@ function isDocumentColor(value: string): value is DocumentColor {
 }
 
 export function DocumentColorItems(
-    { color, onChange }: {
+    { color, onChange, menu = "dropdown" }: {
         color: DocumentColor;
         onChange: (color: DocumentColor) => void;
+        /** The primitive family of the menu that hosts the items. */
+        menu?: "dropdown" | "context";
     },
 ) {
+    const RadioGroup = menu === "context"
+        ? ContextMenuRadioGroup
+        : DropdownMenuRadioGroup;
+    const RadioItem = menu === "context"
+        ? ContextMenuRadioItem
+        : DropdownMenuRadioItem;
     return (
-        <DropdownMenuRadioGroup
+        <RadioGroup
             value={color}
             onValueChange={(value) => {
                 if (isDocumentColor(value)) onChange(value);
@@ -39,14 +51,14 @@ export function DocumentColorItems(
             aria-label="笔记颜色"
         >
             {DOCUMENT_COLORS.map((value) => (
-                <DropdownMenuRadioItem key={value} value={value} closeOnClick>
+                <RadioItem key={value} value={value} closeOnClick>
                     <span
                         aria-hidden="true"
                         className={`note-quick-dot note-quick-dot--${value}`}
                     />
                     {COLOR_NAMES[value]}
-                </DropdownMenuRadioItem>
+                </RadioItem>
             ))}
-        </DropdownMenuRadioGroup>
+        </RadioGroup>
     );
 }

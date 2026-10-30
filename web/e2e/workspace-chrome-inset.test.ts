@@ -220,7 +220,10 @@ Deno.test("Notes window stays in the work area under shared chrome and preserves
         await page.screenshot({ path: `${evidence}/recovered-window.png` });
     }
 
-    const body = panel.locator(".workspace-body");
+    // The sidebar scrolls as one; its rows live in the flat 最近 list.
+    await panel.getByRole("button", { name: "最近", exact: true }).click();
+    await panel.locator("[data-sidebar-mode='list']").waitFor();
+    const body = panel.locator("#notes-sidebar");
     const bodyMetrics = await body.evaluate((element) => ({
         clientHeight: element.clientHeight,
         scrollHeight: element.scrollHeight,
@@ -262,7 +265,7 @@ Deno.test("Notes window stays in the work area under shared chrome and preserves
     await page.mouse.wheel(0, 700);
     await page.waitForFunction(() => {
         const bodyElement = document.querySelector(
-            '[data-window-id="notes"] .workspace-body',
+            '[data-window-id="notes"] #notes-sidebar',
         );
         return bodyElement !== null && bodyElement.scrollTop > 0;
     });

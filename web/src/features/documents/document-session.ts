@@ -94,8 +94,9 @@ function extractConflictDocument(err: unknown): DocumentDto | null {
 export function createDocumentSession(
     options: DocumentSessionOptions,
 ): DocumentSession {
-    const { userId, documentId } = options;
-    const draftKey = `text:document:draft:${userId}:${documentId}`;
+    const { userId } = options;
+    let documentId = options.documentId ?? "";
+    const draftKey = () => `text:document:draft:${userId}:${documentId}`;
 
     const request = options.request ?? api;
     const drafts = options.drafts ?? {
@@ -185,13 +186,15 @@ export function createDocumentSession(
         })();
         await remoteRefresh;
     }
-    const unsubscribeEvents = options.events?.subscribe(
-        documentId,
-        (version) => {
+    let unsubscribeEvents: (() => void) | undefined;
+    function subscribeEvents(): void {
+        if (!documentId) return;
+        unsubscribeEvents = options.events?.subscribe(documentId, (version) => {
             pendingRemoteVersion = Math.max(pendingRemoteVersion, version);
             void refreshRemote();
-        },
-    );
+        });
+    }
+    subscribeEvents();
 
     function notify(): void {
         for (const listener of listeners) {
@@ -222,6 +225,7 @@ export function createDocumentSession(
         body: string,
         version: number,
     ): Promise<void> {
+        if (!documentId) return;
         try {
             const draftPayload: DocumentLocalDraft = {
                 userId,
@@ -231,7 +235,7 @@ export function createDocumentSession(
                 version,
                 updatedAt: Date.now(),
             };
-            await drafts.write(draftKey, draftPayload);
+            await drafts.write(draftKey(), draftPayload);
             if (snapshot.localDraftError !== null) {
                 snapshot = { ...snapshot, localDraftError: null };
                 notify();
@@ -248,8 +252,9 @@ export function createDocumentSession(
     }
 
     async function clearDraftFromStorage(): Promise<void> {
+        if (!documentId) return;
         try {
-            await drafts.delete(draftKey);
+            await drafts.delete(draftKey());
             if (snapshot.localDraftError !== null) {
                 snapshot = { ...snapshot, localDraftError: null };
                 notify();
@@ -268,13 +273,13 @@ export function createDocumentSession(
     async function executeSave(
         origin: "autosave" | "manual",
     ): Promise<boolean> {
-        if (!snapshot.document) return false;
+        if (!snapshot.document && documentId) return false;
         if (snapshot.conflict !== null) return false;
 
         const currentDoc = snapshot.document;
         const savingTitle = snapshot.title;
         const savingBody = snapshot.body;
-        const savingVersion = currentDoc.version;
+        const savingVersion = currentDoc?.version ?? 1;
 
         snapshot = {
             ...snapshot,
@@ -284,19 +289,33 @@ export function createDocumentSession(
         notify();
 
         try {
+            const creating = !documentId;
             const updated = await request<DocumentDto>(
-                `/api/documents/${encodeURIComponent(documentId)}`,
+                creating
+                    ? "/api/documents"
+                    : `/api/documents/${encodeURIComponent(documentId)}`,
                 {
-                    method: "PATCH",
+                    method: creating ? "POST" : "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        version: savingVersion,
-                        title: savingTitle.trim() ? savingTitle : null,
-                        body: savingBody,
-                        origin,
-                    }),
+                    body: JSON.stringify(creating
+                        ? {
+                            title: savingTitle.trim() ? savingTitle : null,
+                            body: savingBody,
+                            notebookId: options.target?.notebookId ?? null,
+                            isHomeFixed: options.target?.isHomeFixed ?? false,
+                        }
+                        : {
+                            version: savingVersion,
+                            title: savingTitle.trim() ? savingTitle : null,
+                            body: savingBody,
+                            origin,
+                        }),
                 },
             );
+            if (creating) {
+                documentId = updated.id;
+                if (!isDestroyed) subscribeEvents();
+            }
 
             // Check if further edits arrived while save was in flight
             const hasNewEdits = snapshot.title !== savingTitle ||
@@ -308,6 +327,9 @@ export function createDocumentSession(
                     document: updated,
                     saveStatus: "dirty",
                 };
+                if (creating) {
+                    void persistDraftToStorage(snapshot.title, snapshot.body, updated.version);
+                }
                 notify();
                 scheduleAutosave();
             } else {
@@ -317,13 +339,14 @@ export function createDocumentSession(
                     saveStatus: "saved",
                     draft: null,
                 };
-                await clearDraftFromStorage();
+                if (!creating) await clearDraftFromStorage();
                 notify();
             }
+            if (creating) options.onCreated?.(updated.id);
 
             return true;
         } catch (err) {
-            if (err instanceof ApiError && err.code === 409) {
+            if (documentId && err instanceof ApiError && err.code === 409) {
                 const conflictDoc = extractConflictDocument(err);
                 snapshot = {
                     ...snapshot,
@@ -390,6 +413,13 @@ export function createDocumentSession(
             }
             return snapshot.saveStatus === "saved";
         }
+        if (!documentId) {
+            if (!snapshot.title.trim() && !snapshot.body.trim()) return true;
+            if (isComposing) {
+                hasPendingAutosave = true;
+                return false;
+            }
+        }
 
         // Never report success on conflict
         if (
@@ -432,6 +462,7 @@ export function createDocumentSession(
         },
 
         async load(): Promise<void> {
+            if (!documentId) return;
             if (snapshot.document !== null) {
                 return;
             }
@@ -450,7 +481,7 @@ export function createDocumentSession(
                 try {
                     let draftRaw: unknown = null;
                     try {
-                        draftRaw = await drafts.read(draftKey);
+                        draftRaw = await drafts.read(draftKey());
                     } catch (err) {
                         snapshot = {
                             ...snapshot,
@@ -534,12 +565,21 @@ export function createDocumentSession(
 
             userEditedSinceLoad = true;
             const inConflict = snapshot.conflict !== null;
+            let saveStatus: DocumentSessionSnapshot["saveStatus"] = "dirty";
+            if (inConflict) {
+                saveStatus = "conflict";
+            } else if (!documentId && !inFlightSavePromise &&
+                !nextTitle.trim() && !nextBody.trim()) {
+                saveStatus = "saved";
+            } else if (!documentId && snapshot.saveStatus === "error") {
+                saveStatus = "error";
+            }
 
             snapshot = {
                 ...snapshot,
                 title: nextTitle,
                 body: nextBody,
-                saveStatus: inConflict ? "conflict" : "dirty",
+                saveStatus,
             };
             notify();
 
@@ -548,8 +588,12 @@ export function createDocumentSession(
                 : (snapshot.document?.version ?? 1);
             void persistDraftToStorage(snapshot.title, snapshot.body, version);
 
-            if (!inConflict) {
+            if (!inConflict && snapshot.saveStatus === "dirty") {
                 scheduleAutosave();
+            } else if (snapshot.saveStatus === "saved" && autosaveTimer !== null) {
+                clearTimeout(autosaveTimer);
+                autosaveTimer = null;
+                hasPendingAutosave = false;
             }
         },
 
@@ -990,7 +1034,7 @@ export function createDocumentSession(
                     snapshot.body,
                     snapshot.draft?.version ?? 1,
                 );
-            } else if (snapshot.saveStatus === "dirty") {
+            } else if (snapshot.saveStatus === "dirty" && (!isComposing || documentId)) {
                 try {
                     const saved = await executeSave("autosave");
                     if (!saved) {

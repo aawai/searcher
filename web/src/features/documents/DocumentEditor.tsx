@@ -1,9 +1,10 @@
-import { MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
+import { BREAKPOINTS, MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
 import {
     type ChangeEvent,
     type FocusEvent,
     type KeyboardEvent,
     lazy,
+    type ReactNode,
     Suspense,
     useCallback,
     useEffect,
@@ -24,6 +25,8 @@ import { DocumentPaperSettingsDialog } from "./DocumentPaperSettingsDialog.tsx";
 import { prepareDocumentPrint } from "./document-print.ts";
 import { api, ApiError } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
+import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
+import { WindowOverlay } from "../../components/ui/window-overlay.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -31,6 +34,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "../../components/ui/popover.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import { Textarea } from "../../components/ui/textarea.tsx";
 import { type EditorState, TextSelection } from "@milkdown/prose/state";
@@ -46,6 +54,10 @@ import { LoadingState } from "../../components/searcher/semantic.tsx";
 import {
     BookOpen,
     Check,
+    CodeXml,
+    FileText,
+    ChevronUp,
+    Pencil,
     Copy,
     Download,
     History,
@@ -53,6 +65,7 @@ import {
     Printer,
     RefreshCw,
     Settings,
+    Type,
 } from "lucide-react";
 
 import type {
@@ -67,6 +80,20 @@ import {
     uploadAndInsertDocumentImage,
     VALID_IMAGE_MIME_TYPES,
 } from "./editor-extensions.ts";
+import {
+    readDevicePreferences,
+    resolveToolbarCollapsed,
+    writeOutlineOpen,
+    writeToolbarCollapsed,
+} from "./device-preferences.ts";
+
+function deviceStorage(): Storage | null {
+    try {
+        return globalThis.localStorage;
+    } catch {
+        return null;
+    }
+}
 import { analyzeDocumentMarkdown } from "./editor-content.ts";
 import { DocumentToolbar } from "./DocumentToolbar.tsx";
 // Outline UI is loaded only when requested; it must not inflate the editor's initial chunk.
@@ -211,37 +238,65 @@ function getDocumentToolbarState(
 }
 
 export interface DocumentEditorProps {
-    documentId: string;
+    documentId?: string;
+    target?: { notebookId: string | null; isHomeFixed: boolean };
+    onCreated?: (id: string) => void;
     userId: string;
     onOpenDocument?: (id: string) => void;
     onChanged?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
+    narrow?: boolean;
+    focusTitleSignal?: number;
     eventSubscriptions?: DocumentEventSubscriptions;
+    /** Leads the header row, before the title: the host's navigation toggle. */
+    leading?: ReactNode;
 }
 
 export function DocumentEditor({
-    documentId,
+    documentId: requestedDocumentId,
+    target,
+    onCreated,
     userId,
     onOpenDocument,
     onChanged,
     onDirtyChange,
+    narrow = false,
+    focusTitleSignal,
+    leading,
     eventSubscriptions,
 }: DocumentEditorProps) {
     // 1. Session Setup & useSyncExternalStore
     const documentEditorOwner = useId();
-    const session = useMemo(() => {
-        return createDocumentSession({
-            userId,
-            documentId,
-            events: eventSubscriptions,
-        });
-    }, [userId, documentId, eventSubscriptions]);
+    const createdIdRef = useRef<string | undefined>(undefined);
+    const onCreatedRef = useRef(onCreated);
+    onCreatedRef.current = onCreated;
+    const sessionDocumentId = requestedDocumentId === createdIdRef.current
+        ? undefined
+        : requestedDocumentId;
+    const targetRef = useRef(target);
+    if (!createdIdRef.current || requestedDocumentId !== createdIdRef.current) {
+        targetRef.current = target;
+    }
+    const notebookId = targetRef.current?.notebookId ?? null;
+    const isHomeFixed = targetRef.current?.isHomeFixed ?? false;
+    const session = useMemo(() => createDocumentSession({
+        userId,
+        documentId: sessionDocumentId,
+        target: { notebookId, isHomeFixed },
+        onCreated: (id) => {
+            createdIdRef.current = id;
+            onCreatedRef.current?.(id);
+        },
+        events: eventSubscriptions,
+    }), [userId, sessionDocumentId, notebookId, isHomeFixed, eventSubscriptions]);
 
     const snapshot = useSyncExternalStore(
         session.subscribe,
         session.getSnapshot,
         session.getSnapshot,
     );
+    const documentId = snapshot.document?.id ?? requestedDocumentId ?? "";
+    const isNewSession = sessionDocumentId === undefined;
 
     useEffect(() => {
         void session.load().catch((error: unknown) => {
@@ -287,7 +342,97 @@ export function DocumentEditor({
     // 3. UI states (outline toggle, history dialog, copy status, errors)
     const [linkOpen, setLinkOpen] = useState(false);
     const [linkHref, setLinkHref] = useState("");
-    const [showOutline, setShowOutline] = useState(false);
+    const [devicePreferences, setDevicePreferences] = useState(() =>
+        readDevicePreferences(deviceStorage(), userId)
+    );
+    const [coarsePointer, setCoarsePointer] = useState(() =>
+        globalThis.matchMedia("(any-pointer: coarse)").matches
+    );
+    const editorContainerRef = useRef<HTMLDivElement>(null);
+    const titleInputRef = useRef<HTMLInputElement>(null);
+    const outlineButtonRef = useRef<HTMLButtonElement>(null);
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const [sheetRestoreFocus, setSheetRestoreFocus] = useState(true);
+    const [outlineHasFocus, setOutlineHasFocus] = useState(false);
+    const [outlineFits, setOutlineFits] = useState(false);
+    const showOutline = devicePreferences.outlineOpen;
+    const visibleOutline = narrow ? sheetOpen : showOutline;
+    const showToolbar = !resolveToolbarCollapsed(
+        devicePreferences.toolbarCollapsed,
+        narrow ? 0 : BREAKPOINTS.medium,
+        coarsePointer,
+    );
+    const [modeOpen, setModeOpen] = useState(false);
+    const formatButtonRef = useRef<HTMLButtonElement>(null);
+    const toolbarCollapseRef = useRef<HTMLButtonElement>(null);
+    // The collapse chevron and the header toggle replace each other; focus follows.
+    const toolbarFocusTarget = useRef<"format" | "collapse" | null>(null);
+    const toolbarContainerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const container = editorContainerRef.current;
+        if (!container) return;
+        const observer = new ResizeObserver((entries) => {
+            const width = entries[0]?.contentRect.width;
+            if (width !== undefined && width > 0) {
+                const outlineWidth = Number.parseFloat(
+                    getComputedStyle(container).getPropertyValue("--document-outline-width"),
+                );
+                setOutlineFits(width >= BREAKPOINTS.small + outlineWidth);
+            }
+        });
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [snapshot.document]);
+    useEffect(() => {
+        const media = globalThis.matchMedia("(any-pointer: coarse)");
+        const onChange = () => {
+            if (
+                resolveToolbarCollapsed(devicePreferences.toolbarCollapsed, narrow ? 0 : BREAKPOINTS.medium, media.matches) &&
+                toolbarContainerRef.current?.contains(document.activeElement)
+            ) toolbarFocusTarget.current = "format";
+            setCoarsePointer(media.matches);
+        };
+        media.addEventListener("change", onChange);
+        return () => media.removeEventListener("change", onChange);
+    }, [devicePreferences.toolbarCollapsed, narrow]);
+    useEffect(() => {
+        const target = toolbarFocusTarget.current;
+        toolbarFocusTarget.current = null;
+        if (target === "format" && !showToolbar) formatButtonRef.current?.focus();
+        else if (target === "collapse" && showToolbar) toolbarCollapseRef.current?.focus();
+    }, [showToolbar]);
+    useEffect(() => {
+        if (focusTitleSignal !== undefined) titleInputRef.current?.focus();
+    }, [focusTitleSignal, snapshot.loading]);
+    useEffect(() => {
+        if (!narrow || !richMode) setSheetOpen(false);
+    }, [narrow, richMode]);
+    const updateOutline = (open: boolean) => {
+        writeOutlineOpen(deviceStorage(), userId, open);
+        setDevicePreferences((previous) => ({ ...previous, outlineOpen: open }));
+    };
+    const closeOutline = () => {
+        if (narrow) {
+            setSheetRestoreFocus(true);
+            setSheetOpen(false);
+        } else {
+            updateOutline(false);
+            outlineButtonRef.current?.focus();
+        }
+    };
+    useEscapeLayer(
+        !narrow && showOutline && !outlineFits && outlineHasFocus && richMode,
+        closeOutline,
+        "overlay",
+    );
+    const toggleToolbar = () => {
+        const collapsed = showToolbar;
+        toolbarFocusTarget.current = collapsed
+            ? toolbarContainerRef.current?.contains(document.activeElement) ? "format" : null
+            : "collapse";
+        writeToolbarCollapsed(deviceStorage(), userId, collapsed);
+        setDevicePreferences((previous) => ({ ...previous, toolbarCollapsed: collapsed }));
+    };
     const [historyOpen, setHistoryOpen] = useState(false);
     const [activeCommands, setActiveCommands] = useState<
         DocumentToolbarActiveCommands
@@ -330,6 +475,7 @@ export function DocumentEditor({
     const paginationRef = useRef<DocumentPagination | null>(null);
     const paginationViewportRef = useRef<HTMLDivElement>(null);
     const loadPaper = useCallback(async () => {
+        if (!documentId) return;
         try {
             const settings = await api<DocumentSettingsDto>(
                 `/api/documents/${encodeURIComponent(documentId)}/settings`,
@@ -383,7 +529,7 @@ export function DocumentEditor({
             const scrollArea = container.querySelector<HTMLElement>(
                 ".document-editor-scroll-area",
             );
-            if (!toolbar || !scrollArea) return;
+            if (!scrollArea) return;
 
             const view = editorHandleRef.current?.view;
             const hasEditorFocus = Boolean(
@@ -398,15 +544,16 @@ export function DocumentEditor({
                 const viewportBottom = viewportTop +
                     (viewport?.height ?? globalThis.innerHeight);
                 const containerRect = container.getBoundingClientRect();
-                const toolbarRect = toolbar.getBoundingClientRect();
+                const toolbarRect = toolbar?.getBoundingClientRect();
                 const toolbarTop = Math.max(containerRect.top, viewportTop);
                 const toolbarBottom = Math.min(
                     containerRect.bottom,
                     viewportBottom,
                 );
                 if (
-                    toolbarRect.top < toolbarTop - 1 ||
-                    toolbarRect.bottom > toolbarBottom + 1
+                    toolbarRect &&
+                    (toolbarRect.top < toolbarTop - 1 ||
+                        toolbarRect.bottom > toolbarBottom + 1)
                 ) {
                     container.scrollTop += toolbarRect.top - toolbarTop;
                 }
@@ -416,12 +563,12 @@ export function DocumentEditor({
                 const getVisibleContentBounds = () => {
                     const rootRect = container.getBoundingClientRect();
                     const areaRect = scrollArea.getBoundingClientRect();
-                    const currentToolbarRect = toolbar.getBoundingClientRect();
+                    const currentToolbarRect = toolbar?.getBoundingClientRect();
                     return {
                         top: Math.max(
                             rootRect.top,
                             areaRect.top,
-                            currentToolbarRect.bottom,
+                            currentToolbarRect?.bottom ?? rootRect.top,
                             viewportTop,
                         ),
                         bottom: Math.min(
@@ -511,12 +658,13 @@ export function DocumentEditor({
         }
     }, [snapshot.saveStatus, onChanged]);
 
-    // onDirtyChange: true ONLY when unsaved content AND localDraftError means cannot safely persist
+    // An uncreated note has no local draft, so a failed POST is unsafe.
     useEffect(() => {
         const isUnsaved = snapshot.saveStatus === "dirty" ||
             snapshot.saveStatus === "error" || hasConflict;
         const hasUnsafePersist = isUnsaved &&
-            Boolean(snapshot.localDraftError);
+            (Boolean(snapshot.localDraftError) ||
+                (isNewSession && !snapshot.document && snapshot.saveStatus === "error"));
         onDirtyChange?.(hasUnsafePersist);
         return () => {
             onDirtyChange?.(false);
@@ -524,6 +672,8 @@ export function DocumentEditor({
     }, [
         snapshot.saveStatus,
         snapshot.localDraftError,
+        snapshot.document,
+        isNewSession,
         hasConflict,
         onDirtyChange,
     ]);
@@ -533,11 +683,12 @@ export function DocumentEditor({
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             if (
                 snapshot.saveStatus === "dirty" ||
+                snapshot.saveStatus === "saving" ||
                 snapshot.saveStatus === "error" ||
                 hasConflict
             ) {
                 if (!hasConflict) void session.save("autosave");
-                if (snapshot.localDraftError) {
+                if (snapshot.localDraftError || (isNewSession && !snapshot.document)) {
                     event.preventDefault();
                     event.returnValue = "";
                 }
@@ -547,7 +698,7 @@ export function DocumentEditor({
         return () => {
             globalThis.removeEventListener("beforeunload", handleBeforeUnload);
         };
-    }, [session, snapshot.saveStatus, snapshot.localDraftError, hasConflict]);
+    }, [session, snapshot.saveStatus, snapshot.localDraftError, snapshot.document, hasConflict, isNewSession]);
 
     // 6. Asset upload handler (POST /api/documents/:id/assets multipart)
     const handleUpload = useCallback(async (file: File): Promise<string> => {
@@ -558,16 +709,19 @@ export function DocumentEditor({
             throw new Error("图片大小不能超过 10 MiB");
         }
         const formData = new FormData();
+        // Assets belong to a persisted document.
+        const id = session.getSnapshot().document?.id;
+        if (!id) throw new Error("请先输入笔记内容再上传图片");
         formData.append("file", file);
         const result = await api<DocumentAssetDto>(
-            `/api/documents/${encodeURIComponent(documentId)}/assets`,
+            `/api/documents/${encodeURIComponent(id)}/assets`,
             {
                 method: "POST",
                 body: formData,
             },
         );
         return result.assetId;
-    }, [documentId]);
+    }, [session]);
 
     const handleUploadError = useCallback((message: string) => {
         setUploadError(message);
@@ -575,8 +729,8 @@ export function DocumentEditor({
 
     // 7. Dynamic import and mount of Milkdown (#110 createMarkdownEditor) in continuous mode
     // Gated on isDocumentReady so it reliably mounts after initial loading finishes
-    const isDocumentReady = !snapshot.loading && Boolean(snapshot.document) &&
-        (!needsPagination || Boolean(paperSettings));
+    const isDocumentReady = !snapshot.loading && (Boolean(snapshot.document) || isNewSession) &&
+        (!needsPagination || !documentId || Boolean(paperSettings));
 
     useEffect(() => {
         if (
@@ -600,7 +754,9 @@ export function DocumentEditor({
                 if (!isMounted || !editorRootRef.current) return;
 
                 const plugins = createDocumentExtensions({
-                    documentId,
+                    get documentId() {
+                        return session.getSnapshot().document?.id ?? "";
+                    },
                     onUpload: handleUpload,
                     onError: handleUploadError,
                     onToolbarStateChange: (view) =>
@@ -684,7 +840,6 @@ export function DocumentEditor({
             }
         };
     }, [
-        documentId,
         handleUpload,
         handleUploadError,
         isDocumentReady,
@@ -870,6 +1025,15 @@ export function DocumentEditor({
 
     // 13. Outline click focus
     const handleOutlineSelectHeading = (index: number) => {
+        if (narrow) {
+            setSheetRestoreFocus(false);
+            setSheetOpen(false);
+            requestAnimationFrame(() => focusOutlineHeading(index));
+            return;
+        }
+        focusOutlineHeading(index);
+    };
+    const focusOutlineHeading = (index: number) => {
         if (richMode) {
             const headings = editorRootRef.current?.querySelectorAll(
                 "h1, h2, h3, h4, h5, h6",
@@ -927,17 +1091,19 @@ export function DocumentEditor({
     };
 
     // 16. Initial Loading & Fatal Error state
-    if (!snapshot.document && !snapshot.error) {
+    if (!isNewSession && !snapshot.document && !snapshot.error) {
         return (
             <div className="document-editor-container document-editor-state">
+                {leading && <div className="document-editor-header document-editor-header--bare">{leading}</div>}
                 <LoadingState density="default">正在加载笔记…</LoadingState>
             </div>
         );
     }
 
-    if (snapshot.error && !snapshot.document) {
+    if (!isNewSession && snapshot.error && !snapshot.document) {
         return (
             <div className="document-editor-container document-editor-state">
+                {leading && <div className="document-editor-header document-editor-header--bare">{leading}</div>}
                 <div className="document-editor-state-body">
                     <p className="document-load-error">
                         {snapshot.error}
@@ -964,6 +1130,7 @@ export function DocumentEditor({
 
     return (
         <div
+            ref={editorContainerRef}
             className="document-editor-container"
             data-workspace-editor
             onKeyDown={handleContainerKeyDown}
@@ -1077,95 +1244,73 @@ export function DocumentEditor({
             )}
             {/* Header & Controls */}
             <header className="document-editor-header">
+                {leading}
+                {/* Document Title Input */}
+                <div className="document-title-wrapper">
+                    <input
+                        ref={titleInputRef}
+                        type="text"
+                        className="document-title-input"
+                        placeholder="未命名笔记…"
+                        aria-label="笔记标题"
+                        value={snapshot.title}
+                        onChange={(e) =>
+                            session.edit({ title: e.target.value })}
+                        onCompositionStart={() => session.setComposing(true)}
+                        onCompositionEnd={() => session.setComposing(false)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                if (e.nativeEvent.isComposing) return;
+                                e.preventDefault();
+                                if (richMode) editorHandleRef.current?.focus();
+                            }
+                        }}
+                    />
+                </div>
                 <div className="document-editor-header-main">
-                    {/* One document, three presentations. */}
-                    <div
-                        className="document-view-switch"
-                        role="group"
-                        aria-label="视图模式"
-                    >
+                    {hasConflict && conflictDismissed && (
                         <Button
                             type="button"
-                            variant={viewMode === "continuous"
-                                ? "outline"
-                                : "ghost"}
+                            variant="outline"
                             size="sm"
-                            aria-label="编辑"
-                            title="编辑"
-                            aria-pressed={viewMode === "continuous"}
-                            onClick={() => handleViewChange("continuous")}
+                            onClick={() => setConflictDismissed(false)}
                         >
-                            编辑
+                            处理冲突
                         </Button>
-                        <Button
-                            type="button"
-                            variant={viewMode === "page" ? "outline" : "ghost"}
-                            size="sm"
-                            aria-label="分页"
-                            title="分页"
-                            aria-pressed={viewMode === "page"}
-                            disabled={snapshot.loading}
-                            onClick={() => handleViewChange("page")}
-                        >
-                            分页
-                        </Button>
-                        <Button
-                            type="button"
-                            variant={viewMode === "source"
-                                ? "outline"
-                                : "ghost"}
-                            size="sm"
-                            aria-label="Markdown 源码"
-                            title="Markdown 源码"
-                            aria-pressed={viewMode === "source"}
-                            onClick={() => handleViewChange("source")}
-                        >
-                            源码
-                        </Button>
-                    </div>
-                    {/* Metadata & Word Count */}
-                    <div className="document-metadata-bar">
-                        {viewMode === "page" && <span>{pageCount} 页</span>}
-                        <span>
-                            {analysis.wordCount > 0
-                                ? `${analysis.wordCount} 字 · 约 ${analysis.readingMinutes} 分钟`
-                                : "0 字"}
-                        </span>
-                        <span
-                            className="document-save-status"
-                            data-status={snapshot.saveStatus}
-                            role="status"
-                        >
-                            {snapshot.saveStatus === "saving" && (
-                                <RefreshCw
-                                    size="1em"
-                                    className="icon-sm animate-spin"
-                                />
-                            )}
-                            {saveStatusLabel}
-                        </span>
-                        {hasConflict && conflictDismissed && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setConflictDismissed(false)}
-                            >
-                                处理冲突
-                            </Button>
-                        )}
-                    </div>
+                    )}
 
                     <div className="document-editor-header-actions">
+                        {!showToolbar && (
+                            <Button
+                                ref={formatButtonRef}
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label="显示格式工具栏"
+                                title="显示格式工具栏"
+                                aria-pressed={false}
+                                onClick={toggleToolbar}
+                            >
+                                <Type size="1em" className="icon-sm" />
+                            </Button>
+                        )}
                         <Button
+                            ref={outlineButtonRef}
                             type="button"
                             variant="ghost"
                             size="icon"
                             aria-label="大纲"
                             title="大纲"
-                            aria-pressed={showOutline}
+                            aria-pressed={visibleOutline}
                             disabled={viewMode === "source"}
-                            onClick={() => setShowOutline(!showOutline)}
+                            onClick={() => {
+                                if (narrow) {
+                                    setSheetRestoreFocus(true);
+                                    setSheetOpen(!sheetOpen);
+                                } else {
+                                    updateOutline(!showOutline);
+                                }
+                            }}
                         >
                             <BookOpen size="1em" className="icon-sm" />
                         </Button>
@@ -1300,49 +1445,45 @@ export function DocumentEditor({
                     </div>
                 </div>
 
-                {/* Document Title Input */}
-                <div className="document-title-wrapper">
-                    <input
-                        type="text"
-                        className="document-title-input"
-                        placeholder="未命名笔记…"
-                        aria-label="笔记标题"
-                        value={snapshot.title}
-                        onChange={(e) =>
-                            session.edit({ title: e.target.value })}
-                        onCompositionStart={() => session.setComposing(true)}
-                        onCompositionEnd={() => session.setComposing(false)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                if (e.nativeEvent.isComposing) return;
-                                e.preventDefault();
-                                if (richMode) editorHandleRef.current?.focus();
-                            }
-                        }}
-                    />
-                </div>
             </header>
 
             {/* Toolbar: Formatting disabled in source mode per §32 */}
-            <DocumentToolbar
-                disabled={viewMode === "source" || isUploading}
-                activeCommands={viewMode === "source"
-                    ? undefined
-                    : activeCommands}
-                onUndo={() => {
-                    if (richMode && editorHandleRef.current) {
-                        editorHandleRef.current.undo();
-                    }
-                }}
-                onRedo={() => {
-                    if (richMode && editorHandleRef.current) {
-                        editorHandleRef.current.redo();
-                    }
-                }}
-                onCommand={handleToolbarCommand}
-                onInsertPageBreak={handleInsertPageBreak}
-                onUploadImage={handleUploadImageClick}
-            />
+            {showToolbar && (
+                <div ref={toolbarContainerRef} className="document-toolbar-container">
+                    <DocumentToolbar
+                        disabled={viewMode === "source" || isUploading}
+                        activeCommands={viewMode === "source"
+                            ? undefined
+                            : activeCommands}
+                        onUndo={() => {
+                            if (richMode && editorHandleRef.current) {
+                                editorHandleRef.current.undo();
+                            }
+                        }}
+                        onRedo={() => {
+                            if (richMode && editorHandleRef.current) {
+                                editorHandleRef.current.redo();
+                            }
+                        }}
+                        onCommand={handleToolbarCommand}
+                        onInsertPageBreak={handleInsertPageBreak}
+                        onUploadImage={handleUploadImageClick}
+                    />
+                    <Button
+                        ref={toolbarCollapseRef}
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="document-toolbar-collapse"
+                        aria-label="隐藏格式工具栏"
+                        title="隐藏格式工具栏"
+                        aria-pressed={true}
+                        onClick={toggleToolbar}
+                    >
+                        <ChevronUp size="1em" className="icon-md" />
+                    </Button>
+                </div>
+            )}
 
             {/* Workspace Content Area: Editor + Outline */}
             <div className="document-editor-content-layout">
@@ -1390,23 +1531,88 @@ export function DocumentEditor({
                     </div>
                 </div>
 
-                {/* Outline Panel */}
-                {showOutline && richMode && (
-                    <Suspense
-                        fallback={
-                            <LoadingState density="compact">
-                                正在加载大纲…
-                            </LoadingState>
-                        }
+                {!narrow && showOutline && richMode && (
+                    <div
+                        className={outlineFits ? "document-outline-panel" : "document-outline-panel document-outline-panel--overlay"}
+                        onFocus={() => setOutlineHasFocus(true)}
+                        onBlur={(event) => {
+                            if (!event.currentTarget.contains(event.relatedTarget)) {
+                                setOutlineHasFocus(false);
+                            }
+                        }}
                     >
-                        <DocumentOutline
-                            outline={analysis.outline}
-                            onSelectHeading={handleOutlineSelectHeading}
-                            onClose={() => setShowOutline(false)}
-                        />
-                    </Suspense>
+                        <Suspense fallback={<LoadingState density="compact">正在加载大纲…</LoadingState>}>
+                            <DocumentOutline
+                                outline={analysis.outline}
+                                onSelectHeading={handleOutlineSelectHeading}
+                                onClose={closeOutline}
+                            />
+                        </Suspense>
+                    </div>
                 )}
             </div>
+            <div className="document-editor-status-bar">
+                <div className="document-editor-status-actions">
+                    <Popover open={modeOpen} onOpenChange={setModeOpen}>
+                        <PopoverTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`切换编辑模式，当前：${viewMode === "continuous" ? "编辑" : viewMode === "page" ? "分页" : "源码"}`}
+                                    title="切换编辑模式"
+                                    className="document-mode-trigger"
+                                >
+                                    {viewMode === "continuous"
+                                        ? <Pencil className="icon-sm" />
+                                        : viewMode === "page"
+                                        ? <FileText className="icon-sm" />
+                                        : <CodeXml className="icon-sm" />}
+                                    <ChevronUp className="icon-sm document-mode-chevron" aria-hidden="true" />
+                                </Button>
+                            }
+                        />
+                        <PopoverContent data-document-editor-owner={documentEditorOwner}>
+                            <div className="document-view-switch" role="group" aria-label="视图模式">
+                                <Button type="button" variant={viewMode === "continuous" ? "outline" : "ghost"} size="icon" aria-label="编辑" title="编辑" aria-pressed={viewMode === "continuous"} onClick={() => { handleViewChange("continuous"); setModeOpen(false); }}>
+                                    <Pencil className="icon-sm" />
+                                </Button>
+                                <Button type="button" variant={viewMode === "page" ? "outline" : "ghost"} size="icon" aria-label="分页" title="分页" aria-pressed={viewMode === "page"} disabled={snapshot.loading} onClick={() => { handleViewChange("page"); setModeOpen(false); }}>
+                                    <FileText className="icon-sm" />
+                                </Button>
+                                <Button type="button" variant={viewMode === "source" ? "outline" : "ghost"} size="icon" aria-label="Markdown 源码" title="Markdown 源码" aria-pressed={viewMode === "source"} onClick={() => { handleViewChange("source"); setModeOpen(false); }}>
+                                    <CodeXml className="icon-sm" />
+                                </Button>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+                <div className="document-metadata-bar">
+                    <span>{analysis.wordCount > 0 ? `${analysis.wordCount} 字 · 约 ${analysis.readingMinutes} 分钟` : "0 字"}</span>
+                    {viewMode === "page" && <span>{pageCount} 页</span>}
+                    <span className="document-save-status" data-status={snapshot.saveStatus} role="status">
+                        {snapshot.saveStatus === "saving" && <RefreshCw size="1em" className="icon-sm animate-spin" />}
+                        {saveStatusLabel}
+                    </span>
+                </div>
+            </div>
+            <WindowOverlay
+                open={narrow && sheetOpen && richMode}
+                onOpenChange={setSheetOpen}
+                label="笔记大纲"
+                className="document-outline-sheet"
+                restoreFocusRef={outlineButtonRef}
+                restoreFocus={sheetRestoreFocus}
+            >
+                <Suspense fallback={<LoadingState density="compact">正在加载大纲…</LoadingState>}>
+                    <DocumentOutline
+                        outline={analysis.outline}
+                        onSelectHeading={handleOutlineSelectHeading}
+                        onClose={closeOutline}
+                    />
+                </Suspense>
+            </WindowOverlay>
 
             <DocumentPaperSettingsDialog
                 documentId={documentId}

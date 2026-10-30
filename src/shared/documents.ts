@@ -82,7 +82,7 @@ export interface DocumentUpdatedEvent {
 }
 
 export type DocumentScope =
-    | { readonly type: "all" | "recent" | "favorite" | "home" }
+    | { readonly type: "all" | "recent" | "favorite" | "home" | "uncategorized" }
     | { readonly type: "notebook"; readonly notebookId: string };
 export interface DocumentSummaryDto {
     id: string;

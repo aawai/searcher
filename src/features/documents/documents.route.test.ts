@@ -151,6 +151,59 @@ Deno.test("Documents HTTP: title/body boundaries and exact 8 MiB create/update i
     }
 });
 
+Deno.test("Documents HTTP: uncategorized scope paginates only the owner's active unfiled documents", async () => {
+    const env = await setup();
+    try {
+        const path = "/api/documents?scope=uncategorized";
+        assertEquals(await data<DocumentPageDto>(await env.request(path)), {
+            items: [],
+            nextCursor: null,
+        });
+        const notebook = await data<DocumentNotebookDto>(
+            await env.request("/api/document-notebooks", "POST", { name: "Filed" }),
+        );
+        await data<DocumentDto>(await env.request("/api/documents", "POST", {
+            notebookId: notebook.id,
+        }));
+        const first = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", { title: "first" }),
+        );
+        const second = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", { title: "second" }),
+        );
+        const deleted = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", { title: "deleted" }),
+        );
+        assertEquals((await env.request(
+            `/api/documents/${deleted.id}?version=${deleted.version}`,
+            "DELETE",
+        )).status, 200);
+        const other = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", { title: "other" }, 1),
+        );
+        const page1 = await data<DocumentPageDto>(await env.request(`${path}&limit=1`));
+        assert(page1.nextCursor);
+        const cursor = encodeURIComponent(page1.nextCursor);
+        const page2 = await data<DocumentPageDto>(
+            await env.request(`${path}&limit=1&cursor=${cursor}`),
+        );
+        assertEquals(
+            [...page1.items, ...page2.items].map((item) => item.id).sort(),
+            [first.id, second.id].sort(),
+        );
+        assertEquals(page2.nextCursor, null);
+        assertEquals(
+            (await data<DocumentPageDto>(await env.request(path, "GET", undefined, 1)))
+                .items.map((item) => item.id),
+            [other.id],
+        );
+        assertEquals((await env.request(`${path}&cursor=${cursor}`, "GET", undefined, 1)).status, 400);
+        assertEquals((await env.request(`/api/documents?scope=recent&cursor=${cursor}`)).status, 400);
+    } finally {
+        await env.store.close();
+    }
+});
+
 Deno.test("Documents HTTP: notebook library/search, conflict current document and trash restoration are owner-isolated", async () => {
     const env = await setup();
     try {

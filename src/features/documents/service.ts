@@ -990,6 +990,8 @@ export class DocumentsService {
                     ? eq(documents.isFavorite, true)
                     : scope.type === "notebook"
                     ? eq(documents.notebookId, scope.notebookId)
+                    : scope.type === "uncategorized"
+                    ? sql`${documents.notebookId} IS NULL`
                     : undefined,
             );
 

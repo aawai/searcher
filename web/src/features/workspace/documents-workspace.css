@@ -1,37 +1,255 @@
+.documents-layout {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+.documents-sidebar {
+    flex: 0 0 var(--notes-sidebar-width);
+    min-width: 0;
+    min-height: 0;
+    background: var(--surface-l3);
+    border-inline-end: var(--space-hairline) solid var(--border);
+}
+.documents-sidebar[hidden] { display: none; }
+.documents-sidebar > nav {
+    height: 100%;
+    overflow: auto;
+}
+/* Drawer: the editor shrinks into a rounded card and slides right, revealing
+   the navigation underneath. The overlay stays rendered while closed
+   (visibility, not display) so both directions animate. */
+.documents-layout[data-drawer] {
+    --documents-drawer-width: min(var(--notes-sidebar-width), 80%);
+    transition: background-color 0s linear var(--motion-base);
+}
+.documents-layout[data-drawer="open"] {
+    background-color: var(--surface-l3);
+    transition-delay: 0s;
+}
+.documents-sidebar--drawer {
+    position: absolute;
+    inset: 0;
+    z-index: var(--elevation-local-10);
+    display: flex;
+    border: 0;
+    background: transparent;
+    opacity: 1;
+    transition: opacity var(--motion-base) var(--ease-out-expo), visibility 0s linear 0s;
+}
+.documents-sidebar--drawer[hidden] {
+    display: flex;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity var(--motion-base) var(--ease-out-expo), visibility 0s linear var(--motion-base);
+}
+.documents-sidebar--drawer > nav {
+    flex: 0 0 var(--documents-drawer-width);
+    background: var(--surface-l3);
+}
+.documents-drawer-dismiss {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+.documents-layout[data-drawer] > .documents-editor-pane {
+    background: var(--surface);
+    transform-origin: left center;
+    transition:
+        transform var(--motion-base) var(--ease-out-expo),
+        border-radius var(--motion-base) var(--ease-out-expo),
+        box-shadow var(--motion-base) var(--ease-out-expo);
+}
+.documents-layout[data-drawer="open"] > .documents-editor-pane {
+    transform: translateX(var(--documents-drawer-width)) scale(.94);
+    border-radius: var(--radius-sheet);
+    box-shadow: var(--shadow-l2);
+}
+/* Reduced motion: the same duration as an opacity change, no translate or scale. */
+@media (prefers-reduced-motion: reduce) {
+    .documents-layout[data-drawer] > .documents-editor-pane,
+    .documents-layout[data-drawer="open"] > .documents-editor-pane {
+        transform: none;
+        border-radius: 0;
+        box-shadow: none;
+        transition: none;
+    }
+}
+.documents-editor-pane {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
 /* The library's notes view: one navigation row, one search row, flat rows. */
 .documents-workspace {
     gap: var(--space-4);
 }
-
-/* Filters, notebook picker and notebook management share one control row. */
-.documents-notebook-navigation {
+.documents-sidebar-header {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+}
+.documents-sidebar-header .documents-list-toolbar {
+    flex: 1;
+    min-width: 0;
+    gap: 0;
+}
+.documents-sidebar-header > [data-slot="button"] {
+    flex: none;
+}
+
+/* Sidebar: search + create row, fixed entries, notebook area, trash entry.
+   The navigation scrolls as a whole: the header sticks, the trash entry rests
+   at the bottom of short content and follows long content, so very short
+   windows keep every entry reachable. */
+.documents-workspace {
+    min-height: 100%;
+    gap: var(--space-2);
+}
+.documents-sidebar-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--elevation-local-1);
+    background: var(--surface-l3);
+}
+.documents-sidebar-scroll {
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+.documents-fixed-entries,
+.documents-notebook-area {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+.documents-notebooks-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+}
+.documents-notebooks-row > .documents-notebooks-heading {
+    flex: 1;
+    min-width: 0;
+}
+/* Create actions: compact visual size; coarse pointers get the touch target
+   from an enlarged hit area, so the row does not grow. */
+[data-slot="button"].documents-heading-action {
+    position: relative;
+    flex: none;
+    width: var(--control-compact-height);
+    min-width: var(--control-compact-height);
+    height: var(--control-compact-height);
+    min-height: var(--control-compact-height);
+}
+[data-slot="button"].documents-heading-action::after {
+    content: "";
+    position: absolute;
+    inset: calc((var(--control-compact-height) - var(--control-touch-target)) / 2);
+}
+.documents-notebooks-heading {
+    margin: 0;
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+}
+[data-slot="button"].documents-entry {
+    justify-content: flex-start;
+    width: 100%;
+    gap: var(--space-2);
+    padding-inline: var(--space-3);
+}
+[data-slot="button"].documents-entry[aria-pressed="true"] {
+    background: var(--surface-soft);
+    color: var(--foreground);
+}
+.documents-notebooks-heading [data-slot="button"].documents-entry {
+    font-size: inherit;
+    color: inherit;
+}
+.documents-sidebar-footer {
+    flex: none;
+    margin-top: auto;
+    padding-top: var(--space-2);
+    border-top: var(--space-hairline) solid var(--border);
+}
+
+/* Notebook tree: one flat role=tree, depth from --tree-level. */
+.documents-tree {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+.documents-tree-row {
+    --tree-level: 1;
+    display: flex;
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
+    min-height: var(--control-compact-height);
+    padding-block: var(--space-1);
+    padding-inline-end: var(--space-1);
+    padding-inline-start: calc(var(--space-2) + (var(--tree-level) - 1) * var(--space-4));
+    border-radius: var(--control-radius);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--motion-fast) var(--ease-standard);
 }
-.documents-notebook-navigation > [data-slot="radio-group"][data-variant="segmented"] {
-    flex: 1 1 216px;
-    min-width: min(100%, 200px);
-}
-.documents-notebook-picker {
-    display: flex;
-    flex: 1 1 144px;
-    align-items: center;
-    gap: var(--space-1);
-    min-width: min(100%, 140px);
-}
-.documents-notebook-picker [data-slot="native-select-wrapper"] {
-    flex: 1;
-    width: auto;
-    min-width: 0;
-}
-/* A borderless track matches the segmented control beside it. */
-.documents-notebook-picker [data-slot="native-select"] {
-    border: none;
+.documents-tree-row:is(:hover, :focus-within),
+.documents-tree-row[data-selected] {
     background: var(--surface-soft);
+}
+.documents-tree-row:focus-visible {
+    outline: var(--space-half) solid var(--ring);
+    outline-offset: calc(var(--space-half) * -1);
+}
+.documents-tree-row[data-selected] {
+    color: var(--foreground);
+    font-weight: var(--font-label-weight);
+}
+.documents-tree-label,
+.documents-tree-more,
+.documents-tree-status {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+.documents-tree-more,
+.documents-tree-status {
+    color: var(--muted);
+}
+.documents-tree-chevron,
+.documents-tree-icon {
+    flex: none;
+    color: var(--muted);
+}
+.documents-tree-row[data-kind="note"] {
+    cursor: default;
+}
+[data-slot="button"].documents-tree-action {
+    flex: none;
+    opacity: 0;
+}
+.documents-tree-row:is(:hover, :focus-within) [data-slot="button"].documents-tree-action,
+[data-slot="button"].documents-tree-action[aria-expanded="true"],
+[data-slot="button"].documents-tree-action:focus-visible,
+.documents-tree-row[data-popup-open] [data-slot="button"].documents-tree-action {
+    opacity: 1;
 }
 
 /* Search and the row count share one row; the section carries the scope name. */
@@ -78,6 +296,9 @@
     transition: background var(--motion-fast) var(--ease-standard);
 }
 .documents-summary-row:is(:hover, :focus-within) {
+    background: var(--surface-soft);
+}
+.documents-summary-row:has([aria-current="page"]) {
     background: var(--surface-soft);
 }
 .documents-summary-header {
@@ -157,13 +378,17 @@
     width: 100%;
     min-width: 0;
 }
-.documents-favorite-icon {
+.documents-favorite-icon,
+.documents-pin-icon {
     flex: none;
     fill: currentColor;
     color: var(--muted);
 }
 .menu-item > .documents-favorite-icon {
     color: var(--warning);
+}
+.menu-item > .documents-pin-icon {
+    color: var(--accent);
 }
 
 /* Library and notebook dialogs: one form rhythm. */
@@ -216,15 +441,24 @@
 /* Dense pointers get compact controls; touch keeps the 44px primitives. */
 @media (hover: hover) and (pointer: fine) {
     [data-slot="button"].documents-summary-open,
-    [data-slot="dropdown-menu-trigger"].documents-row-action {
+    [data-slot="dropdown-menu-trigger"].documents-row-action,
+    [data-slot="button"].documents-tree-action {
         min-height: var(--control-compact-height);
     }
-    [data-slot="dropdown-menu-trigger"].documents-row-action {
+    [data-slot="dropdown-menu-trigger"].documents-row-action,
+    [data-slot="button"].documents-tree-action {
         width: var(--control-compact-height);
+    }
+    [data-slot="button"].documents-entry {
+        min-height: var(--control-compact-height);
     }
 }
 @media (any-pointer: coarse), (hover: none) {
-    [data-slot="dropdown-menu-trigger"].documents-row-action {
+    [data-slot="dropdown-menu-trigger"].documents-row-action,
+    [data-slot="button"].documents-tree-action {
         opacity: 1;
+    }
+    .documents-tree-row {
+        min-height: var(--control-touch-target);
     }
 }

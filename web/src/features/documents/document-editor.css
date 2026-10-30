@@ -7,7 +7,8 @@
     flex-direction: column;
     height: 100%;
     min-height: 0;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     width: 100%;
     background-color: transparent;
     container-type: inline-size;
@@ -25,7 +26,9 @@
 /* Header & Top Bar */
 .document-editor-header {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-control-gap);
     padding: var(--space-3) var(--space-4);
     background-color: transparent;
@@ -33,13 +36,18 @@
     z-index: var(--elevation-local-10);
 }
 
+/* The leading toggle and the title keep their row; on a narrow editor the
+   actions wrap below instead of squeezing the title. */
 .document-editor-header-main {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    flex-wrap: wrap;
+    gap: var(--space-control-gap);
     min-width: 0;
+}
+@container (max-width: 639px) {
+    .document-editor-header-main {
+        margin-inline-start: auto;
+    }
 }
 
 .document-editor-header-actions {
@@ -65,10 +73,10 @@
 
 /* Document Title Input (Separate from Markdown body, no implicit H1) */
 .document-title-wrapper {
-    width: 100%;
+    flex: 1 1 calc(var(--control-touch-target) * 3);
+    min-width: 0;
     max-width: var(--editor-readable-width);
     margin: 0 auto;
-    padding-top: var(--space-2);
 }
 
 .document-title-input {
@@ -135,6 +143,68 @@
     user-select: none;
 }
 
+.document-editor-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-control-gap);
+    padding: var(--space-1) var(--space-3);
+    border-top: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+}
+
+.document-editor-status-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+/* Mode trigger: the icon of the current mode and a chevron for its popover. */
+[data-slot="button"].document-mode-trigger {
+    width: auto;
+    gap: var(--space-half);
+    padding-inline: var(--space-2);
+}
+.document-mode-chevron {
+    color: var(--muted);
+}
+
+/* Toolbar container: the toolbar plus the collapse chevron at its first row's end. */
+.document-toolbar-container {
+    display: flex;
+    align-items: flex-start;
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+    z-index: var(--elevation-local-5);
+}
+.document-toolbar-container > .document-editor-toolbar {
+    flex: 1;
+    min-width: 0;
+    border-bottom: 0;
+}
+.document-toolbar-collapse {
+    flex: none;
+    margin: var(--space-1) var(--space-3) 0 0;
+}
+
+/* Header without a title: the host's navigation toggle in an otherwise empty row. */
+.document-editor-header--bare {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.documents-editor-empty {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+}
+
 /* Toolbar */
 .document-editor-toolbar {
     display: flex;
@@ -167,14 +237,23 @@
     .document-editor-header button,
     .document-editor-header [role="button"],
     .document-editor-toolbar button,
-    .document-editor-toolbar [role="button"] {
+    .document-editor-toolbar [role="button"],
+    .document-toolbar-collapse,
+    .document-editor-status-actions button {
         min-height: var(--control-touch-target);
         min-width: var(--control-touch-target);
         padding: var(--space-2);
     }
-    .document-editor-toolbar {
+    .document-toolbar-container {
         position: sticky;
         top: 0;
+        z-index: var(--elevation-local-5);
+    }
+    .document-toolbar-collapse {
+        margin: var(--space-2) var(--space-2) 0 0;
+    }
+    .document-editor-toolbar {
+        position: static;
         flex-wrap: nowrap;
         overflow-x: auto;
         overflow-y: hidden;
@@ -431,16 +510,47 @@
 }
 
 /* Outline Panel (Headings tree) */
+.document-outline-panel {
+    width: var(--document-outline-width);
+    flex-shrink: 0;
+    min-height: 0;
+}
+
+.document-outline-panel--overlay {
+    position: absolute;
+    inset: 0 0 0 auto;
+    z-index: var(--elevation-local-10);
+}
+
+.document-outline-sheet {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: var(--elevation-local-10);
+    max-height: 100%;
+    overflow: auto;
+    background: var(--surface-l3);
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+}
+
+.document-outline-sheet .document-outline-sidebar {
+    width: 100%;
+    max-height: var(--document-outline-compact-height);
+    border-left: 0;
+    background: var(--surface-l3);
+}
+
 .document-outline-sidebar {
     width: var(--document-outline-width);
     flex-shrink: 0;
     border-left: 1px solid var(--border-subtle);
-    background-color: var(--surface);
+    background-color: var(--surface-l3);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     padding: var(--space-3);
     gap: var(--space-control-gap);
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .document-outline-title {
@@ -485,35 +595,11 @@
     text-overflow: ellipsis;
 }
 @container (max-width: 639px) {
-    .document-editor-content-layout {
-        flex-direction: column;
-        overflow: auto;
-    }
-    .document-outline-sidebar {
-        width: 100%;
-        max-height: var(--document-outline-compact-height);
-        border-left: 0;
-        border-top: 1px solid var(--border-subtle);
-    }
     .document-draft-offer-banner {
         flex-wrap: wrap;
     }
 }
 
-/* Side outline: the title stays in the same column as the text. */
-@container (min-width: 640px) {
-    .document-editor-container:has(.document-outline-sidebar) .document-title-wrapper {
-        --document-title-width: min(
-            var(--editor-readable-width),
-            calc(100% - var(--document-outline-width) - var(--space-page-inline))
-        );
-        width: var(--document-title-width);
-        margin-inline: calc(
-            (100% - var(--document-outline-width) - var(--document-title-width))
-            / 2
-        ) auto;
-    }
-}
 
 .document-outline-item-btn[data-level="1"] {
     padding-left: var(--space-2);

@@ -176,6 +176,7 @@ export function registerDocumentsRoutes(
                         "favorite",
                         "home",
                         "notebook",
+                        "uncategorized",
                     ]),
                     "all",
                 ),

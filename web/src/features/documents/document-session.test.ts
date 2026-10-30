@@ -103,6 +103,7 @@ class MemoryDraftStorage {
     private store = new Map<string, unknown>();
     public failReads = false;
     public failWrites = false;
+    public writes = 0;
     public failDeletes = false;
 
     read(key: string): Promise<unknown> {
@@ -113,6 +114,7 @@ class MemoryDraftStorage {
     }
 
     write(key: string, value: DocumentLocalDraft): Promise<void> {
+        this.writes++;
         if (this.failWrites) {
             return Promise.reject(new Error("IndexedDB write failed"));
         }
@@ -1705,4 +1707,245 @@ Deno.test("Realtime update refreshes a clean session and turns unsaved edits int
     assertEquals(session.getSnapshot().body, "local unsaved");
     assertEquals(session.getSnapshot().conflict?.body, "third");
     await session.destroy();
+});
+
+Deno.test("New session never creates or stores a draft without non-whitespace input", async () => {
+    const time = new TestTime();
+    time.install();
+    try {
+        const requests: string[] = [];
+        const drafts = new MemoryDraftStorage();
+        const created: string[] = [];
+        const session = createDocumentSession({
+            userId: "user-1",
+            target: { notebookId: null, isHomeFixed: false },
+            onCreated: (id) => created.push(id),
+            drafts,
+            request: <T>(path: string): Promise<T> => {
+                requests.push(path);
+                return Promise.reject(new Error("Unexpected request"));
+            },
+        });
+        await session.load();
+        await time.tick(AUTOSAVE_DEBOUNCE_MS * 2);
+        assertEquals(await session.save(), true);
+        session.edit({ title: "  ", body: "\n\t" });
+        await time.tick(AUTOSAVE_DEBOUNCE_MS * 2);
+        assertEquals(await session.save(), true);
+        await session.destroy();
+        assertEquals(requests, []);
+        assertEquals(created, []);
+        assertEquals(drafts.writes, 0);
+    } finally {
+        time.restore();
+    }
+});
+
+Deno.test("New session waits for composition and debounce before creating with its target", async () => {
+    const time = new TestTime();
+    time.install();
+    try {
+        const requests: { path: string; method: string; body: Record<string, unknown> }[] = [];
+        const created: string[] = [];
+        const session = createDocumentSession({
+            userId: "user-1",
+            target: { notebookId: "notebook-1", isHomeFixed: true },
+            onCreated: (id) => created.push(id),
+            drafts: new MemoryDraftStorage(),
+            request: <T>(path: string, init?: RequestInit): Promise<T> => {
+                requests.push({
+                    path,
+                    method: init?.method ?? "GET",
+                    body: JSON.parse(init?.body as string),
+                });
+                return Promise.resolve(createMockDoc({
+                    title: "标题",
+                    body: "正文",
+                    notebookId: "notebook-1",
+                    isHomeFixed: true,
+                }) as unknown as T);
+            },
+        });
+        await session.load();
+        session.setComposing(true);
+        session.edit({ title: "标题", body: "正文" });
+        await time.tick(AUTOSAVE_DEBOUNCE_MS * 2);
+        assertEquals(requests.length, 0);
+        session.setComposing(false);
+        await time.tick(AUTOSAVE_DEBOUNCE_MS - 1);
+        assertEquals(requests.length, 0);
+        await time.tick(1);
+        assertEquals(requests, [{
+            path: "/api/documents",
+            method: "POST",
+            body: {
+                title: "标题",
+                body: "正文",
+                notebookId: "notebook-1",
+                isHomeFixed: true,
+            },
+        }]);
+        assertEquals(await session.save(), true);
+        assertEquals(created, ["doc-1"]);
+        assertEquals(session.getSnapshot().document?.id, "doc-1");
+        await session.destroy();
+    } finally {
+        time.restore();
+    }
+});
+
+Deno.test("New session queues edits during its only POST and PATCHes the returned version", async () => {
+    const time = new TestTime();
+    time.install();
+    try {
+        const calls: { path: string; method: string; body: Record<string, unknown> }[] = [];
+        const post = Promise.withResolvers<DocumentDto>();
+        const created: string[] = [];
+        const session = createDocumentSession({
+            userId: "user-1",
+            target: { notebookId: null, isHomeFixed: false },
+            onCreated: (id) => created.push(id),
+            drafts: new MemoryDraftStorage(),
+            request: <T>(path: string, init?: RequestInit): Promise<T> => {
+                const method = init?.method ?? "GET";
+                const body = JSON.parse(init?.body as string);
+                calls.push({ path, method, body });
+                if (method === "POST") {
+                    return post.promise as Promise<T>;
+                }
+                return Promise.resolve(createMockDoc({
+                    version: 8,
+                    title: "First",
+                    body: "Later",
+                }) as unknown as T);
+            },
+        });
+        await session.load();
+        session.edit({ title: "First", body: "Initial" });
+        const firstSave = session.save();
+        assertEquals(calls.length, 1);
+        session.edit({ body: "Later" });
+        const queuedSave = session.save();
+        assertEquals(calls.length, 1);
+        post.resolve(createMockDoc({ version: 7, title: "First", body: "Initial" }));
+        assertEquals(await firstSave, true);
+        assertEquals(await queuedSave, true);
+        assertEquals(calls.length, 2);
+        assertEquals(calls[0].method, "POST");
+        assertEquals(calls[0].body.body, "Initial");
+        assertEquals(calls[1].path, "/api/documents/doc-1");
+        assertEquals(calls[1].method, "PATCH");
+        assertEquals(calls[1].body.version, 7);
+        assertEquals(calls[1].body.body, "Later");
+        assertEquals(session.getSnapshot().body, "Later");
+        assertEquals(session.getSnapshot().document?.version, 8);
+        assertEquals(created, ["doc-1"]);
+        await time.tick(AUTOSAVE_DEBOUNCE_MS * 2);
+        assertEquals(calls.length, 2);
+        await session.destroy();
+    } finally {
+        time.restore();
+    }
+});
+
+Deno.test("Failed new document creation keeps content, blocks a safe leave and retries", async () => {
+    const drafts = new MemoryDraftStorage();
+    let attempts = 0;
+    const created: string[] = [];
+    const session = createDocumentSession({
+        userId: "user-1",
+        target: { notebookId: null, isHomeFixed: false },
+        onCreated: (id) => created.push(id),
+        drafts,
+        request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+            assertEquals(init?.method, "POST");
+            attempts++;
+            if (attempts === 1) return Promise.reject(new Error("Offline"));
+            return Promise.resolve(createMockDoc({
+                title: "Kept",
+                body: "Unsaved",
+            }) as unknown as T);
+        },
+    });
+    await session.load();
+    session.edit({ title: "Kept", body: "Unsaved" });
+    assertEquals(await session.save(), false);
+    assertEquals(session.getSnapshot().saveStatus, "error");
+    assertEquals(session.getSnapshot().title, "Kept");
+    assertEquals(session.getSnapshot().body, "Unsaved");
+    assertEquals(session.getSnapshot().document, null);
+    assertEquals(created, []);
+    assertEquals(drafts.writes, 0);
+    assertEquals(await session.save(), false);
+    assertEquals(attempts, 1);
+    assertEquals(await session.save("manual"), true);
+    assertEquals(attempts, 2);
+    assertEquals(created, ["doc-1"]);
+    assertEquals(session.getSnapshot().saveStatus, "saved");
+    await session.destroy();
+});
+
+Deno.test("New session ignores its own creation event and remains the same session", async () => {
+    const handlers = new Map<string, (version: number) => void>();
+    const events = {
+        subscribe: (id: string, handler: (version: number) => void) => {
+            handlers.set(id, handler);
+            return () => handlers.delete(id);
+        },
+        subscribeAll: () => () => {},
+        dispose: () => {},
+    };
+    const calls: string[] = [];
+    const session = createDocumentSession({
+        userId: "user-1",
+        target: { notebookId: null, isHomeFixed: false },
+        drafts: new MemoryDraftStorage(),
+        events,
+        onCreated: () => {},
+        request: <T>(path: string, init?: RequestInit): Promise<T> => {
+            calls.push(`${init?.method ?? "GET"} ${path}`);
+            return Promise.resolve(createMockDoc({ title: "New", body: "" }) as unknown as T);
+        },
+    });
+    await session.load();
+    session.edit({ title: "New" });
+    assertEquals(await session.save(), true);
+    session.edit({ body: "Local after creation" });
+    const handler = handlers.get("doc-1");
+    assert(handler);
+    handler(1);
+    await Promise.resolve();
+    assertEquals(session.getSnapshot().conflict, null);
+    assertEquals(session.getSnapshot().saveStatus, "dirty");
+    assertEquals(calls, ["POST /api/documents"]);
+    assertEquals(session.getSnapshot().document?.id, "doc-1");
+    assertEquals(session.getSnapshot().body, "Local after creation");
+    await session.destroy();
+});
+
+Deno.test("Leaving a new session flushes pending content before debounce", async () => {
+    const time = new TestTime();
+    time.install();
+    try {
+        const calls: string[] = [];
+        const session = createDocumentSession({
+            userId: "user-1",
+            target: { notebookId: null, isHomeFixed: false },
+            drafts: new MemoryDraftStorage(),
+            request: <T>(path: string, init?: RequestInit): Promise<T> => {
+                calls.push(`${init?.method ?? "GET"} ${path}`);
+                return Promise.resolve(createMockDoc({ body: "Pending" }) as unknown as T);
+            },
+        });
+        await session.load();
+        session.edit({ body: "Pending" });
+        assertEquals(calls, []);
+        assertEquals(await session.save(), true);
+        assertEquals(calls, ["POST /api/documents"]);
+        await session.destroy();
+        await time.tick(AUTOSAVE_DEBOUNCE_MS);
+        assertEquals(calls, ["POST /api/documents"]);
+    } finally {
+        time.restore();
+    }
 });

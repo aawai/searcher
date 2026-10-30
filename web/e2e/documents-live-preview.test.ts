@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNotes } from "./helpers/library.ts";
+import { openNoteRows } from "./helpers/library.ts";
 
 Deno.test("Document live preview: opening and switching preserve canonical Markdown without saves", async () => {
     await using cleanup = new AsyncDisposableStack();
@@ -28,7 +28,7 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
         if (!response.ok) throw new Error("Cannot create document");
     }, body);
     await page.reload();
-    await openNotes(page);
+    await openNoteRows(page);
     await page.locator("[data-document-id] h4 button").filter({
         hasText: "Live contract",
     }).click();
@@ -41,13 +41,15 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
     });
     await page.locator('.document-editor-scroll-area [contenteditable="true"]')
         .waitFor();
-    assertEquals(
-        await page.getByRole("button", { name: "编辑", exact: true })
-            .getAttribute("aria-pressed"),
-        "true",
-    );
+    await page.getByRole("button", {
+        name: "切换编辑模式，当前：编辑",
+        exact: true,
+    }).waitFor({ state: "visible" });
+    await page.getByRole("button", { name: "切换编辑模式，当前：编辑", exact: true }).click();
     await page.getByRole("button", { name: "Markdown 源码", exact: true })
         .click();
+    await page.getByRole("button", { name: "编辑", exact: true })
+        .waitFor({ state: "hidden" });
     assertEquals(
         await page.getByRole("textbox", {
             name: "Markdown 源码正文",
@@ -55,6 +57,7 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
         }).inputValue(),
         body,
     );
+    await page.getByRole("button", { name: "切换编辑模式，当前：源码", exact: true }).click();
     await page.getByRole("button", { name: "编辑", exact: true }).click();
     await page.locator('.document-editor-scroll-area [contenteditable="true"]')
         .waitFor();
