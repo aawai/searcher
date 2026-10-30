@@ -46,7 +46,9 @@ export interface DocumentSession {
 }
 export interface DocumentSessionOptions {
     userId: string;
-    documentId: string;
+    documentId?: string;
+    target?: { notebookId: string | null; isHomeFixed: boolean };
+    onCreated?: (id: string) => void;
     request?: <T>(path: string, init?: RequestInit) => Promise<T>;
     events?: DocumentEventSubscriptions;
     drafts?: {

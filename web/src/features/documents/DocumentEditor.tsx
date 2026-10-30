@@ -234,7 +234,9 @@ function getDocumentToolbarState(
 }
 
 export interface DocumentEditorProps {
-    documentId: string;
+    documentId?: string;
+    target?: { notebookId: string | null; isHomeFixed: boolean };
+    onCreated?: (id: string) => void;
     userId: string;
     onOpenDocument?: (id: string) => void;
     onChanged?: () => void;
@@ -243,7 +245,9 @@ export interface DocumentEditorProps {
 }
 
 export function DocumentEditor({
-    documentId,
+    documentId: requestedDocumentId,
+    target,
+    onCreated,
     userId,
     onOpenDocument,
     onChanged,
@@ -252,19 +256,36 @@ export function DocumentEditor({
 }: DocumentEditorProps) {
     // 1. Session Setup & useSyncExternalStore
     const documentEditorOwner = useId();
-    const session = useMemo(() => {
-        return createDocumentSession({
-            userId,
-            documentId,
-            events: eventSubscriptions,
-        });
-    }, [userId, documentId, eventSubscriptions]);
+    const createdIdRef = useRef<string | undefined>(undefined);
+    const onCreatedRef = useRef(onCreated);
+    onCreatedRef.current = onCreated;
+    const sessionDocumentId = requestedDocumentId === createdIdRef.current
+        ? undefined
+        : requestedDocumentId;
+    const targetRef = useRef(target);
+    if (!createdIdRef.current || requestedDocumentId !== createdIdRef.current) {
+        targetRef.current = target;
+    }
+    const notebookId = targetRef.current?.notebookId ?? null;
+    const isHomeFixed = targetRef.current?.isHomeFixed ?? false;
+    const session = useMemo(() => createDocumentSession({
+        userId,
+        documentId: sessionDocumentId,
+        target: { notebookId, isHomeFixed },
+        onCreated: (id) => {
+            createdIdRef.current = id;
+            onCreatedRef.current?.(id);
+        },
+        events: eventSubscriptions,
+    }), [userId, sessionDocumentId, notebookId, isHomeFixed, eventSubscriptions]);
 
     const snapshot = useSyncExternalStore(
         session.subscribe,
         session.getSnapshot,
         session.getSnapshot,
     );
+    const documentId = snapshot.document?.id ?? requestedDocumentId ?? "";
+    const isNewSession = sessionDocumentId === undefined;
 
     useEffect(() => {
         void session.load().catch((error: unknown) => {
@@ -409,6 +430,7 @@ export function DocumentEditor({
     const paginationRef = useRef<DocumentPagination | null>(null);
     const paginationViewportRef = useRef<HTMLDivElement>(null);
     const loadPaper = useCallback(async () => {
+        if (!documentId) return;
         try {
             const settings = await api<DocumentSettingsDto>(
                 `/api/documents/${encodeURIComponent(documentId)}/settings`,
@@ -591,12 +613,13 @@ export function DocumentEditor({
         }
     }, [snapshot.saveStatus, onChanged]);
 
-    // onDirtyChange: true ONLY when unsaved content AND localDraftError means cannot safely persist
+    // An uncreated note has no local draft, so a failed POST is unsafe.
     useEffect(() => {
         const isUnsaved = snapshot.saveStatus === "dirty" ||
             snapshot.saveStatus === "error" || hasConflict;
         const hasUnsafePersist = isUnsaved &&
-            Boolean(snapshot.localDraftError);
+            (Boolean(snapshot.localDraftError) ||
+                (isNewSession && !snapshot.document && snapshot.saveStatus === "error"));
         onDirtyChange?.(hasUnsafePersist);
         return () => {
             onDirtyChange?.(false);
@@ -604,6 +627,8 @@ export function DocumentEditor({
     }, [
         snapshot.saveStatus,
         snapshot.localDraftError,
+        snapshot.document,
+        isNewSession,
         hasConflict,
         onDirtyChange,
     ]);
@@ -613,11 +638,12 @@ export function DocumentEditor({
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             if (
                 snapshot.saveStatus === "dirty" ||
+                snapshot.saveStatus === "saving" ||
                 snapshot.saveStatus === "error" ||
                 hasConflict
             ) {
                 if (!hasConflict) void session.save("autosave");
-                if (snapshot.localDraftError) {
+                if (snapshot.localDraftError || (isNewSession && !snapshot.document)) {
                     event.preventDefault();
                     event.returnValue = "";
                 }
@@ -627,7 +653,7 @@ export function DocumentEditor({
         return () => {
             globalThis.removeEventListener("beforeunload", handleBeforeUnload);
         };
-    }, [session, snapshot.saveStatus, snapshot.localDraftError, hasConflict]);
+    }, [session, snapshot.saveStatus, snapshot.localDraftError, snapshot.document, hasConflict, isNewSession]);
 
     // 6. Asset upload handler (POST /api/documents/:id/assets multipart)
     const handleUpload = useCallback(async (file: File): Promise<string> => {
@@ -638,16 +664,19 @@ export function DocumentEditor({
             throw new Error("图片大小不能超过 10 MiB");
         }
         const formData = new FormData();
+        // Assets belong to a persisted document.
+        const id = session.getSnapshot().document?.id;
+        if (!id) throw new Error("请先输入笔记内容再上传图片");
         formData.append("file", file);
         const result = await api<DocumentAssetDto>(
-            `/api/documents/${encodeURIComponent(documentId)}/assets`,
+            `/api/documents/${encodeURIComponent(id)}/assets`,
             {
                 method: "POST",
                 body: formData,
             },
         );
         return result.assetId;
-    }, [documentId]);
+    }, [session]);
 
     const handleUploadError = useCallback((message: string) => {
         setUploadError(message);
@@ -655,8 +684,8 @@ export function DocumentEditor({
 
     // 7. Dynamic import and mount of Milkdown (#110 createMarkdownEditor) in continuous mode
     // Gated on isDocumentReady so it reliably mounts after initial loading finishes
-    const isDocumentReady = !snapshot.loading && Boolean(snapshot.document) &&
-        (!needsPagination || Boolean(paperSettings));
+    const isDocumentReady = !snapshot.loading && (Boolean(snapshot.document) || isNewSession) &&
+        (!needsPagination || !documentId || Boolean(paperSettings));
 
     useEffect(() => {
         if (
@@ -680,7 +709,9 @@ export function DocumentEditor({
                 if (!isMounted || !editorRootRef.current) return;
 
                 const plugins = createDocumentExtensions({
-                    documentId,
+                    get documentId() {
+                        return session.getSnapshot().document?.id ?? "";
+                    },
                     onUpload: handleUpload,
                     onError: handleUploadError,
                     onToolbarStateChange: (view) =>
@@ -764,7 +795,6 @@ export function DocumentEditor({
             }
         };
     }, [
-        documentId,
         handleUpload,
         handleUploadError,
         isDocumentReady,
@@ -1007,7 +1037,7 @@ export function DocumentEditor({
     };
 
     // 16. Initial Loading & Fatal Error state
-    if (!snapshot.document && !snapshot.error) {
+    if (!isNewSession && !snapshot.document && !snapshot.error) {
         return (
             <div className="document-editor-container document-editor-state">
                 <LoadingState density="default">正在加载笔记…</LoadingState>
@@ -1015,7 +1045,7 @@ export function DocumentEditor({
         );
     }
 
-    if (snapshot.error && !snapshot.document) {
+    if (!isNewSession && snapshot.error && !snapshot.document) {
         return (
             <div className="document-editor-container document-editor-state">
                 <div className="document-editor-state-body">

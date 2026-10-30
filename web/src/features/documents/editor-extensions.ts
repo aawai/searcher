@@ -267,7 +267,7 @@ export class DocumentImageView implements NodeView {
 }
 
 export function createDocumentImageNodeViewPlugin(
-    documentId: string,
+    documentId: string | (() => string),
 ): MilkdownPlugin {
     return $prose(() => {
         return new Plugin({
@@ -275,7 +275,10 @@ export function createDocumentImageNodeViewPlugin(
             props: {
                 nodeViews: {
                     image: (node, view, getPos) =>
-                        new DocumentImageView(node, view, getPos, documentId),
+                        new DocumentImageView(
+                            node, view, getPos,
+                            typeof documentId === "function" ? documentId() : documentId,
+                        ),
                 },
             },
         });
@@ -623,7 +626,7 @@ export function createDocumentExtensions(
         ...remarkPageBreakPlugin,
         pagebreakNode,
         trailingPageBreakNormalizerPlugin,
-        createDocumentImageNodeViewPlugin(options.documentId),
+        createDocumentImageNodeViewPlugin(() => options.documentId),
         createDocumentImageUploadPlugin(options),
         ...(options.onToolbarStateChange
             ? [createDocumentToolbarStatePlugin(options.onToolbarStateChange)]

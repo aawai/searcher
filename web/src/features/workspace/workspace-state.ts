@@ -1,6 +1,7 @@
 export type DocumentsRoute =
     | { view: "documents/root" }
     | { view: "documents/create" }
+    | { view: "documents/new"; target: { notebookId: string | null; isHomeFixed: boolean } }
     | { view: "documents/edit"; id: string };
 
 export type DocumentsScope =
@@ -34,6 +35,7 @@ export const initialDocumentsWorkspaceState: DocumentsWorkspaceState = {
 
 export type DomainWorkspaceAction<Route = WorkspaceRoute> =
     | { type: "navigate"; route: Route }
+    | { type: "created"; id: string }
     | { type: "query"; value: string }
     | { type: "back" }
     | { type: "reset" };
@@ -45,6 +47,10 @@ export function areWorkspaceRoutesEqual(
     if (a.view !== b.view) return false;
     if (a.view === "documents/edit" && b.view === "documents/edit") {
         return a.id === b.id;
+    }
+    if (a.view === "documents/new" && b.view === "documents/new") {
+        return a.target.notebookId === b.target.notebookId &&
+            a.target.isHomeFixed === b.target.isHomeFixed;
     }
     return true;
 }
@@ -65,6 +71,10 @@ export function domainWorkspaceReducer(
                 ...state,
                 query: action.value,
             };
+        case "created":
+            return state.route.view === "documents/new"
+                ? { ...state, route: { view: "documents/edit", id: action.id } }
+                : state;
         case "back": {
             if (state.stack.length > 0) {
                 const nextRoute = state.stack[state.stack.length - 1];

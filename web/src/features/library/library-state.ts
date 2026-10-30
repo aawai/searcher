@@ -77,7 +77,8 @@ export function shouldConfirmLibraryAction(
     action: LibraryAction,
 ): boolean {
     return dirty && !(action.type === "documents" &&
-        (action.action.type === "query" || action.action.type === "scope"));
+        (action.action.type === "query" || action.action.type === "scope" ||
+            action.action.type === "created"));
 }
 /** Returning focus never targets a detached trigger. */
 export function libraryFocusTarget<T extends { isConnected: boolean }>(
