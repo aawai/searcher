@@ -527,3 +527,30 @@ const radius = 7;
         [["raw-border-radius", 3, 16]],
     );
 });
+
+Deno.test("tsx-scanner - choice inputs must come from components/ui", () => {
+    const code = `
+        export function Form() {
+            return (
+                <form>
+                    <input type="checkbox" />
+                    <input type="radio" name="a" />
+                    <input type="range" />
+                    <input type="text" />
+                </form>
+            );
+        }
+    `;
+    assertEquals(
+        scanTsxCode("web/src/app/Form.tsx", code).map((v) => v.value),
+        ["checkbox", "radio", "range"],
+    );
+    assertEquals(
+        scanTsxCode("web/src/components/ui/checkbox.tsx", code),
+        [],
+    );
+    assertEquals(
+        scanTsxCode("web/src/components/searcher/NoteMarkdown.tsx", code),
+        [],
+    );
+});

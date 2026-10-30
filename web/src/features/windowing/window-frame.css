@@ -46,6 +46,12 @@
     touch-action: none;
     cursor: move;
 }
+/* Keyboard moves the window from the title bar: the ring sits inside, on the window's top corners. */
+.window-frame__titlebar:focus-visible {
+    outline-offset: calc(-1 * var(--space-half));
+    border-start-start-radius: var(--radius-lg);
+    border-start-end-radius: var(--radius-lg);
+}
 
 .window-frame__title {
     flex: 1;
@@ -109,6 +115,12 @@
     min-width: 0;
     min-height: 0;
     overflow: auto;
+}
+/* Grouped lists need a canvas that differs from their own surface. */
+.window-frame[data-window-id="settings"] .window-frame__content {
+    background: var(--surface-grouped-canvas);
+    border-end-start-radius: inherit;
+    border-end-end-radius: inherit;
 }
 .window-frame__resize {
     position: absolute;

@@ -17,6 +17,7 @@ import {
 import { Button, buttonVariants } from "../components/ui/button.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { Checkbox } from "../components/ui/checkbox.tsx";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import {
     Dialog,
     DialogContent,
@@ -460,6 +461,17 @@ export function AiSettings({ host }: { host: PageHost }) {
                                 )}
                             </SettingsRow>
                         )}
+                        <RadioGroup
+                            variant="rows"
+                            aria-label="默认模型"
+                            value={providerModels.find((model) =>
+                                model.isDefault
+                            )?.id ?? null}
+                            onValueChange={(modelId) =>
+                                void changeModel(String(modelId), {
+                                    isDefault: true,
+                                })}
+                        >
                         {providerModels.map((model) => {
                             const reasoning = describeReasoning(
                                 resolveEffectiveCapability(
@@ -496,57 +508,39 @@ export function AiSettings({ host }: { host: PageHost }) {
                                     {manageable && (
                                         <div className="ai-model-controls">
                                             <label className="ai-model-toggle">
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     aria-label={`启用 ${model.displayName}`}
                                                     checked={model.enabled}
-                                                    onChange={(e) =>
+                                                    onCheckedChange={(checked) =>
                                                         void changeModel(
                                                             model.id,
-                                                            {
-                                                                enabled:
-                                                                    e.target
-                                                                        .checked,
-                                                            },
+                                                            { enabled: checked },
                                                         )}
                                                 />
                                                 启用
                                             </label>
                                             <label className="ai-model-toggle">
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     aria-label={`可见 ${model.displayName}`}
-                                                    checked={model
-                                                        .visibleToUsers}
-                                                    onChange={(e) =>
+                                                    checked={model.visibleToUsers}
+                                                    onCheckedChange={(checked) =>
                                                         void changeModel(
                                                             model.id,
                                                             {
                                                                 visibleToUsers:
-                                                                    e.target
-                                                                        .checked,
+                                                                    checked,
                                                             },
                                                         )}
                                                 />
                                                 可见
                                             </label>
-                                            <label className="ai-model-toggle">
-                                                <input
-                                                    type="radio"
-                                                    name={"default-" +
-                                                        provider.id}
-                                                    aria-label={`设为默认 ${model.displayName}`}
-                                                    checked={model.isDefault}
-                                                    onChange={() =>
-                                                        void changeModel(
-                                                            model.id,
-                                                            {
-                                                                isDefault: true,
-                                                            },
-                                                        )}
-                                                />
+                                            <RadioGroupItem
+                                                value={model.id}
+                                                className="ai-model-toggle"
+                                                aria-label={`设为默认 ${model.displayName}`}
+                                            >
                                                 默认
-                                            </label>
+                                            </RadioGroupItem>
                                             <Button
                                                 type="button"
                                                 variant="ghost"
@@ -561,6 +555,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                 </SettingsRow>
                             );
                         })}
+                        </RadioGroup>
                     </SettingsGroup>
                 );
             })}

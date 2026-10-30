@@ -41,6 +41,8 @@
     --surface-l0: var(--background);
     --surface-l2: var(--surface-solid);
     --surface-l3: var(--surface-solid);
+    /* Canvas behind grouped lists inside an Overlay: groups (`--surface`) must read against it. */
+    --surface-grouped-canvas: var(--background);
     --surface-scrim: rgb(0 0 0 / 0.32);
     --shadow-l2: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.16);
     --shadow-l3: 0 0 0 0.5px rgb(0 0 0 / 0.08), 0 24px 56px -12px rgb(0 0 0 / 0.28);
@@ -312,6 +314,7 @@
     --surface-soft: #2A2A2E;
     --surface-control-thumb: #636366;
     --surface-l3: #242428;
+    --surface-grouped-canvas: var(--surface-l3);
     --muted: #A1A1A6;
     --border: rgb(255 255 255 / 0.10);
     --border-subtle: rgb(255 255 255 / 0.06);

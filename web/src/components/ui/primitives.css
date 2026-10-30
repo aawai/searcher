@@ -78,21 +78,22 @@
 .radio-item {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-control-gap);
-    min-height: var(--control-height);
-    padding: 0 var(--space-3);
+    gap: var(--space-2);
+    min-height: var(--control-compact-height);
+    padding: 0;
     border: 0;
     border-radius: var(--control-radius);
     background: transparent;
     color: var(--foreground);
     font-size: var(--font-body-size);
     font-weight: var(--font-body-weight);
+    white-space: nowrap;
     cursor: pointer;
-    transition: background var(--motion-fast) var(--ease-standard);
 }
 
-.radio-item:hover {
-    background: var(--surface-soft);
+/* Rows: the radios sit in separate list rows, so the group adds no box of its own. */
+[data-slot="radio-group"][data-variant="rows"] {
+    display: contents;
 }
 
 .radio-item:focus-visible {
@@ -211,6 +212,9 @@
 }
 
 @media (any-pointer: coarse), (hover: none) {
+    .radio-item {
+        min-height: var(--control-touch-target);
+    }
     [data-slot="radio-group"][data-variant="swatch"] {
         gap: 0;
     }
@@ -934,6 +938,7 @@
     flex-shrink: 0;
     width: 16px;
     height: 16px;
+    padding: 0;
     border: 1.5px solid var(--border-control);
     border-radius: var(--radius-sm);
     background: var(--surface-solid);

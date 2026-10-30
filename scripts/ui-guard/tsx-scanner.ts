@@ -387,6 +387,20 @@ function geometryCssVariables(expression: ts.Expression): string[] {
     return [];
 }
 
+/** Choice controls come from components/ui (Checkbox, RadioGroup, Switch, Slider), never a native input. */
+const NATIVE_CHOICE_TYPES: Record<string, true> = {
+    checkbox: true,
+    radio: true,
+    range: true,
+};
+
+/** Primitives own their markup; rendered Markdown task lists are document content, not UI controls. */
+function isNativeFormControlOwner(file: string): boolean {
+    const path = file.replaceAll("\\", "/");
+    return path.includes("/components/ui/") ||
+        path.endsWith("/components/searcher/NoteMarkdown.tsx");
+}
+
 export function scanTsxCode(
     file: string,
     code: string,
@@ -462,6 +476,28 @@ export function scanTsxCode(
                         checkColorString(attrName, color);
                     }
                 }
+            }
+            if (
+                attrName === "type" &&
+                (ts.isJsxOpeningElement(element) ||
+                    ts.isJsxSelfClosingElement(element)) &&
+                element.tagName.getText(sourceFile) === "input" &&
+                node.initializer && ts.isStringLiteral(node.initializer) &&
+                Object.hasOwn(NATIVE_CHOICE_TYPES, node.initializer.text) &&
+                !isNativeFormControlOwner(file)
+            ) {
+                const { line, character } = sourceFile
+                    .getLineAndCharacterOfPosition(node.getStart());
+                violations.push({
+                    file,
+                    rule: "native-form-control",
+                    property: "type",
+                    value: node.initializer.text,
+                    line: line + 1,
+                    column: character + 1,
+                    fingerprint:
+                        `native-form-control:type:${node.initializer.text}`,
+                });
             }
             if (["size", "width", "height"].includes(attrName)) {
                 const element = node.parent.parent;

@@ -192,16 +192,6 @@
     top: 0;
     left: 0;
 }
-.documents-editor-empty {
-    position: relative;
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
-    align-items: center;
-    justify-content: center;
-}
 
 /* Toolbar */
 .document-editor-toolbar {

@@ -532,12 +532,6 @@
     white-space: nowrap;
     cursor: pointer;
 }
-.ai-model-toggle input {
-    width: var(--icon-md);
-    height: var(--icon-md);
-    margin: 0;
-    accent-color: var(--accent);
-}
 @media (any-pointer: coarse) {
     .ai-model-toggle {
         min-height: var(--control-touch-target);
