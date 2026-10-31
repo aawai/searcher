@@ -228,11 +228,20 @@
     font-size: inherit;
     color: inherit;
 }
+/* Equal space above and below the entry; the editor's status bar sits on the
+   same inset so the trash entry, mode switch and stats share one centre line. */
 .documents-sidebar-footer {
     flex: none;
     margin-top: auto;
-    padding-top: var(--space-2);
+    padding-block: var(--space-2);
     border-top: var(--space-hairline) solid var(--border);
+}
+/* A coarse pointer's resize zone overlays the editor's leading edge; it stops
+   above the footer row so the editor's mode switch stays reachable there. */
+@media (any-pointer: coarse) {
+    .documents-sidebar-resize {
+        margin-block-end: calc(var(--control-touch-target) + 2 * var(--space-2));
+    }
 }
 
 /* Notebook tree: one flat role=tree, depth from --tree-level. */

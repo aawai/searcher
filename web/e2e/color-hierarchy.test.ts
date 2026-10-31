@@ -25,21 +25,34 @@ Deno.test("home color hierarchy keeps avatar and primary icons neutral and the e
                 (theme) => document.documentElement.dataset.theme = theme,
                 theme,
             );
-            const avatar = await page.locator(".user-avatar-badge").evaluate(
-                (el) => {
-                    const probe = document.createElement("span");
-                    probe.style.background = "var(--surface-soft)";
-                    probe.style.color = "var(--foreground)";
-                    document.body.append(probe);
-                    const matches = getComputedStyle(el).backgroundColor ===
-                            getComputedStyle(probe).backgroundColor &&
-                        getComputedStyle(el).color ===
-                            getComputedStyle(probe).color;
-                    probe.remove();
-                    return matches;
-                },
+            const identity = await page.evaluate(() => {
+                const probe = document.createElement("span");
+                probe.style.background = "var(--surface-control-thumb)";
+                probe.style.color = "var(--accent)";
+                document.body.append(probe);
+                const badge = getComputedStyle(
+                    document.querySelector(".user-avatar-badge")!,
+                );
+                const result = {
+                    // On the home group the badge is a thumb, never accent.
+                    badge: badge.backgroundColor ===
+                        getComputedStyle(probe).backgroundColor,
+                    badgeText: badge.color === getComputedStyle(
+                        document.querySelector(".wordmark-small")!,
+                    ).color,
+                    // The wordmark's full stop is the brand's only accent.
+                    dot: getComputedStyle(
+                        document.querySelector(".wordmark-dot")!,
+                    ).color === getComputedStyle(probe).color,
+                };
+                probe.remove();
+                return result;
+            });
+            assertEquals(
+                identity,
+                { badge: true, badgeText: true, dot: true },
+                `${theme}: neutral avatar and accent wordmark stop`,
             );
-            assert(avatar, `${theme}: neutral avatar`);
             const submit = page.locator(".search-submit");
             const idle = await submit.evaluate((el) => ({
                 width: el.clientWidth,

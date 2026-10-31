@@ -509,7 +509,10 @@ Deno.test("后台笔记窗口含链接时页面保持可交互，Tab 跳过后�
         Promise.race([
             work,
             new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error("page stopped responding")), 5000)
+                setTimeout(
+                    () => reject(new Error("page stopped responding")),
+                    5000,
+                )
             ),
         ]);
     try {
@@ -530,9 +533,13 @@ Deno.test("后台笔记窗口含链接时页面保持可交互，Tab 跳过后�
             hasText: "链接笔记",
         }).click();
         const notes = page.locator(NOTES);
-        const link = notes.locator('.ProseMirror a[href="https://example.com/"]');
+        const link = notes.locator(
+            '.ProseMirror a[href="https://example.com/"]',
+        );
         await link.waitFor();
-        await link.evaluate((element) => element.setAttribute("data-probe", ""));
+        await link.evaluate((element) =>
+            element.setAttribute("data-probe", "")
+        );
 
         // Opening a second window sends the note window to the background.
         await page.locator('[data-dock-id="settings"]').click();
@@ -553,7 +560,9 @@ Deno.test("后台笔记窗口含链接时页面保持可交互，Tab 跳过后�
         const before = await page.evaluateHandle(() => {
             const frame = document.querySelector('[data-window-id="notes"]')!;
             const stops = Array.from(
-                document.querySelectorAll<HTMLElement>("a[href], button, input"),
+                document.querySelectorAll<HTMLElement>(
+                    "a[href], button, input",
+                ),
             ).filter((element) =>
                 element.tabIndex >= 0 && element.getClientRects().length > 0 &&
                 !element.closest(".window-frame") &&
@@ -576,7 +585,9 @@ Deno.test("后台笔记窗口含链接时页面保持可交互，Tab 跳过后�
         assertEquals(landed, { inNotes: false, onBody: false });
         await page.keyboard.press("Shift+Tab");
         assertEquals(
-            await start.evaluate((element) => element === document.activeElement),
+            await start.evaluate((element) =>
+                element === document.activeElement
+            ),
             true,
         );
     } finally {
@@ -663,13 +674,101 @@ Deno.test("笔记编辑器：任务复选框与首行文字居中，状态信息
                 layout.statusLeftInset,
                 layout.statusRightInset,
             ],
-            [0, 16, 16],
+            [8, 16, 16],
             JSON.stringify(layout),
         );
         // At the end of a long note the last line stays above the corners.
         assert(layout.lastBottom <= layout.statusTop, JSON.stringify(layout));
     } finally {
         await browser.close();
+        await app.close();
+    }
+});
+
+/** Primary / available pointer and hover capabilities, as Blink settings. */
+const POINTER_PROFILES = {
+    mouse:
+        "primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+    // A touch-screen laptop: the trackpad is primary, a touch screen exists.
+    hybrid:
+        "primaryHoverType=2,availableHoverTypes=3,primaryPointerType=4,availablePointerTypes=6",
+    touch:
+        "primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2",
+} as const;
+
+Deno.test("笔记窗口底部：回收站与模式图标、字数同一中线，回收站上下留白对称（鼠标 / 触屏笔记本 / 触屏）", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    try {
+        for (const [profile, settings] of Object.entries(POINTER_PROFILES)) {
+            const browser = await chromium.launch({
+                args: ["--no-sandbox", `--blink-settings=${settings}`],
+            });
+            try {
+                const page = await browser.newPage({
+                    viewport: { width: 1440, height: 900 },
+                });
+                await loginAndVisit(page, app.origin, "/?view=notes", user);
+                await createNote(page, `底栏 ${profile}`);
+                await page.locator(".document-metadata-bar").waitFor();
+                const geometry = await page.evaluate(() => {
+                    const rect = (selector: string) =>
+                        document.querySelector(selector)!
+                            .getBoundingClientRect();
+                    const centre = (box: DOMRect) => box.top + box.height / 2;
+                    const footer = document.querySelector(
+                        ".documents-sidebar-footer",
+                    )!;
+                    const divider = footer.getBoundingClientRect().top +
+                        parseFloat(getComputedStyle(footer).borderTopWidth);
+                    const trash = rect(".documents-sidebar-footer button");
+                    const windowBottom = rect(
+                        '[data-window-id="notes"] .window-frame__content',
+                    ).bottom;
+                    const mode = document.querySelector(
+                        ".document-mode-trigger",
+                    )!;
+                    const modeBox = mode.getBoundingClientRect();
+                    const modeX = modeBox.left + modeBox.width / 2;
+                    // A 44px target centred on the icon, whatever it shows;
+                    // the window's own resize edge keeps its last pixels.
+                    const at = (dy: number) =>
+                        document.elementFromPoint(modeX, centre(modeBox) + dy);
+                    const reach = [-21, 15].every((dy) =>
+                        mode.contains(at(dy))
+                    ) &&
+                        [18, 21].every((dy) => {
+                            const hit = at(dy);
+                            return mode.contains(hit) ||
+                                hit?.matches(".window-frame__resize") === true;
+                        });
+                    return {
+                        trash: centre(trash),
+                        mode: centre(modeBox),
+                        stats: centre(rect(".document-metadata-bar")),
+                        trashHeight: trash.height,
+                        above: trash.top - divider,
+                        below: windowBottom - trash.bottom,
+                        modeTouchTarget: reach,
+                    };
+                });
+                const detail = `${profile}: ${JSON.stringify(geometry)}`;
+                for (const centre of [geometry.mode, geometry.stats]) {
+                    assert(Math.abs(centre - geometry.trash) <= 1, detail);
+                }
+                // The entry keeps its own height; the footer only adds space.
+                assertEquals(
+                    geometry.trashHeight,
+                    profile === "touch" ? 44 : 28,
+                    detail,
+                );
+                assertEquals([geometry.above, geometry.below], [8, 8], detail);
+                assert(geometry.modeTouchTarget, detail);
+            } finally {
+                await browser.close();
+            }
+        }
+    } finally {
         await app.close();
     }
 });
