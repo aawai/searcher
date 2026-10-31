@@ -9,7 +9,7 @@ export const SCROLL_IDLE_MS = 800;
  * own their DOM and observe attribute mutations beneath it.
  */
 export function installScrollActivity(doc: Document = document): () => void {
-    const timers = new Map<Element, number>();
+    const timers = new Map<Element, ReturnType<typeof setTimeout>>();
     const onScroll = (event: Event) => {
         const target = event.target;
         const element = target instanceof Element
