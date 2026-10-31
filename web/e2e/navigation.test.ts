@@ -630,9 +630,9 @@ Deno.test("production navigation contracts", async (t) => {
                 false,
             );
             assertEquals(
-                await page.locator('.topbar-link--active[aria-label="设置"]')
-                    .count(),
-                1,
+                await page.locator('.top-actions [aria-label="设置"]').count(),
+                0,
+                "signed-in desktops keep only theme and identity in the top bar",
             );
             await settingsNav.getByRole("link", { name: "外观", exact: true })
                 .click();
@@ -716,12 +716,15 @@ Deno.test("production navigation contracts", async (t) => {
                 name: "设置分类",
             });
 
-            // Home has no settings link; any other page keeps it.
+            // Signed-in desktops reach settings from the user menu; the top-bar
+            // link is a guest entry and is covered below.
             await visit("/trash");
-            await page.getByRole("link", { name: "设置", exact: true }).click();
+            await page.getByRole("button", { name: /^用户菜单/ }).click();
+            await page.getByRole("menuitem", { name: "设置", exact: true })
+                .click();
             await page.waitForURL(origin + "/settings");
             await settingsNav.waitFor({ state: "visible" });
-            assertEquals(await viewTransitions(page, 1), 1, "top bar link");
+            assertEquals(await viewTransitions(page, 1), 1, "user menu entry");
             await settingsNav.getByRole("link", { name: "外观", exact: true })
                 .click();
             await page.getByRole("heading", {
@@ -750,7 +753,7 @@ Deno.test("production navigation contracts", async (t) => {
             }).click();
             await page.waitForURL(origin + "/settings");
             await settingsNav.waitFor({ state: "visible" });
-            assertEquals(await viewTransitions(page, 2), 2, "user menu entry");
+            assertEquals(await viewTransitions(page, 2), 2, "user menu again");
             await page.getByRole("link", { name: "Searcher 首页" }).click();
             await page.waitForURL(origin + "/");
             await page.locator("main.home").waitFor({ state: "visible" });
@@ -760,6 +763,17 @@ Deno.test("production navigation contracts", async (t) => {
             try {
                 await trackViewTransitions(guestContext);
                 const guest = await guestContext.newPage();
+                await visit("/", guest);
+                await guest.getByRole("link", { name: "设置", exact: true })
+                    .click();
+                await guest.waitForURL(origin + "/settings");
+                await guest.getByRole("navigation", { name: "设置分类" })
+                    .waitFor({ state: "visible" });
+                assertEquals(
+                    await viewTransitions(guest, 1),
+                    1,
+                    "top bar link",
+                );
                 await visit("/missing", guest);
                 await guest.getByRole("link", {
                     name: "返回首页",

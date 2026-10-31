@@ -1,7 +1,21 @@
 import { type ReactNode, type RefObject, useEffect, useRef } from "react";
+import { MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
 import { useEscapeLayer } from "./escape-layer-stack.tsx";
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const TEXT_ENTRY = 'textarea, [contenteditable]:not([contenteditable="false"]), input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="reset"], [type="range"], [type="color"], [type="file"])';
+
+/**
+ * Opening focuses the first control, except that touch devices never start in
+ * a text field: that would raise the soft keyboard over the overlay. The
+ * labelled overlay itself takes focus instead and Tab still reaches the field.
+ */
+function initialFocusTarget(overlay: HTMLElement): HTMLElement {
+    const first = overlay.querySelector<HTMLElement>(FOCUSABLE);
+    if (!first) return overlay;
+    const touch = globalThis.matchMedia?.(MEDIA_QUERIES.coarsePointer).matches;
+    return touch && first.matches(TEXT_ENTRY) ? overlay : first;
+}
 
 /** Modal overlay confined to its positioned parent rather than the viewport. */
 export function WindowOverlay({
@@ -44,8 +58,7 @@ export function WindowOverlay({
             else if (!event.shiftKey && (index < 0 || index === elements.length - 1)) { event.preventDefault(); elements[0].focus(); }
         };
         overlay.addEventListener("keydown", trapFocus);
-        const first = overlay.querySelector<HTMLElement>(FOCUSABLE);
-        (first ?? overlay).focus();
+        initialFocusTarget(overlay).focus();
         return () => {
             overlay.removeEventListener("keydown", trapFocus);
             siblings.forEach((element, index) => { element.inert = previous[index]; });

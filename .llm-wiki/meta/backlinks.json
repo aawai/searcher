@@ -1,6 +1,7 @@
 {
   "concepts/accessible-grid-drag-keyboard-and-announcements": [
     "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "concepts/touch-action-gesture-ownership",
     "entities/dnd-kit-system",
     "entities/searcher-项目",
     "sources/SRC-2026-10-25-005"
@@ -12,6 +13,7 @@
     "sources/SRC-2026-10-24-010"
   ],
   "concepts/backdrop-filter-backdrop-root": [
+    "concepts/reduced-motion-replacement-strategy",
     "concepts/wallpaper-accent-oklch-contrast-solver",
     "concepts/web-animations-api-runtime-architecture",
     "sources/SRC-2026-10-30-004"
@@ -27,8 +29,10 @@
     "sources/SRC-2026-10-28-005"
   ],
   "concepts/content-security-policy-strict-deployment": [
+    "concepts/hono-security-middleware-vs-api-guard",
     "concepts/xss-sanitization-and-trusted-types",
-    "sources/SRC-2026-10-30-003"
+    "sources/SRC-2026-10-30-003",
+    "sources/SRC-2026-10-31-001"
   ],
   "concepts/contract-first-testing": [
     "concepts/modal-layering-and-escape-dismissal",
@@ -46,12 +50,14 @@
     "syntheses/searcher-system-architecture"
   ],
   "concepts/csrf-defense-boundaries": [
+    "concepts/hono-security-middleware-vs-api-guard",
     "concepts/session-security-and-isolation",
     "concepts/xss-sanitization-and-trusted-types",
     "sources/SRC-2026-10-26-003",
     "sources/SRC-2026-10-27-006",
     "sources/SRC-2026-10-29-001",
-    "sources/SRC-2026-10-30-005"
+    "sources/SRC-2026-10-30-005",
+    "sources/SRC-2026-10-31-002"
   ],
   "concepts/css-container-queries": [
     "concepts/tailwind-v4-css-first-architecture",
@@ -97,6 +103,7 @@
   "concepts/dnd-kit-2d-grid-sorting-architecture": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/shortest-column-masonry-layout",
+    "concepts/touch-action-gesture-ownership",
     "entities/dnd-kit-system",
     "sources/SRC-2026-09-25-009",
     "sources/SRC-2026-09-25-013",
@@ -111,6 +118,7 @@
     "sources/SRC-2026-10-25-005"
   ],
   "concepts/hono-middleware-pipeline-request-intake": [
+    "concepts/hono-security-middleware-vs-api-guard",
     "entities/hono-framework",
     "sources/SRC-2026-09-25-011",
     "sources/SRC-2026-09-25-018",
@@ -124,8 +132,16 @@
   "concepts/hono-rpc-type-safe-client": [
     "sources/SRC-2026-09-26-003"
   ],
+  "concepts/hono-security-middleware-vs-api-guard": [
+    "concepts/content-security-policy-strict-deployment",
+    "concepts/csrf-defense-boundaries",
+    "entities/hono-framework",
+    "sources/SRC-2026-10-31-001",
+    "sources/SRC-2026-10-31-002"
+  ],
   "concepts/http-cache-and-service-worker-boundaries": [
     "concepts/browser-storage-persistence-and-eviction",
+    "concepts/hono-security-middleware-vs-api-guard",
     "concepts/offline-first-与-local-draft-持久化架构",
     "concepts/pwa-service-worker-update-lifecycle",
     "sources/SRC-2026-10-28-001",
@@ -134,6 +150,7 @@
   ],
   "concepts/modal-dialog-focus-and-semantics": [
     "concepts/modal-layering-and-escape-dismissal",
+    "concepts/overscroll-containment-for-nested-scroll-areas",
     "entities/shadcn-ui-system",
     "sources/SRC-2026-10-29-002"
   ],
@@ -141,13 +158,15 @@
     "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/aria-combobox-grouped-suggestions",
     "concepts/modal-dialog-focus-and-semantics",
+    "concepts/overscroll-containment-for-nested-scroll-areas",
     "concepts/tailwind-v4-css-first-architecture",
     "concepts/view-transitions-shared-element",
     "entities/searcher-项目",
     "entities/shadcn-ui-system",
     "sources/SRC-2026-09-27-001",
     "sources/SRC-2026-10-24-010",
-    "sources/SRC-2026-10-29-002"
+    "sources/SRC-2026-10-29-002",
+    "sources/SRC-2026-10-31-005"
   ],
   "concepts/offline-first-与-local-draft-持久化架构": [
     "concepts/browser-storage-persistence-and-eviction",
@@ -157,20 +176,28 @@
     "sources/SRC-2026-10-24-007",
     "sources/SRC-2026-10-28-005"
   ],
+  "concepts/overscroll-containment-for-nested-scroll-areas": [
+    "concepts/modal-layering-and-escape-dismissal",
+    "concepts/touch-action-gesture-ownership",
+    "sources/SRC-2026-10-31-005"
+  ],
   "concepts/password-hashing-and-pbkdf2-parameters": [
     "concepts/session-security-and-isolation",
     "sources/SRC-2026-10-30-001"
   ],
   "concepts/pointer-target-size": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
+    "concepts/touch-action-gesture-ownership",
     "concepts/wallpaper-accent-oklch-contrast-solver",
     "entities/searcher-项目",
-    "sources/SRC-2026-10-25-004"
+    "sources/SRC-2026-10-25-004",
+    "sources/SRC-2026-10-31-003"
   ],
   "concepts/pwa-service-worker-update-lifecycle": [
     "concepts/browser-storage-persistence-and-eviction",
     "concepts/http-cache-and-service-worker-boundaries",
     "concepts/offline-first-与-local-draft-持久化架构",
+    "concepts/overscroll-containment-for-nested-scroll-areas",
     "entities/indexeddb-本地存储引擎",
     "sources/SRC-2026-10-24-007",
     "sources/SRC-2026-10-24-008",
@@ -179,6 +206,10 @@
   "concepts/react-19-actions-and-transitions": [
     "entities/react-19-framework",
     "sources/SRC-2026-09-27-004"
+  ],
+  "concepts/reduced-motion-replacement-strategy": [
+    "concepts/view-transitions-shared-element",
+    "sources/SRC-2026-10-31-004"
   ],
   "concepts/route-level-code-splitting-dynamic-bundling": [
     "concepts/pwa-service-worker-update-lifecycle",
@@ -302,9 +333,16 @@
     "sources/SRC-2026-10-27-003",
     "sources/SRC-2026-10-30-002"
   ],
+  "concepts/touch-action-gesture-ownership": [
+    "concepts/overscroll-containment-for-nested-scroll-areas",
+    "concepts/pointer-target-size",
+    "sources/SRC-2026-10-31-003"
+  ],
   "concepts/view-transitions-shared-element": [
+    "concepts/reduced-motion-replacement-strategy",
     "entities/react-19-framework",
-    "sources/SRC-2026-10-24-009"
+    "sources/SRC-2026-10-24-009",
+    "sources/SRC-2026-10-31-004"
   ],
   "concepts/wallpaper-accent-oklch-contrast-solver": [
     "concepts/backdrop-filter-backdrop-root",
@@ -318,11 +356,13 @@
   "concepts/web-animations-api-runtime-architecture": [
     "concepts/backdrop-filter-backdrop-root",
     "concepts/css-custom-property-fallback-and-registration",
+    "concepts/reduced-motion-replacement-strategy",
     "concepts/view-transitions-shared-element",
     "sources/SRC-2026-10-05-003",
     "sources/SRC-2026-10-05-004",
     "sources/SRC-2026-10-24-009",
-    "sources/SRC-2026-10-27-004"
+    "sources/SRC-2026-10-27-004",
+    "sources/SRC-2026-10-31-004"
   ],
   "concepts/whole-line-preview-truncation": [
     "entities/searcher-项目",
@@ -418,6 +458,7 @@
     "concepts/deno-native-serve-architecture",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/hono-rpc-type-safe-client",
+    "concepts/hono-security-middleware-vs-api-guard",
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/single-process-architecture",
     "entities/deno-runtime",
@@ -437,6 +478,7 @@
     "sources/SRC-2026-09-26-003",
     "sources/SRC-2026-09-27-003",
     "sources/SRC-2026-09-27-005",
+    "sources/SRC-2026-10-31-001",
     "syntheses/searcher-system-architecture"
   ],
   "entities/indexeddb-本地存储引擎": [
@@ -877,6 +919,21 @@
   ],
   "sources/SRC-2026-10-30-005": [
     "concepts/session-security-and-isolation"
+  ],
+  "sources/SRC-2026-10-31-001": [
+    "concepts/hono-security-middleware-vs-api-guard"
+  ],
+  "sources/SRC-2026-10-31-002": [
+    "concepts/hono-security-middleware-vs-api-guard"
+  ],
+  "sources/SRC-2026-10-31-003": [
+    "concepts/touch-action-gesture-ownership"
+  ],
+  "sources/SRC-2026-10-31-004": [
+    "concepts/reduced-motion-replacement-strategy"
+  ],
+  "sources/SRC-2026-10-31-005": [
+    "concepts/overscroll-containment-for-nested-scroll-areas"
   ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"

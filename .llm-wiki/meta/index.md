@@ -19,14 +19,17 @@
 - [[concepts/dnd-kit-2d-grid-sorting-architecture]] — dnd-kit 2D Grid Sorting Architecture *(created: 2026-09-25)*
 - [[concepts/hono-middleware-pipeline-request-intake]] — Hono Middleware Pipeline & Request Intake *(created: 2026-09-25)*
 - [[concepts/hono-rpc-type-safe-client]] — Hono RPC & Type-Safe Client *(created: 2026-09-26)*
+- [[concepts/hono-security-middleware-vs-api-guard]] — Hono Security Middleware Compared with Searcher's API Guard *(created: 2026-10-31)*
 - [[concepts/http-cache-and-service-worker-boundaries]] — HTTP Cache and Service Worker Boundaries *(created: 2026-10-28)*
 - [[concepts/modal-dialog-focus-and-semantics]] — Modal Dialog Focus and Semantics *(created: 2026-10-29)*
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
+- [[concepts/overscroll-containment-for-nested-scroll-areas]] — Overscroll Containment for Nested Scroll Areas *(created: 2026-10-31)*
 - [[concepts/password-hashing-and-pbkdf2-parameters]] — Password Hashing and PBKDF2 Parameters *(created: 2026-10-30)*
 - [[concepts/pointer-target-size]] — Pointer Target Size *(created: 2026-10-25)*
 - [[concepts/pwa-service-worker-update-lifecycle]] — PWA Service Worker Update Lifecycle *(created: 2026-10-24)*
 - [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
+- [[concepts/reduced-motion-replacement-strategy]] — Reduced Motion Replacement Strategy *(created: 2026-10-31)*
 - [[concepts/route-level-code-splitting-dynamic-bundling]] — Route-Level Code Splitting & Dynamic Bundling *(created: 2026-10-05)*
 - [[concepts/server-sent-events-sse-与实时事件流]] — Server-Sent Events (SSE) 与实时事件流 *(created: 2026-09-25)*
 - [[concepts/session-security-and-isolation]] — Session Security and Isolation *(created: 2026-09-25)*
@@ -37,6 +40,7 @@
 - [[concepts/sqlite-isolation-and-connection-boundaries]] — SQLite Isolation and Connection Boundaries *(created: 2026-10-26)*
 - [[concepts/sqlite-table-recreation-migration]] — SQLite Table Recreation Migration *(created: 2026-09-25)*
 - [[concepts/tailwind-v4-css-first-architecture]] — Tailwind v4 CSS First Architecture *(created: 2026-09-27)*
+- [[concepts/touch-action-gesture-ownership]] — Touch Action Gesture Ownership *(created: 2026-10-31)*
 - [[concepts/view-transitions-shared-element]] — View Transitions Shared Element *(created: 2026-10-24)*
 - [[concepts/wallpaper-accent-oklch-contrast-solver]] — Wallpaper Accent OKLCH Contrast Solver *(created: 2026-10-25)*
 - [[concepts/web-animations-api-runtime-architecture]] — Web Animations API Runtime Architecture *(created: 2026-10-05)*
@@ -236,10 +240,15 @@
 - [[sources/SRC-2026-10-30-003]] — MDN Content Security Policy (CSP) *(created: unknown)*
 - [[sources/SRC-2026-10-30-004]] — MDN backdrop-filter CSS property *(created: unknown)*
 - [[sources/SRC-2026-10-30-005]] — OWASP Session Management Cheat Sheet *(created: unknown)*
+- [[sources/SRC-2026-10-31-001]] — Secure Headers Middleware *(created: unknown)*
+- [[sources/SRC-2026-10-31-002]] — CSRF Protection *(created: unknown)*
+- [[sources/SRC-2026-10-31-003]] — MDN touch-action CSS property *(created: unknown)*
+- [[sources/SRC-2026-10-31-004]] — MDN prefers-reduced-motion CSS media feature *(created: unknown)*
+- [[sources/SRC-2026-10-31-005]] — MDN overscroll-behavior CSS property *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-30T16:08:24.640Z* | *Total pages: 227*
+*Last updated: 2026-10-31T08:03:21.439Z* | *Total pages: 236*

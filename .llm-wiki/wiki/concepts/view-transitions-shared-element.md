@@ -30,3 +30,4 @@ sources: [sources/SRC-2026-10-24-009]
 - [[sources/SRC-2026-10-24-009]]
 - [[concepts/modal-layering-and-escape-dismissal]]
 - [[entities/react-19-framework]]
+- [Reduced Motion Replacement Strategy](/concepts/reduced-motion-replacement-strategy.md): 项目全部 `prefers-reduced-motion` 规则的“保留透明度、去位移”做法。

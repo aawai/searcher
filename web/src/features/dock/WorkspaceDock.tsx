@@ -786,10 +786,10 @@ export function WorkspaceDock(
         ballJustDraggedRef.current = wasDragging;
         ballDragRef.current = null;
         setBallDragState(null);
-        if (!wasDragging) {
-            setLayout({ collapsed: false });
-            return;
-        }
+        // A tap expands from the ball's own click. Expanding here would make
+        // the ball inert before the touch's compatibility click, which would
+        // then land on whatever lies beneath (e.g. a home note).
+        if (!wasDragging) return;
 
         const side: DockBallSide = e.clientX < globalThis.innerWidth / 2
             ? "left"

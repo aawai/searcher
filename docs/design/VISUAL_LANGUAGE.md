@@ -193,7 +193,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | Canvas   | `--background` / 壁纸 / 壁纸派生画布 | 无                            | 页面、首页                                |
 | Content  | `--surface`                          | 无                            | 分组列表、笔记库列表                      |
 | 图标块   | 图标画布 / `--material-regular`      | `--shadow-elevation-glyph`    | 应用、文件夹预览、“+”、“更多（N）”        |
-| Material | `--material-regular` + blur          | `--shadow-elevation-material` | 搜索框、应用底板、首页笔记、顶栏悬停      |
+| Material | `--material-regular` + blur          | `--shadow-elevation-material` | 搜索框、应用底板、首页笔记、首页顶栏控件  |
 | Floating | `--material-thick` + blur            | `--shadow-elevation-floating` | 菜单、Popover、建议列表、撤销提示、任务栏 |
 | Overlay  | `--surface-l3`                       | `--shadow-l3`                 | 对话框、窗口、Sheet                       |
 
@@ -227,7 +227,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
   - 列数按底板内容区实测宽度求上限，网格水平居中；精细指针宽屏格宽 / 间距 / 图标固定为 76 / 12 / 48（粗指针 80 / 8 / 48），宽度只增加列数：1440 下 608px、7 列容量（7×76 + 6×12 = 604，余 4 对称分配；粗指针 7×80 + 6×8 = 608），1920 下 736px、8 列，2560 下 848px、9 列。<768px 底板与搜索框同宽：390px 下内宽 342px，5×64 + 4×6 = 344px 超出，故用 4 列；430px 起内宽 382px，可容 5 列。行高 = 格宽、纵横间距相等。显示名称时 `--launcher-pad-t` 为 `(格宽 − 图标宽 − --space-launcher-icon-gap − --font-metadata-line-height) / 2`，图标、间距与一行名称作为一组在方格内垂直居中（桌面 5px），底板上下留白等高；隐藏名称不改方格，只把 `--launcher-pad-t` 设为 `(格宽 − 图标宽) / 2`（`[data-labels="hidden"]`），使图标与悬停框在方格内垂直居中、大文件夹表面居中于 2×2 足迹，底板上下留白对称。`planHomeLibrary` 只排图块（“+”不参与），外层只在容量列末行仅 1 个图块时收窄列数，并仍交给 `calculateDesktopLayout` 回填：不增加已有行数、不超过有效行数，选使末行 ≥2 个图块的最大列数，仅做必要的收窄；8 个 / 上限 7 列 → 6 + 2，与上限 6 列一致，避免宽屏反而收成 4 + 4；19 个 / 上限 6 列 → 5 列 × 4 行（末行 4 个），12 个 / 6 列与 7 个 / 5 列不变。含大文件夹时不做列数平衡，保持 2×2 足迹、回填和“更多”预留规则。
   - 实色表面（窗口、Sheet）不使用 Material：文件夹取 `--surface-soft` 实色并关闭模糊与顶光，保留 `--shadow-elevation-glyph`。预览小图标为 `--surface-solid`，明暗主题均须可辨识边界。
   - 应用窗口网格只消费窗口 `--space-4`（16px）左右页边距，不额外水平 padding；`auto-fill` 按窗口实测完整内容宽度取列并居中。390px 手机窗口四周内缩 `--window-margin`（8px），扣 1px 边框与页边距后内宽 340px：标准 64 / 6 需 344px、触屏 68 / 4 需 356px 才能排 5 列，均放不下，因此排 4 列（需 274 / 284px），图标和命中区不缩小；360px 同样 4 列且无横向溢出。owner 为 `launcher.css` 的 `.launcher-grid--library`，验证为 360 / 390 / 768 / 1440 × light / dark 实页与触屏 E2E。
-- **首页颜色层级**：顶栏与账户头像使用 `--surface-soft` 底与 `--foreground`；首页搜索引擎使用品牌原色，仅用于标识本身，不扩展到搜索框底色或提交按钮。网页联想为中性搜索字形，提交按钮始终 ghost。应用窗口的添加入口是应用网格末尾的“+”图块；笔记侧栏头部的创建 icon 属于列表工具栏，列表行只保留次级图标操作。“跟随系统”用 `SunMoon`。
+- **首页颜色层级**：顶栏与账户头像使用 `--foreground`；首页顶栏的字标、主题按钮与头像直接落在壁纸上，常态即为 Material 小块（`--glass-sheen` + `--material-regular`、`--material-filter`、`--shadow-material-edge`），悬停加厚为 `--material-thick`，使主题前景在任意明暗壁纸上可读（`clear` 档同搜索框，属用户主动选择的通透偏好）；非首页顶栏仍为透明底、悬停 `--surface-soft`，头像徽标为 `--surface-soft` 底。登录用户首页顶栏只有主题与头像，不随打开的窗口增减。首页搜索引擎使用品牌原色，仅用于标识本身，不扩展到搜索框底色或提交按钮。网页联想为中性搜索字形，提交按钮始终 ghost。应用窗口的添加入口是应用网格末尾的“+”图块；笔记侧栏头部的创建 icon 属于列表工具栏，列表行只保留次级图标操作。“跟随系统”用 `SunMoon`。
 
 ### 页面原型
 

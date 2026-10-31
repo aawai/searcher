@@ -63,6 +63,67 @@ Deno.test("C1 窗口保留局部路由与内容，返回桌面后可恢复，关
     }
 });
 
+Deno.test("设置窗口首次切到账户与安全不经过加载占位，顶栏不随窗口变化", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    const topActions = () =>
+        page.locator(".top-actions > a, .top-actions > button").evaluateAll(
+            (elements) => elements.map((el) => el.getAttribute("aria-label")),
+        );
+    try {
+        await loginAndVisit(page, app.origin, "/", user);
+        const home = await topActions();
+        for (const id of ["apps", "notes", "ai", "trash", "settings"]) {
+            await page.locator(`[data-dock-id="${id}"]`).click();
+            await page.locator(`[data-window-id="${id}"]`).waitFor();
+            assertEquals(await topActions(), home, `${id} window`);
+        }
+
+        const settings = page.locator('[data-window-id="settings"]');
+        await settings.locator('a[href="/settings/appearance"]').click();
+        await page.waitForURL(app.origin + "/settings/appearance");
+        // Record every frame state the first switch passes through.
+        await page.evaluate(() => {
+            const seen: string[] = [];
+            Object.assign(globalThis, { __settingsSeen: seen });
+            const window = document.querySelector(
+                '[data-window-id="settings"]',
+            )!;
+            new MutationObserver(() => {
+                if (
+                    window.querySelector(
+                        '[data-testid="route-loading-fallback"]',
+                    )
+                ) seen.push("fallback");
+                if (window.textContent?.includes("暂无活跃设备记录")) {
+                    seen.push("empty devices");
+                }
+            }).observe(window, {
+                childList: true,
+                subtree: true,
+                characterData: true,
+            });
+        });
+        await settings.getByRole("link", { name: "账户与安全", exact: true })
+            .click();
+        await settings.locator(".account-device-list").waitFor();
+        assertEquals(
+            await page.evaluate(() =>
+                (globalThis as unknown as { __settingsSeen: string[] })
+                    .__settingsSeen
+            ),
+            [],
+        );
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
 Deno.test("窗口键盘操作可移动、取消，并调整所选边", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();

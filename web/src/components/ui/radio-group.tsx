@@ -3,6 +3,7 @@ import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
 import { cn } from "../../lib/utils.ts";
 export type RadioGroupVariant =
     | "default"
+    | "rows"
     | "swatch"
     | "segmented";
 
