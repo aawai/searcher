@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-30T08:03:51.101Z",
+  "last_updated": "2026-10-30T16:08:24.640Z",
   "pages": {
     "concepts/accessible-grid-drag-keyboard-and-announcements": {
       "type": "concept",
@@ -2782,6 +2782,23 @@
       "relevance": "high",
       "observed_at": "2026-10-30T04:28:37.551Z",
       "source_context": "评估笔记窗口改为 Notion/Inkdown 式布局并创建实施计划",
+      "created": "2026-10-30",
+      "updated": "2026-10-30"
+    },
+    "sources/obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling": {
+      "type": "source",
+      "title": "Observation: Touch drag sensor preserves sidebar scrolling",
+      "tags": [
+        "dnd-kit",
+        "touch",
+        "accessibility",
+        "notes-tree"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling",
+      "relevance": "high",
+      "observed_at": "2026-10-30T16:08:24.602Z",
+      "source_context": "Issue 352 notes tree drag UI",
       "created": "2026-10-30",
       "updated": "2026-10-30"
     },

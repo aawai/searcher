@@ -1770,6 +1770,14 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling",
+      "contentHash": "ec81e9f26b34d71aa48a8f1c001ccd7acb2a0b32f8c377b0e142124e33340c2d",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/searcher-session-token-hash-is-not-salted.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/searcher-session-token-hash-is-not-salted.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",

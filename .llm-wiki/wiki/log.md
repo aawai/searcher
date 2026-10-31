@@ -2,6 +2,7 @@
 
 ## 2026-10-30
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling","title":"Touch drag sensor preserves sidebar scrolling"}
 - **capture**: {"format":"web","source_id":"SRC-2026-10-30-005","url":"https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"}
 - **capture**: {"format":"web","source_id":"SRC-2026-10-30-004","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter"}
 - **capture**: {"format":"web","source_id":"SRC-2026-10-30-003","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP"}

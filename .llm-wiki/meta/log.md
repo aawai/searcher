@@ -644,3 +644,6 @@
 ## [2026-10-30T08:00:32.451Z] capture
 - source_id: "SRC-2026-10-30-005", url: "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html", format: "web"
 
+## [2026-10-30T16:08:24.605Z] observe
+- slug: "obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling", title: "Touch drag sensor preserves sidebar scrolling", relevance: "high"
+
