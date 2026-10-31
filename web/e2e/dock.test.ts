@@ -1433,6 +1433,51 @@ Deno.test("workspace dock: Mod+. expands and focuses dock without opening any pa
     assertEquals(new URL(page.url()).searchParams.has("view"), false);
 });
 
+Deno.test("workspace dock: tapping the floating ball keeps its click on the ball", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+    const context = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
+        isMobile: true,
+    });
+    cleanup.defer(() => context.close());
+    const page = await context.newPage();
+
+    await registerFreshUser(page, app.origin, "dock_ball_tap_user");
+    await collapseDockViaMenu(page);
+    const ball = expandBall(page);
+    await ball.waitFor({ state: "visible" });
+    // Whatever lies beneath the ball (a home note, the wallpaper) would receive
+    // the tap's compatibility click if the ball became inert on touch end.
+    await page.evaluate(() => {
+        const targets: boolean[] = [];
+        Object.assign(globalThis, { __ballClickTargets: targets });
+        document.addEventListener("click", (event) => {
+            targets.push(
+                event.target instanceof Element &&
+                    event.target.closest(".dock-ball") !== null,
+            );
+        }, { capture: true });
+    });
+    await ball.tap();
+    await dockNav(page).waitFor({ state: "visible" });
+    assertEquals(
+        await page.evaluate(() =>
+            (globalThis as unknown as { __ballClickTargets: boolean[] })
+                .__ballClickTargets
+        ),
+        [true],
+    );
+});
+
 Deno.test("workspace dock: touch drag, long-press actions, and overflow management", async () => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();

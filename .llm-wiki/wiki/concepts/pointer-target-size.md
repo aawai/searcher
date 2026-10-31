@@ -32,3 +32,4 @@ sources: [sources/SRC-2026-10-25-004]
 
 - [[concepts/aria-combobox-grouped-suggestions]]
 - [[concepts/wallpaper-accent-oklch-contrast-solver]]
+- [Touch Action Gesture Ownership](/concepts/touch-action-gesture-ownership.md)

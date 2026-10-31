@@ -229,12 +229,21 @@ a {
 .top-actions button:hover {
     background: var(--surface-soft);
 }
-.app-shell[data-home] .top-actions a:hover,
-.app-shell[data-home] .top-actions button:hover {
+/* Home top-bar controls sit directly on the wallpaper, whose brightness is
+   independent of the theme; a Material chip keeps theme foreground legible on
+   any wallpaper. Hover thickens the same material. */
+.app-shell[data-home] .wordmark-small,
+.app-shell[data-home] .top-actions a,
+.app-shell[data-home] .top-actions button {
     background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     box-shadow: var(--shadow-material-edge);
+}
+.app-shell[data-home] .wordmark-small:hover,
+.app-shell[data-home] .top-actions a:hover,
+.app-shell[data-home] .top-actions button:hover {
+    background: var(--glass-sheen), var(--material-thick);
 }
 .top-actions .topbar-link--active {
     background: var(--surface-soft);

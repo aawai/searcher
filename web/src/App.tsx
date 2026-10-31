@@ -161,6 +161,9 @@ function Layout() {
     } = useAppState();
     const hasVisibleDesktop = isHomePage ||
         Boolean(user && windowForLocation(location) !== null);
+    // Signed-in desktops reach AI and settings through the dock and the user
+    // menu; the top bar keeps only theme and identity whichever window is open.
+    const desktopTopbar = Boolean(user) && hasVisibleDesktop;
     const online = useOnline();
     const serviceWorker = useServiceWorkerUpdate();
     // Coming back online re-checks the session the offline start could not.
@@ -278,13 +281,8 @@ function Layout() {
                         s.
                     </Link>
                     <nav className="top-actions" aria-label="账户与设置">
-                        {
-                            /* Home keeps only the theme and identity; AI and settings
-                        are reached from the search box commands and the user menu. */
-                        }
-                        {!isHomePage && !isAuthPage && aiModels.length > 0 && (
-                            <AiTopbarLink pathname={location.pathname} />
-                        )}
+                        {!desktopTopbar && !isAuthPage && aiModels.length > 0 &&
+                            <AiTopbarLink pathname={location.pathname} />}
                         <button
                             type="button"
                             onClick={() =>
@@ -298,7 +296,7 @@ function Layout() {
                                 ? <Moon size="1em" className="icon-lg" />
                                 : <SunMoon size="1em" className="icon-lg" />}
                         </button>
-                        {(!isHomePage || !user) && (
+                        {!desktopTopbar && (
                             <Link
                                 to={routes.settings()}
                                 viewTransition

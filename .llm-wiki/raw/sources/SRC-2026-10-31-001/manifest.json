@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-31-001",
+  "captured": "2026-10-31",
+  "packet_version": "1.0",
+  "title": "Secure Headers Middleware",
+  "url": "https://hono.dev/docs/middleware/builtin/secure-headers",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

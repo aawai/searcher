@@ -46,3 +46,4 @@ sources: [
 - [[sources/SRC-2026-09-25-011]]
 - [[sources/SRC-2026-09-25-018]]
 - [[sources/SRC-2026-09-25-025]]
+- [Hono Security Middleware Compared with Searcher's API Guard](/concepts/hono-security-middleware-vs-api-guard.md): 内置 `secureHeaders()` / `csrf()` 的默认值与项目 API 守卫的逐项对照。

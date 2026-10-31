@@ -38,7 +38,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/content-security-policy-strict-deployment.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/content-security-policy-strict-deployment",
-      "contentHash": "6c21fd7b8e3f9b2062989e17080d544b8b75b0c8a4f5404c9dbec10be2c789fa",
+      "contentHash": "8b3ed66cf89e62f5efbeed48e5e13a9bfbb8452e6d2ce56c43dbf903410e4828",
       "role": "canonical",
       "type": "concept"
     },
@@ -54,7 +54,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/csrf-defense-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/csrf-defense-boundaries",
-      "contentHash": "e39674bbb689671b39dbf0bc5999b4bda2a4c9bcd52e8c9fe92e0406e7ac6a9a",
+      "contentHash": "554f6c83f459ef2f9342a38706a8d0ca1aad4be1306755377e03b984f09fa1f1",
       "role": "canonical",
       "type": "concept"
     },
@@ -122,6 +122,14 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/hono-security-middleware-vs-api-guard.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/hono-security-middleware-vs-api-guard.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/hono-security-middleware-vs-api-guard",
+      "contentHash": "77c96939bb5cb296e81827e550da6480e24f6e630e70f1e7f576ed269caf9c0b",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/http-cache-and-service-worker-boundaries.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/http-cache-and-service-worker-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -142,7 +150,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/modal-layering-and-escape-dismissal.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/modal-layering-and-escape-dismissal",
-      "contentHash": "de4a6fb0c73d4c383fcf8f3f949631c3e1ffa027d34e488d2185304f7034cc4d",
+      "contentHash": "06d528de523c42ef111c44c6a91ff4e36d1aed54d7caa8e158a297ce398cbcd6",
       "role": "canonical",
       "type": "concept"
     },
@@ -151,6 +159,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/offline-first-与-local-draft-持久化架构",
       "contentHash": "9b79f669ab9458119614d41f20da513dd823054542581dc5235663071b1d3427",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/overscroll-containment-for-nested-scroll-areas.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/overscroll-containment-for-nested-scroll-areas.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/overscroll-containment-for-nested-scroll-areas",
+      "contentHash": "dfdb6841a420442ce7b25ac67369ce4429952253a2297922f198e9b103960c37",
       "role": "canonical",
       "type": "concept"
     },
@@ -166,7 +182,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/pointer-target-size.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/pointer-target-size",
-      "contentHash": "2a4eb7c0dc7a4df1701e797ac23b5857dc4daddb13d13300001746adcdc39b67",
+      "contentHash": "44644c035df309f423d8a2eada58bb993c6502c4f6fa6270042e43dfcee40233",
       "role": "canonical",
       "type": "concept"
     },
@@ -183,6 +199,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/react-19-actions-and-transitions",
       "contentHash": "60d82fc334bfd8c84abb4afe0552932aae33648394a4c38934f6aa8dbed9421c",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/reduced-motion-replacement-strategy.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/reduced-motion-replacement-strategy.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/reduced-motion-replacement-strategy",
+      "contentHash": "0e08cdc0811b2774651c65eca0fbf227b024cb6075fa9f89a25b4156326405ae",
       "role": "canonical",
       "type": "concept"
     },
@@ -266,11 +290,19 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/touch-action-gesture-ownership.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/touch-action-gesture-ownership.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/touch-action-gesture-ownership",
+      "contentHash": "562b30d3dd1616ef0047f9a7489b06a0f1b9cb0b7823cdff7843d83a30feb79a",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/view-transitions-shared-element.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/view-transitions-shared-element.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/view-transitions-shared-element",
-      "contentHash": "975ddcad337e7e132fe23912380a976a9e1df4a6287849087fcae13f22ad8f56",
+      "contentHash": "de5a5c05aad9cf9489ed86948e0061eecd3438e53b70cec30de1155b67384621",
       "role": "canonical",
       "type": "concept"
     },
@@ -334,7 +366,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/hono-framework.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/hono-framework",
-      "contentHash": "a2c650fd04697d7c4b3bfe9e6f3c3d0e225e88349102fb8fabe08fac18d8352a",
+      "contentHash": "f9e418e9438363284440e9a8a0d8c934e658652229c451bf6a2acb3620bc43ed",
       "role": "canonical",
       "type": "entity"
     },
@@ -1031,6 +1063,46 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/SRC-2026-10-30-005",
       "contentHash": "f2ba015ca02f9511bd730f52ec1d095c8884a22cb519b93bb1c058af25d04085",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-31-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-31-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-31-001",
+      "contentHash": "d11aafc4df62c69294ce1593e809534c10391375b442e30d800ce8a18e86d381",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-31-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-31-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-31-002",
+      "contentHash": "5fd4207dee372ad8a291d0ec2f3b72a752d34cf811d381de987fc53a6d4a03a1",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-31-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-31-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-31-003",
+      "contentHash": "c8fde7771100f8afab5bbddec4e7f22d81dfdda43cb160c4cac986f742a5a7bc",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-31-004.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-31-004.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-31-004",
+      "contentHash": "d9cd8a1894aabb3e8f057539505f4af68b1cf318681857e4df360d205468cc6a",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-10-31-005.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-10-31-005.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-10-31-005",
+      "contentHash": "834dd93691cdd037ca8042037f2ac740083fb0390f3ab6bac80ecbf27a5fbdef",
       "role": "evidence",
       "type": "source"
     },

@@ -1,5 +1,13 @@
 # Wiki Update Log
 
+## 2026-10-31
+
+- **capture**: {"format":"web","source_id":"SRC-2026-10-31-005","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-31-004","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-31-003","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-31-002","url":"https://hono.dev/docs/middleware/builtin/csrf"}
+- **capture**: {"format":"web","source_id":"SRC-2026-10-31-001","url":"https://hono.dev/docs/middleware/builtin/secure-headers"}
+
 ## 2026-10-30
 
 - **observe**: {"relevance":"high","slug":"obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling","title":"Touch drag sensor preserves sidebar scrolling"}

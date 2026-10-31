@@ -50,14 +50,9 @@ import {
     windowUrl,
 } from "./window-state.ts";
 
-const SettingsContent = lazy(() =>
-    import("../../app/SettingsPage.tsx").then((module) => ({
-        default: module.SettingsContent,
-    }))
-);
-const AccountContent = lazy(() =>
-    import("../../app/AccountPage.tsx").then((module) => ({
-        default: module.AccountContent,
+const SettingsWindowContent = lazy(() =>
+    import("../../app/SettingsWindowContent.tsx").then((module) => ({
+        default: module.SettingsWindowContent,
     }))
 );
 const TrashContent = lazy(() =>
@@ -560,16 +555,8 @@ function ActiveDesktopStage(
                                                         ) ?? undefined}
                                                     />
                                                 )
-                                                : localHost.location
-                                                        .pathname ===
-                                                        routes.account
-                                                ? (
-                                                    <AccountContent
-                                                        host={localHost}
-                                                    />
-                                                )
                                                 : (
-                                                    <SettingsContent
+                                                    <SettingsWindowContent
                                                         host={localHost}
                                                     />
                                                 )}

@@ -38,3 +38,4 @@ sources:
 - [XSS Sanitization and Trusted Types](/concepts/xss-sanitization-and-trusted-types.md)
 - [Session Security and Isolation](/concepts/session-security-and-isolation.md)
 - [Single Process Architecture](/concepts/single-process-architecture.md)：应用与前端静态资源由同一进程提供，响应头可在应用内统一设置。
+- [Hono Security Middleware Compared with Searcher's API Guard](/concepts/hono-security-middleware-vs-api-guard.md)：`secureHeaders()` 的 CSP/nonce 选项与项目 shell 为预构建静态文件的约束。

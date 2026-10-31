@@ -157,7 +157,9 @@ export function AccountContent({ host }: { host: PageHost }) {
 
     // Devices state
     const [devices, setDevices] = useState<SessionDevice[]>([]);
-    const [devicesLoading, setDevicesLoading] = useState(false);
+    // Signed-in users fetch on mount; start in the loading state so the first
+    // frame does not flash the empty-list copy.
+    const [devicesLoading, setDevicesLoading] = useState(Boolean(user));
     const [devicesError, setDevicesError] = useState("");
     const [devicesActionMsg, setDevicesActionMsg] = useState("");
 

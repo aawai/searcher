@@ -213,3 +213,8 @@
 {"source_id":"SRC-2026-10-30-004","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter","format":"web","timestamp":"2026-10-30T08:00:30.591Z","kind":"capture"}
 {"source_id":"SRC-2026-10-30-005","url":"https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html","format":"web","timestamp":"2026-10-30T08:00:32.451Z","kind":"capture"}
 {"slug":"obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling","title":"Touch drag sensor preserves sidebar scrolling","relevance":"high","timestamp":"2026-10-30T16:08:24.605Z","kind":"observe"}
+{"source_id":"SRC-2026-10-31-001","url":"https://hono.dev/docs/middleware/builtin/secure-headers","format":"web","timestamp":"2026-10-31T08:00:27.310Z","kind":"capture"}
+{"source_id":"SRC-2026-10-31-002","url":"https://hono.dev/docs/middleware/builtin/csrf","format":"web","timestamp":"2026-10-31T08:00:31.659Z","kind":"capture"}
+{"source_id":"SRC-2026-10-31-003","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action","format":"web","timestamp":"2026-10-31T08:00:33.288Z","kind":"capture"}
+{"source_id":"SRC-2026-10-31-004","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion","format":"web","timestamp":"2026-10-31T08:00:36.456Z","kind":"capture"}
+{"source_id":"SRC-2026-10-31-005","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior","format":"web","timestamp":"2026-10-31T08:00:39.515Z","kind":"capture"}

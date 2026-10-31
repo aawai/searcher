@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-10-31-005",
+  "captured": "2026-10-31",
+  "packet_version": "1.0",
+  "title": "`overscroll-behavior` CSS property",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

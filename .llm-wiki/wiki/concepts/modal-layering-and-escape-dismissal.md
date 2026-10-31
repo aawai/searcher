@@ -46,3 +46,4 @@ sources:
 - [[concepts/contract-first-testing]]: 验证 Escape 优先级、Tab 焦点锁定与触控遮罩响应的契约测试。
 - [Modal Dialog Focus and Semantics](/concepts/modal-dialog-focus-and-semantics.md): 初始焦点、Tab 循环、焦点恢复及真实模态性；W3C 模式不证明项目已通过可访问性检查。
 - [[sources/SRC-2026-09-27-001]]: Base UI 官方 Dialog 解剖结构与嵌套弹窗规范。
+- [Overscroll Containment for Nested Scroll Areas](/concepts/overscroll-containment-for-nested-scroll-areas.md): 浮层内滚动不链到背景的 `overscroll-behavior` 契约与项目用法。

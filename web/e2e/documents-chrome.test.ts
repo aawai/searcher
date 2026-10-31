@@ -264,6 +264,23 @@ Deno.test("笔记窗口控件：抽屉模式的标题行按钮打开抽屉，关
         });
         assert(metrics.width <= 28, JSON.stringify(metrics));
         assert(metrics.hit >= 44, JSON.stringify(metrics));
+
+        // Opening the drawer by touch never starts in its search field, which
+        // would raise the soft keyboard; the labelled drawer takes focus.
+        const touchFrame = touchPage.locator(NOTES);
+        await touchFrame.getByRole("button", { name: "最近", exact: true })
+            .tap();
+        await touchFrame.getByRole("button", { name: /打开笔记：抽屉笔记/ })
+            .tap();
+        await touchFrame.locator(".documents-layout[data-drawer='closed']")
+            .waitFor();
+        await touchFrame.getByRole("button", { name: "笔记侧栏", exact: true })
+            .tap();
+        await touchFrame.locator(".documents-layout[data-drawer='open']")
+            .waitFor();
+        await touchPage.waitForFunction(() =>
+            document.activeElement?.matches(".documents-sidebar--drawer")
+        );
         await coarse.close();
     } finally {
         await browser.close();
