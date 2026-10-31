@@ -185,6 +185,10 @@ a {
 .wordmark-small:hover {
     background: var(--surface-soft);
 }
+/* The brand's only accent: the wordmark's full stop. */
+.wordmark-dot {
+    color: var(--accent);
+}
 .top-actions {
     display: flex;
     align-items: center;
@@ -230,20 +234,46 @@ a {
     background: var(--surface-soft);
 }
 /* Home top-bar controls sit directly on the wallpaper, whose brightness is
-   independent of the theme; a Material chip keeps theme foreground legible on
-   any wallpaper. Hover thickens the same material. */
+   independent of the theme; Material keeps theme foreground legible on any
+   wallpaper. The wordmark is one Material tile; theme and identity share one
+   Material group (the taskbar's grammar) of the same height and radius, its
+   buttons transparent, concentric with it, and thickened on hover. */
 .app-shell[data-home] .wordmark-small,
-.app-shell[data-home] .top-actions a,
-.app-shell[data-home] .top-actions button {
+.app-shell[data-home] .top-actions {
+    border-radius: var(--radius-lg);
     background: var(--glass-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-filter);
     backdrop-filter: var(--material-filter);
     box-shadow: var(--shadow-material-edge);
 }
-.app-shell[data-home] .wordmark-small:hover,
+.app-shell[data-home] .wordmark-small {
+    min-width: calc(var(--control-height) + 2 * var(--space-half));
+    min-height: calc(var(--control-height) + 2 * var(--space-half));
+}
+.app-shell[data-home] .top-actions {
+    gap: var(--space-half);
+    padding: var(--space-half);
+}
+.app-shell[data-home] .top-actions a,
+.app-shell[data-home] .top-actions button {
+    /* Concentric with the group: its radius less the --space-half inset. */
+    border-radius: calc(var(--radius-lg) - 2px);
+}
+.app-shell[data-home] .wordmark-small:hover {
+    background: var(--glass-sheen), var(--material-thick);
+}
 .app-shell[data-home] .top-actions a:hover,
 .app-shell[data-home] .top-actions button:hover {
-    background: var(--glass-sheen), var(--material-thick);
+    background: var(--material-thick);
+}
+.app-shell[data-home] .top-actions .user-avatar-trigger {
+    border-radius: var(--radius-pill);
+}
+/* On the group the badge is a thumb: lighter than the Material track in both
+   themes, with a hairline edge where the two are close. */
+.app-shell[data-home] .user-avatar-badge {
+    background: var(--surface-control-thumb);
+    box-shadow: var(--shadow-avatar-edge);
 }
 .top-actions .topbar-link--active {
     background: var(--surface-soft);
@@ -293,6 +323,10 @@ a {
     .wordmark-small {
         min-width: var(--control-touch-target);
         min-height: var(--control-touch-target);
+    }
+    .app-shell[data-home] .wordmark-small {
+        min-width: calc(var(--control-touch-target) + 2 * var(--space-half));
+        min-height: calc(var(--control-touch-target) + 2 * var(--space-half));
     }
 }
 .muted {

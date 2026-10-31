@@ -278,7 +278,7 @@ function Layout() {
                         viewTransition
                         aria-label="Searcher 首页"
                     >
-                        s.
+                        s<span className="wordmark-dot">.</span>
                     </Link>
                     <nav className="top-actions" aria-label="账户与设置">
                         {!desktopTopbar && !isAuthPage && aiModels.length > 0 &&

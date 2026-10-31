@@ -139,24 +139,26 @@
 }
 
 /* No strip of its own: the mode switch and the document stats are pinned to the
-   bottom corners of the editor and the text scrolls beneath them. */
+   bottom corners of the editor and the text scrolls beneath them. The row uses
+   the sidebar footer's inset (`documents-workspace.css`) and, like the sidebar's
+   entries, is compact only for a fine primary pointer, so all three share one
+   centre line on hybrid touch laptops too. */
 .document-editor-status-bar {
     position: absolute;
     inset-inline: var(--space-4);
-    inset-block-end: 0;
+    inset-block-end: var(--space-2);
     z-index: var(--elevation-local-10);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-control-gap);
-    /* The same row height as the sidebar footer beside it, so both centre on one line. */
-    block-size: var(--control-compact-height);
+    block-size: var(--control-touch-target);
     pointer-events: none;
 }
 
-@media (any-pointer: coarse), (max-width: 639px) {
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
     .document-editor-status-bar {
-        block-size: var(--control-touch-target);
+        block-size: var(--control-compact-height);
     }
 }
 
@@ -179,20 +181,30 @@
 }
 
 /* Mode trigger: the icon of the current mode, exactly as tall as the status row
-   so it never extends the editor's scroll range. */
+   so it never extends the editor's scroll range. When compact, an enlarged hit
+   area keeps the touch target for a touch screen beside the trackpad; the
+   footer's --space-2 inset leaves room for it below. */
 .document-editor-status-bar .document-mode-trigger {
-    width: var(--control-compact-height);
-    min-width: var(--control-compact-height);
-    height: var(--control-compact-height);
-    min-height: var(--control-compact-height);
+    position: relative;
+    width: var(--control-touch-target);
+    min-width: var(--control-touch-target);
+    height: var(--control-touch-target);
+    min-height: var(--control-touch-target);
 }
 
-@media (any-pointer: coarse), (max-width: 639px) {
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
     .document-editor-status-bar .document-mode-trigger {
-        width: var(--control-touch-target);
-        min-width: var(--control-touch-target);
-        height: var(--control-touch-target);
-        min-height: var(--control-touch-target);
+        width: var(--control-compact-height);
+        min-width: var(--control-compact-height);
+        height: var(--control-compact-height);
+        min-height: var(--control-compact-height);
+    }
+    .document-editor-status-bar .document-mode-trigger::after {
+        content: "";
+        position: absolute;
+        inset: calc(
+            (var(--control-compact-height) - var(--control-touch-target)) / 2
+        );
     }
 }
 
@@ -302,8 +314,11 @@
 .document-editor-scroll-area {
     /* Room beneath the text for the status overlay pinned to the corners; the
        text owns it (the readable wrapper shrinks to the viewport, so padding
-       on this box would not extend the scroll range). */
-    --document-status-clearance: calc(var(--control-height) + var(--space-3));
+       on this box would not extend the scroll range). Follows the status
+       bar's row height and inset. */
+    --document-status-clearance: calc(
+        var(--control-touch-target) + var(--space-2) + var(--space-3)
+    );
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -314,10 +329,10 @@
     scroll-behavior: smooth;
 }
 
-@media (any-pointer: coarse), (max-width: 639px) {
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
     .document-editor-scroll-area {
         --document-status-clearance: calc(
-            var(--control-touch-target) + var(--space-3)
+            var(--control-height) + var(--space-2) + var(--space-3)
         );
     }
 }

@@ -284,6 +284,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
             {props.sidebarPersistent && props.sidebarOpen &&
                 !props.fullScreen && (
                 <PaneResizeHandle
+                    className="documents-sidebar-resize"
                     label="调整侧栏宽度"
                     value={effectiveSidebarWidth}
                     min={SIDEBAR_WIDTH.min}

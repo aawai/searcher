@@ -50,6 +50,8 @@
     --shadow-control-thumb: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.20);
     --shadow-choice-selected: inset 0 0 0 1px var(--accent);
     --shadow-swatch-selected: 0 0 0 2px var(--surface-solid), 0 0 0 4px var(--accent);
+    /* Hairline edge of the identity badge on the home Material group. */
+    --shadow-avatar-edge: inset 0 0 0 var(--space-hairline) var(--border);
 
     /* Material: translucent surfaces. Fill, blur and saturation come from the glass tier below; --material-solid is the theme's opaque base. */
     --material-solid: var(--surface-solid);

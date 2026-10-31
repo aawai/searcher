@@ -17,6 +17,10 @@
 .workspace-body:has([data-workspace-editor]) {
     overflow: hidden;
 }
+/* The notes footer owns its own symmetric inset down to the window edge. */
+.workspace-body:has(> .library-pane--notes) {
+    padding-block-end: 0;
+}
 .workspace-root {
     display: flex;
     flex-direction: column;
