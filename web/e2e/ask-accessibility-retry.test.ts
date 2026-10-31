@@ -333,7 +333,6 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
         for (
             const target of [
                 page.getByRole("button", { name: "打开历史对话", exact: true }),
-                page.getByRole("button", { name: "窗口列表", exact: true }),
                 page.getByRole("button", {
                     name: "最小化AI 问答",
                     exact: true,

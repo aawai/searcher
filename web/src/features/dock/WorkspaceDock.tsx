@@ -269,9 +269,6 @@ export function WorkspaceDock(
     const modalActive = useEscapeLayerActive("overlay");
     const [keyboardOpen, setKeyboardOpen] = useState(false);
     const [managementOpen, setManagementOpen] = useState(false);
-    const windowListOpen = windowManager?.windowListOpen ?? false;
-    const setWindowListOpen = (open: boolean) =>
-        windowManager?.setWindowListOpen(open);
     const [appsOverflowing, setAppsOverflowing] = useState(false);
     const [itemMenu, setItemMenu] = useState<DockItemMenu | null>(null);
     const optionsRef = useRef<HTMLButtonElement | null>(null);
@@ -1085,11 +1082,6 @@ export function WorkspaceDock(
                                         管理
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        onClick={() => setWindowListOpen(true)}
-                                    >
-                                        窗口列表
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
                                         aria-label="收起任务栏"
                                         data-dock-action="collapse"
                                         onClick={() =>
@@ -1311,86 +1303,6 @@ export function WorkspaceDock(
                     </DropdownMenuPortal>
                 </DropdownMenu>
             )}
-            <Dialog open={windowListOpen} onOpenChange={setWindowListOpen}>
-                <DialogContent
-                    aria-label="窗口列表"
-                    className="dock-management"
-                >
-                    <DialogHeader className="dock-management-header">
-                        <DialogTitle>窗口列表</DialogTitle>
-                        <DialogClose
-                            render={
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label="关闭窗口列表"
-                                />
-                            }
-                        >
-                            <X
-                                size="1em"
-                                className="icon-md"
-                                aria-hidden="true"
-                            />
-                        </DialogClose>
-                    </DialogHeader>
-                    <div className="dock-management-content">
-                        {windowManager?.windows.length
-                            ? windowManager.windows.map((item) => {
-                                const label = DOCK_SYSTEM_ITEMS[item.id].label;
-                                const status =
-                                    (windowManager.activeId === item.id
-                                        ? "当前窗口"
-                                        : item.status === "minimized"
-                                        ? "已最小化"
-                                        : "已打开") +
-                                    (item.busy ? "，正在生成" : "");
-                                return (
-                                    <div
-                                        className="dock-window-row"
-                                        key={item.id}
-                                    >
-                                        <span>{label}（{status}）</span>
-                                        <div className="dock-window-actions">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                aria-label={`${
-                                                    item.status === "minimized"
-                                                        ? "恢复"
-                                                        : "激活"
-                                                } ${label}`}
-                                                onClick={() => {
-                                                    windowManager.activate(
-                                                        item.id,
-                                                    );
-                                                    setWindowListOpen(false);
-                                                }}
-                                            >
-                                                {item.status === "minimized"
-                                                    ? "恢复"
-                                                    : "激活"}
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                aria-label={`关闭 ${label}`}
-                                                onClick={() =>
-                                                    windowManager.close(
-                                                        item.id,
-                                                    )}
-                                            >
-                                                关闭
-                                            </Button>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                            : <p>没有打开的窗口</p>}
-                    </div>
-                </DialogContent>
-            </Dialog>
             {/* Management Dialog */}
             <Dialog open={managementOpen} onOpenChange={setManagementOpen}>
                 <DialogContent

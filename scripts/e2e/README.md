@@ -109,7 +109,7 @@ full 默认启用 Deno `--fail-fast`：首次失败后停止调度后续文件�
 
 ### 本地快速超时
 
-`--timeout <ms>`（也支持 `--timeout=<ms>`）或 `E2E_TIMEOUT_MS` 设置 Playwright 的默认 action / wait 超时；CLI 优先。只能是正整数毫秒。不设置则保持原生 30s；显式传入 `timeout` 的调用、测试自己设置的超时和固定观测窗口都不变。可在 suite 后使用一个 `--` 分隔符。CI 不使用快速超时，快速模式输出明确的诊断警告，不代替正常超时的验收。
+`--timeout <ms>`（也支持 `--timeout=<ms>`）或 `E2E_TIMEOUT_MS` 设置 Playwright 的默认 action / wait 超时；CLI 优先。只能是正整数毫秒。不设置则保持原生 30s；显式传入 `timeout` 的调用、测试自己设置的超时和固定观测窗口都不变。可在 suite 后使用一个 `--` 分隔符。CI 不使用快速超时；快速模式启动时输出提示。限时下全部通过可作为本地证据，有失败须以默认超时重跑，规则见 [仓库指南](../../AGENTS.md#执行与调度)。
 
 `full` / `affected` 带 `--no-fail-fast` 却不带超时时启动即警告；有失败的运行结束后，runner 统计 JUnit 中耗时达到超时的失败用例（`failedCases`、`timeoutLikeFailures`、`timeoutLikeSeconds` 写入 `timings.json`，步骤嵌套故秒数为上界），未设超时且此类失败不少于 5 个时提示按根因归类并改用 `--timeout 5000` 摸底。流程见 [测试](../../docs/testing.md#摸底与失败处理)。
 

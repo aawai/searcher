@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import type { Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
-import { ensureSidebarOpen } from "./helpers/library.ts";
+import { ensureSidebarOpen, openNoteRows } from "./helpers/library.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 const APPS = '[data-window-id="apps"]';
@@ -464,7 +464,7 @@ Deno.test("窄窗口大纲右侧抽屉选择标题、关闭并与笔记侧栏互
     }
 });
 
-Deno.test("窄屏应用与笔记窗口为单活动窗口，窗口列表可恢复最小化的窗口", async () => {
+Deno.test("窄屏应用与笔记窗口为单活动窗口，任务栏入口可切回另一窗口", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
@@ -479,7 +479,7 @@ Deno.test("窄屏应用与笔记窗口为单活动窗口，窗口列表可恢复
         assert(area.width >= 340, "near full width");
         await page.locator('[data-dock-id="notes"]').click();
         await page.locator(NOTES).waitFor({ state: "visible" });
-        // One active window at a time; the other keeps its state in the list.
+        // One active window at a time; the other keeps its state behind it.
         assert(await page.locator(APPS).isHidden());
         assertEquals(
             await page.locator('[data-dock-id="apps"]').getAttribute(
@@ -487,12 +487,98 @@ Deno.test("窄屏应用与笔记窗口为单活动窗口，窗口列表可恢复
             ),
             "visible",
         );
-        await page.locator(NOTES).getByRole("button", { name: "窗口列表" })
-            .click();
-        await page.getByRole("button", { name: "激活 应用" }).click();
+        await page.locator('[data-dock-id="apps"]').click();
         await page.waitForURL(app.origin + "/?view=apps");
         await page.locator(APPS).waitFor({ state: "visible" });
         assert(await page.locator(NOTES).isHidden());
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("后台笔记窗口含链接时页面保持可交互，Tab 跳过后台窗口", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    // A frozen main thread never answers an evaluate; fail instead of hanging.
+    const answered = <T>(work: Promise<T>) =>
+        Promise.race([
+            work,
+            new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error("page stopped responding")), 5000)
+            ),
+        ]);
+    try {
+        await loginAndVisit(page, app.origin, "/", user);
+        await page.evaluate(async () => {
+            const response = await fetch("/api/documents", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: "链接笔记",
+                    body: "参见 [示例](https://example.com/) 一节。",
+                }),
+            });
+            if (!response.ok) throw new Error("Cannot create document");
+        });
+        const rows = await openNoteRows(page);
+        await rows.locator("[data-document-id] h4 button", {
+            hasText: "链接笔记",
+        }).click();
+        const notes = page.locator(NOTES);
+        const link = notes.locator('.ProseMirror a[href="https://example.com/"]');
+        await link.waitFor();
+        await link.evaluate((element) => element.setAttribute("data-probe", ""));
+
+        // Opening a second window sends the note window to the background.
+        await page.locator('[data-dock-id="settings"]').click();
+        await page.locator('[data-window-id="settings"]').waitFor({
+            state: "visible",
+        });
+        await answered(page.waitForTimeout(500));
+        // The editor's own nodes stay untouched: no redraw, no rewritten tabindex.
+        assertEquals(
+            await answered(link.evaluate((element) => ({
+                probe: element.hasAttribute("data-probe"),
+                tabindex: element.getAttribute("tabindex"),
+            }))),
+            { probe: true, tabindex: null },
+        );
+
+        // Tab and Shift+Tab pass over the background window in both directions.
+        const before = await page.evaluateHandle(() => {
+            const frame = document.querySelector('[data-window-id="notes"]')!;
+            const stops = Array.from(
+                document.querySelectorAll<HTMLElement>("a[href], button, input"),
+            ).filter((element) =>
+                element.tabIndex >= 0 && element.getClientRects().length > 0 &&
+                !element.closest(".window-frame") &&
+                frame.compareDocumentPosition(element) &
+                    Node.DOCUMENT_POSITION_PRECEDING
+            );
+            return stops.at(-1) ?? null;
+        });
+        const start = before.asElement();
+        assert(start, "a Tab stop precedes the note window");
+        await start.focus();
+        await page.keyboard.press("Tab");
+        const landed = await page.evaluate(() => {
+            const active = document.activeElement;
+            return {
+                inNotes: Boolean(active?.closest('[data-window-id="notes"]')),
+                onBody: active === document.body,
+            };
+        });
+        assertEquals(landed, { inNotes: false, onBody: false });
+        await page.keyboard.press("Shift+Tab");
+        assertEquals(
+            await start.evaluate((element) => element === document.activeElement),
+            true,
+        );
     } finally {
         await browser.close();
         await app.close();

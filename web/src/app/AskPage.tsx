@@ -225,12 +225,6 @@ function AskWorkspaceContent(
             setCloseRequested(true);
             return true;
         }), [registerCloseGuard]);
-    // The window list shows that an answer is being written in the background.
-    const setWindowBusy = windowManager?.setBusy;
-    useEffect(() => {
-        setWindowBusy?.("ai", isStreaming);
-        return () => setWindowBusy?.("ai", false);
-    }, [isStreaming, setWindowBusy]);
     const leave: AskLeave | null = blocked
         ? blocked.location.key === DESTRUCTIVE_ACTION_KEY ? "logout" : "switch"
         : closeRequested

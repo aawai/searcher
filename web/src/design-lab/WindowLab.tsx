@@ -848,7 +848,7 @@ export default function WindowLab() {
                             />
                             <button
                                 type="button"
-                                aria-label="任务栏选项与窗口列表"
+                                aria-label="任务栏选项"
                                 onClick={() => setList(!list)}
                             >
                                 <MoreHorizontal />
@@ -857,29 +857,6 @@ export default function WindowLab() {
                     )}
                 {list && (
                     <div className="window-lab__menu">
-                        <strong>窗口列表</strong>
-                        {order.length === 0 && <p>没有打开的窗口</p>}
-                        {order.map((id) => (
-                            <div key={id}>
-                                <button
-                                    type="button"
-                                    onClick={() => activate(id)}
-                                >
-                                    {labels[id]}{" "}
-                                    {windows[id]?.minimized
-                                        ? "（已最小化）"
-                                        : ""}
-                                </button>
-                                <button
-                                    type="button"
-                                    aria-label={`关闭${labels[id]}`}
-                                    onClick={() => close(id)}
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ))}
-                        <hr />
                         <strong>固定应用</strong>
                         {["邮件", "日历", "收藏"].map((name) => (
                             <div key={name}>

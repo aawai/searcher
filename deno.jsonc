@@ -27,6 +27,7 @@
         "test:bundle": "deno run -A scripts/e2e/run.ts bundle",
         "test:home-notes": "deno run -A scripts/e2e/run.ts home-notes",
         "check:ui": "deno run -A scripts/check-ui.ts",
+        "check:agents": "deno run -A scripts/check-agents.ts",
         "check:bundle": "deno task build && deno run --allow-read --allow-env scripts/check-bundle.ts"
     },
     "imports": {
@@ -37,6 +38,7 @@
         "@logger": "./src/internal/logger/logger.ts",
         "@shared/": "./src/shared/",
         "@std/assert": "jsr:@std/assert@1.0.19",
+        "@std/jsonc": "jsr:@std/jsonc@1.0.2",
         "@std/cli": "jsr:@std/cli@1.0.23",
         "@std/fmt": "jsr:@std/fmt@1.0.10",
         "@std/fs": "jsr:@std/fs@1.0.24",

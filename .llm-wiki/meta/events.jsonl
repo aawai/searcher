@@ -212,3 +212,4 @@
 {"source_id":"SRC-2026-10-30-003","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP","format":"web","timestamp":"2026-10-30T08:00:27.813Z","kind":"capture"}
 {"source_id":"SRC-2026-10-30-004","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/backdrop-filter","format":"web","timestamp":"2026-10-30T08:00:30.591Z","kind":"capture"}
 {"source_id":"SRC-2026-10-30-005","url":"https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html","format":"web","timestamp":"2026-10-30T08:00:32.451Z","kind":"capture"}
+{"slug":"obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling","title":"Touch drag sensor preserves sidebar scrolling","relevance":"high","timestamp":"2026-10-30T16:08:24.605Z","kind":"observe"}

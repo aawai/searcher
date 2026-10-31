@@ -154,17 +154,6 @@ function WindowSession(
             null,
         )
     );
-    const [windowListOpen, setWindowListOpen] = useState(false);
-    const [busy, setBusyWindows] = useState<readonly WindowId[]>([]);
-    const setBusy = useCallback((id: WindowId, working: boolean) => {
-        setBusyWindows((previous) =>
-            previous.includes(id) === working
-                ? previous
-                : working
-                ? [...previous, id]
-                : previous.filter((item) => item !== id)
-        );
-    }, []);
     const [widths, setWidths] = useState<Record<WindowId, number>>(
         DEFAULT_WIDTHS,
     );
@@ -394,14 +383,8 @@ function WindowSession(
     }, []);
 
     const manager: WindowManager = {
-        windows: state.windows.map(({ id, status }) => ({
-            id,
-            status,
-            busy: busy.includes(id),
-        })),
+        windows: state.windows.map(({ id, status }) => ({ id, status })),
         activeId: state.activeId,
-        windowListOpen,
-        setWindowListOpen,
         open,
         activate,
         minimize,
@@ -409,7 +392,6 @@ function WindowSession(
         showDesktop,
         registerCloseGuard,
         registerDesktopFocus,
-        setBusy,
     };
     return (
         <WindowManagerContext value={manager}>

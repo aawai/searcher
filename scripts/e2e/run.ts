@@ -44,7 +44,7 @@ const timings: Record<string, number | string | boolean | string[] | null> = {
     parallel,
     failFast,
     jobs: parallel ? jobs : "serial",
-    // A triage timeout makes the run a diagnosis, never a merge gate.
+    // A timed run that fully passes is valid evidence; failures need a default-timeout rerun.
     timeoutMs,
     files,
     ...(selection && changes
@@ -102,7 +102,7 @@ async function run(phase: string, args: string[]): Promise<number> {
 const skip = selection !== null && (options.list || files.length === 0);
 if (!skip && timeoutMs !== null) {
     console.warn(
-        `Triage run: implicit Playwright timeout ${timeoutMs}ms; not a merge gate.`,
+        `Timed run: implicit Playwright timeout ${timeoutMs}ms; a full pass counts, failures need a rerun without --timeout.`,
     );
 }
 if (
@@ -111,7 +111,7 @@ if (
 ) {
     console.warn(
         "No-fail-fast run without --timeout: every failing locator waits the " +
-            "full 30s. Use --timeout 5000 to triage; acceptance reruns omit it.",
+            "full 30s. Use --timeout 5000; rerun failures without it.",
     );
 }
 let code = 1;
