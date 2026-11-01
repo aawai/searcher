@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-01-003",
+  "captured": "2026-11-01",
+  "packet_version": "1.0",
+  "title": "readme.md",
+  "url": "https://github.com/rehypejs/rehype-sanitize/blob/main/readme.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

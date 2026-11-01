@@ -38,3 +38,4 @@ sources:
 
 - [Touch Action Gesture Ownership](/concepts/touch-action-gesture-ownership.md)：两者都是“手势/滚动归谁”的边界声明，一个管起手手势，一个管到边之后。
 - [Modal Dialog Focus and Semantics](/concepts/modal-dialog-focus-and-semantics.md)
+- [Scrollbar Gutter and Width-Driven Layout Stability](/concepts/scrollbar-gutter-and-layout-stability.md)：同属滚动容器声明；`scrollbar-gutter` 预留槽以切断宽度反馈。

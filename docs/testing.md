@@ -1,10 +1,12 @@
 # 测试
 
-本文维护验证范围、失败处理、证据标准与当前 CI 覆盖。运行命令、参数、资源调度和排障见
-[Production E2E](../scripts/e2e/README.md)，UI 验收矩阵见 [UI 验收清单](design/UI_CHECKLIST.md)。
+单元与契约测试使用 `Deno.test`，与源码并置；浏览器回归使用固定的 Playwright
+1.56.1 与 Chromium，实际执行测试的 E2E 入口先构建生产前端，启动隔离的真实 Hono
+服务、内存数据库与临时资源目录，不连接开发实例或真实账户；affected 的空差异与 `--list` 不执行测试。
 
-单元与契约测试使用 `Deno.test` + `jsr:@std/assert`，与源码并置；浏览器回归使用
-Playwright 1.56.1 与 Chromium。E2E 文件与集合以 `scripts/e2e/suites.ts` 为唯一权威清单。
+E2E 入口清单、并行/串行回退、JUnit 与资源报告、证据目录和排障约定见
+[Production E2E](../scripts/e2e/README.md)；`scripts/e2e/suites.ts`
+是唯一权威清单。
 
 ## 准备
 
@@ -12,100 +14,133 @@ Playwright 1.56.1 与 Chromium。E2E 文件与集合以 `scripts/e2e/suites.ts` 
 deno run -A npm:playwright@1.56.1 install chromium
 ```
 
+`editable-pagination-spike` 的超限段落夹具混合中文与 Latin 文本，确保缺少 CJK
+fallback 字体的 Linux 环境中也实际超过 A4 单页高度；不通过安装中文字体或放宽
+跨页断言来满足夹具前置条件。段落、代码和表格的跨页断言失败时输出实际页分布与图片几何。
+
 ## 常用入口
 
-- 单元与契约测试：`deno task test`；聚焦文件：`deno test -A <file>`。
-- E2E：按 [入口与集合](../scripts/e2e/README.md#入口与集合)选择 suite；
-  局部诊断见 [Affected](../scripts/e2e/README.md#affected保守的局部选择)，失败定位见[诊断](../scripts/e2e/README.md#诊断)。
-- UI 门禁：`deno task check:ui`，规则见[前端开发](frontend.md#ui-门禁)。
-- 指南引用校验：`deno task check:agents`，范围见[仓库指南](../AGENTS.md#agentsmd-自身维护)。
+| 命令                                          | 覆盖                                                                                                   |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `deno task test`                              | 后端与前端契约测试                                                                                     |
+| `deno task test:routing`                      | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航                                      |
+| `deno task test:workspace`                    | Workspace 完整回归（见下文）                                                                           |
+| `deno task test:documents`                    | 完整 Documents 集合：响应式矩阵、长笔记、Library、编辑、历史、草稿与分页契约（见下文）                 |
+| `deno task test:wallpaper`                    | 壁纸链路（见下文）                                                                                     |
+| `deno run -A scripts/e2e/run.ts supplemental` | 完整补充集合：设置、快捷键、Omnibox、AI 反馈及编辑器加载等                                             |
+| `deno task test:e2e:full`                     | 只构建一次，串行执行所有 E2E 文件的去重并集；首次失败停止，可显式 `--parallel` 诊断并发                |
+| `deno task test:e2e:affected`                 | 基于 Git 路径映射选择集合；任一未知路径回退 full，仅供局部诊断                                         |
+| `deno task check:e2e`                         | 检查新增 E2E 文件是否登记                                                                              |
+| `deno task check:ui`                          | UI 门禁（见 [前端开发](frontend.md#ui-门禁)）                                                          |
+| `deno task check:agents`                      | AGENTS.md 引用的路径、task、环境变量、Deno 版本与锚点（见 [仓库指南](../AGENTS.md#agentsmd-自身维护)） |
 
-## 验证策略
+模块入口（如 `test:workspace:apps`）仅作局部开发辅助，不替代完整 Workspace
+回归。
 
-### 范围与契约
+本地摸底可用 `DENO_JOBS=2 deno task test:e2e:full --parallel --no-fail-fast --timeout 5000`，一次收集失败并缩短隐式等待；CI 保持默认超时。限时结果何时可作证据见 [首轮限时](#首轮限时)；参数、优先级与报告字段见 [Production E2E](../scripts/e2e/README.md#本地快速超时)。
 
-- 以最小充分证据证明外部可观察契约。修改前确认受影响行为与既有覆盖，
-  优先复用、迁移现有测试；不以测试数量或执行轮数衡量充分性。
-  添加测试前必须能回答：“失败时，用户或下游消费者会观察到什么回归？”
-- 业务逻辑、数据转换、state management、API、parser、protocol 和 Bug 修复
-  默认采用 **Contract → Red → Green → 必要时 Refactor**。
-  选择能保护契约的最低层级：算法、转换、状态边界优先 unit/module tests；
-  真实布局、输入、焦点、拖拽和跨层交互使用 E2E。不同层级仅为独立风险保留必要重叠。
-- 测试保护消费者可观察的行为、边界和不变量；不为实现细节、无意义回显或重复覆盖添加测试。
-  是否有意义取决于契约，而非断言形式：例如新增列表项后的数量或协议字段透传可属于有效契约。
-  测试应确定、隔离，并能安全加入完整套件。
-- 纯 formatting、comment、type-only change、不改变行为的 rename，
-  以及已有契约测试覆盖的内部重构，通常无需新增测试。
-  文档、注释等不改变运行时行为的修改，不单独触发本地 E2E；既有 CI 门禁照常执行。
-- 明确列举的验收场景逐项覆盖；仅列出维度时，按执行路径、边界与交互风险选择代表组合，
-  不机械执行全组合。
-- UI 任务结束前覆盖受影响的 rendering / interaction contract，执行 `deno task check:ui`。
-  按 [UI 验收清单 · 实页矩阵](design/UI_CHECKLIST.md#实页矩阵)确定页面与消费者范围，
-  填写适用条目并完成矩阵、Host 与交互验证；build/test 不替代实页验证。
-  视觉矩阵与行为验收分开，不在每个视觉组合重复完整业务流程；历史验收记录不自动增加本次范围。
+### 摸底与失败处理
 
-### 执行与调度
+- **先小后大**：修改共享 helper、公共选择器或删除 / 重构被 E2E 依赖的组件后，先单跑 2–3 个有代表性的文件（`NODE_ENV=test E2E_TIMEOUT_MS=5000 deno test -A --no-check <file>`，需先 `deno task build`），确认 helper 与选择器可用，再跑整套摸底。
+- **首轮限时**：遵循下文 [首轮限时](#首轮限时)，避免找不到元素时逐项等待默认 30s；`--no-fail-fast` 不带 `--timeout` 时 runner 会打印警告。
+- **先归类再重跑**：按 `Call log` 把错误归并为共同根因（helper、选择器、重命名 DOM、语义变化），修复根因后只重跑受影响文件；限时运行中失败的集合，验收去掉 `--timeout`，以默认超时重跑。
+- **runner 自动提示**：失败的运行结束后，runner 读取 JUnit 统计耗时达到超时的失败用例，写入 `timings.json` 的 `failedCases`、`timeoutLikeFailures`、`timeoutLikeSeconds`（步骤嵌套在测试内，秒数为上界）；未设超时且此类失败不少于 5 个时输出归类与限时的建议。
 
-| 阶段               | 必须具备的证据                                                                                                                                                 |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 本地开发与任务完成 | 覆盖受影响契约和明确验收场景的聚焦验证；共享行为变化、影响面不确定或局部证据不足时扩大。无需因一次局部任务结束重复全部合并门禁；用户明确要求的完整验收仍须执行 |
-| 提交 PR            | 列出实际本地验证、覆盖范围、失败与尚待 CI 的门禁；可以提交等待 CI，但不得把“已提交”或局部通过写成“可合并”                                                      |
-| 合并前             | 满足规定的完整门禁；可复用当前 revision 的有效 CI 分片并集，缺失或失效的覆盖必须补齐。失败、未执行或待完成的门禁不能视为通过                                   |
+### Affected 局部诊断
 
-- 从最接近变更的验证开始：**focused tests → module/package tests → typecheck →
-  lint/format → 必要时 full suite / integration / benchmark**。
-  这是覆盖不足时的升级路径，不是每个任务必须逐级执行的清单。
-  影响共享行为、影响面不确定或局部证据不足时扩大范围；明确要求与既有门禁不得省略。
-- 本地 E2E 先聚焦文件，再按影响面扩展到受影响 suite。模块入口与 `test:e2e:affected`
-  可用于本地诊断，但不能冒充完整 Workspace 或合并前完整门禁；
-  不使用 `--filter`、`--changed` 或 `--related` 裁剪合并门禁。
-  当前 revision 的 CI 已完整覆盖各 suite 时可复用其并集，不重复本地 full；有效性条件见下节。
+```sh
+deno task test:e2e:affected --base origin/main --list
+DENO_JOBS=2 deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast --timeout 5000
+```
+
+基线默认 `origin/main`，`--base <git-ref>` 仅 affected 可用；不存在时先 fetch 或指定正确 ref。
+选择范围是 `merge-base(base, HEAD)` 到当前工作树的净差异（含暂存/未暂存），加上未忽略的
+untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` 同时维护映射与集合：
+应用与笔记窗口至少覆盖 workspace + documents，并包含 routing/bundle/home-notes/supplemental 消费者；
+直接修改 E2E 文件选择所属完整集合。共享基础设施/helper/config 及任何未知路径令整个选择
+回退 full。手工映射不是依赖图，新增跨域依赖必须更新映射；局部通过不替代完整 Workspace
+回归与交付前完整门禁。
+
+没有改动时明确跳过 build/browser，不能记为测试通过。`--list` 仅 affected 可用，
+打印基线、原因、路径、集合与去重文件，便于临时 Git fixture 的 CLI smoke；不 build、
+不启动浏览器。空差异/list 仍校验清单并写 `timings.json`（含路径、基线、选中集合和 skipped），
+不生成 JUnit。正常执行至多 build 一次；完整细节见 [Production E2E](../scripts/e2e/README.md#affected保守的局部选择)。
+
+### 验证调度
+
+验证范围、失败处理、证据复用与完成报告遵循
+[仓库指南 · 测试与验证](../AGENTS.md#测试与验证)；执行或修改 E2E、组织浏览器验收时遵循本节操作规范。
+上表提供本地执行入口；affected 仅辅助局部选择，完整 CI 分工见下节。
+
+#### 并发与隔离
+
 - 完整验收要求覆盖完整，不要求串行。独立场景优先按隔离服务、数据库、Browser/Context
   分片并行，片内保留有状态步骤顺序；分片并集不遗漏、不重复场景，
   不以删场景、放宽断言或缩短观察窗口提速。
-  本机并发配额、构建隔离与首轮超时遵循 [Production E2E · 并发与报告](../scripts/e2e/README.md#并发与报告)。
+- 本机可同时运行多个 E2E 进程，前提是各进程使用独立的 `E2E_REPORT_DIR`，且全部进程的
+  Deno worker 总数（各进程 `DENO_JOBS` 之和）不超过有效 CPU 配额与可用内存所能支撑的并发；
+  显式并行默认 `DENO_JOBS=2`。日常运行采用当前环境已验证的并发配置；
+  调优时可在隔离实验中逐档提高，并结合有效 CPU 配额、可用内存、隔离分片数，
+  以同等覆盖下的完整墙钟时间、稳定性和进程树内存峰值确定配置，不按逻辑 CPU 数直接设置 worker 数。
+  空闲等待为主的场景（如分页观察窗）可与 CPU 密集场景并发，
+  但并发引入的失败须先排除资源争抢再归因产品。子 agent 只编辑，由主代理统一调度；
+  远端 CI job 不占本机额度。
+- 构建不得与依赖同一份产物的 E2E 并发替换产物；长运行放后台，推进不依赖结果的工作。
+- 调度优化比较同等覆盖下的完整验收墙钟时间，区分 build、test 与 CI 排队；
+  不用单片耗时或各片累计耗时代表整体关键路径，不以失败提前结束的耗时宣称提速。
+
+#### 首轮限时
+
+- 改动后的首轮本地 E2E（聚焦文件、suite、full/affected 摸底均算）必须限时，不以 Playwright 默认 30s 起步：
+  `scripts/e2e/run.ts` / `deno task test:*` 传 `--timeout 5000`，直接 `deno test` 设 `E2E_TIMEOUT_MS=5000`。
+- 限时只缩短判定失败前的等待，不改变应用行为：限时下全部通过可直接作为该范围的通过证据；
+  有失败时按根因归类修复，再以默认超时重跑受影响集合。负向观察（断言某事件不发生）必须显式传
+  timeout，不得依赖隐式默认超时到期作为成功条件，否则上述等价不成立。
+- 超时功能用独立小夹具验证，禁止故意破坏共享入口后跑整套失败基准；
+  显式 timeout 与固定采样/空闲观察窗口保持不变。
+
+#### 浏览器交互就绪
+
 - 批量浏览器验收前先校准少量场景，复用 fixture/helper。
   等待内容、状态或几何的可观察完成条件，不能把可见等同于交互就绪；
   等待须有超时与诊断，不以固定 sleep、强制操作或自动 retry 掩盖失败。
 
-### 失败与证据复用
-
-- Bug 修复尽量保留修复前失败、修复后通过的 regression test，不为通过测试改变验收契约。
-  失败先依据已有证据区分产品、脚本或环境原因，再定向复查；不因单点失败自动重跑全部。
-  共享行为变化或影响面不确定时扩大复查。
-- 复用前确认相关实现、测试脚本、共享 fixture、构建产物、环境与覆盖范围仍有效；
-  只重跑已失效或尚缺的验证，不重复仍有效的已通过检查。
-  筛选运行与失败后未执行的场景，不能作为完整门禁通过证据。
-- 首轮快速超时及有依据的例外遵循 [Production E2E](../scripts/e2e/README.md#本地快速超时)。
-  超时选择只调整判定失败前的等待，不能改变应用行为、断言、显式 timeout 或固定观察窗口；
-  负向观察须显式设置 timeout。满足这些条件且全部通过，可作为实际执行范围的证据。
-  有失败时先归类并处理根因，再以标准超时（或已记录依据的例外值）复查受影响集合，不盲目延长等待或自动重试。
-
-### 完成与报告
-
-- 完成当前阶段前须有足够证据满足上表要求；本地任务完成不代表合并门禁完成。
-  报告实际通过范围、失败原因、复查范围，以及影响交付判断的未验证项，无需另建报告文件。
-  不机械扩展平台/设备，不罗列范围外未验证项或通用免责声明。
-- 分批通过不得写成完整命令一次通过，局部通过不得暗示完整验收通过。
-- 调度优化比较同等覆盖下的完整验收墙钟时间，区分 build、test 与 CI 排队；
-  不用单片耗时或各片累计耗时代表整体关键路径。
-
 ## CI 覆盖
 
-当前集合分工如下；触发条件与 job 配置以链接的 workflow 为准，复用 CI 证据前确认本次实际触发和执行的范围。
+此前 CI 已运行完整 `workspace`、`bundle`、`home-notes`、`wallpaper`
+集合；Documents 并非未运行：Bundle workflow 直接运行
+`documents.test.ts`，Notes workflow 直接运行 `documents-library.test.ts`、
+`documents-live-preview.test.ts`、`documents-live-editing.test.ts` 和
+`documents-focus.test.ts`。这些文件仅覆盖 Documents 集合的一部分；
+完整 `documents`、`routing` 和 `supplemental` 集合当时尚未接入 CI。
 
-| Workflow                                                   | 覆盖与分片                                                                                                                          |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| [Workspace](../.github/workflows/workspace-acceptance.yml) | `workspace-a`、`workspace-b` 两片的无重复并集为完整 Workspace；各片 `--parallel`、`DENO_JOBS=2`                                     |
-| [Coverage](../.github/workflows/e2e-coverage.yml)          | `documents-core` + 四个 `pagination-*` 分片组成完整 Documents，另含 `routing`、`supplemental`；七个独立 matrix job，各片 `--serial` |
-| [Bundle](../.github/workflows/bundle-guard.yml)            | Bundle 预算与完整 `bundle` 集合                                                                                                     |
-| [Home notes](../.github/workflows/notes-regression.yml)    | 完整 `home-notes` 集合                                                                                                              |
-| [Wallpaper](../.github/workflows/wallpaper.yml)            | `deno task test` 与完整 `wallpaper` 集合                                                                                            |
-| [UI guard](../.github/workflows/ui-guard.yml)              | UI 门禁及其回归测试                                                                                                                 |
+现在 `.github/workflows/e2e-coverage.yml` 在 PR/main 上以七个独立 matrix
+job 执行 `documents-core`、`pagination-short`、`pagination-manual`、
+`pagination-consecutive`、`pagination-mixed`、`routing`、`supplemental`。
+前五片无重无漏地组成完整 Documents：core 排除四个分页入口，每个分页片
+独占服务/内存数据库/资源目录/Browser/Context，串行执行 6 个场景（5 种视口 ×
+默认动效，加 1440×900 reduced motion），四片合计 24 场景；版面与主题无关，
+不再按亮 / 暗重复，空闲观察窗与断言不变。
+每个 job 通过 `deno run -A scripts/e2e/run.ts <suite> --serial`
+先构建一次，再串行执行该片；七个 job 可独立并行，不另跑完整 documents。
+不设置 `E2E_TIMEOUT_MS`，保留测试 helper 的标准超时；job 上限为 60 分钟。
+matrix 不因其他集合失败而取消，测试失败通过 `pipefail` 保留非零退出码。
+无论成功或失败均尝试上传 `artifacts/e2e/<suite>/` 中的 JUnit、
+`timings.json`、标准输出和环境/资源报告；构建失败或 job 被终止时可能没有
+JUnit，已有诊断仍保留。
 
-Workspace 与 Coverage 的 matrix 不因其他分片失败而取消；每片独立构建与运行，
-不额外重复完整集合。报告上传、退出码与缺失 JUnit 的处理见 [CI 报告](../scripts/e2e/README.md#ci-报告)。
-分片只调整调度边界，不代表已测得性能提升。
+原 Bundle 与 Notes workflow 中上述五个 Documents 文件的直接执行步骤已移除，
+由上述 Documents core + 四个分页 job 完整覆盖，避免重复执行；原 Bundle、Home papers、
+Wallpaper 门禁及已有 job 名称保持不变；Workspace 门禁改为 `workspace-a` /
+`workspace-b` 两个并行 matrix job（job 名带 shard 后缀），并集等于完整 `workspace`。
+
+本地完整 Documents 验收使用
+`DENO_JOBS=2 deno task test:documents --parallel`，只启动一个 Deno E2E
+进程并只构建一次。显式并行默认并发度 2，调整并发遵循 [并发与隔离](#并发与隔离)；默认 runner
+串行/fail-fast 规则未变。`test:documents` 仍覆盖全部五片，`test:e2e:full`
+仍是全项目去重完整门禁。多个 runner 并发须满足 [并发与隔离](#并发与隔离)，不能共享正在替换的构建产物；
+按需使用 `deno run -A scripts/e2e/run.ts <selector>` 定位单片，局部通过不替代完整验收。
+报告与 artifact 以 selector 区分；分片只调整调度边界，不宣称未测得的性能提升。
 
 ## 手工视觉验收数据
 
@@ -148,16 +183,13 @@ Material off / soft / regular × 亮 / 暗的对比度下限，`clear` 的 Mater
   的长笔记完整性。
 - 保存错误/409/上传，以及分页视图的竖向纸张与单一滚动 owner。
 
-分页分片为 `pagination-short`、`pagination-manual`、`pagination-consecutive`、`pagination-mixed`；
-`documents-core` 排除这四个入口。每个分页片独占 HTTP 服务、内存数据库、资源目录、Browser/Context，
-串行执行 6 个场景：1440×900、1024×768、768×1024、390×844、1024×1552 × 默认动效，
-加 1440×900 reduced motion，四片共 24 个场景。分页版面不随亮/暗主题变化，
-不重复主题组合；颜色对比度由 `accent-contrast` 等测试负责。固定采样与空闲观察窗见 [E2E 诊断](../scripts/e2e/README.md#诊断)。
-
-Documents 响应式截图在字体与布局完成后生成，须人工审阅且不能替代行为断言；
-设置 `E2E_EVIDENCE_DIR` 启用，目录与保留规则见 [报告与证据](../scripts/e2e/README.md#报告与证据)。
+设置 `E2E_EVIDENCE_DIR=<父目录>` 后，响应式矩阵在字体与布局完成后保存各
+Host/主题/视图的实页截图；每次执行在父目录下
+创建唯一子目录并打印路径。截图仍需人工检查，不替代行为断言。完整 Documents CI
+自动运行同一套测试。
 
 ### Wallpaper
 
 偏左/偏右主体构图、双视口裁切、刷新与新设备登录、历史切换、删除及失败保留、URL
-草稿、同步故障恢复、匿名持久化与 reduced-motion。
+草稿、同步故障恢复、匿名持久化与 reduced-motion。PR/main CI
+自动执行该链路、`deno task test` 与 UI 门禁。

@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-01-004",
+  "captured": "2026-11-01",
+  "packet_version": "1.0",
+  "title": "`inert` HTML global attribute",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/inert",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
