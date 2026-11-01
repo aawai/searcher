@@ -181,6 +181,8 @@
 - [Observation: Issue 338 C3 AI 窗口与最终验收结果](obs-2026-10-30-issue-338-c3-ai.md)
 - [Observation: 笔记窗口侧栏布局计划 Issue 340 已创建](obs-2026-10-30-issue-340.md)
 - [Observation: Touch drag sensor preserves sidebar scrolling](obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling.md)
+- [Observation: Desktop UI polish fixes merged via PR 355](obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355.md)
+- [Observation: 首页顶栏 Material 组与笔记底栏对齐经 PR 356 合并 main](obs-2026-10-31-material-pr-356-main.md)
 - [Searcher 会话 Token 使用无盐 SHA-256](searcher-session-token-hash-is-not-salted.md)
 - [Service Worker 直通与 HTTP 缓存边界](service-worker-bypass-does-not-bypass-http-cache.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

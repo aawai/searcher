@@ -155,6 +155,8 @@
 - [[sources/obs-2026-10-30-issue-338-c3-ai]] — Observation: Issue 338 C3 AI 窗口与最终验收结果 *(created: 2026-10-30)*
 - [[sources/obs-2026-10-30-issue-340]] — Observation: 笔记窗口侧栏布局计划 Issue 340 已创建 *(created: 2026-10-30)*
 - [[sources/obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling]] — Observation: Touch drag sensor preserves sidebar scrolling *(created: 2026-10-30)*
+- [[sources/obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355]] — Observation: Desktop UI polish fixes merged via PR 355 *(created: 2026-10-31)*
+- [[sources/obs-2026-10-31-material-pr-356-main]] — Observation: 首页顶栏 Material 组与笔记底栏对齐经 PR 356 合并 main *(created: 2026-10-31)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -251,4 +253,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-31T08:03:21.439Z* | *Total pages: 236*
+*Last updated: 2026-10-31T12:28:39.676Z* | *Total pages: 238*

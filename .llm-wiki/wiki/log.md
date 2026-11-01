@@ -2,6 +2,8 @@
 
 ## 2026-10-31
 
+- **observe**: {"relevance":"high","slug":"obs-2026-10-31-material-pr-356-main","title":"首页顶栏 Material 组与笔记底栏对齐经 PR 356 合并 main"}
+- **observe**: {"relevance":"high","slug":"obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355","title":"Desktop UI polish fixes merged via PR 355"}
 - **capture**: {"format":"web","source_id":"SRC-2026-10-31-005","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior"}
 - **capture**: {"format":"web","source_id":"SRC-2026-10-31-004","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion"}
 - **capture**: {"format":"web","source_id":"SRC-2026-10-31-003","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action"}

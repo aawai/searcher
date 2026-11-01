@@ -4,6 +4,17 @@ README 的 [部署](../README.md#部署) 覆盖启动、Docker /
 Unraid、管理员与备份的常用操作；本文记录镜像构成、
 请求路由、缓存与发布流程等需要排障或修改部署时才查阅的契约。
 
+## 运行与存储边界
+
+- 仅支持单进程、同源部署与持久本地磁盘。生产启动前构建前端，并设置精确的 `APP_ORIGIN`；
+  非回环 origin 必须 HTTPS，TLS 由部署环境终止。
+- 业务数据存于 SQLite，表结构以 `src/db/schema.ts`、`src/db/ai-schema.ts` 为准；
+  壁纸与应用图标文件分别位于数据库旁的 `wallpapers/`、`icons/`。
+- 生产须提供固定的 `ENCRYPTION_KEY`，否则既有 AI Provider Key 无法解密；
+  备份不包含该密钥，恢复要求见[备份与恢复](#备份与恢复)。
+- 环境变量与默认值见 [README 配置](../README.md#配置)和 [`.env.example`](../.env.example)；
+  启动与管理员操作见 [README 部署](../README.md#部署)，不在此复制命令清单。
+
 ## 请求路由
 
 同一服务依次处理：
