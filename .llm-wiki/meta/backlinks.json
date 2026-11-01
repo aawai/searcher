@@ -1042,6 +1042,8 @@
   "sources/obs-2026-10-30-issue-338-c3-ai": [],
   "sources/obs-2026-10-30-issue-340": [],
   "sources/obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling": [],
+  "sources/obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355": [],
+  "sources/obs-2026-10-31-material-pr-356-main": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],

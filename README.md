@@ -54,6 +54,7 @@ deno task dev
 ```
 
 打开 `http://localhost:5173`；Vite 将 `/api` 代理到 `127.0.0.1:34567`。
+`dev:api` 内置开发用 `ENCRYPTION_KEY`；生产须单独提供固定密钥，不能沿用开发值。
 
 ## 配置
 
@@ -104,7 +105,7 @@ deno task admin:create -- <username>
 deno task admin:reset -- <username>   # 重置密码并撤销该用户已有会话
 ```
 
-密码只在真实终端交互输入并确认，不要写入命令行。
+密码只在真实终端隐藏输入并确认，不要写入命令行。
 
 ### Docker / Unraid
 
@@ -181,18 +182,18 @@ docker exec -it searcher deno run -A --cached-only src/commands/admin.ts reset <
 
 | 文档 | 内容 |
 | --- | --- |
-| [AGENTS.md](AGENTS.md) | 工程原则、架构、数据流、代码约定与验证流程 |
+| [AGENTS.md](AGENTS.md) | 项目不变量、协作与代码约定、按任务查阅的文档入口 |
 | [docs/frontend.md](docs/frontend.md) | 组件与样式位置、UI 门禁、前端路由、构建分包 |
 | [Visual Language](docs/design/VISUAL_LANGUAGE.md) / [UI 验收清单](docs/design/UI_CHECKLIST.md) | UI Contract |
 | [Markdown Editor](docs/editor/MARKDOWN_EDITOR.md) / [M0A 报告](docs/editor/MARKDOWN_EDITOR_M0A.md) | 共享编辑器接口、consumer / lazy / styling 契约、草稿降级；M0A 技术验证 |
-| [docs/testing.md](docs/testing.md) / [Production E2E](scripts/e2e/README.md) | 测试入口与 E2E 机制 |
+| [docs/testing.md](docs/testing.md) / [Production E2E](scripts/e2e/README.md) | 验证策略、证据标准、测试入口与 E2E 调度机制 |
 | [docs/deployment.md](docs/deployment.md) | 部署细节与 CI 发布 |
 | [docs/plans/](docs/plans/README.md) | 既有实施计划与设计方案（历史背景） |
 | [CHANGELOG.md](CHANGELOG.md) | 用户可观察变化 |
 
 ## 贡献
 
-1. 从 `main` 创建分支，按 [AGENTS.md](AGENTS.md) 的工程原则与验证阶梯实现改动。
+1. 从 `main` 创建分支，按 [AGENTS.md](AGENTS.md) 的工程约定与[测试策略](docs/testing.md#验证策略)实现改动。
 2. 提交前至少运行与改动相关的测试；涉及 UI 时运行 `deno task check:ui`，并按 [UI 验收清单](docs/design/UI_CHECKLIST.md) 在 PR 描述中逐项填写。
 3. 修改 schema 后执行 `deno task db:generate` 并提交迁移。
 4. 用户可观察的行为变化同步更新 `docs/` 中对应文档，并记录在 [CHANGELOG.md](CHANGELOG.md) 的 `## [Unreleased]` 下。

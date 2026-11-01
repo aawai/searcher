@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-31T08:03:21.439Z",
+  "last_updated": "2026-10-31T12:28:39.676Z",
   "pages": {
     "concepts/accessible-grid-drag-keyboard-and-announcements": {
       "type": "concept",
@@ -2879,6 +2879,38 @@
       "source_context": "Issue 352 notes tree drag UI",
       "created": "2026-10-30",
       "updated": "2026-10-30"
+    },
+    "sources/obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355": {
+      "type": "source",
+      "title": "Observation: Desktop UI polish fixes merged via PR 355",
+      "tags": [
+        "[\"pr-355\",\"topbar\",\"dock\",\"settings\",\"window-overlay\",\"merged\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355",
+      "relevance": "high",
+      "observed_at": "2026-10-31T08:36:27.291Z",
+      "source_context": "实施用户报告的 5 个 UI 问题并合并 main",
+      "created": "2026-10-31",
+      "updated": "2026-10-31"
+    },
+    "sources/obs-2026-10-31-material-pr-356-main": {
+      "type": "source",
+      "title": "Observation: 首页顶栏 Material 组与笔记底栏对齐经 PR 356 合并 main",
+      "tags": [
+        "ui",
+        "topbar",
+        "notes",
+        "footer",
+        "pr-356"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-10-31-material-pr-356-main",
+      "relevance": "high",
+      "observed_at": "2026-10-31T12:28:39.522Z",
+      "source_context": "顶栏 icon 突兀与笔记底栏对齐修复",
+      "created": "2026-10-31",
+      "updated": "2026-10-31"
     },
     "sources/searcher-session-token-hash-is-not-salted": {
       "type": "source",

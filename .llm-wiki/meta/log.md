@@ -662,3 +662,9 @@
 ## [2026-10-31T08:00:39.515Z] capture
 - source_id: "SRC-2026-10-31-005", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior", format: "web"
 
+## [2026-10-31T08:36:27.301Z] observe
+- slug: "obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355", title: "Desktop UI polish fixes merged via PR 355", relevance: "high"
+
+## [2026-10-31T12:28:39.525Z] observe
+- slug: "obs-2026-10-31-material-pr-356-main", title: "首页顶栏 Material 组与笔记底栏对齐经 PR 356 合并 main", relevance: "high"
+

@@ -1850,6 +1850,22 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355",
+      "contentHash": "e56b07e0d3d31815364c7a5f53395eff842ee7382a5068ec374560d26e31aa1e",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-10-31-material-pr-356-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-10-31-material-pr-356-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-10-31-material-pr-356-main",
+      "contentHash": "87de6c2a9604d0ebb8be9e0c3ab7429c88e54ea0c5f4bfe076b0443ca54f15d9",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/searcher-session-token-hash-is-not-salted.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/searcher-session-token-hash-is-not-salted.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
