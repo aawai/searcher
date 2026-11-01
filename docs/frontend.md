@@ -5,20 +5,13 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
 
 ## 组件
 
-UI 变更依次消费已有 Page Archetype、Token、semantic component，再组合 shadcn/ui primitives；
-不为按钮、弹窗、菜单、Tab、Toast 等另造风格不一致的基础组件。
-现有实现不是设计正确性的证据；视觉例外须定义系统级语义与验证边界，并登记到 Visual Language。
-补充组件同样遵守 UI Contract 并支持键盘操作。
-
 - 基础交互组件位于 `web/src/components/ui/`，来自 shadcn/ui 的 Base UI
-  版本并按品牌 Token 调整；`web/components.json` 的 `base-nova` 记录 registry 配置。
+  版本并按品牌 Token 调整；`web/components.json` 记录 registry 配置。
 - 业务组合组件位于 `web/src/components/searcher/`；页面复用
   `PageShell`、`PageHeader` 和 Searcher semantic components。
-- shadcn/ui 不覆盖的能力沿用现有库：拖拽 `@dnd-kit`，Markdown 渲染
-  `react-markdown` + `rehype-sanitize`，编辑器 Milkdown（契约见 [共享编辑器](editor/MARKDOWN_EDITOR.md)）。
 - `/design-lab`
   用于检查正式组件、交互状态、主题与响应式预览，不替代真实业务页面验收；设置中的入口仅对管理员显示。`/design-lab/*`
-  是 [实验通道](design/VISUAL_LANGUAGE.md#实验通道)：按影响范围与不确定性选择原型验证，进入生产须完成契约修订与验收，不强制另建阶段子任务。
+  是 [实验通道](design/VISUAL_LANGUAGE.md#实验通道)：原型进入生产前须经对应契约子任务。
 - `/design-lab/markdown-editor` 是 M0A
   编辑技术验证入口，仅本地演示，不保存或替换笔记。验证结论、bundle 口径和 #110
   输入约束见 [M0A 报告](editor/MARKDOWN_EDITOR_M0A.md)。
@@ -75,7 +68,7 @@ UI 变更依次消费已有 Page Archetype、Token、semantic component，再组
   `HomeNotes.tsx` 和 `home-notes.css` 唯一管理。768–1023px 的两列流式与 <768px 纵向堆叠
   是该组件的正常流分支，不再单独维护 220px 笔记行。
 - 稳定布局与交互状态使用语义 class 或 Tailwind 布局 / 状态 utility；视觉尺度（字重、间距、圆角、无阴影、图标尺寸）只使用 [Visual Language](design/VISUAL_LANGUAGE.md) 登记并在 `tokens.css` 以 `@utility` 绑定正式 Token 的工具类，响应式前缀只使用已登记的 `sm:` / `md:` / `lg:`。字号与行高统一由语义 CSS 消费登记 Token，不使用 `text-xs`、`text-sm`、`text-xl` 等默认文字尺度。壁纸、拖拽变换等 runtime 值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何由组件维护。
-- 样式调整后构建前端，按 [UI 验收清单 · 实页矩阵](design/UI_CHECKLIST.md#实页矩阵)验证受影响页面；共享 Token、基础组件或全局样式变更按消费者范围扩大验证，不将所有局部修改固定扩展到首页、设置、登录和笔记窗口。
+- 样式调整后构建前端，实页检查首页、设置、登录和笔记窗口的浅深色与壁纸组合。
 
 ## UI 门禁
 
@@ -115,8 +108,8 @@ deno task check:ui --update
   允许值由 `registry.ts` 从断点表解析，新增档位先修改契约与验证矩阵。
 - `--update` 不接受新增或数量增加的违规；CI 运行检查和门禁回归测试。
 - baseline 通过不表示历史样式债务、focus
-  语义或所有业务流程已清零。390/768/1440、light/dark 与真实页面交互证据按
-  [UI 验收清单](design/UI_CHECKLIST.md) 人工验收。
+  语义或所有业务流程已清零。实页矩阵与交互证据按
+  [UI 验收清单](design/UI_CHECKLIST.md#实页矩阵) 的影响面规则选择并人工验收。
 - 门禁的 ownership 规则（feature selector 不进入 `global.css`、legacy `.page`
   几何、未定义 Token、native confirm、已废止 class、CSS 前缀归属）不能通过
   baseline、`--update` 或 initialize 豁免。
@@ -125,8 +118,8 @@ deno task check:ui --update
 
 ## 可访问性契约
 
-对比度、触控目标与焦点可辨识性见 [Visual Language · 底线](design/VISUAL_LANGUAGE.md#一底线)；
-焦点环和动效的默认实现及修订要求见[默认交互实现](design/VISUAL_LANGUAGE.md#默认交互实现)。以下为代码必须保持的行为：
+对比度、焦点环与触控目标的数值底线见
+[Visual Language](design/VISUAL_LANGUAGE.md#一底线)。以下为代码必须保持的行为：
 
 - Escape 由 `components/ui/escape-layer-stack.tsx` 统一裁决，每次只消费最上层；笔记窗口依次处理菜单 / 弹窗、焦点在内的大纲 Overlay、窗口内抽屉、全屏和窗口最小化。输入法合成中不分发；注销层不得穿透到 window。关闭后焦点回到触发控件。
 - 删除、覆盖、放弃未保存修改等不可逆操作使用 AlertDialog。取消与 Escape

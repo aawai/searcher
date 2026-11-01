@@ -18,3 +18,5 @@ updated: 2026-10-27
 关联：[Session Security and Isolation](/concepts/session-security-and-isolation.md)、[CSRF Defense Boundaries](/concepts/csrf-defense-boundaries.md)、[Searcher 项目](/entities/searcher-项目.md)。
 
 CSP 的部署方式（strict CSP、`frame-ancestors`、report-only）见 [Content Security Policy Strict Deployment](/concepts/content-security-policy-strict-deployment.md)。
+
+Markdown 渲染链上 `rehype-sanitize` 的位置、默认 schema 与 DOM clobbering 前缀见 [Markdown Sanitization with rehype-sanitize](/concepts/markdown-sanitization-with-rehype-sanitize.md)。

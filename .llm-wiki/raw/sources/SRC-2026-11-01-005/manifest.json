@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-01-005",
+  "captured": "2026-11-01",
+  "packet_version": "1.0",
+  "title": "Popover API",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/API/Popover_API",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

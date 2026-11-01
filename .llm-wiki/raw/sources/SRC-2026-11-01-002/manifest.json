@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-01-002",
+  "captured": "2026-11-01",
+  "packet_version": "1.0",
+  "title": "Auto-waiting",
+  "url": "https://playwright.dev/docs/actionability",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
