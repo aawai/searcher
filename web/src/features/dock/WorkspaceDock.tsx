@@ -179,13 +179,6 @@ function SortableSystemItem({
                             aria-hidden="true"
                         />
                         <span className="dock-item-label">{label}</span>
-                        {id === "ai" && aiDisabled && (
-                            <span
-                                className="dock-error-badge"
-                                title="暂无可用模型"
-                                aria-hidden="true"
-                            />
-                        )}
                     </button>
                 }
             />

@@ -162,6 +162,7 @@
 .documents-workspace {
     min-height: 100%;
     gap: var(--space-2);
+    padding-inline-end: var(--space-4);
 }
 .documents-sidebar-header {
     position: sticky;
@@ -217,8 +218,10 @@
 [data-slot="button"].documents-entry {
     justify-content: flex-start;
     width: 100%;
-    gap: var(--space-2);
     padding-inline: var(--space-3);
+}
+.documents-sidebar :is([data-slot="input"], [data-slot="button"], [data-slot="dropdown-menu-trigger"]):focus-visible {
+    outline-offset: calc(-1 * var(--space-half));
 }
 [data-slot="button"].documents-entry[aria-pressed="true"] {
     background: var(--surface-soft);
@@ -240,7 +243,8 @@
    above the footer row so the editor's mode switch stays reachable there. */
 @media (any-pointer: coarse) {
     .documents-sidebar-resize {
-        margin-block-end: calc(var(--control-touch-target) + 2 * var(--space-2));
+        margin-block-end: calc(var(--control-touch-target) + 2 *
+            var(--space-2));
     }
 }
 
@@ -540,20 +544,6 @@
 }
 
 /* Dense pointers get compact controls; touch keeps the 44px primitives. */
-@media (hover: hover) and (pointer: fine) {
-    [data-slot="button"].documents-summary-open,
-    [data-slot="dropdown-menu-trigger"].documents-row-action,
-    [data-slot="button"].documents-tree-action {
-        min-height: var(--control-compact-height);
-    }
-    [data-slot="dropdown-menu-trigger"].documents-row-action,
-    [data-slot="button"].documents-tree-action {
-        width: var(--control-compact-height);
-    }
-    [data-slot="button"].documents-entry {
-        min-height: var(--control-compact-height);
-    }
-}
 @media (any-pointer: coarse), (hover: none) {
     [data-slot="dropdown-menu-trigger"].documents-row-action,
     [data-slot="button"].documents-tree-action {
@@ -561,5 +551,39 @@
     }
     .documents-tree-row {
         min-height: var(--control-touch-target);
+    }
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
+    [data-slot="button"].documents-summary-open,
+    [data-slot="dropdown-menu-trigger"].documents-row-action,
+    [data-slot="button"].documents-tree-action,
+    [data-slot="button"].documents-entry,
+    .documents-tree-row {
+        min-height: var(--control-compact-height);
+    }
+    [data-slot="dropdown-menu-trigger"].documents-row-action,
+    [data-slot="button"].documents-tree-action {
+        position: relative;
+        width: var(--control-compact-height);
+        min-width: var(--control-compact-height);
+    }
+    [data-slot="dropdown-menu-trigger"].documents-row-action::after,
+    [data-slot="button"].documents-tree-action::after {
+        content: "";
+        position: absolute;
+        inset: calc((var(--control-compact-height) -
+            var(--control-touch-target)) /
+            2);
+    }
+    [data-slot="button"].documents-entry {
+        position: relative;
+    }
+    [data-slot="button"].documents-entry::after {
+        content: "";
+        position: absolute;
+        inset-inline: 0;
+        inset-block: calc(
+            (var(--control-compact-height) - var(--control-touch-target)) / 2
+        );
     }
 }

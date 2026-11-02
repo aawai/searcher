@@ -1,0 +1,73 @@
+{
+ "scenarios_per_variant": 78,
+ "queries": [
+  "",
+  "   ",
+  "c",
+  "cat",
+  "/",
+  "/s",
+  "/settings",
+  "/g",
+  "/g cat",
+  "/ai",
+  "/ai cat",
+  "/zzz",
+  "/g "
+ ],
+ "contexts": [
+  "guest|ai=false|p=false",
+  "guest|ai=true|p=false",
+  "in|ai=false|p=true",
+  "in|ai=false|p=false",
+  "in|ai=true|p=true",
+  "in|ai=true|p=false"
+ ],
+ "violations_by_rule": {
+  "BASE": {},
+  "M1_no_401_gate": {
+   "R2_personal_groups_without_session": 8
+  },
+  "M2_history_limit_6": {
+   "R4b_history_over_3": 18
+  },
+  "M3_web_first_order": {
+   "R1_group_order": 14
+  },
+  "M4_ai_not_gated": {
+   "R3_ai_row_without_model": 12
+  },
+  "M5_smart_route_bare_command": {
+   "R6_bare_command_not_literal_search": 18
+  },
+  "M6_no_dedupe_web": {
+   "R4c_duplicate_web_text": 18
+  }
+ },
+ "example_scenarios": {
+  "M1_no_401_gate:R2_personal_groups_without_session": [
+   "guest|ai=false|p=false|q=\"c\"",
+   "guest|ai=false|p=false|q=\"cat\""
+  ],
+  "M2_history_limit_6:R4b_history_over_3": [
+   "guest|ai=false|p=false|q=\"c\"",
+   "guest|ai=false|p=false|q=\"cat\""
+  ],
+  "M3_web_first_order:R1_group_order": [
+   "guest|ai=true|p=false|q=\"c\"",
+   "guest|ai=true|p=false|q=\"cat\""
+  ],
+  "M4_ai_not_gated:R3_ai_row_without_model": [
+   "guest|ai=false|p=false|q=\"c\"",
+   "guest|ai=false|p=false|q=\"cat\""
+  ],
+  "M5_smart_route_bare_command:R6_bare_command_not_literal_search": [
+   "guest|ai=false|p=false|q=\"/settings\"",
+   "guest|ai=false|p=false|q=\"/g\""
+  ],
+  "M6_no_dedupe_web:R4c_duplicate_web_text": [
+   "guest|ai=false|p=false|q=\"c\"",
+   "guest|ai=false|p=false|q=\"cat\""
+  ]
+ }
+}

@@ -474,17 +474,6 @@
     opacity: 0.5;
 }
 
-/* Error badge on dock */
-.dock-error-badge {
-    position: absolute;
-    top: var(--space-half);
-    right: var(--space-half);
-    width: var(--space-2);
-    height: var(--space-2);
-    border-radius: 50%;
-    background: var(--danger);
-}
-
 /* Reduced transparency */
 @media (prefers-reduced-transparency: reduce) {
     .dock-bar,

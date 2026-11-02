@@ -1,0 +1,247 @@
+============================================================
+ Searcher Bundle Audit & Budget Gate
+============================================================
+Manifest: /home/aawei/searcher/.worktrees/ablation-study-20261102/web/dist/manifest.json
+Baseline SHA: 1d30c92b61676f5447d06e9e0cdbfb0f033399d9
+
+Application Entry: index.html -> assets/index-fd1kiRBG.js
+
+--- Initial Static JS Graph ---
+  assets/index-fd1kiRBG.js                        284352 B (277.69 KiB) │ gzip:   93417 B (91.23 KiB)
+  assets/react-vendor-B0UvL1L9.js                 265721 B (259.49 KiB) │ gzip:   85332 B (83.33 KiB)
+  assets/ui-vendor-_T38yjEN.js                    308677 B (301.44 KiB) │ gzip:   96272 B (94.02 KiB)
+Total Initial JS: 858750 B (838.62 KiB) raw │ 275021 B (268.58 KiB) gzip │ 3 requests
+
+--- Dynamic Route Entries ---
+
+Route: _DocumentsWorkspace-BX8cGZTd.js
+  File: assets/DocumentsWorkspace-BX8cGZTd.js
+  Route-only JS: 51149 B (49.95 KiB) raw │ 15849 B (15.48 KiB) gzip │ 1 requests
+    + assets/DocumentsWorkspace-BX8cGZTd.js         51149 B │ gzip:  15849 B
+
+Route: src/app/AccountPage.tsx
+  File: assets/AccountPage-BzgI7Fbp.js
+  Route-only JS: 11998 B (11.72 KiB) raw │ 4684 B (4.57 KiB) gzip │ 3 requests
+    + assets/AccountPage-BzgI7Fbp.js                 9923 B │ gzip:   3632 B
+    + assets/badge-CNtB56aW.js                        234 B │ gzip:    190 B
+    + assets/SettingsShell-D66FuKKo.js               1841 B │ gzip:    862 B
+
+Route: src/app/AdminPage.tsx
+  File: assets/AdminPage-DjXNztlL.js
+  Route-only JS: 31679 B (30.94 KiB) raw │ 9573 B (9.35 KiB) gzip │ 3 requests
+    + assets/AdminPage-DjXNztlL.js                  29544 B │ gzip:   8499 B
+    + assets/NotFoundPage-Zddu0SJI.js                 985 B │ gzip:    614 B
+    + assets/popover-YZuqWez_.js                     1150 B │ gzip:    460 B
+
+Route: src/app/AskPage.tsx
+  File: assets/AskPage-YjIsRnJv.js
+  Route-only JS: 552508 B (539.56 KiB) raw │ 165383 B (161.51 KiB) gzip │ 8 requests
+    + assets/AskPage-YjIsRnJv.js                    58572 B │ gzip:  17197 B
+    + assets/textarea-BSa7nWn8.js                     219 B │ gzip:    176 B
+    + assets/assistant-vendor-CoS3trcQ.js          318330 B │ gzip:  93622 B
+    + assets/AssistantMarkdown-DYY1CqPW.js           1940 B │ gzip:    958 B
+    + assets/popover-YZuqWez_.js                     1150 B │ gzip:    460 B
+    + assets/slider-DLqjXSvy.js                       920 B │ gzip:    497 B
+    + assets/markdown-renderer-vendor-CTI2aAdQ.js   50509 B │ gzip:  16996 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+
+Route: src/app/AuthPage.tsx
+  File: assets/AuthPage-BMqTiawe.js
+  Route-only JS: 4958 B (4.84 KiB) raw │ 2010 B (1.96 KiB) gzip │ 1 requests
+    + assets/AuthPage-BMqTiawe.js                    4958 B │ gzip:   2010 B
+
+Route: src/app/NotFoundPage.tsx
+  File: assets/NotFoundPage-Zddu0SJI.js
+  Route-only JS: 985 B (0.96 KiB) raw │ 614 B (0.60 KiB) gzip │ 1 requests
+    + assets/NotFoundPage-Zddu0SJI.js                 985 B │ gzip:    614 B
+
+Route: src/app/SettingsPage.tsx
+  File: assets/SettingsPage-B5RfY_eN.js
+  Route-only JS: 45561 B (44.49 KiB) raw │ 14980 B (14.63 KiB) gzip │ 5 requests
+    + assets/SettingsPage-B5RfY_eN.js               41581 B │ gzip:  12817 B
+    + assets/slider-DLqjXSvy.js                       920 B │ gzip:    497 B
+    + assets/badge-CNtB56aW.js                        234 B │ gzip:    190 B
+    + assets/SettingsShell-D66FuKKo.js               1841 B │ gzip:    862 B
+    + assets/NotFoundPage-Zddu0SJI.js                 985 B │ gzip:    614 B
+
+Route: src/app/SettingsWindowContent.tsx
+  File: assets/SettingsWindowContent-Dm17XOMj.js
+  Route-only JS: 56018 B (54.71 KiB) raw │ 18935 B (18.49 KiB) gzip │ 7 requests
+    + assets/SettingsWindowContent-Dm17XOMj.js        534 B │ gzip:    323 B
+    + assets/AccountPage-BzgI7Fbp.js                 9923 B │ gzip:   3632 B
+    + assets/SettingsPage-B5RfY_eN.js               41581 B │ gzip:  12817 B
+    + assets/badge-CNtB56aW.js                        234 B │ gzip:    190 B
+    + assets/SettingsShell-D66FuKKo.js               1841 B │ gzip:    862 B
+    + assets/slider-DLqjXSvy.js                       920 B │ gzip:    497 B
+    + assets/NotFoundPage-Zddu0SJI.js                 985 B │ gzip:    614 B
+
+Route: src/app/TrashPage.tsx
+  File: assets/TrashPage-kyNYyNm2.js
+  Route-only JS: 6945 B (6.78 KiB) raw │ 2503 B (2.44 KiB) gzip │ 1 requests
+    + assets/TrashPage-kyNYyNm2.js                   6945 B │ gzip:   2503 B
+
+Route: src/components/searcher/NoteMarkdown.tsx
+  File: assets/NoteMarkdown-DWdX_22B.js
+  Route-only JS: 173283 B (169.22 KiB) raw │ 53382 B (52.13 KiB) gzip │ 3 requests
+    + assets/NoteMarkdown-DWdX_22B.js                1906 B │ gzip:    909 B
+    + assets/markdown-renderer-vendor-CTI2aAdQ.js   50509 B │ gzip:  16996 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+
+Route: src/design-lab/AccentLab.tsx
+  File: assets/AccentLab-rKH1fj7P.js
+  Route-only JS: 6641 B (6.49 KiB) raw │ 2995 B (2.92 KiB) gzip │ 1 requests
+    + assets/AccentLab-rKH1fj7P.js                   6641 B │ gzip:   2995 B
+
+Route: src/design-lab/DesignLab.tsx
+  File: assets/DesignLab-tL5n1ahK.js
+  Route-only JS: 12072 B (11.79 KiB) raw │ 4653 B (4.54 KiB) gzip │ 5 requests
+    + assets/DesignLab-tL5n1ahK.js                   9549 B │ gzip:   3330 B
+    + assets/textarea-BSa7nWn8.js                     219 B │ gzip:    176 B
+    + assets/slider-DLqjXSvy.js                       920 B │ gzip:    497 B
+    + assets/badge-CNtB56aW.js                        234 B │ gzip:    190 B
+    + assets/popover-YZuqWez_.js                     1150 B │ gzip:    460 B
+
+Route: src/design-lab/HomeGridLab.tsx
+  File: assets/HomeGridLab-Cxb5ZPAD.js
+  Route-only JS: 22547 B (22.02 KiB) raw │ 10084 B (9.85 KiB) gzip │ 2 requests
+    + assets/HomeGridLab-Cxb5ZPAD.js                17779 B │ gzip:   8073 B
+    + assets/home-grid-cells-WXaMqyYG.js             4768 B │ gzip:   2011 B
+
+Route: src/design-lab/MotionLab.tsx
+  File: assets/MotionLab-mxFW38Oc.js
+  Route-only JS: 2722 B (2.66 KiB) raw │ 1551 B (1.51 KiB) gzip │ 1 requests
+    + assets/MotionLab-mxFW38Oc.js                   2722 B │ gzip:   1551 B
+
+Route: src/design-lab/OmniboxLab.tsx
+  File: assets/OmniboxLab-BZ95B8gO.js
+  Route-only JS: 6249 B (6.10 KiB) raw │ 2686 B (2.62 KiB) gzip │ 1 requests
+    + assets/OmniboxLab-BZ95B8gO.js                  6249 B │ gzip:   2686 B
+
+Route: src/design-lab/WindowLab.tsx
+  File: assets/WindowLab-BzEpN8Ey.js
+  Route-only JS: 13838 B (13.51 KiB) raw │ 5037 B (4.92 KiB) gzip │ 1 requests
+    + assets/WindowLab-BzEpN8Ey.js                  13838 B │ gzip:   5037 B
+
+Route: src/features/ask/AssistantMarkdown.tsx
+  File: assets/AssistantMarkdown-DYY1CqPW.js
+  Route-only JS: 173317 B (169.25 KiB) raw │ 53431 B (52.18 KiB) gzip │ 3 requests
+    + assets/AssistantMarkdown-DYY1CqPW.js           1940 B │ gzip:    958 B
+    + assets/markdown-renderer-vendor-CTI2aAdQ.js   50509 B │ gzip:  16996 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+
+Route: src/features/documents/DocumentEditor.tsx
+  File: assets/DocumentEditor-DeSJqrvB.js
+  Route-only JS: 576477 B (562.97 KiB) raw │ 178708 B (174.52 KiB) gzip │ 9 requests
+    + assets/DocumentEditor-DeSJqrvB.js             55028 B │ gzip:  17347 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+    + assets/editor-vendor-sieZRBEz.js             332494 B │ gzip: 102766 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+    + assets/popover-YZuqWez_.js                     1150 B │ gzip:    460 B
+    + assets/textarea-BSa7nWn8.js                     219 B │ gzip:    176 B
+    + assets/DocumentsWorkspace-BX8cGZTd.js         51149 B │ gzip:  15849 B
+    + assets/editor-extensions-C-e-w3rh.js           7265 B │ gzip:   3124 B
+    + assets/runtime-Fj302Rs5.js                     7815 B │ gzip:   3187 B
+
+Route: src/features/documents/DocumentOutline.tsx
+  File: assets/DocumentOutline-B0iXtVX3.js
+  Route-only JS: 946 B (0.92 KiB) raw │ 502 B (0.49 KiB) gzip │ 1 requests
+    + assets/DocumentOutline-B0iXtVX3.js              946 B │ gzip:    502 B
+
+Route: src/features/documents/document-pagination.ts
+  File: assets/document-pagination-BIoKL8-X.js
+  Route-only JS: 466409 B (455.48 KiB) raw │ 143494 B (140.13 KiB) gzip │ 4 requests
+    + assets/document-pagination-BIoKL8-X.js        12558 B │ gzip:   4929 B
+    + assets/editor-vendor-sieZRBEz.js             332494 B │ gzip: 102766 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+
+Route: src/features/home-layouts/HomeNotes.tsx
+  File: assets/HomeNotes-Bv3659cA.js
+  Route-only JS: 142350 B (139.01 KiB) raw │ 44353 B (43.31 KiB) gzip │ 4 requests
+    + assets/HomeNotes-Bv3659cA.js                  15580 B │ gzip:   6281 B
+    + assets/home-grid-cells-WXaMqyYG.js             4768 B │ gzip:   2011 B
+    + assets/note-tasks-BDMc-R5-.js                  1134 B │ gzip:    584 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+
+Route: src/features/home-layouts/home-note-task-saver.ts
+  File: assets/home-note-task-saver-VquK7iPV.js
+  Route-only JS: 123531 B (120.64 KiB) raw │ 36807 B (35.94 KiB) gzip │ 3 requests
+    + assets/home-note-task-saver-VquK7iPV.js        1529 B │ gzip:    746 B
+    + assets/note-tasks-BDMc-R5-.js                  1134 B │ gzip:    584 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+
+Route: src/features/markdown-editor/runtime.ts
+  File: assets/runtime-Fj302Rs5.js
+  Route-only JS: 461177 B (450.37 KiB) raw │ 141430 B (138.12 KiB) gzip │ 3 requests
+    + assets/runtime-Fj302Rs5.js                     7815 B │ gzip:   3187 B
+    + assets/editor-vendor-sieZRBEz.js             332494 B │ gzip: 102766 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+
+Route: src/features/share/SharePage.tsx
+  File: assets/SharePage-C_yVh5y9.js
+  Route-only JS: 623 B (0.61 KiB) raw │ 431 B (0.42 KiB) gzip │ 1 requests
+    + assets/SharePage-C_yVh5y9.js                    623 B │ gzip:    431 B
+
+Route: src/spikes/editable-pagination/EditablePaginationSpike.tsx
+  File: assets/EditablePaginationSpike-CDdEatjQ.js
+  Route-only JS: 15091 B (14.74 KiB) raw │ 6718 B (6.56 KiB) gzip │ 2 requests
+    + assets/EditablePaginationSpike-CDdEatjQ.js    14602 B │ gzip:   6396 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+
+Route: src/spikes/editable-pagination/runtime.ts
+  File: assets/runtime-DhCXU32C.js
+  Route-only JS: 482294 B (470.99 KiB) raw │ 150289 B (146.77 KiB) gzip │ 7 requests
+    + assets/runtime-DhCXU32C.js                      805 B │ gzip:    484 B
+    + assets/runtime-Fj302Rs5.js                     7815 B │ gzip:   3187 B
+    + assets/editor-extensions-C-e-w3rh.js           7265 B │ gzip:   3124 B
+    + assets/document-pagination-BIoKL8-X.js        12558 B │ gzip:   4929 B
+    + assets/paper-CyeXwFU2.js                        489 B │ gzip:    322 B
+    + assets/editor-vendor-sieZRBEz.js             332494 B │ gzip: 102766 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+
+Route: src/spikes/markdown-editor/MarkdownEditorSpike.tsx
+  File: assets/MarkdownEditorSpike-BPspHj1h.js
+  Route-only JS: 3977 B (3.88 KiB) raw │ 2050 B (2.00 KiB) gzip │ 2 requests
+    + assets/MarkdownEditorSpike-BPspHj1h.js         3758 B │ gzip:   1874 B
+    + assets/textarea-BSa7nWn8.js                     219 B │ gzip:    176 B
+
+Route: src/spikes/markdown-editor/runtime.ts
+  File: assets/runtime-bkMYlCih.js
+  Route-only JS: 463204 B (452.35 KiB) raw │ 142480 B (139.14 KiB) gzip │ 4 requests
+    + assets/runtime-bkMYlCih.js                     2027 B │ gzip:   1050 B
+    + assets/runtime-Fj302Rs5.js                     7815 B │ gzip:   3187 B
+    + assets/editor-vendor-sieZRBEz.js             332494 B │ gzip: 102766 B
+    + assets/markdown-vendor-BEM8PGJN.js           120868 B │ gzip:  35477 B
+
+--- Editor Runtime Budget (#108) ---
+Shared editor async runtime: 461177 B raw / 141430 B gzip (limit 153600 B)
+  assets/runtime-Fj302Rs5.js: 7815 B raw / 3187 B gzip
+  assets/markdown-vendor-BEM8PGJN.js: 120868 B raw / 35477 B gzip
+  assets/editor-vendor-sieZRBEz.js: 332494 B raw / 102766 B gzip
+
+--- Largest JS Chunks in Build ---
+  assets/editor-vendor-sieZRBEz.js                332494 B (324.70 KiB) │ gzip:  102766 B (100.36 KiB)
+  assets/assistant-vendor-CoS3trcQ.js             318330 B (310.87 KiB) │ gzip:   93622 B (91.43 KiB)
+  assets/ui-vendor-_T38yjEN.js                    308677 B (301.44 KiB) │ gzip:   96272 B (94.02 KiB)
+  assets/index-fd1kiRBG.js                        284352 B (277.69 KiB) │ gzip:   93417 B (91.23 KiB)
+  assets/react-vendor-B0UvL1L9.js                 265721 B (259.49 KiB) │ gzip:   85332 B (83.33 KiB)
+  assets/markdown-vendor-BEM8PGJN.js              120868 B (118.04 KiB) │ gzip:   35477 B (34.65 KiB)
+  assets/AskPage-YjIsRnJv.js                       58572 B ( 57.20 KiB) │ gzip:   17197 B (16.79 KiB)
+  assets/DocumentEditor-DeSJqrvB.js                55028 B ( 53.74 KiB) │ gzip:   17347 B (16.94 KiB)
+
+============================================================
+ Budget Verification vs Frozen Baseline
+============================================================
+Baseline Raw Bytes:  1463817 B (1429.51 KiB)
+Current Initial Raw: 858750 B (838.62 KiB) │ Reduction: 41.33%
+Baseline Gzip Bytes: 439373 B (429.08 KiB)
+Current Initial Gzip:275021 B (268.58 KiB) │ Reduction: 37.41%
+
+[Gate 1] Initial Raw <= 1024000 B (1000.00 KiB): PASS (838.62 KiB)
+[Gate 2] Initial Gzip <= 307200 B (300.00 KiB): PASS (268.58 KiB)
+[Gate 3] Initial Gzip Reduction >= 30.00%: PASS (37.41% reduction)
+[Gate 4] Forbidden Dependencies Check: PASS (clean static entry)
+============================================================
+✅ BUNDLE AUDIT PASSED: All budget and invariant gates satisfied!
+============================================================
+

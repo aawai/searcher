@@ -1,0 +1,464 @@
+{
+ "generatedAt": "2026-11-02T01:40:37.075Z",
+ "deno": {
+  "deno": "2.9.8",
+  "v8": "15.0.245.2-rusty",
+  "typescript": "6.0.3"
+ },
+ "data": {
+  "S1_always_tool_then_forced_final": {
+   "upstreamCalls": 4,
+   "toolsSentPerCall": [
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    null
+   ],
+   "events": [
+    {
+     "event": "meta"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "apps",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "apps",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "apps",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "apps",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "apps",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "apps",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "token",
+     "data": "forced final"
+    },
+    {
+     "event": "done"
+    }
+   ],
+   "persisted": {
+    "status": "complete",
+    "content": "forced final"
+   },
+   "lastUpstreamMessageRoles": [
+    "user",
+    "assistant",
+    "tool",
+    "assistant",
+    "tool",
+    "assistant",
+    "tool"
+   ]
+  },
+  "S2_always_tool_forced_final_empty": {
+   "upstreamCalls": 4,
+   "toolsSentPerCall": [
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    null
+   ],
+   "events": [
+    {
+     "event": "meta"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "apps",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "apps",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "apps",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "apps",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "apps",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "apps",
+     "error": null,
+     "resultPreview": "[]"
+    }
+   ],
+   "persisted": {
+    "status": "failed",
+    "content": "已达到工具调用轮数上限，未能生成最终回答"
+   },
+   "lastUpstreamMessageRoles": [
+    "user",
+    "assistant",
+    "tool",
+    "assistant",
+    "tool",
+    "assistant",
+    "tool"
+   ]
+  },
+  "S3_preamble_plus_tool_each_round": {
+   "upstreamCalls": 3,
+   "toolsSentPerCall": [
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ]
+   ],
+   "events": [
+    {
+     "event": "meta"
+    },
+    {
+     "event": "token",
+     "data": "Let me check 0. "
+    },
+    {
+     "event": "tool-call",
+     "toolName": "apps",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "apps",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "token",
+     "data": "Let me check 1. "
+    },
+    {
+     "event": "tool-call",
+     "toolName": "apps",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "apps",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "token",
+     "data": "Let me check 2. "
+    },
+    {
+     "event": "tool-call",
+     "toolName": "apps",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "apps",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "done"
+    }
+   ],
+   "persisted": {
+    "status": "complete",
+    "content": "Let me check 0. Let me check 1. Let me check 2. "
+   },
+   "lastUpstreamMessageRoles": [
+    "user",
+    "assistant",
+    "tool",
+    "assistant",
+    "tool"
+   ]
+  },
+  "S4_unknown_tool_name": {
+   "upstreamCalls": 2,
+   "toolsSentPerCall": [
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ]
+   ],
+   "events": [
+    {
+     "event": "meta"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "webSearch",
+     "args": {}
+    },
+    {
+     "event": "tool-result",
+     "toolName": "webSearch",
+     "error": "不支持或未知的工具调用: delete_everything",
+     "resultPreview": "null"
+    },
+    {
+     "event": "token",
+     "data": "ok"
+    },
+    {
+     "event": "done"
+    }
+   ],
+   "persisted": {
+    "status": "complete",
+    "content": "ok"
+   },
+   "lastUpstreamMessageRoles": [
+    "user",
+    "assistant",
+    "tool"
+   ]
+  },
+  "S5_disabled_tool_called": {
+   "upstreamCalls": 2,
+   "toolsSentPerCall": [
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ]
+   ],
+   "events": [
+    {
+     "event": "meta"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "webSearch",
+     "args": {
+      "query": "x"
+     }
+    },
+    {
+     "event": "tool-result",
+     "toolName": "webSearch",
+     "error": "工具 webSearch 未在当前会话中启用",
+     "resultPreview": "null"
+    },
+    {
+     "event": "token",
+     "data": "ok"
+    },
+    {
+     "event": "done"
+    }
+   ],
+   "persisted": {
+    "status": "complete",
+    "content": "ok"
+   },
+   "lastUpstreamMessageRoles": [
+    "user",
+    "assistant",
+    "tool"
+   ]
+  },
+  "S6_malformed_args": {
+   "upstreamCalls": 2,
+   "toolsSentPerCall": [
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ]
+   ],
+   "events": [
+    {
+     "event": "meta"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "documents",
+     "args": {
+      "raw": "{not json"
+     }
+    },
+    {
+     "event": "tool-result",
+     "toolName": "documents",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "token",
+     "data": "ok"
+    },
+    {
+     "event": "done"
+    }
+   ],
+   "persisted": {
+    "status": "complete",
+    "content": "ok"
+   },
+   "lastUpstreamMessageRoles": [
+    "user",
+    "assistant",
+    "tool"
+   ]
+  },
+  "S7_nl_query_documents": {
+   "upstreamCalls": 2,
+   "toolsSentPerCall": [
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ],
+    [
+     "lookup_documents",
+     "lookup_apps"
+    ]
+   ],
+   "events": [
+    {
+     "event": "meta"
+    },
+    {
+     "event": "tool-call",
+     "toolName": "documents",
+     "args": {
+      "query": "what did I write about zebraword yesterday"
+     }
+    },
+    {
+     "event": "tool-result",
+     "toolName": "documents",
+     "error": null,
+     "resultPreview": "[]"
+    },
+    {
+     "event": "token",
+     "data": "ok"
+    },
+    {
+     "event": "done"
+    }
+   ],
+   "persisted": {
+    "status": "complete",
+    "content": "ok"
+   },
+   "lastUpstreamMessageRoles": [
+    "user",
+    "assistant",
+    "tool"
+   ]
+  },
+  "S8_supportsTools_false": {
+   "upstreamCalls": 1,
+   "toolsSentPerCall": [
+    null
+   ],
+   "events": [
+    {
+     "event": "meta"
+    },
+    {
+     "event": "token",
+     "data": "plain"
+    },
+    {
+     "event": "done"
+    }
+   ],
+   "persisted": {
+    "status": "complete",
+    "content": "plain"
+   },
+   "lastUpstreamMessageRoles": [
+    "user"
+   ]
+  },
+  "S9_parallel_calls": {
+   "upstreamCalls": 2,
+   "round2Roles": [
+    "user",
+    "assistant",
+    "tool",
+    "tool"
+   ],
+   "toolCallIdsInAssistant": [
+    "a",
+    "b"
+   ],
+   "toolMsgIds": [
+    "a",
+    "b"
+   ]
+  }
+ }
+}

@@ -1,0 +1,800 @@
+Initialize @vitejs/plugin-react@5.0.4
+Initialize pino@10.3.1
+Initialize rotating-file-stream@3.2.9
+Initialize react@19.1.1
+Initialize @milkdown/preset-commonmark@7.22.2
+Initialize react-router-dom@7.9.1
+Initialize class-variance-authority@0.7.1
+Initialize @tailwindcss/vite@4.1.13
+Initialize drizzle-orm@0.45.2
+Initialize happy-dom@15.11.7
+Initialize unified@11.0.5
+Initialize react-markdown@10.1.0
+Initialize rehype-sanitize@6.0.0
+Initialize assistant-cloud@0.2.3
+Initialize @milkdown/utils@7.22.2
+Initialize pino-pretty@13.1.3
+Initialize esbuild@0.25.12
+Initialize happy-dom@17.4.2
+Initialize @dnd-kit/sortable@10.0.0
+Initialize remark@15.0.1
+Initialize @types/mdast@4.0.4
+Initialize react-dom@19.1.1
+Initialize @deno/vite-plugin@2.0.3
+Initialize sharp@0.34.5
+Initialize remark-gfm@4.0.1
+Initialize fake-indexeddb@6.2.5
+Initialize clsx@2.1.1
+Initialize @milkdown/ctx@7.22.2
+Initialize vite@7.1.7
+Initialize typescript@5.9.3
+Initialize @assistant-ui/core@0.3.21
+Initialize @dnd-kit/core@6.3.1
+Initialize images@3.2.4
+Initialize @types/node@26.6.2
+Initialize hono@4.7.4
+Initialize @base-ui/react@1.0.0
+Initialize tailwind-merge@3.3.1
+Initialize shadcn@4.21.0
+Initialize tailwindcss@4.1.13
+Initialize fflate@0.8.2
+Initialize @milkdown/core@7.22.2
+Initialize playwright@1.56.1
+Initialize remark-parse@11.0.0
+Initialize @dnd-kit/utilities@3.2.2
+Initialize drizzle-kit@0.31.4
+Initialize @assistant-ui/react@0.15.2
+Initialize @milkdown/prose@7.22.2
+Initialize @milkdown/preset-gfm@7.22.2
+Initialize @types/react@19.3.0
+Initialize @milkdown/plugin-history@7.22.2
+Initialize remark-breaks@4.0.0
+Initialize lucide-react@0.468.0
+Initialize @types/react-dom@19.3.0
+Initialize openai@7.23.0
+Initialize icojs@0.20.1
+Initialize @babel/core@7.29.7
+Initialize @types/babel__core@7.20.5
+Initialize @babel/plugin-transform-react-jsx-source@7.29.7
+Initialize react-refresh@0.17.0
+Initialize @rolldown/pluginutils@1.0.0-beta.38
+Initialize @babel/plugin-transform-react-jsx-self@7.29.7
+Initialize thread-stream@4.2.0
+Initialize @pinojs/redact@0.4.0
+Initialize on-exit-leak-free@2.1.2
+Initialize quick-format-unescaped@4.0.4
+Initialize safe-stable-stringify@2.5.0
+Initialize pino-abstract-transport@3.0.0
+Initialize pino-std-serializers@7.1.0
+Initialize real-require@0.2.0
+Initialize process-warning@5.1.0
+Initialize sonic-boom@4.2.1
+Initialize atomic-sleep@1.0.0
+Initialize unist-util-visit-parents@6.0.2
+Initialize unist-util-visit@5.1.0
+Initialize @milkdown/transformer@7.22.2
+Initialize remark-inline-links@7.0.0
+Initialize @milkdown/exception@7.22.2
+Initialize react-router@7.9.1
+Initialize @tailwindcss/node@4.1.13
+Initialize @tailwindcss/oxide@4.1.13
+Initialize webidl-conversions@7.0.0
+Initialize entities@4.5.0
+Initialize whatwg-mimetype@3.0.0
+Initialize is-plain-obj@4.1.0
+Initialize vfile@6.0.3
+Initialize trough@2.2.0
+Initialize bail@2.0.2
+Initialize @types/unist@3.0.3
+Initialize extend@3.0.2
+Initialize devlop@1.1.0
+Initialize @types/hast@3.0.5
+Initialize hast-util-to-jsx-runtime@2.3.6
+Initialize html-url-attributes@3.0.1
+Initialize remark-rehype@11.1.2
+Initialize mdast-util-to-hast@13.2.1
+Initialize hast-util-sanitize@5.0.2
+Initialize assistant-stream@0.3.45
+Initialize nanoid@6.0.1
+Initialize fast-safe-stringify@2.1.1
+Initialize colorette@2.0.20
+Initialize fast-copy@4.0.4
+Initialize secure-json-parse@4.1.0
+Initialize minimist@1.2.8
+Initialize help-me@5.0.0
+Initialize dateformat@4.6.3
+Initialize strip-json-comments@5.0.3
+Initialize pump@3.0.4
+Initialize joycon@3.1.1
+Initialize @esbuild/linux-x64@0.25.12
+Initialize tslib@2.8.1
+Initialize remark-stringify@11.0.0
+Initialize scheduler@0.26.0
+Initialize @jsr/std__jsonc@1.0.2
+Initialize @jsr/deno__loader@0.5.0
+Initialize @img/sharp-linuxmusl-x64@0.34.5
+Initialize @img/sharp-linux-x64@0.34.5
+Initialize @img/sharp-libvips-linuxmusl-x64@1.2.4
+Initialize @img/sharp-libvips-linux-x64@1.2.4
+Initialize semver@7.8.5
+Initialize detect-libc@2.1.2
+Initialize @img/colour@1.1.0
+Initialize micromark-extension-gfm@3.0.0
+Initialize mdast-util-gfm@3.1.0
+Initialize fdir@6.5.0
+Initialize postcss@8.5.28
+Initialize rollup@4.63.4
+Initialize picomatch@4.0.7
+Initialize tinyglobby@0.2.17
+Initialize @assistant-ui/store@0.3.15
+Initialize @assistant-ui/tap@0.9.19
+Initialize @dnd-kit/accessibility@3.1.1
+Initialize undici-types@8.9.0
+Initialize @base-ui/utils@0.2.3
+Initialize @floating-ui/utils@0.2.12
+Initialize use-sync-external-store@1.7.0
+Initialize tabbable@6.5.0
+Initialize @floating-ui/react-dom@2.1.9
+Initialize @babel/runtime@7.29.7
+Initialize reselect@5.3.0
+Initialize deepmerge@4.3.1
+Initialize commander@14.0.3
+Initialize dedent@1.7.2
+Initialize validate-npm-package-name@7.0.2
+Initialize zod-to-json-schema@3.25.2
+Initialize @babel/parser@7.29.9
+Initialize prompts@2.4.2
+Initialize cn@0.2.6
+Initialize @babel/plugin-transform-typescript@7.29.9
+Initialize ts-morph@26.0.0
+Initialize @modelcontextprotocol/sdk@1.30.0
+Initialize @types/validate-npm-package-name@4.0.2
+Initialize open@11.0.4
+Initialize postcss-selector-parser@7.1.6
+Initialize recast@0.23.21
+Initialize zod@3.25.76
+Initialize diff@8.0.4
+Initialize @babel/preset-typescript@7.29.7
+Initialize @dotenvx/dotenvx@1.75.1
+Initialize fs-extra@11.4.1
+Initialize fast-glob@3.3.3
+Initialize kleur@4.1.5
+Initialize cosmiconfig@9.0.2
+Initialize ora@8.2.0
+Initialize undici@7.29.1
+Initialize fuzzysort@3.1.0
+Initialize stringify-object@5.0.0
+Initialize socks@2.8.10
+Initialize browserslist@4.29.0
+Initialize tsconfig-paths@4.2.0
+Initialize execa@9.6.1
+Initialize playwright-core@1.56.1
+Initialize micromark-util-types@2.0.2
+Initialize mdast-util-from-markdown@2.0.3
+Initialize @esbuild-kit/esm-loader@2.6.5
+Initialize @drizzle-team/brocli@0.10.2
+Initialize esbuild-register@3.6.0
+Initialize @radix-ui/react-use-controllable-state@1.2.6
+Initialize @radix-ui/react-use-callback-ref@1.1.4
+Initialize @radix-ui/react-primitive@2.1.10
+Initialize assistant-cloud@0.1.43
+Initialize @radix-ui/primitive@1.1.7
+Initialize react-textarea-autosize@8.5.9
+Initialize @radix-ui/react-compose-refs@1.1.5
+Initialize safe-content-frame@0.0.25
+Initialize zustand@5.0.15
+Initialize radix-ui@1.6.7
+Initialize @radix-ui/react-collection@1.1.15
+Initialize zod@4.4.3
+Initialize @radix-ui/react-use-escape-keydown@1.1.5
+Initialize @radix-ui/react-context@1.2.2
+Initialize prosemirror-inputrules@1.5.1
+Initialize prosemirror-gapcursor@1.4.1
+Initialize prosemirror-model@1.25.12
+Initialize prosemirror-keymap@1.2.3
+Initialize prosemirror-tables@1.8.5
+Initialize prosemirror-schema-list@1.5.1
+Initialize prosemirror-view@1.42.6
+Initialize prosemirror-changeset@2.4.4
+Initialize prosemirror-commands@1.7.2
+Initialize prosemirror-history@1.5.1
+Initialize prosemirror-dropcursor@1.8.4
+Initialize prosemirror-transform@1.12.2
+Initialize prosemirror-state@1.4.4
+Initialize prosemirror-safari-ime-span@1.0.2
+Initialize csstype@3.2.3
+Initialize mdast-util-newline-to-break@2.0.0
+Initialize pngjs@7.0.0
+Initialize decode-ico@0.4.1
+Initialize @jimp/bmp@0.22.12
+Initialize file-type@21.3.4
+Initialize jpeg-js@0.4.4
+Initialize to-data-view@2.0.0
+Initialize @babel/helpers@7.29.7
+Initialize convert-source-map@2.0.0
+Initialize gensync@1.0.0-beta.2
+Initialize @jridgewell/remapping@2.3.5
+Initialize @babel/template@7.29.7
+Initialize @babel/types@7.29.8
+Initialize @babel/helper-compilation-targets@7.29.7
+Initialize @babel/generator@7.29.8
+Initialize @babel/traverse@7.29.8
+Initialize json5@2.2.3
+Initialize @babel/code-frame@7.29.7
+Initialize debug@4.4.3
+Initialize semver@6.3.1
+Initialize @babel/helper-module-transforms@7.29.7
+Initialize @types/babel__generator@7.27.0
+Initialize @types/babel__template@7.4.4
+Initialize @types/babel__traverse@7.28.0
+Initialize @babel/helper-plugin-utils@7.29.7
+Initialize real-require@1.0.0
+Initialize split2@4.2.0
+Initialize unist-util-is@6.0.1
+Initialize mdast-util-definitions@6.0.0
+Initialize set-cookie-parser@2.7.2
+Initialize cookie@1.1.1
+Initialize lightningcss@1.30.1
+Initialize magic-string@0.30.21
+Initialize jiti@2.7.0
+Initialize source-map-js@1.2.1
+Initialize enhanced-resolve@5.25.1
+Initialize @tailwindcss/oxide-linux-x64-musl@4.1.13
+Initialize @tailwindcss/oxide-linux-x64-gnu@4.1.13
+Initialize tar@7.5.22
+Initialize vfile-message@4.0.3
+Initialize dequal@2.0.3
+Initialize style-to-js@1.1.21
+Initialize space-separated-tokens@2.0.2
+Initialize estree-util-is-identifier-name@3.0.0
+Initialize hast-util-whitespace@3.0.0
+Initialize property-information@7.2.0
+Initialize @types/estree@1.0.9
+Initialize mdast-util-mdx-expression@2.0.1
+Initialize unist-util-position@5.0.0
+Initialize mdast-util-mdx-jsx@3.2.0
+Initialize mdast-util-mdxjs-esm@2.0.1
+Initialize comma-separated-tokens@2.0.3
+Initialize @ungap/structured-clone@1.4.0
+Initialize trim-lines@3.0.1
+Initialize micromark-util-sanitize-uri@2.0.1
+Initialize @types/json-schema@7.0.15
+Initialize @standard-schema/spec@1.1.0
+Initialize end-of-stream@1.4.5
+Initialize once@1.4.0
+Initialize mdast-util-to-markdown@2.1.2
+Initialize @jsr/std__json@1.1.0
+Initialize micromark-extension-gfm-task-list-item@2.1.0
+Initialize micromark-extension-gfm-strikethrough@2.1.0
+Initialize micromark-extension-gfm-autolink-literal@2.1.0
+Initialize micromark-util-combine-extensions@2.0.1
+Initialize micromark-extension-gfm-table@2.1.2
+Initialize micromark-extension-gfm-tagfilter@2.0.0
+Initialize micromark-extension-gfm-footnote@2.1.0
+Initialize mdast-util-gfm-footnote@2.1.0
+Initialize mdast-util-gfm-autolink-literal@2.0.1
+Initialize mdast-util-gfm-strikethrough@2.0.0
+Initialize mdast-util-gfm-table@2.0.0
+Initialize mdast-util-gfm-task-list-item@2.0.0
+Initialize picocolors@1.1.1
+Initialize nanoid@3.3.19
+Initialize @rollup/rollup-linux-x64-musl@4.63.4
+Initialize @rollup/rollup-linux-x64-gnu@4.63.4
+Initialize @napi-rs/lzma-linux-x64-gnu@1.5.1
+Initialize @floating-ui/dom@1.8.0
+Initialize kleur@3.0.3
+Initialize sisteransi@1.0.5
+Initialize @babel/helper-create-class-features-plugin@7.29.7
+Initialize @babel/plugin-syntax-typescript@7.29.7
+Initialize @babel/helper-skip-transparent-expression-wrappers@7.29.7
+Initialize @babel/helper-annotate-as-pure@7.29.7
+Initialize code-block-writer@13.0.3
+Initialize @ts-morph/common@0.27.0
+Initialize @hono/node-server@2.1.1
+Initialize express-rate-limit@8.7.0
+Initialize ajv@8.20.0
+Initialize hono@4.13.1
+Initialize content-type@1.0.5
+Initialize eventsource@3.0.7
+Initialize raw-body@3.0.2
+Initialize cross-spawn@7.0.6
+Initialize pkce-challenge@5.0.1
+Initialize json-schema-typed@8.0.2
+Initialize cors@2.8.6
+Initialize express@5.2.1
+Initialize eventsource-parser@3.1.1
+Initialize ajv-formats@3.0.1
+Initialize jose@6.2.12
+Initialize wsl-utils@1.0.0
+Initialize default-browser@5.5.1
+Initialize define-lazy-prop@3.0.0
+Initialize is-inside-container@1.0.0
+Initialize powershell-utils@0.2.1
+Initialize is-in-ssh@1.0.0
+Initialize util-deprecate@1.0.2
+Initialize cssesc@3.0.0
+Initialize esprima@4.0.1
+Initialize tiny-invariant@1.3.3
+Initialize ast-types@0.16.3
+Initialize source-map@0.6.1
+Initialize @babel/plugin-transform-modules-commonjs@7.29.7
+Initialize @babel/plugin-syntax-jsx@7.29.7
+Initialize @babel/helper-validator-option@7.29.7
+Initialize execa@5.1.1
+Initialize yocto-spinner@1.2.2
+Initialize conf@10.2.0
+Initialize enquirer@2.4.1
+Initialize env-paths@2.2.1
+Initialize @dotenvx/primitives@0.8.0
+Initialize systeminformation@5.33.13
+Initialize object-treeify@1.1.33
+Initialize commander@11.1.0
+Initialize open@8.4.2
+Initialize which@4.0.0
+Initialize dotenv@17.4.2
+Initialize ignore@5.3.2
+Initialize jsonfile@6.2.1
+Initialize graceful-fs@4.2.11
+Initialize universalify@2.0.1
+Initialize micromatch@4.0.8
+Initialize merge2@1.4.1
+Initialize glob-parent@5.1.2
+Initialize @nodelib/fs.walk@1.2.8
+Initialize @nodelib/fs.stat@2.0.5
+Initialize import-fresh@3.3.1
+Initialize parse-json@5.2.0
+Initialize js-yaml@4.3.0
+Initialize string-width@7.2.0
+Initialize is-unicode-supported@2.1.0
+Initialize is-interactive@2.0.0
+Initialize cli-spinners@2.9.2
+Initialize log-symbols@6.0.0
+Initialize cli-cursor@5.0.0
+Initialize stdin-discarder@0.2.2
+Initialize strip-ansi@7.2.0
+Initialize chalk@5.6.2
+Initialize get-own-enumerable-keys@1.0.0
+Initialize is-regexp@3.1.0
+Initialize is-obj@3.0.0
+Initialize ip-address@10.7.2
+Initialize smart-buffer@4.2.0
+Initialize update-browserslist-db@1.3.3
+Initialize node-releases@2.0.56
+Initialize baseline-browser-mapping@2.11.25
+Initialize caniuse-lite@1.0.30001810
+Initialize electron-to-chromium@1.5.434
+Initialize strip-bom@3.0.0
+Initialize signal-exit@4.1.0
+Initialize figures@6.1.0
+Initialize npm-run-path@6.0.0
+Initialize get-stream@9.0.1
+Initialize yoctocolors@2.2.0
+Initialize @sindresorhus/merge-streams@4.0.0
+Initialize human-signals@8.0.1
+Initialize strip-final-newline@4.0.0
+Initialize is-stream@4.0.1
+Initialize pretty-ms@9.3.1
+Initialize mdast-util-to-string@4.0.0
+Initialize decode-named-character-reference@1.3.0
+Initialize micromark@4.0.2
+Initialize micromark-util-normalize-identifier@2.0.1
+Initialize micromark-util-decode-string@2.0.1
+Initialize unist-util-stringify-position@4.0.0
+Initialize micromark-util-symbol@2.0.1
+Initialize micromark-util-decode-numeric-character-reference@2.0.2
+Initialize get-tsconfig@4.14.3
+Initialize @esbuild-kit/core-utils@3.3.2
+Initialize @radix-ui/react-use-effect-event@0.0.5
+Initialize @radix-ui/react-use-layout-effect@1.1.4
+Initialize @radix-ui/react-slot@1.3.3
+Initialize use-latest@1.3.0
+Initialize use-composed-ref@1.4.0
+Initialize @radix-ui/react-portal@1.1.17
+Initialize @radix-ui/react-accordion@1.2.20
+Initialize @radix-ui/react-toast@1.2.23
+Initialize @radix-ui/react-roving-focus@1.1.19
+Initialize @radix-ui/react-menubar@1.1.24
+Initialize @radix-ui/react-password-toggle-field@0.1.11
+Initialize @radix-ui/react-select@2.3.7
+Initialize @radix-ui/react-toolbar@1.1.19
+Initialize @radix-ui/react-form@0.1.16
+Initialize @radix-ui/react-slider@1.4.7
+Initialize @radix-ui/react-use-is-hydrated@0.1.3
+Initialize @radix-ui/react-accessible-icon@1.1.15
+Initialize @radix-ui/react-checkbox@1.3.11
+Initialize @radix-ui/react-tooltip@1.2.16
+Initialize @radix-ui/react-progress@1.1.16
+Initialize @radix-ui/react-direction@1.1.4
+Initialize @radix-ui/react-tabs@1.1.21
+Initialize @radix-ui/react-visually-hidden@1.2.11
+Initialize @radix-ui/react-dialog@1.1.23
+Initialize @radix-ui/react-focus-guards@1.1.6
+Initialize @radix-ui/react-dismissable-layer@1.1.19
+Initialize @radix-ui/react-avatar@1.2.6
+Initialize @radix-ui/react-one-time-password-field@0.1.16
+Initialize @radix-ui/react-navigation-menu@1.2.22
+Initialize @radix-ui/react-popper@1.3.7
+Initialize @radix-ui/react-focus-scope@1.1.16
+Initialize @radix-ui/react-label@2.1.15
+Initialize @radix-ui/react-scroll-area@1.2.18
+Initialize @radix-ui/react-radio-group@1.4.7
+Initialize @radix-ui/react-toggle-group@1.1.19
+Initialize @radix-ui/react-alert-dialog@1.1.23
+Initialize @radix-ui/react-popover@1.1.23
+Initialize @radix-ui/react-aspect-ratio@1.1.15
+Initialize @radix-ui/react-separator@1.1.15
+Initialize @radix-ui/react-presence@1.1.10
+Initialize @radix-ui/react-toggle@1.1.18
+Initialize @radix-ui/react-hover-card@1.1.23
+Initialize @radix-ui/react-dropdown-menu@2.1.24
+Initialize @radix-ui/react-context-menu@2.3.7
+Initialize @radix-ui/react-menu@2.1.24
+Initialize @radix-ui/react-switch@1.3.7
+Initialize @radix-ui/react-arrow@1.1.15
+Initialize @radix-ui/react-use-size@1.1.4
+Initialize @radix-ui/react-collapsible@1.1.20
+Initialize orderedmap@2.1.1
+Initialize w3c-keyname@2.2.8
+Initialize rope-sequence@1.3.4
+Initialize mdast-util-find-and-replace@3.0.2
+Initialize to-data-view@1.1.0
+Initialize @canvas/image-data@1.1.0
+Initialize decode-bmp@0.2.1
+Initialize @jimp/utils@0.22.12
+Initialize bmp-js@0.1.0
+Initialize @jimp/custom@0.22.12
+Initialize uint8array-extras@1.6.0
+Initialize @tokenizer/inflate@0.4.1
+Initialize token-types@6.1.2
+Initialize strtok3@10.6.2
+Initialize @jridgewell/trace-mapping@0.3.31
+Initialize @jridgewell/gen-mapping@0.3.13
+Initialize @babel/helper-validator-identifier@7.29.7
+Initialize @babel/helper-string-parser@7.29.7
+Initialize @babel/compat-data@7.29.7
+Initialize lru-cache@5.1.1
+Initialize jsesc@3.1.0
+Initialize @babel/helper-globals@7.29.7
+Initialize js-tokens@4.0.0
+Initialize ms@2.1.3
+Initialize @babel/helper-module-imports@7.29.7
+Initialize lightningcss-linux-x64-gnu@1.30.1
+Initialize lightningcss-linux-x64-musl@1.30.1
+Initialize @jridgewell/sourcemap-codec@1.6.0
+Initialize tapable@2.3.3
+Initialize yallist@5.0.0
+Initialize @isaacs/fs-minipass@4.0.1
+Initialize chownr@3.0.0
+Initialize minizlib@3.1.0
+Initialize minipass@7.1.3
+Initialize style-to-object@1.0.14
+Initialize @types/estree-jsx@1.0.5
+Initialize parse-entities@4.0.2
+Initialize ccount@2.0.1
+Initialize stringify-entities@4.0.4
+Initialize micromark-util-character@2.1.1
+Initialize micromark-util-encode@2.0.1
+Initialize wrappy@1.0.2
+Initialize micromark-util-classify-character@2.0.1
+Initialize zwitch@2.0.4
+Initialize mdast-util-phrasing@4.1.0
+Initialize longest-streak@3.1.0
+Initialize @jsr/std__streams@1.1.2
+Initialize micromark-factory-space@2.0.1
+Initialize micromark-util-chunked@2.0.1
+Initialize micromark-util-resolve-all@2.0.1
+Initialize micromark-core-commonmark@2.0.3
+Initialize markdown-table@3.0.4
+Initialize @floating-ui/core@1.8.0
+Initialize @babel/helper-optimise-call-expression@7.29.7
+Initialize @babel/helper-replace-supers@7.29.7
+Initialize @babel/helper-member-expression-to-functions@7.29.7
+Initialize path-browserify@1.0.1
+Initialize minimatch@10.2.5
+Initialize require-from-string@2.0.2
+Initialize json-schema-traverse@1.0.0
+Initialize fast-deep-equal@3.1.3
+Initialize fast-uri@3.1.3
+Initialize bytes@3.1.2
+Initialize unpipe@1.0.0
+Initialize http-errors@2.0.1
+Initialize iconv-lite@0.7.3
+Initialize shebang-command@2.0.0
+Initialize which@2.0.2
+Initialize path-key@3.1.1
+Initialize object-assign@4.1.1
+Initialize vary@1.1.2
+Initialize etag@1.8.1
+Initialize mime-types@3.0.2
+Initialize body-parser@2.3.0
+Initialize proxy-addr@2.0.8
+Initialize parseurl@1.3.3
+Initialize depd@2.0.0
+Initialize qs@6.16.0
+Initialize serve-static@2.2.1
+Initialize encodeurl@2.0.0
+Initialize type-is@2.1.0
+Initialize router@2.2.0
+Initialize content-disposition@1.1.0
+Initialize merge-descriptors@2.0.0
+Initialize on-finished@2.4.1
+Initialize cookie@0.7.2
+Initialize fresh@2.0.0
+Initialize finalhandler@2.1.1
+Initialize statuses@2.0.2
+Initialize range-parser@1.3.0
+Initialize send@1.2.1
+Initialize escape-html@1.0.3
+Initialize cookie-signature@1.2.2
+Initialize accepts@2.0.0
+Initialize powershell-utils@0.1.0
+Initialize is-wsl@3.1.1
+Initialize default-browser-id@5.0.1
+Initialize bundle-name@4.1.0
+Initialize is-docker@3.0.0
+Initialize get-stream@6.0.1
+Initialize merge-stream@2.0.0
+Initialize strip-final-newline@2.0.0
+Initialize onetime@5.1.2
+Initialize signal-exit@3.0.7
+Initialize is-stream@2.0.1
+Initialize human-signals@2.1.0
+Initialize npm-run-path@4.0.1
+Initialize pkg-up@3.1.0
+Initialize debounce-fn@4.0.0
+Initialize json-schema-typed@7.0.3
+Initialize ajv-formats@2.1.1
+Initialize atomically@1.7.0
+Initialize dot-prop@6.0.1
+Initialize strip-ansi@6.0.1
+Initialize ansi-colors@4.1.3
+Initialize is-wsl@2.2.0
+Initialize is-docker@2.2.1
+Initialize define-lazy-prop@2.0.0
+Initialize isexe@3.1.5
+Initialize picomatch@2.3.2
+Initialize braces@3.0.3
+Initialize is-glob@4.0.3
+Initialize fastq@1.20.3
+Initialize @nodelib/fs.scandir@2.1.5
+Initialize resolve-from@4.0.0
+Initialize parent-module@1.0.1
+Initialize lines-and-columns@1.2.4
+Initialize error-ex@1.3.4
+Initialize json-parse-even-better-errors@2.3.1
+Initialize argparse@2.0.1
+Initialize emoji-regex@10.6.0
+Initialize get-east-asian-width@1.7.0
+Initialize is-unicode-supported@1.3.0
+Initialize restore-cursor@5.1.0
+Initialize ansi-regex@6.3.0
+Initialize escalade@3.2.0
+Initialize path-key@4.0.0
+Initialize unicorn-magic@0.3.0
+Initialize @sec-ant/readable-stream@0.4.1
+Initialize parse-ms@4.0.0
+Initialize character-entities@2.0.2
+Initialize @types/debug@4.1.13
+Initialize micromark-util-subtokenize@2.1.0
+Initialize resolve-pkg-maps@1.0.0
+Initialize source-map-support@0.5.21
+Initialize esbuild@0.18.20
+Initialize use-isomorphic-layout-effect@1.2.1
+Initialize @radix-ui/react-id@1.1.4
+Initialize react-remove-scroll@2.7.2
+Initialize @radix-ui/react-use-previous@1.1.4
+Initialize @radix-ui/number@1.1.3
+Initialize aria-hidden@1.2.6
+Initialize @radix-ui/rect@1.1.3
+Initialize @radix-ui/react-use-rect@1.1.4
+Initialize escape-string-regexp@5.0.0
+Initialize regenerator-runtime@0.13.11
+Initialize @jimp/core@0.22.12
+Initialize @tokenizer/token@0.3.0
+Initialize @borewit/text-codec@0.2.2
+Initialize ieee754@1.2.1
+Initialize @jridgewell/resolve-uri@3.1.2
+Initialize yallist@3.1.1
+Initialize inline-style-parser@0.2.7
+Initialize is-decimal@2.0.1
+Initialize is-hexadecimal@2.0.1
+Initialize is-alphanumerical@2.0.1
+Initialize @types/unist@2.0.11
+Initialize character-reference-invalid@2.0.1
+Initialize character-entities-legacy@3.0.0
+Initialize character-entities-html4@2.1.0
+Initialize @jsr/std__bytes@1.0.6
+Initialize micromark-factory-destination@2.0.1
+Initialize micromark-util-html-tag-name@2.0.1
+Initialize micromark-factory-title@2.0.1
+Initialize micromark-factory-whitespace@2.0.1
+Initialize micromark-factory-label@2.0.1
+Initialize brace-expansion@5.0.7
+Initialize setprototypeof@1.2.0
+Initialize toidentifier@1.0.1
+Initialize inherits@2.0.4
+Initialize safer-buffer@2.1.2
+Initialize shebang-regex@3.0.0
+Initialize isexe@2.0.0
+Initialize mime-db@1.54.0
+Initialize content-type@2.1.0
+Initialize ipaddr.js@1.9.1
+Initialize forwarded@0.2.0
+Initialize es-define-property@1.0.1
+Initialize side-channel@1.1.1
+Initialize media-typer@1.1.1
+Initialize path-to-regexp@8.4.2
+Initialize is-promise@4.0.0
+Initialize ee-first@1.1.1
+Initialize negotiator@1.1.0
+Initialize run-applescript@7.1.0
+Initialize mimic-fn@2.1.0
+Initialize find-up@3.0.0
+Initialize mimic-fn@3.1.0
+Initialize is-obj@2.0.0
+Initialize ansi-regex@5.0.1
+Initialize fill-range@7.1.1
+Initialize is-extglob@2.1.1
+Initialize reusify@1.1.0
+Initialize run-parallel@1.2.0
+Initialize callsites@3.1.0
+Initialize is-arrayish@0.2.1
+Initialize onetime@7.0.0
+Initialize @types/ms@2.1.0
+Initialize buffer-from@1.1.2
+Initialize @esbuild/linux-x64@0.18.20
+Initialize react-remove-scroll-bar@2.3.8
+Initialize react-style-singleton@2.2.3
+Initialize use-callback-ref@1.3.3
+Initialize use-sidecar@1.1.3
+Initialize pixelmatch@4.0.2
+Initialize tinycolor2@1.6.0
+Initialize buffer@5.7.1
+Initialize any-base@1.1.0
+Initialize exif-parser@0.1.12
+Initialize isomorphic-fetch@3.0.0
+Initialize file-type@16.5.4
+Initialize is-alphabetical@2.0.1
+Initialize balanced-match@4.0.4
+Initialize side-channel-weakmap@1.0.2
+Initialize side-channel-map@1.0.1
+Initialize object-inspect@1.13.4
+Initialize es-errors@1.3.0
+Initialize side-channel-list@1.0.1
+Initialize locate-path@3.0.0
+Initialize to-regex-range@5.0.1
+Initialize queue-microtask@1.2.3
+Initialize mimic-function@5.0.1
+Initialize get-nonce@1.0.1
+Initialize detect-node-es@1.1.0
+Initialize pngjs@3.4.0
+Initialize base64-js@1.5.1
+Initialize node-fetch@2.7.0
+Initialize whatwg-fetch@3.6.20
+Initialize token-types@4.2.1
+Initialize readable-web-to-node-stream@3.0.4
+Initialize strtok3@6.3.0
+Initialize get-intrinsic@1.3.0
+Initialize call-bound@1.0.4
+Initialize p-locate@3.0.0
+Initialize path-exists@3.0.0
+Initialize is-number@7.0.0
+Initialize whatwg-url@5.0.0
+Initialize readable-stream@4.8.0
+Initialize peek-readable@4.1.0
+Initialize es-object-atoms@1.1.2
+Initialize math-intrinsics@1.1.0
+Initialize function-bind@1.1.2
+Initialize call-bind-apply-helpers@1.0.2
+Initialize has-symbols@1.1.0
+Initialize gopd@1.2.0
+Initialize get-proto@1.0.1
+Initialize hasown@2.0.4
+Initialize p-limit@2.3.0
+Initialize webidl-conversions@3.0.1
+Initialize tr46@0.0.3
+Initialize events@3.3.0
+Initialize buffer@6.0.3
+Initialize string_decoder@1.3.0
+Initialize abort-controller@3.0.0
+Initialize process@0.11.10
+Initialize dunder-proto@1.0.1
+Initialize p-try@2.2.0
+Initialize safe-buffer@5.2.1
+Initialize event-target-shim@5.0.1
+╭ Warning
+│
+│  The following packages are deprecated:
+│  npm:@esbuild-kit/esm-loader@2.6.5 (Merged into tsx: https://tsx.hirok.io)
+│  npm:@esbuild-kit/core-utils@3.3.2 (Merged into tsx: https://tsx.hirok.io)
+╰─
+╭ Warning
+│
+│  Ignored build scripts for packages:
+│  npm:images@3.2.4
+│  npm:@tailwindcss/oxide@4.1.13
+│  npm:sharp@0.34.5
+│
+│  Run "deno approve-scripts" to run build scripts.
+╰─
+Task build deno run -A npm:vite@7.1.7 build --config web/vite.config.ts
+vite v7.1.7 building for production...
+transforming...
+✓ 3200 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                     1.40 kB │ gzip:   0.67 kB
+dist/sw.js                                          2.02 kB
+dist/manifest.json                                 17.65 kB │ gzip:   2.28 kB
+dist/bundle-report.json                           532.60 kB │ gzip:  31.99 kB
+dist/assets/narrow-form-rt1xVpo8.css                0.19 kB │ gzip:   0.16 kB
+dist/assets/structural-Cy9_WDdj.css                 0.30 kB │ gzip:   0.17 kB
+dist/assets/pane-resize-handle-DH9n-Avf.css         0.64 kB │ gzip:   0.31 kB
+dist/assets/MotionLab-C0AD72-g.css                  0.69 kB │ gzip:   0.35 kB
+dist/assets/AuthPage-BBLCKHee.css                   0.99 kB │ gzip:   0.38 kB
+dist/assets/MarkdownEditorSpike-M_uCSSL7.css        1.24 kB │ gzip:   0.49 kB
+dist/assets/AccentLab-BIx9vumd.css                  1.37 kB │ gzip:   0.56 kB
+dist/assets/EditablePaginationSpike-277vw2zY.css    1.54 kB │ gzip:   0.48 kB
+dist/assets/AssistantMarkdown-DWZhNmyB.css          1.55 kB │ gzip:   0.53 kB
+dist/assets/TrashPage-B5CsLR3r.css                  1.59 kB │ gzip:   0.57 kB
+dist/assets/OmniboxLab-otFA0xf2.css                 1.72 kB │ gzip:   0.59 kB
+dist/assets/AccountPage-sqYgqE53.css                2.01 kB │ gzip:   0.54 kB
+dist/assets/document-print-I2wQRGl3.css             2.32 kB │ gzip:   0.68 kB
+dist/assets/design-lab-BtxOk-Nw.css                 4.15 kB │ gzip:   1.03 kB
+dist/assets/document-pagination-B0rjXsNg.css        4.34 kB │ gzip:   1.04 kB
+dist/assets/AdminPage-Cgl-d7Ef.css                  4.73 kB │ gzip:   1.09 kB
+dist/assets/markdown-DH-f3S1d.css                   4.97 kB │ gzip:   1.46 kB
+dist/assets/WindowLab-FLOe8bKo.css                  7.10 kB │ gzip:   1.57 kB
+dist/assets/HomeGridLab-DasdruPN.css                8.48 kB │ gzip:   1.82 kB
+dist/assets/SettingsShell-BvOM1G8E.css             14.51 kB │ gzip:   2.85 kB
+dist/assets/document-editor-DUZeWa7t.css           22.66 kB │ gzip:   3.79 kB
+dist/assets/AskPage-BsGKLLiW.css                   26.90 kB │ gzip:   4.23 kB
+dist/assets/index-D2NyL58d.css                    158.86 kB │ gzip:  26.57 kB
+dist/assets/textarea-BSa7nWn8.js                    0.22 kB │ gzip:   0.18 kB
+dist/assets/badge-CNtB56aW.js                       0.23 kB │ gzip:   0.19 kB
+dist/assets/paper-CyeXwFU2.js                       0.49 kB │ gzip:   0.33 kB
+dist/assets/SettingsWindowContent-Dm17XOMj.js       0.53 kB │ gzip:   0.32 kB
+dist/assets/SharePage-C_yVh5y9.js                   0.62 kB │ gzip:   0.43 kB
+dist/assets/runtime-DhCXU32C.js                     0.81 kB │ gzip:   0.48 kB
+dist/assets/slider-DLqjXSvy.js                      0.92 kB │ gzip:   0.50 kB
+dist/assets/DocumentOutline-B0iXtVX3.js             0.95 kB │ gzip:   0.50 kB
+dist/assets/NotFoundPage-Zddu0SJI.js                0.99 kB │ gzip:   0.61 kB
+dist/assets/note-tasks-BDMc-R5-.js                  1.13 kB │ gzip:   0.59 kB
+dist/assets/popover-YZuqWez_.js                     1.15 kB │ gzip:   0.46 kB
+dist/assets/home-note-task-saver-VquK7iPV.js        1.53 kB │ gzip:   0.75 kB
+dist/assets/SettingsShell-D66FuKKo.js               1.84 kB │ gzip:   0.86 kB
+dist/assets/NoteMarkdown-DWdX_22B.js                1.91 kB │ gzip:   0.91 kB
+dist/assets/AssistantMarkdown-DYY1CqPW.js           1.94 kB │ gzip:   0.96 kB
+dist/assets/runtime-bkMYlCih.js                     2.03 kB │ gzip:   1.05 kB
+dist/assets/MotionLab-mxFW38Oc.js                   2.72 kB │ gzip:   1.58 kB
+dist/assets/MarkdownEditorSpike-BPspHj1h.js         3.76 kB │ gzip:   1.90 kB
+dist/assets/home-grid-cells-WXaMqyYG.js             4.77 kB │ gzip:   2.04 kB
+dist/assets/AuthPage-BMqTiawe.js                    4.96 kB │ gzip:   2.03 kB
+dist/assets/OmniboxLab-BZ95B8gO.js                  6.25 kB │ gzip:   2.72 kB
+dist/assets/AccentLab-rKH1fj7P.js                   6.64 kB │ gzip:   3.04 kB
+dist/assets/TrashPage-kyNYyNm2.js                   6.95 kB │ gzip:   2.51 kB
+dist/assets/editor-extensions-C-e-w3rh.js           7.27 kB │ gzip:   3.11 kB
+dist/assets/runtime-Fj302Rs5.js                     7.82 kB │ gzip:   3.19 kB
+dist/assets/DesignLab-tL5n1ahK.js                   9.55 kB │ gzip:   3.38 kB
+dist/assets/AccountPage-BzgI7Fbp.js                 9.92 kB │ gzip:   3.69 kB
+dist/assets/document-pagination-BIoKL8-X.js        12.56 kB │ gzip:   4.95 kB
+dist/assets/WindowLab-BzEpN8Ey.js                  13.84 kB │ gzip:   5.14 kB
+dist/assets/EditablePaginationSpike-CDdEatjQ.js    14.60 kB │ gzip:   6.62 kB
+dist/assets/HomeNotes-Bv3659cA.js                  15.58 kB │ gzip:   6.32 kB
+dist/assets/HomeGridLab-Cxb5ZPAD.js                17.78 kB │ gzip:   8.37 kB
+dist/assets/AdminPage-DjXNztlL.js                  29.54 kB │ gzip:   8.62 kB
+dist/assets/SettingsPage-B5RfY_eN.js               41.58 kB │ gzip:  12.98 kB
+dist/assets/markdown-renderer-vendor-CTI2aAdQ.js   50.51 kB │ gzip:  17.07 kB
+dist/assets/DocumentsWorkspace-BX8cGZTd.js         51.15 kB │ gzip:  15.98 kB
+dist/assets/DocumentEditor-DeSJqrvB.js             55.03 kB │ gzip:  17.49 kB
+dist/assets/AskPage-YjIsRnJv.js                    58.57 kB │ gzip:  17.42 kB
+dist/assets/markdown-vendor-BEM8PGJN.js           120.87 kB │ gzip:  35.70 kB
+dist/assets/react-vendor-B0UvL1L9.js              265.72 kB │ gzip:  86.23 kB
+dist/assets/index-fd1kiRBG.js                     284.35 kB │ gzip:  94.48 kB
+dist/assets/ui-vendor-_T38yjEN.js                 308.68 kB │ gzip:  97.01 kB
+dist/assets/assistant-vendor-CoS3trcQ.js          318.33 kB │ gzip:  94.40 kB
+dist/assets/editor-vendor-sieZRBEz.js             332.49 kB │ gzip: 103.76 kB
+✓ built in 5.55s
+
+
+Wall time: 6.26 seconds

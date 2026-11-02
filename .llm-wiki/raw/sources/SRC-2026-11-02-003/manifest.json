@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-02-003",
+  "captured": "2026-11-02",
+  "packet_version": "1.0",
+  "title": "File Upload Cheat Sheet[¶](#file-upload-cheat-sheet \"Permanent link\")",
+  "url": "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

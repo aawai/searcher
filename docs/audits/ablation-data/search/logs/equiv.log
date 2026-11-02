@@ -1,0 +1,7 @@
+{
+ "sqlite": "3.53.2",
+ "pairs": 300000,
+ "positives": 145198,
+ "disagreements": 0,
+ "examples": []
+}

@@ -25,3 +25,5 @@ SQLite 官方还提醒：[运行时复制与文件锁风险](/sources/SRC-2026-1
 [Searcher 部署文档](../../../docs/deployment.md#备份与恢复)描述管理员 ZIP 包含数据库、设置及壁纸/图标，且还原前进行校验、保存恢复前快照；备份不包含 `ENCRYPTION_KEY`。数据库一致性只是完整应用备份的一部分；本轮没有运行备份或恢复，也未审计实现。
 
 关联：[Drizzle SQLite Store](/entities/drizzle-sqlite-store.md)、[SQLite Isolation and Connection Boundaries](/concepts/sqlite-isolation-and-connection-boundaries.md)。
+
+关联：[Archive Extraction: Zip Slip and Decompression Limits](/concepts/archive-extraction-zip-slip-and-decompression-limits.md)，还原包的解包校验（路径白名单、体积上限）记录于该页。

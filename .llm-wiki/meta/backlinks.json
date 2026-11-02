@@ -1,4 +1,8 @@
 {
+  "concepts/abortcontroller-and-request-cancellation": [
+    "concepts/server-sent-events-sse-与实时事件流",
+    "sources/SRC-2026-11-02-002"
+  ],
   "concepts/accessible-grid-drag-keyboard-and-announcements": [
     "concepts/dnd-kit-2d-grid-sorting-architecture",
     "concepts/touch-action-gesture-ownership",
@@ -6,7 +10,15 @@
     "entities/searcher-项目",
     "sources/SRC-2026-10-25-005"
   ],
+  "concepts/archive-extraction-zip-slip-and-decompression-limits": [
+    "concepts/sqlite-backup-and-recovery-boundaries",
+    "concepts/upload-validation-defense-in-depth",
+    "sources/SRC-2026-11-02-003",
+    "sources/SRC-2026-11-02-004",
+    "sources/SRC-2026-11-02-005"
+  ],
   "concepts/aria-combobox-grouped-suggestions": [
+    "concepts/abortcontroller-and-request-cancellation",
     "concepts/pointer-target-size",
     "concepts/react-19-actions-and-transitions",
     "entities/searcher-项目",
@@ -30,12 +42,15 @@
   ],
   "concepts/content-security-policy-strict-deployment": [
     "concepts/hono-security-middleware-vs-api-guard",
+    "concepts/markdown-sanitization-with-rehype-sanitize",
+    "concepts/upload-validation-defense-in-depth",
     "concepts/xss-sanitization-and-trusted-types",
     "sources/SRC-2026-10-30-003",
     "sources/SRC-2026-10-31-001"
   ],
   "concepts/contract-first-testing": [
     "concepts/modal-layering-and-escape-dismissal",
+    "concepts/playwright-actionability-and-e2e-waits",
     "concepts/sqlite-table-recreation-migration",
     "entities/deno-runtime",
     "sources/SRC-2026-09-25-001",
@@ -52,14 +67,17 @@
   "concepts/csrf-defense-boundaries": [
     "concepts/hono-security-middleware-vs-api-guard",
     "concepts/session-security-and-isolation",
+    "concepts/upload-validation-defense-in-depth",
     "concepts/xss-sanitization-and-trusted-types",
     "sources/SRC-2026-10-26-003",
     "sources/SRC-2026-10-27-006",
     "sources/SRC-2026-10-29-001",
     "sources/SRC-2026-10-30-005",
-    "sources/SRC-2026-10-31-002"
+    "sources/SRC-2026-10-31-002",
+    "sources/SRC-2026-11-02-003"
   ],
   "concepts/css-container-queries": [
+    "concepts/scrollbar-gutter-and-layout-stability",
     "concepts/tailwind-v4-css-first-architecture",
     "sources/SRC-2026-10-30-002"
   ],
@@ -96,12 +114,14 @@
     "sources/SRC-2026-09-27-005"
   ],
   "concepts/deno-permission-boundaries": [
+    "concepts/archive-extraction-zip-slip-and-decompression-limits",
     "concepts/csrf-defense-boundaries",
     "entities/deno-runtime",
     "sources/SRC-2026-10-26-002"
   ],
   "concepts/dnd-kit-2d-grid-sorting-architecture": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
+    "concepts/pointer-capture-and-drag-lifecycle",
     "concepts/shortest-column-masonry-layout",
     "concepts/touch-action-gesture-ownership",
     "entities/dnd-kit-system",
@@ -135,6 +155,7 @@
   "concepts/hono-security-middleware-vs-api-guard": [
     "concepts/content-security-policy-strict-deployment",
     "concepts/csrf-defense-boundaries",
+    "concepts/markdown-sanitization-with-rehype-sanitize",
     "entities/hono-framework",
     "sources/SRC-2026-10-31-001",
     "sources/SRC-2026-10-31-002"
@@ -148,15 +169,28 @@
     "sources/SRC-2026-10-28-002",
     "sources/service-worker-bypass-does-not-bypass-http-cache"
   ],
+  "concepts/inert-and-top-layer-in-searcher-overlays": [
+    "concepts/modal-layering-and-escape-dismissal",
+    "concepts/playwright-actionability-and-e2e-waits",
+    "sources/SRC-2026-11-01-004",
+    "sources/SRC-2026-11-01-005"
+  ],
+  "concepts/markdown-sanitization-with-rehype-sanitize": [
+    "concepts/xss-sanitization-and-trusted-types",
+    "sources/SRC-2026-11-01-003"
+  ],
   "concepts/modal-dialog-focus-and-semantics": [
+    "concepts/inert-and-top-layer-in-searcher-overlays",
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/overscroll-containment-for-nested-scroll-areas",
     "entities/shadcn-ui-system",
-    "sources/SRC-2026-10-29-002"
+    "sources/SRC-2026-10-29-002",
+    "sources/SRC-2026-11-01-004"
   ],
   "concepts/modal-layering-and-escape-dismissal": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/aria-combobox-grouped-suggestions",
+    "concepts/inert-and-top-layer-in-searcher-overlays",
     "concepts/modal-dialog-focus-and-semantics",
     "concepts/overscroll-containment-for-nested-scroll-areas",
     "concepts/tailwind-v4-css-first-architecture",
@@ -166,7 +200,8 @@
     "sources/SRC-2026-09-27-001",
     "sources/SRC-2026-10-24-010",
     "sources/SRC-2026-10-29-002",
-    "sources/SRC-2026-10-31-005"
+    "sources/SRC-2026-10-31-005",
+    "sources/SRC-2026-11-01-005"
   ],
   "concepts/offline-first-与-local-draft-持久化架构": [
     "concepts/browser-storage-persistence-and-eviction",
@@ -178,6 +213,8 @@
   ],
   "concepts/overscroll-containment-for-nested-scroll-areas": [
     "concepts/modal-layering-and-escape-dismissal",
+    "concepts/pointer-capture-and-drag-lifecycle",
+    "concepts/scrollbar-gutter-and-layout-stability",
     "concepts/touch-action-gesture-ownership",
     "sources/SRC-2026-10-31-005"
   ],
@@ -185,8 +222,18 @@
     "concepts/session-security-and-isolation",
     "sources/SRC-2026-10-30-001"
   ],
+  "concepts/playwright-actionability-and-e2e-waits": [
+    "concepts/contract-first-testing",
+    "concepts/inert-and-top-layer-in-searcher-overlays",
+    "sources/SRC-2026-11-01-002"
+  ],
+  "concepts/pointer-capture-and-drag-lifecycle": [
+    "concepts/touch-action-gesture-ownership",
+    "sources/SRC-2026-11-02-001"
+  ],
   "concepts/pointer-target-size": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
+    "concepts/pointer-capture-and-drag-lifecycle",
     "concepts/touch-action-gesture-ownership",
     "concepts/wallpaper-accent-oklch-contrast-solver",
     "entities/searcher-项目",
@@ -204,10 +251,12 @@
     "sources/SRC-2026-10-28-002"
   ],
   "concepts/react-19-actions-and-transitions": [
+    "concepts/abortcontroller-and-request-cancellation",
     "entities/react-19-framework",
     "sources/SRC-2026-09-27-004"
   ],
   "concepts/reduced-motion-replacement-strategy": [
+    "concepts/playwright-actionability-and-e2e-waits",
     "concepts/view-transitions-shared-element",
     "sources/SRC-2026-10-31-004"
   ],
@@ -218,11 +267,17 @@
     "sources/SRC-2026-10-05-001",
     "sources/SRC-2026-10-05-002"
   ],
+  "concepts/scrollbar-gutter-and-layout-stability": [
+    "concepts/overscroll-containment-for-nested-scroll-areas",
+    "sources/SRC-2026-11-01-001"
+  ],
   "concepts/server-sent-events-sse-与实时事件流": [
+    "concepts/abortcontroller-and-request-cancellation",
     "entities/deno-runtime",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-035",
-    "sources/SRC-2026-09-27-003"
+    "sources/SRC-2026-09-27-003",
+    "sources/SRC-2026-11-02-002"
   ],
   "concepts/session-security-and-isolation": [
     "concepts/content-security-policy-strict-deployment",
@@ -232,6 +287,7 @@
     "concepts/http-cache-and-service-worker-boundaries",
     "concepts/password-hashing-and-pbkdf2-parameters",
     "concepts/pwa-service-worker-update-lifecycle",
+    "concepts/upload-validation-defense-in-depth",
     "concepts/xss-sanitization-and-trusted-types",
     "entities/hono-framework",
     "entities/searcher-项目",
@@ -294,11 +350,13 @@
     "syntheses/searcher-system-architecture"
   ],
   "concepts/sqlite-backup-and-recovery-boundaries": [
+    "concepts/archive-extraction-zip-slip-and-decompression-limits",
     "entities/drizzle-sqlite-store",
     "entities/searcher-项目",
     "sources/SRC-2026-10-27-001",
     "sources/SRC-2026-10-27-002",
-    "sources/SRC-2026-10-29-003"
+    "sources/SRC-2026-10-29-003",
+    "sources/SRC-2026-11-02-004"
   ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
@@ -334,9 +392,18 @@
     "sources/SRC-2026-10-30-002"
   ],
   "concepts/touch-action-gesture-ownership": [
+    "concepts/inert-and-top-layer-in-searcher-overlays",
     "concepts/overscroll-containment-for-nested-scroll-areas",
+    "concepts/pointer-capture-and-drag-lifecycle",
     "concepts/pointer-target-size",
-    "sources/SRC-2026-10-31-003"
+    "sources/SRC-2026-10-31-003",
+    "sources/SRC-2026-11-02-001"
+  ],
+  "concepts/upload-validation-defense-in-depth": [
+    "concepts/archive-extraction-zip-slip-and-decompression-limits",
+    "concepts/csrf-defense-boundaries",
+    "sources/SRC-2026-11-02-003",
+    "sources/SRC-2026-11-02-005"
   ],
   "concepts/view-transitions-shared-element": [
     "concepts/reduced-motion-replacement-strategy",
@@ -370,12 +437,14 @@
   ],
   "concepts/xss-sanitization-and-trusted-types": [
     "concepts/content-security-policy-strict-deployment",
+    "concepts/markdown-sanitization-with-rehype-sanitize",
     "concepts/session-security-and-isolation",
     "entities/searcher-项目",
     "sources/SRC-2026-10-27-005",
     "sources/SRC-2026-10-27-006",
     "sources/SRC-2026-10-29-001",
-    "sources/SRC-2026-10-30-003"
+    "sources/SRC-2026-10-30-003",
+    "sources/SRC-2026-11-01-003"
   ],
   "entities/deno-runtime": [
     "concepts/deno-native-serve-architecture",
@@ -510,6 +579,7 @@
     "concepts/pointer-target-size",
     "concepts/pwa-service-worker-update-lifecycle",
     "concepts/route-level-code-splitting-dynamic-bundling",
+    "concepts/scrollbar-gutter-and-layout-stability",
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/session-security-and-isolation",
     "concepts/shortest-column-masonry-layout",
@@ -935,6 +1005,37 @@
   "sources/SRC-2026-10-31-005": [
     "concepts/overscroll-containment-for-nested-scroll-areas"
   ],
+  "sources/SRC-2026-11-01-001": [
+    "concepts/scrollbar-gutter-and-layout-stability"
+  ],
+  "sources/SRC-2026-11-01-002": [
+    "concepts/playwright-actionability-and-e2e-waits"
+  ],
+  "sources/SRC-2026-11-01-003": [
+    "concepts/markdown-sanitization-with-rehype-sanitize"
+  ],
+  "sources/SRC-2026-11-01-004": [
+    "concepts/inert-and-top-layer-in-searcher-overlays"
+  ],
+  "sources/SRC-2026-11-01-005": [
+    "concepts/inert-and-top-layer-in-searcher-overlays"
+  ],
+  "sources/SRC-2026-11-02-001": [
+    "concepts/pointer-capture-and-drag-lifecycle"
+  ],
+  "sources/SRC-2026-11-02-002": [
+    "concepts/abortcontroller-and-request-cancellation"
+  ],
+  "sources/SRC-2026-11-02-003": [
+    "concepts/archive-extraction-zip-slip-and-decompression-limits",
+    "concepts/upload-validation-defense-in-depth"
+  ],
+  "sources/SRC-2026-11-02-004": [
+    "concepts/archive-extraction-zip-slip-and-decompression-limits"
+  ],
+  "sources/SRC-2026-11-02-005": [
+    "concepts/archive-extraction-zip-slip-and-decompression-limits"
+  ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
   ],
@@ -999,7 +1100,9 @@
   "sources/obs-2026-10-10-pr-151-merged-into-main-mobile-home-density-and-centering-un": [],
   "sources/obs-2026-10-11-147": [],
   "sources/obs-2026-10-11-issue-158-completed-through-pr-159": [],
-  "sources/obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop": [],
+  "sources/obs-2026-10-11-issue-158-zen-page-scrollbar-feedback-loop": [
+    "concepts/scrollbar-gutter-and-layout-stability"
+  ],
   "sources/obs-2026-10-12-issue-157": [],
   "sources/obs-2026-10-12-issue-157-pr-162-main": [
     "sources/issue-174-data-router-session-leave-guard"

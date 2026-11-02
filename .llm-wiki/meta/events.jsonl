@@ -220,3 +220,8 @@
 {"source_id":"SRC-2026-10-31-005","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior","format":"web","timestamp":"2026-10-31T08:00:39.515Z","kind":"capture"}
 {"slug":"obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355","title":"Desktop UI polish fixes merged via PR 355","relevance":"high","timestamp":"2026-10-31T08:36:27.301Z","kind":"observe"}
 {"slug":"obs-2026-10-31-material-pr-356-main","title":"首页顶栏 Material 组与笔记底栏对齐经 PR 356 合并 main","relevance":"high","timestamp":"2026-10-31T12:28:39.525Z","kind":"observe"}
+{"source_id":"SRC-2026-11-02-001","url":"https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture","format":"web","timestamp":"2026-11-02T08:00:33.865Z","kind":"capture"}
+{"source_id":"SRC-2026-11-02-002","url":"https://developer.mozilla.org/en-US/docs/Web/API/AbortController","format":"web","timestamp":"2026-11-02T08:00:35.059Z","kind":"capture"}
+{"source_id":"SRC-2026-11-02-003","url":"https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html","format":"web","timestamp":"2026-11-02T08:00:37.626Z","kind":"capture"}
+{"source_id":"SRC-2026-11-02-004","url":"https://github.com/101arrowz/fflate/blob/master/README.md","format":"web","timestamp":"2026-11-02T08:00:39.657Z","kind":"capture"}
+{"source_id":"SRC-2026-11-02-005","url":"https://security.snyk.io/research/zip-slip-vulnerability","format":"web","timestamp":"2026-11-02T08:00:41.594Z","kind":"capture"}

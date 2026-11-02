@@ -1,0 +1,22 @@
+# loo (reps=5, keys/rep=45, warmup=5; 141.0.7390.37; Intel(R) Core(TM) Ultra 5 125H x8)
+
+| config | chars | pm blocks | dispatch med (ms) | dispatch p95 | frame med | frame p95 | analysis med | layout sum med | layouts/key | measurements/key | rep-medians dispatch (ms) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| FULL | 20243 | 227 | 37.00 | 58.50 | 46.10 | 68.60 | 23.80 | 10.10 | 5 | 1845 | 33.50, 39.40, 36.50, 36.70, 45.00 |
+| -pageMode(plugin stays, continuous) | 20243 | 227 | 37.40 | 56.70 | 41.40 | 61.20 | 23.80 | 0.20 | 1 | 0 | 37.80, 36.40, 35.30, 36.70, 38.90 |
+| -paginationPlugin | 20243 | 227 | 36.30 | 58.50 | 40.60 | 64.00 | 23.50 | 0.00 | 0 | 0 | 37.10, 37.70, 34.80, 36.30, 35.60 |
+| -analysis | 20243 | 227 | 12.50 | 18.60 | 21.30 | 30.30 | 0.00 | 10.00 | 5 | 1845 | 12.20, 12.20, 12.80, 12.60, 13.20 |
+| -idbDrafts(memory) | 20243 | 227 | 37.00 | 57.10 | 45.60 | 67.30 | 23.70 | 10.00 | 5 | 1845 | 36.80, 37.00, 41.90, 34.50, 39.70 |
+| -session(serialize only) | 20243 | 227 | 12.30 | 21.80 | 20.80 | 33.70 | 0.00 | 10.10 | 5 | 1845 | 17.50, 12.40, 12.10, 11.70, 12.20 |
+| -onChange(no serialize) | 20243 | 227 | 0.60 | 1.20 | 18.90 | 23.90 | 0.00 | 9.90 | 5 | 1845 | 0.60, 0.60, 0.70, 0.60, 0.60 |
+| -extensions | 20243 | 227 | 39.30 | 72.90 | 47.10 | 83.20 | 25.10 | 10.30 | 5 | 1845 | 33.80, 48.10, 37.50, 37.20, 39.60 |
+
+Cold open (median over reps): createMs, first page-layout settle, pages, DOM nodes
+- FULL: createMs=128.60 settleMs=56.70 pages=20 dom=1381
+- -pageMode(plugin stays, continuous): createMs=125.40 settleMs=n/a pages=1 dom=1360
+- -paginationPlugin: createMs=148.70 settleMs=n/a pages=n/a dom=1360
+- -analysis: createMs=158.30 settleMs=53.70 pages=20 dom=1381
+- -idbDrafts(memory): createMs=125.90 settleMs=56.40 pages=20 dom=1381
+- -session(serialize only): createMs=134.00 settleMs=60.30 pages=20 dom=1381
+- -onChange(no serialize): createMs=128.30 settleMs=56.70 pages=20 dom=1381
+- -extensions: createMs=138.70 settleMs=59.00 pages=23 dom=1048

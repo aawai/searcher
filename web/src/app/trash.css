@@ -1,7 +1,20 @@
 /* Trash: one hairline list per tab. Purge stays quiet until the row is hovered or focused. */
 
-.trash-tabs {
+.window-frame[data-window-id="trash"] .trash-page {
+    margin-block-start: var(--space-4);
+}
+
+.trash-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3);
     margin-block-end: var(--space-4);
+}
+
+.trash-tabs {
+    margin: 0;
 }
 
 .trash-status {

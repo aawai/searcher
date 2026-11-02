@@ -227,6 +227,15 @@
     min-width: 0;
 }
 
+.ask-workspace__empty {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+}
+
 .ask-header {
     position: relative;
     z-index: var(--elevation-local-20);

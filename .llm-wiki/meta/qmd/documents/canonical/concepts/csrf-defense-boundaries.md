@@ -23,3 +23,5 @@ updated: 2026-10-26
 [Session Security and Isolation](/concepts/session-security-and-isolation.md) 记录的 Cookie 属性只是防线的一部分。2026-10-31 读取 `src/features/auth/security.ts`：`/api/*` 对 POST/PATCH/PUT/DELETE 要求 `Origin` 头存在且与 `APP_ORIGIN` 严格相等，否则 403；未使用 `Sec-Fetch-Site`，也没有 CSRF token。与 Hono 内置 `csrf()` 的逐项对照见 [Hono Security Middleware Compared with Searcher's API Guard](/concepts/hono-security-middleware-vs-api-guard.md)。本页不是安全审计，不判断整体完整性。
 
 关联：[Deno Permission Boundaries](/concepts/deno-permission-boundaries.md)，区分浏览器请求信任边界与服务器进程权限。
+
+关联：[Upload Validation Defense in Depth](/concepts/upload-validation-defense-in-depth.md)，上传接口同样受 Origin 检查保护，但内容校验是另一层。

@@ -1,0 +1,120 @@
+ 01:42:03  up 5 days 19:21,  0 users,  load average: 1.96, 1.57, 1.25
+seeded s1k in 907 ms
+== s1k {"sqliteVersion":"3.53.2","docsUser1Live":959,"docsUser2Live":96,"docsDeleted":45,"ftsRows":1055,"appsUser1Live":94,"bodyBytesAvg":1686.620909090909} dbBytes 13459456
+docs:long-rare                 service(real=2.71 sql-replica=0.50 A1=0.39 A2=0.36 A3=0.34 T1=0.34 T2=0.36 T3=0.32 N1=0.33
+docs:long-common               service(real=9.17 sql-replica=5.54 A1=5.29 A2=5.14 A3=5.14 T1=5.16 T2=5.21! T3=5.06 N1=5.24
+docs:and2-long                 service(real=0.79 sql-replica=0.42 A1=0.40 A2=0.39 A3=0.38 T1=0.37 T2=0.38 T3=0.35 N1=0.37
+docs:cjk3-rare                 service(real=3.12 sql-replica=0.31 A1=0.25 A2=0.21 A3=0.20 T1=0.20 T2=0.22 T3=0.17 N1=0.19
+docs:short2-cjk-rare           service(real=3.89 sql-replica=2.94 A1=2.79 A2=2.27 A3=2.69 T1=0.01! T2=2.68 T3=2.69 N1=2.73
+docs:short1-cjk-rare           service(real=3.89 sql-replica=2.92 A1=2.86 A2=2.28 A3=2.77 T1=0.01! T2=2.72 T3=2.70 N1=2.75
+docs:short2-cjk-common         service(real=3.84 sql-replica=2.83 A1=2.77 A2=2.22 A3=2.72 T1=0.01! T2=2.66 T3=2.59 N1=2.68
+docs:short2-latin-planted      service(real=6.41 sql-replica=2.96 A1=2.84 A2=1.00 A3=2.65 T1=0.01! T2=2.67 T3=2.58 N1=2.63
+docs:short2-latin-common       service(real=3.18 sql-replica=2.09 A1=2.02 A2=1.11 A3=2.00 T1=0.00! T2=1.99 T3=1.94 N1=1.99
+docs:mixed-long+short          service(real=0.31 sql-replica=0.30 A1=0.32 A2=0.30 A3=0.31 T1=0.39! T2=0.33 T3=0.29 N1=0.29
+docs:miss-long                 service(real=0.14 sql-replica=0.13 A1=0.14 A2=0.13 A3=0.13 T1=0.13 T2=0.14 T3=0.12 N1=0.13
+docs:miss-short                service(real=2.78 sql-replica=2.80 A1=2.78 A2=2.21 A3=2.70 T1=0.00 T2=2.73 T3=2.73 N1=2.75
+apps:rare                      service(real=0.31 sql-replica=0.13 B1=0.10 T4=0.09!
+apps:common                    service(real=0.32 sql-replica=0.15 B1=0.12 T4=0.11
+apps:short2                    service(real=0.32 sql-replica=0.15 B1=0.12 T4=0.11
+apps:cjk2                      service(real=0.25 sql-replica=0.12 B1=0.10 T4=0.09
+apps:two-terms                 service(real=0.36 sql-replica=0.19 B1=0.15 T4=0.11!
+apps:miss                      service(real=0.23 sql-replica=0.11 B1=0.08 T4=0.08
+personal:rare                  P0=2.81 P1=2.79
+personal:short-cjk             P0=3.85 P1=3.74
+personal:common                P0=9.35 P1=9.33
+suggest:delay0                 S0=0.110 S1=0.108
+suggest:delay25                S0=26.827 S1=26.039
+suggest:delay100               S0=101.953 S1=101.085
+seeded m10k in 12313 ms
+== m10k {"sqliteVersion":"3.53.2","docsUser1Live":9474,"docsUser2Live":949,"docsDeleted":577,"ftsRows":10423,"appsUser1Live":474,"bodyBytesAvg":1680.5985454545455} dbBytes 120958976
+docs:long-rare                 service(real=2.12 sql-replica=0.75 A1=0.73 A2=0.70 A3=0.68 T1=0.67 T2=0.69 T3=0.63 N1=0.69
+docs:long-common               service(real=55.91 sql-replica=52.19 A1=51.86 A2=54.57 A3=52.06 T1=53.12 T2=53.01! T3=51.94 N1=54.56!
+docs:and2-long                 service(real=3.15 sql-replica=1.41 A1=1.34 A2=1.28 A3=1.33 T1=1.33 T2=1.34 T3=1.31 N1=1.29
+docs:cjk3-rare                 service(real=8.69 sql-replica=0.88 A1=0.70 A2=0.70 A3=0.71 T1=0.66 T2=0.68 T3=0.59 N1=0.67!
+docs:short2-cjk-rare           service(real=28.39 sql-replica=26.40 A1=26.16 A2=21.24 A3=26.17 T1=0.01! T2=26.08 T3=26.16 N1=25.94
+docs:short1-cjk-rare           service(real=29.96 sql-replica=27.19 A1=26.92 A2=21.67 A3=26.61 T1=0.01! T2=26.68 T3=27.28 N1=26.52
+docs:short2-cjk-common         service(real=24.86 sql-replica=23.77 A1=23.86 A2=19.43 A3=23.69 T1=0.01! T2=23.36 T3=24.04 N1=23.99
+docs:short2-latin-planted      service(real=27.42 sql-replica=26.35 A1=26.39 A2=8.74 A3=26.47 T1=0.01! T2=26.21 T3=26.45 N1=26.38
+docs:short2-latin-common       service(real=19.26 sql-replica=18.17 A1=17.97 A2=9.69 A3=18.02 T1=0.01! T2=17.99 T3=18.21 N1=18.15
+docs:mixed-long+short          service(real=3.55 sql-replica=1.04 A1=0.96 A2=0.87 A3=0.89 T1=0.78! T2=0.91 T3=0.86 N1=0.89
+docs:miss-long                 service(real=0.10 sql-replica=0.10 A1=0.12 A2=0.10 A3=0.10 T1=0.10 T2=0.11 T3=0.09 N1=0.10
+docs:miss-short                service(real=26.46 sql-replica=26.49 A1=26.68 A2=21.70 A3=26.71 T1=0.01 T2=26.65 T3=26.80 N1=26.44
+apps:rare                      service(real=0.40 sql-replica=0.27 B1=0.15 T4=0.17
+apps:common                    service(real=0.48 sql-replica=0.32 B1=0.22 T4=0.21
+apps:short2                    service(real=0.49 sql-replica=0.34 B1=0.22 T4=0.21
+apps:cjk2                      service(real=0.39 sql-replica=0.26 B1=0.19 T4=0.17
+apps:two-terms                 service(real=0.56 sql-replica=0.42 B1=0.26 T4=0.20!
+apps:miss                      service(real=0.37 sql-replica=0.26 B1=0.14 T4=0.16
+personal:rare                  P0=2.53 P1=2.50
+personal:short-cjk             P0=29.74 P1=29.95
+personal:common                P0=60.11 P1=64.63
+seeded l50k in 120914 ms
+== l50k {"sqliteVersion":"3.53.2","docsUser1Live":47599,"docsUser2Live":4770,"docsDeleted":2631,"ftsRows":52369,"appsUser1Live":477,"bodyBytesAvg":1682.763018181818} dbBytes 593956864
+docs:long-rare                 service(real=5.96 sql-replica=4.51 A1=4.32 A2=4.21 A3=4.24 T1=4.20 T2=4.32 T3=4.18 N1=4.44
+docs:long-common               service(real=314.22 sql-replica=316.13 A1=333.39 A2=313.44 A3=315.21 T1=318.08 T2=317.68! T3=318.69 N1=311.62
+docs:and2-long                 service(real=6.60 sql-replica=3.39 A1=3.27 A2=3.18 A3=3.18 T1=3.21 T2=3.22 T3=3.12 N1=3.29!
+docs:cjk3-rare                 service(real=9.97 sql-replica=4.27 A1=3.85 A2=3.73 A3=3.53 T1=3.49 T2=3.50 T3=3.34 N1=3.60
+docs:short2-cjk-rare           service(real=147.30 sql-replica=150.21 A1=152.22 A2=119.29 A3=150.64 T1=0.01! T2=145.95 T3=148.65 N1=144.60
+docs:short1-cjk-rare           service(real=146.82 sql-replica=142.95 A1=145.79 A2=116.34 A3=140.83 T1=0.01! T2=145.19 T3=142.54 N1=143.90
+docs:short2-cjk-common         service(real=125.48 sql-replica=124.78 A1=124.65 A2=101.38 A3=124.07 T1=0.01! T2=123.45 T3=123.02 N1=126.81
+docs:short2-latin-planted      service(real=149.63 sql-replica=150.01 A1=149.69 A2=44.96 A3=147.01 T1=0.01! T2=151.43 T3=156.55 N1=150.45
+docs:short2-latin-common       service(real=92.92 sql-replica=93.90 A1=92.75 A2=48.20 A3=91.63 T1=0.01! T2=91.47 T3=90.95 N1=92.38
+docs:mixed-long+short          service(real=9.26 sql-replica=6.17 A1=6.00 A2=5.28 A3=5.77 T1=4.91! T2=5.71 T3=5.76 N1=5.87
+docs:miss-long                 service(real=0.14 sql-replica=0.14 A1=0.14 A2=0.14 A3=0.14 T1=0.13 T2=0.14 T3=0.12 N1=0.14
+docs:miss-short                service(real=134.70 sql-replica=134.51 A1=135.55 A2=109.00 A3=136.59 T1=0.01 T2=134.68 T3=133.24 N1=133.11
+apps:rare                      service(real=0.46 sql-replica=0.30 B1=0.16 T4=0.18
+apps:common                    service(real=0.54 sql-replica=0.36 B1=0.24 T4=0.22
+apps:short2                    service(real=0.55 sql-replica=0.38 B1=0.25 T4=0.24
+apps:cjk2                      service(real=0.45 sql-replica=0.30 B1=0.21 T4=0.19
+apps:two-terms                 service(real=0.64 sql-replica=0.47 B1=0.29 T4=0.21!
+apps:miss                      service(real=0.40 sql-replica=0.28 B1=0.15 T4=0.18
+personal:rare                  P0=6.19 P1=6.20
+personal:short-cjk             P0=144.53 P1=141.51
+personal:common                P0=296.25 P1=293.80
+seeded xlbody5k in 26468 ms
+== xlbody5k {"sqliteVersion":"3.53.2","docsUser1Live":4760,"docsUser2Live":476,"docsDeleted":264,"ftsRows":5236,"appsUser1Live":472,"bodyBytesAvg":10908.73290909091} dbBytes 327004160
+docs:long-rare                 service(real=16.63 sql-replica=1.26 A1=1.01 A2=0.92 A3=0.92 T1=0.90 T2=0.89 T3=0.81 N1=0.88!
+docs:long-common               service(real=94.55 sql-replica=81.85 A1=82.07 A2=82.03 A3=81.18 T1=80.83 T2=81.20! T3=80.62 N1=82.13
+docs:and2-long                 service(real=8.11 sql-replica=1.13 A1=0.93 A2=0.91 A3=0.89 T1=0.89 T2=0.89 T3=0.84 N1=0.86
+docs:cjk3-rare                 service(real=27.64 sql-replica=1.04 A1=0.71 A2=0.66 A3=0.67 T1=0.64 T2=0.59 T3=0.50 N1=0.57
+docs:short2-cjk-rare           service(real=81.29 sql-replica=67.59 A1=66.98 A2=55.38 A3=66.70 T1=0.01! T2=66.31 T3=66.45 N1=66.97
+docs:short1-cjk-rare           service(real=77.69 sql-replica=64.91 A1=65.27 A2=53.41 A3=63.89 T1=0.01! T2=63.87 T3=64.86 N1=64.14
+docs:short2-cjk-common         service(real=37.82 sql-replica=36.86 A1=36.82 A2=22.23 A3=36.86 T1=0.01! T2=36.62 T3=36.68 N1=36.42
+docs:short2-latin-planted      service(real=75.15 sql-replica=67.75 A1=67.42 A2=17.99 A3=67.04 T1=0.01! T2=67.30 T3=67.04 N1=67.15
+docs:short2-latin-common       service(real=34.23 sql-replica=33.32 A1=33.01 A2=17.75 A3=32.89 T1=0.01! T2=33.36 T3=33.10 N1=32.84
+docs:mixed-long+short          service(real=8.93 sql-replica=1.68 A1=1.54 A2=1.38 A3=1.43 T1=0.86! T2=1.42 T3=1.37 N1=1.43
+docs:miss-long                 service(real=0.13 sql-replica=0.13 A1=0.14 A2=0.13 A3=0.12 T1=0.12 T2=0.13 T3=0.11 N1=0.12
+docs:miss-short                service(real=65.77 sql-replica=65.95 A1=66.50 A2=55.20 A3=65.86 T1=0.01 T2=66.15 T3=65.70 N1=65.89
+apps:rare                      service(real=0.45 sql-replica=0.28 B1=0.16 T4=0.18
+apps:common                    service(real=0.48 sql-replica=0.34 B1=0.22 T4=0.21
+apps:short2                    service(real=0.54 sql-replica=0.37 B1=0.25 T4=0.24
+apps:cjk2                      service(real=0.45 sql-replica=0.28 B1=0.20 T4=0.18
+apps:two-terms                 service(real=0.60 sql-replica=0.44 B1=0.28 T4=0.21!
+apps:miss                      service(real=0.39 sql-replica=0.27 B1=0.14 T4=0.17
+personal:rare                  P0=15.95 P1=15.68
+personal:short-cjk             P0=82.95 P1=82.70
+personal:common                P0=94.80 P1=95.12
+seeded apps5k in 319 ms
+== apps5k {"sqliteVersion":"3.53.2","docsUser1Live":189,"docsUser2Live":20,"docsDeleted":11,"ftsRows":209,"appsUser1Live":4749,"bodyBytesAvg":1673.1136363636363} dbBytes 3915776
+docs:long-rare                 service(real=2.01 sql-replica=0.45 A1=0.40 A2=0.39 A3=0.36 T1=0.37 T2=0.38 T3=0.35 N1=0.37
+docs:long-common               service(real=3.22 sql-replica=1.32 A1=1.29 A2=1.25 A3=1.23 T1=1.24 T2=1.24! T3=1.19 N1=1.23
+docs:and2-long                 service(real=0.29 sql-replica=0.29 A1=0.31 A2=0.29 A3=0.29 T1=0.29 T2=0.30 T3=0.28 N1=0.30
+docs:cjk3-rare                 service(real=0.58 sql-replica=0.22 A1=0.18 A2=0.17 A3=0.16 T1=0.16 T2=0.17 T3=0.15 N1=0.15
+docs:short2-cjk-rare           service(real=2.02 sql-replica=0.63 A1=0.58 A2=0.46 A3=0.56 T1=0.00! T2=0.56 T3=0.54 N1=0.56
+docs:short1-cjk-rare           service(real=2.01 sql-replica=0.62 A1=0.59 A2=0.45 A3=0.56 T1=0.00! T2=0.56 T3=0.55 N1=0.56
+docs:short2-cjk-common         service(real=1.51 sql-replica=0.63 A1=0.57 A2=0.47 A3=0.56 T1=0.00! T2=0.56 T3=0.52 N1=0.57
+docs:short2-latin-planted      service(real=4.38 sql-replica=0.71 A1=0.66 A2=0.28 A3=0.63 T1=0.00! T2=0.62 T3=0.60 N1=0.62
+docs:short2-latin-common       service(real=1.40 sql-replica=0.53 A1=0.48 A2=0.30 A3=0.47 T1=0.00! T2=0.46 T3=0.43 N1=0.46
+docs:mixed-long+short          service(real=0.26 sql-replica=0.26 A1=0.27 A2=0.27 A3=0.26 T1=0.38! T2=0.28 T3=0.26 N1=0.26
+docs:miss-long                 service(real=0.12 sql-replica=0.12 A1=0.13 A2=0.12 A3=0.12 T1=0.12 T2=0.13 T3=0.11 N1=0.11
+docs:miss-short                service(real=0.55 sql-replica=0.55 A1=0.55 A2=0.43 A3=0.56 T1=0.00 T2=0.55 T3=0.55 N1=0.55
+apps:rare                      service(real=2.27 sql-replica=2.10 B1=0.87 T4=1.22
+apps:common                    service(real=2.77 sql-replica=2.63 B1=1.49 T4=1.50
+apps:short2                    service(real=2.95 sql-replica=2.77 B1=1.59 T4=1.61
+apps:cjk2                      service(real=2.29 sql-replica=2.10 B1=1.32 T4=1.23
+apps:two-terms                 service(real=3.59 sql-replica=3.42 B1=1.81 T4=1.39!
+apps:miss                      service(real=2.14 sql-replica=2.01 B1=0.82 T4=1.16
+personal:rare                  P0=4.27 P1=4.27
+personal:short-cjk             P0=4.48 P1=4.45
+personal:common                P0=6.37 P1=6.29
+wrote /home/aawei/experiments/search-study/results/results-1793584458490.json

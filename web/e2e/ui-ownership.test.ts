@@ -421,11 +421,14 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
 
             // 2. Trash page empty state canonical rendering
             await visit("/trash", page);
-            await page.getByRole("heading", { name: "回收站" }).first().waitFor(
+            await page.locator(
+                '[data-window-id="trash"] .window-frame__title',
                 {
-                    state: "visible",
+                    hasText: "回收站",
                 },
-            );
+            ).waitFor({
+                state: "visible",
+            });
             await page.getByRole("heading", { name: "没有已删除的应用" })
                 .waitFor({ state: "visible" });
             assertEquals(

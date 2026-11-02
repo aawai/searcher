@@ -1,0 +1,23 @@
+{
+ "generatedAt": "2026-11-02T01:44:06.599Z",
+ "deno": {
+  "deno": "2.9.8",
+  "v8": "15.0.245.2-rusty",
+  "typescript": "6.0.3"
+ },
+ "data": {
+  "note": "synthetic SSE where id+name repeat on every chunk",
+  "events": [
+   {
+    "type": "tool_calls",
+    "toolCalls": [
+     {
+      "id": "call_1call_1",
+      "name": "lookup_appslookup_apps",
+      "arguments": "{\"query\":\"x\"}"
+     }
+    ]
+   }
+  ]
+ }
+}

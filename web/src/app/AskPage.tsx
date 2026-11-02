@@ -4,6 +4,8 @@ import type {
 } from "@shared/contracts.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Menu } from "lucide-react";
+import { Button } from "../components/ui/button.tsx";
 import { resolveModelSwitchGenerationConfig } from "../../../src/features/ai/reasoning.ts";
 import type {
     AiConversationDto,
@@ -675,22 +677,42 @@ function AskWorkspaceContent(
 
                 {loaded && models.length === 0
                     ? (
-                        <EmptyState
-                            title="暂无可用 AI 模型"
-                            description={user.role === "admin"
-                                ? "系统尚未配置或启用任何 AI 模型。请前往管理后台配置模型与提供商。"
-                                : "当前系统暂无可用 AI 模型，请联系管理员进行配置。"}
-                            action={user.role === "admin"
-                                ? (
-                                    <Link
-                                        to={routes.admin("settings")}
-                                        className="button button--primary"
+                        <div className="ask-workspace">
+                            <header
+                                className="ask-header"
+                                aria-label="对话标题与操作"
+                            >
+                                <div className="ask-header__left">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="ask-header__drawer-toggle"
+                                        onClick={() => setDrawerOpen(true)}
+                                        aria-label="打开历史对话"
                                     >
-                                        前往模型配置
-                                    </Link>
-                                )
-                                : undefined}
-                        />
+                                        <Menu size="1em" className="icon-md" />
+                                    </Button>
+                                </div>
+                            </header>
+                            <div className="ask-workspace__empty">
+                                <EmptyState
+                                    title="暂无可用 AI 模型"
+                                    description={user.role === "admin"
+                                        ? "系统尚未配置或启用任何 AI 模型。请前往管理后台配置模型与提供商。"
+                                        : "当前系统暂无可用 AI 模型，请联系管理员进行配置。"}
+                                    action={user.role === "admin"
+                                        ? (
+                                            <Link
+                                                to={routes.admin("settings")}
+                                                className="button button--primary"
+                                            >
+                                                前往模型配置
+                                            </Link>
+                                        )
+                                        : undefined}
+                                />
+                            </div>
+                        </div>
                     )
                     : (
                         <ConversationWorkspace

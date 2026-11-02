@@ -4,7 +4,9 @@
 
 ## Concepts
 
+- [[concepts/abortcontroller-and-request-cancellation]] — AbortController and Request Cancellation in Searcher *(created: 2026-11-02)*
 - [[concepts/accessible-grid-drag-keyboard-and-announcements]] — Accessible Grid Drag — Keyboard and Announcements *(created: 2026-10-25)*
+- [[concepts/archive-extraction-zip-slip-and-decompression-limits]] — Archive Extraction: Zip Slip and Decompression Limits *(created: 2026-11-02)*
 - [[concepts/aria-combobox-grouped-suggestions]] — ARIA Combobox Grouped Suggestions *(created: 2026-10-24)*
 - [[concepts/backdrop-filter-backdrop-root]] — Backdrop Filter Backdrop Root *(created: 2026-10-30)*
 - [[concepts/browser-storage-persistence-and-eviction]] — Browser Storage Persistence and Eviction *(created: 2026-10-28)*
@@ -21,16 +23,21 @@
 - [[concepts/hono-rpc-type-safe-client]] — Hono RPC & Type-Safe Client *(created: 2026-09-26)*
 - [[concepts/hono-security-middleware-vs-api-guard]] — Hono Security Middleware Compared with Searcher's API Guard *(created: 2026-10-31)*
 - [[concepts/http-cache-and-service-worker-boundaries]] — HTTP Cache and Service Worker Boundaries *(created: 2026-10-28)*
+- [[concepts/inert-and-top-layer-in-searcher-overlays]] — Inert and Top Layer in Searcher Overlays *(created: 2026-11-01)*
+- [[concepts/markdown-sanitization-with-rehype-sanitize]] — Markdown Sanitization with rehype-sanitize *(created: 2026-11-01)*
 - [[concepts/modal-dialog-focus-and-semantics]] — Modal Dialog Focus and Semantics *(created: 2026-10-29)*
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
 - [[concepts/overscroll-containment-for-nested-scroll-areas]] — Overscroll Containment for Nested Scroll Areas *(created: 2026-10-31)*
 - [[concepts/password-hashing-and-pbkdf2-parameters]] — Password Hashing and PBKDF2 Parameters *(created: 2026-10-30)*
+- [[concepts/playwright-actionability-and-e2e-waits]] — Playwright Actionability and E2E Wait Conditions *(created: 2026-11-01)*
+- [[concepts/pointer-capture-and-drag-lifecycle]] — Pointer Capture and Drag Lifecycle in Searcher *(created: 2026-11-02)*
 - [[concepts/pointer-target-size]] — Pointer Target Size *(created: 2026-10-25)*
 - [[concepts/pwa-service-worker-update-lifecycle]] — PWA Service Worker Update Lifecycle *(created: 2026-10-24)*
 - [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
 - [[concepts/reduced-motion-replacement-strategy]] — Reduced Motion Replacement Strategy *(created: 2026-10-31)*
 - [[concepts/route-level-code-splitting-dynamic-bundling]] — Route-Level Code Splitting & Dynamic Bundling *(created: 2026-10-05)*
+- [[concepts/scrollbar-gutter-and-layout-stability]] — Scrollbar Gutter and Width-Driven Layout Stability *(created: 2026-11-01)*
 - [[concepts/server-sent-events-sse-与实时事件流]] — Server-Sent Events (SSE) 与实时事件流 *(created: 2026-09-25)*
 - [[concepts/session-security-and-isolation]] — Session Security and Isolation *(created: 2026-09-25)*
 - [[concepts/shortest-column-masonry-layout]] — Shortest Column Masonry Layout *(created: 2026-09-25)*
@@ -41,6 +48,7 @@
 - [[concepts/sqlite-table-recreation-migration]] — SQLite Table Recreation Migration *(created: 2026-09-25)*
 - [[concepts/tailwind-v4-css-first-architecture]] — Tailwind v4 CSS First Architecture *(created: 2026-09-27)*
 - [[concepts/touch-action-gesture-ownership]] — Touch Action Gesture Ownership *(created: 2026-10-31)*
+- [[concepts/upload-validation-defense-in-depth]] — Upload Validation Defense in Depth *(created: 2026-11-02)*
 - [[concepts/view-transitions-shared-element]] — View Transitions Shared Element *(created: 2026-10-24)*
 - [[concepts/wallpaper-accent-oklch-contrast-solver]] — Wallpaper Accent OKLCH Contrast Solver *(created: 2026-10-25)*
 - [[concepts/web-animations-api-runtime-architecture]] — Web Animations API Runtime Architecture *(created: 2026-10-05)*
@@ -247,10 +255,20 @@
 - [[sources/SRC-2026-10-31-003]] — MDN touch-action CSS property *(created: unknown)*
 - [[sources/SRC-2026-10-31-004]] — MDN prefers-reduced-motion CSS media feature *(created: unknown)*
 - [[sources/SRC-2026-10-31-005]] — MDN overscroll-behavior CSS property *(created: unknown)*
+- [[sources/SRC-2026-11-01-001]] — scrollbar-gutter CSS property (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-01-002]] — Playwright Auto-waiting *(created: unknown)*
+- [[sources/SRC-2026-11-01-003]] — rehype-sanitize README *(created: unknown)*
+- [[sources/SRC-2026-11-01-004]] — inert HTML global attribute (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-01-005]] — Popover API (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-02-001]] — Element: setPointerCapture() method *(created: unknown)*
+- [[sources/SRC-2026-11-02-002]] — AbortController *(created: unknown)*
+- [[sources/SRC-2026-11-02-003]] — File Upload Cheat Sheet (OWASP) *(created: unknown)*
+- [[sources/SRC-2026-11-02-004]] — fflate README *(created: unknown)*
+- [[sources/SRC-2026-11-02-005]] — Zip Slip Vulnerability (Snyk) *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-10-31T12:28:39.676Z* | *Total pages: 238*
+*Last updated: 2026-11-02T08:04:46.046Z* | *Total pages: 256*
