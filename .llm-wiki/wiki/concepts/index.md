@@ -2,7 +2,9 @@
 
 ## Concepts
 
+- [AbortController and Request Cancellation in Searcher](abortcontroller-and-request-cancellation.md)
 - [Accessible Grid Drag — Keyboard and Announcements](accessible-grid-drag-keyboard-and-announcements.md)
+- [Archive Extraction: Zip Slip and Decompression Limits](archive-extraction-zip-slip-and-decompression-limits.md)
 - [ARIA Combobox Grouped Suggestions](aria-combobox-grouped-suggestions.md)
 - [Backdrop Filter Backdrop Root](backdrop-filter-backdrop-root.md)
 - [Browser Storage Persistence and Eviction](browser-storage-persistence-and-eviction.md)
@@ -27,6 +29,7 @@
 - [Overscroll Containment for Nested Scroll Areas](overscroll-containment-for-nested-scroll-areas.md)
 - [Password Hashing and PBKDF2 Parameters](password-hashing-and-pbkdf2-parameters.md)
 - [Playwright Actionability and E2E Wait Conditions](playwright-actionability-and-e2e-waits.md)
+- [Pointer Capture and Drag Lifecycle in Searcher](pointer-capture-and-drag-lifecycle.md)
 - [Pointer Target Size](pointer-target-size.md)
 - [PWA Service Worker Update Lifecycle](pwa-service-worker-update-lifecycle.md)
 - [React 19 Actions and Transitions](react-19-actions-and-transitions.md)
@@ -43,6 +46,7 @@
 - [SQLite Table Recreation Migration](sqlite-table-recreation-migration.md)
 - [Tailwind v4 CSS First Architecture](tailwind-v4-css-first-architecture.md)
 - [Touch Action Gesture Ownership](touch-action-gesture-ownership.md)
+- [Upload Validation Defense in Depth](upload-validation-defense-in-depth.md)
 - [View Transitions Shared Element](view-transitions-shared-element.md)
 - [Wallpaper Accent OKLCH Contrast Solver](wallpaper-accent-oklch-contrast-solver.md)
 - [Web Animations API Runtime Architecture](web-animations-api-runtime-architecture.md)

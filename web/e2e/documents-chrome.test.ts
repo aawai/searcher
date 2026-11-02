@@ -84,6 +84,25 @@ Deno.test("笔记窗口控件：侧栏折叠 / 展开按钮、创建图标位置
             ) < 4,
         );
 
+        // Sidebar entries have equal horizontal padding to the window edge and the divider,
+        // and their focus ring is inset rather than clipped by the sidebar scroller.
+        const entrySymmetry = await frame.getByRole("button", {
+            name: "最近",
+            exact: true,
+        }).evaluate((entry) => {
+            const winContent = entry.closest(".window-frame__content")!
+                .getBoundingClientRect();
+            const sidebar = entry.closest(".documents-sidebar")!
+                .getBoundingClientRect();
+            const rect = entry.getBoundingClientRect();
+            return {
+                leftGap: Math.round(rect.left - winContent.left),
+                rightGap: Math.round((sidebar.right - 1) - rect.right),
+                outlineOffset: getComputedStyle(entry).outlineOffset,
+            };
+        });
+        assertEquals(entrySymmetry.leftGap, 16);
+        assertEquals(entrySymmetry.rightGap, 16);
         // Collapsing moves focus to the expand button in the editor-header row (empty state has a minimal header).
         await sidebarButton.click();
         await frame.locator(".documents-sidebar[hidden]").waitFor({
@@ -133,6 +152,13 @@ Deno.test("笔记窗口控件：侧栏折叠 / 展开按钮、创建图标位置
         assert(
             expandBox.x + expandBox.width <= titleBox.x + 1,
             "expand precedes the title",
+        );
+        assert(
+            Math.abs(
+                (expandBox.y + expandBox.height / 2) -
+                    (titleBox.y + titleBox.height / 2),
+            ) <= 2,
+            "expand button and title share one horizontal centre line",
         );
         await expand.click();
         await search.waitFor();

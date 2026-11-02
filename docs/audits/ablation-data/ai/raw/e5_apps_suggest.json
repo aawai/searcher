@@ -1,0 +1,284 @@
+{
+ "generatedAt": "2026-11-02T01:41:38.455Z",
+ "deno": {
+  "deno": "2.9.8",
+  "v8": "15.0.245.2-rusty",
+  "typescript": "6.0.3"
+ },
+ "data": {
+  "apps": [
+   {
+    "n": 100,
+    "queries": {
+     "single_name_word": {
+      "q": "alpha",
+      "toolFoundNeedle": true,
+      "toolCount": 1,
+      "sqlFoundNeedle": true,
+      "sqlCount": 1,
+      "toolMs": {
+       "n": 20,
+       "p50": 0.47890200000000505,
+       "p95": 2.980702999999977,
+       "max": 2.980702999999977,
+       "mean": 0.6676898499999965
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 0.31453000000001907,
+       "p95": 0.8787269999999978,
+       "max": 0.8787269999999978,
+       "mean": 0.3658408000000023
+      }
+     },
+     "multi_in_order": {
+      "q": "tracker issues",
+      "toolFoundNeedle": true,
+      "toolCount": 1,
+      "sqlFoundNeedle": true,
+      "sqlCount": 4,
+      "toolMs": {
+       "n": 20,
+       "p50": 0.3221659999999815,
+       "p95": 0.3447660000000212,
+       "max": 0.3447660000000212,
+       "mean": 0.32354005000000396
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 0.31974199999999087,
+       "p95": 0.5013289999999984,
+       "max": 0.5013289999999984,
+       "mean": 0.3350161
+      }
+     },
+     "multi_reversed": {
+      "q": "issues tracker",
+      "toolFoundNeedle": false,
+      "toolCount": 0,
+      "sqlFoundNeedle": true,
+      "sqlCount": 4,
+      "toolMs": {
+       "n": 20,
+       "p50": 0.325491999999997,
+       "p95": 0.37705700000000775,
+       "max": 0.37705700000000775,
+       "mean": 0.33209625000000215
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 0.3205440000000124,
+       "p95": 0.5020289999999932,
+       "max": 0.5020289999999932,
+       "mean": 0.3346361000000016
+      }
+     },
+     "nl_with_filler": {
+      "q": "my alpha tracker app",
+      "toolFoundNeedle": false,
+      "toolCount": 0,
+      "sqlFoundNeedle": false,
+      "sqlCount": 0,
+      "toolMs": {
+       "n": 20,
+       "p50": 0.33362399999998615,
+       "p95": 0.5683119999999917,
+       "max": 0.5683119999999917,
+       "mean": 0.36235100000000103
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 0.36227400000001353,
+       "p95": 0.498139000000009,
+       "max": 0.498139000000009,
+       "mean": 0.38249089999999625
+      }
+     }
+    }
+   },
+   {
+    "n": 1000,
+    "queries": {
+     "single_name_word": {
+      "q": "alpha",
+      "toolFoundNeedle": true,
+      "toolCount": 1,
+      "sqlFoundNeedle": true,
+      "sqlCount": 1,
+      "toolMs": {
+       "n": 20,
+       "p50": 2.5511619999999766,
+       "p95": 3.135197000000005,
+       "max": 3.135197000000005,
+       "mean": 2.5329623500000027
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 0.8242759999999976,
+       "p95": 1.044758999999999,
+       "max": 1.044758999999999,
+       "mean": 0.8476915500000004
+      }
+     },
+     "multi_in_order": {
+      "q": "tracker issues",
+      "toolFoundNeedle": true,
+      "toolCount": 4,
+      "sqlFoundNeedle": true,
+      "sqlCount": 20,
+      "toolMs": {
+       "n": 20,
+       "p50": 2.1915900000000192,
+       "p95": 2.88417800000002,
+       "max": 2.88417800000002,
+       "mean": 2.2985488999999975
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 0.9158239999999864,
+       "p95": 1.3318669999999884,
+       "max": 1.3318669999999884,
+       "mean": 0.9464169499999997
+      }
+     },
+     "multi_reversed": {
+      "q": "issues tracker",
+      "toolFoundNeedle": false,
+      "toolCount": 4,
+      "sqlFoundNeedle": true,
+      "sqlCount": 20,
+      "toolMs": {
+       "n": 20,
+       "p50": 2.215188000000012,
+       "p95": 2.5683240000000183,
+       "max": 2.5683240000000183,
+       "mean": 2.2532835999999947
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 0.9545729999999821,
+       "p95": 1.1322959999999966,
+       "max": 1.1322959999999966,
+       "mean": 0.9690249500000021
+      }
+     },
+     "nl_with_filler": {
+      "q": "my alpha tracker app",
+      "toolFoundNeedle": false,
+      "toolCount": 0,
+      "sqlFoundNeedle": false,
+      "sqlCount": 0,
+      "toolMs": {
+       "n": 20,
+       "p50": 2.237805000000037,
+       "p95": 2.815041000000008,
+       "max": 2.815041000000008,
+       "mean": 2.323027399999998
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 0.904754999999966,
+       "p95": 1.1452709999999797,
+       "max": 1.1452709999999797,
+       "mean": 0.9359583499999957
+      }
+     }
+    }
+   },
+   {
+    "n": 10000,
+    "queries": {
+     "single_name_word": {
+      "q": "alpha",
+      "toolFoundNeedle": true,
+      "toolCount": 1,
+      "sqlFoundNeedle": true,
+      "sqlCount": 1,
+      "toolMs": {
+       "n": 20,
+       "p50": 19.53390300000001,
+       "p95": 30.79164400000002,
+       "max": 30.79164400000002,
+       "mean": 21.047195699999996
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 4.521393999999987,
+       "p95": 7.026400999999851,
+       "max": 7.026400999999851,
+       "mean": 4.8065908499999805
+      }
+     },
+     "multi_in_order": {
+      "q": "tracker issues",
+      "toolFoundNeedle": true,
+      "toolCount": 20,
+      "sqlFoundNeedle": false,
+      "sqlCount": 20,
+      "toolMs": {
+       "n": 20,
+       "p50": 21.590104999999994,
+       "p95": 35.844078999999965,
+       "max": 35.844078999999965,
+       "mean": 23.500451750000014
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 5.185124999999971,
+       "p95": 9.956410000000005,
+       "max": 9.956410000000005,
+       "mean": 6.393017450000025
+      }
+     },
+     "multi_reversed": {
+      "q": "issues tracker",
+      "toolFoundNeedle": false,
+      "toolCount": 20,
+      "sqlFoundNeedle": false,
+      "sqlCount": 20,
+      "toolMs": {
+       "n": 20,
+       "p50": 19.20544400000017,
+       "p95": 33.40363400000024,
+       "max": 33.40363400000024,
+       "mean": 21.27034595
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 5.201583999999912,
+       "p95": 10.515362000000096,
+       "max": 10.515362000000096,
+       "mean": 6.069198600000038
+      }
+     },
+     "nl_with_filler": {
+      "q": "my alpha tracker app",
+      "toolFoundNeedle": false,
+      "toolCount": 0,
+      "sqlFoundNeedle": false,
+      "sqlCount": 0,
+      "toolMs": {
+       "n": 20,
+       "p50": 22.20676400000002,
+       "p95": 28.37582799999973,
+       "max": 28.37582799999973,
+       "mean": 22.95700420000003
+      },
+      "sqlMs": {
+       "n": 20,
+       "p50": 5.709238999999798,
+       "p95": 7.351544999999987,
+       "max": 7.351544999999987,
+       "mean": 5.70070369999994
+      }
+     }
+    }
+   }
+  ],
+  "suggestions": {
+   "historyRows": 500,
+   "oldestEntryMatchedBy_kubernetes": [],
+   "recentFillerMatches": 5
+  }
+ }
+}

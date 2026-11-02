@@ -1,0 +1,22 @@
+# ladder (reps=5, keys/rep=45, warmup=5; 141.0.7390.37; Intel(R) Core(TM) Ultra 5 125H x8)
+
+| config | chars | pm blocks | dispatch med (ms) | dispatch p95 | frame med | frame p95 | analysis med | layout sum med | layouts/key | measurements/key | rep-medians dispatch (ms) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| L0_bare | 20243 | 227 | 0.70 | 1.10 | 16.10 | 17.30 | 0.00 | 0.00 | 0 | 0 | 0.60, 0.80, 0.80, 0.80, 0.70 |
+| L1_+extensions | 20243 | 227 | 0.70 | 1.30 | 16.30 | 17.50 | 0.00 | 0.00 | 0 | 0 | 0.70, 0.60, 0.90, 0.60, 0.70 |
+| L2_+serialize_onChange | 20243 | 227 | 12.80 | 26.80 | 17.00 | 32.50 | 0.00 | 0.00 | 0 | 0 | 12.30, 12.00, 13.00, 19.30, 12.30 |
+| L3_+session_memDrafts | 20243 | 227 | 12.80 | 22.50 | 17.10 | 28.00 | 0.00 | 0.00 | 0 | 0 | 12.70, 11.50, 11.80, 15.60, 13.50 |
+| L4_+idbDrafts | 20243 | 227 | 11.60 | 23.00 | 16.70 | 28.60 | 0.00 | 0.00 | 0 | 0 | 11.00, 10.80, 12.30, 11.70, 14.30 |
+| L5_+analysis | 20243 | 227 | 38.90 | 73.20 | 42.60 | 80.70 | 25.00 | 0.00 | 0 | 0 | 32.80, 32.30, 42.50, 40.80, 47.70 |
+| L6_+paginationPlugin_continuous | 20243 | 227 | 38.30 | 73.10 | 42.50 | 79.20 | 24.40 | 0.20 | 1 | 0 | 32.30, 31.40, 45.30, 45.80, 41.10 |
+| L7_+pageMode(full) | 20243 | 227 | 40.40 | 71.10 | 49.30 | 85.90 | 25.90 | 10.80 | 5 | 1845 | 32.70, 33.40, 53.50, 51.30, 39.30 |
+
+Cold open (median over reps): createMs, first page-layout settle, pages, DOM nodes
+- L0_bare: createMs=120.00 settleMs=n/a pages=n/a dom=1004
+- L1_+extensions: createMs=126.10 settleMs=n/a pages=n/a dom=1360
+- L2_+serialize_onChange: createMs=128.00 settleMs=n/a pages=n/a dom=1360
+- L3_+session_memDrafts: createMs=125.50 settleMs=n/a pages=n/a dom=1360
+- L4_+idbDrafts: createMs=139.80 settleMs=n/a pages=n/a dom=1360
+- L5_+analysis: createMs=137.50 settleMs=n/a pages=n/a dom=1360
+- L6_+paginationPlugin_continuous: createMs=137.30 settleMs=n/a pages=1 dom=1360
+- L7_+pageMode(full): createMs=128.70 settleMs=52.10 pages=20 dom=1381

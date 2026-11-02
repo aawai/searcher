@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-02-004",
+  "captured": "2026-11-02",
+  "packet_version": "1.0",
+  "title": "README.md",
+  "url": "https://github.com/101arrowz/fflate/blob/master/README.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

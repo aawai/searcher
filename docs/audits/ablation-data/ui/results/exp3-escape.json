@@ -1,0 +1,86 @@
+{
+ "BASE": {
+  "A_layers_closed_by_one_escape_overlay_selfclose": 1,
+  "A_host_closed_in_same_press": 0,
+  "B_order_correct": 1,
+  "B_closes_total": 3,
+  "C_overlay_wins_over_later_host": 1,
+  "D_handlers_run_during_ime": 0,
+  "E_handler_runs_for_double_dispatch": 1,
+  "E2_handler_runs_for_double_dispatch_noncancelable": 1,
+  "F_layer_closed_after_input_handled_escape": 0,
+  "G_consumed_with_no_layer": 0
+ },
+ "S1_no_event_snapshot": {
+  "A_layers_closed_by_one_escape_overlay_selfclose": 1,
+  "A_host_closed_in_same_press": 1,
+  "B_order_correct": 1,
+  "B_closes_total": 3,
+  "C_overlay_wins_over_later_host": 1,
+  "D_handlers_run_during_ime": 0,
+  "E_handler_runs_for_double_dispatch": 1,
+  "E2_handler_runs_for_double_dispatch_noncancelable": 1,
+  "F_layer_closed_after_input_handled_escape": 0,
+  "G_consumed_with_no_layer": 0
+ },
+ "S2_no_dispatch_dedupe": {
+  "A_layers_closed_by_one_escape_overlay_selfclose": 1,
+  "A_host_closed_in_same_press": 0,
+  "B_order_correct": 1,
+  "B_closes_total": 3,
+  "C_overlay_wins_over_later_host": 1,
+  "D_handlers_run_during_ime": 0,
+  "E_handler_runs_for_double_dispatch": 1,
+  "E2_handler_runs_for_double_dispatch_noncancelable": 2,
+  "F_layer_closed_after_input_handled_escape": 0,
+  "G_consumed_with_no_layer": 0
+ },
+ "S3_equal_priority_host_overlay": {
+  "A_layers_closed_by_one_escape_overlay_selfclose": 1,
+  "A_host_closed_in_same_press": 1,
+  "B_order_correct": 0,
+  "B_closes_total": 3,
+  "C_overlay_wins_over_later_host": 1,
+  "D_handlers_run_during_ime": 0,
+  "E_handler_runs_for_double_dispatch": 1,
+  "E2_handler_runs_for_double_dispatch_noncancelable": 1,
+  "F_layer_closed_after_input_handled_escape": 0,
+  "G_consumed_with_no_layer": 0
+ },
+ "S4a_ime_check_removed_in_capture_only": {
+  "A_layers_closed_by_one_escape_overlay_selfclose": 1,
+  "A_host_closed_in_same_press": 0,
+  "B_order_correct": 1,
+  "B_closes_total": 3,
+  "C_overlay_wins_over_later_host": 1,
+  "D_handlers_run_during_ime": 0,
+  "E_handler_runs_for_double_dispatch": 1,
+  "E2_handler_runs_for_double_dispatch_noncancelable": 1,
+  "F_layer_closed_after_input_handled_escape": 0,
+  "G_consumed_with_no_layer": 0
+ },
+ "S4b_ime_check_removed_everywhere": {
+  "A_layers_closed_by_one_escape_overlay_selfclose": 1,
+  "A_host_closed_in_same_press": 0,
+  "B_order_correct": 1,
+  "B_closes_total": 3,
+  "C_overlay_wins_over_later_host": 1,
+  "D_handlers_run_during_ime": 1,
+  "E_handler_runs_for_double_dispatch": 1,
+  "E2_handler_runs_for_double_dispatch_noncancelable": 1,
+  "F_layer_closed_after_input_handled_escape": 0,
+  "G_consumed_with_no_layer": 0
+ },
+ "S5_dispatch_ignores_defaultPrevented": {
+  "A_layers_closed_by_one_escape_overlay_selfclose": 1,
+  "A_host_closed_in_same_press": 0,
+  "B_order_correct": 1,
+  "B_closes_total": 3,
+  "C_overlay_wins_over_later_host": 1,
+  "D_handlers_run_during_ime": 0,
+  "E_handler_runs_for_double_dispatch": 1,
+  "E2_handler_runs_for_double_dispatch_noncancelable": 1,
+  "F_layer_closed_after_input_handled_escape": 1,
+  "G_consumed_with_no_layer": 0
+ }
+}

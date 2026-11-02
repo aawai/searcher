@@ -1,0 +1,41 @@
+rep 0 FULL: dispatch med 33.50ms frame med 42.5ms
+rep 0 -pageMode(plugin stays, continuous): dispatch med 37.80ms frame med 41.5ms
+rep 0 -paginationPlugin: dispatch med 37.10ms frame med 41.0ms
+rep 0 -analysis: dispatch med 12.20ms frame med 20.8ms
+rep 0 -idbDrafts(memory): dispatch med 36.80ms frame med 45.8ms
+rep 0 -session(serialize only): dispatch med 17.50ms frame med 28.0ms
+rep 0 -onChange(no serialize): dispatch med 0.60ms frame med 18.9ms
+rep 0 -extensions: dispatch med 33.80ms frame med 41.2ms
+rep 1 -pageMode(plugin stays, continuous): dispatch med 36.40ms frame med 40.3ms
+rep 1 -paginationPlugin: dispatch med 37.70ms frame med 41.4ms
+rep 1 -analysis: dispatch med 12.20ms frame med 20.8ms
+rep 1 -idbDrafts(memory): dispatch med 37.00ms frame med 45.2ms
+rep 1 -session(serialize only): dispatch med 12.40ms frame med 20.8ms
+rep 1 -onChange(no serialize): dispatch med 0.60ms frame med 19.0ms
+rep 1 -extensions: dispatch med 48.10ms frame med 56.1ms
+rep 1 FULL: dispatch med 39.40ms frame med 48.1ms
+rep 2 -paginationPlugin: dispatch med 34.80ms frame med 38.6ms
+rep 2 -analysis: dispatch med 12.80ms frame med 21.3ms
+rep 2 -idbDrafts(memory): dispatch med 41.90ms frame med 50.7ms
+rep 2 -session(serialize only): dispatch med 12.10ms frame med 20.3ms
+rep 2 -onChange(no serialize): dispatch med 0.70ms frame med 19.1ms
+rep 2 -extensions: dispatch med 37.50ms frame med 44.7ms
+rep 2 FULL: dispatch med 36.50ms frame med 45.4ms
+rep 2 -pageMode(plugin stays, continuous): dispatch med 35.30ms frame med 39.5ms
+rep 3 -analysis: dispatch med 12.60ms frame med 21.3ms
+rep 3 -idbDrafts(memory): dispatch med 34.50ms frame med 42.5ms
+rep 3 -session(serialize only): dispatch med 11.70ms frame med 19.9ms
+rep 3 -onChange(no serialize): dispatch med 0.60ms frame med 18.6ms
+rep 3 -extensions: dispatch med 37.20ms frame med 44.4ms
+rep 3 FULL: dispatch med 36.70ms frame med 45.8ms
+rep 3 -pageMode(plugin stays, continuous): dispatch med 36.70ms frame med 41.4ms
+rep 3 -paginationPlugin: dispatch med 36.30ms frame med 40.4ms
+rep 4 -idbDrafts(memory): dispatch med 39.70ms frame med 47.7ms
+rep 4 -session(serialize only): dispatch med 12.20ms frame med 20.8ms
+rep 4 -onChange(no serialize): dispatch med 0.60ms frame med 18.9ms
+rep 4 -extensions: dispatch med 39.60ms frame med 47.3ms
+rep 4 FULL: dispatch med 45.00ms frame med 55.0ms
+rep 4 -pageMode(plugin stays, continuous): dispatch med 38.90ms frame med 43.8ms
+rep 4 -paginationPlugin: dispatch med 35.60ms frame med 39.6ms
+rep 4 -analysis: dispatch med 13.20ms frame med 22.1ms
+wrote /home/aawei/experiments/editor-study/results/loo.json

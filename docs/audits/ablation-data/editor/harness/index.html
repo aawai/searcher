@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>editor-study</title></head>
+<body style="margin:0">
+<div id="window" style="position:fixed;left:0;top:0;width:960px;height:720px;display:flex;flex-direction:column;overflow:hidden">
+  <div class="document-editor-container" id="container">
+    <div class="document-editor-content-layout">
+      <div class="document-editor-scroll-area" tabindex="0" role="region" aria-label="笔记内容滚动区" id="scroll">
+        <div class="document-editor-readable-wrapper" id="viewport">
+          <div class="document-continuous-editor block" id="root"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="./harness.ts"></script>
+</body></html>

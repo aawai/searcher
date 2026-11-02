@@ -1,0 +1,281 @@
+{
+ "plan:BASE": {
+  "examples": {
+   "19tiles/6cols/4rows": {
+    "colsUsed": 5,
+    "rowsUsed": 4,
+    "lastRowTiles": 4,
+    "overflow": 0,
+    "more": null
+   },
+   "8tiles/7cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 2,
+    "lastRowTiles": 2,
+    "overflow": 0,
+    "more": null
+   },
+   "12tiles/6cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 2,
+    "lastRowTiles": 6,
+    "overflow": 0,
+    "more": null
+   },
+   "7tiles/6cols/4rows": {
+    "colsUsed": 5,
+    "rowsUsed": 2,
+    "lastRowTiles": 2,
+    "overflow": 0,
+    "more": null
+   },
+   "13tiles/6cols/4rows": {
+    "colsUsed": 5,
+    "rowsUsed": 3,
+    "lastRowTiles": 3,
+    "overflow": 0,
+    "more": null
+   }
+  },
+  "sweep": {
+   "configs": 3680,
+   "loneLastRow_noOverflow_noLarge": 10,
+   "itemsLost": 0,
+   "rowsExceededCapacity": 0,
+   "moreCellOverlapsTile": 0,
+   "rowCountGrewBeyondUnnarrowed": 0,
+   "layoutsDifferingFromBase": 0,
+   "ofWhich_withLargeFolder": 0,
+   "baseResidualLoneLastRow": [
+    "3t/2c/2r",
+    "3t/2c/3r",
+    "3t/2c/4r",
+    "5t/2c/3r",
+    "5t/2c/4r",
+    "7t/2c/4r",
+    "7t/3c/3r",
+    "7t/3c/4r",
+    "10t/3c/4r",
+    "13t/4c/4r"
+   ]
+  }
+ },
+ "plan:P1_no_lone_tile_narrowing": {
+  "examples": {
+   "19tiles/6cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 4,
+    "lastRowTiles": 1,
+    "overflow": 0,
+    "more": null
+   },
+   "8tiles/7cols/4rows": {
+    "colsUsed": 7,
+    "rowsUsed": 2,
+    "lastRowTiles": 1,
+    "overflow": 0,
+    "more": null
+   },
+   "12tiles/6cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 2,
+    "lastRowTiles": 6,
+    "overflow": 0,
+    "more": null
+   },
+   "7tiles/6cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 2,
+    "lastRowTiles": 1,
+    "overflow": 0,
+    "more": null
+   },
+   "13tiles/6cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 3,
+    "lastRowTiles": 1,
+    "overflow": 0,
+    "more": null
+   }
+  },
+  "sweep": {
+   "configs": 3680,
+   "loneLastRow_noOverflow_noLarge": 48,
+   "itemsLost": 0,
+   "rowsExceededCapacity": 0,
+   "moreCellOverlapsTile": 0,
+   "rowCountGrewBeyondUnnarrowed": 0,
+   "layoutsDifferingFromBase": 38,
+   "ofWhich_withLargeFolder": 0,
+   "baseResidualLoneLastRow": []
+  }
+ },
+ "plan:P2_narrow_even_with_large_folder": {
+  "examples": {
+   "19tiles/6cols/4rows": {
+    "colsUsed": 5,
+    "rowsUsed": 4,
+    "lastRowTiles": 4,
+    "overflow": 0,
+    "more": null
+   },
+   "8tiles/7cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 2,
+    "lastRowTiles": 2,
+    "overflow": 0,
+    "more": null
+   },
+   "12tiles/6cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 2,
+    "lastRowTiles": 6,
+    "overflow": 0,
+    "more": null
+   },
+   "7tiles/6cols/4rows": {
+    "colsUsed": 5,
+    "rowsUsed": 2,
+    "lastRowTiles": 2,
+    "overflow": 0,
+    "more": null
+   },
+   "13tiles/6cols/4rows": {
+    "colsUsed": 5,
+    "rowsUsed": 3,
+    "lastRowTiles": 3,
+    "overflow": 0,
+    "more": null
+   }
+  },
+  "sweep": {
+   "configs": 3680,
+   "loneLastRow_noOverflow_noLarge": 10,
+   "itemsLost": 0,
+   "rowsExceededCapacity": 0,
+   "moreCellOverlapsTile": 0,
+   "rowCountGrewBeyondUnnarrowed": 0,
+   "layoutsDifferingFromBase": 70,
+   "ofWhich_withLargeFolder": 70,
+   "baseResidualLoneLastRow": []
+  }
+ },
+ "plan:P3_no_more_cell_reservation": {
+  "examples": {
+   "19tiles/6cols/4rows": {
+    "colsUsed": 5,
+    "rowsUsed": 4,
+    "lastRowTiles": 4,
+    "overflow": 0,
+    "more": null
+   },
+   "8tiles/7cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 2,
+    "lastRowTiles": 2,
+    "overflow": 0,
+    "more": null
+   },
+   "12tiles/6cols/4rows": {
+    "colsUsed": 6,
+    "rowsUsed": 2,
+    "lastRowTiles": 6,
+    "overflow": 0,
+    "more": null
+   },
+   "7tiles/6cols/4rows": {
+    "colsUsed": 5,
+    "rowsUsed": 2,
+    "lastRowTiles": 2,
+    "overflow": 0,
+    "more": null
+   },
+   "13tiles/6cols/4rows": {
+    "colsUsed": 5,
+    "rowsUsed": 3,
+    "lastRowTiles": 3,
+    "overflow": 0,
+    "more": null
+   }
+  },
+  "sweep": {
+   "configs": 3680,
+   "loneLastRow_noOverflow_noLarge": 10,
+   "itemsLost": 0,
+   "rowsExceededCapacity": 0,
+   "moreCellOverlapsTile": 2543,
+   "rowCountGrewBeyondUnnarrowed": 0,
+   "layoutsDifferingFromBase": 2720,
+   "ofWhich_withLargeFolder": 1880,
+   "baseResidualLoneLastRow": []
+  }
+ },
+ "effectiveRows:BASE": {
+  "viewportHeights_tested": 251,
+  "clearanceViolations_lt48px": 0,
+  "ofWhich_atFloorOf1Row": 0,
+  "minClearancePx": 49,
+  "anchorMovedViaComposeBlockTop": 0,
+  "firstViolations": []
+ },
+ "effectiveRows:H1_no_bottom_clearance": {
+  "viewportHeights_tested": 251,
+  "clearanceViolations_lt48px": 57,
+  "ofWhich_atFloorOf1Row": 0,
+  "minClearancePx": 0,
+  "anchorMovedViaComposeBlockTop": 57,
+  "firstViolations": [
+   {
+    "vh": 400,
+    "rows": 2,
+    "clearance": 4
+   },
+   {
+    "vh": 404,
+    "rows": 2,
+    "clearance": 6
+   },
+   {
+    "vh": 408,
+    "rows": 2,
+    "clearance": 9
+   }
+  ]
+ },
+ "effectiveRows:H2_ignore_plate_padding": {
+  "viewportHeights_tested": 251,
+  "clearanceViolations_lt48px": 19,
+  "ofWhich_atFloorOf1Row": 0,
+  "minClearancePx": 33,
+  "anchorMovedViaComposeBlockTop": 19,
+  "firstViolations": [
+   {
+    "vh": 448,
+    "rows": 2,
+    "clearance": 34
+   },
+   {
+    "vh": 452,
+    "rows": 2,
+    "clearance": 36
+   },
+   {
+    "vh": 456,
+    "rows": 2,
+    "clearance": 39
+   }
+  ]
+ },
+ "composeBlockTop_unconstrained_rows:BASE": {
+  "cases": 1004,
+  "anchorMoved": 161,
+  "maxUpwardShiftPx": 160,
+  "note": "rows forced 1..4 irrespective of effectiveRows; shows what the cap in composeBlockTop does when rows are NOT reduced"
+ },
+ "composeBlockTop_unconstrained_rows:C1_no_clearance_cap": {
+  "cases": 1004,
+  "anchorMoved": 0,
+  "maxUpwardShiftPx": 0,
+  "note": "rows forced 1..4 irrespective of effectiveRows; shows what the cap in composeBlockTop does when rows are NOT reduced"
+ }
+}

@@ -1,0 +1,4249 @@
+{
+ "generatedAt": "2026-11-02T01:43:54.987Z",
+ "deno": {
+  "deno": "2.9.8",
+  "v8": "15.0.245.2-rusty",
+  "typescript": "6.0.3"
+ },
+ "data": [
+  {
+   "n": 500,
+   "buildMs": 763.50539,
+   "classes": {
+    "A_single_rare": {
+     "recallAt5_baseline": 1,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.5026339999999436,
+      "p95": 0.6689550000000963,
+      "max": 1.883950000000027,
+      "mean": 0.5241601022222272
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.19612800000004427,
+      "p95": 0.2583910000000742,
+      "max": 0.3895899999999983,
+      "mean": 0.19982193111111782
+     },
+     "rawHits": [
+      {
+       "q": "zqtukahux",
+       "hit": true,
+       "hitOr": true,
+       "n": 2
+      },
+      {
+       "q": "zqkazesox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmivebox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfimipax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgopakax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvedepax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsolorax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqrasofix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtukahux",
+       "hit": true,
+       "hitOr": true,
+       "n": 2
+      },
+      {
+       "q": "zqnitugox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlomibox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqdebovex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqnidefix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhunisox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtusomix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzegofix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmifimix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtumitux",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqpavemix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsohugox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzebofix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgogosox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfiranix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhupasox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqrakatux",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqradevex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqrafirax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsofimix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtuvenix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlovelox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "B_two_rare_AND": {
+     "recallAt5_baseline": 1,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.642325000000028,
+      "p95": 0.7701309999999921,
+      "max": 0.8934130000000096,
+      "mean": 0.6501704577777809
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.3366839999998774,
+      "p95": 0.39870299999984127,
+      "max": 0.6282889999997678,
+      "mean": 0.3394379600000002
+     },
+     "rawHits": [
+      {
+       "q": "zqtukahux qjbomituy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqkazesox qjtuzeray",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmivebox qjzeturay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfimipax qjkabohuy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgopakax qjdenipay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvedepax qjlomituy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsolorax qjfidedey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqrasofix qjvekaniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtukahux qjnikagoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqnitugox qjpaniboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlomibox qjfigoniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqdebovex qjsoragoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqnidefix qjtudeniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhunisox qjboradey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtusomix qjdedesoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzegofix qjbotuvey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmifimix qjgobomiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtumitux qjzelofiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqpavemix qjsogotuy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsohugox qjgovegoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzebofix qjdenigoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgogosox qjdepafiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfiranix qjbolosoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhupasox qjgosofiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqrakatux qjsoloboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqradevex qjtuhusoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqrafirax qjveramiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsofimix qjtutufiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtuvenix qjpaniboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlovelox qjsogosoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "C_nl_with_filler": {
+     "recallAt5_baseline": 0.4,
+     "emptyResultRate_baseline": 0.6,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.4681570000002466,
+      "p95": 1.2691570000001775,
+      "max": 1.8849209999998493,
+      "mean": 0.7180716977777891
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 1.8000309999997626,
+      "p95": 2.5242729999999938,
+      "max": 4.787756000000172,
+      "mean": 1.8956490199999962
+     },
+     "rawHits": [
+      {
+       "q": "what did I write about zqtukahux and qjbomituy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqkazesox and qjtuzeray",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqmivebox and qjzeturay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqfimipax and qjkabohuy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqgopakax and qjdenipay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqvedepax and qjlomituy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqsolorax and qjfidedey",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqrasofix and qjvekaniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqtukahux and qjnikagoy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqnitugox and qjpaniboy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqlomibox and qjfigoniy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqdebovex and qjsoragoy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqnidefix and qjtudeniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqhunisox and qjboradey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqtusomix and qjdedesoy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqzegofix and qjbotuvey",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqmifimix and qjgobomiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqtumitux and qjzelofiy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqpavemix and qjsogotuy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqsohugox and qjgovegoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqzebofix and qjdenigoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqgogosox and qjdepafiy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqfiranix and qjbolosoy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqhupasox and qjgosofiy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqrakatux and qjsoloboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqradevex and qjtuhusoy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqrafirax and qjveramiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqsofimix and qjtutufiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqtuvenix and qjpaniboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqlovelox and qjsogosoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "D_nl_with_absent_word": {
+     "recallAt5_baseline": 0,
+     "emptyResultRate_baseline": 1,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.2541670000000522,
+      "p95": 0.502933999999641,
+      "max": 1.4415290000001733,
+      "mean": 0.28672665555555593
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.3575020000002951,
+      "p95": 0.659027000000151,
+      "max": 1.8141209999998864,
+      "mean": 0.3941569799999939
+     },
+     "rawHits": [
+      {
+       "q": "zqtukahux qjbomituy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqkazesox qjtuzeray yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqmivebox qjzeturay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqfimipax qjkabohuy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqgopakax qjdenipay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqvedepax qjlomituy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqsolorax qjfidedey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqrasofix qjvekaniy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqtukahux qjnikagoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqnitugox qjpaniboy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqlomibox qjfigoniy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqdebovex qjsoragoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqnidefix qjtudeniy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqhunisox qjboradey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqtusomix qjdedesoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqzegofix qjbotuvey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqmifimix qjgobomiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqtumitux qjzelofiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqpavemix qjsogotuy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqsohugox qjgovegoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqzebofix qjdenigoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqgogosox qjdepafiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqfiranix qjbolosoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqhupasox qjgosofiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqrakatux qjsoloboy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqradevex qjtuhusoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqrafirax qjveramiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqsofimix qjtutufiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqtuvenix qjpaniboy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqlovelox qjsogosoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      }
+     ]
+    },
+    "E_2char_scan": {
+     "recallAt5_baseline": 0.16666666666666666,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 0,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 1.8618679999999586,
+      "p95": 2.3127660000004653,
+      "max": 3.3327360000002955,
+      "mean": 1.9287194400000045
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.00046800000018265564,
+      "p95": 0.00442399999974441,
+      "max": 0.0373290000002271,
+      "mean": 0.0008861333333364503
+     },
+     "rawHits": [
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      }
+     ]
+    },
+    "F_cjk_exact_substring": {
+     "recallAt5_baseline": 1,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.41886299999987386,
+      "p95": 0.48607500000071013,
+      "max": 0.8064480000002732,
+      "mean": 0.42665236888888103
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.13887800000065909,
+      "p95": 0.191237000000001,
+      "max": 0.2326180000000022,
+      "mean": 0.14518274444444007
+     },
+     "rawHits": [
+      {
+       "q": "新事点与长甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "前但作无所乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "二其分有同丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "以能子新还丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "大心身机给甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "用为二后最乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "同道工想事丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "年下时将主丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "是多法学想甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "用能时时都乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "开部等样发丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "又家对着行丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "声全很面自甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "情用学国下乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "自美国两国丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "以月大高想丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "小又二最上甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "上和就起样乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "里从问动着丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "无得新她长丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "其文度新美甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "家说在说学乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "头又只可得丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "已道主新生丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "三情起见公甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "名几一国自乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "知所很本没丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "开现面写一丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "要就我民天甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "用全了日与乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "G_cjk_question_wrapped": {
+     "recallAt5_baseline": 0,
+     "emptyResultRate_baseline": 1,
+     "recallAt5_orVariant": 0,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.10785800000030576,
+      "p95": 0.13951099999940197,
+      "max": 0.30052900000009686,
+      "mean": 0.11275497333333584
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.05390799999986484,
+      "p95": 0.07259200000044075,
+      "max": 0.13901299999997718,
+      "mean": 0.05721641555553611
+     },
+     "rawHits": [
+      {
+       "q": "请问我之前记录的新事点与长甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的前但作无所乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的二其分有同丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的以能子新还丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的大心身机给甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的用为二后最乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的同道工想事丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的年下时将主丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的是多法学想甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的用能时时都乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的开部等样发丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的又家对着行丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的声全很面自甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的情用学国下乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的自美国两国丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的以月大高想丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的小又二最上甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的上和就起样乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的里从问动着丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的无得新她长丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的其文度新美甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的家说在说学乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的头又只可得丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的已道主新生丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的三情起见公甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的名几一国自乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的知所很本没丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的开现面写一丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的要就我民天甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的用全了日与乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "n": 2000,
+   "buildMs": 2702.9680280000002,
+   "classes": {
+    "A_single_rare": {
+     "recallAt5_baseline": 1,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.6972649999997884,
+      "p95": 0.828642999999829,
+      "max": 1.315429000000222,
+      "mean": 0.6953493933333468
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.3948979999995572,
+      "p95": 0.4910970000000816,
+      "max": 0.9112139999997453,
+      "mean": 0.39345980222218513
+     },
+     "rawHits": [
+      {
+       "q": "zqfininix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvesonix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvetubox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfimirax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlosomix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhufigox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgomidex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqveminix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqpavekax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhuzenix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfitukax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsozevex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqkamisox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsohudex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmibosox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzenidex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgorapax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgotugox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvetukax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvehumix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzedezex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmizehux",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqnilobox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqbofidex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqbosotux",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmisotux",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqniravex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvenikax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlotubox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqnimipax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "B_two_rare_AND": {
+     "recallAt5_baseline": 1,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 1.0483939999994618,
+      "p95": 1.2730149999988498,
+      "max": 1.5092270000004646,
+      "mean": 1.0530156622222038
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.774716999998418,
+      "p95": 0.8970349999999598,
+      "max": 1.5312099999991915,
+      "mean": 0.756978011111108
+     },
+     "rawHits": [
+      {
+       "q": "zqfininix qjloveray",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvesonix qjnidesoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvetubox qjzezekay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfimirax qjgobosoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlosomix qjlobokay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhufigox qjravetuy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgomidex qjtukahuy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqveminix qjdezetuy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqpavekax qjvekaloy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhuzenix qjfilosoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfitukax qjkadedey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsozevex qjraveloy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqkamisox qjmigoboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsohudex qjsokazey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmibosox qjhumivey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzenidex qjnigosoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgorapax qjlobokay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgotugox qjsotufiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvetukax qjlomizey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvehumix qjzeloniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzedezex qjsotuboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmizehux qjnigohuy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqnilobox qjpahumiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqbofidex qjgohupay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqbosotux qjdedemiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmisotux qjhufigoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqniravex qjsoragoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvenikax qjzepaloy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlotubox qjragopay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqnimipax qjhulomiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "C_nl_with_filler": {
+     "recallAt5_baseline": 0.36666666666666664,
+     "emptyResultRate_baseline": 0.6333333333333333,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.9535109999997076,
+      "p95": 2.9429139999992913,
+      "max": 4.354622000000745,
+      "mean": 1.5011730511111132
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 6.454389000000447,
+      "p95": 8.070611000001009,
+      "max": 9.683043999999427,
+      "mean": 6.614876488888864
+     },
+     "rawHits": [
+      {
+       "q": "what did I write about zqfininix and qjloveray",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqvesonix and qjnidesoy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqvetubox and qjzezekay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqfimirax and qjgobosoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqlosomix and qjlobokay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqhufigox and qjravetuy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqgomidex and qjtukahuy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqveminix and qjdezetuy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqpavekax and qjvekaloy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqhuzenix and qjfilosoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqfitukax and qjkadedey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqsozevex and qjraveloy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqkamisox and qjmigoboy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqsohudex and qjsokazey",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqmibosox and qjhumivey",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqzenidex and qjnigosoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqgorapax and qjlobokay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqgotugox and qjsotufiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqvetukax and qjlomizey",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqvehumix and qjzeloniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqzedezex and qjsotuboy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqmizehux and qjnigohuy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqnilobox and qjpahumiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqbofidex and qjgohupay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqbosotux and qjdedemiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqmisotux and qjhufigoy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqniravex and qjsoragoy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqvenikax and qjzepaloy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqlotubox and qjragopay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqnimipax and qjhulomiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "D_nl_with_absent_word": {
+     "recallAt5_baseline": 0,
+     "emptyResultRate_baseline": 1,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.4463789999990695,
+      "p95": 0.5842190000003029,
+      "max": 0.7920419999991282,
+      "mean": 0.45668317333335934
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.8122629999998026,
+      "p95": 0.9508949999999459,
+      "max": 1.3981280000007246,
+      "mean": 0.8005185800000779
+     },
+     "rawHits": [
+      {
+       "q": "zqfininix qjloveray yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqvesonix qjnidesoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqvetubox qjzezekay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqfimirax qjgobosoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqlosomix qjlobokay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqhufigox qjravetuy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqgomidex qjtukahuy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqveminix qjdezetuy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqpavekax qjvekaloy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqhuzenix qjfilosoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqfitukax qjkadedey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqsozevex qjraveloy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqkamisox qjmigoboy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqsohudex qjsokazey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqmibosox qjhumivey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqzenidex qjnigosoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqgorapax qjlobokay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqgotugox qjsotufiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqvetukax qjlomizey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqvehumix qjzeloniy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqzedezex qjsotuboy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqmizehux qjnigohuy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqnilobox qjpahumiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqbofidex qjgohupay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqbosotux qjdedemiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqmisotux qjhufigoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqniravex qjsoragoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqvenikax qjzepaloy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqlotubox qjragopay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqnimipax qjhulomiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      }
+     ]
+    },
+    "E_2char_scan": {
+     "recallAt5_baseline": 0.16666666666666666,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 0,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 5.731959000000643,
+      "p95": 6.188624000000345,
+      "max": 11.100334000000657,
+      "mean": 5.77889157111115
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.0003510000005917391,
+      "p95": 0.005379999998694984,
+      "max": 0.014388999999937369,
+      "mean": 0.0007784022222161487
+     },
+     "rawHits": [
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      }
+     ]
+    },
+    "F_cjk_exact_substring": {
+     "recallAt5_baseline": 1,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.5213679999997112,
+      "p95": 0.9094960000002175,
+      "max": 2.4957720000002155,
+      "mean": 0.5936813822222676
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.2268579999999929,
+      "p95": 0.39912900000126683,
+      "max": 1.482654999999795,
+      "mean": 0.25022448666659736
+     },
+     "rawHits": [
+      {
+       "q": "文道地头行甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "回回高问文乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "间已声就最丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "外者名很是丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "主其了写政甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "子得间说三乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "后从此大如丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "要子最者方丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "主个二一话甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "也者好一作乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "点最自十十丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "当美起于无丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "从子到面部甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "上两用二无乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "上最公此面丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "就有进后好丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "最问时点对甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "本我没三外乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "公同情们地丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "和小定回是丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "家出女也开甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "自理力与如乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "方实来高小丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "从子好等最丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "就身分着问甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "月对着最他乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "行她起要儿丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "声面业女着丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "他你于不什甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "事可得业日乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "G_cjk_question_wrapped": {
+     "recallAt5_baseline": 0,
+     "emptyResultRate_baseline": 1,
+     "recallAt5_orVariant": 0,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.12173000000075263,
+      "p95": 0.1828029999996943,
+      "max": 0.762763000000632,
+      "mean": 0.13347974888889036
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.06384499999876425,
+      "p95": 0.10815799999909359,
+      "max": 0.5509579999998095,
+      "mean": 0.07334698222224284
+     },
+     "rawHits": [
+      {
+       "q": "请问我之前记录的文道地头行甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的回回高问文乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的间已声就最丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的外者名很是丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的主其了写政甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的子得间说三乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的后从此大如丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的要子最者方丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的主个二一话甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的也者好一作乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的点最自十十丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的当美起于无丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的从子到面部甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的上两用二无乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的上最公此面丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的就有进后好丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的最问时点对甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的本我没三外乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的公同情们地丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的和小定回是丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的家出女也开甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的自理力与如乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的方实来高小丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的从子好等最丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的就身分着问甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的月对着最他乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的行她起要儿丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的声面业女着丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的他你于不什甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的事可得业日乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "n": 10000,
+   "buildMs": 14321.769112,
+   "classes": {
+    "A_single_rare": {
+     "recallAt5_baseline": 1,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.9737690000001749,
+      "p95": 1.4716719999996712,
+      "max": 3.2737510000006296,
+      "mean": 1.0191818822222154
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.6197639999991225,
+      "p95": 1.2318880000020727,
+      "max": 3.0731790000027104,
+      "mean": 0.6828637311111299
+     },
+     "rawHits": [
+      {
+       "q": "zqtukagox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvezerax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqnigogox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgofikax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqdevezex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqkalopax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqpanivex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzetunix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqbogozex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmikalox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfinimix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsofigox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlolofix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqkazepax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhubobox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlodefix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgozekax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtumihux",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgosodex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgobohux",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfipanix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmigomix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzenizex",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqbozerax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzerabox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqverasox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtunisox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtulonix",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmiturax",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhuhubox",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "B_two_rare_AND": {
+     "recallAt5_baseline": 1,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 2.2360850000004575,
+      "p95": 3.6166379999995115,
+      "max": 7.810834000003524,
+      "mean": 2.4325471777777907
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 1.8628410000019358,
+      "p95": 3.027623999998468,
+      "max": 7.907966999999189,
+      "mean": 1.9709769777777384
+     },
+     "rawHits": [
+      {
+       "q": "zqtukagox qjpasoniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqvezerax qjpasoboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqnigogox qjhuragoy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgofikax qjrabodey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqdevezex qjniraray",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqkalopax qjlobokay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqpanivex qjlodezey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzetunix qjdenipay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqbogozex qjvehufiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmikalox qjsomituy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfinimix qjzezeniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqsofigox qjfimiloy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlolofix qjhukamiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqkazepax qjgozeray",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhubobox qjhulovey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqlodefix qjkaramiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgozekax qjzesotuy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtumihux qjdefikay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgosodex qjpabodey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqgobohux qjvesomiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqfipanix qjtudeboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmigomix qjhugokay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzenizex qjhulopay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqbozerax qjzepakay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqzerabox qjhuhukay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqverasox qjfizetuy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtunisox qjpavezey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqtulonix qjtudedey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqmiturax qjsosoloy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "zqhuhubox qjnigoboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "C_nl_with_filler": {
+     "recallAt5_baseline": 0.4,
+     "emptyResultRate_baseline": 0.6,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 1.3719060000003083,
+      "p95": 15.175082000001566,
+      "max": 25.61742999999842,
+      "mean": 5.057200242222284
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 35.54611499999737,
+      "p95": 55.6178510000027,
+      "max": 86.6554959999994,
+      "mean": 37.47123344888909
+     },
+     "rawHits": [
+      {
+       "q": "what did I write about zqtukagox and qjpasoniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqvezerax and qjpasoboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqnigogox and qjhuragoy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqgofikax and qjrabodey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqdevezex and qjniraray",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqkalopax and qjlobokay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqpanivex and qjlodezey",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqzetunix and qjdenipay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqbogozex and qjvehufiy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqmikalox and qjsomituy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqfinimix and qjzezeniy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqsofigox and qjfimiloy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqlolofix and qjhukamiy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqkazepax and qjgozeray",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqhubobox and qjhulovey",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqlodefix and qjkaramiy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqgozekax and qjzesotuy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqtumihux and qjdefikay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqgosodex and qjpabodey",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqgobohux and qjvesomiy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqfipanix and qjtudeboy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqmigomix and qjhugokay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqzenizex and qjhulopay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqbozerax and qjzepakay",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqzerabox and qjhuhukay",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqverasox and qjfizetuy",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqtunisox and qjpavezey",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqtulonix and qjtudedey",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "what did I write about zqmiturax and qjsosoloy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "what did I write about zqhuhubox and qjnigoboy",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "D_nl_with_absent_word": {
+     "recallAt5_baseline": 0,
+     "emptyResultRate_baseline": 1,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.9051800000015646,
+      "p95": 1.4248870000010356,
+      "max": 4.450031000000308,
+      "mean": 0.9757705422222757
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 1.684798000002047,
+      "p95": 2.791597000003094,
+      "max": 5.4130609999992885,
+      "mean": 1.802411586666842
+     },
+     "rawHits": [
+      {
+       "q": "zqtukagox qjpasoniy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqvezerax qjpasoboy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqnigogox qjhuragoy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqgofikax qjrabodey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqdevezex qjniraray yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqkalopax qjlobokay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqpanivex qjlodezey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqzetunix qjdenipay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqbogozex qjvehufiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqmikalox qjsomituy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqfinimix qjzezeniy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqsofigox qjfimiloy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqlolofix qjhukamiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqkazepax qjgozeray yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqhubobox qjhulovey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqlodefix qjkaramiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqgozekax qjzesotuy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqtumihux qjdefikay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqgosodex qjpabodey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqgobohux qjvesomiy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqfipanix qjtudeboy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqmigomix qjhugokay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqzenizex qjhulopay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqbozerax qjzepakay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqzerabox qjhuhukay yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqverasox qjfizetuy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqtunisox qjpavezey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqtulonix qjtudedey yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqmiturax qjsosoloy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      },
+      {
+       "q": "zqhuhubox qjnigoboy yesterday",
+       "hit": false,
+       "hitOr": true,
+       "n": 0
+      }
+     ]
+    },
+    "E_2char_scan": {
+     "recallAt5_baseline": 0.16666666666666666,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 0,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 24.997904999996535,
+      "p95": 25.891424999994342,
+      "max": 31.452017000003252,
+      "mean": 24.98699673999987
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.0004079999998793937,
+      "p95": 0.005310000000463333,
+      "max": 0.017414999994798563,
+      "mean": 0.0008185777778271586
+     },
+     "rawHits": [
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": false,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      },
+      {
+       "q": "xk",
+       "hit": true,
+       "hitOr": false,
+       "n": 5
+      }
+     ]
+    },
+    "F_cjk_exact_substring": {
+     "recallAt5_baseline": 1,
+     "emptyResultRate_baseline": 0,
+     "recallAt5_orVariant": 1,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.5873350000038045,
+      "p95": 1.0434640000021318,
+      "max": 1.7724119999984396,
+      "mean": 0.6464979422223567
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.28966899999795714,
+      "p95": 0.544277000000875,
+      "max": 1.7235279999949853,
+      "mean": 0.32560156222209724
+     },
+     "rawHits": [
+      {
+       "q": "美又方与很甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "后现本小这乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "头不此只地丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "月如可地给丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "可等正下于甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "什天二民和乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "从之后理道丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "心经我要与丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "多新样名你甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "同能外不你乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "发实之三好丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "者下于与着丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "头动一多部甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "国之业美这乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "小和女得文丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "把上十度什丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "也里面其日甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "于后主此最乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "小开日工现丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "理已开下过丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "三种然回女甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "用年间度政乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "见么家想会丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "得长了过情丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "对那就政大甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "手间主面会乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "也不者部分丙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "这大一开老丁戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "理学同知外甲戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      },
+      {
+       "q": "上美机间去乙戊",
+       "hit": true,
+       "hitOr": true,
+       "n": 1
+      }
+     ]
+    },
+    "G_cjk_question_wrapped": {
+     "recallAt5_baseline": 0,
+     "emptyResultRate_baseline": 1,
+     "recallAt5_orVariant": 0,
+     "latencyMs_baseline": {
+      "n": 450,
+      "p50": 0.1267100000040955,
+      "p95": 0.1819759999998496,
+      "max": 0.48530200000095647,
+      "mean": 0.13486325999990287
+     },
+     "latencyMs_orVariant": {
+      "n": 450,
+      "p50": 0.0668020000011893,
+      "p95": 0.0892729999977746,
+      "max": 0.158369999997376,
+      "mean": 0.07034770000004856
+     },
+     "rawHits": [
+      {
+       "q": "请问我之前记录的美又方与很甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的后现本小这乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的头不此只地丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的月如可地给丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的可等正下于甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的什天二民和乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的从之后理道丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的心经我要与丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的多新样名你甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的同能外不你乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的发实之三好丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的者下于与着丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的头动一多部甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的国之业美这乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的小和女得文丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的把上十度什丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的也里面其日甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的于后主此最乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的小开日工现丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的理已开下过丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的三种然回女甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的用年间度政乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的见么家想会丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的得长了过情丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的对那就政大甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的手间主面会乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的也不者部分丙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的这大一开老丁戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的理学同知外甲戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      },
+      {
+       "q": "请问我之前记录的上美机间去乙戊是什么",
+       "hit": false,
+       "hitOr": false,
+       "n": 0
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,107 @@
+{
+ "total_states": 6144,
+ "BASE": {
+  "changedVsBase_effect": 0,
+  "rawActionTypeDiffersVsBase": 0,
+  "specViolations_documentedCells": 0,
+  "specViolations_undocumentedCells": 0,
+  "effectsWhileComposing": 0,
+  "escapeConsumedWhileListClosed": 0,
+  "askAiWithoutModel": 0,
+  "captureWithoutLogin": 0,
+  "changedByKey": {}
+ },
+ "K1_no_ime_guard": {
+  "changedVsBase_effect": 384,
+  "rawActionTypeDiffersVsBase": 784,
+  "specViolations_documentedCells": 384,
+  "specViolations_undocumentedCells": 0,
+  "effectsWhileComposing": 384,
+  "escapeConsumedWhileListClosed": 0,
+  "askAiWithoutModel": 0,
+  "captureWithoutLogin": 0,
+  "changedByKey": {
+   "Enter": 112,
+   "Escape": 256,
+   "ArrowDown": 8,
+   "ArrowUp": 8
+  }
+ },
+ "K2_ime_enter_ignore_not_swallow": {
+  "changedVsBase_effect": 0,
+  "rawActionTypeDiffersVsBase": 512,
+  "specViolations_documentedCells": 0,
+  "specViolations_undocumentedCells": 0,
+  "effectsWhileComposing": 0,
+  "escapeConsumedWhileListClosed": 0,
+  "askAiWithoutModel": 0,
+  "captureWithoutLogin": 0,
+  "changedByKey": {}
+ },
+ "K3_escape_ignores_open": {
+  "changedVsBase_effect": 256,
+  "rawActionTypeDiffersVsBase": 256,
+  "specViolations_documentedCells": 256,
+  "specViolations_undocumentedCells": 0,
+  "effectsWhileComposing": 0,
+  "escapeConsumedWhileListClosed": 256,
+  "askAiWithoutModel": 0,
+  "captureWithoutLogin": 0,
+  "changedByKey": {
+   "Escape": 256
+  }
+ },
+ "K4_arrow_modifiers_allowed": {
+  "changedVsBase_effect": 240,
+  "rawActionTypeDiffersVsBase": 240,
+  "specViolations_documentedCells": 0,
+  "specViolations_undocumentedCells": 240,
+  "effectsWhileComposing": 0,
+  "escapeConsumedWhileListClosed": 0,
+  "askAiWithoutModel": 0,
+  "captureWithoutLogin": 0,
+  "changedByKey": {
+   "ArrowDown": 120,
+   "ArrowUp": 120
+  }
+ },
+ "K5_ai_not_gated_by_model": {
+  "changedVsBase_effect": 8,
+  "rawActionTypeDiffersVsBase": 8,
+  "specViolations_documentedCells": 8,
+  "specViolations_undocumentedCells": 0,
+  "effectsWhileComposing": 0,
+  "escapeConsumedWhileListClosed": 0,
+  "askAiWithoutModel": 8,
+  "captureWithoutLogin": 0,
+  "changedByKey": {
+   "Enter": 8
+  }
+ },
+ "K6_capture_not_gated_by_login": {
+  "changedVsBase_effect": 8,
+  "rawActionTypeDiffersVsBase": 8,
+  "specViolations_documentedCells": 8,
+  "specViolations_undocumentedCells": 0,
+  "effectsWhileComposing": 0,
+  "escapeConsumedWhileListClosed": 0,
+  "askAiWithoutModel": 0,
+  "captureWithoutLogin": 8,
+  "changedByKey": {
+   "Enter": 8
+  }
+ },
+ "K7_alt_enter_combo_allowed": {
+  "changedVsBase_effect": 40,
+  "rawActionTypeDiffersVsBase": 40,
+  "specViolations_documentedCells": 0,
+  "specViolations_undocumentedCells": 40,
+  "effectsWhileComposing": 0,
+  "escapeConsumedWhileListClosed": 0,
+  "askAiWithoutModel": 0,
+  "captureWithoutLogin": 0,
+  "changedByKey": {
+   "Enter": 40
+  }
+ }
+}

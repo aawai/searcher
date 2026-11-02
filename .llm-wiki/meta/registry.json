@@ -1,13 +1,27 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-31T12:28:39.676Z",
+  "last_updated": "2026-11-02T08:04:46.046Z",
   "pages": {
+    "concepts/abortcontroller-and-request-cancellation": {
+      "type": "concept",
+      "title": "AbortController and Request Cancellation in Searcher",
+      "domain": "engineering",
+      "created": "2026-11-02",
+      "updated": "2026-11-02"
+    },
     "concepts/accessible-grid-drag-keyboard-and-announcements": {
       "type": "concept",
       "title": "Accessible Grid Drag — Keyboard and Announcements",
       "domain": "accessibility",
       "created": "2026-10-25",
       "updated": "2026-10-25"
+    },
+    "concepts/archive-extraction-zip-slip-and-decompression-limits": {
+      "type": "concept",
+      "title": "Archive Extraction: Zip Slip and Decompression Limits",
+      "domain": "engineering",
+      "created": "2026-11-02",
+      "updated": "2026-11-02"
     },
     "concepts/aria-combobox-grouped-suggestions": {
       "type": "concept",
@@ -121,6 +135,20 @@
       "created": "2026-10-28",
       "updated": "2026-10-28"
     },
+    "concepts/inert-and-top-layer-in-searcher-overlays": {
+      "type": "concept",
+      "title": "Inert and Top Layer in Searcher Overlays",
+      "domain": "engineering",
+      "created": "2026-11-01",
+      "updated": "2026-11-01"
+    },
+    "concepts/markdown-sanitization-with-rehype-sanitize": {
+      "type": "concept",
+      "title": "Markdown Sanitization with rehype-sanitize",
+      "domain": "engineering",
+      "created": "2026-11-01",
+      "updated": "2026-11-01"
+    },
     "concepts/modal-dialog-focus-and-semantics": {
       "type": "concept",
       "title": "Modal Dialog Focus and Semantics",
@@ -159,6 +187,20 @@
       "created": "2026-10-30",
       "updated": "2026-10-30"
     },
+    "concepts/playwright-actionability-and-e2e-waits": {
+      "type": "concept",
+      "title": "Playwright Actionability and E2E Wait Conditions",
+      "domain": "engineering",
+      "created": "2026-11-01",
+      "updated": "2026-11-01"
+    },
+    "concepts/pointer-capture-and-drag-lifecycle": {
+      "type": "concept",
+      "title": "Pointer Capture and Drag Lifecycle in Searcher",
+      "domain": "engineering",
+      "created": "2026-11-02",
+      "updated": "2026-11-02"
+    },
     "concepts/pointer-target-size": {
       "type": "concept",
       "title": "Pointer Target Size",
@@ -193,6 +235,13 @@
       "domain": "engineering",
       "created": "2026-10-05",
       "updated": "2026-10-05"
+    },
+    "concepts/scrollbar-gutter-and-layout-stability": {
+      "type": "concept",
+      "title": "Scrollbar Gutter and Width-Driven Layout Stability",
+      "domain": "engineering",
+      "created": "2026-11-01",
+      "updated": "2026-11-01"
     },
     "concepts/server-sent-events-sse-与实时事件流": {
       "type": "concept",
@@ -263,6 +312,13 @@
       "domain": "engineering",
       "created": "2026-10-31",
       "updated": "2026-10-31"
+    },
+    "concepts/upload-validation-defense-in-depth": {
+      "type": "concept",
+      "title": "Upload Validation Defense in Depth",
+      "domain": "engineering",
+      "created": "2026-11-02",
+      "updated": "2026-11-02"
     },
     "concepts/view-transitions-shared-element": {
       "type": "concept",
@@ -1305,6 +1361,106 @@
       "format": "web",
       "captured": "2026-10-31",
       "updated": "2026-10-31"
+    },
+    "sources/SRC-2026-11-01-001": {
+      "type": "source",
+      "title": "scrollbar-gutter CSS property (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-01-001/extracted.md",
+      "source_id": "SRC-2026-11-01-001",
+      "format": "web",
+      "captured": "2026-11-01",
+      "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-01-002": {
+      "type": "source",
+      "title": "Playwright Auto-waiting",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-01-002/extracted.md",
+      "source_id": "SRC-2026-11-01-002",
+      "format": "web",
+      "captured": "2026-11-01",
+      "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-01-003": {
+      "type": "source",
+      "title": "rehype-sanitize README",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-01-003/extracted.md",
+      "source_id": "SRC-2026-11-01-003",
+      "format": "web",
+      "captured": "2026-11-01",
+      "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-01-004": {
+      "type": "source",
+      "title": "inert HTML global attribute (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-01-004/extracted.md",
+      "source_id": "SRC-2026-11-01-004",
+      "format": "web",
+      "captured": "2026-11-01",
+      "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-01-005": {
+      "type": "source",
+      "title": "Popover API (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-01-005/extracted.md",
+      "source_id": "SRC-2026-11-01-005",
+      "format": "web",
+      "captured": "2026-11-01",
+      "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-02-001": {
+      "type": "source",
+      "title": "Element: setPointerCapture() method",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-02-001/extracted.md",
+      "source_id": "SRC-2026-11-02-001",
+      "format": "web",
+      "captured": "2026-11-02",
+      "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-02-002": {
+      "type": "source",
+      "title": "AbortController",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-02-002/extracted.md",
+      "source_id": "SRC-2026-11-02-002",
+      "format": "web",
+      "captured": "2026-11-02",
+      "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-02-003": {
+      "type": "source",
+      "title": "File Upload Cheat Sheet (OWASP)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-02-003/extracted.md",
+      "source_id": "SRC-2026-11-02-003",
+      "format": "web",
+      "captured": "2026-11-02",
+      "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-02-004": {
+      "type": "source",
+      "title": "fflate README",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-02-004/extracted.md",
+      "source_id": "SRC-2026-11-02-004",
+      "format": "web",
+      "captured": "2026-11-02",
+      "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-02-005": {
+      "type": "source",
+      "title": "Zip Slip Vulnerability (Snyk)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-02-005/extracted.md",
+      "source_id": "SRC-2026-11-02-005",
+      "format": "web",
+      "captured": "2026-11-02",
+      "updated": "2026-11-02"
     },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",

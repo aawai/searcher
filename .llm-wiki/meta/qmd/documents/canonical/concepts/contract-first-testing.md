@@ -27,6 +27,7 @@ sources:
 
 - 项目应用：[[entities/searcher-项目]]
 - 依赖定义：[[sources/SRC-2026-09-25-005]]
+- E2E 等待条件与 actionability：[Playwright Actionability and E2E Wait Conditions](/concepts/playwright-actionability-and-e2e-waits.md)
 - 架构总览：[[syntheses/searcher-system-architecture]]
 
 ## 来源

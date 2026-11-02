@@ -664,6 +664,47 @@ Deno.test("AI 窗口：后台保活、关闭 / 切换保护、临时会话与后
                 }
             },
         );
+
+        await t.step(
+            "narrow AI window keeps history drawer reachable when no model is available",
+            async () => {
+                const { page, context } = await newPage({
+                    viewport: { width: 390, height: 844 },
+                });
+                try {
+                    await openAi(page, app.origin);
+                    await ask(page, "移动端历史");
+                    await asked(page);
+                    await windowText(page, LAST_WORDS);
+                    await app.store.run((db) =>
+                        db.update(aiModels).set({ enabled: false }).run()
+                    );
+                    try {
+                        await page.reload();
+                        await aiWindow(page).waitFor({ state: "visible" });
+                        await windowText(page, "暂无可用 AI 模型");
+                        const drawerToggle = aiWindow(page).getByRole(
+                            "button",
+                            {
+                                name: "打开历史对话",
+                                exact: true,
+                            },
+                        );
+                        await drawerToggle.waitFor({ state: "visible" });
+                        await drawerToggle.click();
+                        await page.locator(".ask-history-sheet").waitFor({
+                            state: "visible",
+                        });
+                    } finally {
+                        await app.store.run((db) =>
+                            db.update(aiModels).set({ enabled: true }).run()
+                        );
+                    }
+                } finally {
+                    await context.close();
+                }
+            },
+        );
     } finally {
         await browser.close();
         await fake.close();

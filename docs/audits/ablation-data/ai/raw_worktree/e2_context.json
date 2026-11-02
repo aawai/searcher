@@ -1,0 +1,572 @@
+{
+ "generatedAt": "2026-11-02T01:44:03.166Z",
+ "deno": {
+  "deno": "2.9.8",
+  "v8": "15.0.245.2-rusty",
+  "typescript": "6.0.3"
+ },
+ "data": {
+  "historyGrowth": [
+   {
+    "turn": 1,
+    "upstreamBytes": 509,
+    "upstreamMessages": 1,
+    "totalMs": 16.937117,
+    "ttfbMs": 14.779345999999975
+   },
+   {
+    "turn": 2,
+    "upstreamBytes": 1796,
+    "upstreamMessages": 3,
+    "totalMs": 4.1183300000000145,
+    "ttfbMs": 3.306225999999981
+   },
+   {
+    "turn": 3,
+    "upstreamBytes": 3083,
+    "upstreamMessages": 5,
+    "totalMs": 3.602958000000001,
+    "ttfbMs": 2.9770980000000122
+   },
+   {
+    "turn": 4,
+    "upstreamBytes": 4370,
+    "upstreamMessages": 7,
+    "totalMs": 3.0604060000000004,
+    "ttfbMs": 2.4709269999999606
+   },
+   {
+    "turn": 5,
+    "upstreamBytes": 5657,
+    "upstreamMessages": 9,
+    "totalMs": 3.9149300000000267,
+    "ttfbMs": 3.16941300000002
+   },
+   {
+    "turn": 6,
+    "upstreamBytes": 6944,
+    "upstreamMessages": 11,
+    "totalMs": 3.2942500000000337,
+    "ttfbMs": 2.705399
+   },
+   {
+    "turn": 7,
+    "upstreamBytes": 8231,
+    "upstreamMessages": 13,
+    "totalMs": 3.4123089999999934,
+    "ttfbMs": 2.768753000000004
+   },
+   {
+    "turn": 8,
+    "upstreamBytes": 9518,
+    "upstreamMessages": 15,
+    "totalMs": 4.05392999999998,
+    "ttfbMs": 3.2259670000000256
+   },
+   {
+    "turn": 9,
+    "upstreamBytes": 10805,
+    "upstreamMessages": 17,
+    "totalMs": 2.7111570000000142,
+    "ttfbMs": 2.1645560000000046
+   },
+   {
+    "turn": 10,
+    "upstreamBytes": 12093,
+    "upstreamMessages": 19,
+    "totalMs": 2.8266080000000215,
+    "ttfbMs": 2.3077780000000416
+   },
+   {
+    "turn": 11,
+    "upstreamBytes": 13381,
+    "upstreamMessages": 21,
+    "totalMs": 2.716047000000003,
+    "ttfbMs": 2.074251000000004
+   },
+   {
+    "turn": 12,
+    "upstreamBytes": 14669,
+    "upstreamMessages": 23,
+    "totalMs": 3.500994999999989,
+    "ttfbMs": 2.8112750000000233
+   },
+   {
+    "turn": 13,
+    "upstreamBytes": 15957,
+    "upstreamMessages": 25,
+    "totalMs": 3.4802199999999743,
+    "ttfbMs": 2.805022000000008
+   },
+   {
+    "turn": 14,
+    "upstreamBytes": 17245,
+    "upstreamMessages": 27,
+    "totalMs": 4.162395000000004,
+    "ttfbMs": 3.114307999999994
+   },
+   {
+    "turn": 15,
+    "upstreamBytes": 18533,
+    "upstreamMessages": 29,
+    "totalMs": 4.179723000000024,
+    "ttfbMs": 3.570543999999984
+   },
+   {
+    "turn": 16,
+    "upstreamBytes": 19821,
+    "upstreamMessages": 31,
+    "totalMs": 2.9928350000000137,
+    "ttfbMs": 2.4249110000000087
+   },
+   {
+    "turn": 17,
+    "upstreamBytes": 21109,
+    "upstreamMessages": 33,
+    "totalMs": 2.9925059999999917,
+    "ttfbMs": 2.414215000000013
+   },
+   {
+    "turn": 18,
+    "upstreamBytes": 22397,
+    "upstreamMessages": 35,
+    "totalMs": 2.898113999999964,
+    "ttfbMs": 2.3357189999999832
+   },
+   {
+    "turn": 19,
+    "upstreamBytes": 23685,
+    "upstreamMessages": 37,
+    "totalMs": 3.2563769999999863,
+    "ttfbMs": 2.6866600000000176
+   },
+   {
+    "turn": 20,
+    "upstreamBytes": 24973,
+    "upstreamMessages": 39,
+    "totalMs": 2.924572000000012,
+    "ttfbMs": 2.341015000000027
+   },
+   {
+    "turn": 21,
+    "upstreamBytes": 26261,
+    "upstreamMessages": 41,
+    "totalMs": 3.3758920000000217,
+    "ttfbMs": 2.7287130000000275
+   },
+   {
+    "turn": 22,
+    "upstreamBytes": 27549,
+    "upstreamMessages": 43,
+    "totalMs": 3.0176460000000134,
+    "ttfbMs": 2.4396300000000224
+   },
+   {
+    "turn": 23,
+    "upstreamBytes": 28837,
+    "upstreamMessages": 45,
+    "totalMs": 2.8642980000000193,
+    "ttfbMs": 2.312534000000028
+   },
+   {
+    "turn": 24,
+    "upstreamBytes": 30125,
+    "upstreamMessages": 47,
+    "totalMs": 3.0374480000000403,
+    "ttfbMs": 2.4548300000000154
+   },
+   {
+    "turn": 25,
+    "upstreamBytes": 31413,
+    "upstreamMessages": 49,
+    "totalMs": 2.9081379999999513,
+    "ttfbMs": 2.3581159999999954
+   },
+   {
+    "turn": 26,
+    "upstreamBytes": 32701,
+    "upstreamMessages": 51,
+    "totalMs": 3.06072800000004,
+    "ttfbMs": 2.4216800000000376
+   },
+   {
+    "turn": 27,
+    "upstreamBytes": 33989,
+    "upstreamMessages": 53,
+    "totalMs": 3.5989600000000337,
+    "ttfbMs": 3.0716340000000173
+   },
+   {
+    "turn": 28,
+    "upstreamBytes": 35277,
+    "upstreamMessages": 55,
+    "totalMs": 3.028224000000023,
+    "ttfbMs": 2.508384000000035
+   },
+   {
+    "turn": 29,
+    "upstreamBytes": 36565,
+    "upstreamMessages": 57,
+    "totalMs": 3.0519499999999766,
+    "ttfbMs": 2.527772999999968
+   },
+   {
+    "turn": 30,
+    "upstreamBytes": 37853,
+    "upstreamMessages": 59,
+    "totalMs": 3.2892360000000167,
+    "ttfbMs": 2.5297370000000114
+   },
+   {
+    "turn": 31,
+    "upstreamBytes": 39141,
+    "upstreamMessages": 61,
+    "totalMs": 2.9152899999999704,
+    "ttfbMs": 2.3534889999999677
+   },
+   {
+    "turn": 32,
+    "upstreamBytes": 40429,
+    "upstreamMessages": 63,
+    "totalMs": 3.0793369999999527,
+    "ttfbMs": 2.5123399999999947
+   },
+   {
+    "turn": 33,
+    "upstreamBytes": 41717,
+    "upstreamMessages": 65,
+    "totalMs": 5.348025000000007,
+    "ttfbMs": 4.548318999999992
+   },
+   {
+    "turn": 34,
+    "upstreamBytes": 43005,
+    "upstreamMessages": 67,
+    "totalMs": 7.581068000000016,
+    "ttfbMs": 5.022153000000003
+   },
+   {
+    "turn": 35,
+    "upstreamBytes": 44293,
+    "upstreamMessages": 69,
+    "totalMs": 3.633735999999999,
+    "ttfbMs": 3.0188989999999762
+   },
+   {
+    "turn": 36,
+    "upstreamBytes": 45581,
+    "upstreamMessages": 71,
+    "totalMs": 3.587327000000016,
+    "ttfbMs": 2.935030999999981
+   },
+   {
+    "turn": 37,
+    "upstreamBytes": 46869,
+    "upstreamMessages": 73,
+    "totalMs": 3.675726999999995,
+    "ttfbMs": 3.036227999999994
+   },
+   {
+    "turn": 38,
+    "upstreamBytes": 48157,
+    "upstreamMessages": 75,
+    "totalMs": 3.8068589999999745,
+    "ttfbMs": 3.1878169999999955
+   },
+   {
+    "turn": 39,
+    "upstreamBytes": 49445,
+    "upstreamMessages": 77,
+    "totalMs": 3.728100999999981,
+    "ttfbMs": 3.1734309999999937
+   },
+   {
+    "turn": 40,
+    "upstreamBytes": 50733,
+    "upstreamMessages": 79,
+    "totalMs": 3.586359000000016,
+    "ttfbMs": 2.9618340000000103
+   },
+   {
+    "turn": 41,
+    "upstreamBytes": 52021,
+    "upstreamMessages": 81,
+    "totalMs": 3.6750940000000014,
+    "ttfbMs": 3.0778000000000247
+   },
+   {
+    "turn": 42,
+    "upstreamBytes": 53309,
+    "upstreamMessages": 83,
+    "totalMs": 3.791795000000036,
+    "ttfbMs": 3.1931510000000003
+   },
+   {
+    "turn": 43,
+    "upstreamBytes": 54597,
+    "upstreamMessages": 85,
+    "totalMs": 3.8204489999999964,
+    "ttfbMs": 3.1272409999999695
+   },
+   {
+    "turn": 44,
+    "upstreamBytes": 55885,
+    "upstreamMessages": 87,
+    "totalMs": 4.683826999999951,
+    "ttfbMs": 4.0431089999999585
+   },
+   {
+    "turn": 45,
+    "upstreamBytes": 57173,
+    "upstreamMessages": 89,
+    "totalMs": 3.9054840000000013,
+    "ttfbMs": 3.3213499999999954
+   },
+   {
+    "turn": 46,
+    "upstreamBytes": 58461,
+    "upstreamMessages": 91,
+    "totalMs": 3.24434100000002,
+    "ttfbMs": 2.6672210000000405
+   },
+   {
+    "turn": 47,
+    "upstreamBytes": 59749,
+    "upstreamMessages": 93,
+    "totalMs": 3.324100000000044,
+    "ttfbMs": 2.7786180000000513
+   },
+   {
+    "turn": 48,
+    "upstreamBytes": 61037,
+    "upstreamMessages": 95,
+    "totalMs": 3.2420299999999997,
+    "ttfbMs": 2.681732000000011
+   },
+   {
+    "turn": 49,
+    "upstreamBytes": 62325,
+    "upstreamMessages": 97,
+    "totalMs": 3.6800210000000106,
+    "ttfbMs": 3.121217999999999
+   },
+   {
+    "turn": 50,
+    "upstreamBytes": 63613,
+    "upstreamMessages": 99,
+    "totalMs": 3.3345820000000117,
+    "ttfbMs": 2.777294999999981
+   },
+   {
+    "turn": 51,
+    "upstreamBytes": 64901,
+    "upstreamMessages": 101,
+    "totalMs": 3.2124769999999785,
+    "ttfbMs": 2.6462789999999927
+   },
+   {
+    "turn": 52,
+    "upstreamBytes": 66189,
+    "upstreamMessages": 103,
+    "totalMs": 3.0912010000000123,
+    "ttfbMs": 2.497964999999965
+   },
+   {
+    "turn": 53,
+    "upstreamBytes": 67477,
+    "upstreamMessages": 105,
+    "totalMs": 3.179883000000018,
+    "ttfbMs": 2.625686999999971
+   },
+   {
+    "turn": 54,
+    "upstreamBytes": 68765,
+    "upstreamMessages": 107,
+    "totalMs": 3.2110399999999686,
+    "ttfbMs": 2.6705670000000055
+   },
+   {
+    "turn": 55,
+    "upstreamBytes": 70053,
+    "upstreamMessages": 109,
+    "totalMs": 4.0398400000000265,
+    "ttfbMs": 3.3746100000000183
+   },
+   {
+    "turn": 56,
+    "upstreamBytes": 71341,
+    "upstreamMessages": 111,
+    "totalMs": 4.463530000000048,
+    "ttfbMs": 3.7325440000000185
+   },
+   {
+    "turn": 57,
+    "upstreamBytes": 72629,
+    "upstreamMessages": 113,
+    "totalMs": 4.376030999999955,
+    "ttfbMs": 3.669191000000012
+   },
+   {
+    "turn": 58,
+    "upstreamBytes": 73917,
+    "upstreamMessages": 115,
+    "totalMs": 4.113294999999994,
+    "ttfbMs": 3.502326999999923
+   },
+   {
+    "turn": 59,
+    "upstreamBytes": 75205,
+    "upstreamMessages": 117,
+    "totalMs": 4.396639999999934,
+    "ttfbMs": 3.7975139999999783
+   },
+   {
+    "turn": 60,
+    "upstreamBytes": 76493,
+    "upstreamMessages": 119,
+    "totalMs": 3.2177879999999277,
+    "ttfbMs": 2.646082999999976
+   }
+  ],
+  "prepLatencyVsHistory": [
+   {
+    "priorTurns": 10,
+    "storedMessages": 22,
+    "upstreamBytes": 7214,
+    "upstreamMessages": 31,
+    "ttfbMs": [
+     1.9567980000000489,
+     1.9978749999999081,
+     2.06445999999994,
+     1.8443429999999807,
+     2.340693999999985
+    ],
+    "totalMs": [
+     2.4265679999999747,
+     2.5083829999999807,
+     2.5417139999999563,
+     2.3601959999999735,
+     2.936268000000041
+    ]
+   },
+   {
+    "priorTurns": 100,
+    "storedMessages": 202,
+    "upstreamBytes": 66884,
+    "upstreamMessages": 211,
+    "ttfbMs": [
+     3.5890410000000657,
+     3.347060000000056,
+     3.414578000000006,
+     4.301004999999918,
+     2.737895999999978
+    ],
+    "totalMs": [
+     4.225808000000029,
+     3.950032999999962,
+     3.9942610000000514,
+     4.826734999999985,
+     3.2578700000000254
+    ]
+   },
+   {
+    "priorTurns": 500,
+    "storedMessages": 1002,
+    "upstreamBytes": 332084,
+    "upstreamMessages": 1011,
+    "ttfbMs": [
+     6.334938000000079,
+     6.045329000000038,
+     6.735687999999982,
+     5.920500999999945,
+     9.390942999999993
+    ],
+    "totalMs": [
+     6.975459999999998,
+     6.587092999999982,
+     7.4162959999999885,
+     6.675561000000016,
+     12.214404000000059
+    ]
+   },
+   {
+    "priorTurns": 2000,
+    "storedMessages": 4002,
+    "upstreamBytes": 1326584,
+    "upstreamMessages": 4011,
+    "ttfbMs": [
+     21.844118999999978,
+     29.642742999999996,
+     20.887331000000017,
+     23.25707,
+     15.926111999999875
+    ],
+    "totalMs": [
+     22.539065999999934,
+     30.436885000000075,
+     21.576542000000018,
+     24.04395800000009,
+     16.510549999999967
+    ]
+   }
+  ],
+  "toolResultSize": [
+   {
+    "bodyChars": 2000,
+    "docsReturned": 5,
+    "toolMessageChars": 11356,
+    "round2UpstreamBytes": 12173,
+    "followUpUpstreamBytes": 626,
+    "followUpHasToolRole": false,
+    "followUpRoles": [
+     "user",
+     "assistant",
+     "user"
+    ],
+    "sseToolResultEventChars": 11356
+   },
+   {
+    "bodyChars": 20000,
+    "docsReturned": 5,
+    "toolMessageChars": 101356,
+    "round2UpstreamBytes": 102173,
+    "followUpUpstreamBytes": 626,
+    "followUpHasToolRole": false,
+    "followUpRoles": [
+     "user",
+     "assistant",
+     "user"
+    ],
+    "sseToolResultEventChars": 101356
+   },
+   {
+    "bodyChars": 200000,
+    "docsReturned": 5,
+    "toolMessageChars": 1001356,
+    "round2UpstreamBytes": 1002173,
+    "followUpUpstreamBytes": 626,
+    "followUpHasToolRole": false,
+    "followUpRoles": [
+     "user",
+     "assistant",
+     "user"
+    ],
+    "sseToolResultEventChars": 1001356
+   },
+   {
+    "bodyChars": 1000000,
+    "docsReturned": 5,
+    "toolMessageChars": 5001356,
+    "round2UpstreamBytes": 5002173,
+    "followUpUpstreamBytes": 626,
+    "followUpHasToolRole": false,
+    "followUpRoles": [
+     "user",
+     "assistant",
+     "user"
+    ],
+    "sseToolResultEventChars": 5001356
+   }
+  ]
+ }
+}

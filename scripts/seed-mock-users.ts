@@ -114,6 +114,7 @@ export async function seedMockUsers(dbPath?: string, passwordInput?: string) {
                             name,
                             url,
                             sortOrder: index,
+                            isHomeFixed: true,
                             createdAt: now,
                             updatedAt: now,
                         })),

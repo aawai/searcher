@@ -1,0 +1,2600 @@
+Task test deno test -A src web/src
+Check src/app.test.ts
+Check src/db/accent-follows-wallpaper-migration.test.ts
+Check src/db/ai-workspace-migration.test.ts
+Check src/db/app-library-migration.test.ts
+Check src/db/appearance-cut-migration.test.ts
+Check src/db/database.test.ts
+Check src/db/documents-fts-trigram-migration.test.ts
+Check src/db/documents-order-migration.test.ts
+Check src/db/glass-intensity-migration.test.ts
+Check src/db/gradient-wallpaper-removal-migration.test.ts
+Check src/db/home-calm-migration.test.ts
+Check src/db/home-note-band-migration.test.ts
+Check src/db/home-note-cells-migration.test.ts
+Check src/db/icon-size-migration.test.ts
+Check src/db/notes-unification-migration.test.ts
+Check src/db/webapp-home-fixed-migration.test.ts
+Check src/features/ai/ai.route.test.ts
+Check src/features/ai/ai.test.ts
+Check src/features/ai/ask-workspace.test.ts
+Check src/features/ai/attachments.test.ts
+Check src/features/ai/client.test.ts
+Check src/features/ai/images.test.ts
+Check src/features/ai/model-capabilities.test.ts
+Check src/features/ai/provider-adapter.test.ts
+Check src/features/ai/reasoning.test.ts
+Check src/features/ai/tools.test.ts
+Check src/features/audit/audit.test.ts
+Check src/features/auth/auth.test.ts
+Check src/features/bookmarks/bookmarks.test.ts
+Check src/features/bookmarks/icons.contract.test.ts
+Check src/features/bookmarks/migration.test.ts
+Check src/features/documents/assets.test.ts
+Check src/features/documents/documents.route.test.ts
+Check src/features/documents/markdown.test.ts
+Check src/features/documents/notebooks.test.ts
+Check src/features/documents/service.test.ts
+Check src/features/documents/settings.test.ts
+Check src/features/home/home.test.ts
+Check src/features/preferences/dock.test.ts
+Check src/features/preferences/generation-defaults.test.ts
+Check src/features/preferences/preferences.test.ts
+Check src/features/search/personal-search.test.ts
+Check src/features/search/search.route.test.ts
+Check src/features/search/search.test.ts
+Check src/features/system/backup.test.ts
+Check src/features/system/config-import.test.ts
+Check src/features/system/settings-enforcement.test.ts
+Check src/features/system/system.route.test.ts
+Check src/features/users/users.test.ts
+Check src/features/wallpaper/wallpaper.test.ts
+Check src/features/webapp-icons/fetcher.test.ts
+Check src/features/webapp-icons/presentation.test.ts
+Check src/features/webapp-icons/service.test.ts
+Check src/features/webapp-icons/ssrf.test.ts
+Check src/features/webapp-icons/svg.test.ts
+Check src/features/webapp-icons/validator.test.ts
+Check src/features/webapp-icons/webapp-icons.route.test.ts
+Check src/internal/crypto/vault.test.ts
+Check src/internal/hono/body-policy.test.ts
+Check src/internal/hono/intake-response.test.ts
+Check src/internal/hono/middleware/logger.test.ts
+Check src/internal/hono/route-overlap.test.ts
+Check src/internal/hono/routes.test.ts
+Check src/internal/logger/logger.test.ts
+Check src/internal/validator/hono.test.ts
+Check src/shared/dock.test.ts
+Check src/shared/wallpaper-presentation.test.ts
+Check src/shared/wallpaper.test.ts
+Check web/src/app/navigation-guards.test.tsx
+Check web/src/app/routes.test.ts
+Check web/src/app/state.test.ts
+Check web/src/app/undo-feedback.test.ts
+Check web/src/components/searcher/NoteMarkdown.test.tsx
+Check web/src/components/searcher/SettingsPresetSlider.test.tsx
+Check web/src/components/searcher/desktopLayout.test.ts
+Check web/src/components/searcher/folderPreview.test.ts
+Check web/src/components/searcher/homeLibraryLayout.test.ts
+Check web/src/components/searcher/iconFallback.test.ts
+Check web/src/components/searcher/launcherTiles.test.ts
+Check web/src/components/ui/escape-layer-stack.test.ts
+Check web/src/components/ui/slider.test.tsx
+Check web/src/components/wallpaper/WallpaperStageContextPreview.test.tsx
+Check web/src/components/wallpaper/WallpaperSurface.test.ts
+Check web/src/components/wallpaper/canvas-daypart.test.ts
+Check web/src/design-system/breakpoints.test.ts
+Check web/src/design-system/glass-contrast.test.ts
+Check web/src/design-system/home-grid.test.ts
+Check web/src/design-system/wallpaper-accent.test.ts
+Check web/src/features/app-library/library-actions.test.ts
+Check web/src/features/app-library/library-order.test.ts
+Check web/src/features/app-library/library-viewport.test.ts
+Check web/src/features/ask/ReasoningSelector.test.ts
+Check web/src/features/ask/SearcherAttachmentAdapter.test.ts
+Check web/src/features/ask/assistant-message-adapter.test.ts
+Check web/src/features/ask/attachment-utils.test.ts
+Check web/src/features/ask/leave-loss.test.ts
+Check web/src/features/ask/temporary-lease.test.ts
+Check web/src/features/ask/tree-utils.test.ts
+Check web/src/features/ask/useAskStream.test.ts
+Check web/src/features/dock/dock-provider.test.tsx
+Check web/src/features/documents/device-preferences.test.ts
+Check web/src/features/documents/document-event-subscriptions.test.ts
+Check web/src/features/documents/document-pagination.test.ts
+Check web/src/features/documents/document-session.test.ts
+Check web/src/features/documents/editor-content.test.ts
+Check web/src/features/documents/editor-extensions.test.ts
+Check web/src/features/documents/local-drafts.test.ts
+Check web/src/features/home-calm/calm-clock.test.ts
+Check web/src/features/home-calm/continue-line.test.ts
+Check web/src/features/home-layouts/home-grid-cells.test.ts
+Check web/src/features/home-layouts/home-note-task-saver.test.ts
+Check web/src/features/home-layouts/home-notes.test.ts
+Check web/src/features/home-layouts/home-viewport.test.ts
+Check web/src/features/home-layouts/note-preview-clip.test.ts
+Check web/src/features/home-layouts/note-tasks.test.ts
+Check web/src/features/inline-ai/inline-answer.test.ts
+Check web/src/features/library/library-state.test.ts
+Check web/src/features/markdown-editor/commands.test.ts
+Check web/src/features/markdown-editor/runtime.test.ts
+Check web/src/features/omnibox/omnibox-keys.test.ts
+Check web/src/features/omnibox/omnibox-model.test.ts
+Check web/src/features/omnibox/split-label.test.ts
+Check web/src/features/omnibox/useAiModels.test.ts
+Check web/src/features/share/share-capture.test.ts
+Check web/src/features/shortcuts/ShortcutsSettings.test.tsx
+Check web/src/features/shortcuts/shortcut-catalog.test.ts
+Check web/src/features/windowing/window-state.test.ts
+Check web/src/features/workspace/document-notebooks.test.ts
+Check web/src/features/workspace/note-summary.test.ts
+Check web/src/features/workspace/notes-tree-drop.test.ts
+Check web/src/features/workspace/notes-tree-model.test.ts
+Check web/src/features/workspace/tree-keyboard.test.ts
+Check web/src/features/workspace/workspace-state.test.ts
+Check web/src/lib/local.test.ts
+Check web/src/lib/shared-element.test.ts
+Check web/src/pwa/manifest.test.ts
+Check web/src/pwa/sw-policy.test.ts
+Check web/src/spikes/editable-pagination/runtime.test.ts
+Check web/src/spikes/markdown-editor/runtime.test.ts
+running 10 tests from ./src/app.test.ts
+SPA route integration: unknown and React-routed regular pages return SPA shell ...
+------- output -------
+[2026-11-02 01:38:02.693] INFO: GET /unknown-regular-page 200 1ms undefined
+[2026-11-02 01:38:02.696] INFO: GET /some/nested/unknown/route 200 0ms undefined
+[2026-11-02 01:38:02.697] INFO: GET /settings/unknown-tab 200 0ms undefined
+[2026-11-02 01:38:02.697] INFO: GET /admin/unknown-section 200 0ms undefined
+[2026-11-02 01:38:02.698] INFO: GET /settings/appearance 200 1ms undefined
+[2026-11-02 01:38:02.698] INFO: GET /admin/users 200 0ms undefined
+----- output end -----
+SPA route integration: unknown and React-routed regular pages return SPA shell ... ok (66ms)
+SPA route integration: HEAD requests on critical pages return empty body with headers ...
+------- output -------
+[2026-11-02 01:38:02.741] INFO: HEAD / 200 0ms undefined
+[2026-11-02 01:38:02.742] INFO: HEAD /settings/appearance 200 0ms undefined
+[2026-11-02 01:38:02.743] INFO: HEAD /admin/users 200 0ms undefined
+[2026-11-02 01:38:02.744] INFO: HEAD /ask 200 0ms undefined
+[2026-11-02 01:38:02.745] INFO: HEAD /unknown-regular-page 200 1ms undefined
+----- output end -----
+SPA route integration: HEAD requests on critical pages return empty body with headers ... ok (41ms)
+SPA route boundary: unknown /api or /api/* returns JSON 404 ...
+------- output -------
+[2026-11-02 01:38:02.786] INFO: GET /api 404 0ms undefined
+[2026-11-02 01:38:02.787] INFO: GET /api/ 404 0ms undefined
+[2026-11-02 01:38:02.787] INFO: GET /api/not-exists 404 0ms undefined
+[2026-11-02 01:38:02.787] INFO: GET /api/not-exists/deep/nested 404 0ms undefined
+[2026-11-02 01:38:02.787] INFO: GET /api/settings/not-found 404 0ms undefined
+[2026-11-02 01:38:02.789] INFO: POST /api/not-exists 404 2ms undefined
+----- output end -----
+SPA route boundary: unknown /api or /api/* returns JSON 404 ... ok (43ms)
+SPA route boundary: /assets and /assets/* return static 404 not shell ...
+------- output -------
+[2026-11-02 01:38:02.827] INFO: GET /assets 404 1ms undefined
+[2026-11-02 01:38:02.827] INFO: HEAD /assets 404 0ms undefined
+[2026-11-02 01:38:02.828] INFO: POST /assets 404 0ms undefined
+[2026-11-02 01:38:02.828] INFO: GET /assets/ 404 0ms undefined
+[2026-11-02 01:38:02.828] INFO: HEAD /assets/ 404 0ms undefined
+[2026-11-02 01:38:02.828] INFO: POST /assets/ 404 0ms undefined
+[2026-11-02 01:38:02.829] INFO: GET /assets/not-exists.js 404 0ms undefined
+[2026-11-02 01:38:02.829] INFO: HEAD /assets/not-exists.js 404 0ms undefined
+[2026-11-02 01:38:02.830] INFO: POST /assets/not-exists.js 404 1ms undefined
+[2026-11-02 01:38:02.830] INFO: GET /assets/styles/missing.css 404 0ms undefined
+[2026-11-02 01:38:02.830] INFO: HEAD /assets/styles/missing.css 404 0ms undefined
+[2026-11-02 01:38:02.830] INFO: POST /assets/styles/missing.css 404 0ms undefined
+[2026-11-02 01:38:02.831] INFO: GET /assets/missing-AbCd1234.js 404 1ms undefined
+[2026-11-02 01:38:02.831] INFO: HEAD /assets/missing-AbCd1234.js 404 0ms undefined
+[2026-11-02 01:38:02.831] INFO: POST /assets/missing-AbCd1234.js 404 0ms undefined
+----- output end -----
+SPA route boundary: /assets and /assets/* return static 404 not shell ... ok (42ms)
+SPA route boundary: non-GET/HEAD methods do not fall back to SPA shell ...
+------- output -------
+[2026-11-02 01:38:02.868] INFO: POST /not-exists 404 0ms undefined
+[2026-11-02 01:38:02.868] INFO: POST /settings 404 0ms undefined
+[2026-11-02 01:38:02.868] INFO: PUT /admin/users 404 0ms undefined
+[2026-11-02 01:38:02.868] INFO: DELETE /account 404 0ms undefined
+[2026-11-02 01:38:02.869] INFO: PATCH /ask 404 0ms undefined
+----- output end -----
+SPA route boundary: non-GET/HEAD methods do not fall back to SPA shell ... ok (37ms)
+PWA files: manifest, service worker and icons are served before the SPA fallback ...
+------- output -------
+[2026-11-02 01:38:02.907] INFO: GET /manifest.webmanifest 200 1ms undefined
+[2026-11-02 01:38:02.908] INFO: HEAD /manifest.webmanifest 200 1ms undefined
+[2026-11-02 01:38:02.908] INFO: GET /sw.js 200 0ms undefined
+[2026-11-02 01:38:02.909] INFO: HEAD /sw.js 200 1ms undefined
+[2026-11-02 01:38:02.909] INFO: GET /icons/icon.svg 200 0ms undefined
+[2026-11-02 01:38:02.909] INFO: HEAD /icons/icon.svg 200 0ms undefined
+----- output end -----
+PWA files: manifest, service worker and icons are served before the SPA fallback ... ok (40ms)
+PWA files: missing manifest, service worker or icon return static 404 not shell ...
+------- output -------
+[2026-11-02 01:38:02.947] INFO: GET /manifest.webmanifest 404 0ms undefined
+[2026-11-02 01:38:02.947] INFO: HEAD /manifest.webmanifest 404 0ms undefined
+[2026-11-02 01:38:02.948] INFO: POST /manifest.webmanifest 404 0ms undefined
+[2026-11-02 01:38:02.948] INFO: GET /sw.js 404 0ms undefined
+[2026-11-02 01:38:02.948] INFO: HEAD /sw.js 404 0ms undefined
+[2026-11-02 01:38:02.948] INFO: POST /sw.js 404 0ms undefined
+[2026-11-02 01:38:02.949] INFO: GET /icons 404 1ms undefined
+[2026-11-02 01:38:02.949] INFO: HEAD /icons 404 0ms undefined
+[2026-11-02 01:38:02.949] INFO: POST /icons 404 0ms undefined
+[2026-11-02 01:38:02.949] INFO: GET /icons/ 404 0ms undefined
+[2026-11-02 01:38:02.950] INFO: HEAD /icons/ 404 1ms undefined
+[2026-11-02 01:38:02.950] INFO: POST /icons/ 404 0ms undefined
+[2026-11-02 01:38:02.950] INFO: GET /icons/missing.png 404 0ms undefined
+[2026-11-02 01:38:02.950] INFO: HEAD /icons/missing.png 404 0ms undefined
+[2026-11-02 01:38:02.950] INFO: POST /icons/missing.png 404 0ms undefined
+----- output end -----
+PWA files: missing manifest, service worker or icon return static 404 not shell ... ok (40ms)
+Static cache: hashed build assets preserve content, MIME and GET/HEAD headers ...
+------- output -------
+[2026-11-02 01:38:02.989] INFO: GET /assets/index-AbCd1234.js 200 1ms undefined
+[2026-11-02 01:38:02.989] INFO: HEAD /assets/index-AbCd1234.js 200 0ms undefined
+[2026-11-02 01:38:02.990] INFO: GET /assets/style-XyZ9_765.css 200 0ms undefined
+[2026-11-02 01:38:02.990] INFO: HEAD /assets/style-XyZ9_765.css 200 0ms undefined
+[2026-11-02 01:38:02.991] INFO: GET /assets/logo-AbCd12-4.svg 200 0ms undefined
+[2026-11-02 01:38:02.991] INFO: HEAD /assets/logo-AbCd12-4.svg 200 0ms undefined
+----- output end -----
+Static cache: hashed build assets preserve content, MIME and GET/HEAD headers ... ok (40ms)
+Static cache: unversioned and unsupported files require revalidation ...
+------- output -------
+[2026-11-02 01:38:03.030] INFO: GET /assets/bundle.js 200 0ms undefined
+[2026-11-02 01:38:03.031] INFO: HEAD /assets/bundle.js 200 0ms undefined
+[2026-11-02 01:38:03.032] INFO: GET /assets/bundle.js 200 0ms undefined
+[2026-11-02 01:38:03.032] INFO: HEAD /assets/bundle.js 200 0ms undefined
+[2026-11-02 01:38:03.033] INFO: GET /assets/manual.css 200 0ms undefined
+[2026-11-02 01:38:03.033] INFO: HEAD /assets/manual.css 200 0ms undefined
+[2026-11-02 01:38:03.033] INFO: GET /assets/index-AbCd123.js 200 0ms undefined
+[2026-11-02 01:38:03.034] INFO: HEAD /assets/index-AbCd123.js 200 0ms undefined
+[2026-11-02 01:38:03.034] INFO: GET /assets/index-AbCd1234.js.map 200 0ms undefined
+[2026-11-02 01:38:03.034] INFO: HEAD /assets/index-AbCd1234.js.map 200 0ms undefined
+[2026-11-02 01:38:03.035] INFO: GET /assets/index-AbCd1234.html 200 0ms undefined
+[2026-11-02 01:38:03.035] INFO: HEAD /assets/index-AbCd1234.html 200 0ms undefined
+[2026-11-02 01:38:03.036] INFO: GET /assets/index-AbCd1234!.js 200 0ms undefined
+[2026-11-02 01:38:03.036] INFO: HEAD /assets/index-AbCd1234!.js 200 0ms undefined
+[2026-11-02 01:38:03.036] INFO: GET /assets/logo.svg 200 0ms undefined
+[2026-11-02 01:38:03.037] INFO: HEAD /assets/logo.svg 200 0ms undefined
+[2026-11-02 01:38:03.037] INFO: GET /assets/nested-AbCd1234.js/bundle.js 200 0ms undefined
+[2026-11-02 01:38:03.037] INFO: HEAD /assets/nested-AbCd1234.js/bundle.js 200 0ms undefined
+----- output end -----
+Static cache: unversioned and unsupported files require revalidation ... ok (46ms)
+Static cache: protected API retains authentication and no-store ...
+------- output -------
+[2026-11-02 01:38:03.081] INFO: GET /api/webapps 401 0ms undefined
+----- output end -----
+Static cache: protected API retains authentication and no-store ... ok (45ms)
+running 2 tests from ./src/db/accent-follows-wallpaper-migration.test.ts
+accent migration keeps existing accounts' accent and makes new accounts follow the wallpaper ... ok (41ms)
+accent rollback SQL turns 'follow wallpaper' back into blue for the previous version ... ok (38ms)
+running 1 test from ./src/db/ai-workspace-migration.test.ts
+AI workspace upgrade preserves Provider data and reconstructs legacy variants ... ok (37ms)
+running 1 test from ./src/db/app-library-migration.test.ts
+app library migration puts pinned root apps first, keeps the rest in order, and loses no rows ... ok (32ms)
+running 1 test from ./src/db/appearance-cut-migration.test.ts
+appearance cut migration drops removed preference columns and keeps row data ... ok (23ms)
+running 3 tests from ./src/db/database.test.ts
+database: openDatabase with :memory: and migrateDatabase is idempotent ... ok (43ms)
+database: run queue executes in FIFO order with promise coordination ... ok (37ms)
+database: transaction rollback preserves consistency and next FIFO operations succeed ... ok (33ms)
+running 3 tests from ./src/db/documents-fts-trigram-migration.test.ts
+trigram migration rebuilds the index from live documents so CJK substrings match ... ok (43ms)
+trigram index stays in sync with edits, soft delete and restore ... ok (40ms)
+rollback SQL restores the unicode61 index without touching documents ... ok (42ms)
+running 1 test from ./src/db/documents-order-migration.test.ts
+document order migration backfills each user and notebook including trash and can be rolled back ... ok (49ms)
+running 1 test from ./src/db/glass-intensity-migration.test.ts
+glass intensity migration maps legacy search_opacity to tiers and drops the column ... ok (38ms)
+running 1 test from ./src/db/gradient-wallpaper-removal-migration.test.ts
+gradient wallpaper removal clears only gradient backgrounds ... ok (42ms)
+running 1 test from ./src/db/home-calm-migration.test.ts
+首页静状态迁移保留既有偏好并填充默认值 ... ok (33ms)
+running 1 test from ./src/db/home-note-band-migration.test.ts
+band migration maps legacy flat columns to band-relative cells ... ok (37ms)
+running 2 tests from ./src/db/home-note-cells-migration.test.ts
+home note cell migration converts pixels, resolves conflicts and leaves unknown notes for default placement ... ok (37ms)
+home note cell migration rolls back every row when one update fails ... ok (33ms)
+running 1 test from ./src/db/icon-size-migration.test.ts
+icon size removal migrates every legacy tier without losing readable preferences ... ok (40ms)
+running 2 tests from ./src/db/notes-unification-migration.test.ts
+notes unification upgrade keeps documents and removes legacy notes data ... ok (42ms)
+upgraded documents keep FTS sync and accept nullable titles and document colors ... ok (38ms)
+running 2 tests from ./src/db/webapp-home-fixed-migration.test.ts
+Y8 migration pins existing root apps and all folders, leaving members and deleted apps alone ... ok (36ms)
+Y8 migration failure rolls back both columns and the pin updates ... ok (34ms)
+running 13 tests from ./src/features/ai/ai.route.test.ts
+AI Route: HTTP POST /api/ai/providers creates provider & /models endpoint lists them ... ok (21ms)
+AI Route: HTTP POST /api/ai/chat/stream returns SSE stream without leaking browser key ... ok (24ms)
+AI Route: HTTP POST /api/ai/chat/stream emits meta, token, and error events on provider stream failure ... ok (6ms)
+AI Route: real HTTP client disconnect stops /api/ai/chat/stream provider generation ... ok (25ms)
+AI Route: HTTP POST /api/ai/conversations/:id/restore restores deleted conversation ... ok (6ms)
+AI Route: HTTP DELETE /api/ai/conversations/:id/temporary deletes temporary conversation, messages and blobs (Cache-Control: no-store) ... ok (7ms)
+AI Logo candidates use the requested visible model and return three validated images ... ok (4ms)
+AI Logo candidates route rejects invalid styles before calling provider ...
+------- post-test output -------
+[2026-11-02 01:38:05.869] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+----- post-test output end -----
+AI Logo candidates route rejects invalid styles before calling provider ... ok (7ms)
+AI Logo candidates route rejects siteDomain > 253 and description > 300 before provider call ...
+------- post-test output -------
+[2026-11-02 01:38:05.872] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-11-02 01:38:05.872] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-11-02 01:38:05.873] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-11-02 01:38:05.873] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-11-02 01:38:05.874] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-11-02 01:38:05.877] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+[2026-11-02 01:38:05.877] INFO:
+    method: "POST"
+    path: "/api/ai/logo-candidates"
+    event: "validation-failed"
+----- post-test output end -----
+AI Logo candidates route rejects siteDomain > 253 and description > 300 before provider call ... ok (4ms)
+AI Logo candidates route rejects invalid images and denies unauthenticated or unowned model generation ... ok (4ms)
+AI Logo errors never disclose system credentials to ordinary users ... ok (15ms)
+AI image protocol selection preserves model aliases and text chat ... ok (10ms)
+temporary lease routes enforce ownership and protect another holder from legacy DELETE ... ok (3ms)
+running 18 tests from ./src/features/ai/ai.test.ts
+AI Crypto: encryptApiKey & decryptApiKey works with mask ... ok (11ms)
+AI Service: Provider creation requires /models discovery & sets default model ... ok (7ms)
+AI Service: Streaming chat sends prior conversation history upstream ... ok (20ms)
+AI Provider update and refresh leave database available during model discovery ... ok (4ms)
+AI Service: History disabled (spec 7.4) maintains current context but excluded from history list ... ok (7ms)
+AI Service: Partial token Abort persists interrupted content ... ok (5ms)
+AI Service: 4xx and 5xx responses preserve failed status and error ... ok (5ms)
+AI Service: No silent provider failover when selected provider fails ... ok (3ms)
+AI Service: Target unavailable rejects without silent failover ... ok (4ms)
+temporary leases isolate holders, survive service restart and cascade attachments ... ok (3ms)
+temporary cleanup respects old data, updates, and list has no cleanup side effect ... ok (1ms)
+legacy temporary conversation remains available after continued activity without lease renewal ... ok (5ms)
+temporary release and expiry wait for every stream, including return at meta ... ok (3ms)
+switching history mode invalidates old leases without deleting the conversation ... ok (1ms)
+failure before meta leaves an unclaimed lease that expires after restart ... ok (2ms)
+temporary cleanup retries after a database failure ...
+------- post-test output -------
+AI temporary cleanup failed DrizzleQueryError: Failed query: delete from "ai_conversations" where "ai_conversations"."id" = ?
+params: expired
+    at RemotePreparedQuery.queryWithCache (file:///home/aawei/searcher/.worktrees/ablation-study-20261102/node_modules/.deno/drizzle-orm@0.45.2/node_modules/drizzle-orm/sqlite-core/session.js:80:11)
+    at async RemotePreparedQuery.run (file:///home/aawei/searcher/.worktrees/ablation-study-20261102/node_modules/.deno/drizzle-orm@0.45.2/node_modules/drizzle-orm/sqlite-proxy/session.js:180:10)
+    at async file:///home/aawei/searcher/.worktrees/ablation-study-20261102/src/features/ai/service.ts:1340:17 {
+  query: 'delete from "ai_conversations" where "ai_conversations"."id" = ?',
+  params: [ "expired" ],
+  cause: Error: cleanup failed
+      at RemotePreparedQuery.drizzle.schema.schema [as client] (file:///home/aawei/searcher/.worktrees/ablation-study-20261102/src/db/database.ts:25:23)
+      at file:///home/aawei/searcher/.worktrees/ablation-study-20261102/node_modules/.deno/drizzle-orm@0.45.2/node_modules/drizzle-orm/sqlite-proxy/session.js:181:23
+      at RemotePreparedQuery.queryWithCache (file:///home/aawei/searcher/.worktrees/ablation-study-20261102/node_modules/.deno/drizzle-orm@0.45.2/node_modules/drizzle-orm/sqlite-core/session.js:78:18)
+      at RemotePreparedQuery.run (file:///home/aawei/searcher/.worktrees/ablation-study-20261102/node_modules/.deno/drizzle-orm@0.45.2/node_modules/drizzle-orm/sqlite-proxy/session.js:180:21)
+      at QueryPromise.run (file:///home/aawei/searcher/.worktrees/ablation-study-20261102/node_modules/.deno/drizzle-orm@0.45.2/node_modules/drizzle-orm/sqlite-core/query-builders/delete.js:285:26)
+      at file:///home/aawei/searcher/.worktrees/ablation-study-20261102/src/features/ai/service.ts:1342:19 {
+    errcode: 1811,
+    code: "ERR_SQLITE_ERROR",
+    errstr: "constraint failed"
+  }
+}
+----- post-test output end -----
+temporary cleanup retries after a database failure ... ok (3ms)
+abort before meta delivery leaves a recoverable unclaimed lease ... ok (2ms)
+pending releases survive restart, while a new holder or history conversion cancels them ... ok (7ms)
+running 13 tests from ./src/features/ai/ask-workspace.test.ts
+AskWorkspace Phase 2: Reasoning effort validation rejects unsupported models without DB mutation ... ok (17ms)
+AskWorkspace Phase 2: Manual reasoning override is preserved across provider refresh ... ok (5ms)
+AskWorkspace Phase 3: True parent chain, edit sibling branch, and regenerate variant ... ok (17ms)
+AskWorkspace Phase 4: Token usage and system instruction persist with the done event ... ok (4ms)
+AskWorkspace Phase 4: Conversation search and export reflect persisted messages ... ok (4ms)
+AskWorkspace Phase 5: Multi-round tools execution and sources persistence ... ok (45ms)
+AskWorkspace: Document source citations stream and persist with document identity ... ok (39ms)
+AskWorkspace: Empty message allowed on regenerate ... ok (5ms)
+AskWorkspace: Non-vision model rejects image attachments with 400 before DB mutations ... ok (2ms)
+AskWorkspace: Tool call security rejects unknown tool names ... ok (644µs)
+AskWorkspace: web search with an invalid SearXNG URL reports not configured ... ok (952µs)
+AskWorkspace: Live SearXNG HTTP mock smoke test verifies real query/sources/persistence ...Listening on http://0.0.0.0:44553/ (http://localhost:44553/)
+ ok (4ms)
+AskWorkspace: Public DTO strips image base64 data ... ok (3ms)
+running 8 tests from ./src/features/ai/attachments.test.ts
+Attachments: validateAttachments passes valid attachments ... ok (515µs)
+Attachments: validateAttachments rejects more than 4 attachments ... ok (538µs)
+Attachments: validateAttachments rejects image with invalid magic bytes ... ok (122µs)
+Attachments: validateAttachments rejects image larger than 5 MiB ... ok (15ms)
+Attachments: validateAttachments rejects mismatched declared vs detected MIME type ... ok (156µs)
+Attachments: validateAttachments rejects unsupported MIME type ... ok (89µs)
+Attachments: validateAttachments rejects text larger than 1 MiB ... ok (705µs)
+Attachments: processAndStoreAttachments persists image blobs ... ok (4ms)
+running 7 tests from ./src/features/ai/client.test.ts
+AI Client: provider SSE errors terminate with an error event ... ok (21ms)
+AI Client: fragmented UTF-8 and CRLF SSE preserve text and ignore non-text chunks ... ok (2ms)
+AI Client: malformed SSE returns an error after partial output without throwing ...
+------- post-test output -------
+Could not parse message into JSON:
+From chunk:
+----- post-test output end -----
+AI Client: malformed SSE returns an error after partial output without throwing ... ok (1ms)
+AI Client: unexpected JSON chunks cannot escape the stream boundary ... ok (1ms)
+AI Client: models and chat never retry provider HTTP failures ... ok (3ms)
+AI Client: invalid models responses remain Searcher errors ... ok (455µs)
+AI Client: endpoint policy rejects credentials, query, hash and restricted hosts ... ok (559µs)
+running 3 tests from ./src/features/ai/images.test.ts
+logo prompt keeps untrusted metadata inside quoted context for every style ... ok (12ms)
+logo prompt omits absent and whitespace-only optional metadata ... ok (1ms)
+official Gemini API accepts native endpoint and API key authentication ... ok (3ms)
+running 7 tests from ./src/features/ai/model-capabilities.test.ts
+ModelCapabilities: normalizeRawModelCapabilities extracts known fields without inventing levels ... ok (735µs)
+ModelCapabilities: validateModelMetadata validates nested structures at runtime ... ok (206µs)
+ModelCapabilities: resolveEffectiveCapability priority order ... ok (303µs)
+ModelCapabilities: mergeModelMetadata preserves manual overrides on refresh ... ok (109µs)
+ModelCapabilities: applyManualOverride sets or clears override ... ok (164µs)
+ModelCapabilities: discovery without an explicit default preserves Provider defaults ... ok (232µs)
+ModelCapabilities: populateModelDtoCapabilities filters reasoningEfforts strictly by transport ... ok (205µs)
+running 10 tests from ./src/features/ai/provider-adapter.test.ts
+ProviderAdapter: redactSensitiveData redacts api keys and Bearer tokens ... ok (12ms)
+ProviderAdapter: resolveOriginEndpoint resolves to origin root ... ok (543µs)
+ProviderAdapter: normalizeRawModels honors explicit capability denials before name inference ... ok (674µs)
+ProviderAdapter: hasCLIProxyDiscriminator distinguishes cliproxy from generic capabilities ... ok (259µs)
+ProviderAdapter: OpenAICompatibleAdapter denies credential-bearing redirects on /models ... ok (1ms)
+ProviderAdapter: CLIProxyAPIHomeAdapter denies credential-bearing redirects on /user/models without failing standard discovery ... ok (1ms)
+ProviderAdapter: discoverProviderModels in Auto mode is /models-first and never blind-probes /user/models ... ok (316µs)
+ProviderAdapter: discoverProviderModels in Auto mode with cliproxy URL enriches via /user/models ... ok (291µs)
+ProviderAdapter: CLIProxyAPIHomeAdapter preserves standard models when /user/models fails or is empty ... ok (206µs)
+ProviderAdapter: discoverProviderModels in cliproxyapi mode queries standard and origin user models ... ok (359µs)
+running 9 tests from ./src/features/ai/reasoning.test.ts
+Reasoning: validateReasoningEffort permits undefined for any capability ... ok (332µs)
+Reasoning: validateReasoningEffort throws on unsupported models ... ok (484µs)
+Reasoning: validateReasoningEffort throws on levels not in model capability ... ok (118µs)
+Reasoning: resolveEffectiveReasoningEffort priority order ... ok (86µs)
+Reasoning: normalizeReasoningEffortOnModelSwitch retains compatible levels or falls back ... ok (75µs)
+Reasoning: mapReasoningTransport maps exactly and rejects unmappable values ... ok (396µs)
+Reasoning: buildProviderGenerationParams validates and rejects incompatible sampling ... ok (291µs)
+Reasoning: resolveEffectiveGenerationConfig follows strict precedence hierarchy ... ok (282µs)
+Reasoning: resolveModelSwitchGenerationConfig resolves config cleanly on model switch ... ok (155µs)
+running 6 tests from ./src/features/ai/tools.test.ts
+Tools: buildToolDefinitions respects opt-in flags ... ok (8ms)
+Tools: lookup_documents searches owned live documents and returns document sources ... ok (50ms)
+Tools: lookup_documents rejects disabled and missing session opt-in ... ok (450µs)
+Tools: executeToolCall apps lookup returns read-only apps ... ok (840µs)
+Tools: executeToolCall web search surfaces SearXNG HTTP failures as tool errors ...Listening on http://0.0.0.0:37539/ (http://localhost:37539/)
+ ok (6ms)
+Tools: executeToolCall web search reports an unreachable SearXNG as a tool error ...Listening on http://0.0.0.0:34951/ (http://localhost:34951/)
+ ok (1ms)
+running 3 tests from ./src/features/audit/audit.test.ts
+AuditService: sanitizes sensitive fields like passwords, tokens, note contents ... ok (534µs)
+AuditService: logs and retrieves audit records ... ok (46ms)
+AuditService: log persists metadata without secrets ... ok (43ms)
+running 8 tests from ./src/features/auth/auth.test.ts
+auth contract: register, me, logout lifecycle with session cookie ... ok (136ms)
+auth contract: unauthenticated requests to protected endpoints return 401 envelope ... ok (37ms)
+auth contract: account password change increments authVersion and revokes old sessions ... ok (356ms)
+auth security: Origin and Content-Type checks on mutating endpoints ... ok (37ms)
+auth security: login returns 429 after 10 attempts on one account without affecting others ... ok (945ms)
+auth security: optimistic authVersion check prevents stale password overwrite ... ok (267ms)
+auth spec §14: register/login with optional unique email, login by username or email ... ok (332ms)
+auth spec §14: remember-me session duration (7 vs 30 days) and device listing/revocation ... ok (279ms)
+running 7 tests from ./src/features/bookmarks/bookmarks.test.ts
+webapps contract: strict user isolation and duplicate url allowed ...
+------- post-test output -------
+[2026-11-02 01:38:10.661] INFO: POST /api/auth/register 200 80ms undefined
+[2026-11-02 01:38:10.737] INFO: POST /api/auth/register 200 74ms undefined
+[2026-11-02 01:38:10.741] INFO: POST /api/webapps 200 3ms undefined
+[2026-11-02 01:38:10.743] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:10.744] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:10.745] INFO: GET /api/webapps/fe781245-60ed-4e9c-a072-827c54c7fcc3 404 1ms undefined
+[2026-11-02 01:38:10.747] INFO: PATCH /api/webapps/fe781245-60ed-4e9c-a072-827c54c7fcc3 404 1ms undefined
+[2026-11-02 01:38:10.748] INFO: DELETE /api/webapps/fe781245-60ed-4e9c-a072-827c54c7fcc3 404 1ms undefined
+----- post-test output end -----
+webapps contract: strict user isolation and duplicate url allowed ... ok (227ms)
+webapps & webapp-groups: CRUD, groups, soft-delete, trash and restore ...
+------- post-test output -------
+[2026-11-02 01:38:10.875] INFO: POST /api/auth/register 200 83ms undefined
+[2026-11-02 01:38:10.877] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-11-02 01:38:10.878] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:10.880] INFO: PATCH /api/webapp-groups/39ed399a-1fea-446b-9860-fe06d5828b62 200 1ms undefined
+[2026-11-02 01:38:10.881] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:10.883] INFO: GET /api/webapps 200 1ms undefined
+[2026-11-02 01:38:10.884] INFO: DELETE /api/webapps/a4345d20-b456-4dc4-8416-837d7915f5a7 200 1ms undefined
+[2026-11-02 01:38:10.885] INFO: GET /api/webapps 200 1ms undefined
+[2026-11-02 01:38:10.886] INFO: GET /api/webapps/trash 200 1ms undefined
+[2026-11-02 01:38:10.888] INFO: POST /api/webapps/a4345d20-b456-4dc4-8416-837d7915f5a7/restore 200 1ms undefined
+[2026-11-02 01:38:10.889] INFO: GET /api/webapps 200 1ms undefined
+[2026-11-02 01:38:10.890] INFO: DELETE /api/webapps/a4345d20-b456-4dc4-8416-837d7915f5a7/permanent 200 1ms undefined
+[2026-11-02 01:38:10.891] INFO: GET /api/webapps/trash 200 1ms undefined
+----- post-test output end -----
+webapps & webapp-groups: CRUD, groups, soft-delete, trash and restore ... ok (136ms)
+webapps contract: moving webapp out of folder defaults sortOrder to max + 1 (placed at the end) ...
+------- post-test output -------
+[2026-11-02 01:38:11.010] INFO: POST /api/auth/register 200 79ms undefined
+[2026-11-02 01:38:11.012] INFO: POST /api/webapp-groups 200 2ms undefined
+[2026-11-02 01:38:11.013] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-11-02 01:38:11.014] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:11.015] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:11.016] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:11.017] INFO: PATCH /api/webapps/88210108-0887-4446-8eb2-3b9457eb4abf 200 1ms undefined
+[2026-11-02 01:38:11.018] INFO: PATCH /api/webapps/88210108-0887-4446-8eb2-3b9457eb4abf 200 1ms undefined
+----- post-test output end -----
+webapps contract: moving webapp out of folder defaults sortOrder to max + 1 (placed at the end) ... ok (127ms)
+webapps contract: deleting folder migrates members to ungrouped and appends them to end preserving relative order ...
+------- post-test output -------
+[2026-11-02 01:38:11.131] INFO: POST /api/auth/register 200 78ms undefined
+[2026-11-02 01:38:11.132] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-11-02 01:38:11.133] INFO: POST /api/webapps 200 0ms undefined
+[2026-11-02 01:38:11.134] INFO: POST /api/webapps 200 0ms undefined
+[2026-11-02 01:38:11.135] INFO: POST /api/webapps 200 0ms undefined
+[2026-11-02 01:38:11.137] INFO: DELETE /api/webapp-groups/6729206a-fd1a-4b37-96c4-451e44f60478 200 2ms undefined
+[2026-11-02 01:38:11.138] INFO: GET /api/webapps 200 1ms undefined
+----- post-test output end -----
+webapps contract: deleting folder migrates members to ungrouped and appends them to end preserving relative order ... ok (119ms)
+WebApps mixed root reorder is atomic and owner isolated ...
+------- post-test output -------
+[2026-11-02 01:38:11.248] INFO: POST /api/auth/register 200 75ms undefined
+[2026-11-02 01:38:11.323] INFO: POST /api/auth/register 200 74ms undefined
+[2026-11-02 01:38:11.324] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:11.325] INFO: POST /api/webapp-groups 200 0ms undefined
+[2026-11-02 01:38:11.326] INFO: POST /api/webapp-groups 200 0ms undefined
+[2026-11-02 01:38:11.328] INFO: PUT /api/webapps/reorder 200 1ms undefined
+[2026-11-02 01:38:11.331] INFO: GET /api/webapps 200 3ms undefined
+[2026-11-02 01:38:11.331] INFO: GET /api/webapp-groups 200 0ms undefined
+[2026-11-02 01:38:11.333] INFO: PUT /api/webapps/reorder 404 1ms undefined
+[2026-11-02 01:38:11.333] INFO: GET /api/webapps 200 0ms undefined
+[2026-11-02 01:38:11.334] INFO: PUT /api/webapps/reorder 404 1ms undefined
+[2026-11-02 01:38:11.335] INFO: GET /api/webapps 200 1ms undefined
+[2026-11-02 01:38:11.336] INFO: PUT /api/webapps/reorder 200 1ms undefined
+[2026-11-02 01:38:11.336] INFO: GET /api/webapp-groups 200 0ms undefined
+----- post-test output end -----
+WebApps mixed root reorder is atomic and owner isolated ... ok (198ms)
+webapps contract: home pin defaults follow the entry surface and PATCH validates isHomeFixed ...
+------- post-test output -------
+[2026-11-02 01:38:11.454] INFO: POST /api/auth/register 200 82ms undefined
+[2026-11-02 01:38:11.455] INFO: POST /api/webapps 200 0ms undefined
+[2026-11-02 01:38:11.457] INFO: PATCH /api/webapps/7e77cee9-8bda-4544-8208-b7e415f6f734 200 1ms undefined
+[2026-11-02 01:38:11.457] INFO: POST /api/webapps 200 0ms undefined
+[2026-11-02 01:38:11.458] INFO: POST /api/webapp-groups 200 0ms undefined
+[2026-11-02 01:38:11.459] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-11-02 01:38:11.460] INFO: PATCH /api/webapp-groups/05c90abe-4422-4969-9e96-2aa513778942 200 1ms undefined
+[2026-11-02 01:38:11.461] INFO:
+    method: "POST"
+    path: "/api/webapps"
+    event: "validation-failed"
+[2026-11-02 01:38:11.462] INFO: POST /api/webapps 400 2ms undefined
+[2026-11-02 01:38:11.463] INFO:
+    method: "POST"
+    path: "/api/webapp-groups"
+    event: "validation-failed"
+[2026-11-02 01:38:11.464] INFO: POST /api/webapp-groups 400 2ms undefined
+----- post-test output end -----
+webapps contract: home pin defaults follow the entry surface and PATCH validates isHomeFixed ... ok (127ms)
+webapps contract: an app released from a folder inherits the folder's home pin ...
+------- post-test output -------
+[2026-11-02 01:38:11.579] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:11.580] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-11-02 01:38:11.581] INFO: POST /api/webapp-groups 200 1ms undefined
+[2026-11-02 01:38:11.582] INFO: POST /api/webapps 200 0ms undefined
+[2026-11-02 01:38:11.582] INFO: POST /api/webapps 200 0ms undefined
+[2026-11-02 01:38:11.583] INFO: PATCH /api/webapps/9905930b-cfce-445b-acff-2219b47cae91 200 0ms undefined
+[2026-11-02 01:38:11.588] INFO: PATCH /api/webapps/f3745387-385e-4ac8-8845-cfbb3cb8c9d9 200 4ms undefined
+[2026-11-02 01:38:11.590] INFO: POST /api/webapps 200 2ms undefined
+[2026-11-02 01:38:11.591] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:11.594] INFO: DELETE /api/webapp-groups/a648bc7b-6477-4a22-88e7-934874f53363 200 2ms undefined
+[2026-11-02 01:38:11.595] INFO: DELETE /api/webapp-groups/744da51c-bbc5-49c7-bdb0-5332ef4fffae 200 1ms undefined
+[2026-11-02 01:38:11.596] INFO: GET /api/webapps 200 1ms undefined
+----- post-test output end -----
+webapps contract: an app released from a folder inherits the folder's home pin ... ok (132ms)
+running 1 test from ./src/features/bookmarks/icons.contract.test.ts
+webapp icon backfill preserves manual edits and never blocks creation ...
+------- post-test output -------
+[2026-11-02 01:38:12.020] INFO: POST /api/auth/register 200 84ms undefined
+[2026-11-02 01:38:12.026] INFO: POST /api/webapps 200 3ms undefined
+[2026-11-02 01:38:12.029] INFO: PATCH /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f 200 1ms undefined
+[2026-11-02 01:38:12.030] INFO: POST /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f/fetch-icon 200 4ms undefined
+[2026-11-02 01:38:12.031] INFO: GET /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f 200 1ms undefined
+[2026-11-02 01:38:12.032] INFO: POST /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f/fetch-icon 200 0ms undefined
+[2026-11-02 01:38:12.034] INFO: PATCH /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f 200 1ms undefined
+[2026-11-02 01:38:12.035] INFO: POST /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f/fetch-icon 400 1ms undefined
+[2026-11-02 01:38:12.036] INFO: GET /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f 200 1ms undefined
+[2026-11-02 01:38:12.038] INFO: PATCH /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f 200 1ms undefined
+[2026-11-02 01:38:12.038] INFO: POST /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f/fetch-icon 200 2ms undefined
+----- post-test output end -----
+webapp icon backfill preserves manual edits and never blocks creation ... ok (158ms)
+------- post-test output -------
+[2026-11-02 01:38:12.039] INFO: POST /api/webapps/71f1fa47-b5d5-4967-9fdd-3e930adcda0f/fetch-icon 200 0ms undefined
+----- post-test output end -----
+running 2 tests from ./src/features/bookmarks/migration.test.ts
+migration 0005: preserves pre-existing user, session, preference and bookmark data ... ok (8ms)
+migration 0010: preserves existing webapp_groups and preferences with folder_size and show_app_labels defaults ... ok (13ms)
+running 6 tests from ./src/features/documents/assets.test.ts
+assets: upload and read round-trip (opaque storageRef, sha256 and bytes) ... ok (50ms)
+assets: owner and docbinding isolation (foreign user, cross-doc access, 404 hidden) ... ok (40ms)
+assets: magic bytes validation (PNG, JPEG, WebP allowed; mismatch, SVG, GIF rejected) ... ok (36ms)
+assets: 10 MiB boundary checks (0 bytes, exact 10 MiB allowed, 10 MiB + 1 byte rejected) ... ok (64ms)
+assets: delete guards (inline image references block delete, code/text allowed, orphan allowed) ... ok (48ms)
+assets: trash retention vs permanent deletion cascade ... ok (33ms)
+running 12 tests from ./src/features/documents/documents.route.test.ts
+Documents HTTP: title/body boundaries and exact 8 MiB create/update intake remain isolated ...
+------- post-test output -------
+[2026-11-02 01:38:13.018] INFO: POST /api/auth/register 200 84ms undefined
+[2026-11-02 01:38:13.103] INFO: POST /api/auth/register 200 81ms undefined
+[2026-11-02 01:38:13.246] INFO: POST /api/documents 200 141ms undefined
+[2026-11-02 01:38:13.248] INFO:
+    method: "POST"
+    path: "/api/documents"
+    event: "validation-failed"
+[2026-11-02 01:38:13.249] INFO: POST /api/documents 400 2ms undefined
+[2026-11-02 01:38:13.251] INFO:
+    method: "PATCH"
+    path: "/api/documents/4af013ae-31f9-40c4-97a1-054f61c2cfcf"
+    event: "validation-failed"
+[2026-11-02 01:38:13.251] INFO: PATCH /api/documents/4af013ae-31f9-40c4-97a1-054f61c2cfcf 400 2ms undefined
+[2026-11-02 01:38:13.255] INFO:
+    method: "POST"
+    path: "/api/documents"
+    event: "validation-failed"
+[2026-11-02 01:38:13.255] INFO: POST /api/documents 400 2ms undefined
+[2026-11-02 01:38:13.258] INFO:
+    method: "PATCH"
+    path: "/api/documents/4af013ae-31f9-40c4-97a1-054f61c2cfcf"
+    event: "validation-failed"
+[2026-11-02 01:38:13.259] INFO: PATCH /api/documents/4af013ae-31f9-40c4-97a1-054f61c2cfcf 400 3ms undefined
+[2026-11-02 01:38:13.260] INFO:
+    method: "PATCH"
+    path: "/api/documents/4af013ae-31f9-40c4-97a1-054f61c2cfcf"
+    event: "validation-failed"
+[2026-11-02 01:38:13.260] INFO: PATCH /api/documents/4af013ae-31f9-40c4-97a1-054f61c2cfcf 400 1ms undefined
+[2026-11-02 01:38:13.280] INFO: POST /api/documents 200 20ms undefined
+[2026-11-02 01:38:13.285] INFO: POST /api/documents 413 5ms undefined
+----- post-test output end -----
+Documents HTTP: title/body boundaries and exact 8 MiB create/update intake remain isolated ... ok (448ms)
+Documents HTTP: uncategorized scope paginates only the owner's active unfiled documents ...
+------- post-test output -------
+[2026-11-02 01:38:13.318] INFO: PATCH /api/documents/4af013ae-31f9-40c4-97a1-054f61c2cfcf 200 33ms undefined
+[2026-11-02 01:38:13.323] INFO: PATCH /api/documents/4af013ae-31f9-40c4-97a1-054f61c2cfcf 413 5ms undefined
+[2026-11-02 01:38:13.323] INFO: PUT /api/documents/4af013ae-31f9-40c4-97a1-054f61c2cfcf/settings 413 0ms undefined
+[2026-11-02 01:38:13.463] INFO: POST /api/auth/register 200 94ms undefined
+[2026-11-02 01:38:13.538] INFO: POST /api/auth/register 200 75ms undefined
+[2026-11-02 01:38:13.542] INFO: GET /api/documents 200 3ms undefined
+[2026-11-02 01:38:13.544] INFO: POST /api/document-notebooks 200 2ms undefined
+[2026-11-02 01:38:13.546] INFO: POST /api/documents 200 2ms undefined
+[2026-11-02 01:38:13.547] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:13.548] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:13.550] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:13.551] INFO: DELETE /api/documents/0eded8ac-c3f8-4dc1-b52f-925f703889fe 200 1ms undefined
+[2026-11-02 01:38:13.552] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:13.553] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:13.555] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:13.556] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:13.557] INFO: GET /api/documents 400 1ms undefined
+[2026-11-02 01:38:13.557] INFO: GET /api/documents 400 0ms undefined
+----- post-test output end -----
+Documents HTTP: uncategorized scope paginates only the owner's active unfiled documents ... ok (228ms)
+Documents HTTP: notebook library/search, conflict current document and trash restoration are owner-isolated ...
+------- post-test output -------
+[2026-11-02 01:38:13.679] INFO: POST /api/auth/register 200 80ms undefined
+[2026-11-02 01:38:13.755] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:13.755] INFO: GET /api/documents 401 0ms undefined
+[2026-11-02 01:38:13.757] INFO: POST /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:13.758] INFO: POST /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:13.759] INFO: POST /api/document-notebooks 400 1ms undefined
+[2026-11-02 01:38:13.761] INFO: POST /api/document-notebooks/14722f4d-af37-4074-ae9e-e77939619807/move 400 2ms undefined
+[2026-11-02 01:38:13.764] INFO: POST /api/documents 200 3ms undefined
+[2026-11-02 01:38:13.765] INFO: GET /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5 404 1ms undefined
+[2026-11-02 01:38:13.766] INFO: POST /api/documents 404 1ms undefined
+[2026-11-02 01:38:13.768] INFO: PATCH /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5 200 2ms undefined
+[2026-11-02 01:38:13.770] INFO: PATCH /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5 409 2ms undefined
+[2026-11-02 01:38:13.772] INFO: GET /api/documents/search 200 2ms undefined
+[2026-11-02 01:38:13.773] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:13.774] INFO:
+    method: "GET"
+    path: "/api/documents"
+    event: "validation-failed"
+[2026-11-02 01:38:13.774] INFO: GET /api/documents 400 1ms undefined
+[2026-11-02 01:38:13.775] INFO: GET /api/documents/search 200 1ms undefined
+[2026-11-02 01:38:13.776] INFO:
+    method: "POST"
+    path: "/api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5/versions/1junk/restore"
+    event: "validation-failed"
+[2026-11-02 01:38:13.776] INFO: POST /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5/versions/1junk/restore 400 1ms undefined
+[2026-11-02 01:38:13.778] INFO: POST /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5/versions/1/restore 200 2ms undefined
+[2026-11-02 01:38:13.779] INFO: GET /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5/versions 200 1ms undefined
+[2026-11-02 01:38:13.780] INFO:
+    method: "DELETE"
+    path: "/api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5"
+    event: "validation-failed"
+[2026-11-02 01:38:13.780] INFO: DELETE /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5 400 1ms undefined
+[2026-11-02 01:38:13.781] INFO: DELETE /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5 409 1ms undefined
+[2026-11-02 01:38:13.783] INFO: DELETE /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5 200 1ms undefined
+[2026-11-02 01:38:13.784] INFO: PATCH /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5 404 1ms undefined
+[2026-11-02 01:38:13.785] INFO: GET /api/documents/search 200 1ms undefined
+[2026-11-02 01:38:13.786] INFO: GET /api/documents/trash 200 1ms undefined
+[2026-11-02 01:38:13.788] INFO: DELETE /api/document-notebooks/14722f4d-af37-4074-ae9e-e77939619807 200 2ms undefined
+[2026-11-02 01:38:13.789] INFO: GET /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:13.790] INFO: DELETE /api/document-notebooks/14716aa5-ed8f-4268-9e77-b4eec93651ec 200 1ms undefined
+[2026-11-02 01:38:13.792] INFO: POST /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5/restore 200 2ms undefined
+[2026-11-02 01:38:13.793] INFO: DELETE /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5/permanent 200 1ms undefined
+[2026-11-02 01:38:13.794] INFO: GET /api/documents/a6174ab2-60d3-447d-bfa8-ea55f2838bd5 404 1ms undefined
+----- post-test output end -----
+Documents HTTP: notebook library/search, conflict current document and trash restoration are owner-isolated ... ok (236ms)
+Documents HTTP: assets bind owner/document, deny referenced deletion and settings expose no presentation state ...
+------- post-test output -------
+[2026-11-02 01:38:13.909] INFO: POST /api/auth/register 200 75ms undefined
+[2026-11-02 01:38:13.993] INFO: POST /api/auth/register 200 84ms undefined
+[2026-11-02 01:38:13.994] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:13.996] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:14.003] INFO: POST /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/assets 200 6ms undefined
+[2026-11-02 01:38:14.005] INFO: GET /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/assets/a6cd7d4b-5489-48bf-8b5b-bffd2643b53c 200 2ms undefined
+[2026-11-02 01:38:14.006] INFO: GET /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/assets/a6cd7d4b-5489-48bf-8b5b-bffd2643b53c 404 1ms undefined
+[2026-11-02 01:38:14.007] INFO: GET /api/documents/63213519-d368-4b15-8d1b-e94bdddc61f4/assets/a6cd7d4b-5489-48bf-8b5b-bffd2643b53c 404 1ms undefined
+[2026-11-02 01:38:14.010] INFO: PATCH /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a 200 3ms undefined
+[2026-11-02 01:38:14.012] INFO: DELETE /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/assets/a6cd7d4b-5489-48bf-8b5b-bffd2643b53c 400 1ms undefined
+[2026-11-02 01:38:14.014] INFO: PATCH /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a 200 2ms undefined
+[2026-11-02 01:38:14.016] INFO: DELETE /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/assets/a6cd7d4b-5489-48bf-8b5b-bffd2643b53c 200 1ms undefined
+[2026-11-02 01:38:14.017] INFO: GET /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/assets/a6cd7d4b-5489-48bf-8b5b-bffd2643b53c 404 1ms undefined
+[2026-11-02 01:38:14.071] INFO: POST /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/assets 400 49ms undefined
+[2026-11-02 01:38:14.073] INFO: GET /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/settings 200 2ms undefined
+[2026-11-02 01:38:14.074] INFO: PUT /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/settings 200 1ms undefined
+[2026-11-02 01:38:14.075] INFO:
+    method: "PUT"
+    path: "/api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/settings"
+    event: "validation-failed"
+[2026-11-02 01:38:14.075] INFO: PUT /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/settings 400 0ms undefined
+[2026-11-02 01:38:14.076] INFO: GET /api/documents/051cee48-6ed0-4607-be84-be1ea4a02c7a/settings 404 0ms undefined
+----- post-test output end -----
+Documents HTTP: assets bind owner/document, deny referenced deletion and settings expose no presentation state ... ok (281ms)
+Documents HTTP: home papers share nullable titles, metadata and account-isolated events ...
+------- post-test output -------
+[2026-11-02 01:38:14.195] INFO: POST /api/auth/register 200 79ms undefined
+[2026-11-02 01:38:14.274] INFO: POST /api/auth/register 200 78ms undefined
+[2026-11-02 01:38:14.275] INFO: GET /api/documents/events 200 1ms undefined
+[2026-11-02 01:38:14.276] INFO: GET /api/documents/events 200 0ms undefined
+[2026-11-02 01:38:14.278] INFO: POST /api/documents 200 2ms undefined
+[2026-11-02 01:38:14.280] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:14.283] INFO: PATCH /api/documents/a36274b8-7a56-4ec6-8ab4-89d7d308f0a5 200 2ms undefined
+[2026-11-02 01:38:14.283] INFO:
+    method: "POST"
+    path: "/api/documents"
+    event: "validation-failed"
+[2026-11-02 01:38:14.284] INFO: POST /api/documents 400 1ms undefined
+[2026-11-02 01:38:14.285] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:14.287] INFO: PATCH /api/documents/d8bf44b6-b176-445e-b704-658a137ab494 200 1ms undefined
+----- post-test output end -----
+Documents HTTP: home papers share nullable titles, metadata and account-isolated events ... ok (210ms)
+Documents HTTP: home note cells are band-relative and validate as one position ...
+------- post-test output -------
+[2026-11-02 01:38:14.409] INFO: POST /api/auth/register 200 85ms undefined
+[2026-11-02 01:38:14.483] INFO: POST /api/auth/register 200 74ms undefined
+[2026-11-02 01:38:14.486] INFO: POST /api/documents 200 2ms undefined
+[2026-11-02 01:38:14.488] INFO: POST /api/documents 200 2ms undefined
+[2026-11-02 01:38:14.491] INFO: PATCH /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 200 2ms undefined
+[2026-11-02 01:38:14.492] INFO: GET /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 200 1ms undefined
+[2026-11-02 01:38:14.493] INFO: PATCH /api/documents/a3616125-d9d2-4ea0-85c3-21004844ae6d/layout 200 1ms undefined
+[2026-11-02 01:38:14.495] INFO: PATCH /api/documents/a3616125-d9d2-4ea0-85c3-21004844ae6d/layout 409 1ms undefined
+[2026-11-02 01:38:14.497] INFO: PATCH /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 200 2ms undefined
+[2026-11-02 01:38:14.498] INFO: PATCH /api/documents/a3616125-d9d2-4ea0-85c3-21004844ae6d/layout 400 1ms undefined
+[2026-11-02 01:38:14.499] INFO:
+    method: "PATCH"
+    path: "/api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout"
+    event: "validation-failed"
+[2026-11-02 01:38:14.499] INFO: PATCH /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 400 1ms undefined
+[2026-11-02 01:38:14.500] INFO:
+    method: "PATCH"
+    path: "/api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout"
+    event: "validation-failed"
+[2026-11-02 01:38:14.500] INFO: PATCH /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 400 1ms undefined
+[2026-11-02 01:38:14.501] INFO:
+    method: "PATCH"
+    path: "/api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout"
+    event: "validation-failed"
+[2026-11-02 01:38:14.501] INFO: PATCH /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 400 1ms undefined
+[2026-11-02 01:38:14.502] INFO: PATCH /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 400 1ms undefined
+[2026-11-02 01:38:14.503] INFO: PATCH /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 400 1ms undefined
+[2026-11-02 01:38:14.504] INFO:
+    method: "PATCH"
+    path: "/api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout"
+    event: "validation-failed"
+[2026-11-02 01:38:14.504] INFO: PATCH /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 400 1ms undefined
+[2026-11-02 01:38:14.506] INFO: PATCH /api/documents/9caa6309-10bc-4ca5-bb73-40c07c96303b/layout 200 2ms undefined
+----- post-test output end -----
+Documents HTTP: home note cells are band-relative and validate as one position ... ok (218ms)
+Documents HTTP: batch layout swaps are atomic and keep unspecified fields ...
+------- post-test output -------
+[2026-11-02 01:38:14.627] INFO: POST /api/auth/register 200 82ms undefined
+[2026-11-02 01:38:14.700] INFO: POST /api/auth/register 200 73ms undefined
+[2026-11-02 01:38:14.703] INFO: POST /api/documents 200 3ms undefined
+[2026-11-02 01:38:14.704] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:14.706] INFO: PATCH /api/documents/33655015-05d9-4cef-9dba-07cbb529e32c/layout 200 2ms undefined
+[2026-11-02 01:38:14.707] INFO: PATCH /api/documents/91a3b851-e820-4324-96e1-61d2c5b6fc0c/layout 200 1ms undefined
+[2026-11-02 01:38:14.709] INFO: PATCH /api/documents/layouts 200 2ms undefined
+[2026-11-02 01:38:14.710] INFO: GET /api/documents/33655015-05d9-4cef-9dba-07cbb529e32c/layout 200 1ms undefined
+[2026-11-02 01:38:14.710] INFO: GET /api/documents/91a3b851-e820-4324-96e1-61d2c5b6fc0c/layout 200 0ms undefined
+[2026-11-02 01:38:14.712] INFO: PATCH /api/documents/layouts 200 1ms undefined
+----- post-test output end -----
+Documents HTTP: batch layout swaps are atomic and keep unspecified fields ... ok (205ms)
+Documents HTTP: batch conflicts reject the whole write ...
+------- post-test output -------
+[2026-11-02 01:38:14.839] INFO: POST /api/auth/register 200 86ms undefined
+[2026-11-02 01:38:14.912] INFO: POST /api/auth/register 200 73ms undefined
+[2026-11-02 01:38:14.914] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:14.916] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:14.917] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:14.919] INFO: PATCH /api/documents/531cc67e-64a2-4982-81d9-ee4753f1d20f/layout 200 1ms undefined
+[2026-11-02 01:38:14.920] INFO: PATCH /api/documents/1e89a60c-4362-42f3-90e4-672a176aa55d/layout 200 1ms undefined
+[2026-11-02 01:38:14.921] INFO: PATCH /api/documents/629940a7-c2dc-4e38-9714-3f60c953c213/layout 200 1ms undefined
+[2026-11-02 01:38:14.922] INFO: PATCH /api/documents/layouts 409 1ms undefined
+[2026-11-02 01:38:14.923] INFO: GET /api/documents/531cc67e-64a2-4982-81d9-ee4753f1d20f/layout 200 1ms undefined
+[2026-11-02 01:38:14.924] INFO: GET /api/documents/1e89a60c-4362-42f3-90e4-672a176aa55d/layout 200 1ms undefined
+[2026-11-02 01:38:14.925] INFO: PATCH /api/documents/layouts 409 1ms undefined
+[2026-11-02 01:38:14.925] INFO: GET /api/documents/531cc67e-64a2-4982-81d9-ee4753f1d20f/layout 200 0ms undefined
+----- post-test output end -----
+Documents HTTP: batch conflicts reject the whole write ... ok (213ms)
+Documents HTTP: batch layouts reject foreign ids and invalid batches ...
+------- post-test output -------
+[2026-11-02 01:38:15.065] INFO: POST /api/auth/register 200 92ms undefined
+[2026-11-02 01:38:15.145] INFO: POST /api/auth/register 200 79ms undefined
+[2026-11-02 01:38:15.148] INFO: POST /api/documents 200 2ms undefined
+[2026-11-02 01:38:15.149] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.150] INFO: PATCH /api/documents/layouts 404 1ms undefined
+[2026-11-02 01:38:15.151] INFO: GET /api/documents/3ffb3069-94f9-42b2-aec6-1273f55073b1/layout 200 1ms undefined
+[2026-11-02 01:38:15.152] INFO: PATCH /api/documents/layouts 404 1ms undefined
+[2026-11-02 01:38:15.153] INFO: GET /api/documents/3ffb3069-94f9-42b2-aec6-1273f55073b1/layout 200 0ms undefined
+[2026-11-02 01:38:15.154] INFO:
+    method: "PATCH"
+    path: "/api/documents/layouts"
+    event: "validation-failed"
+[2026-11-02 01:38:15.154] INFO: PATCH /api/documents/layouts 400 1ms undefined
+[2026-11-02 01:38:15.155] INFO:
+    method: "PATCH"
+    path: "/api/documents/layouts"
+    event: "validation-failed"
+[2026-11-02 01:38:15.155] INFO: PATCH /api/documents/layouts 400 1ms undefined
+[2026-11-02 01:38:15.156] INFO:
+    method: "PATCH"
+    path: "/api/documents/layouts"
+    event: "validation-failed"
+[2026-11-02 01:38:15.156] INFO: PATCH /api/documents/layouts 400 1ms undefined
+[2026-11-02 01:38:15.157] INFO: GET /api/documents/3ffb3069-94f9-42b2-aec6-1273f55073b1/layout 200 1ms undefined
+----- post-test output end -----
+Documents HTTP: batch layouts reject foreign ids and invalid batches ... ok (231ms)
+Documents HTTP: last opened is owner-isolated, ignores trash and does not edit or emit ...
+------- post-test output -------
+[2026-11-02 01:38:15.269] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:15.353] INFO: POST /api/auth/register 200 84ms undefined
+[2026-11-02 01:38:15.355] INFO: GET /api/documents/events 200 1ms undefined
+[2026-11-02 01:38:15.357] INFO: GET /api/documents/last-opened 200 2ms undefined
+[2026-11-02 01:38:15.360] INFO: POST /api/documents 200 2ms undefined
+[2026-11-02 01:38:15.362] INFO: POST /api/documents 200 2ms undefined
+[2026-11-02 01:38:15.363] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.364] INFO: PUT /api/documents/a8ad1ab2-8510-475f-9eec-8ffe0a87d4f2/opened 200 1ms undefined
+[2026-11-02 01:38:15.365] INFO: GET /api/documents/last-opened 200 0ms undefined
+[2026-11-02 01:38:15.368] INFO: GET /api/documents/last-opened 200 2ms undefined
+[2026-11-02 01:38:15.374] INFO: PUT /api/documents/ed31c7cb-d7ac-4e58-88d5-a4d5d94a07aa/opened 200 5ms undefined
+[2026-11-02 01:38:15.376] INFO: PUT /api/documents/307e56fd-6c76-4f0c-927c-b9bac13afafc/opened 200 2ms undefined
+[2026-11-02 01:38:15.377] INFO: GET /api/documents/last-opened 200 1ms undefined
+[2026-11-02 01:38:15.378] INFO: GET /api/documents/last-opened 200 1ms undefined
+[2026-11-02 01:38:15.379] INFO: PUT /api/documents/307e56fd-6c76-4f0c-927c-b9bac13afafc/opened 404 1ms undefined
+[2026-11-02 01:38:15.379] INFO: PUT /api/documents/missing/opened 404 0ms undefined
+[2026-11-02 01:38:15.380] INFO: GET /api/documents/ed31c7cb-d7ac-4e58-88d5-a4d5d94a07aa 200 0ms undefined
+[2026-11-02 01:38:15.382] INFO: PATCH /api/documents/a8ad1ab2-8510-475f-9eec-8ffe0a87d4f2 200 2ms undefined
+[2026-11-02 01:38:15.383] INFO: DELETE /api/documents/ed31c7cb-d7ac-4e58-88d5-a4d5d94a07aa 200 1ms undefined
+[2026-11-02 01:38:15.383] INFO: PUT /api/documents/ed31c7cb-d7ac-4e58-88d5-a4d5d94a07aa/opened 404 0ms undefined
+[2026-11-02 01:38:15.384] INFO: GET /api/documents/last-opened 200 0ms undefined
+[2026-11-02 01:38:15.385] INFO: DELETE /api/documents/a8ad1ab2-8510-475f-9eec-8ffe0a87d4f2 200 1ms undefined
+[2026-11-02 01:38:15.386] INFO: GET /api/documents/last-opened 200 1ms undefined
+[2026-11-02 01:38:15.386] INFO: GET /api/documents/last-opened 200 0ms undefined
+----- post-test output end -----
+Documents HTTP: last opened is owner-isolated, ignores trash and does not edit or emit ... ok (229ms)
+Documents HTTP: position orders and moves documents without changing their content version ...
+------- post-test output -------
+[2026-11-02 01:38:15.495] INFO: POST /api/auth/register 200 73ms undefined
+[2026-11-02 01:38:15.568] INFO: POST /api/auth/register 200 72ms undefined
+[2026-11-02 01:38:15.570] INFO: POST /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:15.571] INFO: POST /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:15.572] INFO: POST /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:15.573] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.574] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.576] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.577] INFO: POST /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.578] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.578] INFO: GET /api/documents/events 200 0ms undefined
+[2026-11-02 01:38:15.580] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 200 2ms undefined
+[2026-11-02 01:38:15.581] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.582] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.583] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.584] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 200 1ms undefined
+[2026-11-02 01:38:15.585] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.586] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.587] INFO: POST /api/documents/db06992a-42c8-4530-ac03-4a23e2ea042b/position 200 1ms undefined
+[2026-11-02 01:38:15.588] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.589] INFO: GET /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad 200 1ms undefined
+[2026-11-02 01:38:15.590] INFO: PATCH /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad 200 1ms undefined
+[2026-11-02 01:38:15.591] INFO: GET /api/documents 200 1ms undefined
+[2026-11-02 01:38:15.591] INFO:
+    method: "POST"
+    path: "/api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position"
+    event: "validation-failed"
+[2026-11-02 01:38:15.592] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 400 1ms undefined
+[2026-11-02 01:38:15.592] INFO:
+    method: "POST"
+    path: "/api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position"
+    event: "validation-failed"
+[2026-11-02 01:38:15.592] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 400 0ms undefined
+[2026-11-02 01:38:15.593] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 400 1ms undefined
+[2026-11-02 01:38:15.594] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 400 1ms undefined
+[2026-11-02 01:38:15.595] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 400 1ms undefined
+[2026-11-02 01:38:15.596] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 404 1ms undefined
+[2026-11-02 01:38:15.596] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 404 0ms undefined
+[2026-11-02 01:38:15.597] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 404 0ms undefined
+[2026-11-02 01:38:15.598] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 404 1ms undefined
+[2026-11-02 01:38:15.599] INFO: POST /api/documents/2c2b31fb-ba53-4411-bcf9-0ec16e0c4f9c/position 404 1ms undefined
+[2026-11-02 01:38:15.600] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 404 1ms undefined
+[2026-11-02 01:38:15.601] INFO: DELETE /api/documents/5e7f620e-d03e-4486-b161-fe28368d7e5c 200 1ms undefined
+[2026-11-02 01:38:15.602] INFO: POST /api/documents/5b067d35-6b5e-4383-82c9-d3ad969c88ad/position 404 1ms undefined
+[2026-11-02 01:38:15.602] INFO: POST /api/documents/5e7f620e-d03e-4486-b161-fe28368d7e5c/position 404 0ms undefined
+[2026-11-02 01:38:15.603] INFO: GET /api/documents 200 1ms undefined
+----- post-test output end -----
+Documents HTTP: position orders and moves documents without changing their content version ... ok (217ms)
+Documents HTTP: notebook move orders siblings and validates anchors ...
+------- post-test output -------
+[2026-11-02 01:38:15.724] INFO: POST /api/auth/register 200 85ms undefined
+[2026-11-02 01:38:15.798] INFO: POST /api/auth/register 200 74ms undefined
+[2026-11-02 01:38:15.799] INFO: POST /api/document-notebooks 200 0ms undefined
+[2026-11-02 01:38:15.800] INFO: POST /api/document-notebooks 200 0ms undefined
+[2026-11-02 01:38:15.801] INFO: POST /api/document-notebooks 200 0ms undefined
+[2026-11-02 01:38:15.802] INFO: POST /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:15.803] INFO: POST /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:15.804] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 200 1ms undefined
+[2026-11-02 01:38:15.805] INFO: GET /api/document-notebooks 200 0ms undefined
+[2026-11-02 01:38:15.806] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 200 1ms undefined
+[2026-11-02 01:38:15.809] INFO: GET /api/document-notebooks 200 3ms undefined
+[2026-11-02 01:38:15.810] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 200 1ms undefined
+[2026-11-02 01:38:15.811] INFO: GET /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:15.812] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 200 1ms undefined
+[2026-11-02 01:38:15.813] INFO: GET /api/document-notebooks 200 1ms undefined
+[2026-11-02 01:38:15.814] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 400 1ms undefined
+[2026-11-02 01:38:15.814] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 400 0ms undefined
+[2026-11-02 01:38:15.815] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 400 0ms undefined
+[2026-11-02 01:38:15.816] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 404 0ms undefined
+[2026-11-02 01:38:15.817] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 404 0ms undefined
+[2026-11-02 01:38:15.818] INFO: POST /api/document-notebooks/48030809-f907-4f24-a7ee-931c1078b6e8/move 404 1ms undefined
+[2026-11-02 01:38:15.819] INFO: GET /api/document-notebooks 200 1ms undefined
+----- post-test output end -----
+Documents HTTP: notebook move orders siblings and validates anchors ... ok (215ms)
+running 13 tests from ./src/features/documents/markdown.test.ts
+countOpenTasks 统计嵌套及有序列表待办并忽略已勾选与代码块 ... ok (19ms)
+documentDisplayTitle preserves explicit title precedence and first-block fallback boundary ... ok (3ms)
+documentPlainText - extracts text from headers, paragraphs, and formatting ... ok (1ms)
+documentPlainText - strips HTML tags safely ... ok (971µs)
+documentPlainText - handles lists, blockquotes, tables, and code blocks ... ok (1ms)
+documentSnippet - normalizes whitespace and respects maxLength ... ok (476µs)
+documentSnippet - handles empty or whitespace input ... ok (151µs)
+documentSnippet - guarantees no raw HTML syntax or comment pagebreak ... ok (1ms)
+documentPlainText and documentSnippet - preserve image reference alt text and exclude definition syntax ... ok (2ms)
+documentAssetReferences - extracts direct and reference image asset IDs ... ok (1ms)
+documentAssetReferences - ignores asset:// in code, plain text, and non-image links ... ok (1ms)
+documentAssetReferences - handles case-insensitive reference identifiers ... ok (316µs)
+documentAssetReferences - handles shortcut reference images and nested containers without code leakage ... ok (1ms)
+running 11 tests from ./src/features/documents/notebooks.test.ts
+notebooks depth: create root (0) and child (1) succeed, depth >= 2 rejected ... ok (49ms)
+notebooks depth: move rejecting depth >= 2 and moving root with children to non-root ... ok (38ms)
+notebooks cycle & self: moving notebook to itself rejected ... ok (33ms)
+notebooks owner isolation: foreign parent, foreign notebook mutations hidden as 404 ... ok (39ms)
+notebooks name: trim nonempty and duplicate name allowed in same parent ... ok (35ms)
+notebooks reorder: exact siblings coverage, rejects duplicate/missing/foreign/outscope ... ok (39ms)
+notebooks move: independent mutation, append to parent scope sortOrder, no-op same parent ... ok (39ms)
+notebooks move: positions within and across scopes and rejects invalid anchors atomically ... ok (38ms)
+notebooks delete: appends documents to root in scope order without changing metadata ... ok (35ms)
+notebooks delete: detaches active and trash documents, promotes children, preserves sortOrder without deduplication ... ok (36ms)
+notebooks delete: non-existent notebook throws DocumentNotFoundError ... ok (42ms)
+running 31 tests from ./src/features/documents/service.test.ts
+DocumentsService - create: establishes version 1, isFavorite false, and initial snapshot ... ok (59ms)
+DocumentsService - create: title & body validation limits ... ok (38ms)
+DocumentsService - create: validates notebook ownership ... ok (38ms)
+DocumentsService - get: owner isolation, foreign document, and deleted document reading ... ok (42ms)
+DocumentsService - update: optimistic version conflict detection ... ok (40ms)
+DocumentsService - position: notebook validation and moving to root ... ok (59ms)
+DocumentsService - position orders root and notebook pages without changing content metadata ... ok (63ms)
+DocumentsService - position rejects missing, foreign, deleted and wrong-scope targets ... ok (56ms)
+DocumentsService - restore places a note at the top of its original scope ... ok (46ms)
+DocumentsService - last opened is owner isolated, skips trash, and does not modify content metadata ... ok (40ms)
+DocumentsService - snapshot throttling: autosave < 10min skips, >= 10min inserts snapshot ... ok (36ms)
+DocumentsService - snapshot: unchanged title and body does not snapshot ... ok (34ms)
+DocumentsService - snapshot: manual and conflict_resolution force snapshot immediately ... ok (35ms)
+DocumentsService - snapshot retention: keeps newest 100 'snapshot' rows while preserving other reasons ... ok (40ms)
+DocumentsService - restoreVersion: version monotonically increments ... ok (36ms)
+DocumentsService - softDelete, restore, and permanentDelete lifecycle ... ok (38ms)
+DocumentsService - uncategorized scope isolates active documents and paginates in notebook order ... ok (36ms)
+DocumentsService - list: deterministic ordering across scopes and no body in projection ... ok (37ms)
+DocumentsService - list: opaque cursor pagination stability across pages ... ok (37ms)
+DocumentsService - list: cursor validation & tamper resistance ... ok (34ms)
+DocumentsService - search: FTS matches title & body, excludes trash, safe tokenization, and cursor ... ok (37ms)
+DocumentsService - search result snippet is plain text from the matching body ... ok (33ms)
+DocumentsService - search matches CJK substrings and terms shorter than 3 characters ... ok (39ms)
+DocumentsService - short-term search ranks title hits before newer body hits ... ok (34ms)
+DocumentsService - search treats FTS syntax characters as literal text ... ok (41ms)
+DocumentsService - short-term search honours cursor ownership and pagination ... ok (35ms)
+DocumentsService - rollback invariant: multi-mutation operations roll back completely on failure ... ok (36ms)
+Documents preserve nullable canonical titles across summaries, snapshots and restore ... ok (50ms)
+Documents colors, favorites and home ordering persist with scope-bound keyset cursors ... ok (44ms)
+Document layouts store home note cells, reject overlaps and never version content ... ok (50ms)
+Document events isolate users and service instances and publish committed lifecycle versions ... ok (42ms)
+running 5 tests from ./src/features/documents/settings.test.ts
+settings: owner active 404 guard (missing, foreign user, soft deleted) ... ok (40ms)
+settings: lazy insertion of defaults on get and persistent update upsert ... ok (35ms)
+settings: update upserts if row does not exist prior to update ... ok (34ms)
+settings: strict input validation (paperSize, orientation, margin 5..50 boundaries) ... ok (34ms)
+settings: permanent document deletion cascades to documentSettings ... ok (35ms)
+running 1 test from ./src/features/home/home.test.ts
+首页继续：鉴权、隔离、最近编辑、未完成对话和首页待办 ...
+------- post-test output -------
+[2026-11-02 01:38:18.614] INFO: GET /api/home/continue 401 1ms undefined
+[2026-11-02 01:38:18.700] INFO: POST /api/auth/register 200 83ms undefined
+[2026-11-02 01:38:18.784] INFO: POST /api/auth/register 200 83ms undefined
+[2026-11-02 01:38:18.789] INFO: GET /api/home/continue 200 4ms undefined
+[2026-11-02 01:38:18.799] INFO: GET /api/home/continue 200 9ms undefined
+[2026-11-02 01:38:18.803] INFO: GET /api/home/continue 200 2ms undefined
+[2026-11-02 01:38:18.806] INFO: GET /api/home/continue 200 2ms undefined
+[2026-11-02 01:38:18.808] INFO: GET /api/home/continue 200 1ms undefined
+[2026-11-02 01:38:18.811] INFO: GET /api/home/continue 200 2ms undefined
+[2026-11-02 01:38:18.813] INFO: GET /api/home/continue 200 1ms undefined
+[2026-11-02 01:38:18.816] INFO: GET /api/home/continue 200 2ms undefined
+----- post-test output end -----
+首页继续：鉴权、隔离、最近编辑、未完成对话和首页待办 ... ok (260ms)
+running 6 tests from ./src/features/preferences/dock.test.ts
+dock preferences: default preferences for guest and new user ...
+------- post-test output -------
+[2026-11-02 01:38:19.188] INFO: GET /api/preferences 200 3ms undefined
+[2026-11-02 01:38:19.273] INFO: POST /api/auth/register 200 82ms undefined
+[2026-11-02 01:38:19.277] INFO: GET /api/preferences 200 2ms undefined
+----- post-test output end -----
+dock preferences: default preferences for guest and new user ... ok (147ms)
+dock preferences: systemOrder reordering and validation guards ...
+------- post-test output -------
+[2026-11-02 01:38:19.397] INFO: POST /api/auth/register 200 77ms undefined
+[2026-11-02 01:38:19.401] INFO: PATCH /api/preferences 200 4ms undefined
+[2026-11-02 01:38:19.403] INFO: PATCH /api/preferences 400 2ms undefined
+[2026-11-02 01:38:19.404] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:19.405] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:19.406] INFO: PATCH /api/preferences 400 2ms undefined
+[2026-11-02 01:38:19.408] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:19.410] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:19.411] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:19.411] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:19.412] INFO: PATCH /api/preferences 400 1ms undefined
+----- post-test output end -----
+dock preferences: systemOrder reordering and validation guards ... ok (126ms)
+dock preferences: legacy data is read lazily, rejects old snapshots, and resets ...
+------- post-test output -------
+[2026-11-02 01:38:19.525] INFO: POST /api/auth/register 200 77ms undefined
+[2026-11-02 01:38:19.528] INFO: POST /api/webapps 200 2ms undefined
+[2026-11-02 01:38:19.532] INFO: PATCH /api/preferences 200 3ms undefined
+[2026-11-02 01:38:19.534] INFO: GET /api/preferences 200 2ms undefined
+[2026-11-02 01:38:19.537] INFO: PATCH /api/preferences 400 2ms undefined
+[2026-11-02 01:38:19.538] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:19.540] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:19.541] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:19.542] INFO: GET /api/preferences 200 0ms undefined
+[2026-11-02 01:38:19.543] INFO: GET /api/preferences 200 0ms undefined
+[2026-11-02 01:38:19.544] INFO: GET /api/preferences 200 1ms undefined
+[2026-11-02 01:38:19.545] INFO: GET /api/preferences 200 0ms undefined
+----- post-test output end -----
+dock preferences: legacy data is read lazily, rejects old snapshots, and resets ... ok (133ms)
+dock preferences: appIds pinning validation, isolation and privacy ...
+------- post-test output -------
+[2026-11-02 01:38:19.653] INFO: POST /api/auth/register 200 73ms undefined
+[2026-11-02 01:38:19.728] INFO: POST /api/auth/register 200 75ms undefined
+[2026-11-02 01:38:19.730] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:19.731] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:19.732] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:19.733] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:19.734] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-11-02 01:38:19.736] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:19.736] INFO: GET /api/preferences 200 0ms undefined
+----- post-test output end -----
+dock preferences: appIds pinning validation, isolation and privacy ... ok (190ms)
+dock preferences: bookmark deletion clears pinned app; restore does not re-pin ...
+------- post-test output -------
+[2026-11-02 01:38:19.860] INFO: POST /api/auth/register 200 90ms undefined
+[2026-11-02 01:38:19.861] INFO: POST /api/webapps 200 1ms undefined
+[2026-11-02 01:38:19.863] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:19.864] INFO: DELETE /api/webapps/8ae8e07f-3179-4e02-97ca-52947a71c375 200 1ms undefined
+[2026-11-02 01:38:19.865] INFO: GET /api/preferences 200 0ms undefined
+[2026-11-02 01:38:19.867] INFO: POST /api/webapps/8ae8e07f-3179-4e02-97ca-52947a71c375/restore 200 1ms undefined
+[2026-11-02 01:38:19.868] INFO: GET /api/preferences 200 1ms undefined
+[2026-11-02 01:38:19.869] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:19.871] INFO: DELETE /api/webapps/8ae8e07f-3179-4e02-97ca-52947a71c375/permanent 200 2ms undefined
+[2026-11-02 01:38:19.871] INFO: GET /api/preferences 200 0ms undefined
+----- post-test output end -----
+dock preferences: bookmark deletion clears pinned app; restore does not re-pin ... ok (135ms)
+dock preferences: atomic rollback fault injection ensures webapp deletion rolls back if preferences unpin fails ...
+------- post-test output -------
+[2026-11-02 01:38:19.987] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:19.989] INFO: POST /api/webapps 200 2ms undefined
+[2026-11-02 01:38:19.991] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:19.992] ERROR:
+    method: "DELETE"
+    path: "/api/webapps/963d1fb1-45b5-427e-a848-17717786bd8a"
+    status: 500
+    errorType: "unknown"
+[2026-11-02 01:38:19.992] INFO: DELETE /api/webapps/963d1fb1-45b5-427e-a848-17717786bd8a 500 1ms undefined
+[2026-11-02 01:38:19.993] ERROR:
+    method: "DELETE"
+    path: "/api/webapps/963d1fb1-45b5-427e-a848-17717786bd8a/permanent"
+    status: 500
+    errorType: "unknown"
+[2026-11-02 01:38:19.993] INFO: DELETE /api/webapps/963d1fb1-45b5-427e-a848-17717786bd8a/permanent 500 1ms undefined
+[2026-11-02 01:38:19.995] INFO: DELETE /api/webapps/963d1fb1-45b5-427e-a848-17717786bd8a 200 1ms undefined
+[2026-11-02 01:38:19.995] INFO: GET /api/preferences 200 0ms undefined
+----- post-test output end -----
+dock preferences: atomic rollback fault injection ensures webapp deletion rolls back if preferences unpin fails ... ok (123ms)
+running 2 tests from ./src/features/preferences/generation-defaults.test.ts
+Preferences: persisted user generation defaults full lifecycle, precedence and validation ...
+------- post-test output -------
+[2026-11-02 01:38:20.418] INFO: POST /api/auth/register 200 84ms undefined
+[2026-11-02 01:38:20.422] INFO: GET /api/preferences 200 2ms undefined
+[2026-11-02 01:38:20.426] INFO: PATCH /api/preferences 200 3ms undefined
+[2026-11-02 01:38:20.428] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:20.430] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:20.432] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:20.433] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:20.434] INFO: PATCH /api/preferences 400 2ms undefined
+[2026-11-02 01:38:20.435] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:20.435] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:20.436] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:20.436] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-11-02 01:38:20.437] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:20.437] INFO: PATCH /api/preferences 400 0ms undefined
+----- post-test output end -----
+Preferences: persisted user generation defaults full lifecycle, precedence and validation ... ok (160ms)
+Preferences: user generation defaults applied in chatStream when request params omitted ...
+------- post-test output -------
+[2026-11-02 01:38:20.564] INFO: POST /api/auth/register 200 83ms undefined
+[2026-11-02 01:38:20.569] INFO: PATCH /api/preferences 200 1ms undefined
+----- post-test output end -----
+Preferences: user generation defaults applied in chatStream when request params omitted ... ok (139ms)
+running 8 tests from ./src/features/preferences/preferences.test.ts
+preferences: authenticated appearance sync is isolated and partial updates preserve fields ...
+------- post-test output -------
+[2026-11-02 01:38:21.016] INFO: POST /api/auth/register 200 84ms undefined
+[2026-11-02 01:38:21.020] INFO: GET /api/preferences 200 2ms undefined
+[2026-11-02 01:38:21.108] INFO: POST /api/auth/register 200 87ms undefined
+[2026-11-02 01:38:21.113] INFO: PATCH /api/preferences 200 3ms undefined
+[2026-11-02 01:38:21.114] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:21.116] INFO: GET /api/preferences 200 1ms undefined
+[2026-11-02 01:38:21.117] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:21.119] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:21.120] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+preferences: authenticated appearance sync is isolated and partial updates preserve fields ... ok (244ms)
+preferences: invalid wallpaper and appearance values are rejected ...
+------- post-test output -------
+[2026-11-02 01:38:21.241] INFO: POST /api/auth/register 200 80ms undefined
+[2026-11-02 01:38:21.243] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.244] INFO: PATCH /api/preferences 400 3ms undefined
+[2026-11-02 01:38:21.245] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.245] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.246] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.246] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.247] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.247] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.248] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.248] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.249] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.249] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.250] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.250] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.250] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.251] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.251] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.251] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-11-02 01:38:21.252] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.252] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.253] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.253] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.253] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.254] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.254] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.254] INFO: PATCH /api/preferences 400 0ms undefined
+[2026-11-02 01:38:21.255] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.255] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.256] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.256] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.257] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.257] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:21.259] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:21.259] INFO: PATCH /api/preferences 400 2ms undefined
+----- post-test output end -----
+preferences: invalid wallpaper and appearance values are rejected ... ok (133ms)
+preferences: new user GET and guest GET return canonical defaults ...
+------- post-test output -------
+[2026-11-02 01:38:21.295] INFO: GET /api/preferences 200 0ms undefined
+[2026-11-02 01:38:21.374] INFO: POST /api/auth/register 200 78ms undefined
+[2026-11-02 01:38:21.375] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+preferences: new user GET and guest GET return canonical defaults ... ok (116ms)
+preferences: first partial PATCH with accent-only seeds full canonical defaults including system settings ...
+------- post-test output -------
+[2026-11-02 01:38:21.413] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:21.414] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+preferences: first partial PATCH with accent-only seeds full canonical defaults including system settings ... ok (38ms)
+preferences: subsequent partial updates preserve existing accent and presentation fields ...
+------- post-test output -------
+[2026-11-02 01:38:21.528] INFO: POST /api/auth/register 200 75ms undefined
+[2026-11-02 01:38:21.530] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:21.532] INFO: PATCH /api/preferences 200 2ms undefined
+----- post-test output end -----
+preferences: subsequent partial updates preserve existing accent and presentation fields ... ok (117ms)
+preferences: legacy DB row with NULL wallpaper_presentations deterministically migrates on GET ...
+------- post-test output -------
+[2026-11-02 01:38:21.573] INFO: GET /api/preferences 200 3ms undefined
+----- post-test output end -----
+preferences: legacy DB row with NULL wallpaper_presentations deterministically migrates on GET ... ok (40ms)
+preferences: clear backgroundImage deactivates wallpaper but retains presentation record ...
+------- post-test output -------
+[2026-11-02 01:38:21.699] INFO: POST /api/auth/register 200 90ms undefined
+[2026-11-02 01:38:21.701] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:21.703] INFO: PATCH /api/preferences 200 2ms undefined
+----- post-test output end -----
+preferences: clear backgroundImage deactivates wallpaper but retains presentation record ... ok (129ms)
+preferences: remote LRU enforces max 24 limit and keeps the current background ...
+------- post-test output -------
+[2026-11-02 01:38:21.829] INFO: POST /api/auth/register 200 88ms undefined
+[2026-11-02 01:38:21.832] INFO: PATCH /api/preferences 200 3ms undefined
+----- post-test output end -----
+preferences: remote LRU enforces max 24 limit and keeps the current background ... ok (129ms)
+running 7 tests from ./src/features/search/personal-search.test.ts
+personal search requires a session ...
+------- post-test output -------
+[2026-11-02 01:38:22.252] INFO: POST /api/auth/register 200 87ms undefined
+[2026-11-02 01:38:22.329] INFO: POST /api/auth/register 200 74ms undefined
+----- post-test output end -----
+personal search requires a session ... ok (219ms)
+personal search returns documents and apps in separate groups ...
+------- post-test output -------
+[2026-11-02 01:38:22.330] INFO: GET /api/search/personal 401 1ms undefined
+[2026-11-02 01:38:22.458] INFO: POST /api/auth/register 200 85ms undefined
+[2026-11-02 01:38:22.555] INFO: POST /api/auth/register 200 97ms undefined
+[2026-11-02 01:38:22.565] INFO: GET /api/search/personal 200 4ms undefined
+[2026-11-02 01:38:22.567] INFO: GET /api/search/personal 200 2ms undefined
+[2026-11-02 01:38:22.568] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:22.569] INFO: GET /api/search/personal 200 1ms undefined
+----- post-test output end -----
+personal search returns documents and apps in separate groups ... ok (233ms)
+personal search never returns other owners, trashed documents or deleted apps ...
+------- post-test output -------
+[2026-11-02 01:38:22.683] INFO: POST /api/auth/register 200 79ms undefined
+[2026-11-02 01:38:22.760] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:22.767] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:22.770] INFO: GET /api/search/personal 200 2ms undefined
+----- post-test output end -----
+personal search never returns other owners, trashed documents or deleted apps ... ok (200ms)
+personal search orders apps by name prefix, name substring, then URL, then home order ...
+------- post-test output -------
+[2026-11-02 01:38:22.883] INFO: POST /api/auth/register 200 79ms undefined
+[2026-11-02 01:38:22.958] INFO: POST /api/auth/register 200 75ms undefined
+[2026-11-02 01:38:22.961] INFO: GET /api/search/personal 200 1ms undefined
+----- post-test output end -----
+personal search orders apps by name prefix, name substring, then URL, then home order ... ok (191ms)
+personal search includes apps inside folders and requires every term ...
+------- post-test output -------
+[2026-11-02 01:38:23.074] INFO: POST /api/auth/register 200 78ms undefined
+[2026-11-02 01:38:23.152] INFO: POST /api/auth/register 200 78ms undefined
+[2026-11-02 01:38:23.155] INFO: GET /api/search/personal 200 2ms undefined
+----- post-test output end -----
+personal search includes apps inside folders and requires every term ... ok (193ms)
+personal search caps each group at limit and validates input ...
+------- post-test output -------
+[2026-11-02 01:38:23.264] INFO: POST /api/auth/register 200 74ms undefined
+[2026-11-02 01:38:23.343] INFO: POST /api/auth/register 200 79ms undefined
+[2026-11-02 01:38:23.353] INFO: GET /api/search/personal 200 3ms undefined
+[2026-11-02 01:38:23.356] INFO: GET /api/search/personal 200 2ms undefined
+[2026-11-02 01:38:23.357] INFO:
+    method: "GET"
+    path: "/api/search/personal"
+    event: "validation-failed"
+[2026-11-02 01:38:23.358] INFO: GET /api/search/personal 400 2ms undefined
+[2026-11-02 01:38:23.358] INFO:
+    method: "GET"
+    path: "/api/search/personal"
+    event: "validation-failed"
+[2026-11-02 01:38:23.358] INFO: GET /api/search/personal 400 0ms undefined
+[2026-11-02 01:38:23.359] INFO:
+    method: "GET"
+    path: "/api/search/personal"
+    event: "validation-failed"
+[2026-11-02 01:38:23.359] INFO: GET /api/search/personal 400 0ms undefined
+[2026-11-02 01:38:23.360] INFO:
+    method: "GET"
+    path: "/api/search/personal"
+    event: "validation-failed"
+[2026-11-02 01:38:23.360] INFO: GET /api/search/personal 400 1ms undefined
+[2026-11-02 01:38:23.361] INFO:
+    method: "GET"
+    path: "/api/search/personal"
+    event: "validation-failed"
+[2026-11-02 01:38:23.361] INFO: GET /api/search/personal 400 1ms undefined
+[2026-11-02 01:38:23.361] INFO: GET /api/search/personal 200 0ms undefined
+----- post-test output end -----
+personal search caps each group at limit and validates input ... ok (206ms)
+personal search treats operators and punctuation as literal text ...
+------- post-test output -------
+[2026-11-02 01:38:23.477] INFO: POST /api/auth/register 200 80ms undefined
+[2026-11-02 01:38:23.579] INFO: POST /api/auth/register 200 102ms undefined
+[2026-11-02 01:38:23.584] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.585] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.586] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.588] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.589] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.591] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.593] INFO: GET /api/search/personal 200 2ms undefined
+[2026-11-02 01:38:23.595] INFO: GET /api/search/personal 200 2ms undefined
+[2026-11-02 01:38:23.596] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.597] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.599] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.600] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.601] INFO: GET /api/search/personal 200 1ms undefined
+[2026-11-02 01:38:23.602] INFO: GET /api/search/personal 200 1ms undefined
+----- post-test output end -----
+personal search treats operators and punctuation as literal text ... ok (241ms)
+running 3 tests from ./src/features/search/search.route.test.ts
+search routes: webpage suggestions follow canonical interface language without cross-language reuse ...
+------- post-test output -------
+[2026-11-02 01:38:23.861] INFO:
+    method: "GET"
+    path: "/api/search/suggestions"
+    event: "validation-failed"
+[2026-11-02 01:38:23.864] INFO:
+    method: "GET"
+    path: "/api/search/suggestions"
+    event: "validation-failed"
+[2026-11-02 01:38:23.864] INFO:
+    method: "GET"
+    path: "/api/search/suggestions"
+    event: "validation-failed"
+[2026-11-02 01:38:23.865] INFO:
+    method: "GET"
+    path: "/api/search/suggestions"
+    event: "validation-failed"
+[2026-11-02 01:38:23.865] INFO:
+    method: "GET"
+    path: "/api/search/suggestions"
+    event: "validation-failed"
+----- post-test output end -----
+search routes: webpage suggestions follow canonical interface language without cross-language reuse ... ok (55ms)
+search routes: history endpoints require auth and follow opt-in ... ok (129ms)
+search routes: deleting another user's history item returns 404 and keeps it ... ok (204ms)
+running 2 tests from ./src/features/search/search.test.ts
+search suggestions: silent degradation on adapter network failure ... ok (38ms)
+search history: recorded items after opt-in are suggested ... ok (38ms)
+running 11 tests from ./src/features/system/backup.test.ts
+backup prevalidation: focal handling supports old manifest and validates new 0..1 ... ok (190ms)
+backup prevalidation: payload presence and rejects extra unmanifested payloads ... ok (133ms)
+backup prevalidation: enforces payload size and magic bytes content-type consistency ... ok (151ms)
+backup prevalidation: enforces per-user quota limit (max 5 wallpapers) ... ok (124ms)
+backup prevalidation: enforces preference local refs exist AND are owned ... ok (369ms)
+backup restore: validates before restore and fails closed on corrupted backup ... ok (128ms)
+backup smoke: roundtrip full backup and restore preserves wallpaper files and database ... ok (219ms)
+backup prevalidation: wallpaperPresentations local references must exist and be owned by the user ... ok (282ms)
+backup concurrency: concurrent backup and delete produces consistent valid backup and ignores transient .deleting files ... ok (117ms)
+legacy backup: accepts old tables, preserves documents and ignores sticky data with warnings ... ok (378ms)
+system overview and backup count only unified documents ... ok (118ms)
+running 4 tests from ./src/features/system/config-import.test.ts
+Config Export/Import: validates malformed input gracefully ... ok (46ms)
+Config Export/Import: roundtrip exports system providers without secrets, imports them disabled and updates on re-import ... ok (75ms)
+Config Import: ownership isolation never overwrites user-scoped providers ... ok (36ms)
+Config Import: fails closed when ENCRYPTION_KEY missing without partial settings apply ... ok (33ms)
+running 1 test from ./src/features/system/settings-enforcement.test.ts
+settings-enforcement: registration gating & custom default engine/theme/target ...
+------- post-test output -------
+[2026-11-02 01:38:27.522] INFO: GET /api/auth/register 200 1ms undefined
+[2026-11-02 01:38:27.526] INFO: GET /api/preferences 200 1ms undefined
+[2026-11-02 01:38:27.528] INFO: GET /api/auth/register 200 0ms undefined
+[2026-11-02 01:38:27.531] INFO: POST /api/auth/register 403 3ms undefined
+[2026-11-02 01:38:27.531] INFO: GET /api/preferences 200 0ms undefined
+[2026-11-02 01:38:27.612] INFO: POST /api/auth/register 200 81ms undefined
+[2026-11-02 01:38:27.614] INFO: GET /api/preferences 200 2ms undefined
+----- post-test output end -----
+settings-enforcement: registration gating & custom default engine/theme/target ... ok (151ms)
+------- post-test output -------
+[2026-11-02 01:38:27.615] INFO: GET /api/search/suggestions 200 1ms undefined
+----- post-test output end -----
+running 2 tests from ./src/features/system/system.route.test.ts
+system routes: permissions, overview, settings, config export/import, backup/restore ...
+------- post-test output -------
+[2026-11-02 01:38:27.978] INFO: GET /api/admin/system/overview 403 3ms undefined
+[2026-11-02 01:38:27.983] INFO: GET /api/admin/system/overview 200 2ms undefined
+[2026-11-02 01:38:27.988] INFO: PATCH /api/admin/system/settings 200 4ms undefined
+[2026-11-02 01:38:27.989] INFO: GET /api/admin/system/config/export 200 1ms undefined
+[2026-11-02 01:38:27.991] INFO: POST /api/admin/system/config/import 200 1ms undefined
+[2026-11-02 01:38:28.081] INFO: GET /api/admin/backup/export 200 88ms undefined
+[2026-11-02 01:38:28.085] INFO: PATCH /api/admin/system/settings 200 2ms undefined
+[2026-11-02 01:38:28.100] INFO: POST /api/admin/backup/validate 200 15ms undefined
+[2026-11-02 01:38:28.120] INFO: POST /api/admin/backup/validate 400 5ms undefined
+[2026-11-02 01:38:28.211] INFO: POST /api/admin/backup/restore 200 90ms undefined
+[2026-11-02 01:38:28.212] INFO: GET /api/admin/system/settings 200 0ms undefined
+[2026-11-02 01:38:28.214] INFO: GET /api/admin/audit-logs 200 1ms undefined
+----- post-test output end -----
+system routes: permissions, overview, settings, config export/import, backup/restore ... ok (301ms)
+backup restore persists to SQLite file across restart ... ok (207ms)
+running 2 tests from ./src/features/users/users.test.ts
+users admin contract: role-based access control and user management ... ok (139ms)
+admin spec §15/§16: create, reset password forcing change, two-stage soft delete, and audit logging ... ok (423ms)
+running 17 tests from ./src/features/wallpaper/wallpaper.test.ts
+wallpaper: failed deletion compensation retains staged bytes for recovery ... ok (10ms)
+wallpaper: upload, auth, mime, retrieval, and persistence contract ...
+------- post-test output -------
+[2026-11-02 01:38:29.624] INFO: POST /api/auth/register 200 82ms undefined
+[2026-11-02 01:38:29.705] INFO: POST /api/auth/register 200 77ms undefined
+[2026-11-02 01:38:29.708] INFO: POST /api/wallpaper 401 2ms undefined
+[2026-11-02 01:38:29.708] INFO: POST /api/wallpaper 415 0ms undefined
+[2026-11-02 01:38:29.712] INFO: POST /api/wallpaper 400 3ms undefined
+[2026-11-02 01:38:29.714] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:29.716] INFO: GET /api/wallpaper/6e36fe8c-1105-4de5-ac99-7bb28b3fc391 200 1ms undefined
+[2026-11-02 01:38:29.717] INFO: GET /api/wallpaper/6e36fe8c-1105-4de5-ac99-7bb28b3fc391 404 1ms undefined
+[2026-11-02 01:38:29.720] INFO: PATCH /api/preferences 200 3ms undefined
+[2026-11-02 01:38:29.721] INFO: GET /api/preferences 200 0ms undefined
+[2026-11-02 01:38:29.723] INFO: PATCH /api/preferences 404 1ms undefined
+[2026-11-02 01:38:29.723] INFO: GET /api/wallpaper/6e36fe8c-1105-4de5-ac99-7bb28b3fc391 401 0ms undefined
+[2026-11-02 01:38:29.727] INFO: GET /api/wallpaper/6e36fe8c-1105-4de5-ac99-7bb28b3fc391 200 1ms undefined
+[2026-11-02 01:38:29.728] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:29.729] INFO: GET /api/wallpaper/66473d90-24ba-4366-9749-c72e24c2ab6e 200 0ms undefined
+[2026-11-02 01:38:29.731] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:29.732] INFO: GET /api/wallpaper/688bcc8f-678c-47ef-a5f5-9abc9538a6d5 200 1ms undefined
+[2026-11-02 01:38:29.733] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:29.734] INFO: GET /api/wallpaper/28c1137d-91c4-48d1-a0b0-2e41b4b97076 200 1ms undefined
+[2026-11-02 01:38:29.762] INFO: POST /api/wallpaper 413 24ms undefined
+[2026-11-02 01:38:29.764] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:29.766] INFO: DELETE /api/wallpaper/c8dc9c2d-43a7-4697-ae76-d4ce8a200091 200 2ms undefined
+[2026-11-02 01:38:29.766] INFO: GET /api/wallpaper/c8dc9c2d-43a7-4697-ae76-d4ce8a200091 404 0ms undefined
+[2026-11-02 01:38:29.767] INFO: GET /api/wallpaper/6e36fe8c-1105-4de5-ac99-7bb28b3fc391 200 0ms undefined
+----- post-test output end -----
+wallpaper: upload, auth, mime, retrieval, and persistence contract ... ok (276ms)
+wallpaper: concurrent uploads maintain record integrity without dropping ...
+------- post-test output -------
+[2026-11-02 01:38:29.876] INFO: POST /api/auth/register 200 74ms undefined
+[2026-11-02 01:38:29.882] INFO: POST /api/wallpaper 200 5ms undefined
+[2026-11-02 01:38:29.883] INFO: POST /api/wallpaper 200 6ms undefined
+[2026-11-02 01:38:29.883] INFO: POST /api/wallpaper 200 6ms undefined
+[2026-11-02 01:38:29.884] INFO: POST /api/wallpaper 200 7ms undefined
+[2026-11-02 01:38:29.885] INFO: POST /api/wallpaper 200 8ms undefined
+[2026-11-02 01:38:29.886] INFO: POST /api/wallpaper 200 9ms undefined
+[2026-11-02 01:38:29.887] INFO: GET /api/wallpaper/f262969d-aa5e-445b-af2c-97fd9c57b4e9 200 1ms undefined
+[2026-11-02 01:38:29.888] INFO: GET /api/wallpaper/d66b5923-237a-4615-9db0-09e96d2f7e67 200 1ms undefined
+[2026-11-02 01:38:29.889] INFO: GET /api/wallpaper/6f1df37f-0a47-4c2c-96bc-d0875a66493e 200 1ms undefined
+[2026-11-02 01:38:29.890] INFO: GET /api/wallpaper/12568fd6-be78-437a-95f7-1df87c4cfa83 200 1ms undefined
+[2026-11-02 01:38:29.891] INFO: GET /api/wallpaper/cf6c5518-eef7-49b8-be9a-ccfb1ecbde19 200 1ms undefined
+[2026-11-02 01:38:29.892] INFO: GET /api/wallpaper/9a3a042e-0bd9-4d9e-a649-282f124c5639 200 1ms undefined
+----- post-test output end -----
+wallpaper: concurrent uploads maintain record integrity without dropping ... ok (124ms)
+wallpaper: per-user quota bounds storage and evicts oldest files cleanly ...
+------- post-test output -------
+[2026-11-02 01:38:30.003] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:30.005] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.007] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.008] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.009] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.010] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.012] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.013] INFO: GET /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.091] INFO: POST /api/auth/register 200 78ms undefined
+[2026-11-02 01:38:30.092] INFO: GET /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.093] INFO: GET /api/wallpaper 401 1ms undefined
+[2026-11-02 01:38:30.093] INFO: GET /api/wallpaper/b380e3f0-db87-4520-8685-64f5df01dca3 404 0ms undefined
+[2026-11-02 01:38:30.094] INFO: GET /api/wallpaper/cba500c0-f1b4-42ae-b45e-c87de3c54ffd 200 0ms undefined
+[2026-11-02 01:38:30.095] INFO: GET /api/wallpaper/8ddf3c90-1ed2-441d-8bc5-202b45c38c91 200 1ms undefined
+[2026-11-02 01:38:30.096] INFO: GET /api/wallpaper/75a1bbdf-e249-4dac-a713-da2912f254e0 200 1ms undefined
+[2026-11-02 01:38:30.097] INFO: GET /api/wallpaper/680f06af-164b-430e-8523-9886b4e06c00 200 1ms undefined
+[2026-11-02 01:38:30.098] INFO: GET /api/wallpaper/e61463c2-8316-4ea9-982e-6af1e4031d32 200 1ms undefined
+----- post-test output end -----
+wallpaper: per-user quota bounds storage and evicts oldest files cleanly ... ok (208ms)
+wallpaper: malformed manifest fails closed and does not silently wipe ... ok (14ms)
+wallpaper: orphaned payload is deleted if manifest commit fails ... ok (671µs)
+wallpaper: asset record focal defaults from old manifest and updates via API ...
+------- post-test output -------
+[2026-11-02 01:38:30.231] INFO: POST /api/auth/register 200 75ms undefined
+[2026-11-02 01:38:30.314] INFO: POST /api/auth/register 200 83ms undefined
+[2026-11-02 01:38:30.316] INFO: GET /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.319] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:30.320] INFO: POST /api/wallpaper 400 1ms undefined
+[2026-11-02 01:38:30.321] INFO: POST /api/wallpaper 400 1ms undefined
+[2026-11-02 01:38:30.323] INFO: PATCH /api/wallpaper/66238b4d-0827-446a-beaa-daef2eb62235 200 2ms undefined
+[2026-11-02 01:38:30.324] INFO: GET /api/preferences 200 1ms undefined
+[2026-11-02 01:38:30.325] INFO: PATCH /api/wallpaper/66238b4d-0827-446a-beaa-daef2eb62235 404 1ms undefined
+[2026-11-02 01:38:30.326] INFO:
+    method: "PATCH"
+    path: "/api/wallpaper/66238b4d-0827-446a-beaa-daef2eb62235"
+    event: "validation-failed"
+[2026-11-02 01:38:30.326] INFO: PATCH /api/wallpaper/66238b4d-0827-446a-beaa-daef2eb62235 400 1ms undefined
+----- post-test output end -----
+wallpaper: asset record focal defaults from old manifest and updates via API ... ok (210ms)
+wallpaper: private no-cache ETag and conditional 304 vs auth isolation ...
+------- post-test output -------
+[2026-11-02 01:38:30.442] INFO: POST /api/auth/register 200 80ms undefined
+[2026-11-02 01:38:30.516] INFO: POST /api/auth/register 200 74ms undefined
+[2026-11-02 01:38:30.519] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:30.520] INFO: GET /api/wallpaper/d75ea730-38ba-43f2-a108-6a978738dded 200 0ms undefined
+[2026-11-02 01:38:30.520] INFO: GET /api/wallpaper/d75ea730-38ba-43f2-a108-6a978738dded 304 0ms undefined
+[2026-11-02 01:38:30.521] INFO: GET /api/wallpaper/d75ea730-38ba-43f2-a108-6a978738dded 404 0ms undefined
+[2026-11-02 01:38:30.522] INFO: GET /api/wallpaper/d75ea730-38ba-43f2-a108-6a978738dded 401 0ms undefined
+----- post-test output end -----
+wallpaper: private no-cache ETag and conditional 304 vs auth isolation ... ok (195ms)
+wallpaper: deletion referential integrity and recoverable rollback on failure ...
+------- post-test output -------
+[2026-11-02 01:38:30.636] INFO: POST /api/auth/register 200 78ms undefined
+[2026-11-02 01:38:30.638] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:30.641] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:30.642] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:30.644] INFO: DELETE /api/wallpaper/3732f0ea-a668-4118-8716-8460db760bfb 200 1ms undefined
+[2026-11-02 01:38:30.645] INFO: GET /api/preferences 200 1ms undefined
+[2026-11-02 01:38:30.647] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:30.650] INFO: PATCH /api/preferences 200 3ms undefined
+[2026-11-02 01:38:30.651] INFO: DELETE /api/wallpaper/8d2f8086-09e2-493f-a862-a4ee07bb3725 500 1ms undefined
+[2026-11-02 01:38:30.652] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+wallpaper: deletion referential integrity and recoverable rollback on failure ... ok (129ms)
+wallpaper: quota eviction prioritizes non-active wallpapers and clears preference if active is evicted ...
+------- post-test output -------
+[2026-11-02 01:38:30.762] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:30.764] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:30.765] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:30.767] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:30.768] INFO: PATCH /api/preferences 200 1ms undefined
+[2026-11-02 01:38:30.770] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:30.771] INFO: GET /api/wallpaper/c83e4ee2-a2e6-4ebc-ac9f-1d08158e0dbe 404 1ms undefined
+[2026-11-02 01:38:30.772] INFO: GET /api/wallpaper/66719c04-a39a-448a-97d6-728bbdc78e30 200 1ms undefined
+[2026-11-02 01:38:30.772] INFO: GET /api/preferences 200 0ms undefined
+----- post-test output end -----
+wallpaper: quota eviction prioritizes non-active wallpapers and clears preference if active is evicted ... ok (120ms)
+wallpaper: source validation for HTTPS, uploaded owner, and gradient rejection ...
+------- post-test output -------
+[2026-11-02 01:38:30.883] INFO: POST /api/auth/register 200 73ms undefined
+[2026-11-02 01:38:30.958] INFO: POST /api/auth/register 200 75ms undefined
+[2026-11-02 01:38:30.962] INFO: POST /api/wallpaper 200 4ms undefined
+[2026-11-02 01:38:30.964] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:30.966] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:30.968] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:30.969] INFO: PATCH /api/preferences 404 1ms undefined
+[2026-11-02 01:38:30.970] INFO: PATCH /api/preferences 404 1ms undefined
+[2026-11-02 01:38:30.971] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:30.971] INFO: PATCH /api/preferences 400 1ms undefined
+[2026-11-02 01:38:30.972] INFO:
+    method: "PATCH"
+    path: "/api/preferences"
+    event: "validation-failed"
+[2026-11-02 01:38:30.972] INFO: PATCH /api/preferences 400 1ms undefined
+----- post-test output end -----
+wallpaper: source validation for HTTPS, uploaded owner, and gradient rejection ... ok (199ms)
+wallpaper: concurrent select and delete race condition avoids dangling reference ...
+------- post-test output -------
+[2026-11-02 01:38:31.082] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:31.085] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:31.087] INFO: DELETE /api/wallpaper/c93290f5-f07a-468f-a440-f3a5183d1629 200 1ms undefined
+[2026-11-02 01:38:31.087] INFO: PATCH /api/preferences 404 1ms undefined
+[2026-11-02 01:38:31.088] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+wallpaper: concurrent select and delete race condition avoids dangling reference ... ok (116ms)
+wallpaper: file deletion failure rolls back manifest, preferences, and staged file ...
+------- post-test output -------
+[2026-11-02 01:38:31.198] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:31.201] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:31.205] INFO: PATCH /api/preferences 200 4ms undefined
+[2026-11-02 01:38:31.207] INFO: DELETE /api/wallpaper/231fe828-00cf-4025-9504-fea340841ced 500 2ms undefined
+[2026-11-02 01:38:31.207] INFO: GET /api/preferences 200 0ms undefined
+[2026-11-02 01:38:31.208] INFO: GET /api/wallpaper/231fe828-00cf-4025-9504-fea340841ced 200 0ms undefined
+----- post-test output end -----
+wallpaper: file deletion failure rolls back manifest, preferences, and staged file ... ok (120ms)
+wallpaper: preferences PATCH canonicalizes sources, delete clears background and presentation ...
+------- post-test output -------
+[2026-11-02 01:38:31.324] INFO: POST /api/auth/register 200 77ms undefined
+[2026-11-02 01:38:31.327] INFO: POST /api/wallpaper 200 2ms undefined
+[2026-11-02 01:38:31.330] INFO: PATCH /api/preferences 200 2ms undefined
+[2026-11-02 01:38:31.330] INFO: GET /api/preferences 200 0ms undefined
+[2026-11-02 01:38:31.332] INFO: DELETE /api/wallpaper/023d43e8-4d44-41ea-a541-79d4ae6e0114 200 1ms undefined
+[2026-11-02 01:38:31.333] INFO: GET /api/preferences 200 1ms undefined
+----- post-test output end -----
+wallpaper: preferences PATCH canonicalizes sources, delete clears background and presentation ... ok (124ms)
+wallpaper: preferences PATCH validates all keys before mutation (zero partial updates) ...
+------- post-test output -------
+[2026-11-02 01:38:31.443] INFO: POST /api/auth/register 200 75ms undefined
+[2026-11-02 01:38:31.521] INFO: POST /api/auth/register 200 77ms undefined
+[2026-11-02 01:38:31.525] INFO: POST /api/wallpaper 200 3ms undefined
+[2026-11-02 01:38:31.526] INFO: POST /api/wallpaper 200 1ms undefined
+[2026-11-02 01:38:31.528] INFO: PATCH /api/preferences 404 2ms undefined
+----- post-test output end -----
+wallpaper: preferences PATCH validates all keys before mutation (zero partial updates) ... ok (195ms)
+wallpaper: updateWallpaperComposition rolls back manifest on DB preferences failure ...
+------- post-test output -------
+[2026-11-02 01:38:31.647] INFO: POST /api/auth/register 200 82ms undefined
+[2026-11-02 01:38:31.651] INFO: POST /api/wallpaper 200 3ms undefined
+----- post-test output end -----
+wallpaper: updateWallpaperComposition rolls back manifest on DB preferences failure ... ok (124ms)
+wallpaper: single-payload eviction unlink failure restores the evicted file from in-memory bytes ...
+------- post-test output -------
+[2026-11-02 01:38:31.763] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:31.767] INFO: POST /api/wallpaper 200 3ms undefined
+[2026-11-02 01:38:31.770] INFO: POST /api/wallpaper 200 3ms undefined
+[2026-11-02 01:38:31.773] INFO: POST /api/wallpaper 500 2ms undefined
+[2026-11-02 01:38:31.774] INFO: GET /api/wallpaper/02a33fee-525a-43f7-8001-7f7eb01df235 200 0ms undefined
+----- post-test output end -----
+wallpaper: single-payload eviction unlink failure restores the evicted file from in-memory bytes ... ok (121ms)
+running 4 tests from ./src/features/webapp-icons/fetcher.test.ts
+extractCandidateIconsFromHtml respects priority: apple-touch-icon -> manifest -> link rel=icon -> favicon.ico ... ok (1ms)
+apple touch icon chooses 180px before smaller HTML candidates ... ok (166µs)
+website quick add derives a readable title from remote HTML without markup ... ok (242µs)
+icon fetch rejects redirects and stops oversized streams before buffering the response ... ok (10ms)
+running 3 tests from ./src/features/webapp-icons/presentation.test.ts
+icon presentation: full-bleed ... ok (15ms)
+icon presentation: transparent ... ok (6ms)
+icon presentation: semi-transparent edges ... ok (5ms)
+running 1 test from ./src/features/webapp-icons/service.test.ts
+WebAppIconService saves icon with SHA-256 deduplication and serves it ... ok (24ms)
+running 3 tests from ./src/features/webapp-icons/ssrf.test.ts
+isPrivateOrRestrictedIp identifies IPv4 private/loopback/link-local/special ... ok (792µs)
+isPrivateOrRestrictedIp identifies IPv6 loopback/link-local/unique-local ... ok (63µs)
+validateUrlForSafeFetch rejects non-http/https, localhost, credentials ... ok (2ms)
+running 2 tests from ./src/features/webapp-icons/svg.test.ts
+sanitizeSvg strips script tags, event handlers, and javascript: links ... ok (1ms)
+sanitizeSvg rejects non-SVG text or empty input ... ok (436µs)
+running 1 test from ./src/features/webapp-icons/validator.test.ts
+validateImageBytes accepts PNG, JPEG, WebP, AVIF, ICO and safe SVG, rejects HTML ... ok (1ms)
+running 1 test from ./src/features/webapp-icons/webapp-icons.route.test.ts
+WebAppIcons routes: upload, fetch, and serve ...
+------- post-test output -------
+[2026-11-02 01:38:32.870] INFO: POST /api/auth/register 200 80ms undefined
+[2026-11-02 01:38:32.874] INFO: GET /api/webapp-icons/non-existent 404 1ms undefined
+[2026-11-02 01:38:32.880] INFO: POST /api/webapp-icons/upload 401 1ms undefined
+[2026-11-02 01:38:32.891] INFO: POST /api/webapp-icons/upload 200 11ms undefined
+[2026-11-02 01:38:32.892] INFO: GET /api/webapp-icons/998fa643-f8aa-4dcf-814d-d291619f0494 200 1ms undefined
+[2026-11-02 01:38:32.905] INFO: POST /api/webapp-icons/upload 413 11ms undefined
+[2026-11-02 01:38:32.905] INFO: POST /api/webapp-icons/upload 403 0ms undefined
+[2026-11-02 01:38:32.906] INFO: POST /api/webapp-icons/upload 415 0ms undefined
+[2026-11-02 01:38:32.906] INFO: POST /api/auth/login 413 0ms undefined
+----- post-test output end -----
+WebAppIcons routes: upload, fetch, and serve ... ok (173ms)
+running 8 tests from ./src/internal/crypto/vault.test.ts
+CryptoVault: passwords.hash 与 passwords.verify 正确验证与防碰撞 ... ok (62ms)
+CryptoVault: fields.encrypt 与 fields.decrypt 保证加解密正确性与 UTF-8 支持 ... ok (1ms)
+CryptoVault: fields.decrypt 拒绝篡改密文与非法格式 ... ok (1ms)
+CryptoVault: fields.blindIndex 提供确定性索引供可搜索加密查询与独立密钥缓存隔离 ... ok (455µs)
+CryptoVault: HMAC 盲索引密钥与 AES 密钥在环境变量动态切换时互不污染 ... ok (475µs)
+CryptoVault: 默认从 APP_KEY 环境变量解析 masterKey 并支持开箱即用单例 ... ok (188µs)
+CryptoVault: 缺少 APP_KEY/APP_SECRET 且未显式指定 masterKey 时抛错（拒绝回退到 JWT_SECRET） ... ok (421µs)
+CryptoVault: 拒绝非规范迭代次数及超限密码记录 ... ok (128ms)
+running 14 tests from ./src/internal/hono/body-policy.test.ts
+Contract: POST /api/ai/chat/stream with body > 64 KiB (e.g. 100 KiB) is allowed ...
+------- post-test output -------
+[2026-11-02 01:38:33.614] INFO: POST /api/auth/register 200 80ms undefined
+[2026-11-02 01:38:33.620] INFO: POST /api/ai/chat/stream 400 3ms undefined
+----- post-test output end -----
+Contract: POST /api/ai/chat/stream with body > 64 KiB (e.g. 100 KiB) is allowed ... ok (144ms)
+Contract: Normal endpoint > 64 KiB rejected with 413 and unified message ...
+------- post-test output -------
+[2026-11-02 01:38:33.744] INFO: POST /api/auth/register 200 81ms undefined
+[2026-11-02 01:38:33.745] INFO: POST /api/preferences 413 0ms undefined
+----- post-test output end -----
+Contract: Normal endpoint > 64 KiB rejected with 413 and unified message ... ok (119ms)
+Contract: POST /api/ai/chat/stream exceeding 32 MiB rejected with 413 and AI message ...
+------- post-test output -------
+[2026-11-02 01:38:33.873] INFO: POST /api/auth/register 200 89ms undefined
+[2026-11-02 01:38:33.874] INFO: POST /api/ai/chat/stream 413 1ms undefined
+----- post-test output end -----
+Contract: POST /api/ai/chat/stream exceeding 32 MiB rejected with 413 and AI message ... ok (127ms)
+Contract: Without Content-Length (streamed), normal endpoint > 64 KiB rejected with 413 ...
+------- post-test output -------
+[2026-11-02 01:38:34.006] INFO: POST /api/auth/register 200 92ms undefined
+[2026-11-02 01:38:34.007] INFO: POST /api/preferences 413 0ms undefined
+----- post-test output end -----
+Contract: Without Content-Length (streamed), normal endpoint > 64 KiB rejected with 413 ... ok (133ms)
+Contract: Wrong Origin rejected with 403 ...
+------- post-test output -------
+[2026-11-02 01:38:34.131] INFO: POST /api/auth/register 200 88ms undefined
+[2026-11-02 01:38:34.132] INFO: POST /api/ai/chat/stream 403 0ms undefined
+----- post-test output end -----
+Contract: Wrong Origin rejected with 403 ... ok (125ms)
+Contract: AI chat still requires JSON Content-Type ...
+------- post-test output -------
+[2026-11-02 01:38:34.267] INFO: POST /api/auth/register 200 97ms undefined
+[2026-11-02 01:38:34.268] INFO: POST /api/ai/chat/stream 415 1ms undefined
+----- post-test output end -----
+Contract: AI chat still requires JSON Content-Type ... ok (135ms)
+Contract: Wrong Content-Type on Upload endpoint rejected with 415 ...
+------- post-test output -------
+[2026-11-02 01:38:34.392] INFO: POST /api/auth/register 200 89ms undefined
+[2026-11-02 01:38:34.393] INFO: POST /api/webapp-icons/upload 415 0ms undefined
+----- post-test output end -----
+Contract: Wrong Content-Type on Upload endpoint rejected with 415 ... ok (124ms)
+Contract: WebApp Icons upload: > 2 MiB + 64 KiB rejected at bodyLimit level ...
+------- post-test output -------
+[2026-11-02 01:38:34.503] INFO: POST /api/auth/register 200 76ms undefined
+[2026-11-02 01:38:34.504] INFO: POST /api/webapp-icons/upload 413 0ms undefined
+----- post-test output end -----
+Contract: WebApp Icons upload: > 2 MiB + 64 KiB rejected at bodyLimit level ... ok (111ms)
+Contract: WebApp Icons upload: within bodyLimit but icon file > 2 MiB rejected with business message ...
+------- post-test output -------
+[2026-11-02 01:38:34.632] INFO: POST /api/auth/register 200 90ms undefined
+[2026-11-02 01:38:34.647] INFO: POST /api/webapp-icons/upload 413 10ms undefined
+----- post-test output end -----
+Contract: WebApp Icons upload: within bodyLimit but icon file > 2 MiB rejected with business message ... ok (143ms)
+Contract: Wallpaper upload: > 50 MiB rejected at bodyLimit level ...
+------- post-test output -------
+[2026-11-02 01:38:34.758] INFO: POST /api/auth/register 200 74ms undefined
+[2026-11-02 01:38:34.758] INFO: POST /api/wallpaper 413 0ms undefined
+----- post-test output end -----
+Contract: Wallpaper upload: > 50 MiB rejected at bodyLimit level ... ok (109ms)
+Contract: Wallpaper upload: within 50 MiB but wallpaper file > 5 MiB rejected with business message ...
+------- post-test output -------
+[2026-11-02 01:38:34.875] INFO: POST /api/auth/register 200 81ms undefined
+[2026-11-02 01:38:34.904] INFO: POST /api/wallpaper 413 24ms undefined
+----- post-test output end -----
+Contract: Wallpaper upload: within 50 MiB but wallpaper file > 5 MiB rejected with business message ... ok (145ms)
+Contract: Admin backup upload: > 50 MiB rejected at bodyLimit level ...
+------- post-test output -------
+[2026-11-02 01:38:35.013] INFO: POST /api/auth/register 200 74ms undefined
+[2026-11-02 01:38:35.013] INFO: POST /api/admin/backup/validate 413 0ms undefined
+----- post-test output end -----
+Contract: Admin backup upload: > 50 MiB rejected at bodyLimit level ... ok (109ms)
+Contract: Without Content-Length (streamed), AI chat stream > 64 KiB is allowed ...
+------- post-test output -------
+[2026-11-02 01:38:35.137] INFO: POST /api/auth/register 200 88ms undefined
+[2026-11-02 01:38:35.140] INFO: POST /api/ai/chat/stream 400 2ms undefined
+----- post-test output end -----
+Contract: Without Content-Length (streamed), AI chat stream > 64 KiB is allowed ... ok (126ms)
+Contract: streamed AI body above 32 MiB is rejected without Content-Length ...
+------- post-test output -------
+[2026-11-02 01:38:35.261] INFO: POST /api/auth/register 200 86ms undefined
+[2026-11-02 01:38:35.262] INFO: POST /api/ai/chat/stream 413 0ms undefined
+----- post-test output end -----
+Contract: streamed AI body above 32 MiB is rejected without Content-Length ... ok (122ms)
+running 8 tests from ./src/internal/hono/intake-response.test.ts
+responseMiddleware c.success 与 c.fail 返回准确 typed JSON 结构 ... ok (10ms)
+failResponse 统一构建 4xx/5xx typed envelope ... ok (347µs)
+errorResponse 对未知错误不泄露内部信息 ...
+------- post-test output -------
+[2026-11-02 01:38:35.444] ERROR:
+    method: "GET"
+    path: "/unknown-error"
+    status: 500
+    errorType: "unknown"
+----- post-test output end -----
+errorResponse 对未知错误不泄露内部信息 ... ok (3ms)
+c.fail 在 runtime 拒绝非法非 4xx/5xx 状态码（覆盖 204/205/100/200/600/NaN） ... ok (1ms)
+errorResponse 对 HonoHTTPException 保留挑战头等语义响应头并过滤旧表示头与 content headers ...
+------- post-test output -------
+[2026-11-02 01:38:35.448] INFO:
+    method: "GET"
+    path: "/auth-challenge"
+    status: 401
+    errorType: "http"
+----- post-test output end -----
+errorResponse 对 HonoHTTPException 保留挑战头等语义响应头并过滤旧表示头与 content headers ... ok (1ms)
+notFoundResponse 提供标准的 404 envelope 响应 ... ok (217µs)
+validator 品牌与编译期类型保护 ... ok (266µs)
+createRequestIntake 与 Handler/HandlerData 支持自定义 Env 和类型保护 ...
+------- post-test output -------
+[2026-11-02 01:38:35.451] INFO:
+    method: "GET"
+    path: "/p"
+    event: "validation-failed"
+----- post-test output end -----
+createRequestIntake 与 Handler/HandlerData 支持自定义 Env 和类型保护 ... ok (1ms)
+running 5 tests from ./src/internal/hono/middleware/logger.test.ts
+logger 在无 Deno 连接信息的 app.request 下仍成功执行下游且不伪造 IP ...
+------- post-test output -------
+[2026-11-02 01:38:35.591] INFO: GET /ping 200 1ms undefined
+----- post-test output end -----
+logger 在无 Deno 连接信息的 app.request 下仍成功执行下游且不伪造 IP ... ok (13ms)
+logger 记录元数据且不暴露 query/body/headers/token/password ...
+------- post-test output -------
+[2026-11-02 01:38:35.602] INFO: POST /login 201 0ms 192.168.1.100
+----- post-test output end -----
+logger 记录元数据且不暴露 query/body/headers/token/password ... ok (1ms)
+logger 优先使用直接连接地址且不信任代理头 ...
+------- post-test output -------
+[2026-11-02 01:38:35.603] INFO: GET /test-ip 200 0ms 172.16.0.5
+----- post-test output end -----
+logger 优先使用直接连接地址且不信任代理头 ... ok (992µs)
+logger 规范化 options 不修改已冻结调用方对象 ...
+------- post-test output -------
+[2026-11-02 01:38:35.604] INFO: GET /frozen 200 0ms undefined
+----- post-test output end -----
+logger 规范化 options 不修改已冻结调用方对象 ... ok (1ms)
+logger 不主动读取或解析 request body，保持 body 未读契约 ...
+------- post-test output -------
+[2026-11-02 01:38:35.605] INFO: POST /stream 200 0ms 127.0.0.1
+----- post-test output end -----
+logger 不主动读取或解析 request body，保持 body 未读契约 ... ok (979µs)
+running 7 tests from ./src/internal/hono/route-overlap.test.ts
+route-overlap: 静态与参数路径重叠 ... ok (824µs)
+route-overlap: 独立通配符与嵌入通配符 ... ok (94µs)
+route-overlap: 可选参数分支重叠 ... ok (75µs)
+route-overlap: 复杂正则与跨段正则保守拒绝 ... ok (44µs)
+route-overlap: HTTP method 相交性 ... ok (56µs)
+route-overlap: compareRouteSpecificity 静态 > 参数 > 通配符 ... ok (168µs)
+route-overlap: hasAmbiguousOverlap 检测不可靠定序重叠 ... ok (115µs)
+running 18 tests from ./src/internal/hono/routes.test.ts
+Routes 按访问策略挂载认证中间件 ... ok (11ms)
+Routes 挂载后禁止继续注册 ... ok (568µs)
+Routes 在挂载时拒绝重复的 method 和 path ... ok (330µs)
+Routes 重复路由校验失败时不挂载任何路由 ... ok (497µs)
+Routes 挂载后禁止重复 mount ... ok (180µs)
+Routes 挂载 protected 路由时缺失 authMiddleware 抛错 ... ok (115µs)
+Routes 在挂载时拒绝同 path 下 ALL 与具体 Method 冲突 ... ok (153µs)
+Routes 冲突路由校验失败时不挂载任何路由 ... ok (349µs)
+Routes 注册时自动包装普通 handler，并交给全局 errorResponse ...
+------- post-test output -------
+[2026-11-02 01:38:35.849] INFO:
+    method: "GET"
+    path: "/error"
+    status: 400
+    errorType: "BadRequest"
+----- post-test output end -----
+Routes 注册时自动包装普通 handler，并交给全局 errorResponse ... ok (4ms)
+Routes 将 Hono 与普通异常交给全局 error handler ...
+------- post-test output -------
+[2026-11-02 01:38:35.852] INFO:
+    method: "GET"
+    path: "/forbidden"
+    status: 403
+    errorType: "http"
+----- post-test output end -----
+Routes 将 Hono 与普通异常交给全局 error handler ... ok (1ms)
+Routes 将 Handler 异常交给应用级 error handler ...
+------- post-test output -------
+[2026-11-02 01:38:35.853] ERROR:
+    method: "GET"
+    path: "/error"
+    status: 500
+    errorType: "unknown"
+----- post-test output end -----
+Routes 将 Handler 异常交给应用级 error handler ... ok (485µs)
+Routes 支持前置路由中间件与 Validator 及普通 Handler 组合 ... ok (1ms)
+Routes 在挂载前拒绝 public /users/:id 与 protected /users/admin 跨 access 重叠 ... ok (218µs)
+Routes 跨 access 重叠校验失败时原子拒绝挂载（无部分挂载） ... ok (346µs)
+Routes 允许合法的非相交跨 access 路由共存并成功挂载 ... ok (570µs)
+Routes 按照特异度排序：普通 static 优于 param 优于 wildcard ... ok (1ms)
+Routes 挂载前拒绝同 access 无法可靠定序的复杂歧义路由 ... ok (240µs)
+Routes 歧义路由拒绝时原子保证零挂载 ... ok (161µs)
+running 1 test from ./src/internal/logger/logger.test.ts
+双输出遵循 logger 级别，支持运行时调整与自定义级别 ... ok (115ms)
+running 14 tests from ./src/internal/validator/hono.test.ts
+validator 校验 query 并传递字段数据 ... ok (12ms)
+validator query 失败返回 400 JSON envelope ...
+------- post-test output -------
+[2026-11-02 01:38:36.250] INFO:
+    method: "GET"
+    path: "/invalid-query"
+    event: "validation-failed"
+----- post-test output end -----
+validator query 失败返回 400 JSON envelope ... ok (3ms)
+validator 保留 JSON false 值 ... ok (1ms)
+validator malformed JSON 返回固定 400 envelope ...
+------- post-test output -------
+[2026-11-02 01:38:36.255] INFO:
+    method: "POST"
+    path: "/json-malformed"
+    status: 400
+    errorType: "http"
+----- post-test output end -----
+validator malformed JSON 返回固定 400 envelope ... ok (1ms)
+validator 缺少 JSON Content-Type 返回 Valibot 400 ...
+------- post-test output -------
+[2026-11-02 01:38:36.256] INFO:
+    method: "POST"
+    path: "/json-missing-content-type"
+    event: "validation-failed"
+----- post-test output end -----
+validator 缺少 JSON Content-Type 返回 Valibot 400 ... ok (900µs)
+validator query 支持数组字段 ... ok (543µs)
+validator queries 将单值 query 参数归一化为数组 ... ok (369µs)
+validator JSON 类型失败返回 400 issue ...
+------- post-test output -------
+[2026-11-02 01:38:36.258] INFO:
+    method: "POST"
+    path: "/json-invalid-type"
+    event: "validation-failed"
+----- post-test output end -----
+validator JSON 类型失败返回 400 issue ... ok (609µs)
+validator 校验 param 并传递字段数据 ... ok (552µs)
+validator 校验 urlencoded form 并保留重复字段 ... ok (1ms)
+validator 校验 header 与 cookie 并保留 source key 大小写 ... ok (591µs)
+validator 解析 FormData 失败时返回固定错误消息且不泄漏底层错误细节 ...
+------- post-test output -------
+[2026-11-02 01:38:36.262] INFO:
+    method: "POST"
+    path: "/form-malformed"
+    status: 400
+    errorType: "http"
+----- post-test output end -----
+validator 解析 FormData 失败时返回固定错误消息且不泄漏底层错误细节 ... ok (963µs)
+validator 流式超限请求体经 bodyLimit 抛出的 413 不被包装为 400 ...
+------- post-test output -------
+[2026-11-02 01:38:36.264] INFO:
+    method: "POST"
+    path: "/json-streamed"
+    status: 413
+    errorType: "http"
+----- post-test output end -----
+validator 流式超限请求体经 bodyLimit 抛出的 413 不被包装为 400 ... ok (1ms)
+validator 保留 JSON 请求体读取阶段抛出的 HTTPException 状态码 ...
+------- post-test output -------
+[2026-11-02 01:38:36.266] INFO:
+    method: "POST"
+    path: "/json-read-error"
+    status: 413
+    errorType: "http"
+----- post-test output end -----
+validator 保留 JSON 请求体读取阶段抛出的 HTTPException 状态码 ... ok (1ms)
+running 5 tests from ./src/shared/dock.test.ts
+shared/dock: normalizeDockPreferences fallback on null/empty/invalid input ... ok (750µs)
+shared/dock: normalizeDockPreferences preserves complete system order, hiddenSystemIds, and deduplicates appIds ... ok (109µs)
+shared/dock: legacy duplicates and unknown ids are discarded without reordering ... ok (96µs)
+shared/dock: normalizeDockLayout migrates legacy collapsible, preserves new collapsed state, and clamps ballY ... ok (134µs)
+shared/dock: legacy fixed layout remains expanded after migration ... ok (74µs)
+running 6 tests from ./src/shared/wallpaper-presentation.test.ts
+wallpaper-presentation: normalizeWallpaperPresentation handles valid and fallback inputs ... ok (701µs)
+wallpaper-presentation: migrateLegacyWallpaperPresentation maps mask to readability and keeps composition ... ok (143µs)
+wallpaper-presentation: migration idempotence ... ok (62µs)
+wallpaper-presentation: wallpaperPresentation lookup and defaults ... ok (528µs)
+wallpaper-presentation: normalizeWallpaperPresentations migration and retention ... ok (866µs)
+wallpaper-presentation: touchWallpaperPresentation and purgeWallpaperPresentation ... ok (158µs)
+running 2 tests from ./src/shared/wallpaper.test.ts
+wallpaper shared: parseWallpaperSource validates uploaded and remote sources ... ok (2ms)
+wallpaper shared: normalizeWallpaperCompositions parses and clamps focal points ... ok (226µs)
+running 1 test from ./web/src/app/navigation-guards.test.tsx
+navigation guards preserve the original destination until every owner approves ... ok (50ms)
+running 2 tests from ./web/src/app/routes.test.ts
+auth return destination preserves page context and rejects external redirects ... ok (2ms)
+ask conversation deep links round-trip ids, including reserved characters ... ok (130µs)
+running 19 tests from ./web/src/app/state.test.ts
+AppState: 401 error results in anonymous user and NO connectionError ... ok (12ms)
+AppState: 503 error flags connectionError without wiping existing user ... ok (109µs)
+AppState: Network error flags connectionError for anonymous visitor ... ok (74µs)
+AppState: Recovery after connectionError restores normal state ... ok (49µs)
+Appearance: old device preferences migrate wallpaper mask to semantic readability ... ok (601µs)
+Appearance: device caches keep a valid glass tier and fall back for stale or unknown values ... ok (68µs)
+Appearance: legacy icon size fields are ignored without losing valid preferences ... ok (93µs)
+Appearance: home app toggles default on and only accept booleans ... ok (99µs)
+Appearance: the calm layer shows the date and 继续 by default, time only on request ... ok (167µs)
+Appearance: switching cached wallpapers restores their own presentation and composition ... ok (188µs)
+Appearance: guest image cache keeps only the current local asset and rejects oversized images ... ok (2ms)
+Appearance: malformed presentation records normalize to canonical defaults safely ... ok (96µs)
+Appearance sync: a failed patch remains queued for an explicit retry ... ok (291µs)
+Appearance: device caches keep their accent; new or unreadable caches follow the wallpaper ... ok (56µs)
+Appearance store: anonymous local upload waits for IndexedDB commit and survives reload without redundant hydration writes ... ok (487µs)
+Appearance store: early update during slow IndexedDB hydration merges onto cached appearance and awaits write completion ... ok (185µs)
+Appearance store: failed local commit rejects the upload completion, including during hydration ... ok (539µs)
+Appearance store: a stale owner read or cloud response cannot cross account boundaries ... ok (767µs)
+Appearance store: delayed cloud snapshots do not overwrite a newer local choice ... ok (104µs)
+running 3 tests from ./web/src/app/undo-feedback.test.ts
+deletion feedback names one item or lists several ... ok (535µs)
+capture feedback reports the new note and whether it was pinned ... ok (67µs)
+failed undo names the item and the cause ... ok (88µs)
+running 7 tests from ./web/src/components/searcher/NoteMarkdown.test.tsx
+NoteMarkdown: renders single newline as br tag (remark-breaks) ... ok (23ms)
+NoteMarkdown: renders GFM task lists with disabled checkboxes ... ok (4ms)
+NoteMarkdown: renders table with tabIndex for keyboard scrolling ... ok (2ms)
+NoteMarkdown: sanitizes unsafe HTML and javascript links ... ok (2ms)
+NoteMarkdown: applies safe external link props (target=_blank, rel=noopener noreferrer) ... ok (967µs)
+NoteMarkdown: renders code block with tabIndex for keyboard scrolling ... ok (1ms)
+NoteMarkdown: task checkboxes are interactive only when a toggle handler is provided ... ok (860µs)
+running 3 tests from ./web/src/components/searcher/SettingsPresetSlider.test.tsx
+SettingsPresetSlider: renders range input with semantic snap points and aria-valuetext ... ok (34ms)
+SettingsPresetSlider: stages without detail format aria-valuetext with label only ... ok (1ms)
+SettingsPresetSlider: disabled prop disables root, input, and marks ... ok (1ms)
+running 2 tests from ./web/src/components/searcher/desktopLayout.test.ts
+large folder leaves its second-row neighbors available to apps ... ok (760µs)
+mixed folders fit without overlap, overflow or persistent holes after resizing ... ok (255µs)
+running 4 tests from ./web/src/components/searcher/folderPreview.test.ts
+large folder: up to 9 members occupy ordered 3x3 slots ... ok (722µs)
+large folder: more than 9 keeps 8 members plus remainder ... ok (139µs)
+large folder: 12 members put the last four in the ninth slot ... ok (61µs)
+small folder has no clickable icons, only a 4-item mini preview ... ok (86µs)
+running 15 tests from ./web/src/components/searcher/homeLibraryLayout.test.ts
+home balances nineteen tiles into five columns without another row ... ok (959µs)
+home keeps eight tiles spread across the available width when resizing ... ok (205µs)
+home keeps the capacity unless the trailing row is a lone tile ... ok (228µs)
+large folders retain the six-column backfill rather than balancing ... ok (91µs)
+effective rows account for the bottom plate padding ... ok (122µs)
+large folder counts as 4 cells and 4 full rows fit exactly ... ok (84µs)
+exceeding capacity by one tile reserves the last cell for more ... ok (135µs)
+mobile 5 columns: tiles filling the capacity exactly need no more cell ... ok (78µs)
+effective rows 3: a large folder crossing the limit goes to more ... ok (125µs)
+rows = 1: a large folder always goes to more ... ok (101µs)
+columns are at least 2 ... ok (44µs)
+effectiveRows from viewport numbers ... ok (48µs)
+visual order differs from canonical when a small tile backfills ... ok (142µs)
+moveInVisualOrder ignores overflow tiles not in visual order ... ok (42µs)
+home plans pinned root tiles only and counts hidden pins in 更多 ... ok (224µs)
+running 1 test from ./web/src/components/searcher/iconFallback.test.ts
+fallback hue is domain-stable and keeps AA contrast with its ink ... ok (2ms)
+running 4 tests from ./web/src/components/searcher/launcherTiles.test.ts
+grouped apps form one folder with every current member in app order ... ok (833µs)
+sorting a filtered desktop preserves hidden apps in canonical order ... ok (83µs)
+empty folders participate in root mixed layout and explicit sortOrder ... ok (100µs)
+only pinned root apps and folders enter the home grid ... ok (108µs)
+running 4 tests from ./web/src/components/ui/escape-layer-stack.test.ts
+Escape dispatch uses the newest layer at the highest priority ... ok (932µs)
+an overlay snapshot prevents Escape falling through after it closes ... ok (131µs)
+each Escape snapshot dispatches at most one layer and respects prevention ... ok (109µs)
+Escape layer subscriptions observe active overlay changes ... ok (111µs)
+running 2 tests from ./web/src/components/ui/slider.test.tsx
+Slider: scalar value renders exactly 1 thumb with accessible label ... ok (25ms)
+Slider: scalar defaultValue renders exactly 1 thumb ... ok (1ms)
+running 1 test from ./web/src/components/wallpaper/WallpaperStageContextPreview.test.tsx
+WallpaperStageContextPreview: strictly non-interactive and aria-hidden presentation ... ok (18ms)
+running 2 tests from ./web/src/components/wallpaper/WallpaperSurface.test.ts
+WallpaperSurface: formatWallpaperCss escapes URLs and rejects unsupported sources ... ok (14ms)
+WallpaperSurface: substrate classifies image and rejected sources ... ok (10ms)
+running 1 test from ./web/src/components/wallpaper/canvas-daypart.test.ts
+daypart boundaries: 早 05–10, 午 11–17, 夜 18–04 ... ok (606µs)
+running 2 tests from ./web/src/design-system/breakpoints.test.ts
+JS media queries track the documented exclusive width boundaries ... ok (2ms)
+default notes host is persistent at the measured boundary ... ok (85µs)
+running 28 tests from ./web/src/design-system/glass-contrast.test.ts
+glass light/off: body text holds AA and --muted 3:1 on the worst backdrop ... ok (4ms)
+glass light/soft: body text holds AA and --muted 3:1 on the worst backdrop ... ok (1ms)
+glass light/regular: body text holds AA and --muted 3:1 on the worst backdrop ... ok (2ms)
+glass light/clear: body text holds AA and --muted 3:1 on the worst backdrop ... ok (970µs)
+glass light: tiers get more transparent from off to clear, thick never below regular ... ok (2ms)
+glass dark/off: body text holds AA and --muted 3:1 on the worst backdrop ... ok (1ms)
+glass dark/soft: body text holds AA and --muted 3:1 on the worst backdrop ... ok (1ms)
+glass dark/regular: body text holds AA and --muted 3:1 on the worst backdrop ... ok (708µs)
+glass dark/clear: body text holds AA and --muted 3:1 on the worst backdrop ... ok (575µs)
+glass dark: tiers get more transparent from off to clear, thick never below regular ... ok (1ms)
+mini icon light: fallback letter holds AA on opaque --surface-solid ... ok (525µs)
+mini icon dark: fallback letter holds AA on opaque --surface-solid ... ok (660µs)
+derived canvas light: body and --muted text set on it hold AA on the worst backdrop ... ok (838µs)
+derived canvas dark: body and --muted text set on it hold AA on the worst backdrop ... ok (890µs)
+home glyph light/off/light-portrait: white tile edge holds 3:1 against light wallpaper ... ok (1ms)
+home glyph light/off/high-detail-illustration: white tile edge holds 3:1 against light wallpaper ... ok (730µs)
+home glyph light/soft/light-portrait: white tile edge holds 3:1 against light wallpaper ... ok (443µs)
+home glyph light/soft/high-detail-illustration: white tile edge holds 3:1 against light wallpaper ... ok (423µs)
+home glyph light/regular/light-portrait: white tile edge holds 3:1 against light wallpaper ... ok (349µs)
+home glyph light/regular/high-detail-illustration: white tile edge holds 3:1 against light wallpaper ... ok (661µs)
+home glyph dark/off/light-portrait: white tile edge holds 3:1 against light wallpaper ... ok (494µs)
+home glyph dark/off/high-detail-illustration: white tile edge holds 3:1 against light wallpaper ... ok (535µs)
+home glyph dark/soft/light-portrait: white tile edge holds 3:1 against light wallpaper ... ok (513µs)
+home glyph dark/soft/high-detail-illustration: white tile edge holds 3:1 against light wallpaper ... ok (438µs)
+home glyph dark/regular/light-portrait: white tile edge holds 3:1 against light wallpaper ... ok (410µs)
+home glyph dark/regular/high-detail-illustration: white tile edge holds 3:1 against light wallpaper ... ok (389µs)
+home note light: task box border holds 3:1 on neutral Material ... ok (1ms)
+home note dark: task box border holds 3:1 on neutral Material ... ok (1ms)
+running 1 test from ./web/src/design-system/home-grid.test.ts
+home grid CSS and placement metrics share the same source values ... ok (1ms)
+running 21 tests from ./web/src/design-system/wallpaper-accent.test.ts
+wallpaper accent pure black: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (2ms)
+wallpaper accent pure white: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (525µs)
+wallpaper accent mid grey: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (554µs)
+wallpaper accent saturated red: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (577µs)
+wallpaper accent saturated yellow: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (848µs)
+wallpaper accent saturated green: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (581µs)
+wallpaper accent saturated cyan: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (491µs)
+wallpaper accent saturated blue: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (549µs)
+wallpaper accent saturated magenta: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (345µs)
+wallpaper accent neon orange: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (437µs)
+wallpaper accent pastel lilac: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (418µs)
+wallpaper accent deep navy: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (361µs)
+wallpaper accent landscape photo: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (1ms)
+wallpaper accent red and blue halves: light and dark palettes hold primary text 4.5:1 and focus ring 3:1 ... ok (373µs)
+wallpaper accent: the same wallpaper always yields the same palette ... ok (1ms)
+wallpaper accent: the palette keeps the wallpaper's dominant hue ... ok (938µs)
+wallpaper accent: a mostly blue sky photo yields a blue accent ... ok (1ms)
+wallpaper accent: the focal region decides between competing hues ... ok (257µs)
+wallpaper accent: black, white and grey wallpapers yield a neutral accent ... ok (273µs)
+wallpaper accent: a small saturated subject on grey still sets the hue ... ok (347µs)
+wallpaper accent: transparent pixels do not vote ... ok (320µs)
+running 10 tests from ./web/src/features/app-library/library-actions.test.ts
+moving an app into a folder appends it and persists the same order ... ok (885µs)
+moving an app out of a folder appends it after root apps and folders ... ok (108µs)
+root reorder writes one atomic snapshot across apps and folders ... ok (351µs)
+folder reorder renumbers its members from zero ... ok (151µs)
+deleting a folder returns members to the root end in folder order ... ok (263µs)
+a failed folder delete rolls the library back and reports the error ... ok (333µs)
+rename and resize apply optimistically and roll back on failure ... ok (330µs)
+a new folder is appended to the mixed root order ... ok (182µs)
+home creates a pinned folder and moves the dropped apps into it ... ok (152µs)
+app and folder pin state change optimistically and roll back on failure ... ok (263µs)
+running 3 tests from ./web/src/features/app-library/library-order.test.ts
+joining a folder goes after its last member, ignoring the moving app ... ok (522µs)
+leaving a folder goes after every root app and folder ... ok (68µs)
+a new folder is appended to the mixed root order ... ok (38µs)
+running 2 tests from ./web/src/features/app-library/library-viewport.test.ts
+window resizes re-plan the grid ... ok (659µs)
+a soft-keyboard height change with an editable focused does not re-plan ... ok (58µs)
+running 5 tests from ./web/src/features/ask/ReasoningSelector.test.ts
+ReasoningSelector: returns undefined if model does not support reasoning ... ok (13ms)
+ReasoningSelector: preserves currentChoice if supported by new model ... ok (95µs)
+ReasoningSelector: falls back to user preference if currentChoice is unsupported ... ok (53µs)
+ReasoningSelector: falls back to model default if user preference is unsupported ... ok (43µs)
+ReasoningSelector: falls back to undefined if all fallbacks fail ... ok (55µs)
+running 5 tests from ./web/src/features/ask/SearcherAttachmentAdapter.test.ts
+SearcherAttachmentAdapter: prevents count leak if processFileToAttachment fails and preserves 4-file limit ... ok (15ms)
+SearcherAttachmentAdapter: remove decrements count and prevents double-decrement ... ok (3ms)
+SearcherAttachmentAdapter: reset clears count and active tracking ... ok (9ms)
+SearcherAttachmentAdapter: updates accept filter based on vision capability ... ok (140µs)
+SearcherAttachmentAdapter: invokes onError callback when validation or processing fails ... ok (835µs)
+running 3 tests from ./web/src/features/ask/assistant-message-adapter.test.ts
+assistant-message-adapter: ExportedMessageRepository accepts converted user and system messages without blank-UI status rejection ... ok (13ms)
+assistant-message-adapter: ExportedMessageRepository preserves assistant streaming, complete, interrupted, and failed status snapshots ... ok (627µs)
+assistant-message-adapter: converted messages keep their DTO ids so sibling branches resolve ... ok (235µs)
+running 5 tests from ./web/src/features/ask/attachment-utils.test.ts
+attachment-utils: rejects image if vision not supported ... ok (879µs)
+attachment-utils: accepts image if vision is supported and under 5MiB ... ok (153µs)
+attachment-utils: rejects image if over 5MiB ... ok (1ms)
+attachment-utils: accepts text documents under 1MiB ... ok (103µs)
+attachment-utils: rejects when max files reached ... ok (88µs)
+running 4 tests from ./web/src/features/ask/leave-loss.test.ts
+switching keeps text drafts of history conversations but not attachments ... ok (523µs)
+closing and signing out lose every unsent draft ... ok (72µs)
+leaving the page warns for streams and unsent input only ... ok (66µs)
+consequences distinguish kept history content from deleted temporary content ... ok (155µs)
+running 5 tests from ./web/src/features/ask/temporary-lease.test.ts
+temporary session remains available until both page owners leave ... ok (56ms)
+lease acquired after the page leaves is released instead of retaining the session ... ok (38ms)
+an unavailable temporary session tells the user to copy remaining content ... ok (35ms)
+saving a temporary session keeps its content after the owner stops renewing ... ok (37ms)
+offline lease renewal warns and preserves the session after reconnection ... ok (37ms)
+running 3 tests from ./web/src/features/ask/tree-utils.test.ts
+tree-utils: getActiveBranchMessages with legacy linear messages without parentMessageId ... ok (634µs)
+tree-utils: getActiveBranchMessages follows parent chain to active leaf ... ok (196µs)
+tree-utils: resolveLeafForSibling navigates down subtree to latest leaf ... ok (98µs)
+running 12 tests from ./web/src/features/ask/useAskStream.test.ts
+useAskStream: parseSseBlock parses valid SSE events ... ok (13ms)
+useAskStream: parseSseBlock handles invalid or missing data ... ok (324µs)
+useAskStream: applySseEvent updates accumulator correctly ... ok (278µs)
+useAskStream: createOptimisticStreamSnapshot builds new conversation and messages ... ok (266µs)
+useAskStream: createOptimisticStreamSnapshot preserves interrupted status on abort ... ok (99µs)
+useAskStream: createOptimisticStreamSnapshot handles editMessageId and preserves parent tree ... ok (672µs)
+useAskStream: createOptimisticStreamSnapshot handles regenerateMessageId variant grouping ... ok (131µs)
+useAskStream: shouldApplyCanonicalConversation preserves client snapshot when aborted and backend still streaming ... ok (113µs)
+useAskStream: failed optimistic messages keep a sanitized local reason ... ok (301µs)
+useAskStream: failure reasons remove controls and stay bounded ... ok (69µs)
+useAskStream: keeps terminal local failures while backend persists ... ok (75µs)
+useAskStream: preserves prior failure details after a later successful turn ... ok (284µs)
+running 5 tests from ./web/src/features/dock/dock-provider.test.tsx
+DockProvider: synchronous consecutive setPinned calls chain without dropping earlier items ... ok (23ms)
+DockProvider: unmount prevents queued second mutation task from sending requests after session unmounted ... ok (3ms)
+DockProvider: refreshApps does not overwrite pending in-flight optimistic mutation ... ok (4ms)
+moveDockItem: reorders within bounds without mutating source and returns null out of bounds ... ok (131µs)
+DockProvider: migrates legacy fixed/collapsible layouts and isolates manual collapse per account ... ok (4ms)
+running 8 tests from ./web/src/features/documents/device-preferences.test.ts
+device preferences: unset toolbar follows width and pointer; outline defaults closed ... ok (576µs)
+device preferences: explicit toolbar choice overrides device defaults ... ok (85µs)
+device preferences: choices persist independently per account and device ... ok (104µs)
+sidebar preference defaults open and is isolated by account and device ... ok (62µs)
+device preferences: invalid values and unavailable storage use defaults ... ok (313µs)
+pane widths persist per account and device and clamp invalid bounds ... ok (143µs)
+effective pane width respects available space without changing the saved width ... ok (50µs)
+pane width constants mirror design tokens ... ok (542µs)
+running 4 tests from ./web/src/features/documents/document-event-subscriptions.test.ts
+documents/document-event-subscriptions: one source routes updates by document id ... ok (818µs)
+documents/document-event-subscriptions: only the final unsubscribe closes the source ... ok (183µs)
+documents/document-event-subscriptions: ignores malformed and invalid updates ... ok (350µs)
+documents/document-event-subscriptions: logout disposal and account switch isolate old events ... ok (111µs)
+running 6 tests from ./web/src/features/documents/document-pagination.test.ts
+trailing PageBreak normalization yields an editable blank page without synthetic bytes ... ok (50ms)
+start, consecutive, and end PageBreaks round-trip to an equal AST ...
+  start-pagebreak ... ok (11ms)
+  consecutive-pagebreaks ... ok (9ms)
+  end-pagebreak ... ok (8ms)
+start, consecutive, and end PageBreaks round-trip to an equal AST ... ok (29ms)
+setMode toggles page chrome without replacing the editor document ... ok (12ms)
+paperMetrics maps A4 and Letter in both orientations to physical CSS pixels ... ok (163µs)
+paperMetrics keeps content area positive at 5mm and 50mm margins ... ok (103µs)
+insertPageBreak writes a pagebreak marker and destroy removes the sheets ... ok (6ms)
+running 34 tests from ./web/src/features/documents/document-session.test.ts
+Session initialization and snapshot immutability contract ... ok (6ms)
+load() GET body once and deduplicates concurrent calls ... ok (420µs)
+load() handles error and allows retry ... ok (574µs)
+Draft isolation: keys include userId and documentId ... ok (198µs)
+Draft validation rejects missing identity or corrupt versions/timestamps ... ok (235µs)
+Equal draft clears on load; stale/newer draft offers recover ... ok (123µs)
+Stale draft apply enters conflict without autosave PATCH to protect server body ... ok (400µs)
+Equal/newer draft apply marks dirty and schedules autosave ... ok (273µs)
+Edits during conflict preserve conflict saveStatus and do not schedule autosave ... ok (401µs)
+Autosave 1500ms debounce and blur flush ... ok (200µs)
+IME composition holds autosave until composition finishes ... ok (148µs)
+Manual save creates version even when unchanged; autosave unchanged is no-op ... ok (101µs)
+Consumer data-loss guard: save() never returns true on conflict or error ... ok (191µs)
+In-flight edits during save are not lost and automatically debounced ... ok (164µs)
+Conflict 409 preserves local draft in storage and sets conflict state ... ok (186µs)
+Conflict resolution: 'server' choice ... ok (167µs)
+Conflict resolution: 'local' choice with origin conflict_resolution ... ok (722µs)
+Failed local conflict resolution preserves draft and can be retried ... ok (392µs)
+Failed save-as-new conflict resolution preserves draft for retry ... ok (294µs)
+In-flight edits during resolveConflict local are preserved as dirty without data loss ... ok (245µs)
+Conflict resolution: 'new' choice performs POST and resets session ... ok (214µs)
+listVersions() returns sorted newest first ... ok (142µs)
+restoreVersion() dirty guard: aborts restore if current edits fail to save ... ok (311µs)
+restoreVersion() POST version current, handles 409 and updates editor ... ok (218µs)
+destroy() clears listeners immediately, flushes or safely persists to draft ... ok (506µs)
+Untitled documents load with an empty title and clearing the title saves null ... ok (133µs)
+updatePresentation patches color and home pinning against the current version ... ok (161µs)
+Realtime update refreshes a clean session and turns unsaved edits into a conflict ... ok (4ms)
+New session never creates or stores a draft without non-whitespace input ... ok (125µs)
+New session waits for composition and debounce before creating with its target ... ok (186µs)
+New session queues edits during its only POST and PATCHes the returned version ... ok (169µs)
+Failed new document creation keeps content, blocks a safe leave and retries ... ok (216µs)
+New session ignores its own creation event and remains the same session ... ok (175µs)
+Leaving a new session flushes pending content before debounce ... ok (115µs)
+running 8 tests from ./web/src/features/documents/editor-content.test.ts
+editor-content: formatting preserves word boundaries while blocks separate words ... ok (21ms)
+editor-content: empty and whitespace-only content ... ok (192µs)
+editor-content: outline extracts H1-H6 with sequential indices and formatting stripped ... ok (2ms)
+editor-content: empty or whitespace-only headings fallback to 未命名标题 ... ok (779µs)
+editor-content: word count excludes Markdown syntax, comments, and images ... ok (3ms)
+editor-content: word count handles CJK characters, English words, and mixed text deterministically ... ok (80µs)
+editor-content: reading minutes boundary values ... ok (49µs)
+editor-content: full document analysis with tables and code blocks ... ok (3ms)
+running 11 tests from ./web/src/features/documents/editor-extensions.test.ts
+editor-extensions: resolveDocumentImageSrc resolves internal assets safely ... ok (808µs)
+editor-extensions: pagebreak parses exact <!-- pagebreak --> and serializes back ... ok (30ms)
+editor-extensions: pagebreak negative variants remain raw comments ... ok (14ms)
+editor-extensions: insertDocumentPageBreak inserts node and moves caret ... ok (6ms)
+editor-extensions: image NodeView renders authenticated asset URL while preserving canonical schema src ... ok (6ms)
+editor-extensions: non-image paste is NOT intercepted ... ok (3ms)
+editor-extensions: invalid MIME and oversized images are rejected with onError ... ok (3ms)
+editor-extensions: valid image paste uploads and maps bookmark across typing ... ok (6ms)
+editor-extensions: destroyed editor during upload handles safely without error ... ok (4ms)
+editor-extensions: task checkbox updates canonical Markdown and undo restores completion ... ok (7ms)
+editor-extensions: programmatic uploadAndInsertDocumentImage works cleanly ... ok (3ms)
+running 2 tests from ./web/src/features/documents/local-drafts.test.ts
+documents/local-drafts: upgrade cleanup removes old sticky drafts without reading them or touching document drafts ... ok (30ms)
+documents/local-drafts: logout discovery only counts the current account's valid document drafts ... ok (448µs)
+running 2 tests from ./web/src/features/home-calm/calm-clock.test.ts
+calm date and time text are fixed-format and zero-padded ... ok (751µs)
+the next tick lands exactly on the next minute or local midnight ... ok (204µs)
+running 3 tests from ./web/src/features/home-calm/continue-line.test.ts
+继续 leads with the more recent of the note and the unfinished conversation ... ok (1ms)
+open home to-dos follow the lead entry and stand alone without one ... ok (131µs)
+no candidates or no data renders no 继续 line ... ok (58µs)
+running 16 tests from ./web/src/features/home-layouts/home-grid-cells.test.ts
+1440×900 opens one row above the search box and a shelf below the plate ... ok (664µs)
+capacity per viewport: sides above and below the search line plus the shelf ... ok (579µs)
+rows above the search box stop at the top limit ... ok (92µs)
+the shelf follows the plate: a taller plate removes shelf rows ... ok (110µs)
+side spans grow away from the block; shelf spans grow rightward ... ok (442µs)
+a span fits only inside one band and its row range ... ok (58µs)
+nearest free cell crosses bands by pixel distance ... ok (210µs)
+keyboard directions follow the screen, across the block and onto the shelf ... ok (302µs)
+default notes alternate sides from the search line down, then above it, then the shelf ... ok (417µs)
+a W keeps its width on the shelf when neither side has two columns ... ok (194µs)
+a downgraded W drop skips visible S gaps that conflict with its saved width ... ok (322µs)
+saved cells win over earlier unsaved notes and keep their band across viewports ... ok (113µs)
+a saved shelf cell falls back to the default order when the shelf is gone ... ok (63µs)
+notes beyond the free cells are overflow and placed notes avoid obstacles ... ok (277µs)
+composition keeps the 38% anchor unless the lower third is requested ... ok (77µs)
+asymmetric dock limits drop only the overlapping side band and preserve saved coordinates ... ok (101µs)
+running 9 tests from ./web/src/features/home-layouts/home-note-task-saver.test.ts
+toggle shows the change at once and sends one PATCH after the debounce ... ok (21ms)
+toggles within the debounce window coalesce into one PATCH ... ok (8ms)
+a successful save renders the server document and later toggles use its version ... ok (2ms)
+a 409 whose target row is unchanged replays the toggles on the latest body and retries once ... ok (3ms)
+a 409 whose target row changed rolls back to the latest server state and reports a conflict ... ok (1ms)
+a second 409 after the retry reports a conflict instead of looping ... ok (2ms)
+toggles made while a PATCH is in flight are sent after it settles, on the new version ... ok (2ms)
+a non-conflict failure rolls the card back to the last server state ... ok (867µs)
+toggle refuses an index that is not a task and leaves the view alone ... ok (356µs)
+running 3 tests from ./web/src/features/home-layouts/home-notes.test.ts
+home notes sort by homeSortOrder then createdAt then id ... ok (697µs)
+refresh is required for unknown notes and moved versions only ... ok (79µs)
+setNote removes on null and keeps the newer local version on stale input ... ok (196µs)
+running 3 tests from ./web/src/features/home-layouts/home-viewport.test.ts
+home viewport: free rect keeps the page margin from chrome and viewport edges ... ok (12ms)
+home viewport: margins and chrome never produce negative sizes ... ok (142µs)
+home viewport: non-finite inputs fall back to zero ... ok (63µs)
+running 7 tests from ./web/src/features/home-layouts/note-preview-clip.test.ts
+clip ends at the last whole line and reports the hidden content ... ok (733µs)
+clip keeps the natural height when every line fits ... ok (69µs)
+mixed task and paragraph boxes clip between lines, never through one ... ok (67µs)
+duplicate line fragments do not move the clip boundary ... ok (56µs)
+text fragments inset inside their line boxes still fit without a fade ... ok (52µs)
+overflowing glyph fragments retain their full line boxes ... ok (79µs)
+content without line boxes falls back to the content height ... ok (51µs)
+running 6 tests from ./web/src/features/home-layouts/note-tasks.test.ts
+setTaskChecked toggles the matching task in document order and ignores code blocks ... ok (22ms)
+taskRowText returns the row text of each task without its checkbox state ... ok (1ms)
+taskRowText ignores tasks inside code blocks ... ok (440µs)
+replayTaskToggles applies toggles to a newer body whose target rows are unchanged ... ok (1ms)
+replayTaskToggles returns null when a target row text or ordinal changed ... ok (943µs)
+task progress counts nested tasks but excludes fenced examples and plain list items ... ok (1ms)
+running 8 tests from ./web/src/features/inline-ai/inline-answer.test.ts
+sources: personal notes come before web sources, order otherwise kept ... ok (670µs)
+sources: the same note or URL is listed once, first occurrence wins ... ok (91µs)
+answer view: nothing has arrived yet is pending, with the question ... ok (154µs)
+answer view: a streaming assistant message keeps growing text and ordered sources ... ok (269µs)
+answer view: terminal statuses map one to one, failure reason is sanitized ... ok (333µs)
+answer view: a persisted streaming status settles only once the stream ended ... ok (67µs)
+answer view: a request error before any message is a failure ... ok (177µs)
+answer view: the user message alone is still pending while streaming ... ok (69µs)
+running 5 tests from ./web/src/features/library/library-state.test.ts
+opening a note opens the library on a documents root stack and leave closes it ... ok (638µs)
+closing a dirty note requires confirmation, clean and filter actions do not ... ok (93µs)
+close returns to its trigger, detached trigger falls back to search ... ok (62µs)
+logout clears selection, route, search and scopes ... ok (80µs)
+new note creation replaces its route without adding to navigation history ... ok (124µs)
+running 16 tests from ./web/src/features/markdown-editor/commands.test.ts
+commands - bold toggle on selection and undo/redo ... ok (33ms)
+commands - italic toggle on selection and undo/redo ... ok (5ms)
+commands - strike toggle on selection and undo/redo ... ok (5ms)
+commands - inlineCode toggle on selection and undo/redo ... ok (4ms)
+commands - heading levels 1/2/3 and toggle back to paragraph ... ok (7ms)
+commands - blockquote toggle and lift ... ok (4ms)
+commands - list matrix: bulletList -> taskList -> orderedList -> lift ... ok (5ms)
+commands - task list toggle off when already a task list ... ok (4ms)
+commands - link command with typed object arguments and remove link ... ok (4ms)
+commands - link command with href object and collapsed cursor ... ok (3ms)
+commands - cursor updates and removes the whole link across inline marks ... ok (9ms)
+commands - codeBlock with language and toggle to paragraph ... ok (3ms)
+commands - horizontalRule insertion and undo/redo ... ok (4ms)
+commands - table insertion with custom dimensions and undo ... ok (6ms)
+commands - IME composition safety prevents command execution ... ok (5ms)
+commands - multi-instance isolation across concurrent editors ... ok (7ms)
+running 5 tests from ./web/src/features/markdown-editor/runtime.test.ts
+Notes-compatible foundation preserves soft/hard breaks and supported Markdown ...
+  empty-document ... ok (22ms)
+  paragraphs ... ok (7ms)
+  headings-1-to-6 ... ok (10ms)
+  chinese-rich-text ... ok (9ms)
+  emoji-text ... ok (5ms)
+  inline-formatting ... ok (5ms)
+  fenced-code-blocks ... ok (3ms)
+  fenced-code-without-lang ... ok (3ms)
+  unordered-list ... ok (3ms)
+  unordered-list-star-normalization ... ok (4ms)
+  ordered-list ... ok (4ms)
+  nested-lists ... ok (5ms)
+  task-lists ... ok (4ms)
+  blockquotes ... ok (3ms)
+  links ... ok (6ms)
+  images-standard-and-asset ... ok (4ms)
+  horizontal-rules ... ok (2ms)
+  gfm-tables ... ok (10ms)
+  line-breaks ... ok (3ms)
+  long-content ... ok (14ms)
+  raw-html-inline ... ok (4ms)
+  soft-newlines ... ok (4ms)
+  notes-9500-characters ... ok (237ms)
+Notes-compatible foundation preserves soft/hard breaks and supported Markdown ... ok (378ms)
+Phase 1: Event origins, no user dirty on init, and replace appended origin preserved ... ok (7ms)
+Phase 1: Undo and Redo operations ... ok (4ms)
+Phase 1: Multi-instance independence ... ok (5ms)
+Phase 2: Semantic roundtrip across shared fixtures via AST equality ...
+  roundtrip: empty-document (structure) ... ok (1ms)
+  roundtrip: paragraphs (blocks) ... ok (3ms)
+  roundtrip: headings-1-to-6 (headings) ... ok (3ms)
+  roundtrip: chinese-rich-text (chinese) ... ok (3ms)
+  roundtrip: emoji-text (emoji) ... ok (2ms)
+  roundtrip: inline-formatting (inlines) ... ok (3ms)
+  roundtrip: fenced-code-blocks (code) ... ok (2ms)
+  roundtrip: fenced-code-without-lang (code) ... ok (4ms)
+  roundtrip: unordered-list (lists) ... ok (3ms)
+  roundtrip: unordered-list-star-normalization (lists) ... ok (2ms)
+  roundtrip: ordered-list (lists) ... ok (2ms)
+  roundtrip: nested-lists (lists) ... ok (3ms)
+  roundtrip: task-lists (tasks) ... ok (3ms)
+  roundtrip: blockquotes (quotes) ... ok (2ms)
+  roundtrip: links (inlines) ... ok (3ms)
+  roundtrip: images-standard-and-asset (images) ... ok (2ms)
+  roundtrip: horizontal-rules (rules) ... ok (1ms)
+  roundtrip: gfm-tables (tables) ... ok (3ms)
+  roundtrip: line-breaks (breaks) ... ok (3ms)
+  roundtrip: long-content (stress) ... ok (12ms)
+  roundtrip: raw-html-inline (html) ... ok (3ms)
+Phase 2: Semantic roundtrip across shared fixtures via AST equality ... ok (69ms)
+running 6 tests from ./web/src/features/omnibox/omnibox-keys.test.ts
+Enter submits (selection or default engine); Mod+Enter submits in a new tab ... ok (710µs)
+Alt+Enter hands input to AI only when a model is usable ... ok (87µs)
+Shift+Enter captures only for a signed-in user with text ... ok (57µs)
+Tab is never captured and arrows only move through an open list ... ok (73µs)
+Escape closes the suggestions first, then yields to outer layers ... ok (49µs)
+IME composition: Enter variants are swallowed, every other key is left to the IME ... ok (250µs)
+running 12 tests from ./web/src/features/omnibox/omnibox-model.test.ts
+query resolution: empty, prefixes and plain text ... ok (973µs)
+groups follow AI / 我的 / 应用 / 网页 / 命令 order and drop empty ones ... ok (404µs)
+guests and AI-less accounts: no AI row, guests have no personal groups ... ok (211µs)
+a 401 (personalAllowed false) removes documents, apps and folders together ... ok (70µs)
+应用 group lists matching folders before personal apps; documents keep server order ... ok (131µs)
+网页 group: history first (max 3), then online, 6 total, deduplicated ... ok (149µs)
+engine prefix lists only web results for the stripped query ... ok (137µs)
+Enter with nothing selected is always a default-engine search (no routing) ... ok (146µs)
+explicit prefixes with a query: engine prefix searches that engine, /ai asks AI ... ok (70µs)
+/ai without a usable model is just text: a literal default-engine search ... ok (39µs)
+selected items map to their own actions ... ok (233µs)
+item keys are unique across a result list so selection can follow them ... ok (98µs)
+running 1 test from ./web/src/features/omnibox/split-label.test.ts
+suggestion label highlights every actual match, preserving the visible text ... ok (1ms)
+running 2 tests from ./web/src/features/omnibox/useAiModels.test.ts
+AI entry points need an enabled, text-capable model ... ok (13ms)
+only usable models can be asked ... ok (160µs)
+running 8 tests from ./web/src/features/share/share-capture.test.ts
+share: the page title is the title, the URL then the text is the body ... ok (866µs)
+share: a link sent as text alone is the URL ... ok (116µs)
+share: text that repeats the URL does not duplicate it ... ok (109µs)
+share: text without a URL is kept as the body ... ok (89µs)
+share: nothing to record yields no note ... ok (97µs)
+share: an over-long page title is cut to the note title limit ... ok (132µs)
+share: a stashed note is taken once ... ok (620µs)
+share: only well-formed values pass as a shared note ... ok (44µs)
+running 4 tests from ./web/src/features/shortcuts/ShortcutsSettings.test.tsx
+routes: shortcuts settings tab routes and resolution contract ... ok (12ms)
+ShortcutsSettings: renders every catalog shortcut action and quick command ... ok (16ms)
+ShortcutsSettings: macOS keycaps and screen reader text format correctly ... ok (5ms)
+ShortcutsSettings: screen reader accessible text is provided for every entry ... ok (4ms)
+running 8 tests from ./web/src/features/shortcuts/shortcut-catalog.test.ts
+catalog identifiers cannot hide shortcuts or ambiguous command prefixes ... ok (492µs)
+platform presentation keeps stable modifier order and readable accessible keys ... ok (677µs)
+shortcut matching normalizes key case but excludes extra modifiers and handled/composing events ... ok (497µs)
+command parsing preserves boundaries whitespace case and all canonical targets ... ok (733µs)
+slash command triggers are single slash-prefixed tokens ... ok (187µs)
+matchSearchCommands lists by prefix or action, hides AI and personal commands by capability ... ok (752µs)
+guests reach settings and the shortcut reference by command name ... ok (153µs)
+parseCommandPrefix accurately extracts command, target engine, and rest query without pollution ... ok (171µs)
+running 8 tests from ./web/src/features/windowing/window-state.test.ts
+each address shows at most one window ... ok (1ms)
+a window stays visible behind the next one that takes focus ... ok (316µs)
+the desktop minimizes every window without destroying it ... ok (145µs)
+the AI window is an ordinary window that keeps the others where they are ... ok (168µs)
+the AI window keeps its own conversation address while another window is active ... ok (134µs)
+independent pages hide the desktop but keep window state ... ok (102µs)
+a window reopens in most-recently-used order and keeps its own address ... ok (88µs)
+a pending minimize or close completes only at its destination ... ok (241µs)
+running 3 tests from ./web/src/features/workspace/document-notebooks.test.ts
+Notebook tree lists roots and their children in picker order ... ok (846µs)
+Notebook tree exposes sibling order and child presence ... ok (126µs)
+Notebook tree ties equal sort orders by id and tolerates emptiness ... ok (134µs)
+running 3 tests from ./web/src/features/workspace/note-summary.test.ts
+Notes readable summaries preserve link text, code and lists but not HTML or URLs ... ok (22ms)
+Notes source-only queries remain visible and Unicode snippets keep whole code points ... ok (1ms)
+untitled notes do not repeat the derived title in the list snippet ... ok (118µs)
+running 5 tests from ./web/src/features/workspace/notes-tree-drop.test.ts
+note drops follow the target note's scope and position ... ok (816µs)
+notebook edge drops preserve the target parent and sibling anchor ... ok (123µs)
+only childless notebooks can enter a root, at the end ... ok (62µs)
+only the upper edge of the first root note appends a root notebook ... ok (97µs)
+missing, self and non-draggable rows are rejected with a reason ... ok (67µs)
+running 8 tests from ./web/src/features/workspace/notes-tree-model.test.ts
+create target: selected notebook, selected note's notebook, otherwise root ... ok (647µs)
+create target: list mode ignores the selection and never pins to home ... ok (107µs)
+new notebook parent: only a selected root notebook, never a third level ... ok (65µs)
+tree entries: root notebooks precede root notes and share positions ... ok (553µs)
+tree entries: expanded root shows sub-notebooks, then notes, then load-more ... ok (186µs)
+tree entries: loading, error, empty and load-more failures are rows ... ok (225µs)
+root page status and load-more rows appear at root level ... ok (254µs)
+note index maps loaded notes to their notebook or root ... ok (92µs)
+running 6 tests from ./web/src/features/workspace/tree-keyboard.test.ts
+tree keys move through visible items and clamp at both ends ... ok (667µs)
+ArrowRight expands, then enters the first child; leaves stay put ... ok (129µs)
+ArrowLeft collapses an open node, otherwise moves to the parent ... ok (94µs)
+Enter and Space activate the active item; other keys and empty trees are ignored ... ok (58µs)
+with no active item arrows start from the first item ... ok (69µs)
+the roving item survives changes and falls back predictably ... ok (95µs)
+running 2 tests from ./web/src/features/workspace/workspace-state.test.ts
+Workspace navigation replaces the current note and preserves query and scope ... ok (668µs)
+Workspace creation replaces only a new route ... ok (99µs)
+running 4 tests from ./web/src/lib/local.test.ts
+web/local: fails fast when IndexedDB is unavailable and does not silently succeed ... ok (904µs)
+web/local: preserves FIFO queue ordering across sequential writes, gets, and deletes ... ok (679µs)
+web/local: handles rapid write/delete races without dropping final state ... ok (173µs)
+web/local: listLocalKeys returns only keys with the given prefix ... ok (279µs)
+running 5 tests from ./web/src/lib/shared-element.test.ts
+shared element: without the API the update is applied at once, no names, no root class ... ok (598µs)
+shared element: exactly one element holds the name at the snapshot, then everything is cleaned up ... ok (7ms)
+shared element: every transition gets its own unique name ... ok (4ms)
+shared element: the same element can be source and target (in-place state change) ... ok (2ms)
+shared element: a failed update still cleans up and rejects ... ok (182µs)
+running 4 tests from ./web/src/pwa/manifest.test.ts
+manifest: launch colours match the light page background token ... ok (548µs)
+manifest: the share target is a GET to /share, never a POST ... ok (132µs)
+index.html: first-paint theme-color matches each theme's background token ... ok (802µs)
+manifest: installable with existing icons of the declared sizes ... ok (1ms)
+running 7 tests from ./web/src/pwa/sw-policy.test.ts
+service worker: API requests always reach the network ... ok (905µs)
+service worker: only same-origin GET requests are intercepted ... ok (86µs)
+service worker: build assets are cache first, app pages network first ... ok (192µs)
+service worker: install files are never answered with the shell ... ok (109µs)
+service worker: activation removes only other builds' shell caches ... ok (72µs)
+service worker: the shell asset list follows index.html references ... ok (259µs)
+service worker: a page runs a build only if it loaded all its shell assets ... ok (65µs)
+running 1 test from ./web/src/spikes/editable-pagination/runtime.test.ts
+M0B live IME composition queue: defer paper geometry updates until compositionend ... ok (39ms)
+running 8 tests from ./web/src/spikes/markdown-editor/runtime.test.ts
+M0A consumer PageBreak roundtrip across boundary fixtures via AST equality ...
+  roundtrip: pagebreak-standalone (pagebreak) ... ok (33ms)
+  roundtrip: pagebreak-consecutive (pagebreak) ... ok (9ms)
+  roundtrip: pagebreak-document-start (pagebreak) ... ok (7ms)
+  roundtrip: pagebreak-document-end (pagebreak) ... ok (7ms)
+M0A consumer PageBreak roundtrip across boundary fixtures via AST equality ... ok (57ms)
+M0A PageBreak must be strict exact custom node and preserve negative variants as raw HTML ... ok (21ms)
+M0A PageBreak Backspace navigation across node ... ok (3ms)
+M0A Unsupported structural HTML: preserve raw without silent loss (not arbitrary DOM injection) ... ok (2ms)
+M0A Pagination decorations are purely presentational in single PM state ... ok (5ms)
+M0A Programmatic replace and initialization distinguish from user transactions (regression: count 0 on open) ... ok (5ms)
+M0A Undo and Redo execution ... ok (4ms)
+M0A Multi-instance independence ... ok (6ms)
+
+ok | 841 passed (51 steps) | 0 failed (42s)
+

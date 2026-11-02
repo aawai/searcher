@@ -43,3 +43,4 @@ sources:
 - [Accessible Grid Drag, Keyboard and Announcements](/concepts/accessible-grid-drag-keyboard-and-announcements.md)
 - [dnd-kit 2D Grid Sorting Architecture](/concepts/dnd-kit-2d-grid-sorting-architecture.md)
 - [Overscroll Containment for Nested Scroll Areas](/concepts/overscroll-containment-for-nested-scroll-areas.md)
+- [Pointer Capture and Drag Lifecycle in Searcher](/concepts/pointer-capture-and-drag-lifecycle.md)

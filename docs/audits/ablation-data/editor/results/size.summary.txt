@@ -1,0 +1,30 @@
+# size (reps=4, keys/rep=30, warmup=4; 141.0.7390.37; Intel(R) Core(TM) Ultra 5 125H x8)
+
+| config | chars | pm blocks | dispatch med (ms) | dispatch p95 | frame med | frame p95 | analysis med | layout sum med | layouts/key | measurements/key | rep-medians dispatch (ms) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| full_page_5000 | 5246 | 60 | 9.20 | 15.60 | 17.50 | 20.70 | 5.10 | 2.40 | 3 | 294 | 9.60, 9.30, 9.20, 9.00 |
+| continuous_noPagPlugin_5000 | 5246 | 60 | 10.10 | 17.50 | 15.80 | 21.10 | 6.10 | 0.00 | 0 | 0 | 9.80, 10.10, 10.40, 10.20 |
+| bare_5000 | 5246 | 60 | 0.60 | 0.90 | 15.80 | 16.40 | 0.00 | 0.00 | 0 | 0 | 0.60, 0.60, 0.50, 0.60 |
+| full_page_20000 | 20243 | 227 | 33.60 | 49.50 | 42.20 | 59.50 | 20.90 | 9.10 | 5 | 1845 | 30.90, 34.10, 34.10, 34.40 |
+| continuous_noPagPlugin_20000 | 20243 | 227 | 33.40 | 50.70 | 37.00 | 54.80 | 21.50 | 0.00 | 0 | 0 | 31.30, 33.40, 34.40, 34.40 |
+| bare_20000 | 20243 | 227 | 0.60 | 1.00 | 15.80 | 16.70 | 0.00 | 0.00 | 0 | 0 | 0.70, 0.60, 0.60, 0.70 |
+| full_page_100000 | 100270 | 1102 | 156.20 | 198.50 | 194.50 | 244.10 | 96.30 | 83.80 | 5 | 8945 | 149.10, 161.20, 160.20, 155.30 |
+| continuous_noPagPlugin_100000 | 100270 | 1102 | 155.90 | 185.50 | 165.00 | 194.50 | 99.30 | 0.00 | 0 | 0 | 154.50, 159.20, 155.90, 158.70 |
+| bare_100000 | 100270 | 1102 | 1.50 | 2.80 | 16.70 | 18.20 | 0.00 | 0.00 | 0 | 0 | 1.50, 1.50, 1.50, 1.50 |
+| full_page_300000 | 300373 | 3276 | 825.40 | 1452.90 | 808.60 | 1442.40 | 300.80 | 514.10 | 5 | 26580 | 825.40, 836.40, 832.90, 822.50 |
+| continuous_noPagPlugin_300000 | 300373 | 3276 | 844.70 | 943.30 | 702.10 | 784.70 | 329.90 | 0.00 | 0 | 0 | 858.70, 808.90, 854.40, 859.20 |
+| bare_300000 | 300373 | 3276 | 15.60 | 17.20 | 31.50 | 35.30 | 0.00 | 0.00 | 0 | 0 | 15.50, 15.50, 15.80, 15.60 |
+
+Cold open (median over reps): createMs, first page-layout settle, pages, DOM nodes
+- full_page_5000: createMs=67.80 settleMs=29.50 pages=5 dom=365
+- continuous_noPagPlugin_5000: createMs=61.50 settleMs=n/a pages=n/a dom=360
+- bare_5000: createMs=67.70 settleMs=n/a pages=n/a dom=265
+- full_page_20000: createMs=107.40 settleMs=49.90 pages=20 dom=1381
+- continuous_noPagPlugin_20000: createMs=127.50 settleMs=n/a pages=n/a dom=1360
+- bare_20000: createMs=122.20 settleMs=n/a pages=n/a dom=1004
+- full_page_100000: createMs=347.50 settleMs=189.70 pages=95 dom=6639
+- continuous_noPagPlugin_100000: createMs=326.20 settleMs=n/a pages=n/a dom=6525
+- bare_100000: createMs=341.20 settleMs=n/a pages=n/a dom=4790
+- full_page_300000: createMs=921.10 settleMs=779.70 pages=285 dom=19717
+- continuous_noPagPlugin_300000: createMs=879.60 settleMs=n/a pages=n/a dom=19386
+- bare_300000: createMs=903.90 settleMs=n/a pages=n/a dom=14230

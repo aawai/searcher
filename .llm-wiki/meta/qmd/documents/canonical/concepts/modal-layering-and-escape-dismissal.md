@@ -47,3 +47,4 @@ entities:
 - [Modal Dialog Focus and Semantics](/concepts/modal-dialog-focus-and-semantics.md): 初始焦点、Tab 循环、焦点恢复及真实模态性；W3C 模式不证明项目已通过可访问性检查。
 - [[sources/SRC-2026-09-27-001]]: Base UI 官方 Dialog 解剖结构与嵌套弹窗规范。
 - [Overscroll Containment for Nested Scroll Areas](/concepts/overscroll-containment-for-nested-scroll-areas.md): 浮层内滚动不链到背景的 `overscroll-behavior` 契约与项目用法。
+- [Inert and Top Layer in Searcher Overlays](/concepts/inert-and-top-layer-in-searcher-overlays.md): 退场期、窗口内遮罩与被裁剪控件对 `inert` 的使用；项目不用原生 `<dialog>`/Popover top layer。

@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-02-005",
+  "captured": "2026-11-02",
+  "packet_version": "1.0",
+  "title": "Zip Slip Vulnerability",
+  "url": "https://security.snyk.io/research/zip-slip-vulnerability",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

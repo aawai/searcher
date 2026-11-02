@@ -668,3 +668,18 @@
 ## [2026-10-31T12:28:39.525Z] observe
 - slug: "obs-2026-10-31-material-pr-356-main", title: "首页顶栏 Material 组与笔记底栏对齐经 PR 356 合并 main", relevance: "high"
 
+## [2026-11-02T08:00:33.865Z] capture
+- source_id: "SRC-2026-11-02-001", url: "https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture", format: "web"
+
+## [2026-11-02T08:00:35.059Z] capture
+- source_id: "SRC-2026-11-02-002", url: "https://developer.mozilla.org/en-US/docs/Web/API/AbortController", format: "web"
+
+## [2026-11-02T08:00:37.626Z] capture
+- source_id: "SRC-2026-11-02-003", url: "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html", format: "web"
+
+## [2026-11-02T08:00:39.657Z] capture
+- source_id: "SRC-2026-11-02-004", url: "https://github.com/101arrowz/fflate/blob/master/README.md", format: "web"
+
+## [2026-11-02T08:00:41.594Z] capture
+- source_id: "SRC-2026-11-02-005", url: "https://security.snyk.io/research/zip-slip-vulnerability", format: "web"
+

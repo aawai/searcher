@@ -445,6 +445,25 @@ export function TrashContent({ host }: { host: PageHost }) {
     }));
     const pending = !initialized || loading;
 
+    const refreshButton = (
+        <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void loadTrash()}
+            disabled={loading}
+        >
+            <RefreshCw
+                size="1em"
+                className={cn(
+                    "icon-sm",
+                    loading && "animate-spin",
+                )}
+            />
+            <span>{loading ? "刷新中…" : "刷新"}</span>
+        </Button>
+    );
+
     return (
         <PageShell
             as={host.inWindow ? "section" : "main"}
@@ -452,41 +471,27 @@ export function TrashContent({ host }: { host: PageHost }) {
             className="trash-page"
             data-host-narrow={host.narrow ? "true" : undefined}
         >
-            <PageHeader
-                title="回收站"
-                actions={
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => void loadTrash()}
-                        disabled={loading}
-                    >
-                        <RefreshCw
-                            size="1em"
-                            className={cn(
-                                "icon-sm",
-                                loading && "animate-spin",
-                            )}
-                        />
-                        <span>{loading ? "刷新中…" : "刷新"}</span>
-                    </Button>
-                }
-            />
-            <Tabs
-                value={tab}
-                onValueChange={(val) => setTab(val as "webapps" | "documents")}
-                className="trash-tabs"
-            >
-                <TabsList>
-                    <TabsTrigger value="webapps">
-                        应用 {webapps.length}
-                    </TabsTrigger>
-                    <TabsTrigger value="documents">
-                        笔记 {documents.length}
-                    </TabsTrigger>
-                </TabsList>
-            </Tabs>
+            {host.inWindow
+                ? <h1 className="sr-only">回收站</h1>
+                : <PageHeader title="回收站" actions={refreshButton} />}
+            <div className="trash-toolbar">
+                <Tabs
+                    value={tab}
+                    onValueChange={(val) =>
+                        setTab(val as "webapps" | "documents")}
+                    className="trash-tabs"
+                >
+                    <TabsList>
+                        <TabsTrigger value="webapps">
+                            应用 {webapps.length}
+                        </TabsTrigger>
+                        <TabsTrigger value="documents">
+                            笔记 {documents.length}
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
+                {host.inWindow && refreshButton}
+            </div>
             {status && (
                 <StatusBanner tone="success" className="trash-status">
                     {status}
