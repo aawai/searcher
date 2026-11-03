@@ -234,3 +234,9 @@
 {"slug":"obs-2026-11-03-documents-core-longest-first-order-adopted-after-race-fix","title":"documents-core longest-first order adopted after race fix","relevance":"medium","timestamp":"2026-11-03T05:10:40.267Z","kind":"observe"}
 {"slug":"obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes","title":"E2E geometry matrices run in light only (layoutThemes)","relevance":"high","timestamp":"2026-11-03T05:10:40.271Z","kind":"observe"}
 {"slug":"obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2","title":"Coverage CI documents-core runs --parallel with DENO_JOBS=2","relevance":"medium","timestamp":"2026-11-03T05:10:40.275Z","kind":"observe"}
+{"source_id":"SRC-2026-11-03-001","url":"https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF","format":"web","timestamp":"2026-11-03T08:00:30.418Z","kind":"capture"}
+{"source_id":"SRC-2026-11-03-002","url":"https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy","format":"web","timestamp":"2026-11-03T08:00:36.050Z","kind":"capture"}
+{"source_id":"SRC-2026-11-03-003","url":"https://sqlite.org/c3ref/backup_finish.html","format":"web","timestamp":"2026-11-03T08:03:42.297Z","kind":"capture"}
+{"slug":"obs-2026-11-03-","title":"首页笔记改为刊头排版（方向二优化版）决策","relevance":"high","timestamp":"2026-11-03T09:43:10.221Z","kind":"observe"}
+{"slug":"obs-2026-11-03-","title":"首页刊头实现落地与贴合效果图的关键取舍","relevance":"high","timestamp":"2026-11-03T14:10:23.561Z","kind":"observe"}
+{"slug":"obs-2026-11-03-issue-363","title":"首页刊头验收 Issue 363 与素材分支","relevance":"high","timestamp":"2026-11-03T14:21:36.875Z","kind":"observe"}

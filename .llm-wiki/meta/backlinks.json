@@ -74,7 +74,9 @@
     "sources/SRC-2026-10-29-001",
     "sources/SRC-2026-10-30-005",
     "sources/SRC-2026-10-31-002",
-    "sources/SRC-2026-11-02-003"
+    "sources/SRC-2026-11-02-003",
+    "sources/SRC-2026-11-03-001",
+    "sources/SRC-2026-11-03-002"
   ],
   "concepts/css-container-queries": [
     "concepts/scrollbar-gutter-and-layout-stability",
@@ -305,6 +307,8 @@
     "sources/SRC-2026-10-29-001",
     "sources/SRC-2026-10-30-001",
     "sources/SRC-2026-10-30-005",
+    "sources/SRC-2026-11-03-001",
+    "sources/SRC-2026-11-03-002",
     "sources/searcher-session-token-hash-is-not-salted",
     "syntheses/searcher-system-architecture"
   ],
@@ -356,7 +360,8 @@
     "sources/SRC-2026-10-27-001",
     "sources/SRC-2026-10-27-002",
     "sources/SRC-2026-10-29-003",
-    "sources/SRC-2026-11-02-004"
+    "sources/SRC-2026-11-02-004",
+    "sources/SRC-2026-11-03-003"
   ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
@@ -520,6 +525,7 @@
     "sources/SRC-2026-10-26-001",
     "sources/SRC-2026-10-27-001",
     "sources/SRC-2026-10-29-003",
+    "sources/SRC-2026-11-03-003",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -913,7 +919,8 @@
   ],
   "sources/SRC-2026-10-27-001": [
     "concepts/sqlite-backup-and-recovery-boundaries",
-    "sources/SRC-2026-10-27-002"
+    "sources/SRC-2026-10-27-002",
+    "sources/SRC-2026-11-03-003"
   ],
   "sources/SRC-2026-10-27-002": [
     "concepts/sqlite-backup-and-recovery-boundaries",
@@ -1036,6 +1043,17 @@
   "sources/SRC-2026-11-02-005": [
     "concepts/archive-extraction-zip-slip-and-decompression-limits"
   ],
+  "sources/SRC-2026-11-03-001": [
+    "concepts/csrf-defense-boundaries",
+    "sources/SRC-2026-11-03-002"
+  ],
+  "sources/SRC-2026-11-03-002": [
+    "concepts/csrf-defense-boundaries",
+    "sources/SRC-2026-11-03-001"
+  ],
+  "sources/SRC-2026-11-03-003": [
+    "concepts/sqlite-backup-and-recovery-boundaries"
+  ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
   ],
@@ -1147,6 +1165,7 @@
   "sources/obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling": [],
   "sources/obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355": [],
   "sources/obs-2026-10-31-material-pr-356-main": [],
+  "sources/obs-2026-11-03-": [],
   "sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file": [],
   "sources/obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2": [],
   "sources/obs-2026-11-03-documentmodeswitch": [],
@@ -1155,6 +1174,7 @@
   "sources/obs-2026-11-03-documents-page-mode-keyboard-selection-fails-under-changed-c": [],
   "sources/obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes": [],
   "sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel": [],
+  "sources/obs-2026-11-03-issue-363": [],
   "sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2": [],
   "sources/obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup": [],
   "sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e": [],

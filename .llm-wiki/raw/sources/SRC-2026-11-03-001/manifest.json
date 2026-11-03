@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-03-001",
+  "captured": "2026-11-03",
+  "packet_version": "1.0",
+  "title": "Cross-site request forgery (CSRF)",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
