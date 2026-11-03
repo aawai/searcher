@@ -1,5 +1,17 @@
 # Wiki Update Log
 
+## 2026-11-03
+
+- **observe**: {"relevance":"medium","slug":"obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2","title":"Coverage CI documents-core runs --parallel with DENO_JOBS=2"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes","title":"E2E geometry matrices run in light only (layoutThemes)"}
+- **observe**: {"relevance":"medium","slug":"obs-2026-11-03-documents-core-longest-first-order-adopted-after-race-fix","title":"documents-core longest-first order adopted after race fix"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2","title":"ProseMirror focus timer undoes fast keyboard selection in E2E"}
+- **observe**: {"relevance":"medium","slug":"obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup","title":"Replacing short E2E settle waits gave no measurable speedup"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-03-documents-page-mode-keyboard-selection-fails-under-changed-c","title":"Documents page-mode keyboard selection fails under changed concurrency"}
+- **observe**: {"relevance":"medium","slug":"obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file","title":"Bundle E2E split: route-style-admin-lab file"}
+- **observe**: {"relevance":"medium","slug":"obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e","title":"Routing auth-surface steps moved from navigation to auth E2E"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel","title":"E2E suites ordered longest-first for Deno --parallel"}
+
 ## 2026-11-02
 
 - **capture**: {"format":"web","source_id":"SRC-2026-11-02-005","url":"https://security.snyk.io/research/zip-slip-vulnerability"}

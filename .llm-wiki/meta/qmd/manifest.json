@@ -2010,6 +2010,94 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file",
+      "contentHash": "afe814088bbae3e0df07f0434fa018f9668f230f844071be640f8ad6f8cb8f29",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2",
+      "contentHash": "c7ff1434db873bbb8cac91bbbf8a6958d940ec2d1322529a95c65b0939f25de5",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-documentmodeswitch.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-documentmodeswitch.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-documentmodeswitch",
+      "contentHash": "7b58970654de4f7a0d44dfe028f7942caef2565e8036c1216e480208e8423293",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-documents-core-longest-first-order-adopted-after-race-fix.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-documents-core-longest-first-order-adopted-after-race-fix.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-documents-core-longest-first-order-adopted-after-race-fix",
+      "contentHash": "ac86fcb2171295a9c7af23d8f2b484d174d8f4e6950bf613eeeaa86e4404b111",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-documents-e2e-24-5s-deno-jobs-4.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-documents-e2e-24-5s-deno-jobs-4.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-documents-e2e-24-5s-deno-jobs-4",
+      "contentHash": "ab3b13cca207ef32ecb5630acade822e3b786a1e5fccff5f40be2eec75401e42",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-documents-page-mode-keyboard-selection-fails-under-changed-c.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-documents-page-mode-keyboard-selection-fails-under-changed-c.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-documents-page-mode-keyboard-selection-fails-under-changed-c",
+      "contentHash": "ac8206a03932cb379d03076d5edad35e0363cff1e8585759ea015b6b2da769b1",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes",
+      "contentHash": "d3caff555739b19639551c8e16a0872c4bb67f89df87afd82fadb438a4215839",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel",
+      "contentHash": "4f70c962af8b258dfe6797d07ce4c2b42fee2ff3ad3e6d0031da1d54088e8b39",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2",
+      "contentHash": "ab217d30dc34c98a1cc236927524d8c49416a87ab2fe94a94d700336c309a5ed",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup",
+      "contentHash": "d8d434a65a5dcda0536ffabe24044d3658bb72faeed74bcf9d932ff6534c92b8",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e",
+      "contentHash": "6b891fb06727f9d9338a4579e876f40c25eaf1959be165d00cec16a8acfe85ab",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/searcher-session-token-hash-is-not-salted.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/searcher-session-token-hash-is-not-salted.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
