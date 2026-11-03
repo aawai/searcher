@@ -39,6 +39,20 @@ export async function switchDocumentMode(
 }
 
 /**
+ * Clicks into rich-editor text and returns once ProseMirror has settled the
+ * focus. When the editor gains focus, ProseMirror re-applies its own selection
+ * from a 20 ms timer if the DOM selection has moved on; keys sent before that
+ * timer runs (which load can delay) are undone. A 20 ms timer queued after the
+ * click fires after ProseMirror's, so it is an ordering barrier, not a guess.
+ */
+export async function clickIntoEditor(target: Locator): Promise<void> {
+    await target.click();
+    await target.evaluate(() =>
+        new Promise<void>((settled) => setTimeout(settled, 20))
+    );
+}
+
+/**
  * The apps or notes window while it is open, minimized or not (the marker is
  * absent once closed): title bar controls, the view's actions, and the body.
  * Both views match when both are open; scope by view then.
