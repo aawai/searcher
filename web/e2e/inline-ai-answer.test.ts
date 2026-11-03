@@ -12,7 +12,7 @@ type StorageState = Exclude<
     string
 >;
 import { aiModels } from "../../src/db/ai-schema.ts";
-import { createEvidenceDirectory } from "./helpers/evidence.ts";
+import { createEvidenceDirectory, layoutThemes } from "./helpers/evidence.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { visitAsk } from "./helpers/ask.ts";
 
@@ -978,14 +978,14 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
         }
 
         await t.step(
-            "screenshots: card streaming, done and expanded at 390/768/1440 × light/dark",
+            "screenshots: card streaming, done and expanded at 390/768/1440",
             async () => {
                 const viewports = [
                     { width: 390, height: 844 },
                     { width: 768, height: 1024 },
                     { width: 1440, height: 900 },
                 ];
-                for (const colorScheme of ["light", "dark"] as const) {
+                for (const colorScheme of layoutThemes()) {
                     for (const viewport of viewports) {
                         const { page, context } = await newPage(withModel, {
                             viewport,
