@@ -10,39 +10,43 @@
    --background wash, fading out just inside the column's outer edge. A static
    `filter` on the copy is rasterized once; a backdrop-filter would re-sample
    the wallpaper whenever a window moves above the veil. It shares the
-   wallpaper's layer so the top bar, search box and windows paint above it. */
+   wallpaper's layer so the top bar, search box and windows paint above it.
+   The fade follows a smootherstep curve over --masthead-veil-fade-length: a
+   linear ramp leaves a visible edge where it starts and ends. */
 .home-masthead__veil {
+    --masthead-veil-fade-length: var(--layout-masthead-veil-fade);
+    --masthead-veil-ramp: var(--foreground) 0
+        calc(100% - var(--masthead-veil-fade-length)),
+        color-mix(in srgb, var(--foreground) 98.4%, transparent)
+        calc(100% - var(--masthead-veil-fade-length) * 0.875),
+        color-mix(in srgb, var(--foreground) 89.6%, transparent)
+        calc(100% - var(--masthead-veil-fade-length) * 0.75),
+        color-mix(in srgb, var(--foreground) 72.5%, transparent)
+        calc(100% - var(--masthead-veil-fade-length) * 0.625),
+        color-mix(in srgb, var(--foreground) 50%, transparent)
+        calc(100% - var(--masthead-veil-fade-length) * 0.5),
+        color-mix(in srgb, var(--foreground) 27.5%, transparent)
+        calc(100% - var(--masthead-veil-fade-length) * 0.375),
+        color-mix(in srgb, var(--foreground) 10.4%, transparent)
+        calc(100% - var(--masthead-veil-fade-length) * 0.25),
+        color-mix(in srgb, var(--foreground) 1.6%, transparent)
+        calc(100% - var(--masthead-veil-fade-length) * 0.125),
+        transparent 100%;
     position: fixed;
     inset-block: 0;
     inset-inline-start: 0;
     overflow: hidden;
     pointer-events: none;
     z-index: var(--elevation-wallpaper);
-    -webkit-mask-image: linear-gradient(
-        to right,
-        var(--foreground) 0 calc(100% - var(--layout-masthead-veil-fade)),
-        transparent 100%
-    );
-    mask-image: linear-gradient(
-        to right,
-        var(--foreground) 0 calc(100% - var(--layout-masthead-veil-fade)),
-        transparent 100%
-    );
+    -webkit-mask-image: linear-gradient(to right, var(--masthead-veil-ramp));
+    mask-image: linear-gradient(to right, var(--masthead-veil-ramp));
 }
 
 .home-masthead__veil[data-side="right"] {
     inset-inline-start: auto;
     inset-inline-end: 0;
-    -webkit-mask-image: linear-gradient(
-        to left,
-        var(--foreground) 0 calc(100% - var(--layout-masthead-veil-fade)),
-        transparent 100%
-    );
-    mask-image: linear-gradient(
-        to left,
-        var(--foreground) 0 calc(100% - var(--layout-masthead-veil-fade)),
-        transparent 100%
-    );
+    -webkit-mask-image: linear-gradient(to left, var(--masthead-veil-ramp));
+    mask-image: linear-gradient(to left, var(--masthead-veil-ramp));
 }
 
 /* The copy spans the whole viewport (plus a blur's reach on every edge, so
@@ -67,8 +71,12 @@
     background: var(--masthead-veil);
 }
 
-/* Scrollable column in side mode. */
+/* Only the body scrolls; it shrinks to fit the column so the footer below it
+   stays visible. The inline padding keeps the hover rule inside the clip. */
 .home-masthead__scroll {
+    flex: 0 1 auto;
+    min-height: 0;
+    padding-inline-start: var(--space-4);
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;
@@ -94,8 +102,8 @@
 .home-masthead__column {
     position: fixed;
     z-index: var(--elevation-canvas);
-    padding-inline-start: var(--space-4);
-    padding-block-end: var(--space-6);
+    display: flex;
+    flex-direction: column;
 }
 
 /* 1. Masthead date / time header */
@@ -334,7 +342,9 @@
     outline-offset: 2px;
 }
 
-.home-masthead__entry:is(:hover, :focus-within)::before {
+/* Hover states only for fine hover-capable pointers: a tap on touch screens
+   leaves a sticky :hover on whatever entry ends up under the finger. */
+.home-masthead__entry:focus-within::before {
     content: "";
     position: absolute;
     inset-inline-start: calc(-1 * var(--space-4));
@@ -373,11 +383,11 @@
     transition: transform var(--motion-fast) var(--ease-standard);
 }
 
-.home-masthead__entry:is(:hover, :focus-within) .home-masthead__entry-title {
+.home-masthead__entry:focus-within .home-masthead__entry-title {
     transform: translateX(4px);
 }
 
-.home-masthead__entry:is(:hover, :focus-within) .home-masthead__entry-title::after {
+.home-masthead__entry:focus-within .home-masthead__entry-title::after {
     content: " ↗";
     font-family: var(--font-sans);
     font-size: var(--font-body-size);
@@ -396,9 +406,35 @@
     transition: opacity var(--motion-fast) var(--ease-standard);
 }
 
-.home-masthead__entry:is(:hover, :focus-within) .home-masthead__entry-actions,
+.home-masthead__entry:focus-within .home-masthead__entry-actions,
 .home-masthead__entry-actions:has([data-popup-open], [aria-expanded="true"]) {
     opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .home-masthead__entry:hover::before {
+        content: "";
+        position: absolute;
+        inset-inline-start: calc(-1 * var(--space-4));
+        inset-block: var(--space-4);
+        width: 0;
+        border-inline-start: 2px solid var(--accent);
+    }
+
+    .home-masthead__entry:hover .home-masthead__entry-title {
+        transform: translateX(4px);
+    }
+
+    .home-masthead__entry:hover .home-masthead__entry-title::after {
+        content: " ↗";
+        font-family: var(--font-sans);
+        font-size: var(--font-body-size);
+        color: var(--accent);
+    }
+
+    .home-masthead__entry:hover .home-masthead__entry-actions {
+        opacity: 1;
+    }
 }
 
 .home-masthead__entry-menu-btn {
@@ -443,8 +479,9 @@
     color: var(--foreground);
 }
 
-/* A command reads as one line; the full block is one click away via 复制命令. */
-.home-masthead__entry-summary:has(> code) {
+/* A command reads as one line; the full block is one click away via 复制命令.
+   Inline code inside prose wraps with the text. */
+.home-masthead__entry[data-kind="code"] .home-masthead__entry-summary {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -487,7 +524,9 @@
 
 /* 6. Footer */
 .home-masthead__footer {
+    flex-shrink: 0;
     margin-block-start: var(--space-3);
+    padding-inline-start: var(--space-4);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -517,75 +556,34 @@
     outline-offset: 2px;
 }
 
-/* 7. Narrow mode: Material pill and the expandable sheet */
-/* No stacking context here: the sheet's veil must stay on the wallpaper
+/* 7. Narrow mode: the masthead peeks at the top and expands into a sheet.
+   No stacking context on the section: the veil must stay on the wallpaper
    layer, under the top bar, the docked search box and the Dock. */
-.home-masthead[data-mode="narrow"] {
-    position: relative;
-    width: 100%;
-    max-width: var(--layout-home-content-max);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
 
-.home-masthead__pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    min-height: var(--control-height);
-    padding: 0 var(--space-4);
-    border: 0;
-    border-radius: var(--radius-pill);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-elevation-material);
-    color: var(--foreground);
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-    font-variant-numeric: tabular-nums;
-}
-
-button.home-masthead__pill {
-    cursor: pointer;
-}
-
-button.home-masthead__pill:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-}
-
-.home-masthead__pill-sep,
-.home-masthead__pill-chevron {
-    color: var(--muted);
-}
-
-.home-masthead__pill-tasks {
-    color: var(--accent);
-    font-weight: var(--font-label-weight);
-}
-
-.home-masthead__pill[data-hidden="true"] {
-    visibility: hidden;
-}
-
-/* Narrow sheet: the whole home blurs under the masthead, which reads from the
-   top bar down to the search box docked above the bottom edge. */
+/* The veil spans the top of the home: while collapsed (inline height) it
+   reaches past the peek's bottom and fades over --layout-masthead-peek-fade,
+   which starts around the date block and dissolves behind the search box, so
+   the wash never ends in a visible line; open, it covers the viewport and
+   fades over its last 20%. */
 .home-masthead__veil[data-side="top"] {
+    --masthead-veil-fade-length: 20%;
     inset-inline: 0;
     width: auto;
-    -webkit-mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 80%,
-        transparent 100%
-    );
-    mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 80%,
-        transparent 100%
-    );
+    height: 100%;
+    -webkit-mask-image: linear-gradient(to bottom, var(--masthead-veil-ramp));
+    mask-image: linear-gradient(to bottom, var(--masthead-veil-ramp));
+}
+
+.home-masthead__veil[data-side="top"][data-open="false"] {
+    --masthead-veil-fade-length: var(--layout-masthead-peek-fade);
+}
+
+.home-masthead__veil[data-side="top"][data-open="false"]::after {
+    background: var(--masthead-peek-veil);
+}
+
+.home-masthead[data-mode="narrow"][data-collapsed="true"] :is(.home-masthead__header, .home-masthead__dek) {
+    text-shadow: var(--masthead-text-halo);
 }
 
 .home-masthead__sheet {
@@ -595,26 +593,75 @@ button.home-masthead__pill:focus-visible {
     );
 }
 
+.home-masthead__sheet .home-masthead__scroll {
+    padding-inline-start: 0;
+}
+
 .home-masthead__veil[data-side="top"],
 .home-masthead__sheet {
-    transition: opacity var(--motion-panel) var(--ease-out-expo),
-        transform var(--motion-panel) var(--ease-out-expo);
+    transition: height var(--motion-panel) var(--ease-out-expo);
 }
 
-.home-masthead__veil[data-side="top"][data-open="false"],
+/* Collapsed: only the top of the masthead (date block and rule) shows; the
+   rest fades out above the search box. The peek button above it expands. */
 .home-masthead__sheet[data-open="false"] {
-    opacity: 0;
     pointer-events: none;
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        var(--foreground) 0 calc(100% - var(--space-8)),
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        var(--foreground) 0 calc(100% - var(--space-8)),
+        transparent 100%
+    );
 }
 
-.home-masthead__sheet[data-open="false"] {
-    transform: translateY(calc(-1 * var(--space-2)));
+.home-masthead__sheet[data-open="false"] .home-masthead__scroll {
+    overflow: hidden;
+    -webkit-mask-image: none;
+    mask-image: none;
 }
 
+.home-masthead__sheet[data-open="false"] .home-masthead__sheet-bar {
+    display: none;
+}
+
+.home-masthead__peek {
+    position: fixed;
+    z-index: var(--elevation-canvas);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    cursor: pointer;
+}
+
+.home-masthead__peek:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.home-masthead__time-sep {
+    margin-inline: var(--space-1);
+    color: var(--muted);
+}
+
+.home-masthead__peek-tasks {
+    color: var(--accent);
+}
+
+/* 全部笔记 on the left, 收起 on the right, below the scrolling body. */
 .home-masthead__sheet-bar {
+    flex-shrink: 0;
     display: flex;
-    justify-content: center;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
     padding-block-start: var(--space-4);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
 }
 
 /* While the sheet is open the search box slides down above the bottom edge
@@ -630,6 +677,7 @@ button.home-masthead__pill:focus-visible {
 }
 
 .home-masthead__collapse {
+    margin-inline-start: auto;
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
@@ -660,7 +708,6 @@ button.home-masthead__pill:focus-visible {
     .home-masthead__task,
     .home-masthead__copy-btn,
     .home-masthead__all-notes,
-    .home-masthead__pill,
     .home-masthead__collapse {
         min-height: var(--control-touch-target);
     }
@@ -693,12 +740,9 @@ button.home-masthead__pill:focus-visible {
         transform: none;
     }
 
+    .home-masthead__veil[data-side="top"],
     .home-masthead__sheet {
-        transition: opacity var(--motion-panel) var(--ease-out-expo);
-    }
-
-    .home-masthead__sheet[data-open="false"] {
-        transform: none;
+        transition: none;
     }
 
     /* The search box still docks, without sliding. */

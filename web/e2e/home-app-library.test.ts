@@ -1038,7 +1038,7 @@ Deno.test("home app library (#244)", async (t) => {
                         a.top < b.bottom && b.top < a.bottom;
                     const measureMasthead = async (count: number) => {
                         await page.locator(
-                            ".home-masthead__column, .home-masthead__pill",
+                            ".home-masthead__column",
                         ).first().waitFor();
                         await page.waitForFunction(
                             (expected) =>
@@ -1064,7 +1064,7 @@ Deno.test("home app library (#244)", async (t) => {
                                 ".search-form-wrap",
                             );
                             const masthead = document.querySelector(
-                                ".home-masthead__column, .home-masthead__pill",
+                                ".home-masthead__column",
                             );
                             return {
                                 library: library ? box(library) : null,

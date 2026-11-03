@@ -91,9 +91,9 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
             const search = page.locator("#search-query");
             const expandMastheadIfNarrow = async () => {
                 if (width >= 1440) return;
-                const pill = page.locator(".home-masthead__pill");
-                await pill.waitFor({ state: "visible" });
-                await pill.click();
+                const peek = page.locator(".home-masthead__peek");
+                await peek.waitFor({ state: "visible" });
+                await peek.click();
                 await page.waitForFunction(() =>
                     document.querySelector(".home-masthead")?.getAttribute(
                         "data-collapsed",

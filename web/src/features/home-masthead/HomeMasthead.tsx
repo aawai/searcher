@@ -1,5 +1,5 @@
 import "@fontsource/noto-serif-sc/600.css";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronUp } from "lucide-react";
 import {
     type JSX,
     lazy,
@@ -23,6 +23,7 @@ import { useCalmClock } from "../home-calm/useHomeCalm.ts";
 import type { HomeNoteItem } from "../home-layouts/home-notes.ts";
 import type { SafeRect } from "../home-layouts/home-viewport.ts";
 import {
+    MASTHEAD_PEEK_VEIL_TAIL,
     mastheadDateParts,
     mastheadPlacement,
     resolveMastheadSwipe,
@@ -147,7 +148,8 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     }, [user, notes.length]);
 
     const scrollRef = useRef<HTMLDivElement>(null);
-    const pillRef = useRef<HTMLButtonElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const peekRef = useRef<HTMLButtonElement>(null);
     const [overflowBottom, setOverflowBottom] = useState(false);
 
     const updateOverflow = useCallback(() => {
@@ -161,12 +163,15 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         setOverflowBottom(hasOverflow);
     }, []);
 
+    // The scroll box has a fixed height; what changes is its content (lazy
+    // sections, tasks, web fonts), so watch both.
     useLayoutEffect(() => {
         updateOverflow();
         const element = scrollRef.current;
         if (!element) return;
         const observer = new ResizeObserver(updateOverflow);
         observer.observe(element);
+        if (contentRef.current) observer.observe(contentRef.current);
         return () => observer.disconnect();
     }, [
         updateOverflow,
@@ -190,12 +195,16 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         onSearchDockChange(searchDock);
     }, [onSearchDockChange, searchDock]);
 
-    // The pill is hidden while the sheet is open; focus it once it is back.
-    const focusPillOnCollapse = useRef(false);
+    // The peek is the expand control; focus it again once the sheet closes by
+    // Escape or 收起. Collapsing also scrolls the masthead back to its top so
+    // the peek shows the date block.
+    const focusPeekOnCollapse = useRef(false);
     useEffect(() => {
-        if (!effectiveCollapsed || !focusPillOnCollapse.current) return;
-        focusPillOnCollapse.current = false;
-        pillRef.current?.focus();
+        if (!effectiveCollapsed) return;
+        scrollRef.current?.scrollTo({ top: 0 });
+        if (!focusPeekOnCollapse.current) return;
+        focusPeekOnCollapse.current = false;
+        peekRef.current?.focus();
     }, [effectiveCollapsed]);
 
     // Focusing the docked search box closes the sheet; the box returns to its
@@ -217,7 +226,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     useEscapeLayer(
         hostActive && sheetOpen,
         () => {
-            focusPillOnCollapse.current = true;
+            focusPeekOnCollapse.current = true;
             setCollapsed(true);
         },
         "overlay",
@@ -232,6 +241,8 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
 
         const canStartSwipe = (target: EventTarget | null): boolean => {
             if (!(target instanceof Element)) return false;
+            // The peek is a button but swiping down on it is the main way in.
+            if (target.closest(".home-masthead__peek")) return true;
             if (target.closest(SWIPE_IGNORE_SELECTOR)) return false;
             if (effectiveCollapsed) {
                 return Boolean(target.closest(".home, .app-shell"));
@@ -318,13 +329,21 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         return null;
     }
 
-    const pillDateTimeText = showDate && showTime
-        ? `${dateParts.shortDate} · ${dateParts.time}`
-        : showDate
-        ? dateParts.shortDate
-        : showTime
-        ? dateParts.time
-        : "";
+    // Collapsed narrow masthead: the open task count rides on the time line.
+    // Visual only; the peek button's name carries it for assistive tech.
+    const peekTaskCount = isNarrow && effectiveCollapsed && user
+        ? openTaskCount
+        : 0;
+    const peekTasks = peekTaskCount > 0 && (
+        <span className="home-masthead__peek-tasks" aria-hidden="true">
+            {peekTaskCount} 项待办
+        </span>
+    );
+    const peekSeparator = peekTasks && (
+        <span className="home-masthead__time-sep" aria-hidden="true">
+            ·
+        </span>
+    );
 
     const bodyContent = (
         <>
@@ -347,9 +366,11 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                                         <span className="home-masthead__month">
                                             {dateParts.month}
                                         </span>
-                                        {showTime && (
+                                        {(showTime || peekTasks) && (
                                             <span className="home-masthead__time">
-                                                {dateParts.time}
+                                                {showTime && dateParts.time}
+                                                {showTime && peekSeparator}
+                                                {peekTasks}
                                             </span>
                                         )}
                                     </span>
@@ -358,6 +379,8 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                             : (
                                 <span className="home-masthead__time home-masthead__time--solo">
                                     {dateParts.time}
+                                    {peekSeparator}
+                                    {peekTasks}
                                 </span>
                             )}
                     </time>
@@ -436,7 +459,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                         now={now}
                         editingNoteId={editingNoteId}
                         onOpenNote={onOpenNote}
-                        onOpenNotes={onOpenNotes}
                         onToggleTask={onToggleTask}
                         onUnpin={onUnpin}
                         onDelete={onDelete}
@@ -446,6 +468,30 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 </Suspense>
             )}
         </>
+    );
+
+    // Only the body scrolls; 全部笔记 stays below it so a long list never
+    // hides the way to the notes library.
+    const scrollArea = (
+        <div
+            ref={scrollRef}
+            className="home-masthead__scroll"
+            data-overflow-bottom={overflowBottom ? "true" : undefined}
+            onScroll={updateOverflow}
+        >
+            <div ref={contentRef} className="home-masthead__content">
+                {bodyContent}
+            </div>
+        </div>
+    );
+    const allNotesButton = hasNotes && (
+        <button
+            type="button"
+            className="home-masthead__all-notes"
+            onClick={onOpenNotes}
+        >
+            全部笔记 →
+        </button>
     );
 
     if (placement.mode === "side") {
@@ -466,10 +512,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                     {veilWallpaper}
                 </div>
                 <div
-                    ref={scrollRef}
-                    className="home-masthead__scroll home-masthead__column"
-                    data-overflow-bottom={overflowBottom ? "true" : undefined}
-                    onScroll={updateOverflow}
+                    className="home-masthead__column"
                     style={{
                         left: placement.column.x,
                         top: placement.column.y,
@@ -477,7 +520,12 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                         height: placement.column.height,
                     }}
                 >
-                    {bodyContent}
+                    {scrollArea}
+                    {allNotesButton && (
+                        <footer className="home-masthead__footer">
+                            {allNotesButton}
+                        </footer>
+                    )}
                 </div>
             </section>
         );
@@ -488,6 +536,9 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         return null;
     }
 
+    const peekLabel = peekTaskCount > 0
+        ? `展开首页刊头，${peekTaskCount} 项待办`
+        : "展开首页刊头";
     return (
         <section
             className="home-masthead"
@@ -495,130 +546,77 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             data-mode="narrow"
             data-collapsed={effectiveCollapsed ? "true" : "false"}
         >
-            {isGuest
-                ? (
-                    <div
-                        className="home-masthead__pill"
-                        data-guest="true"
-                    >
-                        <time
-                            className="home-masthead__pill-time"
-                            dateTime={calmDateTimeAttribute(now, showTime)}
-                        >
-                            {pillDateTimeText}
-                        </time>
-                    </div>
-                )
-                : (
-                    <>
+            {
+                /* Collapsed, the veil and the sheet shrink to the peek above the
+                search box; open, they cover the home down to the docked box. */
+            }
+            <div
+                className="home-masthead__veil"
+                data-side="top"
+                data-open={!effectiveCollapsed ? "true" : "false"}
+                aria-hidden="true"
+                style={effectiveCollapsed
+                    ? {
+                        height: placement.peek.y + placement.peek.height +
+                            MASTHEAD_PEEK_VEIL_TAIL,
+                    }
+                    : undefined}
+            >
+                {veilWallpaper}
+            </div>
+            <div
+                className="home-masthead__column home-masthead__sheet"
+                data-open={!effectiveCollapsed ? "true" : "false"}
+                inert={effectiveCollapsed}
+                style={{
+                    left: placement.sheet.x,
+                    top: placement.sheet.y,
+                    width: placement.sheet.width,
+                    height: effectiveCollapsed
+                        ? placement.peek.height
+                        : placement.sheet.height,
+                }}
+            >
+                {scrollArea}
+                {!isGuest && (
+                    <div className="home-masthead__sheet-bar">
+                        {allNotesButton}
                         <button
-                            ref={pillRef}
                             type="button"
-                            className="home-masthead__pill"
-                            data-hidden={effectiveCollapsed
-                                ? undefined
-                                : "true"}
+                            className="home-masthead__collapse"
                             aria-expanded={!effectiveCollapsed}
-                            aria-label={effectiveCollapsed
-                                ? "展开首页刊头"
-                                : "收起首页刊头"}
-                            onClick={() => setCollapsed((prev) => !prev)}
+                            aria-label="收起首页刊头"
+                            onClick={() => {
+                                focusPeekOnCollapse.current = true;
+                                setCollapsed(true);
+                            }}
                         >
-                            {pillDateTimeText && (
-                                <time
-                                    className="home-masthead__pill-time"
-                                    dateTime={calmDateTimeAttribute(
-                                        now,
-                                        showTime,
-                                    )}
-                                >
-                                    {pillDateTimeText}
-                                </time>
-                            )}
-                            {pillDateTimeText && openTaskCount > 0 && (
-                                <span
-                                    className="home-masthead__pill-sep"
-                                    aria-hidden="true"
-                                >
-                                    ·
-                                </span>
-                            )}
-                            {openTaskCount > 0 && (
-                                <span className="home-masthead__pill-tasks">
-                                    {openTaskCount} 项待办
-                                </span>
-                            )}
-                            {!pillDateTimeText && openTaskCount === 0 && (
-                                <span className="home-masthead__pill-label">
-                                    首页刊头
-                                </span>
-                            )}
-                            {effectiveCollapsed
-                                ? (
-                                    <ChevronDown
-                                        size="1em"
-                                        className="icon-sm home-masthead__pill-chevron"
-                                        aria-hidden="true"
-                                    />
-                                )
-                                : (
-                                    <ChevronUp
-                                        size="1em"
-                                        className="icon-sm home-masthead__pill-chevron"
-                                        aria-hidden="true"
-                                    />
-                                )}
+                            <ChevronUp
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                            <span>收起</span>
                         </button>
-
-                        <div
-                            className="home-masthead__veil"
-                            data-side="top"
-                            data-open={!effectiveCollapsed ? "true" : "false"}
-                            aria-hidden="true"
-                        >
-                            {veilWallpaper}
-                        </div>
-                        <div
-                            ref={scrollRef}
-                            className="home-masthead__scroll home-masthead__column home-masthead__sheet"
-                            data-open={!effectiveCollapsed ? "true" : "false"}
-                            data-overflow-bottom={overflowBottom
-                                ? "true"
-                                : undefined}
-                            inert={effectiveCollapsed}
-                            onScroll={updateOverflow}
-                            style={placement.mode === "narrow"
-                                ? {
-                                    left: placement.sheet.x,
-                                    top: placement.sheet.y,
-                                    width: placement.sheet.width,
-                                    height: placement.sheet.height,
-                                }
-                                : undefined}
-                        >
-                            {bodyContent}
-                            <div className="home-masthead__sheet-bar">
-                                <button
-                                    type="button"
-                                    className="home-masthead__collapse"
-                                    aria-expanded={!effectiveCollapsed}
-                                    aria-label="收起首页刊头"
-                                    onClick={() => {
-                                        focusPillOnCollapse.current = true;
-                                        setCollapsed(true);
-                                    }}
-                                >
-                                    <ChevronUp
-                                        size="1em"
-                                        className="icon-sm"
-                                        aria-hidden="true"
-                                    />
-                                    <span>收起</span>
-                                </button>
-                            </div>
-                        </div>
-                    </>
+                    </div>
                 )}
+            </div>
+            {!isGuest && effectiveCollapsed && (
+                <button
+                    ref={peekRef}
+                    type="button"
+                    className="home-masthead__peek"
+                    aria-expanded="false"
+                    aria-label={peekLabel}
+                    onClick={() => setCollapsed(false)}
+                    style={{
+                        left: placement.peek.x,
+                        top: placement.peek.y,
+                        width: placement.peek.width,
+                        height: placement.peek.height,
+                    }}
+                />
+            )}
         </section>
     );
 }

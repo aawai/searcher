@@ -56,7 +56,6 @@ export interface MastheadSectionsProps {
     now: Date;
     editingNoteId: string | null;
     onOpenNote: (note: HomeNoteItem) => void;
-    onOpenNotes: () => void;
     onToggleTask: (note: HomeNoteItem, index: number, checked: boolean) => void;
     onUnpin: (note: HomeNoteItem) => void;
     onDelete: (note: HomeNoteItem) => Promise<void>;
@@ -69,7 +68,6 @@ export function MastheadSections({
     now,
     editingNoteId,
     onOpenNote,
-    onOpenNotes,
     onToggleTask,
     onUnpin,
     onDelete,
@@ -253,7 +251,7 @@ export function MastheadSections({
                                         now={now}
                                         summary={summaries.get(note.id) ?? {
                                             kind: "text",
-                                            text: "",
+                                            segments: [],
                                         }}
                                         onOpen={() => onOpenNote(note)}
                                         onMoveUp={index > 0
@@ -271,15 +269,6 @@ export function MastheadSections({
                             </ol>
                         </SortableContext>
                     </DndContext>
-                    <footer className="home-masthead__footer">
-                        <button
-                            type="button"
-                            className="home-masthead__all-notes"
-                            onClick={onOpenNotes}
-                        >
-                            全部笔记 →
-                        </button>
-                    </footer>
                 </section>
             )}
 
@@ -477,11 +466,23 @@ function SortableMastheadEntry({
                         </div>
                     </div>
 
-                    {summary.text.length > 0 && (
+                    {summary.kind === "code" && summary.text.length > 0 && (
                         <p className="home-masthead__entry-summary">
-                            {summary.kind === "code"
-                                ? <code>{summary.text}</code>
-                                : summary.text}
+                            <code>{summary.text}</code>
+                        </p>
+                    )}
+                    {summary.kind === "tasks-only" && (
+                        <p className="home-masthead__entry-summary">
+                            {summary.text}
+                        </p>
+                    )}
+                    {summary.kind === "text" && summary.segments.length > 0 && (
+                        <p className="home-masthead__entry-summary">
+                            {summary.segments.map((segment, index) =>
+                                segment.code
+                                    ? <code key={index}>{segment.text}</code>
+                                    : segment.text
+                            )}
                         </p>
                     )}
 
