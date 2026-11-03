@@ -1,3 +1,4 @@
+import { layoutThemes } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import { type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
@@ -300,7 +301,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
         },
     );
     await t.step(
-        "Utility/Management/Workbench/Search geometry has no overflow across 390/768/1440 x light/dark",
+        "Utility/Management/Workbench/Search geometry has no overflow across 390/768/1440",
         async () => {
             await updatePreferences({ theme: "system" });
             await page.reload();
@@ -314,7 +315,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 "/ask", // Workbench
             ];
 
-            for (const colorScheme of ["light", "dark"] as const) {
+            for (const colorScheme of layoutThemes()) {
                 await page.emulateMedia({
                     colorScheme,
                     reducedMotion: "reduce",

@@ -23,7 +23,7 @@ fallback 字体的 Linux 环境中也实际超过 A4 单页高度；不通过安
 | 命令                                          | 覆盖                                                                                                   |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `deno task test`                              | 后端与前端契约测试                                                                                     |
-| `deno task test:routing`                      | 直访/刷新、登录与注册回跳、Tab history、非法路由和 320px 页面导航                                      |
+| `deno task test:routing`                      | 直访/刷新、登录与注册回跳、认证页几何、Tab history、非法路由和 320px 页面导航                          |
 | `deno task test:workspace`                    | Workspace 完整回归（见下文）                                                                           |
 | `deno task test:documents`                    | 完整 Documents 集合：响应式矩阵、长笔记、Library、编辑、历史、草稿与分页契约（见下文）                 |
 | `deno task test:wallpaper`                    | 壁纸链路（见下文）                                                                                     |
@@ -104,6 +104,18 @@ untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` �
 - 批量浏览器验收前先校准少量场景，复用 fixture/helper。
   等待内容、状态或几何的可观察完成条件，不能把可见等同于交互就绪；
   等待须有超时与诊断，不以固定 sleep、强制操作或自动 retry 掩盖失败。
+- 点击进入富文本编辑器后立即发送按键，使用 `clickIntoEditor`（`web/e2e/helpers/library.ts`）：
+  ProseMirror 获得焦点后用 20ms 定时器回写自身选区，负载下该定时器延迟，
+  先到的 `Shift+方向键` 会被撤销；helper 排在其后的同时长定时器是顺序屏障，不是猜测的等待。
+
+#### 主题维度
+
+- E2E 的几何与行为断言（布局、溢出、命中区、焦点位置、保存与版本）与主题无关，只在 light
+  下执行；主题相关的颜色、对比度、焦点环、材质由专项断言在两种主题下覆盖（如
+  `accent-contrast`、`workspace-matrix` Matrix A、认证切换链接、管理页语义色）。
+- 矩阵循环统一使用 `layoutThemes()`（`web/e2e/helpers/evidence.ts`）：设置
+  `E2E_EVIDENCE_DIR` 时追加 dark，仅为留存截图供人工审阅；light/dark 视觉验收仍按
+  [UI 验收清单](design/UI_CHECKLIST.md#实页矩阵)执行。
 
 ## CI 覆盖
 
@@ -119,10 +131,11 @@ job 执行 `documents-core`、`pagination-short`、`pagination-manual`、
 `pagination-consecutive`、`pagination-mixed`、`routing`、`supplemental`。
 前五片无重无漏地组成完整 Documents：core 排除四个分页入口，每个分页片
 独占服务/内存数据库/资源目录/Browser/Context，串行执行 6 个场景（5 种视口 ×
-默认动效，加 1440×900 reduced motion），四片合计 24 场景；版面与主题无关，
-不再按亮 / 暗重复，空闲观察窗与断言不变。
-每个 job 通过 `deno run -A scripts/e2e/run.ts <suite> --serial`
-先构建一次，再串行执行该片；七个 job 可独立并行，不另跑完整 documents。
+默认动效，加 1440×900 reduced motion），四片合计 24 场景；版面与主题无关（见
+[主题维度](#主题维度)），空闲观察窗与断言不变。
+每个 job 通过 `deno run -A scripts/e2e/run.ts <suite>` 先构建一次：`documents-core`
+含 17 个相互隔离的文件，以 `--parallel` 与 `DENO_JOBS=2` 执行；其余六片以 `--serial`
+执行。七个 job 可独立并行，不另跑完整 documents。
 不设置 `E2E_TIMEOUT_MS`，保留测试 helper 的标准超时；job 上限为 60 分钟。
 matrix 不因其他集合失败而取消，测试失败通过 `pipefail` 保留非零退出码。
 无论成功或失败均尝试上传 `artifacts/e2e/<suite>/` 中的 JUnit、
@@ -177,7 +190,7 @@ Material off / soft / regular × 亮 / 暗的对比度下限，`clear` 的 Mater
 
 ### Documents
 
-- 390×844、768×1024、1024×768、1440×900 × Zen × light/dark 三视图矩阵。
+- 390×844、768×1024、1024×768、1440×900 × Zen 三视图矩阵（light；证据模式追加 dark 截图，见 [主题维度](#主题维度)）。
 - Library 网络隔离与摘要契约、短屏输入保存（390×400 模拟软键盘缩小可用视口）。
 - 100k Markdown / 200 headings / 50 images / 20 tables / 30 PageBreak
   的长笔记完整性。

@@ -8,6 +8,7 @@ import type {
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
 import {
+    clickIntoEditor,
     libraryWindow,
     openNoteRows,
     switchDocumentMode,
@@ -903,7 +904,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     const historyParagraph = editor.locator("p").filter({
         hasText: VIEW_SWITCH_MARKER,
     });
-    await historyParagraph.click();
+    await clickIntoEditor(historyParagraph);
     await page.keyboard.press("End");
     for (let index = 0; index < 6; index++) {
         await page.keyboard.press("Shift+ArrowLeft");

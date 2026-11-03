@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-02T08:04:46.046Z",
+  "last_updated": "2026-11-03T05:10:40.670Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -3067,6 +3067,193 @@
       "source_context": "顶栏 icon 突兀与笔记底栏对齐修复",
       "created": "2026-10-31",
       "updated": "2026-10-31"
+    },
+    "sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file": {
+      "type": "source",
+      "title": "Observation: Bundle E2E split: route-style-admin-lab file",
+      "tags": [
+        "e2e",
+        "performance",
+        "bundle"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file",
+      "relevance": "medium",
+      "observed_at": "2026-11-03T04:16:07.681Z",
+      "source_context": "E2E duration audit 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2": {
+      "type": "source",
+      "title": "Observation: Coverage CI documents-core runs --parallel with DENO_JOBS=2",
+      "tags": [
+        "e2e",
+        "ci",
+        "documents"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2",
+      "relevance": "medium",
+      "observed_at": "2026-11-03T05:10:40.274Z",
+      "source_context": "E2E duration audit follow-up 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-documentmodeswitch": {
+      "type": "source",
+      "title": "Observation: 笔记编辑器模式切换改为悬停向右展开（DocumentModeSwitch）",
+      "tags": [
+        "documents",
+        "ui",
+        "editor",
+        "mode-switch",
+        "e2e"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-documentmodeswitch",
+      "relevance": "medium",
+      "observed_at": "2026-11-03T02:27:17.896Z",
+      "source_context": "用户要求切换编辑模式改为悬停向右展开",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-documents-core-longest-first-order-adopted-after-race-fix": {
+      "type": "source",
+      "title": "Observation: documents-core longest-first order adopted after race fix",
+      "tags": [
+        "e2e",
+        "performance",
+        "documents",
+        "scheduling"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-documents-core-longest-first-order-adopted-after-race-fix",
+      "relevance": "medium",
+      "observed_at": "2026-11-03T05:10:40.266Z",
+      "source_context": "E2E duration audit follow-up 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-documents-e2e-24-5s-deno-jobs-4": {
+      "type": "source",
+      "title": "Observation: Documents E2E 提速：分页矩阵 24 场景、5s 初始采样仅证据模式、DENO_JOBS 默认 4",
+      "tags": [
+        "e2e",
+        "testing",
+        "performance",
+        "pagination",
+        "deno-jobs"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-documents-e2e-24-5s-deno-jobs-4",
+      "relevance": "high",
+      "observed_at": "2026-11-03T02:27:17.605Z",
+      "source_context": "笔记编辑器模式切换改为悬停展开后的 E2E 调度与提速",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-documents-page-mode-keyboard-selection-fails-under-changed-c": {
+      "type": "source",
+      "title": "Observation: Documents page-mode keyboard selection fails under changed concurrency",
+      "tags": [
+        "e2e",
+        "documents",
+        "flaky",
+        "pagination",
+        "selection"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-documents-page-mode-keyboard-selection-fails-under-changed-c",
+      "relevance": "high",
+      "observed_at": "2026-11-03T04:16:07.683Z",
+      "source_context": "E2E duration audit 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes": {
+      "type": "source",
+      "title": "Observation: E2E geometry matrices run in light only (layoutThemes)",
+      "tags": [
+        "e2e",
+        "performance",
+        "theme",
+        "rule"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes",
+      "relevance": "high",
+      "observed_at": "2026-11-03T05:10:40.270Z",
+      "source_context": "E2E duration audit follow-up 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel": {
+      "type": "source",
+      "title": "Observation: E2E suites ordered longest-first for Deno --parallel",
+      "tags": [
+        "e2e",
+        "performance",
+        "scheduling",
+        "deno-parallel"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel",
+      "relevance": "high",
+      "observed_at": "2026-11-03T04:16:07.258Z",
+      "source_context": "E2E duration audit 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2": {
+      "type": "source",
+      "title": "Observation: ProseMirror focus timer undoes fast keyboard selection in E2E",
+      "tags": [
+        "e2e",
+        "prosemirror",
+        "flaky",
+        "selection",
+        "documents"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2",
+      "relevance": "high",
+      "observed_at": "2026-11-03T05:10:39.842Z",
+      "source_context": "E2E duration audit follow-up 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup": {
+      "type": "source",
+      "title": "Observation: Replacing short E2E settle waits gave no measurable speedup",
+      "tags": [
+        "e2e",
+        "performance",
+        "fixed-wait"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup",
+      "relevance": "medium",
+      "observed_at": "2026-11-03T04:16:07.686Z",
+      "source_context": "E2E duration audit 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e": {
+      "type": "source",
+      "title": "Observation: Routing auth-surface steps moved from navigation to auth E2E",
+      "tags": [
+        "e2e",
+        "performance",
+        "routing"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e",
+      "relevance": "medium",
+      "observed_at": "2026-11-03T04:16:07.677Z",
+      "source_context": "E2E duration audit 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
     },
     "sources/searcher-session-token-hash-is-not-salted": {
       "type": "source",

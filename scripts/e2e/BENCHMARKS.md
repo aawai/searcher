@@ -195,3 +195,102 @@ seed、DB、请求和断言并未被原生日志完全拆分，不能将剩余�
 Browser launch 均低于 50ms，缺乏通过 Browser 共享承担隔离成本的收益依据；
 notes-focus 包含真实负向静默窗口，保持原有等待。未采用全局
 fixture/browser/session 共享、缓存或热点重写。
+
+# 2026-11-03 E2E 耗时审查
+
+## 环境与计量
+
+- 本机 Intel Core Ultra 5 125H，8 个逻辑 CPU，15469 MiB RAM；Deno 2.9.8。
+- 全部为 `deno run -A scripts/e2e/run.ts <suite> --parallel --timeout 5000`，默认
+  `DENO_JOBS=4`，每轮独立进程、各自 build；每个集合基线 1 轮，候选按改动性质 1 或 3 轮。
+- Build/Test/Wall 取 `timings.json`；“串行合计”为 JUnit 顶层用例耗时之和（并发下各文件互相
+  争抢，数值随并发配对变化，不等于串行运行耗时）。
+- 会话内机器逐渐变慢：Workspace 三轮候选的串行合计从 622s 升到 718s，build 从 5.6s 升到
+  9.1s。因此调度改动另以“同一轮各文件耗时代入新旧顺序”的 4 worker 贪心模拟对比顺序本身的影响。
+
+## 结果（秒）
+
+| 集合 / 改动                                | 轮次 | Build |  Test |  Wall | 串行合计 | 失败 |
+| ------------------------------------------ | ---- | ----: | ----: | ----: | -------: | ---: |
+| workspace 基线                             | 1    |   5.9 | 174.4 | 180.3 |    590.9 |    0 |
+| workspace 降序登记                         | 1    |   5.6 | 165.3 | 171.0 |    622.5 |    0 |
+| workspace 降序登记                         | 2    |   9.1 | 179.9 | 189.1 |    686.6 |    0 |
+| workspace 降序登记                         | 3    |   8.6 | 188.3 | 196.8 |    717.7 |    0 |
+| routing 基线                               | 1    |   7.5 |  60.7 |  68.2 |     70.8 |    0 |
+| routing 认证页步骤移入 `auth`              | 1    |   6.9 |  46.6 |  53.5 |     71.2 |    0 |
+| supplemental 基线                          | 1    |   6.9 |  51.9 |  58.8 |    145.1 |    0 |
+| supplemental 降序登记                      | 1    |   7.5 |  48.7 |  56.2 |    164.7 |    0 |
+| supplemental 降序登记                      | 2    |   9.5 |  47.1 |  56.6 |    170.8 |    0 |
+| supplemental 降序登记                      | 3    |   9.2 |  48.6 |  57.8 |    176.0 |    0 |
+| bundle 基线                                | 1    |  10.4 |  52.1 |  62.5 |     60.9 |    0 |
+| bundle 拆出 `route-style-admin-lab` + 降序 | 1    |   7.7 |  32.0 |  39.8 |     67.8 |    0 |
+| bundle 拆出 `route-style-admin-lab` + 降序 | 2    |   7.3 |  30.2 |  37.5 |     65.8 |    0 |
+| bundle 拆出 `route-style-admin-lab` + 降序 | 3    |   9.2 |  30.8 |  40.0 |     65.7 |    0 |
+| home-notes 基线                            | 1    |   8.2 |  38.5 |  46.7 |    104.3 |    0 |
+| home-notes 降序登记                        | 1    |   9.0 |  34.9 |  43.9 |    104.7 |    0 |
+| home-notes 降序登记                        | 2    |   7.9 |  32.8 |  40.7 |    110.0 |    0 |
+| home-notes 降序登记                        | 3    |   8.1 |  33.7 |  41.8 |    112.0 |    0 |
+| documents-core 基线                        | 1    |  10.6 | 129.5 | 140.2 |    394.1 |    0 |
+| documents-core 降序登记（已回滚）          | 1    |   7.2 | 108.6 | 115.8 |    378.6 |    0 |
+| documents-core 降序登记（已回滚）          | 2    |  10.4 |  88.1 |  98.6 |    327.1 |    1 |
+| documents-core 降序登记（已回滚）          | 3    |  10.8 | 101.4 | 112.2 |    381.3 |    1 |
+
+同一轮耗时代入新旧顺序的模拟：Workspace 每轮少 15.5–16.5s；Supplemental 少
+8.7–13.2s；Home notes 少 3.7–6.1s。Test/串行合计从 0.295（Workspace）、0.358
+（Supplemental）、0.369（Home notes）降到 0.26–0.33。Bundle 与 Routing 的收益来自把
+不依赖同文件状态的测试移出最长文件，JUnit testcase 数不变（Bundle 24/24）或只多一个
+顶层包装（Routing 24→25，步骤相同）。CI 中 routing、bundle、home-notes 与
+supplemental 为串行执行，以上墙钟收益只适用于本地 `--parallel`。
+
+未采用：
+
+- Documents 降序登记 3 轮中 2 轮失败：`document-vertical-layout` 第 620 行在分页视图
+  点击段落后 `Home` + `Shift+ArrowRight` 得到空选区；`document-presentation-contracts`
+  第 928 行 `End` + 6 次 `Shift+ArrowLeft` 只选中 4 个字符。两处都是分页视图中点击后
+  立即键盘扩展选区，基线 1 轮未出现；产品或脚本归因未定，未重跑、未放宽，顺序已回滚。
+- `home-notes-placement` / `home-notes-resize` 的 14 处 300ms（等待 `--motion-base`
+  200ms 的位置过渡后测几何）改为“三帧几何不变且无运行中动画”：聚焦 3 轮与集合 3 轮
+  均通过，但两文件耗时与改前在噪声内（placement 15.2 → 14.9），无收益，已回滚。
+- `library-windows` 第 617 行 600ms（等待 `scroll-behavior: smooth` 滚动结束后测状态栏
+  与末行几何）改为滚动停止条件：聚焦 3 轮与集合 1 轮通过，收益低于 1s 不可分辨，已回滚。
+
+## 决定项实施
+
+### 分页视图选区失败的根因
+
+复现：`document-vertical-layout`、`documents-library`、`documents-drafts`、
+`document-presentation-contracts` 四个文件以 `DENO_JOBS=4` 同时运行，19 轮中 10 轮失败：
+9 轮为选区断言（presentation-contracts 第 928 行 8 轮、vertical-layout 第 620 行 1 轮），
+1 轮为 presentation-contracts 后段 `waitForFunction` 超时（未单独归因）。在测试内临时记录 keydown/keyup
+时的选区长度、`Selection` 写入调用栈与焦点事件后确认：点击使编辑器获得焦点，
+ProseMirror 的 focus handler 排入 20ms 定时器，若 DOM 选区与其上次观察不同就把
+自身状态选区写回 DOM；负载下该定时器延迟到 75ms 之后，此间原生 `Shift+ArrowLeft`
+已把选区扩到 5–6 字符，随后被写回 2 字符。期间无分页装饰重排（
+`data-decoration-signature`、`data-page-count` 不变），也无应用代码调用
+`focus()`。这是测试在编辑器焦点处理完成前发送按键，属于脚本就绪问题；人手输入
+不会在点击后 20ms 内开始。
+
+修复：`web/e2e/helpers/library.ts` 新增 `clickIntoEditor`，点击后在页面内等待一个同为
+20ms 的定时器（排在 ProseMirror 定时器之后，作为顺序屏障），替换 3 个文件 7 处“点击后立即
+按键”。同一四文件并发配置修复后 5/5 轮通过。
+
+| 集合 / 改动                                                | 轮次 | Build |  Test |  Wall | 串行合计 | 失败 |
+| ---------------------------------------------------------- | ---- | ----: | ----: | ----: | -------: | ---: |
+| documents-core 基线（见上表）                              | 1    |  10.6 | 129.5 | 140.2 |    394.1 |    0 |
+| documents-core 降序 + `clickIntoEditor` + 单主题           | 1    |   9.2 | 109.5 | 118.7 |    385.3 |    0 |
+| documents-core 降序 + `clickIntoEditor` + 单主题           | 2    |   8.4 | 106.6 | 115.0 |    400.4 |    0 |
+| documents-core 降序 + `clickIntoEditor` + 单主题           | 3    |   8.1 | 106.0 | 114.1 |    396.5 |    0 |
+| documents-core `DENO_JOBS=2`、默认超时（coverage CI 配置） | 1    |   9.3 | 170.6 | 180.0 |    325.0 |    0 |
+
+testcase 69 → 65，即 `documents.test.ts` 去掉 4 个 dark 视口步骤。CI 中 documents-core
+此前为 `--serial`，本机未测串行墙钟；`DENO_JOBS=2` 的本机墙钟 180s 是 CI 预期的参考，
+不是 CI 实测。
+
+### 几何断言改为单主题
+
+`layoutThemes()` 只在设置 `E2E_EVIDENCE_DIR` 时追加 dark。同机背靠背 A/B（两个文件，
+`DENO_JOBS=2`）：`apps-density` 58.3 → 48.1s，`workspace-shell` 42.3 → 34.2s。集合
+1 轮：workspace test 191.2s（机器变慢，串行合计 714.1s，与此前 3 轮在同一区间，收益被
+漂移掩盖）；supplemental 46.4s，其中 `inline-ai-answer` 41.9–45.6 → 32.6s、
+`ui-ownership` 19.8–23.7 → 15.2s；routing 48.9s，`auth` 20.9 → 16.1s。全部通过，testcase
+数只在 documents-core 减少（步骤级维度合并在单个步骤内的不改变计数）。

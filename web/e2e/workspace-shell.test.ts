@@ -1,3 +1,4 @@
+import { layoutThemes } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import { type Locator, type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
@@ -133,9 +134,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     });
     await request("/api/preferences", "PATCH", { theme: "system" });
     await t.step(
-        "viewport/theme/mode matrix keeps chrome bounded, scrolls only Body and restores focus",
+        "viewport/mode matrix keeps chrome bounded, scrolls only Body and restores focus",
         async () => {
-            for (const theme of ["light", "dark"] as const) {
+            for (const theme of layoutThemes()) {
                 await page.emulateMedia({ colorScheme: theme });
                 for (
                     const viewport of [
@@ -403,7 +404,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     await t.step(
         "library keeps bounded chrome, search alignment and create action hierarchy",
         async () => {
-            for (const theme of ["light", "dark"] as const) {
+            for (const theme of layoutThemes()) {
                 await page.emulateMedia({ colorScheme: theme });
                 for (const width of [375, 390, 768, 1024, 1440]) {
                     await page.setViewportSize({ width, height: 900 });

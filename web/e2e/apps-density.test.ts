@@ -1,4 +1,4 @@
-import { createEvidenceDirectory } from "./helpers/evidence.ts";
+import { createEvidenceDirectory, layoutThemes } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import {
     type Browser,
@@ -69,7 +69,6 @@ const TOUCH_VIEWPORTS: Viewport[] = [
     { width: 767, height: 1024 },
     { width: 768, height: 1024 },
 ];
-const THEMES: Theme[] = ["light", "dark"];
 const HOME = ".launcher-library .launcher-grid--home";
 const BOTTOM_CLEARANCE = 48;
 const HOME_MAX_ROWS = 4;
@@ -837,7 +836,7 @@ async function runTouchMatrix(
         await register(page, origin, "apps_density_touch");
         const fixtures = await seedFixtures(page);
         const cdp = await context.newCDPSession(page);
-        for (const theme of THEMES) {
+        for (const theme of layoutThemes()) {
             await setTheme(page, theme);
             for (const viewport of TOUCH_VIEWPORTS) {
                 await page.setViewportSize(viewport);
@@ -913,7 +912,7 @@ async function runDesktopMatrix(
         const page = await context.newPage();
         await register(page, origin, "apps_density_desktop");
         const fixtures = await seedFixtures(page);
-        for (const theme of THEMES) {
+        for (const theme of layoutThemes()) {
             await setTheme(page, theme);
             for (
                 const viewport of [

@@ -6,6 +6,7 @@ import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
 import {
+    clickIntoEditor,
     libraryPanel,
     openNoteRows,
     switchDocumentMode,
@@ -601,7 +602,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     const secondParagraph = win.locator(".ProseMirror p").filter({
         hasText: "SECONDPAGEGLYPH147",
     });
-    await secondParagraph.click();
+    await clickIntoEditor(secondParagraph);
     await page.keyboard.press("Home");
     await page.keyboard.press("Shift+ArrowRight");
     await stableLayout(page);
@@ -668,7 +669,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     const firstParagraph = win.locator(".ProseMirror p").filter({
         hasText: "FIRSTPAGEGLYPH147",
     });
-    await firstParagraph.click();
+    await clickIntoEditor(firstParagraph);
     await page.keyboard.press("End");
     await page.keyboard.insertText(" LAYOUTHISTORY147");
     await waitForDocument(
@@ -918,7 +919,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
                 (document.body.match(/<!-- pagebreak -->/g)?.length ?? 0) ===
                     expected,
         );
-    await firstParagraph.click();
+    await clickIntoEditor(firstParagraph);
     await page.keyboard.press("End");
     await page.keyboard.press("Delete");
     if (await livePageBreakCount() === 2) {
@@ -932,7 +933,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     await page.keyboard.press("Control+z");
     await waitForBreakCount(2);
 
-    await secondParagraph.click();
+    await clickIntoEditor(secondParagraph);
     await page.keyboard.press("Home");
     await page.keyboard.press("Backspace");
     if (await livePageBreakCount() === 2) {
@@ -945,7 +946,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     await waitForBreakCount(1);
     await page.keyboard.press("Control+z");
     await waitForBreakCount(2);
-    await firstParagraph.click();
+    await clickIntoEditor(firstParagraph);
     await page.keyboard.press("End");
     await page.keyboard.press("Enter");
     await page.keyboard.insertText("ENTERBLOCK147");

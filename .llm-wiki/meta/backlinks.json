@@ -1147,6 +1147,17 @@
   "sources/obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling": [],
   "sources/obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355": [],
   "sources/obs-2026-10-31-material-pr-356-main": [],
+  "sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file": [],
+  "sources/obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2": [],
+  "sources/obs-2026-11-03-documentmodeswitch": [],
+  "sources/obs-2026-11-03-documents-core-longest-first-order-adopted-after-race-fix": [],
+  "sources/obs-2026-11-03-documents-e2e-24-5s-deno-jobs-4": [],
+  "sources/obs-2026-11-03-documents-page-mode-keyboard-selection-fails-under-changed-c": [],
+  "sources/obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes": [],
+  "sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel": [],
+  "sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2": [],
+  "sources/obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup": [],
+  "sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],

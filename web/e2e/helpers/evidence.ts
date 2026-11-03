@@ -11,3 +11,12 @@ export async function createEvidenceDirectory(suite: string): Promise<string> {
     console.log(`E2E evidence: ${directory}`);
     return directory;
 }
+
+/**
+ * Themes for geometry and behaviour matrices. Layout does not depend on the
+ * theme, so assertions run in light; evidence mode (`E2E_EVIDENCE_DIR`) adds
+ * dark to capture screenshots for visual review.
+ */
+export function layoutThemes(): readonly ("light" | "dark")[] {
+    return Deno.env.get("E2E_EVIDENCE_DIR") ? ["light", "dark"] : ["light"];
+}

@@ -4,25 +4,25 @@
 检查，使用真实 HTTP 服务、内存数据库和 Chromium。没有公共 no-build
 执行入口；不复用未知来源的构建。affected 空差异或 `--list` 仅选择、不执行。
 
-| Task                      | 覆盖范围                                                                                                                    |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `test:workspace`          | 原 Workspace 完整集合，默认原生文件级并行；见 `suites.ts` 的 `workspace`                                                    |
-| `test:workspace:serial`   | 相同完整集合，明确不传 `--parallel`                                                                                         |
-| `test:workspace:parallel` | 相同完整集合，原生文件级 `--parallel`；用 `DENO_JOBS` 控制并发                                                              |
-| `test:workspace:apps`     | Workspace 中 `apps-*`、`launcher`、`home-launcher-*`                                                                        |
-| `test:workspace:layout`   | Workspace 中 `workspace*`、`home-launcher-*`                                                                                |
-| `test:routing`            | `navigation`、`auth`、`guest-ai-auth`、`share`：导航、认证规则/注册可用性、游客 AI 与分享的登录回跳                         |
-| `test:documents`          | 统一笔记入口：`documents-*` 与 `document-*` 文件；完整列表见清单                                                            |
-| `test:wallpaper`          | `wallpaper`                                                                                                                 |
-| `test:bundle`             | `bundle-loading`、`route-style-stability`、`omnibox-lab`、`pwa`（安装、离线外壳、版本更新）                                 |
-| `test:home-notes`         | `home-notes-*`：首页笔记的吸附、键盘、缩放、容量、排序、持久化、颜色、直接勾选与跨断点呈现                                  |
-| `test:e2e:full`           | 清单内所有集合与 supplemental 的去重并集；默认串行、首次失败停止，只 build 一次，每个文件只运行一次                         |
-| `test:e2e:affected`       | 按 Git 改动选择集合；未知/共享路径回退 full，空差异明确跳过；仅供局部诊断                                                   |
-| `check:e2e`               | 校验清单与磁盘覆盖、集合内重复、affected 前缀唯一/目标集合有效/所有集合可达，以及统一 Chromium 入口；不 build、不启动浏览器 |
+| Task                      | 覆盖范围                                                                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `test:workspace`          | 原 Workspace 完整集合，默认原生文件级并行；见 `suites.ts` 的 `workspace`                                                           |
+| `test:workspace:serial`   | 相同完整集合，明确不传 `--parallel`                                                                                                |
+| `test:workspace:parallel` | 相同完整集合，原生文件级 `--parallel`；用 `DENO_JOBS` 控制并发                                                                     |
+| `test:workspace:apps`     | Workspace 中 `apps-*`、`launcher`、`home-launcher-*`                                                                               |
+| `test:workspace:layout`   | Workspace 中 `workspace*`、`home-launcher-*`                                                                                       |
+| `test:routing`            | `navigation`、`auth`、`guest-ai-auth`、`share`：导航、认证页几何与切换链接、认证规则/注册可用性、游客 AI 与分享的登录回跳          |
+| `test:documents`          | 统一笔记入口：`documents-*` 与 `document-*` 文件；完整列表见清单                                                                   |
+| `test:wallpaper`          | `wallpaper`                                                                                                                        |
+| `test:bundle`             | `route-style-stability`、`route-style-admin-lab`、`pwa`（安装、离线外壳、版本更新）、`bundle-loading`、`omnibox-lab`、`accent-lab` |
+| `test:home-notes`         | `home-notes-*`：首页笔记的吸附、键盘、缩放、容量、排序、持久化、颜色、直接勾选与跨断点呈现                                         |
+| `test:e2e:full`           | 清单内所有集合与 supplemental 的去重并集；默认串行、首次失败停止，只 build 一次，每个文件只运行一次                                |
+| `test:e2e:affected`       | 按 Git 改动选择集合；未知/共享路径回退 full，空差异明确跳过；仅供局部诊断                                                          |
+| `check:e2e`               | 校验清单与磁盘覆盖、集合内重复、affected 前缀唯一/目标集合有效/所有集合可达，以及统一 Chromium 入口；不 build、不启动浏览器        |
 
 `suites.ts` 是唯一权威清单。目前 supplemental 包含 UI
-ownership/feedback、设置/搜索/笔记/Ask 快捷键及 Markdown editor/pagination
-独立场景。新增 E2E 必须登记；任何执行入口都先检查遗漏。类别可以重叠，full
+ownership/feedback、设置/搜索/笔记/Ask 快捷键、统一输入框与内联 AI 回答、Ask 失败重试及
+Markdown editor/pagination 独立场景。新增 E2E 必须登记；任何执行入口都先检查遗漏。类别可以重叠，full
 使用去重并集。模块入口与 affected 仅用于局部开发，不替代完整 Workspace 或交付前
 完整合并回归。不使用 `--filter`、`--changed` 或 `--related`
 裁剪合并门禁；局部选择不能证明生产 React 构建的完整浏览器覆盖。当前 revision 的 CI
@@ -34,14 +34,15 @@ Documents 的执行分区选择器为 `documents-core`、`pagination-short`、
 `documents-core` 排除四个分页入口；每个分页入口独占 fixture（HTTP 服务、
 内存数据库、资源目录、Browser 和 Context），串行观察 6 个场景：5 种视口
 （1440×900、1024×768、768×1024、390×844、1024×1552）× 默认动效，外加 1440×900
-的 reduced motion。版面不随亮 / 暗主题变化（主题只改颜色，对比度由
-`accent-contrast` 等测试负责），故不再按主题重复；`initial` 的 5 秒采样仅在
+的 reduced motion。版面不随亮 / 暗主题变化，故不再按主题重复（规则见
+[测试 · 主题维度](../../docs/testing.md#主题维度)）；`initial` 的 5 秒采样仅在
 `E2E_EVIDENCE_DIR` 证据模式下执行。四片合计 24 个场景，空闲观察窗与断言不变，不重复运行。
 `test:documents` 仍包含 core 与四片，full 仍执行全部文件的去重并集。
 
 Coverage CI 以 `documents-core` + 四个 `pagination-*` job 组成完整 Documents
-覆盖，再加 `routing`、`supplemental`，共七个独立并行 matrix job；各 job 内
-串行执行，不额外运行完整 documents。JUnit、`timings.json`、stdout 和资源报告
+覆盖，再加 `routing`、`supplemental`，共七个独立并行 matrix job；`documents-core`
+job 内以 `--parallel`、`DENO_JOBS=2` 执行，其余 job 内串行，不额外运行完整 documents。
+JUnit、`timings.json`、stdout 和资源报告
 按 selector 存入 `artifacts/e2e/<selector>/`，artifact 名也携带 selector。
 
 本地完整 Documents 验收使用单个 Deno E2E 进程、一次构建：
@@ -84,7 +85,8 @@ bundle、home-notes 和 supplemental；documents/editor 等映射包含共享入
 
 重复的领域导航复用 `web/e2e/helpers/`：`library.ts` 进入资料库/笔记，
 `settings.ts` 从用户菜单进入偏好设置，`ask.ts` 加载 Ask 工作区，
-`app-library.ts` 打开首页「更多应用」弹层。这些 helper 将操作和可观察的就绪
+`app-library.ts` 打开首页「更多应用」弹层，`library.ts` 的 `clickIntoEditor` 点击进入富文本
+并等待 ProseMirror 完成焦点处理。这些 helper 将操作和可观察的就绪
 条件放在一起，不使用固定 sleep，也不创建或共享浏览器。路由/深链、键盘、
 焦点、无障碍和懒加载机制的断言仍留在各测试内；不要为复用而隐藏被测交互。
 
@@ -100,10 +102,18 @@ deno task test:e2e:full --parallel --no-fail-fast --timeout 5000
 
 调度完全委托给 Deno `--parallel` / `DENO_JOBS`，不拆分单文件内有状态的测试或
 `t.step`，不共享 Browser、Context、数据库或 session。未设置 `DENO_JOBS`
-时采用 4；Workspace CI 显式固定 `DENO_JOBS=2`，coverage CI 使用独立 job 并行、job 内串行。
+时采用 4；Workspace CI 显式固定 `DENO_JOBS=2`；coverage CI 使用独立 job 并行，`documents-core` job 内
+以 `DENO_JOBS=2` 并行，其余 job 内串行。
 默认 Workspace 与 Workspace CI 均为并行，显式 `--serial` 会移除
 `--parallel`（而不是只把并发数设为 1）作为回退。full 与其他集合保持串行默认，显式 `--parallel` 可用于并发诊断；并发独有失败须单独隔离，不把单文件复查通过写成完整并发门禁通过。
 单独设置 `DENO_JOBS` 不会启用并行；以报告中的 `parallel` 与 `jobs` 为准。禁止用全局 retry 隐藏失败。
+
+Deno `--parallel` 按参数顺序启动文件，因此各集合在 `suites.ts` 中按最近一次实测的
+单文件 JUnit 耗时降序登记（长文件先启动，不在尾部拖长墙钟）；顺序只影响调度，
+不改变覆盖与隔离。新增或明显变慢的文件按实测耗时插入。
+单个文件的有状态旅程拖长关键路径时，可把不依赖该旅程状态、自带隔离 fixture 的
+测试移到同集合的新文件（如 `auth` 承接认证页几何、`route-style-admin-lab` 承接
+Design Lab 与管理页契约），步骤与断言不变。数据见 [BENCHMARKS](BENCHMARKS.md#2026-11-03-e2e-耗时审查)。
 
 full 默认启用 Deno `--fail-fast`：首次失败后停止调度后续文件，不自动重跑；已启动的 worker 按 Deno 行为收尾。显式 `--no-fail-fast` 可一次收集所有文件的失败，与 `--parallel` 独立组合；`--serial` / `--parallel` 与 `--fail-fast` / `--no-fail-fast` 各自互斥。未知、重复或冲突参数会在 build 前拒绝。失败轮只代表已执行范围，未运行的文件不计为通过；实际执行范围以 JUnit 为准。
 

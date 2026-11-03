@@ -1,11 +1,15 @@
-import { createEvidenceDirectory } from "./helpers/evidence.ts";
+import { createEvidenceDirectory, layoutThemes } from "./helpers/evidence.ts";
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { largeDocumentMarkdown } from "./fixtures/document.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { openNoteRows, switchDocumentMode } from "./helpers/library.ts";
+import {
+    clickIntoEditor,
+    openNoteRows,
+    switchDocumentMode,
+} from "./helpers/library.ts";
 
 Deno.test("Documents production responsive modes and large-document integrity (#102 M7)", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -125,7 +129,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             900,
         ]]
     ) {
-        for (const theme of ["light", "dark"] as const) {
+        for (const theme of layoutThemes()) {
             assert(
                 await t.step(
                     `${width}x${height} ${theme}: modes, overflow and library boundary`,
@@ -380,7 +384,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     "dismissing More must leave the in-progress draft unsaved",
                 );
 
-                await editor.locator("h1").first().click();
+                await clickIntoEditor(editor.locator("h1").first());
                 await page.keyboard.press("Home");
                 await page.keyboard.press("Shift+End");
                 const bold = toolbar.getByRole("button", {

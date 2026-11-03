@@ -1,4 +1,6 @@
+import { layoutThemes } from "./helpers/evidence.ts";
 import {
+    assert,
     assertEquals,
     assertNotEquals,
     assertStringIncludes,
@@ -277,4 +279,174 @@ Deno.test("login continues to show the existing invalid-credentials feedback", a
             "用户名或密码错误",
         );
     });
+});
+
+// Guest-only surfaces with their own fixture, so they run beside the stateful
+// navigation journey instead of extending it.
+Deno.test("auth surfaces keep responsive geometry and accent switch links in both themes", async (t) => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+    await t.step(
+        "auth surfaces retain responsive geometry",
+        async () => {
+            const guest = await browser.newContext();
+            try {
+                const target = await guest.newPage();
+                for (const colorScheme of layoutThemes()) {
+                    await target.emulateMedia({
+                        colorScheme,
+                        reducedMotion: "reduce",
+                    });
+                    for (const width of [390, 768, 1440]) {
+                        await target.setViewportSize({ width, height: 900 });
+                        for (const path of ["/login", "/register"]) {
+                            await visit(target, app.origin, path);
+                            await target.locator("#auth-username").waitFor();
+                            await target.waitForFunction(
+                                (theme) =>
+                                    document.documentElement.dataset.theme ===
+                                        theme,
+                                colorScheme,
+                            );
+                            const geometry = await target.locator(
+                                ".narrow-form",
+                            ).last().evaluate((surface) => {
+                                const rect = surface.getBoundingClientRect();
+                                const style = getComputedStyle(surface);
+                                const max = parseFloat(
+                                    style.getPropertyValue("--layout-auth-max"),
+                                );
+                                const controls = [
+                                    ...surface.querySelectorAll(
+                                        "input, button[type=submit]",
+                                    ),
+                                ].map((control) => {
+                                    const box = control.getBoundingClientRect();
+                                    return { left: box.left, right: box.right };
+                                });
+                                const axes = [
+                                    ...surface.querySelectorAll(
+                                        "h1, label, form, .auth-footer",
+                                    ),
+                                ].map((element) =>
+                                    element.getBoundingClientRect().left
+                                );
+                                return {
+                                    width: rect.width,
+                                    left: rect.left,
+                                    right: rect.right,
+                                    max,
+                                    controls,
+                                    axes,
+                                    overflow:
+                                        document.documentElement.scrollWidth >
+                                            innerWidth,
+                                };
+                            });
+                            const scenario = path + " " + width + "px " +
+                                colorScheme;
+                            assert(
+                                geometry.width <= geometry.max,
+                                scenario + " narrow surface",
+                            );
+                            assert(
+                                !geometry.overflow,
+                                scenario + " horizontal overflow",
+                            );
+                            assert(
+                                geometry.left > 0 && geometry.right < width,
+                                scenario + " page gutters",
+                            );
+                            for (const control of geometry.controls) {
+                                assert(
+                                    control.left >= geometry.left &&
+                                        control.right <= geometry.right,
+                                    scenario + " control containment",
+                                );
+                            }
+                            assert(
+                                geometry.axes.every((left) =>
+                                    Math.abs(left - geometry.axes[0]) < 1
+                                ),
+                                scenario + " content axis",
+                            );
+                        }
+                    }
+                }
+            } finally {
+                await guest.close();
+            }
+        },
+    );
+    await t.step(
+        "auth switch links use the accent color and underline on hover",
+        async () => {
+            const guest = await browser.newContext();
+            try {
+                const target = await guest.newPage();
+                for (const colorScheme of ["light", "dark"] as const) {
+                    await target.emulateMedia({ colorScheme });
+                    for (
+                        const [path, name] of [
+                            ["/login", "注册"],
+                            ["/register", "登录"],
+                        ] as const
+                    ) {
+                        await visit(target, app.origin, path);
+                        await target.waitForFunction(
+                            (theme) =>
+                                document.documentElement.dataset.theme ===
+                                    theme,
+                            colorScheme,
+                        );
+                        const link = target.locator(".auth-footer")
+                            .getByRole("link", { name, exact: true });
+                        await link.waitFor({ state: "visible" });
+                        const accent = await target.evaluate(() => {
+                            const probe = document.createElement("span");
+                            probe.style.color = "var(--accent)";
+                            document.body.append(probe);
+                            const color = getComputedStyle(probe).color;
+                            probe.remove();
+                            return color;
+                        });
+                        const appearance = () =>
+                            link.evaluate((element) => {
+                                const style = getComputedStyle(element);
+                                return {
+                                    color: style.color,
+                                    decoration: style.textDecorationLine,
+                                };
+                            });
+                        const scenario = path + " " + colorScheme;
+                        assertEquals(
+                            (await appearance()).color,
+                            accent,
+                            scenario + " link color",
+                        );
+                        assertEquals(
+                            (await appearance()).decoration,
+                            "none",
+                            scenario + " resting link",
+                        );
+                        await link.hover();
+                        assertEquals(
+                            (await appearance()).decoration,
+                            "underline",
+                            scenario + " hovered link",
+                        );
+                    }
+                }
+            } finally {
+                await guest.close();
+            }
+        },
+    );
 });
