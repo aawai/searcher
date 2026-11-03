@@ -1,3 +1,5 @@
+/* Task boxes and other `.markdown-editor` rules live in the shared markdown sheet. */
+@import "../../components/searcher/markdown.css";
 @import "./document-pagination.css";
 
 /* Document Editor Styling (Issue #102 M4) */
