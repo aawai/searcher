@@ -29,7 +29,7 @@ import {
 } from "./helpers/library.ts";
 
 // Documents workspace library contracts: scopes, search, row actions, create /
-// trash / restore, editor presentation (color + pin to home), save lifecycle,
+// trash / restore, editor presentation (pin to home), save lifecycle,
 // conflict resolution, version history, overflow and Home paper isolation.
 // Run with: NODE_ENV=test deno test -A web/e2e/documents-library.test.ts
 
@@ -695,7 +695,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
     );
 
     await t.step(
-        "Editor: color and pin-to-home persist and reach the Home papers",
+        "Editor: pin-to-home persists and reaches the Home papers",
         async () => {
             const title = "Pin Home Document";
             const doc = await createDocument({
@@ -708,26 +708,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 exact: true,
             });
 
-            // 1. Color radio group reflects the current color and changes it
-            await more.click();
-            await page.getByRole("menuitemradio", {
-                name: "纸白",
-                exact: true,
-            }).waitFor({ state: "visible" });
-            const colors = page.getByRole("menuitemradio");
-            assertEquals(await colors.count(), 5);
-            assertEquals(
-                await page.getByRole("menuitemradio", {
-                    name: "纸白",
-                    exact: true,
-                }).getAttribute("aria-checked"),
-                "true",
-            );
-            await page.getByRole("menuitemradio", { name: "琥珀", exact: true })
-                .click();
-            await waitForDocument(page, doc.id, (d) => d.color === "amber");
-
-            // 2. Pin to Home
+            // 1. Pin to Home
             await more.click();
             await page.getByRole("menuitem", {
                 name: "固定到首页",
@@ -735,27 +716,15 @@ Deno.test("production documents library workspace contracts", async (t) => {
             }).click();
             await waitForDocument(page, doc.id, (d) => d.isHomeFixed);
 
-            // 3. Library row carries the color; Home shows the pinned paper
+            // 2. Home shows the pinned paper
             await backToLibrary();
-            assertEquals(
-                await row(doc.id).locator(".documents-color-dot")
-                    .getAttribute("data-color"),
-                "amber",
-            );
             await closeLibrary(page);
             await page.locator("#search-query:not([inert])").waitFor();
             await homeNotesSettled();
             const paper = homePaper(title);
             await paper.waitFor({ state: "visible" });
-            assertEquals(
-                await paper.locator(".home-note-card").getAttribute(
-                    "data-color",
-                ),
-                null,
-                "home notes are neutral Material; color lives only in the library and editor",
-            );
 
-            // 4. Unpin from the editor menu
+            // 3. Unpin from the editor menu
             await openEditor(doc.id);
             await more.click();
             await page.getByRole("menuitem", {

@@ -118,7 +118,6 @@ Deno.test("Document history flush, restore and failure preserve real server cont
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 body: "另一设备更新",
-                color: "amber",
                 version,
             }),
         });
@@ -154,5 +153,4 @@ Deno.test("Document history flush, restore and failure preserve real server cont
     await source.waitFor();
     assertEquals(await source.inputValue(), "第一版手动保存");
     assertEquals(await title.inputValue(), "第一版标题");
-    assertEquals((await state()).color, "amber");
 });

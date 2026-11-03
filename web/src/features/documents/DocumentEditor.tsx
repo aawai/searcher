@@ -107,7 +107,6 @@ const DocumentOutline = lazy(() =>
 );
 import { DocumentHistoryDialog } from "./DocumentHistoryDialog.tsx";
 import { ConflictDialog } from "../../components/searcher/ConflictDialog.tsx";
-import { DocumentColorItems } from "../../components/searcher/DocumentColorMenu.tsx";
 
 // Exception (Bundler-only asset):
 // CSS module import is bundled by Vite for browsers but not supported in Deno test runner.
@@ -1451,18 +1450,6 @@ export function DocumentEditor({
                                         ? "取消固定到首页"
                                         : "固定到首页"}
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DocumentColorItems
-                                    color={snapshot.document?.color ?? "paper"}
-                                    onChange={(color) => {
-                                        void session.updatePresentation({
-                                            color,
-                                        })
-                                            .then((saved) => {
-                                                if (saved) onChanged?.();
-                                            });
-                                    }}
-                                />
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                     disabled={snapshot.loading}

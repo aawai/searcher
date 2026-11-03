@@ -53,7 +53,7 @@ import "./home-grid-lab.css";
 type SizeMode = "mixed" | DocumentNoteSize;
 type Composition = "hint" | "lower" | "scrim";
 type Theme = "light" | "dark";
-type Wallpaper = "mesh" | "light" | "dark" | "upload0" | "upload1";
+type Wallpaper = "none" | "light" | "dark" | "upload0" | "upload1";
 
 /** A lab note: the stored band cell plus the span it currently renders at. */
 interface Note extends HomeNoteCell {
@@ -86,7 +86,7 @@ const COMPOSITION_LABEL: Record<Composition, string> = {
 };
 
 const WALLPAPER_LABEL: Record<Wallpaper, string> = {
-    mesh: "无壁纸 mesh",
+    none: "无壁纸",
     light: "浅色照片（生成）",
     dark: "深色照片（生成）",
     upload0: "真实壁纸 · 白底人像",
@@ -128,12 +128,10 @@ const NOTE_BODIES = [
     "沿着河堤走到旧桥，再折回菜市场。带相机、零钱和一瓶水；回来时买一束小的花，插在书桌左边的杯子里。若下雨就改去图书馆，把上周没读完的那本借回来。走到桥中间停一会儿，看看水面有没有风。",
     "发布前核对：迁移回滚步骤、外观设置说明、窄屏截图。名单上还剩三个人要确认，确认完再合并。合并后看一遍首屏，把临时入口和调试开关都删掉，再跑一次构建和单元测试。",
     "护照、充电器、雨具、转换插头和一本书。出发前把行程写在第一页，留一页给路上遇到的地方。每天只安排一个必须去的地点，其余时间沿着街道走，看到喜欢的店就进去坐一会儿。",
-    "首页物体的高度需要收敛成三档：贴面图标、Material、浮层。笔记只保留色点，不再用整张纸色。标题一行，正文按整行裁切，最后一行才渐隐。容量不足时只显示一个入口，不要把剩下的硬塞进来。",
+    "首页物体的高度需要收敛成三档：贴面图标、Material、浮层。标题一行，正文按整行裁切，最后一行才渐隐。容量不足时只显示一个入口，不要把剩下的硬塞进来。",
     "如果半年后回看今天：希望你已经把首页整理成只需要一眼就能读懂的样子，并且还在写。别把时间都花在整理工具上，先写下真正想做的事，再决定要不要换一个更好的工具。",
     "先做 Y3 的尺寸闸门，再决定契约里的默认档位。容量不足时只显示一个入口，不要把剩下的硬塞进来。等真实壁纸和图标都看过一遍，再写迁移和默认落点。",
 ];
-
-const NOTE_COLORS = ["amber", "rose", "sage", "sky"] as const;
 
 const APP_NAMES = [
     "邮件",
@@ -352,7 +350,7 @@ export default function HomeGridLab() {
         const value = params.get("wallpaper");
         if (value === "light" || value === "dark") return value;
         // Upload slots start empty; their object URLs only exist after a pick.
-        return "mesh";
+        return "none";
     });
     const [uploads, setUploads] = useState<[string, string]>(["", ""]);
     const [icons, setIcons] = useState<string[]>([]);
@@ -1089,7 +1087,6 @@ function NoteCard(
     const placement = grid && cell ? cellToPixels(cell, grid) : null;
     const size = note.cols > HOME_NOTE_SPANS.s.cols ? "w" : "s";
     const title = NOTE_TITLES[Number(note.id)];
-    const color = NOTE_COLORS[Number(note.id) % NOTE_COLORS.length];
     const style: CSSProperties = {
         left: placement?.x,
         top: placement?.y,
@@ -1107,7 +1104,6 @@ function NoteCard(
             data-note={note.id}
             data-size={size}
             data-tier={note.size}
-            data-note-color={color}
             data-dragging={isDragging || preview}
             aria-label={flow || !cell
                 ? `${title}，${size === "w" ? "W" : "S"} 尺寸夹具`
@@ -1118,13 +1114,7 @@ function NoteCard(
             onKeyDown={(event) => onKeyDown(event, note)}
             onBlur={onBlur}
         >
-            <span className="home-grid-lab__note-title">
-                <span
-                    className={`note-quick-dot note-quick-dot--${color}`}
-                    aria-hidden="true"
-                />
-                <span>{title}</span>
-            </span>
+            <span className="home-grid-lab__note-title">{title}</span>
             <span
                 ref={body}
                 className="home-grid-lab__note-body"

@@ -253,27 +253,6 @@ const CSS_NAMED_COLORS: Record<string, true> = {
     yellowgreen: true,
 };
 
-const DOCUMENT_COLOR_LIGHT_SELECTOR =
-    ":where(.note-quick-dot, .documents-color-dot)";
-const DOCUMENT_COLOR_DARK_SELECTOR =
-    '[data-theme="dark"] :where(.note-quick-dot, .documents-color-dot)';
-
-const DOCUMENT_COLOR_LIGHT_PALETTE: Record<string, string> = {
-    "--note-dot-amber": "#724E00",
-    "--note-dot-rose": "#7F3B58",
-    "--note-dot-sage": "#2C6330",
-    "--note-dot-sky": "#085B87",
-    "--note-dot-paper": "#5A5A60",
-};
-
-const DOCUMENT_COLOR_DARK_PALETTE: Record<string, string> = {
-    "--note-dot-amber": "#E6C183",
-    "--note-dot-rose": "#F7AFCA",
-    "--note-dot-sage": "#A3D7A3",
-    "--note-dot-sky": "#91D0FC",
-    "--note-dot-paper": "#BEBEC4",
-};
-
 const ENGINE_BRAND_FILL_HEXES: Record<string, true> = {
     // Google
     "#4285F4": true,
@@ -606,9 +585,8 @@ export function hasRawColor(value: string, property?: string): boolean {
 
 /**
  * Narrow, exact domain color exceptions registered in Visual Language:
- * 1. Note color dots in `web/src/components/searcher/document-colors.css`
- * 2. Search engine brand SVG fills in `web/src/components/searcher/EngineSelector.tsx`
- * 3. High-contrast glass comparison fixture in `web/src/design-lab/design-lab.css`
+ * 1. Search engine brand SVG fills in `web/src/components/searcher/EngineSelector.tsx`
+ * 2. High-contrast glass comparison fixture in `web/src/design-lab/design-lab.css`
  */
 export function isDomainColorException(
     file: string,
@@ -625,36 +603,7 @@ export function isDomainColorException(
         ? selector.replaceAll(/\s+/g, " ").trim()
         : undefined;
 
-    // 1. Note color dots: exact owner, selector, custom property, and hex value.
-    if (normFile === "web/src/components/searcher/document-colors.css") {
-        if (
-            normSelector === undefined ||
-            normSelector === DOCUMENT_COLOR_LIGHT_SELECTOR
-        ) {
-            const expectedLight = DOCUMENT_COLOR_LIGHT_PALETTE[normProp];
-            if (
-                expectedLight &&
-                cleanValue.toUpperCase() === expectedLight.toUpperCase()
-            ) {
-                return true;
-            }
-        }
-        if (
-            normSelector === undefined ||
-            normSelector === DOCUMENT_COLOR_DARK_SELECTOR
-        ) {
-            const expectedDark = DOCUMENT_COLOR_DARK_PALETTE[normProp];
-            if (
-                expectedDark &&
-                cleanValue.toUpperCase() === expectedDark.toUpperCase()
-            ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // 2. Search engine brand marks: exact owner, `fill` attribute/property, and registered brand hex.
+    // 1. Search engine brand marks: exact owner, `fill` attribute/property, and registered brand hex.
     if (normFile === "web/src/components/searcher/EngineSelector.tsx") {
         if (normProp === "fill" && !normSelector) {
             return Boolean(ENGINE_BRAND_FILL_HEXES[cleanValue.toUpperCase()]);
@@ -662,7 +611,7 @@ export function isDomainColorException(
         return false;
     }
 
-    // 3. Design Lab glass material contrast fixture: exact file, selector, property, and value.
+    // 2. Design Lab glass material contrast fixture: exact file, selector, property, and value.
     if (normFile === "web/src/design-lab/design-lab.css") {
         if (
             normProp === "background" &&

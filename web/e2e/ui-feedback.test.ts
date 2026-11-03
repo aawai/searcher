@@ -487,7 +487,6 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                     userId: user.id,
                     title: "Trash Test Note",
                     currentBody: "Content to be permanently deleted",
-                    color: "amber",
                     deletedAt: now,
                     createdAt: now,
                     updatedAt: now,

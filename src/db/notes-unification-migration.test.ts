@@ -106,13 +106,12 @@ Deno.test("notes unification upgrade keeps documents and removes legacy notes da
             );
             assertEquals(
                 native.prepare(
-                    "SELECT id, title, current_body, color, is_home_fixed, home_sort_order FROM documents",
+                    "SELECT id, title, current_body, is_home_fixed, home_sort_order FROM documents",
                 ).all(),
                 [{
                     id: "doc-1",
                     title: "Legacy document",
                     current_body: "upgrade body",
-                    color: "paper",
                     is_home_fixed: 0,
                     home_sort_order: 0,
                 }],
@@ -138,7 +137,7 @@ Deno.test("notes unification upgrade keeps documents and removes legacy notes da
     }
 });
 
-Deno.test("upgraded documents keep FTS sync and accept nullable titles and document colors", async () => {
+Deno.test("upgraded documents keep FTS sync, accept nullable titles and drop document colors", async () => {
     const store = await createLegacyDatabase();
     try {
         await store.exclusiveNative((native) => {
@@ -164,6 +163,12 @@ Deno.test("upgraded documents keep FTS sync and accept nullable titles and docum
             );
             native.exec(
                 "INSERT INTO document_versions (id, document_id, user_id, version, title, body, reason, created_at) VALUES ('dv-null', 'doc-null', 'owner', 1, NULL, 'fresh', 'snapshot', 2)",
+            );
+            assertEquals(
+                native.prepare(
+                    "SELECT name FROM pragma_table_info('documents') WHERE name = 'color'",
+                ).all(),
+                [],
             );
             assertThrows(() =>
                 native.exec(

@@ -161,29 +161,7 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                 const box = await guestPage.locator(".search-frame")
                     .boundingBox();
                 assert(box);
-                const screenshot = await guestPage.screenshot();
-                const corner = await guestPage.evaluate(async (base64) => {
-                    const image = new Image();
-                    image.src = `data:image/png;base64,${base64}`;
-                    await image.decode();
-                    const canvas = document.createElement("canvas");
-                    canvas.width = image.width;
-                    canvas.height = image.height;
-                    const context = canvas.getContext("2d")!;
-                    context.drawImage(image, 0, 0);
-                    return [
-                        ...context.getImageData(20, image.height - 40, 1, 1)
-                            .data,
-                    ].slice(0, 3);
-                }, screenshot.toString("base64"));
-                assert(
-                    theme === "light"
-                        ? Math.max(...corner) < 240
-                        : Math.min(...corner) >= 40,
-                    `${theme} canvas corner: ${corner}`,
-                );
                 assertAlmostEquals(box.y + box.height / 2, metrics.center, 1);
-                console.log(theme, width, "canvas corner", corner);
                 if (evidence) {
                     await guestPage.screenshot({
                         path: `${evidence}/guest-${width}-${theme}.png`,

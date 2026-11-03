@@ -275,9 +275,6 @@ export const documents = sqliteTable("documents", {
     isFavorite: integer("is_favorite", { mode: "boolean" }).notNull().default(
         false,
     ),
-    color: text("color", {
-        enum: ["paper", "amber", "rose", "sage", "sky"],
-    }).notNull().default("paper"),
     isHomeFixed: integer("is_home_fixed", { mode: "boolean" }).notNull()
         .default(false),
     homeSortOrder: integer("home_sort_order").notNull().default(0),
@@ -296,10 +293,6 @@ export const documents = sqliteTable("documents", {
         t.userId,
         t.notebookId,
         t.sortOrder,
-    ),
-    check(
-        "documents_color_check",
-        sql`${t.color} in ('paper','amber','rose','sage','sky')`,
     ),
 ]);
 

@@ -1,5 +1,4 @@
 import type { DocumentDto, DocumentVersionDto } from "@shared/documents.ts";
-import type { DocumentColor } from "@shared/documents.ts";
 import type { DocumentEventSubscriptions } from "./document-event-subscriptions.ts";
 
 export interface DocumentLocalDraft {
@@ -34,9 +33,7 @@ export interface DocumentSession {
     edit(change: { title?: string; body?: string }): void;
     setComposing(composing: boolean): void;
     save(origin?: "autosave" | "manual"): Promise<boolean>;
-    updatePresentation(
-        change: { color?: DocumentColor; isHomeFixed?: boolean },
-    ): Promise<boolean>;
+    updatePresentation(change: { isHomeFixed?: boolean }): Promise<boolean>;
     applyDraft(): void;
     discardDraft(): Promise<void>;
     resolveConflict(choice: "server" | "local" | "new"): Promise<string | null>;

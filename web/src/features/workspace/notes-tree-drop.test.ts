@@ -25,7 +25,6 @@ const note = (id: string, notebookId: string | null): DocumentSummaryDto => ({
     displayTitle: id,
     snippet: "",
     isFavorite: false,
-    color: "paper",
     isHomeFixed: false,
     homeSortOrder: 0,
     createdAt: 0,

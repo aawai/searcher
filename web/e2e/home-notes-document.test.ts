@@ -18,7 +18,6 @@ Deno.test("home-notes-document: 180px cell, Material card and no editor chunk on
             title: "封面笔记",
             body:
                 "# 封面笔记\n\n![示例图片](asset://sample-image-asset-id)\n\n<!-- pagebreak -->\n\n第二页内容",
-            color: "sage",
             band: "left",
             col: 0,
             row: 0,

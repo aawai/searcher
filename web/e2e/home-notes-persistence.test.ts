@@ -72,3 +72,40 @@ Deno.test("the note size persists with one PATCH and code stays clipped without 
         await fixture.close();
     }
 });
+
+Deno.test("unpin removes the note from home", async () => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 1440, height: 900 },
+    });
+    const { page } = fixture;
+    try {
+        const note = await createHomeNote(page, {
+            title: "取消固定的笔记",
+            body: "移出首页后不再呈现。",
+        });
+        await reloadHome(page);
+        await waitForNoteCards(page, 1);
+        const card = homeNote(page, "取消固定的笔记");
+        await card.hover();
+        await card.getByRole("button", { name: "更多操作", exact: true })
+            .click();
+        const changed = page.waitForResponse((response) =>
+            response.request().method() === "PATCH" &&
+            response.url().endsWith(`/api/documents/${note.id}`)
+        );
+        await page.getByRole("menuitem", { name: "移出首页", exact: true })
+            .click();
+        assertEquals((await changed).ok(), true);
+        await page.waitForFunction(() =>
+            document.querySelectorAll(".home-note-card").length === 0
+        );
+        const pinned = await page.evaluate(async (id) => {
+            const document = (await (await fetch(`/api/documents/${id}`))
+                .json()).data;
+            return document.isHomeFixed as boolean;
+        }, note.id);
+        assertEquals(pinned, false);
+    } finally {
+        await fixture.close();
+    }
+});

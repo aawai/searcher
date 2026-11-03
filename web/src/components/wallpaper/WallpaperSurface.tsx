@@ -1,5 +1,4 @@
-import { type CSSProperties, type ReactNode, useState } from "react";
-import { daypartOf } from "./canvas-daypart.ts";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "../../lib/utils.ts";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
 import {
@@ -45,8 +44,6 @@ export function WallpaperSurface({
     const wallpaperCss = formatWallpaperCss(source);
     const substrate = wallpaperCss === "none" ? "canvas" : "image";
     const intent = presentation ?? DEFAULT_WALLPAPER_PRESENTATION;
-    // Chosen once per mount; the canvas never shifts tone while shown.
-    const [daypart] = useState(() => daypartOf(new Date()));
     const focal = substrate === "canvas"
         ? { focalX: 0.5, focalY: 0.5 }
         : intent.composition;
@@ -61,7 +58,6 @@ export function WallpaperSurface({
                 className,
             )}
             data-substrate={substrate}
-            data-daypart={substrate === "canvas" ? daypart : undefined}
             data-wallpaper-image={wallpaperCss.startsWith("url(")
                 ? "true"
                 : undefined}

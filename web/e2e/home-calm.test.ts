@@ -99,7 +99,7 @@ async function newPage(browser: Browser, time: string) {
     return { context, page };
 }
 
-Deno.test("home calm layer: date, optional time, 继续 and the time-of-day canvas #239", async (t) => {
+Deno.test("home calm layer: date, optional time, 继续 and the plain theme canvas #239", async (t) => {
     const app = await startProductionApp();
     const credentials = await app.seedAskFixtureUser({
         username: "calm_user",
@@ -359,42 +359,42 @@ Deno.test("home calm layer: date, optional time, 继续 and the time-of-day canv
         );
 
         await t.step(
-            "the default canvas tone follows the time of day at load",
+            "without a wallpaper the canvas is the plain theme background",
             async () => {
-                for (
-                    const [time, part, light] of [
-                        ["2026-10-24T08:00:00+08:00", "morning", "#EDC9B5"],
-                        ["2026-10-24T14:00:00+08:00", "day", "#C3D6EA"],
-                        ["2026-10-24T22:00:00+08:00", "night", "#D3C9E8"],
-                    ] as const
-                ) {
-                    const { context, page } = await newPage(browser, time);
-                    try {
-                        await openHome(page, app.origin);
-                        const surface = page.getByTestId(
-                            "home-wallpaper-surface",
+                const { context, page } = await newPage(
+                    browser,
+                    "2026-10-24T14:00:00+08:00",
+                );
+                try {
+                    await openHome(page, app.origin);
+                    const surface = page.getByTestId("home-wallpaper-surface");
+                    for (
+                        const [scheme, color] of [
+                            ["light", "rgb(244, 244, 245)"],
+                            ["dark", "rgb(17, 17, 19)"],
+                        ] as const
+                    ) {
+                        await page.emulateMedia({ colorScheme: scheme });
+                        await page.waitForFunction(
+                            (theme) =>
+                                document.documentElement.dataset.theme ===
+                                    theme,
+                            scheme,
                         );
                         assertEquals(
-                            await surface.getAttribute("data-daypart"),
-                            part,
+                            await surface.evaluate((element) => {
+                                const style = getComputedStyle(element);
+                                return [
+                                    style.backgroundColor,
+                                    style.backgroundImage,
+                                ];
+                            }),
+                            [color, "none"],
+                            scheme,
                         );
-                        assertEquals(
-                            await surface.evaluate((element) =>
-                                getComputedStyle(element).getPropertyValue(
-                                    "--canvas-mesh-secondary",
-                                ).trim().toUpperCase()
-                            ),
-                            light,
-                        );
-                        // Crossing into the next part of the day never repaints the canvas.
-                        await page.clock.runFor(4 * 60 * 60 * 1000);
-                        assertEquals(
-                            await surface.getAttribute("data-daypart"),
-                            part,
-                        );
-                    } finally {
-                        await context.close();
                     }
+                } finally {
+                    await context.close();
                 }
             },
         );

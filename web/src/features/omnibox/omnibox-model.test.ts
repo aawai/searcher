@@ -29,7 +29,6 @@ const note = (id: string, displayTitle: string) => ({
     snippet: "",
     notebookId: null,
     isFavorite: false,
-    color: "paper" as const,
     isHomeFixed: false,
     homeSortOrder: 0,
     createdAt: 1,

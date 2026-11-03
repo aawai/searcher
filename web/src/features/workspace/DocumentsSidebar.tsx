@@ -138,11 +138,6 @@ function DocumentSummaryRow(
                         aria-label={`打开笔记：${displayTitle}`}
                         aria-current={selected ? "page" : undefined}
                     >
-                        <span
-                            className="documents-color-dot"
-                            data-color={item.color}
-                            aria-hidden="true"
-                        />
                         <span className="documents-summary-title-text">
                             {displayTitle}
                         </span>
@@ -1285,11 +1280,6 @@ function TreeNoteRow(
             menu={<DocumentActionMenuItems actions={actions} menu="context" />}
             after={actions.dialogs}
         >
-            <span
-                className="documents-color-dot"
-                data-color={item.color}
-                aria-hidden="true"
-            />
             <span className="documents-tree-label">{item.displayTitle}</span>
             <NoteMarkers item={item} />
         </NotesTreeRow>

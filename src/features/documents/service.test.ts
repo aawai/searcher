@@ -14,10 +14,7 @@ import {
     DOCUMENT_TITLE_MAX_LENGTH,
     HOME_NOTE_GRID_MAX_COL,
 } from "../../shared/documents.ts";
-import type {
-    DocumentColor,
-    DocumentUpdatedEvent,
-} from "../../shared/documents.ts";
+import type { DocumentUpdatedEvent } from "../../shared/documents.ts";
 import { DocumentLayoutsService } from "./layouts.ts";
 import {
     DocumentConflictError,
@@ -1317,36 +1314,27 @@ Deno.test("Documents preserve nullable canonical titles across summaries, snapsh
     }
 });
 
-Deno.test("Documents colors, favorites and home ordering persist with scope-bound keyset cursors", async () => {
+Deno.test("Documents favorites and home ordering persist with scope-bound keyset cursors", async () => {
     const { service, store, advanceTime } = await setupTestContext();
     try {
-        const colors: DocumentColor[] = [
-            "paper",
-            "amber",
-            "rose",
-            "sage",
-            "sky",
-        ];
         const created = [];
-        for (const [index, color] of colors.entries()) {
+        for (let index = 0; index < 5; index++) {
             advanceTime(1);
             created.push(
                 await service.create("user-1", {
-                    color,
                     isHomeFixed: true,
                     homeSortOrder: index === 0 ? 5 : 1,
                     isFavorite: index === 0,
-                    body: "Searchable color",
+                    body: "Searchable note",
                 }),
             );
         }
         const ordinary = await service.create("user-1", {});
         assertEquals([
-            ordinary.color,
             ordinary.isHomeFixed,
             ordinary.homeSortOrder,
             ordinary.isFavorite,
-        ], ["paper", false, 0, false]);
+        ], [false, 0, false]);
         await service.create("user-2", {
             isHomeFixed: true,
             homeSortOrder: -1,
@@ -1371,12 +1359,6 @@ Deno.test("Documents colors, favorites and home ordering persist with scope-boun
             actual.map((item) => item.id),
             expected.map((item) => item.id),
         );
-        for (const doc of created) {
-            assertEquals(
-                actual.find((item) => item.id === doc.id)?.color,
-                doc.color,
-            );
-        }
         const first = await service.list("user-1", {
             scope: { type: "home" },
             limit: 1,
@@ -1398,27 +1380,25 @@ Deno.test("Documents colors, favorites and home ordering persist with scope-boun
         );
         const updated = await service.update("user-1", created[0].id, {
             version: 1,
-            color: "sky",
             isHomeFixed: false,
             homeSortOrder: -5,
             isFavorite: false,
         });
         assertEquals([
-            updated.color,
             updated.isHomeFixed,
             updated.homeSortOrder,
             updated.isFavorite,
-        ], ["sky", false, -5, false]);
+        ], [false, -5, false]);
         await assertRejects(() =>
             service.update("user-1", updated.id, {
                 version: 1,
-                color: "amber",
+                isHomeFixed: true,
             }), DocumentConflictError);
         assertEquals(
             (await service.search("user-1", "Searchable")).items.find((item) =>
                 item.id === updated.id
-            )?.color,
-            "sky",
+            )?.homeSortOrder,
+            -5,
         );
         assertEquals((await service.versions("user-1", updated.id)).length, 1);
     } finally {

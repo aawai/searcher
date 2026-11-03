@@ -564,7 +564,6 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata and accou
             await env.request("/api/documents", "POST", {
                 title: null,
                 body: "A single unified note",
-                color: "sage",
                 isHomeFixed: true,
                 homeSortOrder: 12,
                 isFavorite: true,
@@ -572,7 +571,6 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata and accou
         );
         assertEquals(document.title, null);
         assertEquals(document.displayTitle, "A single unified note");
-        assertEquals(document.color, "sage");
         assertEquals(document.isHomeFixed, true);
         assertEquals(document.homeSortOrder, 12);
         assertEquals(document.isFavorite, true);
@@ -584,7 +582,6 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata and accou
             await env.request(`/api/documents/${document.id}`, "PATCH", {
                 version: document.version,
                 body: "Updated across views",
-                color: "rose",
             }),
         );
         // Creation may also be observable; consume until the committed update.
@@ -594,11 +591,6 @@ Deno.test("Documents HTTP: home papers share nullable titles, metadata and accou
         }
         assert(event.startsWith("event: document.updated\n"));
         assert(event.includes(`"documentId":"${document.id}"`));
-        assertEquals(
-            (await env.request("/api/documents", "POST", { color: "invalid" }))
-                .status,
-            400,
-        );
         const ownOther = await data<DocumentDto>(
             await env.request("/api/documents", "POST", {
                 body: "Other account",

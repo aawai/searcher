@@ -27,15 +27,14 @@ const appFixtures = [
 ] as const;
 
 const noteFixtures = [
-    { title: "购物清单", body: "- 牛奶\n- 面包\n- 鸡蛋", color: "amber" },
+    { title: "购物清单", body: "- 牛奶\n- 面包\n- 鸡蛋" },
     {
         title: "会议",
         body: "周四 15:00 设计评审，带上 **截图矩阵**。",
-        color: "sky",
     },
-    { title: "灵感", body: "动效只回应操作；不做循环动画。", color: "sage" },
-    { title: "待办", body: "检查深色模式下边界与文字对比度。", color: "rose" },
-    { title: null, body: "少一点干扰，多一点专注。", color: "paper" },
+    { title: "灵感", body: "动效只回应操作；不做循环动画。" },
+    { title: "待办", body: "检查深色模式下边界与文字对比度。" },
+    { title: null, body: "少一点干扰，多一点专注。" },
 ] as const;
 
 /** Seeds only the three named visual-fixture accounts; never grants admin access. */
@@ -129,7 +128,6 @@ export async function seedMockUsers(dbPath?: string, passwordInput?: string) {
                 await documentService.create(userId, {
                     title: note.title,
                     body: note.body,
-                    color: note.color,
                     isFavorite: index < 2,
                     isHomeFixed: index < 3,
                     homeSortOrder: index,

@@ -43,7 +43,6 @@ const NumericQuery = v.pipe(
 const Title = v.nullable(
     v.pipe(v.string(), v.maxLength(DOCUMENT_TITLE_MAX_LENGTH)),
 );
-const Color = v.picklist(["paper", "amber", "rose", "sage", "sky"]);
 const Integer = v.pipe(v.number(), v.integer(), v.safeInteger());
 const NoteSize = v.picklist(["s", "w"]);
 const Band = v.nullable(v.picklist(HOME_NOTE_BANDS));
@@ -230,7 +229,6 @@ export function registerDocumentsRoutes(
             title: json(v.optional(Title)),
             body: json(v.optional(Body)),
             notebookId: json(v.optional(v.nullable(Id))),
-            color: json(v.optional(Color)),
             isHomeFixed: json(v.optional(v.boolean())),
             homeSortOrder: json(v.optional(Integer)),
             isFavorite: json(v.optional(v.boolean())),
@@ -314,7 +312,6 @@ export function registerDocumentsRoutes(
             title: json(v.optional(Title)),
             body: json(v.optional(Body)),
             isFavorite: json(v.optional(v.boolean())),
-            color: json(v.optional(Color)),
             isHomeFixed: json(v.optional(v.boolean())),
             homeSortOrder: json(v.optional(Integer)),
             origin: json(

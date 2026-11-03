@@ -15,7 +15,7 @@
 | `test:documents`          | 统一笔记入口：`documents-*` 与 `document-*` 文件；完整列表见清单                                                                   |
 | `test:wallpaper`          | `wallpaper`                                                                                                                        |
 | `test:bundle`             | `route-style-stability`、`route-style-admin-lab`、`pwa`（安装、离线外壳、版本更新）、`bundle-loading`、`omnibox-lab`、`accent-lab` |
-| `test:home-notes`         | `home-notes-*`：首页笔记的吸附、键盘、缩放、容量、排序、持久化、颜色、直接勾选与跨断点呈现                                         |
+| `test:home-notes`         | `home-notes-*`：首页笔记的吸附、键盘、缩放、容量、排序、持久化、直接勾选与跨断点呈现                                               |
 | `test:e2e:full`           | 清单内所有集合与 supplemental 的去重并集；默认串行、首次失败停止，只 build 一次，每个文件只运行一次                                |
 | `test:e2e:affected`       | 按 Git 改动选择集合；未知/共享路径回退 full，空差异明确跳过；仅供局部诊断                                                          |
 | `check:e2e`               | 校验清单与磁盘覆盖、集合内重复、affected 前缀唯一/目标集合有效/所有集合可达，以及统一 Chromium 入口；不 build、不启动浏览器        |

@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import {
     DOCUMENT_TITLE_MAX_LENGTH,
-    type DocumentColor,
     type DocumentDto,
     type DocumentNotebookDto,
     type DocumentSummaryDto,
@@ -52,7 +51,6 @@ import {
     ContextMenuItem,
     ContextMenuSeparator,
 } from "../../components/ui/context-menu.tsx";
-import { DocumentColorItems } from "../../components/searcher/DocumentColorMenu.tsx";
 import { StatusBanner } from "../../components/searcher/semantic.tsx";
 import { useAppState } from "../../app/state.tsx";
 import { notifyTrashChange } from "../../app/trash-events.ts";
@@ -209,24 +207,6 @@ export function useDocumentActions({
                     version: doc.version,
                     isFavorite: !item.isFavorite,
                 }),
-            );
-            onChanged();
-        } catch (err) {
-            setFavoriteError(err instanceof Error ? err.message : String(err));
-        } finally {
-            setIsFavoriting(false);
-        }
-    }
-
-    async function handleColor(color: DocumentColor) {
-        if (isFavoriting || color === item.color) return;
-        setIsFavoriting(true);
-        setFavoriteError(null);
-        try {
-            const doc = await api<DocumentDto>(`/api/documents/${item.id}`);
-            await api<DocumentDto>(
-                `/api/documents/${item.id}`,
-                json("PATCH", { version: doc.version, color }),
             );
             onChanged();
         } catch (err) {
@@ -492,7 +472,6 @@ export function useDocumentActions({
         trash: () => setTrashOpen(true),
         toggleFavorite: () => void handleToggleFavorite(),
         toggleHomeFixed: () => void handleToggleHomeFixed(),
-        setColor: (color: DocumentColor) => void handleColor(color),
     };
 }
 
@@ -551,12 +530,6 @@ export function DocumentActionMenuItems(
                     </Item>
                 </>
             )}
-            <Separator />
-            <DocumentColorItems
-                menu={menu}
-                color={item.color}
-                onChange={actions.setColor}
-            />
             <Separator />
             <Item variant="destructive" onClick={actions.trash}>
                 <Trash2 className="icon-md" />

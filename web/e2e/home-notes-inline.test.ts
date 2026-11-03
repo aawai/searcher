@@ -75,7 +75,6 @@ Deno.test("390px renders every pinned note as one vertical stack of Material car
                 body: index === 0
                     ? "- [ ] 待办一\n- [x] 待办二\n\n" + LONG_BODY
                     : LONG_BODY,
-                color: index === 0 ? "amber" : "paper",
                 homeSortOrder: index,
             });
         }

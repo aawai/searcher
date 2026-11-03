@@ -13,7 +13,6 @@ import {
     DOCUMENT_SNAPSHOT_INTERVAL_MS,
     DOCUMENT_SNAPSHOT_RETENTION,
     DOCUMENT_TITLE_MAX_LENGTH,
-    type DocumentColor,
     type DocumentDto,
     type DocumentListInput,
     type DocumentPageDto,
@@ -185,7 +184,6 @@ export class DocumentsService {
         notebookId: string | null;
         notebookName?: string | null;
         isFavorite: boolean;
-        color: DocumentColor;
         isHomeFixed: boolean;
         homeSortOrder: number;
         createdAt: number;
@@ -200,7 +198,6 @@ export class DocumentsService {
             notebookId: row.notebookId,
             ...(row.notebookName ? { notebookName: row.notebookName } : {}),
             isFavorite: Boolean(row.isFavorite),
-            color: row.color,
             isHomeFixed: Boolean(row.isHomeFixed),
             homeSortOrder: row.homeSortOrder,
             createdAt: row.createdAt,
@@ -222,7 +219,6 @@ export class DocumentsService {
             notebookId: doc.notebookId,
             ...(notebookName ? { notebookName } : {}),
             isFavorite: Boolean(doc.isFavorite),
-            color: doc.color,
             isHomeFixed: Boolean(doc.isHomeFixed),
             homeSortOrder: doc.homeSortOrder,
             createdAt: doc.createdAt,
@@ -467,7 +463,6 @@ export class DocumentsService {
                     currentBody: initialBody,
                     currentVersion: 1,
                     isFavorite: input.isFavorite ?? false,
-                    color: input.color ?? "paper",
                     isHomeFixed: input.isHomeFixed ?? false,
                     homeSortOrder: input.homeSortOrder ?? 0,
                     sortOrder,
@@ -498,7 +493,6 @@ export class DocumentsService {
                         currentBody: initialBody,
                         currentVersion: 1,
                         isFavorite: input.isFavorite ?? false,
-                        color: input.color ?? "paper",
                         isHomeFixed: input.isHomeFixed ?? false,
                         homeSortOrder: input.homeSortOrder ?? 0,
                         sortOrder,
@@ -586,7 +580,6 @@ export class DocumentsService {
                         title: updatedTitle,
                         currentBody: updatedBody,
                         isFavorite: updatedIsFavorite,
-                        color: input.color ?? current.color,
                         isHomeFixed: input.isHomeFixed ?? current.isHomeFixed,
                         homeSortOrder: input.homeSortOrder ??
                             current.homeSortOrder,
@@ -669,7 +662,6 @@ export class DocumentsService {
                         title: updatedTitle,
                         currentBody: updatedBody,
                         isFavorite: updatedIsFavorite,
-                        color: input.color ?? current.color,
                         isHomeFixed: input.isHomeFixed ?? current.isHomeFixed,
                         homeSortOrder: input.homeSortOrder ??
                             current.homeSortOrder,
@@ -1223,7 +1215,6 @@ export class DocumentsService {
                     notebookId: documents.notebookId,
                     notebookName: documentNotebooks.name,
                     isFavorite: documents.isFavorite,
-                    color: documents.color,
                     isHomeFixed: documents.isHomeFixed,
                     homeSortOrder: documents.homeSortOrder,
                     sortOrder: documents.sortOrder,
@@ -1347,7 +1338,6 @@ export class DocumentsService {
                     notebookId: documents.notebookId,
                     notebookName: documentNotebooks.name,
                     isFavorite: documents.isFavorite,
-                    color: documents.color,
                     isHomeFixed: documents.isHomeFixed,
                     homeSortOrder: documents.homeSortOrder,
                     createdAt: documents.createdAt,
@@ -1464,7 +1454,6 @@ export class DocumentsService {
                     d.title,
                     d.notebook_id,
                     d.is_favorite,
-                    d.color,
                     d.is_home_fixed,
                     d.home_sort_order,
                     d.created_at,
@@ -1485,7 +1474,6 @@ export class DocumentsService {
                 string | null,
                 string | null,
                 number,
-                DocumentColor,
                 number,
                 number,
                 number,
@@ -1501,14 +1489,13 @@ export class DocumentsService {
                 title: r[1] === null ? null : String(r[1]),
                 notebookId: r[2] ? String(r[2]) : null,
                 isFavorite: Boolean(r[3]),
-                color: r[4],
-                isHomeFixed: Boolean(r[5]),
-                homeSortOrder: Number(r[6]),
-                createdAt: Number(r[7]),
-                updatedAt: Number(r[8]),
-                bodyPreview: String(r[9] ?? ""),
-                notebookName: r[10] ? String(r[10]) : null,
-                rank: Number(r[11]),
+                isHomeFixed: Boolean(r[4]),
+                homeSortOrder: Number(r[5]),
+                createdAt: Number(r[6]),
+                updatedAt: Number(r[7]),
+                bodyPreview: String(r[8] ?? ""),
+                notebookName: r[9] ? String(r[9]) : null,
+                rank: Number(r[10]),
             }));
 
             const hasNextPage = rows.length > limit;

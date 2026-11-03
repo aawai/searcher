@@ -348,11 +348,6 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
             "下移",
             "移至回收站",
         ]);
-        assertEquals(
-            await menu.getByRole("menuitemradio").count(),
-            5,
-            "colors",
-        );
         await closeMenu();
 
         // Menu actions reuse the notebook dialogs: rename through the node menu.

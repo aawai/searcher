@@ -7,8 +7,6 @@ export const DOCUMENT_PAGE_MAX_LIMIT = 100;
 export const DOCUMENT_SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000;
 export const DOCUMENT_SNAPSHOT_RETENTION = 100;
 
-export type DocumentColor = "paper" | "amber" | "rose" | "sage" | "sky";
-
 /** Home note tiers: S is one cell, W spans two cells in one band. */
 export type DocumentNoteSize = "s" | "w";
 export const HOME_NOTE_SPANS: Record<
@@ -94,7 +92,6 @@ export interface DocumentSummaryDto {
     notebookId: string | null;
     notebookName?: string;
     isFavorite: boolean;
-    color: DocumentColor;
     isHomeFixed: boolean;
     homeSortOrder: number;
     createdAt: number;
@@ -123,7 +120,6 @@ export interface CreateDocumentInput {
     title?: string | null;
     body?: string;
     notebookId?: string | null;
-    color?: DocumentColor;
     isHomeFixed?: boolean;
     homeSortOrder?: number;
     isFavorite?: boolean;
@@ -133,7 +129,6 @@ export interface UpdateDocumentInput {
     title?: string | null;
     body?: string;
     isFavorite?: boolean;
-    color?: DocumentColor;
     isHomeFixed?: boolean;
     homeSortOrder?: number;
     origin?: "autosave" | "manual" | "conflict_resolution" | "restore";
