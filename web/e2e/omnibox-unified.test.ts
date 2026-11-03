@@ -699,7 +699,7 @@ Deno.test("focusing an empty search never opens suggestions", async () => {
         await mockWeb(context);
         const page = await context.newPage();
         await loginAndVisit(page, app.origin, "/", credentials);
-        await page.locator(".launcher-grid--home").waitFor();
+        await page.locator("#search-query").waitFor();
         const search = page.locator("#search-query");
         const listbox = page.getByRole("listbox", { name: "搜索建议" });
 

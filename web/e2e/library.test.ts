@@ -89,6 +89,17 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
             assert(created.ok(), await created.text());
             const title = `工作区入口 ${width}`;
             const search = page.locator("#search-query");
+            const expandMastheadIfNarrow = async () => {
+                if (width >= 1440) return;
+                const pill = page.locator(".home-masthead__pill");
+                await pill.waitFor({ state: "visible" });
+                await pill.click();
+                await page.waitForFunction(() =>
+                    document.querySelector(".home-masthead")?.getAttribute(
+                        "data-collapsed",
+                    ) === "false"
+                );
+            };
             const entries: {
                 name: string;
                 view: "notes" | "apps";
@@ -110,11 +121,13 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                 {
                     name: "home note",
                     view: "notes",
-                    open: () =>
-                        page.getByRole("button", {
+                    open: async () => {
+                        await expandMastheadIfNarrow();
+                        await page.getByRole("button", {
                             name: title,
                             exact: true,
-                        }).click(),
+                        }).click();
+                    },
                     focus: () =>
                         page.getByRole("button", {
                             name: title,
@@ -124,12 +137,14 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                 {
                     name: "continue",
                     view: "notes",
-                    open: () =>
-                        page.getByRole("navigation", { name: "继续" })
+                    open: async () => {
+                        await expandMastheadIfNarrow();
+                        await page.getByRole("navigation", { name: "继续" })
                             .getByRole("button", {
                                 name: `继续编辑 ${title}`,
                                 exact: true,
-                            }).click(),
+                            }).click();
+                    },
                     focus: () =>
                         page.getByRole("navigation", { name: "继续" })
                             .getByRole("button", {
@@ -202,7 +217,12 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                     );
                     await assertInteractiveHome(page);
                     await closeLibrary(page);
-                    await assertFocus(entry.focus());
+                    // Typing in the search box closed the narrow masthead,
+                    // hiding the opener: focus falls back to the search box.
+                    const openerHidden = width < 1440 &&
+                        (entry.name === "home note" ||
+                            entry.name === "continue");
+                    await assertFocus(openerHidden ? search : entry.focus());
                 });
             }
 

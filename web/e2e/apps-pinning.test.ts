@@ -25,6 +25,12 @@ async function saveApp(
     origin: string,
     data: Record<string, unknown>,
 ): Promise<{ id: string }> {
+    if (data.isHomeFixed) {
+        await context.request.patch(origin + "/api/preferences", {
+            headers: { Origin: origin },
+            data: { showHomeApps: true },
+        });
+    }
     const response = await context.request.post(origin + "/api/webapps", {
         headers: { Origin: origin },
         data,

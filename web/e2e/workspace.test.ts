@@ -68,6 +68,13 @@ Deno.test("production workspace contracts", async (t) => {
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
     await page.locator("main.home").waitFor();
+    await page.evaluate(async () => {
+        await fetch("/api/preferences", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ showHomeApps: true }),
+        });
+    });
 
     await page.setViewportSize({ width: 1280, height: 800 });
     await visit("/");
@@ -221,7 +228,8 @@ Deno.test("production workspace contracts", async (t) => {
             // then (no inner layer open) minimizes: hidden, content kept, and
             // focus returns to the Dock trigger.
             await page.keyboard.press("Escape");
-            await frame.locator(".documents-layout[data-drawer='closed']").waitFor();
+            await frame.locator(".documents-layout[data-drawer='closed']")
+                .waitFor();
             assertEquals(await frame.isVisible(), true);
             await page.keyboard.press("Escape");
             await frame.waitFor({ state: "hidden" });

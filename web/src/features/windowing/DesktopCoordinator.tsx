@@ -197,8 +197,14 @@ function WindowSession(
         if (focus && location.pathname === routes.home && !location.search) {
             focusDesktop.current = null;
             requestAnimationFrame(() => {
-                const target = focus === "opener"
+                const opener = focus === "opener"
                     ? desktopFocus.current?.()
+                    : null;
+                // An opener the home has since hidden (e.g. inside the closed
+                // narrow masthead) cannot take focus: fall back to search.
+                const target = opener && opener.isConnected &&
+                        !opener.closest("[inert]") && opener.checkVisibility()
+                    ? opener
                     : null;
                 (target ?? document.getElementById("search-query"))?.focus();
             });

@@ -26,6 +26,11 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
         await homeModels;
+        await page.request.patch(app.origin + "/api/preferences", {
+            headers: { Origin: app.origin },
+            data: { showHomeApps: true },
+        });
+        await page.reload();
         await page.route("**/api/ai/models", (route) => {
             return route.fulfill({
                 json: {

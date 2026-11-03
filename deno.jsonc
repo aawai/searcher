@@ -25,12 +25,13 @@
         "test:documents": "deno run -A scripts/e2e/run.ts documents",
         "test:wallpaper": "deno run -A scripts/e2e/run.ts wallpaper",
         "test:bundle": "deno run -A scripts/e2e/run.ts bundle",
-        "test:home-notes": "deno run -A scripts/e2e/run.ts home-notes",
+        "test:home-masthead": "deno run -A scripts/e2e/run.ts home-masthead",
         "check:ui": "deno run -A scripts/check-ui.ts",
         "check:agents": "deno run -A scripts/check-agents.ts",
         "check:bundle": "deno task build && deno run --allow-read --allow-env scripts/check-bundle.ts"
     },
     "imports": {
+        "@fontsource/noto-serif-sc": "npm:@fontsource/noto-serif-sc@^5.3.1",
         "@internal/": "./src/internal/",
         "icojs": "npm:icojs@0.20.1",
         "sharp": "npm:sharp@0.34.5",

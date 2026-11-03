@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "@std/assert";
+import { assert } from "@std/assert";
 import type {
     Browser,
     BrowserContext,
@@ -8,7 +8,6 @@ import type {
     Response,
 } from "playwright";
 import { chromium } from "./browser.ts";
-import type { HomeNoteBand } from "../../../src/shared/documents.ts";
 import {
     type ProductionAppInstance,
     startProductionApp,
@@ -27,10 +26,6 @@ export interface CreateNoteInput {
     body: string;
     isHomeFixed?: boolean;
     homeSortOrder?: number;
-    size?: "s" | "w";
-    band?: HomeNoteBand | null;
-    col?: number | null;
-    row?: number | null;
 }
 
 /** Registers a fresh account and leaves the page on the home surface. */
@@ -93,53 +88,13 @@ export async function createHomeNote(
             },
         },
     );
-    const hasPosition = input.band !== undefined || input.col !== undefined ||
-        input.row !== undefined;
-    if (
-        hasPosition &&
-        (input.band === undefined || input.band === null ||
-            input.col === undefined || input.col === null ||
-            input.row === undefined || input.row === null)
-    ) {
-        throw new Error("band, col and row are one position: pass all or none");
-    }
-    if (input.size || hasPosition) {
-        await patchHomeNoteLayout(page, envelope.data.id, {
-            ...(input.size ? { size: input.size } : {}),
-            ...(hasPosition
-                ? { band: input.band, col: input.col, row: input.row }
-                : {}),
-        });
-    }
-    return envelope.data;
-}
-
-export async function patchHomeNoteLayout(
-    page: Page,
-    id: string,
-    layout: {
-        band?: HomeNoteBand | null;
-        col?: number | null;
-        row?: number | null;
-        size?: "s" | "w";
-    },
-): Promise<unknown> {
-    const envelope = await api<{ data: unknown }>(
-        page,
-        `/api/documents/${encodeURIComponent(id)}/layout`,
-        { method: "PATCH", data: layout },
-    );
     return envelope.data;
 }
 
 export function homeNote(page: Page, title: string): Locator {
-    return page.locator(".home-note, .home-note-flow-item").filter({
+    return page.locator(".home-masthead__entry").filter({
         hasText: title,
     }).first();
-}
-
-export function noteCard(page: Page, title: string): Locator {
-    return homeNote(page, title).locator(".home-note-card");
 }
 
 export async function waitForNoteCards(
@@ -148,7 +103,8 @@ export async function waitForNoteCards(
 ): Promise<void> {
     await page.waitForFunction(
         (expected) =>
-            document.querySelectorAll(".home-note-card").length === expected,
+            document.querySelectorAll(".home-masthead__entry").length ===
+                expected,
         count,
     );
 }
@@ -177,121 +133,30 @@ export function intersects(a: Box, b: Box): boolean {
         a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
-export interface HomeNoteMetrics {
-    search: Box;
-    plate: Box | null;
-    topbar: Box | null;
-    cards: Array<Box & { title: string; size: string }>;
-    flow: string | null;
-    more: { text: string | null; mode: "pill" | null; box: Box | null };
-    grid: Box | null;
-}
-
-/** Measures the rendered home notes in viewport coordinates. */
-export async function measureHomeNotes(
-    page: Page,
-): Promise<HomeNoteMetrics> {
-    return await page.evaluate(() => {
-        const measure = (element: Element | null) => {
-            if (!element) return null;
-            const rect = element.getBoundingClientRect();
-            return {
-                x: rect.x,
-                y: rect.y,
-                width: rect.width,
-                height: rect.height,
-            };
-        };
-        const search = document.querySelector(".search-form-wrap");
-        if (!search) throw new Error("search box missing");
-        return {
-            search: measure(search)!,
-            plate: measure(document.querySelector(".launcher-plate")),
-            topbar: measure(document.querySelector(".topbar")),
-            cards: [...document.querySelectorAll(
-                ".home-note, .home-note-flow-item",
-            )].map((note) => ({
-                title: note.querySelector(".home-note-title")?.textContent
-                    ?.trim() ?? "",
-                size: note.getAttribute("data-size") ?? "",
-                ...measure(note)!,
-            })),
-            flow: document.querySelector(".home-notes--flow")?.getAttribute(
-                "data-mode",
-            ) ?? null,
-            more: (() => {
-                const button = document.querySelector(".home-note-more");
-                return {
-                    text: button?.textContent?.trim() ?? null,
-                    mode: button ? "pill" as const : null,
-                    box: measure(button),
-                };
-            })(),
-            grid: measure(document.querySelector(".home-notes--grid")),
-        };
-    });
-}
-
-/** Asserts notes do not overlap the search box, the plate or each other. */
-export function assertNoIntersections(metrics: HomeNoteMetrics): void {
-    for (const card of metrics.cards) {
-        assert(
-            !intersects(card, metrics.search),
-            `${card.title} overlaps the search box`,
-        );
-        if (metrics.plate) {
-            assert(
-                !intersects(card, metrics.plate),
-                `${card.title} overlaps the app plate`,
-            );
-        }
-        if (metrics.topbar) {
-            assert(
-                card.y >= metrics.topbar.y + metrics.topbar.height,
-                `${card.title} sits above the top bar`,
-            );
-        }
-    }
-    for (let i = 0; i < metrics.cards.length; i++) {
-        for (let j = i + 1; j < metrics.cards.length; j++) {
-            assert(
-                !intersects(metrics.cards[i], metrics.cards[j]),
-                `${metrics.cards[i].title} overlaps ${metrics.cards[j].title}`,
-            );
-        }
-    }
-}
-
-/** Blank card padding, clear of the title, checkbox, body links and ⋯ menu. */
+/** Blank entry area away from the trailing ⋯ menu button. */
 function dragStartPoint(box: Box): { x: number; y: number } {
-    return { x: box.x + 8, y: box.y + box.height - 8 };
+    return { x: box.x + 24, y: box.y + box.height / 2 };
 }
 
-/** A drag only activates after the pointer moves past its sensor threshold. */
-async function waitForDragStart(page: Page): Promise<void> {
-    await page.locator('.home-note[data-dragging="true"]').waitFor({
-        state: "attached",
-        timeout: 3000,
-    });
-}
-
-/** Grabs a card's blank padding and drags with the mouse. */
+/** Grabs a masthead entry and drags vertically with the mouse. */
 export async function dragWithMouse(
     page: Page,
-    card: Locator,
+    entry: Locator,
     dx: number,
     dy: number,
 ): Promise<void> {
-    const box = await card.boundingBox();
-    assert(box, "drag card has no box");
+    const box = await entry.boundingBox();
+    assert(box, "drag entry has no box");
     const { x, y } = dragStartPoint(box);
     const length = Math.hypot(dx, dy) || 1;
-    const nudge = 6;
+    const nudge = 8;
     await page.mouse.move(x, y);
     await page.mouse.down();
-    await page.mouse.move(x + (dx / length) * nudge, y + (dy / length) * nudge);
-    await waitForDragStart(page);
-    const steps = 8;
+    await page.mouse.move(
+        x + (dx / length) * nudge,
+        y + (dy / length) * nudge,
+    );
+    const steps = 10;
     for (let step = 1; step <= steps; step++) {
         await page.mouse.move(
             x + (dx * step) / steps,
@@ -303,17 +168,17 @@ export async function dragWithMouse(
 }
 
 /**
- * Long-presses a card's blank padding (the touch sensor needs 250ms) and
- * drags with real touch events through CDP (context must set hasTouch).
+ * Long-presses a masthead entry (the touch sensor needs 250ms) and drags with
+ * real touch events through CDP (context must set hasTouch).
  */
 export async function dragWithTouch(
     page: Page,
-    card: Locator,
+    entry: Locator,
     dx: number,
     dy: number,
 ): Promise<void> {
-    const box = await card.boundingBox();
-    assert(box, "drag card has no box");
+    const box = await entry.boundingBox();
+    assert(box, "drag entry has no box");
     const { x, y } = dragStartPoint(box);
     const session = await page.context().newCDPSession(page);
     await session.send("Input.dispatchTouchEvent", {
@@ -321,8 +186,7 @@ export async function dragWithTouch(
         touchPoints: [{ x, y }],
     });
     await page.waitForTimeout(320);
-    await waitForDragStart(page);
-    const steps = 8;
+    const steps = 10;
     for (let step = 1; step <= steps; step++) {
         await session.send("Input.dispatchTouchEvent", {
             type: "touchMove",
@@ -340,75 +204,36 @@ export async function dragWithTouch(
     await session.detach();
 }
 
-/** The batch endpoint is the only layout write the client makes. */
-function isLayoutWrite(request: Request): boolean {
+function isHomeOrderWrite(request: Request): boolean {
     return request.method() === "PATCH" &&
-        /\/api\/documents\/layouts$/.test(request.url());
+        /\/api\/documents\/home-order$/.test(request.url());
 }
 
-export function layoutPatch(page: Page): Promise<Response> {
+export function homeOrderPatch(page: Page): Promise<Response> {
     return page.waitForResponse(
-        (response) => isLayoutWrite(response.request()) && response.ok(),
+        (response) => isHomeOrderWrite(response.request()) && response.ok(),
     );
 }
 
-export function countLayoutPatches(page: Page): {
-    count: () => number;
+export function captureHomeOrderWrites(page: Page): {
+    writes: () => ReadonlyArray<{ ids: string[] }>;
     reset: () => void;
 } {
-    let count = 0;
+    let writes: Array<{ ids: string[] }> = [];
     page.on("request", (request) => {
-        if (isLayoutWrite(request)) count++;
-    });
-    return { count: () => count, reset: () => (count = 0) };
-}
-
-export interface LayoutWriteItem {
-    id: string;
-    band?: HomeNoteBand | null;
-    col?: number | null;
-    row?: number | null;
-    size?: "s" | "w";
-}
-
-export interface LayoutWrite {
-    items: LayoutWriteItem[];
-}
-
-function isLayoutWriteItem(value: unknown): value is LayoutWriteItem {
-    return typeof value === "object" && value !== null && "id" in value &&
-        typeof value.id === "string";
-}
-
-function decodeLayoutWrite(raw: string): LayoutWrite | null {
-    try {
-        const parsed: unknown = JSON.parse(raw);
-        if (
-            typeof parsed !== "object" || parsed === null ||
-            !("items" in parsed)
-        ) {
-            return null;
-        }
-        const items = parsed.items;
-        if (!Array.isArray(items)) return null;
-        return { items: items.filter(isLayoutWriteItem) };
-    } catch {
-        return null;
-    }
-}
-
-/** Records the decoded bodies of every batch layout write. */
-export function captureLayoutWrites(page: Page): {
-    writes: () => ReadonlyArray<LayoutWrite>;
-    reset: () => void;
-} {
-    let writes: LayoutWrite[] = [];
-    page.on("request", (request) => {
-        if (!isLayoutWrite(request)) return;
+        if (!isHomeOrderWrite(request)) return;
         const raw = request.postData();
         if (!raw) return;
-        const write = decodeLayoutWrite(raw);
-        if (write) writes.push(write);
+        try {
+            const parsed: unknown = JSON.parse(raw);
+            if (
+                typeof parsed === "object" && parsed !== null &&
+                "ids" in parsed && Array.isArray(parsed.ids) &&
+                parsed.ids.every((id) => typeof id === "string")
+            ) {
+                writes.push({ ids: parsed.ids });
+            }
+        } catch { /* ignore invalid payload */ }
     });
     return {
         writes: () => writes,
@@ -416,48 +241,6 @@ export function captureLayoutWrites(page: Page): {
             writes = [];
         },
     };
-}
-
-export interface LayoutSnapshot {
-    band: HomeNoteBand | null;
-    col: number | null;
-    row: number | null;
-    size: string;
-}
-
-/** Reads the saved cell; null when the note never received a layout row. */
-export async function readLayout(
-    page: Page,
-    id: string,
-): Promise<LayoutSnapshot | null> {
-    const envelope = await page.evaluate(async (id) => {
-        const response = await fetch(
-            `/api/documents/${encodeURIComponent(id)}/layout`,
-        );
-        if (!response.ok) throw new Error(await response.text());
-        return await response.json();
-    }, id) as {
-        data: LayoutSnapshot | null;
-    };
-    return envelope.data;
-}
-
-export async function expectLayout(
-    page: Page,
-    id: string,
-    expected: {
-        band: HomeNoteBand | null;
-        col: number | null;
-        row: number | null;
-        size?: string;
-    },
-): Promise<void> {
-    const layout = await readLayout(page, id);
-    assert(layout, `note ${id} has no saved layout`);
-    assertEquals(layout.band, expected.band);
-    assertEquals(layout.col, expected.col);
-    assertEquals(layout.row, expected.row);
-    if (expected.size) assertEquals(layout.size, expected.size);
 }
 
 export interface HomeNotesFixture {
@@ -507,12 +290,18 @@ export async function openHomeNotesFixture(
     };
 }
 
-/** Seeds root apps so the home plate has multiple rows of note capacity. */
+/** Seeds root apps and enables showHomeApps so the home plate renders. */
 export async function seedHomeApps(
     page: Page,
     count = 18,
 ): Promise<void> {
     await page.evaluate(async (total) => {
+        const prefs = await fetch("/api/preferences", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ showHomeApps: true }),
+        });
+        if (!prefs.ok) throw new Error(await prefs.text());
         for (let index = 0; index < total; index++) {
             const response = await fetch("/api/webapps", {
                 method: "POST",
@@ -526,17 +315,4 @@ export async function seedHomeApps(
             if (!response.ok) throw new Error(await response.text());
         }
     }, count);
-}
-
-export async function waitForFlowMode(
-    page: Page,
-    mode: "flow" | "stack",
-): Promise<void> {
-    await page.waitForFunction(
-        (expected) =>
-            document.querySelector(".home-notes--flow")?.getAttribute(
-                "data-mode",
-            ) === expected,
-        mode,
-    );
 }

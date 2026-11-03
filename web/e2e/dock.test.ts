@@ -90,6 +90,13 @@ async function registerFreshUser(
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
     await page.locator("main.home").waitFor({ state: "visible" });
+    await page.evaluate(async () => {
+        await fetch("/api/preferences", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ showHomeApps: true }),
+        });
+    });
     return { username, password };
 }
 
@@ -1797,15 +1804,6 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
         },
     );
     assert(leftNoteRes.ok(), await leftNoteRes.text());
-    const leftNote = (await leftNoteRes.json()).data;
-    const patchLeft = await context.request.patch(
-        `${app.origin}/api/documents/${leftNote.id}/layout`,
-        {
-            headers: { Origin: app.origin },
-            data: { band: "left", col: 0, row: 0, size: "s" },
-        },
-    );
-    assert(patchLeft.ok(), await patchLeft.text());
 
     const rightNoteRes = await context.request.post(
         app.origin + "/api/documents",
@@ -1819,15 +1817,6 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
         },
     );
     assert(rightNoteRes.ok(), await rightNoteRes.text());
-    const rightNote = (await rightNoteRes.json()).data;
-    const patchRight = await context.request.patch(
-        `${app.origin}/api/documents/${rightNote.id}/layout`,
-        {
-            headers: { Origin: app.origin },
-            data: { band: "right", col: 0, row: 0, size: "s" },
-        },
-    );
-    assert(patchRight.ok(), await patchRight.text());
     const setDockEdge = async (
         edge: "bottom" | "top" | "left" | "right",
     ) => {
@@ -1932,39 +1921,36 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
     );
 
     await t.step(
-        "1096x900 left/right dock and 1366x768 bottom dock: home notes and app plate avoid dock without rewriting saved note coordinates",
+        "1096x900 left/right dock and 1366x768 bottom dock: home masthead and app plate avoid dock",
         async () => {
             await page.setViewportSize({ width: 1096, height: 900 });
             for (const edge of ["left", "right"] as const) {
                 await setDockEdge(edge);
-                await page.locator(".home-note").first().waitFor({
-                    state: "visible",
-                });
+                const masthead = page.locator(
+                    ".home-masthead__column, .home-masthead__pill",
+                ).first();
+                await masthead.waitFor({ state: "visible" });
                 await page.waitForFunction(() => {
                     const bar = document.querySelector("nav.dock-bar");
-                    if (!bar) return false;
+                    const m = document.querySelector(
+                        ".home-masthead__column, .home-masthead__pill",
+                    );
+                    if (!bar || !m) return false;
                     const dockRect = bar.getBoundingClientRect();
-                    return Array.from(document.querySelectorAll(".home-note"))
-                        .every((note) => {
-                            const r = note.getBoundingClientRect();
-                            return !(
-                                r.left < dockRect.right - 0.5 &&
-                                r.right > dockRect.left + 0.5 &&
-                                r.top < dockRect.bottom - 0.5 &&
-                                r.bottom > dockRect.top + 0.5
-                            );
-                        });
+                    const r = m.getBoundingClientRect();
+                    return !(
+                        r.left < dockRect.right - 0.5 &&
+                        r.right > dockRect.left + 0.5 &&
+                        r.top < dockRect.bottom - 0.5 &&
+                        r.bottom > dockRect.top + 0.5
+                    );
                 });
                 const dockBox = (await dockNav(page).boundingBox())!;
-                const noteCount = await page.locator(".home-note").count();
-                for (let i = 0; i < noteCount; i++) {
-                    const noteBox = (await page.locator(".home-note").nth(i)
-                        .boundingBox())!;
-                    assert(
-                        !boxesOverlap(noteBox, dockBox),
-                        `1096x900 ${edge} dock overlaps home note ${i}`,
-                    );
-                }
+                const mastheadBox = (await masthead.boundingBox())!;
+                assert(
+                    !boxesOverlap(mastheadBox, dockBox),
+                    `1096x900 ${edge} dock overlaps home masthead`,
+                );
             }
 
             await page.setViewportSize({ width: 1366, height: 768 });
@@ -1986,25 +1972,6 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                     plateBox.y + plateBox.height
                 } vs ${dockBox.y})`,
             );
-
-            // Verify server-stored note coordinates were NOT overwritten by viewport/dock reflow
-            const leftCheck = await context.request.get(
-                `${app.origin}/api/documents/${leftNote.id}/layout`,
-            );
-            assert(leftCheck.ok());
-            const leftLayout = (await leftCheck.json()).data;
-            assertEquals(leftLayout.band, "left");
-            assertEquals(leftLayout.col, 0);
-            assertEquals(leftLayout.row, 0);
-
-            const rightCheck = await context.request.get(
-                `${app.origin}/api/documents/${rightNote.id}/layout`,
-            );
-            assert(rightCheck.ok());
-            const rightLayout = (await rightCheck.json()).data;
-            assertEquals(rightLayout.band, "right");
-            assertEquals(rightLayout.col, 0);
-            assertEquals(rightLayout.row, 0);
         },
     );
 

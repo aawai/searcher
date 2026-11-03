@@ -107,46 +107,67 @@ Deno.test("Appearance: legacy icon size fields are ignored without losing valid 
     }
 });
 
-Deno.test("Appearance: home app toggles default on and only accept booleans", () => {
-    for (const key of ["showHomeApps", "showHomeAppPlate"] as const) {
-        assertEquals(normalizeAppearance(undefined)[key], true);
-        assertEquals(normalizeAppearance({})[key], true);
+Deno.test("Appearance: home app toggles only accept booleans and showHomeApps defaults off", () => {
+    for (
+        const [key, defaultValue] of [
+            ["showHomeApps", false],
+            ["showHomeAppPlate", true],
+        ] as const
+    ) {
+        assertEquals(normalizeAppearance(undefined)[key], defaultValue);
+        assertEquals(normalizeAppearance({})[key], defaultValue);
         assertEquals(normalizeAppearance({ [key]: false })[key], false);
         assertEquals(normalizeAppearance({ [key]: true })[key], true);
         for (const bad of ["false", 0, null, "off"]) {
-            assertEquals(normalizeAppearance({ [key]: bad })[key], true);
+            assertEquals(
+                normalizeAppearance({ [key]: bad })[key],
+                defaultValue,
+            );
         }
     }
 });
 
-Deno.test("Appearance: the calm layer shows the date and 继续 by default, time only on request", () => {
+Deno.test("Appearance: the masthead shows the date and 继续 by default, time only on request, and collapses on narrow viewports by default", () => {
     const defaults = normalizeAppearance({});
     assertEquals(
         [
             defaults.showHomeDate,
             defaults.showHomeTime,
             defaults.showHomeContinue,
+            defaults.homeMastheadCollapsed,
         ],
-        [true, false, true],
+        [true, false, true, true],
     );
     const saved = normalizeAppearance({
         showHomeDate: false,
         showHomeTime: true,
         showHomeContinue: false,
+        homeMastheadCollapsed: false,
     });
     assertEquals(
-        [saved.showHomeDate, saved.showHomeTime, saved.showHomeContinue],
-        [false, true, false],
+        [
+            saved.showHomeDate,
+            saved.showHomeTime,
+            saved.showHomeContinue,
+            saved.homeMastheadCollapsed,
+        ],
+        [false, true, false, false],
     );
     // Older caches and invalid values fall back to the defaults.
     const invalid = normalizeAppearance({
         showHomeDate: "no",
         showHomeTime: 1,
         showHomeContinue: null,
+        homeMastheadCollapsed: "no",
     });
     assertEquals(
-        [invalid.showHomeDate, invalid.showHomeTime, invalid.showHomeContinue],
-        [true, false, true],
+        [
+            invalid.showHomeDate,
+            invalid.showHomeTime,
+            invalid.showHomeContinue,
+            invalid.homeMastheadCollapsed,
+        ],
+        [true, false, true, true],
     );
 });
 

@@ -43,7 +43,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
 - 图标使用 Lucide，`size` 只允许 14、16、20（`check:ui` 强制）。语义映射：应用
   `AppWindow`、笔记 `NotebookPen`、总览 `LayoutGrid`、文件夹
   `Folder`。
-- 用户可见文案（应用 / 网站 / 网址、笔记 / 首页笔记、删除与恢复动词、版本冲突选项）以 Visual Language 文案为准；代码与 API
+- 用户可见文案（应用 / 网站 / 网址、笔记 / 首页刊头、删除与恢复动词、版本冲突选项）以 Visual Language 文案为准；代码与 API
   保持 canonical 英文命名。
 
 ## 样式
@@ -62,11 +62,11 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   16px；触屏常规控件使用 44px 点击目标。不要把不同用途的尺寸合并成同一个 Token。
 - 通用布局断点为 Visual Language 登记的 640 / 768 / 1024；笔记侧栏另按窗口 Host 的 `BREAKPOINTS.notesSidebar` 分档。`max-width` 使用前一像素；JS / TSX 引用 `design-system/breakpoints.ts`，不在组件中写数字媒体查询；触屏能力使用 `any-pointer: coarse`。
 - 首页 `tokens.css` 的 `--home-grid-*` 拥有应用方格、间距、中轴与搜索框 / 应用底板外缘对齐线，
-  `--home-note-*` 拥有与应用方格脱钩的笔记单元与间距；Launcher 消费前者，首页笔记消费后者。
-  `home-grid.ts` 的 `HOME_GRID` / `HOME_NOTE_GRID` 是数值镜像，由单元测试保护。首页笔记的分带网格数学（两侧负行、底板下方 shelf、
-  默认落点、最近空闲单元）在 `home-grid-cells.ts`；吸附、交换、键盘移动与溢出入口由
-  `HomeNotes.tsx` 和 `home-notes.css` 唯一管理。768–1023px 的两列流式与 <768px 纵向堆叠
-  是该组件的正常流分支，不再单独维护 220px 笔记行。
+  `home-grid.ts` 的 `HOME_GRID` 是其数值镜像，由单元测试保护。首页刊头在
+  `web/src/features/home-masthead/`：选边与列几何（`mastheadPlacement`）、条目摘要与待办汇总是纯函数，
+  排版、磨砂衬底与窄屏展开在 `home-masthead.css`；衬线字体 `--font-serif` 来自自托管的
+  `@fontsource/noto-serif-sc`（只打包 600 字重），只在刊头使用。构建时 `web/vite.config.ts` 的
+  `woff2OnlyFontsPlugin` 去掉 Fontsource 的 WOFF 备用源，`dist` 只输出 WOFF2 切片。
 - 稳定布局与交互状态使用语义 class 或 Tailwind 布局 / 状态 utility；视觉尺度（字重、间距、圆角、无阴影、图标尺寸）只使用 [Visual Language](design/VISUAL_LANGUAGE.md) 登记并在 `tokens.css` 以 `@utility` 绑定正式 Token 的工具类，响应式前缀只使用已登记的 `sm:` / `md:` / `lg:`。字号与行高统一由语义 CSS 消费登记 Token，不使用 `text-xs`、`text-sm`、`text-xl` 等默认文字尺度。壁纸、拖拽变换等 runtime 值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何由组件维护。
 - 样式调整后构建前端，实页检查首页、设置、登录和笔记窗口的浅深色与壁纸组合。
 

@@ -1,5 +1,4 @@
-/* Home search, app plate and pinned notes share the Material elevation.
-   Note geometry and presentation are owned by home-notes.css. */
+/* Home search and app plate share the Material elevation. */
 
 .home {
     width: 100%;

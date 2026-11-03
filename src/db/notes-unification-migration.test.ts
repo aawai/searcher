@@ -121,10 +121,9 @@ Deno.test("notes unification upgrade keeps documents and removes legacy notes da
                     `SELECT
                         (SELECT count(*) FROM document_versions) AS versions,
                         (SELECT count(*) FROM document_settings) AS settings,
-                        (SELECT count(*) FROM document_assets) AS assets,
-                        (SELECT count(*) FROM document_layouts) AS layouts`,
+                        (SELECT count(*) FROM document_assets) AS assets`,
                 ).all(),
-                [{ versions: 1, settings: 1, assets: 1, layouts: 0 }],
+                [{ versions: 1, settings: 1, assets: 1 }],
             );
             assertEquals(
                 native.prepare("PRAGMA foreign_key_check").all(),

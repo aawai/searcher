@@ -62,6 +62,25 @@ function bundleReportPlugin(): Plugin {
     };
 }
 
+/** A Fontsource `src` fallback entry for the legacy WOFF format. */
+const LEGACY_WOFF_SOURCE = /,\s*url\([^)]+\.woff\)\s*format\(['"]woff['"]\)/g;
+
+/**
+ * Fontsource lists every slice as WOFF2 plus a WOFF fallback. Every browser
+ * the app supports loads WOFF2, so the fallbacks would only add unused files
+ * to dist; dropping them before url() resolution keeps them out of the build.
+ */
+function woff2OnlyFontsPlugin(): Plugin {
+    return {
+        name: "woff2-only-fonts",
+        enforce: "pre",
+        transform(code, id) {
+            if (!/@fontsource\/[^/]+\/[^/?]+\.css(?:\?|$)/.test(id)) return;
+            return { code: code.replace(LEGACY_WOFF_SOURCE, ""), map: null };
+        },
+    };
+}
+
 export default defineConfig({
     root: fileURLToPath(new URL(".", import.meta.url)),
     resolve: {
@@ -86,6 +105,7 @@ export default defineConfig({
         react(),
         tailwindcss(),
         bundleReportPlugin(),
+        woff2OnlyFontsPlugin(),
         serviceWorkerPlugin(),
     ],
     build: {

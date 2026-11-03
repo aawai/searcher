@@ -158,6 +158,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
     await t.step(
         "Global theme and accent preferences remain effective globally",
         async () => {
+            await updatePreferences({ showHomeApps: true });
             await visit("/settings/appearance");
 
             // 1. Theme global application via Appearance UI

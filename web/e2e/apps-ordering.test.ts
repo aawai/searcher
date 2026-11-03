@@ -21,6 +21,10 @@ Deno.test("apps concurrent optimistic sorting converges to confirmed server orde
         );
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
+        await page.request.patch(app.origin + "/api/preferences", {
+            headers: { Origin: app.origin },
+            data: { showHomeApps: true },
+        });
         for (let index = 0; index < 3; index++) {
             const response = await page.request.post(
                 app.origin + "/api/webapps",

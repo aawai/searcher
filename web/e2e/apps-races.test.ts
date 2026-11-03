@@ -18,6 +18,11 @@ Deno.test("apps ignores obsolete fetches and retains failed saves", async () => 
         await page.locator("#auth-password").fill("Apps-race-password-141!");
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
+        await page.request.patch(app.origin + "/api/preferences", {
+            headers: { Origin: app.origin },
+            data: { showHomeApps: true },
+        });
+        await page.reload();
         const addCell = page.locator('[data-library-cell="add"]');
         const dialog = page.locator(".app-form-dialog");
         const submit = dialog.getByRole("button", {

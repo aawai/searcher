@@ -7,8 +7,8 @@ import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 const NOTES_WINDOW = '[data-window-id="notes"]';
 const TIMEZONE = "Asia/Shanghai";
-const clockText = (page: Page) =>
-    page.getByTestId("home-calm-clock").textContent();
+const CLOCK_SELECTOR = ".home-masthead__clock";
+const TIME_SELECTOR = ".home-masthead__time";
 const box = async (page: Page, selector: string) => {
     const rect = await page.locator(selector).boundingBox();
     if (!rect) throw new Error(`${selector} has no box`);
@@ -119,9 +119,23 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                 );
                 try {
                     await openHome(page, app.origin);
-                    assertEquals(await clockText(page), "10月24日 星期六");
+                    await page.locator(CLOCK_SELECTOR).waitFor();
                     assertEquals(
-                        await page.locator(".home-calm__time").count(),
+                        await page.locator(".home-masthead__day").textContent(),
+                        "24",
+                    );
+                    assertEquals(
+                        await page.locator(".home-masthead__weekday")
+                            .textContent(),
+                        "星期六",
+                    );
+                    assertEquals(
+                        await page.locator(".home-masthead__month")
+                            .textContent(),
+                        "十月",
+                    );
+                    assertEquals(
+                        await page.locator(TIME_SELECTOR).count(),
                         0,
                     );
                     assertEquals(
@@ -130,19 +144,20 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                         0,
                     );
                     assertEquals(
-                        await page.locator(".home-calm").evaluate((element) =>
-                            element.getAnimations({ subtree: true }).length
+                        await page.locator(".home-masthead").evaluate(
+                            (element) =>
+                                element.getAnimations({ subtree: true }).length,
                         ),
                         0,
-                        "nothing in the calm layer animates",
+                        "nothing in the masthead animates",
                     );
                     const top = await searchTop(page);
                     await page.clock.runFor(31_000);
                     await page.waitForFunction(() =>
-                        document.querySelector(
-                            '[data-testid="home-calm-clock"]',
-                        )
-                            ?.textContent === "10月25日 星期日"
+                        document.querySelector(".home-masthead__day")
+                                ?.textContent === "25" &&
+                        document.querySelector(".home-masthead__weekday")
+                                ?.textContent === "星期日"
                     );
                     assertEquals(await searchTop(page), top);
                 } finally {
@@ -174,15 +189,15 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                     const geometry = new Set<string>();
                     // 09:58 → 10:13 crosses digits of every width.
                     for (let minute = 0; minute < 16; minute++) {
-                        const text = await page.locator(".home-calm__time")
+                        const text = await page.locator(TIME_SELECTOR)
                             .textContent();
                         seen.push(text ?? "");
-                        const rect = await box(page, ".home-calm__time");
+                        const rect = await box(page, TIME_SELECTOR);
                         geometry.add(`${rect.x}:${rect.width}:${rect.y}`);
                         await page.clock.runFor(60_000);
                         await page.waitForFunction(
                             (previous) =>
-                                document.querySelector(".home-calm__time")
+                                document.querySelector(".home-masthead__time")
                                     ?.textContent !== previous,
                             text,
                         );
@@ -191,7 +206,9 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                     assertEquals(seen.at(-1), "10:13");
                     assertEquals(geometry.size, 1, [...geometry].join(" "));
                     assertEquals(
-                        await page.locator("time").getAttribute("datetime"),
+                        await page.locator(CLOCK_SELECTOR).getAttribute(
+                            "datetime",
+                        ),
                         "2026-10-24T10:14",
                     );
 
@@ -211,7 +228,7 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                     );
                     await openHome(page, app.origin);
                     // The home first renders defaults, then the device cache hides the line.
-                    await page.getByTestId("home-calm-clock").waitFor({
+                    await page.locator(CLOCK_SELECTOR).waitFor({
                         state: "detached",
                     });
                     assertEquals(
@@ -226,7 +243,7 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
         );
 
         await t.step(
-            "继续 leads to the latest note, open home to-dos and an unfinished conversation",
+            "继续 leads to the latest note and an unfinished conversation",
             async () => {
                 const { context, page } = await newPage(
                     browser,
@@ -262,12 +279,9 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                         await route.continue();
                     });
                     await openHome(page, app.origin);
-                    await page.getByTestId("home-calm-clock").waitFor();
+                    await page.locator(CLOCK_SELECTOR).waitFor();
                     const before = {
-                        clock: await box(
-                            page,
-                            '[data-testid="home-calm-clock"]',
-                        ),
+                        clock: await box(page, CLOCK_SELECTOR),
                         search: await searchTop(page),
                     };
                     release();
@@ -277,14 +291,14 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                     await continueNav.waitFor();
                     await page.unroute("**/api/home/continue");
                     assertEquals(
-                        await box(page, '[data-testid="home-calm-clock"]'),
+                        await box(page, CLOCK_SELECTOR),
                         before.clock,
                     );
                     assertEquals(await searchTop(page), before.search);
                     assertEquals(
                         await continueNav.locator("a, button")
                             .allTextContents(),
-                        ["继续编辑 周报草稿", "首页 2 项待办"],
+                        ["继续编辑 周报草稿"],
                     );
 
                     await continueNav.getByRole("button", {
@@ -295,18 +309,6 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                         (document.querySelector(".document-title-input") as
                             | HTMLInputElement
                             | null)?.value === "周报草稿"
-                    );
-
-                    await openHome(page, app.origin);
-                    await continueNav.getByRole("button", {
-                        name: "首页 2 项待办",
-                    })
-                        .click();
-                    await page.locator(NOTES_WINDOW).waitFor();
-                    await page.waitForFunction(() =>
-                        (document.querySelector(".document-title-input") as
-                            | HTMLInputElement
-                            | null)?.value === "今日待办"
                     );
 
                     // An interrupted answer newer than the note takes the lead.
@@ -348,7 +350,7 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                         false,
                     );
                     await openHome(page, app.origin);
-                    await page.getByTestId("home-calm-clock").waitFor();
+                    await page.locator(CLOCK_SELECTOR).waitFor();
                     await continueNav.waitFor({ state: "detached" });
                     assertEquals(await continueNav.count(), 0);
                     assertEquals(await searchTop(page), top, "继续 off");

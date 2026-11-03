@@ -441,6 +441,10 @@ Deno.test("production search shortcuts respect editable focus and submit command
                 },
             });
             assert(response.ok(), await response.text());
+            await page.request.patch(origin + "/api/preferences", {
+                headers: { Origin: origin },
+                data: { showHomeApps: true },
+            });
             await page.route(
                 /\/api\/search\/suggestions\?/,
                 (route) =>

@@ -9,7 +9,7 @@ import { aiConversations, aiMessages } from "../../db/ai-schema.ts";
 import { AuthService } from "../auth/service.ts";
 
 const origin = "http://localhost:8000";
-Deno.test("首页继续：鉴权、隔离、最近编辑、未完成对话和首页待办", async () => {
+Deno.test("首页继续：鉴权、隔离、最近编辑和未完成对话", async () => {
     const store = openDatabase(":memory:");
     try {
         await migrateDatabase(store);
@@ -49,7 +49,6 @@ Deno.test("首页继续：鉴权、隔离、最近编辑、未完成对话和首
         assertEquals(await read(), {
             document: null,
             conversation: null,
-            homeTasks: null,
         });
         await store.run(async (db) => {
             await db.insert(documents).values([
@@ -88,40 +87,11 @@ Deno.test("首页继续：鉴权、隔离、最近编辑、未完成对话和首
                     createdAt: 1,
                     updatedAt: 200,
                 },
-                {
-                    id: "home-done",
-                    userId: owner.id,
-                    currentBody: "- [x] 完成",
-                    isHomeFixed: true,
-                    homeSortOrder: 0,
-                    createdAt: 1,
-                    updatedAt: 1,
-                },
-                {
-                    id: "home-z",
-                    userId: owner.id,
-                    currentBody:
-                        "- [ ] 首个\n  - [ ] 嵌套\n\n```md\n- [ ] 代码\n```",
-                    isHomeFixed: true,
-                    homeSortOrder: 1,
-                    createdAt: 1,
-                    updatedAt: 1,
-                },
-                {
-                    id: "home-a",
-                    userId: owner.id,
-                    currentBody: "1. [ ] 有序",
-                    isHomeFixed: true,
-                    homeSortOrder: 1,
-                    createdAt: 1,
-                    updatedAt: 1,
-                },
             ]).run();
         });
         assertEquals(await read(), {
             document: { id: "latest", displayTitle: "派生标题", updatedAt: 50 },
             conversation: null,
-            homeTasks: { open: 3, documentId: "home-z" },
         });
         const conversation = async (
             id: string,
@@ -185,11 +155,6 @@ Deno.test("首页继续：鉴权、隔离、最近编辑、未完成对话和首
                 updatedAt: time,
             });
         }
-        await store.run(async (db) => {
-            await db.update(documents).set({ currentBody: "- [x] 全部完成" })
-                .where(eq(documents.userId, owner.id)).run();
-        });
-        assertEquals((await read()).homeTasks, null);
     } finally {
         await store.close();
     }

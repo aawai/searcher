@@ -1,9 +1,12 @@
 import type {
     CreateDocumentInput,
     DocumentDto,
-    DocumentLayoutDto,
     UpdateDocumentInput,
 } from "@shared/documents.ts";
+import {
+    DEFAULT_WALLPAPER_PRESENTATION,
+    wallpaperPresentation,
+} from "@shared/wallpaper-presentation.ts";
 import {
     buildSearchUrl,
     type EngineId,
@@ -52,7 +55,7 @@ import {
     fetchHomeNote,
     fetchHomeNotes,
     patchNote,
-    patchNoteLayouts,
+    reorderHomeNotes,
     restoreNote,
     trashNote,
 } from "../features/home-layouts/home-notes-api.ts";
@@ -60,6 +63,7 @@ import {
     type HomeNoteItem,
     needsNoteRefresh,
     setNote,
+    sortNotes,
 } from "../features/home-layouts/home-notes.ts";
 import { useHomeViewport } from "../features/home-layouts/home-viewport.ts";
 import type { HomeLayoutProps } from "../features/home-layouts/types.ts";
@@ -252,12 +256,6 @@ export function DesktopHost(
     >(null);
     const openDocumentRef = useRef<(id: string) => void>(() => {});
     const updatingNotesRef = useRef<Set<string>>(new Set());
-    const paperLayoutLatestGenRef = useRef<Map<string, number>>(new Map());
-    /** One queue for every layout write: a swap touches two notes at once. */
-    const paperLayoutQueueRef = useRef<Promise<void>>(Promise.resolve());
-    const paperLayoutPrevCanonicalRef = useRef<
-        Map<string, DocumentLayoutDto>
-    >(new Map());
     const [engine, setEngine] = useState<EngineId>(appearance.engine);
     const [reachability, setReachability] = useState<Reachability>({});
     const [isCheckingConnections, setIsCheckingConnections] = useState(false);
@@ -682,9 +680,7 @@ export function DesktopHost(
                     return setNote(
                         items,
                         paper.id,
-                        paper.isHomeFixed && current
-                            ? { ...paper, layout: current.layout }
-                            : null,
+                        paper.isHomeFixed && current ? paper : null,
                     );
                 }),
             show: (id, body) =>
@@ -1245,9 +1241,7 @@ export function DesktopHost(
                 setNote(
                     items,
                     document.id,
-                    document.isHomeFixed
-                        ? { ...document, layout: paper.layout }
-                        : null,
+                    document.isHomeFixed ? document : null,
                 )
             );
         try {
@@ -1261,97 +1255,59 @@ export function DesktopHost(
             updatingNotesRef.current.delete(lockKey);
         }
     }
-    /**
-     * One atomic write for a layout gesture: a move or resize is one change,
-     * a swap is two. Every changed cell renders together so the lattice never
-     * shows a half-applied swap, and all writes share one queue because a
-     * single request may move notes that the next request moves again.
-     */
-    async function updateNoteLayouts(
-        changes: ReadonlyArray<{
-            note: HomeNoteItem;
-            layout: DocumentLayoutDto;
-        }>,
-    ) {
-        if (changes.length === 0) return;
-        const generations = new Map<string, number>();
-        const optimistic = new Map<string, DocumentLayoutDto>();
-        for (const { note, layout } of changes) {
-            const nextGen =
-                (paperLayoutLatestGenRef.current.get(note.id) ?? 0) + 1;
-            paperLayoutLatestGenRef.current.set(note.id, nextGen);
-            generations.set(note.id, nextGen);
-            if (!paperLayoutPrevCanonicalRef.current.has(note.id)) {
-                paperLayoutPrevCanonicalRef.current.set(note.id, note.layout);
-            }
-            optimistic.set(note.id, layout);
-        }
+    async function reorderNotes(ids: string[]): Promise<void> {
+        const ownerId = currentUserIdRef.current;
+        if (!ownerId) return;
+        setError("");
+        const previous = notesRef.current;
+        const orderMap = new Map(ids.map((id, index) => [id, index]));
         setHomeNotes((items) =>
-            items.map((item) => {
-                const layout = optimistic.get(item.id);
-                return layout ? { ...item, layout } : item;
-            })
+            sortNotes(
+                items.map((item) => {
+                    const nextOrder = orderMap.get(item.id);
+                    return nextOrder !== undefined
+                        ? { ...item, homeSortOrder: nextOrder }
+                        : item;
+                }),
+            )
         );
-
-        const request = changes.map(({ note, layout }) => ({
-            id: note.id,
-            layout,
-        }));
-
-        const runTask = async () => {
-            try {
-                const persisted = await patchNoteLayouts(request);
-                const canonical = new Map<string, DocumentLayoutDto>(
-                    persisted.map((item) => [item.id, item.layout]),
-                );
-                const settled = new Map<string, DocumentLayoutDto>();
-                for (const { id } of request) {
-                    const layout = canonical.get(id);
-                    if (!layout) continue;
-                    paperLayoutPrevCanonicalRef.current.set(id, layout);
-                    if (
-                        paperLayoutLatestGenRef.current.get(id) !==
-                            generations.get(id)
-                    ) continue;
-                    settled.set(id, layout);
-                    paperLayoutPrevCanonicalRef.current.delete(id);
-                }
-                if (settled.size === 0) return;
-                setHomeNotes((items) =>
+        try {
+            const persisted = await reorderHomeNotes(ids);
+            if (
+                !componentMountedRef.current ||
+                currentUserIdRef.current !== ownerId
+            ) return;
+            const serverOrder = new Map(
+                persisted.map((item) => [item.id, item.homeSortOrder]),
+            );
+            setHomeNotes((items) =>
+                sortNotes(
                     items.map((item) => {
-                        const layout = settled.get(item.id);
-                        return layout ? { ...item, layout } : item;
-                    })
-                );
-            } catch (e) {
-                setError(errorMessage(e));
-                // Only cells with no newer gesture behind them roll back.
-                const rollback = new Map<string, DocumentLayoutDto>();
-                for (const { note } of changes) {
+                        const nextOrder = serverOrder.get(item.id);
+                        return nextOrder !== undefined
+                            ? { ...item, homeSortOrder: nextOrder }
+                            : item;
+                    }),
+                )
+            );
+        } catch (cause) {
+            if (
+                componentMountedRef.current &&
+                currentUserIdRef.current === ownerId
+            ) {
+                setHomeNotes(previous);
+                setError(errorMessage(cause));
+                void fetchHomeNotes().then((items) => {
                     if (
-                        paperLayoutLatestGenRef.current.get(note.id) !==
-                            generations.get(note.id)
-                    ) continue;
-                    rollback.set(
-                        note.id,
-                        paperLayoutPrevCanonicalRef.current.get(note.id) ??
-                            note.layout,
-                    );
-                    paperLayoutPrevCanonicalRef.current.delete(note.id);
-                }
-                if (rollback.size === 0) return;
-                setHomeNotes((items) =>
-                    items.map((item) => {
-                        const layout = rollback.get(item.id);
-                        return layout ? { ...item, layout } : item;
-                    })
-                );
+                        componentMountedRef.current &&
+                        currentUserIdRef.current === ownerId
+                    ) {
+                        setHomeNotes(items);
+                    }
+                }).catch(() => {});
             }
-        };
-
-        const taskPromise = paperLayoutQueueRef.current.then(runTask, runTask);
-        paperLayoutQueueRef.current = taskPromise;
-        await taskPromise;
+            throw cause;
+        }
     }
     async function deleteNote(paper: HomeNoteItem) {
         const ownerId = currentUserIdRef.current;
@@ -1501,6 +1457,16 @@ export function DesktopHost(
             navigate("/?view=apps");
         }
     }
+    // The same presentation the home wallpaper surface renders (App.tsx).
+    const wallpaper = {
+        source: appearance.wallpaper,
+        presentation: appearance.wallpaper
+            ? wallpaperPresentation(
+                appearance.wallpaper,
+                appearance.wallpaperPresentations,
+            )
+            : DEFAULT_WALLPAPER_PRESENTATION,
+    };
     const layoutProps: HomeLayoutProps = {
         user,
         engine,
@@ -1526,7 +1492,7 @@ export function DesktopHost(
         openNote,
         deleteNote,
         updateNote,
-        updateNoteLayouts,
+        reorderNotes,
         toggleTask: taskSaver.toggle,
         editingNoteId: libraryState.documents.route.view === "documents/edit"
             ? libraryState.documents.route.id
@@ -1540,6 +1506,8 @@ export function DesktopHost(
         showAppLabels: appearance.showAppLabels,
         showHomeApps: appearance.showHomeApps,
         showHomeAppPlate: appearance.showHomeAppPlate,
+        homeMastheadCollapsed: appearance.homeMastheadCollapsed,
+        wallpaper,
         calm: {
             showDate: appearance.showHomeDate,
             showTime: appearance.showHomeTime,

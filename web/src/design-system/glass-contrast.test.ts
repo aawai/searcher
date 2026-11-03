@@ -1,4 +1,5 @@
 import { assert } from "@std/assert";
+import { WALLPAPER_READABILITY_MASKS } from "@shared/wallpaper-presentation.ts";
 
 const css = await Deno.readTextFile(new URL("./tokens.css", import.meta.url));
 const markdownCss = await Deno.readTextFile(
@@ -266,6 +267,43 @@ for (const theme of ["light", "dark"] as const) {
                 `${name} on --canvas-derived-${theme} ${alpha * 100}% gives ${
                     worst.toFixed(2)
                 }:1`,
+            );
+        }
+    });
+}
+
+for (const theme of ["light", "dark"] as const) {
+    Deno.test(`home masthead veil ${theme}: text holds AA and --muted 3:1 over the default readability mask`, () => {
+        const tokens = cascade(theme, "regular");
+        const background = hex(resolve(tokens, "--background"));
+        const veilAlpha = fillPercent(tokens, `--masthead-veil-${theme}`) /
+            100;
+        // The wallpaper surface paints --background at the default "均衡"
+        // readability stage before the veil washes over the blurred result.
+        const maskAlpha = WALLPAPER_READABILITY_MASKS.balanced;
+        const probes = [
+            ["--foreground", WCAG_AA_TEXT],
+            ["--muted", SECONDARY_TEXT],
+        ] as const;
+        for (const [name, floor] of probes) {
+            const color = hex(resolve(tokens, name));
+            const worst = Math.min(
+                ...BACKDROPS.map((backdrop) =>
+                    contrast(
+                        color,
+                        over(
+                            background,
+                            veilAlpha,
+                            over(background, maskAlpha, backdrop),
+                        ),
+                    )
+                ),
+            );
+            assert(
+                worst >= floor,
+                `${name} on --masthead-veil-${theme} ${
+                    veilAlpha * 100
+                }% gives ${worst.toFixed(2)}:1`,
             );
         }
     });

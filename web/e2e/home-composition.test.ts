@@ -20,6 +20,12 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
         await page.evaluate(async () => {
+            const prefs = await fetch("/api/preferences", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ showHomeApps: true }),
+            });
+            if (!prefs.ok) throw new Error(await prefs.text());
             for (let index = 0; index < 24; index++) {
                 const response = await fetch("/api/webapps", {
                     method: "POST",
@@ -44,21 +50,6 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                     }),
                 });
                 if (!created.ok) throw new Error(await created.text());
-                const { data: document } = await created.json();
-                const layout = await fetch(
-                    `/api/documents/${document.id}/layout`,
-                    {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            band: index === 0 ? "left" : "right",
-                            col: 0,
-                            row: 0,
-                            size: "s",
-                        }),
-                    },
-                );
-                if (!layout.ok) throw new Error(await layout.text());
             }
         });
         await page.reload();
@@ -97,10 +88,10 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                 await page.locator(".launcher-grid--home .launcher-tile")
                     .first().waitFor();
                 await page.locator(
-                    width < 768
-                        ? '.home-notes--flow[data-mode="stack"]'
-                        : ".home-note-card",
-                ).last().waitFor();
+                    width >= 1366
+                        ? ".home-masthead__entry"
+                        : ".home-masthead__pill",
+                ).first().waitFor();
                 await page.evaluate(() => document.fonts.ready);
                 const metrics = await page.evaluate(() => {
                     const search = document.querySelector(".search-frame")!
@@ -221,7 +212,8 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                     await target.locator(".wallpaper-surface__image").waitFor();
                     await target.locator(".search-frame").waitFor();
                     if (identity === "account") {
-                        await target.locator(".home-note").nth(1).waitFor();
+                        await target.locator(".home-masthead__entry").nth(1)
+                            .waitFor();
                     }
                     await target.screenshot({
                         path:

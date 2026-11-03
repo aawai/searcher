@@ -821,6 +821,17 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     />
                                 </SettingsRow>
                             )}
+                            <SettingsRow
+                                title="窄屏默认收起刊头"
+                                description="手机和窄窗口上默认只显示一行日期，下滑展开"
+                            >
+                                <Switch
+                                    checked={appearance.homeMastheadCollapsed}
+                                    onCheckedChange={(checked) =>
+                                        set("homeMastheadCollapsed", checked)}
+                                    aria-label="窄屏默认收起刊头"
+                                />
+                            </SettingsRow>
                         </SettingsGroup>
                         <SettingsGroup
                             title="壁纸"

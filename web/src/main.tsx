@@ -8,7 +8,6 @@ import "./styles/global.css";
 import "./components/ui/primitives.css";
 import "./components/searcher/search.css";
 import "./components/searcher/apps.css";
-import "./features/home-layouts/home-notes.css";
 import "./components/searcher/conflict-dialog.css";
 import "./components/searcher/launcher.css";
 import "./components/searcher/semantic.css";

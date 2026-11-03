@@ -82,7 +82,7 @@ Deno.test("icon presentation real-page matrix: fixed glyphs, opaque and transpar
         assertEquals(fallback.status(), 200);
         for (const theme of ["light", "dark"]) {
             await context.request.patch(app.origin + "/api/preferences", {
-                data: { theme },
+                data: { theme, showHomeApps: true },
                 headers: { Origin: app.origin },
             });
             for (

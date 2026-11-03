@@ -341,8 +341,12 @@ export function checkBundle(rootDir = Deno.cwd()): {
     };
     const sharedFiles = staticFiles("src/features/markdown-editor/runtime.ts");
     const noteFiles = new Set<string>();
-    // HomeNotes is the lazy entry; HomeNoteCard is part of its static graph.
-    for (const file of staticFiles("src/features/home-layouts/HomeNotes.tsx")) {
+    // MastheadSections is the lazy entry for signed-in home notes and tasks.
+    for (
+        const file of staticFiles(
+            "src/features/home-masthead/MastheadSections.tsx",
+        )
+    ) {
         noteFiles.add(file);
     }
     const sharedMetrics = [...sharedFiles].filter((file) =>

@@ -82,7 +82,7 @@ export const preferences = sqliteTable("preferences", {
     searchHistoryEnabled: integer("search_history_enabled", { mode: "boolean" })
         .notNull().default(false),
     showHomeApps: integer("show_home_apps", { mode: "boolean" })
-        .notNull().default(true),
+        .notNull().default(false),
     showHomeAppPlate: integer("show_home_app_plate", { mode: "boolean" })
         .notNull().default(true),
     showHomeDate: integer("show_home_date", { mode: "boolean" })
@@ -91,6 +91,9 @@ export const preferences = sqliteTable("preferences", {
         .notNull().default(false),
     showHomeContinue: integer("show_home_continue", { mode: "boolean" })
         .notNull().default(true),
+    homeMastheadCollapsed: integer("home_masthead_collapsed", {
+        mode: "boolean",
+    }).notNull().default(true),
     showAppLabels: integer("show_app_labels", { mode: "boolean" })
         .notNull().default(true),
     aiGenerationDefaults: text("ai_generation_defaults"),
@@ -293,40 +296,6 @@ export const documents = sqliteTable("documents", {
         t.userId,
         t.notebookId,
         t.sortOrder,
-    ),
-]);
-
-export const documentLayouts = sqliteTable("document_layouts", {
-    id: text("id").primaryKey(),
-    documentId: text("document_id").notNull().references(() => documents.id, {
-        onDelete: "cascade",
-    }),
-    userId: text("user_id").notNull().references(() => users.id, {
-        onDelete: "cascade",
-    }),
-    deviceClass: text("device_class", {
-        enum: ["desktop", "tablet", "mobile"],
-    }).notNull().default("desktop"),
-    // Home note lattice: band/col/row are cell origins, null until placed.
-    band: text("band", { enum: ["left", "right", "center"] }),
-    col: integer("col"),
-    row: integer("row"),
-    size: text("size", { enum: ["s", "w"] }).notNull().default("s"),
-    // Legacy pixel layout; read-only until a later release drops these columns
-    // after the cell migration has run everywhere.
-    x: real("x"),
-    y: real("y"),
-    width: real("width"),
-    zIndex: integer("z_index").notNull().default(0),
-    expanded: integer("expanded", { mode: "boolean" }).notNull().default(false),
-    sortOrder: integer("sort_order"),
-    updatedAt: integer("updated_at").notNull(),
-}, (t) => [
-    index("document_layouts_user_idx").on(t.userId),
-    index("document_layouts_document_idx").on(t.documentId),
-    check(
-        "document_layouts_device_class_check",
-        sql`${t.deviceClass} in ('desktop','tablet','mobile')`,
     ),
 ]);
 

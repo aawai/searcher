@@ -235,6 +235,14 @@ async function signedInPage(
     await page.locator("#auth-password").fill("Library-test-password-244!");
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
+    await page.evaluate(async () => {
+        const res = await fetch("/api/preferences", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ showHomeApps: true }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+    });
     return { page, context };
 }
 
@@ -994,7 +1002,7 @@ Deno.test("home app library (#244)", async (t) => {
         );
 
         await t.step(
-            "default notes stay clear of the library region and the hidden plate becomes the shelf",
+            "home masthead stays clear of the library region and search box with apps on or off",
             async () => {
                 const { page, context } = await bigLibraryPage(
                     browser,
@@ -1002,17 +1010,15 @@ Deno.test("home app library (#244)", async (t) => {
                 );
                 try {
                     await waitForPlannedHome(page, 7);
-                    // Eight default-placed notes (no stored layout) exceed the
-                    // six side cells, so the overflow pill takes the rest.
                     const statuses = await page.evaluate(async () => {
                         const result: number[] = [];
-                        for (let index = 1; index <= 8; index++) {
+                        for (let index = 1; index <= 4; index++) {
                             const response = await fetch("/api/documents", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
                                     title: `默认落点便签${index}`,
-                                    body: "no explicit layout",
+                                    body: "pinned masthead entry",
                                     isHomeFixed: true,
                                 }),
                             });
@@ -1020,7 +1026,7 @@ Deno.test("home app library (#244)", async (t) => {
                         }
                         return result;
                     });
-                    assertEquals(statuses, Array(8).fill(200));
+                    assertEquals(statuses, Array(4).fill(200));
                     type Box = {
                         left: number;
                         top: number;
@@ -1030,22 +1036,17 @@ Deno.test("home app library (#244)", async (t) => {
                     const intersects = (a: Box, b: Box) =>
                         a.left < b.right && b.left < a.right &&
                         a.top < b.bottom && b.top < a.bottom;
-                    const placed = async (count: number) => {
-                        await page.locator(".home-notes--grid").waitFor();
+                    const measureMasthead = async (count: number) => {
+                        await page.locator(
+                            ".home-masthead__column, .home-masthead__pill",
+                        ).first().waitFor();
                         await page.waitForFunction(
                             (expected) =>
-                                document.querySelectorAll(".home-note")
-                                    .length === expected,
+                                document.querySelectorAll(
+                                    ".home-masthead__entry",
+                                ).length === expected,
                             count,
                         );
-                        await page.evaluate(() => {
-                            const { promise, resolve } = Promise
-                                .withResolvers<void>();
-                            requestAnimationFrame(() =>
-                                requestAnimationFrame(() => resolve())
-                            );
-                            return promise;
-                        });
                         return await page.evaluate(() => {
                             const box = (element: Element): Box => {
                                 const rect = element.getBoundingClientRect();
@@ -1062,63 +1063,31 @@ Deno.test("home app library (#244)", async (t) => {
                             const search = document.querySelector(
                                 ".search-form-wrap",
                             );
+                            const masthead = document.querySelector(
+                                ".home-masthead__column, .home-masthead__pill",
+                            );
                             return {
                                 library: library ? box(library) : null,
                                 search: search ? box(search) : null,
-                                notes: Array.from(
-                                    document.querySelectorAll(".home-note"),
-                                ).map(box),
+                                masthead: masthead ? box(masthead) : null,
                             };
                         });
                     };
                     await page.reload();
                     await page.locator(".launcher-grid--home").waitFor();
-                    const on = await placed(6);
-                    const library = on.library;
-                    assert(library, "the app library is measurable");
-                    assert(library.bottom > library.top);
+                    const on = await measureMasthead(4);
+                    assert(on.library, "the app library is measurable");
                     assert(on.search);
-                    for (const note of on.notes) {
-                        assert(
-                            !intersects(note, library),
-                            `note ${JSON.stringify(note)} overlaps library ${
-                                JSON.stringify(library)
-                            }`,
-                        );
-                    }
+                    assert(on.masthead);
+                    assert(!intersects(on.masthead, on.library));
+                    assert(!intersects(on.masthead, on.search));
 
-                    // Without the plate the shelf below the block inherits the
-                    // former app region; the side cells do not move.
                     await setShowHomeApps(page, app.origin, false);
-                    const off = await placed(8);
+                    const off = await measureMasthead(4);
                     assertEquals(off.library, null);
                     assert(off.search);
-                    const onSide = on.notes.map((note) =>
-                        `${Math.round(note.left)}:${Math.round(note.top)}`
-                    ).sort();
-                    const offSide = off.notes
-                        .filter((note) => !intersects(note, library))
-                        .map((note) =>
-                            `${Math.round(note.left)}:${Math.round(note.top)}`
-                        )
-                        .sort();
-                    assertEquals(
-                        offSide,
-                        onSide,
-                        "the hidden plate does not move a side cell",
-                    );
-                    for (const note of off.notes) {
-                        assert(
-                            !intersects(note, off.search),
-                            `note ${
-                                JSON.stringify(note)
-                            } overlaps the search box`,
-                        );
-                    }
-                    assert(
-                        off.notes.some((note) => intersects(note, library)),
-                        "the shelf may use the former app region",
-                    );
+                    assert(off.masthead);
+                    assert(!intersects(off.masthead, off.search));
                 } finally {
                     await context.close();
                 }

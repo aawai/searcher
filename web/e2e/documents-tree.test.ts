@@ -431,6 +431,8 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
             .click();
         await ui.frame.getByRole("button", { name: "打开笔记：散记置顶" })
             .waitFor();
+        await ui.frame.getByRole("button", { name: "打开笔记：新读书笔记" })
+            .waitFor({ state: "detached" });
         assertEquals(
             await ui.frame.getByRole("button", { name: /^打开笔记：/ }).count(),
             1,

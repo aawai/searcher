@@ -49,7 +49,7 @@ const TAILWIND_VISUAL_MARKER = "**Tailwind 视觉工具类登记";
 
 /** `font-size` Tokens: every `--font-*` except families, weights and line heights. */
 const FONT_TOKEN_NAME =
-    /^--font-(?!sans$|mono$)(?!.*-(?:weight|line-height)$)[a-z0-9-]+$/;
+    /^--font-(?!sans$|mono$|serif$)(?!.*-(?:weight|line-height)$)[a-z0-9-]+$/;
 /** Radius Tokens: `--radius`, `--radius-*` and `--*-radius`. */
 const RADIUS_TOKEN_NAME = /^--(?:[a-z0-9-]+-)?radius(?:-[a-z0-9-]+)?$/;
 

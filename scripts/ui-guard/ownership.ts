@@ -81,6 +81,8 @@ export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
         "WallpaperSurface runtime owner: Shared resolver readability stage",
     "--wallpaper-position":
         "WallpaperSurface runtime owner: Normalized focal point",
+    "--masthead-dock-shift":
+        "ZenLayout runtime owner: measured vertical distance from the search box's anchor to its dock above the open narrow masthead sheet",
     "--page-width":
         "DocumentPagination layout owner: physical paper metrics and measured vertical page flow; never visual styling",
     "--page-height":

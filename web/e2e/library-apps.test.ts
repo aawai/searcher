@@ -37,6 +37,10 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
     cleanup.defer(() => context.close());
     const page = await context.newPage();
     await loginAndVisit(page, app.origin, "/", credentials);
+    await page.request.patch(app.origin + "/api/preferences", {
+        headers: { Origin: app.origin },
+        data: { showHomeApps: true },
+    });
     const post = async (
         path: string,
         data: unknown,

@@ -36,37 +36,41 @@ async function startFixture(username: string, seed: Seed = {}) {
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
         await page.locator("main.home").waitFor({ state: "visible" });
-        if (seed.apps?.length || seed.folders?.length) {
-            await page.evaluate(async (seed) => {
-                for (const [index, name] of (seed.folders ?? []).entries()) {
-                    const response = await fetch("/api/webapp-groups", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            name,
-                            sortOrder: index,
-                            isHomeFixed: true,
-                        }),
-                    });
-                    if (!response.ok) throw new Error(await response.text());
-                }
-                for (const item of seed.apps ?? []) {
-                    const response = await fetch("/api/webapps", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            iconSource: "default",
-                            openMode: "global",
-                            isHomeFixed: true,
-                            ...item,
-                        }),
-                    });
-                    if (!response.ok) throw new Error(await response.text());
-                }
-            }, seed);
-            await page.reload();
-            await page.locator("main.home").waitFor({ state: "visible" });
-        }
+        await page.evaluate(async (seed) => {
+            const prefs = await fetch("/api/preferences", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ showHomeApps: true }),
+            });
+            if (!prefs.ok) throw new Error(await prefs.text());
+            for (const [index, name] of (seed.folders ?? []).entries()) {
+                const response = await fetch("/api/webapp-groups", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name,
+                        sortOrder: index,
+                        isHomeFixed: true,
+                    }),
+                });
+                if (!response.ok) throw new Error(await response.text());
+            }
+            for (const item of seed.apps ?? []) {
+                const response = await fetch("/api/webapps", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        iconSource: "default",
+                        openMode: "global",
+                        isHomeFixed: true,
+                        ...item,
+                    }),
+                });
+                if (!response.ok) throw new Error(await response.text());
+            }
+        }, seed);
+        await page.reload();
+        await page.locator("main.home").waitFor({ state: "visible" });
         return {
             page,
             origin: app.origin,

@@ -167,9 +167,9 @@ Deno.test("production documents library workspace contracts", async (t) => {
         );
     }
 
-    // Pinned documents render as Home notes (grid or flow stack).
+    // Pinned documents render in the Home masthead.
     const homePaper = (title: string) =>
-        page.locator(".home-note, .home-note-flow-item")
+        page.locator(".home-masthead__entry")
             .filter({ hasText: title }).first();
 
     async function homeNotesSettled() {
@@ -177,7 +177,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await document.fonts.ready;
         });
         await page.waitForFunction(() =>
-            document.querySelectorAll(".home-note-card").length > 0
+            document.querySelectorAll(".home-masthead__entry").length > 0
         );
         await page.evaluate(() => {
             const { promise, resolve } = Promise.withResolvers<void>();
