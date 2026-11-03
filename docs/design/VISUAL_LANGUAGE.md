@@ -262,7 +262,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 
 首页尺度三级：主体块是搜索框 + 应用底板（搜索输入用 `--font-search-input-size`，底板标签用 `--font-metadata-size`）；次级是“静”状态日期 / 时间（`--font-title-size`）、“继续”（`--font-body-size`）与首页笔记（标题 `--font-body-size` / 600，正文 `--font-body-size` / 400，标题行右侧任务进度 `--font-metadata-size`）；辅助是首页顶栏字标（`--font-body-size`）、主题与头像（沿用登记图标 / 控件尺寸）。层级由块体、距离与字重共同表达，不新增 raw 字号、不将顶栏升格为页面标题；窗口标题仍用 `--font-title-size`。
 
-本次系统语法修订（#285 Y3 C）：以「首页笔记」替换「纸张（Paper）」与层级表 Paper 行；新增 S / W 单元档位、吸附、不叠放、中性 Material 与跨断点短预览，保留底层 `color` 数据及笔记列表 / 编辑器配色。删除首页笔记专用的 `--radius-note-card`、`--paper-*`、`--shadow-note-card*`、`--material-note-*`（仅保留编辑器颜色选择器色点的 `--shadow-note-color-swatch`）；正文 ≥4.5:1、任务框边界 ≥3:1。owner 为 `home-grid-cells.ts`、`HomeNoteCard.tsx` 与 `home-notes.css`；以单元换算 / 交换 / 越界 / 默认落点、迁移测试和实页验证。
+本次系统语法修订（#285 Y3 C）：以「首页笔记」替换「纸张（Paper）」与层级表 Paper 行；新增 S / W 单元档位、吸附、不叠放、中性 Material 与跨断点短预览。删除首页笔记专用的 `--radius-note-card`、`--paper-*`、`--shadow-note-card*`、`--material-note-*`；正文 ≥4.5:1、任务框边界 ≥3:1。owner 为 `home-grid-cells.ts`、`HomeNoteCard.tsx` 与 `home-notes.css`；以单元换算 / 交换 / 越界 / 默认落点、迁移测试和实页验证。
 
 本次系统语法修订（#285 Y4 C2–C5）：新增应用底板、末行平衡与三档组合阴影，owner 分别为首页应用库 / `launcher.css`、`homeLibraryLayout.ts`、`tokens.css`；字号复用登记值。验证包括 19 / 12 格与大文件夹的布局单元测试、含内边距的有效行数测试、玻璃对比度（应用名 ≥4.5:1、浅底图标边缘 ≥3:1）、`check:ui`，以及 390 / 768 / 1440 / 1920 / 2560 × light / dark × mesh / 浅深照片 / 两张用户真实壁纸 × 四档玻璃实页与减少透明度降级；1440×900、1366×768、1920×1080 与 2560×1440 核验底板下缘留白 ≥48px。真实壁纸与 18 个真实图标的前后对比须由用户确认观感，不能以合规检查代替。
 
@@ -287,17 +287,16 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 | 基础控件外观                    | `web/src/components/ui/*.tsx` + `primitives.css`                                                                                                                                                   |
 | 页面骨架、分组列表、状态反馈    | `web/src/components/searcher/semantic.tsx` + `semantic.css`                                                                                                                                        |
 | reset、AppShell、顶栏、壁纸画布 | `web/src/styles/global.css`                                                                                                                                                                        |
-| 场景布局与领域呈现              | 对应 feature / 领域 CSS（如 `launcher.css`、`home-notes.css`、`documents-workspace.css`、`document-editor.css`、`document-colors.css`、`markdown.css`、`settings.css`；原 `notes.css` 已拆分退役） |
+| 场景布局与领域呈现              | 对应 feature / 领域 CSS（如 `launcher.css`、`home-notes.css`、`documents-workspace.css`、`document-editor.css`、`markdown.css`、`settings.css`；原 `notes.css` 已拆分退役） |
 
 feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 primitive 前须确认现有组件及其 variant 无法表达，且至少两个页面需要同一语义。`deno task check:ui` 在颜色语义属性、颜色语义自定义属性及支持的 TSX 静态样式 / SVG 属性 / 任意颜色类中以 `raw-color` 拒绝 hex、颜色函数和 CSS 命名色，包括渐变、阴影与 `var()` fallback 中的颜色；Token、`currentColor` 和 `transparent` 允许，字符串与 URL 内容不作颜色判定。此规则与 `unregistered-accent-fill` 独立：前者检查 raw 色值，后者检查强调色填充的文件和选择器登记。门禁还拒绝 raw 字号、圆角、阴影、间距与 z-index、未定义的 CSS 变量、未登记的字号 / 圆角 Token 及其定义，以及未登记的 Tailwind 视觉尺度与断点前缀。登记表由 `scripts/ui-guard/registry.ts` 从本文解析，表格缺失或格式错误时门禁失败；`tokens.css` 的登记工具类及断点还须与表中唯一来源一致。
 
 ### 例外
 
-新增例外必须说明它表达的系统级语义、owner 与验证方式，并写入本节。“更好看”“现在就是这样”不是理由。运行时几何（拖拽坐标、笔记单元、壁纸焦点）与领域颜色值（笔记颜色、引擎品牌色）不属于 raw 视觉值。
+新增例外必须说明它表达的系统级语义、owner 与验证方式，并写入本节。“更好看”“现在就是这样”不是理由。运行时几何（拖拽坐标、笔记单元、壁纸焦点）与领域颜色值（引擎品牌色）不属于 raw 视觉值。
 
 颜色领域例外按 owner、属性、选择器及值精确限制，不能豁免整个文件：
 
-- 笔记色点仅 `components/searcher/document-colors.css` 的 `:where(.note-quick-dot, .documents-color-dot)` 及其暗色选择器可定义 `--note-dot-amber/rose/sage/sky/paper`：亮色依次为 `#724E00` / `#7F3B58` / `#2C6330` / `#085B87` / `#5A5A60`，暗色为 `#E6C183` / `#F7AFCA` / `#A3D7A3` / `#91D0FC` / `#BEBEC4`。
 - 搜索引擎品牌仅 `components/searcher/EngineSelector.tsx` 的 SVG `fill` 可使用登记的 Google、Bing、Baidu 与 DuckDuckGo 品牌原色；具体色值由 `scripts/ui-guard/raw-color.ts` 精确限制，其他属性、owner 与未登记颜色不放行。
 - 玻璃对照仅 `design-lab/design-lab.css` 的 `.design-lab-wallpaper` 的 `background` 可使用固定高对比渐变样本，值由同一门禁精确核对。
 - 域名回退身份色由 `iconFallback.ts` 按 hostname 计算 HSL 浅底并配固定深墨色，`WebAppIcon.tsx` 以运行时函数调用消费；跨模块函数返回值是静态抽取的未知边界，不视为门禁已经求值。原有域名稳定性及对比度测试保护这一领域合同。
@@ -334,7 +333,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 **材质只出现在壁纸之上。** 搜索框、应用底板与首页笔记使用 Material；菜单、Popover、建议列表及悬浮任务栏使用 Floating 厚材质，消费全局玻璃档位。应用 / 笔记 / AI 窗口承载阅读、编辑与对话，使用 Overlay 实色，不改变首页壁纸；任务栏在所有窗口之上保持 Floating 材质。
 
-**设置等页面可以使用壁纸派生画布，内容层仍为实色。** 壁纸派生画布是同一张壁纸（或默认 mesh 画布）经 `--canvas-derived-filter` 模糊、再盖一层 `--canvas-derived`（`--background` 按 `--canvas-derived-mix` 混合，浅色 94%、深色 84%）后的画布，允许设置、账户、管理等独立页面使用，避免文字直接落在任意壁纸上；目前没有页面使用它（登录用户的设置、账户、AI 与回收站均是实色窗口）。分组列表、表格、面板、对话框等内容层保持实色（`--surface` / `--surface-l3`），不得改为材质。直接放在派生画布上的文字（页面标题、分组标题与脚注）按正文要求：`--foreground` 与 `--muted` 在深 / 浅照片极值与饱和色背景上均 ≥ 4.5:1，由 `design-system/glass-contrast.test.ts` 检验，低于下限的混合比例不得合入。`prefers-reduced-transparency: reduce` 或不支持 `backdrop-filter` 时派生画布为实色 `--background`。
+**设置等页面可以使用壁纸派生画布，内容层仍为实色。** 壁纸派生画布是同一张壁纸（无壁纸时为主题背景色 `--background`）经 `--canvas-derived-filter` 模糊、再盖一层 `--canvas-derived`（`--background` 按 `--canvas-derived-mix` 混合，浅色 94%、深色 84%）后的画布，允许设置、账户、管理等独立页面使用，避免文字直接落在任意壁纸上；目前没有页面使用它（登录用户的设置、账户、AI 与回收站均是实色窗口）。分组列表、表格、面板、对话框等内容层保持实色（`--surface` / `--surface-l3`），不得改为材质。直接放在派生画布上的文字（页面标题、分组标题与脚注）按正文要求：`--foreground` 与 `--muted` 在深 / 浅照片极值与饱和色背景上均 ≥ 4.5:1，由 `design-system/glass-contrast.test.ts` 检验，低于下限的混合比例不得合入。`prefers-reduced-transparency: reduce` 或不支持 `backdrop-filter` 时派生画布为实色 `--background`。
 
 ### 玻璃效果
 
@@ -351,9 +350,9 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 - `clear` 是用户主动选择的通透档位：Material fill 降至 45% / 55% 以透出壁纸（与壁纸可读性遮罩选“无”同理），设置页在选中时显示可读性说明；`glass-contrast.test.ts` 未将 `clear` 档 Material 纳入对比度断言，静态 Token 亦不保证其在任意壁纸上达到 4.5:1（开启 `prefers-reduced-transparency: reduce` 或不支持 `backdrop-filter` 时自动回退为 `off` 100% 实色）。菜单、Popover、建议列表等 Floating 在 `clear` 档仍保持 76% / 84% 填充并纳入上述合成探针。不得把 `clear` 档 Material 的未覆盖状态表述为已验证可读，也不得扩展到默认档或 `off` / `soft` / `regular`。
 - `--shadow-material-edge`（顶部 1px 高光、1px 内环和底部 1px 暗线）在所有档位保留；图标块、Material 与 Floating 分别消费 `--shadow-elevation-glyph`、`--shadow-elevation-material`、`--shadow-elevation-floating`，组合边缘与对应投影，不在组件中另加更强阴影。
 - `--glass-sheen`：Material 与 Floating 背景最上层的白色顶光（顶部最亮，到 55% 高度渐隐；亮色峰值 60%，暗色 6%），按上表随档位缩放；`clear` 减弱顶光，避免白色顶光把透出的壁纸重新盖成乳白。对比度测试按文字所在位置计入顶光。
-- off / soft / regular 的可感知度来自 blur、saturate、边缘高光、顶光与默认画布的色相变化，不得为“更透”把这三档下调到 fill 下限以下；要更透只能选 `clear`。
+- off / soft / regular 的可感知度来自 blur、saturate、边缘高光与顶光，不得为“更透”把这三档下调到 fill 下限以下；要更透只能选 `clear`。
 - 不支持 `backdrop-filter` 或系统开启 `prefers-reduced-transparency: reduce` 时，所有档位按 `off` 渲染（实色、无 blur），`--shadow-material-edge` 保留。设置页显示一行说明，但不禁用控件，也不改写已存值。
-- 无壁纸时的默认画布是低饱和 mesh 渐变（强调色加 `--canvas-mesh-secondary` 的大色斑），让玻璃背后有色相与明暗可折射；不提供关闭选项。明暗主题独立定义 `--canvas-mesh-base` / `--canvas-mesh-floor` 与色斑混合比例，不复用控件表面作为画布底色：浅色左下保留灰蓝色调而非近白空洞，深色底部抬升至中性灰紫而非近黑暗斑。`--canvas-mesh-secondary` 的色相按页面加载时的本地时段选择（`WallpaperSurface` 的 `data-daypart`：早 05–10 暖杏、午 11–17 浅天蓝、夜 18–04 淡紫；深色为暖褐、灰蓝、灰紫），明度与默认值接近，玻璃对比度不变；只在挂载时决定，不循环、不过渡。
+- 无壁纸时的默认画布是纯色主题背景 `--background`（浅色 `#F4F4F5`、深色 `#111113`），随明暗主题切换；不使用渐变、色斑、强调色或按时段变化的色调，也不提供其他画布颜色选项。
 - 应用底板内名称直接使用 Material 表面的 `--foreground` 前景色，不套逐项胶囊、不依赖 `--wallpaper-text-halo`；`off` / `soft` / `regular` 档明暗主题与壁纸夹具上应用名由 `glass-contrast.test.ts` 校验合成对比度 ≥ 4.5:1，`clear` 档 Material 未纳入该自动断言。底板外直接放在壁纸上的“静”状态继续用 `--wallpaper-text-halo` 表面色光晕，图片壁纸上保留现行 Material 小胶囊底；壁纸文字的强调色用途见 [强调色用途](#强调色用途)。
 - 档位对比在设计实验室“材质”区块，用高对比夹具并排渲染四档。
 
@@ -368,7 +367,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 - **窗口尺寸变化**：越界的 `col` / `row` 在所在带内夹取，不丢失、不写回服务器；带在当前视口不存在时（如高底板挤掉 shelf）按默认落点重新放置，同样不写回。只有用户再次拖动、交换或键盘移动时才保存。
 - **默认落点**：先放置有保存坐标的笔记；没有坐标或所在带不存在的笔记由 `placeHomeNotes` 计算默认落点：避开搜索框、应用底板与“静”状态，左右两侧交替，从搜索行向下、再向上填满，最后使用 shelf；放不下 W 时按 S 渲染。`placeHomeNotes` 为纯函数，owner 为 `home-grid-cells.ts`。
 - **尺寸切换**：笔记菜单提供 S / W 两项（取代原“展开 / 折叠”）。切换改 `size`，若已保存列坐标在新尺寸下超出当前带列数上限则同步夹取到带内合法列；放不下 W 时按 S 渲染。
-- **颜色**：首页固定笔记统一使用 `--glass-sheen` + `--material-regular` 中性材质，移除整面着色、色点及首页配色入口。底层 `color` 保留，笔记列表色点与编辑器五项颜色单选不变。标题、正文与标题行任务进度计数均使用 `--foreground`（不降为 `--muted`）；`glass-contrast.test.ts` 在 `off` / `soft` / `regular` 壁纸夹具上校验正文与进度文字 ≥ 4.5:1、任务框边界 `--task-box-border` ≥ 3:1，`clear` 档 Material 未纳入该自动断言。
+- **材质与对比度**：首页固定笔记统一使用 `--glass-sheen` + `--material-regular` 中性材质。标题、正文与标题行任务进度计数均使用 `--foreground`（不降为 `--muted`）；`glass-contrast.test.ts` 在 `off` / `soft` / `regular` 壁纸夹具上校验正文与进度文字 ≥ 4.5:1、任务框边界 `--task-box-border` ≥ 3:1，`clear` 档 Material 未纳入该自动断言。
 - **排版**：标题 `--font-body-size`（14 / 22）/ 600（透明底、无悬停填充块，仅在实际截断时显示 `title` 提示），正文 `--font-body-size`（14 / 22）/ 400，继承 `--foreground`；标题行与正文间距 `--space-2`（8px），卡片水平内边距 `--space-4`（16px），纵向内边距 `--space-home-note-pad-block` 按单元高度与完整内容高度均分（桌面 180px 单元下有标题行时上下各 20px、无标题无任务时上下各 24px；<768px 纵向堆叠 134px 单元下有标题行时上下各 19px、无标题无任务时上下各 23px），使满行卡片上下留白对称。通过标题 600 / 正文 400 与对称留白建立层级，不新增全局 Token。正文按整行裁切：任务行、列表行与段落共享同一行距（任务复选框在行内），以 Range 的实际 line box 计算可见高度，停在最后一条完整行的底部；仅在实际溢出时对最后一行行尾（60%→100% 宽度）做水平渐隐，保持前序各行及最后一行前半段完整不透明，渐隐不得垂直切半个字，正文不出现滚动条。预览行数：桌面与两列流式有标题行时 5 行（S / W 高度一致，不预留底部空白）、无标题且无任务时 6 行；<768px 纵向堆叠有标题行时 3 行、无标题且无任务时 4 行。无标题但有正文的笔记不重复显示首行标题。不做插画与链接图片预览。任务进度收敛在标题行右侧（先于 `⋯` 操作位），由复选框图标（`icon-sm`）与 `--font-metadata-size`（12 / 16）继承 `--foreground` 的完成数 / 总数计数（数字等宽）组成，不单独占用底部行。任务 checkbox 保留自绘样式：未完成 `--task-box-border` 描边、已完成墨色填充加镂空对勾，边框对组件底 ≥3:1、正文 ≥4.5:1。粗指针下任务命中区仍为 44×44：只在行首复选框列内向上下扩展到 44px 高，相邻行重叠带按行中心最近者判定，不改变 22px 行距。
 - **跨断点**：≥1024px 且至少一侧有完整单元时为分带吸附网格；两侧的负行与底板下方 shelf 只在这个形态存在。768–1023px 与 1024–1087px 无侧列时为两列流式（S 占一列，W 跨两列，高度仍为单元高；与底板的间距等于搜索框→底板间距，笔记间距等于应用网格间距）；<768px 为纵向堆叠（单列、与搜索框同宽、单元高），取代原单张轮播。各断点由同一组件渲染，材质与排版一致，没有新增尺寸档位。网格以卡片作为键盘入口，标题不重复加入 Tab 顺序；流式与堆叠中无标题但有正文的卡片可聚焦，空白笔记通过标题进入，卡片获得焦点时显示同圆角焦点环。
 - **容量与“更多笔记”**：入口为固定在视口底部、任务栏避让区域之上的 Material pill，消费 `--space-2` 间距，不占网格单元；可见高度 32px，粗指针及窄屏命中区 ≥44px。点击直达笔记窗口，不与搜索框、底板、笔记或任务栏相交。容量依据扣除任务栏后的可用区域完整单元计算；两侧计入搜索框上下的可用行，shelf 位于底板下 20px，W 占两格，两侧单列时按 S 渲染或放入 shelf。窗口变化不改写保存坐标。
@@ -395,29 +394,27 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 强调色有两种来源，偏好 `accent` 二选一：
 
-- **壁纸派生（`wallpaper`，默认）**：取当前壁纸构图焦点周围（每轴 50% 窗口）的像素，按 OKLCH 色相直方图（彩度加权、近黑近白降权）选主色；彩色像素不足 4% 时为中性，派生中性灰。由主色分别为浅色 / 深色求解 `--accent`、`--accent-hover`、`--accent-active`、`--accent-foreground`，满足与预设相同的对比度：强调色文字与焦点环分别 ≥ 4.5:1、≥ 3:1（对表面、背景、次表面与 `--accent-soft`），前景对三种填充 ≥ 4.5:1。gradient 壁纸按色标取色。owner：`design-system/wallpaper-accent.ts`（纯函数，同一像素与焦点得到同一结果）与 `components/wallpaper/wallpaper-accent-source.ts`（采样）；`AppState` 把派生对写到 `<html>` 的 `--wallpaper-accent*`，`[data-accent="wallpaper"]` 读取它们。
+- **壁纸派生（`wallpaper`，默认）**：取当前壁纸构图焦点周围（每轴 50% 窗口）的像素，按 OKLCH 色相直方图（彩度加权、近黑近白降权）选主色；彩色像素不足 4% 时为中性，派生中性灰。由主色分别为浅色 / 深色求解 `--accent`、`--accent-hover`、`--accent-active`、`--accent-foreground`，满足与预设相同的对比度：强调色文字与焦点环分别 ≥ 4.5:1、≥ 3:1（对表面、背景、次表面与 `--accent-soft`），前景对三种填充 ≥ 4.5:1。owner：`design-system/wallpaper-accent.ts`（纯函数，同一像素与焦点得到同一结果）与 `components/wallpaper/wallpaper-accent-source.ts`（采样）；`AppState` 把派生对写到 `<html>` 的 `--wallpaper-accent*`，`[data-accent="wallpaper"]` 读取它们。
 - **手选（9 种预设）**：作为覆盖，不再跟随壁纸；随时可选回“跟随壁纸”。
 
 无壁纸、图片无法解码或远程图片未开放 CORS 时，壁纸派生回退为经典蓝。派生结果不上传：每台设备由同一壁纸与焦点确定性重算，因此跨设备一致；更换壁纸或调整焦点后即时重算。
 
 ### 强调色用途
 
-强调色（`--accent` 及 `--accent-hover`、`--accent-active`、`--accent-foreground`，以及由它派生的 `--accent-soft`、`--accent-subtle`、`--accent-border` 着色）表达交互语义与个性化画布，除此之外不使用。对比度与“选中不只靠颜色”属于底线，不因用途登记而放宽。
+强调色（`--accent` 及 `--accent-hover`、`--accent-active`、`--accent-foreground`，以及由它派生的 `--accent-soft`、`--accent-subtle`、`--accent-border` 着色）表达交互语义与色样，除此之外不使用。对比度与“选中不只靠颜色”属于底线，不因用途登记而放宽。
 
 1. **交互语义**
    - primary：primary 按钮、默认 Badge；每个区域最多一个 primary 按钮。
    - 选中 / 激活 / 高亮：开关、复选框、单选点、滑块已选段、菜单与建议列表的高亮项、活动状态点。
    - 焦点环、链接。
    - 拖放反馈：整理模式下可拖拽提示、拖入文件夹的目标提示。
-2. **个性化画布**
-   - 无壁纸时的默认画布 mesh 渐变，强调色只占 `--canvas-mesh-accent-mix` 的色斑。
-   - 色样：强调色选择与设计实验室中展示强调色本身的色块。
+2. **色样**：强调色选择与设计实验室中展示强调色本身的色块。
 
 **禁止项**：
 
 - 装饰：与上述语义无关的色块、描边、图标着色、插画。
 - 大面积强调色背景：页面、面板、卡片、分组列表、桌面对象、搜索框、对话框不得用强调色填充。
-- 渐变：除默认画布 mesh 外，不用强调色做渐变。
+- 渐变：不用强调色做渐变。
 - 状态含义：错误、成功、警告用 `--danger`、`--success`、`--warning`，不借强调色。
 - 应用图标的首字母底色（用中性色）。
 
@@ -439,7 +436,6 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 | 选中 / 激活 | `web/src/features/dock/dock.css`           | `.dock-item[data-active="true"]::after`                                    |
 | 拖放反馈    | `web/src/components/searcher/launcher.css` | `.launcher-drag-cue`                                                       |
 | 拖放反馈    | `web/src/components/searcher/launcher.css` | `.launcher-folder-drop-badge`                                              |
-| 个性化画布  | `web/src/styles/global.css`                | `.wallpaper-surface`                                                       |
 | 色样        | `web/src/app/settings.css`                 | `.settings-swatch-color`                                                   |
 | 色样        | `web/src/design-lab/design-lab.css`        | `.design-lab-swatch-chip[data-token="--accent"]`                           |
 | 色样        | `web/src/design-lab/design-lab.css`        | `.design-lab-swatch-dot`                                                   |
@@ -477,7 +473,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 应用与笔记由同一 `WindowFrame` 呈现（`data-window-id` 为 `apps`、`notes`），正文位于标题栏下方并占满剩余高度。`tokens.css` 拥有 `--window-apps-width/height`（640×640）与 `--window-notes-width/height`（960×720）。平板与手机沿用单活动窗口；内容按窗口实测宽度而非视口选择布局。
 常驻侧栏与 ≥768px 大纲的可聚焦分隔条由 `PaneResizeHandle` 拥有；宽度 token 的默认值分别为 240px / 260px，最小 180px、最大 400px，运行时按 Host 限制且不覆盖存储值。分隔条支持指针捕获、方向键 16px、Home / End 和双击复位，粗指针命中区为 `--control-touch-target`。验证键盘、触控、临时夹取与账号 / 设备隔离，抽屉保持原布局。
 
-笔记标题栏只有标题、全屏与窗口按钮，不提供侧栏开关、返回或创建。侧栏折叠 / 展开 icon 属于侧栏与编辑区：常驻侧栏在搜索行右端放折叠按钮（`PanelLeftClose`，ghost icon），折叠后在编辑器标题行最左（标题输入之前）放展开按钮（`PanelLeftOpen`），抽屉模式（<阈值）同一位置的按钮打开抽屉；无编辑器标题行的空状态 / 加载状态渲染仅含该按钮的最小标题行。创建 icon 位于“笔记本”标题行右端（视觉 `--control-compact-height`、icon `--icon-md`，粗指针由伪元素扩大到 `--control-touch-target`，不改变视觉尺寸），列表模式下标题行保留并以范围名作标签。侧栏自上而下为搜索（整行）、固定入口（最近 / 收藏）、笔记本区与底部回收站；笔记本区为 `role="tree"` 笔记本树（两层、笔记为叶子，根笔记本之后直接显示根目录笔记），点击固定入口或搜索时替换为平铺列表，点击树空白处清空选中并将新建目标设为根目录。树节点行高为 `--control-compact-height`（粗指针 `--control-touch-target`），缩进为 `--space-4` 每层，选中与悬停使用 `--surface-soft`，色点 / 星标 / 图钉标记沿用同一套（图钉与星标同属 muted 图标，菜单内图钉为强调色）；⋯ 在细指针下悬停 / 聚焦才显示，触屏常驻。节点菜单使用 ContextMenu 基础组件（右键、长按、⋯、ContextMenu 键同一份），笔记和笔记本均提供上移 / 下移。树模式拖拽以拖动浮层、插入线或目标高亮反馈排序与移动，无效落点显示禁用反馈并通过 live region 说明；触屏长按不动打开菜单，长按后移动进入拖拽，列表模式与全屏禁用拖拽，具体落点规则见 [笔记](../documents.md#library)。≥ `BREAKPOINTS.notesSidebar` 为可折叠常驻侧栏，宽度为 `--notes-sidebar-width`；更窄为窗口内容区内的左抽屉，窗口 Host <768px 的大纲为镜像右抽屉，两者互斥。抽屉使用 Overlay 实色，不覆盖窗口外内容；打开时约束焦点并使抽屉外内容 inert，关闭后返回触发控件。左抽屉打开时编辑区缩成 `--radius-sheet` 圆角卡片（`scale(.94)`，使用既有 `--shadow-l2`，不新增阴影档位）并向右位移 `min(--notes-sidebar-width, 80%)`，露出实色抽屉；右抽屉则以右侧为变换原点，卡片向左位移 `min(--document-outline-width, 80%)`，露出同宽的大纲。卡片 inert，点击卡片关闭；大纲选择标题后关闭并定位。位移、缩放与抽屉淡入均为 `--motion-base` / `--ease-out-expo`，关闭时抽屉保持渲染到动效结束（`visibility` 延迟）；`prefers-reduced-motion: reduce` 下编辑区不位移、不缩放、无圆角，抽屉仅做同时长的透明度变化。焦点、`inert` 与 Escape 层级不随动效变化。
+笔记标题栏只有标题、全屏与窗口按钮，不提供侧栏开关、返回或创建。侧栏折叠 / 展开 icon 属于侧栏与编辑区：常驻侧栏在搜索行右端放折叠按钮（`PanelLeftClose`，ghost icon），折叠后在编辑器标题行最左（标题输入之前）放展开按钮（`PanelLeftOpen`），抽屉模式（<阈值）同一位置的按钮打开抽屉；无编辑器标题行的空状态 / 加载状态渲染仅含该按钮的最小标题行。创建 icon 位于“笔记本”标题行右端（视觉 `--control-compact-height`、icon `--icon-md`，粗指针由伪元素扩大到 `--control-touch-target`，不改变视觉尺寸），列表模式下标题行保留并以范围名作标签。侧栏自上而下为搜索（整行）、固定入口（最近 / 收藏）、笔记本区与底部回收站；笔记本区为 `role="tree"` 笔记本树（两层、笔记为叶子，根笔记本之后直接显示根目录笔记），点击固定入口或搜索时替换为平铺列表，点击树空白处清空选中并将新建目标设为根目录。树节点行高为 `--control-compact-height`（粗指针 `--control-touch-target`），缩进为 `--space-4` 每层，选中与悬停使用 `--surface-soft`，星标 / 图钉标记沿用同一套（图钉与星标同属 muted 图标，菜单内图钉为强调色）；⋯ 在细指针下悬停 / 聚焦才显示，触屏常驻。节点菜单使用 ContextMenu 基础组件（右键、长按、⋯、ContextMenu 键同一份），笔记和笔记本均提供上移 / 下移。树模式拖拽以拖动浮层、插入线或目标高亮反馈排序与移动，无效落点显示禁用反馈并通过 live region 说明；触屏长按不动打开菜单，长按后移动进入拖拽，列表模式与全屏禁用拖拽，具体落点规则见 [笔记](../documents.md#library)。≥ `BREAKPOINTS.notesSidebar` 为可折叠常驻侧栏，宽度为 `--notes-sidebar-width`；更窄为窗口内容区内的左抽屉，窗口 Host <768px 的大纲为镜像右抽屉，两者互斥。抽屉使用 Overlay 实色，不覆盖窗口外内容；打开时约束焦点并使抽屉外内容 inert，关闭后返回触发控件。左抽屉打开时编辑区缩成 `--radius-sheet` 圆角卡片（`scale(.94)`，使用既有 `--shadow-l2`，不新增阴影档位）并向右位移 `min(--notes-sidebar-width, 80%)`，露出实色抽屉；右抽屉则以右侧为变换原点，卡片向左位移 `min(--document-outline-width, 80%)`，露出同宽的大纲。卡片 inert，点击卡片关闭；大纲选择标题后关闭并定位。位移、缩放与抽屉淡入均为 `--motion-base` / `--ease-out-expo`，关闭时抽屉保持渲染到动效结束（`visibility` 延迟）；`prefers-reduced-motion: reduce` 下编辑区不位移、不缩放、无圆角，抽屉仅做同时长的透明度变化。焦点、`inert` 与 Escape 层级不随动效变化。
 
 ≥768px 的大纲：编辑区至少能容纳 640px 正文与 `--document-outline-width` 时并排，否则在编辑区右缘以 Overlay 实色悬浮，不改变正文排版。右缘 Overlay 非模态、无遮罩或焦点圈定，点击标题定位后保持打开；仅焦点在面板内时 Escape 关闭并归还焦点。窗口缩放切换呈现时保持展开状态，不收起侧栏。全屏隐藏侧栏、触发、标题文字、窗口按钮、缩放手柄、任务栏与悬浮球，标题栏只保留退出全屏。
 

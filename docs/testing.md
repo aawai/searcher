@@ -180,7 +180,7 @@ workspace-contract、workspace-matrix、颜色层级与对比度等完整 Worksp
 Material off / soft / regular × 亮 / 暗的对比度下限，`clear` 的 Material 不承诺对比度；
 `search_opacity` 的 `1`、`0.72`、`0.5`、`0.1` 边界）。实页验收不做档位 × 视口 × 主题 × 背景的全组合：
 
-- 默认档位：390 / 768 / 1440 × light/dark，默认 mesh 画布，共 6 张。
+- 默认档位：390 / 768 / 1440 × light/dark，无壁纸（纯色主题背景），共 6 张。
 - 档位差异：设计实验室并排四档，1440 × light/dark，共 2 张。
 - 照片壁纸：首页 1440 × light/dark，标准档，共 2 张。
 - `prefers-reduced-transparency`：1440 light 断言 Material 表面 fill

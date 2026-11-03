@@ -75,7 +75,6 @@ export const suites = {
         "home-notes-drag",
         "home-notes-placement",
         "home-notes-inline",
-        "home-notes-color",
         "home-notes-keyboard",
         "home-notes-document",
         "home-notes-resize",

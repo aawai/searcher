@@ -126,7 +126,6 @@ Deno.test("production workspace layered matrix E2E (Issue #92)", async (t) => {
     await request<{ id: string }>("/api/documents", "POST", {
         title: "Welcome Note",
         body: "First note content for matrix verification",
-        color: "amber",
     });
 
     async function openWorkspace(target: Page = page) {

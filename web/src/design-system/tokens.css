@@ -62,17 +62,10 @@
     --glyph-edge: rgb(0 0 0 / 0.5);
     /* Light catching the top of the glass: peak white at the top edge, fading out by 55% of the height. Scaled by the tier. */
     --glass-sheen-peak: 60%;
-    /* Default canvas (no wallpaper): accent blobs plus this secondary tint give the glass something to refract. */
-    --canvas-mesh-base: #E3E3EA;
-    --canvas-mesh-floor: #D9DEE8;
-    --canvas-mesh-secondary: #EDC9B5;
-    --canvas-mesh-accent-mix: 24%;
-    --canvas-mesh-secondary-mix: 50%;
 
     /* Free cells while a home note is being moved. */
     --home-note-slot-fill: rgb(255 255 255 / 0.24);
     --home-note-slot-ring: rgb(0 0 0 / 0.28);
-    --shadow-note-color-swatch: inset 0 0 0 1px var(--border);
 
     /* Documents paper and achromatic print. */
     --surface-document-paper: var(--surface-solid);
@@ -346,30 +339,6 @@
     --glass-edge-ring: rgb(255 255 255 / 0.12);
     --glass-edge-bottom: rgb(0 0 0 / 0.35);
     --glass-sheen-peak: 6%;
-    --canvas-mesh-base: #2B2C34;
-    --canvas-mesh-floor: #30313C;
-    --canvas-mesh-secondary: #61557A;
-    --canvas-mesh-accent-mix: 24%;
-    --canvas-mesh-secondary-mix: 40%;
-}
-
-/* Default canvas tone by the time of day at load (WallpaperSurface data-daypart):
-   only the secondary blob changes hue; luminance stays close to the defaults
-   above so glass contrast is unchanged. Morning keeps the warm default. */
-[data-daypart="day"] {
-    --canvas-mesh-secondary: #C3D6EA;
-}
-[data-daypart="night"] {
-    --canvas-mesh-secondary: #D3C9E8;
-}
-[data-theme="dark"] [data-daypart="morning"] {
-    --canvas-mesh-secondary: #6A5A55;
-}
-[data-theme="dark"] [data-daypart="day"] {
-    --canvas-mesh-secondary: #4D6074;
-}
-[data-theme="dark"] [data-daypart="night"] {
-    --canvas-mesh-secondary: #61557A;
 }
 
 /* Each palette owns both themes; color-scheme selects the light-dark pair. */

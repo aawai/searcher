@@ -37,7 +37,6 @@ function createMockDoc(overrides: Partial<DocumentDto> = {}): DocumentDto {
         snippet: "Initial snippet",
         notebookId: null,
         isFavorite: false,
-        color: "paper",
         isHomeFixed: false,
         homeSortOrder: 0,
         createdAt: 1000,
@@ -1641,7 +1640,7 @@ Deno.test("Untitled documents load with an empty title and clearing the title sa
     assertEquals(patches[0].title, null);
 });
 
-Deno.test("updatePresentation patches color and home pinning against the current version", async () => {
+Deno.test("updatePresentation patches home pinning against the current version", async () => {
     const patches: Record<string, unknown>[] = [];
     let currentDoc = createMockDoc({ version: 3 });
     const session = createDocumentSession({
@@ -1663,11 +1662,8 @@ Deno.test("updatePresentation patches color and home pinning against the current
     });
 
     await session.load();
-    assert(
-        await session.updatePresentation({ color: "sage", isHomeFixed: true }),
-    );
-    assertEquals(patches, [{ version: 3, color: "sage", isHomeFixed: true }]);
-    assertEquals(session.getSnapshot().document?.color, "sage");
+    assert(await session.updatePresentation({ isHomeFixed: true }));
+    assertEquals(patches, [{ version: 3, isHomeFixed: true }]);
     assertEquals(session.getSnapshot().document?.isHomeFixed, true);
     assertEquals(session.getSnapshot().document?.version, 4);
 });
@@ -1745,7 +1741,11 @@ Deno.test("New session waits for composition and debounce before creating with i
     const time = new TestTime();
     time.install();
     try {
-        const requests: { path: string; method: string; body: Record<string, unknown> }[] = [];
+        const requests: {
+            path: string;
+            method: string;
+            body: Record<string, unknown>;
+        }[] = [];
         const created: string[] = [];
         const session = createDocumentSession({
             userId: "user-1",
@@ -1798,7 +1798,11 @@ Deno.test("New session queues edits during its only POST and PATCHes the returne
     const time = new TestTime();
     time.install();
     try {
-        const calls: { path: string; method: string; body: Record<string, unknown> }[] = [];
+        const calls: {
+            path: string;
+            method: string;
+            body: Record<string, unknown>;
+        }[] = [];
         const post = Promise.withResolvers<DocumentDto>();
         const created: string[] = [];
         const session = createDocumentSession({
@@ -1827,7 +1831,9 @@ Deno.test("New session queues edits during its only POST and PATCHes the returne
         session.edit({ body: "Later" });
         const queuedSave = session.save();
         assertEquals(calls.length, 1);
-        post.resolve(createMockDoc({ version: 7, title: "First", body: "Initial" }));
+        post.resolve(
+            createMockDoc({ version: 7, title: "First", body: "Initial" }),
+        );
         assertEquals(await firstSave, true);
         assertEquals(await queuedSave, true);
         assertEquals(calls.length, 2);
@@ -1904,7 +1910,9 @@ Deno.test("New session ignores its own creation event and remains the same sessi
         onCreated: () => {},
         request: <T>(path: string, init?: RequestInit): Promise<T> => {
             calls.push(`${init?.method ?? "GET"} ${path}`);
-            return Promise.resolve(createMockDoc({ title: "New", body: "" }) as unknown as T);
+            return Promise.resolve(
+                createMockDoc({ title: "New", body: "" }) as unknown as T,
+            );
         },
     });
     await session.load();
@@ -1934,7 +1942,9 @@ Deno.test("Leaving a new session flushes pending content before debounce", async
             drafts: new MemoryDraftStorage(),
             request: <T>(path: string, init?: RequestInit): Promise<T> => {
                 calls.push(`${init?.method ?? "GET"} ${path}`);
-                return Promise.resolve(createMockDoc({ body: "Pending" }) as unknown as T);
+                return Promise.resolve(
+                    createMockDoc({ body: "Pending" }) as unknown as T,
+                );
             },
         });
         await session.load();

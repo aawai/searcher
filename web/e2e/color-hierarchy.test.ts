@@ -109,7 +109,7 @@ Deno.test("home color hierarchy keeps avatar and primary icons neutral and the e
     }
 });
 
-Deno.test("color hierarchy real-page matrix: guest/account, mesh/image, light/dark", async () => {
+Deno.test("color hierarchy real-page matrix: guest/account, plain/image, light/dark", async () => {
     const app = await startProductionApp();
     const browser = await chromium.launch({
         args: ["--no-sandbox"],
@@ -180,7 +180,7 @@ Deno.test("color hierarchy real-page matrix: guest/account, mesh/image, light/da
                             }-${
                                 image
                                     ? "image"
-                                    : "mesh"
+                                    : "plain"
                             }-${width}-${theme}.png`,
                             fullPage: true,
                             animations: "disabled",

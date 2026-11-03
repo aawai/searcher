@@ -25,7 +25,6 @@ export interface CreateNoteInput {
     /** `null`/omitted creates an untitled note whose display title is its body. */
     title?: string | null;
     body: string;
-    color?: "paper" | "amber" | "rose" | "sage" | "sky";
     isHomeFixed?: boolean;
     homeSortOrder?: number;
     size?: "s" | "w";
@@ -89,7 +88,6 @@ export async function createHomeNote(
             data: {
                 title: input.title ?? null,
                 body: input.body,
-                color: input.color ?? "paper",
                 isHomeFixed: input.isHomeFixed ?? true,
                 homeSortOrder: input.homeSortOrder ?? 0,
             },

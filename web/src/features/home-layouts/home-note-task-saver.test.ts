@@ -15,7 +15,6 @@ function paperFixture(overrides: Partial<DocumentDto> = {}): DocumentDto {
         snippet: "",
         notebookId: null,
         isFavorite: false,
-        color: "paper",
         isHomeFixed: true,
         homeSortOrder: 0,
         createdAt: 0,

@@ -18,7 +18,6 @@ function note(
         snippet: "",
         notebookId: "notebook",
         isFavorite: false,
-        color: "paper",
         isHomeFixed: true,
         homeSortOrder,
         createdAt: 1,

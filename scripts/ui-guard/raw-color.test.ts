@@ -188,57 +188,6 @@ Deno.test("raw-color - rejects non-hex # tokens while catching valid 3/4/6/8-dig
     );
 });
 
-Deno.test("raw-color - domain exception: note dot palette is restricted to exact owner, selector, property, and value", () => {
-    const owner = "web/src/components/searcher/document-colors.css";
-    const validCss = `
-        :where(.note-quick-dot, .documents-color-dot) {
-            --note-dot-amber: #724E00;
-            --note-dot-rose: #7F3B58;
-            --note-dot-sage: #2C6330;
-            --note-dot-sky: #085B87;
-            --note-dot-paper: #5A5A60;
-        }
-        [data-theme="dark"] :where(.note-quick-dot, .documents-color-dot) {
-            --note-dot-amber: #E6C183;
-            --note-dot-rose: #F7AFCA;
-            --note-dot-sage: #A3D7A3;
-            --note-dot-sky: #91D0FC;
-            --note-dot-paper: #BEBEC4;
-        }
-    `;
-    assertEquals(scanCss(owner, validCss), []);
-
-    // Wrong owner with identical CSS is rejected
-    assertEquals(
-        scanCss("web/src/features/home-layouts/home-notes.css", validCss)
-            .length,
-        10,
-    );
-
-    // Wrong selector, wrong property, or wrong hex value inside owner is rejected
-    const invalidInOwner = `
-        .note-quick-dot {
-            --note-dot-amber: #724E00;
-        }
-        :where(.note-quick-dot, .documents-color-dot) {
-            --note-dot-amber: #E6C183;
-            --note-dot-extra: #724E00;
-            background: #724E00;
-            color: #5A5A60;
-        }
-    `;
-    assertEquals(
-        scanCss(owner, invalidInOwner).map((v) => [v.rule, v.property, v.line]),
-        [
-            ["raw-color", "--note-dot-amber", 3],
-            ["raw-color", "--note-dot-amber", 6],
-            ["raw-color", "--note-dot-extra", 7],
-            ["raw-color", "background", 8],
-            ["raw-color", "color", 9],
-        ],
-    );
-});
-
 Deno.test("raw-color - domain exception: Design Lab glass fixture is restricted to exact selector and value", () => {
     const labOwner = "web/src/design-lab/design-lab.css";
     const validCss = `

@@ -6,7 +6,7 @@
     line-height: var(--font-body-line-height);
 }
 
-/* Wallpaper layers: the shared mesh canvas below, an optional photo above it.
+/* Wallpaper layers: the shared theme-background canvas below, an optional photo above it.
    Both are fixed and inert, so the lattice can use viewport coordinates. */
 .home-grid-lab__photo {
     position: fixed;
@@ -241,21 +241,15 @@
 }
 
 .home-grid-lab__note-title {
-    display: flex;
+    display: block;
     flex: none;
-    align-items: center;
-    gap: var(--space-2);
-    min-width: 0;
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-    font-weight: var(--font-title-weight);
-}
-
-.home-grid-lab__note-title > span:last-child {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-title-weight);
 }
 
 /* Truncation lands on whole lines; only the last line fades. */
