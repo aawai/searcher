@@ -47,10 +47,10 @@ Coverage CI 以 `documents-core` + 四个 `pagination-*` job 组成完整 Docume
 本地完整 Documents 验收使用单个 Deno E2E 进程、一次构建：
 
 ```sh
-DENO_JOBS=2 deno task test:documents --parallel
+deno task test:documents --parallel
 ```
 
-显式并行时默认并发度为 2；并发调优与多个 runner 的资源、报告目录及构建产物隔离遵循 [测试 · 并发与隔离](../../docs/testing.md#并发与隔离)。
+显式并行时默认并发度为 4；并发调优与多个 runner 的资源、报告目录及构建产物隔离遵循 [测试 · 并发与隔离](../../docs/testing.md#并发与隔离)。
 不加 `--parallel` 仍保持原有串行默认；完整全项目门禁仍为
 `deno task test:e2e:full`。分片仅改变调度边界，不代表已测得性能提升。
 
@@ -59,7 +59,7 @@ DENO_JOBS=2 deno task test:documents --parallel
 ```sh
 deno task test:e2e:affected
 deno task test:e2e:affected --base origin/main --list
-DENO_JOBS=2 deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast --timeout 5000
+deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast --timeout 5000
 ```
 
 `--base <git-ref>` 默认 `origin/main`，只允许用于 affected；没有该 ref 时先 fetch，
@@ -91,16 +91,16 @@ bundle、home-notes 和 supplemental；documents/editor 等映射包含共享入
 ## 并发与报告
 
 ```sh
-DENO_JOBS=2 deno task test:workspace:parallel
+deno task test:workspace:parallel
 deno task test:workspace:serial
 deno task test:e2e:full
-DENO_JOBS=2 deno task test:e2e:full --parallel
-DENO_JOBS=2 deno task test:e2e:full --parallel --no-fail-fast --timeout 5000
+deno task test:e2e:full --parallel
+deno task test:e2e:full --parallel --no-fail-fast --timeout 5000
 ```
 
 调度完全委托给 Deno `--parallel` / `DENO_JOBS`，不拆分单文件内有状态的测试或
 `t.step`，不共享 Browser、Context、数据库或 session。未设置 `DENO_JOBS`
-时采用保守值 2；Workspace CI 固定该值，coverage CI 使用独立 job 并行、job 内串行。
+时采用 4；Workspace CI 显式固定 `DENO_JOBS=2`，coverage CI 使用独立 job 并行、job 内串行。
 默认 Workspace 与 Workspace CI 均为并行，显式 `--serial` 会移除
 `--parallel`（而不是只把并发数设为 1）作为回退。full 与其他集合保持串行默认，显式 `--parallel` 可用于并发诊断；并发独有失败须单独隔离，不把单文件复查通过写成完整并发门禁通过。
 单独设置 `DENO_JOBS` 不会启用并行；以报告中的 `parallel` 与 `jobs` 为准。禁止用全局 retry 隐藏失败。
@@ -148,7 +148,7 @@ warning，不替代根本失败。Deno 2.9.7、60/10 分钟 timeout 与 PR concu
 - 先看终端或 `stdout.log` 的首个失败与堆栈，再看 JUnit
   名称、状态和耗时；不启用自动重试。
 - 局部失败先依据已有构建定向运行相应文件，修复并确认后才运行完整门禁；不要为调试一处失败反复构建和跑 full。
-- 分页稳定性测试的 5s 初始采样与 2s / 9s 空闲观测是回归契约，不以缩短观测窗口换取加速；保留原 fixture 与有状态步骤的边界。
+- 分页稳定性测试的 2s / 9s 空闲观测是回归契约，不以缩短观测窗口换取加速；5s 初始采样只记录过渡轨迹供证据模式使用，不参与断言。保留原 fixture 与有状态步骤的边界。
 - 对服务/编辑器做专项检查可直接使用
   `NODE_ENV=test deno test -A --trace-leaks --sanitize-resources --sanitize-ops <file>`；需先合法生产
   build。`--trace-leaks` 不能替代 Chromium

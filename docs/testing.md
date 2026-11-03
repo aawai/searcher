@@ -37,7 +37,7 @@ fallback 字体的 Linux 环境中也实际超过 A4 单页高度；不通过安
 模块入口（如 `test:workspace:apps`）仅作局部开发辅助，不替代完整 Workspace
 回归。
 
-本地摸底可用 `DENO_JOBS=2 deno task test:e2e:full --parallel --no-fail-fast --timeout 5000`，一次收集失败并缩短隐式等待；CI 保持默认超时。限时结果何时可作证据见 [首轮限时](#首轮限时)；参数、优先级与报告字段见 [Production E2E](../scripts/e2e/README.md#本地快速超时)。
+本地摸底可用 `deno task test:e2e:full --parallel --no-fail-fast --timeout 5000`，一次收集失败并缩短隐式等待；CI 保持默认超时。限时结果何时可作证据见 [首轮限时](#首轮限时)；参数、优先级与报告字段见 [Production E2E](../scripts/e2e/README.md#本地快速超时)。
 
 ### 摸底与失败处理
 
@@ -50,7 +50,7 @@ fallback 字体的 Linux 环境中也实际超过 A4 单页高度；不通过安
 
 ```sh
 deno task test:e2e:affected --base origin/main --list
-DENO_JOBS=2 deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast --timeout 5000
+deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast --timeout 5000
 ```
 
 基线默认 `origin/main`，`--base <git-ref>` 仅 affected 可用；不存在时先 fetch 或指定正确 ref。
@@ -79,7 +79,7 @@ untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` �
   不以删场景、放宽断言或缩短观察窗口提速。
 - 本机可同时运行多个 E2E 进程，前提是各进程使用独立的 `E2E_REPORT_DIR`，且全部进程的
   Deno worker 总数（各进程 `DENO_JOBS` 之和）不超过有效 CPU 配额与可用内存所能支撑的并发；
-  显式并行默认 `DENO_JOBS=2`。日常运行采用当前环境已验证的并发配置；
+  显式并行默认 `DENO_JOBS=4`。日常运行采用当前环境已验证的并发配置；
   调优时可在隔离实验中逐档提高，并结合有效 CPU 配额、可用内存、隔离分片数，
   以同等覆盖下的完整墙钟时间、稳定性和进程树内存峰值确定配置，不按逻辑 CPU 数直接设置 worker 数。
   空闲等待为主的场景（如分页观察窗）可与 CPU 密集场景并发，
@@ -135,8 +135,8 @@ Wallpaper 门禁及已有 job 名称保持不变；Workspace 门禁改为 `works
 `workspace-b` 两个并行 matrix job（job 名带 shard 后缀），并集等于完整 `workspace`。
 
 本地完整 Documents 验收使用
-`DENO_JOBS=2 deno task test:documents --parallel`，只启动一个 Deno E2E
-进程并只构建一次。显式并行默认并发度 2，调整并发遵循 [并发与隔离](#并发与隔离)；默认 runner
+`deno task test:documents --parallel`，只启动一个 Deno E2E
+进程并只构建一次。显式并行默认并发度 4，调整并发遵循 [并发与隔离](#并发与隔离)；默认 runner
 串行/fail-fast 规则未变。`test:documents` 仍覆盖全部五片，`test:e2e:full`
 仍是全项目去重完整门禁。多个 runner 并发须满足 [并发与隔离](#并发与隔离)，不能共享正在替换的构建产物；
 按需使用 `deno run -A scripts/e2e/run.ts <selector>` 定位单片，局部通过不替代完整验收。

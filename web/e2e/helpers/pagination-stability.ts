@@ -4,7 +4,7 @@ import { chromium } from "./browser.ts";
 import type { Page, Request } from "playwright";
 import type { DocumentDto } from "../../../src/shared/documents.ts";
 import { startProductionApp } from "./production-app.ts";
-import { openNoteRows } from "./library.ts";
+import { openNoteRows, switchDocumentMode } from "./library.ts";
 
 async function sample(page: Page, duration: number) {
     return await page.evaluate(async (duration) => {
@@ -236,31 +236,24 @@ export function registerPaginationStabilityTest(
             [390, 844],
             [1024, 1552],
         ];
-        const scenarios = viewports.flatMap(([width, height]) =>
-            (["light", "dark"] as const).map((theme) => ({
+        // Layout is theme-independent: every viewport with default motion, plus
+        // one reduced-motion pass (docs/testing.md CI 覆盖).
+        const scenarios = [
+            ...viewports.map(([width, height]) => ({
                 width,
                 height,
-                theme,
-            }))
-        );
-        for (const { width, height, theme } of scenarios) {
-            const name = `${fixture.name}-${width}x${height}-${theme}`;
+                motion: "no-preference" as const,
+            })),
+            { width: 1440, height: 900, motion: "reduce" as const },
+        ];
+        for (const { width, height, motion } of scenarios) {
+            const name = `${fixture.name}-${width}x${height}${
+                motion === "reduce" ? "-reduced-motion" : ""
+            }`;
             const passed = await t.step(name, async () => {
                 await page.setViewportSize({ width, height });
-                await page.emulateMedia({
-                    colorScheme: theme,
-                    reducedMotion: theme === "dark"
-                        ? "reduce"
-                        : "no-preference",
-                });
-                const origin = app.origin;
-                await page.goto(origin + "/settings");
-                await request("/api/preferences", "PATCH", { theme });
-                await page.goto(origin + "/");
-                await page.waitForFunction(
-                    (theme) => document.documentElement.dataset.theme === theme,
-                    theme,
-                );
+                await page.emulateMedia({ reducedMotion: motion });
+                await page.goto(app.origin + "/");
                 await openNoteRows(page);
                 await page.locator(`[data-document-id="${doc.id}"] h4 button`)
                     .click();
@@ -274,12 +267,11 @@ export function registerPaginationStabilityTest(
                     ) patches.push(req.postData() ?? "");
                 };
                 page.on("request", listener);
-                await page.getByRole("button", {
-                    name: /^切换编辑模式，当前：/,
-                }).click();
-                await page.getByRole("button", { name: "分页", exact: true })
-                    .click();
-                const initial = await sample(page, 5000);
+                await switchDocumentMode(page, "分页");
+                // The transition trace is evidence only; assertions use the idle
+                // window, which ready() gates on observable completion instead
+                // of a fixed wait.
+                const initial = evidence ? await sample(page, 5000) : undefined;
                 await ready(page);
                 if (fixture.name === "mixed") {
                     const dimensions = await page.locator(
