@@ -1927,13 +1927,13 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
             for (const edge of ["left", "right"] as const) {
                 await setDockEdge(edge);
                 const masthead = page.locator(
-                    ".home-masthead__column, .home-masthead__pill",
+                    ".home-masthead__column",
                 ).first();
                 await masthead.waitFor({ state: "visible" });
                 await page.waitForFunction(() => {
                     const bar = document.querySelector("nav.dock-bar");
                     const m = document.querySelector(
-                        ".home-masthead__column, .home-masthead__pill",
+                        ".home-masthead__column",
                     );
                     if (!bar || !m) return false;
                     const dockRect = bar.getBoundingClientRect();

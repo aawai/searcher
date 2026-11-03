@@ -259,7 +259,10 @@
     --layout-search-max: 640px;
     --layout-home-content-max: 640px;
     --layout-masthead-col: clamp(296px, 19vw, 372px);
-    --layout-masthead-veil-fade: 400px;
+    --layout-masthead-veil-fade: 640px;
+    /* Collapsed narrow masthead: the top veil's fade, ending
+       MASTHEAD_PEEK_VEIL_TAIL (masthead-layout.ts) below the peek. */
+    --layout-masthead-peek-fade: 200px;
     --layout-masthead-panel-max: var(--layout-form-max);
     /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
     --home-grid-wide-cell: 76px;
@@ -516,23 +519,43 @@
     --canvas-derived-mix: var(--canvas-derived-dark);
 }
 
+/* Dark themes dim the wallpaper image (not the readability mask above it), so
+   a bright wallpaper sits under dark surfaces the way a dark wallpaper would
+   and the masthead veil fades into it without a seam. */
+:root,
+[data-theme] {
+    --wallpaper-dim: none;
+}
+[data-theme="dark"] {
+    --wallpaper-dim: brightness(0.55);
+}
+
 /* Home masthead veil: a translucent --background wash over a strongly blurred
    wallpaper, so the wallpaper's colour still shows behind the column. The
-   glass `off` tier and the fallbacks below make it a solid wash. */
+   collapsed narrow masthead (the peek) uses a much thinner wash so it reads
+   as printed on the wallpaper; its text carries --masthead-text-halo, a soft
+   --background glow that keeps glyph edges legible where the wash is thin.
+   The glass `off` tier and the fallbacks below make both washes solid. */
 :root {
     --masthead-veil-light: 66%;
-    --masthead-veil-dark: 60%;
+    --masthead-veil-dark: 50%;
+    --masthead-peek-veil-mix: 22%;
     --masthead-veil-filter: blur(28px) saturate(1.35);
 }
 [data-glass="off"] {
     --masthead-veil-light: 100%;
     --masthead-veil-dark: 100%;
+    --masthead-peek-veil-mix: 100%;
     --masthead-veil-filter: none;
 }
 :root,
 [data-theme] {
     --masthead-veil-mix: var(--masthead-veil-light);
     --masthead-veil: color-mix(in srgb, var(--background) var(--masthead-veil-mix), transparent);
+    --masthead-peek-veil: color-mix(in srgb, var(--background) var(--masthead-peek-veil-mix), transparent);
+    --masthead-text-halo: 0 0 1px var(--background), 0 0 1px var(--background),
+        0 0 3px var(--background), 0 0 8px var(--background),
+        0 0 16px var(--background);
 }
 [data-theme="dark"] {
     --masthead-veil-mix: var(--masthead-veil-dark);
@@ -555,6 +578,7 @@
         --masthead-veil-light: 100%;
         --masthead-veil-dark: 100%;
         --masthead-veil-filter: none;
+        --masthead-peek-veil-mix: 100%;
     }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -572,6 +596,7 @@
         --masthead-veil-light: 100%;
         --masthead-veil-dark: 100%;
         --masthead-veil-filter: none;
+        --masthead-peek-veil-mix: 100%;
     }
 }
 

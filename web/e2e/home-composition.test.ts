@@ -90,7 +90,7 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                 await page.locator(
                     width >= 1366
                         ? ".home-masthead__entry"
-                        : ".home-masthead__pill",
+                        : ".home-masthead__peek",
                 ).first().waitFor();
                 await page.evaluate(() => document.fonts.ready);
                 const metrics = await page.evaluate(() => {

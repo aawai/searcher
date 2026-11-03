@@ -25,8 +25,14 @@ export type MastheadEntrySummary =
     }
     | {
         kind: "text";
-        text: string;
+        /** Readable text; inline code stays a separate monospace span. */
+        segments: readonly MastheadTextSegment[];
     };
+
+export interface MastheadTextSegment {
+    text: string;
+    code: boolean;
+}
 
 export interface MastheadTaskRow {
     key: string;
@@ -50,7 +56,7 @@ export function mastheadTaskKey(noteId: string, index: number): string {
     return `${noteId}:${index}`;
 }
 
-function readableNodeText(node: MdastNode): string {
+function readableSegments(node: MdastNode): MastheadTextSegment[] {
     if (
         node.type === "html" ||
         node.type === "definition" ||
@@ -58,9 +64,11 @@ function readableNodeText(node: MdastNode): string {
         node.type === "imageReference" ||
         node.type === "thematicBreak"
     ) {
-        return "";
+        return [];
     }
-    if (node.value !== undefined) return node.value;
+    if (node.value !== undefined) {
+        return [{ text: node.value, code: node.type === "inlineCode" }];
+    }
     const inline = node.type === "paragraph" ||
         node.type === "heading" ||
         node.type === "strong" ||
@@ -68,11 +76,61 @@ function readableNodeText(node: MdastNode): string {
         node.type === "delete" ||
         node.type === "link" ||
         node.type === "linkReference";
-    return (node.children ?? []).map(readableNodeText).join(inline ? "" : " ");
+    const parts = (node.children ?? []).map(readableSegments);
+    if (inline) return parts.flat();
+    return parts.flatMap((part, index) =>
+        index === 0 ? part : [{ text: " ", code: false }, ...part]
+    );
+}
+
+function readableNodeText(node: MdastNode): string {
+    return readableSegments(node).map((segment) => segment.text).join("");
 }
 
 function normalizeWhitespace(text: string): string {
     return text.replace(/\s+/gu, " ").trim();
+}
+
+/** Collapses whitespace across segments, trims both ends and merges neighbours of one kind. */
+function normalizeSegments(
+    segments: readonly MastheadTextSegment[],
+): MastheadTextSegment[] {
+    const result: MastheadTextSegment[] = [];
+    for (const segment of segments) {
+        const previous = result.at(-1);
+        let text = segment.text.replace(/\s+/gu, " ");
+        if (!previous || previous.text.endsWith(" ")) {
+            text = text.replace(/^ /u, "");
+        }
+        if (!text) continue;
+        if (previous?.code === segment.code) previous.text += text;
+        else result.push({ text, code: segment.code });
+    }
+    while (result.length > 0) {
+        const last = result[result.length - 1];
+        last.text = last.text.replace(/ $/u, "");
+        if (last.text) break;
+        result.pop();
+    }
+    return result;
+}
+
+/** Drops the first `count` characters of already normalized segments. */
+function dropLeadingText(
+    segments: readonly MastheadTextSegment[],
+    count: number,
+): MastheadTextSegment[] {
+    let remaining = count;
+    const rest: MastheadTextSegment[] = [];
+    for (const segment of segments) {
+        if (remaining >= segment.text.length) {
+            remaining -= segment.text.length;
+            continue;
+        }
+        rest.push({ text: segment.text.slice(remaining), code: segment.code });
+        remaining = 0;
+    }
+    return normalizeSegments(rest);
 }
 
 function isMeaningfulBlock(node: MdastNode): boolean {
@@ -186,7 +244,10 @@ export function summarizeMastheadEntry(
             if (blocks.length > 1) {
                 blocks = blocks.slice(1);
             } else {
-                const fullText = normalizeWhitespace(readableNodeText(first));
+                const segments = normalizeSegments(readableSegments(first));
+                const fullText = segments.map((segment) => segment.text).join(
+                    "",
+                );
                 const titleText = normalizeWhitespace(note.displayTitle);
                 if (
                     titleText &&
@@ -195,16 +256,16 @@ export function summarizeMastheadEntry(
                 ) {
                     return {
                         kind: "text",
-                        text: fullText.slice(titleText.length).trim(),
+                        segments: dropLeadingText(segments, titleText.length),
                     };
                 }
-                return { kind: "text", text: "" };
+                return { kind: "text", segments: [] };
             }
         }
     }
 
     if (blocks.length === 0) {
-        return { kind: "text", text: "" };
+        return { kind: "text", segments: [] };
     }
 
     const code = extractStandaloneCode(blocks[0]);
@@ -228,10 +289,14 @@ export function summarizeMastheadEntry(
         }
     }
 
-    const text = normalizeWhitespace(
-        blocks.map(readableNodeText).filter(Boolean).join(" "),
+    const segments = normalizeSegments(
+        blocks.flatMap((block, index) =>
+            index === 0
+                ? readableSegments(block)
+                : [{ text: " ", code: false }, ...readableSegments(block)]
+        ),
     );
-    return { kind: "text", text };
+    return { kind: "text", segments };
 }
 
 /**

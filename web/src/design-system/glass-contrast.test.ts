@@ -278,8 +278,17 @@ for (const theme of ["light", "dark"] as const) {
         const background = hex(resolve(tokens, "--background"));
         const veilAlpha = fillPercent(tokens, `--masthead-veil-${theme}`) /
             100;
+        // Dark themes dim the wallpaper image with `--wallpaper-dim`
+        // (`brightness()`), modelled as a per-channel scale (Chromium applies
+        // the shorthand in sRGB). The light theme declares no dim.
+        const brightness = Number(
+            tokens.get("--wallpaper-dim")?.match(
+                /brightness\((\d+(?:\.\d+)?)\)/,
+            )?.[1] ?? 1,
+        );
         // The wallpaper surface paints --background at the default "均衡"
-        // readability stage before the veil washes over the blurred result.
+        // readability stage over the dimmed image; the veil washes over the
+        // blurred result.
         const maskAlpha = WALLPAPER_READABILITY_MASKS.balanced;
         const probes = [
             ["--foreground", WCAG_AA_TEXT],
@@ -288,16 +297,13 @@ for (const theme of ["light", "dark"] as const) {
         for (const [name, floor] of probes) {
             const color = hex(resolve(tokens, name));
             const worst = Math.min(
-                ...BACKDROPS.map((backdrop) =>
-                    contrast(
-                        color,
-                        over(
-                            background,
-                            veilAlpha,
-                            over(background, maskAlpha, backdrop),
-                        ),
-                    )
-                ),
+                ...BACKDROPS.map((backdrop) => {
+                    const dimmed = backdrop.map((channel) =>
+                        channel * brightness
+                    ) as unknown as Rgb;
+                    const copy = over(background, maskAlpha, dimmed);
+                    return contrast(color, over(background, veilAlpha, copy));
+                }),
             );
             assert(
                 worst >= floor,

@@ -8,10 +8,9 @@ export const MASTHEAD_VW_RATIO = 0.19;
 export const MASTHEAD_SEARCH_GAP = 32;
 /** Extra breathing room between the page margin and the column, taken only from spare width. */
 export const MASTHEAD_EDGE_INSET_MAX = 48;
-/** The veil reaches this far past the column's outer edge… */
-export const MASTHEAD_VEIL_TAIL = 360;
-/** …and fades out over this width, so the fade starts just inside the column. */
-export const MASTHEAD_VEIL_FADE_WIDTH = 400;
+/** The veil reaches this far past the column's outer edge, so its fade
+ *  (`--layout-masthead-veil-fade`, 640px) starts 40px inside the column. */
+export const MASTHEAD_VEIL_TAIL = 600;
 export const MASTHEAD_SWIPE_THRESHOLD = 48;
 
 export type MastheadSide = "left" | "right";
@@ -20,17 +19,25 @@ export type MastheadSide = "left" | "right";
 export const MASTHEAD_DEFAULT_SEARCH_HEIGHT = 56;
 /** Space kept between the open narrow sheet and the search box docked below it. */
 export const MASTHEAD_SHEET_SEARCH_GAP = 24;
+/** Space kept between the collapsed narrow masthead's peek and the search box. */
+export const MASTHEAD_PEEK_SEARCH_GAP = 8;
+/** The collapsed top veil reaches this far below the peek, so its fade
+ *  (`--layout-masthead-peek-fade`, 200px) starts 80px above the peek's bottom
+ *  and dissolves behind the search box. */
+export const MASTHEAD_PEEK_VEIL_TAIL = 120;
 
 export type MastheadPlacement =
     | {
         mode: "side";
         side: MastheadSide;
         column: SafeRect;
-        opaqueWidth: number;
         veilWidth: number;
     }
     | {
         mode: "narrow";
+        /** Collapsed: the masthead's top shows from the free area's top down
+         *  to just above the search box at its anchor, fading out at the bottom. */
+        peek: SafeRect;
         /** The open sheet: from the free area's top to just above the docked search box. */
         sheet: SafeRect;
         /** Where the search box docks while the sheet is open. */
@@ -64,7 +71,6 @@ export interface MastheadDateParts {
     day: string;
     weekday: string;
     month: string;
-    shortDate: string;
     time: string;
 }
 
@@ -104,6 +110,17 @@ export function mastheadPlacement(
     const searchHeight = searchRect?.height ?? MASTHEAD_DEFAULT_SEARCH_HEIGHT;
     const narrow = (): MastheadPlacement => ({
         mode: "narrow",
+        peek: {
+            x: availableRect.x,
+            y: availableRect.y,
+            width: availableRect.width,
+            height: searchRect
+                ? Math.max(
+                    0,
+                    searchRect.y - MASTHEAD_PEEK_SEARCH_GAP - availableRect.y,
+                )
+                : 0,
+        },
         sheet: {
             x: availableRect.x,
             y: availableRect.y,
@@ -176,27 +193,21 @@ export function mastheadPlacement(
         ? column.x + column.width
         : Math.max(0, viewportWidth - column.x);
     const veilWidth = outerEdge + MASTHEAD_VEIL_TAIL;
-    const opaqueWidth = Math.max(0, veilWidth - MASTHEAD_VEIL_FADE_WIDTH);
 
     return {
         mode: "side",
         side,
         column,
-        opaqueWidth,
         veilWidth,
     };
 }
 
 /** Splits a local `Date` into the typographic parts shown by the masthead. */
 export function mastheadDateParts(date: Date): MastheadDateParts {
-    const dayNum = date.getDate();
-    const weekday = `星期${WEEKDAYS[date.getDay()]}`;
-    const month = CHINESE_MONTHS[date.getMonth()] ?? "一月";
     return {
-        day: String(dayNum),
-        weekday,
-        month,
-        shortDate: `${dayNum}日 ${weekday}`,
+        day: String(date.getDate()),
+        weekday: `星期${WEEKDAYS[date.getDay()]}`,
+        month: CHINESE_MONTHS[date.getMonth()] ?? "一月",
         time: formatCalmTime(date),
     };
 }

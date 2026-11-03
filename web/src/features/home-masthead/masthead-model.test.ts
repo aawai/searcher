@@ -48,8 +48,7 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
         mode: "side",
         side: "left",
         column: { x: 72, y: 88, width: 296, height: 780 },
-        opaqueWidth: 72 + 296 + 360 - 400,
-        veilWidth: 72 + 296 + 360,
+        veilWidth: 72 + 296 + 600,
     });
 
     const focalRight = mastheadPlacement({
@@ -74,8 +73,7 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
         mode: "side",
         side: "right",
         column: { x: 1440 - 32 - 296 - 40, y: 88, width: 296, height: 780 },
-        opaqueWidth: 72 + 296 + 360 - 400,
-        veilWidth: 72 + 296 + 360,
+        veilWidth: 72 + 296 + 600,
     });
 });
 
@@ -144,6 +142,8 @@ Deno.test("mastheadPlacement: exact fit width boundary and narrow fallback when 
     });
     assertEquals(narrow, {
         mode: "narrow",
+        // Collapsed, the masthead peeks from the free area's top down to 8px above the search box.
+        peek: { x: 32, y: 88, width: 1358 - 64, height: 314 - 8 - 88 },
         sheet: { x: 32, y: 88, width: 1358 - 64, height: 780 - 56 - 24 },
         searchDock: { x: 32, y: 88 + 780 - 56, width: 1358 - 64, height: 56 },
     });
@@ -159,11 +159,21 @@ Deno.test("mastheadPlacement: exact fit width boundary and narrow fallback when 
         }),
         {
             mode: "narrow",
+            peek: { x: 16, y: 72, width: 358, height: 200 - 8 - 72 },
             // The open sheet ends 24px above the search box docked on the free area's bottom.
             sheet: { x: 16, y: 72, width: 358, height: 756 - 56 - 24 },
             searchDock: { x: 16, y: 72 + 756 - 56, width: 358, height: 56 },
         },
     );
+
+    // A search box at (or above) the free area's top leaves no room to peek.
+    const cramped = mastheadPlacement({
+        viewportWidth: 390,
+        availableRect: mobileRect,
+        searchRect: { x: 16, y: 60, width: 358, height: 56 },
+        focalX: 0.5,
+    });
+    assertEquals(cramped.mode === "narrow" && cramped.peek.height, 0);
 
     // Column width scales with 19vw up to 372px.
     assertEquals(mastheadColumnWidth(1440), 296);
@@ -176,7 +186,6 @@ Deno.test("mastheadDateParts: formats day number, weekday, Chinese month name an
         day: "3",
         weekday: "星期二",
         month: "十一月",
-        shortDate: "3日 星期二",
         time: "09:05",
     });
 
@@ -216,15 +225,20 @@ Deno.test("summarizeMastheadEntry: distinguishes code fence, standalone inline c
         code: "deno task dev",
     });
 
-    // 3. Inline code mixed with prose -> text entry (not code entry)
+    // 3. Inline code mixed with prose -> text entry (not code entry) that
+    //    keeps the code span, with whitespace collapsed across segments
     const inlineMixed = summarizeMastheadEntry({
         title: "部署",
         displayTitle: "部署",
-        body: "`deno task build` 后以 production 启动",
+        body: "`deno task build`  后以 **production** 启动，再看 `logs`",
     });
     assertEquals(inlineMixed, {
         kind: "text",
-        text: "deno task build 后以 production 启动",
+        segments: [
+            { text: "deno task build", code: true },
+            { text: " 后以 production 启动，再看 ", code: false },
+            { text: "logs", code: true },
+        ],
     });
 
     // 4. Tasks-only note -> tasks-only summary
@@ -249,7 +263,7 @@ Deno.test("summarizeMastheadEntry: distinguishes code fence, standalone inline c
     });
     assertEquals(prose, {
         kind: "text",
-        text: "是否引入 HeroUI v3 与迁移风险",
+        segments: [{ text: "是否引入 HeroUI v3 与迁移风险", code: false }],
     });
 });
 
@@ -261,7 +275,20 @@ Deno.test("summarizeMastheadEntry: untitled note does not repeat first line and 
     });
     assertEquals(singleParagraph, {
         kind: "text",
-        text: "",
+        segments: [],
+    });
+
+    const untitledWithInlineCode = summarizeMastheadEntry({
+        title: null,
+        displayTitle: "启动服务",
+        body: "启动服务 用 `deno task dev`",
+    });
+    assertEquals(untitledWithInlineCode, {
+        kind: "text",
+        segments: [
+            { text: "用 ", code: false },
+            { text: "deno task dev", code: true },
+        ],
     });
 
     const multiBlockText = summarizeMastheadEntry({
@@ -271,7 +298,7 @@ Deno.test("summarizeMastheadEntry: untitled note does not repeat first line and 
     });
     assertEquals(multiBlockText, {
         kind: "text",
-        text: "讨论排期与迁移风险。",
+        segments: [{ text: "讨论排期与迁移风险。", code: false }],
     });
 
     const untitledCodeSecondBlock = summarizeMastheadEntry({

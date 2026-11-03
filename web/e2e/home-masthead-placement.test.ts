@@ -82,16 +82,31 @@ Deno.test("masthead placement: side follows wallpaper focalX at 1440 and narrow 
                     "true",
                 );
 
-                const pill = masthead.locator(".home-masthead__pill");
-                await pill.waitFor({ state: "visible" });
+                // Collapsed, the masthead peeks at the top: the date block
+                // shows above the search box, the open task count rides on
+                // the time line, and the peek itself is the expand control.
+                const peek = masthead.locator(".home-masthead__peek");
+                await peek.waitFor({ state: "visible" });
                 assertEquals(
-                    await pill.locator(".home-masthead__pill-tasks")
+                    await masthead.locator(".home-masthead__peek-tasks")
                         .textContent(),
                     "1 项待办",
                 );
+                assertEquals(
+                    await peek.getAttribute("aria-label"),
+                    "展开首页刊头，1 项待办",
+                );
+                const peekBox = await peek.boundingBox();
+                const dayBox = await masthead.locator(".home-masthead__day")
+                    .boundingBox();
+                const searchAnchor = await boxOf(page, ".search-form-wrap");
+                assert(peekBox && dayBox && searchAnchor);
+                assert(peekBox.y + peekBox.height <= searchAnchor.y);
+                assert(dayBox.y >= peekBox.y);
+                assert(dayBox.y + dayBox.height <= peekBox.y + peekBox.height);
 
-                // Expand by tapping the pill, collapse with Escape.
-                await pill.click();
+                // Expand by tapping the peek, collapse with Escape.
+                await peek.click();
                 await page.waitForFunction(() =>
                     document.querySelector(".home-masthead")?.getAttribute(
                         "data-collapsed",
@@ -109,9 +124,9 @@ Deno.test("masthead placement: side follows wallpaper focalX at 1440 and narrow 
                         "data-collapsed",
                     ) === "true"
                 );
-                // Escape hands focus back to the pill.
+                // Escape hands focus back to the peek.
                 assertEquals(
-                    await pill.evaluate((el) => el === document.activeElement),
+                    await peek.evaluate((el) => el === document.activeElement),
                     true,
                 );
 
@@ -130,7 +145,7 @@ Deno.test("masthead placement: side follows wallpaper focalX at 1440 and narrow 
                 const anchored = await searchWrap.boundingBox();
                 const heroBefore = await page.locator(".hero").boundingBox();
                 assert(anchored && heroBefore);
-                await pill.click();
+                await peek.click();
                 const sheet = page.locator(
                     '.home-masthead__sheet[data-open="true"]',
                 );
@@ -231,6 +246,90 @@ Deno.test("masthead placement: side follows wallpaper focalX at 1440 and narrow 
                         el.getAttribute("data-collapsed") === "false";
                 });
                 await waitForNoteCards(page, 1);
+            },
+        );
+    } finally {
+        await fixture.close();
+    }
+});
+
+Deno.test("masthead overflow: a long pinned list fades at the bottom on first paint and 全部笔记 stays visible in side and narrow modes", async (t) => {
+    const fixture = await openHomeNotesFixture({
+        viewport: { width: 1440, height: 900 },
+    });
+    const { page } = fixture;
+    const total = 8;
+    try {
+        for (let index = 0; index < total; index++) {
+            await createHomeNote(page, {
+                title: `置顶 ${index + 1}`,
+                body: `- [ ] 待办 ${index + 1}\n\n第 ${
+                    index + 1
+                } 篇的正文摘要。`,
+                homeSortOrder: index,
+            });
+        }
+        await reloadHome(page);
+        await waitForNoteCards(page, total);
+
+        /** The link is painted on top at its centre and inside `container`. */
+        const assertAllNotesVisible = async (container: string) => {
+            const link = await boxOf(page, ".home-masthead__all-notes");
+            const area = await boxOf(page, container);
+            assert(link && area);
+            assert(link.y >= area.y - 1);
+            assert(link.y + link.height <= area.y + area.height + 1);
+            assertEquals(
+                await page.evaluate(
+                    ({ x, y }) =>
+                        document.elementFromPoint(x, y)?.closest(
+                            ".home-masthead__all-notes",
+                        ) !== null,
+                    {
+                        x: link.x + link.width / 2,
+                        y: link.y + link.height / 2,
+                    },
+                ),
+                true,
+            );
+        };
+
+        await t.step(
+            "side mode: the scroll area reports bottom overflow without any scroll or resize, and the footer sits outside it",
+            async () => {
+                await page.waitForFunction(
+                    () =>
+                        document.querySelector(".home-masthead__scroll")
+                            ?.getAttribute("data-overflow-bottom") === "true",
+                    undefined,
+                    { timeout: 5000 },
+                );
+                const scroll = await boxOf(page, ".home-masthead__scroll");
+                const link = await boxOf(page, ".home-masthead__all-notes");
+                assert(scroll && link);
+                assert(link.y >= scroll.y + scroll.height - 1);
+                await assertAllNotesVisible(".home-masthead__column");
+            },
+        );
+
+        await t.step(
+            "narrow mode: the open sheet keeps 全部笔记 visible above the docked search box",
+            async () => {
+                await page.setViewportSize({ width: 390, height: 844 });
+                await reloadHome(page);
+                const peek = page.locator(".home-masthead__peek");
+                await peek.click();
+                await page.locator('.home-masthead__sheet[data-open="true"]')
+                    .waitFor({ state: "visible" });
+                await page.locator(".home-masthead__sheet").evaluate((
+                    element,
+                ) => Promise.all(
+                    element.getAnimations().map((animation) =>
+                        animation.finished
+                    ),
+                ));
+                await waitForNoteCards(page, total);
+                await assertAllNotesVisible(".home-masthead__sheet");
             },
         );
     } finally {

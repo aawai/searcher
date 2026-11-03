@@ -117,6 +117,7 @@ a {
     background-position: var(--wallpaper-position);
     background-size: cover;
     background-repeat: no-repeat;
+    filter: var(--wallpaper-dim);
 }
 .wallpaper-surface__mask {
     position: absolute;
