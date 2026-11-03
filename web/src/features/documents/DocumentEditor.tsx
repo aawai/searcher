@@ -26,6 +26,10 @@ import type { DocumentPagination } from "./document-pagination.ts";
 import type { DocumentEventSubscriptions } from "./document-event-subscriptions.ts";
 import { DocumentPaperSettingsDialog } from "./DocumentPaperSettingsDialog.tsx";
 import { prepareDocumentPrint } from "./document-print.ts";
+import {
+    DocumentModeSwitch,
+    type DocumentViewMode,
+} from "./DocumentModeSwitch.tsx";
 import { api, ApiError } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
@@ -36,11 +40,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "../../components/ui/popover.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import { Textarea } from "../../components/ui/textarea.tsx";
 import { type EditorState, TextSelection } from "@milkdown/prose/state";
@@ -58,13 +57,10 @@ import {
     BookOpen,
     Check,
     ChevronUp,
-    CodeXml,
     Copy,
     Download,
-    FileText,
     History,
     MoreHorizontal,
-    Pencil,
     Printer,
     RefreshCw,
     Settings,
@@ -344,7 +340,7 @@ export function DocumentEditor({
 
     // View choice is local to this user, device and document.
     const viewStorageKey = `document:view:${userId}:${documentId}`;
-    const [viewMode, setViewMode] = useState<"continuous" | "page" | "source">(
+    const [viewMode, setViewMode] = useState<DocumentViewMode>(
         () => {
             try {
                 const saved = localStorage.getItem(viewStorageKey);
@@ -358,7 +354,7 @@ export function DocumentEditor({
     );
     const richMode = viewMode !== "source";
 
-    const handleViewChange = (nextMode: "continuous" | "page" | "source") => {
+    const handleViewChange = (nextMode: DocumentViewMode) => {
         if (nextMode === viewMode) return;
         // View switch flush: save current edits via autosave
         void session.save("autosave");
@@ -409,7 +405,6 @@ export function DocumentEditor({
         narrow ? 0 : BREAKPOINTS.medium,
         coarsePointer,
     );
-    const [modeOpen, setModeOpen] = useState(false);
     const formatButtonRef = useRef<HTMLButtonElement>(null);
     const toolbarCollapseRef = useRef<HTMLButtonElement>(null);
     // The collapse chevron and the header toggle replace each other; focus follows.
@@ -1680,91 +1675,11 @@ export function DocumentEditor({
             </div>
             <div className="document-editor-status-bar">
                 <div className="document-editor-status-actions">
-                    <Popover open={modeOpen} onOpenChange={setModeOpen}>
-                        <PopoverTrigger
-                            render={
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label={`切换编辑模式，当前：${
-                                        viewMode === "continuous"
-                                            ? "编辑"
-                                            : viewMode === "page"
-                                            ? "分页"
-                                            : "源码"
-                                    }`}
-                                    title="切换编辑模式"
-                                    className="document-mode-trigger"
-                                >
-                                    {viewMode === "continuous"
-                                        ? <Pencil className="icon-sm" />
-                                        : viewMode === "page"
-                                        ? <FileText className="icon-sm" />
-                                        : <CodeXml className="icon-sm" />}
-                                </Button>
-                            }
-                        />
-                        <PopoverContent
-                            data-document-editor-owner={documentEditorOwner}
-                        >
-                            <div
-                                className="document-view-switch"
-                                role="group"
-                                aria-label="视图模式"
-                            >
-                                <Button
-                                    type="button"
-                                    variant={viewMode === "continuous"
-                                        ? "outline"
-                                        : "ghost"}
-                                    size="icon"
-                                    aria-label="编辑"
-                                    title="编辑"
-                                    aria-pressed={viewMode === "continuous"}
-                                    onClick={() => {
-                                        handleViewChange("continuous");
-                                        setModeOpen(false);
-                                    }}
-                                >
-                                    <Pencil className="icon-sm" />
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant={viewMode === "page"
-                                        ? "outline"
-                                        : "ghost"}
-                                    size="icon"
-                                    aria-label="分页"
-                                    title="分页"
-                                    aria-pressed={viewMode === "page"}
-                                    disabled={snapshot.loading}
-                                    onClick={() => {
-                                        handleViewChange("page");
-                                        setModeOpen(false);
-                                    }}
-                                >
-                                    <FileText className="icon-sm" />
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant={viewMode === "source"
-                                        ? "outline"
-                                        : "ghost"}
-                                    size="icon"
-                                    aria-label="Markdown 源码"
-                                    title="Markdown 源码"
-                                    aria-pressed={viewMode === "source"}
-                                    onClick={() => {
-                                        handleViewChange("source");
-                                        setModeOpen(false);
-                                    }}
-                                >
-                                    <CodeXml className="icon-sm" />
-                                </Button>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
+                    <DocumentModeSwitch
+                        mode={viewMode}
+                        pageDisabled={snapshot.loading}
+                        onChange={handleViewChange}
+                    />
                 </div>
                 <div className="document-metadata-bar">
                     <span>

@@ -5,7 +5,11 @@ import { chromium } from "./helpers/browser.ts";
 import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { libraryPanel, openNoteRows } from "./helpers/library.ts";
+import {
+    libraryPanel,
+    openNoteRows,
+    switchDocumentMode,
+} from "./helpers/library.ts";
 
 type PaperSize = "a4" | "letter";
 type Orientation = "portrait" | "landscape";
@@ -250,8 +254,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
             contentPatches.push(request.postData() ?? "");
         }
     });
-    await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "分页", exact: true }).click();
+    await switchDocumentMode(win, "分页");
     await page.waitForFunction(() =>
         document.querySelector(".pagination-viewport")
             ?.getAttribute("data-page-count") === "3"
@@ -762,9 +765,7 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         await matrixPage.locator(`[data-document-id="${doc.id}"] h4 button`)
             .click();
         await matrixPage.locator(".ProseMirror").waitFor();
-        await matrixPage.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-        await matrixPage.getByRole("button", { name: "分页", exact: true })
-            .click();
+        await switchDocumentMode(matrixPage, "分页");
         await stableLayout(matrixPage);
         await matrixPage.waitForFunction(() =>
             Number(
@@ -1087,17 +1088,14 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
         "# One tall editable row\n\n| Short | Tall |\n| --- | --- |\n| Short cell | " +
         repeatedTallCell.repeat(160) +
         " |\n| NEXT_ROW_147 | Text after the tall row |\n\nEND_DOCUMENT_147";
-    await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "Markdown 源码", exact: true })
-        .click();
+    await switchDocumentMode(win, "Markdown 源码");
     const source = win.getByRole("textbox", {
         name: "Markdown 源码正文",
         exact: true,
     });
     await source.waitFor();
     await source.fill(tallRowBody);
-    await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "分页", exact: true }).click();
+    await switchDocumentMode(win, "分页");
     await page.waitForFunction(() =>
         !!document.querySelector(
             '[data-pagination-mode="page"][data-page-count]',
@@ -1188,17 +1186,14 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
     }
 
     async function sourceFixture(markdown: string, expectedPages: number) {
-        await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-        await page.getByRole("button", { name: "Markdown 源码", exact: true })
-            .click();
+        await switchDocumentMode(win, "Markdown 源码");
         const markdownBody = win.getByRole("textbox", {
             name: "Markdown 源码正文",
             exact: true,
         });
         await markdownBody.waitFor();
         await markdownBody.fill(markdown);
-        await win.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-        await page.getByRole("button", { name: "分页", exact: true }).click();
+        await switchDocumentMode(win, "分页");
         await page.waitForFunction((pages) => {
             const viewport = document.querySelector<HTMLElement>(
                 ".pagination-viewport",

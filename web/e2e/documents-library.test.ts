@@ -25,6 +25,7 @@ import {
     libraryPanel,
     libraryWindow,
     openNotes,
+    switchDocumentMode,
 } from "./helpers/library.ts";
 
 // Documents workspace library contracts: scopes, search, row actions, create /
@@ -147,10 +148,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
     }
 
     async function openSource() {
-        await page.getByRole("button", { name: /^切换编辑模式，当前：/ })
-            .click();
-        await page.getByRole("button", { name: "Markdown 源码", exact: true })
-            .click();
+        await switchDocumentMode(page, "Markdown 源码");
         const source = page.getByRole("textbox", {
             name: "Markdown 源码正文",
             exact: true,

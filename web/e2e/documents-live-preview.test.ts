@@ -1,7 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNoteRows } from "./helpers/library.ts";
+import { openNoteRows, switchDocumentMode } from "./helpers/library.ts";
 
 Deno.test("Document live preview: opening and switching preserve canonical Markdown without saves", async () => {
     await using cleanup = new AsyncDisposableStack();
@@ -45,9 +45,7 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
         name: "切换编辑模式，当前：编辑",
         exact: true,
     }).waitFor({ state: "visible" });
-    await page.getByRole("button", { name: "切换编辑模式，当前：编辑", exact: true }).click();
-    await page.getByRole("button", { name: "Markdown 源码", exact: true })
-        .click();
+    await switchDocumentMode(page, "Markdown 源码");
     await page.getByRole("button", { name: "编辑", exact: true })
         .waitFor({ state: "hidden" });
     assertEquals(
@@ -57,8 +55,7 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
         }).inputValue(),
         body,
     );
-    await page.getByRole("button", { name: "切换编辑模式，当前：源码", exact: true }).click();
-    await page.getByRole("button", { name: "编辑", exact: true }).click();
+    await switchDocumentMode(page, "编辑");
     await page.locator('.document-editor-scroll-area [contenteditable="true"]')
         .waitFor();
     // Cross the autosave debounce; mode hydration must never create a transaction to save.
