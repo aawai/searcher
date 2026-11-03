@@ -29,7 +29,7 @@ if (selection && changes) {
     console.log(`Affected paths: ${JSON.stringify(selection.paths)}`);
     console.log(`Affected files: ${JSON.stringify(files)}`);
 }
-const jobs = Deno.env.get("DENO_JOBS") ?? "2";
+const jobs = Deno.env.get("DENO_JOBS") ?? "4";
 const reportDir = Deno.env.get("E2E_REPORT_DIR") ??
     `artifacts/e2e/${suite}-${Date.now()}-${crypto.randomUUID()}`;
 await Deno.mkdir(reportDir, { recursive: true });

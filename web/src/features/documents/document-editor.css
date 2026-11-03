@@ -180,11 +180,41 @@
     min-height: var(--control-compact-height);
 }
 
-/* Mode trigger: the icon of the current mode, exactly as tall as the status row
-   so it never extends the editor's scroll range. When compact, an enlarged hit
-   area keeps the touch target for a touch screen beside the trackpad; the
-   footer's --space-2 inset leaves room for it below. */
-.document-editor-status-bar .document-mode-trigger {
+/* Mode switch: the current-mode icon; hovering it (or pinning it by click,
+   Enter or tap) reveals the other modes to its right, inside the same corner
+   surface. While expanded the icon takes the selected fill, so one filled
+   item marks the current mode. Every button is exactly as tall as the status
+   row so it never extends the editor's scroll range. When compact, an
+   enlarged hit area keeps the touch target for a touch screen beside the
+   trackpad; the footer's --space-2 inset leaves room for it below. */
+.document-mode-switch {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.document-mode-switch .document-view-switch {
+    animation: document-mode-reveal var(--motion-fast) var(--ease-standard);
+}
+
+@keyframes document-mode-reveal {
+    from {
+        opacity: 0;
+        clip-path: inset(0 100% 0 0);
+    }
+    to {
+        opacity: 1;
+        clip-path: inset(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .document-mode-switch .document-view-switch {
+        animation: none;
+    }
+}
+
+.document-mode-switch [data-slot="button"] {
     position: relative;
     width: var(--control-touch-target);
     min-width: var(--control-touch-target);
@@ -193,18 +223,22 @@
 }
 
 @media (hover: hover) and (pointer: fine) and (min-width: 640px) {
-    .document-editor-status-bar .document-mode-trigger {
+    .document-mode-switch [data-slot="button"] {
         width: var(--control-compact-height);
         min-width: var(--control-compact-height);
         height: var(--control-compact-height);
         min-height: var(--control-compact-height);
     }
-    .document-editor-status-bar .document-mode-trigger::after {
+    .document-mode-switch [data-slot="button"]::after {
         content: "";
         position: absolute;
         inset: calc(
             (var(--control-compact-height) - var(--control-touch-target)) / 2
         );
+    }
+    /* Options sit side by side: grow their hit areas only vertically. */
+    .document-view-switch [data-slot="button"]::after {
+        inset-inline: 0;
     }
 }
 

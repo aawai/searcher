@@ -2,7 +2,7 @@ import type { DocumentDto } from "../../src/shared/documents.ts";
 import { assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNoteRows } from "./helpers/library.ts";
+import { openNoteRows, switchDocumentMode } from "./helpers/library.ts";
 
 Deno.test("Document history flush, restore and failure preserve real server contracts", async () => {
     await using cleanup = new AsyncDisposableStack();
@@ -34,9 +34,7 @@ Deno.test("Document history flush, restore and failure preserve real server cont
     }).click();
     const editor = page.locator(".document-editor-container");
     await editor.locator(".ProseMirror").waitFor();
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "Markdown 源码", exact: true })
-        .click();
+    await switchDocumentMode(page, "Markdown 源码");
     const source = page.getByRole("textbox", {
         name: "Markdown 源码正文",
         exact: true,

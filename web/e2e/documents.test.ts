@@ -5,7 +5,7 @@ import type { DocumentDto } from "../../src/shared/documents.ts";
 import { startProductionApp } from "./helpers/production-app.ts";
 import { largeDocumentMarkdown } from "./fixtures/document.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { openNoteRows } from "./helpers/library.ts";
+import { openNoteRows, switchDocumentMode } from "./helpers/library.ts";
 
 Deno.test("Documents production responsive modes and large-document integrity (#102 M7)", async (t) => {
     await using cleanup = new AsyncDisposableStack();
@@ -169,11 +169,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         const initialBody = await request<DocumentDto>(
                             `/api/documents/${doc.id}`,
                         );
-                        await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                        await page.getByRole("button", {
-                            name: "编辑",
-                            exact: true,
-                        }).click();
+                        await switchDocumentMode(page, "编辑");
                         const editor = page.locator(".ProseMirror");
                         await editor.waitFor();
                         assertStringIncludes(
@@ -185,11 +181,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         );
                         const element = await editor.elementHandle();
                         assert(element);
-                        await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                        await page.getByRole("button", {
-                            name: "分页",
-                            exact: true,
-                        }).click();
+                        await switchDocumentMode(page, "分页");
                         await page.waitForFunction(() =>
                             !!document.querySelector(
                                 '[data-pagination-mode="page"][data-page-count]',
@@ -205,11 +197,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         await captureMode(
                             `${width}x${height}-${theme}-page`,
                         );
-                        await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                        await page.getByRole("button", {
-                            name: "Markdown 源码",
-                            exact: true,
-                        }).click();
+                        await switchDocumentMode(page, "Markdown 源码");
                         const source = page.getByRole("textbox", {
                             name: "Markdown 源码正文",
                             exact: true,
@@ -222,11 +210,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         await captureMode(
                             `${width}x${height}-${theme}-source`,
                         );
-                        await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                        await page.getByRole("button", {
-                            name: "编辑",
-                            exact: true,
-                        }).click();
+                        await switchDocumentMode(page, "编辑");
                         assertEquals(
                             (await request<DocumentDto>(
                                 `/api/documents/${doc.id}`,
@@ -252,11 +236,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             async () => {
                 await page.setViewportSize({ width: 390, height: 844 });
                 await resetHome("dark");
-                await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                await page.getByRole("button", {
-                    name: "编辑",
-                    exact: true,
-                }).click();
+                await switchDocumentMode(page, "编辑");
                 const formatToggle = page.getByRole("button", {
                     name: "显示格式工具栏",
                     exact: true,
@@ -588,11 +568,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     "the focused caret should remain visible below the toolbar",
                 );
 
-                await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                await page.getByRole("button", {
-                    name: "Markdown 源码",
-                    exact: true,
-                }).click();
+                await switchDocumentMode(page, "Markdown 源码");
                 const disabledToolbar = await toolbar.evaluate((element) => ({
                     allDisabled: Array.from(
                         element.querySelectorAll<HTMLButtonElement>("button"),
@@ -614,12 +590,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
             async () => {
                 await page.setViewportSize({ width: 390, height: 400 });
                 await resetHome("dark");
-                await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                await page.getByRole("button", {
-                    name: "Markdown 源码",
-                    exact: true,
-                })
-                    .click();
+                await switchDocumentMode(page, "Markdown 源码");
                 const source = page.getByRole("textbox", {
                     name: "Markdown 源码正文",
                     exact: true,
@@ -733,21 +704,14 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     30,
                 );
                 assertEquals(saved.body.match(/asset:\/\//g)?.length, 50);
-                await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                await page.getByRole("button", { name: "分页", exact: true })
-                    .click();
+                await switchDocumentMode(page, "分页");
                 await page.waitForFunction(() =>
                     Number(
                         document.querySelector('[data-pagination-mode="page"]')
                             ?.getAttribute("data-page-count"),
                     ) >= 31
                 );
-                await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                await page.getByRole("button", {
-                    name: "Markdown 源码",
-                    exact: true,
-                })
-                    .click();
+                await switchDocumentMode(page, "Markdown 源码");
                 assertEquals(
                     await page.getByRole("textbox", {
                         name: "Markdown 源码正文",
@@ -755,9 +719,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     }).inputValue(),
                     saved.body,
                 );
-                await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-                await page.getByRole("button", { name: "编辑", exact: true })
-                    .click();
+                await switchDocumentMode(page, "编辑");
                 await editor.waitFor();
                 await page.waitForFunction(() =>
                     document.querySelectorAll(".ProseMirror h2").length === 200

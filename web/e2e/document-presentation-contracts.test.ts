@@ -7,7 +7,11 @@ import type {
 } from "../../src/shared/documents.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
-import { libraryWindow, openNoteRows } from "./helpers/library.ts";
+import {
+    libraryWindow,
+    openNoteRows,
+    switchDocumentMode,
+} from "./helpers/library.ts";
 
 interface Rect {
     x: number;
@@ -551,8 +555,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     );
 
     await editor.evaluate((node) => (node as HTMLElement).focus());
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "分页", exact: true }).click();
+    await switchDocumentMode(page, "分页");
     await waitForPaginationMode(page, "page");
     await page.evaluate(async () => {
         await document.fonts.ready;
@@ -569,8 +572,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     );
     assert(beforeImage.marker, "the post-image content marker is measurable");
 
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "编辑", exact: true }).click();
+    await switchDocumentMode(page, "编辑");
     await waitForPaginationMode(page, "continuous");
     assert(
         await originalEditor.evaluate((node) =>
@@ -586,8 +588,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
             }),
         );
     });
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "分页", exact: true }).click();
+    await switchDocumentMode(page, "分页");
     await page.evaluate(async () => {
         const { promise, resolve } = Promise.withResolvers<void>();
         requestAnimationFrame(() => resolve());
@@ -615,8 +616,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
         ),
         "ending composition applies page layout without replacing the editor",
     );
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "编辑", exact: true }).click();
+    await switchDocumentMode(page, "编辑");
     await waitForPaginationMode(page, "continuous");
 
     releaseImage();
@@ -636,8 +636,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     assertEquals(imageEvidence.naturalHeight, 180);
     await page.unroute(imagePath, imageHandler);
 
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "分页", exact: true }).click();
+    await switchDocumentMode(page, "分页");
     await waitForPaginationMode(page, "page");
     await finishFiniteAnimations(page);
     const imageSamples = await captureLayoutFrames(
@@ -852,17 +851,14 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     assertEquals(sourceBodyBaseline.body, fixtureDocument.body);
     assertEquals(sourceBodyBaseline.version, fixtureDocument.version);
 
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "Markdown 源码", exact: true })
-        .click();
+    await switchDocumentMode(page, "Markdown 源码");
     const source = page.getByRole("textbox", {
         name: "Markdown 源码正文",
         exact: true,
     });
     await source.waitFor({ state: "visible" });
     assertEquals(await source.inputValue(), fixtureDocument.body);
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "分页", exact: true }).click();
+    await switchDocumentMode(page, "分页");
     await editor.waitFor({ state: "visible" });
     await waitForPaginationMode(page, "page");
     assertEquals(await source.count(), 0);
@@ -873,8 +869,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     assertEquals(cleanAfterSource.body, fixtureDocument.body);
     assertEquals(cleanAfterSource.version, fixtureDocument.version);
 
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "编辑", exact: true }).click();
+    await switchDocumentMode(page, "编辑");
     await waitForPaginationMode(page, "continuous");
     const firstSaveGate = await holdFirstDocumentPatch(
         page,
@@ -885,8 +880,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     await page.keyboard.insertText(`\n\n${VIEW_SWITCH_MARKER}`);
 
     try {
-        await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-        await page.getByRole("button", { name: "分页", exact: true }).click();
+        await switchDocumentMode(page, "分页");
         await firstSaveGate.started;
         await page.locator('.document-save-status[data-status="saving"]')
             .waitFor({ state: "attached" });
@@ -942,8 +936,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
 
     const preservedSelection = selected;
     for (let cycle = 0; cycle < 20; cycle++) {
-        await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-        await page.getByRole("button", { name: "编辑", exact: true }).click();
+        await switchDocumentMode(page, "编辑");
         await waitForPaginationMode(page, "continuous");
         assert(
             await presentationEditor.evaluate((node) =>
@@ -958,8 +951,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
             `cycle ${cycle + 1}: continuous restores the selected text`,
         );
 
-        await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-        await page.getByRole("button", { name: "分页", exact: true }).click();
+        await switchDocumentMode(page, "分页");
         await waitForPaginationMode(page, "page");
         assert(
             await presentationEditor.evaluate((node) =>
@@ -1009,8 +1001,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
         "redo after undo restores the user's edit",
     );
 
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "编辑", exact: true }).click();
+    await switchDocumentMode(page, "编辑");
     await waitForPaginationMode(page, "continuous");
     const patchesBeforeInFlight = bodyPatchRequests.length;
     const inFlightGate = await holdFirstDocumentPatch(page, fixtureDocument.id);
@@ -1022,8 +1013,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
         await inFlightGate.started;
         await page.locator('.document-save-status[data-status="saving"]')
             .waitFor({ state: "attached" });
-        await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-        await page.getByRole("button", { name: "分页", exact: true }).click();
+        await switchDocumentMode(page, "分页");
         await waitForPaginationMode(page, "page");
         inFlightGate.release();
         const savedInFlight = await waitForDocument(
@@ -1048,17 +1038,14 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
         `/api/documents/${fixtureDocument.id}`,
     );
     const patchesBeforeSource = bodyPatchRequests.length;
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "Markdown 源码", exact: true })
-        .click();
+    await switchDocumentMode(page, "Markdown 源码");
     const finalSource = page.getByRole("textbox", {
         name: "Markdown 源码正文",
         exact: true,
     });
     await finalSource.waitFor({ state: "visible" });
     assertEquals(await finalSource.inputValue(), beforeSource.body);
-    await page.getByRole("button", { name: /^切换编辑模式，当前：/ }).click();
-    await page.getByRole("button", { name: "分页", exact: true }).click();
+    await switchDocumentMode(page, "分页");
     await editor.waitFor({ state: "visible" });
     await waitForPaginationMode(page, "page");
     const finalSaved = await api<DocumentDto>(

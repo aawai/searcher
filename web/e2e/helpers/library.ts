@@ -14,6 +14,30 @@ export function workspaceAppsTrigger(page: Page): Locator {
     return workspaceDock(page).locator('[data-dock-id="apps"]');
 }
 
+export type DocumentModeLabel = "编辑" | "分页" | "Markdown 源码";
+
+const MODE_TRIGGER_PREFIX = "切换编辑模式，当前：";
+
+/**
+ * Switches the editor view through its status-corner mode switch. The switch
+ * offers only the other modes, so choosing the current one is a no-op.
+ */
+export async function switchDocumentMode(
+    scope: Page | Locator,
+    mode: DocumentModeLabel,
+): Promise<void> {
+    const trigger = scope.getByRole("button", {
+        name: new RegExp(`^${MODE_TRIGGER_PREFIX}`),
+    });
+    const current = (await trigger.getAttribute("aria-label"))
+        ?.slice(MODE_TRIGGER_PREFIX.length);
+    if (current === (mode === "Markdown 源码" ? "源码" : mode)) return;
+    await trigger.click();
+    await scope.getByRole("group", { name: "视图模式", exact: true })
+        .getByRole("button", { name: mode, exact: true })
+        .click();
+}
+
 /**
  * The apps or notes window while it is open, minimized or not (the marker is
  * absent once closed): title bar controls, the view's actions, and the body.
