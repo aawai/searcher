@@ -1,4 +1,16 @@
-import { and, asc, desc, eq, gt, lt, or, sql } from "drizzle-orm";
+import {
+    and,
+    asc,
+    desc,
+    eq,
+    gt,
+    inArray,
+    isNull,
+    lt,
+    ne,
+    or,
+    sql,
+} from "drizzle-orm";
 import type { DatabaseStore } from "../../db/database.ts";
 import {
     documentNotebooks,
@@ -20,11 +32,14 @@ import {
     type DocumentSummaryDto,
     type DocumentVersionDto,
     type DocumentVersionReason,
+    type HomeOrderDto,
     type PositionDocumentInput,
     type UpdateDocumentInput,
+    type UpdateHomeOrderInput,
 } from "../../shared/documents.ts";
 import {
     DocumentConflictError,
+    DocumentHomeOrderConflictError,
     DocumentNotFoundError,
     DocumentValidationError,
 } from "./errors.ts";
@@ -455,6 +470,26 @@ export class DocumentsService {
                     )).orderBy(asc(documents.sortOrder)).limit(1);
                 const sortOrder = (first[0]?.sort ?? 0) - 1;
 
+                const isHomeFixed = input.isHomeFixed ?? false;
+                let homeSortOrder = input.homeSortOrder ?? 0;
+                if (isHomeFixed && input.homeSortOrder === undefined) {
+                    const lastHome = await tx
+                        .select({ homeSortOrder: documents.homeSortOrder })
+                        .from(documents)
+                        .where(
+                            and(
+                                eq(documents.userId, userId),
+                                eq(documents.isHomeFixed, true),
+                                sql`${documents.deletedAt} IS NULL`,
+                            ),
+                        )
+                        .orderBy(desc(documents.homeSortOrder))
+                        .limit(1);
+                    homeSortOrder = lastHome.length > 0
+                        ? lastHome[0].homeSortOrder + 1
+                        : 0;
+                }
+
                 const docRow: typeof documents.$inferInsert = {
                     id: documentId,
                     userId,
@@ -463,8 +498,8 @@ export class DocumentsService {
                     currentBody: initialBody,
                     currentVersion: 1,
                     isFavorite: input.isFavorite ?? false,
-                    isHomeFixed: input.isHomeFixed ?? false,
-                    homeSortOrder: input.homeSortOrder ?? 0,
+                    isHomeFixed,
+                    homeSortOrder,
                     sortOrder,
                     deletedAt: null,
                     createdAt: currentTime,
@@ -493,8 +528,8 @@ export class DocumentsService {
                         currentBody: initialBody,
                         currentVersion: 1,
                         isFavorite: input.isFavorite ?? false,
-                        isHomeFixed: input.isHomeFixed ?? false,
-                        homeSortOrder: input.homeSortOrder ?? 0,
+                        isHomeFixed,
+                        homeSortOrder,
                         sortOrder,
                         lastOpenedAt: null,
                         deletedAt: null,
@@ -573,6 +608,32 @@ export class DocumentsService {
                 const updatedIsFavorite = input.isFavorite !== undefined
                     ? input.isFavorite
                     : current.isFavorite;
+                const updatedIsHomeFixed = input.isHomeFixed ??
+                    current.isHomeFixed;
+                let updatedHomeSortOrder = input.homeSortOrder ??
+                    current.homeSortOrder;
+                if (
+                    !current.isHomeFixed &&
+                    updatedIsHomeFixed &&
+                    input.homeSortOrder === undefined
+                ) {
+                    const lastHome = await tx
+                        .select({ homeSortOrder: documents.homeSortOrder })
+                        .from(documents)
+                        .where(
+                            and(
+                                eq(documents.userId, userId),
+                                eq(documents.isHomeFixed, true),
+                                ne(documents.id, id),
+                                sql`${documents.deletedAt} IS NULL`,
+                            ),
+                        )
+                        .orderBy(desc(documents.homeSortOrder))
+                        .limit(1);
+                    updatedHomeSortOrder = lastHome.length > 0
+                        ? lastHome[0].homeSortOrder + 1
+                        : 0;
+                }
 
                 await tx
                     .update(documents)
@@ -580,9 +641,8 @@ export class DocumentsService {
                         title: updatedTitle,
                         currentBody: updatedBody,
                         isFavorite: updatedIsFavorite,
-                        isHomeFixed: input.isHomeFixed ?? current.isHomeFixed,
-                        homeSortOrder: input.homeSortOrder ??
-                            current.homeSortOrder,
+                        isHomeFixed: updatedIsHomeFixed,
+                        homeSortOrder: updatedHomeSortOrder,
                         currentVersion: nextVersion,
                         updatedAt: currentTime,
                     })
@@ -662,9 +722,8 @@ export class DocumentsService {
                         title: updatedTitle,
                         currentBody: updatedBody,
                         isFavorite: updatedIsFavorite,
-                        isHomeFixed: input.isHomeFixed ?? current.isHomeFixed,
-                        homeSortOrder: input.homeSortOrder ??
-                            current.homeSortOrder,
+                        isHomeFixed: updatedIsHomeFixed,
+                        homeSortOrder: updatedHomeSortOrder,
                         currentVersion: nextVersion,
                         updatedAt: currentTime,
                     },
@@ -678,6 +737,100 @@ export class DocumentsService {
             updatedAt: result.updatedAt,
         });
         return result;
+    }
+
+    async updateHomeOrder(
+        userId: string,
+        input: UpdateHomeOrderInput,
+    ): Promise<HomeOrderDto> {
+        if (
+            !input ||
+            !Array.isArray(input.ids) ||
+            input.ids.length < 1 ||
+            input.ids.length > 500
+        ) {
+            throw new DocumentValidationError(
+                "首页笔记排序列表长度必须为 1 到 500",
+            );
+        }
+        const ids: string[] = [];
+        const seen = new Set<string>();
+        for (const rawId of input.ids) {
+            if (typeof rawId !== "string") {
+                throw new DocumentValidationError("ID 不能为空");
+            }
+            const id = rawId.trim();
+            if (id.length === 0) {
+                throw new DocumentValidationError("ID 不能为空");
+            }
+            if (seen.has(id)) {
+                throw new DocumentValidationError("笔记 ID 不能重复");
+            }
+            seen.add(id);
+            ids.push(id);
+        }
+
+        return await this.store.run(async (db) => {
+            return await db.transaction(async (tx) => {
+                const ownedRows = await tx
+                    .select({
+                        id: documents.id,
+                        isHomeFixed: documents.isHomeFixed,
+                    })
+                    .from(documents)
+                    .where(
+                        and(
+                            eq(documents.userId, userId),
+                            isNull(documents.deletedAt),
+                            inArray(documents.id, ids),
+                        ),
+                    )
+                    .all();
+
+                if (ownedRows.length !== ids.length) {
+                    throw new DocumentNotFoundError();
+                }
+                for (const row of ownedRows) {
+                    if (!row.isHomeFixed) {
+                        throw new DocumentHomeOrderConflictError();
+                    }
+                }
+
+                const homeRows = await tx
+                    .select({ id: documents.id })
+                    .from(documents)
+                    .where(
+                        and(
+                            eq(documents.userId, userId),
+                            isNull(documents.deletedAt),
+                            eq(documents.isHomeFixed, true),
+                        ),
+                    )
+                    .all();
+
+                if (homeRows.length !== ids.length) {
+                    throw new DocumentHomeOrderConflictError();
+                }
+
+                const items: Array<{ id: string; homeSortOrder: number }> = [];
+                for (let index = 0; index < ids.length; index++) {
+                    const id = ids[index];
+                    await tx
+                        .update(documents)
+                        .set({ homeSortOrder: index })
+                        .where(
+                            and(
+                                eq(documents.id, id),
+                                eq(documents.userId, userId),
+                                isNull(documents.deletedAt),
+                            ),
+                        )
+                        .run();
+                    items.push({ id, homeSortOrder: index });
+                }
+                return { items };
+            });
+        });
     }
 
     async softDelete(

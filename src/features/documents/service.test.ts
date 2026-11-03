@@ -12,13 +12,11 @@ import {
     DOCUMENT_BODY_MAX_LENGTH,
     DOCUMENT_PAGE_MAX_LIMIT,
     DOCUMENT_TITLE_MAX_LENGTH,
-    HOME_NOTE_GRID_MAX_COL,
 } from "../../shared/documents.ts";
 import type { DocumentUpdatedEvent } from "../../shared/documents.ts";
-import { DocumentLayoutsService } from "./layouts.ts";
 import {
     DocumentConflictError,
-    DocumentLayoutConflictError,
+    DocumentHomeOrderConflictError,
     DocumentNotFoundError,
     DocumentValidationError,
 } from "./errors.ts";
@@ -1406,112 +1404,122 @@ Deno.test("Documents favorites and home ordering persist with scope-bound keyset
     }
 });
 
-Deno.test("Document layouts store home note cells, reject overlaps and never version content", async () => {
-    const { service, store, now, advanceTime } = await setupTestContext();
-    const layouts = new DocumentLayoutsService(store, now);
+Deno.test("Documents pin-to-end on create/update and home-order batch reorder without versioning", async () => {
+    const { service, store, advanceTime } = await setupTestContext();
     try {
-        const doc = await service.create("user-1", { isHomeFixed: true });
-        assertEquals(await layouts.getLayout("user-1", doc.id), null);
+        const events: DocumentUpdatedEvent[] = [];
+        const off = service.events.on("user-1", (event) => events.push(event));
+
+        const first = await service.create("user-1", {
+            title: "First",
+            isHomeFixed: true,
+        });
+        assertEquals(first.homeSortOrder, 0);
+
+        advanceTime(10);
+        const second = await service.create("user-1", {
+            title: "Second",
+            isHomeFixed: true,
+        });
+        assertEquals(second.homeSortOrder, 1);
+
+        advanceTime(10);
+        const unpinned = await service.create("user-1", {
+            title: "Unpinned",
+            isHomeFixed: false,
+        });
+        assertEquals(unpinned.homeSortOrder, 0);
+
+        // Pinning via update without explicit homeSortOrder appends after max (1 -> 2).
+        advanceTime(10);
+        const pinnedThird = await service.update("user-1", unpinned.id, {
+            version: unpinned.version,
+            isHomeFixed: true,
+        });
+        assertEquals(pinnedThird.homeSortOrder, 2);
+
+        // Updating body of an already-pinned note preserves its homeSortOrder.
+        advanceTime(10);
+        const editedFirst = await service.update("user-1", first.id, {
+            version: first.version,
+            body: "Edited body",
+        });
+        assertEquals(editedFirst.homeSortOrder, 0);
+
+        const eventCountBeforeReorder = events.length;
+        advanceTime(50);
+        const reordered = await service.updateHomeOrder("user-1", {
+            ids: [pinnedThird.id, first.id, second.id],
+        });
+        assertEquals(reordered, {
+            items: [
+                { id: pinnedThird.id, homeSortOrder: 0 },
+                { id: first.id, homeSortOrder: 1 },
+                { id: second.id, homeSortOrder: 2 },
+            ],
+        });
+        // No version bump, updatedAt change, version snapshot, or SSE event.
+        assertEquals(events.length, eventCountBeforeReorder);
+        const rereadFirst = await service.get("user-1", first.id);
+        assertEquals(rereadFirst.version, editedFirst.version);
+        assertEquals(rereadFirst.updatedAt, editedFirst.updatedAt);
+        assertEquals(rereadFirst.homeSortOrder, 1);
+        assertEquals((await service.versions("user-1", first.id)).length, 1);
+
+        const homeList = await service.list("user-1", {
+            scope: { type: "home" },
+        });
+        assertEquals(
+            homeList.items.map((item) => item.id),
+            [pinnedThird.id, first.id, second.id],
+        );
+
+        // Validation & conflict / not-found errors
+        const otherUnpinned = await service.create("user-1", {
+            title: "Still unpinned",
+        });
+        const foreign = await service.create("user-2", {
+            title: "Foreign",
+            isHomeFixed: true,
+        });
         await assertRejects(
-            () => layouts.getLayout("user-2", doc.id),
-            DocumentNotFoundError,
+            () =>
+                service.updateHomeOrder("user-1", {
+                    ids: [pinnedThird.id, first.id],
+                }),
+            DocumentHomeOrderConflictError,
         );
         await assertRejects(
             () =>
-                layouts.updateLayout("user-2", doc.id, {
-                    band: "left",
-                    col: 0,
-                    row: 0,
+                service.updateHomeOrder("user-1", {
+                    ids: [
+                        pinnedThird.id,
+                        first.id,
+                        second.id,
+                        otherUnpinned.id,
+                    ],
+                }),
+            DocumentHomeOrderConflictError,
+        );
+        await assertRejects(
+            () =>
+                service.updateHomeOrder("user-1", {
+                    ids: [pinnedThird.id, first.id, foreign.id],
                 }),
             DocumentNotFoundError,
         );
-        // band, col and row are one position; a partial input is invalid.
+        await assertRejects(
+            () => service.updateHomeOrder("user-1", { ids: [] }),
+            DocumentValidationError,
+        );
         await assertRejects(
             () =>
-                layouts.updateLayout("user-1", doc.id, {
-                    band: "left",
-                    col: 3,
+                service.updateHomeOrder("user-1", {
+                    ids: [first.id, first.id],
                 }),
             DocumentValidationError,
         );
-        const placed = await layouts.updateLayout("user-1", doc.id, {
-            band: "left",
-            col: 0,
-            row: 0,
-            size: "w",
-        });
-        assertEquals(placed, {
-            band: "left",
-            col: 0,
-            row: 0,
-            size: "w",
-            updatedAt: now(),
-        });
-        advanceTime(1);
-        const changed = await layouts.updateLayout("user-1", doc.id, {
-            band: "left",
-            col: 0,
-            row: 1,
-            size: "s",
-        });
-        assertEquals(changed, {
-            ...placed,
-            row: 1,
-            size: "s",
-            updatedAt: now(),
-        });
-        // W spans two columns: it overlaps a note at the same origin.
-        const other = await service.create("user-1", { isHomeFixed: true });
-        await assertRejects(
-            () =>
-                layouts.updateLayout("user-1", other.id, {
-                    band: "left",
-                    col: 0,
-                    row: 1,
-                    size: "w",
-                }),
-            DocumentLayoutConflictError,
-        );
-        const beside = await layouts.updateLayout("user-1", other.id, {
-            band: "left",
-            col: 2,
-            row: 1,
-        });
-        assertEquals(beside.col, 2);
-        // Off-home notes do not occupy the home lattice.
-        const hidden = await service.create("user-1", {});
-        const hiddenLayout = await layouts.updateLayout("user-1", hidden.id, {
-            band: "left",
-            col: 0,
-            row: 1,
-        });
-        assertEquals(hiddenLayout.col, 0);
-        await assertRejects(
-            () =>
-                layouts.updateLayout("user-1", doc.id, {
-                    band: "left",
-                    col: HOME_NOTE_GRID_MAX_COL + 1,
-                    row: 0,
-                }),
-            DocumentValidationError,
-        );
-        assertEquals(await service.get("user-1", doc.id), doc);
-        await service.softDelete("user-1", doc.id, doc.version);
-        await assertRejects(
-            () => layouts.getLayout("user-1", doc.id),
-            DocumentNotFoundError,
-        );
-        await assertRejects(
-            () =>
-                layouts.updateLayout("user-1", doc.id, {
-                    band: "left",
-                    col: 1,
-                    row: 1,
-                }),
-            DocumentNotFoundError,
-        );
-        await service.restore("user-1", doc.id);
-        assertEquals(await layouts.getLayout("user-1", doc.id), changed);
+        off();
     } finally {
         store.close();
     }

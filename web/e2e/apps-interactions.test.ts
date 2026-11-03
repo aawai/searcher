@@ -49,6 +49,10 @@ Deno.test("app form dialog session and icon contracts on home #141 #244", async 
         );
         await page.locator('form button[type="submit"]').click();
         await page.waitForURL(app.origin + "/");
+        await page.request.patch(app.origin + "/api/preferences", {
+            headers: { Origin: app.origin },
+            data: { showHomeApps: true },
+        });
         const folderName =
             "长文件夹名称用于检查标题换行与计数只展示一次以及添加入口始终可达";
         const appName = "同名应用——长名称展示及编辑会话验证";

@@ -372,6 +372,12 @@ Deno.test("回收站恢复后桌面与原撤销提示同步", async () => {
     try {
         await loginAndVisit(page, app.origin, "/", user);
         await page.evaluate(async () => {
+            const prefs = await fetch("/api/preferences", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ showHomeApps: true }),
+            });
+            if (!prefs.ok) throw new Error(await prefs.text());
             const response = await fetch("/api/webapps", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

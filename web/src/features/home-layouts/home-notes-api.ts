@@ -1,15 +1,13 @@
 import {
     DOCUMENT_PAGE_MAX_LIMIT,
     type DocumentDto,
-    type DocumentLayoutDto,
-    type DocumentLayoutsDto,
     type DocumentPageDto,
     type DocumentSummaryDto,
+    type HomeOrderDto,
     type UpdateDocumentInput,
 } from "@shared/documents.ts";
 import { api, ApiError, json } from "../../lib/api.ts";
-import { defaultNoteLayout, type HomeNoteItem } from "./home-notes.ts";
-
+import { type HomeNoteItem, sortNotes } from "./home-notes.ts";
 const DOCUMENTS = "/api/documents";
 
 function documentPath(id: string, suffix = ""): string {
@@ -36,11 +34,7 @@ async function fetchHomeSummaries(): Promise<DocumentSummaryDto[]> {
 export async function fetchHomeNote(id: string): Promise<HomeNoteItem | null> {
     try {
         const document = await api<DocumentDto>(documentPath(id));
-        if (!document.isHomeFixed) return null;
-        const layout = await api<DocumentLayoutDto | null>(
-            documentPath(id, "/layout"),
-        );
-        return { ...document, layout: layout ?? defaultNoteLayout() };
+        return document.isHomeFixed ? document : null;
     } catch (cause) {
         if (cause instanceof ApiError && cause.code === 404) return null;
         throw cause;
@@ -52,7 +46,9 @@ export async function fetchHomeNotes(): Promise<HomeNoteItem[]> {
     const notes = await Promise.all(
         summaries.map((summary) => fetchHomeNote(summary.id)),
     );
-    return notes.filter((note): note is HomeNoteItem => note !== null);
+    return sortNotes(
+        notes.filter((note): note is HomeNoteItem => note !== null),
+    );
 }
 
 export function patchNote(
@@ -66,23 +62,14 @@ export function patchNote(
 }
 
 /**
- * One atomic layout write for several notes (a swap moves two). The server
- * applies every item or none, and answers in request order.
+ * Atomically reorders all pinned home notes for the current user.
  */
-export async function patchNoteLayouts(
-    items: ReadonlyArray<{ id: string; layout: DocumentLayoutDto }>,
-): Promise<Array<{ id: string; layout: DocumentLayoutDto }>> {
-    const response = await api<DocumentLayoutsDto>(
-        `${DOCUMENTS}/layouts`,
-        json("PATCH", {
-            items: items.map(({ id, layout }) => ({
-                id,
-                band: layout.band,
-                col: layout.col,
-                row: layout.row,
-                size: layout.size,
-            })),
-        }),
+export async function reorderHomeNotes(
+    ids: readonly string[],
+): Promise<Array<{ id: string; homeSortOrder: number }>> {
+    const response = await api<HomeOrderDto>(
+        `${DOCUMENTS}/home-order`,
+        json("PATCH", { ids }),
     );
     return response.items;
 }

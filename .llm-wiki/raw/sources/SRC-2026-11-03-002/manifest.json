@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-03-002",
+  "captured": "2026-11-03",
+  "packet_version": "1.0",
+  "title": "Same-origin policy",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

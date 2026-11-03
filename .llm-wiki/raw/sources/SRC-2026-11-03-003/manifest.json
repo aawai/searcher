@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-03-003",
+  "captured": "2026-11-03",
+  "packet_version": "1.0",
+  "title": "Online Backup API.",
+  "url": "https://sqlite.org/c3ref/backup_finish.html",
+  "format": "web",
+  "extractor": "htmlToMarkdown",
+  "extraction_status": "success"
+}

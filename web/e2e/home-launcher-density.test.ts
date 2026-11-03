@@ -31,6 +31,12 @@ Deno.test("Home touch grid density and drag alignment", async () => {
         const APP_COUNT = 7;
         const longAppName = "A".repeat(80);
         await page.evaluate(async ([longName, appCount]) => {
+            const prefs = await fetch("/api/preferences", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ showHomeApps: true }),
+            });
+            if (!prefs.ok) throw new Error(await prefs.text());
             for (let index = 0; index < appCount; index++) {
                 const response = await fetch("/api/webapps", {
                     method: "POST",

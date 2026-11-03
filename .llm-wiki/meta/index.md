@@ -165,6 +165,7 @@
 - [[sources/obs-2026-10-30-touch-drag-sensor-preserves-sidebar-scrolling]] — Observation: Touch drag sensor preserves sidebar scrolling *(created: 2026-10-30)*
 - [[sources/obs-2026-10-31-desktop-ui-polish-fixes-merged-via-pr-355]] — Observation: Desktop UI polish fixes merged via PR 355 *(created: 2026-10-31)*
 - [[sources/obs-2026-10-31-material-pr-356-main]] — Observation: 首页顶栏 Material 组与笔记底栏对齐经 PR 356 合并 main *(created: 2026-10-31)*
+- [[sources/obs-2026-11-03-]] — Observation: 首页刊头实现落地与贴合效果图的关键取舍 *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file]] — Observation: Bundle E2E split: route-style-admin-lab file *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2]] — Observation: Coverage CI documents-core runs --parallel with DENO_JOBS=2 *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-documentmodeswitch]] — Observation: 笔记编辑器模式切换改为悬停向右展开（DocumentModeSwitch） *(created: 2026-11-03)*
@@ -173,6 +174,7 @@
 - [[sources/obs-2026-11-03-documents-page-mode-keyboard-selection-fails-under-changed-c]] — Observation: Documents page-mode keyboard selection fails under changed concurrency *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes]] — Observation: E2E geometry matrices run in light only (layoutThemes) *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel]] — Observation: E2E suites ordered longest-first for Deno --parallel *(created: 2026-11-03)*
+- [[sources/obs-2026-11-03-issue-363]] — Observation: 首页刊头验收 Issue 363 与素材分支 *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2]] — Observation: ProseMirror focus timer undoes fast keyboard selection in E2E *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup]] — Observation: Replacing short E2E settle waits gave no measurable speedup *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e]] — Observation: Routing auth-surface steps moved from navigation to auth E2E *(created: 2026-11-03)*
@@ -276,10 +278,13 @@
 - [[sources/SRC-2026-11-02-003]] — File Upload Cheat Sheet (OWASP) *(created: unknown)*
 - [[sources/SRC-2026-11-02-004]] — fflate README *(created: unknown)*
 - [[sources/SRC-2026-11-02-005]] — Zip Slip Vulnerability (Snyk) *(created: unknown)*
+- [[sources/SRC-2026-11-03-001]] — Cross-site request forgery (CSRF) *(created: unknown)*
+- [[sources/SRC-2026-11-03-002]] — Same-origin policy *(created: unknown)*
+- [[sources/SRC-2026-11-03-003]] — SQLite Online Backup API reference *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-03T05:10:40.670Z* | *Total pages: 267*
+*Last updated: 2026-11-03T14:21:36.912Z* | *Total pages: 272*

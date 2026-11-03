@@ -1,4 +1,11 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+    type CSSProperties,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { usePageHost } from "../../app/page-host.tsx";
 import type { SafeRect } from "./home-viewport.ts";
 import type { HomeLayoutProps } from "./types.ts";
@@ -8,18 +15,12 @@ import {
     type HomeAppLibraryHandle,
 } from "../app-library/HomeAppLibrary.tsx";
 import { InlineAnswerCard } from "../inline-ai/InlineAnswerCard.tsx";
-import { HomeCalm } from "../home-calm/HomeCalm.tsx";
-
-const HomeNotes = lazy(() =>
-    import("./HomeNotes.tsx").then((module) => ({
-        default: module.HomeNotes,
-    }))
-);
+import { HomeMasthead } from "../home-masthead/HomeMasthead.tsx";
 
 export function ZenLayout(
     props: HomeLayoutProps & {
         viewportWidth: number;
-        availableRect?: SafeRect;
+        availableRect: SafeRect;
     },
 ) {
     const { active } = usePageHost();
@@ -47,7 +48,6 @@ export function ZenLayout(
         openNote,
         deleteNote,
         updateNote,
-        updateNoteLayouts,
         openLibrary,
         showAppLabels,
         showHomeApps,
@@ -64,7 +64,49 @@ export function ZenLayout(
         }
         answerWasOpen.current = inlineAnswer.open;
     }, [active, inlineAnswer.open]);
-    const [gridElement, setGridElement] = useState<HTMLElement | null>(null);
+    const [searchRect, setSearchRect] = useState<SafeRect | null>(null);
+    // While the narrow masthead sheet is open the search box docks to this rect.
+    const [searchDock, setSearchDock] = useState<SafeRect | null>(null);
+    useLayoutEffect(() => {
+        const hero = heroRef.current;
+        const searchElement = hero?.querySelector<HTMLElement>(
+            ".search-form-wrap",
+        );
+        if (!hero || !searchElement) return;
+        const measure = () => {
+            // While docked the box is only translated; keep its layout rect.
+            if (hero.dataset.mastheadSheet === "open") return;
+            const box = searchElement.getBoundingClientRect();
+            const next = box.width > 0 && box.height > 0
+                ? {
+                    x: Math.round(box.left),
+                    y: Math.round(box.top),
+                    width: Math.round(box.width),
+                    height: Math.round(box.height),
+                }
+                : null;
+            setSearchRect((previous) => {
+                if (!previous || !next) {
+                    return previous === next ? previous : next;
+                }
+                return previous.x === next.x &&
+                        previous.y === next.y &&
+                        previous.width === next.width &&
+                        previous.height === next.height
+                    ? previous
+                    : next;
+            });
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(hero);
+        observer.observe(searchElement);
+        addEventListener("resize", measure);
+        return () => {
+            observer.disconnect();
+            removeEventListener("resize", measure);
+        };
+    }, [props.availableRect, props.viewportWidth]);
 
     const libraryRef = useRef<HomeAppLibraryHandle>(null);
     const webFolders = useMemo(
@@ -89,37 +131,25 @@ export function ZenLayout(
             onEditApp={openEditApp}
             onCreateApp={openCreateApp}
             onDeleteApp={(app) => void softDeleteApp(app)}
-            onGridElement={setGridElement}
             onOpenLibraryApps={() => openLibrary("apps")}
         />
     );
-    const notesBlock = user && !notesLoading && homeNotes.length > 0 && (
-        <Suspense fallback={null}>
-            <HomeNotes
-                notes={homeNotes}
-                viewportWidth={props.viewportWidth}
-                availableRect={props.availableRect}
-                heroRef={heroRef}
-                gridElement={gridElement}
-                onOpen={openNote}
-                onUpdateLayouts={(changes) => void updateNoteLayouts(changes)}
-                onToggleHomeFixed={(note) =>
-                    void updateNote(note, { isHomeFixed: false })}
-                onToggleTask={props.toggleTask}
-                editingNoteId={props.editingNoteId}
-                onDelete={(note) => void deleteNote(note)}
-                onOpenLibrary={() => openLibrary("notes")}
-            />
-        </Suspense>
-    );
+    // Distance from the search box's anchor to its dock above the open sheet.
+    const dockShift = searchDock && searchRect
+        ? searchDock.y - searchRect.y
+        : null;
 
     return (
         <>
-            <section className="hero" aria-label="搜索" ref={heroRef}>
-                <HomeCalm
-                    {...props.calm}
-                    onOpenDocument={props.openDocument}
-                />
+            <section
+                className="hero"
+                aria-label="搜索"
+                ref={heroRef}
+                data-masthead-sheet={dockShift === null ? undefined : "open"}
+                style={dockShift === null ? undefined : {
+                    "--masthead-dock-shift": `${dockShift}px`,
+                } as CSSProperties}
+            >
                 <SearcherSearchInput
                     active={active}
                     engine={engine}
@@ -159,7 +189,30 @@ export function ZenLayout(
                 </section>
             )}
             {user && !showHomeApps && libraryView}
-            {notesBlock}
+            <HomeMasthead
+                user={user}
+                notes={homeNotes}
+                notesLoading={notesLoading}
+                showDate={props.calm.showDate}
+                showTime={props.calm.showTime}
+                showContinue={props.calm.showContinue}
+                continueCandidates={props.calm.candidates}
+                collapsedByDefault={props.homeMastheadCollapsed}
+                wallpaper={props.wallpaper}
+                viewportWidth={props.viewportWidth}
+                availableRect={props.availableRect}
+                searchRect={searchRect}
+                editingNoteId={props.editingNoteId}
+                onOpenNote={openNote}
+                onOpenDocument={props.openDocument}
+                onOpenNotes={() => openLibrary("notes")}
+                onToggleTask={props.toggleTask}
+                onUnpin={(note) =>
+                    void updateNote(note, { isHomeFixed: false })}
+                onDelete={deleteNote}
+                onReorder={props.reorderNotes}
+                onSearchDockChange={setSearchDock}
+            />
         </>
     );
 }

@@ -24,13 +24,6 @@ function note(
         updatedAt: 1,
         body: "",
         version: 1,
-        layout: {
-            band: null,
-            col: null,
-            row: null,
-            size: "s",
-            updatedAt: 1,
-        },
         ...overrides,
     };
 }

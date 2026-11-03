@@ -90,6 +90,29 @@ export interface TaskToggle {
 }
 
 /**
+ * Lists every task list item in document order (code blocks excluded) in the
+ * same ordinal space as `setTaskChecked`.
+ */
+export function listTasks(body: string): TaskToggle[] {
+    const offsets = taskOffsets(parseNoteMarkdown(body), []);
+    const items: TaskToggle[] = [];
+    for (let index = 0; index < offsets.length; index++) {
+        const offset = offsets[index];
+        const marker = TASK_MARKER.exec(body.slice(offset));
+        if (!marker) continue;
+        const start = offset + marker[0].length;
+        const end = body.indexOf("\n", start);
+        const line = body.slice(start, end === -1 ? undefined : end);
+        items.push({
+            index,
+            text: line.replace(/\r$/u, "").trim(),
+            checked: marker[1] !== " ",
+        });
+    }
+    return items;
+}
+
+/**
  * Applies `toggles` in order to `body`. Returns null when any target task is
  * missing or its row text differs, so a stale toggle never lands on another row.
  */

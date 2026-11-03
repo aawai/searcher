@@ -76,8 +76,6 @@ export interface HomeAppLibraryProps {
     onEditApp: (app: LauncherApp, expandIcon?: boolean) => void;
     onCreateApp: (groupId?: string) => void;
     onDeleteApp: (app: LauncherApp) => void;
-    /** The measured grid; note placement expands it to the plate. */
-    onGridElement: (element: HTMLElement | null) => void;
     /** 更多（N） opens the library's app view; the popup branch is gone. */
     onOpenLibraryApps: () => void;
 }
@@ -165,7 +163,6 @@ export const HomeAppLibrary = forwardRef<
     onEditApp,
     onCreateApp,
     onDeleteApp,
-    onGridElement,
     onOpenLibraryApps,
 }, ref) {
     const { actions } = library;
@@ -181,10 +178,6 @@ export const HomeAppLibrary = forwardRef<
         [tiles],
     );
     const { gridRef, grid, columns } = useGridColumns();
-    const setGrid = useCallback((element: HTMLDivElement | null) => {
-        gridRef(element);
-        onGridElement(element);
-    }, [gridRef, onGridElement]);
     const root = useRef<HTMLDivElement>(null);
     const layoutHeight = useLayoutViewportHeight();
     const [metrics, setMetrics] = useState<
@@ -534,7 +527,7 @@ export const HomeAppLibrary = forwardRef<
                                     actions={tileActions}
                                     variant="home"
                                     label="应用库"
-                                    gridRef={setGrid}
+                                    gridRef={gridRef}
                                     onOpenMore={onOpenLibraryApps}
                                     onAdd={() => onCreateApp()}
                                     onDropOnFolder={dropOnFolder}

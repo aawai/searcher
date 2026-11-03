@@ -1,0 +1,708 @@
+/* Home Masthead: typographic column for date/time, continue, tasks and pinned notes.
+   Contract: docs/design/VISUAL_LANGUAGE.md#首页刊头home-masthead */
+
+.home-masthead {
+    color: var(--foreground);
+}
+
+/* Progressive veil on the chosen side: a blurred copy of the wallpaper (the
+   same image, focal point and readability mask) under a translucent
+   --background wash, fading out just inside the column's outer edge. A static
+   `filter` on the copy is rasterized once; a backdrop-filter would re-sample
+   the wallpaper whenever a window moves above the veil. It shares the
+   wallpaper's layer so the top bar, search box and windows paint above it. */
+.home-masthead__veil {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: var(--elevation-wallpaper);
+    -webkit-mask-image: linear-gradient(
+        to right,
+        var(--foreground) 0 calc(100% - var(--layout-masthead-veil-fade)),
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to right,
+        var(--foreground) 0 calc(100% - var(--layout-masthead-veil-fade)),
+        transparent 100%
+    );
+}
+
+.home-masthead__veil[data-side="right"] {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+    -webkit-mask-image: linear-gradient(
+        to left,
+        var(--foreground) 0 calc(100% - var(--layout-masthead-veil-fade)),
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to left,
+        var(--foreground) 0 calc(100% - var(--layout-masthead-veil-fade)),
+        transparent 100%
+    );
+}
+
+/* The copy spans the whole viewport (plus a blur's reach on every edge, so
+   the blur never pulls in transparency) and stays aligned with the real
+   wallpaper whichever side the veil is on. */
+.home-masthead__veil-wallpaper.wallpaper-surface {
+    inset: calc(-1 * var(--space-10)) auto;
+    inset-inline-start: calc(-1 * var(--space-10));
+    width: calc(100vw + 2 * var(--space-10));
+    filter: var(--masthead-veil-filter);
+}
+
+.home-masthead__veil[data-side="right"] .home-masthead__veil-wallpaper {
+    inset-inline-start: auto;
+    inset-inline-end: calc(-1 * var(--space-10));
+}
+
+.home-masthead__veil::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--masthead-veil);
+}
+
+/* Scrollable column in side mode. */
+.home-masthead__scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+
+.home-masthead__scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.home-masthead__scroll[data-overflow-bottom="true"] {
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        var(--foreground) calc(100% - var(--space-6)),
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        var(--foreground) calc(100% - var(--space-6)),
+        transparent 100%
+    );
+}
+
+.home-masthead__column {
+    position: fixed;
+    z-index: var(--elevation-canvas);
+    padding-inline-start: var(--space-4);
+    padding-block-end: var(--space-6);
+}
+
+/* 1. Masthead date / time header */
+.home-masthead__header {
+    margin: 0;
+}
+
+.home-masthead__clock {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: var(--space-4);
+    align-items: end;
+}
+
+.home-masthead__day {
+    font-family: var(--font-serif);
+    font-size: var(--font-masthead-day-size);
+    line-height: var(--font-masthead-day-line-height);
+    font-weight: var(--font-title-weight);
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.home-masthead__date-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-block-end: var(--space-1);
+}
+
+.home-masthead__weekday {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+    letter-spacing: 0.12em;
+}
+
+.home-masthead__month {
+    font-family: var(--font-serif);
+    font-size: var(--font-masthead-month-size);
+    line-height: var(--font-masthead-month-line-height);
+    font-weight: var(--font-title-weight);
+}
+
+.home-masthead__time {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-title-weight);
+    font-variant-numeric: tabular-nums;
+    color: var(--foreground);
+}
+
+.home-masthead__time--solo {
+    font-size: var(--font-title-size);
+    line-height: var(--font-title-line-height);
+}
+
+/* 2. Thick rule + dek: continue (or “今日”) on the left, today's counts on the right */
+.home-masthead__dek {
+    margin-block-start: var(--space-4);
+    border-block-start: 2px solid var(--foreground);
+}
+
+.home-masthead__dek-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-block-start: var(--space-3);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.home-masthead__dek-label {
+    letter-spacing: 0.14em;
+}
+
+.home-masthead__dek-status {
+    flex-shrink: 0;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.home-masthead__continue {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+}
+
+.home-masthead__continue-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-1);
+    min-width: 0;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.home-masthead__continue-item:hover {
+    color: var(--foreground);
+}
+
+.home-masthead__continue-item:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.home-masthead__continue-verb {
+    flex-shrink: 0;
+}
+
+.home-masthead__continue-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--foreground);
+    font-weight: var(--font-label-weight);
+}
+
+/* 3. Section headings (待办 / 置顶) */
+.home-masthead__section {
+    margin-block-start: var(--space-6);
+}
+
+.home-masthead__section-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-title-weight);
+    letter-spacing: 0.16em;
+    color: var(--accent);
+}
+
+.home-masthead__section-head::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    transform: translateY(-4px);
+}
+
+.home-masthead__section-count {
+    letter-spacing: 0;
+    color: var(--muted);
+    font-weight: var(--font-label-weight);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 4. Tasks list */
+.home-masthead__tasks {
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.home-masthead__task {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: calc(var(--font-body-line-height) + var(--space-2));
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+.home-masthead__task-check-hit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.home-masthead__task-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.home-masthead__task[data-checked="true"] .home-masthead__task-text {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--muted);
+}
+
+.home-masthead__task-source {
+    flex-shrink: 0;
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+}
+
+/* 5. Pinned note entries */
+.home-masthead__entries {
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.home-masthead__entry-item + .home-masthead__entry-item {
+    border-block-start: 1px solid var(--border);
+}
+
+.home-masthead__entry-item[data-dragging="true"] {
+    z-index: var(--elevation-local-4);
+    opacity: 0.72;
+}
+
+.home-masthead__entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    padding-block: var(--space-3);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    outline: none;
+}
+
+.home-masthead__entry:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.home-masthead__entry:is(:hover, :focus-within)::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: calc(-1 * var(--space-4));
+    inset-block: var(--space-4);
+    width: 0;
+    border-inline-start: 2px solid var(--accent);
+}
+
+.home-masthead__entry-no {
+    font-family: var(--font-serif);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-masthead-entry-line-height);
+    font-weight: var(--font-title-weight);
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+}
+
+.home-masthead__entry-body {
+    min-width: 0;
+}
+
+.home-masthead__entry-head {
+    position: relative;
+    padding-inline-end: var(--control-compact-height);
+}
+
+.home-masthead__entry-title {
+    margin: 0;
+    min-width: 0;
+    flex: 1;
+    font-family: var(--font-serif);
+    font-size: var(--font-masthead-entry-size);
+    line-height: var(--font-masthead-entry-line-height);
+    font-weight: var(--font-title-weight);
+    overflow-wrap: anywhere;
+    transition: transform var(--motion-fast) var(--ease-standard);
+}
+
+.home-masthead__entry:is(:hover, :focus-within) .home-masthead__entry-title {
+    transform: translateX(4px);
+}
+
+.home-masthead__entry:is(:hover, :focus-within) .home-masthead__entry-title::after {
+    content: " ↗";
+    font-family: var(--font-sans);
+    font-size: var(--font-body-size);
+    color: var(--accent);
+}
+
+/* ⋯ floats at the title's end so it never adds height to the title line. */
+.home-masthead__entry-actions {
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: calc(
+        (var(--font-masthead-entry-line-height) - var(--control-compact-height))
+        / 2
+    );
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.home-masthead__entry:is(:hover, :focus-within) .home-masthead__entry-actions,
+.home-masthead__entry-actions:has([data-popup-open], [aria-expanded="true"]) {
+    opacity: 1;
+}
+
+.home-masthead__entry-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-compact-height);
+    height: var(--control-compact-height);
+    padding: 0;
+    border: 0;
+    border-radius: var(--control-radius);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.home-masthead__entry-menu-btn:hover {
+    background: var(--surface-soft);
+    color: var(--foreground);
+}
+
+.home-masthead__entry-menu-btn:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.home-masthead__entry-summary {
+    margin: var(--space-half) 0 0;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    color: color-mix(in srgb, var(--foreground) 76%, transparent);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.home-masthead__entry-summary code {
+    font-family: var(--font-mono);
+    font-size: var(--font-code-size);
+    line-height: var(--font-code-line-height);
+    color: var(--foreground);
+}
+
+/* A command reads as one line; the full block is one click away via 复制命令. */
+.home-masthead__entry-summary:has(> code) {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.home-masthead__entry-meta {
+    margin-block-start: var(--space-1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+}
+
+.home-masthead__copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--accent);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-title-weight);
+    cursor: pointer;
+}
+
+.home-masthead__copy-btn:hover {
+    text-decoration: underline;
+}
+
+.home-masthead__copy-btn:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+/* 6. Footer */
+.home-masthead__footer {
+    margin-block-start: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+}
+
+.home-masthead__all-notes {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-weight: var(--font-title-weight);
+    cursor: pointer;
+}
+
+.home-masthead__all-notes:hover {
+    text-decoration: underline;
+}
+
+.home-masthead__all-notes:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+/* 7. Narrow mode: Material pill and the expandable sheet */
+/* No stacking context here: the sheet's veil must stay on the wallpaper
+   layer, under the top bar, the docked search box and the Dock. */
+.home-masthead[data-mode="narrow"] {
+    position: relative;
+    width: 100%;
+    max-width: var(--layout-home-content-max);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.home-masthead__pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--control-height);
+    padding: 0 var(--space-4);
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-elevation-material);
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-variant-numeric: tabular-nums;
+}
+
+button.home-masthead__pill {
+    cursor: pointer;
+}
+
+button.home-masthead__pill:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.home-masthead__pill-sep,
+.home-masthead__pill-chevron {
+    color: var(--muted);
+}
+
+.home-masthead__pill-tasks {
+    color: var(--accent);
+    font-weight: var(--font-label-weight);
+}
+
+.home-masthead__pill[data-hidden="true"] {
+    visibility: hidden;
+}
+
+/* Narrow sheet: the whole home blurs under the masthead, which reads from the
+   top bar down to the search box docked above the bottom edge. */
+.home-masthead__veil[data-side="top"] {
+    inset-inline: 0;
+    width: auto;
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        var(--foreground) 0 80%,
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        var(--foreground) 0 80%,
+        transparent 100%
+    );
+}
+
+.home-masthead__sheet {
+    padding-inline: max(
+        0px,
+        calc((100% - var(--layout-masthead-panel-max)) / 2)
+    );
+}
+
+.home-masthead__veil[data-side="top"],
+.home-masthead__sheet {
+    transition: opacity var(--motion-panel) var(--ease-out-expo),
+        transform var(--motion-panel) var(--ease-out-expo);
+}
+
+.home-masthead__veil[data-side="top"][data-open="false"],
+.home-masthead__sheet[data-open="false"] {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.home-masthead__sheet[data-open="false"] {
+    transform: translateY(calc(-1 * var(--space-2)));
+}
+
+.home-masthead__sheet-bar {
+    display: flex;
+    justify-content: center;
+    padding-block-start: var(--space-4);
+}
+
+/* While the sheet is open the search box slides down above the bottom edge
+   (ZenLayout's measured --masthead-dock-shift). Only a transform: the hero
+   keeps its box, so nothing else on the home moves. Focusing the box closes
+   the sheet and it slides back. */
+.hero .search-form-wrap {
+    transition: transform var(--motion-panel) var(--ease-out-expo);
+}
+
+.hero[data-masthead-sheet="open"] .search-form-wrap {
+    transform: translateY(var(--masthead-dock-shift));
+}
+
+.home-masthead__collapse {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--control-compact-height);
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--surface-soft);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-label-weight);
+    cursor: pointer;
+}
+
+.home-masthead__collapse:hover {
+    color: var(--foreground);
+}
+
+.home-masthead__collapse:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+/* Coarse pointer: >=44px hit areas and always-visible menu button */
+@media (any-pointer: coarse), (hover: none) {
+    .home-masthead__continue-item,
+    .home-masthead__task,
+    .home-masthead__copy-btn,
+    .home-masthead__all-notes,
+    .home-masthead__pill,
+    .home-masthead__collapse {
+        min-height: var(--control-touch-target);
+    }
+
+    /* The 44px hit area grows around the 16px box without widening the row's
+       visual rhythm: the box stays on the column edge, the text 12px after it. */
+    .home-masthead__task-check-hit {
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+        margin-inline: calc((var(--space-4) - var(--control-touch-target)) / 2);
+    }
+
+    .home-masthead__entry-actions {
+        opacity: 1;
+    }
+
+    .home-masthead__entry-menu-btn {
+        width: var(--control-touch-target);
+        height: var(--control-touch-target);
+    }
+}
+
+/* Reduced motion: no translation on hover or for the narrow sheet */
+@media (prefers-reduced-motion: reduce) {
+    .home-masthead__entry-title {
+        transition: none;
+    }
+
+    .home-masthead__entry:is(:hover, :focus-within) .home-masthead__entry-title {
+        transform: none;
+    }
+
+    .home-masthead__sheet {
+        transition: opacity var(--motion-panel) var(--ease-out-expo);
+    }
+
+    .home-masthead__sheet[data-open="false"] {
+        transform: none;
+    }
+
+    /* The search box still docks, without sliding. */
+    .hero .search-form-wrap {
+        transition: none;
+    }
+}

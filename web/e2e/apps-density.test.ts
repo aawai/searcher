@@ -118,6 +118,13 @@ async function register(page: Page, origin: string, username: string) {
     await page.locator('form button[type="submit"]').click();
     await page.waitForURL(origin + "/");
     await page.locator("main.home").waitFor({ state: "visible" });
+    await page.evaluate(async () => {
+        await fetch("/api/preferences", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ showHomeApps: true }),
+        });
+    });
 }
 
 async function seedFixtures(page: Page): Promise<Fixtures> {

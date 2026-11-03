@@ -2,6 +2,12 @@
 
 ## 2026-11-03
 
+- **observe**: {"relevance":"high","slug":"obs-2026-11-03-issue-363","title":"首页刊头验收 Issue 363 与素材分支"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-03-","title":"首页刊头实现落地与贴合效果图的关键取舍"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-03-","title":"首页笔记改为刊头排版（方向二优化版）决策"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-03-003","url":"https://sqlite.org/c3ref/backup_finish.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-03-002","url":"https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-03-001","url":"https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF"}
 - **observe**: {"relevance":"medium","slug":"obs-2026-11-03-coverage-ci-documents-core-runs-parallel-with-deno-jobs-2","title":"Coverage CI documents-core runs --parallel with DENO_JOBS=2"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes","title":"E2E geometry matrices run in light only (layoutThemes)"}
 - **observe**: {"relevance":"medium","slug":"obs-2026-11-03-documents-core-longest-first-order-adopted-after-race-fix","title":"documents-core longest-first order adopted after race fix"}

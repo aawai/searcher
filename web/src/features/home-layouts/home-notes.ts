@@ -1,7 +1,7 @@
-import type { DocumentDto, DocumentLayoutDto } from "@shared/documents.ts";
+import type { DocumentDto } from "@shared/documents.ts";
 
-/** A note pinned to home, with this account's home layout attached. */
-export type HomeNoteItem = DocumentDto & { layout: DocumentLayoutDto };
+/** A note pinned to home. */
+export type HomeNoteItem = DocumentDto;
 
 /** Mirrors the server home scope: homeSortOrder, createdAt, then id ascending. */
 export function sortNotes(notes: readonly HomeNoteItem[]): HomeNoteItem[] {
@@ -30,15 +30,4 @@ export function setNote(
     if (note && current && current.version > note.version) return [...notes];
     const rest = notes.filter((item) => item.id !== documentId);
     return note ? sortNotes([...rest, note]) : rest;
-}
-
-/** A note that was never moved on this account has no stored cell yet. */
-export function defaultNoteLayout(): DocumentLayoutDto {
-    return {
-        band: null,
-        col: null,
-        row: null,
-        size: "s",
-        updatedAt: 0,
-    };
 }

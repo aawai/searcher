@@ -68,6 +68,8 @@ export type Appearance = {
     showHomeDate: boolean;
     showHomeTime: boolean;
     showHomeContinue: boolean;
+    /** 窄屏默认收起刊头。 */
+    homeMastheadCollapsed: boolean;
 };
 
 const initial: Appearance = {
@@ -80,11 +82,12 @@ const initial: Appearance = {
     wallpaper: "",
     wallpaperPresentations: {},
     showAppLabels: true,
-    showHomeApps: true,
+    showHomeApps: false,
     showHomeAppPlate: true,
     showHomeDate: true,
     showHomeTime: false,
     showHomeContinue: true,
+    homeMastheadCollapsed: true,
 };
 
 /** 旧设备缓存和旧 API 响应缺少字段时，仍生成有效的背景参数。 */
@@ -148,6 +151,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
             "showHomeDate",
             "showHomeTime",
             "showHomeContinue",
+            "homeMastheadCollapsed",
         ] as const
     ) {
         const value = saved[key];
@@ -393,6 +397,7 @@ export function AppState({ children }: { children: ReactNode }) {
                     showHomeDate: prefs.showHomeDate,
                     showHomeTime: prefs.showHomeTime,
                     showHomeContinue: prefs.showHomeContinue,
+                    homeMastheadCollapsed: prefs.homeMastheadCollapsed,
                 },
                 initialRevision,
             );
@@ -498,6 +503,7 @@ export function AppState({ children }: { children: ReactNode }) {
                     "showHomeDate",
                     "showHomeTime",
                     "showHomeContinue",
+                    "homeMastheadCollapsed",
                 ] as const
             ) {
                 if (next[key] !== undefined) updates[key] = next[key];

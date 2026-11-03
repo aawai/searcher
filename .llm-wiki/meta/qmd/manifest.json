@@ -70,7 +70,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/csrf-defense-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/csrf-defense-boundaries",
-      "contentHash": "65c773e670a294d2ecf58d44e634e6f66a80a3fffa37f5c45d68a44916295002",
+      "contentHash": "6169aa388cf30e428d988cc4a3a9caa91f892972e03c828f46f823bc54fee538",
       "role": "canonical",
       "type": "concept"
     },
@@ -310,7 +310,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/sqlite-backup-and-recovery-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/sqlite-backup-and-recovery-boundaries",
-      "contentHash": "3fd27b3cf6a0e6340a2a0656082b27ddf88e4b37b41254cdab464a0f2ebcf2b2",
+      "contentHash": "7ad9a87f9bc7495cc94d5f0c85417841e62195959e0ea28c9475557fe8130ade",
       "role": "canonical",
       "type": "concept"
     },
@@ -1250,6 +1250,30 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/SRC-2026-11-03-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-03-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-03-001",
+      "contentHash": "b8f33c75529dc19b84ce497139d0d1292ee6cace3edb1af6b660da2de72290e7",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-03-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-03-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-03-002",
+      "contentHash": "fce8753583a77ea9dedcceaf7d02169707117657d0f8fca74846d55b14d43777",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-03-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-03-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-03-003",
+      "contentHash": "12870a8434da7769d5e283d0ee4f6fad007a3a22f557f1a0fbaf27bce072cf58",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/css-var-fallback-consumer-value-boundary.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/css-var-fallback-consumer-value-boundary.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -2010,6 +2034,14 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-11-03-.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-",
+      "contentHash": "5dee0ff82443caa736a093d752ab8ceab20c21f239d3a563de6a3ff745b454a6",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -2071,6 +2103,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel",
       "contentHash": "4f70c962af8b258dfe6797d07ce4c2b42fee2ff3ad3e6d0031da1d54088e8b39",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-issue-363.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-issue-363.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-issue-363",
+      "contentHash": "627780bd321cdcdb230a550d52ca80c0f4b84baff90367ca963204a4717b64d8",
       "role": "evidence",
       "type": "source"
     },

@@ -41,9 +41,11 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         });
         const initialData =
             (await initial.json() as Envelope<PreferencesDto>).data;
+        assertEquals(initialData?.showHomeApps, false);
         assertEquals(initialData?.showHomeDate, true);
         assertEquals(initialData?.showHomeTime, false);
         assertEquals(initialData?.showHomeContinue, true);
+        assertEquals(initialData?.homeMastheadCollapsed, true);
         assertEquals(initialData?.showHomeAppPlate, true);
         const second = await register("appearance_b");
         const response = await app.request("/api/preferences", {
@@ -59,11 +61,12 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 searchShape: "pill",
                 glassIntensity: "clear",
                 defaultEngine: "google",
-                showHomeApps: false,
+                showHomeApps: true,
                 showHomeAppPlate: false,
                 showHomeDate: false,
                 showHomeTime: true,
                 showHomeContinue: false,
+                homeMastheadCollapsed: false,
                 showAppLabels: false,
             }),
         });
@@ -72,8 +75,9 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.accent, "violet");
         assertEquals(saved.data?.searchShape, "pill");
         assertEquals(saved.data?.glassIntensity, "clear");
-        assertEquals(saved.data?.showHomeApps, false);
+        assertEquals(saved.data?.showHomeApps, true);
         assertEquals(saved.data?.showHomeAppPlate, false);
+        assertEquals(saved.data?.homeMastheadCollapsed, false);
         assertEquals(saved.data?.showAppLabels, false);
         const partial = await app.request("/api/preferences", {
             method: "PATCH",
@@ -90,8 +94,9 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         const changed = await partial.json() as Envelope<PreferencesDto>;
         assertEquals(changed.data?.accent, "rose");
         assertEquals(changed.data?.defaultEngine, "google");
-        assertEquals(changed.data?.showHomeApps, false);
+        assertEquals(changed.data?.showHomeApps, true);
         assertEquals(changed.data?.showHomeAppPlate, false);
+        assertEquals(changed.data?.homeMastheadCollapsed, false);
         assertEquals(changed.data?.searchShape, "pill");
         assertEquals(changed.data?.glassIntensity, "clear");
         assertEquals(changed.data?.showAppLabels, false);
@@ -105,6 +110,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
             (await readBack.json() as Envelope<PreferencesDto>).data;
         assertEquals(persisted?.showHomeDate, false);
         assertEquals(persisted?.showHomeAppPlate, false);
+        assertEquals(persisted?.homeMastheadCollapsed, false);
         // Choosing "follow wallpaper" again drops the manual override.
         const follow = await app.request("/api/preferences", {
             method: "PATCH",
@@ -128,21 +134,22 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 cookie: first,
                 "content-type": "application/json",
             },
-            body: JSON.stringify({ showHomeApps: true }),
+            body: JSON.stringify({ showHomeApps: false }),
         });
         assertEquals(toggleBack.status, 200);
         assertEquals(
             (await toggleBack.json() as Envelope<PreferencesDto>).data
                 ?.showHomeApps,
-            true,
+            false,
         );
         const other = await app.request("/api/preferences", {
             headers: { cookie: second },
         });
         const isolated = await other.json() as Envelope<PreferencesDto>;
         assertEquals(isolated.data?.defaultEngine, "bing");
-        assertEquals(isolated.data?.showHomeApps, true);
+        assertEquals(isolated.data?.showHomeApps, false);
         assertEquals(isolated.data?.showHomeAppPlate, true);
+        assertEquals(isolated.data?.homeMastheadCollapsed, true);
         assertEquals(isolated.data?.searchShape, "rounded");
         assertEquals(isolated.data?.glassIntensity, "regular");
         assertEquals(isolated.data?.showAppLabels, true);
@@ -203,6 +210,7 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { showHomeDate: "yes" },
                 { showHomeTime: 1 },
                 { showHomeContinue: null },
+                { homeMastheadCollapsed: "yes" },
                 { searchShape: "square" },
                 { glassIntensity: "ultra" },
                 { glassIntensity: 0.5 },
@@ -304,7 +312,8 @@ Deno.test("preferences: first partial PATCH with accent-only seeds full canonica
         assertEquals(patchBody.data?.defaultEngine, "duckduckgo");
         assertEquals(patchBody.data?.theme, "dark");
         assertEquals(patchBody.data?.searchTarget, "new");
-        assertEquals(patchBody.data?.showHomeApps, true);
+        assertEquals(patchBody.data?.showHomeApps, false);
+        assertEquals(patchBody.data?.homeMastheadCollapsed, true);
 
         // Verify subsequent GET confirms DB persistence
         const getRes = await app.request("/api/preferences", {

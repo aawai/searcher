@@ -9,12 +9,11 @@ import {
     DOCUMENT_JSON_MAX_BYTES,
     type DocumentAssetDto,
     type DocumentDto,
-    type DocumentLayoutDto,
-    type DocumentLayoutsDto,
     type DocumentNotebookDto,
     type DocumentPageDto,
     type DocumentSettingsDto,
     type DocumentVersionDto,
+    type HomeOrderDto,
 } from "../../shared/documents.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
 
@@ -628,302 +627,177 @@ async function createHomeNote(
     );
 }
 
-async function readLayoutOrNull(
-    env: TestEnv,
-    id: string,
-): Promise<DocumentLayoutDto | null> {
-    const response = await env.request(`/api/documents/${id}/layout`);
-    assertEquals(response.status, 200);
-    const envelope = await response.json() as Envelope<
-        DocumentLayoutDto | null
-    >;
-    return envelope.data ?? null;
-}
-
-Deno.test("Documents HTTP: home note cells are band-relative and validate as one position", async () => {
-    const env = await setup();
-    try {
-        const note = await createHomeNote(env, "Band note");
-        const other = await createHomeNote(env, "Center note");
-        const patch = (id: string, body: unknown) =>
-            env.request(`/api/documents/${id}/layout`, "PATCH", body);
-        const layout = await data<DocumentLayoutDto>(
-            await patch(note.id, {
-                band: "left",
-                col: 0,
-                row: 0,
-                size: "w",
-            }),
-        );
-        assertEquals(layout.band, "left");
-        assertEquals(layout.col, 0);
-        assertEquals(layout.row, 0);
-        assertEquals(layout.size, "w");
-        assertEquals(
-            await data(
-                await env.request(`/api/documents/${note.id}/layout`),
-            ),
-            layout,
-        );
-
-        // The same column and row in another band is a different cell.
-        assertEquals(
-            (await patch(other.id, {
-                band: "center",
-                col: 0,
-                row: 0,
-            })).status,
-            200,
-        );
-        assertEquals(
-            (await patch(other.id, {
-                band: "left",
-                col: 0,
-                row: 0,
-            })).status,
-            409,
-        );
-
-        // Sides extend above the search box; the center shelf does not.
-        assertEquals(
-            (await patch(note.id, {
-                band: "left",
-                col: 0,
-                row: -31,
-            })).status,
-            200,
-        );
-        assertEquals(
-            (await patch(other.id, {
-                band: "center",
-                col: 0,
-                row: -1,
-            })).status,
-            400,
-        );
-        assertEquals(
-            (await patch(note.id, {
-                band: "left",
-                col: 0,
-                row: -32,
-            })).status,
-            400,
-        );
-        assertEquals(
-            (await patch(note.id, {
-                band: "left",
-                col: 64,
-                row: 0,
-            })).status,
-            400,
-        );
-        assertEquals(
-            (await patch(note.id, {
-                band: "left",
-                col: 0,
-                row: 32,
-            })).status,
-            400,
-        );
-
-        // band/col/row are one position: all three provided or none.
-        assertEquals((await patch(note.id, { band: "left" })).status, 400);
-        assertEquals(
-            (await patch(note.id, { col: 0, row: 0 })).status,
-            400,
-        );
-        assertEquals(
-            (await patch(note.id, {
-                band: "top",
-                col: 0,
-                row: 0,
-            })).status,
-            400,
-        );
-        const cleared = await data<DocumentLayoutDto>(
-            await patch(note.id, { band: null, col: null, row: null }),
-        );
-        assertEquals(cleared.band, null);
-        assertEquals(cleared.col, null);
-        assertEquals(cleared.row, null);
-        assertEquals(cleared.size, "w");
-    } finally {
-        await env.store.close();
-    }
-});
-
-Deno.test("Documents HTTP: batch layout swaps are atomic and keep unspecified fields", async () => {
-    const env = await setup();
+Deno.test("Documents HTTP: home-order reorders without versioning and pin-to-end appends new pins", async () => {
+    let clock = 1_000_000;
+    const env = await setup(() => clock);
     try {
         const first = await createHomeNote(env, "First");
+        clock += 100;
         const second = await createHomeNote(env, "Second");
-        for (
-            const [id, col] of [[first.id, 0], [second.id, 1]] as const
-        ) {
-            assertEquals(
-                (await env.request(`/api/documents/${id}/layout`, "PATCH", {
-                    band: "left",
-                    col,
-                    row: 0,
-                })).status,
-                200,
-            );
-        }
-        const swapped = await data<DocumentLayoutsDto>(
-            await env.request("/api/documents/layouts", "PATCH", {
-                items: [
-                    { id: first.id, band: "left", col: 1, row: 0 },
-                    { id: second.id, band: "left", col: 0, row: 0 },
-                ],
+        clock += 100;
+        const unpinned = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", {
+                body: "Third via pin",
+                isHomeFixed: false,
             }),
         );
-        assertEquals(swapped.items.map((item) => item.id), [
+        assertEquals(first.homeSortOrder, 0);
+        assertEquals(second.homeSortOrder, 1);
+        assertEquals(unpinned.homeSortOrder, 0);
+
+        clock += 100;
+        const third = await data<DocumentDto>(
+            await env.request(`/api/documents/${unpinned.id}`, "PATCH", {
+                version: unpinned.version,
+                isHomeFixed: true,
+            }),
+        );
+        assertEquals(third.homeSortOrder, 2);
+
+        const initialHome = await data<DocumentPageDto>(
+            await env.request("/api/documents?scope=home"),
+        );
+        assertEquals(initialHome.items.map((item) => item.id), [
+            first.id,
+            second.id,
+            third.id,
+        ]);
+
+        clock += 500;
+        const orderRes = await env.request(
+            "/api/documents/home-order",
+            "PATCH",
+            { ids: [third.id, first.id, second.id] },
+        );
+        assertEquals(orderRes.status, 200);
+        const orderDto = await data<HomeOrderDto>(orderRes);
+        assertEquals(orderDto, {
+            items: [
+                { id: third.id, homeSortOrder: 0 },
+                { id: first.id, homeSortOrder: 1 },
+                { id: second.id, homeSortOrder: 2 },
+            ],
+        });
+
+        const reorderedHome = await data<DocumentPageDto>(
+            await env.request("/api/documents?scope=home"),
+        );
+        assertEquals(reorderedHome.items.map((item) => item.id), [
+            third.id,
             first.id,
             second.id,
         ]);
-        assertEquals(swapped.items[0].layout.col, 1);
-        assertEquals(swapped.items[1].layout.col, 0);
-        assertEquals(
-            await data(
-                await env.request(`/api/documents/${first.id}/layout`),
-            ),
-            swapped.items[0].layout,
-        );
-        assertEquals(
-            await data(
-                await env.request(`/api/documents/${second.id}/layout`),
-            ),
-            swapped.items[1].layout,
-        );
 
-        // Unspecified fields keep the stored value, as in the single PATCH.
-        const resized = await data<DocumentLayoutsDto>(
-            await env.request("/api/documents/layouts", "PATCH", {
-                items: [{ id: first.id, size: "w" }],
-            }),
+        // Version and updatedAt remain untouched after home-order PATCH.
+        const afterFirst = await data<DocumentDto>(
+            await env.request(`/api/documents/${first.id}`),
         );
-        assertEquals(resized.items[0].layout.band, "left");
-        assertEquals(resized.items[0].layout.col, 1);
-        assertEquals(resized.items[0].layout.row, 0);
-        assertEquals(resized.items[0].layout.size, "w");
+        assertEquals(afterFirst.version, first.version);
+        assertEquals(afterFirst.updatedAt, first.updatedAt);
+        assertEquals(afterFirst.homeSortOrder, 1);
+
+        // Pinning another note after reorder appends after max (2 -> 3).
+        clock += 100;
+        const fourth = await createHomeNote(env, "Fourth");
+        assertEquals(fourth.homeSortOrder, 3);
     } finally {
         await env.store.close();
     }
 });
 
-Deno.test("Documents HTTP: batch conflicts reject the whole write", async () => {
+Deno.test("Documents HTTP: home-order enforces 400/404/409 contracts atomically", async () => {
     const env = await setup();
     try {
         const first = await createHomeNote(env, "First");
         const second = await createHomeNote(env, "Second");
-        const third = await createHomeNote(env, "Third");
-        for (
-            const [id, col] of [
-                [first.id, 0],
-                [second.id, 1],
-                [third.id, 2],
-            ] as const
-        ) {
-            assertEquals(
-                (await env.request(`/api/documents/${id}/layout`, "PATCH", {
-                    band: "left",
-                    col,
-                    row: 0,
-                })).status,
-                200,
-            );
-        }
-        // Moving onto a note outside the batch fails the whole transaction.
-        assertEquals(
-            (await env.request("/api/documents/layouts", "PATCH", {
-                items: [
-                    { id: first.id, band: "left", col: 2, row: 0 },
-                    { id: second.id, band: "left", col: 1, row: 0 },
-                ],
-            })).status,
-            409,
+        const unpinned = await data<DocumentDto>(
+            await env.request("/api/documents", "POST", {
+                body: "Unpinned",
+                isHomeFixed: false,
+            }),
         );
+        const trashed = await createHomeNote(env, "Trashed");
         assertEquals(
-            (await readLayoutOrNull(env, first.id))?.col,
-            0,
+            (await env.request(
+                `/api/documents/${trashed.id}?version=${trashed.version}`,
+                "DELETE",
+            )).status,
+            200,
         );
-        assertEquals(
-            (await readLayoutOrNull(env, second.id))?.col,
-            1,
-        );
-        // Two items may not resolve to the same resulting cell either.
-        assertEquals(
-            (await env.request("/api/documents/layouts", "PATCH", {
-                items: [
-                    { id: first.id, band: "left", col: 3, row: 0 },
-                    { id: second.id, band: "left", col: 3, row: 0 },
-                ],
-            })).status,
-            409,
-        );
-        assertEquals(
-            (await readLayoutOrNull(env, first.id))?.col,
-            0,
-        );
-    } finally {
-        await env.store.close();
-    }
-});
+        const foreign = await createHomeNote(env, "Foreign", 1);
 
-Deno.test("Documents HTTP: batch layouts reject foreign ids and invalid batches", async () => {
-    const env = await setup();
-    try {
-        const note = await createHomeNote(env, "Owned note");
-        const foreign = await createHomeNote(env, "Foreign note", 1);
+        // 409: missing a home note
         assertEquals(
-            (await env.request("/api/documents/layouts", "PATCH", {
-                items: [
-                    { id: note.id, band: "left", col: 3, row: 0 },
-                    { id: "missing" },
-                ],
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: [first.id],
+            })).status,
+            409,
+        );
+        // 409: extra unpinned note (even when all home notes are included or replaced)
+        assertEquals(
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: [first.id, second.id, unpinned.id],
+            })).status,
+            409,
+        );
+        assertEquals(
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: [first.id, unpinned.id],
+            })).status,
+            409,
+        );
+
+        // 404: foreign, soft-deleted, or unknown id
+        assertEquals(
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: [first.id, second.id, foreign.id],
             })).status,
             404,
         );
-        assertEquals(await readLayoutOrNull(env, note.id), null);
         assertEquals(
-            (await env.request("/api/documents/layouts", "PATCH", {
-                items: [
-                    { id: note.id, band: "left", col: 3, row: 0 },
-                    {
-                        id: foreign.id,
-                        band: "left",
-                        col: 3,
-                        row: 0,
-                    },
-                ],
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: [first.id, second.id, trashed.id],
             })).status,
             404,
         );
-        assertEquals(await readLayoutOrNull(env, note.id), null);
         assertEquals(
-            (await env.request("/api/documents/layouts", "PATCH", {
-                items: [
-                    { id: note.id, band: "left", col: 3, row: 0 },
-                    { id: note.id, band: "left", col: 4, row: 0 },
-                ],
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: [first.id, second.id, "missing-id"],
+            })).status,
+            404,
+        );
+
+        // 400: empty, duplicate, blank, or >500 ids
+        assertEquals(
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: [],
             })).status,
             400,
         );
         assertEquals(
-            (await env.request("/api/documents/layouts", "PATCH", {
-                items: [],
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: [first.id, first.id],
             })).status,
             400,
         );
         assertEquals(
-            (await env.request("/api/documents/layouts", "PATCH", {
-                items: Array.from({ length: 65 }, (_, index) => ({
-                    id: `note-${index}`,
-                })),
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: ["   "],
             })).status,
             400,
         );
-        assertEquals(await readLayoutOrNull(env, note.id), null);
+        assertEquals(
+            (await env.request("/api/documents/home-order", "PATCH", {
+                ids: Array.from({ length: 501 }, (_, i) => `id-${i}`),
+            })).status,
+            400,
+        );
+
+        // Order unchanged after rejected requests
+        const home = await data<DocumentPageDto>(
+            await env.request("/api/documents?scope=home"),
+        );
+        assertEquals(home.items.map((item) => item.id), [first.id, second.id]);
     } finally {
         await env.store.close();
     }

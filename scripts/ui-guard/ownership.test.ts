@@ -1193,7 +1193,9 @@ Deno.test("Ownership integration: scanOwnership reports bare feature class overr
 
         const result = await scanOwnership(dir, dir);
         assertEquals(
-            result.byRule["primitive-feature-cascade-order"].map((v) => v.snippet),
+            result.byRule["primitive-feature-cascade-order"].map((v) =>
+                v.snippet
+            ),
             [".settings-example"],
         );
     } finally {

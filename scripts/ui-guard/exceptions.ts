@@ -41,6 +41,8 @@ function isDragOwner(file: string): boolean {
         p.endsWith("SearchHome.tsx") ||
         p.endsWith("WebAppLauncher.tsx") ||
         p.endsWith("HomeNotes.tsx") ||
+        p.endsWith("HomeMasthead.tsx") ||
+        p.endsWith("MastheadSections.tsx") ||
         p.includes("/fixtures/drag/")
     );
 }
@@ -108,7 +110,11 @@ export function isDragTransformException(
 ): boolean {
     const normValue = value.trim();
     if (
-        normalizePath(file) === "web/src/features/dock/WorkspaceDock.tsx" &&
+        (normalizePath(file) === "web/src/features/dock/WorkspaceDock.tsx" ||
+            normalizePath(file) ===
+                "web/src/features/home-masthead/HomeMasthead.tsx" ||
+            normalizePath(file) ===
+                "web/src/features/home-masthead/MastheadSections.tsx") &&
         prop === "transition" && normValue === "transition"
     ) return true;
 
@@ -170,6 +176,7 @@ function isRuntimeLayoutOwner(file: string): boolean {
         p.endsWith("SearchHome.tsx") ||
         p.endsWith("WebAppLauncher.tsx") ||
         p.endsWith("HomeNotes.tsx") ||
+        p.endsWith("HomeMasthead.tsx") ||
         p.endsWith("design-lab/HomeGridLab.tsx") ||
         p.endsWith("design-lab/AccentLab.tsx") ||
         p.includes("/fixtures/layout/")
@@ -240,6 +247,12 @@ export function isRuntimeLayoutGeometryException(
             prop === "--document-outline-width" &&
             normValue === "`${effectiveOutlineWidth}px`"
         ) return true;
+    }
+    // The open narrow masthead sheet slides the search box down to the dock
+    // that mastheadPlacement measured from the free area.
+    if (path === "web/src/features/home-layouts/ZenLayout.tsx") {
+        return prop === "--masthead-dock-shift" &&
+            normValue === "`${dockShift}px`";
     }
     if (!RUNTIME_LAYOUT_PROPS[prop] || !isRuntimeLayoutOwner(file)) {
         return false;

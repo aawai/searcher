@@ -84,6 +84,10 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
     await regPage.locator('form button[type="submit"]').click();
     await regPage.waitForURL(origin + "/");
     await regPage.locator("main.home").waitFor({ state: "visible" });
+    await regPage.request.patch(origin + "/api/preferences", {
+        headers: { Origin: origin },
+        data: { showHomeApps: true },
+    });
 
     // Retrieve registered user
     const dbUser = await store.run((db) => db.select().from(users).all());
@@ -1436,6 +1440,10 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await emptyRegPage.waitForURL(origin + "/");
             await emptyRegPage.locator("main.home").waitFor({
                 state: "visible",
+            });
+            await emptyRegPage.request.patch(origin + "/api/preferences", {
+                headers: { Origin: origin },
+                data: { showHomeApps: true },
             });
 
             // 1. Documents: initial loading gate -> ensure empty state does NOT flicker during load

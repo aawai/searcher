@@ -35,6 +35,9 @@ const ShowHomeAppPlate = v.optional(v.boolean("首页应用底板必须为布尔
 const ShowHomeDate = v.optional(v.boolean("首页显示日期必须为布尔值"));
 const ShowHomeTime = v.optional(v.boolean("首页显示时间必须为布尔值"));
 const ShowHomeContinue = v.optional(v.boolean("首页显示继续必须为布尔值"));
+const HomeMastheadCollapsed = v.optional(
+    v.boolean("刊头默认收起必须为布尔值"),
+);
 const ShowAppLabels = v.optional(v.boolean("显示应用名称必须为布尔值"));
 const DockSchema = v.optional(
     v.nullable(
@@ -207,6 +210,7 @@ export function registerPreferencesRoutes(
             showHomeDate: json(ShowHomeDate),
             showHomeTime: json(ShowHomeTime),
             showHomeContinue: json(ShowHomeContinue),
+            homeMastheadCollapsed: json(HomeMastheadCollapsed),
             backgroundImage: json(BackgroundImage),
             wallpaperPresentations: json(WallpaperPresentations),
             aiGenerationDefaults: json(AiGenerationDefaults),

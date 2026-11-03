@@ -190,7 +190,22 @@ Provider Key。不要将备份 ZIP、密钥或 `data/` 提交到 Git。
 - 旧备份 ZIP 仍可校验与还原：其中的 `notes` 表与便签布局被忽略，笔记（`documents`）完整保留。校验与还原结果的 `warnings: string[]` 会列出被忽略的数据。
 - 浏览器中残留的便签草稿（`note:draft:*`）不读取、不迁移，升级后被清理。
 
-首页笔记与笔记的数据模型见 [笔记 · 首页笔记](documents.md#首页笔记)。
+首页刊头与笔记的数据模型见 [笔记 · 首页刊头](documents.md#首页刊头)。
+
+### 升级：首页刊头取代首页笔记网格
+
+迁移 `0038_unique_carlie_cooper` 删除 `document_layouts`（首页笔记卡片的网格位置与 S / W 尺寸），并重建
+`preferences`：新增 `home_masthead_collapsed`（窄屏默认收起刊头，既有行写入开启），`show_home_apps` 的列默认值改为关闭，
+既有行保留原值。首页改为按 `homeSortOrder` 排列的刊头，固定到首页的笔记与顺序不受影响；旧的卡片位置不再使用，迁移后不可恢复。
+迁移在同步原生事务中执行，失败回滚。
+
+回退到升级前的版本时先停止服务，执行回退脚本重建空的布局表并移除新列，再部署旧版本：
+
+```bash
+sqlite3 data/searcher.sqlite < drizzle/rollback/0038_unique_carlie_cooper.sql
+```
+
+旧版本会按默认落点重新摆放首页笔记；如需找回升级前的卡片位置，从升级前的备份恢复。
 
 ### 升级：首页笔记布局改为网格单元
 

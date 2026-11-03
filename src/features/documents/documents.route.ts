@@ -10,22 +10,17 @@ import {
     DOCUMENT_PAGE_MAX_LIMIT,
     DOCUMENT_TITLE_MAX_LENGTH,
     type DocumentScope,
-    HOME_NOTE_BANDS,
-    HOME_NOTE_GRID_MAX_COL,
-    HOME_NOTE_GRID_MAX_ROW,
-    HOME_NOTE_LAYOUT_BATCH_MAX,
 } from "../../shared/documents.ts";
 import { DocumentAssetsService } from "./assets.ts";
 import {
     DocumentConflictError,
-    DocumentLayoutConflictError,
+    DocumentHomeOrderConflictError,
     DocumentNotFoundError,
     DocumentValidationError,
 } from "./errors.ts";
 import { DocumentNotebooksService } from "./notebooks.ts";
 import { DocumentsService } from "./service.ts";
 import { DocumentSettingsService } from "./settings.ts";
-import { DocumentLayoutsService } from "./layouts.ts";
 
 const Id = v.pipe(v.string(), v.trim(), v.minLength(1, "ID 不能为空"));
 const Version = v.pipe(
@@ -44,46 +39,16 @@ const Title = v.nullable(
     v.pipe(v.string(), v.maxLength(DOCUMENT_TITLE_MAX_LENGTH)),
 );
 const Integer = v.pipe(v.number(), v.integer(), v.safeInteger());
-const NoteSize = v.picklist(["s", "w"]);
-const Band = v.nullable(v.picklist(HOME_NOTE_BANDS));
-const GridCol = v.nullable(
-    v.pipe(
-        v.number(),
-        v.integer(),
-        v.minValue(0),
-        v.maxValue(
-            HOME_NOTE_GRID_MAX_COL,
-        ),
-    ),
-);
-const GridRow = v.nullable(
-    v.pipe(
-        v.number(),
-        v.integer(),
-        v.minValue(
-            -HOME_NOTE_GRID_MAX_ROW,
-        ),
-        v.maxValue(
-            HOME_NOTE_GRID_MAX_ROW,
-        ),
-    ),
-);
-const LayoutItem = v.object({
-    id: Id,
-    band: v.optional(Band),
-    col: v.optional(GridCol),
-    row: v.optional(GridRow),
-    size: v.optional(NoteSize),
-});
-const LayoutItems = v.pipe(
-    v.array(LayoutItem),
-    v.minLength(1, "至少需要一项布局"),
+const HOME_ORDER_MAX_ITEMS = 500;
+const HomeOrderIds = v.pipe(
+    v.array(Id, "笔记 ID 列表必须是数组"),
+    v.minLength(1, "至少需要一项首页笔记"),
     v.maxLength(
-        HOME_NOTE_LAYOUT_BATCH_MAX,
-        `一次最多更新 ${HOME_NOTE_LAYOUT_BATCH_MAX} 项布局`,
+        HOME_ORDER_MAX_ITEMS,
+        `一次最多排序 ${HOME_ORDER_MAX_ITEMS} 项首页笔记`,
     ),
     v.check(
-        (items) => new Set(items.map((item) => item.id)).size === items.length,
+        (ids) => new Set(ids).size === ids.length,
         "笔记 ID 不能重复",
     ),
 );
@@ -111,7 +76,7 @@ async function documentResponse(
         if (error instanceof DocumentValidationError) {
             return c.fail(400, error.message);
         }
-        if (error instanceof DocumentLayoutConflictError) {
+        if (error instanceof DocumentHomeOrderConflictError) {
             return c.fail(409, error.message);
         }
         if (error instanceof DocumentConflictError) {
@@ -131,7 +96,6 @@ export function registerDocumentsRoutes(
     const notebooks = new DocumentNotebooksService(deps.store, deps.now);
     const assets = new DocumentAssetsService(deps.store, deps.now);
     const settings = new DocumentSettingsService(deps.store, deps.now);
-    const layouts = new DocumentLayoutsService(deps.store, deps.now);
 
     routes.get("/api/documents/events", (c) => {
         const encoder = new TextEncoder();
@@ -241,14 +205,14 @@ export function registerDocumentsRoutes(
             ),
     );
     routes.patch(
-        "/api/documents/layouts",
-        validator({ items: json(LayoutItems) }),
+        "/api/documents/home-order",
+        validator({ ids: json(HomeOrderIds) }),
         (c, data) =>
             documentResponse(
                 c,
                 async () =>
                     c.success(
-                        await layouts.updateLayouts(
+                        await documents.updateHomeOrder(
                             c.get("user").id,
                             data,
                         ),
@@ -399,41 +363,6 @@ export function registerDocumentsRoutes(
                         data.version,
                     ),
                 )),
-    );
-
-    routes.get(
-        "/api/documents/:id/layout",
-        validator(entityParam),
-        (c, data) =>
-            documentResponse(
-                c,
-                async () =>
-                    c.success(
-                        await layouts.getLayout(c.get("user").id, data.id),
-                    ),
-            ),
-    );
-    routes.patch(
-        "/api/documents/:id/layout",
-        validator({
-            ...entityParam,
-            band: json(v.optional(Band)),
-            col: json(v.optional(GridCol)),
-            row: json(v.optional(GridRow)),
-            size: json(v.optional(NoteSize)),
-        }),
-        (c, data) =>
-            documentResponse(
-                c,
-                async () =>
-                    c.success(
-                        await layouts.updateLayout(
-                            c.get("user").id,
-                            data.id,
-                            data,
-                        ),
-                    ),
-            ),
     );
 
     routes.get(

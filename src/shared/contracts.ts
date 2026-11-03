@@ -199,6 +199,8 @@ export interface PreferencesDto {
     showHomeDate: boolean;
     showHomeTime: boolean;
     showHomeContinue: boolean;
+    /** 登录用户的跨设备偏好：窄屏默认收起刊头。 */
+    homeMastheadCollapsed: boolean;
     aiGenerationDefaults?: AiGenerationDefaultsDto;
     dock: DockPreferences;
 }
@@ -208,8 +210,6 @@ export interface HomeContinueDto {
     document: { id: string; displayTitle: string; updatedAt: number } | null;
     /** 最近更新的未完成 AI 对话。 */
     conversation: { id: string; title: string; updatedAt: number } | null;
-    /** 首页便签未勾选待办总数；documentId 指向首张包含未完成待办的便签。 */
-    homeTasks: { open: number; documentId: string } | null;
 }
 export * from "./documents.ts";
 export interface Envelope<T> {

@@ -70,17 +70,11 @@ export const suites = {
         "omnibox-lab",
         "accent-lab",
     ],
-    "home-notes": [
-        "home-notes-tasks",
-        "home-notes-drag",
-        "home-notes-placement",
-        "home-notes-inline",
-        "home-notes-keyboard",
-        "home-notes-document",
-        "home-notes-resize",
-        "home-notes-persistence",
-        "home-notes-order",
-        "home-notes-overflow",
+    "home-masthead": [
+        "home-masthead-tasks",
+        "home-masthead-order",
+        "home-masthead-placement",
+        "home-masthead-document",
     ],
     supplemental: [
         "inline-ai-answer",
@@ -184,7 +178,7 @@ export const affectedMappings: readonly {
             "routing",
             "documents",
             "bundle",
-            "home-notes",
+            "home-masthead",
             "supplemental",
         ],
     },
@@ -201,7 +195,7 @@ export const affectedMappings: readonly {
         suites: [
             "workspace",
             "documents",
-            "home-notes",
+            "home-masthead",
             "supplemental",
             "bundle",
         ],
@@ -211,21 +205,31 @@ export const affectedMappings: readonly {
         suites: [
             "workspace",
             "documents",
-            "home-notes",
+            "home-masthead",
             "supplemental",
             "bundle",
         ],
     },
     {
         prefix: "web/src/features/home-calm/",
-        suites: ["workspace", "home-notes", "bundle"],
+        suites: ["workspace", "home-masthead", "bundle"],
+    },
+    {
+        prefix: "web/src/features/home-masthead/",
+        suites: [
+            "workspace",
+            "documents",
+            "home-masthead",
+            "supplemental",
+            "bundle",
+        ],
     },
     {
         prefix: "web/src/features/home-layouts/",
         suites: [
             "workspace",
             "documents",
-            "home-notes",
+            "home-masthead",
             "supplemental",
             "bundle",
         ],
@@ -248,7 +252,7 @@ export const affectedMappings: readonly {
     },
     {
         prefix: "web/src/features/share/",
-        suites: ["routing", "documents", "home-notes"],
+        suites: ["routing", "documents", "home-masthead"],
     },
     {
         prefix: "web/src/components/wallpaper/",

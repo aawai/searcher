@@ -45,10 +45,7 @@ Deno.test("打开已有笔记不聚焦标题，新建笔记仍聚焦标题", asy
     };
 
     await waitForNoteCards(page, 1);
-    await homeNote(page, "焦点入口笔记").getByRole("button", {
-        name: "焦点入口笔记",
-        exact: true,
-    }).click();
+    await homeNote(page, "焦点入口笔记").click();
     await assertNotFocused();
     await close();
 

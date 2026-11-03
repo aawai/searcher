@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-03T05:10:40.670Z",
+  "last_updated": "2026-11-03T14:21:36.912Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -1461,6 +1461,36 @@
       "format": "web",
       "captured": "2026-11-02",
       "updated": "2026-11-02"
+    },
+    "sources/SRC-2026-11-03-001": {
+      "type": "source",
+      "title": "Cross-site request forgery (CSRF)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-03-001/extracted.md",
+      "source_id": "SRC-2026-11-03-001",
+      "format": "web",
+      "captured": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/SRC-2026-11-03-002": {
+      "type": "source",
+      "title": "Same-origin policy",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-03-002/extracted.md",
+      "source_id": "SRC-2026-11-03-002",
+      "format": "web",
+      "captured": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/SRC-2026-11-03-003": {
+      "type": "source",
+      "title": "SQLite Online Backup API reference",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-03-003/extracted.md",
+      "source_id": "SRC-2026-11-03-003",
+      "format": "web",
+      "captured": "2026-11-03",
+      "updated": "2026-11-03"
     },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",
@@ -3068,6 +3098,25 @@
       "created": "2026-10-31",
       "updated": "2026-10-31"
     },
+    "sources/obs-2026-11-03-": {
+      "type": "source",
+      "title": "Observation: 首页刊头实现落地与贴合效果图的关键取舍",
+      "tags": [
+        "ui",
+        "home",
+        "masthead",
+        "performance",
+        "backdrop-filter",
+        "e2e"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-",
+      "relevance": "high",
+      "observed_at": "2026-11-03T14:10:23.560Z",
+      "source_context": "首页刊头实现与效果图贴合",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
     "sources/obs-2026-11-03-bundle-e2e-split-route-style-admin-lab-file": {
       "type": "source",
       "title": "Observation: Bundle E2E split: route-style-admin-lab file",
@@ -3202,6 +3251,24 @@
       "relevance": "high",
       "observed_at": "2026-11-03T04:16:07.258Z",
       "source_context": "E2E duration audit 2026-11-03",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-issue-363": {
+      "type": "source",
+      "title": "Observation: 首页刊头验收 Issue 363 与素材分支",
+      "tags": [
+        "issue-363",
+        "home",
+        "masthead",
+        "acceptance",
+        "assets"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-issue-363",
+      "relevance": "high",
+      "observed_at": "2026-11-03T14:21:36.874Z",
+      "source_context": "创建首页刊头验收 issue",
       "created": "2026-11-03",
       "updated": "2026-11-03"
     },

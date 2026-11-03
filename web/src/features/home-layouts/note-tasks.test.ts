@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
 import {
+    listTasks,
     replayTaskToggles,
     setTaskChecked,
     taskProgress,
@@ -75,4 +76,23 @@ Deno.test("task progress counts nested tasks but excludes fenced examples and pl
         { done: 2, total: 3 },
     );
     assertEquals(taskProgress("no tasks\n\n```\n- [ ] example\n```"), null);
+});
+
+Deno.test("listTasks returns tasks in setTaskChecked ordinal space and excludes code blocks", () => {
+    const body =
+        "- [ ] first\n  - [x] second\n\n```md\n- [ ] fenced\n```\n\n> - [ ] third\n1. [X] fourth\n";
+    const tasks = listTasks(body);
+    assertEquals(tasks, [
+        { index: 0, text: "first", checked: false },
+        { index: 1, text: "second", checked: true },
+        { index: 2, text: "third", checked: false },
+        { index: 3, text: "fourth", checked: true },
+    ]);
+    for (const task of tasks) {
+        const flipped = setTaskChecked(body, task.index, !task.checked);
+        assertEquals(
+            listTasks(flipped ?? "")[task.index]?.checked,
+            !task.checked,
+        );
+    }
 });

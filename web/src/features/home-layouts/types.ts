@@ -1,9 +1,6 @@
 import type React from "react";
 import type { EngineId } from "@shared/engines.ts";
-import type {
-    DocumentLayoutDto,
-    UpdateDocumentInput,
-} from "@shared/documents.ts";
+import type { UpdateDocumentInput } from "@shared/documents.ts";
 import type { Reachability } from "../../components/searcher/SearcherSearchInput.tsx";
 import type {
     ExtendedWebApp,
@@ -15,6 +12,7 @@ import type { LibraryRequest } from "../library/library-request.ts";
 import type { SearchQuickCommand } from "../shortcuts/shortcut-catalog.ts";
 import type { HomeNoteItem } from "./home-notes.ts";
 import type { InlineAnswer } from "../inline-ai/useInlineAnswer.ts";
+import type { MastheadWallpaper } from "../home-masthead/HomeMasthead.tsx";
 export interface HomeLayoutProps {
     user: UserDto | null;
     engine: EngineId;
@@ -55,13 +53,8 @@ export interface HomeLayoutProps {
         note: HomeNoteItem,
         patch: Omit<UpdateDocumentInput, "version">,
     ) => Promise<void>;
-    /** One atomic home layout write: a move or resize is one change, a swap two. */
-    updateNoteLayouts: (
-        changes: ReadonlyArray<{
-            note: HomeNoteItem;
-            layout: DocumentLayoutDto;
-        }>,
-    ) => Promise<void>;
+    /** Full new id order; resolves after save, rejects after rollback. */
+    reorderNotes: (ids: string[]) => Promise<void>;
     /** Toggles one task row in a note's body; optimistic, saved and coalesced. */
     toggleTask: (note: HomeNoteItem, index: number, checked: boolean) => void;
     /** The note open in the editor; its card task boxes are read-only meanwhile. */
@@ -84,6 +77,13 @@ export interface HomeLayoutProps {
     showHomeApps: boolean;
     /** 显示应用底板: paint the Material plate behind the home grid. */
     showHomeAppPlate: boolean;
+    /** appearance.homeMastheadCollapsed — initial state in narrow mode. */
+    homeMastheadCollapsed: boolean;
+    /**
+     * The home wallpaper: the masthead picks its side by the composition's
+     * focal point and blurs a copy of it for its veil.
+     */
+    wallpaper: MastheadWallpaper;
     /** The calm layer above the search box: date, time and 继续. */
     calm: {
         showDate: boolean;

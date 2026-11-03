@@ -105,6 +105,8 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
             { endpoint, method, body },
         );
     }
+    await apiRequest("/api/preferences", "PATCH", { showHomeApps: true });
+    await showHome();
 
     async function settlePresentation(targetPage: Page = page) {
         await targetPage.evaluate(async () => {

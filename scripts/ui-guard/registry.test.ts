@@ -2,6 +2,7 @@ import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
     checkFontSize,
     checkRadius,
+    isFontTokenName,
     isRegisteredAccentFill,
     parseVisualRegistry,
 } from "./registry.ts";
@@ -70,6 +71,11 @@ Deno.test("registry - breakpoint table fails closed on malformed or unordered bo
 });
 
 Deno.test("registry - font-size accepts registered Tokens and relative keywords only", () => {
+    assertEquals(isFontTokenName("--font-sans"), false);
+    assertEquals(isFontTokenName("--font-mono"), false);
+    assertEquals(isFontTokenName("--font-serif"), false);
+    assertEquals(isFontTokenName("--font-masthead-day-line-height"), false);
+    assertEquals(isFontTokenName("--font-masthead-day-size"), true);
     assertEquals(
         checkFontSize("var(--font-body-size)", FIXTURE_REGISTRY),
         "ok",
