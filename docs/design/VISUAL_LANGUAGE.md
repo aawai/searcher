@@ -115,13 +115,13 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | Token                             | 尺寸 / 行高        | 字重        | 用途                                                                                          |
 | --------------------------------- | ------------------ | ----------- | --------------------------------------------------------------------------------------------- |
 | `--font-metadata-size`            | 12 / 16            | 400/500     | 时间、计数、脚注、快捷键、应用 / 文件夹名称、首页刊头分节标题、来源笔记与元信息               |
-| `--font-body-size`                | 14 / 22            | 400/500/600 | 正文、标签、按钮、输入、列表行、首页刊头待办与“继续”、首页辅助字标；分组标题用 600            |
+| `--font-body-size`                | 14 / 22            | 400/500/600 | 正文、标签、按钮、输入、列表行、首页刊头待办与“继续”；分组标题用 600                          |
 | `--font-title-size`               | 17 / 24            | 600         | 窗口 / 对话框 / Sheet 标题、页面内分区标题                                                    |
 | `--font-page-title-size`          | 24 / 32            | 600         | 每页唯一 h1                                                                                   |
 | `--font-search-input-size`        | 17（<768px 为 16） | 400         | 首页搜索框（专用）                                                                            |
 | `--font-code-size`                | 13 / 20            | 400         | 代码（mono）                                                                                  |
 | `--font-input-touch-size`         | 16                 | 同控件      | 粗指针下的表单控件；低于 16px 时 iOS 聚焦会缩放页面                                           |
-| `--font-brand-size`               | 19                 | 600         | 品牌展示角色（非首页顶栏字标）；不用于首页日期 / 时间或首页标题                               |
+| `--font-brand-size`               | 19                 | 600         | 品牌展示角色（顶栏字标，首页与其他页面同号）；不用于首页日期 / 时间或首页标题                 |
 | `--font-inline-code-size`         | 0.9em              | 同上下文    | 行内代码，相对所在文字缩放                                                                    |
 | `--font-markdown-title-size`      | 1.35em             | 同上下文    | Markdown 标题，相对正文缩放                                                                   |
 | `--font-markdown-section-size`    | 1.2em              | 同上下文    | Markdown 二级标题                                                                             |
@@ -197,14 +197,14 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 ### 层级
 
-| 层       | 背景                                 | 阴影                          | 示例                                      |
-| -------- | ------------------------------------ | ----------------------------- | ----------------------------------------- |
-| Canvas   | `--background` / 壁纸 / 壁纸派生画布 | 无                            | 页面、首页                                |
-| Content  | `--surface`                          | 无                            | 分组列表、笔记库列表                      |
-| 图标块   | 图标画布 / `--material-regular`      | `--shadow-elevation-glyph`    | 应用、文件夹预览、“+”、“更多（N）”        |
-| Material | `--material-regular` + blur          | `--shadow-elevation-material` | 搜索框、应用底板、首页顶栏控件            |
-| Floating | `--material-thick` + blur            | `--shadow-elevation-floating` | 菜单、Popover、建议列表、撤销提示、任务栏 |
-| Overlay  | `--surface-l3`                       | `--shadow-l3`                 | 对话框、窗口、Sheet                       |
+| 层       | 背景                                 | 阴影                          | 示例                                                     |
+| -------- | ------------------------------------ | ----------------------------- | -------------------------------------------------------- |
+| Canvas   | `--background` / 壁纸 / 壁纸派生画布 | 无                            | 页面、首页                                               |
+| Content  | `--surface`                          | 无                            | 分组列表、笔记库列表                                     |
+| 图标块   | 图标画布 / `--material-regular`      | `--shadow-elevation-glyph`    | 应用、文件夹预览、“+”、“更多（N）”                       |
+| Material | `--material-regular` + blur          | `--shadow-elevation-material` | 搜索框、应用底板、首页顶栏控件的悬停 / 聚焦 / 弹层打开态 |
+| Floating | `--material-thick` + blur            | `--shadow-elevation-floating` | 菜单、Popover、建议列表、撤销提示、任务栏                |
+| Overlay  | `--surface-l3`                       | `--shadow-l3`                 | 对话框、窗口、Sheet                                      |
 
 首页高度收敛为贴面图标块 → Material（搜索框 / 应用底板）→ Floating 三档，每档只消费一个组合阴影 Token；图标块组合 `--glyph-edge` 内环与极淡投影，Material / Floating 组合 `--shadow-material-edge` 与各档投影，不以 z-index 推导阴影强度。首页刊头的衬底是壁纸层上渐隐的整高模糊层（`--masthead-veil`，见 [首页刊头](#首页刊头home-masthead)），不属于高度阶梯，不加阴影与边缘。#285 Y3 起不再有 Paper 层。
 
@@ -222,7 +222,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
   - **颜色归属**：普通值继承 `--foreground`；Button 等控件保留各自的 primary / destructive 等语义颜色，分组行不得覆盖。
 - **管理表格**：固定的短状态、角色与审计操作保留阅读宽度；长名称和明细允许换行，容量不足时在表格容器内横向滚动。审计对象 ID 的缩略值可通过键盘或触屏打开 Popover 查看完整值，Escape 关闭并返回触发控件。
 - **分段控件**：2–4 个互斥选项（如主题）；超过 4 个用 Select。选中项使用 `--surface-control-thumb`，在明暗主题下都亮于轨道。
-- **色点选择**：强调色使用 24px 圆点，选中显示外环；名称只在 `aria-label` 与 tooltip。首个圆点是“跟随壁纸”：显示当前派生色并带图片字形，表示来源而非固定颜色。十项空间充足时排列一行，空间不足时按五项一组换为两行，避免窗口 Host 收窄后出现孤点；<640px 时为分组行下方的整行五列均分网格。粗指针命中区至少 44px；`SettingsPage.tsx` 与 `settings.css` 拥有分组，验证跨组键盘导航及视口和 Host 收窄。
+- **色点选择**：强调色使用 24px 圆点，选中显示外环；名称只在 `aria-label` 与 tooltip。首个圆点是“跟随壁纸”：显示当前派生色并带图片字形，表示来源而非固定颜色。十项按五项一组分为两组：设置行内空间充足时排列一行，空间不足时换为两行，避免窗口 Host 收窄后出现孤点；<640px 时为分组行下方的整行五列均分网格；首页顶栏强调色弹层内固定为两行。粗指针命中区至少 44px。`AccentSwatches`（`web/src/components/searcher/AccentPicker.tsx` + `semantic.css`）拥有分组，设置页与顶栏弹层共用；验证跨组键盘导航及视口和 Host 收窄。
 - **空状态**：默认一句话与一个主要操作，居中，不加装饰性插图与卡片。需要解释原因、权限或恢复路径时允许补充信息及有明确用途的次要操作，保持主次层级，不以固定句数或操作数量牺牲清晰度。
 - **Toast / 撤销**：底部居中材质胶囊；破坏性操作用 AlertDialog 二次确认，软删除给撤销。
 - **菜单**：`⋯` 触发；危险项置底、红色、前有分隔线。互斥选择（如搜索引擎）用单选项，当前项显示勾号。
@@ -236,7 +236,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
   - 列数按底板内容区实测宽度求上限，网格水平居中；精细指针宽屏格宽 / 间距 / 图标固定为 76 / 12 / 48（粗指针 80 / 8 / 48），宽度只增加列数：1440 下 608px、7 列容量（7×76 + 6×12 = 604，余 4 对称分配；粗指针 7×80 + 6×8 = 608），1920 下 736px、8 列，2560 下 848px、9 列。<768px 底板与搜索框同宽：390px 下内宽 342px，5×64 + 4×6 = 344px 超出，故用 4 列；430px 起内宽 382px，可容 5 列。行高 = 格宽、纵横间距相等。显示名称时 `--launcher-pad-t` 为 `(格宽 − 图标宽 − --space-launcher-icon-gap − --font-metadata-line-height) / 2`，图标、间距与一行名称作为一组在方格内垂直居中（桌面 5px），底板上下留白等高；隐藏名称不改方格，只把 `--launcher-pad-t` 设为 `(格宽 − 图标宽) / 2`（`[data-labels="hidden"]`），使图标与悬停框在方格内垂直居中、大文件夹表面居中于 2×2 足迹，底板上下留白对称。`planHomeLibrary` 只排图块（“+”不参与），外层只在容量列末行仅 1 个图块时收窄列数，并仍交给 `calculateDesktopLayout` 回填：不增加已有行数、不超过有效行数，选使末行 ≥2 个图块的最大列数，仅做必要的收窄；8 个 / 上限 7 列 → 6 + 2，与上限 6 列一致，避免宽屏反而收成 4 + 4；19 个 / 上限 6 列 → 5 列 × 4 行（末行 4 个），12 个 / 6 列与 7 个 / 5 列不变。含大文件夹时不做列数平衡，保持 2×2 足迹、回填和“更多”预留规则。
   - 实色表面（窗口、Sheet）不使用 Material：文件夹取 `--surface-soft` 实色并关闭模糊与顶光，保留 `--shadow-elevation-glyph`。预览小图标为 `--surface-solid`，明暗主题均须可辨识边界。
   - 应用窗口网格只消费窗口 `--space-4`（16px）左右页边距，不额外水平 padding；`auto-fill` 按窗口实测完整内容宽度取列并居中。390px 手机窗口四周内缩 `--window-margin`（8px），扣 1px 边框与页边距后内宽 340px：标准 64 / 6 需 344px、触屏 68 / 4 需 356px 才能排 5 列，均放不下，因此排 4 列（需 274 / 284px），图标和命中区不缩小；360px 同样 4 列且无横向溢出。owner 为 `launcher.css` 的 `.launcher-grid--library`，验证为 360 / 390 / 768 / 1440 × light / dark 实页与触屏 E2E。
-- **首页颜色层级**：顶栏与账户头像使用 `--foreground`；首页顶栏控件直接落在壁纸上，字标是一块 Material，主题与头像（访客另有设置）共用一个 Material 组，与任务栏同一语法：两者同高（控件高 + 2 × `--space-half`）、同圆角 `--radius-lg`，材质为 `--glass-sheen` + `--material-regular`、`--material-filter`、`--shadow-material-edge`，使主题前景在任意明暗壁纸上可读（`clear` 档同搜索框，属用户主动选择的通透偏好）。组内按钮透明、圆角与组同心（`--radius-lg` − 2px），悬停为 `--material-thick`；字标悬停加厚为 `--material-thick`。组内头像徽标为 `--surface-control-thumb` 底加 `--shadow-avatar-edge`（`--border` 发丝内环，owner `tokens.css`，`color-hierarchy` E2E 验证），在明暗主题都与组底区分（深色主题 `--material-solid` 即 `--surface-soft`，徽标不能再用它）。非首页顶栏仍为透明底、悬停 `--surface-soft`，头像徽标为 `--surface-soft` 底。登录用户首页顶栏只有主题与头像，不随打开的窗口增减。首页搜索引擎使用品牌原色，仅用于标识本身，不扩展到搜索框底色或提交按钮。网页联想为中性搜索字形，提交按钮始终 ghost。应用窗口的添加入口是应用网格末尾的“+”图块；笔记侧栏头部的创建 icon 属于列表工具栏，列表行只保留次级图标操作。“跟随系统”用 `SunMoon`。
+- **首页颜色层级**：顶栏与账户头像使用 `--foreground`。首页顶栏控件直接落在壁纸上、常态没有底座：字标、图标与“登录”文字依次带 `--wallpaper-text-halo` / `--wallpaper-icon-halo`（`--surface-solid` 柔光，owner `tokens.css`），保证任意明暗壁纸上可读；悬停、键盘聚焦与弹层打开时才显示 `--glass-sheen` + `--material-regular`、`--material-filter`、`--shadow-material-edge` 的控件底，同步失败徽标常驻该 Material。右侧顺序为主题、强调色 │ 身份（访客为主题、强调色、设置 │ 登录），分隔线为 16px 高的 `--border-on-wallpaper` 发丝，左右各 `--space-3`，使强调色入口归入外观组而不像头像的状态点。强调色入口是图标尺寸（`--icon-lg`）的调色板芯片：`--surface-control-thumb` 底、`--shadow-avatar-edge` 发丝环、`--radius-sm` 圆角，2×2 圆点为 `--accent`、`--foreground`、`--accent-active`、`--muted`；点击打开强调色弹层（标题、两行色点、当前名称与“更多外观设置”）。头像徽标 24px，为 `--surface-control-thumb` 底加 `--shadow-avatar-edge`（`color-hierarchy` E2E 验证），与芯片同一“thumb”语法，在明暗主题与任意壁纸上都可辨认。边缘按字形对齐：字标首字母与头像（或“登录”字形）外缘落在 `--space-page-inline`，命中区向外延伸；任务栏在右侧（≥768px）时头像中心对齐任务栏中轴。非首页顶栏为透明底、悬停 `--surface-soft`，头像徽标为 `--surface-soft` 底。登录用户首页顶栏只有主题、强调色与头像，不随打开的窗口增减。首页搜索引擎使用品牌原色，仅用于标识本身，不扩展到搜索框底色或提交按钮。网页联想为中性搜索字形，提交按钮始终 ghost。应用窗口的添加入口是应用网格末尾的“+”图块；笔记侧栏头部的创建 icon 属于列表工具栏，列表行只保留次级图标操作。“跟随系统”用 `SunMoon`。
 
 ### 页面原型
 
@@ -254,7 +254,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 
 设置只有一层，不显示面包屑；面包屑只用于三层及以上的直达页面（如管理详情）。
 
-首页尺度三级：主体块是搜索框 + 应用底板（搜索输入用 `--font-search-input-size`，底板标签用 `--font-metadata-size`）；次级是首页刊头（日数字 `--font-masthead-day-size`、月份 `--font-masthead-month-size`、置顶标题 `--font-masthead-entry-size`，待办与“继续” `--font-body-size`，分节标题与元信息 `--font-metadata-size`）；辅助是首页顶栏字标（`--font-body-size`）、主题与头像（沿用登记图标 / 控件尺寸）。刊头的大字只在壁纸焦点另一侧出现，不与搜索框争夺中轴；层级由块体、距离与字重共同表达，不将顶栏升格为页面标题；窗口标题仍用 `--font-title-size`。
+首页尺度三级：主体块是搜索框 + 应用底板（搜索输入用 `--font-search-input-size`，底板标签用 `--font-metadata-size`）；次级是首页刊头（日数字 `--font-masthead-day-size`、月份 `--font-masthead-month-size`、置顶标题 `--font-masthead-entry-size`，待办与“继续” `--font-body-size`，分节标题与元信息 `--font-metadata-size`）；辅助是首页顶栏字标（`--font-brand-size`）、主题、强调色与头像（沿用登记图标 / 控件尺寸，常态无底座）。刊头的大字只在壁纸焦点另一侧出现，不与搜索框争夺中轴；层级由块体、距离与字重共同表达，不将顶栏升格为页面标题；窗口标题仍用 `--font-title-size`。
 
 本次风格方向修订（首页刊头）：以「首页刊头」替换「首页笔记」（S / W 单元、分带吸附网格、卡片与“更多笔记”入口）与搜索框上方的“静”状态层；删除 `--home-note-*` Token、`HOME_NOTE_GRID`、`home-grid-cells.ts`、`HomeNoteCard.tsx`、`home-notes.css` 与布局 API。新增 `--font-serif`（自托管 Noto Serif SC 600）、三个刊头专用字号与刊头衬底 `--masthead-veil*`（`tokens.css`）。owner 为 `web/src/features/home-masthead/`；以位置 / 摘要 / 待办汇总纯函数单元测试、`glass-contrast.test.ts` 的刊头衬底探针、`check:ui`、home-masthead E2E 与 390 / 768 / 1024 / 1440 / 1920 × light / dark 实页验证。
 
@@ -430,13 +430,15 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 | 选中 / 激活 | `web/src/features/dock/dock.css`           | `.dock-item[data-active="true"]::after`                                    |
 | 拖放反馈    | `web/src/components/searcher/launcher.css` | `.launcher-drag-cue`                                                       |
 | 拖放反馈    | `web/src/components/searcher/launcher.css` | `.launcher-folder-drop-badge`                                              |
-| 色样        | `web/src/app/settings.css`                 | `.settings-swatch-color`                                                   |
+| 色样        | `web/src/components/searcher/semantic.css` | `.accent-swatch-color`                                                     |
+| 色样        | `web/src/components/searcher/semantic.css` | `.accent-picker-chip-dot[data-tone="accent"]`                              |
+| 色样        | `web/src/components/searcher/semantic.css` | `.accent-picker-chip-dot[data-tone="accent-active"]`                       |
 | 色样        | `web/src/design-lab/design-lab.css`        | `.design-lab-swatch-chip[data-token="--accent"]`                           |
 | 色样        | `web/src/design-lab/design-lab.css`        | `.design-lab-swatch-dot`                                                   |
 
 ### 品牌表达
 
-品牌在界面内只以顶栏的小字标“s.”（`.wordmark-small`，一般品牌角色为 `--font-brand-size`，首页辅助角色降为 `--font-body-size`）出现；句点（`.wordmark-dot`）取 `--accent`，是品牌在界面内唯一的强调色用法，字母保持 `--foreground`。首页不显示品牌大标题，不用品牌色铺面。浏览器标签图标与安装图标（`web/public/icons/`）沿用同一放大镜字形：白底、`#245DBD` 描边，maskable 版本满版铺底、字形留在中央安全区内；它们属于操作系统表面，不进入界面 Token。品牌表达方向属于本层，可在实验通道挑战。
+品牌在界面内只以顶栏的小字标“s.”（`.wordmark-small`，`--font-brand-size`）出现；句点（`.wordmark-dot`）取 `--accent`，是品牌在界面内唯一的强调色用法，字母保持 `--foreground`（顶栏强调色芯片属于色样，不是品牌表达）。首页不显示品牌大标题，不用品牌色铺面。浏览器标签图标与安装图标（`web/public/icons/`）沿用同一放大镜字形：白底、`#245DBD` 描边，maskable 版本满版铺底、字形留在中央安全区内；它们属于操作系统表面，不进入界面 Token。品牌表达方向属于本层，可在实验通道挑战。
 
 ## 实验通道
 

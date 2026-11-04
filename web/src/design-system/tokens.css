@@ -50,7 +50,7 @@
     --shadow-control-thumb: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.20);
     --shadow-choice-selected: inset 0 0 0 1px var(--accent);
     --shadow-swatch-selected: 0 0 0 2px var(--surface-solid), 0 0 0 4px var(--accent);
-    /* Hairline edge of the identity badge on the home Material group. */
+    /* Hairline edge of the identity badge on the home top bar. */
     --shadow-avatar-edge: inset 0 0 0 var(--space-hairline) var(--border);
 
     /* Material: translucent surfaces. Fill, blur and saturation come from the glass tier below; --material-solid is the theme's opaque base. */
@@ -495,12 +495,17 @@
     --glass-sheen: linear-gradient(180deg, color-mix(in srgb, white calc(var(--glass-sheen-peak) * var(--glass-sheen-scale)), transparent), transparent 55%);
 }
 
-/* Text set directly on the wallpaper (home app labels, the calm layer): a soft
-   halo in the surface colour keeps it legible. */
+/* Text and glyphs set directly on the wallpaper (home app labels, the home top
+   bar): a soft halo in the surface colour keeps them legible. The icon halo is
+   the same pair as drop-shadow filters, which follow an SVG's strokes. */
 :root,
 [data-theme] {
     --wallpaper-text-halo: 0 0 var(--space-2) color-mix(in srgb, var(--surface-solid) 90%, transparent),
         0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent);
+    --wallpaper-icon-halo: drop-shadow(0 0 var(--space-1) color-mix(in srgb, var(--surface-solid) 90%, transparent))
+        drop-shadow(0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent));
+    /* Hairline divider between top-bar groups on the wallpaper. */
+    --border-on-wallpaper: color-mix(in srgb, var(--foreground) 28%, transparent);
 }
 
 /* Wallpaper-derived canvas (览; permitted for settings-class pages): the

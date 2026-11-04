@@ -127,12 +127,19 @@ a {
     opacity: var(--wallpaper-mask);
 }
 .topbar {
+    /* Hit target of every top-bar control; touch raises it to 44px. */
+    --topbar-target: var(--control-height);
     height: 56px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 var(--space-page-inline);
     gap: var(--space-section);
+}
+@media (any-pointer: coarse), (hover: none) {
+    .topbar {
+        --topbar-target: var(--control-touch-target);
+    }
 }
 .connection-banner {
     display: flex;
@@ -147,22 +154,23 @@ a {
     position: relative;
     z-index: var(--elevation-dock);
 }
+/* Edges are optical: the wordmark's first letter and the identity glyph sit on
+   the page inline edge, their hit targets extend outward past it. */
 .wordmark-small {
-    min-width: var(--control-height);
-    min-height: var(--control-height);
+    min-width: var(--topbar-target);
+    min-height: var(--topbar-target);
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    padding-inline: var(--space-2);
+    margin-inline-start: calc(-1 * var(--space-2));
     border-radius: var(--control-radius);
     font-weight: var(--font-title-weight);
     font-size: var(--font-brand-size);
+    line-height: 1;
     letter-spacing: -.04em;
     color: var(--foreground);
     text-decoration: none;
     transition: background var(--motion-fast) var(--ease-standard);
-}
-.app-shell[data-home] .wordmark-small {
-    font-size: var(--font-body-size);
 }
 .wordmark-small:lang(zh) {
     letter-spacing: normal;
@@ -203,8 +211,8 @@ a {
 }
 .top-actions a,
 .top-actions button {
-    min-width: var(--control-height);
-    min-height: var(--control-height);
+    min-width: var(--topbar-target);
+    min-height: var(--topbar-target);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -215,69 +223,42 @@ a {
     transition: background var(--motion-fast) var(--ease-standard);
 }
 .top-actions a:hover,
-.top-actions button:hover {
+.top-actions button:hover,
+.top-actions [data-popup-open] {
     background: var(--surface-soft);
-}
-/* Home top-bar controls sit directly on the wallpaper, whose brightness is
-   independent of the theme; Material keeps theme foreground legible on any
-   wallpaper. The wordmark is one Material tile; theme and identity share one
-   Material group (the taskbar's grammar) of the same height and radius, its
-   buttons transparent, concentric with it, and thickened on hover. */
-.app-shell[data-home] .wordmark-small,
-.app-shell[data-home] .top-actions {
-    border-radius: var(--radius-lg);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
-    box-shadow: var(--shadow-material-edge);
-}
-.app-shell[data-home] .wordmark-small {
-    min-width: calc(var(--control-height) + 2 * var(--space-half));
-    min-height: calc(var(--control-height) + 2 * var(--space-half));
-}
-.app-shell[data-home] .top-actions {
-    gap: var(--space-half);
-    padding: var(--space-half);
-}
-.app-shell[data-home] .top-actions a,
-.app-shell[data-home] .top-actions button {
-    /* Concentric with the group: its radius less the --space-half inset. */
-    border-radius: calc(var(--radius-lg) - 2px);
-}
-.app-shell[data-home] .wordmark-small:hover {
-    background: var(--glass-sheen), var(--material-thick);
-}
-.app-shell[data-home] .top-actions a:hover,
-.app-shell[data-home] .top-actions button:hover {
-    background: var(--material-thick);
-}
-.app-shell[data-home] .top-actions .user-avatar-trigger {
-    border-radius: var(--radius-pill);
-}
-/* On the group the badge is a thumb: lighter than the Material track in both
-   themes, with a hairline edge where the two are close. */
-.app-shell[data-home] .user-avatar-badge {
-    background: var(--surface-control-thumb);
-    box-shadow: var(--shadow-avatar-edge);
 }
 .top-actions .topbar-link--active {
     background: var(--surface-soft);
 }
+/* Appearance controls | identity. Outranks the primitive's stretch. The wide
+   margin keeps the small accent dot visibly in the appearance group rather
+   than reading as a status badge on the avatar beside it. */
+.top-actions .top-actions-separator[data-orientation="vertical"] {
+    align-self: center;
+    height: var(--space-4);
+    margin-inline: var(--space-3);
+}
 .top-actions .user-link {
     gap: var(--space-2);
     padding: 0 var(--space-3);
+    margin-inline-end: calc(-1 * var(--space-3));
     font-size: var(--font-body-size);
     font-weight: var(--font-label-weight);
 }
 .top-actions .user-avatar-trigger {
-    width: var(--control-height);
-    height: var(--control-height);
+    width: var(--topbar-target);
+    height: var(--topbar-target);
     padding: 0;
+    margin-inline-end: calc((var(--space-6) - var(--topbar-target)) / 2);
     border-radius: var(--radius-pill);
 }
+/* A sync failure badge trails the identity, which then keeps its full box. */
+.top-actions:has(.sync-failed-badge) :is(.user-link, .user-avatar-trigger) {
+    margin-inline-end: 0;
+}
 .user-avatar-badge {
-    width: 28px;
-    height: 28px;
+    width: var(--space-6);
+    height: var(--space-6);
     border-radius: var(--radius-pill);
     background: var(--surface-soft);
     color: var(--foreground);
@@ -286,6 +267,47 @@ a {
     display: grid;
     place-items: center;
     line-height: 1;
+}
+/* With the Dock on the right, the identity glyph centres on the Dock's axis
+   (the Dock sits max(12px, safe area) from the edge and is --dock-size wide). */
+@media (min-width: 768px) {
+    .app-shell[data-dock-edge="right"] > .topbar {
+        padding-inline-end: calc(
+            max(var(--space-3), env(safe-area-inset-right, var(--space-3))) +
+            (var(--dock-size) - var(--space-6)) / 2
+        );
+    }
+}
+/* Home: the controls sit straight on the wallpaper without a surface of their
+   own. The wallpaper halo keeps theme foreground legible on any wallpaper;
+   Material appears only under the pointer, on keyboard focus and while the
+   control's popup is open. A sync failure keeps its Material so it is never
+   lost on the wallpaper. */
+.app-shell[data-home] .wordmark-small {
+    text-shadow: var(--wallpaper-text-halo);
+}
+.app-shell[data-home] .top-actions :is(a, button) > svg {
+    filter: var(--wallpaper-icon-halo);
+}
+.app-shell[data-home] .top-actions .user-link > span {
+    text-shadow: var(--wallpaper-text-halo);
+}
+.app-shell[data-home] .top-actions-separator {
+    background: var(--border-on-wallpaper);
+}
+.app-shell[data-home] :is(.wordmark-small, .top-actions a, .top-actions button):is(:hover, :focus-visible, [data-popup-open]),
+.app-shell[data-home] .top-actions .topbar-link--active,
+.app-shell[data-home] .top-actions .sync-failed-badge {
+    background: var(--glass-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-filter);
+    backdrop-filter: var(--material-filter);
+    box-shadow: var(--shadow-material-edge);
+}
+/* The identity badge is a thumb: lighter than Material in both themes, with a
+   hairline edge where the two are close. */
+.app-shell[data-home] .user-avatar-badge {
+    background: var(--surface-control-thumb);
+    box-shadow: var(--shadow-avatar-edge);
 }
 .user-menu-identity {
     display: grid;
@@ -301,18 +323,6 @@ a {
     color: var(--muted);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
-}
-@media (any-pointer: coarse), (hover: none) {
-    .top-actions a,
-    .top-actions button,
-    .wordmark-small {
-        min-width: var(--control-touch-target);
-        min-height: var(--control-touch-target);
-    }
-    .app-shell[data-home] .wordmark-small {
-        min-width: calc(var(--control-touch-target) + 2 * var(--space-half));
-        min-height: calc(var(--control-touch-target) + 2 * var(--space-half));
-    }
 }
 .muted {
     color: var(--muted);

@@ -50,6 +50,8 @@ import {
 } from "./app/RouteErrorBoundary.tsx";
 import { Button } from "./components/ui/button.tsx";
 import { LoadingState } from "./components/searcher/semantic.tsx";
+import { AccentPicker } from "./components/searcher/AccentPicker.tsx";
+import { Separator } from "./components/ui/separator.tsx";
 import { useOnline } from "./app/online.ts";
 import { useServiceWorkerUpdate } from "./pwa/service-worker.ts";
 import {
@@ -295,6 +297,11 @@ function Layout() {
                                 ? <Moon size="1em" className="icon-lg" />
                                 : <SunMoon size="1em" className="icon-lg" />}
                         </button>
+                        <AccentPicker
+                            value={appearance.accent}
+                            onValueChange={(accent) =>
+                                void setAppearance({ accent })}
+                        />
                         {!desktopTopbar && (
                             <Link
                                 to={routes.settings()}
@@ -307,6 +314,12 @@ function Layout() {
                             >
                                 <Settings size="1em" className="icon-lg" />
                             </Link>
+                        )}
+                        {(user || !isAuthPage) && (
+                            <Separator
+                                orientation="vertical"
+                                className="top-actions-separator"
+                            />
                         )}
                         <span className="sync-status" role="status">
                             {syncFailed && (

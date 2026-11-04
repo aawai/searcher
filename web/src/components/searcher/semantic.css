@@ -254,11 +254,113 @@
         width: 100%;
     }
 
+    /* The two swatch sets dissolve into the row's five-column grid. */
+    .settings-row .accent-swatch-set {
+        display: contents;
+    }
+
     .settings-row [data-variant="swatch"] .radio-item {
         width: 100%;
         min-height: var(--control-touch-target);
         justify-content: center;
     }
+}
+
+/* Accent swatches (AccentSwatches): two sets of five; settings.css decides
+   how the sets sit in a settings row, the top-bar picker stacks them. */
+.accent-swatch-set {
+    display: flex;
+    flex: none;
+    gap: var(--space-2);
+}
+@media (any-pointer: coarse), (hover: none) {
+    .accent-swatch-set {
+        gap: 0;
+    }
+}
+.accent-swatch-color {
+    display: grid;
+    place-items: center;
+    width: var(--space-6);
+    height: var(--space-6);
+    border-radius: var(--radius-pill);
+    /* `data-accent` scopes that palette's light-dark pair onto the dot. */
+    background: var(--accent);
+    color: var(--accent-foreground);
+}
+/* "跟随壁纸" is a source, not a fixed colour: its dot carries an image glyph. */
+.accent-swatch-color > svg {
+    width: var(--space-4);
+    height: var(--space-4);
+}
+
+/* Top-bar accent entry: a palette chip the size of a top-bar icon. It is a
+   thumb (lighter than Material, hairline edge), the same grammar as the
+   identity badge, so it reads on any wallpaper; its 2×2 dots show the current
+   accent and its pressed shade beside the theme's foreground and muted ink. */
+.accent-picker-chip {
+    display: grid;
+    grid-template-columns: repeat(2, calc(var(--icon-lg) / 4));
+    place-content: center;
+    gap: calc(var(--icon-lg) / 10);
+    width: var(--icon-lg);
+    height: var(--icon-lg);
+    border-radius: var(--radius-sm);
+    background: var(--surface-control-thumb);
+    box-shadow: var(--shadow-avatar-edge);
+}
+.accent-picker-chip-dot {
+    aspect-ratio: 1;
+    border-radius: var(--radius-pill);
+}
+.accent-picker-chip-dot[data-tone="accent"] {
+    background: var(--accent);
+}
+.accent-picker-chip-dot[data-tone="accent-active"] {
+    background: var(--accent-active);
+}
+.accent-picker-chip-dot[data-tone="foreground"] {
+    background: var(--foreground);
+}
+.accent-picker-chip-dot[data-tone="muted"] {
+    background: var(--muted);
+}
+
+/* Top-bar accent picker popover: title, the two swatch rows, then the current
+   name and the way to the full appearance settings. */
+[data-slot="popover-content"].accent-picker {
+    width: max-content;
+    display: grid;
+    gap: var(--space-3);
+}
+.accent-picker-title {
+    margin: 0;
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-label-weight);
+    color: var(--muted);
+}
+.accent-picker [data-slot="radio-group"][data-variant="swatch"] {
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+.accent-picker-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block-start: var(--space-2);
+    border-block-start: var(--space-hairline) solid var(--border);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+.accent-picker-footer a {
+    color: var(--muted);
+    text-decoration: none;
+    border-radius: var(--control-radius);
+}
+.accent-picker-footer a:hover {
+    color: var(--foreground);
 }
 
 /* Inline fields: borderless with the value right-aligned (macOS System Settings).
