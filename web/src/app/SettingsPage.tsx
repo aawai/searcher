@@ -1,4 +1,4 @@
-import { ACCENTS, type GlassIntensity } from "@shared/contracts.ts";
+import type { GlassIntensity } from "@shared/contracts.ts";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
     parseWallpaperSource,
@@ -14,13 +14,8 @@ import {
     type WallpaperReadability,
 } from "@shared/wallpaper-presentation.ts";
 import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
-import {
-    Check,
-    ChevronRight,
-    ImageIcon,
-    MoreVertical,
-    Upload,
-} from "lucide-react";
+import { Check, ChevronRight, MoreVertical, Upload } from "lucide-react";
+import { AccentSwatches } from "../components/searcher/AccentPicker.tsx";
 import {
     type ReactNode,
     useCallback,
@@ -97,15 +92,13 @@ function useReducedTransparency(): boolean {
 }
 
 function Choices<T extends string>(
-    { title, description, value, values, control, select, swatchIcons }: {
+    { title, description, value, values, control, select }: {
         title: string;
         description?: ReactNode;
         value: string;
         values: readonly (readonly [T, string])[];
-        control: "select" | "segmented" | "swatches";
+        control: "select" | "segmented";
         select: (v: T) => void;
-        /** Marks swatches that are a source rather than a fixed colour. */
-        swatchIcons?: Partial<Record<T, ReactNode>>;
     },
 ) {
     let input: ReactNode;
@@ -125,7 +118,7 @@ function Choices<T extends string>(
                 </NativeSelect>
             </div>
         );
-    } else if (control === "segmented") {
+    } else {
         input = (
             <RadioGroup
                 variant="segmented"
@@ -137,38 +130,6 @@ function Choices<T extends string>(
                     <RadioGroupItem key={id} value={id}>
                         {label}
                     </RadioGroupItem>
-                ))}
-            </RadioGroup>
-        );
-    } else {
-        input = (
-            <RadioGroup
-                variant="swatch"
-                value={value}
-                onValueChange={(next) => select(next as T)}
-                aria-label={title}
-            >
-                {[values.slice(0, 5), values.slice(5)].filter((group) =>
-                    group.length > 0
-                ).map((group) => (
-                    <span className="settings-swatch-set" key={group[0][0]}>
-                        {group.map(([id, label]) => (
-                            <RadioGroupItem
-                                key={id}
-                                value={id}
-                                aria-label={label}
-                                title={label}
-                            >
-                                <span
-                                    className="settings-swatch-color"
-                                    data-accent={id}
-                                    aria-hidden="true"
-                                >
-                                    {swatchIcons?.[id]}
-                                </span>
-                            </RadioGroupItem>
-                        ))}
-                    </span>
                 ))}
             </RadioGroup>
         );
@@ -720,21 +681,12 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                 ] as const}
                                 select={(v) => set("theme", v)}
                             />
-                            <Choices
-                                title="强调色"
-                                value={appearance.accent}
-                                control="swatches"
-                                values={[
-                                    ["wallpaper", "跟随壁纸"] as const,
-                                    ...ACCENTS.map((a) =>
-                                        [a.id, a.label] as const
-                                    ),
-                                ]}
-                                swatchIcons={{
-                                    wallpaper: <ImageIcon />,
-                                }}
-                                select={(v) => set("accent", v)}
-                            />
+                            <SettingsRow title="强调色">
+                                <AccentSwatches
+                                    value={appearance.accent}
+                                    onValueChange={(v) => set("accent", v)}
+                                />
+                            </SettingsRow>
                         </SettingsGroup>
                         <SettingsGroup title="首页">
                             <Choices
