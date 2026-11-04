@@ -6,12 +6,19 @@ import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 const NOTES = '[data-window-id="notes"]';
 
-async function createNote(page: Page, origin: string, title: string) {
+async function createNote(
+    page: Page,
+    origin: string,
+    title: string,
+): Promise<string> {
     const response = await page.request.post(origin + "/api/documents", {
         headers: { Origin: origin },
         data: { title, body: "正文" },
     });
     assert(response.ok(), `create note: ${response.status()}`);
+    const created = await response.json() as { data: { id: string } };
+    assert(created.data.id, "create note id");
+    return created.data.id;
 }
 
 Deno.test("笔记窗口控件：侧栏折叠 / 展开按钮、创建图标位置与格式工具栏开关", async () => {
@@ -230,42 +237,144 @@ Deno.test("笔记窗口控件：抽屉模式的标题行按钮打开抽屉，关
     });
     try {
         await loginAndVisit(page, app.origin, "/", user);
-        await createNote(page, app.origin, "抽屉笔记");
+        const noteId = await createNote(page, app.origin, "抽屉笔记");
+        const secondId = await createNote(page, app.origin, "慢加载笔记");
+        const holdDocumentLoad = async (id: string) => {
+            const matcher = `**/api/documents/${id}`;
+            const pathname = `/api/documents/${id}`;
+            const entered = page.waitForRequest(
+                (request) =>
+                    request.method() === "GET" &&
+                    new URL(request.url()).pathname === pathname,
+                { timeout: 5_000 },
+            ).then(() => {});
+            const gate = Promise.withResolvers<void>();
+            const completed = Promise.withResolvers<void>();
+            let held = false;
+            let released = false;
+            await page.route(matcher, async (route) => {
+                if (route.request().method() === "GET" && !held) {
+                    held = true;
+                    await gate.promise;
+                    try {
+                        await route.continue();
+                    } finally {
+                        completed.resolve();
+                    }
+                    return;
+                }
+                await route.continue();
+            });
+            return {
+                entered,
+                release: async () => {
+                    if (released) return;
+                    released = true;
+                    gate.resolve();
+                    if (held) await completed.promise;
+                    await page.unroute(matcher);
+                },
+            };
+        };
         await page.goto(app.origin + "/?view=notes");
         const frame = page.locator(NOTES);
         const toggle = frame.getByRole("button", {
             name: "笔记侧栏",
             exact: true,
         });
+        const title = frame.getByRole("textbox", {
+            name: "笔记标题",
+            exact: true,
+        });
         await ensureSidebarOpen(page);
         await frame.getByRole("button", { name: "最近", exact: true }).click();
-        await frame.getByRole("button", { name: /打开笔记：抽屉笔记/ }).click();
-        await frame.locator(".documents-layout[data-drawer='closed']")
-            .waitFor();
-        assert(
-            await toggle.evaluate((el) =>
-                !!el.closest(".document-editor-header")
-            ),
-        );
-        assertEquals(
-            await frame.locator(".window-frame__toolbar").getByRole("button", {
-                name: "笔记侧栏",
-            }).count(),
-            0,
-        );
-        await toggle.click();
-        await frame.locator(".documents-layout[data-drawer='open']").waitFor();
-        await page.keyboard.press("Escape");
-        await frame.locator(".documents-layout[data-drawer='closed']")
-            .waitFor();
-        await page.waitForFunction(() => {
-            const toggle = document.querySelector(
-                '[data-window-id="notes"] .document-editor-header button[aria-label="笔记侧栏"]',
+        const firstLoad = await holdDocumentLoad(noteId);
+        try {
+            await frame.getByRole("button", { name: /打开笔记：抽屉笔记/ })
+                .click();
+            await frame.locator(".documents-layout[data-drawer='closed']")
+                .waitFor();
+            await firstLoad.entered;
+            assert(
+                await toggle.evaluate((el) =>
+                    !!el.closest(".document-editor-header")
+                ),
             );
-            return toggle === document.activeElement;
-        });
-        assert(await toggle.evaluate((el) => el === document.activeElement));
+            assertEquals(
+                await frame.locator(".window-frame__toolbar").getByRole(
+                    "button",
+                    {
+                        name: "笔记侧栏",
+                    },
+                ).count(),
+                0,
+            );
+            await toggle.click();
+            await frame.locator(".documents-layout[data-drawer='open']")
+                .waitFor();
+            await page.keyboard.press("Escape");
+            await frame.locator(".documents-layout[data-drawer='closed']")
+                .waitFor();
+            await page.waitForFunction(() => {
+                const toggle = document.querySelector(
+                    '[data-window-id="notes"] .document-editor-header button[aria-label="笔记侧栏"]',
+                );
+                return toggle === document.activeElement;
+            });
+            // Finishing the note load keeps focus on the toggle when the user left it there.
+            await firstLoad.release();
+            await title.waitFor();
+            assertEquals(await title.inputValue(), "抽屉笔记");
+            assert(
+                await toggle.evaluate((el) => el === document.activeElement),
+            );
+        } finally {
+            await firstLoad.release();
+        }
 
+        // If the user moves focus elsewhere while the note is still loading,
+        // completing the load must not steal focus back to the toggle.
+        const secondLoad = await holdDocumentLoad(secondId);
+        try {
+            await toggle.click();
+            await frame.locator(".documents-layout[data-drawer='open']")
+                .waitFor();
+            await frame.getByRole("button", { name: /打开笔记：慢加载笔记/ })
+                .click();
+            await frame.locator(".documents-layout[data-drawer='closed']")
+                .waitFor();
+            await secondLoad.entered;
+            await page.waitForFunction(() => {
+                const toggle = document.querySelector(
+                    '[data-window-id="notes"] .document-editor-header button[aria-label="笔记侧栏"]',
+                );
+                return toggle === document.activeElement;
+            });
+            const fullScreen = frame.getByRole("button", {
+                name: "全屏编辑",
+                exact: true,
+            });
+            await fullScreen.focus();
+            assert(
+                await fullScreen.evaluate((el) =>
+                    el === document.activeElement
+                ),
+            );
+            await secondLoad.release();
+            await page.waitForFunction(() => {
+                const input = document.querySelector<HTMLInputElement>(
+                    '[data-window-id="notes"] input[aria-label="笔记标题"]',
+                );
+                return input?.value === "慢加载笔记";
+            });
+            assert(
+                await fullScreen.evaluate((el) =>
+                    el === document.activeElement
+                ),
+            );
+        } finally {
+            await secondLoad.release();
+        }
         // Coarse pointers keep the visual size and reach the touch target through the hit area.
         const coarse = await browser.newContext({
             viewport: { width: 390, height: 844 },
@@ -300,6 +409,10 @@ Deno.test("笔记窗口控件：抽屉模式的标题行按钮打开抽屉，关
             .tap();
         await touchFrame.locator(".documents-layout[data-drawer='closed']")
             .waitFor();
+        await touchFrame.getByRole("textbox", {
+            name: "笔记标题",
+            exact: true,
+        }).waitFor();
         await touchFrame.getByRole("button", { name: "笔记侧栏", exact: true })
             .tap();
         await touchFrame.locator(".documents-layout[data-drawer='open']")

@@ -1168,9 +1168,12 @@ export function DocumentEditor({
         return (
             <div className="document-editor-container document-editor-state">
                 {leading && (
-                    <div className="document-editor-header document-editor-header--bare">
+                    <header
+                        key="editor-header"
+                        className="document-editor-header document-editor-header--bare"
+                    >
                         {leading}
-                    </div>
+                    </header>
                 )}
                 <LoadingState density="default">正在加载笔记…</LoadingState>
             </div>
@@ -1181,9 +1184,12 @@ export function DocumentEditor({
         return (
             <div className="document-editor-container document-editor-state">
                 {leading && (
-                    <div className="document-editor-header document-editor-header--bare">
+                    <header
+                        key="editor-header"
+                        className="document-editor-header document-editor-header--bare"
+                    >
                         {leading}
-                    </div>
+                    </header>
                 )}
                 <div className="document-editor-state-body">
                     <p className="document-load-error">
@@ -1327,7 +1333,7 @@ export function DocumentEditor({
                 </div>
             )}
             {/* Header & Controls */}
-            <header className="document-editor-header">
+            <header key="editor-header" className="document-editor-header">
                 {leading}
                 {/* Document Title Input */}
                 <div className="document-title-wrapper">
