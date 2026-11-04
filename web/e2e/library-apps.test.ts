@@ -12,15 +12,10 @@ import {
 
 async function chooseMenu(page: Page, tile: Locator, name: string) {
     await tile.click({ button: "right" });
-    assertEquals(
-        await page.getByRole("menuitem", { name: "整理布局", exact: true })
-            .count(),
-        0,
-    );
     await page.getByRole("menuitem", { name, exact: true }).click();
 }
 
-Deno.test("Library apps: complete searchable library, folder management, no sorting and labels #285", async (t) => {
+Deno.test("Library apps: complete searchable library, folder management, layout arranging and labels #285", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
@@ -363,6 +358,46 @@ Deno.test("Library apps: complete searchable library, folder management, no sort
                     nodes.map((node) => node.getAttribute("data-app-id"))
                 ),
                 before,
+            );
+            const firstAppId = before[0]!;
+            await chooseMenu(page, appTile(firstAppId), "整理布局");
+            await surface.getByRole("status").filter({ hasText: "整理中" })
+                .waitFor();
+            await surface.locator(".launcher-drag-cue").first().waitFor();
+            await appTile(firstAppId).focus();
+            const reordered = page.waitForResponse((response) =>
+                response.request().method() === "PUT" &&
+                new URL(response.url()).pathname === "/api/webapps/reorder" &&
+                response.ok()
+            );
+            await page.keyboard.press("ArrowRight");
+            await reordered;
+            assertEquals(
+                await grid.locator("[data-app-id]").evaluateAll((nodes) =>
+                    nodes.map((node) => node.getAttribute("data-app-id"))
+                ),
+                [before[1], before[0], ...before.slice(2)],
+            );
+            const restored = page.waitForResponse((response) =>
+                response.request().method() === "PUT" &&
+                new URL(response.url()).pathname === "/api/webapps/reorder" &&
+                response.ok()
+            );
+            await appTile(firstAppId).focus();
+            await page.keyboard.press("ArrowLeft");
+            await restored;
+            assertEquals(
+                await grid.locator("[data-app-id]").evaluateAll((nodes) =>
+                    nodes.map((node) => node.getAttribute("data-app-id"))
+                ),
+                before,
+            );
+            await chooseMenu(page, appTile(firstAppId), "完成整理");
+            await surface.getByRole("status").filter({ hasText: "整理中" })
+                .waitFor({ state: "detached" });
+            assertEquals(
+                await surface.locator(".launcher-drag-cue").count(),
+                0,
             );
         },
     );

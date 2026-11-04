@@ -25,6 +25,7 @@ import type {
 import type {
     LauncherApp,
     LauncherGroup,
+    LauncherTile,
 } from "../../components/searcher/launcherTiles.ts";
 import { WebAppIcon } from "../../components/searcher/WebAppIcon.tsx";
 import {
@@ -78,22 +79,12 @@ export function useGridColumns(): {
     return { gridRef, grid, columns };
 }
 
-function SortableTile({
-    placement,
-    groups,
-    managing,
-    actions,
-    activeDragId,
-    onMoveByKey,
-}: {
-    placement: HomeLibraryVisibleItem;
-    groups: LauncherGroup[];
-    managing: boolean;
-    actions: LibraryTileActions;
-    activeDragId: string | null;
-    onMoveByKey: (id: string, direction: -1 | 1) => void;
-}) {
-    const { tile } = placement;
+function useTileSortable(
+    tile: LauncherTile,
+    managing: boolean,
+    activeDragId: string | null,
+    onMoveByKey: (id: string, direction: -1 | 1) => void,
+) {
     const {
         attributes,
         listeners,
@@ -129,16 +120,55 @@ function SortableTile({
             },
         }
         : undefined;
+    const className = `launcher-tile${managing ? " is-managing" : ""}${
+        isDragging ? " is-dragging" : ""
+    }${isOver ? " is-over" : ""}${
+        isFolderDropTarget ? " is-folder-drop-target" : ""
+    }`;
+    return {
+        attributes,
+        dragListeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+        isFolderDropTarget,
+        className,
+    };
+}
+
+function SortableTile({
+    placement,
+    groups,
+    managing,
+    actions,
+    activeDragId,
+    onMoveByKey,
+}: {
+    placement: HomeLibraryVisibleItem;
+    groups: LauncherGroup[];
+    managing: boolean;
+    actions: LibraryTileActions;
+    activeDragId: string | null;
+    onMoveByKey: (id: string, direction: -1 | 1) => void;
+}) {
+    const { tile } = placement;
+    const {
+        attributes,
+        dragListeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+        isFolderDropTarget,
+        className,
+    } = useTileSortable(tile, managing, activeDragId, onMoveByKey);
     return (
         <div
             ref={setNodeRef}
             data-tile-id={tile.id}
             data-folder-id={tile.type === "folder" ? tile.group.id : undefined}
-            className={`launcher-tile${managing ? " is-managing" : ""}${
-                isDragging ? " is-dragging" : ""
-            }${isOver ? " is-over" : ""}${
-                isFolderDropTarget ? " is-folder-drop-target" : ""
-            }`}
+            className={className}
             style={{
                 gridColumn: `${placement.col + 1} / span ${placement.colSpan}`,
                 gridRow: `${placement.row + 1} / span ${placement.rowSpan}`,
@@ -410,6 +440,204 @@ export function WebAppLauncher({
                         ? (
                             <div
                                 className={`launcher-overlay launcher-overlay--${variant}${
+                                    active.type === "folder" &&
+                                        active.group.folderSize === "large"
+                                        ? " launcher-overlay--large"
+                                        : ""
+                                }`}
+                                data-labels={actions.showAppLabels
+                                    ? undefined
+                                    : "hidden"}
+                            >
+                                {active.type === "app"
+                                    ? (
+                                        <WebAppIcon
+                                            app={active.app}
+                                            onOpen={actions.onOpen}
+                                            showLabel={actions.showAppLabels}
+                                        />
+                                    )
+                                    : (
+                                        <FolderTile
+                                            tile={active}
+                                            managing={false}
+                                            actions={actions}
+                                        />
+                                    )}
+                            </div>
+                        )
+                        : null}
+                </DragOverlay>,
+                document.body,
+            )}
+        </DndContext>
+    );
+}
+
+function SortableLibraryTile({
+    tile,
+    groups,
+    managing,
+    actions,
+    activeDragId,
+    onMoveByKey,
+}: {
+    tile: LauncherTile;
+    groups: LauncherGroup[];
+    managing: boolean;
+    actions: LibraryTileActions;
+    activeDragId: string | null;
+    onMoveByKey: (id: string, direction: -1 | 1) => void;
+}) {
+    const {
+        attributes,
+        dragListeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+        isFolderDropTarget,
+        className,
+    } = useTileSortable(tile, managing, activeDragId, onMoveByKey);
+    const tileRender = (
+        <div
+            ref={setNodeRef}
+            data-tile-id={tile.id}
+            style={{
+                transform: isDragging
+                    ? undefined
+                    : CSS.Transform.toString(transform),
+                transition: isDragging ? undefined : transition,
+            }}
+        />
+    );
+    return tile.type === "app"
+        ? (
+            <AppTile
+                app={tile.app}
+                groups={groups}
+                managing={managing}
+                actions={actions}
+                dragAttributes={managing ? attributes : undefined}
+                dragListeners={dragListeners}
+                isDragging={isDragging}
+                tileRender={tileRender}
+                tileClassName={className}
+            />
+        )
+        : (
+            <FolderTile
+                tile={tile}
+                managing={managing}
+                actions={actions}
+                dragAttributes={managing ? attributes : undefined}
+                dragListeners={dragListeners}
+                isFolderDropTarget={isFolderDropTarget}
+                tileRender={tileRender}
+                tileClassName={className}
+            />
+        );
+}
+
+export interface LibraryLauncherGridProps {
+    tiles: LauncherTile[];
+    groups: LauncherGroup[];
+    managing: boolean;
+    actions: LibraryTileActions;
+    pointerActive: boolean;
+    onAdd?: () => void;
+    onReorder?: (activeId: string, overId: string) => void;
+    onDropOnFolder?: (app: LauncherApp, folderId: string) => void;
+    onMoveByKey?: (id: string, direction: -1 | 1) => void;
+}
+
+export function LibraryLauncherGrid({
+    tiles,
+    groups,
+    managing,
+    actions,
+    pointerActive,
+    onAdd,
+    onReorder,
+    onDropOnFolder,
+    onMoveByKey,
+}: LibraryLauncherGridProps) {
+    const [activeId, setActiveId] = useState<string | null>(null);
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
+    );
+    const active = tiles.find((tile) => tile.id === activeId);
+
+    function dragEnd(event: DragEndEvent) {
+        setActiveId(null);
+        const { active: from, over } = event;
+        if (!over || from.id === over.id) return;
+        const fromTile = tiles.find((tile) => tile.id === from.id);
+        const overTile = tiles.find((tile) => tile.id === over.id);
+        if (
+            fromTile?.type === "app" && overTile?.type === "folder" &&
+            onDropOnFolder
+        ) {
+            onDropOnFolder(fromTile.app, overTile.group.id);
+            return;
+        }
+        onReorder?.(String(from.id), String(over.id));
+    }
+
+    return (
+        <DndContext
+            sensors={sensors}
+            collisionDetection={(args) => {
+                const targets = pointerWithin(args);
+                return targets.length ? targets : closestCenter(args);
+            }}
+            onDragStart={(event) => setActiveId(String(event.active.id))}
+            onDragCancel={() => setActiveId(null)}
+            onDragEnd={dragEnd}
+        >
+            <SortableContext
+                items={tiles.map((tile) => tile.id)}
+                strategy={() => null}
+            >
+                <div
+                    className="launcher-grid launcher-grid--library"
+                    data-library-apps-grid
+                    data-pointer-active={pointerActive || undefined}
+                    data-labels={actions.showAppLabels ? undefined : "hidden"}
+                    onKeyDown={managing ? undefined : focusAdjacent}
+                >
+                    {tiles.map((tile) => (
+                        <SortableLibraryTile
+                            key={tile.id}
+                            tile={tile}
+                            groups={groups}
+                            managing={managing}
+                            actions={actions}
+                            activeDragId={activeId}
+                            onMoveByKey={(id, direction) =>
+                                onMoveByKey?.(id, direction)}
+                        />
+                    ))}
+                    {onAdd && (
+                        <ActionCell
+                            cellId="add"
+                            icon={<Plus size="1em" className="icon-lg" />}
+                            label="添加应用"
+                            showLabel={actions.showAppLabels}
+                            onClick={onAdd}
+                        />
+                    )}
+                </div>
+            </SortableContext>
+            {createPortal(
+                <DragOverlay className="launcher-drag-overlay launcher-drag-overlay--popup">
+                    {active && managing
+                        ? (
+                            <div
+                                className={`launcher-overlay launcher-overlay--popup${
                                     active.type === "folder" &&
                                         active.group.folderSize === "large"
                                         ? " launcher-overlay--large"

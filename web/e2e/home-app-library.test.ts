@@ -312,6 +312,11 @@ async function setShowHomeApps(page: Page, origin: string, show: boolean) {
         await toggle.click();
         assertEquals((await saved).status(), 200);
     }
+    assertEquals(
+        await page.getByRole("switch", { name: "显示应用底板" }).count(),
+        show ? 1 : 0,
+    );
+    await page.getByRole("switch", { name: "显示应用名称" }).waitFor();
     await page.goto(origin + "/");
     await page.locator("#search-query").waitFor();
 }

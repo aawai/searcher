@@ -734,16 +734,14 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     />
                                 </SettingsRow>
                             )}
-                            {(!user || appearance.showHomeApps) && (
-                                <SettingsRow title="显示应用名称">
-                                    <Switch
-                                        checked={appearance.showAppLabels}
-                                        onCheckedChange={(checked) =>
-                                            set("showAppLabels", checked)}
-                                        aria-label="显示应用名称"
-                                    />
-                                </SettingsRow>
-                            )}
+                            <SettingsRow title="显示应用名称">
+                                <Switch
+                                    checked={appearance.showAppLabels}
+                                    onCheckedChange={(checked) =>
+                                        set("showAppLabels", checked)}
+                                    aria-label="显示应用名称"
+                                />
+                            </SettingsRow>
                             <SettingsRow title="显示日期">
                                 <Switch
                                     checked={appearance.showHomeDate}
