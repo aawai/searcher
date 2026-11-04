@@ -158,8 +158,16 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
     await t.step(
         "Global theme and accent preferences remain effective globally",
         async () => {
-            await updatePreferences({ showHomeApps: true });
             await visit("/settings/appearance");
+            await page.getByRole("switch", {
+                name: "在首页显示应用",
+                checked: false,
+            }).waitFor();
+            assertEquals(
+                await page.getByRole("switch", { name: "显示应用底板" })
+                    .count(),
+                0,
+            );
 
             // 1. Theme global application via Appearance UI
             await page.getByRole("radio", { name: "深色", exact: true })

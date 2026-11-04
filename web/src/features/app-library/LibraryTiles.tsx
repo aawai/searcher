@@ -42,6 +42,8 @@ export function AppTile({
     dragAttributes,
     dragListeners,
     isDragging,
+    tileRender,
+    tileClassName,
 }: {
     app: LauncherApp;
     groups: LauncherGroup[];
@@ -50,10 +52,17 @@ export function AppTile({
     dragAttributes?: object;
     dragListeners?: object;
     isDragging?: boolean;
+    tileRender?: React.ReactElement;
+    tileClassName?: string;
 }) {
     return (
         <ContextMenu>
-            <ContextMenuTrigger className="launcher-app">
+            <ContextMenuTrigger
+                render={tileRender}
+                className={`launcher-app${
+                    tileClassName ? ` ${tileClassName}` : ""
+                }`}
+            >
                 <WebAppIcon
                     app={app}
                     onOpen={() =>
@@ -89,6 +98,8 @@ export function FolderTile({
     dragAttributes,
     dragListeners,
     isFolderDropTarget = false,
+    tileRender,
+    tileClassName,
 }: {
     tile: Extract<LauncherTile, { type: "folder" }>;
     managing: boolean;
@@ -96,6 +107,8 @@ export function FolderTile({
     dragAttributes?: object;
     dragListeners?: object;
     isFolderDropTarget?: boolean;
+    tileRender?: React.ReactElement;
+    tileClassName?: string;
 }) {
     // Taps fall through to the folder: miniatures are under the 44px touch
     // target. Decided per press, so a mouse on a touchscreen still opens apps.
@@ -110,9 +123,12 @@ export function FolderTile({
     return (
         <ContextMenu>
             <ContextMenuTrigger
+                render={tileRender}
                 className={`launcher-folder-item launcher-folder-item--${
                     large ? "large" : "small"
-                }${isFolderDropTarget ? " is-folder-drop-target" : ""}`}
+                }${isFolderDropTarget ? " is-folder-drop-target" : ""}${
+                    tileClassName ? ` ${tileClassName}` : ""
+                }`}
                 onClick={() => {
                     if (!managing) openFolder();
                 }}

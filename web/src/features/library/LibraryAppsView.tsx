@@ -1,23 +1,19 @@
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, MoreHorizontal, Plus } from "lucide-react";
+import { ArrowLeft, MoreHorizontal } from "lucide-react";
+import { arrayMove } from "@dnd-kit/sortable";
 import type {
     ExtendedWebApp,
     WebAppGroup,
 } from "../app-library/library-types.ts";
 import type { AppLibraryController } from "../app-library/useAppLibraryActions.ts";
-import {
-    ActionCell,
-    AppTile,
-    FolderTile,
-    type LibraryTileActions,
-} from "../app-library/LibraryTiles.tsx";
+import type { LibraryTileActions } from "../app-library/LibraryTiles.tsx";
+import { LibraryLauncherGrid } from "../app-library/WebAppLauncher.tsx";
 import {
     FolderDeleteDialog,
     FolderNameDialog,
 } from "../app-library/FolderNameDialog.tsx";
 import {
     type LauncherGroup,
-    type LauncherTile,
     launcherTiles,
 } from "../../components/searcher/launcherTiles.ts";
 import { AppMenuItems } from "../../components/searcher/AppMenuItems.tsx";
@@ -50,7 +46,7 @@ export interface LibraryAppsViewProps {
     groups: WebAppGroup[];
     library: AppLibraryController;
     onOpenApp: (app: ExtendedWebApp) => void;
-    onEditApp: (app: ExtendedWebApp) => void;
+    onEditApp: (app: ExtendedWebApp, expandIcon?: boolean) => void;
     onDeleteApp: (app: ExtendedWebApp) => void;
     /** Opens the create form, in `groupId` when given. */
     onAddApp: (groupId?: string) => void;
@@ -72,6 +68,7 @@ export function LibraryAppsView({
     // under a still pointer when the view swaps does not look selected.
     const [pointerActive, setPointerActive] = useState(false);
     const [folderId, setFolderId] = useState<string | null>(null);
+    const [managing, setManaging] = useState(false);
     const [creating, setCreating] = useState(false);
     const [renaming, setRenaming] = useState<LauncherGroup | null>(null);
     const [deleting, setDeleting] = useState<LauncherGroup | null>(null);
@@ -83,11 +80,30 @@ export function LibraryAppsView({
         apps,
         groups,
     ]);
+    const rootIds = useMemo(
+        () => rootTiles.map((tile) => tile.id),
+        [rootTiles],
+    );
     const activeTile = rootTiles.find((tile) =>
         tile.type === "folder" && tile.group.id === folderId
     );
     const activeFolder = activeTile?.type === "folder" ? activeTile : null;
     const hasActiveFolder = Boolean(activeFolder);
+    const folderTiles = useMemo(
+        () =>
+            activeFolder
+                ? activeFolder.apps.map((app) => ({
+                    type: "app" as const,
+                    id: app.id,
+                    app,
+                }))
+                : [],
+        [activeFolder],
+    );
+    const folderAppIds = useMemo(
+        () => folderTiles.map((tile) => tile.id),
+        [folderTiles],
+    );
     const normalizedQuery = query.trim().toLowerCase();
     const searching = Boolean(normalizedQuery);
     const matchedFolders = useMemo(() => {
@@ -126,8 +142,23 @@ export function LibraryAppsView({
         setQuery("");
         setFolderId(null);
     }
+    function toggleManaging() {
+        setManaging((current) => {
+            const next = !current;
+            if (next) setQuery("");
+            return next;
+        });
+    }
     const workspaceActive = useContext(WorkspaceActivity);
-    useEscapeLayer(workspaceActive && hasActiveFolder, closeFolder, "overlay");
+    useEscapeLayer(
+        workspaceActive && (managing || hasActiveFolder) && !creating &&
+            !renaming && !deleting,
+        () => {
+            if (managing) setManaging(false);
+            else closeFolder();
+        },
+        "overlay",
+    );
     useLayoutEffect(() => {
         if (folderId && hasActiveFolder) {
             if (surface.current) surface.current.scrollTop = 0;
@@ -156,8 +187,10 @@ export function LibraryAppsView({
     const actions: LibraryTileActions = {
         showAppLabels,
         onOpen: onOpenApp,
-        onEdit: onEditApp,
+        onEdit: (app) => onEditApp(app),
+        onChangeIcon: (app) => onEditApp(app, true),
         onDelete: onDeleteApp,
+        onToggleManaging: toggleManaging,
         onMove: (app, groupId) => void library.actions.moveApp(app, groupId),
         onSetHomeFixed: (app, isHomeFixed) =>
             void library.actions.setAppHomeFixed(app, isHomeFixed),
@@ -170,47 +203,6 @@ export function LibraryAppsView({
         onFolderSizeChange: (group, size) =>
             void library.actions.changeGroupSize(group, size),
     };
-    /** `onAdd` appends the "+" cell, which ends the grid like the Home grid's. */
-    function renderGrid(tiles: LauncherTile[], onAdd?: () => void) {
-        return (
-            <div
-                className="launcher-grid launcher-grid--library"
-                data-library-apps-grid
-                data-pointer-active={pointerActive || undefined}
-                data-labels={showAppLabels ? undefined : "hidden"}
-            >
-                {tiles.map((tile) =>
-                    tile.type === "folder"
-                        ? (
-                            <FolderTile
-                                key={tile.id}
-                                tile={tile}
-                                managing={false}
-                                actions={actions}
-                            />
-                        )
-                        : (
-                            <AppTile
-                                key={tile.id}
-                                app={tile.app}
-                                groups={groups}
-                                managing={false}
-                                actions={actions}
-                            />
-                        )
-                )}
-                {onAdd && (
-                    <ActionCell
-                        cellId="add"
-                        icon={<Plus size="1em" className="icon-lg" />}
-                        label="添加应用"
-                        showLabel={showAppLabels}
-                        onClick={onAdd}
-                    />
-                )}
-            </div>
-        );
-    }
     const errors = [
         { text: library.actionError, dismiss: library.dismissActionError },
         { text: library.layoutError, dismiss: library.dismissLayoutError },
@@ -226,7 +218,8 @@ export function LibraryAppsView({
             }}
             onKeyDown={(event) => {
                 if (
-                    event.defaultPrevented || creating || renaming || deleting
+                    event.defaultPrevented || managing || creating ||
+                    renaming || deleting
                 ) return;
                 const target = event.target;
                 if (
@@ -255,7 +248,10 @@ export function LibraryAppsView({
             <div className="library-apps-controls">
                 <WorkspaceSearch
                     value={query}
-                    onChange={setQuery}
+                    onChange={(value) => {
+                        if (value.trim()) setManaging(false);
+                        setQuery(value);
+                    }}
                     placeholder="搜索应用、网址或文件夹"
                     ariaLabel="搜索应用"
                 />
@@ -275,8 +271,14 @@ export function LibraryAppsView({
                         }
                     />
                     <DropdownMenuContent aria-label="应用管理操作">
-                        <DropdownMenuItem onClick={() => setCreating(true)}>
+                        <DropdownMenuItem
+                            disabled={managing}
+                            onClick={() => setCreating(true)}
+                        >
                             新建文件夹
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={toggleManaging}>
+                            {managing ? "完成整理" : "整理布局"}
                         </DropdownMenuItem>
                         {activeFolder && (
                             <>
@@ -346,7 +348,38 @@ export function LibraryAppsView({
                                     : "文件夹")
                                 : "全部应用"}
                         </h2>
+                        {managing && (
+                            <div
+                                className="library-apps-managing-bar"
+                                role="status"
+                                aria-live="polite"
+                            >
+                                <span className="library-apps-managing-text">
+                                    整理中
+                                </span>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    disabled={library.iconBusy}
+                                    onClick={library.backfillIcons}
+                                >
+                                    补全图标
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => setManaging(false)}
+                                >
+                                    完成
+                                </Button>
+                            </div>
+                        )}
                     </div>
+                    {managing && library.iconProgress && (
+                        <p role="status" className="library-apps-notice">
+                            {library.iconProgress}
+                        </p>
+                    )}
                     {searching
                         ? (
                             <>
@@ -355,7 +388,13 @@ export function LibraryAppsView({
                                         <h3 className="library-apps-group-heading">
                                             文件夹
                                         </h3>
-                                        {renderGrid(matchedFolders)}
+                                        <LibraryLauncherGrid
+                                            tiles={matchedFolders}
+                                            groups={groups}
+                                            managing={false}
+                                            actions={actions}
+                                            pointerActive={pointerActive}
+                                        />
                                     </section>
                                 )}
                                 {matchedApps.length > 0 && (
@@ -423,6 +462,7 @@ export function LibraryAppsView({
                                                                 <AppMenuItems
                                                                     app={app}
                                                                     groups={groups}
+                                                                    managing={managing}
                                                                     actions={actions}
                                                                     Item={DropdownMenuItem}
                                                                 />
@@ -454,14 +494,50 @@ export function LibraryAppsView({
                             </>
                         )
                         : activeFolder
-                        ? activeFolder.apps.length
-                            ? renderGrid(
-                                activeFolder.apps.map((app) => ({
-                                    type: "app",
-                                    id: app.id,
-                                    app,
-                                })),
-                                () => onAddApp(activeFolder.group.id),
+                        ? folderTiles.length
+                            ? (
+                                <LibraryLauncherGrid
+                                    tiles={folderTiles}
+                                    groups={groups}
+                                    managing={managing}
+                                    actions={actions}
+                                    pointerActive={pointerActive}
+                                    onAdd={() =>
+                                        onAddApp(activeFolder.group.id)}
+                                    onReorder={(activeId, overId) => {
+                                        const from = folderAppIds.indexOf(
+                                            activeId,
+                                        );
+                                        const to = folderAppIds.indexOf(overId);
+                                        if (
+                                            from >= 0 && to >= 0 && from !== to
+                                        ) {
+                                            void library.actions.reorderFolder(
+                                                arrayMove(
+                                                    folderAppIds,
+                                                    from,
+                                                    to,
+                                                ),
+                                            );
+                                        }
+                                    }}
+                                    onMoveByKey={(id, direction) => {
+                                        const from = folderAppIds.indexOf(id);
+                                        const to = from + direction;
+                                        if (
+                                            from >= 0 && to >= 0 &&
+                                            to < folderAppIds.length
+                                        ) {
+                                            void library.actions.reorderFolder(
+                                                arrayMove(
+                                                    folderAppIds,
+                                                    from,
+                                                    to,
+                                                ),
+                                            );
+                                        }
+                                    }}
+                                />
                             )
                             : (
                                 <EmptyState
@@ -479,7 +555,39 @@ export function LibraryAppsView({
                                 />
                             )
                         : rootTiles.length
-                        ? renderGrid(rootTiles, () => onAddApp())
+                        ? (
+                            <LibraryLauncherGrid
+                                tiles={rootTiles}
+                                groups={groups}
+                                managing={managing}
+                                actions={actions}
+                                pointerActive={pointerActive}
+                                onAdd={() => onAddApp()}
+                                onDropOnFolder={(app, groupId) =>
+                                    void library.actions.moveApp(app, groupId)}
+                                onReorder={(activeId, overId) => {
+                                    const from = rootIds.indexOf(activeId);
+                                    const to = rootIds.indexOf(overId);
+                                    if (from >= 0 && to >= 0 && from !== to) {
+                                        void library.actions.reorderRoot(
+                                            arrayMove(rootTiles, from, to),
+                                        );
+                                    }
+                                }}
+                                onMoveByKey={(id, direction) => {
+                                    const from = rootIds.indexOf(id);
+                                    const to = from + direction;
+                                    if (
+                                        from >= 0 && to >= 0 &&
+                                        to < rootTiles.length
+                                    ) {
+                                        void library.actions.reorderRoot(
+                                            arrayMove(rootTiles, from, to),
+                                        );
+                                    }
+                                }}
+                            />
+                        )
                         : (
                             <EmptyState
                                 headingLevel={3}
@@ -494,8 +602,14 @@ export function LibraryAppsView({
                         )}
                 </ContextMenuTrigger>
                 <ContextMenuContent aria-label="启动器空白区域操作">
-                    <ContextMenuItem onClick={() => setCreating(true)}>
+                    <ContextMenuItem
+                        disabled={managing}
+                        onClick={() => setCreating(true)}
+                    >
                         新建文件夹
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={toggleManaging}>
+                        {managing ? "完成整理" : "整理布局"}
                     </ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
