@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import {
     createHomeNote,
     homeNote,
@@ -6,9 +6,14 @@ import {
     reloadHome,
     waitForNoteCards,
 } from "./helpers/home-notes.ts";
-import { closeLibrary, libraryPanel } from "./helpers/library.ts";
+import {
+    clickIntoEditor,
+    closeLibrary,
+    libraryPanel,
+    openNotes,
+} from "./helpers/library.ts";
 
-Deno.test("masthead task checkboxes toggle directly, stay visible as just-completed until reload, and save through the document version", async () => {
+Deno.test("masthead task checkboxes list open and completed tasks in order, toggle both ways, persist across reload, and save through the document version", async () => {
     const fixture = await openHomeNotesFixture({
         viewport: { width: 1440, height: 900 },
     });
@@ -29,26 +34,34 @@ Deno.test("masthead task checkboxes toggle directly, stay visible as just-comple
         });
         await tasksList.waitFor();
 
-        // Only open tasks are listed on fresh load; count shows 1 / 2.
+        // Both open and completed tasks are listed in document order; count shows 1 / 2.
         assertEquals(
             await masthead.locator(".home-masthead__section-count").first()
                 .textContent(),
             "1 / 2",
         );
         const taskItems = tasksList.locator(".home-masthead__task");
-        assertEquals(await taskItems.count(), 1);
+        assertEquals(await taskItems.count(), 2);
         assertEquals(
-            await taskItems.first().locator(".home-masthead__task-text")
-                .textContent(),
-            "第一项",
+            await taskItems.locator(".home-masthead__task-text")
+                .allTextContents(),
+            ["第一项", "第二项"],
         );
         assertEquals(
-            await taskItems.first().locator(".home-masthead__task-source")
-                .textContent(),
-            "直接勾选",
+            await taskItems.locator(".home-masthead__task-source")
+                .allTextContents(),
+            ["直接勾选", "直接勾选"],
+        );
+        assertEquals(
+            await taskItems.nth(0).getAttribute("data-checked"),
+            null,
+        );
+        assertEquals(
+            await taskItems.nth(1).getAttribute("data-checked"),
+            "true",
         );
 
-        const firstCheckbox = taskItems.first().getByRole("checkbox", {
+        const firstCheckbox = taskItems.nth(0).getByRole("checkbox", {
             name: "第一项",
             exact: true,
         });
@@ -61,32 +74,27 @@ Deno.test("masthead task checkboxes toggle directly, stay visible as just-comple
             firstCheckbox.click(),
         ]);
 
-        // In the current session, the newly checked task stays visible as just-completed so the user can undo it.
         await page.waitForFunction(() =>
             document.querySelector(".home-masthead__section-count")
                 ?.textContent === "2 / 2"
         );
         assertEquals(
-            await taskItems.first().getAttribute("data-checked"),
-            "true",
-        );
-        assertEquals(
-            await taskItems.first().getAttribute("data-just-completed"),
+            await taskItems.nth(0).getAttribute("data-checked"),
             "true",
         );
 
-        const body = await page.evaluate(
+        const bodyAfterCheck = await page.evaluate(
             async (id) =>
                 (await (await fetch(`/api/documents/${id}`)).json()).data
                     .body as string,
             note.id,
         );
         assertEquals(
-            body,
+            bodyAfterCheck,
             "- [x] 第一项\n- [x] 第二项\n\n```\n- [ ] 代码里的不是任务\n```",
         );
 
-        // After reload, completed tasks from prior sessions are no longer listed in the open to-dos list.
+        // After reload, all tasks remain visible in their original order and can be unchecked.
         await reloadHome(page);
         await waitForNoteCards(page, 1);
         assertEquals(
@@ -94,13 +102,58 @@ Deno.test("masthead task checkboxes toggle directly, stay visible as just-comple
                 .textContent(),
             "2 / 2",
         );
-        assertEquals(await masthead.locator(".home-masthead__task").count(), 0);
+        assertEquals(await taskItems.count(), 2);
+        assertEquals(
+            await taskItems.locator(".home-masthead__task-text")
+                .allTextContents(),
+            ["第一项", "第二项"],
+        );
+        assertEquals(
+            await taskItems.nth(0).getAttribute("data-checked"),
+            "true",
+        );
+        assertEquals(
+            await taskItems.nth(1).getAttribute("data-checked"),
+            "true",
+        );
+
+        const secondCheckbox = taskItems.nth(1).getByRole("checkbox", {
+            name: "第二项",
+            exact: true,
+        });
+        await Promise.all([
+            page.waitForResponse((response) =>
+                response.request().method() === "PATCH" &&
+                response.url().endsWith(`/api/documents/${note.id}`) &&
+                response.ok()
+            ),
+            secondCheckbox.click(),
+        ]);
+
+        await page.waitForFunction(() =>
+            document.querySelector(".home-masthead__section-count")
+                ?.textContent === "1 / 2"
+        );
+        assertEquals(
+            await taskItems.nth(1).getAttribute("data-checked"),
+            null,
+        );
+        const bodyAfterUncheck = await page.evaluate(
+            async (id) =>
+                (await (await fetch(`/api/documents/${id}`)).json()).data
+                    .body as string,
+            note.id,
+        );
+        assertEquals(
+            bodyAfterUncheck,
+            "- [x] 第一项\n- [ ] 第二项\n\n```\n- [ ] 代码里的不是任务\n```",
+        );
     } finally {
         await fixture.close();
     }
 });
 
-Deno.test("masthead task toggles coalesce into one PATCH, Space toggles a focused task, and tasks lock while the note is open in the editor", async () => {
+Deno.test("masthead task toggles coalesce into one PATCH, Space toggles a focused task, and tasks stay interactive and synchronized while open in the editor", async () => {
     const fixture = await openHomeNotesFixture({
         viewport: { width: 1440, height: 900 },
     });
@@ -160,16 +213,60 @@ Deno.test("masthead task toggles coalesce into one PATCH, Space toggles a focuse
         );
         assertEquals(body, "- [x] 甲\n- [x] 乙\n- [ ] 丙");
 
-        // Opening the note in the editor locks its tasks in the masthead.
+        // Opening the note in the editor keeps masthead tasks interactive and in sync with the editor draft.
         await homeNote(page, "连续勾选").click();
         await libraryPanel(page).waitFor();
+        const editor = page.locator(".document-editor-container .ProseMirror");
+        await editor.waitFor({ state: "visible" });
+
         const remaining = tasksList.getByRole("checkbox", {
             name: "丙",
             exact: true,
         });
-        assert(await remaining.isDisabled());
-        await closeLibrary(page);
         assertEquals(await remaining.isDisabled(), false);
+        await remaining.click();
+        await page.waitForFunction(() =>
+            document.querySelector(".home-masthead__section-count")
+                    ?.textContent === "3 / 3" &&
+            document.querySelectorAll(
+                    '.document-editor-container .ProseMirror li[data-item-type="task"][data-checked="true"]',
+                ).length === 3
+        );
+
+        await openNotes(page);
+        await editor.waitFor({ state: "visible" });
+        // Type unsaved text in the open editor and toggle a masthead task; neither edit is lost.
+        await clickIntoEditor(
+            editor.locator('li[data-item-type="task"]').nth(2).locator("p"),
+        );
+        await page.keyboard.press("End");
+        await page.keyboard.insertText("（补充）");
+        await tasksList.getByRole("checkbox", { name: "甲", exact: true })
+            .click();
+
+        await page.waitForFunction(() =>
+            document.querySelector(".home-masthead__section-count")
+                    ?.textContent === "2 / 3" &&
+            document.querySelector(
+                    '.document-editor-container .ProseMirror li[data-item-type="task"]',
+                )?.getAttribute("data-checked") === "false"
+        );
+        await page.waitForFunction(
+            async (id) => {
+                const doc = (await (await fetch(`/api/documents/${id}`)).json())
+                    .data;
+                return typeof doc?.body === "string" &&
+                    doc.body.trim() === "- [ ] 甲\n- [x] 乙\n- [x] 丙（补充）";
+            },
+            note.id,
+        );
+        assertEquals(
+            await tasksList.locator(".home-masthead__task-text")
+                .allTextContents(),
+            ["甲", "乙", "丙（补充）"],
+        );
+        await openNotes(page);
+        await closeLibrary(page);
     } finally {
         await fixture.close();
     }

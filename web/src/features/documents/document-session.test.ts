@@ -1959,3 +1959,487 @@ Deno.test("Leaving a new session flushes pending content before debounce", async
         time.restore();
     }
 });
+
+Deno.test("toggleTask updates editor draft, preserves unsaved edits, coalesces autosave, and queues in-flight changes", async () => {
+    const time = new TestTime();
+    time.install();
+    try {
+        const patches: PatchPayload[] = [];
+        let inFlight: PromiseWithResolvers<DocumentDto> | null = null;
+        let currentDoc = createMockDoc({
+            version: 1,
+            title: "清单",
+            body: "- [x] 甲\n- [x] 乙\n- [ ] 丙",
+        });
+        const drafts = new MemoryDraftStorage();
+        const updatedDocs: DocumentDto[] = [];
+
+        const session = createDocumentSession({
+            userId: "user-1",
+            documentId: "doc-1",
+            drafts,
+            onDocumentUpdated: (doc) => updatedDocs.push(doc),
+            request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+                if (init?.method === "PATCH") {
+                    const payload: PatchPayload = JSON.parse(
+                        init.body as string,
+                    );
+                    patches.push(payload);
+                    if (inFlight) {
+                        return inFlight.promise as Promise<T>;
+                    }
+                    currentDoc = {
+                        ...currentDoc,
+                        title: payload.title ?? currentDoc.title,
+                        body: payload.body ?? currentDoc.body,
+                        version: payload.version + 1,
+                    };
+                    return Promise.resolve(currentDoc as unknown as T);
+                }
+                return Promise.resolve(currentDoc as unknown as T);
+            },
+        });
+
+        // Refuses toggle before load completes
+        assertEquals(session.toggleTask(2, true), false);
+
+        await session.load();
+        assertEquals(updatedDocs.length, 1);
+
+        // User edits text in editor (unsaved) and then toggles task from masthead
+        session.edit({ body: "- [x] 甲\n- [x] 乙\n- [x] 丙（补充）" });
+        assertEquals(
+            session.toggleTask(
+                0,
+                false,
+                "- [x] 甲\n- [x] 乙\n- [x] 丙（补充）",
+            ),
+            true,
+        );
+        assertEquals(
+            session.getSnapshot().body,
+            "- [ ] 甲\n- [x] 乙\n- [x] 丙（补充）",
+        );
+        assertEquals(session.getSnapshot().saveStatus, "dirty");
+        assertEquals(
+            drafts.getDraft("text:document:draft:user-1:doc-1")?.body,
+            "- [ ] 甲\n- [x] 乙\n- [x] 丙（补充）",
+        );
+
+        // Both the editor typing and masthead toggle coalesce into a single debounced PATCH
+        await time.tick(AUTOSAVE_DEBOUNCE_MS);
+        await Promise.resolve();
+        await Promise.resolve();
+        assertEquals(patches.length, 1);
+        assertEquals(patches[0].version, 1);
+        assertEquals(patches[0].body, "- [ ] 甲\n- [x] 乙\n- [x] 丙（补充）");
+        assertEquals(session.getSnapshot().saveStatus, "saved");
+
+        // Toggle while a save is already in-flight queues the follow-up save on the next version
+        inFlight = Promise.withResolvers<DocumentDto>();
+        session.edit({ title: "清单（改）" });
+        const firstSave = session.save("autosave");
+        assertEquals(patches.length, 2);
+
+        assertEquals(session.toggleTask(0, true), true);
+        assertEquals(
+            session.getSnapshot().body,
+            "- [x] 甲\n- [x] 乙\n- [x] 丙（补充）",
+        );
+        const activeInFlight = inFlight;
+        inFlight = null;
+        currentDoc = {
+            ...currentDoc,
+            title: "清单（改）",
+            version: 3,
+        };
+        activeInFlight.resolve(currentDoc);
+        await firstSave;
+
+        assertEquals(session.getSnapshot().saveStatus, "dirty");
+        assertEquals(
+            drafts.getDraft("text:document:draft:user-1:doc-1")?.version,
+            3,
+        );
+
+        await time.tick(AUTOSAVE_DEBOUNCE_MS);
+        assertEquals(patches.length, 3);
+        assertEquals(patches[2].version, 3);
+        assertEquals(patches[2].body, "- [x] 甲\n- [x] 乙\n- [x] 丙（补充）");
+        assertEquals(session.getSnapshot().saveStatus, "saved");
+    } finally {
+        time.restore();
+    }
+});
+
+Deno.test("toggleTask handles task position shifts in the editor draft and refuses stale or ambiguous rows", async () => {
+    const drafts = new MemoryDraftStorage();
+    const initialBody = "- [ ] 买牛奶\n- [ ] 买面包";
+    let savedDoc = createMockDoc({
+        version: 1,
+        body: initialBody,
+    });
+    const updatedDocs: DocumentDto[] = [];
+
+    const session = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-1",
+        drafts,
+        onDocumentUpdated: (doc) => updatedDocs.push(doc),
+        request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+            if (init?.method === "PATCH") {
+                const payload: PatchPayload = JSON.parse(init.body as string);
+                savedDoc = {
+                    ...savedDoc,
+                    body: payload.body ?? savedDoc.body,
+                    version: payload.version + 1,
+                };
+            }
+            return Promise.resolve(savedDoc as unknown as T);
+        },
+    });
+
+    await session.load();
+
+    // Editor inserts a new task at index 0, shifting "买牛奶" from index 0 to index 1
+    session.edit({
+        body: "- [ ] 新增首项\n- [ ] 买牛奶\n- [ ] 买面包",
+    });
+
+    // Masthead click referencing index 0 of initialBody ("买牛奶") resolves to index 1 in current draft
+    assertEquals(session.toggleTask(0, true, initialBody), true);
+    assertEquals(
+        session.getSnapshot().body,
+        "- [ ] 新增首项\n- [x] 买牛奶\n- [ ] 买面包",
+    );
+
+    // If the target task was renamed or deleted in the editor, toggleTask refuses rather than flipping another row
+    session.edit({
+        body: "- [ ] 新增首项\n- [x] 买牛奶\n- [ ] 已改名任务",
+    });
+    assertEquals(session.toggleTask(1, true, initialBody), false);
+    assertEquals(
+        session.getSnapshot().body,
+        "- [ ] 新增首项\n- [x] 买牛奶\n- [ ] 已改名任务",
+    );
+
+    // Destroying the dirty session flushes the draft and notifies onDocumentUpdated
+    await session.destroy();
+    assertEquals(updatedDocs.at(-1)?.version, 2);
+    assertEquals(
+        updatedDocs.at(-1)?.body,
+        "- [ ] 新增首项\n- [x] 买牛奶\n- [ ] 已改名任务",
+    );
+    assertEquals(session.toggleTask(0, true), false);
+});
+
+Deno.test("load() awaits in-flight taskSaver PATCH via takePendingTasks, adopts unsent toggles on the settled version, and flushes even if destroyed mid-load", async () => {
+    const time = new TestTime();
+    time.install();
+    try {
+        const drafts = new MemoryDraftStorage();
+        const patches: PatchPayload[] = [];
+        let serverDoc = createMockDoc({
+            version: 1,
+            body: "- [ ] a\n- [ ] b\n- [ ] c",
+        });
+        const inFlightSaverPatch = Promise.withResolvers<void>();
+        let pendingClaimed = false;
+
+        const session = createDocumentSession({
+            userId: "user-1",
+            documentId: "doc-1",
+            drafts,
+            takePendingTasks: async () => {
+                if (pendingClaimed) return [];
+                pendingClaimed = true;
+                await inFlightSaverPatch.promise;
+                return [{ index: 1, text: "b", checked: true }];
+            },
+            request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+                if (init?.method === "PATCH") {
+                    const payload: PatchPayload = JSON.parse(
+                        init.body as string,
+                    );
+                    patches.push(payload);
+                    serverDoc = {
+                        ...serverDoc,
+                        body: payload.body ?? serverDoc.body,
+                        version: payload.version + 1,
+                    };
+                }
+                return Promise.resolve(serverDoc as unknown as T);
+            },
+        });
+
+        const loadPromise = session.load();
+        // Simulate taskSaver's in-flight PATCH settling to version 2 (with task 0 checked)
+        serverDoc = {
+            ...serverDoc,
+            version: 2,
+            body: "- [x] a\n- [ ] b\n- [ ] c",
+        };
+        inFlightSaverPatch.resolve();
+        await loadPromise;
+
+        // Session loaded version 2 and adopted unsent toggle for task 1
+        assertEquals(session.getSnapshot().document?.version, 2);
+        assertEquals(session.getSnapshot().body, "- [x] a\n- [x] b\n- [ ] c");
+        assertEquals(session.getSnapshot().saveStatus, "dirty");
+
+        // Continuing to toggle task 2 in the loaded session coalesces onto version 2 without conflict
+        assertEquals(session.toggleTask(2, true), true);
+        assertEquals(session.getSnapshot().body, "- [x] a\n- [x] b\n- [x] c");
+
+        await time.tick(AUTOSAVE_DEBOUNCE_MS);
+        await Promise.resolve();
+        await Promise.resolve();
+        assertEquals(patches.length, 1);
+        assertEquals(patches[0].version, 2);
+        assertEquals(patches[0].body, "- [x] a\n- [x] b\n- [x] c");
+        assertEquals(session.getSnapshot().saveStatus, "saved");
+
+        // Destroying a session while load + takePendingTasks is still in flight flushes the adopted tasks instead of losing them
+        const handoffGate = Promise.withResolvers<void>();
+        let secondClaimed = false;
+        const sessionMidLoadDestroy = createDocumentSession({
+            userId: "user-1",
+            documentId: "doc-1",
+            drafts,
+            takePendingTasks: async () => {
+                if (secondClaimed) return [];
+                secondClaimed = true;
+                await handoffGate.promise;
+                return [{ index: 0, text: "a", checked: false }];
+            },
+            request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+                if (init?.method === "PATCH") {
+                    const payload: PatchPayload = JSON.parse(
+                        init.body as string,
+                    );
+                    patches.push(payload);
+                    serverDoc = {
+                        ...serverDoc,
+                        body: payload.body ?? serverDoc.body,
+                        version: payload.version + 1,
+                    };
+                }
+                return Promise.resolve(serverDoc as unknown as T);
+            },
+        });
+
+        const secondLoad = sessionMidLoadDestroy.load();
+        const destroyPromise = sessionMidLoadDestroy.destroy();
+        handoffGate.resolve();
+        await Promise.all([secondLoad, destroyPromise]);
+
+        assertEquals(patches.length, 2);
+        assertEquals(patches[1].version, 3);
+        assertEquals(patches[1].body, "- [ ] a\n- [x] b\n- [x] c");
+    } finally {
+        time.restore();
+    }
+});
+
+Deno.test("load() retains pending tasks across GET failure for retry and restores them if destroyed before load succeeds", async () => {
+    const drafts = new MemoryDraftStorage();
+    const restored: {
+        documentId: string;
+        toggles: readonly { index: number; text: string; checked: boolean }[];
+    }[] = [];
+    let failGet = true;
+    let claimed = false;
+    const doc = createMockDoc({
+        version: 1,
+        body: "- [ ] a\n- [ ] b",
+    });
+
+    // Case 1: GET fails after takePendingTasks, then retry load() succeeds and applies the retained tasks
+    const sessionRetry = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-1",
+        drafts,
+        takePendingTasks: () => {
+            if (claimed) return [];
+            claimed = true;
+            return [{ index: 0, text: "a", checked: true }];
+        },
+        request: <T>(): Promise<T> => {
+            if (failGet) {
+                failGet = false;
+                return Promise.reject(new Error("GET offline"));
+            }
+            return Promise.resolve(doc as unknown as T);
+        },
+    });
+
+    await assertRejects(() => sessionRetry.load(), Error, "GET offline");
+    await sessionRetry.load();
+    assertEquals(sessionRetry.getSnapshot().body, "- [x] a\n- [ ] b");
+    assertEquals(sessionRetry.getSnapshot().saveStatus, "dirty");
+
+    // Case 2: GET fails and session is destroyed without retrying -> restorePendingTasks returns them to saver
+    let claimedDestroy = false;
+    const sessionDestroy = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-1",
+        drafts,
+        takePendingTasks: () => {
+            if (claimedDestroy) return [];
+            claimedDestroy = true;
+            return [{ index: 1, text: "b", checked: true }];
+        },
+        restorePendingTasks: (documentId, toggles) => {
+            restored.push({ documentId, toggles });
+        },
+        request: <T>(): Promise<T> =>
+            Promise.reject(new Error("GET still offline")),
+    });
+
+    await assertRejects(
+        () => sessionDestroy.load(),
+        Error,
+        "GET still offline",
+    );
+    await sessionDestroy.destroy();
+    assertEquals(restored, [{
+        documentId: "doc-1",
+        toggles: [{ index: 1, text: "b", checked: true }],
+    }]);
+});
+
+Deno.test("pending and live task toggles while an unrecovered local draft is offered preserve the draft and never overwrite it via autosave", async () => {
+    const time = new TestTime();
+    time.install();
+    try {
+        const drafts = new MemoryDraftStorage();
+        const patches: PatchPayload[] = [];
+        let serverDoc = createMockDoc({
+            version: 3,
+            title: "Server Title",
+            body: "- [ ] a\n- [ ] b",
+        });
+
+        // Existing unrecovered local draft in IndexedDB
+        drafts.setDirect("text:document:draft:user-1:doc-1", {
+            userId: "user-1",
+            documentId: "doc-1",
+            title: "Recovered Draft Title",
+            body: "- [ ] a\n- [ ] b\nUnsaved paragraph from earlier crash",
+            version: 3,
+            updatedAt: 1000,
+        });
+
+        let claimed = false;
+        const session = createDocumentSession({
+            userId: "user-1",
+            documentId: "doc-1",
+            drafts,
+            takePendingTasks: () => {
+                if (claimed) return [];
+                claimed = true;
+                return [{ index: 0, text: "a", checked: true }];
+            },
+            request: <T>(_path: string, init?: RequestInit): Promise<T> => {
+                if (init?.method === "PATCH") {
+                    const payload: PatchPayload = JSON.parse(
+                        init.body as string,
+                    );
+                    patches.push(payload);
+                    serverDoc = {
+                        ...serverDoc,
+                        title: payload.title ?? serverDoc.title,
+                        body: payload.body ?? serverDoc.body,
+                        version: payload.version + 1,
+                    };
+                }
+                return Promise.resolve(serverDoc as unknown as T);
+            },
+        });
+
+        await session.load();
+        assertEquals(session.getSnapshot().body, "- [x] a\n- [ ] b");
+        assertEquals(
+            session.getSnapshot().draft?.title,
+            "Recovered Draft Title",
+        );
+        assertEquals(
+            session.getSnapshot().draft?.body,
+            "- [x] a\n- [ ] b\nUnsaved paragraph from earlier crash",
+        );
+
+        // Live toggle while draft offer banner is still open updates both server view and offered draft without autosaving
+        assertEquals(session.toggleTask(1, true), true);
+        assertEquals(session.getSnapshot().body, "- [x] a\n- [x] b");
+        assertEquals(
+            session.getSnapshot().draft?.body,
+            "- [x] a\n- [x] b\nUnsaved paragraph from earlier crash",
+        );
+        assertEquals(
+            drafts.getDraft("text:document:draft:user-1:doc-1")?.title,
+            "Recovered Draft Title",
+        );
+        assertEquals(
+            drafts.getDraft("text:document:draft:user-1:doc-1")?.body,
+            "- [x] a\n- [x] b\nUnsaved paragraph from earlier crash",
+        );
+
+        // No autosave PATCH fires while draft offer is pending user decision
+        await time.tick(AUTOSAVE_DEBOUNCE_MS * 2);
+        assertEquals(patches.length, 0);
+
+        // Applying the draft keeps both the recovered draft text and the task toggles
+        session.applyDraft();
+        assertEquals(session.getSnapshot().title, "Recovered Draft Title");
+        assertEquals(
+            session.getSnapshot().body,
+            "- [x] a\n- [x] b\nUnsaved paragraph from earlier crash",
+        );
+        await time.tick(AUTOSAVE_DEBOUNCE_MS);
+        await Promise.resolve();
+        await Promise.resolve();
+        assertEquals(patches.length, 1);
+        assertEquals(patches[0].title, "Recovered Draft Title");
+        assertEquals(
+            patches[0].body,
+            "- [x] a\n- [x] b\nUnsaved paragraph from earlier crash",
+        );
+    } finally {
+        time.restore();
+    }
+});
+
+Deno.test("load() rolls back atomically and reports a task conflict when handed-off toggles do not match the server body", async () => {
+    const drafts = new MemoryDraftStorage();
+    const conflicts: DocumentDto[] = [];
+    const serverDoc = createMockDoc({
+        version: 2,
+        body: "- [ ] a\n- [ ] renamed on server",
+    });
+    let claimed = false;
+
+    const session = createDocumentSession({
+        userId: "user-1",
+        documentId: "doc-1",
+        drafts,
+        takePendingTasks: () => {
+            if (claimed) return [];
+            claimed = true;
+            return [
+                { index: 0, text: "a", checked: true },
+                { index: 1, text: "b", checked: true },
+            ];
+        },
+        onTaskConflict: (doc) => conflicts.push(doc),
+        request: mockDocRequest(serverDoc),
+    });
+
+    await session.load();
+    const snap = session.getSnapshot();
+    // Atomic rollback: neither task 0 nor task 1 is partially applied
+    assertEquals(snap.body, "- [ ] a\n- [ ] renamed on server");
+    assertEquals(snap.saveStatus, "saved");
+    assertEquals(snap.error, "笔记已在别处修改");
+    assertEquals(conflicts, [serverDoc]);
+    assertEquals(drafts.hasKey("text:document:draft:user-1:doc-1"), false);
+});

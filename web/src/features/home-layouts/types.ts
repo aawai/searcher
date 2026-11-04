@@ -57,8 +57,6 @@ export interface HomeLayoutProps {
     reorderNotes: (ids: string[]) => Promise<void>;
     /** Toggles one task row in a note's body; optimistic, saved and coalesced. */
     toggleTask: (note: HomeNoteItem, index: number, checked: boolean) => void;
-    /** The note open in the editor; its card task boxes are read-only meanwhile. */
-    editingNoteId: string | null;
     /** Opens the complete apps or notes management panel directly. */
     openLibrary: (request: LibraryRequest) => void;
     /** Opens a note's detail on the desk by id (search results). */

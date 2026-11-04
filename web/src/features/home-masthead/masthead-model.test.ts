@@ -313,7 +313,7 @@ Deno.test("summarizeMastheadEntry: untitled note does not repeat first line and 
     });
 });
 
-Deno.test("aggregateMastheadTasks: aligns ordinals with setTaskChecked and retains only session-completed tasks", () => {
+Deno.test("aggregateMastheadTasks: lists all open and completed tasks in note and document order and aligns ordinals with setTaskChecked", () => {
     const noteA = noteFixture({
         id: "n-a",
         displayTitle: "本周",
@@ -332,44 +332,63 @@ Deno.test("aggregateMastheadTasks: aligns ordinals with setTaskChecked and retai
     assertEquals(initial.open, 3);
     assertEquals(
         initial.items.map((i) => ({
+            key: i.key,
             noteId: i.noteId,
+            noteTitle: i.noteTitle,
             index: i.index,
             text: i.text,
             checked: i.checked,
-            justCompleted: i.justCompleted,
         })),
         [
             {
+                key: mastheadTaskKey("n-a", 0),
                 noteId: "n-a",
+                noteTitle: "本周",
+                index: 0,
+                text: "已完成旧任务",
+                checked: true,
+            },
+            {
+                key: mastheadTaskKey("n-a", 1),
+                noteId: "n-a",
+                noteTitle: "本周",
                 index: 1,
                 text: "待办一",
                 checked: false,
-                justCompleted: false,
             },
             {
+                key: mastheadTaskKey("n-a", 2),
                 noteId: "n-a",
+                noteTitle: "本周",
                 index: 2,
                 text: "待办二",
                 checked: false,
-                justCompleted: false,
             },
             {
+                key: mastheadTaskKey("n-b", 0),
                 noteId: "n-b",
+                noteTitle: "发布",
                 index: 0,
                 text: "检查构建",
                 checked: false,
-                justCompleted: false,
+            },
+            {
+                key: mastheadTaskKey("n-b", 1),
+                noteId: "n-b",
+                noteTitle: "发布",
+                index: 1,
+                text: "更新迁移",
+                checked: true,
             },
         ],
     );
 
-    // Toggle "待办二" (index 2 in noteA) using setTaskChecked and record its session key
-    const updatedBodyA = setTaskChecked(noteA.body, 2, true)!;
-    const sessionKeys = new Set([mastheadTaskKey("n-a", 2)]);
-    const afterCheck = aggregateMastheadTasks(
-        [{ ...noteA, body: updatedBodyA }, noteB],
-        sessionKeys,
-    );
+    // Check "待办二" (index 2 in noteA) and uncheck "已完成旧任务" (index 0 in noteA): order is preserved
+    const checkedBodyA = setTaskChecked(noteA.body, 2, true)!;
+    const afterCheck = aggregateMastheadTasks([
+        { ...noteA, body: checkedBodyA },
+        noteB,
+    ]);
     assertEquals(afterCheck.done, 3);
     assertEquals(afterCheck.total, 5);
     assertEquals(afterCheck.open, 2);
@@ -378,27 +397,36 @@ Deno.test("aggregateMastheadTasks: aligns ordinals with setTaskChecked and retai
             key: i.key,
             text: i.text,
             checked: i.checked,
-            justCompleted: i.justCompleted,
         })),
         [
-            {
-                key: "n-a:1",
-                text: "待办一",
-                checked: false,
-                justCompleted: false,
-            },
-            {
-                key: "n-a:2",
-                text: "待办二",
-                checked: true,
-                justCompleted: true,
-            },
-            {
-                key: "n-b:0",
-                text: "检查构建",
-                checked: false,
-                justCompleted: false,
-            },
+            { key: "n-a:0", text: "已完成旧任务", checked: true },
+            { key: "n-a:1", text: "待办一", checked: false },
+            { key: "n-a:2", text: "待办二", checked: true },
+            { key: "n-b:0", text: "检查构建", checked: false },
+            { key: "n-b:1", text: "更新迁移", checked: true },
+        ],
+    );
+
+    const uncheckedBodyA = setTaskChecked(checkedBodyA, 0, false)!;
+    const afterUncheck = aggregateMastheadTasks([
+        { ...noteA, body: uncheckedBodyA },
+        noteB,
+    ]);
+    assertEquals(afterUncheck.done, 2);
+    assertEquals(afterUncheck.total, 5);
+    assertEquals(afterUncheck.open, 3);
+    assertEquals(
+        afterUncheck.items.map((i) => ({
+            key: i.key,
+            text: i.text,
+            checked: i.checked,
+        })),
+        [
+            { key: "n-a:0", text: "已完成旧任务", checked: false },
+            { key: "n-a:1", text: "待办一", checked: false },
+            { key: "n-a:2", text: "待办二", checked: true },
+            { key: "n-b:0", text: "检查构建", checked: false },
+            { key: "n-b:1", text: "更新迁移", checked: true },
         ],
     );
 });

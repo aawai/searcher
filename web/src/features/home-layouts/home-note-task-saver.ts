@@ -24,6 +24,17 @@ export interface HomeNoteTaskSaverDeps {
 export interface HomeNoteTaskSaver {
     /** Returns false when `index` is not a task of the card's current body. */
     toggle(paper: DocumentDto, index: number, checked: boolean): boolean;
+    /**
+     * Hands unacknowledged checkbox toggles for `id` over to an opening editor
+     * session, cancelling any debounce timer and awaiting any in-flight PATCH
+     * so the editor loads the settled version and applies remaining toggles.
+     */
+    takePending(id: string): Promise<TaskToggle[]>;
+    /**
+     * Returns handed-off toggles back to the saver if the editor failed to load
+     * the document and was destroyed before adopting them.
+     */
+    restorePending(id: string, toggles: readonly TaskToggle[]): void;
 }
 
 interface NoteState {
@@ -37,6 +48,8 @@ interface NoteState {
     /** True after one 409 retry on the current conflict cycle. */
     retried: boolean;
     cancelTimer: (() => void) | null;
+    inFlight: Promise<void> | null;
+    handedOff: boolean;
 }
 
 function conflictNote(error: unknown): DocumentDto | null {
@@ -54,6 +67,7 @@ export function createHomeNoteTaskSaver(
     deps: HomeNoteTaskSaverDeps,
 ): HomeNoteTaskSaver {
     const notes = new Map<string, NoteState>();
+    const handedOffBases = new Map<string, DocumentDto>();
 
     function forget(note: NoteState) {
         note.cancelTimer?.();
@@ -71,10 +85,13 @@ export function createHomeNoteTaskSaver(
         const body = replayTaskToggles(note.base.body, note.unacked);
         if (body === null) return rollback(note, note.base);
         note.sent = note.unacked.length;
-        void deps.save(note.base, body).then(
+        const request = deps.save(note.base, body).then(
             (paper) => saved(note, paper),
             (error: unknown) => failed(note, error),
-        );
+        ).finally(() => {
+            if (note.inFlight === request) note.inFlight = null;
+        });
+        note.inFlight = request;
     }
 
     function saved(note: NoteState, paper: DocumentDto) {
@@ -82,6 +99,14 @@ export function createHomeNoteTaskSaver(
         note.unacked = note.unacked.slice(note.sent);
         note.sent = 0;
         note.retried = false;
+        if (note.handedOff) {
+            const body = note.unacked.length > 0
+                ? replayTaskToggles(paper.body, note.unacked)
+                : null;
+            forget(note);
+            deps.render(body !== null ? { ...paper, body } : paper);
+            return;
+        }
         if (note.unacked.length === 0) return rollback(note, paper);
         const body = replayTaskToggles(paper.body, note.unacked);
         if (body === null) return rollback(note, paper);
@@ -92,6 +117,10 @@ export function createHomeNoteTaskSaver(
 
     function failed(note: NoteState, error: unknown) {
         note.sent = 0;
+        if (note.handedOff) {
+            forget(note);
+            return;
+        }
         const latest = conflictNote(error);
         if (latest === null) {
             rollback(note, note.base);
@@ -132,16 +161,66 @@ export function createHomeNoteTaskSaver(
                 sent: 0,
                 retried: false,
                 cancelTimer: null,
+                inFlight: null,
+                handedOff: false,
             };
             note.unacked = next;
             notes.set(note.id, note);
             deps.show(note.id, body);
+            if (!note.handedOff) {
+                note.cancelTimer?.();
+                note.cancelTimer = deps.schedule(() => {
+                    note.cancelTimer = null;
+                    if (notes.get(note.id) === note) flush(note);
+                }, TASK_SAVE_DEBOUNCE_MS);
+            }
+            return true;
+        },
+        async takePending(id) {
+            const note = notes.get(id);
+            if (!note) return [];
+            note.cancelTimer?.();
+            note.cancelTimer = null;
+            if (note.sent === 0 && !note.inFlight) {
+                handedOffBases.set(id, note.base);
+                notes.delete(id);
+                return note.unacked;
+            }
+            note.handedOff = true;
+            while (note.inFlight) {
+                await note.inFlight;
+            }
+            handedOffBases.set(id, note.base);
+            forget(note);
+            return note.unacked;
+        },
+        restorePending(id, toggles) {
+            if (toggles.length === 0) return;
+            const existing = notes.get(id);
+            const base = existing?.base ?? handedOffBases.get(id);
+            if (!base) return;
+            const combined = [...toggles, ...(existing?.unacked ?? [])];
+            const body = replayTaskToggles(base.body, combined);
+            if (body === null) return;
+            const note: NoteState = existing ?? {
+                id,
+                base,
+                unacked: [],
+                sent: 0,
+                retried: false,
+                cancelTimer: null,
+                inFlight: null,
+                handedOff: false,
+            };
+            note.handedOff = false;
+            note.unacked = combined;
+            notes.set(id, note);
+            deps.show(id, body);
             note.cancelTimer?.();
             note.cancelTimer = deps.schedule(() => {
                 note.cancelTimer = null;
                 if (notes.get(note.id) === note) flush(note);
             }, TASK_SAVE_DEBOUNCE_MS);
-            return true;
         },
     };
 }

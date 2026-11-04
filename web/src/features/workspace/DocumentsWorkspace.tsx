@@ -10,6 +10,7 @@ import {
     useState,
 } from "react";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
+import type { DocumentDto } from "@shared/documents.ts";
 import { PanelLeftOpen } from "lucide-react";
 import {
     EmptyState,
@@ -27,6 +28,11 @@ import {
 } from "../documents/device-preferences.ts";
 import { BREAKPOINTS } from "../../design-system/breakpoints.ts";
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
+import type {
+    DocumentEditorDraftSync,
+    DocumentEditorTaskBridge,
+    PendingTaskToggle,
+} from "../documents/document-session-types.ts";
 import { WorkspaceActivity } from "./WorkspaceActivity.ts";
 
 /** A wider sidebar never leaves the editor narrower than at the persistent threshold. */
@@ -62,6 +68,17 @@ export interface DocumentsWorkspaceProps {
     narrow: boolean;
     onDirtyChange?: (dirty: boolean) => void;
     eventSubscriptions?: DocumentEventSubscriptions;
+    onDocumentUpdated?: (document: DocumentDto) => void;
+    onDraftSync?: (draft: DocumentEditorDraftSync | null) => void;
+    onTaskBridgeChange?: (bridge: DocumentEditorTaskBridge | null) => void;
+    onTakePendingTasks?: (
+        documentId: string,
+    ) => Promise<readonly PendingTaskToggle[]>;
+    onRestorePendingTasks?: (
+        documentId: string,
+        toggles: readonly PendingTaskToggle[],
+    ) => void;
+    onTaskConflict?: (document: DocumentDto) => void;
 }
 
 export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
@@ -396,6 +413,13 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                                 }}
                                 onDirtyChange={props.onDirtyChange}
                                 onChanged={refresh}
+                                onDocumentUpdated={props.onDocumentUpdated}
+                                onDraftSync={props.onDraftSync}
+                                onTaskBridgeChange={props.onTaskBridgeChange}
+                                onTakePendingTasks={props.onTakePendingTasks}
+                                onRestorePendingTasks={props
+                                    .onRestorePendingTasks}
+                                onTaskConflict={props.onTaskConflict}
                                 narrow={props.narrow}
                                 outlineDrawerOpen={outlineOpen}
                                 outlineDrawerMount={outlineMount}

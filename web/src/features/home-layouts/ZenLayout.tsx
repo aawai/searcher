@@ -210,7 +210,6 @@ export function ZenLayout(
                 viewportWidth={props.viewportWidth}
                 availableRect={props.availableRect}
                 searchRect={searchRect}
-                editingNoteId={props.editingNoteId}
                 onOpenNote={openNote}
                 onOpenDocument={props.openDocument}
                 onOpenNotes={() => openLibrary("notes")}

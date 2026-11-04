@@ -6,11 +6,17 @@ import {
 } from "@shared/documents.ts";
 import { api, ApiError } from "../../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../../lib/local.ts";
+import {
+    listTasks,
+    setTaskChecked,
+    taskRowText,
+} from "../home-layouts/note-tasks.ts";
 import type {
     DocumentLocalDraft,
     DocumentSession,
     DocumentSessionOptions,
     DocumentSessionSnapshot,
+    PendingTaskToggle,
 } from "./document-session-types.ts";
 
 export const AUTOSAVE_DEBOUNCE_MS = 1500;
@@ -91,6 +97,62 @@ function extractConflictDocument(err: unknown): DocumentDto | null {
     return null;
 }
 
+function resolveTaskIndex(
+    body: string,
+    index: number,
+    checked: boolean,
+    sourceBody?: string,
+    expectedText?: string,
+): number | null {
+    const targetText = expectedText !== undefined
+        ? expectedText
+        : sourceBody !== undefined
+        ? taskRowText(sourceBody, index)
+        : undefined;
+    if (targetText === null) return null;
+    if (targetText === undefined) return index;
+    if (taskRowText(body, index) === targetText) return index;
+    const tasks = listTasks(body);
+    const unflipped = tasks.filter(
+        (task) => task.text === targetText && task.checked !== checked,
+    );
+    if (unflipped.length === 1) return unflipped[0].index;
+    const matching = tasks.filter((task) => task.text === targetText);
+    if (unflipped.length === 0 && matching.length === 1) {
+        return matching[0].index;
+    }
+    return null;
+}
+
+function applyPendingTaskToggles(
+    body: string,
+    toggles: readonly PendingTaskToggle[],
+): { body: string; changed: boolean } | null {
+    let nextBody = body;
+    let changed = false;
+    for (const toggle of toggles) {
+        const resolvedIndex = resolveTaskIndex(
+            nextBody,
+            toggle.index,
+            toggle.checked,
+            undefined,
+            toggle.text,
+        );
+        if (resolvedIndex === null) return null;
+        const updatedBody = setTaskChecked(
+            nextBody,
+            resolvedIndex,
+            toggle.checked,
+        );
+        if (updatedBody === null) return null;
+        if (updatedBody !== nextBody) {
+            nextBody = updatedBody;
+            changed = true;
+        }
+    }
+    return { body: nextBody, changed };
+}
+
 export function createDocumentSession(
     options: DocumentSessionOptions,
 ): DocumentSession {
@@ -128,6 +190,7 @@ export function createDocumentSession(
     let userEditedSinceLoad = false;
     let pendingRemoteVersion = 0;
     let remoteRefresh: Promise<void> | null = null;
+    const retainedPendingTasks: PendingTaskToggle[] = [];
     async function refreshRemote(): Promise<void> {
         if (isDestroyed || !snapshot.document) return;
         if (inFlightSavePromise) await inFlightSavePromise;
@@ -156,6 +219,7 @@ export function createDocumentSession(
                             title: current.title ?? "",
                             body: current.body,
                         };
+                        options.onDocumentUpdated?.(current);
                     } else {
                         snapshot = {
                             ...snapshot,
@@ -297,19 +361,22 @@ export function createDocumentSession(
                 {
                     method: creating ? "POST" : "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(creating
-                        ? {
-                            title: savingTitle.trim() ? savingTitle : null,
-                            body: savingBody,
-                            notebookId: options.target?.notebookId ?? null,
-                            isHomeFixed: options.target?.isHomeFixed ?? false,
-                        }
-                        : {
-                            version: savingVersion,
-                            title: savingTitle.trim() ? savingTitle : null,
-                            body: savingBody,
-                            origin,
-                        }),
+                    body: JSON.stringify(
+                        creating
+                            ? {
+                                title: savingTitle.trim() ? savingTitle : null,
+                                body: savingBody,
+                                notebookId: options.target?.notebookId ?? null,
+                                isHomeFixed: options.target?.isHomeFixed ??
+                                    false,
+                            }
+                            : {
+                                version: savingVersion,
+                                title: savingTitle.trim() ? savingTitle : null,
+                                body: savingBody,
+                                origin,
+                            },
+                    ),
                 },
             );
             if (creating) {
@@ -327,9 +394,11 @@ export function createDocumentSession(
                     document: updated,
                     saveStatus: "dirty",
                 };
-                if (creating) {
-                    void persistDraftToStorage(snapshot.title, snapshot.body, updated.version);
-                }
+                void persistDraftToStorage(
+                    snapshot.title,
+                    snapshot.body,
+                    updated.version,
+                );
                 notify();
                 scheduleAutosave();
             } else {
@@ -343,6 +412,7 @@ export function createDocumentSession(
                 notify();
             }
             if (creating) options.onCreated?.(updated.id);
+            options.onDocumentUpdated?.(updated);
 
             return true;
         } catch (err) {
@@ -479,6 +549,12 @@ export function createDocumentSession(
 
             loadPromise = (async () => {
                 try {
+                    const preLoadPending = options.takePendingTasks
+                        ? await options.takePendingTasks(documentId)
+                        : [];
+                    if (preLoadPending.length > 0) {
+                        retainedPendingTasks.push(...preLoadPending);
+                    }
                     let draftRaw: unknown = null;
                     try {
                         draftRaw = await drafts.read(draftKey());
@@ -510,6 +586,13 @@ export function createDocumentSession(
                         // Always clean up invalid or corrupt draft storage entry
                         await clearDraftFromStorage();
                     }
+                    const postLoadPending = options.takePendingTasks
+                        ? await options.takePendingTasks(documentId)
+                        : [];
+                    if (postLoadPending.length > 0) {
+                        retainedPendingTasks.push(...postLoadPending);
+                    }
+                    const pendingTasks = retainedPendingTasks.splice(0);
 
                     snapshot = {
                         ...snapshot,
@@ -525,7 +608,68 @@ export function createDocumentSession(
                         saveStatus: userEditedSinceLoad ? "dirty" : "saved",
                         draft: offerDraft,
                     };
+                    if (pendingTasks.length > 0) {
+                        const appliedServer = applyPendingTaskToggles(
+                            snapshot.body,
+                            pendingTasks,
+                        );
+                        if (appliedServer === null) {
+                            snapshot = {
+                                ...snapshot,
+                                error: "笔记已在别处修改",
+                            };
+                            options.onTaskConflict?.(serverDoc);
+                        } else if (offerDraft !== null) {
+                            const appliedDraft = applyPendingTaskToggles(
+                                offerDraft.body,
+                                pendingTasks,
+                            );
+                            if (appliedDraft?.changed) {
+                                offerDraft = {
+                                    ...offerDraft,
+                                    body: appliedDraft.body,
+                                    updatedAt: Date.now(),
+                                };
+                                void persistDraftToStorage(
+                                    offerDraft.title,
+                                    offerDraft.body,
+                                    offerDraft.version,
+                                );
+                            }
+                            if (
+                                appliedServer.changed || appliedDraft?.changed
+                            ) {
+                                if (appliedServer.changed) {
+                                    userEditedSinceLoad = true;
+                                }
+                                snapshot = {
+                                    ...snapshot,
+                                    body: appliedServer.body,
+                                    saveStatus: appliedServer.changed
+                                        ? "dirty"
+                                        : snapshot.saveStatus,
+                                    draft: offerDraft,
+                                };
+                            }
+                        } else if (appliedServer.changed) {
+                            userEditedSinceLoad = true;
+                            snapshot = {
+                                ...snapshot,
+                                body: appliedServer.body,
+                                saveStatus: "dirty",
+                            };
+                            void persistDraftToStorage(
+                                snapshot.title,
+                                snapshot.body,
+                                serverDoc.version,
+                            );
+                            if (!isDestroyed) {
+                                scheduleAutosave();
+                            }
+                        }
+                    }
 
+                    options.onDocumentUpdated?.(serverDoc);
                     notify();
                     void refreshRemote();
                 } catch (err) {
@@ -568,8 +712,10 @@ export function createDocumentSession(
             let saveStatus: DocumentSessionSnapshot["saveStatus"] = "dirty";
             if (inConflict) {
                 saveStatus = "conflict";
-            } else if (!documentId && !inFlightSavePromise &&
-                !nextTitle.trim() && !nextBody.trim()) {
+            } else if (
+                !documentId && !inFlightSavePromise &&
+                !nextTitle.trim() && !nextBody.trim()
+            ) {
                 saveStatus = "saved";
             } else if (!documentId && snapshot.saveStatus === "error") {
                 saveStatus = "error";
@@ -590,11 +736,87 @@ export function createDocumentSession(
 
             if (!inConflict && snapshot.saveStatus === "dirty") {
                 scheduleAutosave();
-            } else if (snapshot.saveStatus === "saved" && autosaveTimer !== null) {
+            } else if (
+                snapshot.saveStatus === "saved" && autosaveTimer !== null
+            ) {
                 clearTimeout(autosaveTimer);
                 autosaveTimer = null;
                 hasPendingAutosave = false;
             }
+        },
+
+        toggleTask(
+            index: number,
+            checked: boolean,
+            sourceBody?: string,
+            expectedText?: string,
+        ): boolean {
+            if (
+                isDestroyed ||
+                snapshot.loading ||
+                (Boolean(documentId) && !snapshot.document)
+            ) {
+                return false;
+            }
+            const resolvedIndex = resolveTaskIndex(
+                snapshot.body,
+                index,
+                checked,
+                sourceBody,
+                expectedText,
+            );
+            if (resolvedIndex === null) return false;
+            const targetText = taskRowText(snapshot.body, resolvedIndex);
+            const nextBody = setTaskChecked(
+                snapshot.body,
+                resolvedIndex,
+                checked,
+            );
+            if (nextBody === null) return false;
+            if (snapshot.draft !== null && snapshot.conflict === null) {
+                let nextDraft = snapshot.draft;
+                if (targetText !== null) {
+                    const appliedDraft = applyPendingTaskToggles(
+                        snapshot.draft.body,
+                        [{
+                            index: resolvedIndex,
+                            text: targetText,
+                            checked,
+                        }],
+                    );
+                    if (appliedDraft?.changed) {
+                        nextDraft = {
+                            ...snapshot.draft,
+                            body: appliedDraft.body,
+                            updatedAt: Date.now(),
+                        };
+                        void persistDraftToStorage(
+                            nextDraft.title,
+                            nextDraft.body,
+                            nextDraft.version,
+                        );
+                    }
+                }
+                if (
+                    nextBody !== snapshot.body || nextDraft !== snapshot.draft
+                ) {
+                    if (nextBody !== snapshot.body) {
+                        userEditedSinceLoad = true;
+                    }
+                    snapshot = {
+                        ...snapshot,
+                        body: nextBody,
+                        saveStatus: nextBody !== snapshot.body
+                            ? "dirty"
+                            : snapshot.saveStatus,
+                        draft: nextDraft,
+                    };
+                    notify();
+                }
+                return true;
+            }
+            session.edit({ body: nextBody });
+            return true;
         },
 
         setComposing(composing: boolean): void {
@@ -634,6 +856,7 @@ export function createDocumentSession(
                     },
                 );
                 snapshot = { ...snapshot, document: updated };
+                options.onDocumentUpdated?.(updated);
                 notify();
                 return true;
             } catch (error) {
@@ -702,7 +925,16 @@ export function createDocumentSession(
                 ...snapshot,
                 draft: null,
             };
-            await clearDraftFromStorage();
+            if (snapshot.saveStatus === "dirty") {
+                await persistDraftToStorage(
+                    snapshot.title,
+                    snapshot.body,
+                    snapshot.document?.version ?? 1,
+                );
+                scheduleAutosave();
+            } else {
+                await clearDraftFromStorage();
+            }
             notify();
         },
 
@@ -724,6 +956,7 @@ export function createDocumentSession(
                     draft: null,
                 };
                 await clearDraftFromStorage();
+                options.onDocumentUpdated?.(serverDoc);
                 notify();
                 return serverDoc.id;
             }
@@ -790,6 +1023,7 @@ export function createDocumentSession(
                         await clearDraftFromStorage();
                         notify();
                     }
+                    options.onDocumentUpdated?.(updated);
 
                     return updated.id;
                 } catch (err) {
@@ -874,6 +1108,7 @@ export function createDocumentSession(
                             error: null,
                             draft: null,
                         };
+                        if (currentDoc) options.onDocumentUpdated?.(currentDoc);
                     }
                     notify();
                     return created.id;
@@ -977,6 +1212,7 @@ export function createDocumentSession(
                     draft: null,
                 };
                 await clearDraftFromStorage();
+                options.onDocumentUpdated?.(restored);
                 notify();
                 return true;
             } catch (err) {
@@ -1018,12 +1254,31 @@ export function createDocumentSession(
             }
             listeners.clear();
 
+            if (loadPromise !== null) {
+                try {
+                    await loadPromise;
+                } catch {
+                    // ignore load failure on destroy
+                }
+            }
+
             if (inFlightSavePromise !== null) {
                 try {
                     await inFlightSavePromise;
                 } catch {
                     // ignore
                 }
+            }
+
+            if (
+                !snapshot.document &&
+                retainedPendingTasks.length > 0 &&
+                documentId
+            ) {
+                options.restorePendingTasks?.(
+                    documentId,
+                    retainedPendingTasks.splice(0),
+                );
             }
 
             if (
@@ -1034,7 +1289,15 @@ export function createDocumentSession(
                     snapshot.body,
                     snapshot.draft?.version ?? 1,
                 );
-            } else if (snapshot.saveStatus === "dirty" && (!isComposing || documentId)) {
+            } else if (snapshot.draft !== null) {
+                await persistDraftToStorage(
+                    snapshot.draft.title,
+                    snapshot.draft.body,
+                    snapshot.draft.version,
+                );
+            } else if (
+                snapshot.saveStatus === "dirty" && (!isComposing || documentId)
+            ) {
                 try {
                     const saved = await executeSave("autosave");
                     if (!saved) {

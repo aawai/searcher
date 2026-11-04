@@ -44,7 +44,6 @@ import { formatRelativeNoteTime } from "./masthead-layout.ts";
 import {
     aggregateMastheadTasks,
     type MastheadEntrySummary,
-    mastheadTaskKey,
     summarizeMastheadEntry,
 } from "./masthead-notes.ts";
 
@@ -54,7 +53,6 @@ const INTERACTIVE_SELECTOR =
 export interface MastheadSectionsProps {
     notes: readonly HomeNoteItem[];
     now: Date;
-    editingNoteId: string | null;
     onOpenNote: (note: HomeNoteItem) => void;
     onToggleTask: (note: HomeNoteItem, index: number, checked: boolean) => void;
     onUnpin: (note: HomeNoteItem) => void;
@@ -66,7 +64,6 @@ export interface MastheadSectionsProps {
 export function MastheadSections({
     notes,
     now,
-    editingNoteId,
     onOpenNote,
     onToggleTask,
     onUnpin,
@@ -74,9 +71,6 @@ export function MastheadSections({
     onReorder,
     onOpenTaskCountChange,
 }: MastheadSectionsProps) {
-    const [justCompletedKeys, setJustCompletedKeys] = useState<
-        ReadonlySet<string>
-    >(() => new Set());
     const [copyTick, setCopyTick] = useState(0);
 
     useEffect(() => {
@@ -88,8 +82,8 @@ export function MastheadSections({
     }, [copyTick]);
 
     const tasksModel = useMemo(
-        () => aggregateMastheadTasks(notes, justCompletedKeys),
-        [notes, justCompletedKeys],
+        () => aggregateMastheadTasks(notes),
+        [notes],
     );
 
     useEffect(() => {
@@ -110,21 +104,6 @@ export function MastheadSections({
             activationConstraint: { delay: 250, tolerance: 8 },
         }),
     );
-
-    const handleToggleTask = (
-        note: HomeNoteItem,
-        index: number,
-        checked: boolean,
-    ) => {
-        const key = mastheadTaskKey(note.id, index);
-        setJustCompletedKeys((previous) => {
-            const next = new Set(previous);
-            if (checked) next.add(key);
-            else next.delete(key);
-            return next;
-        });
-        onToggleTask(note, index, checked);
-    };
 
     const handleCopyCode = async (code: string) => {
         try {
@@ -168,50 +147,37 @@ export function MastheadSections({
                         </span>
                     </div>
                     <ul className="home-masthead__tasks" aria-label="待办">
-                        {tasksModel.items.map((task) => {
-                            const locked = task.noteId === editingNoteId;
-                            return (
-                                <li
-                                    key={task.key}
-                                    className="home-masthead__task"
-                                    data-note-id={task.noteId}
-                                    data-task-index={task.index}
-                                    data-checked={task.checked
-                                        ? "true"
-                                        : undefined}
-                                    data-just-completed={task.justCompleted
-                                        ? "true"
-                                        : undefined}
-                                    title={locked ? "正在编辑" : undefined}
+                        {tasksModel.items.map((task) => (
+                            <li
+                                key={task.key}
+                                className="home-masthead__task"
+                                data-note-id={task.noteId}
+                                data-task-index={task.index}
+                                data-checked={task.checked ? "true" : undefined}
+                            >
+                                <span className="home-masthead__task-check-hit">
+                                    <Checkbox
+                                        checked={task.checked}
+                                        aria-label={task.text}
+                                        onCheckedChange={(nextChecked) =>
+                                            onToggleTask(
+                                                task.note,
+                                                task.index,
+                                                Boolean(nextChecked),
+                                            )}
+                                    />
+                                </span>
+                                <span className="home-masthead__task-text">
+                                    {task.text}
+                                </span>
+                                <span
+                                    className="home-masthead__task-source"
+                                    title={task.noteTitle}
                                 >
-                                    <span className="home-masthead__task-check-hit">
-                                        <Checkbox
-                                            checked={task.checked}
-                                            disabled={locked}
-                                            title={locked
-                                                ? "正在编辑"
-                                                : undefined}
-                                            aria-label={task.text}
-                                            onCheckedChange={(nextChecked) =>
-                                                handleToggleTask(
-                                                    task.note,
-                                                    task.index,
-                                                    Boolean(nextChecked),
-                                                )}
-                                        />
-                                    </span>
-                                    <span className="home-masthead__task-text">
-                                        {task.text}
-                                    </span>
-                                    <span
-                                        className="home-masthead__task-source"
-                                        title={task.noteTitle}
-                                    >
-                                        {task.noteTitle}
-                                    </span>
-                                </li>
-                            );
-                        })}
+                                    {task.noteTitle}
+                                </span>
+                            </li>
+                        ))}
                     </ul>
                 </section>
             )}

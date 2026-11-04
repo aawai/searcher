@@ -81,6 +81,11 @@ import {
     readSidebarCollapsed,
     writeSidebarCollapsed,
 } from "../features/documents/device-preferences.ts";
+import type {
+    DocumentEditorDraftSync,
+    DocumentEditorTaskBridge,
+    PendingTaskToggle,
+} from "../features/documents/document-session-types.ts";
 import "../features/workspace/documents-workspace.css";
 import { HomeWorkspaceContent } from "../features/workspace/HomeWorkspaceContent.tsx";
 import {
@@ -667,9 +672,121 @@ export function DesktopHost(
         setUndoPaused(undoOverlayPausedRef.current);
         restoringUndoIdsRef.current.clear();
         setWorkspaceResetUserId(user?.id ?? null);
+        editorTaskBridgeRef.current = null;
+        editorDraftRef.current = null;
     }, [user?.id, cancelPendingAction]);
     const [error, setError] = useState("");
     const [taskConflictId, setTaskConflictId] = useState<string | null>(null);
+    const editorTaskBridgeRef = useRef<DocumentEditorTaskBridge | null>(null);
+    const editorDraftRef = useRef<DocumentEditorDraftSync | null>(null);
+    const applyEditorDraft = useCallback(
+        (items: HomeNoteItem[]): HomeNoteItem[] => {
+            const draft = editorDraftRef.current;
+            if (!draft) return items;
+            const doc = draft.document;
+            const existing = items.find((item) => item.id === doc.id);
+            if (!doc.isHomeFixed) {
+                return existing
+                    ? items.filter((item) => item.id !== doc.id)
+                    : items;
+            }
+            const base = existing
+                ? {
+                    ...existing,
+                    ...doc,
+                    homeSortOrder: existing.homeSortOrder,
+                    version: Math.max(existing.version, doc.version),
+                }
+                : doc;
+            const merged: HomeNoteItem = {
+                ...base,
+                title: draft.title,
+                displayTitle: draft.displayTitle,
+                body: draft.body,
+            };
+            if (existing) {
+                if (
+                    existing.title === merged.title &&
+                    existing.displayTitle === merged.displayTitle &&
+                    existing.body === merged.body &&
+                    existing.version === merged.version &&
+                    existing.isHomeFixed === merged.isHomeFixed &&
+                    existing.homeSortOrder === merged.homeSortOrder
+                ) {
+                    return items;
+                }
+                return items.map((item) =>
+                    item.id === merged.id ? merged : item
+                );
+            }
+            return sortNotes([...items, merged]);
+        },
+        [],
+    );
+    const syncServerNoteToEditorDraft = useCallback(
+        (documentId: string, paper: DocumentDto | null) => {
+            const currentDraft = editorDraftRef.current;
+            if (!currentDraft || currentDraft.document.id !== documentId) {
+                return;
+            }
+            editorDraftRef.current = {
+                ...currentDraft,
+                document: paper
+                    ? {
+                        ...paper,
+                        version: Math.max(
+                            currentDraft.document.version,
+                            paper.version,
+                        ),
+                    }
+                    : {
+                        ...currentDraft.document,
+                        isHomeFixed: false,
+                    },
+            };
+        },
+        [],
+    );
+    const handleEditorDraftSync = useCallback(
+        (draft: DocumentEditorDraftSync | null) => {
+            editorDraftRef.current = draft;
+            if (draft) {
+                setHomeNotes((items) => applyEditorDraft(items));
+            }
+        },
+        [applyEditorDraft],
+    );
+    const handleEditorDocumentUpdated = useCallback(
+        (document: DocumentDto) => {
+            syncServerNoteToEditorDraft(
+                document.id,
+                document.isHomeFixed ? document : null,
+            );
+            setHomeNotes((items) => {
+                const existing = items.find((item) => item.id === document.id);
+                const next = setNote(
+                    items,
+                    document.id,
+                    document.isHomeFixed
+                        ? existing
+                            ? {
+                                ...document,
+                                homeSortOrder: existing.homeSortOrder,
+                            }
+                            : document
+                        : null,
+                );
+                return applyEditorDraft(next);
+            });
+        },
+        [applyEditorDraft, syncServerNoteToEditorDraft],
+    );
+    const handleEditorTaskBridgeChange = useCallback(
+        (bridge: DocumentEditorTaskBridge | null) => {
+            editorTaskBridgeRef.current = bridge;
+        },
+        [],
+    );
     // Home card checkboxes: optimistic, coalesced per note, rebased on conflict.
     const [taskSaver] = useState(() => {
         const deps: HomeNoteTaskSaverDeps = {
@@ -677,10 +794,12 @@ export function DesktopHost(
             render: (paper) =>
                 setHomeNotes((items) => {
                     const current = items.find((item) => item.id === paper.id);
-                    return setNote(
-                        items,
-                        paper.id,
-                        paper.isHomeFixed && current ? paper : null,
+                    return applyEditorDraft(
+                        setNote(
+                            items,
+                            paper.id,
+                            paper.isHomeFixed && current ? paper : null,
+                        ),
                     );
                 }),
             show: (id, body) =>
@@ -709,6 +828,20 @@ export function DesktopHost(
                 void loading.then((saver) =>
                     saver.toggle(paper, index, checked)
                 ).catch(deps.failed);
+            },
+            takePending(id: string) {
+                if (!loading) return Promise.resolve([]);
+                return loading.then((saver) => saver.takePending(id)).catch(
+                    () => [],
+                );
+            },
+            restorePending(
+                id: string,
+                toggles: readonly PendingTaskToggle[],
+            ) {
+                if (!loading || toggles.length === 0) return;
+                void loading.then((saver) => saver.restorePending(id, toggles))
+                    .catch(deps.failed);
             },
         };
     });
@@ -880,7 +1013,7 @@ export function DesktopHost(
         setHomeNotesError("");
         fetchHomeNotes().then((items) => {
             if (!active) return;
-            setHomeNotes(items);
+            setHomeNotes(applyEditorDraft(items));
         }).catch(async (cause: unknown) => {
             if (!active) return;
             try {
@@ -955,8 +1088,9 @@ export function DesktopHost(
             if (!needsNoteRefresh(current, event.version)) return;
             fetchHomeNote(event.documentId).then((paper) => {
                 if (currentUserIdRef.current !== userId) return;
+                syncServerNoteToEditorDraft(event.documentId, paper);
                 setHomeNotes((items) =>
-                    setNote(items, event.documentId, paper)
+                    applyEditorDraft(setNote(items, event.documentId, paper))
                 );
             }).catch(() => {});
         });
@@ -1236,14 +1370,21 @@ export function DesktopHost(
         updatingNotesRef.current.add(lockKey);
         setError("");
         // A document that left home drops out of the paper list.
-        const apply = (document: DocumentDto) =>
+        const apply = (document: DocumentDto) => {
+            syncServerNoteToEditorDraft(
+                document.id,
+                document.isHomeFixed ? document : null,
+            );
             setHomeNotes((items) =>
-                setNote(
-                    items,
-                    document.id,
-                    document.isHomeFixed ? document : null,
+                applyEditorDraft(
+                    setNote(
+                        items,
+                        document.id,
+                        document.isHomeFixed ? document : null,
+                    ),
                 )
             );
+        };
         try {
             apply(await patchNote(paper, patch));
         } catch (e) {
@@ -1324,6 +1465,12 @@ export function DesktopHost(
                 domain: "documents",
                 source: "desktop",
             });
+            if (editorDraftRef.current?.document.id === paper.id) {
+                editorDraftRef.current = null;
+            }
+            if (editorTaskBridgeRef.current?.documentId === paper.id) {
+                editorTaskBridgeRef.current = null;
+            }
             setHomeNotes((items) =>
                 items.filter((item) => item.id !== paper.id)
             );
@@ -1493,10 +1640,17 @@ export function DesktopHost(
         deleteNote,
         updateNote,
         reorderNotes,
-        toggleTask: taskSaver.toggle,
-        editingNoteId: libraryState.documents.route.view === "documents/edit"
-            ? libraryState.documents.route.id
-            : null,
+        toggleTask: (paper, index, checked) => {
+            const bridge = editorTaskBridgeRef.current;
+            if (
+                bridge &&
+                bridge.documentId === paper.id &&
+                bridge.toggleTask(index, checked, paper.body)
+            ) {
+                return;
+            }
+            taskSaver.toggle(paper, index, checked);
+        },
         openLibrary: requestLibraryEntry,
         openDocument,
         aiAvailable,
@@ -1662,6 +1816,17 @@ export function DesktopHost(
                                         onDirtyChange: (dirty) => {
                                             dirtyForm.current = dirty;
                                         },
+                                        onDocumentUpdated:
+                                            handleEditorDocumentUpdated,
+                                        onDraftSync: handleEditorDraftSync,
+                                        onTaskBridgeChange:
+                                            handleEditorTaskBridgeChange,
+                                        onTakePendingTasks:
+                                            taskSaver.takePending,
+                                        onRestorePendingTasks:
+                                            taskSaver.restorePending,
+                                        onTaskConflict: (doc) =>
+                                            setTaskConflictId(doc.id),
                                         onOpenDocument: (documentId) =>
                                             requestLibrary({
                                                 type: "documents",
