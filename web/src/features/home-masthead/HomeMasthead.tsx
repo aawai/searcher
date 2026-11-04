@@ -64,7 +64,6 @@ export interface HomeMastheadProps {
     availableRect: SafeRect;
     /** Measured search box rect in viewport px; null before first measure. */
     searchRect: SafeRect | null;
-    editingNoteId: string | null;
     onOpenNote: (note: HomeNoteItem) => void;
     onOpenDocument: (id: string) => void;
     onOpenNotes: () => void;
@@ -97,7 +96,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         viewportWidth,
         availableRect,
         searchRect,
-        editingNoteId,
         onOpenNote,
         onOpenDocument,
         onOpenNotes,
@@ -475,7 +473,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                     <MastheadSections
                         notes={notes}
                         now={now}
-                        editingNoteId={editingNoteId}
                         onOpenNote={onOpenNote}
                         onToggleTask={onToggleTask}
                         onUnpin={onUnpin}

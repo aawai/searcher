@@ -244,3 +244,50 @@ Deno.test("toggle refuses an index that is not a task and leaves the view alone"
     assertEquals(h.shown, []);
     assertEquals(h.delays, []);
 });
+
+Deno.test("takePending cancels pending PATCH or awaits in-flight PATCH before handing off remaining toggles", async () => {
+    const h = harness();
+    const saver = createHomeNoteTaskSaver(h.deps);
+    const paper = paperFixture({ body: "- [ ] a\n- [ ] b\n- [ ] c\n" });
+
+    saver.toggle(paper, 0, true);
+    assertEquals(await saver.takePending("p1"), [
+        { index: 0, text: "a", checked: true },
+    ]);
+    h.runTimers();
+    assertEquals(h.saves, []);
+
+    // In-flight PATCH: takePending awaits it, renders the updated version with unsent toggles preserved, and returns unsent toggles
+    saver.toggle(paper, 0, true);
+    h.runTimers();
+    saver.toggle(paper, 1, true);
+    const pendingPromise = saver.takePending("p1");
+    // Toggles made while takePending awaits the in-flight PATCH are also captured without scheduling a new saver timer
+    saver.toggle(paper, 2, true);
+    const saved = paperFixture({
+        body: "- [x] a\n- [ ] b\n- [ ] c\n",
+        version: 2,
+    });
+    h.inFlight[0].resolve(saved);
+    assertEquals(await pendingPromise, [
+        { index: 1, text: "b", checked: true },
+        { index: 2, text: "c", checked: true },
+    ]);
+    assertEquals(h.saves.length, 1);
+    assertEquals(h.rendered.at(-1), {
+        ...saved,
+        body: "- [x] a\n- [x] b\n- [x] c\n",
+    });
+
+    // If editor load fails and restores pending toggles, saver re-queues and saves them
+    saver.restorePending("p1", [
+        { index: 1, text: "b", checked: true },
+        { index: 2, text: "c", checked: true },
+    ]);
+    h.runTimers();
+    assertEquals(h.saves.length, 2);
+    assertEquals(h.saves[1], {
+        version: 2,
+        body: "- [x] a\n- [x] b\n- [x] c\n",
+    });
+});

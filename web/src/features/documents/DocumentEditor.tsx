@@ -19,11 +19,17 @@ import {
 import { createPortal } from "react-dom";
 import type {
     DocumentAssetDto,
+    DocumentDto,
     DocumentSettingsDto,
 } from "@shared/documents.ts";
 import { documentDisplayTitle } from "../../../../src/features/documents/markdown.ts";
 import type { DocumentPagination } from "./document-pagination.ts";
 import type { DocumentEventSubscriptions } from "./document-event-subscriptions.ts";
+import type {
+    DocumentEditorDraftSync,
+    DocumentEditorTaskBridge,
+    PendingTaskToggle,
+} from "./document-session-types.ts";
 import { DocumentPaperSettingsDialog } from "./DocumentPaperSettingsDialog.tsx";
 import { prepareDocumentPrint } from "./document-print.ts";
 import {
@@ -248,6 +254,17 @@ export interface DocumentEditorProps {
     onChanged?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
     narrow?: boolean;
+    onDocumentUpdated?: (document: DocumentDto) => void;
+    onDraftSync?: (draft: DocumentEditorDraftSync | null) => void;
+    onTaskBridgeChange?: (bridge: DocumentEditorTaskBridge | null) => void;
+    onTakePendingTasks?: (
+        documentId: string,
+    ) => Promise<readonly PendingTaskToggle[]>;
+    onRestorePendingTasks?: (
+        documentId: string,
+        toggles: readonly PendingTaskToggle[],
+    ) => void;
+    onTaskConflict?: (document: DocumentDto) => void;
     outlineDrawerOpen: boolean;
     outlineDrawerMount: HTMLElement | null;
     outlineButtonRef: RefObject<HTMLButtonElement | null>;
@@ -266,6 +283,12 @@ export function DocumentEditor({
     onOpenDocument,
     onChanged,
     onDirtyChange,
+    onDocumentUpdated,
+    onDraftSync,
+    onTaskBridgeChange,
+    onTakePendingTasks,
+    onRestorePendingTasks,
+    onTaskConflict,
     narrow = false,
     outlineDrawerOpen,
     outlineDrawerMount,
@@ -280,6 +303,18 @@ export function DocumentEditor({
     const createdIdRef = useRef<string | undefined>(undefined);
     const onCreatedRef = useRef(onCreated);
     onCreatedRef.current = onCreated;
+    const onDocumentUpdatedRef = useRef(onDocumentUpdated);
+    onDocumentUpdatedRef.current = onDocumentUpdated;
+    const onDraftSyncRef = useRef(onDraftSync);
+    onDraftSyncRef.current = onDraftSync;
+    const onTaskBridgeChangeRef = useRef(onTaskBridgeChange);
+    onTaskBridgeChangeRef.current = onTaskBridgeChange;
+    const onTakePendingTasksRef = useRef(onTakePendingTasks);
+    onTakePendingTasksRef.current = onTakePendingTasks;
+    const onRestorePendingTasksRef = useRef(onRestorePendingTasks);
+    onRestorePendingTasksRef.current = onRestorePendingTasks;
+    const onTaskConflictRef = useRef(onTaskConflict);
+    onTaskConflictRef.current = onTaskConflict;
     const sessionDocumentId = requestedDocumentId === createdIdRef.current
         ? undefined
         : requestedDocumentId;
@@ -298,6 +333,14 @@ export function DocumentEditor({
                 createdIdRef.current = id;
                 onCreatedRef.current?.(id);
             },
+            onDocumentUpdated: (doc) => onDocumentUpdatedRef.current?.(doc),
+            takePendingTasks: (id) =>
+                onTakePendingTasksRef.current
+                    ? onTakePendingTasksRef.current(id)
+                    : [],
+            restorePendingTasks: (id, toggles) =>
+                onRestorePendingTasksRef.current?.(id, toggles),
+            onTaskConflict: (doc) => onTaskConflictRef.current?.(doc),
             events: eventSubscriptions,
         }), [
         userId,
@@ -336,6 +379,44 @@ export function DocumentEditor({
             void session.destroy();
         };
     }, [session]);
+    useEffect(() => {
+        if (!documentId) {
+            onTaskBridgeChangeRef.current?.(null);
+            return;
+        }
+        onTaskBridgeChangeRef.current?.({
+            documentId,
+            toggleTask: (index, checked, sourceBody) =>
+                session.toggleTask(index, checked, sourceBody),
+        });
+        return () => {
+            onTaskBridgeChangeRef.current?.(null);
+        };
+    }, [session, documentId]);
+
+    useEffect(() => {
+        if (snapshot.loading || !snapshot.document) return;
+        onDraftSyncRef.current?.({
+            document: snapshot.document,
+            title: snapshot.title.trim() ? snapshot.title : null,
+            displayTitle: documentDisplayTitle(snapshot.title, snapshot.body),
+            body: snapshot.body,
+            dirty: snapshot.saveStatus !== "saved" || snapshot.draft !== null,
+        });
+    }, [
+        snapshot.loading,
+        snapshot.document,
+        snapshot.title,
+        snapshot.body,
+        snapshot.saveStatus,
+        snapshot.draft,
+    ]);
+
+    useEffect(() => {
+        return () => {
+            onDraftSyncRef.current?.(null);
+        };
+    }, []);
 
     // View choice is local to this user, device and document.
     const viewStorageKey = `document:view:${userId}:${documentId}`;
@@ -1131,10 +1212,16 @@ export function DocumentEditor({
             relatedTarget.closest("[data-document-editor-owner]")
                     ?.getAttribute("data-document-editor-owner") ===
                 documentEditorOwner;
+        const belongsToSameDocumentTask = Boolean(documentId) &&
+            relatedTarget instanceof Element &&
+            relatedTarget.closest(".home-masthead__task")?.getAttribute(
+                    "data-note-id",
+                ) === documentId;
         if (
             e.currentTarget &&
             !e.currentTarget.contains(relatedTarget as Node | null) &&
-            !belongsToDocumentMenu
+            !belongsToDocumentMenu &&
+            !belongsToSameDocumentTask
         ) {
             void session.save("autosave");
         }

@@ -42,7 +42,6 @@ export interface MastheadTaskRow {
     index: number;
     text: string;
     checked: boolean;
-    justCompleted: boolean;
 }
 
 export interface MastheadTasksModel {
@@ -301,11 +300,10 @@ export function summarizeMastheadEntry(
 
 /**
  * Aggregates tasks across all pinned home notes in home order, then document
- * order. Includes unchecked tasks plus tasks checked during the current session.
+ * order, including both open and completed tasks.
  */
 export function aggregateMastheadTasks(
     notes: readonly HomeNoteItem[],
-    justCompletedKeys: ReadonlySet<string> = new Set(),
 ): MastheadTasksModel {
     let done = 0;
     let total = 0;
@@ -316,20 +314,15 @@ export function aggregateMastheadTasks(
         for (const task of noteTasks) {
             total++;
             if (task.checked) done++;
-            const key = mastheadTaskKey(note.id, task.index);
-            const justCompleted = task.checked && justCompletedKeys.has(key);
-            if (!task.checked || justCompleted) {
-                items.push({
-                    key,
-                    note,
-                    noteId: note.id,
-                    noteTitle: note.displayTitle,
-                    index: task.index,
-                    text: task.text,
-                    checked: task.checked,
-                    justCompleted,
-                });
-            }
+            items.push({
+                key: mastheadTaskKey(note.id, task.index),
+                note,
+                noteId: note.id,
+                noteTitle: note.displayTitle,
+                index: task.index,
+                text: task.text,
+                checked: task.checked,
+            });
         }
     }
 
