@@ -1010,6 +1010,28 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                                         "done",
                             );
                             await assertNoOverflow(page);
+                            if (viewport.width < 768) {
+                                // On phones the box stays raised while the
+                                // answer shows, even without focus, so the
+                                // card clears the soft keyboard.
+                                await page.evaluate(() =>
+                                    (document.activeElement as
+                                        | HTMLElement
+                                        | null)?.blur()
+                                );
+                                const raisedTop = 56 +
+                                    Math.min(
+                                        140,
+                                        Math.max(64, viewport.height * 0.16),
+                                    );
+                                await page.waitForFunction((top) => {
+                                    const box = document.querySelector(
+                                        ".search-form-wrap",
+                                    )?.getBoundingClientRect();
+                                    return box !== undefined &&
+                                        Math.abs(box.top - top) < 1;
+                                }, raisedTop);
+                            }
                             await page.screenshot({
                                 path: `${evidence}/card-done-${tag}.png`,
                             });

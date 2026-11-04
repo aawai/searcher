@@ -111,11 +111,19 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                 props.sidebarTriggerRef.current === document.activeElement
             ) {
                 triggerFocusPending.current = true;
+                queueMicrotask(() => {
+                    triggerFocusPending.current = false;
+                });
             }
             props.sidebarTriggerRef.current = element;
             if (element && triggerFocusPending.current) {
                 triggerFocusPending.current = false;
-                if (document.activeElement === document.body) element.focus();
+                const active = document.activeElement;
+                if (
+                    !active || active === document.body || !active.isConnected
+                ) {
+                    element.focus();
+                }
             }
         },
         [props.sidebarTriggerRef],

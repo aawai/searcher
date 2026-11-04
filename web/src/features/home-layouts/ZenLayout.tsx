@@ -74,13 +74,18 @@ export function ZenLayout(
         );
         if (!hero || !searchElement) return;
         const measure = () => {
-            // While docked the box is only translated; keep its layout rect.
-            if (hero.dataset.mastheadSheet === "open") return;
+            // While the sheet is open the box is translated toward its dock;
+            // subtract the live translation so the rect stays the layout
+            // anchor even when the anchor moves (viewport height, keyboard).
             const box = searchElement.getBoundingClientRect();
+            const transform = getComputedStyle(searchElement).transform;
+            const shiftY = transform === "none"
+                ? 0
+                : new DOMMatrixReadOnly(transform).m42;
             const next = box.width > 0 && box.height > 0
                 ? {
                     x: Math.round(box.left),
-                    y: Math.round(box.top),
+                    y: Math.round(box.top - shiftY),
                     width: Math.round(box.width),
                     height: Math.round(box.height),
                 }
@@ -99,7 +104,9 @@ export function ZenLayout(
         };
         measure();
         const observer = new ResizeObserver(measure);
-        observer.observe(hero);
+        // The border box: the anchor is the hero's top padding, which moves
+        // (and on phones animates) without changing the content box.
+        observer.observe(hero, { box: "border-box" });
         observer.observe(searchElement);
         addEventListener("resize", measure);
         return () => {
@@ -146,6 +153,7 @@ export function ZenLayout(
                 aria-label="搜索"
                 ref={heroRef}
                 data-masthead-sheet={dockShift === null ? undefined : "open"}
+                data-inline-answer={inlineAnswer.open ? "open" : undefined}
                 style={dockShift === null ? undefined : {
                     "--masthead-dock-shift": `${dockShift}px`,
                 } as CSSProperties}

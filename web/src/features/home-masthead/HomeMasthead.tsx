@@ -23,6 +23,7 @@ import { useCalmClock } from "../home-calm/useHomeCalm.ts";
 import type { HomeNoteItem } from "../home-layouts/home-notes.ts";
 import type { SafeRect } from "../home-layouts/home-viewport.ts";
 import {
+    MASTHEAD_PEEK_HALO_ROOM,
     MASTHEAD_PEEK_VEIL_TAIL,
     mastheadDateParts,
     mastheadPlacement,
@@ -191,6 +192,26 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         ? placement.searchDock
         : null;
 
+    // Collapsed, the narrow masthead shows only its first block; the peek is
+    // that block's height (plus room for the text halo), capped above the
+    // search box.
+    const [peekBlockHeight, setPeekBlockHeight] = useState<number | null>(
+        null,
+    );
+    useLayoutEffect(() => {
+        const block = contentRef.current?.firstElementChild;
+        if (!isNarrow || !block) {
+            setPeekBlockHeight(null);
+            return;
+        }
+        const measure = () =>
+            setPeekBlockHeight(Math.ceil(block.getBoundingClientRect().height));
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(block);
+        return () => observer.disconnect();
+    }, [isNarrow, showDate, showTime, showContinue, notes.length]);
+
     useEffect(() => {
         onSearchDockChange(searchDock);
     }, [onSearchDockChange, searchDock]);
@@ -223,14 +244,11 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         return () => document.removeEventListener("focusin", onFocusIn);
     }, [sheetOpen]);
 
-    useEscapeLayer(
-        hostActive && sheetOpen,
-        () => {
-            focusPeekOnCollapse.current = true;
-            setCollapsed(true);
-        },
-        "overlay",
-    );
+    // The open sheet is not modal: the Dock and undo feedback stay usable.
+    useEscapeLayer(hostActive && sheetOpen, () => {
+        focusPeekOnCollapse.current = true;
+        setCollapsed(true);
+    });
 
     // Narrow mode touch swipe: swipe down on home blank area expands; swipe up collapses when scrolled to top.
     useEffect(() => {
@@ -539,6 +557,12 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const peekLabel = peekTaskCount > 0
         ? `展开首页刊头，${peekTaskCount} 项待办`
         : "展开首页刊头";
+    const peekHeight = peekBlockHeight === null
+        ? placement.peek.height
+        : Math.min(
+            placement.peek.height,
+            peekBlockHeight + MASTHEAD_PEEK_HALO_ROOM,
+        );
     return (
         <section
             className="home-masthead"
@@ -547,8 +571,9 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             data-collapsed={effectiveCollapsed ? "true" : "false"}
         >
             {
-                /* Collapsed, the veil and the sheet shrink to the peek above the
-                search box; open, they cover the home down to the docked box. */
+                /* Collapsed, the sheet shrinks to the peek (the first block)
+                and the veil is hidden except in the solid fallbacks; open,
+                both cover the home down to the docked search box. */
             }
             <div
                 className="home-masthead__veil"
@@ -557,7 +582,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 aria-hidden="true"
                 style={effectiveCollapsed
                     ? {
-                        height: placement.peek.y + placement.peek.height +
+                        height: placement.peek.y + peekHeight +
                             MASTHEAD_PEEK_VEIL_TAIL,
                     }
                     : undefined}
@@ -573,7 +598,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                     top: placement.sheet.y,
                     width: placement.sheet.width,
                     height: effectiveCollapsed
-                        ? placement.peek.height
+                        ? peekHeight
                         : placement.sheet.height,
                 }}
             >
@@ -613,7 +638,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                         left: placement.peek.x,
                         top: placement.peek.y,
                         width: placement.peek.width,
-                        height: placement.peek.height,
+                        height: peekHeight,
                     }}
                 />
             )}

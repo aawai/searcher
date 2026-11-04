@@ -113,15 +113,12 @@ Deno.test("Home anchor is shared by guests and accounts and respects the plate c
                             document.documentElement.scrollWidth > innerWidth,
                     };
                 });
-                // Preserve the flow-note layouts while calibrating desktop.
+                // ≥768px (tablets and desktop) share the 38% anchor.
                 let expectedCenter = height * 0.38;
-                if (width < 1024) {
-                    expectedCenter = 84 +
-                        Math.min(220, Math.max(80, height * 0.22));
-                }
                 if (width < 768) {
-                    expectedCenter = 82 +
-                        Math.min(140, Math.max(64, height * 0.16));
+                    // Phones centre the box in the free area between the top
+                    // bar and the Dock (48% of the viewport).
+                    expectedCenter = 82 + Math.max(64, height * 0.48 - 84);
                 }
                 assertAlmostEquals(metrics.center, expectedCenter, 1);
                 assertAlmostEquals(metrics.width, Math.min(640, width - 32), 1);

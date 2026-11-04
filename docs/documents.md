@@ -52,7 +52,7 @@ heading/paragraph 的纯文本前 100 字 → “无标题笔记”。
 ## 首页刊头
 
 固定到首页（`isHomeFixed`）的笔记与首页待办一起排进首页刊头：一列排版放在壁纸焦点的另一侧，
-窄屏收成顶部一行，可展开。呈现只由 `isHomeFixed` 决定，与正文长度无关；未固定的笔记只出现在
+窄屏收起时只露出顶部日期块，可展开。呈现只由 `isHomeFixed` 决定，与正文长度无关；未固定的笔记只出现在
 笔记库、搜索与 AI 引用中。同一笔记可以同时固定到首页、插入图片并使用分页。视觉与交互契约见
 [Visual Language · 首页刊头](design/VISUAL_LANGUAGE.md#首页刊头home-masthead)，首页位置见
 [首页与桌面](workspace.md#首页与桌面)。
