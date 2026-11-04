@@ -260,8 +260,8 @@
     --layout-home-content-max: 640px;
     --layout-masthead-col: clamp(296px, 19vw, 372px);
     --layout-masthead-veil-fade: 640px;
-    /* Collapsed narrow masthead: the top veil's fade, ending
-       MASTHEAD_PEEK_VEIL_TAIL (masthead-layout.ts) below the peek. */
+    /* Collapsed narrow masthead in the solid fallbacks: the top veil's fade,
+       ending MASTHEAD_PEEK_VEIL_TAIL (masthead-layout.ts) below the peek. */
     --layout-masthead-peek-fade: 200px;
     --layout-masthead-panel-max: var(--layout-form-max);
     /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
@@ -282,7 +282,8 @@
     --home-grid-inline-start: calc(var(--home-grid-axis) - var(--home-grid-content-width) / 2);
     --home-grid-inline-end: calc(var(--home-grid-axis) + var(--home-grid-content-width) / 2);
     --home-grid-block-start: calc(56px + var(--home-hero-inset));
-    /* 38% viewport centre minus topbar (56px) and half search height (28px). */
+    /* ≥768px: 38% viewport centre minus topbar (56px) and half search height
+       (28px). Phones override it below. */
     --home-hero-inset: max(80px, calc(38dvh - 84px));
     --layout-sheet-max: 960px;
     --sheet-width: min(65vw, var(--layout-sheet-max));
@@ -532,30 +533,30 @@
 
 /* Home masthead veil: a translucent --background wash over a strongly blurred
    wallpaper, so the wallpaper's colour still shows behind the column. The
-   collapsed narrow masthead (the peek) uses a much thinner wash so it reads
-   as printed on the wallpaper; its text carries --masthead-text-halo, a soft
-   --background glow that keeps glyph edges legible where the wash is thin.
-   The glass `off` tier and the fallbacks below make both washes solid. */
+   collapsed narrow masthead (the peek) has no veil at all: it reads as
+   printed on the wallpaper and its text carries --masthead-text-halo, a soft
+   --background glow that keeps glyph edges legible. The glass `off` tier and
+   the fallbacks below make the veil solid and show it behind the peek too. */
 :root {
     --masthead-veil-light: 66%;
     --masthead-veil-dark: 50%;
-    --masthead-peek-veil-mix: 22%;
+    --masthead-peek-veil-opacity: 0;
     --masthead-veil-filter: blur(28px) saturate(1.35);
 }
 [data-glass="off"] {
     --masthead-veil-light: 100%;
     --masthead-veil-dark: 100%;
-    --masthead-peek-veil-mix: 100%;
+    --masthead-peek-veil-opacity: 1;
     --masthead-veil-filter: none;
 }
 :root,
 [data-theme] {
     --masthead-veil-mix: var(--masthead-veil-light);
     --masthead-veil: color-mix(in srgb, var(--background) var(--masthead-veil-mix), transparent);
-    --masthead-peek-veil: color-mix(in srgb, var(--background) var(--masthead-peek-veil-mix), transparent);
     --masthead-text-halo: 0 0 1px var(--background), 0 0 1px var(--background),
-        0 0 3px var(--background), 0 0 8px var(--background),
-        0 0 16px var(--background);
+        0 0 2px var(--background), 0 0 4px var(--background),
+        0 0 8px var(--background), 0 0 16px var(--background),
+        0 0 28px var(--background);
 }
 [data-theme="dark"] {
     --masthead-veil-mix: var(--masthead-veil-dark);
@@ -578,7 +579,7 @@
         --masthead-veil-light: 100%;
         --masthead-veil-dark: 100%;
         --masthead-veil-filter: none;
-        --masthead-peek-veil-mix: 100%;
+        --masthead-peek-veil-opacity: 1;
     }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -596,7 +597,7 @@
         --masthead-veil-light: 100%;
         --masthead-veil-dark: 100%;
         --masthead-veil-filter: none;
-        --masthead-peek-veil-mix: 100%;
+        --masthead-peek-veil-opacity: 1;
     }
 }
 
@@ -608,20 +609,17 @@
     }
 }
 
-/* Keep flow-based tablet notes at their existing vertical positions. */
-@media (min-width: 768px) and (max-width: 1023px) {
-    :root {
-        --home-hero-inset: clamp(80px, 22dvh, 220px);
-    }
-}
-
 @media (max-width: 767px) {
     :root {
         --space-page-inline: var(--space-4);
         --home-grid-cell: var(--home-grid-narrow-cell);
         --home-grid-gap: var(--home-grid-narrow-gap);
         --space-page-block: var(--space-5);
-        --home-hero-inset: clamp(64px, 16dvh, 140px);
+        /* Centre of the free area between the top bar and the Dock (about
+           48% of the viewport); while the search box is in use it rises to
+           --home-hero-inset-engaged so suggestions clear the soft keyboard. */
+        --home-hero-inset: max(64px, calc(48dvh - 84px));
+        --home-hero-inset-engaged: clamp(64px, 16dvh, 140px);
         --space-search-inset-block: var(--space-1);
         --space-search-inset-inline: 6px;
         /* iOS zooms focused inputs below 16px. */

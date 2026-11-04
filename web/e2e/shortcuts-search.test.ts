@@ -503,6 +503,14 @@ Deno.test("production search shortcuts respect editable focus and submit command
                 await mobile.goto(origin);
                 await mobile.getByRole("combobox").fill("/g");
                 await mobile.getByRole("option").first().waitFor();
+                // Focus raises the phone search box; measure once it settled.
+                await mobile.locator(".hero").evaluate((hero) =>
+                    Promise.all(
+                        hero.getAnimations().map((animation) =>
+                            animation.finished
+                        ),
+                    )
+                );
                 const frame = await mobile.locator(".search-frame")
                     .boundingBox();
                 assert(frame);

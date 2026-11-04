@@ -82,9 +82,9 @@ Deno.test("masthead placement: side follows wallpaper focalX at 1440 and narrow 
                     "true",
                 );
 
-                // Collapsed, the masthead peeks at the top: the date block
-                // shows above the search box, the open task count rides on
-                // the time line, and the peek itself is the expand control.
+                // Collapsed, the masthead peeks at the top: only the date
+                // block shows, the open task count rides on its last line,
+                // and the peek itself is the expand control.
                 const peek = masthead.locator(".home-masthead__peek");
                 await peek.waitFor({ state: "visible" });
                 assertEquals(
@@ -132,7 +132,8 @@ Deno.test("masthead placement: side follows wallpaper focalX at 1440 and narrow 
 
                 // The open sheet slides the search box down below it without
                 // moving the hero; focusing the box closes the sheet and the
-                // box returns, focused, to its anchor.
+                // box, focused, rises above its resting anchor so suggestions
+                // clear the soft keyboard.
                 const searchWrap = page.locator(".search-form-wrap");
                 // The Escape above slid the box back; measure once it settled.
                 await searchWrap.evaluate((element) =>
@@ -150,32 +151,73 @@ Deno.test("masthead placement: side follows wallpaper focalX at 1440 and narrow 
                     '.home-masthead__sheet[data-open="true"]',
                 );
                 await sheet.waitFor({ state: "visible" });
-                // Wait for the slide to settle below the sheet.
-                await page.waitForFunction(() => {
-                    const box = document.querySelector(".search-form-wrap")
-                        ?.getBoundingClientRect();
-                    const sheetBox = document.querySelector(
-                        ".home-masthead__sheet",
-                    )?.getBoundingClientRect();
-                    return box !== undefined && sheetBox !== undefined &&
-                        box.top >= sheetBox.bottom &&
-                        box.bottom <= innerHeight;
-                });
+                // Docked: the box sits the 16px page margin above the Dock,
+                // below the sheet, with its slide and the sheet settled.
+                const settleDock = () =>
+                    page.waitForFunction(() => {
+                        const wrap = document.querySelector(
+                            ".search-form-wrap",
+                        );
+                        const sheetElement = document.querySelector(
+                            ".home-masthead__sheet",
+                        );
+                        const dock = document.querySelector(".dock-bar")
+                            ?.getBoundingClientRect();
+                        if (!wrap || !sheetElement || !dock) return false;
+                        const box = wrap.getBoundingClientRect();
+                        const moving = [
+                            wrap,
+                            sheetElement,
+                            document.querySelector(".hero"),
+                        ].some((element) =>
+                            (element?.getAnimations().length ?? 0) > 0
+                        );
+                        return !moving &&
+                            box.top >= sheetElement.getBoundingClientRect()
+                                    .bottom &&
+                            Math.abs(box.bottom - (dock.top - 16)) < 1;
+                    });
+                // Wait for the slide to settle between the sheet and the Dock.
+                await settleDock();
                 assertEquals(
                     await page.locator(".hero").boundingBox(),
                     heroBefore,
                 );
+                // The open sheet is not modal: the Dock stays hit-testable.
+                assertEquals(
+                    await page.evaluate(() => {
+                        const item = document.querySelector(
+                            '.dock-bar [aria-label^="设置"]',
+                        )!.getBoundingClientRect();
+                        return document.elementFromPoint(
+                            item.x + item.width / 2,
+                            item.y + item.height / 2,
+                        )?.closest(".dock-bar") !== null;
+                    }),
+                    true,
+                );
+                // The viewport height changes while the sheet is open (soft
+                // keyboard, browser toolbar): the box re-docks above the Dock
+                // from its moved anchor instead of a stale one.
+                await page.setViewportSize({ width: 390, height: 600 });
+                await settleDock();
+                await page.setViewportSize({ width: 390, height: 844 });
+                await settleDock();
                 await page.getByRole("combobox").first().focus();
                 await page.waitForFunction(() =>
                     document.querySelector(".home-masthead")?.getAttribute(
                         "data-collapsed",
                     ) === "true"
                 );
-                await page.waitForFunction((anchorY) => {
+                // 56px top bar + clamp(64px, 16dvh, 140px).
+                const engagedY = 56 + Math.min(140, Math.max(64, 844 * 0.16));
+                await page.waitForFunction((engagedY) => {
                     const box = document.querySelector(".search-form-wrap")
                         ?.getBoundingClientRect();
-                    return box !== undefined && Math.abs(box.top - anchorY) < 1;
-                }, anchored.y);
+                    return box !== undefined &&
+                        Math.abs(box.top - engagedY) < 1;
+                }, engagedY);
+                assert(engagedY < anchored.y);
                 assertEquals(
                     await page.evaluate(() =>
                         document.activeElement?.closest(".search-form-wrap") !==

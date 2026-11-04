@@ -20,6 +20,26 @@
     padding: var(--space-home-hero-inset) var(--space-4) 0;
 }
 
+/* Phones: the search box rests at the centre of the free area and rises to
+   --home-hero-inset-engaged while it is in use (focused, or showing an inline
+   answer), so suggestions and the answer clear the soft keyboard. */
+@media (max-width: 767px) {
+    .hero {
+        transition: padding-block-start var(--motion-panel)
+            var(--ease-out-expo);
+    }
+
+    .hero:is(:has(.search-form-wrap:focus-within), [data-inline-answer="open"]) {
+        padding-block-start: var(--home-hero-inset-engaged);
+    }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+    .hero {
+        transition: none;
+    }
+}
+
 .pinned-area {
     width: calc(100% - 2 * var(--space-4));
     max-width: var(--layout-home-content-max);

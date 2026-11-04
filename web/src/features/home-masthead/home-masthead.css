@@ -560,11 +560,12 @@
    No stacking context on the section: the veil must stay on the wallpaper
    layer, under the top bar, the docked search box and the Dock. */
 
-/* The veil spans the top of the home: while collapsed (inline height) it
-   reaches past the peek's bottom and fades over --layout-masthead-peek-fade,
-   which starts around the date block and dissolves behind the search box, so
-   the wash never ends in a visible line; open, it covers the viewport and
-   fades over its last 20%. */
+/* The veil spans the top of the home and covers the viewport while open,
+   fading over its last 20%. Collapsed it is hidden: the peek reads as printed
+   on the wallpaper, legible through its text halo. Only the solid fallbacks
+   (glass `off`, reduced transparency, no backdrop-filter) keep it behind the
+   peek, reaching past it (inline height) and fading over
+   --layout-masthead-peek-fade. */
 .home-masthead__veil[data-side="top"] {
     --masthead-veil-fade-length: 20%;
     inset-inline: 0;
@@ -576,10 +577,7 @@
 
 .home-masthead__veil[data-side="top"][data-open="false"] {
     --masthead-veil-fade-length: var(--layout-masthead-peek-fade);
-}
-
-.home-masthead__veil[data-side="top"][data-open="false"]::after {
-    background: var(--masthead-peek-veil);
+    opacity: var(--masthead-peek-veil-opacity);
 }
 
 .home-masthead[data-mode="narrow"][data-collapsed="true"] :is(.home-masthead__header, .home-masthead__dek) {
@@ -599,21 +597,26 @@
 
 .home-masthead__veil[data-side="top"],
 .home-masthead__sheet {
-    transition: height var(--motion-panel) var(--ease-out-expo);
+    transition: height var(--motion-panel) var(--ease-out-expo),
+        opacity var(--motion-panel) var(--ease-out-expo);
 }
 
-/* Collapsed: only the top of the masthead (date block and rule) shows; the
-   rest fades out above the search box. The peek button above it expands. */
+/* Collapsed: only the first block (the date block, or the dek without a date
+   and time) shows; the dek's rule and everything below it are hidden. The
+   peek reaches MASTHEAD_PEEK_HALO_ROOM (--space-6) below the block and only
+   its last --space-4 fades: the serif day's glyph overflows its line box by
+   a few pixels and stays solid, while the text halo never ends in a clipped
+   edge. The peek button above it expands. */
 .home-masthead__sheet[data-open="false"] {
     pointer-events: none;
     -webkit-mask-image: linear-gradient(
         to bottom,
-        var(--foreground) 0 calc(100% - var(--space-8)),
+        var(--foreground) 0 calc(100% - var(--space-4)),
         transparent 100%
     );
     mask-image: linear-gradient(
         to bottom,
-        var(--foreground) 0 calc(100% - var(--space-8)),
+        var(--foreground) 0 calc(100% - var(--space-4)),
         transparent 100%
     );
 }
@@ -622,6 +625,19 @@
     overflow: hidden;
     -webkit-mask-image: none;
     mask-image: none;
+}
+
+.home-masthead__sheet .home-masthead__content > * {
+    transition: opacity var(--motion-panel) var(--ease-out-expo);
+}
+
+.home-masthead__sheet[data-open="false"] .home-masthead__content > :not(:first-child) {
+    opacity: 0;
+}
+
+/* Without a date block the dek leads the peek, without its rule. */
+.home-masthead__sheet[data-open="false"] .home-masthead__dek {
+    border-block-start-color: transparent;
 }
 
 .home-masthead__sheet[data-open="false"] .home-masthead__sheet-bar {
@@ -665,9 +681,10 @@
 }
 
 /* While the sheet is open the search box slides down above the bottom edge
-   (ZenLayout's measured --masthead-dock-shift). Only a transform: the hero
-   keeps its box, so nothing else on the home moves. Focusing the box closes
-   the sheet and it slides back. */
+   (ZenLayout's --masthead-dock-shift, re-measured from the box's untranslated
+   anchor whenever the viewport or the anchor changes). Only a transform: the
+   hero keeps its box, so nothing else on the home moves. Focusing the box
+   closes the sheet and it slides back. */
 .hero .search-form-wrap {
     transition: transform var(--motion-panel) var(--ease-out-expo);
 }
@@ -741,7 +758,8 @@
     }
 
     .home-masthead__veil[data-side="top"],
-    .home-masthead__sheet {
+    .home-masthead__sheet,
+    .home-masthead__sheet .home-masthead__content > * {
         transition: none;
     }
 

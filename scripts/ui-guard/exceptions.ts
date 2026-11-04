@@ -254,6 +254,11 @@ export function isRuntimeLayoutGeometryException(
         return prop === "--masthead-dock-shift" &&
             normValue === "`${dockShift}px`";
     }
+    // The collapsed narrow masthead's peek: its first block's measured height
+    // plus the halo room, capped by mastheadPlacement's peek.
+    if (path === "web/src/features/home-masthead/HomeMasthead.tsx") {
+        if (prop === "height" && normValue === "peekHeight") return true;
+    }
     if (!RUNTIME_LAYOUT_PROPS[prop] || !isRuntimeLayoutOwner(file)) {
         return false;
     }

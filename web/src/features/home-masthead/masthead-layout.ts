@@ -21,9 +21,13 @@ export const MASTHEAD_DEFAULT_SEARCH_HEIGHT = 56;
 export const MASTHEAD_SHEET_SEARCH_GAP = 24;
 /** Space kept between the collapsed narrow masthead's peek and the search box. */
 export const MASTHEAD_PEEK_SEARCH_GAP = 8;
-/** The collapsed top veil reaches this far below the peek, so its fade
- *  (`--layout-masthead-peek-fade`, 200px) starts 80px above the peek's bottom
- *  and dissolves behind the search box. */
+/** The collapsed narrow masthead shows only its first block (the date
+ *  block, or the dek when the date and time are off); the peek reaches this
+ *  far below it so the text halo is not clipped. */
+export const MASTHEAD_PEEK_HALO_ROOM = 24;
+/** In the glass `off` tier and the solid fallbacks the collapsed top veil
+ *  shows and reaches this far below the peek, so its fade
+ *  (`--layout-masthead-peek-fade`, 200px) ends below the peek. */
 export const MASTHEAD_PEEK_VEIL_TAIL = 120;
 
 export type MastheadPlacement =
@@ -35,8 +39,8 @@ export type MastheadPlacement =
     }
     | {
         mode: "narrow";
-        /** Collapsed: the masthead's top shows from the free area's top down
-         *  to just above the search box at its anchor, fading out at the bottom. */
+        /** Collapsed: the most room the peek may take, from the free area's
+         *  top down to just above the search box at its anchor. */
         peek: SafeRect;
         /** The open sheet: from the free area's top to just above the docked search box. */
         sheet: SafeRect;
