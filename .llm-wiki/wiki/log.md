@@ -1,7 +1,30 @@
 # Wiki Update Log
 
+## 2026-11-05
+
+- **capture**: {"format":"web","source_id":"SRC-2026-11-05-003","url":"https://www.sqlite.org/c3ref/wal_checkpoint_v2.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-05-002","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-05-001","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Fetch_metadata"}
+
+## 2026-11-04
+
+- **observe**: {"relevance":"high","slug":"obs-2026-11-04-issue-369-d2-d8","title":"Issue 369 D2 改为细边框并新增 D8 分组表单"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-04-issue-370-369","title":"底线重写计划 Issue 370 已创建并与 369 对齐"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-04-issue-369-ui","title":"Issue 369 UI 精致化决定已确认"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-04-ui-issue-369","title":"UI 精致化实施计划 Issue 369 已创建"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-04-003","url":"https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-04-002","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-04-001","url":"https://docs.deno.com/runtime/reference/permissions/"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus","title":"PR 366 merged mobile masthead and note focus"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-04-mobile-masthead-centered-search-halo-only-peek-implemented-i","title":"Mobile masthead centered search halo-only peek implemented (issue 363)"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss","title":"Root cause dock overlap: masthead dockShift stale measure (issue 363)"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-04-issue-363","title":"Issue 363 移动端刊头重设计方案与待决项"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-04-issue-363","title":"Issue 363 移动端刊头：搜索框与任务栏重叠的根因"}
+
 ## 2026-11-03
 
+- **observe**: {"relevance":"high","slug":"obs-2026-11-03-pr-365-main","title":"首页刊头效果图修正经 PR 365 合并 main"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-03-pr-364-main","title":"首页刊头经 PR 364 合并 main"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-03-issue-363","title":"首页刊头验收 Issue 363 与素材分支"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-03-","title":"首页刊头实现落地与贴合效果图的关键取舍"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-03-","title":"首页笔记改为刊头排版（方向二优化版）决策"}

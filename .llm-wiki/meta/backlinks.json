@@ -38,7 +38,8 @@
     "sources/SRC-2026-10-28-002",
     "sources/SRC-2026-10-28-003",
     "sources/SRC-2026-10-28-004",
-    "sources/SRC-2026-10-28-005"
+    "sources/SRC-2026-10-28-005",
+    "sources/SRC-2026-11-04-003"
   ],
   "concepts/content-security-policy-strict-deployment": [
     "concepts/hono-security-middleware-vs-api-guard",
@@ -76,7 +77,9 @@
     "sources/SRC-2026-10-31-002",
     "sources/SRC-2026-11-02-003",
     "sources/SRC-2026-11-03-001",
-    "sources/SRC-2026-11-03-002"
+    "sources/SRC-2026-11-03-002",
+    "sources/SRC-2026-11-05-001",
+    "sources/SRC-2026-11-05-002"
   ],
   "concepts/css-container-queries": [
     "concepts/scrollbar-gutter-and-layout-stability",
@@ -119,7 +122,8 @@
     "concepts/archive-extraction-zip-slip-and-decompression-limits",
     "concepts/csrf-defense-boundaries",
     "entities/deno-runtime",
-    "sources/SRC-2026-10-26-002"
+    "sources/SRC-2026-10-26-002",
+    "sources/SRC-2026-11-04-001"
   ],
   "concepts/dnd-kit-2d-grid-sorting-architecture": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
@@ -169,6 +173,8 @@
     "concepts/pwa-service-worker-update-lifecycle",
     "sources/SRC-2026-10-28-001",
     "sources/SRC-2026-10-28-002",
+    "sources/SRC-2026-11-04-002",
+    "sources/SRC-2026-11-05-001",
     "sources/service-worker-bypass-does-not-bypass-http-cache"
   ],
   "concepts/inert-and-top-layer-in-searcher-overlays": [
@@ -211,7 +217,8 @@
     "entities/indexeddb-本地存储引擎",
     "sources/SRC-2026-09-25-037",
     "sources/SRC-2026-10-24-007",
-    "sources/SRC-2026-10-28-005"
+    "sources/SRC-2026-10-28-005",
+    "sources/SRC-2026-11-04-003"
   ],
   "concepts/overscroll-containment-for-nested-scroll-areas": [
     "concepts/modal-layering-and-escape-dismissal",
@@ -309,6 +316,8 @@
     "sources/SRC-2026-10-30-005",
     "sources/SRC-2026-11-03-001",
     "sources/SRC-2026-11-03-002",
+    "sources/SRC-2026-11-04-002",
+    "sources/SRC-2026-11-05-002",
     "sources/searcher-session-token-hash-is-not-salted",
     "syntheses/searcher-system-architecture"
   ],
@@ -361,7 +370,8 @@
     "sources/SRC-2026-10-27-002",
     "sources/SRC-2026-10-29-003",
     "sources/SRC-2026-11-02-004",
-    "sources/SRC-2026-11-03-003"
+    "sources/SRC-2026-11-03-003",
+    "sources/SRC-2026-11-05-003"
   ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
@@ -372,7 +382,8 @@
     "concepts/sqlite-backup-and-recovery-boundaries",
     "entities/drizzle-sqlite-store",
     "sources/SRC-2026-10-26-001",
-    "sources/SRC-2026-10-29-003"
+    "sources/SRC-2026-10-29-003",
+    "sources/SRC-2026-11-05-003"
   ],
   "concepts/sqlite-table-recreation-migration": [
     "concepts/database-queue-serialization",
@@ -483,6 +494,7 @@
     "sources/SRC-2026-09-27-003",
     "sources/SRC-2026-09-27-005",
     "sources/SRC-2026-10-26-002",
+    "sources/SRC-2026-11-04-001",
     "syntheses/searcher-system-architecture"
   ],
   "entities/dnd-kit-system": [
@@ -526,6 +538,7 @@
     "sources/SRC-2026-10-27-001",
     "sources/SRC-2026-10-29-003",
     "sources/SRC-2026-11-03-003",
+    "sources/SRC-2026-11-05-003",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -652,6 +665,8 @@
     "sources/SRC-2026-10-25-004",
     "sources/SRC-2026-10-25-005",
     "sources/SRC-2026-10-25-006",
+    "sources/SRC-2026-11-05-001",
+    "sources/SRC-2026-11-05-002",
     "syntheses/searcher-system-architecture"
   ],
   "entities/shadcn-ui-system": [
@@ -1054,6 +1069,24 @@
   "sources/SRC-2026-11-03-003": [
     "concepts/sqlite-backup-and-recovery-boundaries"
   ],
+  "sources/SRC-2026-11-04-001": [
+    "concepts/deno-permission-boundaries"
+  ],
+  "sources/SRC-2026-11-04-002": [
+    "concepts/http-cache-and-service-worker-boundaries"
+  ],
+  "sources/SRC-2026-11-04-003": [
+    "concepts/browser-storage-persistence-and-eviction"
+  ],
+  "sources/SRC-2026-11-05-001": [
+    "concepts/csrf-defense-boundaries"
+  ],
+  "sources/SRC-2026-11-05-002": [
+    "concepts/session-security-and-isolation"
+  ],
+  "sources/SRC-2026-11-05-003": [
+    "concepts/sqlite-backup-and-recovery-boundaries"
+  ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
   ],
@@ -1175,9 +1208,19 @@
   "sources/obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes": [],
   "sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel": [],
   "sources/obs-2026-11-03-issue-363": [],
+  "sources/obs-2026-11-03-pr-364-main": [],
+  "sources/obs-2026-11-03-pr-365-main": [],
   "sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2": [],
   "sources/obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup": [],
   "sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e": [],
+  "sources/obs-2026-11-04-issue-363": [],
+  "sources/obs-2026-11-04-issue-369-d2-d8": [],
+  "sources/obs-2026-11-04-issue-369-ui": [],
+  "sources/obs-2026-11-04-issue-370-369": [],
+  "sources/obs-2026-11-04-mobile-masthead-centered-search-halo-only-peek-implemented-i": [],
+  "sources/obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus": [],
+  "sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss": [],
+  "sources/obs-2026-11-04-ui-issue-369": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],

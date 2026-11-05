@@ -112,90 +112,101 @@ export default defineConfig({
         outDir: "dist",
         emptyOutDir: true,
         manifest: "manifest.json",
-        rollupOptions: {
+        target: ["chrome107", "edge107", "firefox104", "safari16"],
+        rolldownOptions: {
             output: {
-                manualChunks(id) {
-                    if (!id.includes("/node_modules/")) return;
-                    const m = id.match(/\/node_modules\/(?:\.deno\/)?([^\/]+)/);
-                    if (!m) return;
-                    let pkg = m[1];
-                    if (pkg.startsWith("@") && pkg.includes("+")) {
-                        pkg = pkg.replace("+", "/");
-                    }
-                    const atIdx = pkg.indexOf("@", 1);
-                    if (atIdx !== -1) {
-                        pkg = pkg.slice(0, atIdx);
-                    }
+                strictExecutionOrder: true,
+                codeSplitting: {
+                    includeDependenciesRecursively: false,
+                    groups: [{
+                        debugName: "vendor-groups",
+                        name(id) {
+                            if (!id.includes("/node_modules/")) return null;
+                            const m = id.match(
+                                /\/node_modules\/(?:\.deno\/)?([^\/]+)/,
+                            );
+                            if (!m) return null;
+                            let pkg = m[1];
+                            if (pkg.startsWith("@") && pkg.includes("+")) {
+                                pkg = pkg.replace("+", "/");
+                            }
+                            const atIdx = pkg.indexOf("@", 1);
+                            if (atIdx !== -1) {
+                                pkg = pkg.slice(0, atIdx);
+                            }
 
-                    if (
-                        pkg === "react" ||
-                        pkg === "react-dom" ||
-                        pkg === "react-router" ||
-                        pkg === "react-router-dom"
-                    ) {
-                        return "react-vendor";
-                    }
-                    if (
-                        pkg.startsWith("@assistant-ui/") ||
-                        pkg === "assistant-stream" ||
-                        pkg === "assistant-cloud"
-                    ) {
-                        return "assistant-vendor";
-                    }
-                    if (
-                        pkg.startsWith("@milkdown/") ||
-                        pkg.startsWith("prosemirror-") ||
-                        pkg === "remark-stringify" ||
-                        pkg === "orderedmap" ||
-                        pkg === "w3c-keyname" ||
-                        pkg === "rope-sequence"
-                    ) {
-                        return "editor-vendor";
-                    }
-                    if (
-                        pkg === "react-markdown" ||
-                        pkg === "remark-rehype" ||
-                        pkg === "remark-breaks" ||
-                        pkg.startsWith("rehype-") ||
-                        pkg.startsWith("hast-") ||
-                        pkg === "mdast-util-to-hast" ||
-                        pkg === "property-information" ||
-                        pkg === "html-url-attributes" ||
-                        pkg === "comma-separated-tokens" ||
-                        pkg === "space-separated-tokens"
-                    ) {
-                        return "markdown-renderer-vendor";
-                    }
-                    if (
-                        pkg.startsWith("remark-") ||
-                        pkg.startsWith("micromark") ||
-                        pkg.startsWith("mdast-") ||
-                        pkg.startsWith("unist-") ||
-                        pkg.startsWith("vfile") ||
-                        pkg === "devlop" ||
-                        pkg === "trim-lines" ||
-                        pkg === "trough" ||
-                        pkg === "unified" ||
-                        pkg === "bail" ||
-                        pkg === "is-plain-obj" ||
-                        pkg === "extend" ||
-                        pkg === "ccount" ||
-                        pkg === "escape-string-regexp" ||
-                        pkg === "markdown-table" ||
-                        pkg === "longest-streak" ||
-                        pkg === "zwitch" ||
-                        pkg === "decode-named-character-reference" ||
-                        pkg === "character-entities"
-                    ) {
-                        return "markdown-vendor";
-                    }
-                    if (
-                        pkg === "@base-ui/react" ||
-                        pkg.startsWith("@dnd-kit/") ||
-                        pkg === "lucide-react"
-                    ) {
-                        return "ui-vendor";
-                    }
+                            if (
+                                pkg === "react" ||
+                                pkg === "react-dom" ||
+                                pkg === "react-router" ||
+                                pkg === "react-router-dom"
+                            ) {
+                                return "react-vendor";
+                            }
+                            if (
+                                pkg.startsWith("@assistant-ui/") ||
+                                pkg === "assistant-stream" ||
+                                pkg === "assistant-cloud"
+                            ) {
+                                return "assistant-vendor";
+                            }
+                            if (
+                                pkg.startsWith("@milkdown/") ||
+                                pkg.startsWith("prosemirror-") ||
+                                pkg === "remark-stringify" ||
+                                pkg === "orderedmap" ||
+                                pkg === "w3c-keyname" ||
+                                pkg === "rope-sequence"
+                            ) {
+                                return "editor-vendor";
+                            }
+                            if (
+                                pkg === "react-markdown" ||
+                                pkg === "remark-rehype" ||
+                                pkg === "remark-breaks" ||
+                                pkg.startsWith("rehype-") ||
+                                pkg.startsWith("hast-") ||
+                                pkg === "mdast-util-to-hast" ||
+                                pkg === "property-information" ||
+                                pkg === "html-url-attributes" ||
+                                pkg === "comma-separated-tokens" ||
+                                pkg === "space-separated-tokens"
+                            ) {
+                                return "markdown-renderer-vendor";
+                            }
+                            if (
+                                pkg.startsWith("remark-") ||
+                                pkg.startsWith("micromark") ||
+                                pkg.startsWith("mdast-") ||
+                                pkg.startsWith("unist-") ||
+                                pkg.startsWith("vfile") ||
+                                pkg === "devlop" ||
+                                pkg === "trim-lines" ||
+                                pkg === "trough" ||
+                                pkg === "unified" ||
+                                pkg === "bail" ||
+                                pkg === "is-plain-obj" ||
+                                pkg === "extend" ||
+                                pkg === "ccount" ||
+                                pkg === "escape-string-regexp" ||
+                                pkg === "markdown-table" ||
+                                pkg === "longest-streak" ||
+                                pkg === "zwitch" ||
+                                pkg === "decode-named-character-reference" ||
+                                pkg === "character-entities"
+                            ) {
+                                return "markdown-vendor";
+                            }
+                            if (
+                                pkg === "@base-ui/react" ||
+                                pkg.startsWith("@dnd-kit/") ||
+                                pkg === "lucide-react"
+                            ) {
+                                return "ui-vendor";
+                            }
+                            return null;
+                        },
+                    }],
                 },
             },
         },

@@ -19,6 +19,8 @@ HTTP 缓存与应用通过 Service Worker / Cache API 管理的缓存是不同�
 - `no-cache` 允许存储，复用前须重新验证；`no-store` 指示 HTTP 缓存不保存，但不会追溯删除已缓存的旧响应。
 - `Vary` 区分同 URL 的不同请求变体；历史导航或 bfcache 恢复不一定发生普通请求的重新验证。以上见 [MDN HTTP caching](/sources/SRC-2026-10-28-001.md)。
 
+补充 [MDN Cache-Control 参考](/sources/SRC-2026-11-04-002.md)：`public` 可以解除带 Authorization 请求的共享缓存限制；Cookie 登录不等同于自动禁止共享缓存。
+
 ## Cache API 与 Service Worker
 
 应用可以通过 Cache API 显式保存响应、命名并清理缓存；条目不按 HTTP 缓存头自动过期或刷新。`no-store` 并不禁止脚本调用 `cache.put()`；匹配时仍考虑响应的 `Vary`。完整机制见 [MDN Cache](/sources/SRC-2026-10-28-002.md)。

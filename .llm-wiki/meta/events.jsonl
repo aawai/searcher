@@ -240,3 +240,20 @@
 {"slug":"obs-2026-11-03-","title":"首页笔记改为刊头排版（方向二优化版）决策","relevance":"high","timestamp":"2026-11-03T09:43:10.221Z","kind":"observe"}
 {"slug":"obs-2026-11-03-","title":"首页刊头实现落地与贴合效果图的关键取舍","relevance":"high","timestamp":"2026-11-03T14:10:23.561Z","kind":"observe"}
 {"slug":"obs-2026-11-03-issue-363","title":"首页刊头验收 Issue 363 与素材分支","relevance":"high","timestamp":"2026-11-03T14:21:36.875Z","kind":"observe"}
+{"slug":"obs-2026-11-03-pr-364-main","title":"首页刊头经 PR 364 合并 main","relevance":"high","timestamp":"2026-11-03T14:38:24.310Z","kind":"observe"}
+{"slug":"obs-2026-11-03-pr-365-main","title":"首页刊头效果图修正经 PR 365 合并 main","relevance":"high","timestamp":"2026-11-03T16:09:13.042Z","kind":"observe"}
+{"slug":"obs-2026-11-04-issue-363","title":"Issue 363 移动端刊头：搜索框与任务栏重叠的根因","relevance":"high","timestamp":"2026-11-04T01:26:24.350Z","kind":"observe"}
+{"slug":"obs-2026-11-04-issue-363","title":"Issue 363 移动端刊头重设计方案与待决项","relevance":"high","timestamp":"2026-11-04T01:26:24.867Z","kind":"observe"}
+{"slug":"obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss","title":"Root cause dock overlap: masthead dockShift stale measure (issue 363)","relevance":"high","timestamp":"2026-11-04T01:26:38.878Z","kind":"observe"}
+{"slug":"obs-2026-11-04-mobile-masthead-centered-search-halo-only-peek-implemented-i","title":"Mobile masthead centered search halo-only peek implemented (issue 363)","relevance":"high","timestamp":"2026-11-04T01:46:08.678Z","kind":"observe"}
+{"slug":"obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus","title":"PR 366 merged mobile masthead and note focus","relevance":"high","timestamp":"2026-11-04T04:27:48.229Z","kind":"observe"}
+{"source_id":"SRC-2026-11-04-001","url":"https://docs.deno.com/runtime/reference/permissions/","format":"web","timestamp":"2026-11-04T08:01:22.912Z","kind":"capture"}
+{"source_id":"SRC-2026-11-04-002","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control","format":"web","timestamp":"2026-11-04T08:01:24.770Z","kind":"capture"}
+{"source_id":"SRC-2026-11-04-003","url":"https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API","format":"web","timestamp":"2026-11-04T08:01:35.004Z","kind":"capture"}
+{"slug":"obs-2026-11-04-ui-issue-369","title":"UI 精致化实施计划 Issue 369 已创建","relevance":"high","timestamp":"2026-11-04T09:00:00.248Z","kind":"observe"}
+{"slug":"obs-2026-11-04-issue-369-ui","title":"Issue 369 UI 精致化决定已确认","relevance":"high","timestamp":"2026-11-04T09:08:27.025Z","kind":"observe"}
+{"slug":"obs-2026-11-04-issue-370-369","title":"底线重写计划 Issue 370 已创建并与 369 对齐","relevance":"high","timestamp":"2026-11-04T09:21:10.054Z","kind":"observe"}
+{"slug":"obs-2026-11-04-issue-369-d2-d8","title":"Issue 369 D2 改为细边框并新增 D8 分组表单","relevance":"high","timestamp":"2026-11-04T09:33:35.396Z","kind":"observe"}
+{"source_id":"SRC-2026-11-05-001","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Fetch_metadata","format":"web","timestamp":"2026-11-05T08:00:55.475Z","kind":"capture"}
+{"source_id":"SRC-2026-11-05-002","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie","format":"web","timestamp":"2026-11-05T08:01:00.323Z","kind":"capture"}
+{"source_id":"SRC-2026-11-05-003","url":"https://www.sqlite.org/c3ref/wal_checkpoint_v2.html","format":"web","timestamp":"2026-11-05T08:02:10.556Z","kind":"capture"}

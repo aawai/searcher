@@ -16,7 +16,7 @@ permissions:
 jobs:
     complete-e2e:
         name: Full production ${{ matrix.suite }} E2E
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         timeout-minutes: 60
         strategy:
             fail-fast: false

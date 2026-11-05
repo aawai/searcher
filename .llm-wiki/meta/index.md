@@ -175,9 +175,19 @@
 - [[sources/obs-2026-11-03-e2e-geometry-matrices-run-in-light-only-layoutthemes]] — Observation: E2E geometry matrices run in light only (layoutThemes) *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-e2e-suites-ordered-longest-first-for-deno-parallel]] — Observation: E2E suites ordered longest-first for Deno --parallel *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-issue-363]] — Observation: 首页刊头验收 Issue 363 与素材分支 *(created: 2026-11-03)*
+- [[sources/obs-2026-11-03-pr-364-main]] — Observation: 首页刊头经 PR 364 合并 main *(created: 2026-11-03)*
+- [[sources/obs-2026-11-03-pr-365-main]] — Observation: 首页刊头效果图修正经 PR 365 合并 main *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2]] — Observation: ProseMirror focus timer undoes fast keyboard selection in E2E *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-replacing-short-e2e-settle-waits-gave-no-measurable-speedup]] — Observation: Replacing short E2E settle waits gave no measurable speedup *(created: 2026-11-03)*
 - [[sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e]] — Observation: Routing auth-surface steps moved from navigation to auth E2E *(created: 2026-11-03)*
+- [[sources/obs-2026-11-04-issue-363]] — Observation: Issue 363 移动端刊头重设计方案与待决项 *(created: 2026-11-04)*
+- [[sources/obs-2026-11-04-issue-369-d2-d8]] — Observation: Issue 369 D2 改为细边框并新增 D8 分组表单 *(created: 2026-11-04)*
+- [[sources/obs-2026-11-04-issue-369-ui]] — Observation: Issue 369 UI 精致化决定已确认 *(created: 2026-11-04)*
+- [[sources/obs-2026-11-04-issue-370-369]] — Observation: 底线重写计划 Issue 370 已创建并与 369 对齐 *(created: 2026-11-04)*
+- [[sources/obs-2026-11-04-mobile-masthead-centered-search-halo-only-peek-implemented-i]] — Observation: Mobile masthead centered search halo-only peek implemented (issue 363) *(created: 2026-11-04)*
+- [[sources/obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus]] — Observation: PR 366 merged mobile masthead and note focus *(created: 2026-11-04)*
+- [[sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss]] — Observation: Root cause dock overlap: masthead dockShift stale measure (issue 363) *(created: 2026-11-04)*
+- [[sources/obs-2026-11-04-ui-issue-369]] — Observation: UI 精致化实施计划 Issue 369 已创建 *(created: 2026-11-04)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -281,10 +291,16 @@
 - [[sources/SRC-2026-11-03-001]] — Cross-site request forgery (CSRF) *(created: unknown)*
 - [[sources/SRC-2026-11-03-002]] — Same-origin policy *(created: unknown)*
 - [[sources/SRC-2026-11-03-003]] — SQLite Online Backup API reference *(created: unknown)*
+- [[sources/SRC-2026-11-04-001]] — Permissions *(created: unknown)*
+- [[sources/SRC-2026-11-04-002]] — Cache-Control header *(created: unknown)*
+- [[sources/SRC-2026-11-04-003]] — Web Storage API *(created: unknown)*
+- [[sources/SRC-2026-11-05-001]] — Fetch metadata *(created: unknown)*
+- [[sources/SRC-2026-11-05-002]] — Set-Cookie header *(created: unknown)*
+- [[sources/SRC-2026-11-05-003]] — Checkpoint a database *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-03T14:21:36.912Z* | *Total pages: 272*
+*Last updated: 2026-11-05T08:03:03.911Z* | *Total pages: 288*

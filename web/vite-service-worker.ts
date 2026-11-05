@@ -1,12 +1,11 @@
 import type { Plugin } from "vite";
-import { build } from "esbuild";
+import { rolldown } from "rolldown";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { shellAssetPaths } from "./src/pwa/sw-policy.ts";
 import { SERVICE_WORKER_PATH } from "../src/shared/pwa.ts";
 
 const entry = fileURLToPath(new URL("./src/pwa/sw.ts", import.meta.url));
-const shared = fileURLToPath(new URL("../src/shared", import.meta.url));
 
 /**
  * Emits `/sw.js` for the shell HTML this build produced: the worker precaches
@@ -38,23 +37,27 @@ export function serviceWorkerPlugin(): Plugin {
                 .update(Object.keys(bundle).sort().join("\n"))
                 .digest("base64url")
                 .slice(0, 16);
-            const result = await build({
-                entryPoints: [entry],
-                bundle: true,
-                write: false,
-                format: "iife",
-                target: "es2022",
-                minify: true,
-                alias: { "@shared": shared },
-                define: {
-                    __SW_VERSION__: JSON.stringify(version),
-                    __SW_SHELL_ASSETS__: JSON.stringify(shellAssets),
+            const worker = await rolldown({
+                input: entry,
+                transform: {
+                    target: "es2022",
+                    define: {
+                        __SW_VERSION__: JSON.stringify(version),
+                        __SW_SHELL_ASSETS__: JSON.stringify(shellAssets),
+                    },
                 },
             });
+            const result = await worker.generate({
+                format: "iife",
+                minify: true,
+            });
+            await worker.close();
+            const chunk = result.output.find((item) => item.type === "chunk");
+            if (!chunk) this.error("Service Worker bundle is missing");
             this.emitFile({
                 type: "asset",
                 fileName: SERVICE_WORKER_PATH.slice(1),
-                source: result.outputFiles[0].text,
+                source: chunk.code,
             });
         },
     };

@@ -18,4 +18,6 @@ updated: 2026-10-26
 - FFI 和 Node-API native code 可直接执行系统调用。
 - revoke 降为 prompt，不是 deny；无人值守场景配合 no-prompt。
 
+权限参考还明确网络 allowlist 可包含 host 和端口，且动态库及子进程不受父进程沙箱限制；按可执行文件或库路径收窄授权不能消除这一边界。详见 [Deno Permissions 参考](/sources/SRC-2026-11-04-001.md)。
+
 关联：[Deno Runtime](/entities/deno-runtime.md)、[Session Security and Isolation](/concepts/session-security-and-isolation.md)。运行时权限与会话/owner 校验保护不同边界，不能互相替代；未据此修改部署参数。

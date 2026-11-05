@@ -2,7 +2,7 @@ import {
     PWA_ICONS_PATH,
     PWA_MANIFEST_PATH,
     SERVICE_WORKER_PATH,
-} from "@shared/pwa.ts";
+} from "../../../src/shared/pwa.ts";
 
 /**
  * How the service worker answers a request:

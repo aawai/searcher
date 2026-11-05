@@ -159,6 +159,8 @@ deno task check:ui --update
 ## 构建分包
 
 本仓库是应用而非可发布的 Deno library，`deno.jsonc` 不声明包 `name` 或
-`exports`。`web/vite.config.ts` 按 React runtime、AI 会话、Markdown 与 UI
-依赖设置 `manualChunks`，保留 Vite 默认的 500 kB chunk
+`exports`。Vite 8 使用 Rolldown 打包、Oxc 转换与压缩 JavaScript，使用
+Lightning CSS 压缩 CSS；Service Worker 也使用 Rolldown 构建。
+`web/vite.config.ts` 通过 `codeSplitting` 按 React runtime、AI 会话、编辑器、
+Markdown 与 UI 依赖分组，保留原有浏览器目标及 Vite 默认的 500 kB chunk
 警告阈值。分包不等于按需加载，也不减少总 JS 体积。

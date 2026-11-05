@@ -83,11 +83,15 @@ Deno.test("production browser network isolation: editor runtime lazy boundary co
         c.src?.endsWith("spikes/markdown-editor/runtime.ts")
     )?.[1]?.file;
     assert(runtimeChunk, "Manifest must contain runtime chunk.");
-    const sharedRuntimeChunk = Object.entries(manifest).find(([k, c]) =>
-        k.endsWith("features/markdown-editor/runtime.ts") ||
-        c.src?.endsWith("features/markdown-editor/runtime.ts")
-    )?.[1]?.file;
-    assert(sharedRuntimeChunk, "Manifest must contain shared editor runtime.");
+    const report = JSON.parse(
+        await Deno.readTextFile("web/dist/bundle-report.json"),
+    ) as Record<string, { modules: Array<{ id: string }> }>;
+    const sharedRuntimeChunk = Object.entries(report).find(([, chunk]) =>
+        chunk.modules.some((module) =>
+            module.id.endsWith("/src/features/markdown-editor/runtime.ts")
+        )
+    )?.[0];
+    assert(sharedRuntimeChunk, "Bundle must contain shared editor runtime.");
     assert(!initialFiles.has(sharedRuntimeChunk));
 
     const spikeHarnessChunk = Object.entries(manifest).find(([k, c]) =>

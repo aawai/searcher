@@ -46,7 +46,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/browser-storage-persistence-and-eviction.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/browser-storage-persistence-and-eviction",
-      "contentHash": "a901ccf0fe5e87d5a5ce806120f87ba9dfe05541e32265fc5ce4b5f128502b31",
+      "contentHash": "f0d037488a4e761ebc16644c4f8b47b9f55c5df220117cae12464dcbfc394948",
       "role": "canonical",
       "type": "concept"
     },
@@ -70,7 +70,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/csrf-defense-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/csrf-defense-boundaries",
-      "contentHash": "6169aa388cf30e428d988cc4a3a9caa91f892972e03c828f46f823bc54fee538",
+      "contentHash": "83a0c4104e50dded51d07709b86963be7320ac90e391a018b3f888a476f86978",
       "role": "canonical",
       "type": "concept"
     },
@@ -110,7 +110,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/deno-permission-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/deno-permission-boundaries",
-      "contentHash": "36470e864f4c88674cbcf570827d01dfab76a88ec54bb54428894e2dd4e3119b",
+      "contentHash": "61b6b87bfb1a6f1096d1fbf8c8c3b27fd747ed95e34387506c132cd288cae90b",
       "role": "canonical",
       "type": "concept"
     },
@@ -150,7 +150,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/http-cache-and-service-worker-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/http-cache-and-service-worker-boundaries",
-      "contentHash": "ca5ce8608ce240f56c41cf0afab2dcdaaa479c127d91c01ea6315a94432564a8",
+      "contentHash": "d0f6edd802c9ce044ed1fec4212c3704dbde71f7c663263e9bc90ffeb62dc5e7",
       "role": "canonical",
       "type": "concept"
     },
@@ -286,7 +286,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/session-security-and-isolation.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/session-security-and-isolation",
-      "contentHash": "9b34d1c2c70f6b180537d9cf987922538cea67b935782cfdc4442bcf0e522a19",
+      "contentHash": "46899eea48a82331ed3e1181e3e98e6ff9a7b6d87fdb08fd1899df08c6d37626",
       "role": "canonical",
       "type": "concept"
     },
@@ -310,7 +310,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/sqlite-backup-and-recovery-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/sqlite-backup-and-recovery-boundaries",
-      "contentHash": "7ad9a87f9bc7495cc94d5f0c85417841e62195959e0ea28c9475557fe8130ade",
+      "contentHash": "36be727acd810c2cf2c2f6ae8a6253bdca39bd0f4b6f8f9deebe3fac985a4b3d",
       "role": "canonical",
       "type": "concept"
     },
@@ -1274,6 +1274,54 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/SRC-2026-11-04-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-04-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-04-001",
+      "contentHash": "7edb051f20ea23940dc7bb086ca1bc4679052f30bf51fa1584a5ca65d7ef892a",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-04-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-04-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-04-002",
+      "contentHash": "65b61810cbd1543f9bd7b3e75b930376f8e87c3d12001839a21548dff249c6e2",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-04-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-04-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-04-003",
+      "contentHash": "266222753a5ab8392ffe81a3bc44737695b92c119515275c013d84d20231fe51",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-05-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-05-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-05-001",
+      "contentHash": "0c34ae40bf268ad6ef21024288a1cd25f0fa06bec1d4e8c3e434073e1a95473f",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-05-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-05-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-05-002",
+      "contentHash": "085b9ff45df8992b95781857277dd0146f0195144dde5977549d9d41cf22ed36",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-05-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-05-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-05-003",
+      "contentHash": "416a5935c315fb5d2423b270daef97832a9bb085235099c3f6ed9a1775e6fbf2",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/css-var-fallback-consumer-value-boundary.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/css-var-fallback-consumer-value-boundary.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -2114,6 +2162,22 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-11-03-pr-364-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-pr-364-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-pr-364-main",
+      "contentHash": "18a96abf7e0de69aaecefbcfc268c48499e9c75e0f017d52a9a9dc9f3e88e662",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-03-pr-365-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-pr-365-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-03-pr-365-main",
+      "contentHash": "6ea79eb77dbbb8b2d6bdc02254217b8cf34ed2371052659cab11983c24026627",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -2135,6 +2199,70 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-11-03-routing-auth-surface-steps-moved-from-navigation-to-auth-e2e",
       "contentHash": "6b891fb06727f9d9338a4579e876f40c25eaf1959be165d00cec16a8acfe85ab",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-04-issue-363.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-04-issue-363.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-04-issue-363",
+      "contentHash": "40f4777d579e9f128b65fffe167f1c8720518bb9fb92c95dba89b1d0648428f1",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-04-issue-369-d2-d8.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-04-issue-369-d2-d8.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-04-issue-369-d2-d8",
+      "contentHash": "13167fe9e9e1b5937585c7f17b0235309a737b7ed74a23f15b79419db1f0713f",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-04-issue-369-ui.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-04-issue-369-ui.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-04-issue-369-ui",
+      "contentHash": "f2f240e810a0e55d0eb744ef4d969cd57b74733df9f209924181cf8db203c463",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-04-issue-370-369.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-04-issue-370-369.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-04-issue-370-369",
+      "contentHash": "f9bf2d55196b591bcc380fc42f4de024de4a0f62e35aa9837818089f53b86861",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-04-mobile-masthead-centered-search-halo-only-peek-implemented-i.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-04-mobile-masthead-centered-search-halo-only-peek-implemented-i.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-04-mobile-masthead-centered-search-halo-only-peek-implemented-i",
+      "contentHash": "592d5379c279d7c1fbd55bf4083be2fe34990a00a594eb8f1eda458d165e1c94",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus",
+      "contentHash": "fb958d10d4b87497f7b712999af5b0e9ed2b715838686d4349758826696b8387",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss",
+      "contentHash": "cb30bd36a95f59458aa893a431aecee90ad52dd7a9d61efdc5b851699a4993e8",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-04-ui-issue-369.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-04-ui-issue-369.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-04-ui-issue-369",
+      "contentHash": "0c183f2beb43e18e8a1cd1d9f07f64b63573f3729dd532211a1b87494ef3fe32",
       "role": "evidence",
       "type": "source"
     },
