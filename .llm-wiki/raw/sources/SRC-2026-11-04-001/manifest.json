@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-04-001",
+  "captured": "2026-11-04",
+  "packet_version": "1.0",
+  "title": "Permissions",
+  "url": "https://docs.deno.com/runtime/reference/permissions/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

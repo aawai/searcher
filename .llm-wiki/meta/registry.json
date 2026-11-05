@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-03T14:21:36.912Z",
+  "last_updated": "2026-11-05T08:03:03.911Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -1491,6 +1491,60 @@
       "format": "web",
       "captured": "2026-11-03",
       "updated": "2026-11-03"
+    },
+    "sources/SRC-2026-11-04-001": {
+      "type": "source",
+      "title": "Permissions",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-11-04-001/extracted.md",
+      "source_id": "SRC-2026-11-04-001",
+      "format": "web",
+      "captured": "2026-11-04"
+    },
+    "sources/SRC-2026-11-04-002": {
+      "type": "source",
+      "title": "Cache-Control header",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-11-04-002/extracted.md",
+      "source_id": "SRC-2026-11-04-002",
+      "format": "web",
+      "captured": "2026-11-04"
+    },
+    "sources/SRC-2026-11-04-003": {
+      "type": "source",
+      "title": "Web Storage API",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-11-04-003/extracted.md",
+      "source_id": "SRC-2026-11-04-003",
+      "format": "web",
+      "captured": "2026-11-04"
+    },
+    "sources/SRC-2026-11-05-001": {
+      "type": "source",
+      "title": "Fetch metadata",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-11-05-001/extracted.md",
+      "source_id": "SRC-2026-11-05-001",
+      "format": "web",
+      "captured": "2026-11-05"
+    },
+    "sources/SRC-2026-11-05-002": {
+      "type": "source",
+      "title": "Set-Cookie header",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-11-05-002/extracted.md",
+      "source_id": "SRC-2026-11-05-002",
+      "format": "web",
+      "captured": "2026-11-05"
+    },
+    "sources/SRC-2026-11-05-003": {
+      "type": "source",
+      "title": "Checkpoint a database",
+      "status": "complete",
+      "raw_path": "raw/sources/SRC-2026-11-05-003/extracted.md",
+      "source_id": "SRC-2026-11-05-003",
+      "format": "web",
+      "captured": "2026-11-05"
     },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",
@@ -3272,6 +3326,38 @@
       "created": "2026-11-03",
       "updated": "2026-11-03"
     },
+    "sources/obs-2026-11-03-pr-364-main": {
+      "type": "source",
+      "title": "Observation: 首页刊头经 PR 364 合并 main",
+      "tags": [
+        "pr-364",
+        "issue-363",
+        "home-masthead",
+        "merged",
+        "markdown-css",
+        "regression"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-pr-364-main",
+      "relevance": "high",
+      "observed_at": "2026-11-03T14:38:24.308Z",
+      "source_context": "创建 PR 并合并首页刊头",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-03-pr-365-main": {
+      "type": "source",
+      "title": "Observation: 首页刊头效果图修正经 PR 365 合并 main",
+      "tags": [
+        "[\"pr-365\",\"issue-363\",\"home-masthead\",\"merged\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-03-pr-365-main",
+      "relevance": "high",
+      "observed_at": "2026-11-03T16:09:13.041Z",
+      "created": "2026-11-03",
+      "updated": "2026-11-03"
+    },
     "sources/obs-2026-11-03-prosemirror-focus-timer-undoes-fast-keyboard-selection-in-e2": {
       "type": "source",
       "title": "Observation: ProseMirror focus timer undoes fast keyboard selection in E2E",
@@ -3321,6 +3407,134 @@
       "source_context": "E2E duration audit 2026-11-03",
       "created": "2026-11-03",
       "updated": "2026-11-03"
+    },
+    "sources/obs-2026-11-04-issue-363": {
+      "type": "source",
+      "title": "Observation: Issue 363 移动端刊头重设计方案与待决项",
+      "tags": [
+        "issue-363",
+        "home",
+        "masthead",
+        "mobile",
+        "design",
+        "proposal",
+        "pending-decision"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-04-issue-363",
+      "relevance": "high",
+      "observed_at": "2026-11-04T01:26:24.866Z",
+      "source_context": "Issue 363 移动端刊头观感问题分析",
+      "created": "2026-11-04",
+      "updated": "2026-11-04"
+    },
+    "sources/obs-2026-11-04-issue-369-d2-d8": {
+      "type": "source",
+      "title": "Observation: Issue 369 D2 改为细边框并新增 D8 分组表单",
+      "tags": [
+        "[\"ui-ux\",\"issue-369\",\"form\",\"decision\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-04-issue-369-d2-d8",
+      "relevance": "high",
+      "observed_at": "2026-11-04T09:33:35.394Z",
+      "created": "2026-11-04",
+      "updated": "2026-11-04"
+    },
+    "sources/obs-2026-11-04-issue-369-ui": {
+      "type": "source",
+      "title": "Observation: Issue 369 UI 精致化决定已确认",
+      "tags": [
+        "[\"ui-ux\",\"issue-369\",\"decision\",\"plan\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-04-issue-369-ui",
+      "relevance": "high",
+      "observed_at": "2026-11-04T09:08:27.023Z",
+      "created": "2026-11-04",
+      "updated": "2026-11-04"
+    },
+    "sources/obs-2026-11-04-issue-370-369": {
+      "type": "source",
+      "title": "Observation: 底线重写计划 Issue 370 已创建并与 369 对齐",
+      "tags": [
+        "[\"accessibility\",\"wcag\",\"design-contract\",\"issue-370\",\"issue-369\",\"plan\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-04-issue-370-369",
+      "relevance": "high",
+      "observed_at": "2026-11-04T09:21:10.053Z",
+      "created": "2026-11-04",
+      "updated": "2026-11-04"
+    },
+    "sources/obs-2026-11-04-mobile-masthead-centered-search-halo-only-peek-implemented-i": {
+      "type": "source",
+      "title": "Observation: Mobile masthead centered search halo-only peek implemented (issue 363)",
+      "tags": [
+        "issue-363",
+        "home",
+        "masthead",
+        "mobile",
+        "implementation"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-04-mobile-masthead-centered-search-halo-only-peek-implemented-i",
+      "relevance": "high",
+      "observed_at": "2026-11-04T01:46:08.677Z",
+      "source_context": "Issue 363 移动端刊头实现 B + 无导语 + V3",
+      "created": "2026-11-04",
+      "updated": "2026-11-04"
+    },
+    "sources/obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus": {
+      "type": "source",
+      "title": "Observation: PR 366 merged mobile masthead and note focus",
+      "tags": [
+        "pr-366",
+        "issue-363",
+        "merged",
+        "focus",
+        "ci"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus",
+      "relevance": "high",
+      "observed_at": "2026-11-04T04:27:48.228Z",
+      "source_context": "定位 CI 失败并合并 PR 366",
+      "created": "2026-11-04",
+      "updated": "2026-11-04"
+    },
+    "sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss": {
+      "type": "source",
+      "title": "Observation: Root cause dock overlap: masthead dockShift stale measure (issue 363)",
+      "tags": [
+        "issue-363",
+        "home",
+        "masthead",
+        "mobile",
+        "dock",
+        "bug",
+        "root-cause"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss",
+      "relevance": "high",
+      "observed_at": "2026-11-04T01:26:38.877Z",
+      "source_context": "Issue 363 移动端刊头观感问题分析",
+      "created": "2026-11-04",
+      "updated": "2026-11-04"
+    },
+    "sources/obs-2026-11-04-ui-issue-369": {
+      "type": "source",
+      "title": "Observation: UI 精致化实施计划 Issue 369 已创建",
+      "tags": [
+        "[\"ui-ux\",\"design-system\",\"heroui\",\"issue-369\",\"plan\",\"contrast\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-04-ui-issue-369",
+      "relevance": "high",
+      "observed_at": "2026-11-04T09:00:00.245Z",
+      "created": "2026-11-04",
+      "updated": "2026-11-04"
     },
     "sources/searcher-session-token-hash-is-not-salted": {
       "type": "source",

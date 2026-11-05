@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-05-002",
+  "captured": "2026-11-05",
+  "packet_version": "1.0",
+  "title": "Set-Cookie header",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

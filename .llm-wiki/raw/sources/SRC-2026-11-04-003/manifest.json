@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-04-003",
+  "captured": "2026-11-04",
+  "packet_version": "1.0",
+  "title": "Web Storage API",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -20,6 +20,8 @@ updated: 2026-10-26
 
 MDN 进一步区分[同源策略](/sources/SRC-2026-11-03-002.md)与 [CSRF 防线](/sources/SRC-2026-11-03-001.md)：origin 由 scheme、host、port 决定，跨源表单写入通常仍可发出；禁止简单请求的方案需要服务端强制执行及严格 CORS 配置。
 
+[MDN Fetch Metadata 指南](/sources/SRC-2026-11-05-001.md)区分 same-site 与 same-origin，并展示允许同源请求、必要的顶层导航和明确开放端点的资源隔离策略；响应若依赖这些请求头且可缓存，需使用相应的 `Vary`。该示例不代表项目已实施 Fetch Metadata。
+
 ## 项目适用性
 
 [Session Security and Isolation](/concepts/session-security-and-isolation.md) 记录的 Cookie 属性只是防线的一部分。2026-10-31 读取 `src/features/auth/security.ts`：`/api/*` 对 POST/PATCH/PUT/DELETE 要求 `Origin` 头存在且与 `APP_ORIGIN` 严格相等，否则 403；未使用 `Sec-Fetch-Site`，也没有 CSRF token。与 Hono 内置 `csrf()` 的逐项对照见 [Hono Security Middleware Compared with Searcher's API Guard](/concepts/hono-security-middleware-vs-api-guard.md)。本页不是安全审计，不判断整体完整性。

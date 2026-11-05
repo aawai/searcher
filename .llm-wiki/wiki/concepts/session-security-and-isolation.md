@@ -31,6 +31,7 @@ sources: [
    限制传输，`SameSite=Lax` 限制部分跨站携带；这些属性不等价于完整 XSS 或 CSRF 防护。
    状态变更还须服务端请求防护，详见 [CSRF Defense Boundaries](/concepts/csrf-defense-boundaries.md)
    与 [OWASP 来源](/sources/SRC-2026-10-26-003.md)。[MDN Cookie 指南](/sources/SRC-2026-10-29-001.md)还讨论 `Domain`、`Path`、有效期和前缀；其建议不代表项目已采用相应前缀。本轮未执行项目安全审计。
+   [MDN Set-Cookie 参考](/sources/SRC-2026-11-05-002.md)补充：`HttpOnly` 不阻止脚本发起的请求携带 Cookie；默认 Lax 在部分浏览器中对近期 Cookie 的 POST 处理比显式 Lax 宽松。
 4. **所有权严格隔离（Owner
    Isolation）**：所有的业务数据（书签、便签、偏好等）均以当前会话验证的用户为唯一
    Owner；无权访问或资源不存在统一返回 404，不泄露任何资源存在性线索。

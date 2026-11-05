@@ -219,8 +219,20 @@ export function checkBundle(rootDir = Deno.cwd()): {
             }
         }
     }
-    // Deep inspection: Scan entry chunk itself for forbidden inlined runtime symbols
-    const entryMetric = getFileMetric(distDir, entryChunk.file);
+    // The HTML entry can be a tiny facade; measure the chunk containing the
+    // application entry module rather than losing the entry budget.
+    const buildReport = JSON.parse(
+        readFileSync(resolve(distDir, "bundle-report.json"), "utf-8"),
+    ) as Record<string, {
+        modules: Array<{ id: string; renderedLength: number }>;
+    }>;
+    const appEntryFile = Object.entries(buildReport).find(([, chunk]) =>
+        chunk.modules.some((module) => module.id.endsWith("/src/main.tsx"))
+    )?.[0];
+    if (!appEntryFile || !initialJsFiles.has(appEntryFile)) {
+        throw new Error("Application entry module missing from initial graph");
+    }
+    const entryMetric = getFileMetric(distDir, appEntryFile);
     if (
         budget.maxEntryChunkRawBytes &&
         entryMetric.rawBytes > budget.maxEntryChunkRawBytes
@@ -238,7 +250,7 @@ export function checkBundle(rootDir = Deno.cwd()): {
         );
     }
 
-    const entryCode = readFileSync(resolve(distDir, entryChunk.file), "utf-8");
+    const entryCode = readFileSync(resolve(distDir, appEntryFile), "utf-8");
     const forbiddenTokens = [
         "micromark",
         "mdast-util",
@@ -251,7 +263,7 @@ export function checkBundle(rootDir = Deno.cwd()): {
     for (const token of forbiddenTokens) {
         if (entryCode.includes(token)) {
             errors.push(
-                `Forbidden runtime token '${token}' detected inside entry chunk '${entryChunk.file}'. Code was inlined into entry!`,
+                `Forbidden runtime token '${token}' detected inside entry chunk '${appEntryFile}'. Code was inlined into entry!`,
             );
         }
     }
@@ -319,11 +331,7 @@ export function checkBundle(rootDir = Deno.cwd()): {
     }
 
     // Home papers use a lightweight read-only renderer, never the editor runtime or Documents presentation.
-    const buildReport = JSON.parse(
-        readFileSync(resolve(distDir, "bundle-report.json"), "utf-8"),
-    ) as Record<string, {
-        modules: Array<{ id: string; renderedLength: number }>;
-    }>;
+    // The report maps source modules to chunks even when an entry is merged.
     const staticFiles = (entry: string) => {
         const keys = new Set<string>();
         const pending = [entry];
@@ -339,7 +347,18 @@ export function checkBundle(rootDir = Deno.cwd()): {
         }
         return files;
     };
-    const sharedFiles = staticFiles("src/features/markdown-editor/runtime.ts");
+    // Rolldown may merge a dynamic entry into a shared chunk, in which case
+    // the manifest no longer uses the source path as its key.
+    const editorChunk = Object.entries(buildReport).find(([, chunk]) =>
+        chunk.modules.some((module) =>
+            module.id.endsWith("/src/features/markdown-editor/runtime.ts")
+        )
+    )?.[0];
+    const editorKey = Object.keys(manifest).find((key) =>
+        manifest[key].file === editorChunk
+    );
+    if (!editorKey) throw new Error("Missing editor runtime in bundle report");
+    const sharedFiles = staticFiles(editorKey);
     const noteFiles = new Set<string>();
     // MastheadSections is the lazy entry for signed-in home notes and tasks.
     for (
