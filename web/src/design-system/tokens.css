@@ -195,11 +195,11 @@
     --layout-note-actions-reserve: 56px;
 
     /* Radius: concentric by layer. */
-    --control-radius: 8px;
-    --input-radius: 8px;
-    --multiline-radius: 10px;
-    --radius: 12px;
-    --radius-lg: 16px;
+    --control-radius: 10px;
+    --input-radius: 12px;
+    --multiline-radius: 12px;
+    --radius: 14px;
+    --radius-lg: 20px;
     --radius-pill: 999px;
     --search-radius: var(--radius-lg);
     --search-inner-radius: max(var(--control-radius), calc(var(--search-radius) - 8px));
