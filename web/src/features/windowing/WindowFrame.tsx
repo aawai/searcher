@@ -7,13 +7,7 @@ import {
     useRef,
     useState,
 } from "react";
-import {
-    Maximize2,
-    Minimize2,
-    Minus,
-    MoreHorizontal,
-    X,
-} from "lucide-react";
+import { Maximize2, Minimize2, Minus, MoreHorizontal, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
@@ -149,7 +143,7 @@ function tabStopOutside(
     ).filter((element) =>
         element.tabIndex >= 0 && !element.matches(":disabled") &&
         element.getClientRects().length > 0 &&
-        !element.closest('[inert], .window-frame:not([data-active])')
+        !element.closest("[inert], .window-frame:not([data-active])")
     );
     const after = (element: HTMLElement) =>
         Boolean(
@@ -183,6 +177,27 @@ export function WindowFrame(
     const host = useRef<HTMLDivElement>(null);
     const safe = useRef<HTMLDivElement>(null);
     const lastFocus = useRef<HTMLElement | null>(null);
+    // Focus a page load put on the title bar: kept ringless until input (T8).
+    const [restoredFocus, setRestoredFocus] = useState(false);
+    // Frames mount with the window session, so focus placed before any input
+    // reaches the document is a page load restoring the window. Sticky user
+    // activation cannot tell: Chromium keeps it across reload and same-origin
+    // navigation.
+    const inputSeen = useRef(false);
+    useEffect(() => {
+        const types = ["pointerdown", "keydown"] as const;
+        const stop = () => {
+            for (const type of types) {
+                document.removeEventListener(type, seen, true);
+            }
+        };
+        const seen = () => {
+            inputSeen.current = true;
+            stop();
+        };
+        for (const type of types) document.addEventListener(type, seen, true);
+        return stop;
+    }, []);
     const drag = useRef<
         | {
             pointerId: number;
@@ -418,7 +433,13 @@ export function WindowFrame(
             if (!node || node.contains(document.activeElement)) return;
             if (target && node.contains(target)) target.focus();
             if (!node.contains(document.activeElement)) {
-                (titlebar.current ?? node).focus();
+                const landing = titlebar.current ?? node;
+                landing.focus();
+                // Without any input yet the browser would ring this
+                // programmatic focus, though no keyboard led here.
+                if (landing === titlebar.current && !inputSeen.current) {
+                    setRestoredFocus(true);
+                }
             }
         });
         return () => cancelAnimationFrame(raf);
@@ -624,6 +645,9 @@ export function WindowFrame(
                     ref={titlebar}
                     tabIndex={-1}
                     className="window-frame__titlebar"
+                    data-focus-origin={restoredFocus ? "restore" : undefined}
+                    onBlur={() => setRestoredFocus(false)}
+                    onKeyDown={() => setRestoredFocus(false)}
                     onPointerDown={(event) => {
                         if (
                             event.target === event.currentTarget ||

@@ -500,6 +500,10 @@
 .status-banner[data-presentation="floating"] {
     padding: var(--space-2) var(--space-4);
 }
+/* Toast buttons sit on the --space-1 inset: concentric with --radius-lg. */
+.undo-toast .button {
+    border-radius: calc(var(--radius-lg) - 4px);
+}
 /* Starting styles and exit styles share transitions, so closing mid-enter
    reverses from the current frame instead of cancelling an entrance animation. */
 .status-banner[data-presentation="floating"],

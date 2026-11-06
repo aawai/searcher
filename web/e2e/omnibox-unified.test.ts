@@ -268,6 +268,37 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
         });
 
         await t.step(
+            "Only a keyboard highlight draws the focus ring",
+            async () => {
+                await openHome(page, app.origin);
+                await search.fill("灵感");
+                await page.getByRole("option", { name: /灵感网页/ }).waitFor();
+                const highlight = (index: number) =>
+                    page.getByRole("option").nth(index).evaluate((node) => ({
+                        selected: node.getAttribute("aria-selected"),
+                        outline: getComputedStyle(node).outlineStyle,
+                    }));
+                await search.press("ArrowDown");
+                const byKey = await highlight(0);
+                assertEquals(byKey.selected, "true");
+                assertEquals(byKey.outline, "solid", JSON.stringify(byKey));
+                await page.getByRole("option").nth(1).hover();
+                const byPointer = await highlight(1);
+                assertEquals(byPointer.selected, "true");
+                assertEquals(
+                    byPointer.outline,
+                    "none",
+                    JSON.stringify(byPointer),
+                );
+                await search.press("ArrowDown");
+                const backToKey = await highlight(2);
+                assertEquals(backToKey.selected, "true");
+                assertEquals(backToKey.outline, "solid");
+                await page.mouse.move(0, 0);
+            },
+        );
+
+        await t.step(
             "Alt+Enter and the 问 AI row open the inline answer with the input",
             async () => {
                 // Streaming itself is covered by inline-ai-answer; here only the hand-over.

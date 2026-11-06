@@ -252,7 +252,8 @@
     height: var(--dock-item-size);
     min-width: var(--control-touch-target);
     min-height: var(--control-touch-target);
-    border-radius: var(--control-radius);
+    /* Concentric with the bar: --radius-lg minus its --space-1 padding. */
+    border-radius: calc(var(--radius-lg) - 4px);
     border: none;
     background: transparent;
     color: var(--foreground);
@@ -372,7 +373,7 @@
     box-shadow: var(--shadow-l3);
     background: var(--surface-solid);
     border: var(--space-hairline) solid var(--border);
-    border-radius: var(--control-radius);
+    border-radius: calc(var(--radius-lg) - 4px);
     z-index: var(--elevation-drag);
 }
 
