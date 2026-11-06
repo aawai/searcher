@@ -41,6 +41,16 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
     });
     await page.locator('.document-editor-scroll-area [contenteditable="true"]')
         .waitFor();
+    // List items keep their bullet in the live view.
+    assertEquals(
+        await page.locator(
+            '.document-editor-scroll-area [contenteditable="true"] ul > li',
+        ).first().evaluate((item) => {
+            const style = getComputedStyle(item);
+            return [style.display, style.listStyleType];
+        }),
+        ["list-item", "disc"],
+    );
     await page.getByRole("button", {
         name: "切换编辑模式，当前：编辑",
         exact: true,

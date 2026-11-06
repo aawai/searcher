@@ -507,6 +507,16 @@
     font-style: italic;
 }
 
+/* The reset strips list markers; restore them as rendered Markdown does.
+   Task rows are flex boxes and show their checkbox instead. */
+.document-continuous-editor .ProseMirror ul {
+    list-style-type: disc;
+}
+
+.document-continuous-editor .ProseMirror ol {
+    list-style-type: decimal;
+}
+
 .document-continuous-editor .ProseMirror ul,
 .document-continuous-editor .ProseMirror ol {
     margin: var(--space-1) 0;

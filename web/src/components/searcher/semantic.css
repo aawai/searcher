@@ -458,6 +458,12 @@
 .settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"])[aria-invalid="true"]:focus-visible {
     border-color: var(--danger);
 }
+/* High contrast theme: inline fields show the field frame at rest. */
+@media (forced-colors: none) {
+    [data-contrast="more"] .settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"]):not(:focus-visible, [aria-invalid="true"]) {
+        border-color: var(--field-border);
+    }
+}
 
 /* Feedback. */
 .empty-state {

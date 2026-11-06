@@ -713,3 +713,68 @@ Deno.test("AI 窗口：后台保活、关闭 / 切换保护、临时会话与后
         else Deno.env.set("ENCRYPTION_KEY", previousKey);
     }
 });
+
+// The dock's fade sits right above the composer; the composer's focus ring and
+// frame reach above its top edge and must stay painted over the fade.
+Deno.test("AI 输入框聚焦环上缘不被消息区渐隐遮挡", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    try {
+        const context = await browser.newContext({
+            viewport: { width: 390, height: 844 },
+            reducedMotion: "reduce",
+        });
+        const page = await context.newPage();
+        await loginAndVisit(
+            page,
+            app.origin,
+            `/ask/${user.conversationId}`,
+            user,
+        );
+        const surface = page.locator(".ask-composer-surface");
+        await page.locator(".ask-composer__textarea").focus();
+        await page.waitForFunction(() =>
+            getComputedStyle(document.querySelector(".ask-composer-surface")!)
+                .outlineStyle === "solid"
+        );
+        const box = (await surface.boundingBox())!;
+        // The 2px outline's upper row, away from the rounded corners.
+        const strip = await page.screenshot({
+            clip: {
+                x: box.x + box.width / 4,
+                y: box.y - 2,
+                width: box.width / 2,
+                height: 1,
+            },
+        });
+        const { pixels, ring } = await page.evaluate(async (base64) => {
+            const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+            const image = await createImageBitmap(
+                new Blob([bytes], { type: "image/png" }),
+            );
+            const canvas = new OffscreenCanvas(image.width, image.height);
+            const ctx = canvas.getContext("2d")!;
+            ctx.drawImage(image, 0, 0);
+            const data = ctx.getImageData(0, 0, image.width, 1).data;
+            const pixels = new Set<string>();
+            for (let index = 0; index < data.length; index += 4) {
+                pixels.add(
+                    `${data[index]},${data[index + 1]},${data[index + 2]}`,
+                );
+            }
+            const probe = document.createElement("canvas").getContext("2d")!;
+            probe.fillStyle = getComputedStyle(
+                document.querySelector(".ask-composer-surface")!,
+            ).outlineColor;
+            probe.fillRect(0, 0, 1, 1);
+            const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
+            return { pixels: [...pixels], ring: `${r},${g},${b}` };
+        }, strip.toString("base64"));
+        assertEquals(pixels, [ring]);
+        await context.close();
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
