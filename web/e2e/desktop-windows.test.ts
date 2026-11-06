@@ -1,4 +1,5 @@
 import { assert, assertEquals } from "@std/assert";
+import type { Locator, Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { hitSize } from "./helpers/touch-target.ts";
@@ -299,6 +300,190 @@ Deno.test("粗指针可通过窗口菜单拖动调整尺寸并取消或完成", 
         );
     } finally {
         await context.close();
+        await browser.close();
+        await app.close();
+    }
+});
+
+type Box = { x: number; y: number; width: number; height: number };
+
+/** The free-window work area: viewport minus `--window-margin` and the Dock. */
+function workArea(page: Page): Promise<Box & { margin: number }> {
+    return page.evaluate(() => {
+        const margin = parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue(
+                "--window-margin",
+            ),
+        );
+        let left = margin, right = innerWidth - margin;
+        let top = margin, bottom = innerHeight - margin;
+        const dock = document.querySelector<HTMLElement>(
+            ".dock-container:not([inert])",
+        )!;
+        const rect = dock.getBoundingClientRect();
+        const edge = dock.dataset.edge;
+        if (edge === "left") left = rect.right + margin;
+        if (edge === "right") right = rect.left - margin;
+        if (edge === "top") top = rect.bottom + margin;
+        if (edge === "bottom") bottom = rect.top - margin;
+        return {
+            margin,
+            x: left,
+            y: top,
+            width: right - left,
+            height: bottom - top,
+        };
+    });
+}
+
+async function waitForFrame(page: Page, id: string, expected: Box) {
+    try {
+        await page.waitForFunction(([id, expected]) => {
+            const rect = document.querySelector(`[data-window-id="${id}"]`)
+                ?.getBoundingClientRect();
+            return rect && rect.width > 0 &&
+                (["x", "y", "width", "height"] as const).every((key) =>
+                    Math.abs(rect[key] - expected[key]) < 0.5
+                );
+        }, [id, expected] as const);
+    } catch (error) {
+        const actual = await page.locator(`[data-window-id="${id}"]`)
+            .boundingBox();
+        throw new Error(
+            `${id} frame ${JSON.stringify(actual)} ≠ ${
+                JSON.stringify(expected)
+            }`,
+            { cause: error },
+        );
+    }
+}
+
+async function choosePreset(page: Page, frame: Locator, name: string) {
+    await frame.getByRole("button", { name: "设置窗口菜单" }).click();
+    await page.getByRole("menuitem", { name, exact: true }).click();
+}
+
+Deno.test("窗口位置预设：居中、左右半屏与默认大小避开四边任务栏并成为记忆位置", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    const frame = page.locator('[data-window-id="settings"]');
+    const halves = async (label: string) => {
+        const area = await workArea(page);
+        const width = Math.floor((area.width - area.margin) / 2);
+        await choosePreset(page, frame, "左半屏");
+        await waitForFrame(page, "settings", { ...area, width });
+        await choosePreset(page, frame, "右半屏");
+        const right = { ...area, x: area.x + area.width - width, width };
+        await waitForFrame(page, "settings", right);
+        assertEquals(right.x - (area.x + width), area.margin, label);
+        return right;
+    };
+    try {
+        await loginAndVisit(page, app.origin, "/settings/appearance", user);
+        await frame.waitFor({ state: "visible" });
+
+        for (const [width, height] of [[1440, 900], [1024, 768]] as const) {
+            await page.setViewportSize({ width, height });
+            const label = `${width}x${height}`;
+            const right = await halves(label);
+
+            // Centering keeps the current size.
+            const area = await workArea(page);
+            await choosePreset(page, frame, "居中");
+            await waitForFrame(page, "settings", {
+                x: area.x + (area.width - right.width) / 2,
+                y: area.y + (area.height - right.height) / 2,
+                width: right.width,
+                height: right.height,
+            });
+
+            // Default size grows around the current center, inside the area.
+            await choosePreset(page, frame, "恢复默认大小");
+            const size = { width: 840, height: Math.min(680, area.height) };
+            await waitForFrame(page, "settings", {
+                x: area.x + (area.width - size.width) / 2,
+                y: area.y + (area.height - size.height) / 2,
+                ...size,
+            });
+        }
+
+        // A preset leaves maximized state and becomes the remembered place.
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await frame.getByRole("button", { name: "最大化设置" }).click();
+        await waitForFrame(page, "settings", await workArea(page));
+        const right = await halves("from maximized");
+        await frame.getByRole("button", { name: "还原设置" }).waitFor({
+            state: "detached",
+        });
+        await frame.getByRole("button", { name: "最小化设置" }).click();
+        await frame.waitFor({ state: "hidden" });
+        await page.locator('[data-dock-id="settings"]').click();
+        await waitForFrame(page, "settings", right);
+        await frame.getByRole("button", { name: "关闭设置" }).click();
+        await frame.waitFor({ state: "hidden" });
+        await page.locator('[data-dock-id="settings"]').click();
+        await waitForFrame(page, "settings", right);
+
+        // Keyboard: open the menu, move to an item and choose it.
+        const trigger = frame.getByRole("button", { name: "设置窗口菜单" });
+        await trigger.focus();
+        await page.keyboard.press("Enter");
+        await page.getByRole("menuitem", { name: "居中", exact: true })
+            .waitFor();
+        const highlighted = () =>
+            page.evaluate(() =>
+                document.querySelector('[role="menuitem"][data-highlighted]')
+                    ?.textContent ?? null
+            );
+        for (let i = 0; i < 4 && await highlighted() !== "左半屏"; i++) {
+            const before = await highlighted();
+            await page.keyboard.press("ArrowDown");
+            await page.waitForFunction(
+                (before) =>
+                    (document.querySelector(
+                        '[role="menuitem"][data-highlighted]',
+                    )?.textContent ?? null) !== before,
+                before,
+            );
+        }
+        await page.keyboard.press("Enter");
+        const area = await workArea(page);
+        await waitForFrame(page, "settings", {
+            ...area,
+            width: Math.floor((area.width - area.margin) / 2),
+        });
+        await page.waitForFunction(() =>
+            document.activeElement?.getAttribute("aria-label") ===
+                "设置窗口菜单"
+        );
+        await page.locator(".window-frame__status").filter({
+            hasText: "窗口已移到左半屏",
+        }).waitFor({ state: "attached" });
+
+        // Every Dock edge is kept clear.
+        for (
+            const [edge, name] of [
+                ["left", "左侧"],
+                ["top", "顶部"],
+                ["right", "右侧"],
+                ["bottom", "底部"],
+            ] as const
+        ) {
+            await page.getByRole("button", { name: "任务栏选项" }).click();
+            await page.getByRole("menuitem", { name: "管理任务栏" }).click();
+            const modal = page.locator('[data-dock-modal="management"]');
+            await modal.getByRole("radio", { name, exact: true }).click();
+            await modal.getByRole("button", { name: "关闭" }).click();
+            await modal.waitFor({ state: "hidden" });
+            await page.locator(`.dock-container[data-edge="${edge}"]`)
+                .waitFor();
+            await halves(edge);
+        }
+    } finally {
         await browser.close();
         await app.close();
     }

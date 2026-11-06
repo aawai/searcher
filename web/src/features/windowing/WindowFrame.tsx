@@ -13,6 +13,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import {
@@ -22,22 +23,18 @@ import {
 import { BREAKPOINTS } from "../../design-system/breakpoints.ts";
 import { isEditableShortcutTarget } from "../shortcuts/shortcut-catalog.ts";
 import type { WindowId } from "./window-context.tsx";
+import {
+    type Direction,
+    type Geometry,
+    initialRect,
+    presetRect,
+    project,
+    type Rect,
+    resize,
+    type WindowPreset,
+} from "./window-geometry.ts";
 import "./window-frame.css";
 
-type Rect = { x: number; y: number; width: number; height: number };
-type Geometry = {
-    area: Rect;
-    wide: boolean;
-    step: number;
-    fine: number;
-    minWidth: number;
-    minHeight: number;
-    defaultWidth: number;
-    defaultHeight: number;
-    /** The Dock icon an anchored window opens beside, when it is visible. */
-    anchor: { rect: Rect; edge: string } | null;
-};
-type Direction = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 type Operation = {
     kind: "move" | "resize";
     direction?: Direction;
@@ -46,6 +43,13 @@ type Operation = {
     /** `performance.now()` when the operation began. */
     startedAt: number;
 };
+
+const PRESETS: readonly (readonly [WindowPreset, string, string])[] = [
+    ["center", "居中", "窗口已居中"],
+    ["left", "左半屏", "窗口已移到左半屏"],
+    ["right", "右半屏", "窗口已移到右半屏"],
+    ["default", "恢复默认大小", "窗口已恢复默认大小"],
+];
 
 export interface WindowFrameProps {
     id: WindowId;
@@ -64,67 +68,6 @@ export interface WindowFrameProps {
     toolbarRef?: (node: HTMLElement | null) => void;
     onHostWidthChange: (width: number) => void;
     children: ReactNode;
-}
-
-const clamp = (value: number, min: number, max: number) =>
-    Math.max(min, Math.min(value, Math.max(min, max)));
-function project(rect: Rect, area: Rect): Rect {
-    const width = Math.min(rect.width, area.width);
-    const height = Math.min(rect.height, area.height);
-    return {
-        width,
-        height,
-        x: clamp(rect.x, area.x, area.x + area.width - width),
-        y: clamp(rect.y, area.y, area.y + area.height - height),
-    };
-}
-function resize(
-    rect: Rect,
-    direction: Direction,
-    dx: number,
-    dy: number,
-    g: Geometry,
-): Rect {
-    const a = g.area;
-    const minW = Math.min(g.minWidth, a.width),
-        minH = Math.min(g.minHeight, a.height);
-    let left = rect.x,
-        right = rect.x + rect.width,
-        top = rect.y,
-        bottom = rect.y + rect.height;
-    if (direction.includes("w")) left = clamp(left + dx, a.x, right - minW);
-    if (direction.includes("e")) {
-        right = clamp(right + dx, left + minW, a.x + a.width);
-    }
-    if (direction.includes("n")) top = clamp(top + dy, a.y, bottom - minH);
-    if (direction.includes("s")) {
-        bottom = clamp(bottom + dy, top + minH, a.y + a.height);
-    }
-    return { x: left, y: top, width: right - left, height: bottom - top };
-}
-
-/** Centered, or beside the anchoring Dock icon on the side it faces. */
-function initialRect(geometry: Geometry, area: Rect): Rect {
-    const width = geometry.defaultWidth, height = geometry.defaultHeight;
-    const center = {
-        x: area.x + (area.width - width) / 2,
-        y: area.y + (area.height - height) / 2,
-        width,
-        height,
-    };
-    const anchor = geometry.anchor;
-    if (!anchor) return center;
-    const { rect, edge } = anchor;
-    const gap = geometry.step;
-    const alongX = rect.x + (rect.width - width) / 2;
-    // Along a side Dock the window stays centered in the work area: aligning
-    // it with the icon would pin it to the top of the screen.
-    if (edge === "top") {
-        return { ...center, x: alongX, y: rect.y + rect.height + gap };
-    }
-    if (edge === "left") return { ...center, x: rect.x + rect.width + gap };
-    if (edge === "right") return { ...center, x: rect.x - gap - width };
-    return { ...center, x: alongX, y: rect.y - gap - height };
 }
 
 const TAB_STOP =
@@ -295,6 +238,7 @@ export function WindowFrame(
                 area,
                 wide: innerWidth >= BREAKPOINTS.wide &&
                     area.width >= minWidth && area.height >= minHeight,
+                margin: gap,
                 step: token("--space-4"),
                 fine: token("--space-1"),
                 minWidth,
@@ -309,6 +253,7 @@ export function WindowFrame(
                     previous.area.width === area.width &&
                     previous.area.height === area.height &&
                     previous.wide === next.wide &&
+                    previous.margin === next.margin &&
                     previous.step === next.step &&
                     previous.fine === next.fine &&
                     previous.minWidth === minWidth &&
@@ -605,6 +550,20 @@ export function WindowFrame(
         if (!maximized && rect) setBounds((previous) => previous ?? rect);
         setMaximized((value) => !value);
     };
+    /**
+     * Places the window without dragging (WCAG 2.5.7). The result becomes the
+     * remembered rectangle, as after a drag, and leaves maximized state.
+     */
+    const applyPreset = (preset: WindowPreset, announcement: string) => {
+        if (!geometry?.wide || !area || !initial) return;
+        setBounds(
+            presetRect(preset, project(bounds ?? initial, area), geometry),
+        );
+        setMaximized(false);
+        setOperation(null);
+        setMenuOpen(false);
+        setAnnouncement(announcement);
+    };
     const style: CSSProperties | undefined = rect
         ? { left: rect.x, top: rect.y, width: rect.width, height: rect.height }
         : undefined;
@@ -699,6 +658,21 @@ export function WindowFrame(
                                     />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
+                                    {PRESETS.map((
+                                        [preset, label, announcement],
+                                    ) => (
+                                        <DropdownMenuItem
+                                            key={preset}
+                                            onClick={() =>
+                                                applyPreset(
+                                                    preset,
+                                                    announcement,
+                                                )}
+                                        >
+                                            {label}
+                                        </DropdownMenuItem>
+                                    ))}
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         disabled={!geometry?.wide || maximized}
                                         onClick={() => beginOperation("move")}
