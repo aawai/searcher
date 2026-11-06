@@ -129,6 +129,26 @@ Deno.test("css-scanner - font-size only accepts registered Tokens", () => {
     ]);
 });
 
+Deno.test("css-scanner - a paired font-size role declares its line height in the same block", () => {
+    const css = `
+        .paired { font-size: var(--font-page-title-size); line-height: var(--font-page-title-line-height); }
+        .shorthand { font: var(--font-page-title-size)/1 var(--font-sans); font-size: var(--font-page-title-size); }
+        .root-role { font-size: var(--font-body-size); }
+        .unpaired { font-size: var(--font-page-title-size); }
+        @media (min-width: 640px) { .nested { font-size: var(--font-page-title-size); } }
+    `;
+    assertEquals(rulesAndValues("web/src/features/a.css", css), [
+        [
+            "unpaired-font-line-height",
+            ".unpaired { font-size: var(--font-page-title-size) }",
+        ],
+        [
+            "unpaired-font-line-height",
+            ".nested { font-size: var(--font-page-title-size) }",
+        ],
+    ]);
+});
+
 Deno.test("css-scanner - border-radius only accepts registered Tokens and Token insets", () => {
     const css = `
         .ok { border-radius: var(--radius); }

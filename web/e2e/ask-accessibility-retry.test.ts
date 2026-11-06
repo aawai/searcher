@@ -330,19 +330,12 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
                 .count(),
             0,
         );
-        for (
-            const target of [
-                page.getByRole("button", { name: "打开历史对话", exact: true }),
-                page.getByRole("button", {
-                    name: "最小化AI 问答",
-                    exact: true,
-                }),
-                page.getByRole("button", { name: "关闭AI 问答", exact: true }),
-            ]
-        ) {
-            const box = await target.boundingBox();
-            assert(box && box.width >= 44 && box.height >= 44);
-        }
+        // Window title-bar targets are covered by touch-targets.test.ts.
+        const history = await page.getByRole("button", {
+            name: "打开历史对话",
+            exact: true,
+        }).boundingBox();
+        assert(history && history.width >= 44 && history.height >= 44);
 
         const toolbarFits = await page.locator(".ask-composer__toolbar")
             .evaluate((toolbar) => {

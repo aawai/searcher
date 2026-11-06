@@ -664,7 +664,7 @@ export function WindowFrame(
                                     render={
                                         <button
                                             type="button"
-                                            className="window-frame__button"
+                                            className="window-frame__button touch-target"
                                             aria-label={`${title}窗口菜单`}
                                         />
                                     }
@@ -709,7 +709,7 @@ export function WindowFrame(
                         )}
                         <button
                             type="button"
-                            className="window-frame__button"
+                            className="window-frame__button touch-target"
                             data-window-dismiss
                             aria-label={`最小化${title}`}
                             onClick={onMinimize}
@@ -719,7 +719,7 @@ export function WindowFrame(
                         {geometry?.wide && (
                             <button
                                 type="button"
-                                className="window-frame__button"
+                                className="window-frame__button touch-target"
                                 aria-label={`${
                                     maximized ? "还原" : "最大化"
                                 }${title}`}
@@ -742,7 +742,7 @@ export function WindowFrame(
                         )}
                         <button
                             type="button"
-                            className="window-frame__button"
+                            className="window-frame__button touch-target"
                             data-window-dismiss
                             aria-label={`关闭${title}`}
                             onClick={onClose}

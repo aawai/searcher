@@ -65,6 +65,7 @@
 .document-copy-status {
     color: var(--muted);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     white-space: nowrap;
 }
 
@@ -136,6 +137,7 @@
     align-items: center;
     gap: var(--space-3);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     color: var(--muted);
     user-select: none;
 }
@@ -230,13 +232,7 @@
         min-width: var(--control-compact-height);
         height: var(--control-compact-height);
         min-height: var(--control-compact-height);
-    }
-    .document-mode-switch [data-slot="button"]::after {
-        content: "";
-        position: absolute;
-        inset: calc(
-            (var(--control-compact-height) - var(--control-touch-target)) / 2
-        );
+        --touch-target-size: var(--control-touch-target);
     }
     /* Options sit side by side: grow their hit areas only vertically. */
     .document-view-switch [data-slot="button"]::after {
@@ -561,6 +557,7 @@
     background: var(--surface-soft);
     color: var(--muted);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
 }
 .document-continuous-editor li[data-item-type="task"] {
     display: flex;

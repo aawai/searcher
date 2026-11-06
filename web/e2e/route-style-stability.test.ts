@@ -11,6 +11,7 @@ import {
     openSeededAskConversation,
     startProductionApp,
 } from "./helpers/production-app.ts";
+import { hitSize } from "./helpers/touch-target.ts";
 import { maximizeAskWindow } from "./helpers/ask.ts";
 
 // Helper for client-side SPA navigation within the same document
@@ -1862,11 +1863,10 @@ Deno.test(
                     const btnCount = await backupButtons.count();
                     assert(btnCount >= 4);
                     for (let i = 0; i < btnCount; i++) {
-                        const box = await backupButtons.nth(i).boundingBox();
-                        assert(box);
+                        const size = await hitSize(backupButtons.nth(i));
                         assert(
-                            box.width >= 44 && box.height >= 44,
-                            `Coarse pointer @${vp.width}: backup button ${i} must be >= 44x44px (got ${box.width}x${box.height})`,
+                            size.width >= 44 && size.height >= 44,
+                            `Coarse pointer @${vp.width}: backup button ${i} hit area must be >= 44x44px (got ${size.width}x${size.height})`,
                         );
                     }
                 }

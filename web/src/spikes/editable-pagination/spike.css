@@ -28,6 +28,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
 }
 .pagination-diagnostic-tag {
     display: inline-flex;

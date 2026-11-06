@@ -59,6 +59,7 @@
     text-align: center;
     color: var(--muted);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
 }
 
 .markdown-spike-rich .milkdown-pagebreak {

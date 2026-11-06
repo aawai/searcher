@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { hitSize } from "./helpers/touch-target.ts";
 
 Deno.test("C1 窗口保留局部路由与内容，返回桌面后可恢复，关闭后重建", async () => {
     const app = await startProductionApp();
@@ -241,9 +242,8 @@ Deno.test("粗指针可通过窗口菜单拖动调整尺寸并取消或完成", 
         };
         await beginResize();
         for (const name of ["取消调整", "完成调整"]) {
-            const size = await frame.getByRole("button", { name })
-                .boundingBox();
-            assert(size && size.width >= 44 && size.height >= 44);
+            const size = await hitSize(frame.getByRole("button", { name }));
+            assert(size.width >= 44 && size.height >= 44, JSON.stringify(size));
         }
         await frame.getByRole("button", { name: "取消调整" }).tap();
         await frame.getByText("拖动标题栏调整所选边").waitFor({

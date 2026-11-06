@@ -3,6 +3,7 @@ import type { Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
 import { ensureSidebarOpen } from "./helpers/library.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { hitSize } from "./helpers/touch-target.ts";
 
 const NOTES = '[data-window-id="notes"]';
 
@@ -388,17 +389,10 @@ Deno.test("笔记窗口控件：抽屉模式的标题行按钮打开抽屉，关
             ".documents-notebooks-row",
         ).getByRole("button", { name: "新建笔记", exact: true });
         await create.waitFor();
-        const metrics = await create.evaluate((el) => {
-            const box = el.getBoundingClientRect();
-            const after = getComputedStyle(el, "::after");
-            return {
-                width: box.width,
-                hit: Math.abs(parseFloat(after.left)) * 2 + box.width,
-                inset: after.left,
-            };
-        });
-        assert(metrics.width <= 28, JSON.stringify(metrics));
-        assert(metrics.hit >= 44, JSON.stringify(metrics));
+        const box = await create.boundingBox();
+        const hit = await hitSize(create);
+        assert(box && box.width <= 28, JSON.stringify(box));
+        assert(hit.width >= 44 && hit.height >= 44, JSON.stringify(hit));
 
         // Opening the drawer by touch never starts in its search field, which
         // would raise the soft keyboard; the labelled drawer takes focus.

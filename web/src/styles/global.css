@@ -206,6 +206,7 @@ a {
     gap: var(--space-1);
     padding-inline: var(--space-2);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     color: var(--danger);
     white-space: nowrap;
 }

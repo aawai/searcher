@@ -204,6 +204,7 @@
     text-align: center;
     color: var(--muted);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     border-block: 1px dashed var(--border);
     background: var(--surface-soft);
 }
