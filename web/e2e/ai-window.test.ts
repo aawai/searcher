@@ -8,6 +8,7 @@ import type {
 } from "playwright";
 import { aiModels } from "../../src/db/ai-schema.ts";
 import { chromium } from "./helpers/browser.ts";
+import { highlightMenuItem } from "./helpers/menu.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 type StorageState = Exclude<
@@ -600,8 +601,7 @@ Deno.test("AI 窗口：后台保活、关闭 / 切换保护、临时会话与后
                     });
                     await menu.focus();
                     await page.keyboard.press("Enter");
-                    await page.getByRole("menuitem", { name: "移动窗口" })
-                        .waitFor();
+                    await highlightMenuItem(page, "移动窗口");
                     await page.keyboard.press("Enter");
                     await page.waitForFunction(() =>
                         !document.querySelector(

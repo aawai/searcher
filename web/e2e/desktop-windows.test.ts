@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import type { Locator, Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
+import { highlightMenuItem } from "./helpers/menu.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { hitSize } from "./helpers/touch-target.ts";
 
@@ -432,24 +433,7 @@ Deno.test("窗口位置预设：居中、左右半屏与默认大小避开四边
         const trigger = frame.getByRole("button", { name: "设置窗口菜单" });
         await trigger.focus();
         await page.keyboard.press("Enter");
-        await page.getByRole("menuitem", { name: "居中", exact: true })
-            .waitFor();
-        const highlighted = () =>
-            page.evaluate(() =>
-                document.querySelector('[role="menuitem"][data-highlighted]')
-                    ?.textContent ?? null
-            );
-        for (let i = 0; i < 4 && await highlighted() !== "左半屏"; i++) {
-            const before = await highlighted();
-            await page.keyboard.press("ArrowDown");
-            await page.waitForFunction(
-                (before) =>
-                    (document.querySelector(
-                        '[role="menuitem"][data-highlighted]',
-                    )?.textContent ?? null) !== before,
-                before,
-            );
-        }
+        await highlightMenuItem(page, "左半屏");
         await page.keyboard.press("Enter");
         const area = await workArea(page);
         await waitForFrame(page, "settings", {
