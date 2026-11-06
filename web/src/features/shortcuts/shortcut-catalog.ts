@@ -193,6 +193,18 @@ export const SEARCH_QUICK_COMMANDS: readonly SearchQuickCommand[] = [
         target: { type: "theme", theme: "system" },
     },
     {
+        id: "theme-high-contrast-light",
+        prefix: "/hc-light",
+        action: "切换到高对比浅色主题",
+        target: { type: "theme", theme: "high-contrast-light" },
+    },
+    {
+        id: "theme-high-contrast-dark",
+        prefix: "/hc-dark",
+        action: "切换到高对比深色主题",
+        target: { type: "theme", theme: "high-contrast-dark" },
+    },
+    {
         id: "wallpaper",
         prefix: "/wallpaper",
         action: "更换壁纸",

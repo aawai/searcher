@@ -188,7 +188,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 exact: true,
             }).click();
             await page.getByRole("button", {
-                name: "切换主题，当前：深色，下一个：跟随系统",
+                name: "切换主题，当前：深色，下一个：高对比浅色",
                 exact: true,
             }).waitFor({ state: "visible" });
             assertEquals(

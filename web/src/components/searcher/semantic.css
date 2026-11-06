@@ -303,12 +303,17 @@
     }
 }
 
-/* Theme choices (ThemeChoices): a three-column radio grid, so the three base
-   themes share a row and the two high contrast themes sit under them. */
+/* Theme choices (ThemeChoices): the three base themes on one row, the two
+   high contrast themes on the next. A row wraps whole labels on narrow hosts
+   instead of scrolling sideways (1.4.10). */
 [data-slot="radio-group"].theme-choices {
-    display: grid;
-    grid-template-columns: repeat(3, max-content);
-    gap: var(--space-2) var(--space-4);
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+.theme-choices-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-control-gap) var(--space-4);
 }
 
 /* Accent swatches (AccentSwatches): two sets of five; settings.css decides

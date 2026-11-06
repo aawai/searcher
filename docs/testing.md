@@ -208,7 +208,7 @@ Host/主题/视图的实页截图；每次执行在父目录下
 
 偏左/偏右主体构图、双视口裁切、刷新与新设备登录、历史切换、删除及失败保留、URL
 草稿、同步故障恢复、匿名持久化、reduced-motion 与可读性低于默认档的就近提示。
-`wallpaper-readability` 是 A6 的机检：七张合成极值壁纸 × light / dark × 390 / 1440 ×
+`wallpaper-readability` 是 A6 的机检：七张合成极值壁纸 × light / dark / 高对比浅色 / 高对比深色 × 390 / 1440 ×
 登录 / 访客，在真实 Chromium 中逐个文字元素取字形外 2px 的背景像素，最不利的 5% 分位须满足
 1.4.3（取样方法见 [VISUAL_LANGUAGE · 验证与已知缺口](design/VISUAL_LANGUAGE.md#验证与已知缺口)）；
 取样前等待两帧截图一致，取样期间背景像素变化即失败，不重试。PR/main CI

@@ -11,19 +11,17 @@ import {
     AlertTriangle,
     LogIn,
     LogOut,
-    Moon,
     Settings,
     Shield,
     Sparkles,
-    Sun,
-    SunMoon,
     Trash2,
     UserRound,
 } from "lucide-react";
 import { AppState, useAppState } from "./app/state.tsx";
 import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
-import { THEME_LABELS } from "./design-system/theme.ts";
+import { nextThemeInCycle, THEME_LABELS } from "./design-system/theme.ts";
+import { THEME_ICONS } from "./components/searcher/theme-icons.ts";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
     wallpaperPresentation,
@@ -243,11 +241,8 @@ function Layout() {
             appearance.wallpaperPresentations,
         )
         : DEFAULT_WALLPAPER_PRESENTATION;
-    const nextTheme = appearance.theme === "system"
-        ? "light"
-        : appearance.theme === "light"
-        ? "dark"
-        : "system";
+    const nextTheme = nextThemeInCycle(appearance.theme);
+    const ThemeIcon = THEME_ICONS[appearance.theme];
     const themeLabel = `切换主题，当前：${
         THEME_LABELS[appearance.theme]
     }，下一个：${THEME_LABELS[nextTheme]}`;
@@ -287,11 +282,7 @@ function Layout() {
                             aria-label={themeLabel}
                             title={themeLabel}
                         >
-                            {appearance.theme === "dark"
-                                ? <Sun size="1em" className="icon-lg" />
-                                : appearance.theme === "light"
-                                ? <Moon size="1em" className="icon-lg" />
-                                : <SunMoon size="1em" className="icon-lg" />}
+                            <ThemeIcon size="1em" className="icon-lg" />
                         </button>
                         <AccentPicker
                             value={appearance.accent}

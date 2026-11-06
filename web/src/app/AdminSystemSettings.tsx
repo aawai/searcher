@@ -17,6 +17,8 @@ import {
 import { api, json } from "../lib/api.ts";
 import { errorMessage } from "./state.tsx";
 import type { SystemSettingsDto } from "./AdminOverview.tsx";
+import { normalizeTheme, THEME_IDS } from "@shared/contracts.ts";
+import { THEME_LABELS } from "../design-system/theme.ts";
 import "./admin.css";
 
 export function AdminSystemSettings() {
@@ -194,21 +196,16 @@ export function AdminSystemSettings() {
                                 onChange={(e) =>
                                     setSettings({
                                         ...settings,
-                                        defaultTheme: e.target
-                                            .value as SystemSettingsDto[
-                                                "defaultTheme"
-                                            ],
+                                        defaultTheme: normalizeTheme(
+                                            e.target.value,
+                                        ),
                                     })}
                             >
-                                <NativeSelectOption value="system">
-                                    跟随系统
-                                </NativeSelectOption>
-                                <NativeSelectOption value="light">
-                                    浅色模式
-                                </NativeSelectOption>
-                                <NativeSelectOption value="dark">
-                                    深色模式
-                                </NativeSelectOption>
+                                {THEME_IDS.map((id) => (
+                                    <NativeSelectOption key={id} value={id}>
+                                        {THEME_LABELS[id]}
+                                    </NativeSelectOption>
+                                ))}
                             </NativeSelect>
                         </SettingsRow>
 

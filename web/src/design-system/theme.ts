@@ -1,4 +1,4 @@
-import type { ThemeId } from "@shared/contracts.ts";
+import { THEME_IDS, type ThemeId } from "@shared/contracts.ts";
 
 export type ColorScheme = "light" | "dark";
 
@@ -9,6 +9,15 @@ export const THEME_LABELS: Readonly<Record<ThemeId, string>> = {
     "high-contrast-light": "高对比浅色",
     "high-contrast-dark": "高对比深色",
 };
+
+/** The top-bar toggle steps through every theme in settings order, then wraps. */
+export function nextThemeInCycle(theme: ThemeId): ThemeId {
+    return THEME_IDS[(THEME_IDS.indexOf(theme) + 1) % THEME_IDS.length];
+}
+
+export function isHighContrastTheme(theme: ThemeId): boolean {
+    return theme === "high-contrast-light" || theme === "high-contrast-dark";
+}
 
 /**
  * 主题偏好在 `<html>` 上的呈现：`data-theme` 只表示基础明暗，现有明暗消费者不受高对比影响；

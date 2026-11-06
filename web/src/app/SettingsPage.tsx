@@ -17,6 +17,8 @@ import {
 import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
 import { Check, ChevronRight, MoreVertical, Upload } from "lucide-react";
 import { AccentSwatches } from "../components/searcher/AccentPicker.tsx";
+import { ThemeChoices } from "../components/searcher/ThemeChoices.tsx";
+import { isHighContrastTheme } from "../design-system/theme.ts";
 import {
     type PointerEvent as ReactPointerEvent,
     type ReactNode,
@@ -200,6 +202,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
     } = useAppState();
     const isAdmin = user?.role === "admin";
     const reducedTransparency = useReducedTransparency();
+    const highContrast = isHighContrastTheme(appearance.theme);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const mounted = useRef(true);
     useEffect(() => {
@@ -714,18 +717,21 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 {tab === "appearance" && (
                     <>
                         <SettingsGroup>
-                            <Choices
+                            <SettingsRow
                                 title="主题"
-                                value={appearance.theme}
-                                control="segmented"
-                                values={[
-                                    ["system", "跟随系统"],
-                                    ["light", "浅色"],
-                                    ["dark", "深色"],
-                                ] as const}
-                                select={(v) => set("theme", v)}
-                            />
-                            <SettingsRow title="强调色">
+                                className="settings-row--vertical"
+                            >
+                                <ThemeChoices
+                                    value={appearance.theme}
+                                    onValueChange={(v) => set("theme", v)}
+                                />
+                            </SettingsRow>
+                            <SettingsRow
+                                title="强调色"
+                                description={highContrast
+                                    ? "高对比主题下以主题高亮色呈现，色点保留所选颜色"
+                                    : undefined}
+                            >
                                 <AccentSwatches
                                     value={appearance.accent}
                                     onValueChange={(v) => set("accent", v)}
@@ -758,6 +764,8 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                 title="玻璃效果"
                                 description={reducedTransparency
                                     ? "系统已开启「减少透明度」，玻璃效果暂以实色显示"
+                                    : highContrast
+                                    ? "高对比主题下玻璃效果以实色显示，切换回其他主题即恢复"
                                     : appearance.glassIntensity === "clear"
                                     ? "通透会透出壁纸，首页文字可读性随壁纸变化"
                                     : undefined}
