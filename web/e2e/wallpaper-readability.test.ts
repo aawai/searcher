@@ -34,7 +34,32 @@ const WIDTHS = [
     { width: 390, height: 844 },
     { width: 1440, height: 900 },
 ] as const;
-const THEMES = ["light", "dark"] as const;
+/**
+ * Light and dark follow the system scheme (theme preference `system`); the
+ * two high contrast themes are chosen explicitly and keep the same A6 floor.
+ */
+const THEMES = [
+    { id: "light", preference: "system", scheme: "light", contrast: false },
+    { id: "dark", preference: "system", scheme: "dark", contrast: false },
+    {
+        id: "high-contrast-light",
+        preference: "high-contrast-light",
+        scheme: "light",
+        contrast: true,
+    },
+    {
+        id: "high-contrast-dark",
+        preference: "high-contrast-dark",
+        scheme: "dark",
+        contrast: true,
+    },
+] as const;
+type Theme = (typeof THEMES)[number];
+const THEME_RADIO_NAMES: Record<Theme["preference"], string> = {
+    system: "跟随系统",
+    "high-contrast-light": "高对比浅色",
+    "high-contrast-dark": "高对比深色",
+};
 
 /**
  * Sampled ring, in CSS px beyond each glyph's outline (≥ 50% coverage):
@@ -120,20 +145,26 @@ async function routeWallpapers(
 const wallpaperUrl = (name: WallpaperName) => `${WALLPAPER_ORIGIN}/${name}.png`;
 
 /** Waits until the wallpaper image has loaded and the home has settled. */
-async function settle(page: Page, name: WallpaperName, theme: string) {
+async function settle(page: Page, name: WallpaperName, theme: Theme) {
     await page.waitForFunction(
-        ({ url, theme }) => {
+        ({ url, scheme, contrast }) => {
             const image = document.querySelector(
                 '[data-testid="home-wallpaper-surface-image"]',
             );
-            return document.documentElement.dataset.theme === theme &&
+            const root = document.documentElement;
+            return root.dataset.theme === scheme &&
+                (root.dataset.contrast === "more") === contrast &&
                 image !== null &&
                 getComputedStyle(image).backgroundImage.includes(url) &&
                 performance.getEntriesByName(url).some((entry) =>
                     (entry as PerformanceResourceTiming).responseEnd > 0
                 );
         },
-        { url: wallpaperUrl(name), theme },
+        {
+            url: wallpaperUrl(name),
+            scheme: theme.scheme,
+            contrast: theme.contrast,
+        },
     );
     await page.evaluate(async () => {
         await document.fonts.ready;
@@ -451,12 +482,17 @@ async function measure(page: Page): Promise<Measurement[]> {
     return results;
 }
 
-async function setUserWallpaper(page: Page, name: WallpaperName) {
-    await page.evaluate(async (url) => {
+async function setUserAppearance(
+    page: Page,
+    name: WallpaperName,
+    theme: Theme,
+) {
+    await page.evaluate(async ({ url, theme }) => {
         const response = await fetch("/api/preferences", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+                theme,
                 backgroundImage: url,
                 wallpaperPresentations: {
                     [url]: {
@@ -467,18 +503,34 @@ async function setUserWallpaper(page: Page, name: WallpaperName) {
             }),
         });
         if (!response.ok) throw new Error(await response.text());
-    }, wallpaperUrl(name));
+    }, { url: wallpaperUrl(name), theme: theme.preference });
 }
 
-async function setGuestWallpaper(
-    page: Page,
-    origin: string,
-    name: WallpaperName,
-) {
-    await page.goto(origin + "/settings/appearance");
-    await page.getByTestId("wallpaper-input").fill(wallpaperUrl(name));
-    await page.getByTestId("wallpaper-apply-btn").click();
-    await page.getByTestId("wallpaper-toast").waitFor();
+/**
+ * Guests keep the appearance on this device: set it in their settings page.
+ * The wallpaper is applied only when it changes; the theme on every call.
+ */
+function guestAppearance(page: Page, origin: string) {
+    let current: WallpaperName | null = null;
+    return async (name: WallpaperName, theme: Theme) => {
+        await page.goto(origin + "/settings/appearance");
+        if (current !== name) {
+            await page.getByTestId("wallpaper-input").fill(wallpaperUrl(name));
+            await page.getByTestId("wallpaper-apply-btn").click();
+            await page.getByTestId("wallpaper-toast").waitFor();
+            current = name;
+        }
+        await page.getByRole("radio", {
+            name: THEME_RADIO_NAMES[theme.preference],
+            exact: true,
+        }).check();
+        await page.waitForFunction(
+            (contrast) =>
+                (document.documentElement.dataset.contrast === "more") ===
+                    contrast,
+            theme.contrast,
+        );
+    };
 }
 
 /** Roles each state must measure, so a missing target never passes silently. */
@@ -505,18 +557,19 @@ Deno.test("A6: home text on the wallpaper meets 1.4.3 on extreme wallpapers at t
     async function run(
         who: "user" | "guest",
         page: Page,
-        setWallpaper: (name: WallpaperName) => Promise<void>,
+        setAppearance: (name: WallpaperName, theme: Theme) => Promise<void>,
     ) {
         for (const name of Object.keys(WALLPAPERS) as WallpaperName[]) {
-            await setWallpaper(name);
-            for (const viewport of WIDTHS) {
-                for (const theme of THEMES) {
+            for (const theme of THEMES) {
+                await page.emulateMedia({ colorScheme: theme.scheme });
+                await setAppearance(name, theme);
+                for (const viewport of WIDTHS) {
                     await page.setViewportSize(viewport);
-                    await page.emulateMedia({ colorScheme: theme });
                     await page.goto(new URL("/", page.url()).href);
                     await settle(page, name, theme);
                     const results = await measure(page);
-                    const state = `${who} ${name} ${viewport.width} ${theme}`;
+                    const state =
+                        `${who} ${name} ${viewport.width} ${theme.id}`;
                     for (const role of requiredRoles(who, viewport.width)) {
                         assert(
                             results.some((result) =>
@@ -563,7 +616,11 @@ Deno.test("A6: home text on the wallpaper meets 1.4.3 on extreme wallpapers at t
                 });
                 if (!response.ok) throw new Error(await response.text());
             });
-            await run("user", page, (name) => setUserWallpaper(page, name));
+            await run(
+                "user",
+                page,
+                (name, theme) => setUserAppearance(page, name, theme),
+            );
         },
     );
 
@@ -580,7 +637,7 @@ Deno.test("A6: home text on the wallpaper meets 1.4.3 on extreme wallpapers at t
             await run(
                 "guest",
                 page,
-                (name) => setGuestWallpaper(page, app.origin, name),
+                guestAppearance(page, app.origin),
             );
         },
     );

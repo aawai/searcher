@@ -5,18 +5,16 @@ import {
     History,
     Image,
     Keyboard,
-    Moon,
     NotebookPen,
     Search,
     Settings,
     Sparkles,
-    Sun,
-    SunMoon,
     Trash2,
 } from "lucide-react";
 import type { EngineId } from "@shared/engines.ts";
 import { EngineIcon } from "../../components/searcher/EngineSelector.tsx";
 import { WebAppGlyph } from "../../components/searcher/WebAppIcon.tsx";
+import { THEME_ICONS } from "../../components/searcher/theme-icons.ts";
 import {
     formatShortcut,
     type SearchQuickCommand,
@@ -51,11 +49,7 @@ function CommandIcon({ command }: { command: SearchQuickCommand }) {
     const Icon = target.type === "mode"
         ? Sparkles
         : target.type === "theme"
-        ? (target.theme === "light"
-            ? Sun
-            : target.theme === "dark"
-            ? Moon
-            : SunMoon)
+        ? THEME_ICONS[target.theme]
         : target.type === "library"
         ? NotebookPen
         : target.type === "apps"

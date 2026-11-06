@@ -72,7 +72,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 - 大字角色清单（`glass-contrast.test.ts` 的 `LARGE_TEXT_ROLES`）与 [字号阶梯登记](#字号) 中所有取值都 ≥ 24px 的行一一对应，目前为 `--font-page-title-size` 与 `--font-masthead-day-size`；测试从 `tokens.css` 读取字号，任一 `--font-*-size` 取值跨过 24px 而清单未同步时失败。月份与置顶笔记标题为 20px / 600，按正文 4.5:1 判定。
 - `accent-contrast.test.ts`（九种预设）与 `wallpaper-accent.test.ts`（壁纸派生）检查强调色文字 4.5:1 与焦点环 3:1（A1）；没有使用强调色的大字角色。高对比主题把强调色统一映射为高亮，其文字、焦点环、边界与选中填充由 `glass-contrast.test.ts` 的高对比用例断言；壁纸派生色在高对比主题下只出现在“跟随壁纸”色点上（色样），不进入该派生对比度测试。
 - A2 的 e2e 只覆盖应用网格、窗口标题栏与设置分组行（`touch-targets.test.ts`：鼠标 / 触屏笔记本 / 触屏三种指针下逐个探测控件中心、四边内缩 1px 与 44px 方框，须命中控件本身）及部分页面控件，其余靠实页清单。笔记侧栏的固定入口与列表条目在触屏笔记本（主指针精细 + 存在触屏，视口 ≥640px）下为紧凑 28px，纵向扩大的命中区会覆盖相邻条目的边缘，属于 A2 的已知未达标项，待侧栏条目改为可见放大或加大间距后补入机检。
-- A6 由 `web/e2e/wallpaper-readability.test.ts` 在真实 Chromium 中取样：纯白、纯黑、50% 灰、4px 黑白棋盘、高饱和红 / 绿 / 蓝七张合成壁纸 × light / dark × 默认 `balanced` 遮罩与默认玻璃档位 × 390 / 1440 × 登录（关闭应用底板）/ 访客。取样范围为顶栏（字标、“登录”、图标按钮）、窄屏收起态的刊头露出区与关闭底板时的应用名称；应用图块、头像与同步失败徽标在自己的表面上，字标句点按 1.4.3 的字标豁免不计。每个文字元素先以两种键色重绘字形求出覆盖率，以覆盖率 ≥50% 为字形轮廓，取轮廓外 2px 内、不含任何字形覆盖的像素（壁纸、遮罩与光晕）为背景，以最不利的 5% 分位与文字颜色计算对比度：正文 4.5:1、≥24px 大字 3:1、图标 3:1（1.4.11）。取样前等两帧截图一致，取样后背景像素变化即失败。
+- A6 由 `web/e2e/wallpaper-readability.test.ts` 在真实 Chromium 中取样：纯白、纯黑、50% 灰、4px 黑白棋盘、高饱和红 / 绿 / 蓝七张合成壁纸 × light / dark / 高对比浅色 / 高对比深色 × 默认 `balanced` 遮罩与默认玻璃档位 × 390 / 1440 × 登录（关闭应用底板）/ 访客。取样范围为顶栏（字标、“登录”、图标按钮）、窄屏收起态的刊头露出区与关闭底板时的应用名称；应用图块、头像与同步失败徽标在自己的表面上，字标句点按 1.4.3 的字标豁免不计。每个文字元素先以两种键色重绘字形求出覆盖率，以覆盖率 ≥50% 为字形轮廓，取轮廓外 2px 内、不含任何字形覆盖的像素（壁纸、遮罩与光晕）为背景，以最不利的 5% 分位与文字颜色计算对比度：正文 4.5:1、≥24px 大字 3:1、图标 3:1（1.4.11）。取样前等两帧截图一致，取样后背景像素变化即失败。
 - A7 由 `web/e2e/forced-colors.test.ts` 在 Chromium `forced-colors: active` × light / dark 下检查计算样式：搜索框与任务栏的玻璃不透明且有边界，菜单与弹层有边界，强调色色点保留各自颜色、选中项带外环，任务栏活动指示条、设置导航当前项、分段控件选中项、Switch 拇指、Slider、单选圆点与回收站活动 Tab 各自的系统色与未选中态或 Canvas 不同。同一文件以字重检查设置与管理导航当前项的 1.4.1 线索。
 - 2.4.11 由 `web/e2e/desktop-windows.test.ts` 在 1440 下打开设置窗口后正反向 Tab 遍历：焦点不进入窗口下方的桌面，每个焦点元素在 5×5 取样中至少一点可见。
 - 1.4.13 由 `web/e2e/wallpaper.test.ts` 检查壁纸卡片悬停菜单：Escape 隐藏且设置窗口不关闭，移开再悬停恢复。其余悬停内容（Tooltip、搜索建议、笔记树与会话行操作等）由 #370 B5 实页审查：Tooltip 与搜索建议满足三项要求，行内悬停操作出现在预留空间、不遮挡或替换内容，不要求 Escape 关闭。
@@ -96,7 +96,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
   可经修订采用立即切换或其他不降低可访问性的反馈方式；不使用全局 `*` 清零规则绕过组件状态、焦点和退出逻辑。
 - reduced-transparency 与不支持 `backdrop-filter` 时，所有玻璃档位按 `off` 渲染（实色、无 blur）。
 - `forced-colors: active` 下系统把背景改为 Canvas 并保留其透明度、改写边框颜色、去掉阴影与渐变，因此：玻璃与刊头衬底按 `off` 渲染为实色（与 reduced-transparency 同一组 Token 回退），否则下层内容会透出；靠阴影划出边界的 Material / Floating 表面（搜索框、应用底板、图标块、文件夹、任务栏、菜单、Popover、Tooltip、对话框、Toast）加 1px `CanvasText` outline（不改变布局）；选中与当前态改用系统色：分段控件、Tab、设置与管理导航当前项为 `Highlight` 底 + `HighlightText`，并以 `forced-color-adjust: none` 避免文字背板盖住底色，其焦点环改用 `CanvasText`；Switch 拇指为 `CanvasText`（选中时轨道 `Highlight`、拇指 `HighlightText`），Slider 轨道 `GrayText`、范围 `Highlight`、拇指 `ButtonText` 边框，单选圆点 `Highlight`，任务栏指示条 `CanvasText`；强调色色点以 `forced-color-adjust: none` 保留颜色，选中项加 `Highlight` 外环。规则与各组件样式并置。
-- 高对比主题（`data-contrast="more"`）是应用自有配色，组件规则包在 `@media (forced-colors: none)` 内，`forced-colors: active` 时上一条的系统色规则照常生效，见 [高对比主题](#高对比主题)。
+- 高对比主题（`data-contrast="more"`）是应用自有配色，组件的应用高亮配色规则包在 `@media (forced-colors: none)` 内，`forced-colors: active` 时上一条的系统色规则照常生效，见 [高对比主题](#高对比主题)。
 - Escape 由 `components/ui/escape-layer-stack.tsx` 统一拥有，避免各 feature 竞争全局键盘事件。
 - 触发控件已不存在时的焦点落点（A5、2.4.3）由 `components/ui/focus-recovery.ts` 统一兜底：记录最近的焦点及其所在容器，焦点因控件被移除而落到 `<body>` 时（等两帧，让菜单、对话框与窗口自己的焦点管理先完成），回到仍存在的触发控件，否则回到最近的仍存在的容器。容器为窗口框架与以 `focusContainer` 标记的集合（`tabIndex=-1` + 无障碍名称）：首页应用库网格、首页刊头及其置顶区域、笔记本树、回收站各分区、最近上传壁纸。新增“条目可能在聚焦时消失”的集合须标记，不在各 feature 重复写删除后的焦点处理。
 - A2 命中区由 `primitives.css` 的唯一规则扩展：宿主设置 `--touch-target-size`（不继承），其 `::after` 以宿主为中心、每轴扩展到该尺寸，不改变可见尺寸与布局；粗指针（`(any-pointer: coarse), (hover: none)`）下 Switch、默认 / 图标按钮、分段控件选项与标记 `.touch-target` 的宿主自动设为 `--control-touch-target`。每侧扩展（44 − 可见尺寸）/ 2；与相邻目标的间距容不下双方的扩展区时改为可见放大到 44（`sm` 按钮所在的紧凑工具栏、色点组、纵向紧邻的列表条目），`<input>` 等替换元素（不能生成伪元素）与菜单项（纵向紧邻的行）亦然。
@@ -277,7 +277,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
   - **验证边界**：两个复合消费者在 320 / 390 / 640 / 768 / 1024 / 1366 / 1440 / 1920px 与 844×390 横屏检查标签阅读空间与操作可达性；390 / 768 / 1440 × light / dark 审阅实页。共享规则同时检查普通设置、账户、后台单值行、长文本、焦点与粗指针 44px 命中区。
   - **颜色归属**：普通值继承 `--foreground`；Button 等控件保留各自的 primary / destructive 等语义颜色，分组行不得覆盖。
 - **管理表格**：固定的短状态、角色与审计操作保留阅读宽度；长名称和明细允许换行，容量不足时在表格容器内横向滚动。审计对象 ID 的缩略值可通过键盘或触屏打开 Popover 查看完整值，Escape 关闭并返回触发控件。
-- **分段控件**：2–4 个互斥选项（如主题）；超过 4 个用 Select。选中项使用 `--surface-control-thumb`，在明暗主题下都亮于轨道。独立使用时选项高 32（轨道 36）；分组行内用紧凑档，选项 `--control-compact-height` 28（轨道 32）。选项间距只有 2px，因此每项至少 `--control-touch-target` 宽，粗指针下保持可见高度，命中区只纵向扩展到 44。
+- **分段控件**：2–4 个互斥选项；更多选项通常用 Select。主题的五个选项使用 `ThemeChoices` 单选组，分两组排列，空间不足时整项换行。分段选中项使用 `--surface-control-thumb`，在明暗主题下都亮于轨道。独立使用时选项高 32（轨道 36）；分组行内用紧凑档，选项 `--control-compact-height` 28（轨道 32）。选项间距只有 2px，因此每项至少 `--control-touch-target` 宽，粗指针下保持可见高度，命中区只纵向扩展到 44。
 - **色点选择**：强调色使用 24px 圆点，选中显示外环；名称只在 `aria-label` 与 tooltip。首个圆点是“跟随壁纸”：显示当前派生色并带图片字形，表示来源而非固定颜色。十项按五项一组分为两组：设置行内空间充足时排列一行，空间不足时换为两行，避免窗口 Host 收窄后出现孤点；<640px 时为分组行下方的整行五列均分网格；首页顶栏强调色弹层内固定为两行。粗指针命中区至少 44px。`AccentSwatches`（`web/src/components/searcher/AccentPicker.tsx` + `semantic.css`）拥有分组，设置页与顶栏弹层共用；验证跨组键盘导航及视口和 Host 收窄。
 - **空状态**：默认一句话与一个主要操作，居中，不加装饰性插图与卡片。需要解释原因、权限或恢复路径时允许补充信息及有明确用途的次要操作，保持主次层级，不以固定句数或操作数量牺牲清晰度。列表本身就是一列条目时（笔记侧栏的最近 / 收藏 / 搜索结果）用 `density="inline"`：作为列表的一条，左对齐在列表内容线上（内缩 `--space-2` / `--space-3`，同紧凑加载态），不居中。
 - **Toast / 撤销**：底部居中材质胶囊；破坏性操作用 AlertDialog 二次确认，软删除给撤销。
@@ -411,7 +411,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 “高对比浅色”“高对比深色”是主题偏好的两个应用自有配色，任何系统配色下都可主动选择；它们**不**开启或模拟操作系统的强制颜色。`AppState` 经 `design-system/theme.ts` 把基础明暗写入 `data-theme`（高对比浅 → `light`，高对比深 → `dark`），另写 `data-contrast="more"`，现有按明暗区分的消费者无需改动。owner：`tokens.css`（`[data-contrast="more"]` 与 `[data-theme="dark"][data-contrast="more"]` 两层，声明在强调色调色板之后）与下列组件规则；“跟随系统”只按 `prefers-color-scheme` 解析，不响应 `prefers-contrast`。
 
-**优先级。** `forced-colors: active` 时系统颜色始终主导：组件的高对比规则都包在 `@media (forced-colors: none)` 内，已有的系统色规则（见 [默认交互实现](#默认交互实现)）不变，也不以 `forced-color-adjust: none` 覆盖系统配色。`prefers-reduced-motion`、`prefers-reduced-transparency` 照常生效。
+**优先级。** `forced-colors: active` 时系统颜色始终主导：组件的应用高亮配色规则包在 `@media (forced-colors: none)` 内，已有的系统色规则（见 [默认交互实现](#默认交互实现)）不变，也不以 `forced-color-adjust: none` 覆盖系统配色。笔记标题占位文字在高对比主题下保持不透明，但颜色仍由系统决定。`prefers-reduced-motion`、`prefers-reduced-transparency` 照常生效。
 
 **系统规则。**
 
@@ -444,7 +444,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 | 任务栏                                                        | 实色 + 1px 框；活动指示条为高亮                                    | 同左                            | 白 / 黑底细框，指示条深色                  | `CanvasText` 指示条                     | 指示条 15.1 / 14.4            | 指示条用高亮而非文字色                                                                      |
 | 状态色                                                        | `--danger` `#A4001D`、`--success` `#00632E`、`--warning` `#6B4700` | `#FF8F8F`、`#6EEB9E`、`#FFD45C` | 参考未展示                                 | —                                       | 5.6 / 5.8                     | 仅配合图标与文字使用                                                                        |
 
-已知差异：参考图主题控件为 3 项分段，产品入口为容纳 5 项的单选网格（`components/searcher/ThemeChoices.tsx`）；参考图深色链接为系统 `LinkText` 黄色，产品为高亮青色；参考中各平台系统高亮色不同，不要求跨平台像素一致。真实操作系统强制颜色是独立验收项，Chromium 模拟不等同真实系统结果。
+已知差异：参考图主题控件为 3 项分段，产品入口为容纳 5 项的单选组（`components/searcher/ThemeChoices.tsx`）；参考图深色链接为系统 `LinkText` 黄色，产品为高亮青色；参考中各平台系统高亮色不同，不要求跨平台像素一致。真实操作系统强制颜色是独立验收项，Chromium 模拟不等同真实系统结果。
 
 验证：`glass-contrast.test.ts` 对两个高对比主题断言上表文字、高亮、边界与填充文字的下限，并要求所有玻璃档位实色；`/design-lab`（主题单选含高对比两项）与 `/design-lab/accent` 实页预览；实页验收按 [UI_CHECKLIST](UI_CHECKLIST.md#实页矩阵)。
 

@@ -100,7 +100,7 @@
 
 ### 命令
 
-命令以 `web/src/features/shortcuts/shortcut-catalog.ts` 的 `SEARCH_QUICK_COMMANDS` 为唯一 catalog，设置页说明消费同一份 catalog。动作命令包含主题（`/light` `/dark` `/system`）、壁纸（`/wallpaper`）、设置（`/settings`）、快捷键（`/shortcuts`）、回收站（`/trash`）、笔记（`/notes`，直达笔记窗口）、应用（`/apps`，直达应用窗口），另有引擎前缀 `/g /b /ba /d` 与 `/ai`。按前缀或动作名称过滤；动作执行后清空输入并关闭建议。访客不显示账号命令，没有可用模型时不显示 `/ai`。
+命令以 `web/src/features/shortcuts/shortcut-catalog.ts` 的 `SEARCH_QUICK_COMMANDS` 为唯一 catalog，设置页说明消费同一份 catalog。动作命令包含主题（`/light` `/dark` `/system` `/hc-light` `/hc-dark`）、壁纸（`/wallpaper`）、设置（`/settings`）、快捷键（`/shortcuts`）、回收站（`/trash`）、笔记（`/notes`，直达笔记窗口）、应用（`/apps`，直达应用窗口），另有引擎前缀 `/g /b /ba /d` 与 `/ai`。按前缀或动作名称过滤；动作执行后清空输入并关闭建议。访客不显示账号命令，没有可用模型时不显示 `/ai`。
 
 ### AI 回答卡片
 

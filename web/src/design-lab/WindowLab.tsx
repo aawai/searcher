@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useAppState } from "../app/state.tsx";
+import { isHighContrastTheme, resolveTheme } from "../design-system/theme.ts";
 import {
     AppWindow,
     Archive,
@@ -110,6 +112,7 @@ function initialRect(id: Id, geometry: Geometry, edge: Edge): Rect {
 }
 
 export default function WindowLab() {
+    const { appearance } = useAppState();
     const [windows, setWindows] = useState<Partial<Record<Id, WindowState>>>(
         {},
     );
@@ -121,7 +124,12 @@ export default function WindowLab() {
     const [modal, setModal] = useState(false);
     const [dirty, setDirty] = useState(false);
     const [confirm, setConfirm] = useState(false);
-    const [theme, setTheme] = useState<"light" | "dark">("light");
+    const [theme, setTheme] = useState<"light" | "dark">(() =>
+        resolveTheme(
+            appearance.theme,
+            matchMedia("(prefers-color-scheme: dark)").matches,
+        ).scheme
+    );
     const [hidden, setHidden] = useState(false);
     const [query, setQuery] = useState("");
     const search = useRef<HTMLInputElement>(null);
@@ -464,6 +472,9 @@ export default function WindowLab() {
             ref={root}
             className="window-lab"
             data-theme={theme}
+            data-contrast={isHighContrastTheme(appearance.theme)
+                ? "more"
+                : undefined}
             data-edge={edge}
             onCompositionStart={() => {
                 composing.current = true;

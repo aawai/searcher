@@ -107,6 +107,11 @@
     opacity: 0.5;
 }
 
+/* Keep placeholder contrast without overriding system forced colours. */
+[data-contrast="more"] .document-title-input::placeholder {
+    opacity: 1;
+}
+
 .document-title-input:focus-visible:not([data-focus-origin="pointer"]) {
     border-color: var(--ring);
     box-shadow: var(--shadow-field-focus);

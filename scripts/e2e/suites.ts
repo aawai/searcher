@@ -41,6 +41,7 @@ export const suites = {
         "apps-ordering",
         "touch-targets",
         "forced-colors",
+        "high-contrast",
         "focus-recovery",
     ],
     routing: ["navigation", "auth", "share", "guest-ai-auth"],
