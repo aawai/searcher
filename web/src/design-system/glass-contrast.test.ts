@@ -7,7 +7,22 @@ const markdownCss = await Deno.readTextFile(
 );
 
 type Rgb = readonly [number, number, number];
-type Theme = "light" | "dark";
+type Scheme = "light" | "dark";
+/** A theme preference as `<html>` renders it: base scheme plus `data-contrast`. */
+interface Theme {
+    readonly id: string;
+    readonly scheme: Scheme;
+    readonly highContrast: boolean;
+}
+const THEMES: readonly Theme[] = [
+    { id: "light", scheme: "light", highContrast: false },
+    { id: "dark", scheme: "dark", highContrast: false },
+    { id: "high-contrast-light", scheme: "light", highContrast: true },
+    { id: "high-contrast-dark", scheme: "dark", highContrast: true },
+];
+/** The high contrast opaque glass block: selector list as written in tokens.css. */
+const HIGH_CONTRAST_GLASS =
+    '[data-contrast="more"],\n[data-contrast="more"] [data-glass]';
 const TIERS = ["off", "soft", "regular", "clear"] as const;
 /** Tiers whose Material keeps the readability floor; `clear` is see-through by choice. */
 const MATERIAL_FLOOR_TIERS = ["off", "soft", "regular"] as const;
@@ -107,11 +122,26 @@ function declarationsIn(
     return result;
 }
 
-/** Tokens for one theme and tier: theme colours, then the tier block (equal specificity: later rule wins). */
+/**
+ * Tokens for one theme and tier in source order: base scheme, high contrast
+ * colours (after the palettes), the tier block, then the high contrast opaque
+ * glass block that follows the tiers.
+ */
 function cascade(theme: Theme, tier: string): Map<string, string> {
     const layers = [declarations(":root")];
-    if (theme === "dark") layers.push(declarations('[data-theme="dark"]'));
+    if (theme.scheme === "dark") {
+        layers.push(declarations('[data-theme="dark"]'));
+    }
+    if (theme.highContrast) {
+        layers.push(declarations('[data-contrast="more"]'));
+        if (theme.scheme === "dark") {
+            layers.push(
+                declarations('[data-theme="dark"][data-contrast="more"]'),
+            );
+        }
+    }
     layers.push(declarations(`[data-glass="${tier}"]`));
+    if (theme.highContrast) layers.push(declarations(HIGH_CONTRAST_GLASS));
     return new Map(layers.flatMap((layer) => [...layer]));
 }
 
@@ -185,20 +215,23 @@ function rgbAlpha(tokens: Map<string, string>, name: string): {
     };
 }
 
-for (const theme of ["light", "dark"] as const) {
+for (const theme of THEMES) {
     for (const tier of TIERS) {
-        Deno.test(`glass ${theme}/${tier}: body text holds AA and --muted 3:1 on the worst backdrop`, () => {
+        Deno.test(`glass ${theme.id}/${tier}: body text holds AA and --muted 3:1 on the worst backdrop`, () => {
             const tokens = cascade(theme, tier);
             const text = hex(resolve(tokens, "--foreground"));
             const muted = hex(resolve(tokens, "--muted"));
             // Material is mixed over --material-solid, Floating over --surface-l3.
             // Floating keeps the floor in every tier; the see-through `clear` Material does not.
             const floating = [
-                `--glass-thick-${theme}`,
+                `--glass-thick-${theme.scheme}`,
                 "--surface-l3",
             ] as const;
             const surfaces = tier === "clear" ? [floating] : [
-                [`--glass-regular-${theme}`, "--material-solid"] as const,
+                [
+                    `--glass-regular-${theme.scheme}`,
+                    "--material-solid",
+                ] as const,
                 floating,
             ];
             // The sheen fades linearly to 0 at 55% of the height; text starts no higher than 25% down.
@@ -237,12 +270,35 @@ for (const theme of ["light", "dark"] as const) {
         });
     }
 
-    Deno.test(`glass ${theme}: tiers get more transparent from off to clear, thick never below regular`, () => {
+    if (theme.highContrast) {
+        Deno.test(`glass ${theme.id}: every tier renders solid, without blur or sheen`, () => {
+            for (const tier of TIERS) {
+                const tokens = cascade(theme, tier);
+                for (const kind of ["regular", "thick"]) {
+                    const fill = `--glass-${kind}-${theme.scheme}`;
+                    assert(
+                        fillPercent(tokens, fill) === 100,
+                        `${tier} ${fill}`,
+                    );
+                }
+                assert(tokens.get("--material-filter") === "none", tier);
+                assert(tokens.get("--glass-sheen-scale") === "0", tier);
+                assert(
+                    fillPercent(tokens, `--masthead-veil-${theme.scheme}`) ===
+                        100,
+                    tier,
+                );
+            }
+        });
+        continue;
+    }
+
+    Deno.test(`glass ${theme.id}: tiers get more transparent from off to clear, thick never below regular`, () => {
         const fills = TIERS.map((tier) => {
             const tokens = cascade(theme, tier);
             return {
-                regular: fillPercent(tokens, `--glass-regular-${theme}`),
-                thick: fillPercent(tokens, `--glass-thick-${theme}`),
+                regular: fillPercent(tokens, `--glass-regular-${theme.scheme}`),
+                thick: fillPercent(tokens, `--glass-thick-${theme.scheme}`),
             };
         });
         for (let i = 1; i < fills.length; i++) {
@@ -252,8 +308,8 @@ for (const theme of ["light", "dark"] as const) {
     });
 }
 
-for (const theme of ["light", "dark"] as const) {
-    Deno.test(`mini icon ${theme}: fallback letter holds AA on opaque --surface-solid`, () => {
+for (const theme of THEMES) {
+    Deno.test(`mini icon ${theme.id}: fallback letter holds AA on opaque --surface-solid`, () => {
         // Mini icon tiles are opaque --surface-solid: their fallback letter is
         // --foreground on that plate, independent of the glass tier.
         const tokens = cascade(theme, "regular");
@@ -271,7 +327,7 @@ for (const theme of ["light", "dark"] as const) {
 /** The derived canvas veils the wallpaper with --background; it does not depend on the glass tier. */
 function derivedCanvas(theme: Theme): Rgb[] {
     const tokens = cascade(theme, "regular");
-    const alpha = fillPercent(tokens, `--canvas-derived-${theme}`) / 100;
+    const alpha = fillPercent(tokens, `--canvas-derived-${theme.scheme}`) / 100;
     const veil = hex(resolve(tokens, "--background"));
     return BACKDROPS.map((backdrop) => over(veil, alpha, backdrop));
 }
@@ -280,7 +336,8 @@ function derivedCanvas(theme: Theme): Rgb[] {
 function mastheadVeil(theme: Theme): Rgb[] {
     const tokens = cascade(theme, "regular");
     const background = hex(resolve(tokens, "--background"));
-    const veilAlpha = fillPercent(tokens, `--masthead-veil-${theme}`) / 100;
+    const veilAlpha = fillPercent(tokens, `--masthead-veil-${theme.scheme}`) /
+        100;
     // Dark themes dim the wallpaper image with `--wallpaper-dim`
     // (`brightness()`), modelled as a per-channel scale (Chromium applies
     // the shorthand in sRGB). The light theme declares no dim.
@@ -340,8 +397,8 @@ const LARGE_TEXT_ROLES: readonly {
     },
 ];
 
-for (const theme of ["light", "dark"] as const) {
-    Deno.test(`derived canvas ${theme}: body and --muted text set on it hold AA on the worst backdrop`, () => {
+for (const theme of THEMES) {
+    Deno.test(`derived canvas ${theme.id}: body and --muted text set on it hold AA on the worst backdrop`, () => {
         const tokens = cascade(theme, "regular");
         for (const name of ["--foreground", "--muted"]) {
             const color = hex(resolve(tokens, name));
@@ -352,7 +409,7 @@ for (const theme of ["light", "dark"] as const) {
             );
             assert(
                 worst >= WCAG_AA_TEXT,
-                `${name} on --canvas-derived-${theme} gives ${
+                `${name} on --canvas-derived-${theme.scheme} gives ${
                     worst.toFixed(2)
                 }:1`,
             );
@@ -360,8 +417,8 @@ for (const theme of ["light", "dark"] as const) {
     });
 }
 
-for (const theme of ["light", "dark"] as const) {
-    Deno.test(`home masthead veil ${theme}: text holds AA and --muted 3:1 over the default readability mask`, () => {
+for (const theme of THEMES) {
+    Deno.test(`home masthead veil ${theme.id}: text holds AA and --muted 3:1 over the default readability mask`, () => {
         const tokens = cascade(theme, "regular");
         const probes = [
             ["--foreground", WCAG_AA_TEXT],
@@ -374,7 +431,7 @@ for (const theme of ["light", "dark"] as const) {
             );
             assert(
                 worst >= floor,
-                `${name} on --masthead-veil-${theme} gives ${
+                `${name} on --masthead-veil-${theme.scheme} gives ${
                     worst.toFixed(2)
                 }:1`,
             );
@@ -410,9 +467,9 @@ Deno.test("large text roles: match the size tokens that reach 24px", () => {
     }
 });
 
-for (const theme of ["light", "dark"] as const) {
+for (const theme of THEMES) {
     for (const role of LARGE_TEXT_ROLES) {
-        Deno.test(`large text ${theme}: ${role.size} holds 3:1 on its backdrops`, () => {
+        Deno.test(`large text ${theme.id}: ${role.size} holds 3:1 on its backdrops`, () => {
             const color = hex(resolve(cascade(theme, "regular"), role.color));
             for (const backdrop of role.backdrops) {
                 const worst = Math.min(
@@ -429,10 +486,10 @@ for (const theme of ["light", "dark"] as const) {
     }
 }
 
-for (const theme of ["light", "dark"] as const) {
+for (const theme of THEMES) {
     for (const tier of MATERIAL_FLOOR_TIERS) {
         for (const fixture of WALLPAPER_FIXTURES) {
-            Deno.test(`home glyph ${theme}/${tier}/${fixture.name}: white tile edge holds 3:1 against light wallpaper`, () => {
+            Deno.test(`home glyph ${theme.id}/${tier}/${fixture.name}: white tile edge holds 3:1 against light wallpaper`, () => {
                 const tokens = cascade(theme, tier);
                 // The dedicated inset glyph edge is painted above the
                 // server-normalized opaque white canvas, not behind the image.
@@ -443,7 +500,8 @@ for (const theme of ["light", "dark"] as const) {
                     [255, 255, 255],
                 );
                 const base = hex(resolve(tokens, "--material-solid"));
-                const alpha = fillPercent(tokens, `--glass-regular-${theme}`) /
+                const alpha =
+                    fillPercent(tokens, `--glass-regular-${theme.scheme}`) /
                     100;
                 const peak = fillPercent(tokens, "--glass-sheen-peak") / 100 *
                     Number(resolve(tokens, "--glass-sheen-scale"));
@@ -466,7 +524,7 @@ for (const theme of ["light", "dark"] as const) {
                         );
                         // On dark Material, the white tile itself supplies the
                         // boundary; on light Material, its inset edge must do so.
-                        const boundary = theme === "dark"
+                        const boundary = theme.scheme === "dark"
                             ? [255, 255, 255] as const
                             : paintedEdge;
                         const plateRatio = contrast(boundary, plate);
@@ -483,12 +541,13 @@ for (const theme of ["light", "dark"] as const) {
     }
 }
 
-for (const theme of ["light", "dark"] as const) {
-    Deno.test(`home note ${theme}: task box border holds 3:1 on neutral Material`, () => {
+for (const theme of THEMES) {
+    Deno.test(`home note ${theme.id}: task box border holds 3:1 on neutral Material`, () => {
         // Task box is checked at the default regular tier, at the sheen level
         // just below the label baseline (0.1 of the height), where sheen is strongest.
         const tokens = cascade(theme, "regular");
-        const alpha = fillPercent(tokens, `--glass-regular-${theme}`) / 100;
+        const alpha = fillPercent(tokens, `--glass-regular-${theme.scheme}`) /
+            100;
         const peak = fillPercent(tokens, "--glass-sheen-peak") / 100 *
             Number(resolve(tokens, "--glass-sheen-scale"));
         const taskTokens = new Map([
@@ -510,5 +569,74 @@ for (const theme of ["light", "dark"] as const) {
                 `task box border ${box.toFixed(2)}:1 on ${backdrop}`,
             );
         }
+    });
+}
+
+/**
+ * High contrast themes (VISUAL_LANGUAGE.md「高对比主题」): every opaque
+ * surface holds text, the highlight that replaces the accent, boundaries and
+ * focus indicators at their floors; there is no translucent layer to sample.
+ */
+for (const theme of THEMES.filter((candidate) => candidate.highContrast)) {
+    Deno.test(`high contrast ${theme.id}: text, highlight, boundaries and focus hold their floors on every surface`, () => {
+        const tokens = cascade(theme, "regular");
+        const color = (name: string) => hex(resolve(tokens, name));
+        const accent = color("--accent");
+        const tint = (mix: string, base: string) =>
+            over(accent, fillPercent(tokens, mix) / 100, color(base));
+        const surfaces: readonly [string, Rgb][] = [
+            ...[
+                "--background",
+                "--surface",
+                "--surface-soft",
+                "--surface-l3",
+                "--surface-grouped-canvas",
+                "--surface-highlight",
+                "--material-solid",
+            ].map((name) => [name, color(name)] as [string, Rgb]),
+            ["--accent-soft", tint("--accent-soft-mix", "--surface")],
+            ["--accent-subtle", tint("--accent-subtle-mix", "--surface-soft")],
+        ];
+        const floors: readonly [string, number][] = [
+            ["--foreground", WCAG_AA_TEXT],
+            ["--muted", WCAG_AA_TEXT],
+            // Links, accent text and the 2px focus ring (A1).
+            ["--accent", WCAG_AA_TEXT],
+            ["--danger", WCAG_AA_TEXT],
+            ["--success", WCAG_AA_TEXT],
+            ["--warning", WCAG_AA_TEXT],
+            // Checkbox, radio and switch outlines; switch off thumb.
+            ["--border-control", WCAG_AA_NON_TEXT],
+            // Window frames, dividers and the slider track.
+            ["--border", WCAG_AA_NON_TEXT],
+        ];
+        // Only text and the highlight sit on the accent tints (selected rows,
+        // the drop target); status colours and boundaries stay on neutrals.
+        const onTints = new Set(["--foreground", "--muted", "--accent"]);
+        for (const [name, floor] of floors) {
+            for (const [surface, rgb] of surfaces) {
+                if (!onTints.has(name) && surface.startsWith("--accent")) {
+                    continue;
+                }
+                const ratio = contrast(color(name), rgb);
+                assert(
+                    ratio >= floor,
+                    `${name} on ${surface} gives ${ratio.toFixed(2)}:1`,
+                );
+            }
+        }
+        // Highlight fills: the selected segment, tab and navigation item, the
+        // checked switch and primary buttons. Their focus ring sits 2px out,
+        // so it is judged against the surfaces above, not against the fill.
+        for (const name of ["--accent", "--accent-hover", "--accent-active"]) {
+            const text = contrast(color("--accent-foreground"), color(name));
+            assert(
+                text >= WCAG_AA_TEXT,
+                `text on ${name}: ${text.toFixed(2)}:1`,
+            );
+        }
+        // Switch: the off thumb (--foreground) on its track.
+        const thumb = contrast(color("--foreground"), color("--surface-soft"));
+        assert(thumb >= WCAG_AA_NON_TEXT, `switch thumb ${thumb.toFixed(2)}:1`);
     });
 }

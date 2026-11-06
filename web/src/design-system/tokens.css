@@ -424,6 +424,93 @@
     --accent-foreground: var(--wallpaper-accent-foreground);
 }
 
+/*
+ * High contrast themes (`data-contrast="more"`, set with the light or dark
+ * base): the app's own palette, not an imitation of the system's forced
+ * colours, which keep priority (`@media (forced-colors: active)` rules).
+ * Pure canvas, opaque surfaces, visible boundaries and one highlight
+ * (light deep violet, dark cyan) that replaces every accent use; colour
+ * swatches keep their own palette through their `data-accent` scope.
+ * Declared after the palettes so the highlight wins on <html> for every
+ * accent preference. Pairs: VISUAL_LANGUAGE.md「高对比主题」, checked by
+ * glass-contrast.test.ts.
+ */
+[data-contrast="more"] {
+    --background: #FFFFFF;
+    --foreground: #000000;
+    --surface: #FFFFFF;
+    --surface-solid: #FFFFFF;
+    --surface-soft: #EDEDED;
+    --surface-highlight: #E0E0E0;
+    --surface-control-thumb: #FFFFFF;
+    --surface-l3: #FFFFFF;
+    --surface-grouped-canvas: #F2F2F2;
+    --muted: #3D3D40;
+    --border: #6E6E73;
+    --border-subtle: #A1A1A6;
+    --border-control: #000000;
+    --field-border: #6E6E73;
+    --field-border-hover: #000000;
+    --scrollbar-thumb: #6E6E73;
+    --scrollbar-thumb-hover: #000000;
+    --danger: #A4001D;
+    --success: #00632E;
+    --warning: #6B4700;
+    --accent: #37006E;
+    --accent-hover: #4B0096;
+    --accent-active: #24004A;
+    --accent-foreground: #FFFFFF;
+    --accent-soft-mix: 12%;
+    --accent-subtle-mix: 18%;
+    --accent-border-mix: 70%;
+    --surface-scrim: rgb(0 0 0 / 0.5);
+    /* A 1px frame replaces depth; the drop stays small. */
+    --shadow-frame: 0 0 0 1px var(--border-control);
+    --shadow-l2: var(--shadow-frame), 0 4px 12px -6px rgb(0 0 0 / 0.2);
+    --shadow-l3: var(--shadow-frame), 0 12px 28px -12px rgb(0 0 0 / 0.3);
+    --shadow-control-thumb: 0 0 0 1px var(--border-control);
+    --shadow-choice-selected: inset 0 0 0 2px var(--accent);
+    --shadow-document-paper: 0 0 0 1px var(--border);
+    --material-solid: var(--surface-solid);
+    /* The frame in --shadow-l2 edges Material; no rim or sheen. */
+    --glass-edge-top: transparent;
+    --glass-edge-ring: transparent;
+    --glass-edge-bottom: transparent;
+    --glass-sheen-peak: 0%;
+    --glyph-edge: rgb(0 0 0 / 0.6);
+}
+[data-theme="dark"][data-contrast="more"] {
+    --background: #000000;
+    --foreground: #FFFFFF;
+    --surface: #000000;
+    --surface-solid: #000000;
+    --surface-soft: #1F1F1F;
+    --surface-highlight: #333333;
+    --surface-control-thumb: #3A3A3C;
+    --surface-l3: #000000;
+    --surface-grouped-canvas: #141414;
+    --muted: #C7C7CC;
+    --border: #8E8E93;
+    --border-subtle: #48484A;
+    --border-control: #FFFFFF;
+    --field-border: #8E8E93;
+    --field-border-hover: #FFFFFF;
+    --scrollbar-thumb: #8E8E93;
+    --scrollbar-thumb-hover: #FFFFFF;
+    --danger: #FF8F8F;
+    --success: #6EEB9E;
+    --warning: #FFD45C;
+    --accent: #1AEBFF;
+    --accent-hover: #7AF3FF;
+    --accent-active: #C2FAFF;
+    --accent-foreground: #000000;
+    --accent-soft-mix: 18%;
+    --accent-subtle-mix: 24%;
+    --surface-scrim: rgb(0 0 0 / 0.7);
+    --shadow-l2: var(--shadow-frame), 0 4px 12px -6px rgb(0 0 0 / 0.6);
+    --shadow-l3: var(--shadow-frame), 0 12px 28px -12px rgb(0 0 0 / 0.7);
+}
+
 /* User preference: pill-shaped search box and its inner controls. */
 [data-shape="pill"] {
     --search-radius: var(--radius-pill);
@@ -639,6 +726,24 @@
         --masthead-veil-filter: none;
         --masthead-peek-veil-opacity: 1;
     }
+}
+/* High contrast theme: the same opaque path. A system palette still wins; the
+   query above applies there regardless of this theme. */
+[data-contrast="more"],
+[data-contrast="more"] [data-glass] {
+    --glass-regular-light: 100%;
+    --glass-regular-dark: 100%;
+    --glass-thick-light: 100%;
+    --glass-thick-dark: 100%;
+    --glass-sheen-scale: 0;
+    --material-filter: none;
+    --canvas-derived-light: 100%;
+    --canvas-derived-dark: 100%;
+    --canvas-derived-filter: none;
+    --masthead-veil-light: 100%;
+    --masthead-veil-dark: 100%;
+    --masthead-veil-filter: none;
+    --masthead-peek-veil-opacity: 1;
 }
 
 /* Wide home: the search box and plate grow with the viewport while the cell

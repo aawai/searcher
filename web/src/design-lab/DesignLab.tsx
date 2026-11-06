@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { type AccentPreference, ACCENTS } from "@shared/contracts.ts";
 import { type Appearance, useAppState } from "../app/state.tsx";
 import { applyResolvedTheme, resolveTheme } from "../design-system/theme.ts";
+import { ThemeChoices } from "../components/searcher/ThemeChoices.tsx";
 
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
@@ -400,17 +401,7 @@ export function DesignLab() {
                             </RadioGroupItem>
                         ))}
                     </RadioGroup>
-                    <RadioGroup
-                        variant="segmented"
-                        aria-label="主题"
-                        value={theme}
-                        onValueChange={(next) =>
-                            setTheme(next as Appearance["theme"])}
-                    >
-                        <RadioGroupItem value="system">跟随系统</RadioGroupItem>
-                        <RadioGroupItem value="light">浅色</RadioGroupItem>
-                        <RadioGroupItem value="dark">深色</RadioGroupItem>
-                    </RadioGroup>
+                    <ThemeChoices value={theme} onValueChange={setTheme} />
                 </div>
             </Section>
 

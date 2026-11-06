@@ -28,6 +28,7 @@ import {
     type AccentPalette,
 } from "../design-system/wallpaper-accent.ts";
 import { applyResolvedTheme, resolveTheme } from "../design-system/theme.ts";
+import { ThemeChoices } from "../components/searcher/ThemeChoices.tsx";
 import "./design-lab.css";
 import "./accent-lab.css";
 
@@ -395,17 +396,7 @@ export default function AccentLab() {
                             </RadioGroupItem>
                         ))}
                     </RadioGroup>
-                    <RadioGroup
-                        variant="segmented"
-                        aria-label="主题"
-                        value={theme}
-                        onValueChange={(next) =>
-                            setTheme(next as Appearance["theme"])}
-                    >
-                        <RadioGroupItem value="system">跟随系统</RadioGroupItem>
-                        <RadioGroupItem value="light">浅色</RadioGroupItem>
-                        <RadioGroupItem value="dark">深色</RadioGroupItem>
-                    </RadioGroup>
+                    <ThemeChoices value={theme} onValueChange={setTheme} />
                 </div>
                 <div className="design-lab-row">
                     <Button variant="default">主要操作</Button>
