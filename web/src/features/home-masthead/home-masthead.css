@@ -581,6 +581,8 @@
 }
 
 .home-masthead[data-mode="narrow"][data-collapsed="true"] :is(.home-masthead__header, .home-masthead__dek) {
+    -webkit-text-stroke: var(--masthead-text-stroke);
+    paint-order: stroke fill;
     text-shadow: var(--masthead-text-halo);
 }
 

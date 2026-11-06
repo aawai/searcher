@@ -133,7 +133,13 @@
     backdrop-filter: none;
     box-shadow: none;
 }
+/* The name clips for its ellipsis; the clip reaches past the box by the halo
+   core's outer half, so the solid outline is never cut off. */
 .launcher-plate[data-plate="hidden"] :is(.webapp-name, .launcher-folder-name) {
+    overflow: clip;
+    overflow-clip-margin: calc(var(--wallpaper-text-core) / 2);
+    -webkit-text-stroke: var(--wallpaper-text-stroke);
+    paint-order: stroke fill;
     text-shadow: var(--wallpaper-text-halo);
 }
 

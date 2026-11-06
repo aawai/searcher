@@ -508,14 +508,35 @@
 }
 
 /* Text and glyphs set directly on the wallpaper (home app labels, the home top
-   bar): a soft halo in the surface colour keeps them legible. The icon halo is
-   the same pair as drop-shadow filters, which follow an SVG's strokes. */
+   bar, the collapsed narrow masthead) keep A6 on any wallpaper with a halo in
+   two parts. The core is a solid outline in the surface colour: a stroke of
+   --wallpaper-text-core painted under the glyph (`paint-order: stroke fill`),
+   so only its outer half (2.5px) shows. Following WCAG 1.4.3 (Understanding,
+   note 5) an outline that fills the letters' inner details is the text's
+   background; wallpaper-readability.test.ts samples the 2px next to each
+   glyph, inside the core's antialiased edge. A soft glow outside it eases the
+   edge into the wallpaper. Icons take the same core as a 2px square dilation
+   of chained zero-blur drop-shadows, which follow an SVG's strokes. Forced
+   colours repaint a text stroke in the text colour, filling the letters in,
+   so the core is dropped there; the system palette owns contrast (A7). */
+:root {
+    --wallpaper-text-core: 5px;
+}
+@media (forced-colors: active) {
+    :root {
+        --wallpaper-text-core: 0px;
+    }
+}
 :root,
 [data-theme] {
+    --wallpaper-text-stroke: var(--wallpaper-text-core) var(--surface-solid);
     --wallpaper-text-halo: 0 0 var(--space-2) color-mix(in srgb, var(--surface-solid) 90%, transparent),
         0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent);
-    --wallpaper-icon-halo: drop-shadow(0 0 var(--space-1) color-mix(in srgb, var(--surface-solid) 90%, transparent))
-        drop-shadow(0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent));
+    --wallpaper-icon-halo: drop-shadow(1px 0 0 var(--surface-solid)) drop-shadow(-1px 0 0 var(--surface-solid))
+        drop-shadow(0 1px 0 var(--surface-solid)) drop-shadow(0 -1px 0 var(--surface-solid))
+        drop-shadow(1px 0 0 var(--surface-solid)) drop-shadow(-1px 0 0 var(--surface-solid))
+        drop-shadow(0 1px 0 var(--surface-solid)) drop-shadow(0 -1px 0 var(--surface-solid))
+        drop-shadow(0 0 var(--space-1) color-mix(in srgb, var(--surface-solid) 90%, transparent));
     /* Hairline divider between top-bar groups on the wallpaper. */
     --border-on-wallpaper: color-mix(in srgb, var(--foreground) 28%, transparent);
 }
@@ -551,9 +572,10 @@
 /* Home masthead veil: a translucent --background wash over a strongly blurred
    wallpaper, so the wallpaper's colour still shows behind the column. The
    collapsed narrow masthead (the peek) has no veil at all: it reads as
-   printed on the wallpaper and its text carries --masthead-text-halo, a soft
-   --background glow that keeps glyph edges legible. The glass `off` tier and
-   the fallbacks below make the veil solid and show it behind the peek too. */
+   printed on the wallpaper and its text carries the wallpaper halo's solid
+   core in --background (--masthead-text-stroke) under --masthead-text-halo, a
+   soft --background glow. The glass `off` tier and the fallbacks below make
+   the veil solid and show it behind the peek too. */
 :root {
     --masthead-veil-light: 66%;
     --masthead-veil-dark: 50%;
@@ -570,10 +592,9 @@
 [data-theme] {
     --masthead-veil-mix: var(--masthead-veil-light);
     --masthead-veil: color-mix(in srgb, var(--background) var(--masthead-veil-mix), transparent);
-    --masthead-text-halo: 0 0 1px var(--background), 0 0 1px var(--background),
-        0 0 2px var(--background), 0 0 4px var(--background),
-        0 0 8px var(--background), 0 0 16px var(--background),
-        0 0 28px var(--background);
+    --masthead-text-stroke: var(--wallpaper-text-core) var(--background);
+    --masthead-text-halo: 0 0 4px var(--background), 0 0 8px var(--background),
+        0 0 16px var(--background), 0 0 28px var(--background);
 }
 [data-theme="dark"] {
     --masthead-veil-mix: var(--masthead-veil-dark);

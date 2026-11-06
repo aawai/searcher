@@ -284,14 +284,13 @@ a {
    Material appears only under the pointer, on keyboard focus and while the
    control's popup is open. A sync failure keeps its Material so it is never
    lost on the wallpaper. */
-.app-shell[data-home] .wordmark-small {
+.app-shell[data-home] :is(.wordmark-small, .top-actions .user-link > span) {
+    -webkit-text-stroke: var(--wallpaper-text-stroke);
+    paint-order: stroke fill;
     text-shadow: var(--wallpaper-text-halo);
 }
 .app-shell[data-home] .top-actions :is(a, button) > svg {
     filter: var(--wallpaper-icon-halo);
-}
-.app-shell[data-home] .top-actions .user-link > span {
-    text-shadow: var(--wallpaper-text-halo);
 }
 .app-shell[data-home] .top-actions-separator {
     background: var(--border-on-wallpaper);
