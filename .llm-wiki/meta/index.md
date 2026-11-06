@@ -199,6 +199,7 @@
 - [[sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main]] — Observation: Issue 370 PR-C（B4）窗口位置预设经 PR 380 合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-pr-374-main]] — Observation: PR 374 已合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-pr-385-main]] — Observation: PR 385 笔记标题焦点与抽屉错位合并 main *(created: 2026-11-06)*
+- [[sources/obs-2026-11-06-pr-386-main]] — Observation: 刊头应用图标与可选标签图标经 PR 386 合并 main *(created: 2026-11-06)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -317,4 +318,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-06T10:53:54.017Z* | *Total pages: 302*
+*Last updated: 2026-11-06T11:07:51.369Z* | *Total pages: 303*

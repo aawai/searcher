@@ -1251,6 +1251,7 @@
   "sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main": [],
   "sources/obs-2026-11-06-pr-374-main": [],
   "sources/obs-2026-11-06-pr-385-main": [],
+  "sources/obs-2026-11-06-pr-386-main": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],

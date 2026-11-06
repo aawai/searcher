@@ -127,6 +127,25 @@ Deno.test("打开已有笔记不聚焦标题，新建笔记仍聚焦标题", asy
             .evaluate((el) => el === document.activeElement),
         false,
     );
+    // Reopening the drawer lands on the current note, never in the search
+    // field; a pointer opening draws no focus ring.
+    await toggle.click();
+    await narrowFrame.locator(".documents-layout[data-drawer='open']")
+        .waitFor();
+    const current = narrowFrame.getByRole("treeitem", { name: "焦点入口笔记" });
+    await narrow.waitForFunction(() =>
+        document.activeElement?.getAttribute("role") === "treeitem"
+    );
+    assertEquals(
+        await current.evaluate((el) => ({
+            focused: el === document.activeElement,
+            ring: el.matches(":focus-visible"),
+        })),
+        { focused: true, ring: false },
+    );
+    await narrow.keyboard.press("Escape");
+    await narrowFrame.locator(".documents-layout[data-drawer='closed']")
+        .waitFor();
 });
 
 Deno.test("Documents focus boundaries, IME composition and leave flush contracts", async (t) => {

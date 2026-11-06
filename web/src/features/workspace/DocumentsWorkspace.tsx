@@ -44,6 +44,19 @@ function deviceStorage(): Storage | null {
         return null;
     }
 }
+/**
+ * The drawer opens on the navigation, not in its search field: the current
+ * note (the tree's roving stop or the open list row), else the tree, else the
+ * drawer itself. Search stays one Tab away.
+ */
+function drawerInitialFocus(overlay: HTMLElement): HTMLElement {
+    return overlay.querySelector<HTMLElement>(
+        '[role="treeitem"][tabindex="0"]',
+    ) ??
+        overlay.querySelector<HTMLElement>('[aria-current="page"]') ??
+        overlay.querySelector<HTMLElement>('[role="tree"]') ??
+        overlay;
+}
 const DocumentEditor = lazy(() => import("../documents/DocumentEditor.tsx"));
 export interface DocumentsWorkspaceProps {
     state: DocumentsRoute;
@@ -169,6 +182,11 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                     aria-expanded={props.sidebarOpen}
                     aria-pressed={props.sidebarOpen}
                     aria-controls="notes-sidebar"
+                    // While the drawer is open its own collapse button is the
+                    // control; this one sits on the inert card underneath.
+                    aria-hidden={!props.sidebarPersistent && props.sidebarOpen
+                        ? true
+                        : undefined}
                     onClick={() => {
                         setRestoreDrawerFocus(true);
                         toggleFocus.current = "expand";
@@ -263,6 +281,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                     props.onSidebarOpenChange(open);
                 }}
                 restoreFocus={restoreDrawerFocus}
+                initialFocus={drawerInitialFocus}
                 restoreFocusRef={props.sidebarTriggerRef}
                 label="笔记侧栏"
                 className={props.sidebarPersistent
@@ -290,7 +309,10 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                                 toggleFocus.current = "collapse";
                                 props.onSidebarOpenChange(false);
                             }
-                            : undefined}
+                            : () => {
+                                setRestoreDrawerFocus(true);
+                                props.onSidebarOpenChange(false);
+                            }}
                         collapseRef={collapseRef}
                     />
                 </nav>

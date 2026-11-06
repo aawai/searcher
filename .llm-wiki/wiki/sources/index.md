@@ -239,6 +239,7 @@
 - [Observation: Issue 370 PR-C（B4）窗口位置预设经 PR 380 合并 main](obs-2026-11-06-issue-370-pr-c-b4-pr-380-main.md)
 - [Observation: PR 374 已合并 main](obs-2026-11-06-pr-374-main.md)
 - [Observation: PR 385 笔记标题焦点与抽屉错位合并 main](obs-2026-11-06-pr-385-main.md)
+- [Observation: 刊头应用图标与可选标签图标经 PR 386 合并 main](obs-2026-11-06-pr-386-main.md)
 - [Searcher 会话 Token 使用无盐 SHA-256](searcher-session-token-hash-is-not-salted.md)
 - [Service Worker 直通与 HTTP 缓存边界](service-worker-bypass-does-not-bypass-http-cache.md)
 - [SQLite Table Recreation Migration Pattern with Zero Loss](sqlite-table-recreation-migration-zero-loss.md)

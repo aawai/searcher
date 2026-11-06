@@ -32,6 +32,14 @@ Deno.test("笔记窗口控件：侧栏折叠 / 展开按钮、创建图标位置
     try {
         await loginAndVisit(page, app.origin, "/", user);
         await createNote(page, app.origin, "控件笔记");
+        const notebook = await page.request.post(
+            app.origin + "/api/document-notebooks",
+            {
+                headers: { Origin: app.origin },
+                data: { name: "控件笔记本", parentId: null },
+            },
+        );
+        assert(notebook.ok(), `create notebook: ${notebook.status()}`);
         await page.goto(app.origin + "/?view=notes");
         const frame = page.locator(NOTES);
         const search = frame.getByRole("searchbox", { name: "搜索笔记" });
@@ -112,7 +120,8 @@ Deno.test("笔记窗口控件：侧栏折叠 / 展开按钮、创建图标位置
         assertEquals(entrySymmetry.leftGap, 16);
         assertEquals(entrySymmetry.rightGap, 16);
         // One content line: the search glyph, entry icons, the 笔记本 heading
-        // and tree rows all start at the same inset from the sidebar.
+        // and the first tree level (a notebook's chevron, a note's equal-width
+        // slot) all start at the same inset from the sidebar.
         const contentLines = await frame.locator(".documents-sidebar")
             .evaluate((sidebar) => {
                 const firstInk = (el: Element) => {
@@ -142,17 +151,43 @@ Deno.test("笔记窗口控件：侧栏折叠 / 展开按钮、创建图标位置
                     if (!el) throw new Error(`missing ${selector}`);
                     return firstInk(el);
                 };
+                const box = (selector: string) => {
+                    const el = sidebar.querySelector(selector);
+                    if (!el) throw new Error(`missing ${selector}`);
+                    return Math.round(el.getBoundingClientRect().left);
+                };
                 return {
                     search: pick(".documents-list-toolbar"),
                     entry: pick(".documents-fixed-entries .documents-entry"),
                     heading: pick(".documents-notebooks-heading"),
-                    treeRow: pick(".documents-tree-row"),
+                    notebookChevron: box(
+                        '.documents-tree-row[data-kind="notebook"] .documents-tree-chevron',
+                    ),
+                    noteSlot: box(
+                        '.documents-tree-row[data-kind="note"] .documents-tree-chevron-slot',
+                    ),
                 };
             });
         assertEquals(
             new Set(Object.values(contentLines)).size,
             1,
             JSON.stringify(contentLines),
+        );
+        // Names at one level share a column: a note's name lines up with a
+        // notebook's beside the chevron.
+        const nameColumns = await frame.locator(".documents-tree-row")
+            .evaluateAll((rows) =>
+                rows.map((row) =>
+                    Math.round(
+                        row.querySelector(".documents-tree-label")!
+                            .getBoundingClientRect().left,
+                    )
+                )
+            );
+        assertEquals(
+            new Set(nameColumns).size,
+            1,
+            JSON.stringify(nameColumns),
         );
         // Collapsing moves focus to the expand button in the editor-header row (empty state has a minimal header).
         await sidebarButton.click();
@@ -438,7 +473,7 @@ Deno.test("笔记窗口控件：抽屉模式的标题行按钮打开抽屉，关
         assert(hit.width >= 44 && hit.height >= 44, JSON.stringify(hit));
 
         // Opening the drawer by touch never starts in its search field, which
-        // would raise the soft keyboard; the labelled drawer takes focus.
+        // would raise the soft keyboard; the current note's row takes focus.
         const touchFrame = touchPage.locator(NOTES);
         await touchFrame.getByRole("button", { name: "最近", exact: true })
             .tap();
@@ -455,7 +490,8 @@ Deno.test("笔记窗口控件：抽屉模式的标题行按钮打开抽屉，关
         await touchFrame.locator(".documents-layout[data-drawer='open']")
             .waitFor();
         await touchPage.waitForFunction(() =>
-            document.activeElement?.matches(".documents-sidebar--drawer")
+            document.activeElement?.getAttribute("aria-label") ===
+                "打开笔记：抽屉笔记"
         );
         await coarse.close();
     } finally {

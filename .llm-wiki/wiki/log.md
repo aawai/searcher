@@ -2,6 +2,7 @@
 
 ## 2026-11-06
 
+- **observe**: {"relevance":"high","slug":"obs-2026-11-06-pr-386-main","title":"刊头应用图标与可选标签图标经 PR 386 合并 main"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-06-6-b-d-e","title":"应用图标重设计：6 个方向效果图，用户在 B/D/E 间比较"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-06-favicon","title":"浏览器标签 favicon 未随新图标更换的根因与修复"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-06-pr-385-main","title":"PR 385 笔记标题焦点与抽屉错位合并 main"}

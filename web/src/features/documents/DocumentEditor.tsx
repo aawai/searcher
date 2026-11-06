@@ -1431,6 +1431,14 @@ export function DocumentEditor({
                         placeholder="未命名笔记…"
                         aria-label="笔记标题"
                         value={snapshot.title}
+                        onPointerDown={(e) => {
+                            // A press focuses with the caret alone; the
+                            // mark lasts until the title loses focus.
+                            e.currentTarget.dataset.focusOrigin = "pointer";
+                        }}
+                        onBlur={(e) => {
+                            delete e.currentTarget.dataset.focusOrigin;
+                        }}
                         onChange={(e) =>
                             session.edit({ title: e.target.value })}
                         onCompositionStart={() => session.setComposing(true)}
