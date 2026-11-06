@@ -4,6 +4,7 @@ import deno from "@deno/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
 import { Buffer } from "node:buffer";
+import { firstFramePlugin } from "./vite-first-frame.ts";
 import { serviceWorkerPlugin } from "./vite-service-worker.ts";
 
 function bundleReportPlugin(): Plugin {
@@ -106,6 +107,7 @@ export default defineConfig({
         tailwindcss(),
         bundleReportPlugin(),
         woff2OnlyFontsPlugin(),
+        firstFramePlugin(),
         serviceWorkerPlugin(),
     ],
     build: {

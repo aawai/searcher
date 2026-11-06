@@ -100,7 +100,11 @@ export function createAppearanceOwnerStore<T extends Record<string, unknown>>(
                 hydrationGate.resolve();
                 return false;
             }
-            const base = options.normalize(saved);
+            // No device cache yet (or unreadable): keep the seed the store was
+            // created with rather than painting defaults over it.
+            const base = saved === undefined
+                ? options.initial
+                : options.normalize(saved);
             const patch = pendingBeforeHydration;
             pendingBeforeHydration = null;
             const merged = patch
