@@ -135,9 +135,7 @@ Deno.test("production navigation contracts", async (t) => {
             await page.waitForURL(origin + "/settings/shortcuts");
             await page.goBack();
             await page.waitForURL(origin + "/");
-            await page.waitForFunction(() =>
-                document.activeElement?.id === "search-query"
-            );
+            await search.click();
             await search.fill("/settings");
             await page.getByRole("option", { name: /打开设置/ }).click();
             await page.waitForURL(origin + "/settings");

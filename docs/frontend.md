@@ -118,7 +118,7 @@ deno task check:ui --update
 
 ## 可访问性契约
 
-对比度、焦点环与触控目标的数值底线见
+可访问性底线（WCAG 2.2 AA 基准与项目附加条目）见
 [Visual Language](design/VISUAL_LANGUAGE.md#一底线)。以下为代码必须保持的行为：
 
 - Escape 由 `components/ui/escape-layer-stack.tsx` 统一裁决，每次只消费最上层；笔记窗口依次处理菜单 / 弹窗、焦点在内的大纲 Overlay、窗口内抽屉、全屏和窗口最小化。输入法合成中不分发；注销层不得穿透到 window。关闭后焦点回到触发控件。
@@ -126,7 +126,7 @@ deno task check:ui --update
   不执行动作；pending 时禁用确认与取消。
 - 禁止 `confirm()`、`window.confirm()` 等原生确认（`check:ui` 的
   native-destructive-confirm 规则）。
-- 选中状态不只靠颜色：配合勾号、`aria-current` 或 `aria-pressed`。
+- 选中状态不只靠颜色：配合勾号、外环、形状、字重或位置等视觉线索；`aria-current` / `aria-pressed` 提供语义，但不替代视觉线索。
 - 同步失败使用持久、礼貌的状态容器，图标与文字链接并存；连接错误与偏好同步错误分开建模，不互相覆盖。
 - 主题切换按钮的可访问名称与 `title` 使用中文，说明当前与下一个主题。
 - `prefers-reduced-motion`
