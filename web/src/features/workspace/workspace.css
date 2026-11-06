@@ -63,16 +63,8 @@
     z-index: var(--elevation-local-1);
 }
 .workspace-search-wrap .workspace-search-input {
-    width: 100%;
-    height: var(--control-input-height);
     padding-left: var(--space-8);
     padding-right: var(--space-8);
-    border-radius: var(--control-radius);
-    border: none;
-    background: var(--surface-soft);
-    color: var(--foreground);
-    font-size: var(--font-body-size);
-    box-sizing: border-box;
 }
 .workspace-search-input::-webkit-search-cancel-button {
     appearance: none;
@@ -95,9 +87,6 @@
     }
 }
 @media (any-pointer: coarse) {
-    .workspace-search-input {
-        min-height: var(--control-touch-target);
-    }
     .workspace-search-clear {
         width: var(--control-touch-target);
         height: var(--control-touch-target);

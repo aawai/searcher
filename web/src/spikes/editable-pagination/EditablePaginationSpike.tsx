@@ -356,6 +356,7 @@ export function EditablePaginationSpike() {
                             <Input
                                 id="paper-margin-input"
                                 aria-label="边距（毫米）"
+                                placeholder="5–50"
                                 type="number"
                                 min={5}
                                 max={50}

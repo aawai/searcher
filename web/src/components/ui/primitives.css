@@ -671,59 +671,45 @@
     font-weight: var(--font-label-weight);
 }
 
-.field input,
-.field select,
-.field textarea {
-    width: 100%;
-    padding: 0 var(--space-3);
-    background: var(--surface-solid);
-    border: 1px solid var(--border-control);
-    border-radius: var(--radius-input);
-    color: var(--foreground);
-    font-size: var(--font-body-size);
-    font-weight: var(--font-body-weight);
-    outline: none;
-    transition: border-color var(--motion-fast) var(--ease-standard);
-}
-
-.field input,
-.field select {
-    min-height: var(--control-input-height);
-}
-
-.field textarea {
-    min-height: 120px;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-multiline);
-    resize: vertical;
-}
-
-.field input:focus-visible,
-.field select:focus-visible,
-.field textarea:focus-visible {
-    border-color: var(--ring);
-    outline: 2px solid var(--ring);
-    outline-offset: 1px;
-}
-
 .error {
     color: var(--danger);
 }
 
 /* --------------------------------------------------------------------------
-   Text inputs (Input / Textarea / NativeSelect)
+   Text inputs (Input / Textarea / NativeSelect): the single field owner.
+   A thin --field-border is a visual rule; fields are identified by their
+   mandatory placeholder or value (VISUAL_LANGUAGE 1.4.11). Focus is the
+   field's own border turned --ring plus a 1px inset: 2px, no gap or halo.
    -------------------------------------------------------------------------- */
 .cn-input,
 .cn-textarea,
 [data-slot="native-select"] {
     width: 100%;
     min-width: 0;
-    border: 1px solid var(--border-control);
+    border: 1px solid var(--field-border);
     background: var(--surface-solid);
     color: var(--foreground);
     font-size: var(--font-body-size);
+    font-weight: var(--font-body-weight);
     outline: none;
-    transition: border-color var(--motion-fast) var(--ease-standard);
+    transition: border-color var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard),
+        background-color var(--motion-fast) var(--ease-standard);
+}
+
+/* Search and filter boxes are toolbar controls: soft fill, no visible border. */
+.cn-input[data-variant="search"] {
+    border-color: transparent;
+    background: var(--surface-soft);
+}
+
+/* Hover deepens only the resting border; focus and invalid keep their own. */
+@media (hover: hover) {
+    .cn-input:not([data-variant="search"]):hover:not(:disabled, :focus-visible, [aria-invalid="true"]),
+    .cn-textarea:hover:not(:disabled, :focus-visible, [aria-invalid="true"]),
+    [data-slot="native-select"]:hover:not(:disabled, :focus-visible, [aria-invalid="true"]) {
+        border-color: var(--field-border-hover);
+    }
 }
 
 .cn-input {
@@ -760,14 +746,37 @@
 .cn-textarea:focus-visible,
 [data-slot="native-select"]:focus-visible {
     border-color: var(--ring);
-    outline: 2px solid var(--ring);
-    outline-offset: 1px;
+    box-shadow: var(--shadow-field-focus);
 }
 
 .cn-input[aria-invalid="true"],
 .cn-textarea[aria-invalid="true"],
 [data-slot="native-select"][aria-invalid="true"] {
     border-color: var(--danger);
+}
+
+.cn-input[aria-invalid="true"]:focus-visible,
+.cn-textarea[aria-invalid="true"]:focus-visible,
+[data-slot="native-select"][aria-invalid="true"]:focus-visible {
+    box-shadow: var(--shadow-field-invalid-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cn-input,
+    .cn-textarea,
+    [data-slot="native-select"] {
+        transition: none;
+    }
+}
+
+/* Forced colors drop box-shadow and repaint borders, so focus needs an outline. */
+@media (forced-colors: active) {
+    .cn-input:focus-visible,
+    .cn-textarea:focus-visible,
+    [data-slot="native-select"]:focus-visible {
+        outline: 2px solid Highlight;
+        outline-offset: -2px;
+    }
 }
 
 .cn-input:disabled,
@@ -788,8 +797,6 @@
 
 @media (any-pointer: coarse), (hover: none) {
     .cn-input,
-    .field input,
-    .field select,
     [data-slot="native-select"] {
         min-height: var(--control-touch-target);
     }
@@ -799,9 +806,6 @@
 @media (any-pointer: coarse) {
     .cn-input,
     .cn-textarea,
-    .field input,
-    .field select,
-    .field textarea,
     [data-slot="native-select"] {
         font-size: var(--font-input-touch-size);
     }

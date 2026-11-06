@@ -220,7 +220,7 @@
     width: 100%;
     padding-inline: var(--space-3);
 }
-.documents-sidebar :is([data-slot="input"], [data-slot="button"], [data-slot="dropdown-menu-trigger"]):focus-visible {
+.documents-sidebar :is([data-slot="button"], [data-slot="dropdown-menu-trigger"]):focus-visible {
     outline-offset: calc(-1 * var(--space-half));
 }
 [data-slot="button"].documents-entry[aria-pressed="true"] {

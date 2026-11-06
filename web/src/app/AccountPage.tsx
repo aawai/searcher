@@ -451,6 +451,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                             <Input
                                 className="account-input"
                                 aria-label="显示名称"
+                                placeholder="例如：爱丽丝"
                                 type="text"
                                 required
                                 maxLength={40}
@@ -643,6 +644,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                                 </label>
                                 <Input
                                     id="account-current-password"
+                                    placeholder="用于确认是你本人"
                                     type="password"
                                     required
                                     autoComplete="current-password"
@@ -661,6 +663,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                                 </label>
                                 <Input
                                     id="account-new-password"
+                                    placeholder="至少 12 个字符"
                                     type="password"
                                     required
                                     minLength={12}
@@ -688,6 +691,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                                 </label>
                                 <Input
                                     id="account-confirm-password"
+                                    placeholder="再次输入新密码"
                                     type="password"
                                     required
                                     minLength={12}

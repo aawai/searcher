@@ -98,6 +98,7 @@ export function ConversationSidebar({
                         className="icon-sm ask-sidebar__search-icon"
                     />
                     <Input
+                        variant="search"
                         className="ask-sidebar__search-input"
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}

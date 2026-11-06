@@ -160,6 +160,7 @@ function EditorSurface({ name }: { name: string }) {
             {source && (
                 <Textarea
                     aria-label={`${name}源码`}
+                    placeholder="输入 Markdown 源码"
                     value={markdown}
                     rows={18}
                     onChange={(event) => setMarkdown(event.target.value)}

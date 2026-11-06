@@ -55,6 +55,7 @@ export function ConversationSearchDialog({
 
                 <div className="ask-search-dialog__field">
                     <Input
+                        variant="search"
                         placeholder="搜索本会话"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}

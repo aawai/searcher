@@ -135,6 +135,7 @@ export function AdminSystemSettings() {
                             <Input
                                 id="auditRetentionDays"
                                 aria-label="审计日志保留期（天）"
+                                placeholder="1–3650"
                                 type="number"
                                 min={1}
                                 max={3650}

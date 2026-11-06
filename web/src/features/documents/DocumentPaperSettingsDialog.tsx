@@ -294,6 +294,7 @@ function DocumentPaperSettingsForm({
                             </label>
                             <Input
                                 id="margin-top-input"
+                                placeholder="5–50"
                                 type="number"
                                 min={5}
                                 max={50}
@@ -321,6 +322,7 @@ function DocumentPaperSettingsForm({
                             </label>
                             <Input
                                 id="margin-right-input"
+                                placeholder="5–50"
                                 type="number"
                                 min={5}
                                 max={50}
@@ -348,6 +350,7 @@ function DocumentPaperSettingsForm({
                             </label>
                             <Input
                                 id="margin-bottom-input"
+                                placeholder="5–50"
                                 type="number"
                                 min={5}
                                 max={50}
@@ -375,6 +378,7 @@ function DocumentPaperSettingsForm({
                             </label>
                             <Input
                                 id="margin-left-input"
+                                placeholder="5–50"
                                 type="number"
                                 min={5}
                                 max={50}
