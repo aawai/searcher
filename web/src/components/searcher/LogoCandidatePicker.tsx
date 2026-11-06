@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { AlertCircle, Check, Loader2, Sparkles } from "lucide-react";
+import { Check, Loader2, Sparkles } from "lucide-react";
 import {
     LOGO_STYLES,
     type LogoStyle,
@@ -19,7 +19,9 @@ import { Button, buttonVariants } from "../ui/button.tsx";
 import { routes } from "../../app/routes.ts";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect } from "../ui/native-select.tsx";
+import { SettingsRow } from "./semantic.tsx";
 
+/** The AI source of the app form's icon group: rows inside that group. */
 export function LogoCandidatePicker({ session }: { session: LogoSession }) {
     const {
         loadingModels,
@@ -50,119 +52,124 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
     } = session;
     if (loadingModels) {
         return (
-            <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--loading">
-                <div className="app-dialog-icon-subpanel__loading-indicator">
-                    <Loader2 size="1em" className="icon-md animate-spin" />
+            <SettingsRow title="AI 生成">
+                <span className="app-ai-loading">
+                    <Loader2 size="1em" className="icon-sm animate-spin" />
                     <span>正在加载模型…</span>
-                </div>
-            </div>
+                </span>
+            </SettingsRow>
         );
     }
 
     if (!models.length) {
         return (
-            <div className="app-ai-unavailable-card">
-                <div className="app-ai-unavailable-icon">
-                    <AlertCircle size="1em" className="icon-lg" />
-                </div>
-                <div className="app-ai-unavailable-body">
-                    <strong className="app-ai-unavailable-title">
-                        未配置图片模型
-                    </strong>
-                </div>
+            <SettingsRow title="AI 生成" description="未配置图片模型">
                 <Link
                     to={routes.settings("ai")}
-                    className={`${
-                        buttonVariants({ variant: "outline", size: "sm" })
-                    } app-ai-unavailable-action`}
+                    className={buttonVariants({
+                        variant: "outline",
+                        size: "sm",
+                    })}
                     onClick={onClose}
                 >
                     前往设置
                 </Link>
-            </div>
+            </SettingsRow>
         );
     }
 
     return (
-        <div className="app-dialog-icon-subpanel">
-            <div className="app-ai-controls">
-                <div className="app-ai-field">
-                    <label htmlFor="ai-model-select">模型</label>
-                    <NativeSelect
-                        id="ai-model-select"
-                        value={selectedId}
-                        onChange={(event) => setSelectedId(event.target.value)}
+        <>
+            <SettingsRow title="模型" labelFor="ai-model-select">
+                <NativeSelect
+                    id="ai-model-select"
+                    value={selectedId}
+                    onChange={(event) => setSelectedId(event.target.value)}
+                    disabled={busy}
+                >
+                    {models.map((item) => (
+                        <option key={item.id} value={item.id}>
+                            {item.displayName} ·{" "}
+                            {providers.find((provider) =>
+                                provider.id === item.providerId
+                            )?.name ?? "未知"} · {item.modelId}
+                        </option>
+                    ))}
+                </NativeSelect>
+            </SettingsRow>
+            <SettingsRow title="风格" labelFor="ai-style-select">
+                <NativeSelect
+                    id="ai-style-select"
+                    value={style}
+                    onChange={(event) =>
+                        setStyle(event.target.value as LogoStyle)}
+                    disabled={busy}
+                >
+                    {LOGO_STYLES.map((styleKey) => (
+                        <option key={styleKey} value={styleKey}>
+                            {LOGO_STYLE_LABELS[styleKey]}
+                        </option>
+                    ))}
+                </NativeSelect>
+            </SettingsRow>
+            <SettingsRow
+                title="图片协议"
+                labelFor="ai-image-protocol"
+                message="仅用于本次生成，不修改模型配置。"
+                messageId="ai-image-protocol-hint"
+            >
+                <NativeSelect
+                    id="ai-image-protocol"
+                    value={imageProtocol}
+                    disabled={busy}
+                    aria-describedby="ai-image-protocol-hint"
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        if (
+                            value === "openai" || value === "gemini"
+                        ) setImageProtocol(value);
+                    }}
+                >
+                    <option value="openai">OpenAI Images</option>
+                    <option value="gemini">Gemini 原生</option>
+                </NativeSelect>
+            </SettingsRow>
+            <SettingsRow
+                title="用途（可选）"
+                labelFor="ai-description-input"
+                className="settings-row--vertical"
+                description={description.length > 0
+                    ? `${description.length}/300`
+                    : undefined}
+            >
+                <Input
+                    id="ai-description-input"
+                    type="text"
+                    placeholder="例如：个人探索与常用应用启动器"
+                    maxLength={300}
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    disabled={busy}
+                />
+            </SettingsRow>
+            <SettingsRow
+                title="候选图标"
+                description="根据名称、域名和用途生成 3 个原创图标"
+            >
+                {candidates.length > 0 && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         disabled={busy}
-                    >
-                        {models.map((item) => (
-                            <option key={item.id} value={item.id}>
-                                {item.displayName} ·{" "}
-                                {providers.find((provider) =>
-                                    provider.id === item.providerId
-                                )?.name ?? "未知"} · {item.modelId}
-                            </option>
-                        ))}
-                    </NativeSelect>
-                </div>
-                <div className="app-ai-field">
-                    <label htmlFor="ai-style-select">风格</label>
-                    <NativeSelect
-                        id="ai-style-select"
-                        value={style}
-                        onChange={(event) =>
-                            setStyle(event.target.value as LogoStyle)}
-                        disabled={busy}
-                    >
-                        {LOGO_STYLES.map((styleKey) => (
-                            <option key={styleKey} value={styleKey}>
-                                {LOGO_STYLE_LABELS[styleKey]}
-                            </option>
-                        ))}
-                    </NativeSelect>
-                </div>
-                <div className="app-ai-field">
-                    <label htmlFor="ai-image-protocol">图片协议</label>
-                    <NativeSelect
-                        id="ai-image-protocol"
-                        value={imageProtocol}
-                        disabled={busy}
-                        onChange={(event) => {
-                            const value = event.target.value;
-                            if (
-                                value === "openai" || value === "gemini"
-                            ) setImageProtocol(value);
+                        onClick={() => {
+                            setCandidates([]);
+                            setSelectedCandidateIndex(null);
                         }}
                     >
-                        <option value="openai">OpenAI Images</option>
-                        <option value="gemini">Gemini 原生</option>
-                    </NativeSelect>
-                    <p className="app-ai-dialog-helper-text">
-                        仅用于本次生成，不修改模型配置。
-                    </p>
-                </div>
-                <div className="app-ai-field app-ai-field--full">
-                    <div className="app-ai-field-header">
-                        <label htmlFor="ai-description-input">
-                            用途（可选）
-                        </label>
-                        {description.length > 0 && (
-                            <span className="app-ai-char-counter">
-                                {description.length}/300
-                            </span>
-                        )}
-                    </div>
-                    <Input
-                        id="ai-description-input"
-                        type="text"
-                        placeholder="例如：个人探索与常用应用启动器"
-                        maxLength={300}
-                        value={description}
-                        onChange={(event) => setDescription(event.target.value)}
-                        disabled={busy}
-                    />
-                </div>
-            </div>
-            <div className="app-ai-action-row">
+                        清除生成结果
+                    </Button>
+                )}
                 <Button
                     type="button"
                     variant="outline"
@@ -187,26 +194,12 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                             </>
                         )}
                 </Button>
-                {candidates.length > 0 && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        disabled={busy}
-                        onClick={() => {
-                            setCandidates([]);
-                            setSelectedCandidateIndex(null);
-                        }}
-                    >
-                        清除生成结果
-                    </Button>
-                )}
-            </div>
+            </SettingsRow>
             {candidates.length > 0 && (
-                <div className="app-ai-candidates-wrapper">
-                    <span className="app-ai-candidates-label">
-                        生成结果
-                    </span>
+                <SettingsRow
+                    title="生成结果"
+                    className="settings-row--vertical"
+                >
                     <div
                         className="app-ai-candidates-grid"
                         role="radiogroup"
@@ -248,7 +241,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                             );
                         })}
                     </div>
-                </div>
+                </SettingsRow>
             )}
             <AlertDialog
                 open={confirmOpen}
@@ -363,6 +356,6 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     )}
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </>
     );
 }

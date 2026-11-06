@@ -188,6 +188,9 @@ export const CANONICAL_SEMANTIC_CLASS_OWNERS: Record<
     "settings-row-control": [
         "web/src/components/searcher/semantic.css",
     ],
+    "settings-row-message": [
+        "web/src/components/searcher/semantic.css",
+    ],
     "settings-row--vertical": [
         "web/src/components/searcher/semantic.css",
     ],

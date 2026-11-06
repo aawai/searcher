@@ -1,9 +1,12 @@
 /* ==========================================================================
-   Apps Domain Stylesheet - Canonical styles for AppForm and LogoCandidatePicker
+   Apps Domain Stylesheet - Canonical styles for AppForm and LogoCandidatePicker.
+   The form is grouped lists (SettingsGroup / SettingsRow, semantic.css); this
+   file owns only the dialog frame and the icon group's own content.
    ========================================================================== */
 
 :root {
     --app-dialog-preview-icon-size: 44px;
+    --app-form-dialog-max-height: 720px;
 }
 @media (min-width: 768px) {
     :root {
@@ -24,187 +27,41 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: var(--space-row-gap) var(--space-5);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-section-gap);
+    padding: var(--space-row-gap) var(--space-5) var(--space-5);
 }
 
-.app-dialog-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-row-gap);
+.app-dialog-form-error {
+    margin: 0 0 var(--space-4);
 }
 
-.app-dialog-section-title {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    font-weight: 500;
-    color: var(--muted);
-    margin: 0;
-}
-
-.app-dialog-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-inline-gap);
-}
-
-.app-dialog-field-label {
-    font-size: var(--font-body-size);
-    font-weight: 500;
-    color: var(--foreground);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
+/* URL fetch feedback on the URL row's second line. The line is always present
+   (an idle hint before any fetch) and as tall as the inline retry button, so
+   feedback arriving while the user moves to "保存" never shifts the footer. */
 .app-dialog-url-status {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-inline-gap);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    min-height: 20px;
-    margin-top: calc(var(--space-1) / 2);
+    min-height: var(--control-compact-height);
+}
+@media (any-pointer: coarse), (hover: none) {
+    .app-dialog-url-status {
+        min-height: var(--control-touch-target);
+    }
 }
 
-.app-dialog-url-status.loading {
-    color: var(--muted);
-}
-
-.app-dialog-url-status.success {
+.app-dialog-url-status[data-tone="success"] {
     color: var(--success);
-    font-weight: 500;
 }
 
-.app-dialog-url-status.error {
+.app-dialog-url-status[data-tone="danger"] {
     color: var(--danger);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-control-gap);
-}
-
-/* 打开设置卡片 (轻量收拢、不喧宾夺主) */
-.app-dialog-options-card {
-    background: var(--surface-soft);
-    border-radius: var(--radius);
-    padding: var(--space-3);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-row-gap);
-}
-
-.app-dialog-option-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-row-gap);
-}
-
-.app-dialog-option-title {
-    font-size: var(--font-body-size);
-    font-weight: 500;
-    color: var(--foreground);
-}
-
-.app-dialog-option-desc {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    color: var(--muted);
-}
-
-.app-dialog-option-divider {
-    height: 1px;
-    background: var(--border);
-    opacity: 0.6;
-    margin: calc(var(--space-1) / 2) 0;
-}
-
-/* 图标卡片 (清晰预览与来源收拢) */
-.app-dialog-icon-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-row-gap);
-}
-
-.app-dialog-preview-bar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-row-gap);
 }
 
 .app-dialog-preview-icon {
     --launcher-icon: var(--app-dialog-preview-icon-size);
     --radius-launcher-icon: calc(var(--launcher-icon) * var(--radius-launcher-ratio));
-}
-
-.app-dialog-preview-meta {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    flex: 1;
-    min-width: 0;
-}
-
-.app-dialog-preview-meta-title {
-    font-size: var(--font-body-size);
-    font-weight: 600;
-    color: var(--foreground);
-}
-
-.app-dialog-source-badge {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    font-weight: 500;
-    color: var(--muted);
-}
-
-.app-dialog-preview-meta-desc {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.app-dialog-preview-reset-btn {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    color: var(--muted);
-    flex-shrink: 0;
-}
-
-.app-dialog-icon-subpanel-wrap {
-    margin-top: calc(var(--space-1) / 2);
-}
-
-.app-dialog-icon-subpanel {
-    border-top: 1px solid var(--border);
-    padding-top: var(--space-control-gap);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-control-gap);
-}
-
-.app-dialog-icon-subpanel--auto {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-control-gap);
-}
-
-.app-dialog-helper-text,
-.app-ai-dialog-helper-text {
-    font-size: var(--font-metadata-size);
-    color: var(--muted);
-    margin: 0;
-    line-height: var(--font-metadata-line-height);
+    flex: none;
 }
 
 .app-upload-dropzone {
@@ -214,6 +71,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-1);
+    width: 100%;
     padding: var(--space-3);
     border: none;
     border-radius: var(--control-radius);
@@ -245,7 +103,8 @@
 
 .app-upload-text {
     font-size: var(--font-body-size);
-    font-weight: 500;
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
     color: var(--foreground);
 }
 
@@ -259,6 +118,7 @@
     display: flex;
     gap: var(--space-control-gap);
     align-items: center;
+    width: 100%;
 }
 
 .app-input-with-button input {
@@ -266,69 +126,18 @@
     margin: 0;
 }
 
-.app-ai-unavailable-card {
-    display: flex;
+.app-ai-loading {
+    display: inline-flex;
     align-items: center;
-    gap: var(--space-row-gap);
-}
-
-.app-ai-unavailable-icon {
+    gap: var(--space-inline-gap);
     color: var(--muted);
-    flex-shrink: 0;
-}
-
-.app-ai-unavailable-body {
-    flex: 1;
-    min-width: 0;
-}
-
-.app-ai-unavailable-title {
-    display: block;
-    font-size: var(--font-body-size);
-    font-weight: 600;
-    color: var(--foreground);
-}
-
-.app-ai-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-row-gap);
-}
-
-.app-ai-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-}
-
-.app-ai-field label {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    color: var(--muted);
-}
-
-.app-ai-action-row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-control-gap);
-}
-
-.app-ai-candidates-wrapper {
-    margin-top: var(--space-control-gap);
-}
-
-.app-ai-candidates-label {
-    display: block;
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    color: var(--muted);
-    margin-bottom: var(--space-control-gap);
 }
 
 .app-ai-candidates-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-control-gap);
+    width: 100%;
 }
 
 .app-ai-candidate-card {
@@ -380,7 +189,7 @@
     gap: var(--space-inline-gap);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
-    font-weight: 500;
+    font-weight: var(--font-label-weight);
     color: var(--foreground);
 }
 
@@ -401,10 +210,10 @@
     background: var(--accent);
 }
 
+/* The footer shares the dialog's grouped canvas: a hairline, no band. */
 .app-dialog-footer {
     padding: var(--space-3) var(--space-5);
     padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
-    background: var(--surface-solid);
     border-top: 1px solid var(--border);
     display: flex;
     justify-content: flex-end;
@@ -413,45 +222,9 @@
 }
 
 @media (max-width: 639px) {
-    .app-dialog-body {
-        padding: var(--space-row-gap) var(--space-5);
-        gap: var(--space-section-gap);
-    }
-    .app-dialog-footer {
-        padding-inline: var(--space-5);
-    }
-    .app-dialog-preview-bar {
-        flex-wrap: wrap;
-    }
-    .app-ai-controls {
-        grid-template-columns: 1fr;
-    }
     .app-ai-candidates-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-}
-
-/* ==========================================================================
-   LogoCandidatePicker presentation (migrated from semantic.css tail)
-   ========================================================================== */
-
-.app-dialog-icon-subpanel--loading {
-    align-items: center;
-    justify-content: center;
-    min-height: calc(var(--control-height) * 2.5);
-}
-
-.app-dialog-icon-subpanel__loading-indicator {
-    display: flex;
-    align-items: center;
-    gap: var(--space-control-gap);
-    color: var(--muted);
-    font-size: var(--font-body-size);
-}
-
-.app-ai-unavailable-action {
-    flex-shrink: 0;
-    text-decoration: none;
 }
 
 .app-panel-form-container {
@@ -468,14 +241,31 @@
     }
 }
 
-/* Home add / edit dialog: a title, then the form's own scrolling body and footer. */
+/* Home add / edit dialog: a title, then the form's own scrolling body and
+   footer, on the grouped canvas (DialogPopup surface="grouped"). The height
+   follows the content up to the cap. The top edge stays where a capped panel
+   would start, so expanding the icon group or switching its source grows the
+   panel downwards and never moves the rows above it. */
 .dialog-panel.app-form-dialog {
+    --app-form-dialog-top: max(var(--space-4), calc((100dvh - var(--app-form-dialog-max-height)) / 2));
+    top: var(--app-form-dialog-top);
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     width: min(calc(100vw - var(--space-6)), 560px);
-    height: min(720px, calc(100dvh - var(--space-7)));
+    max-height: calc(100dvh - 2 * var(--app-form-dialog-top));
     padding: 0;
     overflow: hidden;
+}
+.dialog-panel.app-form-dialog[data-starting-style],
+.dialog-panel.app-form-dialog[data-ending-style] {
+    transform: translate(-50%, var(--space-2));
+}
+@media (prefers-reduced-motion: reduce) {
+    .dialog-panel.app-form-dialog[data-starting-style],
+    .dialog-panel.app-form-dialog[data-ending-style] {
+        transform: translateX(-50%);
+    }
 }
 .app-form-dialog-title {
     flex: none;

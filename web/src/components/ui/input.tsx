@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { Input as InputPrimitive } from "@base-ui/react/input";
 import { cn } from "../../lib/utils.ts";
 
@@ -6,7 +7,7 @@ import { cn } from "../../lib/utils.ts";
  * value, which is why its border need not reach 3:1 (VISUAL_LANGUAGE 1.4.11).
  * `search` is the soft-filled toolbar look for search and filter boxes.
  */
-type InputProps = Omit<InputPrimitive.Props, "placeholder"> & {
+type InputProps = Omit<ComponentProps<typeof InputPrimitive>, "placeholder"> & {
     placeholder: string;
     variant?: "default" | "search";
 };

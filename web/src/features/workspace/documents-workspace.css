@@ -260,7 +260,9 @@
     min-height: var(--control-compact-height);
     padding-block: var(--space-1);
     padding-inline-end: var(--space-1);
-    padding-inline-start: calc(var(--space-2) + (var(--tree-level) - 1) *
+    /* Level 1 starts on the sidebar's content line (--space-3 inside the box
+       edge), the same inset as the search box glyph and the entries. */
+    padding-inline-start: calc(var(--space-3) + (var(--tree-level) - 1) *
         var(--space-4));
     border-radius: var(--control-radius);
     cursor: pointer;

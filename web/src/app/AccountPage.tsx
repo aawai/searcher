@@ -154,6 +154,13 @@ export function AccountContent({ host }: { host: PageHost }) {
     const [passwordSaving, setPasswordSaving] = useState(false);
     const [passwordSuccess, setPasswordSuccess] = useState("");
     const [passwordError, setPasswordError] = useState("");
+    // Client checks belong to one field and show in its row; server errors
+    // stay in the dialog's banner.
+    const [passwordFieldError, setPasswordFieldError] = useState<
+        { field: "new" | "confirm"; message: string } | null
+    >(null);
+    const newPasswordRef = useRef<HTMLInputElement>(null);
+    const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
     // Devices state
     const [devices, setDevices] = useState<SessionDevice[]>([]);
@@ -233,14 +240,23 @@ export function AccountContent({ host }: { host: PageHost }) {
     const handleChangePassword = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         setPasswordError("");
+        setPasswordFieldError(null);
         setPasswordSuccess("");
 
         if (newPassword.length < 12) {
-            setPasswordError("新密码长度不能少于 12 个字符");
+            setPasswordFieldError({
+                field: "new",
+                message: "新密码长度不能少于 12 个字符",
+            });
+            newPasswordRef.current?.focus();
             return;
         }
         if (newPassword !== confirmPassword) {
-            setPasswordError("两次输入的新密码不一致");
+            setPasswordFieldError({
+                field: "confirm",
+                message: "两次输入的新密码不一致",
+            });
+            confirmPasswordRef.current?.focus();
             return;
         }
 
@@ -280,6 +296,7 @@ export function AccountContent({ host }: { host: PageHost }) {
         setConfirmPassword("");
         setPasswordSuccess("");
         setPasswordError("");
+        setPasswordFieldError(null);
     };
 
     const handlePasswordDialogOpenChange = (open: boolean) => {
@@ -621,7 +638,10 @@ export function AccountContent({ host }: { host: PageHost }) {
             >
                 <DialogPortal>
                     <DialogBackdrop />
-                    <DialogPopup className="account-password-dialog">
+                    <DialogPopup
+                        className="account-password-dialog"
+                        surface="grouped"
+                    >
                         <form
                             className="account-password-form"
                             onSubmit={handleChangePassword}
@@ -635,73 +655,91 @@ export function AccountContent({ host }: { host: PageHost }) {
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <div className="account-field">
-                                <label
-                                    className="account-field-label"
-                                    htmlFor="account-current-password"
+                            <SettingsGroup>
+                                <SettingsRow
+                                    title="当前密码"
+                                    labelFor="account-current-password"
                                 >
-                                    当前密码
-                                </label>
-                                <Input
-                                    id="account-current-password"
-                                    placeholder="用于确认是你本人"
-                                    type="password"
-                                    required
-                                    autoComplete="current-password"
-                                    value={currentPassword}
-                                    onChange={(e) =>
-                                        setCurrentPassword(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="account-field">
-                                <label
-                                    className="account-field-label"
-                                    htmlFor="account-new-password"
+                                    <Input
+                                        id="account-current-password"
+                                        placeholder="用于确认是你本人"
+                                        type="password"
+                                        required
+                                        autoComplete="current-password"
+                                        value={currentPassword}
+                                        onChange={(e) =>
+                                            setCurrentPassword(e.target.value)}
+                                    />
+                                </SettingsRow>
+                                <SettingsRow
+                                    title="新密码"
+                                    labelFor="account-new-password"
+                                    message={passwordFieldError?.field === "new"
+                                        ? (
+                                            <span role="alert">
+                                                {passwordFieldError.message}
+                                            </span>
+                                        )
+                                        : "至少 12 个字符"}
+                                    messageId="account-new-password-hint"
+                                    invalid={passwordFieldError?.field ===
+                                        "new"}
                                 >
-                                    新密码
-                                </label>
-                                <Input
-                                    id="account-new-password"
-                                    placeholder="至少 12 个字符"
-                                    type="password"
-                                    required
-                                    minLength={12}
-                                    maxLength={128}
-                                    autoComplete="new-password"
-                                    aria-describedby="account-new-password-hint"
-                                    value={newPassword}
-                                    onChange={(e) =>
-                                        setNewPassword(e.target.value)}
-                                />
-                                <p
-                                    id="account-new-password-hint"
-                                    className="account-field-hint"
+                                    <Input
+                                        ref={newPasswordRef}
+                                        id="account-new-password"
+                                        placeholder="至少 12 个字符"
+                                        type="password"
+                                        required
+                                        minLength={12}
+                                        maxLength={128}
+                                        autoComplete="new-password"
+                                        aria-describedby="account-new-password-hint"
+                                        aria-invalid={passwordFieldError
+                                                    ?.field === "new" ||
+                                            undefined}
+                                        value={newPassword}
+                                        onChange={(e) =>
+                                            setNewPassword(e.target.value)}
+                                    />
+                                </SettingsRow>
+                                <SettingsRow
+                                    title="确认新密码"
+                                    labelFor="account-confirm-password"
+                                    message={passwordFieldError?.field ===
+                                            "confirm"
+                                        ? (
+                                            <span role="alert">
+                                                {passwordFieldError.message}
+                                            </span>
+                                        )
+                                        : undefined}
+                                    messageId="account-confirm-password-error"
+                                    invalid={passwordFieldError?.field ===
+                                        "confirm"}
                                 >
-                                    至少 12 个字符
-                                </p>
-                            </div>
-
-                            <div className="account-field">
-                                <label
-                                    className="account-field-label"
-                                    htmlFor="account-confirm-password"
-                                >
-                                    确认新密码
-                                </label>
-                                <Input
-                                    id="account-confirm-password"
-                                    placeholder="再次输入新密码"
-                                    type="password"
-                                    required
-                                    minLength={12}
-                                    maxLength={128}
-                                    autoComplete="new-password"
-                                    value={confirmPassword}
-                                    onChange={(e) =>
-                                        setConfirmPassword(e.target.value)}
-                                />
-                            </div>
+                                    <Input
+                                        ref={confirmPasswordRef}
+                                        id="account-confirm-password"
+                                        placeholder="再次输入新密码"
+                                        type="password"
+                                        required
+                                        minLength={12}
+                                        maxLength={128}
+                                        autoComplete="new-password"
+                                        aria-describedby={passwordFieldError
+                                                ?.field === "confirm"
+                                            ? "account-confirm-password-error"
+                                            : undefined}
+                                        aria-invalid={passwordFieldError
+                                                    ?.field === "confirm" ||
+                                            undefined}
+                                        value={confirmPassword}
+                                        onChange={(e) =>
+                                            setConfirmPassword(e.target.value)}
+                                    />
+                                </SettingsRow>
+                            </SettingsGroup>
 
                             {passwordSuccess && (
                                 <StatusBanner tone="success">

@@ -9,6 +9,8 @@ import {
     LoadingState,
     LocalNavigation,
     ManagementTable,
+    SettingsGroup,
+    SettingsRow,
     StatusBanner,
     WorkspaceToolbar,
 } from "../components/searcher/semantic.tsx";
@@ -166,6 +168,8 @@ export function AdminPage() {
     const [newPassword, setNewPassword] = useState("");
     const [createBusy, setCreateBusy] = useState(false);
     const [createError, setCreateError] = useState("");
+    const [createPasswordError, setCreatePasswordError] = useState("");
+    const createPasswordRef = useRef<HTMLInputElement>(null);
 
     const [resetModalUser, setResetModalUser] = useState<AdminUserDto | null>(
         null,
@@ -269,14 +273,17 @@ export function AdminPage() {
     function openCreateModal(trigger: HTMLElement) {
         modalTriggerRef.current = trigger;
         setCreateError("");
+        setCreatePasswordError("");
         setCreateModalOpen(true);
     }
 
     async function handleCreateUser(e: FormEvent) {
         e.preventDefault();
         setCreateError("");
+        setCreatePasswordError("");
         if (newPassword.length < 12) {
-            setCreateError("密码长度不能小于 12 个字符");
+            setCreatePasswordError("密码长度不能小于 12 个字符");
+            createPasswordRef.current?.focus();
             return;
         }
         setCreateBusy(true);
@@ -1090,7 +1097,7 @@ export function AdminPage() {
                     if (!createBusy) setCreateModalOpen(open);
                 }}
             >
-                <DialogContent finalFocus={modalTriggerRef}>
+                <DialogContent finalFocus={modalTriggerRef} surface="grouped">
                     <DialogHeader>
                         <DialogTitle>创建新用户</DialogTitle>
                     </DialogHeader>
@@ -1100,86 +1107,89 @@ export function AdminPage() {
                                 {createError}
                             </StatusBanner>
                         )}
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="create-username"
+                        <SettingsGroup>
+                            <SettingsRow
+                                title="用户名"
+                                labelFor="create-username"
+                                message="3–32 位字母、数字或下划线"
+                                messageId="create-username-hint"
                             >
-                                用户名
-                            </label>
-                            <Input
-                                id="create-username"
-                                type="text"
-                                required
-                                autoFocus
-                                autoComplete="off"
-                                pattern="^[a-zA-Z0-9_]{3,32}$"
-                                placeholder="例如: alice"
-                                aria-describedby="create-username-hint"
-                                value={newUsername}
-                                onChange={(e) => setNewUsername(e.target.value)}
-                            />
-                            <span
-                                id="create-username-hint"
-                                className="admin-field-hint"
+                                <Input
+                                    id="create-username"
+                                    type="text"
+                                    required
+                                    autoFocus
+                                    autoComplete="off"
+                                    pattern="^[a-zA-Z0-9_]{3,32}$"
+                                    placeholder="例如：alice"
+                                    aria-describedby="create-username-hint"
+                                    value={newUsername}
+                                    onChange={(e) =>
+                                        setNewUsername(e.target.value)}
+                                />
+                            </SettingsRow>
+                            <SettingsRow
+                                title="显示名称"
+                                labelFor="create-display-name"
                             >
-                                3–32 位字母、数字或下划线
-                            </span>
-                        </div>
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="create-display-name"
+                                <Input
+                                    id="create-display-name"
+                                    type="text"
+                                    required
+                                    maxLength={40}
+                                    autoComplete="off"
+                                    placeholder="例如：爱丽丝"
+                                    value={newDisplayName}
+                                    onChange={(e) =>
+                                        setNewDisplayName(e.target.value)}
+                                />
+                            </SettingsRow>
+                            <SettingsRow
+                                title="邮箱（可选）"
+                                labelFor="create-email"
                             >
-                                显示名称
-                            </label>
-                            <Input
-                                id="create-display-name"
-                                type="text"
-                                required
-                                maxLength={40}
-                                autoComplete="off"
-                                placeholder="例如: 爱丽丝"
-                                value={newDisplayName}
-                                onChange={(e) =>
-                                    setNewDisplayName(e.target.value)}
-                            />
-                        </div>
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="create-email"
+                                <Input
+                                    id="create-email"
+                                    type="email"
+                                    autoComplete="off"
+                                    placeholder="alice@example.com"
+                                    value={newEmail}
+                                    onChange={(e) =>
+                                        setNewEmail(e.target.value)}
+                                />
+                            </SettingsRow>
+                            <SettingsRow
+                                title="初始密码"
+                                labelFor="create-password"
+                                message={createPasswordError
+                                    ? (
+                                        <span role="alert">
+                                            {createPasswordError}
+                                        </span>
+                                    )
+                                    : "至少 12 位，用户首次登录时使用"}
+                                messageId="create-password-hint"
+                                invalid={Boolean(createPasswordError)}
                             >
-                                邮箱（可选）
-                            </label>
-                            <Input
-                                id="create-email"
-                                type="email"
-                                autoComplete="off"
-                                placeholder="alice@example.com"
-                                value={newEmail}
-                                onChange={(e) => setNewEmail(e.target.value)}
-                            />
-                        </div>
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="create-password"
-                            >
-                                初始密码（至少 12 位）
-                            </label>
-                            <Input
-                                id="create-password"
-                                placeholder="用户首次登录时使用"
-                                type="password"
-                                required
-                                minLength={12}
-                                maxLength={128}
-                                autoComplete="new-password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                            />
-                        </div>
+                                <Input
+                                    ref={createPasswordRef}
+                                    id="create-password"
+                                    placeholder="至少 12 个字符"
+                                    type="password"
+                                    required
+                                    minLength={12}
+                                    maxLength={128}
+                                    autoComplete="new-password"
+                                    aria-describedby="create-password-hint"
+                                    aria-invalid={Boolean(
+                                        createPasswordError,
+                                    ) || undefined}
+                                    value={newPassword}
+                                    onChange={(e) =>
+                                        setNewPassword(e.target.value)}
+                                />
+                            </SettingsRow>
+                        </SettingsGroup>
                         <DialogFooter>
                             <Button
                                 type="button"

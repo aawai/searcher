@@ -55,7 +55,8 @@ Deno.test("apps ignores obsolete fetches and retains failed saves", async () => 
         await page.getByText("正在获取网站信息…", { exact: true }).waitFor();
         await page.getByRole("button", { name: "更换图标", exact: true })
             .click();
-        await page.getByRole("tab", { name: "网络图片", exact: true }).click();
+        await page.getByRole("radio", { name: "网络图片", exact: true })
+            .click();
         await page.locator('input[placeholder="https://example.com/icon.png"]')
             .fill("https://manual.invalid/icon.png");
         release.resolve();

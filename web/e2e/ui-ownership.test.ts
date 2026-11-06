@@ -400,9 +400,27 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             await confirmPassInput.fill("Mismatch-different-password-456!");
             await passwordDialog.getByRole("button", { name: "更新密码" })
                 .click();
-            await passwordDialog.getByRole("alert").filter({
+            const mismatch = passwordDialog.getByRole("alert").filter({
                 hasText: "两次输入的新密码不一致",
-            }).waitFor({ state: "visible" });
+            });
+            await mismatch.waitFor({ state: "visible" });
+            // The error belongs to the confirm field: it describes that
+            // field, which is marked invalid and receives focus.
+            assertEquals(
+                await confirmPassInput.getAttribute("aria-invalid"),
+                "true",
+            );
+            assert(
+                await confirmPassInput.evaluate((input) => {
+                    const ids = input.getAttribute("aria-describedby") ?? "";
+                    return input === document.activeElement &&
+                        ids.split(" ").some((id) =>
+                            document.getElementById(id)?.textContent
+                                ?.includes("两次输入的新密码不一致")
+                        );
+                }),
+                "mismatch error describes the focused confirm field",
+            );
             await passwordDialog.getByRole("button", { name: "取消" }).click();
             await passwordDialog.waitFor({ state: "hidden" });
 

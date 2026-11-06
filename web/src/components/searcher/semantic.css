@@ -247,6 +247,29 @@
     justify-content: flex-start;
     margin-inline-start: 0;
 }
+/* Form rows: a text field takes the width the label leaves, wrapping under
+   the label once both no longer fit; a unit after the field stays beside it. */
+.settings-row:not(.settings-row--vertical) .settings-row-control:has(> .cn-input) {
+    flex: 2 1 var(--settings-row-label-min);
+    flex-wrap: nowrap;
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control:has(> .cn-input) > :not(.cn-input) {
+    flex: none;
+}
+/* The field's hint or error: the row's second line, owned by its field. */
+.settings-row-message {
+    min-width: 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    overflow-wrap: anywhere;
+}
+.settings-row:not(.settings-row--vertical) > .settings-row-message {
+    flex-basis: 100%;
+}
+.settings-row-message[data-tone="danger"] {
+    color: var(--danger);
+}
 @media (max-width: 639px) {
     .settings-row:has([data-variant="swatch"]) {
         flex-direction: column;
@@ -467,6 +490,13 @@
 }
 .empty-state[data-density="compact"] {
     padding: var(--space-6) var(--space-4);
+}
+/* A list's own entry: start-aligned on the list's content line, with the
+   same inset as a compact loading state or banner. */
+.empty-state[data-density="inline"] {
+    align-items: flex-start;
+    padding: var(--space-2) var(--space-3);
+    text-align: start;
 }
 .status-banner[data-density="compact"],
 .loading-state[data-density="compact"] {
