@@ -11,6 +11,72 @@ Deno.test("affected: empty paths select no tests", () => {
     });
 });
 
+Deno.test("affected: changelog alone skips E2E, mixed changes retain their selection", () => {
+    const only = selectAffected(["CHANGELOG.md"]);
+    assertEquals(only.suites, []);
+    assertEquals(only.files, []);
+    assertEquals(only.reason, "Only E2E-independent documentation changed");
+    const code = "web/src/features/library/Library.tsx";
+    assertEquals(
+        selectAffected(["CHANGELOG.md", code]).files,
+        selectAffected([code]).files,
+    );
+});
+
+Deno.test("affected: documentation paths skip E2E without hiding other changes", () => {
+    const docs = [
+        "README.md",
+        "AGENTS.md",
+        "docs/testing.md",
+        "docs/design/VISUAL_LANGUAGE.md",
+        "docs/plans/new-plan.md",
+        "scripts/e2e/README.md",
+        "scripts/e2e/BENCHMARKS.md",
+    ];
+    assertEquals(selectAffected(docs).files, []);
+    const code = "web/src/features/library/Library.tsx";
+    assertEquals(
+        selectAffected([...docs, code]).files,
+        selectAffected([code]).files,
+    );
+    const mappedFixture = "web/src/features/library/fixture.md";
+    assertEquals(
+        selectAffected([...docs, mappedFixture]).suites,
+        selectAffected([code]).suites,
+    );
+    for (
+        const path of [
+            "web/src/features/unmapped/fixture.md",
+            "docs/example.json",
+            "scripts/e2e/fixture.md",
+            "new-root.md",
+        ]
+    ) {
+        const selection = selectAffected([...docs, path]);
+        assertEquals(selection.suites, ["full"]);
+        assertEquals(
+            selection.reason,
+            `Unmapped/shared paths require full: ${JSON.stringify([path])}`,
+        );
+    }
+});
+
+Deno.test("affected: reports every unknown or shared path despite exempt documentation", () => {
+    const selection = selectAffected([
+        "CHANGELOG.md",
+        "web/src/features/library/Library.tsx",
+        "web/src/design-system/tokens.css",
+        "unknown.txt",
+        "web/src/components/ui/primitives.css",
+    ]);
+    assertEquals(selection.suites, ["full"]);
+    assertEquals(selection.files, suiteFiles("full"));
+    assertEquals(
+        selection.reason,
+        'Unmapped/shared paths require full: ["unknown.txt","web/src/components/ui/primitives.css","web/src/design-system/tokens.css"]',
+    );
+});
+
 Deno.test("affected: unknown and shared paths override narrow matches", () => {
     for (
         const shared of [

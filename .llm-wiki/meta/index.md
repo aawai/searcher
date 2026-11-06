@@ -188,6 +188,9 @@
 - [[sources/obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus]] — Observation: PR 366 merged mobile masthead and note focus *(created: 2026-11-04)*
 - [[sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss]] — Observation: Root cause dock overlap: masthead dockShift stale measure (issue 363) *(created: 2026-11-04)*
 - [[sources/obs-2026-11-04-ui-issue-369]] — Observation: UI 精致化实施计划 Issue 369 已创建 *(created: 2026-11-04)*
+- [[sources/obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main]] — Observation: Issue 369 PR-3 (T5 T7 T8 T9 T12) 经 PR 377 合并 main *(created: 2026-11-06)*
+- [[sources/obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373]] — Observation: Issue 370 PR-A 提交为 PR 374，B6 跟进为 Issue 373 *(created: 2026-11-06)*
+- [[sources/obs-2026-11-06-pr-374-main]] — Observation: PR 374 已合并 main *(created: 2026-11-06)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -303,4 +306,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-05T08:03:03.911Z* | *Total pages: 288*
+*Last updated: 2026-11-06T03:10:53.352Z* | *Total pages: 291*

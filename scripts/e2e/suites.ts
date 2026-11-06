@@ -268,14 +268,33 @@ export interface AffectedSelection {
     reason: string;
 }
 
+/** Documentation locations do not feed the production build or browser E2E. */
+function isE2eIndependentDocument(path: string): boolean {
+    return path === "CHANGELOG.md" || path === "README.md" ||
+        path === "AGENTS.md" ||
+        path === "scripts/e2e/README.md" ||
+        path === "scripts/e2e/BENCHMARKS.md" ||
+        (path.startsWith("docs/") && path.endsWith(".md"));
+}
+
 /** Pure, conservative selection; one unknown path overrides all narrow matches. */
 export function selectAffected(paths: readonly string[]): AffectedSelection {
     const changed = [...new Set(paths)].sort();
     if (!changed.length) {
         return { paths: [], suites: [], files: [], reason: "No changed paths" };
     }
+    if (changed.every(isE2eIndependentDocument)) {
+        return {
+            paths: changed,
+            suites: [],
+            files: [],
+            reason: "Only E2E-independent documentation changed",
+        };
+    }
     const selected = new Set<DeclaredSuite>();
+    const unmapped: string[] = [];
     for (const path of changed) {
+        if (isE2eIndependentDocument(path)) continue;
         const owners = (Object.keys(suites) as DeclaredSuite[]).filter((
             suite,
         ) => suiteFiles(suite).includes(path));
@@ -283,19 +302,23 @@ export function selectAffected(paths: readonly string[]): AffectedSelection {
             path.startsWith(prefix)
         );
         if (!owners.length && !mapped.length) {
-            return {
-                paths: changed,
-                suites: ["full"],
-                files: suiteFiles("full"),
-                reason: `Unmapped/shared path requires full: ${
-                    JSON.stringify(path)
-                }`,
-            };
+            unmapped.push(path);
+            continue;
         }
         for (const suite of owners) selected.add(suite);
         for (const mapping of mapped) {
             for (const suite of mapping.suites) selected.add(suite);
         }
+    }
+    if (unmapped.length) {
+        return {
+            paths: changed,
+            suites: ["full"],
+            files: suiteFiles("full"),
+            reason: `Unmapped/shared paths require full: ${
+                JSON.stringify(unmapped)
+            }`,
+        };
     }
     const ordered = (Object.keys(suites) as DeclaredSuite[]).filter((suite) =>
         selected.has(suite)
