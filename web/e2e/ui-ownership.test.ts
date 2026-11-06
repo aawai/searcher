@@ -287,12 +287,12 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
 
             await page.getByRole("radio", { name: "圆角", exact: true })
                 .click();
-            await page.waitForFunction(() =>
-                document.documentElement.dataset.shape === "rounded" &&
-                getComputedStyle(document.documentElement).getPropertyValue(
-                        "--search-radius",
-                    ).trim() === "16px"
-            );
+            await page.waitForFunction(() => {
+                const root = getComputedStyle(document.documentElement);
+                return document.documentElement.dataset.shape === "rounded" &&
+                    root.getPropertyValue("--search-radius").trim() ===
+                        root.getPropertyValue("--radius-lg").trim();
+            });
             await updatePreferences({
                 searchShape: "rounded",
                 glassIntensity: "regular",
