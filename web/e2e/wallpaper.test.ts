@@ -731,6 +731,13 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             const rThumbBox = await readabilityThumb.boundingBox();
             const rSliderBox = await readability.boundingBox();
             assert(rThumbBox && rSliderBox);
+            const readabilityBefore =
+                (await prefs()).wallpaperPresentations[currentSrc]
+                    ?.readability ?? "balanced";
+            assertEquals(
+                await page.getByTestId("wallpaper-readability-note").count(),
+                ["none", "clear"].includes(readabilityBefore) ? 1 : 0,
+            );
 
             await page.mouse.move(
                 rThumbBox.x + rThumbBox.width / 2,
@@ -760,6 +767,9 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
                 "0",
                 "Preview mask must reflect dragged readability value in real-time",
             );
+            // Below the default stage the row warns that A6 no longer holds,
+            // while the draft is still being dragged.
+            await page.getByTestId("wallpaper-readability-note").waitFor();
 
             const patchPromise2 = page.waitForResponse(
                 (r) =>

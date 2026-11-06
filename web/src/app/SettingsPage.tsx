@@ -8,6 +8,7 @@ import {
     DEFAULT_WALLPAPER_PRESENTATION,
     purgeWallpaperPresentation,
     touchWallpaperPresentation,
+    WALLPAPER_READABILITY_MASKS,
     WALLPAPER_READABILITY_STAGES,
     type WallpaperPresentation,
     wallpaperPresentation,
@@ -77,6 +78,10 @@ const GLASS_CHOICES = [
 ] as const satisfies readonly (readonly [GlassIntensity, string])[];
 
 const REDUCED_TRANSPARENCY_QUERY = "(prefers-reduced-transparency: reduce)";
+
+const DEFAULT_READABILITY_LABEL = WALLPAPER_READABILITY_STAGES.find((stage) =>
+    stage.id === DEFAULT_WALLPAPER_PRESENTATION.readability
+)?.label;
 
 /** OS 的「减少透明度」偏好；它优先于用户选择的玻璃档位。 */
 function useReducedTransparency(): boolean {
@@ -284,6 +289,12 @@ export function SettingsContent({ host }: { host: PageHost }) {
         draftPresentation,
         currentPresentation,
     ]);
+    // A6: the readability guarantee holds from the default stage up.
+    const readabilityBelowDefault =
+        WALLPAPER_READABILITY_MASKS[effectivePresentation.readability] <
+            WALLPAPER_READABILITY_MASKS[
+                DEFAULT_WALLPAPER_PRESENTATION.readability
+            ];
 
     useEffect(() => {
         setDraftPresentation(null);
@@ -940,6 +951,13 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     </SettingsRow>
                                     <SettingsRow
                                         title="可读性"
+                                        description={readabilityBelowDefault
+                                            ? (
+                                                <span data-testid="wallpaper-readability-note">
+                                                    低于“{DEFAULT_READABILITY_LABEL}”时，首页文字在部分壁纸上可能低于可读性标准
+                                                </span>
+                                            )
+                                            : undefined}
                                         className="settings-row--vertical"
                                     >
                                         <SettingsPresetSlider

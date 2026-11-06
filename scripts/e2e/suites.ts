@@ -62,7 +62,7 @@ export const suites = {
         "documents-ux",
         "documents-drawer-motion",
     ],
-    wallpaper: ["wallpaper", "wallpaper-accent"],
+    wallpaper: ["wallpaper-readability", "wallpaper", "wallpaper-accent"],
     bundle: [
         "route-style-stability",
         "route-style-admin-lab",
