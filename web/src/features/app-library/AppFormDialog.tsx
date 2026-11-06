@@ -31,7 +31,7 @@ export function AppFormDialog({ target, onRequestClose }: {
         >
             <DialogPortal>
                 <DialogBackdrop />
-                <DialogPopup className="app-form-dialog">
+                <DialogPopup className="app-form-dialog" surface="grouped">
                     <DialogTitle className="app-form-dialog-title">
                         {target.mode === "create" ? "添加应用" : "编辑应用"}
                     </DialogTitle>

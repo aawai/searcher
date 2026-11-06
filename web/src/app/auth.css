@@ -1,5 +1,6 @@
-/* Auth: fields share one rhythm inside the narrow-form column (narrow-form.css).
-   The page title is the only heading. */
+/* Auth: one grouped list of fields inside the narrow-form column
+   (narrow-form.css), straight on the page canvas. The page title is the only
+   heading. */
 
 .auth-body {
     display: flex;
@@ -19,28 +20,6 @@
 .auth-fields {
     display: grid;
     gap: var(--space-4);
-}
-
-.auth-field {
-    display: grid;
-    gap: var(--space-2);
-}
-
-.auth-field-label {
-    font-size: var(--font-body-size);
-    font-weight: var(--font-label-weight);
-    line-height: var(--font-body-line-height);
-}
-
-.auth-field-hint {
-    margin: 0;
-    color: var(--muted);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-}
-
-.auth-field-hint--error {
-    color: var(--danger);
 }
 
 .auth-submit {

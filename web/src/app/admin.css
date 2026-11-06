@@ -259,12 +259,6 @@
     color: var(--foreground);
 }
 
-.admin-field-hint {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    color: var(--muted);
-}
-
 .admin-file-row {
     display: flex;
     flex-wrap: wrap;

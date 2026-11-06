@@ -1,6 +1,10 @@
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
-import { StatusBanner } from "../components/searcher/semantic.tsx";
+import {
+    SettingsGroup,
+    SettingsRow,
+    StatusBanner,
+} from "../components/searcher/semantic.tsx";
 import {
     type SubmitEvent,
     useCallback,
@@ -17,7 +21,6 @@ import {
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import { api, json } from "../lib/api.ts";
-import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { authDestination, routes } from "./routes.ts";
 import "./narrow-form.css";
@@ -180,111 +183,90 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                         </div>
                     )}
                     <form className="auth-fields" onSubmit={submit}>
-                        <div className="auth-field">
-                            <label
-                                className="auth-field-label"
-                                htmlFor="auth-username"
+                        <SettingsGroup>
+                            <SettingsRow
+                                title="用户名"
+                                labelFor="auth-username"
+                                message={kind === "register"
+                                    ? `用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 个字符，只能使用英文字母、数字或下划线。`
+                                    : undefined}
+                                messageId="auth-username-hint"
+                                invalid={usernameInvalid}
                             >
-                                用户名
-                            </label>
-                            <Input
-                                id="auth-username"
-                                placeholder="例如：alice"
-                                autoComplete="username"
-                                required
-                                minLength={usernameRules.minLength}
-                                maxLength={usernameRules.maxLength}
-                                pattern={kind === "register"
-                                    ? AUTH_USERNAME_PATTERN
-                                    : undefined}
-                                aria-describedby={kind === "register"
-                                    ? "auth-username-hint"
-                                    : undefined}
-                                aria-invalid={usernameInvalid || undefined}
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                onInvalid={() => setUsernameTouched(true)}
-                                onBlur={() => setUsernameTouched(true)}
-                            />
-                            {kind === "register" && (
-                                <p
-                                    id="auth-username-hint"
-                                    className={cn(
-                                        "auth-field-hint",
-                                        usernameInvalid &&
-                                            "auth-field-hint--error",
-                                    )}
-                                    aria-live="polite"
-                                >
-                                    {`用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 个字符，只能使用英文字母、数字或下划线。`}
-                                </p>
-                            )}
-                        </div>
-                        {kind === "register" && (
-                            <div className="auth-field">
-                                <label
-                                    className="auth-field-label"
-                                    htmlFor="auth-display-name"
-                                >
-                                    显示名称
-                                </label>
                                 <Input
-                                    id="auth-display-name"
-                                    placeholder="例如：爱丽丝"
+                                    id="auth-username"
+                                    placeholder="例如：alice"
+                                    autoComplete="username"
                                     required
-                                    maxLength={40}
-                                    value={displayName}
+                                    minLength={usernameRules.minLength}
+                                    maxLength={usernameRules.maxLength}
+                                    pattern={kind === "register"
+                                        ? AUTH_USERNAME_PATTERN
+                                        : undefined}
+                                    aria-describedby={kind === "register"
+                                        ? "auth-username-hint"
+                                        : undefined}
+                                    aria-invalid={usernameInvalid || undefined}
+                                    value={username}
                                     onChange={(e) =>
-                                        setDisplayName(e.target.value)}
+                                        setUsername(e.target.value)}
+                                    onInvalid={() => setUsernameTouched(true)}
+                                    onBlur={() => setUsernameTouched(true)}
                                 />
-                            </div>
-                        )}
-                        <div className="auth-field">
-                            <label
-                                className="auth-field-label"
-                                htmlFor="auth-password"
-                            >
-                                密码
-                            </label>
-                            <Input
-                                id="auth-password"
-                                placeholder={kind === "login"
-                                    ? "输入登录密码"
-                                    : `至少 ${passwordRules.minLength} 个字符`}
-                                type="password"
-                                autoComplete={kind === "login"
-                                    ? "current-password"
-                                    : "new-password"}
-                                required
-                                minLength={kind === "login"
-                                    ? 1
-                                    : passwordRules.minLength}
-                                maxLength={kind === "register"
-                                    ? passwordRules.maxLength
-                                    : undefined}
-                                aria-describedby={kind === "register"
-                                    ? "auth-password-hint"
-                                    : undefined}
-                                aria-invalid={passwordInvalid || undefined}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                onInvalid={() => setPasswordTouched(true)}
-                                onBlur={() => setPasswordTouched(true)}
-                            />
+                            </SettingsRow>
                             {kind === "register" && (
-                                <p
-                                    id="auth-password-hint"
-                                    className={cn(
-                                        "auth-field-hint",
-                                        passwordInvalid &&
-                                            "auth-field-hint--error",
-                                    )}
-                                    aria-live="polite"
+                                <SettingsRow
+                                    title="显示名称"
+                                    labelFor="auth-display-name"
                                 >
-                                    {`密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符。`}
-                                </p>
+                                    <Input
+                                        id="auth-display-name"
+                                        placeholder="例如：爱丽丝"
+                                        required
+                                        maxLength={40}
+                                        value={displayName}
+                                        onChange={(e) =>
+                                            setDisplayName(e.target.value)}
+                                    />
+                                </SettingsRow>
                             )}
-                        </div>
+                            <SettingsRow
+                                title="密码"
+                                labelFor="auth-password"
+                                message={kind === "register"
+                                    ? `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符。`
+                                    : undefined}
+                                messageId="auth-password-hint"
+                                invalid={passwordInvalid}
+                            >
+                                <Input
+                                    id="auth-password"
+                                    placeholder={kind === "login"
+                                        ? "输入登录密码"
+                                        : `至少 ${passwordRules.minLength} 个字符`}
+                                    type="password"
+                                    autoComplete={kind === "login"
+                                        ? "current-password"
+                                        : "new-password"}
+                                    required
+                                    minLength={kind === "login"
+                                        ? 1
+                                        : passwordRules.minLength}
+                                    maxLength={kind === "register"
+                                        ? passwordRules.maxLength
+                                        : undefined}
+                                    aria-describedby={kind === "register"
+                                        ? "auth-password-hint"
+                                        : undefined}
+                                    aria-invalid={passwordInvalid || undefined}
+                                    value={password}
+                                    onChange={(e) =>
+                                        setPassword(e.target.value)}
+                                    onInvalid={() => setPasswordTouched(true)}
+                                    onBlur={() => setPasswordTouched(true)}
+                                />
+                            </SettingsRow>
+                        </SettingsGroup>
                         {error && (
                             <StatusBanner tone="error">{error}</StatusBanner>
                         )}

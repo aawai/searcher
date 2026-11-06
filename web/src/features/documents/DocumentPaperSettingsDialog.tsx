@@ -10,7 +10,7 @@
  * - Controlled onSaved callback invoked strictly upon verified server persistence
  */
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { DocumentSettingsDto } from "@shared/documents.ts";
 import {
     Dialog,
@@ -27,7 +27,11 @@ import {
     NativeSelectOption,
 } from "../../components/ui/native-select.tsx";
 import { api, json } from "../../lib/api.ts";
-import { StatusBanner } from "../../components/searcher/semantic.tsx";
+import {
+    SettingsGroup,
+    SettingsRow,
+    StatusBanner,
+} from "../../components/searcher/semantic.tsx";
 import { DEFAULT_PAPER_SETTINGS } from "./paper.ts";
 
 export interface DocumentPaperSettingsDialogProps {
@@ -51,29 +55,28 @@ const MARGIN_PRESETS = {
     wide: 25.4,
 } as const;
 
-function validatePaperMargins(margins: {
-    marginTopMm: number;
-    marginRightMm: number;
-    marginBottomMm: number;
-    marginLeftMm: number;
-}): string | null {
-    const vals = [
-        margins.marginTopMm,
-        margins.marginRightMm,
-        margins.marginBottomMm,
-        margins.marginLeftMm,
-    ];
-    for (const val of vals) {
-        if (
-            typeof val !== "number" ||
-            !Number.isFinite(val) ||
-            val < 5 ||
-            val > 50
-        ) {
-            return "页边距必须在 5mm 至 50mm 之间";
-        }
-    }
-    return null;
+type MarginSide = "top" | "right" | "bottom" | "left";
+type Margins = Record<MarginSide, number>;
+
+const MARGIN_FIELDS: readonly { side: MarginSide; label: string }[] = [
+    { side: "top", label: "上边距" },
+    { side: "right", label: "右边距" },
+    { side: "bottom", label: "下边距" },
+    { side: "left", label: "左边距" },
+];
+
+function marginsFrom(settings: DocumentSettingsDto | null): Margins {
+    const source = settings ?? DEFAULT_PAPER_SETTINGS;
+    return {
+        top: source.marginTopMm,
+        right: source.marginRightMm,
+        bottom: source.marginBottomMm,
+        left: source.marginLeftMm,
+    };
+}
+
+function isValidMargin(value: number): boolean {
+    return Number.isFinite(value) && value >= 5 && value <= 50;
 }
 
 function DocumentPaperSettingsForm({
@@ -88,17 +91,15 @@ function DocumentPaperSettingsForm({
     const [orientation, setOrientation] = useState<"portrait" | "landscape">(
         settings?.orientation ?? DEFAULT_PAPER_SETTINGS.orientation,
     );
-    const [marginTopMm, setMarginTopMm] = useState<number>(
-        settings?.marginTopMm ?? DEFAULT_PAPER_SETTINGS.marginTopMm,
+    const [margins, setMargins] = useState<Margins>(() =>
+        marginsFrom(settings)
     );
-    const [marginRightMm, setMarginRightMm] = useState<number>(
-        settings?.marginRightMm ?? DEFAULT_PAPER_SETTINGS.marginRightMm,
+    // Sides that failed the last submit; each clears when its field changes.
+    const [invalidSides, setInvalidSides] = useState<readonly MarginSide[]>(
+        [],
     );
-    const [marginBottomMm, setMarginBottomMm] = useState<number>(
-        settings?.marginBottomMm ?? DEFAULT_PAPER_SETTINGS.marginBottomMm,
-    );
-    const [marginLeftMm, setMarginLeftMm] = useState<number>(
-        settings?.marginLeftMm ?? DEFAULT_PAPER_SETTINGS.marginLeftMm,
+    const marginInputs = useRef<Partial<Record<MarginSide, HTMLInputElement>>>(
+        {},
     );
 
     const [submitting, setSubmitting] = useState<boolean>(false);
@@ -110,40 +111,40 @@ function DocumentPaperSettingsForm({
         setOrientation(
             settings?.orientation ?? DEFAULT_PAPER_SETTINGS.orientation,
         );
-        setMarginTopMm(
-            settings?.marginTopMm ?? DEFAULT_PAPER_SETTINGS.marginTopMm,
-        );
-        setMarginRightMm(
-            settings?.marginRightMm ?? DEFAULT_PAPER_SETTINGS.marginRightMm,
-        );
-        setMarginBottomMm(
-            settings?.marginBottomMm ?? DEFAULT_PAPER_SETTINGS.marginBottomMm,
-        );
-        setMarginLeftMm(
-            settings?.marginLeftMm ?? DEFAULT_PAPER_SETTINGS.marginLeftMm,
-        );
+        setMargins(marginsFrom(settings));
+        setInvalidSides([]);
         setError(null);
     }, [settings]);
 
     const applyPreset = (presetMm: number) => {
-        setMarginTopMm(presetMm);
-        setMarginRightMm(presetMm);
-        setMarginBottomMm(presetMm);
-        setMarginLeftMm(presetMm);
+        setMargins({
+            top: presetMm,
+            right: presetMm,
+            bottom: presetMm,
+            left: presetMm,
+        });
+        setInvalidSides([]);
+        setError(null);
+    };
+
+    const setMargin = (side: MarginSide, raw: string) => {
+        const parsed = parseFloat(raw);
+        setMargins((current) => ({
+            ...current,
+            [side]: Number.isFinite(parsed) ? parsed : 0,
+        }));
+        setInvalidSides((current) => current.filter((s) => s !== side));
         setError(null);
     };
 
     const handleSubmit = async (e?: FormEvent) => {
         e?.preventDefault();
-        const validationError = validatePaperMargins({
-            marginTopMm,
-            marginRightMm,
-            marginBottomMm,
-            marginLeftMm,
-        });
-
-        if (validationError) {
-            setError(validationError);
+        const invalid = MARGIN_FIELDS
+            .map(({ side }) => side)
+            .filter((side) => !isValidMargin(margins[side]));
+        setInvalidSides(invalid);
+        if (invalid.length > 0) {
+            marginInputs.current[invalid[0]]?.focus();
             return;
         }
 
@@ -154,10 +155,10 @@ function DocumentPaperSettingsForm({
             const payload = {
                 paperSize,
                 orientation,
-                marginTopMm: Number(marginTopMm),
-                marginRightMm: Number(marginRightMm),
-                marginBottomMm: Number(marginBottomMm),
-                marginLeftMm: Number(marginLeftMm),
+                marginTopMm: margins.top,
+                marginRightMm: margins.right,
+                marginBottomMm: margins.bottom,
+                marginLeftMm: margins.left,
             };
 
             const saved = await api<DocumentSettingsDto>(
@@ -190,15 +191,8 @@ function DocumentPaperSettingsForm({
                 onSubmit={handleSubmit}
                 className="document-paper-form"
             >
-                {/* Paper Specification & Orientation */}
-                <div className="document-paper-fields">
-                    <div className="document-paper-field">
-                        <label
-                            htmlFor="paper-size-select"
-                            className="document-paper-label"
-                        >
-                            纸张规格
-                        </label>
+                <SettingsGroup>
+                    <SettingsRow title="纸张规格" labelFor="paper-size-select">
                         <NativeSelect
                             id="paper-size-select"
                             value={paperSize}
@@ -215,15 +209,11 @@ function DocumentPaperSettingsForm({
                                 US Letter (215.9 × 279.4 mm)
                             </NativeSelectOption>
                         </NativeSelect>
-                    </div>
-
-                    <div className="document-paper-field">
-                        <label
-                            htmlFor="paper-orientation-select"
-                            className="document-paper-label"
-                        >
-                            版面方向
-                        </label>
+                    </SettingsRow>
+                    <SettingsRow
+                        title="版面方向"
+                        labelFor="paper-orientation-select"
+                    >
                         <NativeSelect
                             id="paper-orientation-select"
                             value={orientation}
@@ -242,162 +232,88 @@ function DocumentPaperSettingsForm({
                                 横向
                             </NativeSelectOption>
                         </NativeSelect>
-                    </div>
-                </div>
+                    </SettingsRow>
+                </SettingsGroup>
 
-                {/* Margin Presets & Numeric Controls */}
-                <div className="document-paper-section">
-                    <div className="document-paper-section-head">
-                        <span className="document-paper-label">
-                            页边距 (5–50 mm)
-                        </span>
-                        <div className="document-paper-presets">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled={submitting}
-                                onClick={() =>
-                                    applyPreset(MARGIN_PRESETS.standard)}
+                <SettingsGroup
+                    title="页边距"
+                    headingLevel={3}
+                    footer="每边 5–50 mm。"
+                >
+                    <SettingsRow title="预设">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={submitting}
+                            onClick={() => applyPreset(MARGIN_PRESETS.standard)}
+                        >
+                            标准 20mm
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={submitting}
+                            onClick={() => applyPreset(MARGIN_PRESETS.narrow)}
+                        >
+                            窄边距 12.7mm
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={submitting}
+                            onClick={() => applyPreset(MARGIN_PRESETS.wide)}
+                        >
+                            宽边距 25.4mm
+                        </Button>
+                    </SettingsRow>
+                    {MARGIN_FIELDS.map(({ side, label }) => {
+                        const id = `margin-${side}-input`;
+                        const invalid = invalidSides.includes(side);
+                        const value = margins[side];
+                        return (
+                            <SettingsRow
+                                key={side}
+                                title={label}
+                                labelFor={id}
+                                message={invalid
+                                    ? (
+                                        <span role="alert">
+                                            {`${label}须在 5–50 mm 之间`}
+                                        </span>
+                                    )
+                                    : undefined}
+                                messageId={`${id}-error`}
+                                invalid={invalid}
                             >
-                                标准 20mm
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled={submitting}
-                                onClick={() =>
-                                    applyPreset(MARGIN_PRESETS.narrow)}
-                            >
-                                窄边距 12.7mm
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled={submitting}
-                                onClick={() => applyPreset(MARGIN_PRESETS.wide)}
-                            >
-                                宽边距 25.4mm
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="document-paper-margins">
-                        <div className="document-paper-field">
-                            <label
-                                htmlFor="margin-top-input"
-                                className="document-paper-sublabel"
-                            >
-                                上边距 (mm)
-                            </label>
-                            <Input
-                                id="margin-top-input"
-                                placeholder="5–50"
-                                type="number"
-                                min={5}
-                                max={50}
-                                step="any"
-                                disabled={submitting}
-                                value={Number.isFinite(marginTopMm)
-                                    ? marginTopMm
-                                    : ""}
-                                onChange={(e) => {
-                                    const parsed = parseFloat(e.target.value);
-                                    setMarginTopMm(
-                                        Number.isFinite(parsed) ? parsed : 0,
-                                    );
-                                    setError(null);
-                                }}
-                            />
-                        </div>
-
-                        <div className="document-paper-field">
-                            <label
-                                htmlFor="margin-right-input"
-                                className="document-paper-sublabel"
-                            >
-                                右边距 (mm)
-                            </label>
-                            <Input
-                                id="margin-right-input"
-                                placeholder="5–50"
-                                type="number"
-                                min={5}
-                                max={50}
-                                step="any"
-                                disabled={submitting}
-                                value={Number.isFinite(marginRightMm)
-                                    ? marginRightMm
-                                    : ""}
-                                onChange={(e) => {
-                                    const parsed = parseFloat(e.target.value);
-                                    setMarginRightMm(
-                                        Number.isFinite(parsed) ? parsed : 0,
-                                    );
-                                    setError(null);
-                                }}
-                            />
-                        </div>
-
-                        <div className="document-paper-field">
-                            <label
-                                htmlFor="margin-bottom-input"
-                                className="document-paper-sublabel"
-                            >
-                                下边距 (mm)
-                            </label>
-                            <Input
-                                id="margin-bottom-input"
-                                placeholder="5–50"
-                                type="number"
-                                min={5}
-                                max={50}
-                                step="any"
-                                disabled={submitting}
-                                value={Number.isFinite(marginBottomMm)
-                                    ? marginBottomMm
-                                    : ""}
-                                onChange={(e) => {
-                                    const parsed = parseFloat(e.target.value);
-                                    setMarginBottomMm(
-                                        Number.isFinite(parsed) ? parsed : 0,
-                                    );
-                                    setError(null);
-                                }}
-                            />
-                        </div>
-
-                        <div className="document-paper-field">
-                            <label
-                                htmlFor="margin-left-input"
-                                className="document-paper-sublabel"
-                            >
-                                左边距 (mm)
-                            </label>
-                            <Input
-                                id="margin-left-input"
-                                placeholder="5–50"
-                                type="number"
-                                min={5}
-                                max={50}
-                                step="any"
-                                disabled={submitting}
-                                value={Number.isFinite(marginLeftMm)
-                                    ? marginLeftMm
-                                    : ""}
-                                onChange={(e) => {
-                                    const parsed = parseFloat(e.target.value);
-                                    setMarginLeftMm(
-                                        Number.isFinite(parsed) ? parsed : 0,
-                                    );
-                                    setError(null);
-                                }}
-                            />
-                        </div>
-                    </div>
-                </div>
+                                <Input
+                                    ref={(node: HTMLInputElement | null) => {
+                                        if (node) {
+                                            marginInputs.current[side] = node;
+                                        }
+                                    }}
+                                    id={id}
+                                    placeholder="5–50"
+                                    type="number"
+                                    min={5}
+                                    max={50}
+                                    step="any"
+                                    disabled={submitting}
+                                    aria-invalid={invalid || undefined}
+                                    aria-describedby={invalid
+                                        ? `${id}-error`
+                                        : undefined}
+                                    value={Number.isFinite(value) ? value : ""}
+                                    onChange={(e) =>
+                                        setMargin(side, e.target.value)}
+                                />
+                                <span>mm</span>
+                            </SettingsRow>
+                        );
+                    })}
+                </SettingsGroup>
 
                 <DialogFooter>
                     <Button
@@ -430,7 +346,7 @@ export function DocumentPaperSettingsDialog({
 }: DocumentPaperSettingsDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="document-paper-dialog">
+            <DialogContent className="document-paper-dialog" surface="grouped">
                 <DialogHeader>
                     <DialogTitle>纸张与打印设置</DialogTitle>
                     <DialogDescription>

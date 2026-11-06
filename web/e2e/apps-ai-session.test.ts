@@ -67,7 +67,7 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         await page.locator("#app-name-input").fill("AI 会话草稿");
         await page.getByRole("button", { name: "更换图标", exact: true })
             .click();
-        await page.getByRole("tab", { name: "AI 生成", exact: true }).click();
+        await page.getByRole("radio", { name: "AI 生成", exact: true }).click();
         await page.locator("#ai-description-input").fill("保留用途描述");
         await page.locator("#ai-style-select").selectOption("geometric");
         for (
@@ -149,7 +149,8 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         await candidate.click();
         await upload;
         await page.setViewportSize({ width: 390, height: 844 });
-        await page.getByRole("tab", { name: "网络图片", exact: true }).click();
+        await page.getByRole("radio", { name: "网络图片", exact: true })
+            .click();
         await page.locator('input[placeholder="https://example.com/icon.png"]')
             .fill("https://manual.invalid/icon.png");
         const uploaded = page.waitForResponse("**/api/webapp-icons/upload");
@@ -159,7 +160,7 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
             await page.locator('img[src^="/api/webapp-icons/"]').count(),
             0,
         );
-        await page.getByRole("tab", { name: "AI 生成", exact: true }).click();
+        await page.getByRole("radio", { name: "AI 生成", exact: true }).click();
         await candidate.waitFor();
         await dialog.getByRole("button", { name: "取消", exact: true })
             .click();
@@ -170,7 +171,7 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         await dialog.waitFor();
         await page.getByRole("button", { name: "更换图标", exact: true })
             .click();
-        await page.getByRole("tab", { name: "AI 生成", exact: true }).click();
+        await page.getByRole("radio", { name: "AI 生成", exact: true }).click();
         await page.locator("#ai-description-input").waitFor();
         assertEquals(
             await page.locator("#ai-description-input").inputValue(),

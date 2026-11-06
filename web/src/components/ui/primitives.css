@@ -1065,6 +1065,13 @@
     width: min(calc(100vw - var(--space-6)), 400px);
 }
 
+/* A dialog holding a grouped form is the grouped-list canvas end to end, the
+   same pairing as the settings window: groups (`--surface`) read against it,
+   and the title and footer share it, so no band separates them. */
+.dialog-panel[data-surface="grouped"] {
+    background: var(--surface-grouped-canvas);
+}
+
 .dialog-panel[data-starting-style],
 .dialog-panel[data-ending-style],
 [data-slot="alert-dialog-content"][data-starting-style],

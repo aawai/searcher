@@ -3,9 +3,10 @@ import { Check, Loader2, RefreshCw, Upload } from "lucide-react";
 import { Button } from "../ui/button.tsx";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect, NativeSelectOption } from "../ui/native-select.tsx";
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.tsx";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
 import { Switch } from "../ui/switch.tsx";
 import { LogoCandidatePicker } from "./LogoCandidatePicker.tsx";
+import { SettingsGroup, SettingsRow } from "./semantic.tsx";
 import { WebAppGlyph } from "./WebAppIcon.tsx";
 import {
     AlertDialog,
@@ -69,33 +70,77 @@ export function AppForm() {
         handleConfirmIconUpdate,
         onClose,
     } = session;
+    // The URL row always keeps its second line, sized for the retry button, so
+    // fetch feedback arriving later never moves the rows and footer below it.
+    const urlMessage = (
+        <span
+            className="app-dialog-url-status"
+            data-tone={urlValidationError || urlFetchStatus === "error"
+                ? "danger"
+                : urlFetchStatus === "success"
+                ? "success"
+                : undefined}
+        >
+            {urlValidationError
+                ? <span role="alert">{urlValidationError}</span>
+                : urlFetchStatus === "loading"
+                ? (
+                    <>
+                        <Loader2 size="1em" className="icon-sm animate-spin" />
+                        <span>{urlFetchMessage}</span>
+                    </>
+                )
+                : urlFetchStatus === "success"
+                ? (
+                    <>
+                        <Check size="1em" className="icon-sm" />
+                        <span>{urlFetchMessage}</span>
+                    </>
+                )
+                : urlFetchStatus === "error"
+                ? (
+                    <>
+                        <span>{urlFetchMessage}</span>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRetryFetch}
+                        >
+                            重新获取
+                        </Button>
+                    </>
+                )
+                : "填写后自动获取应用名称和网站图标"}
+        </span>
+    );
+    const sourceLabel = appIconSource === "website"
+        ? "自动获取"
+        : appIconSource === "upload"
+        ? "本地上传"
+        : appIconSource === "url"
+        ? "网络图片"
+        : appIconSource === "ai"
+        ? "AI 生成"
+        : "首字母";
     const formJsx = (
         <form onSubmit={handleSubmit} className="app-dialog-form">
             <div className="app-dialog-body">
                 {formError && (
-                    <p
-                        role="alert"
-                        className="error"
-                        style={{ margin: 0 }}
-                    >
+                    <p role="alert" className="error app-dialog-form-error">
                         {formError}
                     </p>
                 )}
 
-                {/* 1. 基础信息 (首要) */}
-                <section className="app-dialog-section">
-                    <h3 className="app-dialog-section-title">基础信息</h3>
-
-                    {/* 网址输入与状态 */}
-                    <div className="app-dialog-field">
-                        <label
-                            htmlFor="app-url-input"
-                            className="app-dialog-field-label"
-                        >
-                            <span>
-                                网址
-                            </span>
-                        </label>
+                <SettingsGroup title="基础信息" headingLevel={3}>
+                    <SettingsRow
+                        title="网址"
+                        labelFor="app-url-input"
+                        className="settings-row--vertical"
+                        message={urlMessage}
+                        messageId="app-url-message"
+                        invalid={Boolean(urlValidationError)}
+                    >
                         <Input
                             id="app-url-input"
                             required
@@ -105,102 +150,42 @@ export function AppForm() {
                             onChange={(e) => handleUrlChange(e.target.value)}
                             onBlur={handleUrlBlur}
                             autoFocus={!editingApp}
-                            className="w-full"
+                            aria-invalid={Boolean(urlValidationError) ||
+                                undefined}
+                            aria-describedby="app-url-message"
                         />
-                        {urlValidationError && (
-                            <p className="error" role="alert">
-                                {urlValidationError}
-                            </p>
-                        )}
-                        {/* URL 状态反馈 */}
-                        {urlFetchStatus === "loading" && (
-                            <div className="app-dialog-url-status loading">
-                                <Loader2
-                                    size="1em"
-                                    className="icon-sm animate-spin"
-                                />
-                                <span>{urlFetchMessage}</span>
-                            </div>
-                        )}
-                        {urlFetchStatus === "success" && (
-                            <div className="app-dialog-url-status success">
-                                <Check size="1em" className="icon-sm" />
-                                <span>{urlFetchMessage}</span>
-                            </div>
-                        )}
-                        {urlFetchStatus === "error" && (
-                            <div className="app-dialog-url-status error">
-                                <span>{urlFetchMessage}</span>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleRetryFetch}
-                                >
-                                    重新获取
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 网站名称与文件夹：桌面双列，移动端单列 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="app-dialog-field">
-                            <label
-                                htmlFor="app-name-input"
-                                className="app-dialog-field-label"
-                            >
-                                应用名称
-                            </label>
-                            <Input
-                                id="app-name-input"
-                                placeholder="默认使用域名"
-                                value={appName}
-                                onChange={(e) => setAppName(e.target.value)}
-                                className="w-full"
-                            />
-                        </div>
-
-                        <div className="app-dialog-field">
-                            <label
-                                htmlFor="app-group-select"
-                                className="app-dialog-field-label"
-                            >
-                                文件夹
-                            </label>
-                            <NativeSelect
-                                id="app-group-select"
-                                value={appGroupId}
-                                onChange={(e) => setAppGroupId(e.target.value)}
-                                className="w-full"
-                            >
-                                <NativeSelectOption value="">
-                                    未放入文件夹
+                    </SettingsRow>
+                    <SettingsRow title="应用名称" labelFor="app-name-input">
+                        <Input
+                            id="app-name-input"
+                            placeholder="默认使用域名"
+                            value={appName}
+                            onChange={(e) => setAppName(e.target.value)}
+                        />
+                    </SettingsRow>
+                    <SettingsRow title="文件夹" labelFor="app-group-select">
+                        <NativeSelect
+                            id="app-group-select"
+                            value={appGroupId}
+                            onChange={(e) => setAppGroupId(e.target.value)}
+                        >
+                            <NativeSelectOption value="">
+                                未放入文件夹
+                            </NativeSelectOption>
+                            {groups.map((g) => (
+                                <NativeSelectOption key={g.id} value={g.id}>
+                                    {g.name}
                                 </NativeSelectOption>
-                                {groups.map((g) => (
-                                    <NativeSelectOption key={g.id} value={g.id}>
-                                        {g.name}
-                                    </NativeSelectOption>
-                                ))}
-                            </NativeSelect>
-                        </div>
-                    </div>
-
+                            ))}
+                        </NativeSelect>
+                    </SettingsRow>
                     {!editingApp && (
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex flex-col gap-1">
-                                <label
-                                    htmlFor="app-home-fixed"
-                                    className="app-dialog-field-label"
-                                >
-                                    固定到首页
-                                </label>
-                                <span className="app-dialog-option-desc">
-                                    {appGroupId
-                                        ? "文件夹成员随文件夹显示，固定状态由文件夹决定"
-                                        : "只影响首页呈现，应用始终保留在应用面板"}
-                                </span>
-                            </div>
+                        <SettingsRow
+                            title="固定到首页"
+                            description={appGroupId
+                                ? "文件夹成员随文件夹显示，固定状态由文件夹决定"
+                                : "只影响首页呈现，应用始终保留在应用面板"}
+                        >
                             <Switch
                                 id="app-home-fixed"
                                 aria-label="固定到首页"
@@ -208,256 +193,216 @@ export function AppForm() {
                                 disabled={Boolean(appGroupId)}
                                 onCheckedChange={setAppHomeFixed}
                             />
-                        </div>
+                        </SettingsRow>
                     )}
-                </section>
+                </SettingsGroup>
 
-                {/* 2. 打开设置 (清晰紧凑) */}
-                <section className="app-dialog-section">
-                    <h3 className="app-dialog-section-title">打开设置</h3>
-                    <div className="app-dialog-options-card">
-                        {/* 打开方式 */}
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center justify-between gap-2">
-                                <span className="app-dialog-option-title">
-                                    打开方式
-                                </span>
-                                {appOpenMode === "global" && (
-                                    <span className="app-dialog-option-desc">
-                                        当前全局：{appearance.target ===
-                                                "new_tab"
-                                            ? "新标签页"
-                                            : "当前标签页"}
-                                    </span>
+                <SettingsGroup title="打开设置" headingLevel={3}>
+                    <SettingsRow
+                        title="打开方式"
+                        description={appOpenMode === "global"
+                            ? `当前全局：${
+                                appearance.target === "new_tab"
+                                    ? "新标签页"
+                                    : "当前标签页"
+                            }`
+                            : undefined}
+                    >
+                        <RadioGroup
+                            variant="segmented"
+                            aria-label="打开方式"
+                            value={appOpenMode}
+                            onValueChange={(val) =>
+                                setAppOpenMode(
+                                    val as "global" | "current" | "new_tab",
                                 )}
-                            </div>
-                            <Tabs
-                                value={appOpenMode}
-                                onValueChange={(val) =>
-                                    setAppOpenMode(
-                                        val as "global" | "current" | "new_tab",
-                                    )}
-                                className="w-full"
-                            >
-                                <TabsList className="w-full">
-                                    <TabsTrigger value="global">
-                                        跟随全局
-                                    </TabsTrigger>
-                                    <TabsTrigger value="new_tab">
-                                        新标签页
-                                    </TabsTrigger>
-                                    <TabsTrigger value="current">
-                                        当前标签页
-                                    </TabsTrigger>
-                                </TabsList>
-                            </Tabs>
-                        </div>
-                    </div>
-                </section>
+                        >
+                            <RadioGroupItem value="global">
+                                跟随全局
+                            </RadioGroupItem>
+                            <RadioGroupItem value="new_tab">
+                                新标签页
+                            </RadioGroupItem>
+                            <RadioGroupItem value="current">
+                                当前标签页
+                            </RadioGroupItem>
+                        </RadioGroup>
+                    </SettingsRow>
+                </SettingsGroup>
 
-                {/* 3. 图标设置 (实时预览 + 4种来源选项卡) */}
-                <section className="app-dialog-section">
-                    <h3 className="app-dialog-section-title">图标</h3>
-
-                    <div className="app-dialog-icon-card">
-                        {/* 实时图标预览栏 */}
-                        <div className="app-dialog-preview-bar">
-                            <WebAppGlyph
-                                className="app-dialog-preview-icon"
-                                app={{
-                                    name: previewName,
-                                    url: `https://${previewDomain}`,
-                                    iconUrl: iconPreviewUrl,
-                                }}
-                            />
-                            <div className="app-dialog-preview-meta">
-                                <div className="flex items-center gap-2">
-                                    <span className="app-dialog-preview-meta-title">
-                                        当前图标
-                                    </span>
-                                    <span className="app-dialog-source-badge">
-                                        {appIconSource === "website"
-                                            ? "自动获取"
-                                            : appIconSource === "upload"
-                                            ? "本地上传"
-                                            : appIconSource === "url"
-                                            ? "网络图片"
-                                            : appIconSource === "ai"
-                                            ? "AI 生成"
-                                            : "首字母"}
-                                    </span>
-                                </div>
-                                <span
-                                    className="app-dialog-preview-meta-desc"
-                                    title={previewName || previewDomain}
-                                >
+                <SettingsGroup title="图标" headingLevel={3}>
+                    <SettingsRow
+                        title="当前图标"
+                        description={
+                            <>
+                                <span>{sourceLabel}</span>
+                                {" · "}
+                                <span title={previewName || previewDomain}>
                                     {iconPreviewUrl
                                         ? (previewName || previewDomain)
                                         : "使用首字母"}
                                 </span>
-                            </div>
-                            {iconPreviewUrl && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="app-dialog-preview-reset-btn"
-                                    onClick={() => {
-                                        setAppIconAssetId(null);
-                                        setAppIconSource("default");
-                                        setIconPreviewUrl(null);
-                                        setImageLoadError(false);
-                                    }}
-                                >
-                                    重置
-                                </Button>
-                            )}
-                        </div>
-
+                            </>
+                        }
+                        message={iconError
+                            ? <span role="alert">{iconError}</span>
+                            : undefined}
+                        invalid={Boolean(iconError)}
+                    >
+                        {iconPreviewUrl && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    setAppIconAssetId(null);
+                                    setAppIconSource("default");
+                                    setIconPreviewUrl(null);
+                                    setImageLoadError(false);
+                                }}
+                            >
+                                重置
+                            </Button>
+                        )}
                         <Button
                             type="button"
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             aria-expanded={iconExpanded}
                             onClick={() => setIconExpanded(!iconExpanded)}
                         >
                             {iconExpanded ? "收起图标设置" : "更换图标"}
                         </Button>
-                        {iconError && (
-                            <p role="alert" className="error">{iconError}</p>
-                        )}
-                        <div hidden={!iconExpanded}>
-                            {/* 图标来源模式切换 */}
-                            <Tabs
+                        <WebAppGlyph
+                            className="app-dialog-preview-icon"
+                            app={{
+                                name: previewName,
+                                url: `https://${previewDomain}`,
+                                iconUrl: iconPreviewUrl,
+                            }}
+                        />
+                    </SettingsRow>
+                    {iconExpanded && (
+                        <SettingsRow title="图标来源">
+                            <RadioGroup
+                                variant="segmented"
+                                aria-label="图标来源"
                                 value={iconTab}
                                 onValueChange={(val) =>
                                     setIconTab(
                                         val as "auto" | "upload" | "url" | "ai",
                                     )}
-                                className="w-full"
                             >
-                                <TabsList className="w-full">
-                                    <TabsTrigger value="auto">
-                                        自动获取
-                                    </TabsTrigger>
-                                    <TabsTrigger value="upload">
-                                        上传图片
-                                    </TabsTrigger>
-                                    <TabsTrigger value="url">
-                                        网络图片
-                                    </TabsTrigger>
-                                    <TabsTrigger value="ai">
-                                        AI 生成
-                                    </TabsTrigger>
-                                </TabsList>
-                            </Tabs>
-
-                            {/* 来源子面板 */}
-                            <div className="app-dialog-icon-subpanel-wrap">
-                                {iconTab === "auto" && (
-                                    <div className="app-dialog-icon-subpanel app-dialog-icon-subpanel--auto">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={urlFetchStatus ===
-                                                    "loading" || !appUrl.trim()}
-                                            onClick={() =>
-                                                void handleRetryFetch()}
-                                        >
-                                            {urlFetchStatus === "loading"
-                                                ? (
-                                                    <Loader2
-                                                        size="1em"
-                                                        className="icon-sm animate-spin"
-                                                    />
-                                                )
-                                                : (
-                                                    <RefreshCw
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                    />
-                                                )}
-                                            <span>
-                                                {urlFetchStatus === "loading"
-                                                    ? "正在抓取…"
-                                                    : "重新获取"}
-                                            </span>
-                                        </Button>
-                                    </div>
-                                )}
-
-                                {iconTab === "upload" && (
-                                    <div className="app-dialog-icon-subpanel">
-                                        <label className="app-upload-dropzone">
-                                            <Upload
-                                                size="1em"
-                                                className="icon-lg app-upload-icon"
-                                            />
-                                            <span className="app-upload-text">
-                                                {isUploadingIcon
-                                                    ? "正在上传…"
-                                                    : "上传图片"}
-                                            </span>
-                                            <span className="app-upload-hint">
-                                                支持
-                                                PNG、JPEG、WebP、AVIF、SVG、ICO，文件小于
-                                                5MB
-                                            </span>
-                                            <input
-                                                type="file"
-                                                accept="image/png, image/jpeg, image/webp, image/avif, image/svg+xml, image/x-icon"
-                                                className="app-upload-input"
-                                                disabled={isUploadingIcon}
-                                                onChange={(e) =>
-                                                    void handleFileUpload(e)}
-                                            />
-                                        </label>
-                                    </div>
-                                )}
-
-                                {iconTab === "url" && (
-                                    <div className="app-dialog-icon-subpanel">
-                                        <div className="app-input-with-button">
-                                            <Input
-                                                type="url"
-                                                aria-label="图片网址"
-                                                placeholder="https://example.com/icon.png"
-                                                value={iconImageUrl}
-                                                onChange={(e) =>
-                                                    setIconImageUrl(
-                                                        e.target.value,
-                                                    )}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                disabled={!iconImageUrl
-                                                    .trim() ||
-                                                    isFetchingUrlIcon}
-                                                onClick={() =>
-                                                    void handleUseImageUrl()}
-                                                className="flex-shrink-0"
-                                            >
-                                                {isFetchingUrlIcon
-                                                    ? "提取中…"
-                                                    : "使用图片"}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {iconTab === "ai" && (
-                                    <LogoCandidatePicker session={logo} />
-                                )}
+                                <RadioGroupItem value="auto">
+                                    自动获取
+                                </RadioGroupItem>
+                                <RadioGroupItem value="upload">
+                                    上传图片
+                                </RadioGroupItem>
+                                <RadioGroupItem value="url">
+                                    网络图片
+                                </RadioGroupItem>
+                                <RadioGroupItem value="ai">
+                                    AI 生成
+                                </RadioGroupItem>
+                            </RadioGroup>
+                        </SettingsRow>
+                    )}
+                    {iconExpanded && iconTab === "auto" && (
+                        <SettingsRow
+                            title="网站图标"
+                            description="从网址的网站抓取图标"
+                        >
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={urlFetchStatus === "loading" ||
+                                    !appUrl.trim()}
+                                onClick={() => void handleRetryFetch()}
+                            >
+                                {urlFetchStatus === "loading"
+                                    ? (
+                                        <Loader2
+                                            size="1em"
+                                            className="icon-sm animate-spin"
+                                        />
+                                    )
+                                    : (
+                                        <RefreshCw
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
+                                    )}
+                                <span>
+                                    {urlFetchStatus === "loading"
+                                        ? "正在抓取…"
+                                        : "重新获取"}
+                                </span>
+                            </Button>
+                        </SettingsRow>
+                    )}
+                    {iconExpanded && iconTab === "upload" && (
+                        <SettingsRow
+                            title="图片文件"
+                            className="settings-row--vertical"
+                        >
+                            <label className="app-upload-dropzone">
+                                <Upload
+                                    size="1em"
+                                    className="icon-lg app-upload-icon"
+                                />
+                                <span className="app-upload-text">
+                                    {isUploadingIcon ? "正在上传…" : "上传图片"}
+                                </span>
+                                <span className="app-upload-hint">
+                                    支持
+                                    PNG、JPEG、WebP、AVIF、SVG、ICO，文件小于
+                                    5MB
+                                </span>
+                                <input
+                                    type="file"
+                                    accept="image/png, image/jpeg, image/webp, image/avif, image/svg+xml, image/x-icon"
+                                    className="app-upload-input"
+                                    disabled={isUploadingIcon}
+                                    onChange={(e) => void handleFileUpload(e)}
+                                />
+                            </label>
+                        </SettingsRow>
+                    )}
+                    {iconExpanded && iconTab === "url" && (
+                        <SettingsRow
+                            title="图片网址"
+                            labelFor="app-icon-url-input"
+                            className="settings-row--vertical"
+                        >
+                            <div className="app-input-with-button">
+                                <Input
+                                    id="app-icon-url-input"
+                                    type="url"
+                                    placeholder="https://example.com/icon.png"
+                                    value={iconImageUrl}
+                                    onChange={(e) =>
+                                        setIconImageUrl(e.target.value)}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={!iconImageUrl.trim() ||
+                                        isFetchingUrlIcon}
+                                    onClick={() => void handleUseImageUrl()}
+                                >
+                                    {isFetchingUrlIcon ? "提取中…" : "使用图片"}
+                                </Button>
                             </div>
-                        </div>
-                    </div>
-                </section>
+                        </SettingsRow>
+                    )}
+                    {iconExpanded && iconTab === "ai" && (
+                        <LogoCandidatePicker session={logo} />
+                    )}
+                </SettingsGroup>
             </div>
 
-            {/* 底部固定操作栏 */}
             <div className="app-dialog-footer">
                 <Button
                     variant="outline"

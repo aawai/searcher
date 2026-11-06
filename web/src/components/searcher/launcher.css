@@ -611,22 +611,6 @@
 }
 
 /* AI icon candidate generator (used by LogoCandidatePicker). */
-.app-ai-field--full {
-    grid-column: 1 / -1;
-}
-
-.app-ai-field-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.app-ai-char-counter {
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    color: var(--muted);
-}
-
 [data-slot="alert-dialog-content"].app-ai-confirm-dialog {
     grid-template-rows: auto minmax(0, 1fr) auto;
 }

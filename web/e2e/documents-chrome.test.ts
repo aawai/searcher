@@ -111,6 +111,49 @@ Deno.test("笔记窗口控件：侧栏折叠 / 展开按钮、创建图标位置
         });
         assertEquals(entrySymmetry.leftGap, 16);
         assertEquals(entrySymmetry.rightGap, 16);
+        // One content line: the search glyph, entry icons, the 笔记本 heading
+        // and tree rows all start at the same inset from the sidebar.
+        const contentLines = await frame.locator(".documents-sidebar")
+            .evaluate((sidebar) => {
+                const firstInk = (el: Element) => {
+                    const walker = document.createTreeWalker(
+                        el,
+                        NodeFilter.SHOW_ALL,
+                    );
+                    let left = Infinity;
+                    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+                        let rect: DOMRect | null = null;
+                        if (
+                            n.nodeType === Node.TEXT_NODE &&
+                            n.textContent?.trim()
+                        ) {
+                            const range = document.createRange();
+                            range.selectNodeContents(n);
+                            rect = range.getBoundingClientRect();
+                        } else if (n instanceof SVGSVGElement) {
+                            rect = n.getBoundingClientRect();
+                        }
+                        if (rect?.width) left = Math.min(left, rect.left);
+                    }
+                    return Math.round(left);
+                };
+                const pick = (selector: string) => {
+                    const el = sidebar.querySelector(selector);
+                    if (!el) throw new Error(`missing ${selector}`);
+                    return firstInk(el);
+                };
+                return {
+                    search: pick(".documents-list-toolbar"),
+                    entry: pick(".documents-fixed-entries .documents-entry"),
+                    heading: pick(".documents-notebooks-heading"),
+                    treeRow: pick(".documents-tree-row"),
+                };
+            });
+        assertEquals(
+            new Set(Object.values(contentLines)).size,
+            1,
+            JSON.stringify(contentLines),
+        );
         // Collapsing moves focus to the expand button in the editor-header row (empty state has a minimal header).
         await sidebarButton.click();
         await frame.locator(".documents-sidebar[hidden]").waitFor({

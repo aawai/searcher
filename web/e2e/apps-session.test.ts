@@ -159,10 +159,12 @@ Deno.test("app edit dialog keeps every field and its confirmations across viewpo
         await page.locator("#app-group-select").selectOption({
             label: "编辑目标文件夹",
         });
-        await page.getByRole("tab", { name: "新标签页", exact: true }).click();
+        await page.getByRole("radio", { name: "新标签页", exact: true })
+            .click();
         await page.getByRole("button", { name: "更换图标", exact: true })
             .click();
-        await page.getByRole("tab", { name: "网络图片", exact: true }).click();
+        await page.getByRole("radio", { name: "网络图片", exact: true })
+            .click();
         await iconUrl.fill("https://unsubmitted.invalid/icon.png");
         await page.getByRole("button", { name: "保存修改", exact: true })
             .click();
@@ -186,11 +188,11 @@ Deno.test("app edit dialog keeps every field and its confirmations across viewpo
                 "编辑目标文件夹",
             );
             assertEquals(
-                await page.getByRole("tab", {
+                await page.getByRole("radio", {
                     name: "新标签页",
                     exact: true,
                     includeHidden: true,
-                }).getAttribute("aria-selected"),
+                }).getAttribute("aria-checked"),
                 "true",
             );
             assertEquals(

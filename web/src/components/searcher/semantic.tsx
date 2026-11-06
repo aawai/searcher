@@ -78,20 +78,60 @@ export function SettingsCard(
         />
     );
 }
+/**
+ * One row of a grouped list. As a form row, `labelFor` makes the title the
+ * field's `<label>` and `message` adds the field's hint or error as the row's
+ * second line; pass `messageId` to the field's `aria-describedby`.
+ */
 export function SettingsRow(
-    { title, description, children, className, ...props }:
+    {
+        title,
+        description,
+        labelFor,
+        message,
+        messageId,
+        invalid = false,
+        children,
+        className,
+        ...props
+    }:
         & ComponentProps<"div">
-        & { title: string; description?: ReactNode },
+        & {
+            title: string;
+            description?: ReactNode;
+            labelFor?: string;
+            message?: ReactNode;
+            messageId?: string;
+            invalid?: boolean;
+        },
 ) {
     return (
         <div className={cn("settings-row", className)} {...props}>
             <div className="settings-row-label">
-                <span className="settings-row-title">{title}</span>
+                {labelFor
+                    ? (
+                        <label
+                            htmlFor={labelFor}
+                            className="settings-row-title"
+                        >
+                            {title}
+                        </label>
+                    )
+                    : <span className="settings-row-title">{title}</span>}
                 {description && (
                     <div className="settings-row-desc">{description}</div>
                 )}
             </div>
             <div className="settings-row-control">{children}</div>
+            {message && (
+                <div
+                    id={messageId}
+                    className="settings-row-message"
+                    data-tone={invalid ? "danger" : undefined}
+                >
+                    {message}
+                </div>
+            )}
         </div>
     );
 }
@@ -138,6 +178,10 @@ export function SettingsGroup(
 export function ActionGroup({ className, ...props }: ComponentProps<"div">) {
     return <div className={cn("action-group", className)} {...props} />;
 }
+/**
+ * `inline`: the empty state of a list that is itself an entry of that list,
+ * start-aligned on the list's content line instead of a centred message.
+ */
 export function EmptyState(
     {
         title,
@@ -151,7 +195,7 @@ export function EmptyState(
         description?: string;
         action?: ReactNode;
         headingLevel?: 2 | 3;
-        density?: "default" | "compact";
+        density?: "default" | "compact" | "inline";
         className?: string;
     },
 ) {

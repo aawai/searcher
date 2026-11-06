@@ -45,10 +45,14 @@ function DialogBackdrop({
     );
 }
 
-function DialogPopup({ className, ...props }: DialogPrimitive.Popup.Props) {
+/** `surface="grouped"`: the panel is the grouped-list canvas for a grouped form. */
+type DialogPopupProps = DialogPrimitive.Popup.Props & { surface?: "grouped" };
+
+function DialogPopup({ className, surface, ...props }: DialogPopupProps) {
     return (
         <DialogPrimitive.Popup
             data-slot="dialog-content"
+            data-surface={surface}
             className={cn("dialog-panel", className)}
             {...props}
         />
@@ -118,7 +122,7 @@ function DialogContent({
     className,
     children,
     ...props
-}: DialogPrimitive.Popup.Props) {
+}: DialogPopupProps) {
     return (
         <DialogPortal>
             <DialogBackdrop />

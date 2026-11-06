@@ -1142,7 +1142,7 @@ export function DocumentsSidebar({
                                         ? (
                                             <EmptyState
                                                 headingLevel={3}
-                                                density="compact"
+                                                density="inline"
                                                 title="没有匹配的笔记"
                                                 action={
                                                     <Button
@@ -1159,7 +1159,7 @@ export function DocumentsSidebar({
                                         : (
                                             <EmptyState
                                                 headingLevel={3}
-                                                density="compact"
+                                                density="inline"
                                                 title={scope.type === "recent"
                                                     ? "暂无最近笔记"
                                                     : "暂无收藏笔记"}

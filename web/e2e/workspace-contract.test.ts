@@ -284,12 +284,12 @@ Deno.test("production workspace #80 behavioral contracts", async (t) => {
             });
             await searchRegion.waitFor({ state: "visible" });
 
-            // EmptyState with heading level 3 and compact density
+            // EmptyState with heading level 3, as an entry of the sidebar list
             const emptyState = searchRegion.locator(".empty-state");
             await emptyState.waitFor({ state: "visible" });
             assertEquals(
                 await emptyState.getAttribute("data-density"),
-                "compact",
+                "inline",
             );
             await emptyState.getByRole("heading", { level: 3 }).waitFor({
                 state: "visible",

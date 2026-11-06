@@ -100,7 +100,7 @@ Deno.test("app form dialog session and icon contracts on home #141 #244", async 
                         "https://draft.invalid/",
                     );
                     await page.locator("#app-name-input").fill(appName);
-                    await page.getByRole("tab", {
+                    await page.getByRole("radio", {
                         name: "新标签页",
                         exact: true,
                     }).click();
@@ -108,13 +108,57 @@ Deno.test("app form dialog session and icon contracts on home #141 #244", async 
                         name: "更换图标",
                         exact: true,
                     }).click();
-                    await page.getByRole("tab", {
+                    await page.getByRole("radio", {
                         name: "网络图片",
                         exact: true,
                     }).click();
                     await page.locator(
                         'input[placeholder="https://example.com/icon.png"]',
                     ).fill("https://pending.invalid/icon.png");
+                    // Switching the icon source changes the dialog's height
+                    // downwards only: the dialog top and the source control
+                    // stay put and keyboard focus stays on the chosen source.
+                    const sources = dialog.getByRole("radiogroup", {
+                        name: "图标来源",
+                        exact: true,
+                    });
+                    const anchor = async () => {
+                        const [box, panel] = await Promise.all([
+                            sources.boundingBox(),
+                            dialog.boundingBox(),
+                        ]);
+                        return { sources: box!.y, dialog: panel!.y };
+                    };
+                    const before = await anchor();
+                    await page.getByRole("radio", {
+                        name: "网络图片",
+                        exact: true,
+                    }).focus();
+                    for (
+                        const [key, name] of [
+                            ["ArrowLeft", "上传图片"],
+                            ["ArrowLeft", "自动获取"],
+                            ["ArrowRight", "上传图片"],
+                            ["ArrowRight", "网络图片"],
+                        ]
+                    ) {
+                        await page.keyboard.press(key);
+                        const source = page.getByRole("radio", {
+                            name,
+                            exact: true,
+                        });
+                        assertEquals(
+                            await source.getAttribute("aria-checked"),
+                            "true",
+                        );
+                        assert(
+                            await source.evaluate((el) =>
+                                el === document.activeElement
+                            ),
+                            `focus stays on ${name}`,
+                        );
+                        assertEquals(await anchor(), before, name);
+                    }
                     const group = await page.locator("#app-group-select")
                         .inputValue();
                     for (
@@ -151,10 +195,10 @@ Deno.test("app form dialog session and icon contracts on home #141 #244", async 
                             group,
                         );
                         assertEquals(
-                            await page.getByRole("tab", {
+                            await page.getByRole("radio", {
                                 name: "新标签页",
                                 exact: true,
-                            }).getAttribute("aria-selected"),
+                            }).getAttribute("aria-checked"),
                             "true",
                         );
                         assertEquals(
@@ -180,7 +224,7 @@ Deno.test("app form dialog session and icon contracts on home #141 #244", async 
                         ).inputValue(),
                         "https://pending.invalid/icon.png",
                     );
-                    await page.getByRole("tab", {
+                    await page.getByRole("radio", {
                         name: "上传图片",
                         exact: true,
                     }).click();
@@ -209,9 +253,8 @@ Deno.test("app form dialog session and icon contracts on home #141 #244", async 
                     await page.getByText("正在上传…", { exact: true })
                         .waitFor();
                     upload.resolve();
-                    await page.locator(".app-dialog-source-badge").filter({
-                        hasText: "本地上传",
-                    }).waitFor();
+                    await dialog.getByText("本地上传", { exact: true })
+                        .waitFor();
                     assertEquals(uploads, 1);
                     await page.unroute("**/api/webapp-icons/upload");
                     const save = Promise.withResolvers<void>();
