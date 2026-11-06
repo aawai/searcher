@@ -16,6 +16,7 @@ import type { WallpaperPresentation } from "@shared/wallpaper-presentation.ts";
 import { usePageHost } from "../../app/page-host.tsx";
 import { routes } from "../../app/routes.ts";
 import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
+import { focusContainer } from "../../components/ui/focus-recovery.ts";
 import { WallpaperSurface } from "../../components/wallpaper/WallpaperSurface.tsx";
 import { calmDateTimeAttribute } from "../home-calm/calm-clock.ts";
 import { continueEntries } from "../home-calm/continue-line.ts";
@@ -514,6 +515,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             <section
                 className="home-masthead"
                 aria-label="首页刊头"
+                {...focusContainer}
                 data-mode="side"
                 data-side={placement.side}
                 data-collapsed="false"
@@ -564,6 +566,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         <section
             className="home-masthead"
             aria-label="首页刊头"
+            {...focusContainer}
             data-mode="narrow"
             data-collapsed={effectiveCollapsed ? "true" : "false"}
         >

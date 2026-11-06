@@ -60,11 +60,29 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
+/* The current item also takes the title weight: the fill and icon tint alone
+   are colour cues (1.4.1), and forced colours erase them (A7). */
 .settings-nav-item[aria-current="page"] {
     background: var(--surface-soft);
+    font-weight: var(--font-title-weight);
 }
 .settings-nav-item[aria-current="page"] > svg:first-child {
     color: var(--accent);
+}
+/* A Highlight fill under text opts out of adjustment, or the text backplate
+   paints Canvas over it; the focus ring then names its system colour. */
+@media (forced-colors: active) {
+    .settings-nav-item[aria-current="page"] {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+    }
+    .settings-nav-item[aria-current="page"]:focus-visible {
+        outline-color: CanvasText;
+    }
+    .settings-nav-item[aria-current="page"] > svg:first-child {
+        color: HighlightText;
+    }
 }
 .settings-nav-label {
     flex: 1;
@@ -332,6 +350,11 @@
     .wallpaper-card__menu-trigger:focus-visible,
     .wallpaper-card__menu-trigger[data-popup-open] {
         opacity: 1;
+    }
+    /* Escape hides the button over the thumbnail until the pointer leaves
+       (1.4.13); keyboard focus and an open menu keep it. */
+    .wallpaper-card[data-hover-dismissed] .wallpaper-card__menu-trigger:not(:focus-visible, [data-popup-open]) {
+        opacity: 0;
     }
 }
 @media (any-pointer: coarse) {

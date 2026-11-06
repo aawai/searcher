@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
+import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { createApp } from "../../src/app.ts";
 import { openDatabase } from "../../src/db/database.ts";
 import { migrateDatabase } from "../../src/db/migrate.ts";
@@ -1003,4 +1004,56 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
         },
     );
     assertEquals(errors, []);
+});
+
+// 1.4.13 (#370 B5): the hover-revealed card menu covers part of the thumbnail,
+// so Escape hides it without moving the pointer or closing settings.
+Deno.test("壁纸卡片悬停菜单可用 Escape 关闭，移开再悬停恢复", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    try {
+        const page = await browser.newPage({
+            viewport: { width: 1440, height: 900 },
+        });
+        await loginAndVisit(page, app.origin, "/settings/appearance", user);
+        const path = `${app.tempDir}/card.png`;
+        const data = await page.evaluate(() => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 640;
+            canvas.height = 360;
+            canvas.getContext("2d")!.fillRect(0, 0, 640, 360);
+            return canvas.toDataURL("image/png").split(",")[1];
+        });
+        await Deno.writeFile(
+            path,
+            Uint8Array.from(atob(data), (c) => c.charCodeAt(0)),
+        );
+        await page.getByTestId("wallpaper-file-input").setInputFiles(path);
+        const card = page.locator(".wallpaper-card").first();
+        await card.scrollIntoViewIfNeeded();
+        const settle = (value: string) =>
+            page.waitForFunction(
+                (value) =>
+                    getComputedStyle(
+                        document.querySelector(
+                            ".wallpaper-card__menu-trigger",
+                        )!,
+                    ).opacity === value,
+                value,
+            );
+
+        await card.locator(".wallpaper-card__thumbnail").hover();
+        await settle("1");
+        await page.keyboard.press("Escape");
+        await settle("0");
+        assert(await page.locator('[data-window-id="settings"]').isVisible());
+        // Leaving and hovering again brings the button back.
+        await page.mouse.move(0, 0);
+        await card.locator(".wallpaper-card__thumbnail").hover();
+        await settle("1");
+    } finally {
+        await browser.close();
+        await app.close();
+    }
 });

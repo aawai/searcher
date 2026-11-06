@@ -70,6 +70,13 @@
     box-shadow: var(--shadow-elevation-material);
 }
 
+/* Forced colours drop the shadow that edges the bar (A7). */
+@media (forced-colors: active) {
+    .home-managing-bar {
+        outline: 1px solid CanvasText;
+    }
+}
+
 .home-managing-text {
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);

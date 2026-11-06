@@ -1485,6 +1485,78 @@ Deno.test("workspace dock: tapping the floating ball keeps its click on the ball
     );
 });
 
+// 2.1.1 (#370 B5): the collapsed ball's drag has a keyboard path.
+Deno.test("workspace dock: arrow keys move the focused floating ball and the position persists", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    cleanup.defer(() => browser.close());
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+
+    await registerFreshUser(page, app.origin, "dock_ball_keys_user");
+    await collapseDockViaMenu(page);
+    const ball = expandBall(page);
+    await ball.waitFor({ state: "visible" });
+    // The ball eases between positions; measure its settled box.
+    const place = () =>
+        ball.evaluate(async (element) => {
+            await Promise.all(
+                element.getAnimations().map((animation) => animation.finished),
+            );
+            return {
+                side: element.getAttribute("data-ball-side"),
+                top: Math.round(element.getBoundingClientRect().top),
+            };
+        });
+    await ball.focus();
+    const start = await place();
+
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("ArrowUp");
+    await page.waitForFunction(
+        (top) =>
+            document.querySelector(".dock-ball")!.getBoundingClientRect().top <
+                top,
+        start.top,
+    );
+    const flipped = start.side === "left" ? "right" : "left";
+    await page.keyboard.press(flipped === "left" ? "ArrowLeft" : "ArrowRight");
+    await page.waitForFunction(
+        (side) =>
+            document.querySelector(".dock-ball")?.getAttribute(
+                "data-ball-side",
+            ) === side,
+        flipped,
+    );
+    const moved = await place();
+    assert(moved.top < start.top, JSON.stringify({ start, moved }));
+    // Arrows move the ball without expanding the Dock.
+    assert(await ball.isVisible());
+
+    // The layout is written to IndexedDB asynchronously; reload once saved.
+    await page.waitForFunction(async (side) => {
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+            const request = indexedDB.open("searcher-client", 1);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        const values = await new Promise<unknown[]>((resolve, reject) => {
+            const request = db.transaction("state").objectStore("state")
+                .getAll();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        db.close();
+        return JSON.stringify(values).includes(`"ballSide":"${side}"`);
+    }, flipped);
+    await page.reload();
+    await ball.waitFor({ state: "visible" });
+    assertEquals(await place(), moved);
+});
+
 Deno.test("workspace dock: touch drag, long-press actions, and overflow management", async () => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();

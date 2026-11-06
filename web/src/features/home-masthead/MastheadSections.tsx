@@ -39,6 +39,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
+import { focusContainer } from "../../components/ui/focus-recovery.ts";
 import type { HomeNoteItem } from "../home-layouts/home-notes.ts";
 import { formatRelativeNoteTime } from "./masthead-layout.ts";
 import {
@@ -186,6 +187,7 @@ export function MastheadSections({
                 <section
                     className="home-masthead__section"
                     aria-label="置顶区域"
+                    {...focusContainer}
                 >
                     <div className="home-masthead__section-head">
                         <span className="home-masthead__section-title">

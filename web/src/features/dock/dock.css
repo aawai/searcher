@@ -332,6 +332,14 @@
     left: var(--space-half);
 }
 
+/* Forced colours repaint a currentColor background Canvas, erasing the bar (A7). */
+@media (forced-colors: active) {
+    .dock-item[data-window-status]::after,
+    .dock-item[data-active="true"]::after {
+        background: CanvasText;
+    }
+}
+
 /* Labels remain available to assistive technology. */
 .dock-item-label {
     position: absolute;
@@ -475,13 +483,21 @@
     opacity: 0.5;
 }
 
-/* Reduced transparency */
-@media (prefers-reduced-transparency: reduce) {
+/* Reduced transparency; forced colours repaint the bar Canvas but keep its alpha. */
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
     .dock-bar,
     .dock-ball {
         background: var(--surface-l3);
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
+    }
+}
+
+/* Forced colours drop the floating shadow that edges the bar and the ball (A7). */
+@media (forced-colors: active) {
+    .dock-bar,
+    .dock-ball {
+        outline: 1px solid CanvasText;
     }
 }
 

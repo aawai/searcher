@@ -620,7 +620,9 @@
         --masthead-peek-veil-opacity: 1;
     }
 }
-@media (prefers-reduced-transparency: reduce) {
+/* Forced colours keep a background's alpha while repainting it Canvas, so a
+   translucent material would let the content behind it show through (A7). */
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
     :root,
     [data-glass] {
         --glass-regular-light: 100%;

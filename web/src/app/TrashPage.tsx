@@ -33,6 +33,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../components/ui/alert-dialog.tsx";
+import { focusContainer } from "../components/ui/focus-recovery.ts";
 import "./trash.css";
 
 interface TrashWebApp {
@@ -120,7 +121,11 @@ function TrashSection(
 ) {
     if (rows.length === 0) {
         return (
-            <section className="trash-section" aria-label={label}>
+            <section
+                className="trash-section"
+                aria-label={label}
+                {...focusContainer}
+            >
                 {loading ? <LoadingState /> : (
                     <EmptyState
                         className="trash-empty-state"
@@ -131,7 +136,11 @@ function TrashSection(
         );
     }
     return (
-        <section className="trash-section" aria-label={label}>
+        <section
+            className="trash-section"
+            aria-label={label}
+            {...focusContainer}
+        >
             <div className="trash-table-view">
                 <ManagementTable>
                     <TableHeader>

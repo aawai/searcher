@@ -28,6 +28,7 @@ import type {
     LauncherTile,
 } from "../../components/searcher/launcherTiles.ts";
 import { WebAppIcon } from "../../components/searcher/WebAppIcon.tsx";
+import { focusContainer } from "../../components/ui/focus-recovery.ts";
 import {
     ActionCell,
     AppTile,
@@ -361,6 +362,7 @@ export function WebAppLauncher({
                     ref={gridRef}
                     role="group"
                     aria-label={label}
+                    {...focusContainer}
                     className={`launcher-grid launcher-grid--${variant}`}
                     data-columns={usedColumns}
                     data-labels={actions.showAppLabels ? undefined : "hidden"}

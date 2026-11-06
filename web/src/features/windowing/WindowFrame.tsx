@@ -33,6 +33,10 @@ import {
     resize,
     type WindowPreset,
 } from "./window-geometry.ts";
+import {
+    backgroundLayer,
+    useBackgroundTabSkip,
+} from "./background-tab-order.ts";
 import "./window-frame.css";
 
 type Operation = {
@@ -68,34 +72,6 @@ export interface WindowFrameProps {
     toolbarRef?: (node: HTMLElement | null) => void;
     onHostWidthChange: (width: number) => void;
     children: ReactNode;
-}
-
-const TAB_STOP =
-    'a[href], button, input, select, textarea, summary, [tabindex], [contenteditable]:not([contenteditable="false"])';
-
-/**
- * The Tab stop the browser would reach next if `frame` were not in the Tab
- * order. Background windows and inert regions are skipped as well.
- */
-function tabStopOutside(
-    frame: HTMLElement,
-    backward: boolean,
-): HTMLElement | null {
-    const stops = Array.from(
-        document.querySelectorAll<HTMLElement>(TAB_STOP),
-    ).filter((element) =>
-        element.tabIndex >= 0 && !element.matches(":disabled") &&
-        element.getClientRects().length > 0 &&
-        !element.closest("[inert], .window-frame:not([data-active])")
-    );
-    const after = (element: HTMLElement) =>
-        Boolean(
-            frame.compareDocumentPosition(element) &
-                Node.DOCUMENT_POSITION_FOLLOWING,
-        );
-    return backward
-        ? stops.reverse().find((element) => !after(element)) ?? null
-        : stops.find(after) ?? null;
 }
 
 export function WindowFrame(
@@ -321,54 +297,12 @@ export function WindowFrame(
         return () => observer.disconnect();
     }, [open, minimized, active, geometry?.wide, onHostWidthChange]);
 
-    // Background windows stay out of the Tab order without rewriting their
-    // DOM: content such as the note editor owns its subtree and redraws on
-    // attribute changes, which would answer every rewrite with new nodes.
-    // Inactive windows remain pointer-interactive, so inert cannot be used.
-    const tabbing = useRef<{ backward: boolean } | null>(null);
+    // Background windows stay out of the Tab order; inactive windows remain
+    // pointer-interactive.
     const inBackground = !active || !open || minimized;
-    const backgroundRef = useRef(inBackground);
-    backgroundRef.current = inBackground;
-    useEffect(() => {
-        if (!inBackground) return;
-        let frameId = 0;
-        const keydown = (event: KeyboardEvent) => {
-            if (event.key !== "Tab") return;
-            tabbing.current = { backward: event.shiftKey };
-            cancelAnimationFrame(frameId);
-            // The focus move is this key's default action, done before the
-            // next frame; focus arriving later does not come from Tab.
-            frameId = requestAnimationFrame(() => tabbing.current = null);
-        };
-        document.addEventListener("keydown", keydown, true);
-        return () => {
-            document.removeEventListener("keydown", keydown, true);
-            cancelAnimationFrame(frameId);
-            tabbing.current = null;
-        };
-    }, [inBackground]);
-    // Native listener: window content is portaled into the frame from
-    // elsewhere in the React tree, so React focus events never reach here.
-    useEffect(() => {
-        const node = frame.current;
-        if (!node) return;
-        const focusin = (event: FocusEvent) => {
-            const pending = tabbing.current;
-            if (backgroundRef.current && pending) {
-                const next = tabStopOutside(node, pending.backward);
-                if (next) next.focus();
-                else if (event.target instanceof HTMLElement) {
-                    event.target.blur();
-                }
-                return;
-            }
-            if (event.target instanceof HTMLElement) {
-                lastFocus.current = event.target;
-            }
-        };
-        node.addEventListener("focusin", focusin, true);
-        return () => node.removeEventListener("focusin", focusin, true);
-    }, []);
+    useBackgroundTabSkip(frame, inBackground, (target) => {
+        lastFocus.current = target;
+    });
 
     useLayoutEffect(() => {
         if (!active || !open || minimized) return;
@@ -580,6 +514,7 @@ export function WindowFrame(
                 className="window-frame"
                 data-window-id={id}
                 data-active={active || undefined}
+                {...backgroundLayer(inBackground)}
                 data-library={open ? libraryView : undefined}
                 hidden={!open || minimized || !rect ||
                     (!geometry?.wide && !active)}
