@@ -641,6 +641,73 @@ Deno.test("首击关闭或最小化后台窗口不改变活动窗口与历史", 
     }
 });
 
+// WCAG 2.4.11: behind an active window the desktop is a background layer,
+// so Tab never lands on desktop controls the window may cover entirely.
+Deno.test("活动窗口下方的桌面不进入 Tab 顺序，焦点不被窗口完全遮挡 #370", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    /** Presses `key` up to `limit` times, describing each focus stop. */
+    const traverse = async (key: string, limit: number) => {
+        const stops: { label: string; desktop: boolean; seen: boolean }[] = [];
+        for (let i = 0; i < limit; i++) {
+            await page.keyboard.press(key);
+            stops.push(
+                await page.evaluate(() => {
+                    const active = document.activeElement as HTMLElement;
+                    const box = active.getBoundingClientRect();
+                    // A 5×5 grid inside the box: any hit on the element
+                    // itself means it is not entirely hidden.
+                    let seen = false;
+                    for (let x = 1; x <= 5 && !seen; x++) {
+                        for (let y = 1; y <= 5 && !seen; y++) {
+                            const hit = document.elementFromPoint(
+                                box.left + box.width * x / 6,
+                                box.top + box.height * y / 6,
+                            );
+                            seen = Boolean(hit && active.contains(hit));
+                        }
+                    }
+                    return {
+                        label: active.getAttribute("aria-label") ??
+                            active.id ?? active.tagName,
+                        desktop: Boolean(active.closest("main.home")),
+                        seen: seen || active === document.body,
+                    };
+                }),
+            );
+        }
+        return stops;
+    };
+    try {
+        await loginAndVisit(page, app.origin, "/", user);
+        // On its own the desktop stays in the Tab order.
+        const home = await traverse("Tab", 12);
+        assert(home.some((stop) => stop.desktop), JSON.stringify(home));
+
+        await page.locator('[data-dock-id="settings"]').click();
+        const settings = page.locator('[data-window-id="settings"]');
+        await settings.locator(".settings-row").first().waitFor();
+        for (const key of ["Tab", "Shift+Tab"]) {
+            const stops = await traverse(key, 60);
+            const detail = `${key}: ${JSON.stringify(stops)}`;
+            assertEquals(stops.filter((stop) => stop.desktop), [], detail);
+            assertEquals(stops.filter((stop) => !stop.seen), [], detail);
+            // The cycle still runs through the window and the Dock.
+            assert(
+                stops.some((stop) => stop.label === "关闭设置"),
+                detail,
+            );
+        }
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
 Deno.test("AI 窗口在明暗极端壁纸上保持文字可读", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();

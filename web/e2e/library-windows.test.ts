@@ -556,7 +556,8 @@ Deno.test("后台笔记窗口含链接时页面保持可交互，Tab 跳过后�
             { probe: true, tabindex: null },
         );
 
-        // Tab and Shift+Tab pass over the background window in both directions.
+        // Tab and Shift+Tab pass over the background window in both
+        // directions; the desktop behind the active window is skipped too.
         const before = await page.evaluateHandle(() => {
             const frame = document.querySelector('[data-window-id="notes"]')!;
             const stops = Array.from(
@@ -565,7 +566,7 @@ Deno.test("后台笔记窗口含链接时页面保持可交互，Tab 跳过后�
                 ),
             ).filter((element) =>
                 element.tabIndex >= 0 && element.getClientRects().length > 0 &&
-                !element.closest(".window-frame") &&
+                !element.closest(".window-frame, [data-background-layer]") &&
                 frame.compareDocumentPosition(element) &
                     Node.DOCUMENT_POSITION_PRECEDING
             );

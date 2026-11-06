@@ -34,6 +34,10 @@ import {
     hasPersistentNotesSidebar,
 } from "../../design-system/breakpoints.ts";
 import { WindowFrame } from "./WindowFrame.tsx";
+import {
+    backgroundLayer,
+    useBackgroundTabSkip,
+} from "./background-tab-order.ts";
 import { isLibraryWindow, type LibraryWindows } from "./library-windows.ts";
 import {
     type CloseGuard,
@@ -436,6 +440,10 @@ function ActiveDesktopStage(
     const isHome = location.pathname === routes.home;
     const visible = isHome || currentId !== null;
     const desktopHost: PageHost = { ...host, active: isHome && !currentId };
+    // Behind an active window the desktop is a background layer like any
+    // other window: Tab passes over it (2.4.11).
+    const desktop = useRef<HTMLDivElement>(null);
+    useBackgroundTabSkip(desktop, currentId !== null);
     const [nodes, setNodes] = useState<Record<string, HTMLElement | null>>({});
     // Stable ref callbacks: a changing identity would re-run them every render.
     const mounts = useMemo(() => {
@@ -479,6 +487,8 @@ function ActiveDesktopStage(
     return (
         <>
             <div
+                ref={desktop}
+                {...backgroundLayer(currentId !== null)}
                 hidden={!visible}
                 onPointerDownCapture={(event) => {
                     // Portaled window content and dialogs bubble through React
