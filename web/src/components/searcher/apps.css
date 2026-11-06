@@ -38,6 +38,7 @@
 
 .app-dialog-section-title {
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     font-weight: 500;
     color: var(--muted);
     margin: 0;
@@ -63,6 +64,7 @@
     align-items: center;
     gap: var(--space-inline-gap);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     min-height: 20px;
     margin-top: calc(var(--space-1) / 2);
 }
@@ -110,6 +112,7 @@
 
 .app-dialog-option-desc {
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     color: var(--muted);
 }
 
@@ -154,12 +157,14 @@
 
 .app-dialog-source-badge {
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     font-weight: 500;
     color: var(--muted);
 }
 
 .app-dialog-preview-meta-desc {
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     color: var(--muted);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -168,6 +173,7 @@
 
 .app-dialog-preview-reset-btn {
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     color: var(--muted);
     flex-shrink: 0;
 }
@@ -245,6 +251,7 @@
 
 .app-upload-hint {
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     color: var(--muted);
 }
 
@@ -296,6 +303,7 @@
 
 .app-ai-field label {
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     color: var(--muted);
 }
 
@@ -312,6 +320,7 @@
 .app-ai-candidates-label {
     display: block;
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     color: var(--muted);
     margin-bottom: var(--space-control-gap);
 }
@@ -369,6 +378,7 @@
     align-items: center;
     gap: var(--space-inline-gap);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     font-weight: 500;
     color: var(--foreground);
 }

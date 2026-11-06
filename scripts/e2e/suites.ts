@@ -39,6 +39,7 @@ export const suites = {
         "workspace-contract",
         "accent-contrast",
         "apps-ordering",
+        "touch-targets",
     ],
     routing: ["navigation", "auth", "share", "guest-ai-auth"],
     documents: [

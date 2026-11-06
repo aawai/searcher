@@ -178,6 +178,20 @@
 .settings-row:not(.settings-row--vertical) {
     flex-wrap: wrap;
 }
+/* Row controls use the compact rhythm: segmented items are 28px (32px with the
+   track). Controls taller than 28px borrow the row's block padding, keeping
+   (44 − height) / 2 to the row edge — exactly their touch-target extension —
+   so a single-value row stays 44px and a wrapped control never reaches into
+   the next row. */
+.settings-row-control [data-slot="radio-group"][data-variant="segmented"] .radio-item {
+    min-height: var(--control-compact-height);
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control [data-slot="radio-group"][data-variant="segmented"] {
+    margin-block: calc(-1 * var(--space-half));
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control .button:not(.button--sm, .button--link, .button--content) {
+    margin-block: calc(-1 * var(--space-1));
+}
 /* Inset hairline between rows. */
 .settings-row + .settings-row::before {
     content: "";

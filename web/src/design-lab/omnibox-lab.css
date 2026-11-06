@@ -6,6 +6,7 @@
 .omnibox-lab-detail {
     color: var(--muted);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
 }
 .omnibox-lab-search {
     width: 100%;

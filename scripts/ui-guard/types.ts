@@ -6,6 +6,7 @@ export type RuleId =
     | "scattered-media-query"
     | "raw-z-index"
     | "raw-font-size"
+    | "unpaired-font-line-height"
     | "raw-border-radius"
     | "raw-spacing-literal"
     | "inline-visual-style"

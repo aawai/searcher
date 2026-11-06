@@ -191,6 +191,10 @@ export function scanCssCode(
     let declStart = -1;
     let preludeStart = 0;
     const preludes: string[] = [];
+    const blocks: {
+        lineHeight: boolean;
+        fontSize?: { value: string; line: number; column: number };
+    }[] = [];
     const utilities = new Map<string, {
         count: number;
         line: number;
@@ -291,6 +295,7 @@ export function scanCssCode(
             preludes.push(
                 normalizeSnippet(cleanCss.slice(preludeStart, i)),
             );
+            blocks.push({ lineHeight: false });
             preludeStart = i + 1;
             depth++;
             declStart = i + 1;
@@ -301,6 +306,23 @@ export function scanCssCode(
                     declStart,
                     currentSelector(),
                 );
+            }
+            const block = blocks.pop();
+            if (block?.fontSize && !block.lineHeight) {
+                const { value, line, column } = block.fontSize;
+                const snippet = normalizeSnippet(
+                    `${currentSelector()} { font-size: ${value} }`,
+                );
+                violations.push({
+                    file,
+                    rule: "unpaired-font-line-height",
+                    property: "font-size",
+                    value: snippet,
+                    line,
+                    column,
+                    fingerprint:
+                        `unpaired-font-line-height:font-size:${snippet}`,
+                });
             }
             preludes.pop();
             preludeStart = i + 1;
@@ -351,6 +373,19 @@ export function scanCssCode(
         }
 
         const { line, col } = getLineAndCol(offset + rawDecl.indexOf(prop));
+
+        // A font-size role with a registered line height declares both together.
+        const block = blocks.at(-1);
+        if (block && (prop === "line-height" || prop === "font")) {
+            block.lineHeight = true;
+        }
+        const fontToken = /^var\((--font-[a-z0-9-]+)\)$/.exec(value)?.[1];
+        if (
+            block && prop === "font-size" && fontToken &&
+            registry.pairedFontTokens.has(fontToken)
+        ) {
+            block.fontSize = { value, line, column: col };
+        }
 
         function pushViolation(
             rule: UiViolation["rule"],

@@ -193,8 +193,9 @@
     flex: 1;
     min-width: 0;
 }
-/* Create actions: compact visual size; coarse pointers get the touch target
-   from an enlarged hit area, so the row does not grow. */
+/* Create actions: compact visual size; on a touch screen the shared
+   touch-target rule (primitives.css) grows their hit area, so the row does not
+   grow, and the row's gaps keep neighbouring hit areas apart. */
 [data-slot="button"].documents-heading-action {
     position: relative;
     flex: none;
@@ -202,12 +203,6 @@
     min-width: var(--control-compact-height);
     height: var(--control-compact-height);
     min-height: var(--control-compact-height);
-}
-[data-slot="button"].documents-heading-action::after {
-    content: "";
-    position: absolute;
-    inset: calc((var(--control-compact-height) - var(--control-touch-target)) /
-        2);
 }
 .documents-notebooks-heading {
     margin: 0;
@@ -229,6 +224,7 @@
 }
 .documents-notebooks-heading [data-slot="button"].documents-entry {
     font-size: inherit;
+    line-height: inherit;
     color: inherit;
 }
 /* Equal space above and below the entry; the editor's status bar sits on the
@@ -543,14 +539,23 @@
     opacity: 1;
 }
 
-/* Dense pointers get compact controls; touch keeps the 44px primitives. */
+/* Dense pointers get compact controls. On touch, stacked entries grow visibly
+   (their hit areas would overlap); single actions keep their visible size and
+   reach the target through the shared hit area. */
 @media (any-pointer: coarse), (hover: none) {
     [data-slot="dropdown-menu-trigger"].documents-row-action,
     [data-slot="button"].documents-tree-action {
         opacity: 1;
     }
+    [data-slot="button"].documents-summary-open,
+    [data-slot="button"].documents-entry,
     .documents-tree-row {
         min-height: var(--control-touch-target);
+    }
+    .documents-notebooks-row {
+        column-gap: calc(
+            var(--control-touch-target) - var(--control-compact-height)
+        );
     }
 }
 @media (hover: hover) and (pointer: fine) and (min-width: 640px) {
@@ -566,24 +571,11 @@
         position: relative;
         width: var(--control-compact-height);
         min-width: var(--control-compact-height);
+        --touch-target-size: var(--control-touch-target);
     }
-    [data-slot="dropdown-menu-trigger"].documents-row-action::after,
-    [data-slot="button"].documents-tree-action::after {
-        content: "";
-        position: absolute;
-        inset: calc((var(--control-compact-height) -
-            var(--control-touch-target)) /
-            2);
-    }
+    /* Wider than the target, the entry's hit area grows only vertically. */
     [data-slot="button"].documents-entry {
         position: relative;
-    }
-    [data-slot="button"].documents-entry::after {
-        content: "";
-        position: absolute;
-        inset-inline: 0;
-        inset-block: calc(
-            (var(--control-compact-height) - var(--control-touch-target)) / 2
-        );
+        --touch-target-size: var(--control-touch-target);
     }
 }

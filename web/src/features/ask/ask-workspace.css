@@ -335,6 +335,7 @@
     margin-inline-start: auto;
     padding-inline-start: var(--space-4);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     opacity: .6;
 }
 
@@ -1340,6 +1341,7 @@
 .ask-message-details__row dd.ask-message-details__code {
     font-family: var(--font-mono);
     font-size: var(--font-code-size);
+    line-height: var(--font-code-line-height);
     font-weight: var(--font-body-weight);
 }
 

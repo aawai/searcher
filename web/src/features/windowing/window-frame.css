@@ -34,10 +34,17 @@
     }
 }
 
+/* Title bar: 44 high with 36 buttons by default; a fine primary pointer (the
+   editor status bar's compact test) gets a 36 bar with 28 buttons. Wherever a
+   touch screen exists the buttons' hit areas grow to the touch target, so the
+   gaps and end inset leave room for them: adjacent hit areas meet, never
+   overlap, and the last one ends at the window edge. */
 .window-frame__titlebar {
+    --window-title-button-size: var(--control-height);
+    --space-window-title-gap: var(--space-1);
     display: flex;
     align-items: center;
-    gap: var(--space-1);
+    gap: var(--space-window-title-gap);
     flex: none;
     min-height: var(--control-touch-target);
     padding-inline: var(--space-4) var(--space-1);
@@ -45,6 +52,20 @@
     user-select: none;
     touch-action: none;
     cursor: move;
+}
+@media (hover: hover) and (pointer: fine) {
+    .window-frame__titlebar {
+        --window-title-button-size: var(--control-compact-height);
+        min-height: calc(var(--control-height) + var(--space-hairline));
+    }
+}
+@media (any-pointer: coarse), (hover: none) {
+    .window-frame__titlebar {
+        --space-window-title-gap: calc(
+            var(--control-touch-target) - var(--window-title-button-size)
+        );
+        padding-inline-end: calc(var(--space-window-title-gap) / 2);
+    }
 }
 /* Keyboard moves the window from the title bar: the ring sits inside, on the window's top corners. */
 .window-frame__titlebar:focus-visible {
@@ -69,17 +90,23 @@
     cursor: default;
 }
 
-.window-frame__actions {
+.window-frame__titlebar :is(.window-frame__actions, .window-frame__toolbar > *) {
     display: flex;
     align-items: center;
+    gap: var(--space-window-title-gap);
     cursor: default;
+}
+.window-frame__button,
+.window-frame__toolbar .button--icon {
+    width: var(--window-title-button-size);
+    min-width: var(--window-title-button-size);
+    height: var(--window-title-button-size);
+    min-height: var(--window-title-button-size);
 }
 .window-frame__button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--control-touch-target);
-    height: var(--control-touch-target);
     padding: 0;
     border: 0;
     border-radius: var(--control-radius);
@@ -109,6 +136,7 @@
     flex: 1 1 auto;
     color: var(--muted);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
 }
 .window-frame__content {
     flex: 1;

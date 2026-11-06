@@ -4,6 +4,39 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
+   Touch target (A2): the one hit-area rule. A host opts in by setting
+   --touch-target-size; its ::after is centred on the host and spans
+   `(100% − size) / 2` inward from each edge, so a smaller host gains a hit
+   area of that size while its visible size and layout stay unchanged; a larger
+   host, or the unset 0px, leaves the pseudo-element inside the host. Each side
+   grows by (size − visible size) / 2; controls whose gap to a neighbour cannot
+   hold both sides' growth grow visibly instead, as do replaced elements
+   (<input>) and stacked rows (menu items).
+   Features opt in with `.touch-target` or by setting the property on a host.
+   -------------------------------------------------------------------------- */
+@property --touch-target-size {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+}
+
+/* The property does not inherit, so a nested host never picks up its parent's
+   target; only the host's own pseudo-element reads it. */
+:where(.switch, .button, .radio-item, .touch-target)::after {
+    --touch-target-size: inherit;
+    content: "";
+    position: absolute;
+    inset: calc((100% - var(--touch-target-size)) / 2);
+}
+
+@media (any-pointer: coarse), (hover: none) {
+    :where(.switch, .button:not(.button--sm, .button--link, .button--content), [data-slot="radio-group"][data-variant="segmented"] .radio-item, .touch-target) {
+        position: relative;
+        --touch-target-size: var(--control-touch-target);
+    }
+}
+
+/* --------------------------------------------------------------------------
    Switch
    -------------------------------------------------------------------------- */
 .switch {
@@ -51,19 +84,6 @@
 .switch[data-checked] .switch-thumb {
     transform: translateX(18px);
     background: var(--accent-foreground);
-}
-
-/* Coarse pointers hit a centred 44×44 square; the 40×24 track keeps its look. */
-@media (any-pointer: coarse), (hover: none) {
-    .switch::before {
-        content: "";
-        position: absolute;
-        inset-block-start: 50%;
-        inset-inline-start: 50%;
-        width: var(--control-touch-target);
-        height: var(--control-touch-target);
-        transform: translate(-50%, -50%);
-    }
 }
 
 /* --------------------------------------------------------------------------
@@ -223,9 +243,6 @@
         min-height: var(--control-touch-target);
         height: var(--control-touch-target);
     }
-    [data-slot="radio-group"][data-variant="segmented"] .radio-item {
-        min-height: var(--control-touch-target);
-    }
 }
 
 /* --------------------------------------------------------------------------
@@ -383,14 +400,12 @@
     width: var(--control-compact-height);
 }
 
+/* Compact buttons sit in tight toolbars whose gaps cannot hold a hit area. */
 @media (any-pointer: coarse), (hover: none) {
-    .button,
-    .button--sm,
-    .button--icon {
+    .button--sm {
         min-height: var(--control-touch-target);
         min-width: var(--control-touch-target);
     }
-    .button--icon,
     .button--sm.button--icon {
         width: var(--control-touch-target);
     }
@@ -1180,6 +1195,7 @@
     text-align: left;
     color: var(--muted);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     font-weight: var(--font-label-weight);
     white-space: nowrap;
 }

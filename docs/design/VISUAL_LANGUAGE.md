@@ -52,15 +52,15 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 ### 项目附加条目（比基准更严，可经人类明确批准修订）
 
-| 条目              | 要求                                                                                                                                                                                                                      | 对应的更高标准     | 验证                                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------- |
-| A1 焦点指示对比度 | 焦点指示与相邻颜色 ≥ 3:1                                                                                                                                                                                                  | 接近 2.4.13（AAA） | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/wallpaper-accent.test.ts` + 实页清单 |
-| A2 粗指针命中区   | 粗指针（`any-pointer: coarse`）下可操作目标的**命中区** ≥ 44×44；不要求可见尺寸达到 44，命中区可由伪元素扩展；段落内的文字链接豁免；仅悬停出现的操作在触屏常显或进入 `⋯` 菜单                                             | 2.5.5（AAA）       | 部分 e2e（`apps-density`、`route-style-stability`、`route-style-admin-lab`），其余实页清单     |
-| A3 减少动效       | 尊重 `prefers-reduced-motion`：去除非必要的位移、缩放、旋转与尺寸 / 位置插值；状态反馈、键盘操作和焦点管理完整可用，不依赖运动传递必要信息                                                                                | 2.3.3（AAA）       | `/design-lab/motion` + 实页清单                                                                |
-| A4 减少透明度     | `prefers-reduced-transparency` 或不支持 `backdrop-filter` 时，提供不依赖透明与模糊的可读实色呈现                                                                                                                          | —                  | 实页清单                                                                                       |
-| A5 Escape 层栈    | Escape 每次只关闭最上一层；关闭后焦点优先回到触发控件，触发控件已不存在时回到其所在容器                                                                                                                                   | —                  | `web/src/components/ui/escape-layer-stack.test.ts` + 实页清单                                  |
-| A6 壁纸默认可读性 | 默认可读性遮罩（`balanced`）与默认玻璃档位下，首页直接落在壁纸上的文字在任意壁纸上满足 1.4.3（正文 4.5:1、大字 3:1），以真实浏览器中合成极值壁纸的像素取样验证。用户选择更低遮罩或 `clear` 档属于明示豁免，设置页就近说明 | —                  | 实页清单；取样 e2e 见 [验证与已知缺口](#验证与已知缺口)                                        |
-| A7 强制颜色模式   | `forced-colors: active` 下所有控件、状态与焦点指示可辨，不因背景、阴影或伪元素着色被系统去除而消失                                                                                                                        | —                  | 实页清单                                                                                       |
+| 条目              | 要求                                                                                                                                                                                                                      | 对应的更高标准     | 验证                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| A1 焦点指示对比度 | 焦点指示与相邻颜色 ≥ 3:1                                                                                                                                                                                                  | 接近 2.4.13（AAA） | `web/e2e/accent-contrast.test.ts`、`web/src/design-system/wallpaper-accent.test.ts` + 实页清单              |
+| A2 粗指针命中区   | 粗指针（`any-pointer: coarse`）下可操作目标的**命中区** ≥ 44×44；不要求可见尺寸达到 44，命中区可由伪元素扩展；段落内的文字链接豁免；仅悬停出现的操作在触屏常显或进入 `⋯` 菜单                                             | 2.5.5（AAA）       | 部分 e2e（`touch-targets`、`apps-density`、`route-style-stability`、`route-style-admin-lab`），其余实页清单 |
+| A3 减少动效       | 尊重 `prefers-reduced-motion`：去除非必要的位移、缩放、旋转与尺寸 / 位置插值；状态反馈、键盘操作和焦点管理完整可用，不依赖运动传递必要信息                                                                                | 2.3.3（AAA）       | `/design-lab/motion` + 实页清单                                                                             |
+| A4 减少透明度     | `prefers-reduced-transparency` 或不支持 `backdrop-filter` 时，提供不依赖透明与模糊的可读实色呈现                                                                                                                          | —                  | 实页清单                                                                                                    |
+| A5 Escape 层栈    | Escape 每次只关闭最上一层；关闭后焦点优先回到触发控件，触发控件已不存在时回到其所在容器                                                                                                                                   | —                  | `web/src/components/ui/escape-layer-stack.test.ts` + 实页清单                                               |
+| A6 壁纸默认可读性 | 默认可读性遮罩（`balanced`）与默认玻璃档位下，首页直接落在壁纸上的文字在任意壁纸上满足 1.4.3（正文 4.5:1、大字 3:1），以真实浏览器中合成极值壁纸的像素取样验证。用户选择更低遮罩或 `clear` 档属于明示豁免，设置页就近说明 | —                  | 实页清单；取样 e2e 见 [验证与已知缺口](#验证与已知缺口)                                                     |
+| A7 强制颜色模式   | `forced-colors: active` 下所有控件、状态与焦点指示可辨，不因背景、阴影或伪元素着色被系统去除而消失                                                                                                                        | —                  | 实页清单                                                                                                    |
 
 ### 验证与已知缺口
 
@@ -71,7 +71,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 - `glass-contrast.test.ts` 用无模糊的 sRGB 极值样本加顶光合成玻璃、派生画布与刊头衬底，是回归探针而非实页测量。其中玻璃表面与刊头衬底上的 `--muted` 只断言 3:1 探针：这不构成次要信息文字降为 3:1 的豁免，1.4.3 仍要求 4.5:1，极端背景下的余量见 [玻璃效果](#玻璃效果)。`clear` 档 Material 不纳入断言（A6 的明示豁免）。
 - 大字角色清单（`glass-contrast.test.ts` 的 `LARGE_TEXT_ROLES`）与 [字号阶梯登记](#字号) 中所有取值都 ≥ 24px 的行一一对应，目前为 `--font-page-title-size` 与 `--font-masthead-day-size`；测试从 `tokens.css` 读取字号，任一 `--font-*-size` 取值跨过 24px 而清单未同步时失败。月份与置顶笔记标题为 20px / 600，按正文 4.5:1 判定。
 - `accent-contrast.test.ts`（九种预设）与 `wallpaper-accent.test.ts`（壁纸派生）检查强调色文字 4.5:1 与焦点环 3:1（A1）；没有使用强调色的大字角色。
-- A2 的 e2e 只覆盖应用网格与部分页面控件，其余靠实页清单。
+- A2 的 e2e 只覆盖应用网格、窗口标题栏与设置分组行（`touch-targets.test.ts`：鼠标 / 触屏笔记本 / 触屏三种指针下逐个探测控件中心、四边内缩 1px 与 44px 方框，须命中控件本身）及部分页面控件，其余靠实页清单。笔记侧栏的固定入口与列表条目在触屏笔记本（主指针精细 + 存在触屏，视口 ≥640px）下为紧凑 28px，纵向扩大的命中区会覆盖相邻条目的边缘，属于 A2 的已知未达标项，待侧栏条目改为可见放大或加大间距后补入机检。
 
 **已知未达标与待交付**
 
@@ -92,6 +92,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
   可经修订采用立即切换或其他不降低可访问性的反馈方式；不使用全局 `*` 清零规则绕过组件状态、焦点和退出逻辑。
 - reduced-transparency 与不支持 `backdrop-filter` 时，所有玻璃档位按 `off` 渲染（实色、无 blur）。
 - Escape 由 `components/ui/escape-layer-stack.tsx` 统一拥有，避免各 feature 竞争全局键盘事件。
+- A2 命中区由 `primitives.css` 的唯一规则扩展：宿主设置 `--touch-target-size`（不继承），其 `::after` 以宿主为中心、每轴扩展到该尺寸，不改变可见尺寸与布局；粗指针（`(any-pointer: coarse), (hover: none)`）下 Switch、默认 / 图标按钮、分段控件选项与标记 `.touch-target` 的宿主自动设为 `--control-touch-target`。每侧扩展（44 − 可见尺寸）/ 2；与相邻目标的间距容不下双方的扩展区时改为可见放大到 44（`sm` 按钮所在的紧凑工具栏、色点组、纵向紧邻的列表条目），`<input>` 等替换元素（不能生成伪元素）与菜单项（纵向紧邻的行）亦然。
 
 ### 结构原则
 
@@ -147,7 +148,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 字重只用 400 / 500 / 600。不用全大写或衬线标题；唯一例外是[首页刊头](#首页刊头home-masthead)：日数字、月份与置顶笔记标题使用 `--font-serif`（自托管 Noto Serif SC，只打包 600 字重，按 unicode-range 切片按需加载，`font-display: swap`），分节标题与星期允许字距拉伸。其余字体使用平台原生栈（Apple: SF + PingFang；Windows: Segoe UI + 微软雅黑；其他: Noto Sans SC），数字用 `font-variant-numeric: tabular-nums`。Markdown 正文标题由 `markdown.css` 用 `em` 相对缩放。字体族 Token 为 `--font-sans`、`--font-mono`、`--font-serif`。
 
-**字号阶梯登记。** `font-size` 只能引用本表的 Token，或 `inherit` / `1em` / `100%`。名称为 `--font-*` 的 Token（字体族、字重、行高除外）必须登记于此，在哪个 CSS 文件定义都一样。
+**字号阶梯登记。** `font-size` 只能引用本表的 Token，或 `inherit` / `1em` / `100%`。“尺寸 / 行高”列带行高的角色（正文除外，它是 `body` 的根字体、默认继承）在同一声明块内同时声明 `line-height`，`check:ui` 规则 `unpaired-font-line-height` 检查；`font-size: inherit` 同样连同 `line-height: inherit` 一起继承。名称为 `--font-*` 的 Token（字体族、字重、行高除外）必须登记于此，在哪个 CSS 文件定义都一样。
 
 | Token                             | 尺寸 / 行高        | 字重        | 用途                                                                                          |
 | --------------------------------- | ------------------ | ----------- | --------------------------------------------------------------------------------------------- |
@@ -249,7 +250,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `components/ui/primitives.css` 统一拥有。不另造 Button / Dialog / Menu / Tabs / Toast。
 
-- **Button**：省略 `variant` 时默认 `outline`（`.button--subtle`，`--surface-soft` 填充、无描边，作为次要操作与安全默认，避免未传参误建多个主按钮）；显式 `variant="default"` 为 primary（`.button--primary`，强调色填充，每区域最多一个）；`ghost`（`.button--ghost`，透明，工具栏与图标按钮）；`destructive`（`.button--danger`，普通态为危险文字色配 12% 危险色浅底，仅在 `AlertDialog` 确认对话框内实色填充 `--danger`）；`link`（`.button--link`，强调色文字、无内边距，粗指针命中高 ≥ 44px）；`content`（`.button--content`，块级透明、继承字号与字色、允许换行、最小 44×44 命中区，用于会话列表项与搜索结果等内容消费触发器，而非传统动作按钮）。常规按钮的 `size` 是单选：`default` 高 36、`sm` 高 28、`icon` 为 36 方形；粗指针命中区 ≥ 44×44。`link` 与 `content` 的尺寸另按上述变体规则覆盖。
+- **Button**：省略 `variant` 时默认 `outline`（`.button--subtle`，`--surface-soft` 填充、无描边，作为次要操作与安全默认，避免未传参误建多个主按钮）；显式 `variant="default"` 为 primary（`.button--primary`，强调色填充，每区域最多一个）；`ghost`（`.button--ghost`，透明，工具栏与图标按钮）；`destructive`（`.button--danger`，普通态为危险文字色配 12% 危险色浅底，仅在 `AlertDialog` 确认对话框内实色填充 `--danger`）；`link`（`.button--link`，强调色文字、无内边距，粗指针命中高 ≥ 44px）；`content`（`.button--content`，块级透明、继承字号与字色、允许换行、最小 44×44 命中区，用于会话列表项与搜索结果等内容消费触发器，而非传统动作按钮）。常规按钮的 `size` 是单选：`default` 高 36、`sm` 高 28、`icon` 为 36 方形；粗指针下 `default` / `icon` 保持可见尺寸，命中区由共享规则扩展到 44×44（见[默认交互实现](#默认交互实现)），`sm` 所在的紧凑工具栏容不下扩展区，可见放大到 44。`link` 与 `content` 的尺寸另按上述变体规则覆盖。
 - **Input / Textarea / Select**：外观由 `primitives.css` 唯一拥有，分三种呈现。
   - **独立字段**（默认）：`--surface-solid` 底 + 1px `--field-border`；仅在 `(hover: hover)` 下 hover 加深为 `--field-border-hover`。聚焦时边框变为 `--ring` 并加 1px 内描边（`--shadow-field-focus`），合计 2px；无效态为 1px `--danger`，聚焦时 2px `--danger`（`--shadow-field-invalid-focus`）；禁用为 50% 不透明。过渡覆盖 `border-color`、`box-shadow`，reduced-motion 下取消；`forced-colors: active` 下聚焦另显示系统色 outline（A7）。
   - **搜索 / 筛选框**（`<Input variant="search">`）：属于工具栏控件，`--surface-soft` 填充、无可见边框，聚焦与无效态同独立字段。用于笔记侧栏搜索、AI 会话侧栏筛选、会话内搜索与管理页用户搜索；首页搜索框是 Material 表面，不属于此类。
@@ -257,13 +258,13 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
   - **可识别性**：文本字段（Input、Textarea 及消费它们的搜索 / 筛选框）必须有占位文字，`Input` 与 `Textarea` 的 `placeholder` 是必填 prop；Select 始终显示当前值。可见内容使字段可被识别，这是[底线](#一底线) 1.4.11 不要求 3:1 边界的前提，`--field-border` 的约 1.3:1 是视觉规则而非合规依据。占位文字说明期望输入、不复述标签，颜色为 `--muted`（≥ 4.5:1）。焦点指示（2px `--ring`）与无效态边界（`--danger`）仍须 ≥ 3:1。
 - **表单两种形态**：两个及以上字段的表单使用分组列表行（`SettingsRow` 与行内输入；网址、描述等长值用 `.settings-row--vertical`，标签在上、独立字段在下），字段级错误与说明放在所属行内的第二行。单字段对话框、搜索 / 筛选框与多行输入使用独立字段。迁移进度见 [验证与已知缺口](#验证与已知缺口)。
 - **Checkbox / RadioGroup / Switch / Slider**：只使用 `components/ui` 的组件，业务代码禁止直接写 `<input type="checkbox|radio|range">`（`check:ui` 规则 `native-form-control`；唯一例外是渲染 Markdown 任务列表的 `NoteMarkdown.tsx`，它是文档内容而非界面控件）。Checkbox 渲染为原生 `<button role="checkbox">`，保证 Tab 可聚焦。RadioGroup 的 `default` 变体是带文字的行内单选（紧凑高度、无底色、粗指针 ≥44px）；`rows` 变体让一组单选分布在不同的分组行里，容器本身 `display: contents`，不产生盒子也不打断行间分隔线。
-- **分组列表（Grouped List）**：设置、账户、管理页的基本单元。圆角 `--radius` 的 `--surface` 容器；行高 ≥ 44，左侧标签，右侧控件或值；行间为左侧内缩的细线；分组标题（14 / 600、前景色）在容器外上方，脚注（metadata、`--muted`）在容器外下方。
+- **分组列表（Grouped List）**：设置、账户、管理页的基本单元。圆角 `--radius` 的 `--surface` 容器；行高 ≥ 44，单值行（无说明、非 `.settings-row--vertical`）为 44，左侧标签，右侧控件或值；行内高于 28 的控件（36 的按钮、32 的分段轨道、行内输入）借用行的上下内边距，到行边缘保留（44 − 控件高）/ 2，恰好容纳粗指针命中区扩展，控件换行到标签下方时也不伸入下一行；行间为左侧内缩的细线；分组标题（14 / 600、前景色）在容器外上方，脚注（metadata、`--muted`）在容器外下方。
   - **容量与堆叠**：`semantic.css` 拥有 `SettingsRow` 布局。普通单值行保留右对齐值与 Input / Select；标签以局部语义 Token `--settings-row-label-min: 8em` 保留约八个正文字符的阅读容量，下限不超过行可用宽度，容量不足时控件先换到下一行并保持右对齐，不把短标签压成字列。长用户标题、metadata 与值允许在行内换行，不使用全局 nowrap 或 max-content 下限。
   - **复合管理行**：模型的多项开关与操作、备份文件的选择 / 文件名 / 预检等复合内容使用既有 `.settings-row--vertical`，标签与 metadata 在上，控制组在下左对齐；控制组按 DOM 顺序换行，文件名完整换行，不以裁切、隐藏操作或缩小命中区换取容量。纵向行不将标签的横向 flex-basis 用作高度。
   - **验证边界**：两个复合消费者在 320 / 390 / 640 / 768 / 1024 / 1366 / 1440 / 1920px 与 844×390 横屏检查标签阅读空间与操作可达性；390 / 768 / 1440 × light / dark 审阅实页。共享规则同时检查普通设置、账户、后台单值行、长文本、焦点与粗指针 44px 命中区。
   - **颜色归属**：普通值继承 `--foreground`；Button 等控件保留各自的 primary / destructive 等语义颜色，分组行不得覆盖。
 - **管理表格**：固定的短状态、角色与审计操作保留阅读宽度；长名称和明细允许换行，容量不足时在表格容器内横向滚动。审计对象 ID 的缩略值可通过键盘或触屏打开 Popover 查看完整值，Escape 关闭并返回触发控件。
-- **分段控件**：2–4 个互斥选项（如主题）；超过 4 个用 Select。选中项使用 `--surface-control-thumb`，在明暗主题下都亮于轨道。
+- **分段控件**：2–4 个互斥选项（如主题）；超过 4 个用 Select。选中项使用 `--surface-control-thumb`，在明暗主题下都亮于轨道。独立使用时选项高 32（轨道 36）；分组行内用紧凑档，选项 `--control-compact-height` 28（轨道 32）。粗指针下两者都保持可见尺寸，命中区由共享规则扩展到 44。
 - **色点选择**：强调色使用 24px 圆点，选中显示外环；名称只在 `aria-label` 与 tooltip。首个圆点是“跟随壁纸”：显示当前派生色并带图片字形，表示来源而非固定颜色。十项按五项一组分为两组：设置行内空间充足时排列一行，空间不足时换为两行，避免窗口 Host 收窄后出现孤点；<640px 时为分组行下方的整行五列均分网格；首页顶栏强调色弹层内固定为两行。粗指针命中区至少 44px。`AccentSwatches`（`web/src/components/searcher/AccentPicker.tsx` + `semantic.css`）拥有分组，设置页与顶栏弹层共用；验证跨组键盘导航及视口和 Host 收窄。
 - **空状态**：默认一句话与一个主要操作，居中，不加装饰性插图与卡片。需要解释原因、权限或恢复路径时允许补充信息及有明确用途的次要操作，保持主次层级，不以固定句数或操作数量牺牲清晰度。
 - **Toast / 撤销**：底部居中材质胶囊；破坏性操作用 AlertDialog 二次确认，软删除给撤销。
@@ -498,7 +499,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 登录用户的设置 / 账户与回收站是非模态窗口，首页仍为唯一桌面；应用与笔记自 C2、AI 自 C3 起同样是窗口（见下节）。窗口消费 Overlay 实色 `--surface-l3` 与 `--shadow-l3`，MRU 通过同层 DOM 顺序置顶，窗口层使用 `--elevation-workspace`，任务栏及真正模态、菜单和提示继续消费各自全局层级。背景窗口不进入 Tab 顺序，首个指针操作同时激活和作用于目标；设置、回收站与 AI 不响应窗口层 Escape。
 
-`tokens.css` 拥有 `--window-settings-width/height`（840×680）、`--window-trash-width/height`（880×640）和 `--window-min-width/height`（320×240），以及工作区边距 `--window-margin`：默认 `--space-4`（16px）；<768px 为 `--space-2`（8px，手机窗口四周内缩，与任务栏 / 悬浮球之间同为 8px），窗口阴影改用 `--shadow-l2`；高度 ≤480px 且宽度 ≥768px 为 `--space-1`（4px）。边距四边均适用，含任务栏 / 悬浮球一侧，工作区从可见连接提示条下沿开始；全屏笔记（`inset: 0`）不受影响。标题操作消费 `--control-touch-target`，键盘步长消费 `--space-4`，Shift 微调消费 `--space-1`。`features/windowing/WindowFrame.tsx` 是几何 owner：按实测任务栏 / 悬浮球、安全区和视口投影普通矩形，保存矩形不因临时夹取而改写；<1024px 或空间不足时为单活动大窗口，此时标题栏只有最小化与关闭，操作菜单“⋯”仅在自由窗口生效时出现。Host 实测宽度决定设置与回收站的紧凑布局。精细指针可拖动边角；触屏通过窗口菜单选择边角后拖动标题栏，抬起提交、系统取消触摸还原，操作栏的取消 / 完成按钮使用共享 Button 和 44px 命中区。键盘调整可提交或撤销，且不截取编辑控件按键。
+`tokens.css` 拥有 `--window-settings-width/height`（840×680）、`--window-trash-width/height`（880×640）和 `--window-min-width/height`（320×240），以及工作区边距 `--window-margin`：默认 `--space-4`（16px）；<768px 为 `--space-2`（8px，手机窗口四周内缩，与任务栏 / 悬浮球之间同为 8px），窗口阴影改用 `--shadow-l2`；高度 ≤480px 且宽度 ≥768px 为 `--space-1`（4px）。边距四边均适用，含任务栏 / 悬浮球一侧，工作区从可见连接提示条下沿开始；全屏笔记（`inset: 0`）不受影响。标题栏按主指针分档（与编辑器状态条的紧凑判定同为 `(hover: hover) and (pointer: fine)`）：精细主指针下高 `--control-height` 加 hairline（37），标题栏按钮与工具栏放入的图标按钮可见 `--control-compact-height` 28；其余高 `--control-touch-target` 44，按钮可见 `--control-height` 36。存在触屏时（含触屏笔记本）按钮的命中区由共享规则扩展到 44，按钮间距与末端内边距随之取（44 − 按钮尺寸）及其一半，相邻命中区相接不重叠、末个止于窗口边缘。窗口几何只消费 Token 与实测矩形，不依赖标题栏高度。键盘步长消费 `--space-4`，Shift 微调消费 `--space-1`。`features/windowing/WindowFrame.tsx` 是几何 owner：按实测任务栏 / 悬浮球、安全区和视口投影普通矩形，保存矩形不因临时夹取而改写；<1024px 或空间不足时为单活动大窗口，此时标题栏只有最小化与关闭，操作菜单“⋯”仅在自由窗口生效时出现。Host 实测宽度决定设置与回收站的紧凑布局。精细指针可拖动边角；触屏通过窗口菜单选择边角后拖动标题栏，抬起提交、系统取消触摸还原，操作栏的取消 / 完成按钮使用共享 Button 和 44px 命中区。键盘调整可提交或撤销，且不截取编辑控件按键。
 
 滚动条由 `global.css` 统一：默认隐藏（滑块透明），滚动时显示 `--scrollbar-thumb`，停止滚动 800ms 后收起（`design-system/scroll-activity.ts` 在滚动目标上设置 / 清除 `data-scrolling`；contenteditable 内部节点不标记），指针移到滑块上换为 `--scrollbar-thumb-hover`，轨道透明，宽度 `--scrollbar-size`。Chromium 仅设置标准属性时在 Windows 上仍保留箭头按钮，因此用 `::-webkit-scrollbar`（隐藏 button）实现，仅限精细指针，触屏保留系统 overlay 滚动条；不支持该伪元素的浏览器（Firefox）退回 `scrollbar-width: thin` 并在滚动或悬停时显示滑块。滑块是弱化的辅助视觉，不承诺对比度下限；需要完全隐藏滚动条的容器按各自 owner 设置 `scrollbar-width: none`。
 

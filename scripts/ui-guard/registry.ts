@@ -29,6 +29,8 @@ export interface TailwindVisualEntry {
 
 export interface VisualRegistry {
     fontTokens: ReadonlySet<string>;
+    /** Font-size roles whose registered size carries a line height (`12 / 16`). */
+    pairedFontTokens: ReadonlySet<string>;
     radiusTokens: ReadonlySet<string>;
     accentFills: readonly AccentFillEntry[];
     breakpoints: ReadonlySet<number>;
@@ -103,12 +105,13 @@ function unwrapCode(cell: string, context: string): string {
     return match[1];
 }
 
-function parseTokenTable(
+/** Registered Tokens mapped to their second column (the value or size). */
+function parseTokenRows(
     lines: string[],
     marker: string,
     isTokenName: (name: string) => boolean,
-): Set<string> {
-    const tokens = new Set<string>();
+): Map<string, string> {
+    const tokens = new Map<string, string>();
     for (const cells of tableRowsAfter(lines, marker)) {
         const token = unwrapCode(cells[0], marker);
         if (!isTokenName(token)) {
@@ -116,10 +119,16 @@ function parseTokenTable(
                 `Registry row is not a valid Token (${marker}): ${token}`,
             );
         }
-        tokens.add(token);
+        tokens.set(token, cells[1] ?? "");
     }
     return tokens;
 }
+
+/**
+ * The body role is the document's root font (`body { font: … }`), so blocks
+ * inherit its line height by default; every other role pairs explicitly.
+ */
+const ROOT_FONT_TOKEN = "--font-body-size";
 
 export function normalizeSelector(selector: string): string {
     return selector.replaceAll(/\s+/g, " ").trim();
@@ -214,15 +223,15 @@ export function parseVisualRegistry(markdown: string): VisualRegistry {
     if (breakpoints.size < 2) {
         throw new Error("Breakpoint registry needs a boundary");
     }
-    const fontTokens = parseTokenTable(
-        lines,
-        FONT_LADDER_MARKER,
-        isFontTokenName,
+    const fontRows = parseTokenRows(lines, FONT_LADDER_MARKER, isFontTokenName);
+    const fontTokens = new Set(fontRows.keys());
+    const pairedFontTokens = new Set(
+        [...fontRows].filter(([token, size]) =>
+            token !== ROOT_FONT_TOKEN && /^\d+ \/ \d+/.test(size)
+        ).map(([token]) => token),
     );
-    const radiusTokens = parseTokenTable(
-        lines,
-        RADIUS_LADDER_MARKER,
-        isRadiusTokenName,
+    const radiusTokens = new Set(
+        parseTokenRows(lines, RADIUS_LADDER_MARKER, isRadiusTokenName).keys(),
     );
     const tailwindVisualUtilities = new Set<string>();
     const tailwindVisuals: TailwindVisualEntry[] = [];
@@ -256,6 +265,7 @@ export function parseVisualRegistry(markdown: string): VisualRegistry {
     }
     return {
         fontTokens,
+        pairedFontTokens,
         radiusTokens,
         accentFills,
         breakpoints,

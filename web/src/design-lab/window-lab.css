@@ -46,6 +46,7 @@
 }
 .window-lab__home h1 {
     font-size: var(--font-page-title-size);
+    line-height: var(--font-page-title-line-height);
 }
 .window-lab__home-items {
     display: flex;
@@ -75,12 +76,14 @@
 }
 .window-lab__title strong {
     font-size: var(--font-title-size);
+    line-height: var(--font-title-line-height);
 }
 .window-lab__drag-label {
     display: flex;
     align-items: center;
     gap: var(--space-1);
     font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
     pointer-events: none;
 }
 .window-lab__drag-label svg {
@@ -102,6 +105,7 @@
 .window-lab__content h2 {
     margin: 0;
     font-size: var(--font-title-size);
+    line-height: var(--font-title-line-height);
 }
 .window-lab__content p {
     margin: 0;
