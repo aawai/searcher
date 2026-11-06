@@ -768,3 +768,16 @@
 .launcher-grid--library:not([data-pointer-active]) .launcher-folder-item:hover .launcher-folder-surface {
     background: var(--surface-soft);
 }
+
+/* Forced colours drop the shadows and fills that edge the plate, the icon
+   tiles and the folder surface; a folder would read as loose letters (A7). */
+@media (forced-colors: active) {
+    .launcher-plate:not([data-plate="hidden"]) {
+        outline: 1px solid CanvasText;
+    }
+    .webapp-glyph,
+    .launcher-folder-surface {
+        outline: 1px solid CanvasText;
+        outline-offset: -1px;
+    }
+}

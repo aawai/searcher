@@ -40,6 +40,7 @@ export const suites = {
         "accent-contrast",
         "apps-ordering",
         "touch-targets",
+        "forced-colors",
     ],
     routing: ["navigation", "auth", "share", "guest-ai-auth"],
     documents: [

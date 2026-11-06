@@ -86,6 +86,21 @@
     background: var(--accent-foreground);
 }
 
+/* Forced colours repaint the track and thumb Canvas and drop the thumb's
+   shadow: the thumb takes the text colour, the checked track Highlight (A7). */
+@media (forced-colors: active) {
+    .switch-thumb {
+        background: CanvasText;
+    }
+    .switch[data-checked] {
+        background: Highlight;
+        border-color: Highlight;
+    }
+    .switch[data-checked] .switch-thumb {
+        background: HighlightText;
+    }
+}
+
 /* --------------------------------------------------------------------------
    Radio Group: default list, segmented and swatch variants
    -------------------------------------------------------------------------- */
@@ -255,6 +270,32 @@
     }
 }
 
+/* Forced colours erase accent fills and thumb shadows, so checked states
+   switch to system colours: a Highlight dot, a Highlight segment, and an
+   outline around the chosen swatch (A7). A Highlight fill under text opts out
+   of adjustment: the text backplate would paint Canvas over it; the focus
+   ring then names its system colour itself. */
+@media (forced-colors: active) {
+    .radio-item[data-checked] .radio-circle {
+        border-color: Highlight;
+    }
+    .radio-indicator {
+        background: Highlight;
+    }
+    [data-slot="radio-group"][data-variant="segmented"] .radio-item[data-checked] {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+    }
+    [data-slot="radio-group"][data-variant="segmented"] .radio-item[data-checked]:focus-visible {
+        outline-color: CanvasText;
+    }
+    [data-slot="radio-group"][data-variant="swatch"] .radio-item[data-checked] > :last-child {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+    }
+}
+
 /* --------------------------------------------------------------------------
    Slider
    -------------------------------------------------------------------------- */
@@ -303,6 +344,20 @@
 .slider-thumb:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+}
+
+/* Forced colours repaint the track, range and thumb Canvas (A7). */
+@media (forced-colors: active) {
+    .slider-track {
+        background: GrayText;
+    }
+    .slider-range {
+        background: Highlight;
+    }
+    .slider-thumb {
+        border: 2px solid ButtonText;
+        background: ButtonFace;
+    }
 }
 
 /* --------------------------------------------------------------------------
@@ -571,6 +626,13 @@
 .menu-popup[data-ending-style] {
     opacity: 0;
     transform: scale(.98);
+}
+
+/* Forced colours drop the floating shadow that edges the popup (A7). */
+@media (forced-colors: active) {
+    .menu-popup {
+        outline: 1px solid CanvasText;
+    }
 }
 
 .menu-item {
@@ -926,6 +988,20 @@
     box-shadow: none;
 }
 
+/* Forced colours erase the active tab's thumb fill and shadow (A7); see the
+   radio group for why the Highlight fill opts out of adjustment. */
+@media (forced-colors: active) {
+    [data-slot="tabs-trigger"][data-active],
+    [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-active] {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+    }
+    [data-slot="tabs-trigger"][data-active]:focus-visible {
+        outline-color: CanvasText;
+    }
+}
+
 [data-slot="tabs-trigger"]:disabled,
 [data-slot="tabs-trigger"][aria-disabled="true"] {
     opacity: .45;
@@ -1065,6 +1141,14 @@
     width: min(calc(100vw - var(--space-6)), 400px);
 }
 
+/* Forced colours drop the shadow that edges the panel (A7). */
+@media (forced-colors: active) {
+    .dialog-panel,
+    [data-slot="alert-dialog-content"] {
+        outline: 1px solid CanvasText;
+    }
+}
+
 /* A dialog holding a grouped form is the grouped-list canvas end to end, the
    same pairing as the settings window: groups (`--surface`) read against it,
    and the title and footer share it, so no band separates them. */
@@ -1170,6 +1254,14 @@
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     overflow-wrap: anywhere;
+}
+
+/* Forced colours drop the shadow and the inverted fill that edge these layers (A7). */
+@media (forced-colors: active) {
+    [data-slot="popover-content"],
+    .tooltip-content {
+        outline: 1px solid CanvasText;
+    }
 }
 
 /* Popover and tooltip pop in from their anchor: fade plus a 2% scale. */

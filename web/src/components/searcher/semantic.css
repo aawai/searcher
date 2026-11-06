@@ -362,6 +362,13 @@
 .accent-picker-chip-dot[data-tone="muted"] {
     background: var(--muted);
 }
+/* The dots' colours are their content: forced colours keep them (A7). */
+@media (forced-colors: active) {
+    .accent-swatch-color,
+    .accent-picker-chip-dot {
+        forced-color-adjust: none;
+    }
+}
 
 /* Top-bar accent picker popover: title, the two swatch rows, then the current
    name and the way to the full appearance settings. */
@@ -527,6 +534,13 @@
     box-shadow: var(--shadow-elevation-floating);
     z-index: var(--elevation-toast);
 }
+/* Forced colours drop the shadow that edges the capsule (A7). */
+@media (forced-colors: active) {
+    .status-banner[data-presentation="floating"],
+    .undo-toast {
+        outline: 1px solid CanvasText;
+    }
+}
 .status-banner[data-presentation="floating"] {
     padding: var(--space-2) var(--space-4);
 }
@@ -610,7 +624,8 @@
     min-width: 0;
 }
 
-/* Local navigation: quiet text tabs; current item gets a soft fill. */
+/* Local navigation: quiet text tabs; the current item gets a soft fill and
+   the title weight. */
 .local-navigation {
     display: flex;
     flex-wrap: wrap;
@@ -630,9 +645,24 @@
 .local-navigation a:hover {
     color: var(--foreground);
 }
+/* The current item also takes the title weight: the fill alone is a colour
+   cue (1.4.1), and forced colours erase it (A7). */
 .local-navigation a[aria-current="page"] {
     color: var(--foreground);
     background: var(--surface-soft);
+    font-weight: var(--font-title-weight);
+}
+/* A Highlight fill under text opts out of adjustment, or the text backplate
+   paints Canvas over it; the focus ring then names its system colour. */
+@media (forced-colors: active) {
+    .local-navigation a[aria-current="page"] {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+    }
+    .local-navigation a[aria-current="page"]:focus-visible {
+        outline-color: CanvasText;
+    }
 }
 @media (any-pointer: coarse), (hover: none) {
     .local-navigation a {

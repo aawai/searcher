@@ -17,6 +17,13 @@
     transition: opacity var(--motion-fast) var(--ease-standard);
 }
 
+/* Forced colours drop the shadow that edges the card (A7). */
+@media (forced-colors: active) {
+    .inline-ai-card {
+        outline: 1px solid CanvasText;
+    }
+}
+
 @starting-style {
     .inline-ai-card {
         opacity: 0;
