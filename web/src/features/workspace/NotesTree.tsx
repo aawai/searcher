@@ -36,6 +36,7 @@ import {
     ContextMenuContent,
     ContextMenuTrigger,
 } from "../../components/ui/context-menu.tsx";
+import { focusContainer } from "../../components/ui/focus-recovery.ts";
 import type { TreeEntry } from "./notes-tree-model.ts";
 import { treeKeyAction } from "./tree-keyboard.ts";
 
@@ -267,6 +268,7 @@ export function NotesTree({
                     ref={container}
                     role="tree"
                     aria-label={label}
+                    {...focusContainer}
                     className="documents-tree"
                     onKeyDown={onKeyDown}
                     onClick={(event) => {
