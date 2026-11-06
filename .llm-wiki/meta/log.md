@@ -788,3 +788,27 @@
 ## [2026-11-06T03:10:53.307Z] observe
 - slug: "obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main", title: "Issue 369 PR-3 (T5 T7 T8 T9 T12) 经 PR 377 合并 main", relevance: "high"
 
+## [2026-11-06T05:12:14.905Z] observe
+- slug: "obs-2026-11-06-issue-369-pr-4-t6-t15-pr-379-main", title: "Issue 369 PR-4 (T6 T15) 经 PR 379 合并 main", relevance: "high"
+
+## [2026-11-06T06:01:02.088Z] observe
+- slug: "obs-2026-11-06-issue-370-pr-c-b4-pr-380-main", title: "Issue 370 PR-C（B4）窗口位置预设经 PR 380 合并 main", relevance: "high"
+
+## [2026-11-06T08:00:57.238Z] capture
+- source_id: "SRC-2026-11-06-001", url: "https://sqlite.org/wal.html", format: "web"
+
+## [2026-11-06T08:01:01.071Z] capture
+- source_id: "SRC-2026-11-06-002", url: "https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials", format: "web"
+
+## [2026-11-06T08:01:03.286Z] capture
+- source_id: "SRC-2026-11-06-003", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies", format: "web"
+
+## [2026-11-06T08:03:46.688Z] observe
+- slug: "obs-2026-11-06-issue-370-pr-b-b3-pr-381-main", title: "Issue 370 PR-B（B3）壁纸文字可读性经 PR 381 合并 main", relevance: "high"
+
+## [2026-11-06T10:13:01.352Z] observe
+- slug: "obs-2026-11-06-issue-369-pr-5-t10-pr-384-main", title: "Issue 369 PR-5 (T10) 经 PR 384 合并 main", relevance: "high"
+
+## [2026-11-06T10:28:28.921Z] observe
+- slug: "obs-2026-11-06-", title: "笔记标题焦点下划线与窄窗口抽屉固定错位", relevance: "high"
+

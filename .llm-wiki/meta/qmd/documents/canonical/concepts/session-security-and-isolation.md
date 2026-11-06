@@ -31,6 +31,7 @@ sources:
    状态变更还须服务端请求防护，详见 [CSRF Defense Boundaries](/concepts/csrf-defense-boundaries.md)
    与 [OWASP 来源](/sources/SRC-2026-10-26-003.md)。[MDN Cookie 指南](/sources/SRC-2026-10-29-001.md)还讨论 `Domain`、`Path`、有效期和前缀；其建议不代表项目已采用相应前缀。本轮未执行项目安全审计。
    [MDN Set-Cookie 参考](/sources/SRC-2026-11-05-002.md)补充：`HttpOnly` 不阻止脚本发起的请求携带 Cookie；默认 Lax 在部分浏览器中对近期 Cookie 的 POST 处理比显式 Lax 宽松。
+   [MDN Request.credentials](/sources/SRC-2026-11-06-002.md)指出默认 `same-origin` 仅对同源请求包含凭据，`include` 允许跨源包含；Cookie 的 SameSite 和浏览器策略仍有独立约束。[MDN Cookie 指南](/sources/SRC-2026-11-06-003.md)指出删除 Cookie 需匹配名称、路径和原先指定的 domain，浏览器恢复会话可能延长 session Cookie 的存在时间。
 4. **所有权严格隔离（Owner
    Isolation）**：所有的业务数据（书签、便签、偏好等）均以当前会话验证的用户为唯一
    Owner；无权访问或资源不存在统一返回 404，不泄露任何资源存在性线索。

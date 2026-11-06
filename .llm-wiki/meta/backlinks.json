@@ -39,7 +39,8 @@
     "sources/SRC-2026-10-28-003",
     "sources/SRC-2026-10-28-004",
     "sources/SRC-2026-10-28-005",
-    "sources/SRC-2026-11-04-003"
+    "sources/SRC-2026-11-04-003",
+    "sources/SRC-2026-11-06-003"
   ],
   "concepts/content-security-policy-strict-deployment": [
     "concepts/hono-security-middleware-vs-api-guard",
@@ -79,7 +80,8 @@
     "sources/SRC-2026-11-03-001",
     "sources/SRC-2026-11-03-002",
     "sources/SRC-2026-11-05-001",
-    "sources/SRC-2026-11-05-002"
+    "sources/SRC-2026-11-05-002",
+    "sources/SRC-2026-11-06-002"
   ],
   "concepts/css-container-queries": [
     "concepts/scrollbar-gutter-and-layout-stability",
@@ -318,6 +320,8 @@
     "sources/SRC-2026-11-03-002",
     "sources/SRC-2026-11-04-002",
     "sources/SRC-2026-11-05-002",
+    "sources/SRC-2026-11-06-002",
+    "sources/SRC-2026-11-06-003",
     "sources/searcher-session-token-hash-is-not-salted",
     "syntheses/searcher-system-architecture"
   ],
@@ -371,7 +375,8 @@
     "sources/SRC-2026-10-29-003",
     "sources/SRC-2026-11-02-004",
     "sources/SRC-2026-11-03-003",
-    "sources/SRC-2026-11-05-003"
+    "sources/SRC-2026-11-05-003",
+    "sources/SRC-2026-11-06-001"
   ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
@@ -539,6 +544,7 @@
     "sources/SRC-2026-10-29-003",
     "sources/SRC-2026-11-03-003",
     "sources/SRC-2026-11-05-003",
+    "sources/SRC-2026-11-06-001",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -667,6 +673,8 @@
     "sources/SRC-2026-10-25-006",
     "sources/SRC-2026-11-05-001",
     "sources/SRC-2026-11-05-002",
+    "sources/SRC-2026-11-06-002",
+    "sources/SRC-2026-11-06-003",
     "syntheses/searcher-system-architecture"
   ],
   "entities/shadcn-ui-system": [
@@ -765,7 +773,8 @@
     "concepts/database-queue-serialization",
     "concepts/sqlite-backup-and-recovery-boundaries",
     "concepts/sqlite-table-recreation-migration",
-    "entities/drizzle-sqlite-store"
+    "entities/drizzle-sqlite-store",
+    "sources/SRC-2026-11-06-001"
   ],
   "sources/SRC-2026-09-25-011": [
     "concepts/hono-middleware-pipeline-request-intake",
@@ -1087,6 +1096,16 @@
   "sources/SRC-2026-11-05-003": [
     "concepts/sqlite-backup-and-recovery-boundaries"
   ],
+  "sources/SRC-2026-11-06-001": [
+    "concepts/sqlite-backup-and-recovery-boundaries"
+  ],
+  "sources/SRC-2026-11-06-002": [
+    "concepts/csrf-defense-boundaries",
+    "concepts/session-security-and-isolation"
+  ],
+  "sources/SRC-2026-11-06-003": [
+    "concepts/session-security-and-isolation"
+  ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
   ],
@@ -1221,8 +1240,13 @@
   "sources/obs-2026-11-04-pr-366-merged-mobile-masthead-and-note-focus": [],
   "sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss": [],
   "sources/obs-2026-11-04-ui-issue-369": [],
+  "sources/obs-2026-11-06-": [],
   "sources/obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main": [],
+  "sources/obs-2026-11-06-issue-369-pr-4-t6-t15-pr-379-main": [],
+  "sources/obs-2026-11-06-issue-369-pr-5-t10-pr-384-main": [],
   "sources/obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373": [],
+  "sources/obs-2026-11-06-issue-370-pr-b-b3-pr-381-main": [],
+  "sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main": [],
   "sources/obs-2026-11-06-pr-374-main": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
