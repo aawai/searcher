@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-06T10:53:54.017Z",
+  "last_updated": "2026-11-06T11:07:51.369Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -3721,6 +3721,26 @@
       "relevance": "high",
       "observed_at": "2026-11-06T10:41:11.787Z",
       "source_context": "创建 PR 并合并至 main",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
+    "sources/obs-2026-11-06-pr-386-main": {
+      "type": "source",
+      "title": "Observation: 刊头应用图标与可选标签图标经 PR 386 合并 main",
+      "tags": [
+        "pr-386",
+        "merged",
+        "icon",
+        "pwa",
+        "appearance",
+        "tabIcon",
+        "migration"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-pr-386-main",
+      "relevance": "high",
+      "observed_at": "2026-11-06T11:07:51.317Z",
+      "source_context": "图标重设计实施并合并",
       "created": "2026-11-06",
       "updated": "2026-11-06"
     },

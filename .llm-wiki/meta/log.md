@@ -821,3 +821,6 @@
 ## [2026-11-06T10:53:53.761Z] observe
 - slug: "obs-2026-11-06-6-b-d-e", title: "应用图标重设计：6 个方向效果图，用户在 B/D/E 间比较", relevance: "high"
 
+## [2026-11-06T11:07:51.320Z] observe
+- slug: "obs-2026-11-06-pr-386-main", title: "刊头应用图标与可选标签图标经 PR 386 合并 main", relevance: "high"
+
