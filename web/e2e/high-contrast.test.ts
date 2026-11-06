@@ -250,6 +250,35 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射
         assertEquals(restored.accent, before.accent);
         assertEquals(restored.canvas, before.canvas);
         assertEquals(restored.glass, "clear");
+
+        // The note title placeholder remains legible on both high-contrast
+        // canvases; its normal-theme half-opacity must not carry across.
+        await page.locator('[data-dock-id="notes"]').click();
+        await page.getByRole("button", { name: "新建笔记", exact: true })
+            .click();
+        const title = page.locator(".document-title-input");
+        await title.waitFor();
+        for (const scheme of ["light", "dark"] as const) {
+            await page.evaluate(async (theme) => {
+                const response = await fetch("/api/preferences", {
+                    method: "PATCH",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({ theme }),
+                });
+                if (!response.ok) throw new Error(await response.text());
+            }, `high-contrast-${scheme}`);
+            await page.reload();
+            await waitForTheme(page, scheme, true);
+            await page.getByRole("button", { name: "新建笔记", exact: true })
+                .click();
+            await title.waitFor();
+            assertEquals(
+                await title.evaluate((element) =>
+                    getComputedStyle(element, "::placeholder").opacity
+                ),
+                "1",
+            );
+        }
         await context.close();
     } finally {
         await browser.close();

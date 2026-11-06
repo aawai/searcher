@@ -107,6 +107,13 @@
     opacity: 0.5;
 }
 
+/* High contrast placeholder text must retain the full muted-colour contrast. */
+@media (forced-colors: none) {
+    [data-contrast="more"] .document-title-input::placeholder {
+        opacity: 1;
+    }
+}
+
 .document-title-input:focus-visible:not([data-focus-origin="pointer"]) {
     border-color: var(--ring);
     box-shadow: var(--shadow-field-focus);
