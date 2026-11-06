@@ -96,7 +96,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
   可经修订采用立即切换或其他不降低可访问性的反馈方式；不使用全局 `*` 清零规则绕过组件状态、焦点和退出逻辑。
 - reduced-transparency 与不支持 `backdrop-filter` 时，所有玻璃档位按 `off` 渲染（实色、无 blur）。
 - `forced-colors: active` 下系统把背景改为 Canvas 并保留其透明度、改写边框颜色、去掉阴影与渐变，因此：玻璃与刊头衬底按 `off` 渲染为实色（与 reduced-transparency 同一组 Token 回退），否则下层内容会透出；靠阴影划出边界的 Material / Floating 表面（搜索框、应用底板、图标块、文件夹、任务栏、菜单、Popover、Tooltip、对话框、Toast）加 1px `CanvasText` outline（不改变布局）；选中与当前态改用系统色：分段控件、Tab、设置与管理导航当前项为 `Highlight` 底 + `HighlightText`，并以 `forced-color-adjust: none` 避免文字背板盖住底色，其焦点环改用 `CanvasText`；Switch 拇指为 `CanvasText`（选中时轨道 `Highlight`、拇指 `HighlightText`），Slider 轨道 `GrayText`、范围 `Highlight`、拇指 `ButtonText` 边框，单选圆点 `Highlight`，任务栏指示条 `CanvasText`；强调色色点以 `forced-color-adjust: none` 保留颜色，选中项加 `Highlight` 外环。规则与各组件样式并置。
-- 高对比主题（`data-contrast="more"`）是应用自有配色，组件规则包在 `@media (forced-colors: none)` 内，`forced-colors: active` 时上一条的系统色规则照常生效，见 [高对比主题](#高对比主题)。
+- 高对比主题（`data-contrast="more"`）是应用自有配色，组件的应用高亮配色规则包在 `@media (forced-colors: none)` 内，`forced-colors: active` 时上一条的系统色规则照常生效，见 [高对比主题](#高对比主题)。
 - Escape 由 `components/ui/escape-layer-stack.tsx` 统一拥有，避免各 feature 竞争全局键盘事件。
 - 触发控件已不存在时的焦点落点（A5、2.4.3）由 `components/ui/focus-recovery.ts` 统一兜底：记录最近的焦点及其所在容器，焦点因控件被移除而落到 `<body>` 时（等两帧，让菜单、对话框与窗口自己的焦点管理先完成），回到仍存在的触发控件，否则回到最近的仍存在的容器。容器为窗口框架与以 `focusContainer` 标记的集合（`tabIndex=-1` + 无障碍名称）：首页应用库网格、首页刊头及其置顶区域、笔记本树、回收站各分区、最近上传壁纸。新增“条目可能在聚焦时消失”的集合须标记，不在各 feature 重复写删除后的焦点处理。
 - A2 命中区由 `primitives.css` 的唯一规则扩展：宿主设置 `--touch-target-size`（不继承），其 `::after` 以宿主为中心、每轴扩展到该尺寸，不改变可见尺寸与布局；粗指针（`(any-pointer: coarse), (hover: none)`）下 Switch、默认 / 图标按钮、分段控件选项与标记 `.touch-target` 的宿主自动设为 `--control-touch-target`。每侧扩展（44 − 可见尺寸）/ 2；与相邻目标的间距容不下双方的扩展区时改为可见放大到 44（`sm` 按钮所在的紧凑工具栏、色点组、纵向紧邻的列表条目），`<input>` 等替换元素（不能生成伪元素）与菜单项（纵向紧邻的行）亦然。
@@ -411,7 +411,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 “高对比浅色”“高对比深色”是主题偏好的两个应用自有配色，任何系统配色下都可主动选择；它们**不**开启或模拟操作系统的强制颜色。`AppState` 经 `design-system/theme.ts` 把基础明暗写入 `data-theme`（高对比浅 → `light`，高对比深 → `dark`），另写 `data-contrast="more"`，现有按明暗区分的消费者无需改动。owner：`tokens.css`（`[data-contrast="more"]` 与 `[data-theme="dark"][data-contrast="more"]` 两层，声明在强调色调色板之后）与下列组件规则；“跟随系统”只按 `prefers-color-scheme` 解析，不响应 `prefers-contrast`。
 
-**优先级。** `forced-colors: active` 时系统颜色始终主导：组件的高对比规则都包在 `@media (forced-colors: none)` 内，已有的系统色规则（见 [默认交互实现](#默认交互实现)）不变，也不以 `forced-color-adjust: none` 覆盖系统配色。`prefers-reduced-motion`、`prefers-reduced-transparency` 照常生效。
+**优先级。** `forced-colors: active` 时系统颜色始终主导：组件的应用高亮配色规则包在 `@media (forced-colors: none)` 内，已有的系统色规则（见 [默认交互实现](#默认交互实现)）不变，也不以 `forced-color-adjust: none` 覆盖系统配色。笔记标题占位文字在高对比主题下保持不透明，但颜色仍由系统决定。`prefers-reduced-motion`、`prefers-reduced-transparency` 照常生效。
 
 **系统规则。**
 

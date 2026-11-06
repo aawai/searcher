@@ -279,6 +279,13 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射
                 "1",
             );
         }
+        await page.emulateMedia({ forcedColors: "active" });
+        assertEquals(
+            await title.evaluate((element) =>
+                getComputedStyle(element, "::placeholder").opacity
+            ),
+            "1",
+        );
         await context.close();
     } finally {
         await browser.close();
