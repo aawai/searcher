@@ -21,6 +21,16 @@
 .workspace-body:has(> .library-pane--notes) {
     padding-block-end: 0;
 }
+/* An open notes drawer's grouped canvas reaches the window edges: the body's
+   inset is part of it, not a white frame around it. Same delayed switch as
+   the layout (documents-workspace.css), so closing fades before it clears. */
+.workspace-body:has(> .library-pane--notes .documents-layout:is([data-drawer], [data-outline-drawer])) {
+    transition: background-color 0s linear var(--motion-base);
+}
+.workspace-body:has(> .library-pane--notes .documents-layout:is([data-drawer="open"], [data-outline-drawer="open"])) {
+    background-color: var(--surface-grouped-canvas);
+    transition-delay: 0s;
+}
 .workspace-root {
     display: flex;
     flex-direction: column;

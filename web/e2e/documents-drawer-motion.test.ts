@@ -10,7 +10,7 @@ interface PaneState {
     gapStart: number;
     gapTop: number;
     gapBottom: number;
-    widthMatchesLayout: boolean;
+    fitsLayout: boolean;
     radius: string;
     paneDuration: string;
     inert: boolean;
@@ -19,7 +19,7 @@ interface PaneState {
     drawerVisibility: string;
 }
 
-Deno.test("笔记抽屉：编辑区错开为留有固定间隙的卡片，减少动态效果下保留错位只去掉过渡，焦点与 inert 不变", async () => {
+Deno.test("笔记抽屉：编辑区收窄为留有固定间隙、不越出内容区的卡片，减少动态效果下保留错位只去掉过渡，焦点与 inert 不变", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
@@ -51,8 +51,11 @@ Deno.test("笔记抽屉：编辑区错开为留有固定间隙的卡片，减少
                     gapStart: card.left - nav.right,
                     gapTop: card.top - box.top,
                     gapBottom: box.bottom - card.bottom,
-                    // Unscaled card: text keeps its size and does not rewrap.
-                    widthMatchesLayout: Math.abs(card.width - box.width) < 1,
+                    // Unscaled card that narrows to the room beside the drawer
+                    // and ends at the layout's edge instead of being clipped.
+                    fitsLayout: Math.abs(card.right - box.right) < 1 &&
+                        Math.abs(card.width - (box.right - nav.right - 16)) <
+                            1,
                     radius: style.borderTopLeftRadius,
                     paneDuration: style.transitionDuration,
                     inert: (element as HTMLElement).inert,
@@ -69,10 +72,10 @@ Deno.test("笔记抽屉：编辑区错开为留有固定间隙的卡片，减少
                 )
             );
         const assertAside = (open: PaneState) => {
-            assertEquals(Math.round(open.gapStart), 12);
+            assertEquals(Math.round(open.gapStart), 16);
             assertEquals(Math.round(open.gapTop), 12);
             assertEquals(Math.round(open.gapBottom), 12);
-            assert(open.widthMatchesLayout);
+            assert(open.fitsLayout);
             assertNotEquals(open.radius, "0px");
             assert(open.inert);
             assertEquals(open.drawerVisibility, "visible");

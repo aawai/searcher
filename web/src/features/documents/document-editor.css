@@ -78,22 +78,28 @@
 }
 
 /* The title reads as the document's heading, not a boxed field: no resting
-   border, and focus draws a 2px underline inside the input's own box, so no
-   ancestor's overflow can clip it (an outset outline was cut off at the
-   header's top edge). The transparent border reserves the line's space. */
+   border or fill. Keyboard focus draws the text-field ring (the field's own
+   border turning --ring plus the 1px inset), inside the input's box so no
+   ancestor's overflow clips it; the transparent border reserves its space.
+   Focus that follows a pointer press (data-focus-origin="pointer") shows only
+   the caret. The inline padding is cancelled by an equal negative margin, so
+   the text keeps its line. */
 .document-title-input {
-    width: 100%;
+    width: calc(100% + 2 * var(--space-2));
+    margin-inline: calc(-1 * var(--space-2));
     font-size: var(--font-page-title-size);
     line-height: var(--font-page-title-line-height);
     font-weight: var(--font-title-weight);
     color: var(--foreground);
     background: transparent;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    border-radius: 0;
+    border: var(--space-hairline) solid transparent;
+    border-radius: var(--input-radius);
     outline: none;
-    padding: var(--space-1) 0;
+    padding-block: var(--space-1);
+    padding-inline: calc(var(--space-2) - var(--space-hairline));
     box-sizing: border-box;
+    transition: border-color var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard);
 }
 
 .document-title-input::placeholder {
@@ -101,16 +107,22 @@
     opacity: 0.5;
 }
 
-.document-title-input:focus-visible {
-    border-bottom-color: var(--ring);
+.document-title-input:focus-visible:not([data-focus-origin="pointer"]) {
+    border-color: var(--ring);
+    box-shadow: var(--shadow-field-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .document-title-input {
+        transition: none;
+    }
 }
 
 @media (forced-colors: active) {
-    .document-title-input {
-        border-bottom-color: Canvas;
-    }
-    .document-title-input:focus-visible {
-        border-bottom-color: Highlight;
+    .document-title-input:focus-visible:not([data-focus-origin="pointer"]) {
+        border-color: Highlight;
+        outline: var(--space-half) solid Highlight;
+        outline-offset: calc(-1 * var(--space-half));
     }
 }
 

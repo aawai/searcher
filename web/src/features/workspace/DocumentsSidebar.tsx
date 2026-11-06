@@ -1280,6 +1280,8 @@ function TreeNoteRow(
             menu={<DocumentActionMenuItems actions={actions} menu="context" />}
             after={actions.dialogs}
         >
+            {/* Holds a notebook chevron's place, so names at one level share a column. */}
+            <span className="documents-tree-chevron-slot" aria-hidden="true" />
             <span className="documents-tree-label">{item.displayTitle}</span>
             <NoteMarkers item={item} />
         </NotesTreeRow>

@@ -6,12 +6,16 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), selec
 const TEXT_ENTRY = 'textarea, [contenteditable]:not([contenteditable="false"]), input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="reset"], [type="range"], [type="color"], [type="file"])';
 
 /**
- * Opening focuses the first control, except that touch devices never start in
- * a text field: that would raise the soft keyboard over the overlay. The
- * labelled overlay itself takes focus instead and Tab still reaches the field.
+ * Opening focuses `initialFocus`'s element when it names one, else the first
+ * control, except that touch devices never start in a text field: that would
+ * raise the soft keyboard over the overlay. The labelled overlay itself takes
+ * focus instead and Tab still reaches the field.
  */
-function initialFocusTarget(overlay: HTMLElement): HTMLElement {
-    const first = overlay.querySelector<HTMLElement>(FOCUSABLE);
+function initialFocusTarget(
+    overlay: HTMLElement,
+    preferred: HTMLElement | null,
+): HTMLElement {
+    const first = preferred ?? overlay.querySelector<HTMLElement>(FOCUSABLE);
     if (!first) return overlay;
     const touch = globalThis.matchMedia?.(MEDIA_QUERIES.coarsePointer).matches;
     return touch && first.matches(TEXT_ENTRY) ? overlay : first;
@@ -20,7 +24,7 @@ function initialFocusTarget(overlay: HTMLElement): HTMLElement {
 /** Modal overlay confined to its positioned parent rather than the viewport. */
 export function WindowOverlay({
     open, onOpenChange, children, className, label, restoreFocusRef,
-    restoreFocus = true, modal = true, active = true, role = "dialog",
+    restoreFocus = true, modal = true, active = true, role = "dialog", initialFocus,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -32,12 +36,16 @@ export function WindowOverlay({
     modal?: boolean;
     active?: boolean;
     role?: "dialog" | "region";
+    /** Picks the element that takes focus on open; `null` falls back to the first control. */
+    initialFocus?: (overlay: HTMLElement) => HTMLElement | null;
 }) {
     const ref = useRef<HTMLDivElement>(null);
     const closeRef = useRef(onOpenChange);
     closeRef.current = onOpenChange;
     const restoreRef = useRef(restoreFocus);
     restoreRef.current = restoreFocus;
+    const initialFocusRef = useRef(initialFocus);
+    initialFocusRef.current = initialFocus;
     useEscapeLayer(open && modal && active, () => closeRef.current(false), "window-overlay");
     useEffect(() => {
         if (!open || !modal || !ref.current) return;
@@ -58,7 +66,7 @@ export function WindowOverlay({
             else if (!event.shiftKey && (index < 0 || index === elements.length - 1)) { event.preventDefault(); elements[0].focus(); }
         };
         overlay.addEventListener("keydown", trapFocus);
-        initialFocusTarget(overlay).focus();
+        initialFocusTarget(overlay, initialFocusRef.current?.(overlay) ?? null).focus();
         return () => {
             overlay.removeEventListener("keydown", trapFocus);
             siblings.forEach((element, index) => { element.inert = previous[index]; });

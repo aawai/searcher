@@ -6,11 +6,14 @@
     min-height: 0;
     overflow: hidden;
 }
+/* --documents-sidebar-bg is the navigation's own surface: the sticky search
+   row paints it too, so the row never reads as a band of another colour. */
 .documents-sidebar {
+    --documents-sidebar-bg: var(--surface-l3);
     flex: 0 0 var(--notes-sidebar-width);
     min-width: 0;
     min-height: 0;
-    background: var(--surface-l3);
+    background: var(--documents-sidebar-bg);
     border-inline-end: var(--space-hairline) solid var(--border);
 }
 .documents-sidebar[hidden] {
@@ -21,18 +24,29 @@
     overflow-x: hidden;
     overflow-y: auto;
 }
-/* Drawer: the editor becomes a card that slides aside by the drawer width plus
-   a fixed gap, inset from the top and bottom by the same gap, revealing the
-   navigation underneath on the grouped canvas so the white card and the
-   panel read as two layers. The overlay stays rendered while closed
-   (visibility, not display) so both directions animate. */
+/* Drawer: the editor becomes a card that makes room for the drawer — it
+   narrows by the drawer width plus a fixed gap (the left drawer also slides it
+   aside) — inset from the top and bottom, revealing the navigation on the
+   grouped canvas so the white card and the panel read as two layers. The
+   horizontal gap equals the window body's inset (--space-4), so the window
+   edge, the drawer rows and the card are evenly spaced. The overlay stays
+   rendered while closed (visibility, not display) so both directions
+   animate. */
+/* The layout is the size container, so the drawer width resolves against the
+   layout in every consumer: a bare `80%` would mean the pane's own (narrowed)
+   width inside its translate. */
 .documents-layout[data-drawer],
 .documents-layout[data-outline-drawer] {
-    --documents-drawer-width: min(var(--notes-sidebar-width), 80%);
+    container-type: inline-size;
+    --documents-drawer-width: min(var(--notes-sidebar-width), 80cqi);
+    --documents-drawer-gap: var(--space-4);
     transition: background-color 0s linear var(--motion-base);
 }
 .documents-layout[data-outline-drawer] {
-    --documents-outline-drawer-width: min(var(--document-outline-width), 80%);
+    --documents-outline-drawer-width: min(
+        var(--document-outline-width),
+        80cqi
+    );
 }
 .documents-layout[data-drawer="open"],
 .documents-layout[data-outline-drawer="open"] {
@@ -59,9 +73,25 @@
     transition: opacity var(--motion-base) var(--ease-out-expo), visibility 0s
         linear var(--motion-base);
 }
+.documents-sidebar--drawer {
+    --documents-sidebar-bg: var(--surface-grouped-canvas);
+}
 .documents-sidebar--drawer > nav {
     flex: 0 0 var(--documents-drawer-width);
-    background: var(--surface-grouped-canvas);
+    background: var(--documents-sidebar-bg);
+}
+/* The card's gap is the drawer's trailing inset; no second inset inside. */
+.documents-sidebar--drawer .documents-workspace {
+    padding-inline-end: 0;
+}
+/* On the grouped canvas the soft fill barely separates; the current entry
+   takes the card's surface, the same layer as the editor card beside it. */
+.documents-sidebar--drawer :is(
+    .documents-tree-row[data-selected],
+    .documents-summary-row:has([aria-current="page"]),
+    [data-slot="button"].documents-entry[aria-pressed="true"]
+) {
+    background: var(--surface);
 }
 .documents-outline-drawer-content {
     flex: 0 0 var(--documents-outline-drawer-width);
@@ -87,8 +117,9 @@
         border-radius var(--motion-base) var(--ease-out-expo),
         box-shadow var(--motion-base) var(--ease-out-expo);
 }
-/* The card keeps its width (no scale, so text stays crisp and does not
-   rewrap); the part past the window edge is clipped by the layout. */
+/* The card narrows once as it opens (text rewraps to the room left; width is
+   not animated, so it does not rewrap every frame) and never runs past the
+   window edge. */
 .documents-layout[data-drawer="open"] > .documents-editor-pane,
 .documents-layout[data-outline-drawer="open"] > .documents-editor-pane {
     margin-block: var(--space-3);
@@ -96,16 +127,17 @@
     box-shadow: var(--shadow-l2);
 }
 .documents-layout[data-drawer="open"] > .documents-editor-pane {
+    flex: 0 0 calc(
+        100% - var(--documents-drawer-width) - var(--documents-drawer-gap)
+    );
     transform: translateX(
-        calc(var(--documents-drawer-width) + var(--space-3))
+        calc(var(--documents-drawer-width) + var(--documents-drawer-gap))
     );
 }
 .documents-layout[data-outline-drawer="open"] > .documents-editor-pane {
-    transform: translateX(
-        calc(
-            -1 * (var(--documents-outline-drawer-width) +
-                    var(--space-3))
-        )
+    flex: 0 0 calc(
+        100% - var(--documents-outline-drawer-width) -
+            var(--documents-drawer-gap)
     );
 }
 /* Reduced motion: the open geometry is the state, not the animation, so the
@@ -173,7 +205,7 @@
     position: sticky;
     top: 0;
     z-index: var(--elevation-local-1);
-    background: var(--surface-l3);
+    background: var(--documents-sidebar-bg);
 }
 .documents-sidebar-scroll {
     display: flex;
@@ -345,6 +377,10 @@
 .documents-tree-icon {
     flex: none;
     color: var(--muted);
+}
+.documents-tree-chevron-slot {
+    flex: none;
+    width: var(--icon-sm);
 }
 .documents-tree-row[data-kind="note"] {
     cursor: default;
