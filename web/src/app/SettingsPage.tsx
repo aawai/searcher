@@ -18,6 +18,7 @@ import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlide
 import { Check, ChevronRight, MoreVertical, Upload } from "lucide-react";
 import { AccentSwatches } from "../components/searcher/AccentPicker.tsx";
 import {
+    type PointerEvent as ReactPointerEvent,
     type ReactNode,
     useCallback,
     useEffect,
@@ -50,6 +51,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu.tsx";
+import { useEscapeLayer } from "../components/ui/escape-layer-stack.tsx";
+import { focusContainer } from "../components/ui/focus-recovery.ts";
 import { Input } from "../components/ui/input.tsx";
 import {
     NativeSelect,
@@ -94,6 +97,35 @@ function useReducedTransparency(): boolean {
         () => globalThis.matchMedia(REDUCED_TRANSPARENCY_QUERY).matches,
         () => false,
     );
+}
+
+/**
+ * A wallpaper card's hover-revealed menu button covers part of its thumbnail,
+ * so Escape hides it until the pointer leaves the card (WCAG 1.4.13). Touch
+ * shows the button all the time, so only a hovering pointer counts.
+ */
+function useDismissibleCardHover() {
+    const [hovered, setHovered] = useState<string | null>(null);
+    const [dismissed, setDismissed] = useState(false);
+    useEscapeLayer(
+        hovered !== null && !dismissed,
+        () => setDismissed(true),
+        "overlay",
+    );
+    return {
+        isDismissed: (id: string) => dismissed && hovered === id,
+        handlers: (id: string) => ({
+            onPointerEnter: (event: ReactPointerEvent) => {
+                if (event.pointerType === "touch") return;
+                setHovered(id);
+                setDismissed(false);
+            },
+            onPointerLeave: () => {
+                setHovered((current) => current === id ? null : current);
+                setDismissed(false);
+            },
+        }),
+    };
 }
 
 function Choices<T extends string>(
@@ -195,6 +227,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
         WallpaperHistoryRecord | null
     >(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const cardHover = useDismissibleCardHover();
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const toastTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
         undefined,
@@ -1001,6 +1034,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     data-testid="wallpaper-history"
                                     role="group"
                                     aria-label="最近上传的图片"
+                                    {...focusContainer}
                                 >
                                     <div className="wallpaper-history__grid">
                                         {wallpaperHistory.map(
@@ -1016,6 +1050,14 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                         data-current={isCurrent
                                                             ? "true"
                                                             : undefined}
+                                                        data-hover-dismissed={cardHover
+                                                            .isDismissed(
+                                                                record.id,
+                                                            ) ||
+                                                            undefined}
+                                                        {...cardHover.handlers(
+                                                            record.id,
+                                                        )}
                                                         data-testid={`wallpaper-history-item-${record.id}`}
                                                     >
                                                         <button

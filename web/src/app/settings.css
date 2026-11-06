@@ -351,6 +351,11 @@
     .wallpaper-card__menu-trigger[data-popup-open] {
         opacity: 1;
     }
+    /* Escape hides the button over the thumbnail until the pointer leaves
+       (1.4.13); keyboard focus and an open menu keep it. */
+    .wallpaper-card[data-hover-dismissed] .wallpaper-card__menu-trigger:not(:focus-visible, [data-popup-open]) {
+        opacity: 0;
+    }
 }
 @media (any-pointer: coarse) {
     .wallpaper-card__menu-trigger {
