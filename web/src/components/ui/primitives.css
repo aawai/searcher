@@ -181,6 +181,16 @@
     display: none;
 }
 
+/* Options sit 2px apart, so their hit areas grow only vertically; every
+   option is at least a touch target wide instead. */
+[data-slot="radio-group"][data-variant="segmented"] .radio-item {
+    min-width: var(--control-touch-target);
+}
+
+[data-slot="radio-group"][data-variant="segmented"] .radio-item::after {
+    inset-inline: 0;
+}
+
 [data-slot="radio-group"][data-variant="segmented"] .radio-item:hover {
     background: transparent;
     color: var(--foreground);
