@@ -854,6 +854,13 @@
     border-color: transparent;
     background: var(--surface-soft);
 }
+/* High contrast theme: the search box keeps the field frame like every other
+   field; focus and invalid keep their own border. */
+@media (forced-colors: none) {
+    [data-contrast="more"] .cn-input[data-variant="search"]:not(:focus-visible, [aria-invalid="true"]) {
+        border-color: var(--field-border);
+    }
+}
 
 /* Hover deepens only the resting border; focus and invalid keep their own. */
 @media (hover: hover) {

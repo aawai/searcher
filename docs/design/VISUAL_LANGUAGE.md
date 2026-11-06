@@ -73,7 +73,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 - `accent-contrast.test.ts`（九种预设）与 `wallpaper-accent.test.ts`（壁纸派生）检查强调色文字 4.5:1 与焦点环 3:1（A1）；没有使用强调色的大字角色。高对比主题把强调色统一映射为高亮，其文字、焦点环、边界与选中填充由 `glass-contrast.test.ts` 的高对比用例断言；壁纸派生色在高对比主题下只出现在“跟随壁纸”色点上（色样），不进入该派生对比度测试。
 - A2 的 e2e 只覆盖应用网格、窗口标题栏与设置分组行（`touch-targets.test.ts`：鼠标 / 触屏笔记本 / 触屏三种指针下逐个探测控件中心、四边内缩 1px 与 44px 方框，须命中控件本身）及部分页面控件，其余靠实页清单。笔记侧栏的固定入口与列表条目在触屏笔记本（主指针精细 + 存在触屏，视口 ≥640px）下为紧凑 28px，纵向扩大的命中区会覆盖相邻条目的边缘，属于 A2 的已知未达标项，待侧栏条目改为可见放大或加大间距后补入机检。
 - A6 由 `web/e2e/wallpaper-readability.test.ts` 在真实 Chromium 中取样：纯白、纯黑、50% 灰、4px 黑白棋盘、高饱和红 / 绿 / 蓝七张合成壁纸 × light / dark / 高对比浅色 / 高对比深色 × 默认 `balanced` 遮罩与默认玻璃档位 × 390 / 1440 × 登录（关闭应用底板）/ 访客。取样范围为顶栏（字标、“登录”、图标按钮）、窄屏收起态的刊头露出区与关闭底板时的应用名称；应用图块、头像与同步失败徽标在自己的表面上，字标句点按 1.4.3 的字标豁免不计。每个文字元素先以两种键色重绘字形求出覆盖率，以覆盖率 ≥50% 为字形轮廓，取轮廓外 2px 内、不含任何字形覆盖的像素（壁纸、遮罩与光晕）为背景，以最不利的 5% 分位与文字颜色计算对比度：正文 4.5:1、≥24px 大字 3:1、图标 3:1（1.4.11）。取样前等两帧截图一致，取样后背景像素变化即失败。
-- A7 由 `web/e2e/forced-colors.test.ts` 在 Chromium `forced-colors: active` × light / dark 下检查计算样式：搜索框与任务栏的玻璃不透明且有边界，菜单与弹层有边界，强调色色点保留各自颜色、选中项带外环，任务栏活动指示条、设置导航当前项、分段控件选中项、Switch 拇指、Slider、单选圆点与回收站活动 Tab 各自的系统色与未选中态或 Canvas 不同。同一文件以字重检查设置与管理导航当前项的 1.4.1 线索。
+- A7 由 `web/e2e/forced-colors.test.ts` 在 Chromium `forced-colors: active` × light / dark / 高对比浅色 / 高对比深色下检查计算样式：搜索框与任务栏的玻璃不透明且有边界，菜单与弹层有边界，强调色色点保留各自颜色、选中项带外环，任务栏活动指示条、设置导航当前项、分段控件选中项、Switch 拇指、Slider、单选圆点与回收站活动 Tab 各自的系统色与未选中态或 Canvas 不同；两个高对比主题下设置导航当前项、分段控件选中项与 Switch 开启轨道取系统 `Highlight` 而非应用高亮。同一文件以字重检查设置与管理导航当前项的 1.4.1 线索。
 - 2.4.11 由 `web/e2e/desktop-windows.test.ts` 在 1440 下打开设置窗口后正反向 Tab 遍历：焦点不进入窗口下方的桌面，每个焦点元素在 5×5 取样中至少一点可见。
 - 1.4.13 由 `web/e2e/wallpaper.test.ts` 检查壁纸卡片悬停菜单：Escape 隐藏且设置窗口不关闭，移开再悬停恢复。其余悬停内容（Tooltip、搜索建议、笔记树与会话行操作等）由 #370 B5 实页审查：Tooltip 与搜索建议满足三项要求，行内悬停操作出现在预留空间、不遮挡或替换内容，不要求 Escape 关闭。
 
@@ -417,7 +417,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 - **画布与表面**：纯白 / 纯黑画布与内容表面，`--surface-soft`、`--surface-highlight`（不透明）与 `--surface-grouped-canvas` 只留可辨的近白 / 近黑层次。
 - **实色玻璃**：沿用 reduced-transparency / forced-colors 的不透明路径（`tokens.css` 的同一组档位取值、`dock.css` 的实色任务栏），所有档位与刊头衬底为实色、无 blur、无顶光；`glassIntensity` 的已存值不变，退出高对比主题即恢复。设置页“玻璃效果”一行就近说明。
-- **边界与阴影**：`--shadow-l2` / `--shadow-l3` 以 1px `--border-control` 框线开头，只保留小投影；Material 边缘高光与内环取透明，由同一框线划出边界；`--border`、`--field-border` 提升为可辨实线（≥3:1）。
+- **边界与阴影**：`--shadow-l2` / `--shadow-l3` 以 1px `--border-control` 框线开头，只保留小投影；Material 边缘高光与内环取透明，由同一框线划出边界；`--border`、`--field-border` 提升为可辨实线（≥3:1）。普通主题下不显示边框的字段（工具栏搜索框 `.cn-input[data-variant="search"]`、设置行内字段）在高对比主题下静止时同样显示 `--field-border`，聚焦与错误态仍用各自边框（owner：`primitives.css`、`semantic.css`，均包在 `@media (forced-colors: none)` 内）。
 - **高亮**：`--accent` 及其 hover / active / foreground 在 `<html>` 上映射为主题高亮（浅色深紫、深色青色），对全部 10 种强调色偏好（含“跟随壁纸”）一致，不做运行时按色判断；强调文字、链接、焦点环、指示条、选中填充都随之变为高亮。色点（`.accent-swatch-color`、顶栏芯片 `.accent-picker-chip-dot`）以自身的 `data-accent` 作用域保留调色板颜色，当前项外环为高亮。已存强调色不变，设置页“强调色”一行就近说明。
 - **选中填充**：分段控件选中项、Tab 当前项、设置导航与局部导航当前项为高亮底 + `--accent-foreground` 文字，焦点环改用 `--foreground`（与系统色规则同一语义）；字重等非颜色线索保留。Switch 关闭时拇指取 `--foreground`、无阴影，打开时为高亮轨道 + `--accent-foreground` 拇指；Slider 轨道取 `--border`。
 - **链接**：取高亮并保留现有下划线 / 字重线索（1.4.1）；不还原参考图深色中系统 `LinkText` 的黄色。

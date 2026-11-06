@@ -397,7 +397,11 @@
     bottom: 100%;
 }
 
+/* Positioned after the gradient so it paints over it: the composer's focus
+   outline and --shadow-l2 frame reach above the dock's top edge, where the
+   gradient's opaque end would otherwise cover them. */
 .ask-thread__dock-inner {
+    position: relative;
     padding: 0 var(--space-4);
     padding-bottom: max(var(--space-3), env(safe-area-inset-bottom, 12px));
     pointer-events: auto;

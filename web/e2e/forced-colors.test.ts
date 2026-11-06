@@ -32,17 +32,27 @@ function paint(page: Page, selector: string, pseudo?: string) {
     );
 }
 
-/** The system Canvas colour as computed in this scheme. */
-function canvas(page: Page) {
-    return page.evaluate(() => {
+/** A system colour keyword as computed in this scheme. */
+function systemColor(page: Page, keyword: "Canvas" | "Highlight") {
+    return page.evaluate((keyword) => {
         const probe = document.createElement("div");
-        probe.style.background = "Canvas";
+        probe.style.background = keyword;
         document.body.append(probe);
         const value = getComputedStyle(probe).backgroundColor;
         probe.remove();
         return value;
-    });
+    }, keyword);
 }
+
+// The app's high contrast themes (#383) yield to the system palette: the same
+// system colour rules hold under them, and selections take the system
+// Highlight rather than the theme's own highlight.
+const CASES = [
+    { colorScheme: "light", theme: null },
+    { colorScheme: "dark", theme: null },
+    { colorScheme: "light", theme: "high-contrast-light" },
+    { colorScheme: "dark", theme: "high-contrast-dark" },
+] as const;
 
 const opaque = (color: string) => !/rgba\(.*,\s*0?\.\d+\)$/.test(color);
 
@@ -51,16 +61,31 @@ Deno.test("A7 强制颜色模式下控件状态、浮层边界与玻璃表面可
     const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
     try {
-        for (const colorScheme of ["light", "dark"] as const) {
+        for (const { colorScheme, theme } of CASES) {
             const context = await browser.newContext({
                 viewport: { width: 1280, height: 900 },
                 colorScheme,
                 forcedColors: "active",
             });
             const page = await context.newPage();
-            const label = (what: string) => `${colorScheme}: ${what}`;
+            const label = (what: string) => `${theme ?? colorScheme}: ${what}`;
             await loginAndVisit(page, app.origin, "/", user);
-            const base = await canvas(page);
+            if (theme) {
+                await page.evaluate(async (theme) => {
+                    const response = await fetch("/api/preferences", {
+                        method: "PATCH",
+                        headers: { "content-type": "application/json" },
+                        body: JSON.stringify({ theme }),
+                    });
+                    if (!response.ok) throw new Error(await response.text());
+                }, theme);
+                await page.reload();
+                await page.waitForFunction(() =>
+                    document.documentElement.dataset.contrast === "more"
+                );
+            }
+            const base = await systemColor(page, "Canvas");
+            const highlight = await systemColor(page, "Highlight");
 
             // Glass turns solid, and floating surfaces keep an edge.
             for (const selector of [".search-frame", ".dock-bar"]) {
@@ -152,10 +177,28 @@ Deno.test("A7 强制颜色模式下控件状态、浮层边界与玻璃表面可
                 base,
                 label("unchecked thumb"),
             );
+            if (theme) {
+                for (
+                    const [what, selector] of [
+                        [
+                            "settings navigation",
+                            `${settings} .settings-nav-item[aria-current="page"]`,
+                        ],
+                        ["segmented", `${segment}[data-checked]`],
+                        ["switch", `${settings} .switch[data-checked]`],
+                    ]
+                ) {
+                    assertEquals(
+                        (await paint(page, selector)).background,
+                        highlight,
+                        label(`${what} takes the system Highlight`),
+                    );
+                }
+            }
 
             // The readability slider appears once a wallpaper is set.
             await page.getByTestId("wallpaper-input").fill(
-                `https://example.com/${colorScheme}.jpg`,
+                `https://example.com/${theme ?? colorScheme}.jpg`,
             );
             await page.getByTestId("wallpaper-apply-btn").click();
             const slider = page.getByTestId("wallpaper-readability-slider");

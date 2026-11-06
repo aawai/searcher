@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertNotEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import type { Page } from "playwright";
 import { ACCENT_PREFERENCES } from "@shared/contracts.ts";
 import { chromium } from "./helpers/browser.ts";
@@ -165,16 +165,7 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射
         await page.emulateMedia({ colorScheme: "dark" });
         await waitForTheme(page, "light", true);
 
-        // Forced colours keep priority over the app highlight.
-        await page.emulateMedia({ forcedColors: "active" });
-        assertNotEquals(
-            await background(
-                page,
-                `${settings} [data-variant="segmented"] .radio-item[data-checked]`,
-            ),
-            HIGHLIGHT.light,
-        );
-        await page.emulateMedia({ forcedColors: "none", colorScheme: "light" });
+        await page.emulateMedia({ colorScheme: "light" });
 
         // Saved preferences: the theme changes, accent and glass do not.
         const saved = await savedPreferences(page);

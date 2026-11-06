@@ -99,6 +99,15 @@
     .document-print-body :is(ul, ol, blockquote) {
         padding-inline-start: var(--space-6);
     }
+    .document-print-body ul {
+        list-style-type: disc;
+    }
+    .document-print-body ol {
+        list-style-type: decimal;
+    }
+    .document-print-body li[data-item-type="task"] {
+        list-style: none;
+    }
     .document-print-pagebreak {
         break-before: page;
         height: 1px;
