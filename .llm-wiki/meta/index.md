@@ -189,6 +189,8 @@
 - [[sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss]] — Observation: Root cause dock overlap: masthead dockShift stale measure (issue 363) *(created: 2026-11-04)*
 - [[sources/obs-2026-11-04-ui-issue-369]] — Observation: UI 精致化实施计划 Issue 369 已创建 *(created: 2026-11-04)*
 - [[sources/obs-2026-11-06-]] — Observation: 笔记标题焦点下划线与窄窗口抽屉固定错位 *(created: 2026-11-06)*
+- [[sources/obs-2026-11-06-6-b-d-e]] — Observation: 应用图标重设计：6 个方向效果图，用户在 B/D/E 间比较 *(created: 2026-11-06)*
+- [[sources/obs-2026-11-06-favicon]] — Observation: 浏览器标签 favicon 未随新图标更换的根因与修复 *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main]] — Observation: Issue 369 PR-3 (T5 T7 T8 T9 T12) 经 PR 377 合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-issue-369-pr-4-t6-t15-pr-379-main]] — Observation: Issue 369 PR-4 (T6 T15) 经 PR 379 合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-issue-369-pr-5-t10-pr-384-main]] — Observation: Issue 369 PR-5 (T10) 经 PR 384 合并 main *(created: 2026-11-06)*
@@ -196,6 +198,7 @@
 - [[sources/obs-2026-11-06-issue-370-pr-b-b3-pr-381-main]] — Observation: Issue 370 PR-B（B3）壁纸文字可读性经 PR 381 合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main]] — Observation: Issue 370 PR-C（B4）窗口位置预设经 PR 380 合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-pr-374-main]] — Observation: PR 374 已合并 main *(created: 2026-11-06)*
+- [[sources/obs-2026-11-06-pr-385-main]] — Observation: PR 385 笔记标题焦点与抽屉错位合并 main *(created: 2026-11-06)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -314,4 +317,4 @@
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-06T10:28:28.959Z* | *Total pages: 299*
+*Last updated: 2026-11-06T10:53:54.017Z* | *Total pages: 302*

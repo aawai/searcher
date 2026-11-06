@@ -1241,6 +1241,8 @@
   "sources/obs-2026-11-04-root-cause-dock-overlap-masthead-dockshift-stale-measure-iss": [],
   "sources/obs-2026-11-04-ui-issue-369": [],
   "sources/obs-2026-11-06-": [],
+  "sources/obs-2026-11-06-6-b-d-e": [],
+  "sources/obs-2026-11-06-favicon": [],
   "sources/obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main": [],
   "sources/obs-2026-11-06-issue-369-pr-4-t6-t15-pr-379-main": [],
   "sources/obs-2026-11-06-issue-369-pr-5-t10-pr-384-main": [],
@@ -1248,6 +1250,7 @@
   "sources/obs-2026-11-06-issue-370-pr-b-b3-pr-381-main": [],
   "sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main": [],
   "sources/obs-2026-11-06-pr-374-main": [],
+  "sources/obs-2026-11-06-pr-385-main": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],
