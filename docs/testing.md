@@ -172,7 +172,7 @@ Wallpaper 门禁及已有 job 名称保持不变；Workspace 门禁改为 `works
 ### Workspace
 
 覆盖 Workspace、Shell、Desk、Unified Launcher、应用交互与会话、
-workspace-contract、workspace-matrix、颜色层级与对比度等完整 Workspace
+workspace-contract、workspace-matrix、颜色层级与对比度、强制颜色模式等完整 Workspace
 集合。Documents 的 Library、Live/Source 编辑、历史、草稿与分页回归属于
 独立的 `documents` 集合，不由 `test:workspace` 替代；完整文件列表以
 `scripts/e2e/suites.ts` 为准。
