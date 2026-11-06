@@ -17,6 +17,7 @@ import type {
 } from "./types.ts";
 import { SystemSettingsStore } from "./settings-store.ts";
 import { validateBackupConsistency } from "./backup-validator.ts";
+import { isThemeId, THEME_IDS } from "../../shared/contracts.ts";
 
 const ConfigExportImportSchema = v.object({
     version: v.literal("1.0.0", "不兼容的配置文件版本"),
@@ -33,7 +34,7 @@ const ConfigExportImportSchema = v.object({
             ["google", "bing", "baidu", "duckduckgo"],
             "不支持的默认搜索引擎",
         ),
-        defaultTheme: v.picklist(["system", "light", "dark"], "不支持的主题"),
+        defaultTheme: v.picklist(THEME_IDS, "不支持的主题"),
         defaultSearchTarget: v.picklist(
             ["same", "new"],
             "不支持的搜索打开方式",
@@ -550,7 +551,7 @@ export class SystemService {
             !["google", "bing", "baidu", "duckduckgo"].includes(
                 settings.defaultEngine,
             ) ||
-            !["system", "light", "dark"].includes(settings.defaultTheme) ||
+            !isThemeId(settings.defaultTheme) ||
             !["same", "new"].includes(settings.defaultSearchTarget)
         ) {
             throw new Error("备份中的系统设置无效");

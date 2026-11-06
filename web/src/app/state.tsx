@@ -3,12 +3,15 @@ import {
     DEFAULT_ACCENT,
     DEFAULT_GLASS_INTENSITY,
     DEFAULT_TAB_ICON,
+    DEFAULT_THEME,
     type GlassIntensity,
     normalizeAccent,
     normalizeGlassIntensity,
     normalizeTabIcon,
+    normalizeTheme,
     type PreferencesDto,
     type TabIcon,
+    type ThemeId,
     type UserDto,
 } from "@shared/contracts.ts";
 import type { EngineId } from "@shared/engines.ts";
@@ -45,6 +48,7 @@ import {
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
 import { syncThemeColor } from "../pwa/theme-color.ts";
+import { applyResolvedTheme, resolveTheme } from "../design-system/theme.ts";
 import {
     type AppearanceOwnerStore,
     type AppearanceSyncQueue,
@@ -53,7 +57,7 @@ import {
 } from "./appearance-sync.ts";
 
 export type Appearance = {
-    theme: "system" | "light" | "dark";
+    theme: ThemeId;
     /** 跟随壁纸取色（`wallpaper`）或手选的预设覆盖。 */
     accent: AccentPreference;
     shape: "rounded" | "pill";
@@ -78,7 +82,7 @@ export type Appearance = {
 };
 
 const initial: Appearance = {
-    theme: "system",
+    theme: DEFAULT_THEME,
     accent: DEFAULT_ACCENT,
     shape: "rounded",
     glassIntensity: DEFAULT_GLASS_INTENSITY,
@@ -103,10 +107,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
         : {};
     const result = { ...initial };
     result.accent = normalizeAccent(saved.accent);
-    if (
-        saved.theme === "system" || saved.theme === "light" ||
-        saved.theme === "dark"
-    ) result.theme = saved.theme;
+    result.theme = normalizeTheme(saved.theme);
     if (saved.shape === "rounded" || saved.shape === "pill") {
         result.shape = saved.shape;
     }
@@ -444,11 +445,11 @@ export function AppState({ children }: { children: ReactNode }) {
     useEffect(() => {
         const media = matchMedia("(prefers-color-scheme: dark)");
         const apply = () => {
-            const theme = appearance.theme === "system"
-                ? (media.matches ? "dark" : "light")
-                : appearance.theme;
             const root = document.documentElement;
-            root.dataset.theme = theme;
+            applyResolvedTheme(
+                root,
+                resolveTheme(appearance.theme, media.matches),
+            );
             syncThemeColor(root);
         };
         apply();

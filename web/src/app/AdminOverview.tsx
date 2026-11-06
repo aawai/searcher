@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import type { ThemeId } from "@shared/contracts.ts";
 import { routes } from "./routes.ts";
 import { Button } from "../components/ui/button.tsx";
 import {
@@ -15,7 +16,7 @@ export interface SystemSettingsDto {
     auditRetentionDays: number;
     allowRegistration: boolean;
     defaultEngine: "google" | "bing" | "baidu" | "duckduckgo";
-    defaultTheme: "system" | "light" | "dark";
+    defaultTheme: ThemeId;
     defaultSearchTarget: "same" | "new";
 }
 

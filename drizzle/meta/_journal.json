@@ -281,6 +281,13 @@
       "when": 1793962770705,
       "tag": "0039_flat_sway",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1793966646462,
+      "tag": "0040_high_contrast_themes",
+      "breakpoints": true
     }
   ]
 }

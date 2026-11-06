@@ -183,6 +183,16 @@ ZIP 快照，备份与恢复协调壁纸写入锁。还原后重新加载页面�
 备份不包含 `ENCRYPTION_KEY`；跨部署恢复时须另行提供原实例的密钥才能使用既有 AI
 Provider Key。不要将备份 ZIP、密钥或 `data/` 提交到 Git。
 
+### 升级：高对比主题
+
+迁移 `0040_high_contrast_themes` 重建 `preferences`，使 `theme` 接受 `high-contrast-light` 与 `high-contrast-dark`；既有的 `system`、`light`、`dark` 原样保留。系统默认主题（`system-settings.json` 的 `defaultTheme`）同样接受这两个值。旧版本不接受新值，回退前先停止服务，把高对比浅色 / 深色分别改回浅色 / 深色并恢复旧约束，然后部署旧版本：
+
+```bash
+sqlite3 data/searcher.sqlite < drizzle/rollback/0040_high_contrast_themes.sql
+```
+
+旧版本读取到无法识别的系统默认主题时回落为“跟随系统”，无需另行修改 `system-settings.json`。
+
 ### 升级：便签并入笔记
 
 - 便签（`notes` 表、便签布局与便签版本历史）不迁移为笔记。升级前必须在旧版本中确认便签已保存，并自行备份 `data/` 下的数据库；新版本不读取这些数据。

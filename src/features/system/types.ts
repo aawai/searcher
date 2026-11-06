@@ -1,8 +1,10 @@
+import type { ThemeId } from "../../shared/contracts.ts";
+
 export interface SystemSettingsDto {
     auditRetentionDays: number;
     allowRegistration: boolean;
     defaultEngine: "google" | "bing" | "baidu" | "duckduckgo";
-    defaultTheme: "system" | "light" | "dark";
+    defaultTheme: ThemeId;
     defaultSearchTarget: "same" | "new";
 }
 

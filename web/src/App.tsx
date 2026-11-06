@@ -23,6 +23,7 @@ import {
 import { AppState, useAppState } from "./app/state.tsx";
 import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
+import { THEME_LABELS } from "./design-system/theme.ts";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
     wallpaperPresentation,
@@ -242,19 +243,14 @@ function Layout() {
             appearance.wallpaperPresentations,
         )
         : DEFAULT_WALLPAPER_PRESENTATION;
-    const themeNames = {
-        system: "跟随系统",
-        light: "浅色",
-        dark: "深色",
-    };
     const nextTheme = appearance.theme === "system"
         ? "light"
         : appearance.theme === "light"
         ? "dark"
         : "system";
     const themeLabel = `切换主题，当前：${
-        themeNames[appearance.theme]
-    }，下一个：${themeNames[nextTheme]}`;
+        THEME_LABELS[appearance.theme]
+    }，下一个：${THEME_LABELS[nextTheme]}`;
 
     return (
         <DesktopCoordinator aiModels={aiModels}>

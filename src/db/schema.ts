@@ -10,6 +10,7 @@ import {
     text,
     uniqueIndex,
 } from "drizzle-orm/sqlite-core";
+import { THEME_IDS } from "../shared/contracts.ts";
 
 export const users = sqliteTable("users", {
     id: text("id").primaryKey(),
@@ -53,7 +54,7 @@ export const preferences = sqliteTable("preferences", {
     defaultEngine: text("default_engine", {
         enum: ["google", "bing", "baidu", "duckduckgo"],
     }).notNull().default("bing"),
-    theme: text("theme", { enum: ["system", "light", "dark"] })
+    theme: text("theme", { enum: THEME_IDS })
         .notNull().default("system"),
     accent: text("accent", {
         enum: [
@@ -109,7 +110,9 @@ export const preferences = sqliteTable("preferences", {
     ),
     check(
         "preferences_theme_check",
-        sql`${t.theme} in ('system','light','dark')`,
+        sql`${t.theme} in (${
+            sql.raw(THEME_IDS.map((id) => `'${id}'`).join(","))
+        })`,
     ),
     check(
         "preferences_accent_check",

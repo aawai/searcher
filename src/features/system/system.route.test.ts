@@ -10,7 +10,7 @@ import { WebAppIconService } from "../webapp-icons/service.ts";
 import { SystemService } from "./service.ts";
 import { SystemSettingsStore } from "./settings-store.ts";
 import * as fflate from "fflate";
-import type { Envelope } from "@shared/contracts.ts";
+import type { Envelope, PreferencesDto } from "@shared/contracts.ts";
 import type {
     BackupManifest,
     ConfigExportDto,
@@ -179,7 +179,7 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
                         auditRetentionDays: 120,
                         allowRegistration: true,
                         defaultEngine: "google",
-                        defaultTheme: "dark",
+                        defaultTheme: "high-contrast-dark",
                         defaultSearchTarget: "new",
                     },
                     systemAiProviders: [],
@@ -195,6 +195,20 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
         await Deno.writeTextFile(
             `${ctx.iconDir}/original.png`,
             "original-icon",
+        );
+        const setAdminTheme = (theme: string) =>
+            ctx.app.request("/api/preferences", {
+                method: "PATCH",
+                headers: {
+                    cookie: adminCookie,
+                    origin: ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({ theme }),
+            });
+        assertEquals(
+            (await setAdminTheme("high-contrast-light")).status,
+            STATUS_CODE.OK,
         );
         // 6. Full Backup Export (ZIP)
         const backupRes = await ctx.app.request("/api/admin/backup/export", {
@@ -231,9 +245,13 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
                     origin: ORIGIN,
                     "content-type": "application/json",
                 },
-                body: JSON.stringify({ auditRetentionDays: 30 }),
+                body: JSON.stringify({
+                    auditRetentionDays: 30,
+                    defaultTheme: "light",
+                }),
             },
         );
+        assertEquals((await setAdminTheme("dark")).status, STATUS_CODE.OK);
         assertEquals(changedSettings.status, STATUS_CODE.OK);
 
         // Backup validates intact, and rejects paths that would escape asset storage.
@@ -329,10 +347,19 @@ Deno.test("system routes: permissions, overview, settings, config export/import,
                 headers: { cookie: adminCookie },
             },
         );
-        assertEquals(
+        const restoredSettings =
             (await settingsAfterRestore.json() as Envelope<SystemSettingsDto>)
-                .data?.auditRetentionDays,
-            120,
+                .data;
+        assertEquals(restoredSettings?.auditRetentionDays, 120);
+        assertEquals(restoredSettings?.defaultTheme, "high-contrast-dark");
+        const preferencesAfterRestore = await ctx.app.request(
+            "/api/preferences",
+            { headers: { cookie: adminCookie } },
+        );
+        assertEquals(
+            (await preferencesAfterRestore.json() as Envelope<PreferencesDto>)
+                .data?.theme,
+            "high-contrast-light",
         );
 
         // 9. Verify audit logs recorded actions

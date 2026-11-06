@@ -7,7 +7,9 @@ import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
 import type { AppEnv } from "../../serve/env.ts";
 import { createAuthTestApp } from "../auth/test-app.ts";
 import type { AdminUserDto, Envelope } from "@shared/contracts.ts";
-import { users } from "../../db/schema.ts";
+import { preferences, users } from "../../db/schema.ts";
+import { SystemSettingsStore } from "../system/settings-store.ts";
+import { eq } from "drizzle-orm";
 
 const ORIGIN = "http://localhost:8000";
 
@@ -20,14 +22,16 @@ async function setupTestApp() {
         origin: ORIGIN,
     });
 
+    const settings = new SystemSettingsStore(":memory:");
     const app = createAuthTestApp({
         store,
         auth,
         origin: ORIGIN,
+        settings,
         now: () => Date.now(),
     });
 
-    return { store, auth, app };
+    return { store, auth, app, settings };
 }
 
 function extractCookie(response: Response, name: string): string | null {
@@ -167,7 +171,7 @@ Deno.test({
     name:
         "admin spec §15/§16: create, reset password forcing change, two-stage soft delete, and audit logging",
     async fn() {
-        const { store, auth, app } = await setupTestApp();
+        const { store, auth, app, settings } = await setupTestApp();
         try {
             // 1. Create admin user
             const adminId = crypto.randomUUID();
@@ -186,6 +190,7 @@ Deno.test({
                 });
             });
             const adminSession = await auth.createSession(adminId, 1);
+            await settings.update({ defaultTheme: "high-contrast-dark" });
             const adminToken = adminSession.token;
 
             // 2. Admin creates a new user with optional email
@@ -210,6 +215,11 @@ Deno.test({
             const targetUserId = createBody.data!.user.id;
             assertEquals(createBody.data!.user.username, "target_user");
             assertEquals(createBody.data!.user.email, "target@example.com");
+            const [targetPreferences] = await store.run((db) =>
+                db.select({ theme: preferences.theme }).from(preferences)
+                    .where(eq(preferences.userId, targetUserId)).limit(1)
+            );
+            assertEquals(targetPreferences?.theme, "high-contrast-dark");
 
             // 3. User logs in
             const loginRes = await app.request("/api/auth/login", {

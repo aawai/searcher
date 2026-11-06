@@ -12,6 +12,7 @@ import {
     CANONICAL_REASONING_EFFORTS,
     GLASS_INTENSITIES,
     TAB_ICONS,
+    THEME_IDS,
 } from "../../shared/contracts.ts";
 import { DOCK_SYSTEM_IDS } from "../../shared/dock.ts";
 import {
@@ -25,7 +26,7 @@ import {
 const Engine = v.optional(
     v.picklist(["google", "bing", "baidu", "duckduckgo"]),
 );
-const Theme = v.optional(v.picklist(["system", "light", "dark"]));
+const Theme = v.optional(v.picklist(THEME_IDS));
 const Accent = v.optional(v.picklist(ACCENT_PREFERENCES));
 const Shape = v.optional(v.picklist(["rounded", "pill"]));
 const GlassIntensity = v.optional(v.picklist(GLASS_INTENSITIES));
