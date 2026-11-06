@@ -731,6 +731,17 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     onValueChange={(v) => set("accent", v)}
                                 />
                             </SettingsRow>
+                            <Choices
+                                title="标签图标"
+                                description="只改变浏览器标签上的图标；已安装应用与主屏幕图标保持“刊头”"
+                                control="segmented"
+                                value={appearance.tabIcon}
+                                values={[
+                                    ["editorial", "刊头 s."],
+                                    ["keycap", "键帽 /"],
+                                ] as const}
+                                select={(v) => set("tabIcon", v)}
+                            />
                         </SettingsGroup>
                         <SettingsGroup title="首页">
                             <Choices

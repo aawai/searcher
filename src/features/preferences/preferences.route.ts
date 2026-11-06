@@ -11,6 +11,7 @@ import {
     ACCENT_PREFERENCES,
     CANONICAL_REASONING_EFFORTS,
     GLASS_INTENSITIES,
+    TAB_ICONS,
 } from "../../shared/contracts.ts";
 import { DOCK_SYSTEM_IDS } from "../../shared/dock.ts";
 import {
@@ -28,6 +29,7 @@ const Theme = v.optional(v.picklist(["system", "light", "dark"]));
 const Accent = v.optional(v.picklist(ACCENT_PREFERENCES));
 const Shape = v.optional(v.picklist(["rounded", "pill"]));
 const GlassIntensity = v.optional(v.picklist(GLASS_INTENSITIES));
+const TabIcon = v.optional(v.picklist(TAB_ICONS));
 const Target = v.optional(v.picklist(["same", "new"]));
 const HistoryEnabled = v.optional(v.boolean("搜索历史开关必须为布尔值"));
 const ShowHomeApps = v.optional(v.boolean("首页显示应用必须为布尔值"));
@@ -202,6 +204,7 @@ export function registerPreferencesRoutes(
             accent: json(Accent),
             searchShape: json(Shape),
             glassIntensity: json(GlassIntensity),
+            tabIcon: json(TabIcon),
             searchTarget: json(Target),
             searchHistoryEnabled: json(HistoryEnabled),
             showAppLabels: json(ShowAppLabels),

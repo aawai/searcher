@@ -47,6 +47,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(initialData?.showHomeContinue, true);
         assertEquals(initialData?.homeMastheadCollapsed, true);
         assertEquals(initialData?.showHomeAppPlate, true);
+        assertEquals(initialData?.tabIcon, "editorial");
         const second = await register("appearance_b");
         const response = await app.request("/api/preferences", {
             method: "PATCH",
@@ -60,6 +61,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 accent: "violet",
                 searchShape: "pill",
                 glassIntensity: "clear",
+                tabIcon: "keycap",
                 defaultEngine: "google",
                 showHomeApps: true,
                 showHomeAppPlate: false,
@@ -75,6 +77,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.accent, "violet");
         assertEquals(saved.data?.searchShape, "pill");
         assertEquals(saved.data?.glassIntensity, "clear");
+        assertEquals(saved.data?.tabIcon, "keycap");
         assertEquals(saved.data?.showHomeApps, true);
         assertEquals(saved.data?.showHomeAppPlate, false);
         assertEquals(saved.data?.homeMastheadCollapsed, false);
@@ -99,6 +102,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(changed.data?.homeMastheadCollapsed, false);
         assertEquals(changed.data?.searchShape, "pill");
         assertEquals(changed.data?.glassIntensity, "clear");
+        assertEquals(changed.data?.tabIcon, "keycap");
         assertEquals(changed.data?.showAppLabels, false);
         assertEquals(changed.data?.showHomeDate, false);
         assertEquals(changed.data?.showHomeTime, true);
@@ -152,6 +156,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(isolated.data?.homeMastheadCollapsed, true);
         assertEquals(isolated.data?.searchShape, "rounded");
         assertEquals(isolated.data?.glassIntensity, "regular");
+        assertEquals(isolated.data?.tabIcon, "editorial");
         assertEquals(isolated.data?.showAppLabels, true);
     } finally {
         await store.close();
@@ -214,6 +219,7 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { searchShape: "square" },
                 { glassIntensity: "ultra" },
                 { glassIntensity: 0.5 },
+                { tabIcon: "glass" },
                 { showAppLabels: "not-a-bool" },
                 { accent: "neon_green" },
             ]

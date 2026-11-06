@@ -75,6 +75,8 @@ export const preferences = sqliteTable("preferences", {
     glassIntensity: text("glass_intensity", {
         enum: ["off", "soft", "regular", "clear"],
     }).notNull().default("regular"),
+    tabIcon: text("tab_icon", { enum: ["editorial", "keycap"] })
+        .notNull().default("editorial"),
     backgroundImage: text("background_image"),
     wallpaperMask: real("wallpaper_mask").notNull().default(0.36),
     searchTarget: text("search_target", { enum: ["same", "new"] })
@@ -120,6 +122,10 @@ export const preferences = sqliteTable("preferences", {
     check(
         "preferences_glass_intensity_check",
         sql`${t.glassIntensity} in ('off','soft','regular','clear')`,
+    ),
+    check(
+        "preferences_tab_icon_check",
+        sql`${t.tabIcon} in ('editorial','keycap')`,
     ),
     check(
         "preferences_search_target_check",
