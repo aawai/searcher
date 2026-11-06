@@ -1,4 +1,5 @@
 import type { EngineId } from "@shared/engines.ts";
+import type { ThemeId } from "@shared/contracts.ts";
 import { routes } from "../../app/routes.ts";
 import type { LibraryRequest } from "../library/library-request.ts";
 
@@ -129,7 +130,7 @@ export const KEYBOARD_SHORTCUTS: readonly KeyboardShortcutDefinition[] = Object
 export type SearchCommandTarget =
     | { type: "engine"; engine: EngineId }
     | { type: "mode"; mode: "ai" }
-    | { type: "theme"; theme: "light" | "dark" | "system" }
+    | { type: "theme"; theme: ThemeId }
     | { type: "route"; to: string }
     | { type: "library"; request: LibraryRequest }
     | { type: "apps" };

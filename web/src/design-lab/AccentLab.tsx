@@ -27,6 +27,7 @@ import {
     accentContrast,
     type AccentPalette,
 } from "../design-system/wallpaper-accent.ts";
+import { applyResolvedTheme, resolveTheme } from "../design-system/theme.ts";
 import "./design-lab.css";
 import "./accent-lab.css";
 
@@ -131,13 +132,6 @@ function paint(sample: (typeof PAINTED)[number]): string {
     return canvas.toDataURL("image/png");
 }
 
-function resolveTheme(theme: Appearance["theme"]): "light" | "dark" {
-    if (theme !== "system") return theme;
-    return matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-}
-
 function PaletteTable(
     { theme, palette }: { theme: "light" | "dark"; palette: AccentPalette },
 ) {
@@ -197,6 +191,7 @@ export default function AccentLab() {
         const root = document.documentElement;
         const original = {
             theme: root.dataset.theme,
+            contrast: root.dataset.contrast,
             accent: root.dataset.accent,
         };
         // AppState owns the production pair on <html>; put it back on leave.
@@ -212,7 +207,13 @@ export default function AccentLab() {
 
     useEffect(() => {
         const root = document.documentElement;
-        root.dataset.theme = resolveTheme(theme);
+        applyResolvedTheme(
+            root,
+            resolveTheme(
+                theme,
+                matchMedia("(prefers-color-scheme: dark)").matches,
+            ),
+        );
         root.dataset.accent = choice;
         applyWallpaperAccent(root, derived);
     }, [theme, choice, derived]);

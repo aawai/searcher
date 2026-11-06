@@ -5,7 +5,25 @@ import type { WallpaperPresentation } from "./wallpaper-presentation.ts";
 export type { WallpaperPresentation };
 import type { EngineId } from "./engines.ts";
 
-export type ThemeId = "system" | "light" | "dark";
+/** 主题偏好，顺序即设置与顶栏循环顺序；高对比两项为应用自有配色，不模拟系统强制颜色。 */
+export const THEME_IDS = [
+    "system",
+    "light",
+    "dark",
+    "high-contrast-light",
+    "high-contrast-dark",
+] as const;
+export type ThemeId = (typeof THEME_IDS)[number];
+export const DEFAULT_THEME: ThemeId = "system";
+
+export function isThemeId(raw: unknown): raw is ThemeId {
+    return typeof raw === "string" &&
+        (THEME_IDS as readonly string[]).includes(raw);
+}
+
+export function normalizeTheme(raw: unknown): ThemeId {
+    return isThemeId(raw) ? raw : DEFAULT_THEME;
+}
 
 /** Shared registration and credential-change validation limits. */
 export const AUTH_CREDENTIAL_RULES = {

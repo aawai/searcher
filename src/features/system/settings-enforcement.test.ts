@@ -34,11 +34,11 @@ Deno.test("settings-enforcement: registration gating & custom default engine/the
         assertEquals(guestPrefs.data?.theme, "system");
         assertEquals(guestPrefs.data?.searchTarget, "same");
 
-        // 3. Update system settings: allowRegistration: false, defaultEngine: duckduckgo, defaultTheme: dark, defaultSearchTarget: new
+        // 3. Update system settings: allowRegistration: false, defaultEngine: duckduckgo, defaultTheme: high-contrast-light, defaultSearchTarget: new
         await settings.update({
             allowRegistration: false,
             defaultEngine: "duckduckgo",
-            defaultTheme: "dark",
+            defaultTheme: "high-contrast-light",
             defaultSearchTarget: "new",
         });
 
@@ -70,7 +70,7 @@ Deno.test("settings-enforcement: registration gating & custom default engine/the
             PreferencesDto
         >;
         assertEquals(guestPrefs2.data?.defaultEngine, "duckduckgo");
-        assertEquals(guestPrefs2.data?.theme, "dark");
+        assertEquals(guestPrefs2.data?.theme, "high-contrast-light");
         assertEquals(guestPrefs2.data?.searchTarget, "new");
 
         // 7. Re-open registration
@@ -96,7 +96,7 @@ Deno.test("settings-enforcement: registration gating & custom default engine/the
         assertEquals(userPrefsRes.status, 200);
         const userPrefs = await userPrefsRes.json() as Envelope<PreferencesDto>;
         assertEquals(userPrefs.data?.defaultEngine, "duckduckgo");
-        assertEquals(userPrefs.data?.theme, "dark");
+        assertEquals(userPrefs.data?.theme, "high-contrast-light");
         assertEquals(userPrefs.data?.searchTarget, "new");
 
         // 10. Without an explicit engine the configured default (duckduckgo) uses the Bing fallback.

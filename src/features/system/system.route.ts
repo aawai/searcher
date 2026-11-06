@@ -8,6 +8,7 @@ import { AuditService } from "../audit/service.ts";
 import type { SystemSettingsDto } from "./types.ts";
 import { users } from "../../db/schema.ts";
 import { eq } from "drizzle-orm";
+import { THEME_IDS } from "../../shared/contracts.ts";
 
 const _SystemSettingsPatchSchema = v.object({
     auditRetentionDays: v.optional(
@@ -25,9 +26,7 @@ const _SystemSettingsPatchSchema = v.object({
             "不支持的默认搜索引擎",
         ),
     ),
-    defaultTheme: v.optional(
-        v.picklist(["system", "light", "dark"], "不支持的默认主题"),
-    ),
+    defaultTheme: v.optional(v.picklist(THEME_IDS, "不支持的默认主题")),
     defaultSearchTarget: v.optional(
         v.picklist(["same", "new"], "不支持的搜索打开方式"),
     ),
@@ -93,9 +92,7 @@ export function registerSystemRoutes(
                     v.picklist(["google", "bing", "baidu", "duckduckgo"]),
                 ),
             ),
-            defaultTheme: json(
-                v.optional(v.picklist(["system", "light", "dark"])),
-            ),
+            defaultTheme: json(v.optional(v.picklist(THEME_IDS))),
             defaultSearchTarget: json(v.optional(v.picklist(["same", "new"]))),
         }),
         async (c, data) => {

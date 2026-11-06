@@ -57,7 +57,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 "content-type": "application/json",
             },
             body: JSON.stringify({
-                theme: "dark",
+                theme: "high-contrast-dark",
                 accent: "violet",
                 searchShape: "pill",
                 glassIntensity: "clear",
@@ -74,6 +74,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         });
         assertEquals(response.status, 200);
         const saved = await response.json() as Envelope<PreferencesDto>;
+        assertEquals(saved.data?.theme, "high-contrast-dark");
         assertEquals(saved.data?.accent, "violet");
         assertEquals(saved.data?.searchShape, "pill");
         assertEquals(saved.data?.glassIntensity, "clear");
@@ -96,6 +97,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(partial.status, 200);
         const changed = await partial.json() as Envelope<PreferencesDto>;
         assertEquals(changed.data?.accent, "rose");
+        assertEquals(changed.data?.theme, "high-contrast-dark");
         assertEquals(changed.data?.defaultEngine, "google");
         assertEquals(changed.data?.showHomeApps, true);
         assertEquals(changed.data?.showHomeAppPlate, false);
@@ -151,6 +153,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         });
         const isolated = await other.json() as Envelope<PreferencesDto>;
         assertEquals(isolated.data?.defaultEngine, "bing");
+        assertEquals(isolated.data?.theme, "system");
         assertEquals(isolated.data?.showHomeApps, false);
         assertEquals(isolated.data?.showHomeAppPlate, true);
         assertEquals(isolated.data?.homeMastheadCollapsed, true);
@@ -222,6 +225,8 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { tabIcon: "glass" },
                 { showAppLabels: "not-a-bool" },
                 { accent: "neon_green" },
+                { theme: "high-contrast" },
+                { theme: "contrast-dark" },
             ]
         ) {
             const response = await app.request("/api/preferences", {

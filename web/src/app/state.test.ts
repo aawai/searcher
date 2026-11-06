@@ -105,6 +105,20 @@ Deno.test("Appearance: device caches keep a valid tab icon and default older or 
     );
 });
 
+Deno.test("Appearance: device caches keep every theme choice and default unknown values to system", () => {
+    for (
+        const theme of [
+            "system",
+            "light",
+            "dark",
+            "high-contrast-light",
+            "high-contrast-dark",
+        ] as const
+    ) assertEquals(normalizeAppearance({ theme }).theme, theme);
+    assertEquals(normalizeAppearance({}).theme, "system");
+    assertEquals(normalizeAppearance({ theme: "contrast" }).theme, "system");
+});
+
 Deno.test("Appearance: legacy icon size fields are ignored without losing valid preferences", () => {
     for (const webAppIconSize of ["compact", "default", "large", "unknown"]) {
         const result = normalizeAppearance({

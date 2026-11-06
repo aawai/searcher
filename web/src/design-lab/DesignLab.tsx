@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { type AccentPreference, ACCENTS } from "@shared/contracts.ts";
 import { type Appearance, useAppState } from "../app/state.tsx";
+import { applyResolvedTheme, resolveTheme } from "../design-system/theme.ts";
 
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
@@ -95,13 +96,6 @@ const RADII: readonly [label: string, token: string][] = [
     ["面板", "--radius-sheet"],
 ];
 
-function resolveTheme(theme: Appearance["theme"]): "light" | "dark" {
-    if (theme !== "system") return theme;
-    return matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-}
-
 const FIELD_STATES = [
     { state: "rest", label: "静止" },
     { state: "hover", label: "悬停" },
@@ -148,6 +142,7 @@ export function DesignLab() {
         const root = document.documentElement;
         const original = {
             theme: root.dataset.theme,
+            contrast: root.dataset.contrast,
             accent: root.dataset.accent,
         };
         return () => {
@@ -160,7 +155,13 @@ export function DesignLab() {
 
     useEffect(() => {
         const root = document.documentElement;
-        root.dataset.theme = resolveTheme(theme);
+        applyResolvedTheme(
+            root,
+            resolveTheme(
+                theme,
+                matchMedia("(prefers-color-scheme: dark)").matches,
+            ),
+        );
         root.dataset.accent = accent;
     }, [theme, accent]);
 

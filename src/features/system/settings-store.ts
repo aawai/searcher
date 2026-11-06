@@ -1,11 +1,12 @@
 import { dirname, join } from "@std/path";
 import type { SystemSettingsDto } from "./types.ts";
+import { DEFAULT_THEME, isThemeId } from "../../shared/contracts.ts";
 
 export const DEFAULT_SYSTEM_SETTINGS: SystemSettingsDto = {
     auditRetentionDays: 90,
     allowRegistration: true,
     defaultEngine: "bing",
-    defaultTheme: "system",
+    defaultTheme: DEFAULT_THEME,
     defaultSearchTarget: "same",
 };
 
@@ -69,10 +70,7 @@ export class SystemSettingsStore {
                             )
                         ? parsed.defaultEngine
                         : DEFAULT_SYSTEM_SETTINGS.defaultEngine,
-                    defaultTheme: parsed.defaultTheme &&
-                            ["system", "light", "dark"].includes(
-                                parsed.defaultTheme,
-                            )
+                    defaultTheme: isThemeId(parsed.defaultTheme)
                         ? parsed.defaultTheme
                         : DEFAULT_SYSTEM_SETTINGS.defaultTheme,
                     defaultSearchTarget: parsed.defaultSearchTarget &&
@@ -108,8 +106,7 @@ export class SystemSettingsStore {
                         )
                     ? patch.defaultEngine
                     : current.defaultEngine,
-                defaultTheme: patch.defaultTheme &&
-                        ["system", "light", "dark"].includes(patch.defaultTheme)
+                defaultTheme: isThemeId(patch.defaultTheme)
                     ? patch.defaultTheme
                     : current.defaultTheme,
                 defaultSearchTarget: patch.defaultSearchTarget &&
@@ -147,10 +144,7 @@ export class SystemSettingsStore {
                         )
                     ? parsed.defaultEngine
                     : DEFAULT_SYSTEM_SETTINGS.defaultEngine,
-                defaultTheme: parsed.defaultTheme &&
-                        ["system", "light", "dark"].includes(
-                            parsed.defaultTheme,
-                        )
+                defaultTheme: isThemeId(parsed.defaultTheme)
                     ? parsed.defaultTheme
                     : DEFAULT_SYSTEM_SETTINGS.defaultTheme,
                 defaultSearchTarget: parsed.defaultSearchTarget &&
