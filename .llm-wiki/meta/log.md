@@ -779,3 +779,12 @@
 ## [2026-11-05T08:02:10.556Z] capture
 - source_id: "SRC-2026-11-05-003", url: "https://www.sqlite.org/c3ref/wal_checkpoint_v2.html", format: "web"
 
+## [2026-11-06T00:03:19.863Z] observe
+- slug: "obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373", title: "Issue 370 PR-A 提交为 PR 374，B6 跟进为 Issue 373", relevance: "high"
+
+## [2026-11-06T00:23:30.852Z] observe
+- slug: "obs-2026-11-06-pr-374-main", title: "PR 374 已合并 main", relevance: "high"
+
+## [2026-11-06T03:10:53.307Z] observe
+- slug: "obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main", title: "Issue 369 PR-3 (T5 T7 T8 T9 T12) 经 PR 377 合并 main", relevance: "high"
+

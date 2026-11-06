@@ -58,13 +58,15 @@ deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast --timeout 50
 选择范围是 `merge-base(base, HEAD)` 到当前工作树的净差异（含暂存/未暂存），加上未忽略的
 untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` 同时维护映射与集合：
 应用与笔记窗口至少覆盖 workspace + documents，并包含 routing/bundle/home-masthead/supplemental 消费者；
-直接修改 E2E 文件选择所属完整集合。共享基础设施/helper/config 及任何未知路径令整个选择
-回退 full。手工映射不是依赖图，新增跨域依赖必须更新映射；局部通过不替代完整 Workspace
-回归与交付前完整门禁。
+直接修改 E2E 文件选择所属完整集合。根目录的 `README.md`、`CHANGELOG.md`、仓库指南、
+`docs/` 下的 Markdown 和 E2E 操作说明不参与 E2E 选择；共享基础设施/helper/config
+及任何其他未知路径令整个选择回退 full，输出列出全部触发路径。手工映射不是依赖图，新增跨域依赖必须更新映射；
+局部通过不替代完整 Workspace 回归与交付前完整门禁。当前 revision 的 CI 分片并集可提供完整门禁，
+不必因 affected 回退 full 就重复本地 full。
 
-没有改动时明确跳过 build/browser，不能记为测试通过。`--list` 仅 affected 可用，
+没有改动或仅改上述豁免文档时明确跳过 build/browser，不能记为测试通过。`--list` 仅 affected 可用，
 打印基线、原因、路径、集合与去重文件，便于临时 Git fixture 的 CLI smoke；不 build、
-不启动浏览器。空差异/list 仍校验清单并写 `timings.json`（含路径、基线、选中集合和 skipped），
+不启动浏览器。空差异、仅豁免文档或 list 仍校验清单并写 `timings.json`（含路径、基线、选中集合和 skipped），
 不生成 JUnit。正常执行至多 build 一次；完整细节见 [Production E2E](../scripts/e2e/README.md#affected保守的局部选择)。
 
 ### 验证调度

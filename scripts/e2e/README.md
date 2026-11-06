@@ -72,12 +72,15 @@ deno task test:e2e:affected --base HEAD~1 --parallel --no-fail-fast --timeout 50
 映射与清单共同维护在 `suites.ts`。library 覆盖 workspace、documents、routing、
 bundle、home-masthead 和 supplemental；documents/editor 等映射包含共享入口的消费者。
 直接修改已登记 E2E 文件会选择其所属的完整集合（不是只跑该文件）。
+根目录的 `README.md`、`CHANGELOG.md`、仓库指南，`docs/` 下的 Markdown 和本目录的
+`README.md` / `BENCHMARKS.md` 不参与 E2E 选择；其他位置不以扩展名豁免，因为 Markdown 可能是运行时或测试输入。
+这些文档仍须执行适用的非 E2E 检查，例如视觉规范的 `check:ui` 与路径引用的 `check:agents`。
 共享 helper、基础设施、配置、未识别的新 E2E 或其他任一未映射路径令整次选择回退 full；
-不会因为其他路径可映射而忽略未知路径。集合按清单顺序、文件按集合顺序去重。
+不会因为其他路径可映射而忽略未知路径，原因列出全部触发回退的路径。集合按清单顺序、文件按集合顺序去重。
 这是手工维护的依赖近似，不是自动依赖图；新增跨领域依赖需同步映射，
-保守回退可能让文档改动也选择 full，且不能证明映射没有漏掉间接消费者。
+保守回退可能让其他文档改动也选择 full，且不能证明映射没有漏掉间接消费者。
 
-空差异输出明确 skip，不 build、不启动浏览器，也不声称测试通过。
+空差异或仅改豁免文档输出明确 skip，不 build、不启动浏览器，也不声称测试通过。
 `--list` 也仅允许 affected：打印基线、原因、路径、集合与文件，不 build、不启动浏览器；
 可在临时 Git fixture 中检验 CLI。两者仍检查清单并写入 `timings.json`，
 记录 `skipped`，没有 JUnit；不是合并门禁结果。非空正常执行最多 build 一次，

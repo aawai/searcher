@@ -28,6 +28,9 @@ if (selection && changes) {
     console.log(`Affected suites: ${selection.suites.join(", ") || "none"}`);
     console.log(`Affected paths: ${JSON.stringify(selection.paths)}`);
     console.log(`Affected files: ${JSON.stringify(files)}`);
+    console.log(
+        "Affected is local diagnostic guidance; current-revision CI coverage can satisfy the full gate without repeating local full.",
+    );
 }
 const jobs = Deno.env.get("DENO_JOBS") ?? "4";
 const reportDir = Deno.env.get("E2E_REPORT_DIR") ??
@@ -121,7 +124,7 @@ try {
         console.log(
             options.list
                 ? "Affected selection only (--list): no build or browser; tests not run."
-                : "No affected changes: skipping build and browser; tests not run.",
+                : "No affected E2E files: skipping build and browser; tests not run.",
         );
         code = 0;
     } else {

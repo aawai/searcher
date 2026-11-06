@@ -7,13 +7,13 @@
     "generate": "hf:tobil/qmd-query-expansion-1.7B-gguf/qmd-query-expansion-1.7B-q4_k_m.gguf",
     "rerank": "hf:ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/qwen3-reranker-0.6b-q8_0.gguf"
   },
-  "manifestHash": "d258ed54e8fd604e9bee1fd06ceece02c131a21407efd0c1ef546617b1e35b5b",
-  "indexedAt": "2026-11-05T08:03:04.297Z",
+  "manifestHash": "377aa506ffd4aec1fb6d362963dad2e563af27f609cb3d736b2480ef3e9f94a6",
+  "indexedAt": "2026-11-06T03:10:53.852Z",
   "status": {
-    "totalDocuments": 287,
+    "totalDocuments": 290,
     "canonicalDocuments": 61,
-    "evidenceDocuments": 226,
-    "needsEmbedding": 287,
+    "evidenceDocuments": 229,
+    "needsEmbedding": 290,
     "hasVectorIndex": false
   }
 }
