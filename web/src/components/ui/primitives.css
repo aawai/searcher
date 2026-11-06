@@ -101,6 +101,18 @@
     }
 }
 
+/* High contrast theme (not under a system palette): the off thumb takes the
+   text colour so it reads on the track without a shadow. */
+@media (forced-colors: none) {
+    [data-contrast="more"] .switch-thumb {
+        background: var(--foreground);
+        box-shadow: none;
+    }
+    [data-contrast="more"] .switch[data-checked] .switch-thumb {
+        background: var(--accent-foreground);
+    }
+}
+
 /* --------------------------------------------------------------------------
    Radio Group: default list, segmented and swatch variants
    -------------------------------------------------------------------------- */
@@ -296,6 +308,20 @@
     }
 }
 
+/* High contrast theme (not under a system palette): the chosen segment is a
+   highlight fill, as the reference's forced colours draw it; its focus ring
+   takes the text colour beside that fill. */
+@media (forced-colors: none) {
+    [data-contrast="more"] [data-slot="radio-group"][data-variant="segmented"] .radio-item[data-checked] {
+        background: var(--accent);
+        color: var(--accent-foreground);
+        box-shadow: none;
+    }
+    [data-contrast="more"] [data-slot="radio-group"][data-variant="segmented"] .radio-item[data-checked]:focus-visible {
+        outline-color: var(--foreground);
+    }
+}
+
 /* --------------------------------------------------------------------------
    Slider
    -------------------------------------------------------------------------- */
@@ -357,6 +383,14 @@
     .slider-thumb {
         border: 2px solid ButtonText;
         background: ButtonFace;
+    }
+}
+
+/* High contrast theme (not under a system palette): the track takes the
+   boundary colour so the unfilled part reads on any surface. */
+@media (forced-colors: none) {
+    [data-contrast="more"] .slider-track {
+        background: var(--border);
     }
 }
 
@@ -999,6 +1033,20 @@
     }
     [data-slot="tabs-trigger"][data-active]:focus-visible {
         outline-color: CanvasText;
+    }
+}
+
+/* High contrast theme (not under a system palette): the active tab is a
+   highlight fill, like the chosen segment. */
+@media (forced-colors: none) {
+    [data-contrast="more"] [data-slot="tabs-trigger"][data-active],
+    [data-contrast="more"] [data-slot="tabs-list"][data-variant="line"] [data-slot="tabs-trigger"][data-active] {
+        background: var(--accent);
+        color: var(--accent-foreground);
+        box-shadow: none;
+    }
+    [data-contrast="more"] [data-slot="tabs-trigger"][data-active]:focus-visible {
+        outline-color: var(--foreground);
     }
 }
 

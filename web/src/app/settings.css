@@ -84,6 +84,20 @@
         color: HighlightText;
     }
 }
+/* High contrast theme (not under a system palette): the current item is a
+   highlight fill, like the reference; the narrow list shows no current item. */
+@media (forced-colors: none) {
+    [data-contrast="more"] .settings-layout:not([data-host-narrow="true"]) .settings-nav-item[aria-current="page"] {
+        background: var(--accent);
+        color: var(--accent-foreground);
+    }
+    [data-contrast="more"] .settings-layout:not([data-host-narrow="true"]) .settings-nav-item[aria-current="page"]:focus-visible {
+        outline-color: var(--foreground);
+    }
+    [data-contrast="more"] .settings-layout:not([data-host-narrow="true"]) .settings-nav-item[aria-current="page"] > svg:first-child {
+        color: var(--accent-foreground);
+    }
+}
 .settings-nav-label {
     flex: 1;
     min-width: 0;

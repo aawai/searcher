@@ -501,7 +501,8 @@
     }
 }
 
-[data-reduced-transparency="true"] :is(.dock-bar, .dock-ball) {
+/* High contrast theme: the same opaque bar; its frame comes from --shadow-l2. */
+[data-contrast="more"] :is(.dock-bar, .dock-ball) {
     background: var(--surface-l3);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;

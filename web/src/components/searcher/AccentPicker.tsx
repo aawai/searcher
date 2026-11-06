@@ -69,7 +69,9 @@ export function AccentSwatches(
 
 /**
  * Top-bar accent entry: a palette chip (accent, its pressed shade, foreground
- * and muted ink) that opens the swatches.
+ * and muted ink) that opens the swatches. The chip scopes the chosen palette
+ * with `data-accent`, so its dots keep that colour when a high contrast theme
+ * maps `--accent` to its highlight.
  */
 export function AccentPicker(
     { value, onValueChange }: {
@@ -85,7 +87,11 @@ export function AccentPicker(
                 aria-label={`强调色：${accentLabel(value)}`}
                 title={`强调色：${accentLabel(value)}`}
             >
-                <span className="accent-picker-chip" aria-hidden="true">
+                <span
+                    className="accent-picker-chip"
+                    data-accent={value}
+                    aria-hidden="true"
+                >
                     <span
                         className="accent-picker-chip-dot"
                         data-tone="accent"
