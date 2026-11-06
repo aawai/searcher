@@ -133,11 +133,13 @@
     backdrop-filter: none;
     box-shadow: none;
 }
-/* The name clips for its ellipsis; the clip reaches past the box by the halo
-   core's outer half, so the solid outline is never cut off. */
+/* The name clips for its ellipsis; the clip reaches past the box by the
+   halo's full reach (--space-2, its glow radius), so neither the solid core
+   nor the glow is cut off, even where a fallback font's glyphs overflow the
+   line box. Text past the ellipsis is not painted, so nothing else shows. */
 .launcher-plate[data-plate="hidden"] :is(.webapp-name, .launcher-folder-name) {
     overflow: clip;
-    overflow-clip-margin: calc(var(--wallpaper-text-core) / 2);
+    overflow-clip-margin: var(--space-2);
     -webkit-text-stroke: var(--wallpaper-text-stroke);
     paint-order: stroke fill;
     text-shadow: var(--wallpaper-text-halo);
