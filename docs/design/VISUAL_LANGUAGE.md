@@ -490,7 +490,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 ### 品牌表达
 
-品牌在界面内只以顶栏的小字标“s.”（`.wordmark-small`，`--font-brand-size`）出现；句点（`.wordmark-dot`）取 `--accent`，是品牌在界面内唯一的强调色用法，字母保持 `--foreground`（顶栏强调色芯片属于色样，不是品牌表达）。首页不显示品牌大标题，不用品牌色铺面。浏览器标签图标与安装图标（`web/public/icons/`）沿用同一放大镜字形：白底、`#245DBD` 描边，maskable 版本满版铺底、字形留在中央安全区内；它们属于操作系统表面，不进入界面 Token。品牌表达方向属于本层，可在实验通道挑战。
+品牌在界面内只以顶栏的小字标“s.”（`.wordmark-small`，`--font-brand-size`）出现；句点（`.wordmark-dot`）取 `--accent`，是品牌在界面内唯一的强调色用法，字母保持 `--foreground`（顶栏强调色芯片属于色样，不是品牌表达）。首页不显示品牌大标题，不用品牌色铺面。浏览器标签图标与安装图标（`web/public/icons/`）使用“句点镜”标志：粗白环为镜片，右下 45° 的黄色圆点（`#FDDA34`）既是镜柄也是字标的句点，底为 `#2C6BD6` → `#1F4FA8` 竖向渐变（中值接近 `#245DBD`）；`icon.svg` / `icon-*.png` 为圆角底，`apple-touch-icon.png` 与 maskable 版本满版不透明铺底，maskable 字形缩至 0.84 留在中央 40% 半径安全区内。它们属于操作系统表面，不进入界面 Token，因此不随用户强调色变化。品牌表达方向属于本层，可在实验通道挑战。
 
 ## 实验通道
 
