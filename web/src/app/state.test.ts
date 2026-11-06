@@ -600,3 +600,17 @@ Deno.test("Appearance store: delayed cloud snapshots do not overwrite a newer lo
     assertEquals(store.current().theme, "dark");
     assertEquals(persisted.theme, "dark");
 });
+
+Deno.test("Appearance store: hydration without a device cache keeps the first-frame seed", async () => {
+    const changes: Appearance[] = [];
+    const store = createAppearanceOwnerStore<Appearance>({
+        userId: "user-a",
+        initial: normalizeAppearance({ theme: "high-contrast-dark" }),
+        normalize: normalizeAppearance,
+        readLocal: () => Promise.resolve(undefined),
+        writeLocal: () => Promise.resolve(),
+        onChange: (next) => changes.push(next),
+    });
+    await store.hydrate();
+    assertEquals(changes.map((next) => next.theme), ["high-contrast-dark"]);
+});

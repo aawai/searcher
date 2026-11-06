@@ -409,7 +409,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 ### 高对比主题
 
-“高对比浅色”“高对比深色”是主题偏好的两个应用自有配色，任何系统配色下都可主动选择；它们**不**开启或模拟操作系统的强制颜色。`AppState` 经 `design-system/theme.ts` 把基础明暗写入 `data-theme`（高对比浅 → `light`，高对比深 → `dark`），另写 `data-contrast="more"`，现有按明暗区分的消费者无需改动。owner：`tokens.css`（`[data-contrast="more"]` 与 `[data-theme="dark"][data-contrast="more"]` 两层，声明在强调色调色板之后）与下列组件规则；“跟随系统”只按 `prefers-color-scheme` 解析，不响应 `prefers-contrast`。
+“高对比浅色”“高对比深色”是主题偏好的两个应用自有配色，任何系统配色下都可主动选择；它们**不**开启或模拟操作系统的强制颜色。`app/appearance-first-frame.ts` 经 `design-system/theme.ts` 把基础明暗写入 `data-theme`（高对比浅 → `light`，高对比深 → `dark`），另写 `data-contrast="more"`，现有按明暗区分的消费者无需改动；首次绘制前由 `<head>` 内联脚本（`first-frame-boot.ts`）按设备快照写入，之后由 `AppState` 维护。owner：`tokens.css`（`[data-contrast="more"]` 与 `[data-theme="dark"][data-contrast="more"]` 两层，声明在强调色调色板之后）与下列组件规则；“跟随系统”只按 `prefers-color-scheme` 解析，不响应 `prefers-contrast`。
 
 **优先级。** `forced-colors: active` 时系统颜色始终主导：组件的应用高亮配色规则包在 `@media (forced-colors: none)` 内，已有的系统色规则（见 [默认交互实现](#默认交互实现)）不变，也不以 `forced-color-adjust: none` 覆盖系统配色。笔记标题占位文字在高对比主题下保持不透明，但颜色仍由系统决定。`prefers-reduced-motion`、`prefers-reduced-transparency` 照常生效。
 

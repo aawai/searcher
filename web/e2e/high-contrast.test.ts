@@ -314,3 +314,107 @@ Deno.test("高对比主题：访客偏好只存于本设备，与账号缓存隔
         await app.close();
     }
 });
+
+// Every theme mutation on <html> from document creation on, plus the theme
+// colour and tab icon at the first animation frame.
+const RECORD_FIRST_FRAME = () => {
+    const seen: string[] = [];
+    const record = () => {
+        const root = document.documentElement;
+        seen.push(`${root.dataset.theme}/${root.dataset.contrast ?? "-"}`);
+    };
+    // Init scripts can run before <html> exists, so watch the document.
+    new MutationObserver(record).observe(document, {
+        attributes: true,
+        attributeFilter: ["data-theme", "data-contrast"],
+        subtree: true,
+    });
+    Object.assign(globalThis, { __themes: seen });
+    requestAnimationFrame(() => {
+        Object.assign(globalThis, {
+            __firstFrame: {
+                themeColor: document.querySelector<HTMLMetaElement>(
+                    'meta[name="theme-color"]',
+                )?.content,
+                icon: document.querySelector<HTMLLinkElement>(
+                    'link[rel="icon"]',
+                )?.getAttribute("href"),
+            },
+        });
+    });
+};
+
+function response(page: Page, path: string, method = "GET") {
+    return page.waitForResponse((res) =>
+        new URL(res.url()).pathname === path &&
+        res.request().method() === method
+    );
+}
+
+/** Reloads and waits until the session check (and cloud load) has settled. */
+async function reloadRecording(page: Page, signedIn: boolean) {
+    const loaded = Promise.all([
+        response(page, "/api/auth/me"),
+        signedIn ? response(page, "/api/preferences") : null,
+    ]);
+    await page.reload();
+    await loaded;
+    await page.locator(".theme-choices").first().waitFor();
+    return await page.evaluate(() => {
+        const state = globalThis as unknown as {
+            __themes: string[];
+            __firstFrame: { themeColor?: string; icon?: string | null };
+        };
+        return { themes: state.__themes, firstFrame: state.__firstFrame };
+    });
+}
+
+Deno.test("主题首帧：访客与账号载入时直接呈现所存主题，不先按跟随系统渲染", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    try {
+        const context = await browser.newContext({
+            viewport: { width: 1280, height: 900 },
+            colorScheme: "light",
+            serviceWorkers: "block",
+        });
+        await context.addInitScript(RECORD_FIRST_FRAME);
+        // A slow session check must not let the default theme show first.
+        await context.route("**/api/auth/me", async (route) => {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            await route.continue();
+        });
+        const page = await context.newPage();
+
+        await page.goto(app.origin + "/settings/appearance");
+        await page.getByRole("radio", { name: "深色", exact: true }).check();
+        await page.getByText("键帽 /", { exact: true }).click();
+        await waitForTheme(page, "dark", false);
+        const guest = await reloadRecording(page, false);
+        assertEquals(new Set(guest.themes), new Set(["dark/-"]));
+        assertEquals(guest.firstFrame.themeColor, "#111113");
+        assertEquals(guest.firstFrame.icon, "/icons/favicon-keycap.svg");
+
+        await loginAndVisit(page, app.origin, "/settings/appearance", user);
+        const saved = response(page, "/api/preferences", "PATCH");
+        await page.getByRole("radio", { name: "高对比深色", exact: true })
+            .check();
+        await waitForTheme(page, "dark", true);
+        await saved;
+        const account = await reloadRecording(page, true);
+        assertEquals(new Set(account.themes), new Set(["dark/more"]));
+        assertEquals(account.firstFrame.icon, "/icons/favicon-editorial.svg");
+
+        // Signing out paints the visitor's theme on the next load.
+        await page.getByRole("button", { name: /^用户菜单/ }).click();
+        await page.getByRole("menuitem", { name: "退出登录" }).click();
+        await waitForTheme(page, "dark", false);
+        const signedOut = await reloadRecording(page, false);
+        assertEquals(new Set(signedOut.themes), new Set(["dark/-"]));
+        await context.close();
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});

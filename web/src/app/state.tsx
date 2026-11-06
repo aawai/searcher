@@ -6,9 +6,6 @@ import {
     DEFAULT_THEME,
     type GlassIntensity,
     normalizeAccent,
-    normalizeGlassIntensity,
-    normalizeTabIcon,
-    normalizeTheme,
     type PreferencesDto,
     type TabIcon,
     type ThemeId,
@@ -47,8 +44,17 @@ import {
 } from "../components/wallpaper/wallpaper-accent-source.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
-import { syncThemeColor } from "../pwa/theme-color.ts";
-import { applyResolvedTheme, resolveTheme } from "../design-system/theme.ts";
+import {
+    applyStyleAttributes,
+    applyTabIcon,
+    applyTheme,
+    firstFrameStorage,
+    normalizeFirstFrame,
+    readFirstFrame,
+    readFirstFrameOwner,
+    writeFirstFrame,
+    writeFirstFrameOwner,
+} from "./appearance-first-frame.ts";
 import {
     type AppearanceOwnerStore,
     type AppearanceSyncQueue,
@@ -105,14 +111,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
     const saved = raw && typeof raw === "object" && !Array.isArray(raw)
         ? raw as Record<string, unknown>
         : {};
-    const result = { ...initial };
-    result.accent = normalizeAccent(saved.accent);
-    result.theme = normalizeTheme(saved.theme);
-    if (saved.shape === "rounded" || saved.shape === "pill") {
-        result.shape = saved.shape;
-    }
-    result.glassIntensity = normalizeGlassIntensity(saved.glassIntensity);
-    result.tabIcon = normalizeTabIcon(saved.tabIcon);
+    const result = { ...initial, ...normalizeFirstFrame(saved) };
     if (
         saved.engine === "bing" || saved.engine === "google" ||
         saved.engine === "baidu" || saved.engine === "duckduckgo"
@@ -208,10 +207,15 @@ export function useAppState() {
 }
 
 export function AppState({ children }: { children: ReactNode }) {
+    const [firstFrame] = useState(firstFrameStorage);
     const [user, setUser] = useState<UserDto | null>(null);
     const [authReady, setAuthReady] = useState(false);
     const [ready, setReady] = useState(false);
-    const [appearance, setValue] = useState<Appearance>(initial);
+    // Same snapshot the <head> boot script painted, so React does not repaint.
+    const [appearance, setValue] = useState<Appearance>(() => ({
+        ...initial,
+        ...readFirstFrame(firstFrame, readFirstFrameOwner(firstFrame)),
+    }));
     const [syncFailed, setSyncFailed] = useState(false);
     const [authConnectionError, setAuthConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
@@ -228,16 +232,19 @@ export function AppState({ children }: { children: ReactNode }) {
         storeRef.current?.dispose();
         const store = createAppearanceOwnerStore<Appearance>({
             userId,
-            initial,
+            initial: { ...initial, ...readFirstFrame(firstFrame, userId) },
             normalize: normalizeAppearance,
             readLocal: getLocal,
             writeLocal: setLocal,
-            onChange: setValue,
+            onChange: (value) => {
+                setValue(value);
+                writeFirstFrame(firstFrame, userId, value);
+            },
             onHydrated: () => setReady(true),
         });
         storeRef.current = store;
         return store;
-    }, []);
+    }, [firstFrame]);
     const sessionRef = useRef<AuthSession | null>(null);
     if (sessionRef.current === null) {
         const session: AuthSession = {
@@ -251,8 +258,7 @@ export function AppState({ children }: { children: ReactNode }) {
     const updateUser = useCallback(
         (next: UserDto | null, renew = false, preserveSearch = false) => {
             if (userRef.current?.id !== next?.id) {
-                getOrCreateStore(next?.id ?? null);
-                setValue(initial);
+                setValue(getOrCreateStore(next?.id ?? null).current());
             }
             if (renew || userRef.current?.id !== next?.id) {
                 if (!preserveSearch) searchContinuation.current = null;
@@ -362,6 +368,12 @@ export function AppState({ children }: { children: ReactNode }) {
         void checkAuth();
     }, [checkAuth]);
 
+    // A connection error leaves the owner unknown, so the next load keeps its guess.
+    useEffect(() => {
+        if (!authReady || authConnectionError) return;
+        writeFirstFrameOwner(firstFrame, user?.id ?? null);
+    }, [authReady, authConnectionError, user?.id, firstFrame]);
+
     // 设备缓存按 owner 隔离；账号共享偏好始终以云端为准。
     useEffect(() => {
         if (!authReady) return;
@@ -432,7 +444,6 @@ export function AppState({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const expired = () => {
-            if (userRef.current) setValue(initial);
             updateUser(null, false, true);
             setSyncFailed(false);
             setAuthConnectionError(false);
@@ -444,14 +455,12 @@ export function AppState({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const media = matchMedia("(prefers-color-scheme: dark)");
-        const apply = () => {
-            const root = document.documentElement;
-            applyResolvedTheme(
-                root,
-                resolveTheme(appearance.theme, media.matches),
+        const apply = () =>
+            applyTheme(
+                document.documentElement,
+                appearance.theme,
+                media.matches,
             );
-            syncThemeColor(root);
-        };
         apply();
         media.addEventListener("change", apply);
         return () => media.removeEventListener("change", apply);
@@ -466,16 +475,14 @@ export function AppState({ children }: { children: ReactNode }) {
         ).composition,
     );
     useEffect(() => {
-        const root = document.documentElement;
-        root.dataset.accent = appearance.accent;
-        root.dataset.shape = appearance.shape;
-        root.dataset.glass = appearance.glassIntensity;
+        applyStyleAttributes(document.documentElement, {
+            accent: appearance.accent,
+            shape: appearance.shape,
+            glassIntensity: appearance.glassIntensity,
+        });
     }, [appearance.accent, appearance.shape, appearance.glassIntensity]);
     useEffect(() => {
-        const link = document.querySelector<HTMLLinkElement>(
-            'link[rel="icon"]',
-        );
-        if (link) link.href = `/icons/favicon-${appearance.tabIcon}.svg`;
+        applyTabIcon(document, appearance.tabIcon);
     }, [appearance.tabIcon]);
     useEffect(() => {
         applyWallpaperAccent(document.documentElement, wallpaperAccent);
