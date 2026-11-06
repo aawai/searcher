@@ -11,8 +11,27 @@ type Theme = "light" | "dark";
 const TIERS = ["off", "soft", "regular", "clear"] as const;
 /** Tiers whose Material keeps the readability floor; `clear` is see-through by choice. */
 const MATERIAL_FLOOR_TIERS = ["off", "soft", "regular"] as const;
+/** WCAG 1.4.3: body and secondary information text. */
 const WCAG_AA_TEXT = 4.5;
-const SECONDARY_TEXT = 3;
+/**
+ * WCAG 1.4.3 large text: ≥24px, or ≥18.66px at weight ≥700. Searcher's
+ * weights stop at 600, so only roles of ≥24px qualify (see LARGE_TEXT_ROLES).
+ */
+const WCAG_AA_LARGE_TEXT = 3;
+const LARGE_TEXT_MIN_PX = 24;
+/** WCAG 1.4.11: graphical objects needed to identify a control or its state. */
+const WCAG_AA_NON_TEXT = 3;
+/**
+ * Synthetic regression probe for `--muted` over glass and the masthead veil.
+ * It is not a standard: the baseline still requires 4.5:1 for that text
+ * (VISUAL_LANGUAGE.md「验证与已知缺口」).
+ */
+const MUTED_GLASS_PROBE = 3;
+/**
+ * Icon tile edge: system grammar (VISUAL_LANGUAGE.md 应用图标), not WCAG
+ * 1.4.11 — an app icon is identified by its image, not by its edge.
+ */
+const GLYPH_EDGE = 3;
 
 /** Backdrops behind a glass surface: dark and bright photo extremes plus saturated hues. */
 const BACKDROPS: readonly Rgb[] = [
@@ -209,7 +228,7 @@ for (const theme of ["light", "dark"] as const) {
                     }:1`,
                 );
                 assert(
-                    worst(muted) >= SECONDARY_TEXT,
+                    worst(muted) >= MUTED_GLASS_PROBE,
                     `${fillToken} ${alpha * 100}% gives muted ${
                         worst(muted).toFixed(2)
                     }:1`,
@@ -249,22 +268,91 @@ for (const theme of ["light", "dark"] as const) {
     });
 }
 
+/** The derived canvas veils the wallpaper with --background; it does not depend on the glass tier. */
+function derivedCanvas(theme: Theme): Rgb[] {
+    const tokens = cascade(theme, "regular");
+    const alpha = fillPercent(tokens, `--canvas-derived-${theme}`) / 100;
+    const veil = hex(resolve(tokens, "--background"));
+    return BACKDROPS.map((backdrop) => over(veil, alpha, backdrop));
+}
+
+/** The home masthead veil over the default "均衡" readability mask. */
+function mastheadVeil(theme: Theme): Rgb[] {
+    const tokens = cascade(theme, "regular");
+    const background = hex(resolve(tokens, "--background"));
+    const veilAlpha = fillPercent(tokens, `--masthead-veil-${theme}`) / 100;
+    // Dark themes dim the wallpaper image with `--wallpaper-dim`
+    // (`brightness()`), modelled as a per-channel scale (Chromium applies
+    // the shorthand in sRGB). The light theme declares no dim.
+    const brightness = Number(
+        tokens.get("--wallpaper-dim")?.match(
+            /brightness\((\d+(?:\.\d+)?)\)/,
+        )?.[1] ?? 1,
+    );
+    // The wallpaper surface paints --background at the default "均衡"
+    // readability stage over the dimmed image; the veil washes over the
+    // blurred result.
+    const maskAlpha = WALLPAPER_READABILITY_MASKS.balanced;
+    return BACKDROPS.map((backdrop) => {
+        const dimmed = backdrop.map((channel) =>
+            channel * brightness
+        ) as unknown as Rgb;
+        const copy = over(background, maskAlpha, dimmed);
+        return over(background, veilAlpha, copy);
+    });
+}
+
+/** Opaque surfaces that carry page and window content. */
+function solidSurfaces(theme: Theme): Rgb[] {
+    const tokens = cascade(theme, "regular");
+    return ["--background", "--surface", "--surface-l3"].map((name) =>
+        hex(resolve(tokens, name))
+    );
+}
+
+const LARGE_TEXT_BACKDROPS = {
+    "solid surfaces": solidSurfaces,
+    "derived canvas": derivedCanvas,
+    "masthead veil": mastheadVeil,
+} as const;
+
+/**
+ * Text roles whose every size is ≥24px, so WCAG 1.4.3 judges them at 3:1.
+ * Mirrors the ≥24px rows of VISUAL_LANGUAGE.md 字号阶梯登记表; the registry
+ * test below fails when a size token crosses 24px without updating this list.
+ * The masthead day printed straight on the wallpaper (narrow collapsed state)
+ * is measured in the browser by the A6 wallpaper readability check, not here.
+ */
+const LARGE_TEXT_ROLES: readonly {
+    size: string;
+    color: string;
+    backdrops: readonly (keyof typeof LARGE_TEXT_BACKDROPS)[];
+}[] = [
+    {
+        size: "--font-page-title-size",
+        color: "--foreground",
+        backdrops: ["solid surfaces", "derived canvas"],
+    },
+    {
+        size: "--font-masthead-day-size",
+        color: "--foreground",
+        backdrops: ["masthead veil"],
+    },
+];
+
 for (const theme of ["light", "dark"] as const) {
     Deno.test(`derived canvas ${theme}: body and --muted text set on it hold AA on the worst backdrop`, () => {
-        // The veil does not depend on the glass tier; `regular` is the default scope.
         const tokens = cascade(theme, "regular");
-        const alpha = fillPercent(tokens, `--canvas-derived-${theme}`) / 100;
-        const veil = hex(resolve(tokens, "--background"));
         for (const name of ["--foreground", "--muted"]) {
             const color = hex(resolve(tokens, name));
             const worst = Math.min(
-                ...BACKDROPS.map((backdrop) =>
-                    contrast(color, over(veil, alpha, backdrop))
+                ...derivedCanvas(theme).map((canvas) =>
+                    contrast(color, canvas)
                 ),
             );
             assert(
                 worst >= WCAG_AA_TEXT,
-                `${name} on --canvas-derived-${theme} ${alpha * 100}% gives ${
+                `${name} on --canvas-derived-${theme} gives ${
                     worst.toFixed(2)
                 }:1`,
             );
@@ -275,44 +363,70 @@ for (const theme of ["light", "dark"] as const) {
 for (const theme of ["light", "dark"] as const) {
     Deno.test(`home masthead veil ${theme}: text holds AA and --muted 3:1 over the default readability mask`, () => {
         const tokens = cascade(theme, "regular");
-        const background = hex(resolve(tokens, "--background"));
-        const veilAlpha = fillPercent(tokens, `--masthead-veil-${theme}`) /
-            100;
-        // Dark themes dim the wallpaper image with `--wallpaper-dim`
-        // (`brightness()`), modelled as a per-channel scale (Chromium applies
-        // the shorthand in sRGB). The light theme declares no dim.
-        const brightness = Number(
-            tokens.get("--wallpaper-dim")?.match(
-                /brightness\((\d+(?:\.\d+)?)\)/,
-            )?.[1] ?? 1,
-        );
-        // The wallpaper surface paints --background at the default "均衡"
-        // readability stage over the dimmed image; the veil washes over the
-        // blurred result.
-        const maskAlpha = WALLPAPER_READABILITY_MASKS.balanced;
         const probes = [
             ["--foreground", WCAG_AA_TEXT],
-            ["--muted", SECONDARY_TEXT],
+            ["--muted", MUTED_GLASS_PROBE],
         ] as const;
         for (const [name, floor] of probes) {
             const color = hex(resolve(tokens, name));
             const worst = Math.min(
-                ...BACKDROPS.map((backdrop) => {
-                    const dimmed = backdrop.map((channel) =>
-                        channel * brightness
-                    ) as unknown as Rgb;
-                    const copy = over(background, maskAlpha, dimmed);
-                    return contrast(color, over(background, veilAlpha, copy));
-                }),
+                ...mastheadVeil(theme).map((veil) => contrast(color, veil)),
             );
             assert(
                 worst >= floor,
-                `${name} on --masthead-veil-${theme} ${
-                    veilAlpha * 100
-                }% gives ${worst.toFixed(2)}:1`,
+                `${name} on --masthead-veil-${theme} gives ${
+                    worst.toFixed(2)
+                }:1`,
             );
         }
     });
+}
+
+Deno.test("large text roles: match the size tokens that reach 24px", () => {
+    const sizes = new Map<string, number[]>();
+    for (
+        const [, name, px] of css.matchAll(
+            /(--font-[\w-]+-size)\s*:\s*(\d+(?:\.\d+)?)px\s*;/g,
+        )
+    ) sizes.set(name, [...(sizes.get(name) ?? []), Number(px)]);
+    const reachesLarge = [...sizes]
+        .filter(([, values]) => values.some((px) => px >= LARGE_TEXT_MIN_PX))
+        .map(([name]) => name)
+        .sort();
+    assert(
+        JSON.stringify(reachesLarge) ===
+            JSON.stringify(LARGE_TEXT_ROLES.map((role) => role.size).sort()),
+        `size tokens reaching ${LARGE_TEXT_MIN_PX}px: ${
+            reachesLarge.join(", ")
+        }`,
+    );
+    for (const role of LARGE_TEXT_ROLES) {
+        const values = sizes.get(role.size) ?? [];
+        assert(
+            values.every((px) => px >= LARGE_TEXT_MIN_PX),
+            `${role.size} drops below ${LARGE_TEXT_MIN_PX}px (${values}); ` +
+                "it must be judged as body text at 4.5:1",
+        );
+    }
+});
+
+for (const theme of ["light", "dark"] as const) {
+    for (const role of LARGE_TEXT_ROLES) {
+        Deno.test(`large text ${theme}: ${role.size} holds 3:1 on its backdrops`, () => {
+            const color = hex(resolve(cascade(theme, "regular"), role.color));
+            for (const backdrop of role.backdrops) {
+                const worst = Math.min(
+                    ...LARGE_TEXT_BACKDROPS[backdrop](theme).map((surface) =>
+                        contrast(color, surface)
+                    ),
+                );
+                assert(
+                    worst >= WCAG_AA_LARGE_TEXT,
+                    `${role.color} on ${backdrop} gives ${worst.toFixed(2)}:1`,
+                );
+            }
+        });
+    }
 }
 
 for (const theme of ["light", "dark"] as const) {
@@ -339,7 +453,7 @@ for (const theme of ["light", "dark"] as const) {
                     if (luminance(backdrop) < 0.7) continue;
                     const ratio = contrast(paintedEdge, backdrop);
                     assert(
-                        ratio >= SECONDARY_TEXT,
+                        ratio >= GLYPH_EDGE,
                         `white glyph edge against ${backdrop}: ${
                             ratio.toFixed(2)
                         }:1`,
@@ -357,7 +471,7 @@ for (const theme of ["light", "dark"] as const) {
                             : paintedEdge;
                         const plateRatio = contrast(boundary, plate);
                         assert(
-                            plateRatio >= SECONDARY_TEXT,
+                            plateRatio >= GLYPH_EDGE,
                             `white glyph boundary on plate over ${backdrop}, sheen ${sheen}: ${
                                 plateRatio.toFixed(2)
                             }:1`,
@@ -392,7 +506,7 @@ for (const theme of ["light", "dark"] as const) {
             );
             const box = contrast(border, note);
             assert(
-                box >= SECONDARY_TEXT,
+                box >= WCAG_AA_NON_TEXT,
                 `task box border ${box.toFixed(2)}:1 on ${backdrop}`,
             );
         }
