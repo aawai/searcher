@@ -1,5 +1,6 @@
 import {
     type CSSProperties,
+    type KeyboardEvent as ReactKeyboardEvent,
     type MouseEvent as ReactMouseEvent,
     type PointerEvent as ReactPointerEvent,
     type ReactNode,
@@ -92,6 +93,8 @@ import "./dock.css";
 const TOUCH_HOLD_MS = 250;
 const TOUCH_TOLERANCE = 8;
 const COMPAT_MOUSE_WINDOW_MS = 500;
+/** One arrow press moves the collapsed ball this share of its vertical range. */
+const BALL_KEY_STEP = 0.05;
 
 function mayComeFromTouch(event: MouseEvent): boolean {
     const capabilities = "sourceCapabilities" in event
@@ -818,6 +821,24 @@ export function WorkspaceDock(
         setBallDragState(null);
     };
 
+    // The keyboard path for the drag (2.1.1): left / right pick the side,
+    // up / down step along it within the same safe range.
+    const handleBallKeyDown = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
+        const y = layout.ballY ?? 0.5;
+        const next = e.key === "ArrowLeft"
+            ? { ballSide: "left" as const }
+            : e.key === "ArrowRight"
+            ? { ballSide: "right" as const }
+            : e.key === "ArrowUp"
+            ? { ballY: Math.max(0, y - BALL_KEY_STEP) }
+            : e.key === "ArrowDown"
+            ? { ballY: Math.min(1, y + BALL_KEY_STEP) }
+            : null;
+        if (!next) return;
+        e.preventDefault();
+        setLayout(next);
+    };
+
     if (!barPresence.mounted && !ballPresence.mounted) return null;
 
     const topRatio = Math.max(0, Math.min(1, layout.ballY ?? 0.5));
@@ -875,6 +896,8 @@ export function WorkspaceDock(
                     inert={ballPresence.ending || undefined}
                     style={ballStyle}
                     aria-label="展开任务栏"
+                    aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight"
+                    onKeyDown={handleBallKeyDown}
                     onPointerDown={handleBallPointerDown}
                     onPointerMove={handleBallPointerMove}
                     onPointerUp={handleBallPointerUp}
