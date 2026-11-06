@@ -4,42 +4,84 @@ import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 const NOTES = '[data-window-id="notes"]';
 
-Deno.test("笔记抽屉：编辑区缩成卡片位移，减少动态效果下无位移缩放且焦点与 inert 不变", async () => {
+/** The editor card's geometry and transition state while the drawer is open or closed. */
+interface PaneState {
+    transform: string;
+    gapStart: number;
+    gapTop: number;
+    gapBottom: number;
+    widthMatchesLayout: boolean;
+    radius: string;
+    paneDuration: string;
+    inert: boolean;
+    drawerTransition: string;
+    drawerDuration: string;
+    drawerVisibility: string;
+}
+
+Deno.test("笔记抽屉：编辑区错开为留有固定间隙的卡片，减少动态效果下保留错位只去掉过渡，焦点与 inert 不变", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
-    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const page = await browser.newPage({
+        viewport: { width: 390, height: 844 },
+    });
     try {
         await loginAndVisit(page, app.origin, "/?view=notes", user);
         const frame = page.locator(NOTES);
         const layout = frame.locator(".documents-layout");
         const pane = frame.locator(".documents-editor-pane");
         const sidebar = frame.locator(".documents-sidebar");
-        const toggle = frame.getByRole("button", { name: "笔记侧栏", exact: true });
+        const toggle = frame.getByRole("button", {
+            name: "笔记侧栏",
+            exact: true,
+        });
         const state = () =>
-            pane.evaluate((element) => {
+            pane.evaluate((element): PaneState => {
                 const style = getComputedStyle(element);
-                const drawer = element.parentElement!.querySelector(".documents-sidebar")!;
+                const host = element.parentElement!;
+                const drawer = host.querySelector(".documents-sidebar")!;
+                const card = element.getBoundingClientRect();
+                const box = host.getBoundingClientRect();
+                const nav = drawer.querySelector("nav")!
+                    .getBoundingClientRect();
                 return {
                     transform: style.transform,
+                    // Gaps between the card and the navigation / the layout's edges.
+                    gapStart: card.left - nav.right,
+                    gapTop: card.top - box.top,
+                    gapBottom: box.bottom - card.bottom,
+                    // Unscaled card: text keeps its size and does not rewrap.
+                    widthMatchesLayout: Math.abs(card.width - box.width) < 1,
                     radius: style.borderTopLeftRadius,
+                    paneDuration: style.transitionDuration,
                     inert: (element as HTMLElement).inert,
-                    drawerTransition: getComputedStyle(drawer).transitionProperty,
+                    drawerTransition:
+                        getComputedStyle(drawer).transitionProperty,
                     drawerDuration: getComputedStyle(drawer).transitionDuration,
                     drawerVisibility: getComputedStyle(drawer).visibility,
                 };
             });
         const settle = () =>
-            page.waitForFunction(() => document.getAnimations().every((a) => a.playState === "finished" || a.playState === "idle"));
+            page.waitForFunction(() =>
+                document.getAnimations().every((a) =>
+                    a.playState === "finished" || a.playState === "idle"
+                )
+            );
+        const assertAside = (open: PaneState) => {
+            assertEquals(Math.round(open.gapStart), 12);
+            assertEquals(Math.round(open.gapTop), 12);
+            assertEquals(Math.round(open.gapBottom), 12);
+            assert(open.widthMatchesLayout);
+            assertNotEquals(open.radius, "0px");
+            assert(open.inert);
+            assertEquals(open.drawerVisibility, "visible");
+        };
 
-        // No selection: the drawer is open and the editor is an inert card.
+        // No selection: the drawer is open and the editor is an inert card set aside.
         await layout.locator(":scope[data-drawer='open']").waitFor();
         await settle();
-        const open = await state();
-        assertNotEquals(open.transform, "none");
-        assertNotEquals(open.radius, "0px");
-        assert(open.inert);
-        assertEquals(open.drawerVisibility, "visible");
+        assertAside(await state());
 
         // Clicking the card closes the drawer; focus returns to the toggle.
         await frame.getByRole("button", { name: "关闭笔记侧栏" }).click();
@@ -47,22 +89,25 @@ Deno.test("笔记抽屉：编辑区缩成卡片位移，减少动态效果下无
         await settle();
         const closed = await state();
         assertEquals(closed.transform, "none");
+        assertEquals(Math.round(closed.gapTop), 0);
         assertEquals(closed.inert, false);
         assertEquals(closed.drawerVisibility, "hidden");
         assert(await toggle.evaluate((el) => el === document.activeElement));
 
-        // Reduced motion: opacity only, same duration, no translate or scale.
+        // Reduced motion: the card still sits aside with the same gaps; only its
+        // interpolation is gone, and the drawer keeps its same-duration fade.
         await page.emulateMedia({ reducedMotion: "reduce" });
         await toggle.click();
         await layout.locator(":scope[data-drawer='open']").waitFor();
         await settle();
         const reduced = await state();
-        assertEquals(reduced.transform, "none");
-        assertEquals(reduced.radius, "0px");
-        assert(reduced.inert);
+        assertAside(reduced);
+        assertEquals(reduced.paneDuration, "0s");
         assertEquals(reduced.drawerTransition.includes("opacity"), true);
         assertEquals(reduced.drawerDuration.startsWith("0.2s"), true);
-        assert(await sidebar.evaluate((el) => el.contains(document.activeElement)));
+        assert(
+            await sidebar.evaluate((el) => el.contains(document.activeElement)),
+        );
         await page.keyboard.press("Escape");
         await layout.locator(":scope[data-drawer='closed']").waitFor();
         assert(await toggle.evaluate((el) => el === document.activeElement));

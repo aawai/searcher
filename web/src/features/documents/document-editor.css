@@ -77,6 +77,10 @@
     margin: 0 auto;
 }
 
+/* The title reads as the document's heading, not a boxed field: no resting
+   border, and focus draws a 2px underline inside the input's own box, so no
+   ancestor's overflow can clip it (an outset outline was cut off at the
+   header's top edge). The transparent border reserves the line's space. */
 .document-title-input {
     width: 100%;
     font-size: var(--font-page-title-size);
@@ -84,7 +88,9 @@
     font-weight: var(--font-title-weight);
     color: var(--foreground);
     background: transparent;
-    border: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
     outline: none;
     padding: var(--space-1) 0;
     box-sizing: border-box;
@@ -96,9 +102,16 @@
 }
 
 .document-title-input:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 4px;
-    border-radius: var(--control-radius);
+    border-bottom-color: var(--ring);
+}
+
+@media (forced-colors: active) {
+    .document-title-input {
+        border-bottom-color: Canvas;
+    }
+    .document-title-input:focus-visible {
+        border-bottom-color: Highlight;
+    }
 }
 
 /* Save Status Indicator */

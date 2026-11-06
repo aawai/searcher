@@ -21,8 +21,10 @@
     overflow-x: hidden;
     overflow-y: auto;
 }
-/* Drawer: the editor shrinks into a rounded card and slides right, revealing
-   the navigation underneath. The overlay stays rendered while closed
+/* Drawer: the editor becomes a card that slides aside by the drawer width plus
+   a fixed gap, inset from the top and bottom by the same gap, revealing the
+   navigation underneath on the grouped canvas so the white card and the
+   panel read as two layers. The overlay stays rendered while closed
    (visibility, not display) so both directions animate. */
 .documents-layout[data-drawer],
 .documents-layout[data-outline-drawer] {
@@ -34,7 +36,7 @@
 }
 .documents-layout[data-drawer="open"],
 .documents-layout[data-outline-drawer="open"] {
-    background-color: var(--surface-l3);
+    background-color: var(--surface-grouped-canvas);
     transition-delay: 0s;
 }
 .documents-sidebar--drawer,
@@ -59,12 +61,12 @@
 }
 .documents-sidebar--drawer > nav {
     flex: 0 0 var(--documents-drawer-width);
-    background: var(--surface-l3);
+    background: var(--surface-grouped-canvas);
 }
 .documents-outline-drawer-content {
     flex: 0 0 var(--documents-outline-drawer-width);
     min-width: 0;
-    background: var(--surface-l3);
+    background: var(--surface-grouped-canvas);
 }
 .documents-outline-drawer-content .document-outline-sidebar {
     width: 100%;
@@ -79,36 +81,39 @@
 .documents-layout[data-drawer] > .documents-editor-pane,
 .documents-layout[data-outline-drawer] > .documents-editor-pane {
     background: var(--surface);
-    transform-origin: left center;
     transition:
         transform var(--motion-base) var(--ease-out-expo),
+        margin-block var(--motion-base) var(--ease-out-expo),
         border-radius var(--motion-base) var(--ease-out-expo),
         box-shadow var(--motion-base) var(--ease-out-expo);
 }
-.documents-layout[data-outline-drawer] > .documents-editor-pane {
-    transform-origin: right center;
+/* The card keeps its width (no scale, so text stays crisp and does not
+   rewrap); the part past the window edge is clipped by the layout. */
+.documents-layout[data-drawer="open"] > .documents-editor-pane,
+.documents-layout[data-outline-drawer="open"] > .documents-editor-pane {
+    margin-block: var(--space-3);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-l2);
 }
 .documents-layout[data-drawer="open"] > .documents-editor-pane {
-    transform: translateX(var(--documents-drawer-width)) scale(.94);
-    border-radius: var(--radius-sheet);
-    box-shadow: var(--shadow-l2);
+    transform: translateX(
+        calc(var(--documents-drawer-width) + var(--space-3))
+    );
 }
 .documents-layout[data-outline-drawer="open"] > .documents-editor-pane {
-    transform-origin: right center;
-    transform: translateX(calc(-1 * var(--documents-outline-drawer-width)))
-        scale(.94);
-    border-radius: var(--radius-sheet);
-    box-shadow: var(--shadow-l2);
+    transform: translateX(
+        calc(
+            -1 * (var(--documents-outline-drawer-width) +
+                    var(--space-3))
+        )
+    );
 }
-/* Reduced motion: the same duration as an opacity change, no translate or scale. */
+/* Reduced motion: the open geometry is the state, not the animation, so the
+   card still sits aside; only the interpolation is dropped (the drawer itself
+   keeps its opacity fade). */
 @media (prefers-reduced-motion: reduce) {
     .documents-layout[data-drawer] > .documents-editor-pane,
-    .documents-layout[data-drawer="open"] > .documents-editor-pane,
-    .documents-layout[data-outline-drawer] > .documents-editor-pane,
-    .documents-layout[data-outline-drawer="open"] > .documents-editor-pane {
-        transform: none;
-        border-radius: 0;
-        box-shadow: none;
+    .documents-layout[data-outline-drawer] > .documents-editor-pane {
         transition: none;
     }
 }

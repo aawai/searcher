@@ -20,6 +20,8 @@ sources:
 
 [SQLite checkpoint API](/sources/SRC-2026-11-05-003.md)区分非等待、可能未完成的 PASSIVE 与可能等待的 FULL、RESTART、TRUNCATE；checkpoint 锁竞争可立即返回 `SQLITE_BUSY`。checkpoint 不是一致备份的替代，具体实现与部署行为未在本轮核实。
 
+[SQLite WAL 文档的新捕获](/sources/SRC-2026-11-06-001.md)补充：长时间读事务可阻碍 checkpoint 进度；同一数据库同时只有一个 WAL 写入者。此捕获与上面既有 WAL 来源是同一文档，不是独立佐证。
+
 SQLite 官方还提醒：[运行时复制与文件锁风险](/sources/SRC-2026-10-29-003.md)（[原始 HTML](../../raw/sources/SRC-2026-10-29-003/original/source.html)，第 229–280、316–366 行）包括事务中直接复制产生不一致，以及在 Unix POSIX advisory lock 环境下同一进程绕过 SQLite 直接打开并关闭数据库文件可能解除其他连接的锁。3.51.0 引入的部分 WAL 多进程防御并非完整修复；不要将通用风险直接当作项目已存在的缺陷。
 
 ## 验证与应用边界

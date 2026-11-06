@@ -70,7 +70,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/csrf-defense-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/csrf-defense-boundaries",
-      "contentHash": "83a0c4104e50dded51d07709b86963be7320ac90e391a018b3f888a476f86978",
+      "contentHash": "2586f20815332a3ad774dfaaffcf84ba742d0e8a15362ff60198ee0e138e96f5",
       "role": "canonical",
       "type": "concept"
     },
@@ -286,7 +286,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/session-security-and-isolation.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/session-security-and-isolation",
-      "contentHash": "46899eea48a82331ed3e1181e3e98e6ff9a7b6d87fdb08fd1899df08c6d37626",
+      "contentHash": "adc92f7109e215af37e8687044d8b91e2c8645338f37a48b940c10b8650bb24d",
       "role": "canonical",
       "type": "concept"
     },
@@ -310,7 +310,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/sqlite-backup-and-recovery-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/sqlite-backup-and-recovery-boundaries",
-      "contentHash": "36be727acd810c2cf2c2f6ae8a6253bdca39bd0f4b6f8f9deebe3fac985a4b3d",
+      "contentHash": "525d4e5a4826ccf888e61526d1e169e4d6a5272c387919904bcc0d2016085017",
       "role": "canonical",
       "type": "concept"
     },
@@ -1322,6 +1322,30 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/SRC-2026-11-06-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-06-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-06-001",
+      "contentHash": "bdf39c8b2d656661413d35e63cd29fb0cced524c59906c07ecc040ee157c855a",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-06-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-06-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-06-002",
+      "contentHash": "1fedb9bf8abae9cdcab85c9d87531085f7d02a9b9b889c0e33213f5ab2089fe5",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-06-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-06-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-06-003",
+      "contentHash": "08f92a1c013ddbbc00ba3e64a97e77ec005b7aec8e3b54b10875cb0e361758b8",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/css-var-fallback-consumer-value-boundary.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/css-var-fallback-consumer-value-boundary.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -2266,6 +2290,14 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-11-06-.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-06-",
+      "contentHash": "bd256a15b3f1b8c1b558cc31cdfe4ff194a5b947ab553a111d263e149b0915ec",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -2274,11 +2306,43 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-11-06-issue-369-pr-4-t6-t15-pr-379-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-issue-369-pr-4-t6-t15-pr-379-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-06-issue-369-pr-4-t6-t15-pr-379-main",
+      "contentHash": "d3d458ec0ed6371a0b9b7d9cc22a2c3ac4873e980678b9c352fab1165783adf3",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-06-issue-369-pr-5-t10-pr-384-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-issue-369-pr-5-t10-pr-384-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-06-issue-369-pr-5-t10-pr-384-main",
+      "contentHash": "7f3c3a8f644c3fb6007cff7eae01be419a878dbc15800eac0ee24eed2b451aae",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373",
       "contentHash": "062631a5afed8063d7da34636f8d0575964035fb123d3795fbeae3054298c106",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-06-issue-370-pr-b-b3-pr-381-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-issue-370-pr-b-b3-pr-381-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-06-issue-370-pr-b-b3-pr-381-main",
+      "contentHash": "f3aff02dfde2d28aa80058620aae348b15c7bb77dfa9fd6fd4e731517d6538eb",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main",
+      "contentHash": "85d9e5545f4bd2a9ad6a2a88977f6226cf7f8131e3af16176ada96a306beb6f9",
       "role": "evidence",
       "type": "source"
     },

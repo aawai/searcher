@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-06T03:10:53.352Z",
+  "last_updated": "2026-11-06T10:28:28.959Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -1545,6 +1545,33 @@
       "source_id": "SRC-2026-11-05-003",
       "format": "web",
       "captured": "2026-11-05"
+    },
+    "sources/SRC-2026-11-06-001": {
+      "type": "source",
+      "title": "SQLite Write-Ahead Logging",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-06-001/extracted.md",
+      "source_id": "SRC-2026-11-06-001",
+      "format": "web",
+      "captured": "2026-11-06"
+    },
+    "sources/SRC-2026-11-06-002": {
+      "type": "source",
+      "title": "Request: credentials property",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-06-002/extracted.md",
+      "source_id": "SRC-2026-11-06-002",
+      "format": "web",
+      "captured": "2026-11-06"
+    },
+    "sources/SRC-2026-11-06-003": {
+      "type": "source",
+      "title": "Using HTTP cookies",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-06-003/extracted.md",
+      "source_id": "SRC-2026-11-06-003",
+      "format": "web",
+      "captured": "2026-11-06"
     },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",
@@ -3536,6 +3563,23 @@
       "created": "2026-11-04",
       "updated": "2026-11-04"
     },
+    "sources/obs-2026-11-06-": {
+      "type": "source",
+      "title": "Observation: 笔记标题焦点下划线与窄窗口抽屉固定错位",
+      "tags": [
+        "ui",
+        "notes",
+        "drawer",
+        "focus"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-",
+      "relevance": "high",
+      "observed_at": "2026-11-06T10:28:28.918Z",
+      "source_context": "修复笔记标题焦点裁切与窄窗口侧栏贴合",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
     "sources/obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main": {
       "type": "source",
       "title": "Observation: Issue 369 PR-3 (T5 T7 T8 T9 T12) 经 PR 377 合并 main",
@@ -3549,6 +3593,32 @@
       "created": "2026-11-06",
       "updated": "2026-11-06"
     },
+    "sources/obs-2026-11-06-issue-369-pr-4-t6-t15-pr-379-main": {
+      "type": "source",
+      "title": "Observation: Issue 369 PR-4 (T6 T15) 经 PR 379 合并 main",
+      "tags": [
+        "[\"issue-369\",\"pr-379\",\"settings-row\",\"grouped-form\",\"dialog\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-issue-369-pr-4-t6-t15-pr-379-main",
+      "relevance": "high",
+      "observed_at": "2026-11-06T05:12:14.903Z",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
+    "sources/obs-2026-11-06-issue-369-pr-5-t10-pr-384-main": {
+      "type": "source",
+      "title": "Observation: Issue 369 PR-5 (T10) 经 PR 384 合并 main",
+      "tags": [
+        "[\"issue-369\",\"pr-384\",\"radius\",\"tokens\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-issue-369-pr-5-t10-pr-384-main",
+      "relevance": "high",
+      "observed_at": "2026-11-06T10:13:01.350Z",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
     "sources/obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373": {
       "type": "source",
       "title": "Observation: Issue 370 PR-A 提交为 PR 374，B6 跟进为 Issue 373",
@@ -3559,6 +3629,32 @@
       "slug": "obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373",
       "relevance": "high",
       "observed_at": "2026-11-06T00:03:19.859Z",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
+    "sources/obs-2026-11-06-issue-370-pr-b-b3-pr-381-main": {
+      "type": "source",
+      "title": "Observation: Issue 370 PR-B（B3）壁纸文字可读性经 PR 381 合并 main",
+      "tags": [
+        "[\"issue-370\",\"pr-381\",\"wcag-1.4.3\",\"a6\",\"wallpaper\",\"merged\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-issue-370-pr-b-b3-pr-381-main",
+      "relevance": "high",
+      "observed_at": "2026-11-06T08:03:46.687Z",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
+    "sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main": {
+      "type": "source",
+      "title": "Observation: Issue 370 PR-C（B4）窗口位置预设经 PR 380 合并 main",
+      "tags": [
+        "[\"issue-370\",\"pr-380\",\"windowing\",\"wcag-2.5.7\",\"merged\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-issue-370-pr-c-b4-pr-380-main",
+      "relevance": "high",
+      "observed_at": "2026-11-06T06:01:02.085Z",
       "created": "2026-11-06",
       "updated": "2026-11-06"
     },
