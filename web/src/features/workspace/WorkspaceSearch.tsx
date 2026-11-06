@@ -28,6 +28,7 @@ export function WorkspaceSearch({
             />
             <Input
                 type="search"
+                variant="search"
                 data-workspace-search=""
                 className="workspace-search-input"
                 placeholder={placeholder}

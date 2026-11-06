@@ -17,6 +17,7 @@ import {
 import { Button, buttonVariants } from "../components/ui/button.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { Checkbox } from "../components/ui/checkbox.tsx";
+import { Input } from "../components/ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import {
     Dialog,
@@ -589,7 +590,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                     <form onSubmit={save} className="ai-provider-form">
                         <label className="field">
                             名称
-                            <input
+                            <Input
                                 required
                                 maxLength={100}
                                 value={name}
@@ -599,7 +600,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                         </label>
                         <label className="field">
                             Base URL
-                            <input
+                            <Input
                                 required
                                 type="url"
                                 placeholder="https://api.openai.com/v1"
@@ -629,7 +630,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                         <div className="field">
                             <label htmlFor="ai-api-key">API Key</label>
                             <div className="ai-api-key-row">
-                                <input
+                                <Input
                                     id="ai-api-key"
                                     required={!editing}
                                     type={showApiKey ? "text" : "password"}

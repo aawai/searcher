@@ -20,6 +20,45 @@
     max-width: 360px;
 }
 
+/* Text field prototype: five states on three containers. Hover and focus are
+   static previews of the primitives.css owner and consume the same tokens. */
+.design-lab-field-surface {
+    padding: var(--space-4);
+    border-radius: var(--radius);
+}
+
+.design-lab-field-surface[data-surface="dialog"] {
+    background: var(--surface-solid);
+}
+
+.design-lab-field-surface[data-surface="canvas"] {
+    background: var(--background);
+}
+
+.design-lab-field-states {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-3);
+    width: 100%;
+}
+
+.design-lab-field-state {
+    display: grid;
+    gap: var(--space-1);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.design-lab-field-state[data-state="hover"] .cn-input {
+    border-color: var(--field-border-hover);
+}
+
+.design-lab-field-state[data-state="focus"] .cn-input {
+    border-color: var(--ring);
+    box-shadow: var(--shadow-field-focus);
+}
+
 .design-lab-slider {
     width: 160px;
 }

@@ -189,6 +189,7 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                             </label>
                             <Input
                                 id="auth-username"
+                                placeholder="例如：alice"
                                 autoComplete="username"
                                 required
                                 minLength={usernameRules.minLength}
@@ -229,6 +230,7 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                                 </label>
                                 <Input
                                     id="auth-display-name"
+                                    placeholder="例如：爱丽丝"
                                     required
                                     maxLength={40}
                                     value={displayName}
@@ -246,6 +248,9 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                             </label>
                             <Input
                                 id="auth-password"
+                                placeholder={kind === "login"
+                                    ? "输入登录密码"
+                                    : `至少 ${passwordRules.minLength} 个字符`}
                                 type="password"
                                 autoComplete={kind === "login"
                                     ? "current-password"

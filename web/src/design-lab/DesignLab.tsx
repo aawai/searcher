@@ -102,6 +102,36 @@ function resolveTheme(theme: Appearance["theme"]): "light" | "dark" {
         : "light";
 }
 
+const FIELD_STATES = [
+    { state: "rest", label: "静止" },
+    { state: "hover", label: "悬停" },
+    { state: "focus", label: "聚焦" },
+    { state: "invalid", label: "无效" },
+    { state: "disabled", label: "禁用" },
+] as const;
+
+function FieldStates({ surface }: { surface: string }) {
+    return (
+        <div className="design-lab-field-states">
+            {FIELD_STATES.map(({ state, label }) => (
+                <label
+                    key={state}
+                    className="design-lab-field-state"
+                    data-state={state}
+                >
+                    <span>{label}</span>
+                    <Input
+                        aria-label={`${surface}：${label}`}
+                        placeholder="输入名称"
+                        aria-invalid={state === "invalid" || undefined}
+                        disabled={state === "disabled"}
+                    />
+                </label>
+            ))}
+        </div>
+    );
+}
+
 export function DesignLab() {
     const { appearance: saved } = useAppState();
     // Local preview only: theme and accent are restored on unmount.
@@ -262,11 +292,41 @@ export function DesignLab() {
                 </div>
             </Section>
 
-            <Section title="输入">
+            <Section title="文本字段">
+                <p>
+                    细边框独立字段在白色对话框、分组列表与画布三类容器上的五态；悬停与聚焦为静态示意，其余为真实状态。
+                </p>
+                <div
+                    className="design-lab-field-surface"
+                    data-surface="dialog"
+                >
+                    <FieldStates surface="对话框" />
+                </div>
+                <SettingsGroup title="分组列表">
+                    <SettingsRow
+                        title="独立字段"
+                        className="settings-row--vertical"
+                    >
+                        <FieldStates surface="分组列表" />
+                    </SettingsRow>
+                    <SettingsRow title="行内输入">
+                        <Input
+                            aria-label="行内输入"
+                            placeholder="未设置"
+                        />
+                    </SettingsRow>
+                </SettingsGroup>
+                <div
+                    className="design-lab-field-surface"
+                    data-surface="canvas"
+                >
+                    <FieldStates surface="画布" />
+                </div>
                 <div className="design-lab-form">
                     <Input
+                        variant="search"
                         aria-label="搜索"
-                        placeholder="搜索"
+                        placeholder="搜索笔记"
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                     />
@@ -282,8 +342,10 @@ export function DesignLab() {
                             谷歌
                         </NativeSelectOption>
                     </NativeSelect>
-                    <Textarea aria-label="备注" placeholder="备注" />
-                    <Input aria-label="已禁用" placeholder="禁用" disabled />
+                    <Textarea
+                        aria-label="系统指令"
+                        placeholder="例如：回答时先给结论"
+                    />
                 </div>
             </Section>
 

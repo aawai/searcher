@@ -514,6 +514,7 @@ export function AdminPage() {
                         >
                             <Input
                                 type="search"
+                                variant="search"
                                 className="admin-search-input"
                                 aria-label="搜索用户"
                                 placeholder="按用户名、显示名称或邮箱搜索"
@@ -1169,6 +1170,7 @@ export function AdminPage() {
                             </label>
                             <Input
                                 id="create-password"
+                                placeholder="用户首次登录时使用"
                                 type="password"
                                 required
                                 minLength={12}

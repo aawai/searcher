@@ -87,7 +87,7 @@ export function FolderNameDialog({
                             <Input
                                 id="folder-name-input"
                                 autoFocus
-                                placeholder="文件夹名称"
+                                placeholder="例如：常用工具"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 disabled={isSubmitting}

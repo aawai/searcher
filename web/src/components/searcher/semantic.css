@@ -365,14 +365,13 @@
 
 /* Inline fields: borderless with the value right-aligned (macOS System Settings).
    The field pulls its inset into the row gutter so the value lines up with plain
-   values and switches. Hover fills softly; keyboard focus keeps the primitive ring. */
+   values and switches. Hover fills softly; focus and invalid states restore the
+   primitive's own border so the 2px ring and danger edge stay intact. */
 .settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"]) {
     padding-inline-start: var(--space-2);
     border-color: transparent;
     background: transparent;
     text-align: end;
-    transition: background var(--motion-fast) var(--ease-standard),
-        border-color var(--motion-fast) var(--ease-standard);
 }
 .settings-row:not(.settings-row--vertical) .settings-row-control .cn-input {
     padding-inline-end: var(--space-2);
@@ -394,6 +393,12 @@
     background: var(--surface-soft);
 }
 .settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"])[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"]):focus-visible {
+    border-color: var(--ring);
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"])[aria-invalid="true"]:focus-visible {
     border-color: var(--danger);
 }
 

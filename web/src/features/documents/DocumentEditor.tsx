@@ -1879,6 +1879,7 @@ export function DocumentEditor({
                 mergeContent={
                     <Textarea
                         aria-label="合并内容"
+                        placeholder="编辑合并后的正文"
                         value={mergeBody}
                         onChange={(event) => setMergeBody(event.target.value)}
                     />

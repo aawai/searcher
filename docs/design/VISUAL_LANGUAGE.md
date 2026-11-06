@@ -76,7 +76,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 **已知未达标与待交付**
 
 - **2.5.7**：应用网格排序、笔记侧栏与大纲调宽缺少不需要拖拽的单指针替代，登记于 #373；窗口移动 / 调整的单指针替代（位置预设菜单）由 #370 B4 交付。登记不等于豁免：上述各项在对应 Issue 关闭前都视为未达标。
-- **1.4.11 文本字段占位文字**：由 #369 实现并在组件类型上强制。在此之前，现有文本字段保留 `--border-control` 3:1 边界，仍满足 1.4.11；去掉该边界的前提是占位文字已强制。
+- **表单两种形态**：现有多字段表单（添加 / 编辑应用、登录 / 注册、修改密码、创建用户、纸张设置）迁移到分组列表行由 #369 T15 交付；在此之前它们仍为纵向排列的独立字段。
 - **A6**：真实浏览器的壁纸取样 e2e 由 #370 B3 交付；此前只有实页清单与刊头窄屏日期块的一次性测量（见 [首页刊头](#首页刊头home-masthead)）。
 - **新增与收紧的条款**（1.4.1、1.4.10、1.4.13、2.1.1、2.4.11、2.5.8、A5 触发控件已不存在时的焦点落点、A7）的逐项合规审查由 #370 B5 进行；需要新增功能的问题追加到 #373。
 
@@ -87,7 +87,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 本节记录当前实现选择，不属于不可变的可访问性结果。替代实现须按[分层与修订规则](#分层与修订规则)
 说明语义、owner 与验证方式，满足底线并同步更新受影响的 feature 契约、实现和测试；未修订时仍执行以下默认值。
 
-- 焦点环使用 2px `--ring`，只在 `:focus-visible` 出现。
+- 焦点环使用 2px `--ring`，只在 `:focus-visible` 出现。文本字段与 Select 的焦点指示是字段自身边框：边框变为 `--ring` 并以 1px 内描边补足 2px，不另加外环与间隙。
 - reduced-motion 下，非必要几何动效默认改为同时长纯透明度变化，页面切换无过渡；当前加载 spinner 保留旋转。
   可经修订采用立即切换或其他不降低可访问性的反馈方式；不使用全局 `*` 清零规则绕过组件状态、焦点和退出逻辑。
 - reduced-transparency 与不支持 `backdrop-filter` 时，所有玻璃档位按 `off` 渲染（实色、无 blur）。
@@ -134,7 +134,9 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--foreground`                     | `#1D1D1F`                       | `#F5F5F7`                 | 正文与标题                                                                                                                          |
 | `--muted`                          | `#66666B`                       | `#A1A1A6`                 | 次要文字（≥4.5:1，含填充底）                                                                                                        |
 | `--border`                         | `rgb(0 0 0 / 0.09)`             | `rgb(255 255 255 / 0.10)` | 细线分隔                                                                                                                            |
-| `--border-control`                 | `#86868B`                       | `#747479`                 | 独立表单控件边界（≥3:1）                                                                                                            |
+| `--border-control`                 | `#86868B`                       | `#747479`                 | 复选框 / 单选 / 开关等无文字内容的图形部件边界（≥3:1）                                                                              |
+| `--field-border`                   | `rgb(0 0 0 / 0.13)`             | `rgb(255 255 255 / 0.14)` | 独立文本字段与 Select 的静止边框（约 1.3:1，视觉规则；可识别性由占位文字或值保证，见 [组件语法](#组件语法)）                        |
+| `--field-border-hover`             | `rgb(0 0 0 / 0.24)`             | `rgb(255 255 255 / 0.26)` | 同上，可悬停指针下的 hover 边框                                                                                                     |
 | `--accent`                         | 壁纸派生（默认）或手选 9 种之一 | 同左，明暗各一            | 交互语义与用户身份，见 [强调色用途](#强调色用途)                                                                                    |
 | `--surface-control-thumb`          | `#FFFFFF`                       | `#636366`                 | 分段控件选中项、开关滑块（亮于轨道）                                                                                                |
 | `--danger` `--success` `--warning` | 保持现值                        | 保持现值                  | 状态，仅配合图标与文字使用                                                                                                          |
@@ -248,7 +250,12 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `components/ui/primitives.css` 统一拥有。不另造 Button / Dialog / Menu / Tabs / Toast。
 
 - **Button**：省略 `variant` 时默认 `outline`（`.button--subtle`，`--surface-soft` 填充、无描边，作为次要操作与安全默认，避免未传参误建多个主按钮）；显式 `variant="default"` 为 primary（`.button--primary`，强调色填充，每区域最多一个）；`ghost`（`.button--ghost`，透明，工具栏与图标按钮）；`destructive`（`.button--danger`，普通态为危险文字色配 12% 危险色浅底，仅在 `AlertDialog` 确认对话框内实色填充 `--danger`）；`link`（`.button--link`，强调色文字、无内边距，粗指针命中高 ≥ 44px）；`content`（`.button--content`，块级透明、继承字号与字色、允许换行、最小 44×44 命中区，用于会话列表项与搜索结果等内容消费触发器，而非传统动作按钮）。常规按钮的 `size` 是单选：`default` 高 36、`sm` 高 28、`icon` 为 36 方形；粗指针命中区 ≥ 44×44。`link` 与 `content` 的尺寸另按上述变体规则覆盖。
-- **Input / Textarea / Select**：独立表单与纵向分组行中使用 surface 背景 + `--border-control` 细边；在横向分组行内使用无边框、透明底、值右对齐的行内输入，hover 显示 `--surface-soft` 底，键盘焦点显示焦点环。文本字段（Input、Textarea 及消费它们的搜索 / 筛选框）必须有占位文字，Select 始终显示当前值：可见内容使字段可被识别，这是[底线](#一底线) 1.4.11 不要求 3:1 边界的前提；占位文字说明期望输入、不复述标签，颜色为 `--muted`（≥ 4.5:1）。强制与边框外观调整的进度见 [验证与已知缺口](#验证与已知缺口)。
+- **Input / Textarea / Select**：外观由 `primitives.css` 唯一拥有，分三种呈现。
+  - **独立字段**（默认）：`--surface-solid` 底 + 1px `--field-border`；仅在 `(hover: hover)` 下 hover 加深为 `--field-border-hover`。聚焦时边框变为 `--ring` 并加 1px 内描边（`--shadow-field-focus`），合计 2px；无效态为 1px `--danger`，聚焦时 2px `--danger`（`--shadow-field-invalid-focus`）；禁用为 50% 不透明。过渡覆盖 `border-color`、`box-shadow`，reduced-motion 下取消；`forced-colors: active` 下聚焦另显示系统色 outline（A7）。
+  - **搜索 / 筛选框**（`<Input variant="search">`）：属于工具栏控件，`--surface-soft` 填充、无可见边框，聚焦与无效态同独立字段。用于笔记侧栏搜索、AI 会话侧栏筛选、会话内搜索与管理页用户搜索；首页搜索框是 Material 表面，不属于此类。
+  - **行内输入**：横向分组行内无边框、透明底、值右对齐，hover 显示 `--surface-soft` 底，聚焦同独立字段的 2px 边框。
+  - **可识别性**：文本字段（Input、Textarea 及消费它们的搜索 / 筛选框）必须有占位文字，`Input` 与 `Textarea` 的 `placeholder` 是必填 prop；Select 始终显示当前值。可见内容使字段可被识别，这是[底线](#一底线) 1.4.11 不要求 3:1 边界的前提，`--field-border` 的约 1.3:1 是视觉规则而非合规依据。占位文字说明期望输入、不复述标签，颜色为 `--muted`（≥ 4.5:1）。焦点指示（2px `--ring`）与无效态边界（`--danger`）仍须 ≥ 3:1。
+- **表单两种形态**：两个及以上字段的表单使用分组列表行（`SettingsRow` 与行内输入；网址、描述等长值用 `.settings-row--vertical`，标签在上、独立字段在下），字段级错误与说明放在所属行内的第二行。单字段对话框、搜索 / 筛选框与多行输入使用独立字段。迁移进度见 [验证与已知缺口](#验证与已知缺口)。
 - **Checkbox / RadioGroup / Switch / Slider**：只使用 `components/ui` 的组件，业务代码禁止直接写 `<input type="checkbox|radio|range">`（`check:ui` 规则 `native-form-control`；唯一例外是渲染 Markdown 任务列表的 `NoteMarkdown.tsx`，它是文档内容而非界面控件）。Checkbox 渲染为原生 `<button role="checkbox">`，保证 Tab 可聚焦。RadioGroup 的 `default` 变体是带文字的行内单选（紧凑高度、无底色、粗指针 ≥44px）；`rows` 变体让一组单选分布在不同的分组行里，容器本身 `display: contents`，不产生盒子也不打断行间分隔线。
 - **分组列表（Grouped List）**：设置、账户、管理页的基本单元。圆角 `--radius` 的 `--surface` 容器；行高 ≥ 44，左侧标签，右侧控件或值；行间为左侧内缩的细线；分组标题（14 / 600、前景色）在容器外上方，脚注（metadata、`--muted`）在容器外下方。
   - **容量与堆叠**：`semantic.css` 拥有 `SettingsRow` 布局。普通单值行保留右对齐值与 Input / Select；标签以局部语义 Token `--settings-row-label-min: 8em` 保留约八个正文字符的阅读容量，下限不超过行可用宽度，容量不足时控件先换到下一行并保持右对齐，不把短标签压成字列。长用户标题、metadata 与值允许在行内换行，不使用全局 nowrap 或 max-content 下限。
