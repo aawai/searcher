@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-06T10:28:28.959Z",
+  "last_updated": "2026-11-06T10:53:54.017Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -3580,6 +3580,40 @@
       "created": "2026-11-06",
       "updated": "2026-11-06"
     },
+    "sources/obs-2026-11-06-6-b-d-e": {
+      "type": "source",
+      "title": "Observation: 应用图标重设计：6 个方向效果图，用户在 B/D/E 间比较",
+      "tags": [
+        "icon",
+        "brand",
+        "design",
+        "pwa"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-6-b-d-e",
+      "relevance": "high",
+      "observed_at": "2026-11-06T10:53:53.760Z",
+      "source_context": "图标现代化重设计",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
+    "sources/obs-2026-11-06-favicon": {
+      "type": "source",
+      "title": "Observation: 浏览器标签 favicon 未随新图标更换的根因与修复",
+      "tags": [
+        "pwa",
+        "favicon",
+        "icon",
+        "brand"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-favicon",
+      "relevance": "high",
+      "observed_at": "2026-11-06T10:53:53.472Z",
+      "source_context": "用户反馈标签页 logo 没换",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
     "sources/obs-2026-11-06-issue-369-pr-3-t5-t7-t8-t9-t12-pr-377-main": {
       "type": "source",
       "title": "Observation: Issue 369 PR-3 (T5 T7 T8 T9 T12) 经 PR 377 合并 main",
@@ -3668,6 +3702,25 @@
       "slug": "obs-2026-11-06-pr-374-main",
       "relevance": "high",
       "observed_at": "2026-11-06T00:23:30.850Z",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
+    "sources/obs-2026-11-06-pr-385-main": {
+      "type": "source",
+      "title": "Observation: PR 385 笔记标题焦点与抽屉错位合并 main",
+      "tags": [
+        "pr-385",
+        "merged",
+        "notes",
+        "drawer",
+        "focus",
+        "pwa-icon"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-pr-385-main",
+      "relevance": "high",
+      "observed_at": "2026-11-06T10:41:11.787Z",
+      "source_context": "创建 PR 并合并至 main",
       "created": "2026-11-06",
       "updated": "2026-11-06"
     },

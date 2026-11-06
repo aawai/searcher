@@ -2,10 +2,13 @@ import {
     type AccentPreference,
     DEFAULT_ACCENT,
     DEFAULT_GLASS_INTENSITY,
+    DEFAULT_TAB_ICON,
     type GlassIntensity,
     normalizeAccent,
     normalizeGlassIntensity,
+    normalizeTabIcon,
     type PreferencesDto,
+    type TabIcon,
     type UserDto,
 } from "@shared/contracts.ts";
 import type { EngineId } from "@shared/engines.ts";
@@ -55,6 +58,8 @@ export type Appearance = {
     accent: AccentPreference;
     shape: "rounded" | "pill";
     glassIntensity: GlassIntensity;
+    /** 浏览器标签图标；安装图标不随此项变化。 */
+    tabIcon: TabIcon;
     engine: EngineId;
     target: "current" | "new_tab";
     wallpaper: string;
@@ -77,6 +82,7 @@ const initial: Appearance = {
     accent: DEFAULT_ACCENT,
     shape: "rounded",
     glassIntensity: DEFAULT_GLASS_INTENSITY,
+    tabIcon: DEFAULT_TAB_ICON,
     engine: "bing",
     target: "current",
     wallpaper: "",
@@ -105,6 +111,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
         result.shape = saved.shape;
     }
     result.glassIntensity = normalizeGlassIntensity(saved.glassIntensity);
+    result.tabIcon = normalizeTabIcon(saved.tabIcon);
     if (
         saved.engine === "bing" || saved.engine === "google" ||
         saved.engine === "baidu" || saved.engine === "duckduckgo"
@@ -386,6 +393,7 @@ export function AppState({ children }: { children: ReactNode }) {
                     accent: normalizeAccent(prefs.accent),
                     shape: prefs.searchShape,
                     glassIntensity: prefs.glassIntensity,
+                    tabIcon: prefs.tabIcon,
                     target: prefs.searchTarget === "new"
                         ? "new_tab"
                         : "current",
@@ -463,6 +471,12 @@ export function AppState({ children }: { children: ReactNode }) {
         root.dataset.glass = appearance.glassIntensity;
     }, [appearance.accent, appearance.shape, appearance.glassIntensity]);
     useEffect(() => {
+        const link = document.querySelector<HTMLLinkElement>(
+            'link[rel="icon"]',
+        );
+        if (link) link.href = `/icons/favicon-${appearance.tabIcon}.svg`;
+    }, [appearance.tabIcon]);
+    useEffect(() => {
         applyWallpaperAccent(document.documentElement, wallpaperAccent);
     }, [wallpaperAccent]);
 
@@ -481,6 +495,7 @@ export function AppState({ children }: { children: ReactNode }) {
             if (next.glassIntensity !== undefined) {
                 updates.glassIntensity = next.glassIntensity;
             }
+            if (next.tabIcon !== undefined) updates.tabIcon = next.tabIcon;
             if (next.engine !== undefined) updates.defaultEngine = next.engine;
             if (next.target !== undefined) {
                 updates.searchTarget = next.target === "new_tab"

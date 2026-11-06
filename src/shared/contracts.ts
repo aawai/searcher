@@ -48,6 +48,21 @@ export function normalizeGlassIntensity(raw: unknown): GlassIntensity {
     return DEFAULT_GLASS_INTENSITY;
 }
 
+/** 浏览器标签图标：刊头“s.”（默认）或键帽“/”；安装图标固定为刊头。 */
+export const TAB_ICONS = ["editorial", "keycap"] as const;
+export type TabIcon = (typeof TAB_ICONS)[number];
+export const DEFAULT_TAB_ICON: TabIcon = "editorial";
+
+export function normalizeTabIcon(raw: unknown): TabIcon {
+    if (
+        typeof raw === "string" &&
+        (TAB_ICONS as readonly string[]).includes(raw)
+    ) {
+        return raw as TabIcon;
+    }
+    return DEFAULT_TAB_ICON;
+}
+
 export interface AccentMeta {
     readonly id: AccentId;
     readonly label: string;
@@ -188,6 +203,7 @@ export interface PreferencesDto {
     accent: AccentPreference;
     searchShape: SearchShape;
     glassIntensity: GlassIntensity;
+    tabIcon: TabIcon;
     backgroundImage: string | null;
     wallpaperPresentations: Record<string, WallpaperPresentation>;
     searchTarget: SearchTarget;

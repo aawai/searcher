@@ -96,6 +96,15 @@ Deno.test("Appearance: device caches keep a valid glass tier and fall back for s
     );
 });
 
+Deno.test("Appearance: device caches keep a valid tab icon and default older or unknown values to editorial", () => {
+    assertEquals(normalizeAppearance({ tabIcon: "keycap" }).tabIcon, "keycap");
+    assertEquals(normalizeAppearance({}).tabIcon, "editorial");
+    assertEquals(
+        normalizeAppearance({ tabIcon: "glass" }).tabIcon,
+        "editorial",
+    );
+});
+
 Deno.test("Appearance: legacy icon size fields are ignored without losing valid preferences", () => {
     for (const webAppIconSize of ["compact", "default", "large", "unknown"]) {
         const result = normalizeAppearance({
