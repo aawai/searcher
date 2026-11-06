@@ -386,7 +386,18 @@
     white-space: nowrap;
     transition: background var(--motion-fast) var(--ease-standard),
         color var(--motion-fast) var(--ease-standard),
-        opacity var(--motion-fast) var(--ease-standard);
+        opacity var(--motion-fast) var(--ease-standard),
+        scale var(--motion-fast) var(--ease-standard);
+}
+
+/* Press feedback (T7). `scale` composes with any feature `transform` rather
+   than replacing it; link and content triggers are not pressable surfaces. */
+.button:active:not(:disabled, [data-disabled], .button--link, .button--content) {
+    scale: .97;
+}
+
+.button--sm:active:not(:disabled, [data-disabled], .button--link, .button--content) {
+    scale: .98;
 }
 
 .button:focus-visible {
@@ -427,8 +438,10 @@
     color: var(--accent-foreground);
 }
 
-.button--primary:hover {
-    background: var(--accent-hover);
+@media (hover: hover) {
+    .button--primary:hover {
+        background: var(--accent-hover);
+    }
 }
 
 .button--primary:active {
@@ -440,16 +453,21 @@
     background: var(--surface-soft);
 }
 
-.button--subtle:hover {
-    background: color-mix(in srgb, var(--foreground) 10%, var(--surface-soft));
+@media (hover: hover) {
+    .button--subtle:hover {
+        background: color-mix(in srgb, var(--foreground) 10%,
+            var(--surface-soft));
+    }
 }
 
 .button--ghost {
     background: transparent;
 }
 
-.button--ghost:hover {
-    background: var(--surface-soft);
+@media (hover: hover) {
+    .button--ghost:hover {
+        background: var(--surface-soft);
+    }
 }
 
 .button--ghost:active,
@@ -464,8 +482,10 @@
     min-height: auto;
 }
 
-.button--link:hover {
-    text-decoration: underline;
+@media (hover: hover) {
+    .button--link:hover {
+        text-decoration: underline;
+    }
 }
 
 /* A link-styled action is still a control: coarse pointers get the full row. */
@@ -495,8 +515,10 @@
     color: var(--danger);
 }
 
-.button--danger:hover {
-    background: color-mix(in srgb, var(--danger) 18%, transparent);
+@media (hover: hover) {
+    .button--danger:hover {
+        background: color-mix(in srgb, var(--danger) 18%, transparent);
+    }
 }
 
 /* Inside confirmation dialogs the destructive action is the primary one. */
@@ -505,8 +527,10 @@
     color: var(--surface-solid);
 }
 
-[data-slot="alert-dialog-content"] .button--danger:hover {
-    background: color-mix(in srgb, var(--danger) 88%, var(--foreground));
+@media (hover: hover) {
+    [data-slot="alert-dialog-content"] .button--danger:hover {
+        background: color-mix(in srgb, var(--danger) 88%, var(--foreground));
+    }
 }
 
 .button:disabled,
@@ -565,13 +589,21 @@
     color: var(--muted);
 }
 
+/* Highlight is a neutral fill; the 3:1 indicator is the keyboard focus ring,
+   inset so it never changes the row height. Base UI focuses the item under the
+   pointer too, and the browser keeps that focus "visible" after a keyboard
+   open, so the item being hovered shows the fill alone. */
 .menu-item[data-highlighted] {
-    background: var(--accent);
-    color: var(--accent-foreground);
+    background: var(--surface-highlight);
 }
 
 .menu-item[data-highlighted] > svg {
-    color: inherit;
+    color: var(--foreground);
+}
+
+.menu-item:focus-visible:not(:hover) {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
 }
 
 .menu-item[data-disabled] {
@@ -587,8 +619,7 @@
 }
 
 .menu-item[data-variant="destructive"][data-highlighted] {
-    background: var(--danger);
-    color: var(--surface-solid);
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
 }
 
 .menu-item-indicator {
@@ -1154,6 +1185,10 @@
 @media (prefers-reduced-motion: reduce) {
     .switch-thumb {
         transition: none;
+    }
+
+    .button:active:not(:disabled, [data-disabled], .button--link, .button--content) {
+        scale: none;
     }
 
     .menu-popup[data-starting-style],

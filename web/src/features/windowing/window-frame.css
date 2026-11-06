@@ -73,6 +73,11 @@
     border-start-start-radius: var(--radius-lg);
     border-start-end-radius: var(--radius-lg);
 }
+/* A page load restoring the window lands focus here without any user input;
+   the ring returns with the first key press (T8). */
+.window-frame__titlebar[data-focus-origin="restore"]:focus-visible {
+    outline: none;
+}
 
 .window-frame__title {
     flex: 1;
@@ -111,12 +116,30 @@
     border: 0;
     border-radius: var(--control-radius);
     background: transparent;
-    color: var(--muted);
     cursor: pointer;
 }
-.window-frame__button:hover {
-    background: var(--surface-soft);
+/* One colour grammar for every icon button in the title bar, the window's own
+   and those a view portals into the toolbar: muted at rest, foreground while
+   hovered, pressed or holding an open menu, accent when toggled on. */
+.window-frame__button,
+.window-frame__toolbar .button--icon {
+    color: var(--muted);
+}
+@media (hover: hover) {
+    .window-frame__button:hover,
+    .window-frame__toolbar .button--icon:hover {
+        background: var(--surface-soft);
+        color: var(--foreground);
+    }
+}
+.window-frame__button:is(:active, [data-popup-open]),
+.window-frame__toolbar .button--icon:is(:active, [data-popup-open]) {
     color: var(--foreground);
+}
+.window-frame__button[aria-pressed="true"],
+.window-frame__toolbar .button--icon[aria-pressed="true"] {
+    background: var(--accent-soft);
+    color: var(--accent);
 }
 .window-frame__button:focus-visible {
     outline: var(--space-half) solid var(--ring);

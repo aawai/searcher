@@ -214,11 +214,16 @@
     flex-shrink: 0;
 }
 
-/* Same highlight as menu items; hover moves the selection. */
+/* Same highlight as menu items: a neutral fill, with the 3:1 ring only when the
+   keyboard moved it (focus stays in the field via aria-activedescendant). */
 .suggestion-item.active,
 .suggestion-item[aria-selected="true"] {
-    background: var(--accent);
-    color: var(--accent-foreground);
+    background: var(--surface-highlight);
+}
+
+.suggestion-item[data-highlight-source="keyboard"] {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
 }
 
 .suggestion-item-main {
@@ -236,7 +241,7 @@
 
 .suggestion-item.active .suggestion-icon,
 .suggestion-item[aria-selected="true"] .suggestion-icon {
-    color: inherit;
+    color: var(--foreground);
 }
 
 .suggestion-text {

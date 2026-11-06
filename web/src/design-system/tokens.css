@@ -11,6 +11,8 @@
     --surface: #FFFFFF;
     --surface-solid: #FFFFFF;
     --surface-soft: #EBEBEE;
+    /* Menu and suggestion highlight: translucent, so it reads on solid and every glass level. */
+    --surface-highlight: rgb(0 0 0 / 0.08);
     /* Thumb of switches, segmented selection, tabs and sliders: lighter than its track in both themes. */
     --surface-control-thumb: #FFFFFF;
     --muted: #66666B;
@@ -313,6 +315,7 @@
     --surface: #1C1C1F;
     --surface-solid: #1C1C1F;
     --surface-soft: #2A2A2E;
+    --surface-highlight: rgb(255 255 255 / 0.10);
     --surface-control-thumb: #636366;
     --surface-l3: #242428;
     --surface-grouped-canvas: var(--surface-l3);

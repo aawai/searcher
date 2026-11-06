@@ -599,7 +599,7 @@ Deno.test("AI 窗口在明暗极端壁纸上保持文字可读", async () => {
     }
 });
 
-Deno.test("标题栏焦点环：鼠标打开窗口不显示，键盘打开显示", async () => {
+Deno.test("标题栏焦点环：直达 URL 与鼠标打开不显示，键盘打开显示", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
@@ -656,6 +656,31 @@ Deno.test("标题栏焦点环：鼠标打开窗口不显示，键盘打开显示
         assertEquals(byKeyboard.focused, true);
         assertEquals(byKeyboard.focusVisible, true, JSON.stringify(byKeyboard));
         assert(byKeyboard.outline !== "none", JSON.stringify(byKeyboard));
+
+        // A page load restores the window from its URL: focus still lands in
+        // the title bar, but no input led there, so no ring until a key press.
+        await page.goto(app.origin + "/settings/appearance");
+        const settingsBar = page.locator(
+            '[data-window-id="settings"] .window-frame__titlebar',
+        );
+        await page.waitForFunction(() =>
+            document.activeElement ===
+                document.querySelector(
+                    '[data-window-id="settings"] .window-frame__titlebar',
+                )
+        );
+        const restoredRing = () =>
+            settingsBar.evaluate((node) => ({
+                focused: document.activeElement === node,
+                outline: getComputedStyle(node).outlineStyle,
+            }));
+        const byUrl = await restoredRing();
+        assertEquals(byUrl.focused, true);
+        assertEquals(byUrl.outline, "none", JSON.stringify(byUrl));
+        await page.keyboard.press("Shift");
+        const afterKey = await restoredRing();
+        assertEquals(afterKey.focused, true);
+        assert(afterKey.outline !== "none", JSON.stringify(afterKey));
     } finally {
         await browser.close();
         await app.close();

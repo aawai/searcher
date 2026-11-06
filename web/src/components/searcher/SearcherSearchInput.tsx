@@ -40,6 +40,7 @@ import {
 import {
     OmniboxListbox,
     type OmniboxListboxView,
+    type OmniboxSelection,
 } from "../../features/omnibox/OmniboxListbox.tsx";
 import { useOmniboxSources } from "../../features/omnibox/useOmniboxSources.ts";
 
@@ -117,7 +118,7 @@ export function SearcherSearchInput(
     const [query, setQuery] = useState(() => restored.current?.query ?? "");
     const [focused, setFocused] = useState(false);
     const [dismissed, setDismissed] = useState(false);
-    const [selectedKey, setSelectedKey] = useState<string | null>(null);
+    const [selection, setSelection] = useState<OmniboxSelection | null>(null);
     const listboxId = useId();
     const ownField = useRef<HTMLInputElement>(null);
     const field = inputRef ?? ownField;
@@ -201,6 +202,7 @@ export function SearcherSearchInput(
         ],
     );
     const items = useMemo(() => flattenOmniboxGroups(groups), [groups]);
+    const selectedKey = selection?.key ?? null;
     const selectedIndex = selectedKey === null
         ? -1
         : items.findIndex((item) => omniboxItemKey(item) === selectedKey);
@@ -246,7 +248,7 @@ export function SearcherSearchInput(
 
     function finish() {
         setDismissed(true);
-        setSelectedKey(null);
+        setSelection(null);
     }
 
     function run(action: OmniboxAction | null) {
@@ -295,7 +297,7 @@ export function SearcherSearchInput(
             case "fill":
                 setQuery(action.text);
                 setDismissed(false);
-                setSelectedKey(null);
+                setSelection(null);
                 field.current?.focus();
                 return;
         }
@@ -354,7 +356,10 @@ export function SearcherSearchInput(
                     : (selectedIndex > 0
                         ? selectedIndex - 1
                         : items.length - 1);
-                setSelectedKey(omniboxItemKey(items[next]));
+                setSelection({
+                    key: omniboxItemKey(items[next]),
+                    source: "keyboard",
+                });
                 return;
             }
             case "close":
@@ -386,7 +391,7 @@ export function SearcherSearchInput(
 
     const view: OmniboxListboxView = {
         groups,
-        selectedKey: selectedIndex >= 0 ? selectedKey : null,
+        selection: selectedIndex >= 0 ? selection : null,
         matchingQuery: resolved.kind === "search"
             ? resolved.text
             : resolved.kind === "commands"
@@ -435,7 +440,7 @@ export function SearcherSearchInput(
                             setQuery(e.target.value);
                             setFocused(true);
                             setDismissed(false);
-                            setSelectedKey(null);
+                            setSelection(null);
                         }}
                         onCompositionStart={() => {
                             composingRef.current = true;
@@ -449,7 +454,7 @@ export function SearcherSearchInput(
                         }}
                         onBlur={() => {
                             setFocused(false);
-                            setSelectedKey(null);
+                            setSelection(null);
                         }}
                         placeholder="搜索或输入网址"
                         disabled={disabled}
@@ -500,7 +505,11 @@ export function SearcherSearchInput(
                         view={visible}
                         onSelect={(item) =>
                             run(itemAction(item, resolved, false))}
-                        onHover={(item) => setSelectedKey(omniboxItemKey(item))}
+                        onHover={(item) =>
+                            setSelection({
+                                key: omniboxItemKey(item),
+                                source: "pointer",
+                            })}
                     />
                     {visible.onlineUnavailable && (
                         <p className="search-suggestions-status" role="status">

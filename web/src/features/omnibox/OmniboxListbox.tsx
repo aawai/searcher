@@ -29,9 +29,15 @@ import {
 } from "./omnibox-model.ts";
 import { splitSuggestionLabel } from "./split-label.ts";
 
+/** Which input moved the highlight: only keyboard highlights draw a focus ring. */
+export interface OmniboxSelection {
+    key: string;
+    source: "keyboard" | "pointer";
+}
+
 export interface OmniboxListboxView {
     groups: readonly OmniboxGroup[];
-    selectedKey: string | null;
+    selection: OmniboxSelection | null;
     matchingQuery: string;
     onlineUnavailable: boolean;
     engine: EngineId;
@@ -154,7 +160,7 @@ export function OmniboxListbox(
                     {group.items.map((item) => {
                         const key = omniboxItemKey(item);
                         const optionIndex = index++;
-                        const selected = key === view.selectedKey;
+                        const selected = key === view.selection?.key;
                         const badge = itemBadge(item, view.engine);
                         return (
                             <div
@@ -163,6 +169,9 @@ export function OmniboxListbox(
                                 role="option"
                                 tabIndex={-1}
                                 aria-selected={selected}
+                                data-highlight-source={selected
+                                    ? view.selection?.source
+                                    : undefined}
                                 className={`suggestion-item${
                                     selected ? " active" : ""
                                 }`}

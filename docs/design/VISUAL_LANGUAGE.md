@@ -131,6 +131,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--background`                     | `#F4F4F5`                       | `#111113`                 | 页面画布                                                                                                                            |
 | `--surface` / `--surface-solid`    | `#FFFFFF`                       | `#1C1C1F`                 | 分组列表、面板、对话框                                                                                                              |
 | `--surface-soft`                   | `#EBEBEE`                       | `#2A2A2E`                 | 控件填充、hover、用户气泡                                                                                                           |
+| `--surface-highlight`              | `rgb(0 0 0 / 0.08)`             | `rgb(255 255 255 / 0.10)` | 菜单与建议列表的高亮底；半透明，在实色与 Floating 各玻璃档位上都可辨（暗色 `--surface-soft` 与 Floating 底色几乎相同）              |
 | `--surface-grouped-canvas`         | `--background`                  | `--surface-l3`            | Overlay（设置窗口）内分组列表背后的画布；亮色下 `--surface` 与 Overlay 同为白色，没有该画布分组卡片不可见，owner `window-frame.css` |
 | `--foreground`                     | `#1D1D1F`                       | `#F5F5F7`                 | 正文与标题                                                                                                                          |
 | `--muted`                          | `#66666B`                       | `#A1A1A6`                 | 次要文字（≥4.5:1，含填充底）                                                                                                        |
@@ -177,7 +178,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 - 窗口尺寸：`--window-apps-width/height`（640×640）、`--window-notes-width/height`（960×720）、`--window-ai-width/height`（960×720）、`--window-settings-width/height`、`--window-trash-width/height` 为 1440×900 下的桌面初始矩形，见 [C1 / C2 / C3](#c1设置与回收站窗口)；`--workspace-width`（400）只作为提示与菜单文本的宽度上限。
 - 图标：`--icon-sm/md/lg` = 14/16/20，Lucide 默认描边。
 
-**圆角阶梯登记。** `border-radius` 只能引用本表的 Token，或 `0`、`999px`、`50%`、`inherit`；允许 `calc(<登记 Token> ± Npx)` 表达同心内缩，其他 `calc()` 不允许。名称为 `--radius`、`--radius-*` 或 `--*-radius` 的 Token 必须登记于此，在哪个 CSS 文件定义都一样。别名与其目标同值，新代码优先使用目标 Token。
+**圆角阶梯登记。** `border-radius` 只能引用本表的 Token，或 `0`、`999px`、`50%`、`inherit`；允许 `calc(<登记 Token> ± Npx)` 表达同心内缩，其他 `calc()` 不允许。名称为 `--radius`、`--radius-*` 或 `--*-radius` 的 Token 必须登记于此，在哪个 CSS 文件定义都一样。别名与其目标同值，新代码优先使用目标 Token。圆角容器内贴着内边距的圆角子项取“容器圆角 − 内边距”：菜单项与建议项 `calc(var(--radius) - 4px)` 或等值的 `--control-radius`，分段 / Tab 选项 `--control-radius` − 2，Dock 项与撤销提示内按钮 `calc(var(--radius-lg) - 4px)`，AI 图标候选图 `calc(var(--radius) - 8px)`；附件错误条取 `--radius`，使内缩 4px 的关闭按钮保持 `--control-radius`。子项不触及容器圆角（居中的标题栏按钮、首页搜索框内控件、网格图块）或圆角按比例缩放（文件夹缩略图）时不适用。
 
 | Token                     | 值                                                                                   | 用途                                                                                                                                                        |
 | ------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -250,7 +251,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `components/ui/primitives.css` 统一拥有。不另造 Button / Dialog / Menu / Tabs / Toast。
 
-- **Button**：省略 `variant` 时默认 `outline`（`.button--subtle`，`--surface-soft` 填充、无描边，作为次要操作与安全默认，避免未传参误建多个主按钮）；显式 `variant="default"` 为 primary（`.button--primary`，强调色填充，每区域最多一个）；`ghost`（`.button--ghost`，透明，工具栏与图标按钮）；`destructive`（`.button--danger`，普通态为危险文字色配 12% 危险色浅底，仅在 `AlertDialog` 确认对话框内实色填充 `--danger`）；`link`（`.button--link`，强调色文字、无内边距，粗指针命中高 ≥ 44px）；`content`（`.button--content`，块级透明、继承字号与字色、允许换行、最小 44×44 命中区，用于会话列表项与搜索结果等内容消费触发器，而非传统动作按钮）。常规按钮的 `size` 是单选：`default` 高 36、`sm` 高 28、`icon` 为 36 方形；粗指针下 `default` / `icon` 保持可见尺寸，命中区由共享规则扩展到 44×44（见[默认交互实现](#默认交互实现)），`sm` 所在的紧凑工具栏容不下扩展区，可见放大到 44。`link` 与 `content` 的尺寸另按上述变体规则覆盖。
+- **Button**：省略 `variant` 时默认 `outline`（`.button--subtle`，`--surface-soft` 填充、无描边，作为次要操作与安全默认，避免未传参误建多个主按钮）；显式 `variant="default"` 为 primary（`.button--primary`，强调色填充，每区域最多一个）；`ghost`（`.button--ghost`，透明，工具栏与图标按钮）；`destructive`（`.button--danger`，普通态为危险文字色配 12% 危险色浅底，仅在 `AlertDialog` 确认对话框内实色填充 `--danger`）；`link`（`.button--link`，强调色文字、无内边距，粗指针命中高 ≥ 44px）；`content`（`.button--content`，块级透明、继承字号与字色、允许换行、最小 44×44 命中区，用于会话列表项与搜索结果等内容消费触发器，而非传统动作按钮）。常规按钮的 `size` 是单选：`default` 高 36、`sm` 高 28、`icon` 为 36 方形；粗指针下 `default` / `icon` 保持可见尺寸，命中区由共享规则扩展到 44×44（见[默认交互实现](#默认交互实现)），`sm` 所在的紧凑工具栏容不下扩展区，可见放大到 44。`link` 与 `content` 的尺寸另按上述变体规则覆盖。按压时缩放到 `.97`（`sm` 为 `.98`），`link`、`content` 与禁用按钮不缩放；缩放用独立的 `scale` 属性，与 feature 的 `transform` 叠加而不覆盖，随 `--motion-fast` 过渡，reduced-motion 下取消。hover 底色只在 `(hover: hover)` 下生效，触屏点按后不残留。
 - **Input / Textarea / Select**：外观由 `primitives.css` 唯一拥有，分三种呈现。
   - **独立字段**（默认）：`--surface-solid` 底 + 1px `--field-border`；仅在 `(hover: hover)` 下 hover 加深为 `--field-border-hover`。聚焦时边框变为 `--ring` 并加 1px 内描边（`--shadow-field-focus`），合计 2px；无效态为 1px `--danger`，聚焦时 2px `--danger`（`--shadow-field-invalid-focus`）；禁用为 50% 不透明。过渡覆盖 `border-color`、`box-shadow`，reduced-motion 下取消；`forced-colors: active` 下聚焦另显示系统色 outline（A7）。
   - **搜索 / 筛选框**（`<Input variant="search">`）：属于工具栏控件，`--surface-soft` 填充、无可见边框，聚焦与无效态同独立字段。用于笔记侧栏搜索、AI 会话侧栏筛选、会话内搜索与管理页用户搜索；首页搜索框是 Material 表面，不属于此类。
@@ -268,7 +269,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 - **色点选择**：强调色使用 24px 圆点，选中显示外环；名称只在 `aria-label` 与 tooltip。首个圆点是“跟随壁纸”：显示当前派生色并带图片字形，表示来源而非固定颜色。十项按五项一组分为两组：设置行内空间充足时排列一行，空间不足时换为两行，避免窗口 Host 收窄后出现孤点；<640px 时为分组行下方的整行五列均分网格；首页顶栏强调色弹层内固定为两行。粗指针命中区至少 44px。`AccentSwatches`（`web/src/components/searcher/AccentPicker.tsx` + `semantic.css`）拥有分组，设置页与顶栏弹层共用；验证跨组键盘导航及视口和 Host 收窄。
 - **空状态**：默认一句话与一个主要操作，居中，不加装饰性插图与卡片。需要解释原因、权限或恢复路径时允许补充信息及有明确用途的次要操作，保持主次层级，不以固定句数或操作数量牺牲清晰度。
 - **Toast / 撤销**：底部居中材质胶囊；破坏性操作用 AlertDialog 二次确认，软删除给撤销。
-- **菜单**：`⋯` 触发；危险项置底、红色、前有分隔线。互斥选择（如搜索引擎）用单选项，当前项显示勾号。
+- **菜单**：`⋯` 触发；危险项置底、红色、前有分隔线。互斥选择（如搜索引擎）用单选项，当前项显示勾号，不依赖底色。高亮项（指针悬停或键盘移动）为中性底 `--surface-highlight`，文字保持 `--foreground`，图标由 `--muted` 变为 `--foreground`；危险项高亮为 12% 危险色浅底、文字保持 `--danger`（同 `.button--danger`）。中性底不足 3:1，键盘移动时由焦点指示补足：菜单项 `:focus-visible` 显示 2px `--ring` 内描边（负 offset，不改行高）；Base UI 也会聚焦指针下的项，键盘打开后浏览器仍把它判为 `:focus-visible`，因此指针所在项只显示底色。搜索建议的焦点留在输入框（`aria-activedescendant`），由组件记录高亮来源，键盘产生的高亮显示同一内描边（`data-highlight-source="keyboard"`），指针悬停只有底色。
 - **笔记编辑器外壳与状态条**：标题行只放标题输入、大纲、历史、更多操作及冲突入口；底部状态信息不占独立行：正文滚动区延伸到编辑器底边，左下模式切换与右下字数 / 保存状态固定在底角（底部内缩 `--space-2`，左右 `--space-4`，底色同窗口表面），正文末尾与分页末页下方预留 `--document-status-clearance`，滚到底时不被遮挡。笔记窗口体不保留底部页边距，侧栏底部回收站入口上下各 `--space-2`（分隔线 → 入口 → 窗口底边对称）；状态条与该入口同一底部内缩、同一行高判定（仅“主指针精细且视口 ≥640px”取紧凑 28px，其余 44px，与侧栏条目一致），三者同一中线，触屏笔记本（主指针精细 + 存在触屏）亦然。紧凑模式图标以扩大的命中区保留 44px 目标；粗指针下侧栏调宽区覆盖编辑区左缘，止于底栏行之上，不遮挡模式图标。左侧模式 icon 打开 Popover 选择编辑 / 分页 / 源码，当前模式有可访问名称、各选项有 `aria-pressed`，选择后收起，Escape 关闭并返回焦点；加载期间分页不可选。格式 icon 控制工具栏，折叠时按钮不渲染、快捷键仍可用，工具栏内焦点在折叠后返回格式 icon。右侧显示字数 / 阅读时间、分页页数与 `role="status"` 保存状态。
   - 编辑器标题行允许换行：窄编辑器（容器宽 <640px）中标题保持至少 `--control-touch-target` 的 3 倍宽，右侧图标组换到下一行右对齐，不挤压标题。编辑器底部角落状态语义：左为当前模式图标，悬停（或点击 / 点按）时在同一角落底色内向右展开其余两种模式按钮；展开时当前模式图标取选中底色（`outline` 变体），当前模式只出现一次，所有按钮与状态行等高，右为字数 / 阅读时间 / 页数 / 保存状态，不放格式开关；格式工具栏展开时收起 chevron（`ChevronUp`）位于工具栏容器第一行右端，折叠时“Aa”（`Type`）按钮位于标题行右侧图标组最左，`aria-pressed` 反映展开。工具栏与大纲展开偏好按设备和账号隔离。工具栏未设置时窗口 <768px 或粗指针默认折叠，否则展开；用户设置后使用保存值。大纲默认关闭，源码视图禁用；窗口 Host 实测宽度 <768px 为窗口内右抽屉，≥768px 按编辑区容量显示并排侧栏或非模态右缘 Overlay，详见 C2。
 - **应用图标**：桌面 48px、移动 44px，格宽与间距不随图标变化。服务端将满版不透明正方形铺满 256px 画布；透明或半透明边缘的图形保留白底与每侧约 20% 内边距。`WebAppGlyph` 是非交互呈现 owner，`WebAppIcon` 只添加启动/排序交互。无可用图标时使用按 hostname 派生的稳定色相浅底（HSL 45% / 90%）与固定深墨色 `#1d1d1f`，字重 400；这是域名身份色而非强调色，明暗主题保持同一对比度。`iconFallback.ts` 拥有运行时颜色，`presentation.ts` 拥有图像画布；对比度与满版/透明/半透明测试分别保护这两个边界。
@@ -442,8 +443,8 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 1. **交互语义**
    - primary：primary 按钮、默认 Badge；每个区域最多一个 primary 按钮。
-   - 选中 / 激活 / 高亮：开关、复选框、单选点、滑块已选段、菜单与建议列表的高亮项、活动状态点。
-   - 焦点环、链接。
+   - 选中 / 激活：开关、复选框、单选点、滑块已选段、标题栏按下的切换按钮、活动状态点。菜单与建议列表的高亮是中性底，不用强调色（见 [组件语法](#组件语法) 菜单）。
+   - 焦点环（含菜单与建议列表键盘高亮的内描边）、链接。
    - 拖放反馈：整理模式下可拖拽提示、拖入文件夹的目标提示。
 2. **色样**：强调色选择与设计实验室中展示强调色本身的色块。
 
@@ -465,8 +466,6 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 | 选中 / 激活 | `web/src/components/ui/primitives.css`     | `[data-slot="checkbox"][data-checked]`                                     |
 | 选中 / 激活 | `web/src/components/ui/primitives.css`     | `.radio-item[data-checked] .radio-circle`                                  |
 | 选中 / 激活 | `web/src/components/ui/primitives.css`     | `.slider-range`                                                            |
-| 选中 / 高亮 | `web/src/components/ui/primitives.css`     | `.menu-item[data-highlighted]`                                             |
-| 选中 / 高亮 | `web/src/components/searcher/search.css`   | `.suggestion-item.active, .suggestion-item[aria-selected="true"]`          |
 | 选中 / 激活 | `web/src/components/searcher/apps.css`     | `.app-ai-candidate-card.is-selected .app-ai-candidate-radio-dot`           |
 | 选中 / 激活 | `web/src/app/settings.css`                 | `.settings-preset-slider__mark--active .settings-preset-slider__mark-tick` |
 | 选中 / 激活 | `web/src/features/ask/ask-workspace.css`   | `.ask-composer__active-dot`                                                |
@@ -500,6 +499,8 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 登录用户的设置 / 账户与回收站是非模态窗口，首页仍为唯一桌面；应用与笔记自 C2、AI 自 C3 起同样是窗口（见下节）。窗口消费 Overlay 实色 `--surface-l3` 与 `--shadow-l3`，MRU 通过同层 DOM 顺序置顶，窗口层使用 `--elevation-workspace`，任务栏及真正模态、菜单和提示继续消费各自全局层级。背景窗口不进入 Tab 顺序，首个指针操作同时激活和作用于目标；设置、回收站与 AI 不响应窗口层 Escape。
 
 `tokens.css` 拥有 `--window-settings-width/height`（840×680）、`--window-trash-width/height`（880×640）和 `--window-min-width/height`（320×240），以及工作区边距 `--window-margin`：默认 `--space-4`（16px）；<768px 为 `--space-2`（8px，手机窗口四周内缩，与任务栏 / 悬浮球之间同为 8px），窗口阴影改用 `--shadow-l2`；高度 ≤480px 且宽度 ≥768px 为 `--space-1`（4px）。边距四边均适用，含任务栏 / 悬浮球一侧，工作区从可见连接提示条下沿开始；全屏笔记（`inset: 0`）不受影响。标题栏按主指针分档（与编辑器状态条的紧凑判定同为 `(hover: hover) and (pointer: fine)`）：精细主指针下高 `--control-height` 加 hairline（37），标题栏按钮与工具栏放入的图标按钮可见 `--control-compact-height` 28；其余高 `--control-touch-target` 44，按钮可见 `--control-height` 36。存在触屏时（含触屏笔记本）按钮的命中区由共享规则扩展到 44，按钮间距与末端内边距随之取（44 − 按钮尺寸）及其一半，相邻命中区相接不重叠、末个止于窗口边缘。窗口几何只消费 Token 与实测矩形，不依赖标题栏高度。键盘步长消费 `--space-4`，Shift 微调消费 `--space-1`。`features/windowing/WindowFrame.tsx` 是几何 owner：按实测任务栏 / 悬浮球、安全区和视口投影普通矩形，保存矩形不因临时夹取而改写；<1024px 或空间不足时为单活动大窗口，此时标题栏只有最小化与关闭，操作菜单“⋯”仅在自由窗口生效时出现。Host 实测宽度决定设置与回收站的紧凑布局。精细指针可拖动边角；触屏通过窗口菜单选择边角后拖动标题栏，抬起提交、系统取消触摸还原，操作栏的取消 / 完成按钮使用共享 Button 和 44px 命中区。键盘调整可提交或撤销，且不截取编辑控件按键。
+
+标题栏内的所有图标按钮（窗口自身的窗口菜单、最小化、最大化 / 还原、关闭，以及 feature 通过工具栏 portal 放入的图标按钮，如笔记的全屏编辑）共用一套颜色语法，owner 为 `window-frame.css`：静止 `--muted`；可悬停指针 hover 时 `--surface-soft` 底与 `--foreground`，按下或其菜单打开时（`[data-popup-open]`）`--foreground`；切换按钮按下（`aria-pressed="true"`）为 `--accent-soft` 底与 `--accent` 字形，与任务栏活动入口一致。
 
 滚动条由 `global.css` 统一：默认隐藏（滑块透明），滚动时显示 `--scrollbar-thumb`，停止滚动 800ms 后收起（`design-system/scroll-activity.ts` 在滚动目标上设置 / 清除 `data-scrolling`；contenteditable 内部节点不标记），指针移到滑块上换为 `--scrollbar-thumb-hover`，轨道透明，宽度 `--scrollbar-size`。Chromium 仅设置标准属性时在 Windows 上仍保留箭头按钮，因此用 `::-webkit-scrollbar`（隐藏 button）实现，仅限精细指针，触屏保留系统 overlay 滚动条；不支持该伪元素的浏览器（Firefox）退回 `scrollbar-width: thin` 并在滚动或悬停时显示滑块。滑块是弱化的辅助视觉，不承诺对比度下限；需要完全隐藏滚动条的容器按各自 owner 设置 `scrollbar-width: none`。
 
@@ -552,6 +553,8 @@ AI 问答是由同一 `WindowFrame` 呈现的窗口（`data-window-id="ai"`，�
 Canvas 为唯一桌面；普通窗口消费 Overlay 实色与 `--shadow-l3`，属于非模态窗口层，以 MRU 顺序置顶，不以阴影表示 z 顺序。Dock 与窗口层均可操作；窗口自身菜单、Popover 及其 portal 归属该窗口；全局 modal backdrop 和 Dialog/AlertDialog 阻断所有窗口及 Dock，提示与菜单使用既有对应层级。后续实现须在 `tokens.css` 登记窗口与 Dock 的全局层级关系，并保证窗口局部 MRU 不跨越全局 modal、Popover、menu、suggestions 和 toast 的层级边界，不直接复用局部 z 值作为全局层。后台提示不抢焦点。
 
 EscapeLayerStack 为唯一 owner，每次只处理可见活动窗口的最上层：菜单/对话框 → 窗口子视图、全屏笔记或首页回答卡片 → 窗口层；IME 合成不处理。窗口层中应用、笔记 Escape 最小化，不销毁；AI、设置、回收站不响应。关闭一层后焦点回触发控件，失效则依次回活动窗口、窗口列表或 Dock、首页搜索。新窗口焦点进入标题或首控件，恢复优先回上次可用焦点；非模态窗口无全局焦点陷阱。
+
+页面加载（直达窗口 URL 或刷新）恢复窗口时焦点同样进入标题栏，但此时文档尚未收到任何输入，浏览器会把这次程序化聚焦判为 `:focus-visible`；标题栏为此带 `data-focus-origin="restore"`，不显示焦点环，第一次按键或焦点离开即清除。判定依据是窗口框架挂载后是否收到过 `pointerdown` / `keydown`（框架随窗口会话挂载），不用 `navigator.userActivation`：Chromium 在刷新与同源导航后保留粘性激活。鼠标打开不显示焦点环，键盘打开照常显示，落点不变。
 
 标题栏提供具名窗口列表、最小化、最大化/还原、关闭，自由窗口生效时另有操作菜单；仅空白或专用区可拖动，边角可调整大小。菜单提供键盘移动和选择边/角调整：方向键 `--space-4`，Shift 微调 `--space-1`，Enter 提交，Escape 恢复原矩形并播报。平板和手机不显示拖动边框、最大化与操作菜单。
 
