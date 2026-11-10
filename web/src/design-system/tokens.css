@@ -346,7 +346,9 @@
     --glass-sheen-peak: 6%;
 }
 
-/* Each palette owns both themes; color-scheme selects the light-dark pair. */
+/* Each palette owns both themes; color-scheme selects the light-dark pair.
+   `--accent-hc*` is the palette's high contrast pair (accent text 7:1 on every
+   high contrast surface), read only under `data-contrast="more"`. */
 :root,
 [data-accent="blue"] {
     --accent: light-dark(#1d4ed8, #60a5fa);
@@ -354,6 +356,9 @@
     --accent-active: light-dark(#172554, #bfdbfe);
     --accent-foreground: light-dark(#ffffff, #090d16);
     --masthead-accent-text: light-dark(#112f82, #90c0fc);
+    --accent-hc: light-dark(#0d36b2, #99c6ff);
+    --accent-hc-hover: light-dark(#021b9b, #c0dcff);
+    --accent-hc-active: light-dark(#01007c, #e7f1ff);
 }
 [data-accent="cyan"] {
     --accent: light-dark(#0e7490, #22d3ee);
@@ -361,6 +366,9 @@
     --accent-active: light-dark(#164e63, #a5f3fc);
     --accent-foreground: light-dark(#ffffff, #042f2e);
     --masthead-accent-text: light-dark(#084656, #64e0f3);
+    --accent-hc: light-dark(#004d61, #28d6f1);
+    --accent-hc-hover: light-dark(#003949, #76e9ff);
+    --accent-hc-active: light-dark(#002632, #caf6ff);
 }
 [data-accent="teal"] {
     --accent: light-dark(#0f766e, #2dd4bf);
@@ -368,6 +376,9 @@
     --accent-active: light-dark(#134e4a, #99f6e4);
     --accent-foreground: light-dark(#ffffff, #042f2e);
     --masthead-accent-text: light-dark(#094742, #6ce1d2);
+    --accent-hc: light-dark(#004f49, #36d9c4);
+    --accent-hc-hover: light-dark(#003a36, #56f0db);
+    --accent-hc-active: light-dark(#002724, #a7ffef);
 }
 [data-accent="violet"] {
     --accent: light-dark(#6d28d9, #a78bfa);
@@ -375,6 +386,9 @@
     --accent-active: light-dark(#4c1d95, #ddd6fe);
     --accent-foreground: light-dark(#ffffff, #1e1035);
     --masthead-accent-text: light-dark(#411882, #c1aefc);
+    --accent-hc: light-dark(#5722ad, #c8baff);
+    --accent-hc-hover: light-dark(#450094, #ddd6ff);
+    --accent-hc-active: light-dark(#31006d, #f4f1ff);
 }
 [data-accent="orange"] {
     --accent: light-dark(#c2410c, #fb923c);
@@ -382,6 +396,9 @@
     --accent-active: light-dark(#7c2d12, #fed7aa);
     --accent-foreground: light-dark(#ffffff, #2a1205);
     --masthead-accent-text: light-dark(#742707, #fcb377);
+    --accent-hc: light-dark(#802500, #ffb27b);
+    --accent-hc-hover: light-dark(#621a00, #ffd2b3);
+    --accent-hc-active: light-dark(#461000, #fff0e7);
 }
 [data-accent="rose"] {
     --accent: light-dark(#be123c, #fb7185);
@@ -389,6 +406,9 @@
     --accent-active: light-dark(#881337, #fecdd3);
     --accent-foreground: light-dark(#ffffff, #2f0510);
     --masthead-accent-text: light-dark(#720b24, #fc9caa);
+    --accent-hc: light-dark(#900029, #ffaeb5);
+    --accent-hc-hover: light-dark(#70001e, #ffd0d4);
+    --accent-hc-active: light-dark(#510013, #fff1f2);
 }
 [data-accent="emerald"] {
     --accent: light-dark(#157e3d, #4ade80);
@@ -396,6 +416,9 @@
     --accent-active: light-dark(#14532d, #bbf7d0);
     --accent-foreground: light-dark(#ffffff, #052e16);
     --masthead-accent-text: light-dark(#0d4c25, #80e8a6);
+    --accent-hc: light-dark(#005223, #48dc7e);
+    --accent-hc-hover: light-dark(#003d18, #64f494);
+    --accent-hc-active: light-dark(#00290e, #b2ffc5);
 }
 [data-accent="amber"] {
     --accent: light-dark(#b25209, #fbbf24);
@@ -403,6 +426,9 @@
     --accent-active: light-dark(#78350f, #fde68a);
     --accent-foreground: light-dark(#ffffff, #2e1905);
     --masthead-accent-text: light-dark(#6b3105, #fcd266);
+    --accent-hc: light-dark(#763200, #f5ba17);
+    --accent-hc-hover: light-dark(#5a2500, #ffd57c);
+    --accent-hc-active: light-dark(#401800, #fff0d3);
 }
 [data-accent="mono"] {
     --accent: light-dark(#27272a, #e4e4e7);
@@ -410,13 +436,16 @@
     --accent-active: light-dark(#09090b, #ffffff);
     --accent-foreground: light-dark(#ffffff, #18181b);
     --masthead-accent-text: light-dark(#171719, #ececee);
+    --accent-hc: light-dark(#464646, #c4c4c4);
+    --accent-hc-hover: light-dark(#343434, #dbdbdb);
+    --accent-hc-active: light-dark(#232323, #f2f2f2);
     /* Achromatic surfaces retain their deliberately quieter mixes. */
     --accent-soft-mix: var(--accent-mono-soft-mix);
     --accent-subtle-mix: var(--accent-mono-subtle-mix);
     --accent-border-mix: var(--accent-mono-border-mix);
 }
 
-/* Wallpaper-derived palette: the derived light / dark pair is written over these
+/* Wallpaper-derived palette: the derived light / dark pairs are written over these
    defaults (the blue palette) on <html>; without a readable wallpaper it stays blue. */
 :root {
     --wallpaper-accent: light-dark(#1d4ed8, #60a5fa);
@@ -424,6 +453,9 @@
     --wallpaper-accent-active: light-dark(#172554, #bfdbfe);
     --wallpaper-accent-foreground: light-dark(#ffffff, #090d16);
     --wallpaper-accent-masthead: light-dark(#112f82, #90c0fc);
+    --wallpaper-accent-hc: light-dark(#0d36b2, #99c6ff);
+    --wallpaper-accent-hc-hover: light-dark(#021b9b, #c0dcff);
+    --wallpaper-accent-hc-active: light-dark(#01007c, #e7f1ff);
 }
 [data-accent="wallpaper"] {
     --accent: var(--wallpaper-accent);
@@ -431,18 +463,19 @@
     --accent-active: var(--wallpaper-accent-active);
     --accent-foreground: var(--wallpaper-accent-foreground);
     --masthead-accent-text: var(--wallpaper-accent-masthead);
+    --accent-hc: var(--wallpaper-accent-hc);
+    --accent-hc-hover: var(--wallpaper-accent-hc-hover);
+    --accent-hc-active: var(--wallpaper-accent-hc-active);
 }
 
 /*
  * High contrast themes (`data-contrast="more"`, set with the light or dark
  * base): the app's own palette, not an imitation of the system's forced
  * colours, which keep priority (`@media (forced-colors: active)` rules).
- * Pure canvas, opaque surfaces, visible boundaries and one highlight
- * (light deep violet, dark cyan) that replaces every accent use; colour
- * swatches keep their own palette through their `data-accent` scope.
- * Declared after the palettes so the highlight wins on <html> for every
- * accent preference. Pairs: VISUAL_LANGUAGE.md「高对比主题」, checked by
- * glass-contrast.test.ts.
+ * Pure canvas, opaque surfaces and visible boundaries; the accent is the
+ * chosen palette's high contrast pair (`--accent-hc*`, mapped in the block
+ * after these two), so every accent preference keeps its hue. Pairs:
+ * VISUAL_LANGUAGE.md「高对比主题」, checked by glass-contrast.test.ts.
  */
 [data-contrast="more"] {
     --background: #FFFFFF;
@@ -466,11 +499,6 @@
     --danger: #A4001D;
     --success: #00632E;
     --warning: #6B4700;
-    --accent: #37006E;
-    --accent-hover: #4B0096;
-    --accent-active: #24004A;
-    --accent-foreground: #FFFFFF;
-    --masthead-accent-text: var(--accent);
     --accent-soft-mix: 12%;
     --accent-subtle-mix: 18%;
     --accent-border-mix: 70%;
@@ -512,16 +540,46 @@
     --danger: #FF8F8F;
     --success: #6EEB9E;
     --warning: #FFD45C;
-    --accent: #1AEBFF;
-    --accent-hover: #7AF3FF;
-    --accent-active: #C2FAFF;
-    --accent-foreground: #000000;
-    --masthead-accent-text: var(--accent);
     --accent-soft-mix: 18%;
     --accent-subtle-mix: 24%;
     --surface-scrim: rgb(0 0 0 / 0.7);
     --shadow-l2: var(--shadow-frame), 0 4px 12px -6px rgb(0 0 0 / 0.6);
     --shadow-l3: var(--shadow-frame), 0 12px 28px -12px rgb(0 0 0 / 0.7);
+}
+
+/* High contrast accent: on <html> and on every nested `data-accent` scope (the
+   colour swatches and the top-bar chip), so a swatch shows the colour the
+   theme will use. Text on the fills is pure white / black. */
+[data-contrast="more"],
+[data-contrast="more"] [data-accent] {
+    --accent: var(--accent-hc);
+    --accent-hover: var(--accent-hc-hover);
+    --accent-active: var(--accent-hc-active);
+    --accent-foreground: light-dark(#FFFFFF, #000000);
+    --masthead-accent-text: var(--accent);
+}
+
+/* Theme preview tiles (ThemeChoices): colour samples of each theme, readable
+   under any theme. Each scene repeats that theme's --background, --surface,
+   --border-control (lines) and edge (--border; --border-control in high
+   contrast); glass-contrast.test.ts keeps them equal. */
+:root {
+    --theme-preview-light-canvas: #F4F4F5;
+    --theme-preview-light-surface: #FFFFFF;
+    --theme-preview-light-line: #86868B;
+    --theme-preview-light-edge: rgb(0 0 0 / 0.09);
+    --theme-preview-dark-canvas: #111113;
+    --theme-preview-dark-surface: #1C1C1F;
+    --theme-preview-dark-line: #747479;
+    --theme-preview-dark-edge: rgb(255 255 255 / 0.10);
+    --theme-preview-high-contrast-light-canvas: #FFFFFF;
+    --theme-preview-high-contrast-light-surface: #FFFFFF;
+    --theme-preview-high-contrast-light-line: #000000;
+    --theme-preview-high-contrast-light-edge: #000000;
+    --theme-preview-high-contrast-dark-canvas: #000000;
+    --theme-preview-high-contrast-dark-surface: #000000;
+    --theme-preview-high-contrast-dark-line: #FFFFFF;
+    --theme-preview-high-contrast-dark-edge: #FFFFFF;
 }
 
 /* User preference: pill-shaped search box and its inner controls. */

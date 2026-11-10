@@ -303,21 +303,129 @@
     }
 }
 
-/* Theme choices (ThemeChoices): the three base themes on one row, the two
-   high contrast themes on the next. A row wraps whole labels on narrow hosts
-   instead of scrolling sideways (1.4.10). */
+/* Theme choices (ThemeChoices): five preview tiles, a miniature window on each
+   theme's canvas over a short caption. The five stay on one row and shrink
+   together on narrow hosts rather than leaving one tile alone (1.4.10). The
+   preview colours are samples (`--theme-preview-*`), so they read the same
+   under every theme and keep their colours in forced colours. */
 [data-slot="radio-group"].theme-choices {
-    flex-direction: column;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, var(--space-10)));
+    gap: var(--space-2);
 }
-.theme-choices-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-control-gap) var(--space-4);
+.theme-choices .theme-choice {
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+    border-radius: var(--radius-sm);
+}
+.theme-choices .theme-choice .radio-circle {
+    display: none;
+}
+.theme-choice-preview {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--control-radius);
+    overflow: hidden;
+    transition: box-shadow var(--motion-fast) var(--ease-standard);
+}
+/* The hairline frame sits above the scenes so a light tile reads on a light surface. */
+.theme-choice-preview::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: var(--space-hairline) solid var(--border);
+    border-radius: inherit;
+}
+.theme-choice:hover .theme-choice-preview::after {
+    border-color: var(--border-control);
+}
+.theme-choice[data-checked] .theme-choice-preview {
+    box-shadow: var(--shadow-swatch-selected);
+}
+.theme-choice-scene {
+    position: absolute;
+    inset: 0;
+    background: var(--scene-canvas);
+}
+.theme-choice-scene[data-scene="light"] {
+    --scene-canvas: var(--theme-preview-light-canvas);
+    --scene-surface: var(--theme-preview-light-surface);
+    --scene-line: var(--theme-preview-light-line);
+    --scene-edge: var(--theme-preview-light-edge);
+}
+.theme-choice-scene[data-scene="dark"] {
+    --scene-canvas: var(--theme-preview-dark-canvas);
+    --scene-surface: var(--theme-preview-dark-surface);
+    --scene-line: var(--theme-preview-dark-line);
+    --scene-edge: var(--theme-preview-dark-edge);
+}
+.theme-choice-scene[data-scene="high-contrast-light"] {
+    --scene-canvas: var(--theme-preview-high-contrast-light-canvas);
+    --scene-surface: var(--theme-preview-high-contrast-light-surface);
+    --scene-line: var(--theme-preview-high-contrast-light-line);
+    --scene-edge: var(--theme-preview-high-contrast-light-edge);
+}
+.theme-choice-scene[data-scene="high-contrast-dark"] {
+    --scene-canvas: var(--theme-preview-high-contrast-dark-canvas);
+    --scene-surface: var(--theme-preview-high-contrast-dark-surface);
+    --scene-line: var(--theme-preview-high-contrast-dark-line);
+    --scene-edge: var(--theme-preview-high-contrast-dark-edge);
+}
+/* 跟随系统: the dark scene covers the lower-right half. */
+.theme-choice-scene + .theme-choice-scene {
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+.theme-choice-window {
+    position: absolute;
+    inset: 30% 0 0 22%;
+    display: grid;
+    align-content: start;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    background: var(--scene-surface);
+    border-block-start: var(--space-hairline) solid var(--scene-edge);
+    border-inline-start: var(--space-hairline) solid var(--scene-edge);
+    border-start-start-radius: var(--radius-sm);
+}
+.theme-choice-line {
+    height: var(--space-half);
+    border-radius: var(--radius-pill);
+    background: var(--scene-line);
+}
+.theme-choice-line + .theme-choice-line {
+    width: 60%;
+}
+.theme-choice-caption {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+    text-align: center;
+    white-space: normal;
+}
+.theme-choice[data-checked] .theme-choice-caption {
+    color: var(--foreground);
+    font-weight: var(--font-label-weight);
+}
+@media (prefers-reduced-motion: reduce) {
+    .theme-choice-preview {
+        transition: none;
+    }
+}
+@media (forced-colors: active) {
+    .theme-choice-preview {
+        forced-color-adjust: none;
+    }
+    .theme-choice[data-checked] .theme-choice-preview {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+    }
 }
 
 /* Accent swatches (AccentSwatches): two sets of five; settings.css decides
-   how the sets sit in a settings row, the top-bar picker stacks them. */
+   how the sets sit in a settings row, the top-bar picker wraps them. */
 .accent-swatch-set {
     display: flex;
     flex: none;
@@ -344,11 +452,11 @@
     height: var(--space-4);
 }
 
-/* Top-bar accent entry: a palette chip the size of a top-bar icon. It is a
+/* Top-bar appearance entry: a palette chip the size of a top-bar icon. It is a
    thumb (lighter than Material, hairline edge), the same grammar as the
    identity badge, so it reads on any wallpaper; its 2×2 dots show the current
    accent and its pressed shade beside the theme's foreground and muted ink. */
-.accent-picker-chip {
+.appearance-picker-chip {
     display: grid;
     grid-template-columns: repeat(2, calc(var(--icon-lg) / 4));
     place-content: center;
@@ -359,65 +467,89 @@
     background: var(--surface-control-thumb);
     box-shadow: var(--shadow-avatar-edge);
 }
-.accent-picker-chip-dot {
+.appearance-picker-chip-dot {
     aspect-ratio: 1;
     border-radius: var(--radius-pill);
 }
-.accent-picker-chip-dot[data-tone="accent"] {
+.appearance-picker-chip-dot[data-tone="accent"] {
     background: var(--accent);
 }
-.accent-picker-chip-dot[data-tone="accent-active"] {
+.appearance-picker-chip-dot[data-tone="accent-active"] {
     background: var(--accent-active);
 }
-.accent-picker-chip-dot[data-tone="foreground"] {
+.appearance-picker-chip-dot[data-tone="foreground"] {
     background: var(--foreground);
 }
-.accent-picker-chip-dot[data-tone="muted"] {
+.appearance-picker-chip-dot[data-tone="muted"] {
     background: var(--muted);
 }
 /* The dots' colours are their content: forced colours keep them (A7). */
 @media (forced-colors: active) {
     .accent-swatch-color,
-    .accent-picker-chip-dot {
+    .appearance-picker-chip-dot {
         forced-color-adjust: none;
     }
 }
 
-/* Top-bar accent picker popover: title, the two swatch rows, then the current
-   name and the way to the full appearance settings. */
-[data-slot="popover-content"].accent-picker {
+/* Top-bar appearance popover: theme tiles, the accent swatches with the
+   current accent's name, then the way to the full appearance settings.
+   Sections are divided by full-bleed hairlines, not boxes. */
+[data-slot="popover-content"].appearance-picker {
     width: max-content;
+    max-width: calc(100vw - 2 * var(--space-4));
     display: grid;
     gap: var(--space-3);
 }
-.accent-picker-title {
+.appearance-picker-section {
+    display: grid;
+    gap: var(--space-2);
+}
+.appearance-picker-section + .appearance-picker-section {
+    padding-block-start: var(--space-3);
+    border-block-start: var(--space-hairline) solid var(--border);
+}
+.appearance-picker-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
     margin: 0;
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     font-weight: var(--font-label-weight);
     color: var(--muted);
 }
-.accent-picker [data-slot="radio-group"][data-variant="swatch"] {
-    flex-direction: column;
-    flex-wrap: nowrap;
+.appearance-picker-heading > span {
+    font-weight: var(--font-body-weight);
 }
-.accent-picker-footer {
+/* The two swatch sets sit side by side when they fit, else stack. */
+.appearance-picker [data-slot="radio-group"][data-variant="swatch"] {
+    column-gap: var(--space-2);
+}
+/* With coarse-pointer swatches the popover outgrows the tiles; spread them. */
+.appearance-picker .theme-choices {
+    justify-content: space-between;
+}
+.appearance-picker-more {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    padding-block-start: var(--space-2);
-    border-block-start: var(--space-hairline) solid var(--border);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-}
-.accent-picker-footer a {
-    color: var(--muted);
-    text-decoration: none;
+    min-height: var(--control-compact-height);
+    padding-inline: var(--space-2);
+    margin-inline: calc(-1 * var(--space-2));
     border-radius: var(--control-radius);
+    color: var(--muted);
+    font-size: var(--font-body-size);
+    text-decoration: none;
 }
-.accent-picker-footer a:hover {
+.appearance-picker-more:hover {
+    background: var(--surface-highlight);
     color: var(--foreground);
+}
+.appearance-picker-more > svg {
+    width: var(--icon-sm);
+    height: var(--icon-sm);
 }
 
 /* Inline fields: borderless with the value right-aligned (macOS System Settings).

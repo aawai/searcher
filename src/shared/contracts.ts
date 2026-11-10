@@ -5,7 +5,7 @@ import type { WallpaperPresentation } from "./wallpaper-presentation.ts";
 export type { WallpaperPresentation };
 import type { EngineId } from "./engines.ts";
 
-/** 主题偏好，顺序即设置与顶栏循环顺序；高对比两项为应用自有配色，不模拟系统强制颜色。 */
+/** 主题偏好，顺序即主题图块顺序；高对比两项为应用自有配色，不模拟系统强制颜色。 */
 export const THEME_IDS = [
     "system",
     "light",

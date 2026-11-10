@@ -2,6 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import {
     type AccentPalette,
     deriveWallpaperAccent,
+    type HighContrastAccent,
     type WallpaperPixels,
 } from "./wallpaper-accent.ts";
 
@@ -116,6 +117,78 @@ function contrastFailures(theme: Theme, palette: AccentPalette): string[] {
     });
 }
 
+/**
+ * High contrast themes, against the live `[data-contrast="more"]` tokens:
+ * accent text 7:1 on every neutral surface, 4.5:1 on its tints, and the
+ * fixed foreground 4.5:1 on the three fills.
+ */
+function highContrastFailures(
+    theme: Theme,
+    palette: HighContrastAccent,
+): string[] {
+    const layers = [themeTokens(theme), declarations('[data-contrast="more"]')];
+    if (theme === "dark") {
+        layers.push(declarations('[data-theme="dark"][data-contrast="more"]'));
+    }
+    const tokens = new Map(layers.flatMap((layer) => [...layer]));
+    const foreground = declarations(
+        '[data-contrast="more"],\n[data-contrast="more"] [data-accent]',
+    ).get("--accent-foreground")!.match(/^light-dark\(([^,]+), ([^)]+)\)$/)!;
+    const color = (name: string) => {
+        const value = tokens.get(name)!;
+        const reference = value.match(/^var\((--[\w-]+)\)$/);
+        return hex(reference ? tokens.get(reference[1])! : value);
+    };
+    const accent = hex(palette.accent);
+    const checks: [string, Rgb, number][] = [
+        ...[
+            "--background",
+            "--surface",
+            "--surface-soft",
+            "--surface-highlight",
+            "--surface-grouped-canvas",
+            "--surface-l3",
+        ].map((name): [string, Rgb, number] => [name, color(name), 7]),
+        [
+            "--accent-soft",
+            mix(
+                accent,
+                percent(tokens, "--accent-soft-mix"),
+                color("--surface"),
+            ),
+            4.5,
+        ],
+        [
+            "--accent-subtle",
+            mix(
+                accent,
+                percent(tokens, "--accent-subtle-mix"),
+                color("--surface-soft"),
+            ),
+            4.5,
+        ],
+    ];
+    const fill = hex(foreground[theme === "light" ? 1 : 2]);
+    return [
+        ...checks.flatMap(([surface, rgb, minimum]) => {
+            const ratio = contrast(accent, rgb);
+            return ratio >= minimum ? [] : [
+                `${theme} high contrast accent on ${surface}: ${
+                    ratio.toFixed(2)
+                }:1 < ${minimum}:1`,
+            ];
+        }),
+        ...(["accent", "hover", "active"] as const).flatMap((slot) => {
+            const ratio = contrast(fill, hex(palette[slot]));
+            return ratio >= 4.5 ? [] : [
+                `${theme} high contrast text on ${slot}: ${
+                    ratio.toFixed(2)
+                }:1 < 4.5:1`,
+            ];
+        }),
+    ];
+}
+
 function solid(rgb: Rgb, width = 8, height = 8): WallpaperPixels {
     const data = new Uint8ClampedArray(width * height * 4);
     for (let i = 0; i < width * height; i++) {
@@ -217,6 +290,13 @@ for (const [name, pixels] of FIXTURES) {
         ];
         assertEquals(failures, []);
     });
+    Deno.test(`wallpaper accent ${name}: high contrast pair holds accent text 7:1 on high contrast surfaces`, () => {
+        const { highContrast } = deriveWallpaperAccent(pixels);
+        assertEquals([
+            ...highContrastFailures("light", highContrast.light),
+            ...highContrastFailures("dark", highContrast.dark),
+        ], []);
+    });
 }
 
 Deno.test("wallpaper accent: the same wallpaper always yields the same palette", () => {
@@ -239,14 +319,18 @@ Deno.test("wallpaper accent: the palette keeps the wallpaper's dominant hue", ()
             rgb.map((v) => v.toString(16).padStart(2, "0")).join("")
         }`;
         const derived = deriveWallpaperAccent(solid(rgb));
-        for (const theme of ["light", "dark"] as const) {
-            const distance = hueDistance(
-                hueOf(derived[theme].accent),
-                hueOf(source),
-            );
+        for (
+            const [theme, accent] of [
+                ["light", derived.light.accent],
+                ["dark", derived.dark.accent],
+                ["high contrast light", derived.highContrast.light.accent],
+                ["high contrast dark", derived.highContrast.dark.accent],
+            ]
+        ) {
+            const distance = hueDistance(hueOf(accent), hueOf(source));
             assert(
                 distance <= 20,
-                `${source} ${theme} accent ${derived[theme].accent} drifts ${
+                `${source} ${theme} accent ${accent} drifts ${
                     distance.toFixed(1)
                 }°`,
             );

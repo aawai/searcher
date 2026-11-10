@@ -1,17 +1,18 @@
 import { assert, assertEquals } from "@std/assert";
 import type { Page } from "playwright";
-import { ACCENT_PREFERENCES } from "@shared/contracts.ts";
+import { ACCENT_IDS } from "@shared/contracts.ts";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 // #383: the two high contrast themes are app palettes chosen from every theme
-// entry. They map every accent to one highlight, render glass solid, keep the
-// saved accent / glass / wallpaper, ignore the system scheme, and yield to
-// the system's forced colours.
+// entry. Each accent keeps its hue through its high contrast pair, glass
+// renders solid, the saved accent / glass / wallpaper are kept, the system
+// scheme is ignored, and the system's forced colours win.
 
-const HIGHLIGHT = {
-    light: "rgb(55, 0, 110)",
-    dark: "rgb(26, 235, 255)",
+/** 电光紫's high contrast pair (`--accent-hc` in tokens.css). */
+const VIOLET = {
+    light: "rgb(87, 34, 173)",
+    dark: "rgb(200, 186, 255)",
 } as const;
 
 function root(page: Page) {
@@ -64,7 +65,7 @@ async function savedPreferences(page: Page) {
     );
 }
 
-Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射与偏好保留 #383", async () => {
+Deno.test("高对比主题：设置、顶栏与快捷指令入口，强调色按所选色板生效与偏好保留 #383", async () => {
     const app = await startProductionApp();
     const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({ args: ["--no-sandbox"] });
@@ -87,7 +88,9 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射
 
         // Settings entry: the five themes in one group, high contrast light.
         const themes = await page.locator(`${settings} .theme-choices`)
-            .getByRole("radio").allTextContents();
+            .getByRole("radio").evaluateAll((radios) =>
+                radios.map((radio) => radio.getAttribute("aria-label"))
+            );
         assertEquals(themes, [
             "跟随系统",
             "浅色",
@@ -99,31 +102,31 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射
             .check();
         await waitForTheme(page, "light", true);
         const light = await root(page);
-        assertEquals(light.accent, HIGHLIGHT.light);
+        assertEquals(light.accent, VIOLET.light);
         assertEquals(light.canvas, "rgb(255, 255, 255)");
         assertEquals(light.themeColor, "rgb(255, 255, 255)");
         assertEquals(light.glass, "clear", "the saved glass tier is kept");
-        await page.getByText("高对比主题下以主题高亮色呈现").waitFor();
         await page.getByText("高对比主题下玻璃效果以实色显示").waitFor();
 
-        // Swatches keep their palette; selections take the highlight fill.
+        // Swatches and the chip show the colour the theme uses; selections
+        // take the accent fill.
         const violet = await page.locator(
             `${settings} .accent-swatch-color[data-accent="violet"]`,
         ).evaluate((dot) => getComputedStyle(dot).backgroundColor);
-        assertEquals(violet, "rgb(109, 40, 217)");
+        assertEquals(violet, VIOLET.light);
         assertEquals(
             await background(
                 page,
-                '.accent-picker-chip-dot[data-tone="accent"]',
+                '.appearance-picker-chip-dot[data-tone="accent"]',
             ),
-            "rgb(109, 40, 217)",
+            VIOLET.light,
         );
         assertEquals(
             await background(
                 page,
                 `${settings} [data-variant="segmented"] .radio-item[data-checked]`,
             ),
-            HIGHLIGHT.light,
+            VIOLET.light,
         );
         await page.waitForFunction(
             ({ selector, color }) =>
@@ -131,18 +134,11 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射
                     .backgroundColor === color,
             {
                 selector: `${settings} .settings-nav-item[aria-current="page"]`,
-                color: HIGHLIGHT.light,
+                color: VIOLET.light,
             },
         );
-        assertEquals(
-            await background(
-                page,
-                `${settings} .settings-nav-item[aria-current="page"]`,
-            ),
-            HIGHLIGHT.light,
-        );
 
-        // Every accent preference maps to the one highlight.
+        // Every preset keeps its own hue: nine distinct accents.
         const mapped = await page.evaluate(
             (accents) =>
                 accents.map((accent) => {
@@ -154,13 +150,12 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射
                     probe.remove();
                     return color;
                 }),
-            [...ACCENT_PREFERENCES],
+            [...ACCENT_IDS],
         );
-        assertEquals(new Set(mapped), new Set([HIGHLIGHT.light]));
+        assertEquals(new Set(mapped).size, ACCENT_IDS.length);
         await page.evaluate(() =>
             document.documentElement.dataset.accent = "violet"
         );
-
         // A system scheme change only moves 跟随系统.
         await page.emulateMedia({ colorScheme: "dark" });
         await waitForTheme(page, "light", true);
@@ -174,18 +169,18 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射
             ["high-contrast-light", "violet", "clear"],
         );
 
-        // Top bar: the cycle continues into high contrast dark, then wraps.
+        // Top bar: one click flips to high contrast dark and back.
         await page.goto(app.origin + "/");
         await waitForTheme(page, "light", true);
-        const toggle = page.getByRole("button", { name: /^切换主题，/ });
+        const toggle = page.getByRole("button", { name: /^切换到/ });
         assertEquals(
             await toggle.getAttribute("aria-label"),
-            "切换主题，当前：高对比浅色，下一个：高对比深色",
+            "切换到高对比深色",
         );
         await toggle.click();
         await waitForTheme(page, "dark", true);
         const dark = await root(page);
-        assertEquals(dark.accent, HIGHLIGHT.dark);
+        assertEquals(dark.accent, VIOLET.dark);
         assertEquals(dark.canvas, "rgb(0, 0, 0)");
         assertEquals(dark.themeColor, "rgb(0, 0, 0)");
         assertEquals(dark.colorScheme, "dark");
@@ -210,10 +205,10 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，高亮映射
         assert(frame.shadow.includes("rgb(255, 255, 255)"), frame.shadow);
         assertEquals(
             await toggle.getAttribute("aria-label"),
-            "切换主题，当前：高对比深色，下一个：跟随系统",
+            "切换到高对比浅色",
         );
         await toggle.click();
-        await waitForTheme(page, "light", false);
+        await waitForTheme(page, "light", true);
 
         // Quick commands switch straight to either high contrast theme.
         const search = page.locator("#search-query");

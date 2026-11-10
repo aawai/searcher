@@ -1,4 +1,5 @@
 import { assert } from "@std/assert";
+import { ACCENT_IDS, type AccentId } from "@shared/contracts.ts";
 import { WALLPAPER_READABILITY_MASKS } from "@shared/wallpaper-presentation.ts";
 
 const css = await Deno.readTextFile(new URL("./tokens.css", import.meta.url));
@@ -23,11 +24,16 @@ const THEMES: readonly Theme[] = [
 /** The high contrast opaque glass block: selector list as written in tokens.css. */
 const HIGH_CONTRAST_GLASS =
     '[data-contrast="more"],\n[data-contrast="more"] [data-glass]';
+/** The high contrast accent mapping onto the palette's `--accent-hc*` pair. */
+const HIGH_CONTRAST_ACCENT =
+    '[data-contrast="more"],\n[data-contrast="more"] [data-accent]';
 const TIERS = ["off", "soft", "regular", "clear"] as const;
 /** Tiers whose Material keeps the readability floor; `clear` is see-through by choice. */
 const MATERIAL_FLOOR_TIERS = ["off", "soft", "regular"] as const;
 /** WCAG 1.4.3: body and secondary information text. */
 const WCAG_AA_TEXT = 4.5;
+/** High contrast themes: accent text and links on neutral surfaces, WCAG 1.4.6 (AAA). */
+const HIGH_CONTRAST_ACCENT_TEXT = 7;
 /**
  * WCAG 1.4.3 large text: ≥24px, or ≥18.66px at weight ≥700. Searcher's
  * weights stop at 600, so only roles of ≥24px qualify (see LARGE_TEXT_ROLES).
@@ -122,15 +128,27 @@ function declarationsIn(
 }
 
 /**
- * Tokens for one theme and tier in source order: base scheme, high contrast
- * colours (after the palettes), the tier block, then the high contrast opaque
- * glass block that follows the tiers.
+ * Tokens for one theme and tier in source order: base scheme, the accent
+ * palette, high contrast colours (after the palettes) and their accent
+ * mapping, the tier block, then the high contrast opaque glass block that
+ * follows the tiers. `light-dark()` pairs resolve to the theme's scheme.
  */
-function cascade(theme: Theme, tier: string): Map<string, string> {
+function cascade(
+    theme: Theme,
+    tier: string,
+    accent: AccentId = "blue",
+): Map<string, string> {
     const layers = [declarations(":root")];
     if (theme.scheme === "dark") {
         layers.push(declarations('[data-theme="dark"]'));
     }
+    layers.push(
+        declarations(
+            accent === "blue"
+                ? ':root,\n[data-accent="blue"]'
+                : `[data-accent="${accent}"]`,
+        ),
+    );
     if (theme.highContrast) {
         layers.push(declarations('[data-contrast="more"]'));
         if (theme.scheme === "dark") {
@@ -138,10 +156,19 @@ function cascade(theme: Theme, tier: string): Map<string, string> {
                 declarations('[data-theme="dark"][data-contrast="more"]'),
             );
         }
+        layers.push(declarations(HIGH_CONTRAST_ACCENT));
     }
     layers.push(declarations(`[data-glass="${tier}"]`));
     if (theme.highContrast) layers.push(declarations(HIGH_CONTRAST_GLASS));
-    return new Map(layers.flatMap((layer) => [...layer]));
+    return new Map(
+        layers.flatMap((layer) => [...layer]).map(([name, value]) => {
+            const pair = value.match(/^light-dark\(([^,]+), ([^)]+)\)$/);
+            return [
+                name,
+                pair ? pair[theme.scheme === "light" ? 1 : 2] : value,
+            ];
+        }),
+    );
 }
 
 function resolve(tokens: Map<string, string>, name: string): string {
@@ -442,34 +469,13 @@ for (const theme of THEMES) {
                 }:1`,
             );
         }
-        const presets = [
-            "blue",
-            "cyan",
-            "teal",
-            "violet",
-            "orange",
-            "rose",
-            "emerald",
-            "amber",
-            "mono",
-        ];
-        for (const preset of presets) {
-            let color: Rgb;
-            if (theme.highContrast) {
-                color = hex(resolve(tokens, "--masthead-accent-text"));
-            } else {
-                const selector = preset === "blue"
-                    ? ':root,\n[data-accent="blue"]'
-                    : `[data-accent="${preset}"]`;
-                const value = declarations(selector).get(
+        for (const preset of ACCENT_IDS) {
+            const color = hex(
+                resolve(
+                    cascade(theme, "regular", preset),
                     "--masthead-accent-text",
-                )!;
-                const pair = value.match(
-                    /^light-dark\((#[0-9a-f]+), (#[0-9a-f]+)\)$/i,
-                );
-                assert(pair, `${preset}: invalid masthead accent ${value}`);
-                color = hex(pair[theme.scheme === "light" ? 1 : 2]);
-            }
+                ),
+            );
             const worst = Math.min(
                 ...mastheadVeil(theme).map((veil) => contrast(color, veil)),
             );
@@ -615,70 +621,109 @@ for (const theme of THEMES) {
 }
 
 /**
- * High contrast themes (VISUAL_LANGUAGE.md「高对比主题」): every opaque
- * surface holds text, the highlight that replaces the accent, boundaries and
- * focus indicators at their floors; there is no translucent layer to sample.
+ * High contrast themes (VISUAL_LANGUAGE.md「高对比主题」): for every accent
+ * preset, every opaque surface holds text, the palette's high contrast
+ * accent, boundaries and focus indicators at their floors; there is no
+ * translucent layer to sample. The accent holds AAA text (1.4.6) on the
+ * neutral surfaces and AA on its own tints.
  */
 for (const theme of THEMES.filter((candidate) => candidate.highContrast)) {
-    Deno.test(`high contrast ${theme.id}: text, highlight, boundaries and focus hold their floors on every surface`, () => {
-        const tokens = cascade(theme, "regular");
-        const color = (name: string) => hex(resolve(tokens, name));
-        const accent = color("--accent");
-        const tint = (mix: string, base: string) =>
-            over(accent, fillPercent(tokens, mix) / 100, color(base));
-        const surfaces: readonly [string, Rgb][] = [
-            ...[
-                "--background",
-                "--surface",
-                "--surface-soft",
-                "--surface-l3",
-                "--surface-grouped-canvas",
-                "--surface-highlight",
-                "--material-solid",
-            ].map((name) => [name, color(name)] as [string, Rgb]),
-            ["--accent-soft", tint("--accent-soft-mix", "--surface")],
-            ["--accent-subtle", tint("--accent-subtle-mix", "--surface-soft")],
-        ];
-        const floors: readonly [string, number][] = [
-            ["--foreground", WCAG_AA_TEXT],
-            ["--muted", WCAG_AA_TEXT],
-            // Links, accent text and the 2px focus ring (A1).
-            ["--accent", WCAG_AA_TEXT],
-            ["--danger", WCAG_AA_TEXT],
-            ["--success", WCAG_AA_TEXT],
-            ["--warning", WCAG_AA_TEXT],
-            // Checkbox, radio and switch outlines; switch off thumb.
-            ["--border-control", WCAG_AA_NON_TEXT],
-            // Window frames, dividers and the slider track.
-            ["--border", WCAG_AA_NON_TEXT],
-        ];
-        // Only text and the highlight sit on the accent tints (selected rows,
-        // the drop target); status colours and boundaries stay on neutrals.
-        const onTints = new Set(["--foreground", "--muted", "--accent"]);
-        for (const [name, floor] of floors) {
-            for (const [surface, rgb] of surfaces) {
-                if (!onTints.has(name) && surface.startsWith("--accent")) {
-                    continue;
+    Deno.test(`high contrast ${theme.id}: text, accent, boundaries and focus hold their floors on every surface for every preset`, () => {
+        for (const preset of ACCENT_IDS) {
+            const tokens = cascade(theme, "regular", preset);
+            const color = (name: string) => hex(resolve(tokens, name));
+            const accent = color("--accent");
+            const tint = (mix: string, base: string) =>
+                over(accent, fillPercent(tokens, mix) / 100, color(base));
+            const surfaces: readonly [string, Rgb][] = [
+                ...[
+                    "--background",
+                    "--surface",
+                    "--surface-soft",
+                    "--surface-l3",
+                    "--surface-grouped-canvas",
+                    "--surface-highlight",
+                    "--material-solid",
+                ].map((name) => [name, color(name)] as [string, Rgb]),
+                ["--accent-soft", tint("--accent-soft-mix", "--surface")],
+                [
+                    "--accent-subtle",
+                    tint("--accent-subtle-mix", "--surface-soft"),
+                ],
+            ];
+            const floors: readonly [string, number][] = [
+                ["--foreground", WCAG_AA_TEXT],
+                ["--muted", WCAG_AA_TEXT],
+                // Links, accent text and the 2px focus ring (A1).
+                ["--accent", HIGH_CONTRAST_ACCENT_TEXT],
+                ["--danger", WCAG_AA_TEXT],
+                ["--success", WCAG_AA_TEXT],
+                ["--warning", WCAG_AA_TEXT],
+                // Checkbox, radio and switch outlines; switch off thumb.
+                ["--border-control", WCAG_AA_NON_TEXT],
+                // Window frames, dividers and the slider track.
+                ["--border", WCAG_AA_NON_TEXT],
+            ];
+            // Only text and the accent sit on the accent tints (selected rows,
+            // the drop target), at AA; status colours and boundaries stay on
+            // neutrals.
+            const onTints = new Set(["--foreground", "--muted", "--accent"]);
+            for (const [name, floor] of floors) {
+                for (const [surface, rgb] of surfaces) {
+                    const onTint = surface.startsWith("--accent");
+                    if (onTint && !onTints.has(name)) continue;
+                    const ratio = contrast(color(name), rgb);
+                    const minimum = onTint ? WCAG_AA_TEXT : floor;
+                    assert(
+                        ratio >= minimum,
+                        `${preset}: ${name} on ${surface} gives ${
+                            ratio.toFixed(2)
+                        }:1`,
+                    );
                 }
-                const ratio = contrast(color(name), rgb);
+            }
+            // Accent fills: the selected segment, tab and navigation item, the
+            // checked switch and primary buttons. Their focus ring sits 2px
+            // out, so it is judged against the surfaces above, not the fill.
+            for (
+                const name of ["--accent", "--accent-hover", "--accent-active"]
+            ) {
+                const text = contrast(
+                    color("--accent-foreground"),
+                    color(name),
+                );
                 assert(
-                    ratio >= floor,
-                    `${name} on ${surface} gives ${ratio.toFixed(2)}:1`,
+                    text >= WCAG_AA_TEXT,
+                    `${preset}: text on ${name}: ${text.toFixed(2)}:1`,
                 );
             }
-        }
-        // Highlight fills: the selected segment, tab and navigation item, the
-        // checked switch and primary buttons. Their focus ring sits 2px out,
-        // so it is judged against the surfaces above, not against the fill.
-        for (const name of ["--accent", "--accent-hover", "--accent-active"]) {
-            const text = contrast(color("--accent-foreground"), color(name));
+            // Switch: the off thumb (--foreground) on its track.
+            const thumb = contrast(
+                color("--foreground"),
+                color("--surface-soft"),
+            );
             assert(
-                text >= WCAG_AA_TEXT,
-                `text on ${name}: ${text.toFixed(2)}:1`,
+                thumb >= WCAG_AA_NON_TEXT,
+                `switch thumb ${thumb.toFixed(2)}:1`,
             );
         }
-        // Switch: the off thumb (--foreground) on its track.
-        const thumb = contrast(color("--foreground"), color("--surface-soft"));
-        assert(thumb >= WCAG_AA_NON_TEXT, `switch thumb ${thumb.toFixed(2)}:1`);
+    });
+}
+
+for (const theme of THEMES) {
+    Deno.test(`theme preview ${theme.id}: the settings tile repeats the theme's own colours`, () => {
+        const tokens = cascade(theme, "regular");
+        const preview = (part: string) =>
+            resolve(tokens, `--theme-preview-${theme.id}-${part}`);
+        assert(preview("canvas") === resolve(tokens, "--background"));
+        assert(preview("surface") === resolve(tokens, "--surface"));
+        assert(preview("line") === resolve(tokens, "--border-control"));
+        assert(
+            preview("edge") ===
+                resolve(
+                    tokens,
+                    theme.highContrast ? "--border-control" : "--border",
+                ),
+        );
     });
 }
