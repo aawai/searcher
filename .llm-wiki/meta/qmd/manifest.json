@@ -90,6 +90,14 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/data-router-lifecycle.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/data-router-lifecycle.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/data-router-lifecycle",
+      "contentHash": "078c2716b666eaf67374b24e10f1eda8be8736846ec095aaf7aa43b937165d15",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/database-queue-serialization.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/database-queue-serialization.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -119,6 +127,30 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/dnd-kit-2d-grid-sorting-architecture",
       "contentHash": "d44ec409b914b74e05404031a11e2c75eea202cdb0dfe9f6a52db7203adf3aa5",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/field-encryption-and-key-management.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/field-encryption-and-key-management.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/field-encryption-and-key-management",
+      "contentHash": "a94f4a54cb98d2966c4557724488112dd79109799e107c43b6a964b1c86d2505",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/first-frame-theme-painting.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/first-frame-theme-painting.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/first-frame-theme-painting",
+      "contentHash": "1e2be0ffd6a5a1249f0bef5fe70baedac5f6e094a7bd450c97ef184296a1e53e",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/forced-colors-and-high-contrast-themes.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/forced-colors-and-high-contrast-themes.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/forced-colors-and-high-contrast-themes",
+      "contentHash": "799d3ac38831d30d2fc5f5182a4efc49de0698887af0c34aeb1b7b491ea7bea8",
       "role": "canonical",
       "type": "concept"
     },
@@ -162,6 +194,14 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/login-throttling-and-rate-limiting.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/login-throttling-and-rate-limiting.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/login-throttling-and-rate-limiting",
+      "contentHash": "9deb2584e4405d19617a543cc50849938c7c2b3e12ef0f9e9b816a7c82de6062",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/markdown-sanitization-with-rehype-sanitize.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/markdown-sanitization-with-rehype-sanitize.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -190,7 +230,15 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/offline-first-与-local-draft-持久化架构.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/offline-first-与-local-draft-持久化架构",
-      "contentHash": "9b79f669ab9458119614d41f20da513dd823054542581dc5235663071b1d3427",
+      "contentHash": "38ebeb197a56e239f724ca0bba6dbd574fd3c3d0b101ba87ec7b1ad5009ea3ee",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/openai-compatible-streaming-and-tool-calls.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/openai-compatible-streaming-and-tool-calls.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/openai-compatible-streaming-and-tool-calls",
+      "contentHash": "300a2cb5afeddca5253bc57e922bdfcddcd35ed1725919520fcc766b9792b229",
       "role": "canonical",
       "type": "concept"
     },
@@ -206,7 +254,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/password-hashing-and-pbkdf2-parameters.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/password-hashing-and-pbkdf2-parameters",
-      "contentHash": "22beabf854432a5f06f2eb68fcc6069b95a26288c9208c4aca3a3d17805d0f1e",
+      "contentHash": "7b10f6306181cd8b698bc047e2be97bc26e062209ca16f8db07eb5437e340a6e",
       "role": "canonical",
       "type": "concept"
     },
@@ -231,6 +279,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/pointer-target-size",
       "contentHash": "44644c035df309f423d8a2eada58bb993c6502c4f6fa6270042e43dfcee40233",
+      "role": "canonical",
+      "type": "concept"
+    },
+    "documents/canonical/concepts/prosemirror-transaction-origin-and-undo-history.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/prosemirror-transaction-origin-and-undo-history.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/prosemirror-transaction-origin-and-undo-history",
+      "contentHash": "956ebbaa46c7674adb8046c1e0513cd1f7c3625099ab4544a7917c858be4e7e7",
       "role": "canonical",
       "type": "concept"
     },
@@ -262,7 +318,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/route-level-code-splitting-dynamic-bundling.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/route-level-code-splitting-dynamic-bundling",
-      "contentHash": "78b9686754b7e5ec9aef3f2d0e9879e71f72aa2a78d178d1c5e70f1dea2dae4a",
+      "contentHash": "7d8001749929daf81140e95d76cb5382ffd81953dbce14ab8eaf46f525ec08a6",
       "role": "canonical",
       "type": "concept"
     },
@@ -274,11 +330,19 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/searxng-web-search-integration.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/searxng-web-search-integration.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/searxng-web-search-integration",
+      "contentHash": "3fb4ffa75345635757e77eeb325f5de169d239b027072cd2fd1cfa7ac0bb1e70",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/server-sent-events-sse-与实时事件流.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/server-sent-events-sse-与实时事件流.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/server-sent-events-sse-与实时事件流",
-      "contentHash": "28c5652c2d885da5cd283e43b28cd7dc2f452517e53435f070a7808e0151ca49",
+      "contentHash": "5ab2563dc08a5350e18b11ff2bc1e1d5ca00dd91dadd5325f194b38f9f3a4145",
       "role": "canonical",
       "type": "concept"
     },
@@ -286,7 +350,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/session-security-and-isolation.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/session-security-and-isolation",
-      "contentHash": "adc92f7109e215af37e8687044d8b91e2c8645338f37a48b940c10b8650bb24d",
+      "contentHash": "e159989f9fdc01bfc18d12d535ca48f326b73a2cc0d7cd2c6c12f0a44822f3aa",
       "role": "canonical",
       "type": "concept"
     },
@@ -338,6 +402,14 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/ssrf-and-outbound-fetch-boundaries.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/ssrf-and-outbound-fetch-boundaries.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/ssrf-and-outbound-fetch-boundaries",
+      "contentHash": "8512f400b4e5e6095d4c43d678b9bb25f623109988e2204ee78cff5f689090fd",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/tailwind-v4-css-first-architecture.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/tailwind-v4-css-first-architecture.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -358,7 +430,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/upload-validation-defense-in-depth.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/upload-validation-defense-in-depth",
-      "contentHash": "23c89fb10a4230646ab195310dbcd7dad71b35129537ff560cf3fe4b2940a39b",
+      "contentHash": "ae8a099644cdd4fe290b755e677bbe79993c7c73be7e8c00cf0a536245cfb958",
       "role": "canonical",
       "type": "concept"
     },
@@ -454,7 +526,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/searcher-项目.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/searcher-项目",
-      "contentHash": "6f953de89ddb4dcd29bd9a12589b38ce25ceb821661b6168c4088572112a0165",
+      "contentHash": "42e449c28fb5ad79f60aa5b4c496cb6947c80488f89f844be6a0676d604ad4c8",
       "role": "canonical",
       "type": "entity"
     },
@@ -1343,6 +1415,134 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/SRC-2026-11-06-003",
       "contentHash": "08f92a1c013ddbbc00ba3e64a97e77ec005b7aec8e3b54b10875cb0e361758b8",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-07-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-07-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-07-001",
+      "contentHash": "5ebed7a64e0aa360d874e1109b4c08b36e16c406e1bc380cd1378628f156b0a4",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-07-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-07-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-07-002",
+      "contentHash": "e6fc05accc974df10f06cd765309079d1f20013ce028ec184b9a81efbdc7f7e1",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-07-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-07-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-07-003",
+      "contentHash": "9efba296b2dfc4b4ffce0e42ab60e99dd84cbb98cd8cc74f0e5ceeb28d4b5546",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-07-004.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-07-004.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-07-004",
+      "contentHash": "01444502697ae05dafd0f8194df5951fd1921ab8b353f6cd0126b46020348ba8",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-07-005.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-07-005.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-07-005",
+      "contentHash": "f3cd52228e66fee6d80b57ca3e3634e1f7bff89bafd91867be89e7d0fb89de7f",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-08-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-08-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-08-002",
+      "contentHash": "e296496f24d6418675e56ef011487ec5b0819b2c9166c80b7883d85907526498",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-08-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-08-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-08-003",
+      "contentHash": "e82b358f8ea37a5c869a5d755bad9c1f649e0f3510e13f5ca5f8ca7772d13376",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-08-005.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-08-005.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-08-005",
+      "contentHash": "8a33b1405b5dcf00514884bf8c6171c193a2a85863119f2578a87b70ca69fc0d",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-08-006.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-08-006.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-08-006",
+      "contentHash": "81dfdfdfb846600cf15c119a987b0af72c72e6a202671b629fdf45667dc8933f",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-08-007.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-08-007.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-08-007",
+      "contentHash": "5ee55b5f8e496c4dc38999b4e81123108a72ad32a34cf802561ad99245b98444",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-09-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-09-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-09-001",
+      "contentHash": "92255be15f798333fb0110bf93d3057a800c745c4072c3430d829fe2a5277f20",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-09-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-09-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-09-002",
+      "contentHash": "386c2bb11f20923e5422072eed966fd7c74ceee68aba0bc03149997911ad3df3",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-09-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-09-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-09-003",
+      "contentHash": "d7128d5739d122173ffa84d6d6569b90a5bc39257e2ecfe62bbb3b78dc0c398e",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-09-004.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-09-004.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-09-004",
+      "contentHash": "6d80a1f28d4b21c325ebaad3950d7c3f464d10f1eea61c544ec8cf00dcbe67a5",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-09-005.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-09-005.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-09-005",
+      "contentHash": "57f7b3851986408f8f11ff4bd4adc83b6698bdbdb5f9af7aed4c851e7950c91a",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-09-006.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-09-006.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-09-006",
+      "contentHash": "aa48d2cd39810e73f055c9fa79848167a59c3b85d3ef1f907d9795e7385acfc3",
       "role": "evidence",
       "type": "source"
     },
@@ -2362,6 +2562,14 @@
       "role": "evidence",
       "type": "source"
     },
+    "documents/evidence/sources/obs-2026-11-06-issue-383-pr-d-pr-391-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-issue-383-pr-d-pr-391-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-06-issue-383-pr-d-pr-391-main",
+      "contentHash": "26dc9b160023ffadeba7a3419329394cc7caee3ddb867fb9a013f7182495a3a2",
+      "role": "evidence",
+      "type": "source"
+    },
     "documents/evidence/sources/obs-2026-11-06-pr-374-main.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-pr-374-main.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -2383,6 +2591,30 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-11-06-pr-386-main",
       "contentHash": "3df9ea78e2450bf3d8fa073d70a051e3972f86c23d845759bde8d4cb67942c1b",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-06-pr-392-main.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-06-pr-392-main.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-06-pr-392-main",
+      "contentHash": "b2160743e3cee55a24bbad6f3eaba189ded01675891af197986a4bac23eb0be8",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-10-0-1.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-10-0-1.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-10-0-1",
+      "contentHash": "7527f53c2137f2dff08b54ddf928aa69decd41741220d03e9d51a1b2dbc62d2b",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-10-a.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-10-a.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-10-a",
+      "contentHash": "81887d8bfd1dea1277a6ceffc244391a709572355f33d84a67b7951bc6a49c13",
       "role": "evidence",
       "type": "source"
     },

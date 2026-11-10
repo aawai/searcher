@@ -35,3 +35,4 @@ sources:
 - [[entities/hono-framework]]: 驱动 `/api/notes/events` 等流式接口的轻量 Web 框架。
 - [[sources/SRC-2026-09-27-003]]: Deno 官方 HTTP Server: Server-sent events 架构范式。
 - [AbortController and Request Cancellation in Searcher](/concepts/abortcontroller-and-request-cancellation.md): 流式问答的客户端中止与服务端取消传播。
+- [OpenAI-Compatible Streaming and Tool Calls](/concepts/openai-compatible-streaming-and-tool-calls.md): 上游 Provider SSE 解析、tool_call delta 累积与工具循环。

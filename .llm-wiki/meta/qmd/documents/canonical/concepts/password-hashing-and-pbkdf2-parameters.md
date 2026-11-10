@@ -28,4 +28,5 @@ sources:
 ## 关联
 
 - [Session Security and Isolation](/concepts/session-security-and-isolation.md)：会话令牌用 SHA-256 保存，与口令哈希使用不同机制；OWASP 会话指南明确高熵令牌不需要口令哈希算法。
+- [Field Encryption and Key Management](/concepts/field-encryption-and-key-management.md)：同一 `CryptoVault` 的 AES-GCM 字段加密与盲索引。
 - [Searcher 项目](/entities/searcher-项目.md)

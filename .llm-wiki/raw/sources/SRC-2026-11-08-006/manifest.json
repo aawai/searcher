@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-08-006",
+  "captured": "2026-11-08",
+  "packet_version": "1.0",
+  "title": "OpenAI TypeScript and JavaScript API Library",
+  "url": "https://raw.githubusercontent.com/openai/openai-node/master/README.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

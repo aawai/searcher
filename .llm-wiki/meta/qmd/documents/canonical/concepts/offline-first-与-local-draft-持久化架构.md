@@ -28,3 +28,4 @@ Offline-first 将应用外壳、业务数据与未同步草稿分别设计；外
 - [Browser Storage Persistence and Eviction](/concepts/browser-storage-persistence-and-eviction.md)
 - [IndexedDB 本地存储引擎](/entities/indexeddb-本地存储引擎.md)
 - [HTTP Cache and Service Worker Boundaries](/concepts/http-cache-and-service-worker-boundaries.md)
+- [ProseMirror Transaction Origin and Undo History](/concepts/prosemirror-transaction-origin-and-undo-history.md)

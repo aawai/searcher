@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-09-003",
+  "captured": "2026-11-09",
+  "packet_version": "1.0",
+  "title": "`prefers-contrast` CSS media feature",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-contrast",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

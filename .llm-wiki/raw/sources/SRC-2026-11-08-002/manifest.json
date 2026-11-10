@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-08-002",
+  "captured": "2026-11-08",
+  "packet_version": "1.0",
+  "title": "Authentication Cheat Sheet[¶](#authentication-cheat-sheet \"Permanent link\")",
+  "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

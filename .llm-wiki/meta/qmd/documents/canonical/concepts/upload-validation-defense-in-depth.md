@@ -43,3 +43,4 @@ sources:
 - [CSRF Defense Boundaries](/concepts/csrf-defense-boundaries.md)
 - [Content Security Policy Strict Deployment](/concepts/content-security-policy-strict-deployment.md)
 - [Session Security and Isolation](/concepts/session-security-and-isolation.md)
+- [SSRF and Outbound Fetch Boundaries](/concepts/ssrf-and-outbound-fetch-boundaries.md)：图标 URL 抓取的 `validateUrlForSafeFetch` 细节与已验证边界。

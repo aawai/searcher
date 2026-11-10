@@ -63,6 +63,7 @@ sources: [
 - 项目应用：[[entities/searcher-项目]]
 - 架构总览：[[syntheses/searcher-system-architecture]]
 - [XSS Sanitization and Trusted Types](/concepts/xss-sanitization-and-trusted-types.md)：输出编码、HTML 净化与 DOM sink 的独立防线。
+- [Login Throttling and Rate Limiting](/concepts/login-throttling-and-rate-limiting.md)：登录与注册的 IP/账号固定窗口限流、通用错误与 dummy hash 计时防护。
 
 ## 来源
 

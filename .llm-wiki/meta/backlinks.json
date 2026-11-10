@@ -1,7 +1,10 @@
 {
   "concepts/abortcontroller-and-request-cancellation": [
+    "concepts/openai-compatible-streaming-and-tool-calls",
     "concepts/server-sent-events-sse-与实时事件流",
-    "sources/SRC-2026-11-02-002"
+    "concepts/ssrf-and-outbound-fetch-boundaries",
+    "sources/SRC-2026-11-02-002",
+    "sources/SRC-2026-11-08-006"
   ],
   "concepts/accessible-grid-drag-keyboard-and-announcements": [
     "concepts/dnd-kit-2d-grid-sorting-architecture",
@@ -25,12 +28,14 @@
     "sources/SRC-2026-10-24-010"
   ],
   "concepts/backdrop-filter-backdrop-root": [
+    "concepts/forced-colors-and-high-contrast-themes",
     "concepts/reduced-motion-replacement-strategy",
     "concepts/wallpaper-accent-oklch-contrast-solver",
     "concepts/web-animations-api-runtime-architecture",
     "sources/SRC-2026-10-30-004"
   ],
   "concepts/browser-storage-persistence-and-eviction": [
+    "concepts/first-frame-theme-painting",
     "concepts/http-cache-and-service-worker-boundaries",
     "concepts/offline-first-与-local-draft-持久化架构",
     "concepts/pwa-service-worker-update-lifecycle",
@@ -95,6 +100,11 @@
     "sources/SRC-2026-10-27-004",
     "sources/css-var-fallback-consumer-value-boundary"
   ],
+  "concepts/data-router-lifecycle": [
+    "concepts/route-level-code-splitting-dynamic-bundling",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-07-005"
+  ],
   "concepts/database-queue-serialization": [
     "concepts/sqlite-fts5-fulltext-search",
     "concepts/sqlite-isolation-and-connection-boundaries",
@@ -145,6 +155,29 @@
     "sources/SRC-2026-09-25-026",
     "sources/SRC-2026-10-25-005"
   ],
+  "concepts/field-encryption-and-key-management": [
+    "concepts/openai-compatible-streaming-and-tool-calls",
+    "concepts/password-hashing-and-pbkdf2-parameters",
+    "concepts/ssrf-and-outbound-fetch-boundaries",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-07-002",
+    "sources/SRC-2026-11-07-004"
+  ],
+  "concepts/first-frame-theme-painting": [
+    "concepts/forced-colors-and-high-contrast-themes",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-09-006"
+  ],
+  "concepts/forced-colors-and-high-contrast-themes": [
+    "concepts/first-frame-theme-painting",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-09-001",
+    "sources/SRC-2026-11-09-002",
+    "sources/SRC-2026-11-09-003",
+    "sources/SRC-2026-11-09-004",
+    "sources/SRC-2026-11-09-005",
+    "sources/SRC-2026-11-09-006"
+  ],
   "concepts/hono-middleware-pipeline-request-intake": [
     "concepts/hono-security-middleware-vs-api-guard",
     "entities/hono-framework",
@@ -163,6 +196,7 @@
   "concepts/hono-security-middleware-vs-api-guard": [
     "concepts/content-security-policy-strict-deployment",
     "concepts/csrf-defense-boundaries",
+    "concepts/login-throttling-and-rate-limiting",
     "concepts/markdown-sanitization-with-rehype-sanitize",
     "entities/hono-framework",
     "sources/SRC-2026-10-31-001",
@@ -185,7 +219,14 @@
     "sources/SRC-2026-11-01-004",
     "sources/SRC-2026-11-01-005"
   ],
+  "concepts/login-throttling-and-rate-limiting": [
+    "concepts/session-security-and-isolation",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-08-002",
+    "sources/SRC-2026-11-08-003"
+  ],
   "concepts/markdown-sanitization-with-rehype-sanitize": [
+    "concepts/prosemirror-transaction-origin-and-undo-history",
     "concepts/xss-sanitization-and-trusted-types",
     "sources/SRC-2026-11-01-003"
   ],
@@ -215,12 +256,21 @@
   ],
   "concepts/offline-first-与-local-draft-持久化架构": [
     "concepts/browser-storage-persistence-and-eviction",
+    "concepts/first-frame-theme-painting",
+    "concepts/prosemirror-transaction-origin-and-undo-history",
     "concepts/pwa-service-worker-update-lifecycle",
     "entities/indexeddb-本地存储引擎",
     "sources/SRC-2026-09-25-037",
     "sources/SRC-2026-10-24-007",
     "sources/SRC-2026-10-28-005",
-    "sources/SRC-2026-11-04-003"
+    "sources/SRC-2026-11-04-003",
+    "sources/SRC-2026-11-08-007"
+  ],
+  "concepts/openai-compatible-streaming-and-tool-calls": [
+    "concepts/server-sent-events-sse-与实时事件流",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-08-005",
+    "sources/SRC-2026-11-08-006"
   ],
   "concepts/overscroll-containment-for-nested-scroll-areas": [
     "concepts/modal-layering-and-escape-dismissal",
@@ -230,8 +280,13 @@
     "sources/SRC-2026-10-31-005"
   ],
   "concepts/password-hashing-and-pbkdf2-parameters": [
+    "concepts/field-encryption-and-key-management",
+    "concepts/login-throttling-and-rate-limiting",
     "concepts/session-security-and-isolation",
-    "sources/SRC-2026-10-30-001"
+    "sources/SRC-2026-10-30-001",
+    "sources/SRC-2026-11-07-002",
+    "sources/SRC-2026-11-07-004",
+    "sources/SRC-2026-11-08-002"
   ],
   "concepts/playwright-actionability-and-e2e-waits": [
     "concepts/contract-first-testing",
@@ -251,6 +306,11 @@
     "sources/SRC-2026-10-25-004",
     "sources/SRC-2026-10-31-003"
   ],
+  "concepts/prosemirror-transaction-origin-and-undo-history": [
+    "concepts/offline-first-与-local-draft-持久化架构",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-08-007"
+  ],
   "concepts/pwa-service-worker-update-lifecycle": [
     "concepts/browser-storage-persistence-and-eviction",
     "concepts/http-cache-and-service-worker-boundaries",
@@ -267,28 +327,42 @@
     "sources/SRC-2026-09-27-004"
   ],
   "concepts/reduced-motion-replacement-strategy": [
+    "concepts/forced-colors-and-high-contrast-themes",
     "concepts/playwright-actionability-and-e2e-waits",
     "concepts/view-transitions-shared-element",
     "sources/SRC-2026-10-31-004"
   ],
   "concepts/route-level-code-splitting-dynamic-bundling": [
+    "concepts/data-router-lifecycle",
+    "concepts/prosemirror-transaction-origin-and-undo-history",
     "concepts/pwa-service-worker-update-lifecycle",
     "entities/react-19-framework",
     "entities/vite-bundler",
     "sources/SRC-2026-10-05-001",
-    "sources/SRC-2026-10-05-002"
+    "sources/SRC-2026-10-05-002",
+    "sources/SRC-2026-11-07-005"
   ],
   "concepts/scrollbar-gutter-and-layout-stability": [
     "concepts/overscroll-containment-for-nested-scroll-areas",
     "sources/SRC-2026-11-01-001"
   ],
+  "concepts/searxng-web-search-integration": [
+    "concepts/openai-compatible-streaming-and-tool-calls",
+    "concepts/ssrf-and-outbound-fetch-boundaries",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-07-001",
+    "sources/SRC-2026-11-08-005"
+  ],
   "concepts/server-sent-events-sse-与实时事件流": [
     "concepts/abortcontroller-and-request-cancellation",
+    "concepts/openai-compatible-streaming-and-tool-calls",
+    "concepts/searxng-web-search-integration",
     "entities/deno-runtime",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-035",
     "sources/SRC-2026-09-27-003",
-    "sources/SRC-2026-11-02-002"
+    "sources/SRC-2026-11-02-002",
+    "sources/SRC-2026-11-08-006"
   ],
   "concepts/session-security-and-isolation": [
     "concepts/content-security-policy-strict-deployment",
@@ -296,6 +370,7 @@
     "concepts/deno-permission-boundaries",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/http-cache-and-service-worker-boundaries",
+    "concepts/login-throttling-and-rate-limiting",
     "concepts/password-hashing-and-pbkdf2-parameters",
     "concepts/pwa-service-worker-update-lifecycle",
     "concepts/upload-validation-defense-in-depth",
@@ -322,6 +397,7 @@
     "sources/SRC-2026-11-05-002",
     "sources/SRC-2026-11-06-002",
     "sources/SRC-2026-11-06-003",
+    "sources/SRC-2026-11-08-002",
     "sources/searcher-session-token-hash-is-not-salted",
     "syntheses/searcher-system-architecture"
   ],
@@ -337,6 +413,7 @@
   ],
   "concepts/single-process-architecture": [
     "concepts/content-security-policy-strict-deployment",
+    "concepts/login-throttling-and-rate-limiting",
     "concepts/sqlite-fts5-fulltext-search",
     "entities/deno-runtime",
     "entities/hono-framework",
@@ -368,6 +445,7 @@
   ],
   "concepts/sqlite-backup-and-recovery-boundaries": [
     "concepts/archive-extraction-zip-slip-and-decompression-limits",
+    "concepts/field-encryption-and-key-management",
     "entities/drizzle-sqlite-store",
     "entities/searcher-项目",
     "sources/SRC-2026-10-27-001",
@@ -376,7 +454,8 @@
     "sources/SRC-2026-11-02-004",
     "sources/SRC-2026-11-03-003",
     "sources/SRC-2026-11-05-003",
-    "sources/SRC-2026-11-06-001"
+    "sources/SRC-2026-11-06-001",
+    "sources/SRC-2026-11-07-004"
   ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
@@ -402,6 +481,15 @@
     "sources/SRC-2026-10-24-006",
     "sources/SRC-2026-10-27-002"
   ],
+  "concepts/ssrf-and-outbound-fetch-boundaries": [
+    "concepts/field-encryption-and-key-management",
+    "concepts/openai-compatible-streaming-and-tool-calls",
+    "concepts/searxng-web-search-integration",
+    "concepts/upload-validation-defense-in-depth",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-07-001",
+    "sources/SRC-2026-11-07-003"
+  ],
   "concepts/tailwind-v4-css-first-architecture": [
     "concepts/css-container-queries",
     "concepts/css-custom-property-fallback-and-registration",
@@ -423,10 +511,13 @@
   "concepts/upload-validation-defense-in-depth": [
     "concepts/archive-extraction-zip-slip-and-decompression-limits",
     "concepts/csrf-defense-boundaries",
+    "concepts/ssrf-and-outbound-fetch-boundaries",
     "sources/SRC-2026-11-02-003",
-    "sources/SRC-2026-11-02-005"
+    "sources/SRC-2026-11-02-005",
+    "sources/SRC-2026-11-07-003"
   ],
   "concepts/view-transitions-shared-element": [
+    "concepts/data-router-lifecycle",
     "concepts/reduced-motion-replacement-strategy",
     "entities/react-19-framework",
     "sources/SRC-2026-10-24-009",
@@ -434,6 +525,7 @@
   ],
   "concepts/wallpaper-accent-oklch-contrast-solver": [
     "concepts/backdrop-filter-backdrop-root",
+    "concepts/forced-colors-and-high-contrast-themes",
     "concepts/pointer-target-size",
     "entities/searcher-项目",
     "sources/SRC-2026-10-25-001",
@@ -583,6 +675,7 @@
     "sources/SRC-2026-10-28-005"
   ],
   "entities/react-19-framework": [
+    "concepts/data-router-lifecycle",
     "concepts/react-19-actions-and-transitions",
     "concepts/route-level-code-splitting-dynamic-bundling",
     "concepts/view-transitions-shared-element",
@@ -590,27 +683,37 @@
     "sources/SRC-2026-09-27-004",
     "sources/SRC-2026-10-05-001",
     "sources/SRC-2026-10-05-002",
-    "sources/SRC-2026-10-24-009"
+    "sources/SRC-2026-10-24-009",
+    "sources/SRC-2026-11-07-005"
   ],
   "entities/searcher-项目": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/aria-combobox-grouped-suggestions",
     "concepts/contract-first-testing",
+    "concepts/data-router-lifecycle",
     "concepts/database-queue-serialization",
     "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "concepts/field-encryption-and-key-management",
+    "concepts/first-frame-theme-painting",
+    "concepts/forced-colors-and-high-contrast-themes",
     "concepts/hono-middleware-pipeline-request-intake",
+    "concepts/login-throttling-and-rate-limiting",
     "concepts/modal-layering-and-escape-dismissal",
+    "concepts/openai-compatible-streaming-and-tool-calls",
     "concepts/password-hashing-and-pbkdf2-parameters",
     "concepts/pointer-target-size",
+    "concepts/prosemirror-transaction-origin-and-undo-history",
     "concepts/pwa-service-worker-update-lifecycle",
     "concepts/route-level-code-splitting-dynamic-bundling",
     "concepts/scrollbar-gutter-and-layout-stability",
+    "concepts/searxng-web-search-integration",
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/session-security-and-isolation",
     "concepts/shortest-column-masonry-layout",
     "concepts/single-process-architecture",
     "concepts/sqlite-fts5-fulltext-search",
     "concepts/sqlite-table-recreation-migration",
+    "concepts/ssrf-and-outbound-fetch-boundaries",
     "concepts/tailwind-v4-css-first-architecture",
     "concepts/view-transitions-shared-element",
     "concepts/wallpaper-accent-oklch-contrast-solver",
@@ -675,6 +778,13 @@
     "sources/SRC-2026-11-05-002",
     "sources/SRC-2026-11-06-002",
     "sources/SRC-2026-11-06-003",
+    "sources/SRC-2026-11-07-001",
+    "sources/SRC-2026-11-09-001",
+    "sources/SRC-2026-11-09-002",
+    "sources/SRC-2026-11-09-003",
+    "sources/SRC-2026-11-09-004",
+    "sources/SRC-2026-11-09-005",
+    "sources/SRC-2026-11-09-006",
     "syntheses/searcher-system-architecture"
   ],
   "entities/shadcn-ui-system": [
@@ -707,6 +817,7 @@
     "sources/SRC-2026-09-25-036"
   ],
   "entities/vite-bundler": [
+    "concepts/first-frame-theme-painting",
     "concepts/pwa-service-worker-update-lifecycle",
     "concepts/route-level-code-splitting-dynamic-bundling",
     "entities/react-19-framework",
@@ -1106,6 +1217,55 @@
   "sources/SRC-2026-11-06-003": [
     "concepts/session-security-and-isolation"
   ],
+  "sources/SRC-2026-11-07-001": [
+    "concepts/searxng-web-search-integration"
+  ],
+  "sources/SRC-2026-11-07-002": [
+    "concepts/field-encryption-and-key-management"
+  ],
+  "sources/SRC-2026-11-07-003": [
+    "concepts/ssrf-and-outbound-fetch-boundaries"
+  ],
+  "sources/SRC-2026-11-07-004": [
+    "concepts/field-encryption-and-key-management"
+  ],
+  "sources/SRC-2026-11-07-005": [
+    "concepts/data-router-lifecycle"
+  ],
+  "sources/SRC-2026-11-08-002": [
+    "concepts/login-throttling-and-rate-limiting"
+  ],
+  "sources/SRC-2026-11-08-003": [
+    "concepts/login-throttling-and-rate-limiting"
+  ],
+  "sources/SRC-2026-11-08-005": [
+    "concepts/openai-compatible-streaming-and-tool-calls"
+  ],
+  "sources/SRC-2026-11-08-006": [
+    "concepts/openai-compatible-streaming-and-tool-calls"
+  ],
+  "sources/SRC-2026-11-08-007": [
+    "concepts/prosemirror-transaction-origin-and-undo-history"
+  ],
+  "sources/SRC-2026-11-09-001": [
+    "concepts/forced-colors-and-high-contrast-themes"
+  ],
+  "sources/SRC-2026-11-09-002": [
+    "concepts/forced-colors-and-high-contrast-themes"
+  ],
+  "sources/SRC-2026-11-09-003": [
+    "concepts/forced-colors-and-high-contrast-themes"
+  ],
+  "sources/SRC-2026-11-09-004": [
+    "concepts/forced-colors-and-high-contrast-themes"
+  ],
+  "sources/SRC-2026-11-09-005": [
+    "concepts/forced-colors-and-high-contrast-themes"
+  ],
+  "sources/SRC-2026-11-09-006": [
+    "concepts/first-frame-theme-painting",
+    "concepts/forced-colors-and-high-contrast-themes"
+  ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
   ],
@@ -1249,9 +1409,13 @@
   "sources/obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373": [],
   "sources/obs-2026-11-06-issue-370-pr-b-b3-pr-381-main": [],
   "sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main": [],
+  "sources/obs-2026-11-06-issue-383-pr-d-pr-391-main": [],
   "sources/obs-2026-11-06-pr-374-main": [],
   "sources/obs-2026-11-06-pr-385-main": [],
   "sources/obs-2026-11-06-pr-386-main": [],
+  "sources/obs-2026-11-06-pr-392-main": [],
+  "sources/obs-2026-11-10-0-1": [],
+  "sources/obs-2026-11-10-a": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],

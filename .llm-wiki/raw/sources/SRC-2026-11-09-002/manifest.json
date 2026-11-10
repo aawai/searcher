@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-09-002",
+  "captured": "2026-11-09",
+  "packet_version": "1.0",
+  "title": "`forced-color-adjust` CSS property",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/forced-color-adjust",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

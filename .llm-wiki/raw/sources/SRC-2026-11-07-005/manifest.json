@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-07-005",
+  "captured": "2026-11-07",
+  "packet_version": "1.0",
+  "title": "createBrowserRouter",
+  "url": "https://reactrouter.com/api/data-routers/createBrowserRouter",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

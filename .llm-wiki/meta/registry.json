@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-06T11:07:51.369Z",
+  "last_updated": "2026-11-10T03:07:44.494Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -78,6 +78,13 @@
       "created": "2026-10-27",
       "updated": "2026-10-27"
     },
+    "concepts/data-router-lifecycle": {
+      "type": "concept",
+      "title": "Data Router Lifecycle in Searcher",
+      "domain": "engineering",
+      "created": "2026-11-07",
+      "updated": "2026-11-07"
+    },
     "concepts/database-queue-serialization": {
       "type": "concept",
       "title": "Database Queue Serialization",
@@ -107,6 +114,27 @@
       "title": "dnd-kit 2D Grid Sorting Architecture",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "concepts/field-encryption-and-key-management": {
+      "type": "concept",
+      "title": "Field Encryption and Key Management",
+      "domain": "engineering",
+      "created": "2026-11-07",
+      "updated": "2026-11-07"
+    },
+    "concepts/first-frame-theme-painting": {
+      "type": "concept",
+      "title": "First-Frame Theme Painting",
+      "domain": "engineering",
+      "created": "2026-11-09",
+      "updated": "2026-11-09"
+    },
+    "concepts/forced-colors-and-high-contrast-themes": {
+      "type": "concept",
+      "title": "Forced Colors and High-Contrast Themes",
+      "domain": "design",
+      "created": "2026-11-09",
+      "updated": "2026-11-09"
     },
     "concepts/hono-middleware-pipeline-request-intake": {
       "type": "concept",
@@ -142,6 +170,13 @@
       "created": "2026-11-01",
       "updated": "2026-11-01"
     },
+    "concepts/login-throttling-and-rate-limiting": {
+      "type": "concept",
+      "title": "Login Throttling and Rate Limiting",
+      "domain": "engineering",
+      "created": "2026-11-08",
+      "updated": "2026-11-08"
+    },
     "concepts/markdown-sanitization-with-rehype-sanitize": {
       "type": "concept",
       "title": "Markdown Sanitization with rehype-sanitize",
@@ -172,6 +207,13 @@
       "domain": "engineering",
       "created": "2026-09-25",
       "updated": "2026-10-28"
+    },
+    "concepts/openai-compatible-streaming-and-tool-calls": {
+      "type": "concept",
+      "title": "OpenAI-Compatible Streaming and Tool Calls",
+      "domain": "engineering",
+      "created": "2026-11-08",
+      "updated": "2026-11-08"
     },
     "concepts/overscroll-containment-for-nested-scroll-areas": {
       "type": "concept",
@@ -208,6 +250,13 @@
       "created": "2026-10-25",
       "updated": "2026-10-25"
     },
+    "concepts/prosemirror-transaction-origin-and-undo-history": {
+      "type": "concept",
+      "title": "ProseMirror Transaction Origin and Undo History",
+      "domain": "engineering",
+      "created": "2026-11-08",
+      "updated": "2026-11-08"
+    },
     "concepts/pwa-service-worker-update-lifecycle": {
       "type": "concept",
       "title": "PWA Service Worker Update Lifecycle",
@@ -242,6 +291,13 @@
       "domain": "engineering",
       "created": "2026-11-01",
       "updated": "2026-11-01"
+    },
+    "concepts/searxng-web-search-integration": {
+      "type": "concept",
+      "title": "SearXNG Web Search Integration",
+      "domain": "engineering",
+      "created": "2026-11-07",
+      "updated": "2026-11-07"
     },
     "concepts/server-sent-events-sse-与实时事件流": {
       "type": "concept",
@@ -295,6 +351,13 @@
       "title": "SQLite Table Recreation Migration",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "concepts/ssrf-and-outbound-fetch-boundaries": {
+      "type": "concept",
+      "title": "SSRF and Outbound Fetch Boundaries",
+      "domain": "engineering",
+      "created": "2026-11-07",
+      "updated": "2026-11-07"
     },
     "concepts/tailwind-v4-css-first-architecture": {
       "type": "concept",
@@ -1572,6 +1635,150 @@
       "source_id": "SRC-2026-11-06-003",
       "format": "web",
       "captured": "2026-11-06"
+    },
+    "sources/SRC-2026-11-07-001": {
+      "type": "source",
+      "title": "SearXNG Search API",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-07-001/extracted.md",
+      "source_id": "SRC-2026-11-07-001",
+      "format": "web",
+      "captured": "2026-11-07"
+    },
+    "sources/SRC-2026-11-07-002": {
+      "type": "source",
+      "title": "AesGcmParams (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-07-002/extracted.md",
+      "source_id": "SRC-2026-11-07-002",
+      "format": "web",
+      "captured": "2026-11-07"
+    },
+    "sources/SRC-2026-11-07-003": {
+      "type": "source",
+      "title": "Server-Side Request Forgery Prevention Cheat Sheet (OWASP)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-07-003/extracted.md",
+      "source_id": "SRC-2026-11-07-003",
+      "format": "web",
+      "captured": "2026-11-07"
+    },
+    "sources/SRC-2026-11-07-004": {
+      "type": "source",
+      "title": "Cryptographic Storage Cheat Sheet (OWASP)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-07-004/extracted.md",
+      "source_id": "SRC-2026-11-07-004",
+      "format": "web",
+      "captured": "2026-11-07"
+    },
+    "sources/SRC-2026-11-07-005": {
+      "type": "source",
+      "title": "React Router createBrowserRouter",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-07-005/extracted.md",
+      "source_id": "SRC-2026-11-07-005",
+      "format": "web",
+      "captured": "2026-11-07"
+    },
+    "sources/SRC-2026-11-08-002": {
+      "type": "source",
+      "title": "Authentication Cheat Sheet (OWASP)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-08-002/extracted.md",
+      "source_id": "SRC-2026-11-08-002",
+      "format": "web",
+      "captured": "2026-11-08"
+    },
+    "sources/SRC-2026-11-08-003": {
+      "type": "source",
+      "title": "Retry-After header (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-08-003/extracted.md",
+      "source_id": "SRC-2026-11-08-003",
+      "format": "web",
+      "captured": "2026-11-08"
+    },
+    "sources/SRC-2026-11-08-005": {
+      "type": "source",
+      "title": "Function calling (OpenAI API guide)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-08-005/extracted.md",
+      "source_id": "SRC-2026-11-08-005",
+      "format": "web",
+      "captured": "2026-11-08"
+    },
+    "sources/SRC-2026-11-08-006": {
+      "type": "source",
+      "title": "OpenAI TypeScript and JavaScript API Library (openai-node README)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-08-006/extracted.md",
+      "source_id": "SRC-2026-11-08-006",
+      "format": "web",
+      "captured": "2026-11-08"
+    },
+    "sources/SRC-2026-11-08-007": {
+      "type": "source",
+      "title": "ProseMirror Guide",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-08-007/extracted.md",
+      "source_id": "SRC-2026-11-08-007",
+      "format": "web",
+      "captured": "2026-11-08"
+    },
+    "sources/SRC-2026-11-09-001": {
+      "type": "source",
+      "title": "`forced-colors` CSS media feature (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-09-001/extracted.md",
+      "source_id": "SRC-2026-11-09-001",
+      "format": "web",
+      "captured": "2026-11-09"
+    },
+    "sources/SRC-2026-11-09-002": {
+      "type": "source",
+      "title": "`forced-color-adjust` CSS property (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-09-002/extracted.md",
+      "source_id": "SRC-2026-11-09-002",
+      "format": "web",
+      "captured": "2026-11-09"
+    },
+    "sources/SRC-2026-11-09-003": {
+      "type": "source",
+      "title": "`prefers-contrast` CSS media feature (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-09-003/extracted.md",
+      "source_id": "SRC-2026-11-09-003",
+      "format": "web",
+      "captured": "2026-11-09"
+    },
+    "sources/SRC-2026-11-09-004": {
+      "type": "source",
+      "title": "`<system-color>` CSS type (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-09-004/extracted.md",
+      "source_id": "SRC-2026-11-09-004",
+      "format": "web",
+      "captured": "2026-11-09"
+    },
+    "sources/SRC-2026-11-09-005": {
+      "type": "source",
+      "title": "Understanding SC 1.4.6 Contrast (Enhanced) (W3C WCAG 2.2)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-09-005/extracted.md",
+      "source_id": "SRC-2026-11-09-005",
+      "format": "web",
+      "captured": "2026-11-09"
+    },
+    "sources/SRC-2026-11-09-006": {
+      "type": "source",
+      "title": "`color-scheme` CSS property (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-09-006/extracted.md",
+      "source_id": "SRC-2026-11-09-006",
+      "format": "web",
+      "captured": "2026-11-09"
     },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",
@@ -3692,6 +3899,20 @@
       "created": "2026-11-06",
       "updated": "2026-11-06"
     },
+    "sources/obs-2026-11-06-issue-383-pr-d-pr-391-main": {
+      "type": "source",
+      "title": "Observation: Issue 383 PR-D 经 PR 391 合并 main 并关闭",
+      "tags": [
+        "[\"issue-383\",\"pr-391\",\"merged\",\"high-contrast\",\"ai-composer\",\"lists\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-issue-383-pr-d-pr-391-main",
+      "relevance": "high",
+      "observed_at": "2026-11-06T15:29:54.868Z",
+      "source_context": "创建 PR 并合并至 main",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
     "sources/obs-2026-11-06-pr-374-main": {
       "type": "source",
       "title": "Observation: PR 374 已合并 main",
@@ -3743,6 +3964,56 @@
       "source_context": "图标重设计实施并合并",
       "created": "2026-11-06",
       "updated": "2026-11-06"
+    },
+    "sources/obs-2026-11-06-pr-392-main": {
+      "type": "source",
+      "title": "Observation: 外观首帧闪烁经 PR 392 消除并合并 main",
+      "tags": [
+        "[\"issue-383\",\"pr-392\",\"merged\",\"first-frame\",\"appearance\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-06-pr-392-main",
+      "relevance": "high",
+      "observed_at": "2026-11-06T15:49:44.995Z",
+      "source_context": "消除外观首帧闪烁并合并 main",
+      "created": "2026-11-06",
+      "updated": "2026-11-06"
+    },
+    "sources/obs-2026-11-10-0-1": {
+      "type": "source",
+      "title": "Observation: 窗口内容刊头排版：阶段0/1完成，待方案确认",
+      "tags": [
+        "ui",
+        "visual-language",
+        "serif",
+        "design-lab",
+        "ui-guard"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-10-0-1",
+      "relevance": "high",
+      "observed_at": "2026-11-10T02:36:01.574Z",
+      "source_context": "实施窗口内容刊头排版计划",
+      "created": "2026-11-10",
+      "updated": "2026-11-10"
+    },
+    "sources/obs-2026-11-10-a": {
+      "type": "source",
+      "title": "Observation: 窗口内容标题衬线（方案 A）已在生产实现",
+      "tags": [
+        "ui",
+        "visual-language",
+        "serif",
+        "windows",
+        "ui-guard"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-10-a",
+      "relevance": "high",
+      "observed_at": "2026-11-10T03:07:44.376Z",
+      "source_context": "实施窗口内容刊头排版方案 A",
+      "created": "2026-11-10",
+      "updated": "2026-11-10"
     },
     "sources/searcher-session-token-hash-is-not-salted": {
       "type": "source",

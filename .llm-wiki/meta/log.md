@@ -824,3 +824,75 @@
 ## [2026-11-06T11:07:51.320Z] observe
 - slug: "obs-2026-11-06-pr-386-main", title: "刊头应用图标与可选标签图标经 PR 386 合并 main", relevance: "high"
 
+## [2026-11-06T15:29:54.871Z] observe
+- slug: "obs-2026-11-06-issue-383-pr-d-pr-391-main", title: "Issue 383 PR-D 经 PR 391 合并 main 并关闭", relevance: "high"
+
+## [2026-11-06T15:49:44.996Z] observe
+- slug: "obs-2026-11-06-pr-392-main", title: "外观首帧闪烁经 PR 392 消除并合并 main", relevance: "high"
+
+## [2026-11-07T08:00:56.917Z] capture
+- source_id: "SRC-2026-11-07-001", url: "https://docs.searxng.org/dev/search_api.html", format: "web"
+
+## [2026-11-07T08:00:59.759Z] capture
+- source_id: "SRC-2026-11-07-002", url: "https://developer.mozilla.org/en-US/docs/Web/API/AesGcmParams", format: "web"
+
+## [2026-11-07T08:01:03.825Z] capture
+- source_id: "SRC-2026-11-07-003", url: "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html", format: "web"
+
+## [2026-11-07T08:01:05.534Z] capture
+- source_id: "SRC-2026-11-07-004", url: "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html", format: "web"
+
+## [2026-11-07T08:01:09.444Z] capture
+- source_id: "SRC-2026-11-07-005", url: "https://reactrouter.com/api/data-routers/createBrowserRouter", format: "web"
+
+## [2026-11-08T08:00:51.231Z] capture
+- source_id: "SRC-2026-11-08-001", url: "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html", format: "web"
+
+## [2026-11-08T08:01:44.050Z] capture
+- source_id: "SRC-2026-11-08-002", url: "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html", format: "web"
+
+## [2026-11-08T08:01:51.355Z] capture
+- source_id: "SRC-2026-11-08-003", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After", format: "web"
+
+## [2026-11-08T08:01:52.798Z] capture
+- source_id: "SRC-2026-11-08-004", url: "https://platform.openai.com/docs/api-reference/chat-streaming", format: "web"
+
+## [2026-11-08T08:02:15.199Z] capture
+- source_id: "SRC-2026-11-08-005", url: "https://platform.openai.com/docs/guides/function-calling", format: "web"
+
+## [2026-11-08T08:02:17.503Z] capture
+- source_id: "SRC-2026-11-08-006", url: "https://milkdown.dev/docs/guide/using-plugins", format: "web"
+
+## [2026-11-08T08:02:43.140Z] capture
+- source_id: "SRC-2026-11-08-006", url: "https://raw.githubusercontent.com/openai/openai-node/master/README.md", format: "web"
+
+## [2026-11-08T08:02:49.300Z] capture
+- source_id: "SRC-2026-11-08-007", url: "https://prosemirror.net/docs/guide/", format: "web"
+
+## [2026-11-08T08:03:10.510Z] discard
+- discarded_source_ids: ["SRC-2026-11-08-001","SRC-2026-11-08-004","SRC-2026-11-08-006"], discarded_captures: [{"source_id":"SRC-2026-11-08-001","url":"https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html","reason":"duplicate capture from an interrupted run; extraction empty; superseded by SRC-2026-11-08-002"},{"source_id":"SRC-2026-11-08-004","url":"https://platform.openai.com/docs/api-reference/chat-streaming","reason":"Cloudflare challenge page captured instead of documentation"},{"source_id":"SRC-2026-11-08-006","url":"https://milkdown.dev/docs/guide/using-plugins","captured_at":"2026-11-08T08:02:17.503Z","reason":"redirected to Milkdown homepage; no guide content"}], note: "Packets and skeleton pages were removed before ingest. The capture allocator then reissued SRC-2026-11-08-006 for https://raw.githubusercontent.com/openai/openai-node/master/README.md (capture event 2026-11-08T08:02:43.140Z). From that capture onward, SRC-2026-11-08-006 refers only to the openai-node README."
+
+## [2026-11-09T08:00:31.066Z] capture
+- source_id: "SRC-2026-11-09-001", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/@media/forced-colors", format: "web"
+
+## [2026-11-09T08:00:34.182Z] capture
+- source_id: "SRC-2026-11-09-002", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/forced-color-adjust", format: "web"
+
+## [2026-11-09T08:00:36.592Z] capture
+- source_id: "SRC-2026-11-09-003", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-contrast", format: "web"
+
+## [2026-11-09T08:00:39.997Z] capture
+- source_id: "SRC-2026-11-09-004", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/system-color", format: "web"
+
+## [2026-11-09T08:00:41.657Z] capture
+- source_id: "SRC-2026-11-09-005", url: "https://www.w3.org/WAI/WCAG22/Understanding/contrast-enhanced.html", format: "web"
+
+## [2026-11-09T08:00:45.144Z] capture
+- source_id: "SRC-2026-11-09-006", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme", format: "web"
+
+## [2026-11-10T02:36:01.577Z] observe
+- slug: "obs-2026-11-10-0-1", title: "窗口内容刊头排版：阶段0/1完成，待方案确认", relevance: "high"
+
+## [2026-11-10T03:07:44.378Z] observe
+- slug: "obs-2026-11-10-a", title: "窗口内容标题衬线（方案 A）已在生产实现", relevance: "high"
+
