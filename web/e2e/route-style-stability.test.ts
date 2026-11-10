@@ -738,14 +738,16 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             });
             const page = await context.newPage();
             await loginAndVisit(page, app.origin, "/admin", user);
-            const actions = page.locator(".admin-stat-action");
+            const actions = page.locator(
+                'main[data-archetype="management"] .settings-row a',
+            );
             await actions.first().waitFor({ state: "visible" });
+            // Row buttons keep their visible size; A2 asks for a 44px hit area.
             for (let i = 0; i < await actions.count(); i++) {
-                const box = await actions.nth(i).boundingBox();
-                assert(box);
+                const size = await hitSize(actions.nth(i));
                 assert(
-                    box.height >= 44,
-                    `Admin overview action ${i} must be >= 44px tall (got ${box.height})`,
+                    size.width >= 44 && size.height >= 44,
+                    `Admin overview action ${i} hit area must be >= 44x44px (got ${size.width}x${size.height})`,
                 );
             }
 
@@ -1191,9 +1193,8 @@ Deno.test(
 
                         // --- 1B. /admin/backup ---
                         await spaNavigate(page, "/admin/backup");
-                        await page.locator(".admin-panel").waitFor({
-                            state: "visible",
-                        });
+                        await page.getByRole("heading", { name: "完整备份" })
+                            .waitFor({ state: "visible" });
                         const backupTag =
                             `/admin/backup@${vp.width}x${vp.height}-${theme}`;
 
@@ -1250,7 +1251,7 @@ Deno.test(
                                 row.querySelectorAll<HTMLElement>("button"),
                             );
                             const statusEl = row.querySelector<HTMLElement>(
-                                ".admin-file-placeholder, .admin-file-name",
+                                ".admin-file-name",
                             );
                             if (buttons.length !== 2 || !statusEl) return null;
                             const chooseBtn = buttons[0];
@@ -1460,7 +1461,7 @@ Deno.test(
 
                 // Long filenames on /admin/backup (both horizontal "导入配置" and vertical "备份文件")
                 await spaNavigate(page, "/admin/backup");
-                await page.locator(".admin-panel").waitFor({
+                await page.getByRole("heading", { name: "完整备份" }).waitFor({
                     state: "visible",
                 });
                 const configExportRes = await page.request.get(
@@ -1481,7 +1482,11 @@ Deno.test(
                 await page.locator("#config-import-file-filename").waitFor({
                     state: "visible",
                 });
-                await page.locator('.status-banner:has-text("配置已导入")')
+                await page.getByRole("alertdialog").getByRole("button", {
+                    name: "导入",
+                    exact: true,
+                }).click();
+                await page.locator('.status-banner:has-text("已导入")')
                     .waitFor({
                         state: "visible",
                     });
@@ -1856,10 +1861,11 @@ Deno.test(
                     );
 
                     await spaNavigate(page, "/admin/backup");
-                    await page.locator(".admin-panel").waitFor({
-                        state: "visible",
-                    });
-                    const backupButtons = page.locator(".admin-panel button");
+                    await page.getByRole("heading", { name: "完整备份" })
+                        .waitFor({ state: "visible" });
+                    const backupButtons = page.locator(
+                        'main[data-archetype="management"] .semantic-section',
+                    ).locator("button, a[href]");
                     const btnCount = await backupButtons.count();
                     assert(btnCount >= 4);
                     for (let i = 0; i < btnCount; i++) {
@@ -1942,7 +1948,7 @@ Deno.test(
 
                 // File selection, Tab order, and pre-validate pending/disabled on /admin/backup
                 await spaNavigate(page, "/admin/backup");
-                await page.locator(".admin-panel").waitFor({
+                await page.getByRole("heading", { name: "完整备份" }).waitFor({
                     state: "visible",
                 });
 
@@ -1954,7 +1960,9 @@ Deno.test(
                 });
                 await chooseZipBtn.waitFor({ state: "visible" });
                 assertEquals(
-                    await page.locator(".admin-file-placeholder").textContent(),
+                    await page.locator(
+                        ".settings-row:has(#backup-restore-file) .admin-file-name",
+                    ).textContent(),
                     "未选择文件",
                 );
                 assertEquals(await preValidateBtn.isDisabled(), true);

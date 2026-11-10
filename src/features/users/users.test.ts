@@ -6,7 +6,7 @@ import { migrateDatabase } from "../../db/migrate.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
 import type { AppEnv } from "../../serve/env.ts";
 import { createAuthTestApp } from "../auth/test-app.ts";
-import type { AdminUserDto, Envelope } from "@shared/contracts.ts";
+import type { AdminUserDto, AuditLogDto, Envelope } from "@shared/contracts.ts";
 import { preferences, users } from "../../db/schema.ts";
 import { SystemSettingsStore } from "../system/settings-store.ts";
 import { eq } from "drizzle-orm";
@@ -354,12 +354,7 @@ Deno.test({
             });
             assertEquals(auditRes.status, STATUS_CODE.OK);
             const auditBody = await auditRes.json() as Envelope<{
-                items: Array<{
-                    action: string;
-                    targetType: string;
-                    targetId: string;
-                    metadataJson: string | null;
-                }>;
+                items: AuditLogDto[];
             }>;
 
             const actions = auditBody.data?.items.map((i) => i.action);
@@ -367,13 +362,60 @@ Deno.test({
             assertEquals(actions?.includes("admin.user.reset_password"), true);
             assertEquals(actions?.includes("admin.user.delete"), true);
 
-            // Verify that no passwords or secrets leaked into metadataJson
+            // Verify that no passwords or secrets leaked into metadata
             for (const item of auditBody.data?.items ?? []) {
-                if (item.metadataJson) {
-                    assertEquals(item.metadataJson.includes("Password"), false);
-                    assertEquals(item.metadataJson.includes("password"), false);
-                }
+                const metadata = JSON.stringify(item.metadata ?? {});
+                assertEquals(metadata.includes("Password"), false);
+                assertEquals(metadata.includes("password"), false);
             }
+        } finally {
+            await store.close();
+        }
+    },
+});
+
+Deno.test({
+    name: "users admin search: LIKE wildcards in the keyword match literally",
+    async fn() {
+        const { store, auth, app } = await setupTestApp();
+        try {
+            await registerUser(app, "review_admin");
+            await registerUser(app, "reviewxadmin");
+            const adminId = crypto.randomUUID();
+            const now = Date.now();
+            await store.run(async (db) => {
+                await db.insert(users).values({
+                    id: adminId,
+                    username: "search_admin",
+                    displayName: "Search Admin",
+                    passwordHash: "dummyhash",
+                    role: "admin",
+                    disabled: false,
+                    authVersion: 1,
+                    createdAt: now,
+                    updatedAt: now,
+                });
+            });
+            const { token } = await auth.createSession(adminId, 1);
+            const search = async (q: string) => {
+                const res = await app.request(
+                    `/api/admin/users?q=${encodeURIComponent(q)}`,
+                    { headers: { cookie: `${SESSION_COOKIE_NAME}=${token}` } },
+                );
+                assertEquals(res.status, STATUS_CODE.OK);
+                const body = await res.json() as Envelope<
+                    { items: AdminUserDto[]; total: number }
+                >;
+                return body.data?.items.map((u) => u.username).sort();
+            };
+
+            assertEquals(await search("review_admin"), ["review_admin"]);
+            assertEquals(await search("w_a"), ["review_admin"]);
+            assertEquals(await search("review%admin"), []);
+            assertEquals(await search("review"), [
+                "review_admin",
+                "reviewxadmin",
+            ]);
         } finally {
             await store.close();
         }

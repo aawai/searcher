@@ -31,8 +31,9 @@
     --scrollbar-thumb: rgb(0 0 0 / 0.18);
     --scrollbar-thumb-hover: rgb(0 0 0 / 0.38);
     --danger: #ae3e47;
-    --success: #247c5b;
-    --warning: #946200;
+    /* Status text holds 4.5:1 on its own tint (StatusBanner), not only on --surface. */
+    --success: #1f7352;
+    --warning: #8c5d00;
     --warning-soft: color-mix(in srgb, var(--warning) 12%, var(--surface));
     --warning-border: color-mix(in srgb, var(--warning) 40%, var(--border));
     --ring: var(--accent);

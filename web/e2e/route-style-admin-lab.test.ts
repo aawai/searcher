@@ -101,7 +101,7 @@ Deno.test("Admin backup actions retain readable semantic colors", async () => {
         reducedMotion: "reduce",
     });
     await loginAndVisit(page, app.origin, "/admin/backup", user);
-    const download = page.getByRole("button", { name: "下载备份 (ZIP)" });
+    const download = page.getByRole("link", { name: "下载备份 (ZIP)" });
     await download.waitFor({ state: "visible" });
 
     async function measureContrast(button: Locator) {
@@ -352,28 +352,32 @@ Deno.test("Admin audit exposes the complete object ID to keyboard and touch", as
     await page.goto(`${app.origin}/admin/audit`);
     const row = page.locator("tbody tr").filter({ hasText: "创建用户" });
     await row.waitFor({ state: "visible" });
-    const shortRow = page.locator("tbody tr").filter({
-        hasText: "admin.backup.create",
-    });
+    const shortRow = page.locator("tbody tr").filter({ hasText: "创建备份" });
     await shortRow.waitFor({ state: "visible" });
     const shortTarget = shortRow.locator("td").nth(2);
     assertEquals(
-        await shortTarget.getByText("backup", { exact: true }).count(),
+        await shortTarget.getByText("备份", { exact: true }).count(),
         1,
     );
     assertEquals(
-        await shortTarget.getByRole("button", { name: "查看对象 ID backup" })
-            .count(),
+        await shortTarget.getByRole("button").count(),
         0,
-        "An already complete ID must not add a redundant tab stop",
+        "A named system target must not add a redundant tab stop",
     );
-    const trigger = row.getByRole("button", {
-        name: `查看对象 ID ${created.id}`,
-    });
+    await row.locator("td").nth(2).getByText("@audit_demo", { exact: true })
+        .waitFor({ state: "visible" });
+    const trigger = row.getByRole("button", { name: /查看完整 ID$/ });
     assertEquals(
         await trigger.count(),
         1,
         "Full ID must have an accessible trigger",
+    );
+    assertEquals(
+        (await trigger.getAttribute("aria-label"))?.startsWith(
+            created.id.slice(0, 10),
+        ),
+        true,
+        "The accessible name starts with the visible ID prefix",
     );
     const actionLines = await row.locator("td").nth(1).locator("span").evaluate(
         (element) => {

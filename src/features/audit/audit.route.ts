@@ -1,4 +1,5 @@
 import { query, validator } from "@internal/validator/hono.ts";
+import { AUDIT_ACTIONS } from "@shared/contracts.ts";
 import * as v from "@valibot/valibot";
 import type { Routes } from "@internal/hono/routes.ts";
 import { failResponse } from "@internal/hono/middleware/response.ts";
@@ -18,10 +19,10 @@ const limitSchema = v.pipe(
 );
 
 const actionSchema = v.optional(
-    v.pipe(
-        v.string(),
-        v.trim(),
-    ),
+    v.union([
+        v.literal(""),
+        v.picklist(AUDIT_ACTIONS, "不支持的审计操作"),
+    ]),
 );
 
 export function registerAuditRoutes(

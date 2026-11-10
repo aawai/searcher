@@ -17,7 +17,11 @@ import type {
 } from "./types.ts";
 import { SystemSettingsStore } from "./settings-store.ts";
 import { validateBackupConsistency } from "./backup-validator.ts";
-import { isThemeId, THEME_IDS } from "../../shared/contracts.ts";
+import {
+    type ConfigImportPreviewDto,
+    isThemeId,
+    THEME_IDS,
+} from "../../shared/contracts.ts";
 
 const ConfigExportImportSchema = v.object({
     version: v.literal("1.0.0", "不兼容的配置文件版本"),
@@ -216,16 +220,71 @@ export class SystemService {
         });
     }
 
-    async importConfig(
+    #parseConfig(
         config: unknown,
-    ): Promise<ConfigImportResultDto> {
+    ): v.InferOutput<typeof ConfigExportImportSchema> {
         const parseResult = v.safeParse(ConfigExportImportSchema, config);
         if (!parseResult.success) {
             const firstIssue = parseResult.issues[0];
             const issueMsg = firstIssue?.message ?? "配置文件格式错误";
             throw new Error(`配置数据验证失败: ${issueMsg}`);
         }
-        const cfg = parseResult.output;
+        return parseResult.output;
+    }
+
+    /** Validates a configuration and counts what importing it would change, without writing. */
+    async previewConfigImport(
+        config: unknown,
+    ): Promise<ConfigImportPreviewDto> {
+        const cfg = this.#parseConfig(config);
+        const current = await this.#settingsStore.get();
+        const changedSettingsCount = (
+            Object.keys(cfg.settings) as (keyof SystemSettingsDto)[]
+        ).filter((key) => cfg.settings[key] !== current[key]).length;
+        let createdProvidersCount = 0;
+        let updatedProvidersCount = 0;
+        let skippedProvidersCount = 0;
+        let importedModelsCount = 0;
+        const providers = cfg.systemAiProviders ?? [];
+        if (providers.length > 0) {
+            await this.#store.run(async (db) => {
+                // A name created earlier in the same file is updated by later entries.
+                const createdNames = new Set<string>();
+                for (const p of providers) {
+                    const existingRows = await db
+                        .select({ scope: aiProviders.scope })
+                        .from(aiProviders)
+                        .where(eq(aiProviders.name, p.name))
+                        .limit(1)
+                        .all();
+                    const existing = existingRows[0];
+                    if (existing && existing.scope !== "system") {
+                        skippedProvidersCount++;
+                        continue;
+                    }
+                    if (existing || createdNames.has(p.name)) {
+                        updatedProvidersCount++;
+                    } else {
+                        createdNames.add(p.name);
+                        createdProvidersCount++;
+                    }
+                    importedModelsCount += p.models?.length ?? 0;
+                }
+            });
+        }
+        return {
+            changedSettingsCount,
+            createdProvidersCount,
+            updatedProvidersCount,
+            skippedProvidersCount,
+            importedModelsCount,
+        };
+    }
+
+    async importConfig(
+        config: unknown,
+    ): Promise<ConfigImportResultDto> {
+        const cfg = this.#parseConfig(config);
         const providersToImport = cfg.systemAiProviders;
         let createdProvidersCount = 0;
         let updatedProvidersCount = 0;

@@ -841,6 +841,24 @@
 .management-table [data-slot="table-container"] {
     max-width: 100%;
 }
+/* Management pages: a grouped list keeps a readable label-to-control span on
+   wide screens, start-aligned with the title; below 1024 it shares the page's
+   full content width, so its edges line up with the navigation. */
+@media (min-width: 1024px) {
+    .page-shell[data-archetype="management"] .semantic-section[data-content="grouped"] {
+        max-width: var(--layout-settings-panel-max);
+    }
+}
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+}
 
 @media (max-width: 767px) {
     .local-navigation[data-compact] {

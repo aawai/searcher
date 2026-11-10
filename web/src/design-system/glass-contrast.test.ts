@@ -350,6 +350,32 @@ for (const theme of THEMES) {
     });
 }
 
+/**
+ * Inline StatusBanner (semantic.css): each tone's text colour on its own tint
+ * of --surface. The tints are opaque, so the page behind does not matter.
+ */
+for (const theme of THEMES) {
+    Deno.test(`status banner ${theme.id}: every tone's text holds AA on its tint`, () => {
+        const tokens = cascade(theme, "regular");
+        const color = (name: string) => hex(resolve(tokens, name));
+        const tenPercentOfSurface = (name: string) =>
+            over(color(name), 0.1, color("--surface"));
+        const tones: readonly [string, Rgb, Rgb][] = [
+            ["info", color("--foreground"), color("--surface-soft")],
+            ["error", color("--danger"), tenPercentOfSurface("--danger")],
+            ["success", color("--success"), tenPercentOfSurface("--success")],
+            ["warning", color("--warning"), mixedColor(tokens, "--warning-soft")],
+        ];
+        for (const [tone, text, tint] of tones) {
+            const ratio = contrast(text, tint);
+            assert(
+                ratio >= WCAG_AA_TEXT,
+                `${tone} banner text ${ratio.toFixed(2)}:1`,
+            );
+        }
+    });
+}
+
 /** The derived canvas veils the wallpaper with --background; it does not depend on the glass tier. */
 function derivedCanvas(theme: Theme): Rgb[] {
     const tokens = cascade(theme, "regular");

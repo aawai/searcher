@@ -178,6 +178,46 @@ export interface AdminUserDto extends UserDto {
     disabled: boolean;
     createdAt: number;
 }
+/** Every action the server records in the audit log. */
+export const AUDIT_ACTIONS = [
+    "admin.user.create",
+    "admin.user.disable",
+    "admin.user.enable",
+    "admin.user.reset_password",
+    "admin.user.delete",
+    "admin.system.settings_update",
+    "admin.system.config_export",
+    "admin.system.config_import",
+    "admin.backup.create",
+    "admin.backup.restore",
+    "ai.provider.create",
+    "ai.provider.update",
+    "ai.provider.delete",
+    "ai.provider.refresh",
+    "ai.model.update",
+] as const;
+export type AuditAction = typeof AUDIT_ACTIONS[number];
+export const AUDIT_TARGET_TYPES = ["user", "system", "ai_provider"] as const;
+export type AuditTargetType = typeof AUDIT_TARGET_TYPES[number];
+/** Rows written before an action was renamed keep their stored string. */
+export interface AuditLogDto {
+    id: string;
+    actorUserId: string | null;
+    action: string;
+    targetType: string;
+    targetId: string | null;
+    metadata: Record<string, unknown> | null;
+    createdAt: number;
+}
+/** Dry run of a configuration import: what confirming it would change. */
+export interface ConfigImportPreviewDto {
+    changedSettingsCount: number;
+    createdProvidersCount: number;
+    updatedProvidersCount: number;
+    /** Same-named user-scoped providers, which an import never touches. */
+    skippedProvidersCount: number;
+    importedModelsCount: number;
+}
 export type SearchTarget = "same" | "new";
 
 export type ReasoningEffort =
