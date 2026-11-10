@@ -458,6 +458,14 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/web-font-loading-and-cjk-subsetting.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/web-font-loading-and-cjk-subsetting.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/web-font-loading-and-cjk-subsetting",
+      "contentHash": "0a2a6b9f5ce039f5adcf8033210e531f166b2def79f9a78fb5e8f9aea2dddbb4",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/whole-line-preview-truncation.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/whole-line-preview-truncation.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -526,7 +534,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/searcher-项目.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/searcher-项目",
-      "contentHash": "42e449c28fb5ad79f60aa5b4c496cb6947c80488f89f844be6a0676d604ad4c8",
+      "contentHash": "210db1e3e37414d4cb0bc56752982275839fab8826678afe1290986493c2f946",
       "role": "canonical",
       "type": "entity"
     },
@@ -1543,6 +1551,46 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/SRC-2026-11-09-006",
       "contentHash": "aa48d2cd39810e73f055c9fa79848167a59c3b85d3ef1f907d9795e7385acfc3",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-10-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-10-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-10-001",
+      "contentHash": "52808f0ce85bdfb3024938d13eec61620c728d25d3b8778df83832a76ffc4e07",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-10-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-10-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-10-002",
+      "contentHash": "56dd9313b2afeabb98b4a3d063ee3f1482a3b879795e513efd0def0682ef5f53",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-10-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-10-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-10-003",
+      "contentHash": "de58e3f3464db2204388c50704ba27c81ba3d013cadb4c88b579d0fbeaa780ba",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-10-004.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-10-004.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-10-004",
+      "contentHash": "d11c6fd84a67d1393c73e6d48f40b1a9f1fa145dfb47711eee345e99ebccfb89",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-10-005.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-10-005.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-10-005",
+      "contentHash": "391083573abda66b95615d4f3cb02808a3fba72ae72557a5d0490b3f77ba4f02",
       "role": "evidence",
       "type": "source"
     },
@@ -2615,6 +2663,14 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/obs-2026-11-10-a",
       "contentHash": "81887d8bfd1dea1277a6ceffc244391a709572355f33d84a67b7951bc6a49c13",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/obs-2026-11-10-issue-394.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/obs-2026-11-10-issue-394.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/obs-2026-11-10-issue-394",
+      "contentHash": "39e59242f07a92051695a7ba87aef9c8eb66d12524f8d2d86b510a9d20027765",
       "role": "evidence",
       "type": "source"
     },

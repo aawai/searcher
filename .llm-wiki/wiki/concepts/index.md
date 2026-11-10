@@ -59,5 +59,6 @@
 - [View Transitions Shared Element](view-transitions-shared-element.md)
 - [Wallpaper Accent OKLCH Contrast Solver](wallpaper-accent-oklch-contrast-solver.md)
 - [Web Animations API Runtime Architecture](web-animations-api-runtime-architecture.md)
+- [Web Font Loading and CJK Subsetting](web-font-loading-and-cjk-subsetting.md)
 - [Whole-line Preview Truncation](whole-line-preview-truncation.md)
 - [XSS Sanitization and Trusted Types](xss-sanitization-and-trusted-types.md)

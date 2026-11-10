@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-10-005",
+  "captured": "2026-11-10",
+  "packet_version": "1.0",
+  "title": "https://web.dev/articles/css-size-adjust",
+  "url": "https://web.dev/articles/css-size-adjust",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -2,6 +2,12 @@
 
 ## 2026-11-10
 
+- **capture**: {"format":"web","source_id":"SRC-2026-11-10-005","url":"https://web.dev/articles/css-size-adjust"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-10-004","url":"https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/ready"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-10-003","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/unicode-range"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-10-002","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-10-001","url":"https://web.dev/articles/font-best-practices"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-10-issue-394","title":"视觉语言演进计划 Issue 394 已创建"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-10-a","title":"窗口内容标题衬线（方案 A）已在生产实现"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-10-0-1","title":"窗口内容刊头排版：阶段0/1完成，待方案确认"}
 
