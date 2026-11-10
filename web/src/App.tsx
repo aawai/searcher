@@ -20,8 +20,6 @@ import {
 import { AppState, useAppState } from "./app/state.tsx";
 import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
-import { nextThemeInCycle, THEME_LABELS } from "./design-system/theme.ts";
-import { THEME_ICONS } from "./components/searcher/theme-icons.ts";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
     wallpaperPresentation,
@@ -49,7 +47,10 @@ import {
 } from "./app/RouteErrorBoundary.tsx";
 import { Button } from "./components/ui/button.tsx";
 import { LoadingState } from "./components/searcher/semantic.tsx";
-import { AccentPicker } from "./components/searcher/AccentPicker.tsx";
+import {
+    AppearancePicker,
+    ThemeToggle,
+} from "./components/searcher/AppearancePicker.tsx";
 import { Separator } from "./components/ui/separator.tsx";
 import { useOnline } from "./app/online.ts";
 import { useServiceWorkerUpdate } from "./pwa/service-worker.ts";
@@ -242,12 +243,6 @@ function Layout() {
             appearance.wallpaperPresentations,
         )
         : DEFAULT_WALLPAPER_PRESENTATION;
-    const nextTheme = nextThemeInCycle(appearance.theme);
-    const ThemeIcon = THEME_ICONS[appearance.theme];
-    const themeLabel = `切换主题，当前：${
-        THEME_LABELS[appearance.theme]
-    }，下一个：${THEME_LABELS[nextTheme]}`;
-
     return (
         <DesktopCoordinator aiModels={aiModels}>
             <div
@@ -276,18 +271,17 @@ function Layout() {
                     <nav className="top-actions" aria-label="账户与设置">
                         {!desktopTopbar && !isAuthPage && aiModels.length > 0 &&
                             <AiTopbarLink pathname={location.pathname} />}
-                        <button
-                            type="button"
-                            onClick={() =>
-                                void setAppearance({ theme: nextTheme })}
-                            aria-label={themeLabel}
-                            title={themeLabel}
-                        >
-                            <ThemeIcon size="1em" className="icon-lg" />
-                        </button>
-                        <AccentPicker
-                            value={appearance.accent}
-                            onValueChange={(accent) =>
+                        <ThemeToggle
+                            value={appearance.theme}
+                            onValueChange={(theme) =>
+                                void setAppearance({ theme })}
+                        />
+                        <AppearancePicker
+                            theme={appearance.theme}
+                            accent={appearance.accent}
+                            onThemeChange={(theme) =>
+                                void setAppearance({ theme })}
+                            onAccentChange={(accent) =>
                                 void setAppearance({ accent })}
                         />
                         {!desktopTopbar && (

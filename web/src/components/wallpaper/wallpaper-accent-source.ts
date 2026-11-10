@@ -99,7 +99,14 @@ const WALLPAPER_ACCENT_PROPERTIES = {
     masthead: "--wallpaper-accent-masthead",
 } as const;
 
-/** Writes the derived light / dark pair onto `element`, or clears it for the fallback. */
+/** The high contrast pair, read through `--accent-hc*` under `data-contrast="more"`. */
+const WALLPAPER_HIGH_CONTRAST_PROPERTIES = {
+    accent: "--wallpaper-accent-hc",
+    hover: "--wallpaper-accent-hc-hover",
+    active: "--wallpaper-accent-hc-active",
+} as const;
+
+/** Writes the derived light / dark pairs onto `element`, or clears them for the fallback. */
 export function applyWallpaperAccent(
     element: HTMLElement,
     accent: WallpaperAccent | null,
@@ -112,6 +119,20 @@ export function applyWallpaperAccent(
             element.style.setProperty(
                 property,
                 `light-dark(${accent.light[key]}, ${accent.dark[key]})`,
+            );
+        } else element.style.removeProperty(property);
+    }
+    for (
+        const [slot, property] of Object.entries(
+            WALLPAPER_HIGH_CONTRAST_PROPERTIES,
+        )
+    ) {
+        const key = slot as keyof typeof WALLPAPER_HIGH_CONTRAST_PROPERTIES;
+        if (accent) {
+            const { light, dark } = accent.highContrast;
+            element.style.setProperty(
+                property,
+                `light-dark(${light[key]}, ${dark[key]})`,
             );
         } else element.style.removeProperty(property);
     }

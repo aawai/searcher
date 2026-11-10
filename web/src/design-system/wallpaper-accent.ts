@@ -1,7 +1,8 @@
 /**
  * Wallpaper-derived accent: pick the dominant hue of the wallpaper's focal
  * region, then solve a light and a dark accent palette in OKLCH whose
- * lightness meets the same contrast pairs as the nine preset accents.
+ * lightness meets the same contrast pairs as the nine preset accents, plus a
+ * high contrast pair that holds the high contrast themes' 7:1 accent floor.
  *
  * Pure and deterministic: identical pixels and focal point give an identical
  * palette, so every device that can read the wallpaper derives the same colour.
@@ -34,10 +35,21 @@ export interface AccentPalette {
     readonly masthead: string;
 }
 
+/** Accent fills for a high contrast theme; text on them is the theme's fixed foreground. */
+export interface HighContrastAccent {
+    readonly accent: string;
+    readonly hover: string;
+    readonly active: string;
+}
+
 export interface WallpaperAccent {
     readonly seed: AccentSeed;
     readonly light: AccentPalette;
     readonly dark: AccentPalette;
+    readonly highContrast: {
+        readonly light: HighContrastAccent;
+        readonly dark: HighContrastAccent;
+    };
 }
 
 type Rgb = readonly [number, number, number];
@@ -70,9 +82,57 @@ const SURFACES = {
     }
 >;
 
+/**
+ * High contrast surfaces, mirroring `[data-contrast="more"]` in `tokens.css`:
+ * every opaque surface the accent is read on (`--background`, `--surface`,
+ * `--surface-soft`, `--surface-highlight`, `--surface-grouped-canvas`), the
+ * accent tints (`--accent-soft-mix` over `--surface`, `--accent-subtle-mix`
+ * over `--surface-soft`) and the fixed `--accent-foreground`.
+ */
+const HIGH_CONTRAST_SURFACES = {
+    light: {
+        surfaces: [
+            [0xff, 0xff, 0xff],
+            [0xed, 0xed, 0xed],
+            [0xe0, 0xe0, 0xe0],
+            [0xf2, 0xf2, 0xf2],
+        ],
+        surface: [0xff, 0xff, 0xff],
+        surfaceSoft: [0xed, 0xed, 0xed],
+        softMix: 0.12,
+        subtleMix: 0.18,
+        foreground: [0xff, 0xff, 0xff],
+    },
+    dark: {
+        surfaces: [
+            [0x00, 0x00, 0x00],
+            [0x1f, 0x1f, 0x1f],
+            [0x33, 0x33, 0x33],
+            [0x14, 0x14, 0x14],
+        ],
+        surface: [0x00, 0x00, 0x00],
+        surfaceSoft: [0x1f, 0x1f, 0x1f],
+        softMix: 0.18,
+        subtleMix: 0.24,
+        foreground: [0x00, 0x00, 0x00],
+    },
+} as const satisfies Record<
+    "light" | "dark",
+    {
+        surfaces: readonly Rgb[];
+        surface: Rgb;
+        surfaceSoft: Rgb;
+        softMix: number;
+        subtleMix: number;
+        foreground: Rgb;
+    }
+>;
+
 /** WCAG AA text and non-text (focus ring) minimums. */
 const TEXT_CONTRAST = 4.5;
 const RING_CONTRAST = 3;
+/** High contrast themes: accent text, links and rings hold WCAG AAA text (1.4.6). */
+export const HIGH_CONTRAST_ACCENT_CONTRAST = 7;
 /** The solver keeps this headroom for browser colour-mix rounding. */
 const CONTRAST_MARGIN = 0.1;
 
@@ -358,6 +418,91 @@ export function accentPalette(
     }
 }
 
+/**
+ * The pairs a high contrast accent must hold: accent text on every opaque
+ * neutral surface at 7:1, on its own tints (selected rows, drop targets) at
+ * the AA 4.5:1 ordinary themes hold there, and the fixed foreground on the
+ * accent fills at 4.5:1.
+ */
+export function highContrastAccentContrast(
+    theme: "light" | "dark",
+    palette: HighContrastAccent,
+): AccentContrast[] {
+    const { surfaces, surface, surfaceSoft, softMix, subtleMix, foreground } =
+        HIGH_CONTRAST_SURFACES[theme];
+    const accent = rgb(palette.accent);
+    const pairs: [string, Rgb, Rgb, number][] = [
+        ...surfaces.map((base): [string, Rgb, Rgb, number] => [
+            `强调色文字 / ${hex(base)}`,
+            accent,
+            base,
+            HIGH_CONTRAST_ACCENT_CONTRAST,
+        ]),
+        [
+            "强调色文字 / 浅底",
+            accent,
+            mix(accent, softMix, surface),
+            TEXT_CONTRAST,
+        ],
+        [
+            "强调色文字 / 次浅底",
+            accent,
+            mix(accent, subtleMix, surfaceSoft),
+            TEXT_CONTRAST,
+        ],
+        ...(["accent", "hover", "active"] as const).map((
+            slot,
+        ): [string, Rgb, Rgb, number] => [
+            `前景 / ${slot}`,
+            foreground,
+            rgb(palette[slot]),
+            TEXT_CONTRAST,
+        ]),
+    ];
+    return pairs.map(([label, a, b, minimum]) => ({
+        label,
+        ratio: contrast(a, b),
+        minimum,
+    }));
+}
+
+/**
+ * The high contrast accent keeps the seed's hue and chroma and moves only
+ * lightness: light themes darken from L 0.56, dark themes lighten from
+ * L 0.74, until every pair in `highContrastAccentContrast` holds. Hover and
+ * active step further the same way, so text on them only gains contrast.
+ * Terminates: black / white always pass.
+ */
+export function highContrastAccent(
+    seed: AccentSeed,
+    theme: "light" | "dark",
+): HighContrastAccent {
+    const chroma = Math.min(MAX_ACCENT_CHROMA, seed.chroma);
+    const direction = theme === "light" ? -1 : 1;
+    let lightness = theme === "light" ? 0.56 : 0.74;
+    for (;;) {
+        const [accent, hover, active] = [0, 1, 2].map((step) =>
+            hex(
+                toSrgb(
+                    Math.min(
+                        1,
+                        Math.max(0, lightness + direction * step * STATE_STEP),
+                    ),
+                    chroma,
+                    seed.hue,
+                ),
+            )
+        );
+        const palette = { accent, hover, active };
+        const atLimit = theme === "light" ? lightness <= 0 : lightness >= 1;
+        const holds = highContrastAccentContrast(theme, palette).every((
+            check,
+        ) => check.ratio >= check.minimum + CONTRAST_MARGIN);
+        if (holds || atLimit) return palette;
+        lightness += direction * LIGHTNESS_STEP;
+    }
+}
+
 export function deriveWallpaperAccent(
     pixels: WallpaperPixels,
     focal?: FocalPoint,
@@ -367,5 +512,9 @@ export function deriveWallpaperAccent(
         seed,
         light: accentPalette(seed, "light"),
         dark: accentPalette(seed, "dark"),
+        highContrast: {
+            light: highContrastAccent(seed, "light"),
+            dark: highContrastAccent(seed, "dark"),
+        },
     };
 }

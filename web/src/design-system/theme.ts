@@ -1,4 +1,4 @@
-import { THEME_IDS, type ThemeId } from "@shared/contracts.ts";
+import type { ThemeId } from "@shared/contracts.ts";
 
 export type ColorScheme = "light" | "dark";
 
@@ -10,9 +10,26 @@ export const THEME_LABELS: Readonly<Record<ThemeId, string>> = {
     "high-contrast-dark": "高对比深色",
 };
 
-/** The top-bar toggle steps through every theme in settings order, then wraps. */
-export function nextThemeInCycle(theme: ThemeId): ThemeId {
-    return THEME_IDS[(THEME_IDS.indexOf(theme) + 1) % THEME_IDS.length];
+/**
+ * The top-bar toggle flips light and dark in one click and keeps the contrast
+ * level; 跟随系统 becomes the explicit opposite of what the system shows now.
+ */
+export function toggleThemeScheme(
+    theme: ThemeId,
+    prefersDark: boolean,
+): ThemeId {
+    switch (theme) {
+        case "system":
+            return prefersDark ? "light" : "dark";
+        case "light":
+            return "dark";
+        case "dark":
+            return "light";
+        case "high-contrast-light":
+            return "high-contrast-dark";
+        case "high-contrast-dark":
+            return "high-contrast-light";
+    }
 }
 
 export function isHighContrastTheme(theme: ThemeId): boolean {
