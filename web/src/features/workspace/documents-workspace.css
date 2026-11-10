@@ -84,13 +84,10 @@
 .documents-sidebar--drawer .documents-workspace {
     padding-inline-end: 0;
 }
-/* On the grouped canvas the soft fill barely separates; the current entry
-   takes the card's surface, the same layer as the editor card beside it. */
-.documents-sidebar--drawer :is(
-    .documents-tree-row[data-selected],
-    .documents-summary-row:has([aria-current="page"]),
-    [data-slot="button"].documents-entry[aria-pressed="true"]
-) {
+/* On the grouped canvas the current entry keeps the card's surface, the same
+   layer as the editor card beside it (#340 I3); the persistent sidebar's
+   current entry takes the shared current-item tint instead. */
+.documents-sidebar--drawer :is(.documents-tree-row[data-selected], .documents-summary-row:has([aria-current="page"]), [data-slot="button"].documents-entry[aria-pressed="true"]) {
     background: var(--surface);
 }
 .documents-outline-drawer-content {
@@ -137,7 +134,7 @@
 .documents-layout[data-outline-drawer="open"] > .documents-editor-pane {
     flex: 0 0 calc(
         100% - var(--documents-outline-drawer-width) -
-            var(--documents-drawer-gap)
+        var(--documents-drawer-gap)
     );
 }
 /* Reduced motion: the open geometry is the state, not the animation, so the
@@ -256,8 +253,9 @@
     outline-offset: calc(-1 * var(--space-half));
 }
 [data-slot="button"].documents-entry[aria-pressed="true"] {
-    background: var(--surface-soft);
+    background: var(--accent-soft);
     color: var(--foreground);
+    font-weight: var(--font-title-weight);
 }
 .documents-notebooks-heading [data-slot="button"].documents-entry {
     font-size: inherit;
@@ -346,8 +344,7 @@
 .documents-tree-drag-overlay[data-drop-invalid] {
     opacity: 0.6;
 }
-.documents-tree-row:is(:hover, :focus-within),
-.documents-tree-row[data-selected] {
+.documents-tree-row:is(:hover, :focus-within) {
     background: var(--surface-soft);
 }
 .documents-tree-row:focus-visible {
@@ -355,6 +352,7 @@
     outline-offset: calc(var(--space-half) * -1);
 }
 .documents-tree-row[data-selected] {
+    background: var(--accent-soft);
     color: var(--foreground);
     font-weight: var(--font-label-weight);
 }
@@ -443,7 +441,10 @@
     background: var(--surface-soft);
 }
 .documents-summary-row:has([aria-current="page"]) {
-    background: var(--surface-soft);
+    background: var(--accent-soft);
+}
+.documents-summary-row:has([aria-current="page"]) .documents-summary-open {
+    font-weight: var(--font-title-weight);
 }
 .documents-summary-header {
     display: flex;
@@ -582,9 +583,10 @@
     opacity: 1;
 }
 
-/* Dense pointers get compact controls. On touch, stacked entries grow visibly
-   (their hit areas would overlap); single actions keep their visible size and
-   reach the target through the shared hit area. */
+/* On touch, single actions keep their visible size and reach the target
+   through the shared hit area; entries grow to it. A fine primary pointer
+   with a touch screen keeps the compact sizes below, except stacked entries
+   (after it). */
 @media (any-pointer: coarse), (hover: none) {
     [data-slot="dropdown-menu-trigger"].documents-row-action,
     [data-slot="button"].documents-tree-action {
@@ -620,5 +622,14 @@
     [data-slot="button"].documents-entry {
         position: relative;
         --touch-target-size: var(--control-touch-target);
+    }
+}
+/* Stacked entries in the scrolling list grow visibly under any coarse pointer,
+   a touch-screen laptop's fine primary pointer included: at the compact size
+   their hit areas would cover each other. The lone footer entry keeps the
+   compact size there and aligns with the editor footer. */
+@media (any-pointer: coarse) {
+    .documents-sidebar-scroll :is([data-slot="button"].documents-summary-open, [data-slot="button"].documents-entry, .documents-tree-row) {
+        min-height: var(--control-touch-target);
     }
 }

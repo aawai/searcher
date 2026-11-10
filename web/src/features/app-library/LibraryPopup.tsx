@@ -52,10 +52,13 @@ export function LibraryPopup({
                     data-anchored={top === null ? undefined : ""}
                     // The library returns focus to the opening tile itself.
                     finalFocus={false}
-                    // The dialog itself, not an app: an app tile would open its focus tooltip,
-                    // and that tooltip would swallow the first Escape.
+                    // The first header control (add / close), never an app
+                    // tile: a tile's focus tooltip would swallow the first Escape.
                     initialFocus={() =>
-                        body.current?.closest<HTMLElement>("[role=dialog]") ??
+                        body.current?.closest<HTMLElement>("[role=dialog]")
+                            ?.querySelector<HTMLElement>(
+                                "button:not([disabled])",
+                            ) ??
                             true}
                 >
                     <div className="launcher-popup-header">

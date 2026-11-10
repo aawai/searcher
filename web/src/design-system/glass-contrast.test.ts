@@ -37,9 +37,8 @@ const LARGE_TEXT_MIN_PX = 24;
 /** WCAG 1.4.11: graphical objects needed to identify a control or its state. */
 const WCAG_AA_NON_TEXT = 3;
 /**
- * Synthetic regression probe for `--muted` over glass and the masthead veil.
- * It is not a standard: the baseline still requires 4.5:1 for that text
- * (VISUAL_LANGUAGE.md「验证与已知缺口」).
+ * Synthetic regression probe for `--muted` over glass. The masthead has its
+ * own AA text colours; glass still requires real-page measurement.
  */
 const MUTED_GLASS_PROBE = 3;
 /**
@@ -350,7 +349,14 @@ function mastheadVeil(theme: Theme): Rgb[] {
     // readability stage over the dimmed image; the veil washes over the
     // blurred result.
     const maskAlpha = WALLPAPER_READABILITY_MASKS.balanced;
-    return BACKDROPS.map((backdrop) => {
+    return [
+        ...BACKDROPS,
+        [0, 0, 0] as Rgb,
+        [255, 255, 255] as Rgb,
+        [255, 0, 0] as Rgb,
+        [0, 255, 0] as Rgb,
+        [0, 0, 255] as Rgb,
+    ].map((backdrop) => {
         const dimmed = backdrop.map((channel) =>
             channel * brightness
         ) as unknown as Rgb;
@@ -418,11 +424,11 @@ for (const theme of THEMES) {
 }
 
 for (const theme of THEMES) {
-    Deno.test(`home masthead veil ${theme.id}: text holds AA and --muted 3:1 over the default readability mask`, () => {
+    Deno.test(`home masthead veil ${theme.id}: body, secondary and accent text hold AA over the default readability mask`, () => {
         const tokens = cascade(theme, "regular");
         const probes = [
             ["--foreground", WCAG_AA_TEXT],
-            ["--muted", MUTED_GLASS_PROBE],
+            ["--masthead-muted", WCAG_AA_TEXT],
         ] as const;
         for (const [name, floor] of probes) {
             const color = hex(resolve(tokens, name));
@@ -434,6 +440,42 @@ for (const theme of THEMES) {
                 `${name} on --masthead-veil-${theme.scheme} gives ${
                     worst.toFixed(2)
                 }:1`,
+            );
+        }
+        const presets = [
+            "blue",
+            "cyan",
+            "teal",
+            "violet",
+            "orange",
+            "rose",
+            "emerald",
+            "amber",
+            "mono",
+        ];
+        for (const preset of presets) {
+            let color: Rgb;
+            if (theme.highContrast) {
+                color = hex(resolve(tokens, "--masthead-accent-text"));
+            } else {
+                const selector = preset === "blue"
+                    ? ':root,\n[data-accent="blue"]'
+                    : `[data-accent="${preset}"]`;
+                const value = declarations(selector).get(
+                    "--masthead-accent-text",
+                )!;
+                const pair = value.match(
+                    /^light-dark\((#[0-9a-f]+), (#[0-9a-f]+)\)$/i,
+                );
+                assert(pair, `${preset}: invalid masthead accent ${value}`);
+                color = hex(pair[theme.scheme === "light" ? 1 : 2]);
+            }
+            const worst = Math.min(
+                ...mastheadVeil(theme).map((veil) => contrast(color, veil)),
+            );
+            assert(
+                worst >= WCAG_AA_TEXT,
+                `${preset} on masthead veil: ${worst.toFixed(2)}:1`,
             );
         }
     });

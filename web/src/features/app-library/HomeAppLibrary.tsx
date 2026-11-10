@@ -9,6 +9,7 @@ import {
     useRef,
     useState,
 } from "react";
+import { flushSync } from "react-dom";
 import { Plus } from "lucide-react";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Button } from "../../components/ui/button.tsx";
@@ -18,6 +19,7 @@ import {
     ContextMenuItem,
     ContextMenuTrigger,
 } from "../../components/ui/context-menu.tsx";
+import { runSharedElementTransition } from "../../lib/shared-element.ts";
 import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
 import {
     ActionGroup,
@@ -274,28 +276,92 @@ export const HomeAppLibrary = forwardRef<
     const [renaming, setRenaming] = useState<LauncherGroup | null>(null);
     const [deleting, setDeleting] = useState<LauncherGroup | null>(null);
     const [creatingFolder, setCreatingFolder] = useState(false);
+    const opening = useRef<Promise<unknown> | null>(null);
+    const closePending = useRef(false);
 
+    const folderObject = useCallback(
+        (id: string) =>
+            root.current?.querySelector<HTMLElement>(
+                `[data-folder-id="${CSS.escape(id)}"] .launcher-folder-surface`,
+            ) ?? null,
+        [],
+    );
+    const popupObject = () =>
+        document.querySelector<HTMLElement>(".launcher-popup");
     const push = useCallback((layer: LayerKind) => {
         const top =
             grid?.closest(".launcher-plate")?.getBoundingClientRect().top ??
                 null;
-        setLayers((current) => [
-            ...current,
-            {
-                ...layer,
-                origin: captureOrigin(),
-                top: current[0]?.top ?? top,
-            } as Layer,
-        ]);
-    }, [grid]);
+        const source = folderObject(layer.id);
+        const origin = captureOrigin();
+        const next: Layer = {
+            ...layer,
+            origin: origin && source?.parentElement?.contains(origin)
+                ? origin
+                : source?.querySelector<HTMLElement>(
+                    ".launcher-folder-background",
+                ) ??
+                    origin,
+            top: layers[0]?.top ?? top,
+        };
+        const update = () =>
+            flushSync(() => setLayers((current) => [...current, next]));
+        if (!source) {
+            update();
+            return;
+        }
+        const transition = runSharedElementTransition({
+            source,
+            update,
+            findTarget: popupObject,
+        });
+        opening.current = transition;
+        void transition.finally(() => {
+            if (opening.current === transition) opening.current = null;
+            if (!closePending.current) {
+                popupObject()?.querySelector<HTMLElement>(
+                    "button:not([disabled])",
+                )
+                    ?.focus({ preventScroll: true });
+            }
+        });
+    }, [folderObject, grid, layers]);
     const closeTop = useCallback(() => {
         const closing = layers[layers.length - 1];
         if (!closing) return;
-        setLayers(layers.slice(0, -1));
-        requestAnimationFrame(() =>
-            requestAnimationFrame(() => focusReturn(closing))
-        );
-    }, [layers]);
+        const performClose = () => {
+            const source = popupObject();
+            const target = folderObject(closing.id);
+            const update = () =>
+                flushSync(() => setLayers((current) => current.slice(0, -1)));
+            if (!source || !target) {
+                update();
+                focusReturn(closing);
+                return;
+            }
+            void runSharedElementTransition({
+                source,
+                update,
+                findTarget: () => folderObject(closing.id),
+            }).finally(() => {
+                // Focus the user moved during the morph (e.g. into the search
+                // box) stays; only a focus the closed popup dropped returns.
+                const active = document.activeElement;
+                if (!active || active === document.body) focusReturn(closing);
+            });
+        };
+        if (opening.current) {
+            if (!closePending.current) {
+                closePending.current = true;
+                void opening.current.finally(() => {
+                    closePending.current = false;
+                    performClose();
+                });
+            }
+        } else {
+            performClose();
+        }
+    }, [folderObject, layers]);
     useImperativeHandle(ref, () => ({
         openFolder: (id) => push({ type: "folder", id }),
     }), [push]);

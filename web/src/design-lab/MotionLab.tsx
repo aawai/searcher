@@ -30,6 +30,134 @@ const CARDS = [
     },
 ];
 
+function FolderReference() {
+    const [open, setOpen] = useState(false);
+    const tile = useRef<HTMLButtonElement>(null);
+    const popup = useRef<HTMLDivElement>(null);
+    const close = useRef<HTMLButtonElement>(null);
+    const change = async (next: boolean) => {
+        const source = next ? tile.current : popup.current;
+        if (!source) return;
+        await runSharedElementTransition({
+            source,
+            update: () => flushSync(() => setOpen(next)),
+            findTarget: () => next ? popup.current : tile.current,
+        });
+        (next ? close.current : tile.current)?.focus();
+    };
+    useEscapeLayer(open, () => void change(false));
+    return (
+        <Section title="文件夹图块 ↔ 弹层">
+            <p>同一文件夹展开与收起；只有文件夹参与几何变形。</p>
+            {open
+                ? (
+                    <div ref={popup} className="motion-lab-object">
+                        <h2>常用工具</h2>
+                        <p>文件夹中的应用</p>
+                        <Button ref={close} onClick={() => void change(false)}>
+                            关闭
+                        </Button>
+                    </div>
+                )
+                : (
+                    <Button
+                        ref={tile}
+                        variant="outline"
+                        onClick={() => void change(true)}
+                    >
+                        打开常用工具文件夹
+                    </Button>
+                )}
+        </Section>
+    );
+}
+
+function NotesReference() {
+    const [windowState, setWindowState] = useState<
+        "closed" | "open" | "minimized"
+    >("closed");
+    const [selected, setSelected] = useState(false);
+    const entry = useRef<HTMLButtonElement>(null);
+    const note = useRef<HTMLDivElement>(null);
+    const title = useRef<HTMLButtonElement>(null);
+    const openNote = async () => {
+        if (!entry.current) return;
+        await runSharedElementTransition({
+            source: entry.current,
+            update: () =>
+                flushSync(() => {
+                    setWindowState("open");
+                    setSelected(true);
+                }),
+            findTarget: () => note.current,
+        });
+        title.current?.focus();
+    };
+    return (
+        <Section title="置顶条目 → 笔记窗口（实验）">
+            <p>从关闭、已打开或最小化状态打开同一笔记；窗口不叠加入场动效。</p>
+            <div className="motion-lab-notes-actions">
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        setWindowState("closed");
+                        setSelected(false);
+                    }}
+                >
+                    关闭窗口
+                </Button>
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        setWindowState("open");
+                        setSelected(false);
+                    }}
+                >
+                    窗口已打开
+                </Button>
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        setWindowState("minimized");
+                        setSelected(false);
+                    }}
+                >
+                    窗口已最小化
+                </Button>
+            </div>
+            <p role="status">
+                窗口状态：{windowState === "closed"
+                    ? "关闭"
+                    : windowState === "open"
+                    ? "打开"
+                    : "最小化"}
+            </p>
+            <Button
+                ref={entry}
+                variant="outline"
+                onClick={() => void openNote()}
+            >
+                置顶笔记：旅行计划
+            </Button>
+            {windowState === "open" && (
+                <div className="motion-lab-window">
+                    <h2>笔记窗口</h2>
+                    {selected
+                        ? (
+                            <div ref={note} className="motion-lab-object">
+                                <Button ref={title} variant="ghost">
+                                    旅行计划
+                                </Button>
+                                <p>这是一篇从刊头打开的笔记。</p>
+                            </div>
+                        )
+                        : <p>窗口已打开，尚未选择该笔记。</p>}
+                </div>
+            )}
+        </Section>
+    );
+}
+
 export default function MotionLab() {
     const [expanded, setExpanded] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
@@ -155,6 +283,8 @@ export default function MotionLab() {
                     })}
                 </div>
             </Section>
+            <FolderReference />
+            <NotesReference />
         </PageShell>
     );
 }

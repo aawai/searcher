@@ -25,12 +25,13 @@ export interface AccentSeed {
     readonly chroma: number;
 }
 
-/** The four accent tokens for one theme, as `#rrggbb`. */
+/** Accent tokens for one theme, as `#rrggbb`. */
 export interface AccentPalette {
     readonly accent: string;
     readonly hover: string;
     readonly active: string;
     readonly foreground: string;
+    readonly masthead: string;
 }
 
 export interface WallpaperAccent {
@@ -324,12 +325,30 @@ export function accentPalette(
             ? [255, 255, 255]
             : toSrgb(0.18, Math.min(chroma, 0.04), hue),
     );
+    // Worst sRGB composites of the balanced mask and masthead veil over
+    // black (light) and dimmed white (dark), rounded conservatively.
+    // Light: the 5th-percentile veil pixel measured over black at 1440
+    // (wallpaper-readability), lighter than the flat composite.
+    const backdrop: Rgb = theme === "light" ? [176, 176, 177] : [65, 65, 66];
+    let mastheadLightness = theme === "light" ? 0.56 : 0.74;
+    let masthead: string;
+    for (;;) {
+        masthead = hex(toSrgb(mastheadLightness, chroma, hue));
+        if (
+            contrast(rgb(masthead), backdrop) >=
+                TEXT_CONTRAST + CONTRAST_MARGIN ||
+            (theme === "light"
+                ? mastheadLightness <= 0
+                : mastheadLightness >= 1)
+        ) break;
+        mastheadLightness += direction * LIGHTNESS_STEP;
+    }
     let lightness = theme === "light" ? 0.56 : 0.74;
     for (;;) {
         const [accent, hover, active] = [0, 1, 2].map((step) =>
             hex(toSrgb(lightness + direction * step * STATE_STEP, chroma, hue))
         );
-        const palette = { accent, hover, active, foreground };
+        const palette = { accent, hover, active, foreground, masthead };
         const atLimit = theme === "light" ? lightness <= 0 : lightness >= 1;
         const holds = accentContrast(theme, palette).every((check) =>
             check.ratio >= check.minimum + CONTRAST_MARGIN

@@ -312,3 +312,162 @@ Deno.test("侧栏和大纲宽度拖拽、键盘调整后按设备保存", async 
         "240px",
     );
 });
+
+Deno.test("侧栏和大纲预设支持指针、键盘与触屏并保留宽度", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+
+    for (const touch of [false, true]) {
+        const context = await browser.newContext({
+            viewport: { width: 1600, height: 900 },
+            hasTouch: touch,
+        });
+        const page = await context.newPage();
+        await loginAndVisit(page, app.origin, "/", user);
+        const note = await createHomeNote(page, {
+            title: touch ? "触屏预设" : "指针预设",
+            body: "# 正文",
+            isHomeFixed: false,
+        });
+        await page.reload();
+        await openRow(page, note.id);
+        await expectTitle(page, touch ? "触屏预设" : "指针预设");
+        const resizeHost = async (key: "ArrowLeft" | "ArrowRight") => {
+            await frame(page).getByRole("button", { name: "笔记窗口菜单" })
+                .click();
+            await page.getByRole("menuitem", { name: "调整左边" }).click();
+            for (let i = 0; i < 18; i++) await page.keyboard.press(key);
+            await page.keyboard.press("Enter");
+            await frame(page).getByRole("button", { name: "笔记窗口菜单" })
+                .click();
+            await page.getByRole("menuitem", { name: "调整右边" }).click();
+            for (let i = 0; i < 18; i++) {
+                await page.keyboard.press(
+                    key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft",
+                );
+            }
+            await page.keyboard.press("Enter");
+        };
+        await resizeHost("ArrowLeft");
+        const sidebar = frame(page).getByRole("separator", {
+            name: "调整侧栏宽度",
+        });
+        await sidebar.waitFor();
+        await frame(page).getByRole("button", { name: "大纲", exact: true })
+            .click();
+        const outline = frame(page).getByRole("separator", {
+            name: "调整大纲宽度",
+        });
+        await outline.waitFor();
+        const cdp = touch ? await context.newCDPSession(page) : null;
+        for (
+            const [handle, label, defaultWidth] of [
+                [sidebar, "调整侧栏宽度", 240],
+                [outline, "调整大纲宽度", 260],
+            ] as const
+        ) {
+            const menu = page.getByRole("menu", { name: `${label}预设` });
+            for (
+                const [name, width] of [
+                    ["窄", 180],
+                    ["默认", defaultWidth],
+                    ["宽", 400],
+                ] as const
+            ) {
+                if (cdp) {
+                    const box = await handle.boundingBox();
+                    assert(box);
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchStart",
+                        touchPoints: [{
+                            x: box.x + box.width / 2,
+                            y: box.y + box.height / 2,
+                            id: 1,
+                        }],
+                    });
+                    // A held long press, as in the notes tree test.
+                    await page.waitForTimeout(700);
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchEnd",
+                        touchPoints: [],
+                    });
+                    await menu.waitFor();
+                    // The release's delayed compatibility click must not
+                    // close the menu.
+                    await page.waitForTimeout(400);
+                    await menu.waitFor();
+                } else {
+                    await handle.click({ button: "right" });
+                }
+                await menu.getByRole("menuitemradio", { name, exact: true })
+                    .click();
+                await page.waitForFunction(
+                    ({ label, width }) =>
+                        Number(
+                            document.querySelector(`[aria-label="${label}"]`)
+                                ?.getAttribute("aria-valuenow"),
+                        ) === width,
+                    { label, width },
+                );
+            }
+            await handle.focus();
+            await page.keyboard.press(
+                label === "调整侧栏宽度" ? "Shift+F10" : "ContextMenu",
+            );
+            assertEquals(
+                await menu.getByRole("menuitemradio", {
+                    name: "宽",
+                    exact: true,
+                }).getAttribute("aria-checked"),
+                "true",
+            );
+            await page.keyboard.press("Escape");
+        }
+        await resizeHost("ArrowRight");
+        await page.waitForFunction(() =>
+            Number(
+                    document.querySelector('[aria-label="调整侧栏宽度"]')
+                        ?.getAttribute("aria-valuenow"),
+                ) < 400 &&
+            Number(
+                    document.querySelector('[aria-label="调整大纲宽度"]')
+                        ?.getAttribute("aria-valuenow"),
+                ) < 400
+        );
+        // Selecting while constrained must retain the requested width.
+        for (
+            const [handle, label] of [
+                [sidebar, "调整侧栏宽度"],
+                [outline, "调整大纲宽度"],
+            ] as const
+        ) {
+            for (const name of ["窄", "宽"]) {
+                await handle.click({ button: "right" });
+                await page.getByRole("menu", { name: `${label}预设` })
+                    .getByRole("menuitemradio", { name, exact: true }).click();
+            }
+        }
+        await page.reload();
+        await expectTitle(page, touch ? "触屏预设" : "指针预设");
+        await resizeHost("ArrowLeft");
+        for (const handle of [sidebar, outline]) {
+            await handle.waitFor();
+            await page.waitForFunction(
+                (label) =>
+                    Number(
+                        document.querySelector(`[aria-label="${label}"]`)
+                            ?.getAttribute("aria-valuenow"),
+                    ) === 400,
+                await handle.getAttribute("aria-label"),
+            );
+        }
+        await context.close();
+    }
+});

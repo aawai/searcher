@@ -96,6 +96,7 @@ const WALLPAPER_ACCENT_PROPERTIES = {
     hover: "--wallpaper-accent-hover",
     active: "--wallpaper-accent-active",
     foreground: "--wallpaper-accent-foreground",
+    masthead: "--wallpaper-accent-masthead",
 } as const;
 
 /** Writes the derived light / dark pair onto `element`, or clears it for the fallback. */

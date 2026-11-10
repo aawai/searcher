@@ -176,6 +176,14 @@ Deno.test("accent follows the wallpaper by default, stays a manual override and 
         await pngFile(device.page, orange, "#e8781e");
         await pngFile(device.page, teal, "#1e9aa0");
         const orangeAccent = await upload(device.page, orange);
+        assert(
+            (await device.page.evaluate(() =>
+                document.documentElement.style.getPropertyValue(
+                    "--wallpaper-accent-masthead",
+                )
+            )).startsWith("light-dark("),
+            "wallpaper-derived masthead accent is written to the document",
+        );
         const [r, g, b] = (await tokens(device.page, ["--accent"]))["--accent"];
         assert(r > g && g > b, `orange wallpaper accent ${[r, g, b]}`);
         await assertAccentContrast(device.page);

@@ -211,5 +211,7 @@ Host/主题/视图的实页截图；每次执行在父目录下
 `wallpaper-readability` 是 A6 的机检：七张合成极值壁纸 × light / dark / 高对比浅色 / 高对比深色 × 390 / 1440 ×
 登录 / 访客，在真实 Chromium 中逐个文字元素取字形外 2px 的背景像素，最不利的 5% 分位须满足
 1.4.3（取样方法见 [VISUAL_LANGUAGE · 验证与已知缺口](design/VISUAL_LANGUAGE.md#验证与已知缺口)）；
+1440 下一并取样宽屏刊头衬底上的文字。同一文件另以该方法实测 Floating 上的 `--muted`（头像菜单、文件夹计数、
+搜索建议分组标题 × `regular` / `clear`），并打印各元素最差值。
 取样前等待两帧截图一致，取样期间背景像素变化即失败，不重试。PR/main CI
 自动执行该链路、`deno task test` 与 UI 门禁。

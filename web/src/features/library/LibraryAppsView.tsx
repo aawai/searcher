@@ -184,6 +184,21 @@ export function LibraryAppsView({
         target.focus({ preventScroll: true });
     }, [folderId, hasActiveFolder]);
 
+    function moveRoot(id: string, direction: -1 | 1) {
+        const from = rootIds.indexOf(id);
+        const to = from + direction;
+        if (from >= 0 && to >= 0 && to < rootTiles.length) {
+            void library.actions.reorderRoot(arrayMove(rootTiles, from, to));
+        }
+    }
+    function moveFolder(ids: string[], id: string, direction: -1 | 1) {
+        const from = ids.indexOf(id);
+        const to = from + direction;
+        if (from >= 0 && to >= 0 && to < ids.length) {
+            void library.actions.reorderFolder(arrayMove(ids, from, to));
+        }
+    }
+
     const actions: LibraryTileActions = {
         showAppLabels,
         onOpen: onOpenApp,
@@ -521,22 +536,8 @@ export function LibraryAppsView({
                                             );
                                         }
                                     }}
-                                    onMoveByKey={(id, direction) => {
-                                        const from = folderAppIds.indexOf(id);
-                                        const to = from + direction;
-                                        if (
-                                            from >= 0 && to >= 0 &&
-                                            to < folderAppIds.length
-                                        ) {
-                                            void library.actions.reorderFolder(
-                                                arrayMove(
-                                                    folderAppIds,
-                                                    from,
-                                                    to,
-                                                ),
-                                            );
-                                        }
-                                    }}
+                                    onMoveByKey={(id, direction) =>
+                                        moveFolder(folderAppIds, id, direction)}
                                 />
                             )
                             : (
@@ -574,18 +575,7 @@ export function LibraryAppsView({
                                         );
                                     }
                                 }}
-                                onMoveByKey={(id, direction) => {
-                                    const from = rootIds.indexOf(id);
-                                    const to = from + direction;
-                                    if (
-                                        from >= 0 && to >= 0 &&
-                                        to < rootTiles.length
-                                    ) {
-                                        void library.actions.reorderRoot(
-                                            arrayMove(rootTiles, from, to),
-                                        );
-                                    }
-                                }}
+                                onMoveByKey={moveRoot}
                             />
                         )
                         : (

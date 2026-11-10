@@ -63,7 +63,7 @@
 /* The current item also takes the title weight: the fill and icon tint alone
    are colour cues (1.4.1), and forced colours erase them (A7). */
 .settings-nav-item[aria-current="page"] {
-    background: var(--surface-soft);
+    background: var(--accent-soft);
     font-weight: var(--font-title-weight);
 }
 .settings-nav-item[aria-current="page"] > svg:first-child {

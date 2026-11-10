@@ -16,6 +16,8 @@
     /* Thumb of switches, segmented selection, tabs and sliders: lighter than its track in both themes. */
     --surface-control-thumb: #FFFFFF;
     --muted: #66666B;
+    /* Measured worst case on the veil (black wallpaper, 1440): #444448 read 4.47:1. */
+    --masthead-muted: #3D3D40;
     --border: rgb(0 0 0 / 0.09);
     --border-subtle: rgb(0 0 0 / 0.05);
     /* Graphic control boundary (checkbox, radio, switch): >=3:1 against surface and background. */
@@ -95,24 +97,19 @@
     --elevation-sheet-backdrop: 49;
     --elevation-sheet: 50;
     --elevation-drag: 55;
-    /* CSS integer ceiling inside the canvas, never a global overlay band. */
-    --elevation-note-drag: 2147483647;
     --elevation-modal-backdrop: 59;
     --elevation-modal: 60;
     --elevation-popover: 70;
     --elevation-menu: 80;
     --elevation-suggestions: 90;
     --elevation-toast: 100;
-    --elevation-dev-inspector: var(--elevation-suggestions);
     /* Local child layers are meaningful only inside their owning stack. */
     --elevation-local-0: 0;
     --elevation-local-1: 1;
     --elevation-local-2: 2;
-    --elevation-card: var(--elevation-local-2);
     --elevation-local-3: 3;
     --elevation-local-4: 4;
     --elevation-local-5: 5;
-    --elevation-local-6: 6;
     --elevation-local-10: 10;
     --elevation-local-20: 20;
     --elevation-local-25: 25;
@@ -320,6 +317,7 @@
     --surface-l3: #242428;
     --surface-grouped-canvas: var(--surface-l3);
     --muted: #A1A1A6;
+    --masthead-muted: #c6c6cb;
     --border: rgb(255 255 255 / 0.10);
     --border-subtle: rgb(255 255 255 / 0.06);
     --border-control: #747479;
@@ -355,54 +353,63 @@
     --accent-hover: light-dark(#1e40af, #93c5fd);
     --accent-active: light-dark(#172554, #bfdbfe);
     --accent-foreground: light-dark(#ffffff, #090d16);
+    --masthead-accent-text: light-dark(#112f82, #90c0fc);
 }
 [data-accent="cyan"] {
     --accent: light-dark(#0e7490, #22d3ee);
     --accent-hover: light-dark(#155e75, #67e8f9);
     --accent-active: light-dark(#164e63, #a5f3fc);
     --accent-foreground: light-dark(#ffffff, #042f2e);
+    --masthead-accent-text: light-dark(#084656, #64e0f3);
 }
 [data-accent="teal"] {
     --accent: light-dark(#0f766e, #2dd4bf);
     --accent-hover: light-dark(#115e59, #5eead4);
     --accent-active: light-dark(#134e4a, #99f6e4);
     --accent-foreground: light-dark(#ffffff, #042f2e);
+    --masthead-accent-text: light-dark(#094742, #6ce1d2);
 }
 [data-accent="violet"] {
     --accent: light-dark(#6d28d9, #a78bfa);
     --accent-hover: light-dark(#5b21b6, #c4b5fd);
     --accent-active: light-dark(#4c1d95, #ddd6fe);
     --accent-foreground: light-dark(#ffffff, #1e1035);
+    --masthead-accent-text: light-dark(#411882, #c1aefc);
 }
 [data-accent="orange"] {
     --accent: light-dark(#c2410c, #fb923c);
     --accent-hover: light-dark(#9a3412, #fdba74);
     --accent-active: light-dark(#7c2d12, #fed7aa);
     --accent-foreground: light-dark(#ffffff, #2a1205);
+    --masthead-accent-text: light-dark(#742707, #fcb377);
 }
 [data-accent="rose"] {
     --accent: light-dark(#be123c, #fb7185);
     --accent-hover: light-dark(#9f1239, #fda4af);
     --accent-active: light-dark(#881337, #fecdd3);
     --accent-foreground: light-dark(#ffffff, #2f0510);
+    --masthead-accent-text: light-dark(#720b24, #fc9caa);
 }
 [data-accent="emerald"] {
     --accent: light-dark(#157e3d, #4ade80);
     --accent-hover: light-dark(#166534, #86efac);
     --accent-active: light-dark(#14532d, #bbf7d0);
     --accent-foreground: light-dark(#ffffff, #052e16);
+    --masthead-accent-text: light-dark(#0d4c25, #80e8a6);
 }
 [data-accent="amber"] {
     --accent: light-dark(#b25209, #fbbf24);
     --accent-hover: light-dark(#92400e, #fcd34d);
     --accent-active: light-dark(#78350f, #fde68a);
     --accent-foreground: light-dark(#ffffff, #2e1905);
+    --masthead-accent-text: light-dark(#6b3105, #fcd266);
 }
 [data-accent="mono"] {
     --accent: light-dark(#27272a, #e4e4e7);
     --accent-hover: light-dark(#18181b, #f4f4f5);
     --accent-active: light-dark(#09090b, #ffffff);
     --accent-foreground: light-dark(#ffffff, #18181b);
+    --masthead-accent-text: light-dark(#171719, #ececee);
     /* Achromatic surfaces retain their deliberately quieter mixes. */
     --accent-soft-mix: var(--accent-mono-soft-mix);
     --accent-subtle-mix: var(--accent-mono-subtle-mix);
@@ -416,12 +423,14 @@
     --wallpaper-accent-hover: light-dark(#1e40af, #93c5fd);
     --wallpaper-accent-active: light-dark(#172554, #bfdbfe);
     --wallpaper-accent-foreground: light-dark(#ffffff, #090d16);
+    --wallpaper-accent-masthead: light-dark(#112f82, #90c0fc);
 }
 [data-accent="wallpaper"] {
     --accent: var(--wallpaper-accent);
     --accent-hover: var(--wallpaper-accent-hover);
     --accent-active: var(--wallpaper-accent-active);
     --accent-foreground: var(--wallpaper-accent-foreground);
+    --masthead-accent-text: var(--wallpaper-accent-masthead);
 }
 
 /*
@@ -446,6 +455,7 @@
     --surface-l3: #FFFFFF;
     --surface-grouped-canvas: #F2F2F2;
     --muted: #3D3D40;
+    --masthead-muted: var(--muted);
     --border: #6E6E73;
     --border-subtle: #A1A1A6;
     --border-control: #000000;
@@ -460,6 +470,7 @@
     --accent-hover: #4B0096;
     --accent-active: #24004A;
     --accent-foreground: #FFFFFF;
+    --masthead-accent-text: var(--accent);
     --accent-soft-mix: 12%;
     --accent-subtle-mix: 18%;
     --accent-border-mix: 70%;
@@ -490,6 +501,7 @@
     --surface-l3: #000000;
     --surface-grouped-canvas: #141414;
     --muted: #C7C7CC;
+    --masthead-muted: var(--muted);
     --border: #8E8E93;
     --border-subtle: #48484A;
     --border-control: #FFFFFF;
@@ -504,6 +516,7 @@
     --accent-hover: #7AF3FF;
     --accent-active: #C2FAFF;
     --accent-foreground: #000000;
+    --masthead-accent-text: var(--accent);
     --accent-soft-mix: 18%;
     --accent-subtle-mix: 24%;
     --surface-scrim: rgb(0 0 0 / 0.7);
@@ -561,7 +574,10 @@
 [data-glass="clear"] {
     --glass-regular-light: 45%;
     --glass-regular-dark: 55%;
-    --glass-thick-light: 76%;
+    /* Floating carries readable text: with the weaker sheen it needs more fill
+       than regular. --muted in top-bar menus over black measured 3.8:1 at 76%
+       and 4.49:1 at 86% (#394 2.2). */
+    --glass-thick-light: 90%;
     --glass-thick-dark: 84%;
     --glass-sheen-scale: 0.25;
     --material-filter: blur(8px) saturate(1.8);

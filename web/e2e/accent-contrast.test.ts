@@ -1,7 +1,8 @@
-import { assert } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { ACCENTS } from "../../src/shared/contracts.ts";
-import { startProductionApp } from "./helpers/production-app.ts";
+import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { ensureSidebarOpen } from "./helpers/library.ts";
 
 type RGB = readonly [number, number, number];
 
@@ -204,6 +205,119 @@ Deno.test("accent palette meets WCAG contrast in light and dark themes", async (
             failures.length === 0,
             `Accent contrast failures:\n${failures.join("\n")}`,
         );
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("current items use readable accent-soft in notes, AI and settings", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    try {
+        const page = await browser.newPage({
+            viewport: { width: 1440, height: 900 },
+        });
+        await loginAndVisit(page, app.origin, "/", user);
+        const response = await page.request.post(
+            `${app.origin}/api/documents`,
+            {
+                headers: { Origin: app.origin },
+                data: { title: "浅染测试笔记", body: "内容" },
+            },
+        );
+        assert(response.ok());
+
+        const check = async (row: string, text: string) => {
+            await page.locator(row).first().waitFor({ state: "visible" });
+            for (const theme of themes) {
+                for (const accent of ACCENTS) {
+                    const result = await page.locator(row).first().evaluate(
+                        async (element, { theme, accent, text }) => {
+                            document.documentElement.dataset.theme = theme;
+                            document.documentElement.dataset.accent = accent;
+                            const { promise, resolve } = Promise.withResolvers<
+                                void
+                            >();
+                            requestAnimationFrame(() => resolve());
+                            await promise;
+                            await Promise.all(
+                                element.getAnimations().map((animation) =>
+                                    animation.finished
+                                ),
+                            );
+                            const child = text
+                                ? element.querySelector(text)
+                                : element;
+                            if (!child) {
+                                throw new Error(
+                                    `Missing selected text: ${text}`,
+                                );
+                            }
+                            const probe = document.createElement("span");
+                            probe.style.background = "var(--accent-soft)";
+                            document.body.append(probe);
+                            const background =
+                                getComputedStyle(element).backgroundColor;
+                            const expected =
+                                getComputedStyle(probe).backgroundColor;
+                            probe.remove();
+                            const canvas = document.createElement("canvas");
+                            const context = canvas.getContext("2d");
+                            if (!context) throw new Error("Canvas unavailable");
+                            const rgb = (color: string): RGB => {
+                                context.clearRect(0, 0, 1, 1);
+                                context.fillStyle = color;
+                                context.fillRect(0, 0, 1, 1);
+                                const pixel =
+                                    context.getImageData(0, 0, 1, 1).data;
+                                return [pixel[0], pixel[1], pixel[2]];
+                            };
+                            return {
+                                background,
+                                expected,
+                                foreground: rgb(getComputedStyle(child).color),
+                                fill: rgb(background),
+                            };
+                        },
+                        { theme: theme.id, accent: accent.id, text },
+                    );
+                    assertEquals(
+                        result.background,
+                        result.expected,
+                        `${row} ${theme.id}/${accent.id}`,
+                    );
+                    const ratio = contrastRatio(result.foreground, result.fill);
+                    assert(
+                        ratio >= 4.5,
+                        `${row} ${theme.id}/${accent.id}: ${
+                            ratio.toFixed(3)
+                        }:1`,
+                    );
+                }
+            }
+        };
+
+        await page.goto(`${app.origin}/?view=notes`);
+        await ensureSidebarOpen(page);
+        await page.getByRole("treeitem", { name: "浅染测试笔记", exact: true })
+            .click();
+        await check(
+            ".documents-tree-row[data-selected]",
+            ".documents-tree-label",
+        );
+        await page.getByRole("button", { name: "最近", exact: true }).click();
+        await check(".documents-entry[aria-pressed='true']", "");
+        await check(
+            ".documents-summary-row:has([aria-current='page'])",
+            ".documents-summary-open",
+        );
+
+        await page.goto(`${app.origin}/ask/${user.conversationId}`);
+        await check(".ask-sidebar__item.is-active", ".ask-sidebar__item-title");
+        await page.goto(`${app.origin}/settings/appearance`);
+        await check(".settings-nav-item[aria-current='page']", "svg");
     } finally {
         await browser.close();
         await app.close();

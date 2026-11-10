@@ -578,6 +578,14 @@
 .dialog-panel.launcher-popup[data-anchored][data-ending-style] {
     transform: translate(-50%, var(--space-2));
 }
+/* The shared snapshot owns the folder's motion, not the dialog entrance. */
+:root.shared-element-transition .dialog-panel.launcher-popup {
+    transition: none;
+}
+:root.shared-element-transition .dialog-panel.launcher-popup[data-anchored][data-starting-style] {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
 @media (prefers-reduced-motion: reduce) {
     .dialog-panel.launcher-popup[data-anchored][data-starting-style],
     .dialog-panel.launcher-popup[data-anchored][data-ending-style] {

@@ -1557,6 +1557,134 @@ Deno.test("workspace dock: arrow keys move the focused floating ball and the pos
     assertEquals(await place(), moved);
 });
 
+Deno.test("workspace dock: floating ball position menu changes side and height and persists", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    cleanup.defer(() => browser.close());
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+        reducedMotion: "reduce",
+    });
+    await registerFreshUser(page, app.origin, "dock_ball_menu_user");
+    await collapseDockViaMenu(page);
+    const ball = expandBall(page);
+    await ball.waitFor({ state: "visible" });
+    const menu = page.getByRole("menu", { name: "悬浮球位置" });
+    const openMenu = async () => {
+        await ball.click({ button: "right" });
+        await menu.waitFor({ state: "visible" });
+    };
+    await openMenu();
+    assertEquals(
+        await menu.getByRole("menuitemradio", { name: "停靠左侧" })
+            .getAttribute("aria-checked"),
+        "true",
+    );
+    await menu.getByRole("menuitemradio", { name: "停靠右侧" }).click();
+    assertEquals(await ball.getAttribute("data-ball-side"), "right");
+    await openMenu();
+    assertEquals(
+        await menu.getByRole("menuitemradio", { name: "停靠右侧" })
+            .getAttribute("aria-checked"),
+        "true",
+    );
+    await menu.getByRole("menuitemradio", { name: "上", exact: true }).click();
+    const upper = await ball.evaluate((element) =>
+        element.getBoundingClientRect().top
+    );
+    await openMenu();
+    assertEquals(
+        await menu.getByRole("menuitemradio", { name: "上", exact: true })
+            .getAttribute("aria-checked"),
+        "true",
+    );
+    await menu.getByRole("menuitemradio", { name: "下", exact: true }).click();
+    const lower = await ball.evaluate((element) =>
+        element.getBoundingClientRect().top
+    );
+    assert(lower > upper, JSON.stringify({ upper, lower }));
+    await page.waitForFunction(async () => {
+        const opened = Promise.withResolvers<IDBDatabase>();
+        const openRequest = indexedDB.open("searcher-client", 1);
+        openRequest.onsuccess = () => opened.resolve(openRequest.result);
+        openRequest.onerror = () => opened.reject(openRequest.error);
+        const db = await opened.promise;
+        const loaded = Promise.withResolvers<unknown[]>();
+        const request = db.transaction("state").objectStore("state").getAll();
+        request.onsuccess = () => loaded.resolve(request.result);
+        request.onerror = () => loaded.reject(request.error);
+        const values = await loaded.promise;
+        db.close();
+        return values.some((value) => {
+            const json = JSON.stringify(value) ?? "";
+            return json.includes('"ballSide":"right"') &&
+                json.includes('"ballY":1');
+        });
+    });
+    await page.reload();
+    await ball.waitFor({ state: "visible" });
+    assertEquals(await ball.getAttribute("data-ball-side"), "right");
+    assertEquals(
+        await ball.evaluate((element) => element.getBoundingClientRect().top),
+        lower,
+    );
+    await openMenu();
+    assertEquals(
+        await menu.getByRole("menuitemradio", { name: "下", exact: true })
+            .getAttribute("aria-checked"),
+        "true",
+    );
+    await menu.getByRole("menuitemradio", { name: "中", exact: true }).click();
+    const middle = await ball.evaluate((element) =>
+        element.getBoundingClientRect().top
+    );
+    assert(
+        middle > upper && middle < lower,
+        JSON.stringify({ upper, middle, lower }),
+    );
+});
+
+Deno.test("workspace dock: touch long press opens the floating ball position menu", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    cleanup.defer(() => browser.close());
+    const context = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
+        isMobile: true,
+    });
+    cleanup.defer(() => context.close());
+    const page = await context.newPage();
+    await registerFreshUser(page, app.origin, "dock_ball_touch_menu_user");
+    await collapseDockViaMenu(page);
+    const ball = expandBall(page);
+    await ball.waitFor({ state: "visible" });
+    const box = (await ball.boundingBox())!;
+    const session = await context.newCDPSession(page);
+    await session.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{
+            x: box.x + box.width / 2,
+            y: box.y + box.height / 2,
+            id: 1,
+        }],
+    });
+    await page.waitForTimeout(320);
+    await session.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+    });
+    const menu = page.getByRole("menu", { name: "悬浮球位置" });
+    await menu.waitFor({ state: "visible" });
+    await menu.getByRole("menuitemradio", { name: "停靠右侧" }).tap();
+    assertEquals(await ball.getAttribute("data-ball-side"), "right");
+    assert(await ball.isVisible());
+});
+
 Deno.test("workspace dock: touch drag, long-press actions, and overflow management", async () => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();

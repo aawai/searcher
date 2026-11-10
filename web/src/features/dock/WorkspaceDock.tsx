@@ -68,6 +68,8 @@ import {
     DropdownMenuPopup,
     DropdownMenuPortal,
     DropdownMenuPositioner,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
@@ -267,6 +269,7 @@ export function WorkspaceDock(
     const [managementOpen, setManagementOpen] = useState(false);
     const [appsOverflowing, setAppsOverflowing] = useState(false);
     const [itemMenu, setItemMenu] = useState<DockItemMenu | null>(null);
+    const [ballMenuOpen, setBallMenuOpen] = useState(false);
     const optionsRef = useRef<HTMLButtonElement | null>(null);
     const touchActiveRef = useRef(false);
     const multipleTouchRef = useRef(false);
@@ -740,17 +743,22 @@ export function WorkspaceDock(
             startY: number;
             pointerId: number;
             dragged: boolean;
+            startedAt: number;
+            touch: boolean;
         } | null
     >(null);
     const ballJustDraggedRef = useRef(false);
 
     const handleBallPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
+        if (e.button !== 0) return;
         e.currentTarget.setPointerCapture(e.pointerId);
         ballJustDraggedRef.current = false;
         ballDragRef.current = {
             startX: e.clientX,
             startY: e.clientY,
             pointerId: e.pointerId,
+            startedAt: Date.now(),
+            touch: e.pointerType === "touch",
             dragged: false,
         };
     };
@@ -779,9 +787,20 @@ export function WorkspaceDock(
             // ignore if capture was lost
         }
         const wasDragging = ballDragRef.current.dragged;
-        ballJustDraggedRef.current = wasDragging;
+        const held = ballDragRef.current.touch &&
+            Date.now() - ballDragRef.current.startedAt >= TOUCH_HOLD_MS &&
+            !wasDragging;
+        ballJustDraggedRef.current = wasDragging || held;
         ballDragRef.current = null;
         setBallDragState(null);
+        if (held) {
+            touchReleaseRef.current = { x: e.clientX, y: e.clientY };
+            touchContextDeadlineRef.current = Date.now() +
+                COMPAT_MOUSE_WINDOW_MS;
+            suppressTouchMouseRef.current = true;
+            setBallMenuOpen(true);
+            return;
+        }
         // A tap expands from the ball's own click. Expanding here would make
         // the ball inert before the touch's compatibility click, which would
         // then land on whatever lies beneath (e.g. a home note).
@@ -824,6 +843,11 @@ export function WorkspaceDock(
     // The keyboard path for the drag (2.1.1): left / right pick the side,
     // up / down step along it within the same safe range.
     const handleBallKeyDown = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
+        if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+            e.preventDefault();
+            setBallMenuOpen(true);
+            return;
+        }
         const y = layout.ballY ?? 0.5;
         const next = e.key === "ArrowLeft"
             ? { ballSide: "left" as const }
@@ -902,11 +926,20 @@ export function WorkspaceDock(
                     onPointerMove={handleBallPointerMove}
                     onPointerUp={handleBallPointerUp}
                     onPointerCancel={handleBallPointerCancel}
+                    onContextMenu={(event) => {
+                        event.preventDefault();
+                        if (
+                            ballDragRef.current?.touch ||
+                            Date.now() < touchContextDeadlineRef.current
+                        ) return;
+                        setBallMenuOpen(true);
+                    }}
                     onClick={() => {
                         if (ballJustDraggedRef.current) {
                             ballJustDraggedRef.current = false;
                             return;
                         }
+                        setBallMenuOpen(false);
                         setLayout({ collapsed: false });
                     }}
                 >
@@ -916,6 +949,86 @@ export function WorkspaceDock(
                         aria-hidden="true"
                     />
                 </button>
+            )}
+            {isCollapsed && ballPresence.mounted && ballMenuOpen && (
+                <DropdownMenu
+                    open
+                    onOpenChange={(open, details) => {
+                        const event = details.event;
+                        const release = touchReleaseRef.current;
+                        if (
+                            !open && event instanceof MouseEvent && release &&
+                            Date.now() < touchContextDeadlineRef.current &&
+                            mayComeFromTouch(event) &&
+                            Math.hypot(
+                                    event.clientX - release.x,
+                                    event.clientY - release.y,
+                                ) < TOUCH_TOLERANCE
+                        ) return;
+                        setBallMenuOpen(open);
+                    }}
+                >
+                    <DropdownMenuPortal>
+                        <DropdownMenuPositioner
+                            anchor={ballPresence.ref}
+                            side={layout.ballSide === "left" ? "right" : "left"}
+                            sideOffset={8}
+                        >
+                            <DropdownMenuPopup aria-label="悬浮球位置">
+                                <DropdownMenuRadioGroup
+                                    aria-label="停靠侧"
+                                    value={layout.ballSide}
+                                    onValueChange={(side) => {
+                                        if (
+                                            side === "left" || side === "right"
+                                        ) {
+                                            setLayout({ ballSide: side });
+                                        }
+                                    }}
+                                >
+                                    <DropdownMenuRadioItem
+                                        value="left"
+                                        closeOnClick
+                                    >
+                                        停靠左侧
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem
+                                        value="right"
+                                        closeOnClick
+                                    >
+                                        停靠右侧
+                                    </DropdownMenuRadioItem>
+                                </DropdownMenuRadioGroup>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuRadioGroup
+                                    aria-label="纵向位置"
+                                    value={String(layout.ballY ?? 0.5)}
+                                    onValueChange={(value) =>
+                                        setLayout({ ballY: Number(value) })}
+                                >
+                                    <DropdownMenuRadioItem
+                                        value="0"
+                                        closeOnClick
+                                    >
+                                        上
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem
+                                        value="0.5"
+                                        closeOnClick
+                                    >
+                                        中
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem
+                                        value="1"
+                                        closeOnClick
+                                    >
+                                        下
+                                    </DropdownMenuRadioItem>
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuPopup>
+                        </DropdownMenuPositioner>
+                    </DropdownMenuPortal>
+                </DropdownMenu>
             )}
 
             {barPresence.mounted && (

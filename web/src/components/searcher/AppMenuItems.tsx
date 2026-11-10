@@ -22,13 +22,20 @@ export interface AppMenuActions {
     homeSurface?: "home" | "library";
 }
 
-export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
-    app: LauncherApp;
-    groups: LauncherGroup[];
-    managing?: boolean;
-    actions: AppMenuActions;
-    Item: typeof ContextMenuItem | typeof DropdownMenuItem;
-}) {
+export function AppMenuItems(
+    { app, groups, managing = false, actions, Item, reorder }: {
+        app: LauncherApp;
+        groups: LauncherGroup[];
+        managing?: boolean;
+        actions: AppMenuActions;
+        Item: typeof ContextMenuItem | typeof DropdownMenuItem;
+        reorder?: {
+            canMoveUp: boolean;
+            canMoveDown: boolean;
+            move: (direction: -1 | 1) => void;
+        };
+    },
+) {
     const dock = useDock();
     const dockPinned = dock.preferences.appIds.includes(app.id);
     const Separator = Item === ContextMenuItem
@@ -56,6 +63,22 @@ export function AppMenuItems({ app, groups, managing = false, actions, Item }: {
                 <Item onClick={actions.onToggleManaging}>
                     {managing ? "完成整理" : "整理布局"}
                 </Item>
+            )}
+            {reorder && (
+                <>
+                    <Item
+                        disabled={!reorder.canMoveUp}
+                        onClick={() => reorder.move(-1)}
+                    >
+                        上移
+                    </Item>
+                    <Item
+                        disabled={!reorder.canMoveDown}
+                        onClick={() => reorder.move(1)}
+                    >
+                        下移
+                    </Item>
+                </>
             )}
             <Item onClick={() => actions.onEdit(app)}>
                 编辑

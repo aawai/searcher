@@ -5,6 +5,16 @@
     color: var(--foreground);
 }
 
+/* On the veil (wide column, expanded narrow sheet) secondary and accent text
+   take the veil-specific tokens, hover and focus states included. The
+   collapsed narrow peek is printed directly on the wallpaper with its own
+   stroke and halo and keeps the page tokens. Tokens derived at the root
+   (--ring, --accent-soft) are already resolved and stay unchanged. */
+.home-masthead:not([data-mode="narrow"][data-collapsed="true"]) {
+    --muted: var(--masthead-muted);
+    --accent: var(--masthead-accent-text);
+}
+
 /* Progressive veil on the chosen side: a blurred copy of the wallpaper (the
    same image, focal point and readability mask) under a translucent
    --background wash, fading out just inside the column's outer edge. A static

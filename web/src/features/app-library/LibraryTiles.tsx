@@ -44,6 +44,7 @@ export function AppTile({
     isDragging,
     tileRender,
     tileClassName,
+    reorder,
 }: {
     app: LauncherApp;
     groups: LauncherGroup[];
@@ -54,6 +55,11 @@ export function AppTile({
     isDragging?: boolean;
     tileRender?: React.ReactElement;
     tileClassName?: string;
+    reorder?: {
+        canMoveUp: boolean;
+        canMoveDown: boolean;
+        move: (direction: -1 | 1) => void;
+    };
 }) {
     return (
         <ContextMenu>
@@ -80,6 +86,7 @@ export function AppTile({
                     groups={groups}
                     managing={managing}
                     actions={actions}
+                    reorder={reorder}
                     Item={ContextMenuItem}
                 />
             </ContextMenuContent>

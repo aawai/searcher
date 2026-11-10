@@ -145,12 +145,16 @@ function SortableTile({
     actions,
     activeDragId,
     onMoveByKey,
+    index,
+    count,
 }: {
     placement: HomeLibraryVisibleItem;
     groups: LauncherGroup[];
     managing: boolean;
     actions: LibraryTileActions;
     activeDragId: string | null;
+    index: number;
+    count: number;
     onMoveByKey: (id: string, direction: -1 | 1) => void;
 }) {
     const { tile } = placement;
@@ -186,6 +190,12 @@ function SortableTile({
                         groups={groups}
                         managing={managing}
                         actions={actions}
+                        reorder={{
+                            canMoveUp: index > 0,
+                            canMoveDown: index < count - 1,
+                            move: (direction) =>
+                                onMoveByKey(tile.id, direction),
+                        }}
                         dragAttributes={managing ? attributes : undefined}
                         dragListeners={dragListeners}
                         isDragging={isDragging}
@@ -379,6 +389,10 @@ export function WebAppLauncher({
                                     actions={actions}
                                     activeDragId={activeId}
                                     onMoveByKey={onMoveByKey}
+                                    index={plan.visible.findIndex((item) =>
+                                        item.tile.id === cell.item.tile.id
+                                    )}
+                                    count={plan.visible.length}
                                 />
                             );
                         }
@@ -483,13 +497,17 @@ function SortableLibraryTile({
     actions,
     activeDragId,
     onMoveByKey,
+    index,
+    count,
 }: {
     tile: LauncherTile;
     groups: LauncherGroup[];
     managing: boolean;
     actions: LibraryTileActions;
     activeDragId: string | null;
-    onMoveByKey: (id: string, direction: -1 | 1) => void;
+    onMoveByKey?: (id: string, direction: -1 | 1) => void;
+    index: number;
+    count: number;
 }) {
     const {
         attributes,
@@ -500,7 +518,12 @@ function SortableLibraryTile({
         isDragging,
         isFolderDropTarget,
         className,
-    } = useTileSortable(tile, managing, activeDragId, onMoveByKey);
+    } = useTileSortable(
+        tile,
+        managing,
+        activeDragId,
+        (id, direction) => onMoveByKey?.(id, direction),
+    );
     const tileRender = (
         <div
             ref={setNodeRef}
@@ -520,6 +543,13 @@ function SortableLibraryTile({
                 groups={groups}
                 managing={managing}
                 actions={actions}
+                reorder={onMoveByKey
+                    ? {
+                        canMoveUp: index > 0,
+                        canMoveDown: index < count - 1,
+                        move: (direction) => onMoveByKey(tile.id, direction),
+                    }
+                    : undefined}
                 dragAttributes={managing ? attributes : undefined}
                 dragListeners={dragListeners}
                 isDragging={isDragging}
@@ -611,7 +641,7 @@ export function LibraryLauncherGrid({
                     data-labels={actions.showAppLabels ? undefined : "hidden"}
                     onKeyDown={managing ? undefined : focusAdjacent}
                 >
-                    {tiles.map((tile) => (
+                    {tiles.map((tile, index) => (
                         <SortableLibraryTile
                             key={tile.id}
                             tile={tile}
@@ -619,8 +649,9 @@ export function LibraryLauncherGrid({
                             managing={managing}
                             actions={actions}
                             activeDragId={activeId}
-                            onMoveByKey={(id, direction) =>
-                                onMoveByKey?.(id, direction)}
+                            index={index}
+                            count={tiles.length}
+                            onMoveByKey={onMoveByKey}
                         />
                     ))}
                     {onAdd && (

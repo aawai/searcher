@@ -68,7 +68,17 @@ function contrastFailures(theme: Theme, palette: AccentPalette): string[] {
     const surface = hex(tokens.get("--surface")!);
     const accent = hex(palette.accent);
     const soft = mix(accent, percent(tokens, "--accent-soft-mix"), surface);
+    // Balanced readability mask followed by the unchanged masthead veil.
+    // Black is the light theme's least favourable wallpaper; dimmed white
+    // is the dark theme's least favourable wallpaper.
+    const background = hex(tokens.get("--background")!);
+    const wallpaper = theme === "light" ? 0 : 255 * 0.55;
+    const veil = theme === "light" ? 0.66 : 0.5;
+    const backdrop = background.map((channel) =>
+        channel * veil + (1 - veil) * (channel * 0.24 + wallpaper * 0.76)
+    ) as unknown as Rgb;
     const checks: [string, Rgb, Rgb, number][] = [
+        ["masthead accent text on veil", hex(palette.masthead), backdrop, 4.5],
         ["accent text on surface", accent, surface, 4.5],
         ["foreground on accent", hex(palette.foreground), accent, 4.5],
         [

@@ -4,13 +4,14 @@
 [Visual Language](../design/VISUAL_LANGUAGE.md) 为准；业务
 API、安全与持久化约束以实现和契约为准。
 
-| 计划                                                                   | 文档自述状态                                                                       |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [WORKSPACE_FINAL_REFACTOR_PLAN.md](WORKSPACE_FINAL_REFACTOR_PLAN.md)   | 历史基线（原 Final / Canonical）：Widgets 已移除，现行首页规则见 docs/workspace.md |
-| [WORKSPACE_LAYOUT_REDESIGN_PLAN.md](WORKSPACE_LAYOUT_REDESIGN_PLAN.md) | 未标注；被 WORKSPACE_FINAL_REFACTOR_PLAN 列为历史背景                              |
-| [UI_UX_AUDIT_FIX_PLAN.md](UI_UX_AUDIT_FIX_PLAN.md)                     | 实施计划，文档声明“不表示任何修复已完成”；Design System 列为既有设计资料           |
-| [ZEN_MOBILE_NOTES_PLAN.md](ZEN_MOBILE_NOTES_PLAN.md)                   | 已实现并完成验收（Issue #191）                                                     |
-| [UI_MOTION_CONSISTENCY_PLAN.md](UI_MOTION_CONSISTENCY_PLAN.md)         | 已实施：动效、视觉一致性与页面原型修正                                             |
-| [EDITORIAL_WINDOWS_PLAN.md](EDITORIAL_WINDOWS_PLAN.md)                 | 已实施（方案 A）：窗口内容标题使用衬线，现行规则见 Visual Language                 |
+| 计划                                                                   | 文档自述状态                                                                                     |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [WORKSPACE_FINAL_REFACTOR_PLAN.md](WORKSPACE_FINAL_REFACTOR_PLAN.md)   | 历史基线（原 Final / Canonical）：Widgets 已移除，现行首页规则见 docs/workspace.md               |
+| [WORKSPACE_LAYOUT_REDESIGN_PLAN.md](WORKSPACE_LAYOUT_REDESIGN_PLAN.md) | 未标注；被 WORKSPACE_FINAL_REFACTOR_PLAN 列为历史背景                                            |
+| [UI_UX_AUDIT_FIX_PLAN.md](UI_UX_AUDIT_FIX_PLAN.md)                     | 实施计划，文档声明“不表示任何修复已完成”；Design System 列为既有设计资料                         |
+| [ZEN_MOBILE_NOTES_PLAN.md](ZEN_MOBILE_NOTES_PLAN.md)                   | 已实现并完成验收（Issue #191）                                                                   |
+| [UI_MOTION_CONSISTENCY_PLAN.md](UI_MOTION_CONSISTENCY_PLAN.md)         | 已实施：动效、视觉一致性与页面原型修正                                                           |
+| [EDITORIAL_WINDOWS_PLAN.md](EDITORIAL_WINDOWS_PLAN.md)                 | 已实施（方案 A）：窗口内容标题使用衬线，现行规则见 Visual Language                               |
+| [VISUAL_EVOLUTION_PLAN.md](VISUAL_EVOLUTION_PLAN.md)                   | 部分实施：底线债、刊头衬底对比度、文件夹共享元素过渡与选中态浅染已实施；色彩与着色为原型，待选定 |
 
 新增计划放在本目录，并在文首写明状态。

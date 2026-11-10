@@ -180,8 +180,8 @@ async function settle(page: Page, name: WallpaperName, theme: Theme) {
 }
 
 /** Text and icon glyphs the home paints straight on the wallpaper. */
-function collectTargets(page: Page): Promise<Target[]> {
-    return page.evaluate(() => {
+function collectTargets(page: Page, selector?: string): Promise<Target[]> {
+    return page.evaluate((selector) => {
         const probe = document.createElement("canvas").getContext("2d", {
             willReadFrequently: true,
         })!;
@@ -225,10 +225,9 @@ function collectTargets(page: Page): Promise<Target[]> {
         // accent of the logotype (1.4.3 exempts logotypes).
         const excluded =
             ".user-avatar-badge, .sync-failed-badge, .webapp-glyph, .wordmark-dot";
-        const scopes = [
+        const scopes = selector ? [selector] : [
             ".app-shell[data-home] > .topbar",
-            // Wide, the masthead sits on its veil (glass-contrast.test.ts);
-            // only the collapsed narrow peek is printed on the wallpaper.
+            '.home-masthead[data-mode="side"]',
             '.home-masthead[data-mode="narrow"][data-collapsed="true"]',
             '.launcher-plate[data-plate="hidden"]',
         ];
@@ -271,7 +270,7 @@ function collectTargets(page: Page): Promise<Target[]> {
             }
         }
         return targets;
-    });
+    }, selector);
 }
 
 const KEY_STYLE = `
@@ -283,6 +282,9 @@ html[data-a6-key] :is(.topbar, .home-masthead, .launcher-plate) * {
 }
 html[data-a6-key] :is(.topbar, .home-masthead, .launcher-plate) svg {
     color: var(--a6-key) !important;
+}
+html[data-a6-key] :is(.user-menu-identity > span:last-child, .launcher-popup-count, .suggestion-group-label) {
+    -webkit-text-fill-color: var(--a6-key) !important;
 }`;
 
 async function shot(page: Page, key: string | null): Promise<string> {
@@ -311,7 +313,7 @@ async function shot(page: Page, key: string | null): Promise<string> {
     return btoa(binary);
 }
 
-async function measure(page: Page): Promise<Measurement[]> {
+async function measure(page: Page, selector?: string): Promise<Measurement[]> {
     await page.evaluate((css) => {
         if (!document.getElementById("a6-style")) {
             const style = document.createElement("style");
@@ -332,7 +334,7 @@ async function measure(page: Page): Promise<Measurement[]> {
         assert(Date.now() < deadline, "the home did not settle within 5s");
         plain = next;
     }
-    const targets = await collectTargets(page);
+    const targets = await collectTargets(page, selector);
     const red = await shot(page, "#ff0000");
     const blue = await shot(page, "#0000ff");
     // Re-rasterised glyph edges may differ by a few levels after keying; the
@@ -540,6 +542,14 @@ function requiredRoles(who: "user" | "guest", width: number): string[] {
         "icon ",
         ...(who === "user" ? ["webapp-name"] : ["「登录」"]),
         ...(width < 768 ? ["home-masthead__day"] : []),
+        ...(width >= 768 ? ["home-masthead__weekday"] : []),
+        ...(who === "user" && width >= 768
+            ? [
+                "home-masthead__section-title",
+                "home-masthead__entry-no",
+                "home-masthead__all-notes",
+            ]
+            : []),
     ];
 }
 
@@ -643,4 +653,113 @@ Deno.test("A6: home text on the wallpaper meets 1.4.3 on extreme wallpapers at t
     );
 
     assert(failures.length === 0, `below 1.4.3:\n${failures.join("\n")}`);
+});
+
+Deno.test("floating muted text meets 4.5:1 on extreme wallpapers", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+    const context = await browser.newContext({
+        viewport: { width: 1440, height: 900 },
+        serviceWorkers: "block",
+    });
+    cleanup.defer(() => context.close());
+    const page = await context.newPage();
+    await routeWallpapers(context, await wallpaperPngs(page));
+    await context.route(
+        /\/api\/search\/suggestions\?/,
+        (route) =>
+            route.fulfill({
+                contentType: "application/json",
+                body: JSON.stringify({ status: true, data: [] }),
+            }),
+    );
+    await registerHomeNoteUser(page, app.origin, "floating_reader");
+    await seedHomeApps(page, 1);
+    const created = await page.request.post(app.origin + "/api/webapp-groups", {
+        headers: { Origin: app.origin },
+        data: { name: "测试文件夹", sortOrder: 0, isHomeFixed: true },
+    });
+    assert(created.ok(), await created.text());
+
+    const selectors = {
+        menu: ".user-menu-identity > span:last-child",
+        folder: ".launcher-popup-count",
+        suggestion: '.suggestion-group-label[id$="-group-apps"]',
+    } as const;
+    const minima = new Map<string, { ratio: number; state: string }>();
+    const failures: string[] = [];
+    for (const tier of ["regular", "clear"] as const) {
+        const response = await page.request.patch(
+            app.origin + "/api/preferences",
+            {
+                headers: { Origin: app.origin },
+                data: { glassIntensity: tier },
+            },
+        );
+        assert(response.ok(), await response.text());
+        for (const name of Object.keys(WALLPAPERS) as WallpaperName[]) {
+            for (const theme of THEMES) {
+                await page.emulateMedia({ colorScheme: theme.scheme });
+                await setUserAppearance(page, name, theme);
+                await page.goto(app.origin + "/");
+                await settle(page, name, theme);
+                await page.waitForFunction(
+                    (tier) => document.documentElement.dataset.glass === tier,
+                    tier,
+                );
+                const state = `${tier} ${name} ${theme.id}`;
+                const record = async (element: keyof typeof selectors) => {
+                    const selector = selectors[element];
+                    await page.locator(selector).waitFor({ state: "visible" });
+                    const results = await measure(page, selector);
+                    assert(
+                        results.length > 0,
+                        `${state} ${selector}: not measured`,
+                    );
+                    for (const result of results) {
+                        const previous = minima.get(element);
+                        if (!previous || result.worst < previous.ratio) {
+                            minima.set(element, { ratio: result.worst, state });
+                        }
+                        if (result.worst < TEXT_MIN) {
+                            failures.push(
+                                `${state} ${selector}: ${
+                                    result.worst.toFixed(2)
+                                }:1 (min ${
+                                    result.min.toFixed(2)
+                                }, n=${result.samples})`,
+                            );
+                        }
+                    }
+                };
+
+                await page.locator(".user-avatar-trigger").click();
+                await record("menu");
+                await page.keyboard.press("Escape");
+                await page.getByRole("button", {
+                    name: "打开文件夹 测试文件夹",
+                }).click();
+                await record("folder");
+                await page.keyboard.press("Escape");
+                await page.getByRole("combobox").fill("应用 0");
+                await page.getByRole("option", { name: /应用 0/ }).waitFor();
+                await record("suggestion");
+            }
+        }
+    }
+    console.log("Floating muted text: minimum 5th-percentile contrast");
+    for (const [element, selector] of Object.entries(selectors)) {
+        const minimum = minima.get(element)!;
+        console.log(
+            `${selector}\t${minimum.ratio.toFixed(2)}:1\t${minimum.state}`,
+        );
+    }
+    assert(failures.length === 0, `below 4.5:1:\n${failures.join("\n")}`);
 });
