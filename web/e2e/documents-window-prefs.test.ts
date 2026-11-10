@@ -339,21 +339,27 @@ Deno.test("侧栏和大纲预设支持指针、键盘与触屏并保留宽度", 
         await page.reload();
         await openRow(page, note.id);
         await expectTitle(page, touch ? "触屏预设" : "指针预设");
-        const resizeHost = async (key: "ArrowLeft" | "ArrowRight") => {
+        // Each edge: enter keyboard resize from the window menu, wait for its
+        // hint, step, and confirm; the next menu opens only after it ends.
+        const hint = frame(page).getByText("拖动标题栏调整所选边");
+        const resizeEdge = async (
+            edge: "调整左边" | "调整右边",
+            key: "ArrowLeft" | "ArrowRight",
+        ) => {
             await frame(page).getByRole("button", { name: "笔记窗口菜单" })
                 .click();
-            await page.getByRole("menuitem", { name: "调整左边" }).click();
+            await page.getByRole("menuitem", { name: edge }).click();
+            await hint.waitFor();
             for (let i = 0; i < 18; i++) await page.keyboard.press(key);
             await page.keyboard.press("Enter");
-            await frame(page).getByRole("button", { name: "笔记窗口菜单" })
-                .click();
-            await page.getByRole("menuitem", { name: "调整右边" }).click();
-            for (let i = 0; i < 18; i++) {
-                await page.keyboard.press(
-                    key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft",
-                );
-            }
-            await page.keyboard.press("Enter");
+            await hint.waitFor({ state: "hidden" });
+        };
+        const resizeHost = async (key: "ArrowLeft" | "ArrowRight") => {
+            await resizeEdge("调整左边", key);
+            await resizeEdge(
+                "调整右边",
+                key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft",
+            );
         };
         await resizeHost("ArrowLeft");
         const sidebar = frame(page).getByRole("separator", {
@@ -416,6 +422,7 @@ Deno.test("侧栏和大纲预设支持指针、键盘与触屏并保留宽度", 
                         ) === width,
                     { label, width },
                 );
+                await menu.waitFor({ state: "hidden" });
             }
             await handle.focus();
             await page.keyboard.press(
@@ -429,6 +436,7 @@ Deno.test("侧栏和大纲预设支持指针、键盘与触屏并保留宽度", 
                 "true",
             );
             await page.keyboard.press("Escape");
+            await menu.waitFor({ state: "hidden" });
         }
         await resizeHost("ArrowRight");
         await page.waitForFunction(() =>
