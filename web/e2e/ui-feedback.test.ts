@@ -147,8 +147,8 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 name: "用户菜单：Feedback Tester",
             }).waitFor({ state: "visible" });
             await page.waitForFunction(() =>
-                document.querySelector('button[aria-label^="切换主题，"]')
-                    ?.getAttribute("aria-label")?.includes("当前：跟随系统")
+                document.querySelector(".appearance-picker-trigger")
+                    ?.getAttribute("aria-label")?.startsWith("外观：跟随系统")
             );
             await page.route("**/api/preferences", async (route) => {
                 if (route.request().method() !== "PATCH") {
@@ -165,7 +165,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 });
             });
             await page.getByRole("button", {
-                name: "切换主题，当前：跟随系统，下一个：浅色",
+                name: "切换到深色",
                 exact: true,
             }).click();
             const badge = page.getByRole("link", {
@@ -184,11 +184,11 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 false,
             );
             await page.getByRole("button", {
-                name: "切换主题，当前：浅色，下一个：深色",
+                name: "切换到浅色",
                 exact: true,
             }).click();
             await page.getByRole("button", {
-                name: "切换主题，当前：深色，下一个：高对比浅色",
+                name: "切换到深色",
                 exact: true,
             }).waitFor({ state: "visible" });
             assertEquals(

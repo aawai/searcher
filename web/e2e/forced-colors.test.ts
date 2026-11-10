@@ -102,8 +102,8 @@ Deno.test("A7 强制颜色模式下控件状态、浮层边界与玻璃表面可
                 label("menu edge"),
             );
             await page.keyboard.press("Escape");
-            await page.locator(".accent-picker-trigger").click();
-            const popover = '[data-slot="popover-content"].accent-picker';
+            await page.locator(".appearance-picker-trigger").click();
+            const popover = '[data-slot="popover-content"].appearance-picker';
             assertNotEquals(
                 (await paint(page, popover)).outline,
                 "none",
@@ -122,10 +122,19 @@ Deno.test("A7 强制颜色模式下控件状态、浮层边界与玻璃表面可
             assertNotEquals(
                 (await paint(
                     page,
-                    `${popover} .radio-item[data-checked] > :last-child`,
+                    `${popover} [data-variant="swatch"] .radio-item[data-checked] > :last-child`,
                 )).outline,
                 "none",
                 label("chosen swatch"),
+            );
+            // Theme tiles keep their sample colours; the chosen one is ringed.
+            assertNotEquals(
+                (await paint(
+                    page,
+                    `${popover} .theme-choice[data-checked] .theme-choice-preview`,
+                )).outline,
+                "none",
+                label("chosen theme tile"),
             );
             await page.keyboard.press("Escape");
 

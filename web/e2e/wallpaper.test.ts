@@ -467,7 +467,7 @@ Deno.test("production wallpaper composition, lifecycle and sync E2E", async (t) 
             await input.fill("https://example.com/recovered.png");
             await page.getByTestId("wallpaper-apply-btn").click();
             await page.locator(".sync-failed-badge").waitFor();
-            const theme = page.getByRole("button", { name: /^切换主题，/ });
+            const theme = page.getByRole("button", { name: /^切换到/ });
             await theme.click();
             await held.promise;
             await theme.click();

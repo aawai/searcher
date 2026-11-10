@@ -16,7 +16,7 @@ import {
 } from "@shared/wallpaper-presentation.ts";
 import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
 import { Check, ChevronRight, MoreVertical, Upload } from "lucide-react";
-import { AccentSwatches } from "../components/searcher/AccentPicker.tsx";
+import { AccentSwatches } from "../components/searcher/AccentSwatches.tsx";
 import { ThemeChoices } from "../components/searcher/ThemeChoices.tsx";
 import { isHighContrastTheme } from "../design-system/theme.ts";
 import {
@@ -726,12 +726,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     onValueChange={(v) => set("theme", v)}
                                 />
                             </SettingsRow>
-                            <SettingsRow
-                                title="强调色"
-                                description={highContrast
-                                    ? "高对比主题下以主题高亮色呈现，色点保留所选颜色"
-                                    : undefined}
-                            >
+                            <SettingsRow title="强调色">
                                 <AccentSwatches
                                     value={appearance.accent}
                                     onValueChange={(v) => set("accent", v)}
