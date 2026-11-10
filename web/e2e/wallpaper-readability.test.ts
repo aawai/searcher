@@ -30,6 +30,14 @@ const WALLPAPERS = {
 } as const;
 type WallpaperName = keyof typeof WALLPAPERS;
 
+const matrix = Deno.env.get("WALLPAPER_READABILITY_MATRIX") ?? "full";
+if (matrix !== "full" && matrix !== "fast") {
+    throw new Error("WALLPAPER_READABILITY_MATRIX must be full or fast");
+}
+const wallpaperNames: WallpaperName[] = matrix === "fast"
+    ? ["white", "black", "texture"]
+    : Object.keys(WALLPAPERS) as WallpaperName[];
+
 const WIDTHS = [
     { width: 390, height: 844 },
     { width: 1440, height: 900 },
@@ -306,11 +314,7 @@ async function shot(page: Page, key: string | null): Promise<string> {
         animations: "disabled",
         caret: "hide",
     });
-    let binary = "";
-    for (let i = 0; i < bytes.length; i += 8192) {
-        binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-    }
-    return btoa(binary);
+    return bytes.toString("base64");
 }
 
 async function measure(page: Page, selector?: string): Promise<Measurement[]> {
@@ -343,10 +347,7 @@ async function measure(page: Page, selector?: string): Promise<Measurement[]> {
     const { results, moved } = await page.evaluate(
         async ({ plain, red, blue, after, targets, radius, share, mins }) => {
             const decode = async (base64: string) => {
-                const bytes = Uint8Array.from(
-                    atob(base64),
-                    (c) => c.charCodeAt(0),
-                );
+                const bytes = Uint8Array.fromBase64(base64);
                 const image = await createImageBitmap(
                     new Blob([bytes], { type: "image/png" }),
                 );
@@ -554,6 +555,11 @@ function requiredRoles(who: "user" | "guest", width: number): string[] {
 }
 
 Deno.test("A6: home text on the wallpaper meets 1.4.3 on extreme wallpapers at the default readability mask and glass tier", async (t) => {
+    console.log(
+        `Wallpaper readability matrix: ${matrix} (${
+            wallpaperNames.join(", ")
+        })`,
+    );
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
@@ -569,7 +575,7 @@ Deno.test("A6: home text on the wallpaper meets 1.4.3 on extreme wallpapers at t
         page: Page,
         setAppearance: (name: WallpaperName, theme: Theme) => Promise<void>,
     ) {
-        for (const name of Object.keys(WALLPAPERS) as WallpaperName[]) {
+        for (const name of wallpaperNames) {
             for (const theme of THEMES) {
                 await page.emulateMedia({ colorScheme: theme.scheme });
                 await setAppearance(name, theme);
@@ -656,6 +662,11 @@ Deno.test("A6: home text on the wallpaper meets 1.4.3 on extreme wallpapers at t
 });
 
 Deno.test("floating muted text meets 4.5:1 on extreme wallpapers", async () => {
+    console.log(
+        `Wallpaper readability matrix: ${matrix} (${
+            wallpaperNames.join(", ")
+        })`,
+    );
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
@@ -704,8 +715,11 @@ Deno.test("floating muted text meets 4.5:1 on extreme wallpapers", async () => {
             },
         );
         assert(response.ok(), await response.text());
-        for (const name of Object.keys(WALLPAPERS) as WallpaperName[]) {
+        for (const name of wallpaperNames) {
             for (const theme of THEMES) {
+                // High-contrast Floating is opaque in every tier; the token
+                // contract checks this independently of the wallpaper color.
+                if (theme.contrast && name !== "white") continue;
                 await page.emulateMedia({ colorScheme: theme.scheme });
                 await setUserAppearance(page, name, theme);
                 await page.goto(app.origin + "/");

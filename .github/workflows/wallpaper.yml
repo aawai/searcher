@@ -5,6 +5,7 @@ on:
         branches: [main]
     pull_request:
         branches: [main]
+    workflow_dispatch:
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
@@ -28,4 +29,6 @@ jobs:
             - name: Install Chromium
               run: npx --yes playwright@1.56.1 install chromium
             - name: Production wallpaper user journeys
+              env:
+                  WALLPAPER_READABILITY_MATRIX: ${{ github.event_name == 'pull_request' && 'fast' || 'full' }}
               run: deno task test:wallpaper

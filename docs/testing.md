@@ -61,8 +61,8 @@ untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` �
 直接修改 E2E 文件选择所属完整集合。根目录的 `README.md`、`CHANGELOG.md`、仓库指南、
 `docs/` 下的 Markdown 和 E2E 操作说明不参与 E2E 选择；共享基础设施/helper/config
 及任何其他未知路径令整个选择回退 full，输出列出全部触发路径。手工映射不是依赖图，新增跨域依赖必须更新映射；
-局部通过不替代完整 Workspace 回归与交付前完整门禁。当前 revision 的 CI 分片并集可提供完整门禁，
-不必因 affected 回退 full 就重复本地 full。
+局部通过不替代完整 Workspace 回归与交付前完整门禁。仅当当前 revision 的 CI 分片并集
+包含完整 Wallpaper 矩阵时，才可复用其完整门禁证据，不必因 affected 回退 full 就重复本地 full。
 
 没有改动或仅改上述豁免文档时明确跳过 build/browser，不能记为测试通过。`--list` 仅 affected 可用，
 打印基线、原因、路径、集合与去重文件，便于临时 Git fixture 的 CLI smoke；不 build、
@@ -147,7 +147,7 @@ JUnit，已有诊断仍保留。
 
 原 Bundle 与 Notes workflow 中上述五个 Documents 文件的直接执行步骤已移除，
 由上述 Documents core + 四个分页 job 完整覆盖，避免重复执行；原 Bundle、Home papers、
-Wallpaper 门禁及已有 job 名称保持不变；Workspace 门禁改为 `workspace-a` /
+Wallpaper 的 job 名称保持不变；Workspace 门禁改为 `workspace-a` /
 `workspace-b` 两个并行 matrix job（job 名带 shard 后缀），并集等于完整 `workspace`。
 
 本地完整 Documents 验收使用
@@ -212,6 +212,13 @@ Host/主题/视图的实页截图；每次执行在父目录下
 登录 / 访客，在真实 Chromium 中逐个文字元素取字形外 2px 的背景像素，最不利的 5% 分位须满足
 1.4.3（取样方法见 [VISUAL_LANGUAGE · 验证与已知缺口](design/VISUAL_LANGUAGE.md#验证与已知缺口)）；
 1440 下一并取样宽屏刊头衬底上的文字。同一文件另以该方法实测 Floating 上的 `--muted`（头像菜单、文件夹计数、
-搜索建议分组标题 × `regular` / `clear`），并打印各元素最差值。
-取样前等待两帧截图一致，取样期间背景像素变化即失败，不重试。PR/main CI
-自动执行该链路、`deno task test` 与 UI 门禁。
+搜索建议分组标题 × `regular` / `clear`），并打印各元素最差值。普通浅 / 深主题覆盖所选壁纸；
+高对比浅 / 深主题的 Floating 所有档位均为不透明实色（`glass-contrast.test.ts` 验证），
+因此每档只测纯白壁纸，仍逐一实测三个浮层。
+取样前等待两帧截图一致，取样期间背景像素变化即失败，不重试。
+本地 `deno task test:wallpaper` 默认运行完整七壁纸矩阵；
+`WALLPAPER_READABILITY_MATRIX=fast deno task test:wallpaper` 仅选纯白、纯黑与棋盘纹理，
+其余主题、视口、身份、玻璃档位、浮层与断言不变。PR CI 使用快速矩阵；
+main push 与手动触发使用完整矩阵。快速矩阵不覆盖灰色及高饱和红 / 绿 / 蓝，
+因此通过不代表完整矩阵通过；完整验收仍需针对当前 revision 运行完整矩阵。
+两种模式均运行整个壁纸功能集合，`deno task test` 在同一 CI job 中执行。
