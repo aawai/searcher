@@ -53,6 +53,12 @@ export const FIXTURE_MARKDOWN = `
 | ----------- | --------------------------------- | ------------------------------------- |
 | primary     | \`web/src/components/ui/button.css\` | \`.button--primary\`                    |
 | 选中 / 激活 | \`web/src/components/ui/switch.css\` | \`.switch[data-checked], .switch--on\`  |
+
+**衬线角色登记。** 说明文字。
+
+| 语义     | 文件                               | 选择器            |
+| -------- | ---------------------------------- | ----------------- |
+| 首页刊头 | \`web/src/features/masthead.css\`    | \`.masthead__day\`  |
 `;
 
 export const FIXTURE_REGISTRY = parseVisualRegistry(FIXTURE_MARKDOWN);

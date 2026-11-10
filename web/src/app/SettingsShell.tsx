@@ -66,6 +66,7 @@ export function SettingsShell(
             <div
                 className="settings-layout"
                 data-host-narrow={mobile ? "true" : undefined}
+                data-host-window={host.inWindow ? "true" : undefined}
                 data-view={location.pathname === routes.settings()
                     ? "list"
                     : "detail"}

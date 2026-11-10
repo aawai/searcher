@@ -39,6 +39,7 @@
     }
 
     .document-print-title {
+        font-family: var(--font-serif);
         font-size: var(--font-page-title-size);
         line-height: var(--font-page-title-line-height);
         font-weight: var(--font-title-weight);
@@ -48,6 +49,11 @@
     .document-print-body :is(h1, h2, h3, h4, h5, h6) {
         break-after: avoid;
         margin-block: var(--space-4) var(--space-2);
+    }
+
+    /* Same serif role as the editor, so print wraps headings like the page view. */
+    .document-print-body :is(h1, h2, h3) {
+        font-family: var(--font-serif);
     }
 
     .document-print-body h1 {

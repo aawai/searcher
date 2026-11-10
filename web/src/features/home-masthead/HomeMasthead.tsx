@@ -1,4 +1,3 @@
-import "@fontsource/noto-serif-sc/600.css";
 import { ChevronUp } from "lucide-react";
 import {
     type JSX,

@@ -2,12 +2,14 @@
  * The Visual Language registries that the semantic rules enforce.
  *
  * `docs/design/VISUAL_LANGUAGE.md` is the single source: the font-size ladder,
- * the radius ladder and the accent-fill table are parsed from it, so changing
- * a ladder means changing the contract first. Parsing fails closed: a missing
- * or malformed table throws instead of silently registering nothing.
+ * the radius ladder, the accent-fill table and the serif-role table are parsed
+ * from it, so changing a ladder means changing the contract first. Parsing
+ * fails closed: a missing or malformed table throws instead of silently
+ * registering nothing.
  */
 
-export interface AccentFillEntry {
+/** A semantic registered for one selector of one stylesheet. */
+export interface SelectorEntry {
     semantic: string;
     file: string;
     selector: string;
@@ -32,7 +34,8 @@ export interface VisualRegistry {
     /** Font-size roles whose registered size carries a line height (`12 / 16`). */
     pairedFontTokens: ReadonlySet<string>;
     radiusTokens: ReadonlySet<string>;
-    accentFills: readonly AccentFillEntry[];
+    accentFills: readonly SelectorEntry[];
+    serifRoles: readonly SelectorEntry[];
     breakpoints: ReadonlySet<number>;
     tailwindBreakpoints: ReadonlyMap<string, number>;
     tailwindVisualUtilities: ReadonlySet<string>;
@@ -47,6 +50,7 @@ export const DEFAULT_REGISTRY_URL = new URL(
 const FONT_LADDER_MARKER = "**字号阶梯登记";
 const RADIUS_LADDER_MARKER = "**圆角阶梯登记";
 const ACCENT_FILL_MARKER = "**强调色填充登记";
+const SERIF_ROLE_MARKER = "**衬线角色登记";
 const TAILWIND_VISUAL_MARKER = "**Tailwind 视觉工具类登记";
 
 /** `font-size` Tokens: every `--font-*` except families, weights and line heights. */
@@ -64,7 +68,8 @@ export function isRadiusTokenName(name: string): boolean {
 }
 
 function tableRowsAfter(lines: string[], marker: string): string[][] {
-    const start = lines.findIndex((line) => line.includes(marker));
+    // A registry paragraph opens with its marker; prose may cite the same name.
+    const start = lines.findIndex((line) => line.startsWith(marker));
     if (start === -1) {
         throw new Error(`Visual Language registry marker not found: ${marker}`);
     }
@@ -166,25 +171,40 @@ function isValidTailwindVisualEntry(
     }
 }
 
+function parseSelectorRows(
+    lines: string[],
+    marker: string,
+    label: string,
+): SelectorEntry[] {
+    return tableRowsAfter(lines, marker).map((cells) => {
+        if (cells.length < 3) {
+            throw new Error(
+                `${label} row needs semantic, file and selector: ${
+                    cells.join(" | ")
+                }`,
+            );
+        }
+        return {
+            semantic: cells[0],
+            file: unwrapCode(cells[1], `${label} file`),
+            selector: normalizeSelector(
+                unwrapCode(cells[2], `${label} selector`),
+            ),
+        };
+    });
+}
+
 export function parseVisualRegistry(markdown: string): VisualRegistry {
     const lines = markdown.split("\n");
-    const accentFills = tableRowsAfter(lines, ACCENT_FILL_MARKER).map(
-        (cells) => {
-            if (cells.length < 3) {
-                throw new Error(
-                    `Accent-fill row needs semantic, file and selector: ${
-                        cells.join(" | ")
-                    }`,
-                );
-            }
-            return {
-                semantic: cells[0],
-                file: unwrapCode(cells[1], "accent-fill file"),
-                selector: normalizeSelector(
-                    unwrapCode(cells[2], "accent-fill selector"),
-                ),
-            };
-        },
+    const accentFills = parseSelectorRows(
+        lines,
+        ACCENT_FILL_MARKER,
+        "Accent-fill",
+    );
+    const serifRoles = parseSelectorRows(
+        lines,
+        SERIF_ROLE_MARKER,
+        "Serif-role",
     );
     const breakpoints = new Set<number>();
     const tailwindBreakpoints = new Map<string, number>();
@@ -268,6 +288,7 @@ export function parseVisualRegistry(markdown: string): VisualRegistry {
         pairedFontTokens,
         radiusTokens,
         accentFills,
+        serifRoles,
         breakpoints,
         tailwindBreakpoints,
         tailwindVisualUtilities,
@@ -307,24 +328,48 @@ function withoutStatePseudo(part: string): string {
 }
 
 /**
- * A `var(--accent)` fill is registered when every selector of the rule, after
- * dropping interaction-state pseudo-classes, is listed for the same file.
+ * A rule is registered when every selector of it, after dropping
+ * interaction-state pseudo-classes, is listed for the same file.
  */
-export function isRegisteredAccentFill(
+function isRegisteredSelector(
+    entries: readonly SelectorEntry[],
     file: string,
     selector: string,
-    registry: VisualRegistry,
 ): boolean {
     const parts = splitSelectorList(selector).map(withoutStatePseudo);
     if (parts.length === 0 || parts.some((part) => part === "")) return false;
     const registered = new Set<string>();
-    for (const entry of registry.accentFills) {
+    for (const entry of entries) {
         if (entry.file !== file) continue;
         for (const part of splitSelectorList(entry.selector)) {
             registered.add(withoutStatePseudo(part));
         }
     }
     return parts.every((part) => registered.has(part));
+}
+
+/** A `var(--accent)` fill is limited to the registered accent semantics. */
+export function isRegisteredAccentFill(
+    file: string,
+    selector: string,
+    registry: VisualRegistry,
+): boolean {
+    return isRegisteredSelector(registry.accentFills, file, selector);
+}
+
+/** `--font-serif` (or a raw serif family) is limited to the registered roles. */
+export function isRegisteredSerifRole(
+    file: string,
+    selector: string,
+    registry: VisualRegistry,
+): boolean {
+    return isRegisteredSelector(registry.serifRoles, file, selector);
+}
+
+/** A `font-family` / `font` value that selects a serif face. */
+export function usesSerifFamily(value: string): boolean {
+    return /var\(\s*--font-serif\b/.test(value) ||
+        /(?:^|[\s,])serif(?![\w-])/i.test(value);
 }
 
 const VAR_REFERENCE = /var\(\s*(--[a-z0-9-]+)\s*(?:,[^)]*)?\)/g;

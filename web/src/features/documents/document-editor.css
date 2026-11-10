@@ -87,6 +87,7 @@
 .document-title-input {
     width: calc(100% + 2 * var(--space-2));
     margin-inline: calc(-1 * var(--space-2));
+    font-family: var(--font-serif);
     font-size: var(--font-page-title-size);
     line-height: var(--font-page-title-line-height);
     font-weight: var(--font-title-weight);
@@ -458,6 +459,7 @@
 }
 
 .document-continuous-editor .ProseMirror h1 {
+    font-family: var(--font-serif);
     font-size: var(--font-markdown-title-size);
     line-height: 1.25;
     font-weight: var(--font-title-weight);
@@ -468,6 +470,7 @@
 }
 
 .document-continuous-editor .ProseMirror h2 {
+    font-family: var(--font-serif);
     font-size: var(--font-markdown-section-size);
     line-height: 1.3;
     font-weight: 600;
@@ -478,6 +481,7 @@
 }
 
 .document-continuous-editor .ProseMirror h3 {
+    font-family: var(--font-serif);
     font-size: var(--font-markdown-subsection-size);
     line-height: 1.35;
     font-weight: 600;

@@ -6,6 +6,9 @@ import { installFocusRecovery } from "./components/ui/focus-recovery.ts";
 import { installScrollActivity } from "./design-system/scroll-activity.ts";
 import "./features/home-layouts/home-layouts.css";
 import "./styles/global.css";
+// Self-hosted Noto Serif SC 600 for `--font-serif`: @font-face declarations only,
+// each unicode-range slice downloads when a registered serif role first uses it.
+import "@fontsource/noto-serif-sc/600.css";
 import "./components/ui/primitives.css";
 import "./components/searcher/search.css";
 import "./components/searcher/apps.css";
