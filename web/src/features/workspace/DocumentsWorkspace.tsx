@@ -345,6 +345,12 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                         )
                         : SIDEBAR_WIDTH.max}
                     defaultValue={SIDEBAR_WIDTH.default}
+                    presets={{
+                        narrow: SIDEBAR_WIDTH.min,
+                        default: SIDEBAR_WIDTH.default,
+                        wide: SIDEBAR_WIDTH.max,
+                    }}
+                    savedValue={sidebarWidth}
                     direction={1}
                     onChange={setSidebarWidth}
                     onCommit={(value) =>

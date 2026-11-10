@@ -157,7 +157,7 @@
 }
 
 .ask-sidebar__item.is-active {
-    background: var(--surface-soft);
+    background: var(--accent-soft);
 }
 
 .ask-sidebar__item [data-slot="button"].ask-sidebar__item-title {
@@ -173,7 +173,7 @@
 }
 
 .ask-sidebar__item.is-active [data-slot="button"].ask-sidebar__item-title {
-    font-weight: var(--font-label-weight);
+    font-weight: var(--font-title-weight);
 }
 
 .ask-sidebar__item-text {

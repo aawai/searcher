@@ -1,0 +1,110 @@
+/* Experimental values live only inside these comparison samples. */
+.palette-lab {
+    --palette-warm-background: var(--background);
+    --palette-warm-surface: var(--surface);
+    --palette-warm-soft: var(--surface-soft);
+    --palette-wallpaper: var(--accent);
+}
+.palette-lab p {
+    max-width: 80ch;
+}
+.palette-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: var(--space-4);
+}
+.palette-candidate {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sheet);
+}
+.palette-candidate h3,
+.palette-candidate p {
+    margin: 0;
+}
+.palette-candidate[data-scale="warm"] {
+    --background: var(--palette-warm-background);
+    --surface: var(--palette-warm-surface);
+    --surface-solid: var(--palette-warm-surface);
+    --surface-soft: var(--palette-warm-soft);
+}
+[data-contrast="more"] .palette-candidate[data-scale="warm"] {
+    --background: inherit;
+    --surface: inherit;
+    --surface-solid: inherit;
+    --surface-soft: inherit;
+}
+.palette-surface {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    color: var(--foreground);
+}
+.palette-surface--canvas {
+    background: var(--background);
+}
+.palette-surface--content {
+    background: var(--surface-solid);
+}
+.palette-surface--soft {
+    background: var(--surface-soft);
+}
+.palette-surface--tinted {
+    background: color-mix(in srgb, var(--palette-wallpaper) 6%,
+        var(--surface-solid));
+}
+.palette-surface--derived {
+    background-color: var(--canvas-derived);
+}
+/* The derived wash is drawn over an opaque wallpaper swatch. */
+.palette-candidate:has(.palette-surface--derived) {
+    background: var(--palette-wallpaper);
+}
+.palette-surface--selected {
+    background: var(--accent-soft);
+}
+.palette-coloring {
+    --accent-subtle: color-mix(in srgb, var(--accent) calc(var(--accent-soft-mix) / 2), var(--surface));
+}
+[data-contrast="more"] [data-mapping="neutral"] .palette-coloring {
+    --accent-subtle: var(--surface-soft);
+    --accent-border: var(--border);
+}
+[data-contrast="more"] [data-mapping="highlight"] .palette-coloring {
+    --accent-subtle: var(--accent-soft);
+}
+.palette-surface--subtle {
+    background: var(--accent-subtle);
+}
+.palette-marker {
+    width: fit-content;
+    margin: 0;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--accent-border);
+    background: var(--accent-subtle);
+    color: var(--accent);
+}
+.palette-probes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+.palette-probes [data-probe="次要"] {
+    color: var(--muted);
+}
+.palette-probes [data-probe="前景"] {
+    color: var(--foreground);
+}
+.palette-probes [data-probe="强调"] {
+    color: var(--accent);
+}
+.palette-surface small {
+    color: var(--foreground);
+    font-variant-numeric: tabular-nums;
+}

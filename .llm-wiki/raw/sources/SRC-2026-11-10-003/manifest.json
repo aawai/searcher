@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-10-003",
+  "captured": "2026-11-10",
+  "packet_version": "1.0",
+  "title": "`unicode-range` CSS at-rule descriptor",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/unicode-range",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -1,7 +1,8 @@
-import { assertEquals } from "@std/assert";
-import { type Route } from "playwright";
+import { assert, assertEquals } from "@std/assert";
+import { type Locator, type Route } from "playwright";
 import { chromium } from "./helpers/browser.ts";
-import { startProductionApp } from "./helpers/production-app.ts";
+import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
+import { openApps } from "./helpers/library.ts";
 
 Deno.test("apps concurrent optimistic sorting converges to confirmed server order #141", async () => {
     const app = await startProductionApp();
@@ -135,5 +136,207 @@ Deno.test("apps concurrent optimistic sorting converges to confirmed server orde
     } finally {
         await browser.close();
         await app.close();
+    }
+});
+
+Deno.test("app menu ordering persists on home, in the apps window and in folders", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const browser = await chromium.launch({ headless: true });
+    cleanup.defer(() => browser.close());
+    for (const touch of [false, true]) {
+        const credentials = await app.seedAskFixtureUser({
+            username: touch ? "menu_order_touch" : "menu_order_mouse",
+            password: "Menu-order-password-394!",
+        });
+        const context = await browser.newContext({
+            viewport: { width: 1440, height: 900 },
+            isMobile: touch,
+            hasTouch: touch,
+            reducedMotion: "reduce",
+        });
+        try {
+            const page = await context.newPage();
+            await loginAndVisit(page, app.origin, "/", credentials);
+            await page.request.patch(app.origin + "/api/preferences", {
+                headers: { Origin: app.origin },
+                data: { showHomeApps: true },
+            });
+            const post = async (
+                path: string,
+                data: unknown,
+            ): Promise<string> => {
+                const response = await page.request.post(app.origin + path, {
+                    headers: { Origin: app.origin },
+                    data,
+                });
+                assert(response.ok(), await response.text());
+                return (await response.json()).data.id;
+            };
+            const first = await post("/api/webapps", {
+                name: "排序甲",
+                url: "https://order-a.example/",
+                sortOrder: 0,
+                isHomeFixed: true,
+            });
+            const hidden = await post("/api/webapps", {
+                name: "排序未固定",
+                url: "https://order-hidden.example/",
+                sortOrder: 1,
+                isHomeFixed: false,
+            });
+            const last = await post("/api/webapps", {
+                name: "排序乙",
+                url: "https://order-b.example/",
+                sortOrder: 2,
+                isHomeFixed: true,
+            });
+            const folder = await post("/api/webapp-groups", {
+                name: "排序文件夹",
+                folderSize: "small",
+                sortOrder: 3,
+                isHomeFixed: true,
+            });
+            const memberA = await post("/api/webapps", {
+                name: "文件甲",
+                url: "https://member-a.example/",
+                groupId: folder,
+                sortOrder: 0,
+            });
+            const memberB = await post("/api/webapps", {
+                name: "文件乙",
+                url: "https://member-b.example/",
+                groupId: folder,
+                sortOrder: 1,
+            });
+            await page.reload();
+            const home = page.locator(".launcher-grid--home");
+            const homeTiles = home.locator(".launcher-tile[data-tile-id]");
+            const order = (tiles: Locator) =>
+                tiles.evaluateAll((nodes) =>
+                    nodes.map((node) => node.getAttribute("data-tile-id"))
+                );
+            const cdp = touch ? await context.newCDPSession(page) : null;
+            const openMenu = async (tile: Locator) => {
+                if (!cdp) {
+                    await tile.click({ button: "right" });
+                } else {
+                    const box = await tile.boundingBox();
+                    assert(box);
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchStart",
+                        touchPoints: [{
+                            x: box.x + box.width / 2,
+                            y: box.y + box.height / 2,
+                            id: 1,
+                        }],
+                    });
+                    await page.getByRole("menu").waitFor();
+                    await cdp.send("Input.dispatchTouchEvent", {
+                        type: "touchEnd",
+                        touchPoints: [],
+                    });
+                }
+                await page.getByRole("menu").waitFor();
+            };
+            const choose = async (name: string) => {
+                const saved = page.waitForResponse((response) =>
+                    new URL(response.url()).pathname ===
+                        "/api/webapps/reorder" &&
+                    response.request().method() === "PUT" && response.ok()
+                );
+                await page.getByRole("menuitem", { name, exact: true }).click();
+                await saved;
+            };
+            await homeTiles.first().waitFor();
+            await openMenu(home.locator(`[data-tile-id="${first}"]`));
+            assert(
+                await page.getByRole("menuitem", { name: "上移", exact: true })
+                    .isDisabled(),
+            );
+            await choose("下移");
+            assertEquals(await order(homeTiles), [
+                last,
+                first,
+                `folder:${folder}`,
+            ]);
+            await page.reload();
+            await homeTiles.first().waitFor();
+            assertEquals(await order(homeTiles), [
+                last,
+                first,
+                `folder:${folder}`,
+            ]);
+            await home.locator(
+                `[data-folder-id="${folder}"] .launcher-folder-background`,
+            ).click();
+            const popup = page.locator(".launcher-popup");
+            const popupTiles = popup.locator(".launcher-tile[data-tile-id]");
+            await popupTiles.first().waitFor();
+            // The folder morph's snapshot overlay takes hits until it ends.
+            await page.waitForFunction(() =>
+                !document.documentElement.classList.contains(
+                    "shared-element-transition",
+                )
+            );
+            await openMenu(popup.locator(`[data-tile-id="${memberB}"]`));
+            assert(
+                await page.getByRole("menuitem", { name: "下移", exact: true })
+                    .isDisabled(),
+            );
+            await choose("上移");
+            assertEquals(await order(popupTiles), [memberB, memberA]);
+            await page.keyboard.press("Escape");
+            await popup.waitFor({ state: "detached" });
+
+            await openApps(page);
+            const grid = page.locator("[data-library-apps-grid]");
+            const windowTiles = grid.locator(".launcher-tile[data-tile-id]");
+            await windowTiles.first().waitFor();
+            assertEquals(await order(windowTiles), [
+                last,
+                hidden,
+                first,
+                `folder:${folder}`,
+            ]);
+            await openMenu(grid.locator(`[data-tile-id="${first}"]`));
+            await choose("上移");
+            assertEquals(await order(windowTiles), [
+                last,
+                first,
+                hidden,
+                `folder:${folder}`,
+            ]);
+            await page.reload();
+            await windowTiles.first().waitFor();
+            assertEquals(await order(windowTiles), [
+                last,
+                first,
+                hidden,
+                `folder:${folder}`,
+            ]);
+
+            await grid.locator(
+                `[data-folder-id="${folder}"] .launcher-folder-background`,
+            ).click();
+            const members = grid.locator(".launcher-tile[data-tile-id]");
+            await members.first().waitFor();
+            await openMenu(grid.locator(`[data-tile-id="${memberA}"]`));
+            assert(
+                await page.getByRole("menuitem", { name: "下移", exact: true })
+                    .isDisabled(),
+            );
+            await choose("上移");
+            assertEquals(await order(members), [memberA, memberB]);
+            await page.reload();
+            await grid.locator(
+                `[data-folder-id="${folder}"] .launcher-folder-background`,
+            ).click();
+            await members.first().waitFor();
+            assertEquals(await order(members), [memberA, memberB]);
+        } finally {
+            await context.close();
+        }
     }
 });

@@ -61,6 +61,7 @@
 - [[concepts/view-transitions-shared-element]] — View Transitions Shared Element *(created: 2026-10-24)*
 - [[concepts/wallpaper-accent-oklch-contrast-solver]] — Wallpaper Accent OKLCH Contrast Solver *(created: 2026-10-25)*
 - [[concepts/web-animations-api-runtime-architecture]] — Web Animations API Runtime Architecture *(created: 2026-10-05)*
+- [[concepts/web-font-loading-and-cjk-subsetting]] — Web Font Loading and CJK Subsetting *(created: 2026-11-10)*
 - [[concepts/whole-line-preview-truncation]] — Whole-line Preview Truncation *(created: 2026-10-25)*
 - [[concepts/xss-sanitization-and-trusted-types]] — XSS Sanitization and Trusted Types *(created: 2026-10-27)*
 
@@ -213,6 +214,7 @@
 - [[sources/obs-2026-11-06-pr-392-main]] — Observation: 外观首帧闪烁经 PR 392 消除并合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-10-0-1]] — Observation: 窗口内容刊头排版：阶段0/1完成，待方案确认 *(created: 2026-11-10)*
 - [[sources/obs-2026-11-10-a]] — Observation: 窗口内容标题衬线（方案 A）已在生产实现 *(created: 2026-11-10)*
+- [[sources/obs-2026-11-10-issue-394]] — Observation: 视觉语言演进计划 Issue 394 已创建 *(created: 2026-11-10)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -341,10 +343,15 @@
 - [[sources/SRC-2026-11-09-004]] — `<system-color>` CSS type (MDN) *(created: unknown)*
 - [[sources/SRC-2026-11-09-005]] — Understanding SC 1.4.6 Contrast (Enhanced) (W3C WCAG 2.2) *(created: unknown)*
 - [[sources/SRC-2026-11-09-006]] — `color-scheme` CSS property (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-10-001]] — Best practices for fonts (web.dev) *(created: unknown)*
+- [[sources/SRC-2026-11-10-002]] — `font-display` CSS at-rule descriptor (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-10-003]] — `unicode-range` CSS at-rule descriptor (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-10-004]] — FontFaceSet: ready property (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-10-005]] — How to scale fonts with size-adjust (web.dev) *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-10T03:07:44.494Z* | *Total pages: 332*
+*Last updated: 2026-11-10T08:02:25.481Z* | *Total pages: 339*

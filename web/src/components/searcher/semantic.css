@@ -668,7 +668,7 @@
    cue (1.4.1), and forced colours erase it (A7). */
 .local-navigation a[aria-current="page"] {
     color: var(--foreground);
-    background: var(--surface-soft);
+    background: var(--accent-soft);
     font-weight: var(--font-title-weight);
 }
 /* A Highlight fill under text opts out of adjustment, or the text backplate

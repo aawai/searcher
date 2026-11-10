@@ -173,6 +173,7 @@ export function DesignLab() {
                 <Link to="/design-lab/omnibox">统一输入框</Link>
                 <Link to="/design-lab/motion">共享元素动效实验</Link>
                 <Link to="/design-lab/accent">壁纸取色</Link>
+                <Link to="/design-lab/palette">中性色与浅染</Link>
             </Section>
 
             <Section title="首页构图：31% / 38%">

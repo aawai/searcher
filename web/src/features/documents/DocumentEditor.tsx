@@ -1736,6 +1736,12 @@ export function DocumentEditor({
                                 )
                                 : OUTLINE_WIDTH.max}
                             defaultValue={OUTLINE_WIDTH.default}
+                            presets={{
+                                narrow: OUTLINE_WIDTH.min,
+                                default: OUTLINE_WIDTH.default,
+                                wide: OUTLINE_WIDTH.max,
+                            }}
+                            savedValue={outlineWidth}
                             direction={-1}
                             onChange={setOutlineWidth}
                             onCommit={(value) =>

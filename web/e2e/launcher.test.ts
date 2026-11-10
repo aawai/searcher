@@ -422,6 +422,147 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
     );
 
     await t.step(
+        "folder morph snapshots, reduced motion and unsupported fallback",
+        async () => {
+            await page.addScriptTag({
+                content: `(() => {
+            window.folderTransitions = [];
+            const original = document.startViewTransition.bind(document);
+            const named = () => [...document.querySelectorAll("*")]
+                .filter(e => e.style.viewTransitionName && e.style.viewTransitionName !== "none")
+                .map(e => e.style.viewTransitionName);
+            document.startViewTransition = callback => {
+                const record = { before: named(), after: null, animations: null };
+                window.folderTransitions.push(record);
+                const transition = original(async () => {
+                    await callback();
+                    record.after = named();
+                });
+                transition.ready.then(() => {
+                    record.animations = document.documentElement.getAnimations({ subtree: true })
+                        .map(a => ({
+                            pseudo: a.effect?.pseudoElement,
+                            properties: [...new Set(a.effect.getKeyframes().flatMap(f => Object.keys(f)))]
+                                .filter(k => !["offset", "easing", "composite", "computedOffset"].includes(k))
+                        })).filter(a => a.pseudo?.startsWith("::view-transition"));
+                });
+                return transition;
+            };
+        })()`,
+            });
+            type Record = {
+                before: string[];
+                after: string[];
+                animations: { pseudo: string; properties: string[] }[];
+            };
+            for (const reduced of [false, true]) {
+                await page.emulateMedia({
+                    reducedMotion: reduced ? "reduce" : "no-preference",
+                });
+                const index = reduced ? 2 : 0;
+                await homeFolder("Dev Tools").locator(
+                    ".launcher-folder-background",
+                ).click();
+                await page.waitForFunction((i) => {
+                    const records = Reflect.get(window, "folderTransitions");
+                    return records[i]?.animations &&
+                        !document.documentElement.classList.contains(
+                            "shared-element-transition",
+                        );
+                }, index);
+                await page.waitForFunction(() =>
+                    document.activeElement?.getAttribute("aria-label") ===
+                        "添加应用到 Dev Tools"
+                );
+                await page.keyboard.press("Escape");
+                await page.waitForFunction((i) => {
+                    const records = Reflect.get(window, "folderTransitions");
+                    return records[i]?.animations &&
+                        !document.documentElement.classList.contains(
+                            "shared-element-transition",
+                        );
+                }, index + 1);
+                await page.waitForFunction(
+                    (id) =>
+                        document.querySelector(
+                            `[data-folder-id="${id}"] .launcher-folder-background`,
+                        ) === document.activeElement,
+                    group1.id,
+                );
+                const records = await page.evaluate<Record[]>(
+                    "window.folderTransitions",
+                );
+                for (const record of records.slice(index, index + 2)) {
+                    assertEquals(record.before.length, 1);
+                    assertEquals(record.after, record.before);
+                    const animations = record.animations.filter((a) =>
+                        a.pseudo.includes(record.before[0])
+                    );
+                    assert(animations.length > 0);
+                    if (reduced) {
+                        assert(
+                            animations.every((a) =>
+                                (a.pseudo.startsWith("::view-transition-old") ||
+                                    a.pseudo.startsWith(
+                                        "::view-transition-new",
+                                    )) &&
+                                a.properties.length === 1 &&
+                                a.properties[0] === "opacity"
+                            ),
+                        );
+                    } else {
+                        assert(
+                            animations.some((a) =>
+                                a.properties.some((p) =>
+                                    ["transform", "width", "height"].includes(p)
+                                )
+                            ),
+                        );
+                    }
+                }
+                assertEquals(
+                    new Set(records.map((record) => record.before[0])).size,
+                    records.length,
+                );
+            }
+            await page.evaluate(() =>
+                Object.defineProperty(document, "startViewTransition", {
+                    value: undefined,
+                    configurable: true,
+                })
+            );
+            await homeFolder("Dev Tools").locator(".launcher-folder-background")
+                .click();
+            await popup.waitFor();
+            await page.keyboard.press("Escape");
+            await popup.waitFor({ state: "detached" });
+            assertEquals(
+                await page.evaluate<number>("window.folderTransitions.length"),
+                4,
+            );
+            assertEquals(
+                await page.evaluate(() =>
+                    document.documentElement.classList.contains(
+                        "shared-element-transition",
+                    )
+                ),
+                false,
+            );
+            await page.waitForFunction(
+                (id) =>
+                    document.querySelector(
+                        `[data-folder-id="${id}"] .launcher-folder-background`,
+                    ) === document.activeElement,
+                group1.id,
+            );
+            await page.evaluate(() =>
+                Reflect.deleteProperty(document, "startViewTransition")
+            );
+            await page.emulateMedia({ reducedMotion: "no-preference" });
+        },
+    );
+
+    await t.step(
         "3. Blank menu creates folders; 整理 mode disables 新建文件夹 and hides the add cell",
         async () => {
             const createFolder = async (name: string) => {

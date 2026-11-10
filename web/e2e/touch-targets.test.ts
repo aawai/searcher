@@ -40,7 +40,7 @@ interface Miss {
  * the target itself; outside the visible box a window resize edge may keep
  * its last pixels, as it does today.
  */
-function probeTargets(page: Page, scope: string) {
+function probeTargets(page: Page, scope: string, selector = TARGETS) {
     return page.evaluate(({ scope, selector }) => {
         const misses: Miss[] = [];
         const root = document.querySelector(scope)!;
@@ -85,7 +85,7 @@ function probeTargets(page: Page, scope: string) {
             }
         }
         return misses;
-    }, { scope, selector: TARGETS });
+    }, { scope, selector });
 }
 
 function titleBarGeometry(page: Page, scope: string) {
@@ -215,6 +215,86 @@ Deno.test("分组行节奏：行内分段控件为紧凑档，单值行统一 44
         }
     } finally {
         await browser.close();
+        await app.close();
+    }
+});
+
+// Stacked sidebar entries grow visibly to 44 under any coarse pointer: their
+// hit areas would cover each other at the compact size, which only a fine
+// pointer without a touch screen keeps (A2, Issue #394 1.4).
+const SIDEBAR_ENTRIES = [
+    '[data-slot="button"].documents-entry',
+    ".documents-tree-row:not(.documents-tree-drag-overlay)",
+].join(", ");
+
+Deno.test("笔记侧栏条目：任何粗指针下可见放大到 44，命中区互不覆盖 #394", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    let seeded = false;
+    try {
+        for (const [profile, settings] of Object.entries(POINTER_PROFILES)) {
+            const browser = await chromium.launch({
+                args: ["--no-sandbox", `--blink-settings=${settings}`],
+            });
+            try {
+                const page = await browser.newPage({
+                    viewport: { width: 1440, height: 900 },
+                });
+                await loginAndVisit(page, app.origin, "/?view=notes", user);
+                if (!seeded) {
+                    for (const name of ["工作", "读书"]) {
+                        const response = await page.request.post(
+                            app.origin + "/api/document-notebooks",
+                            {
+                                headers: { Origin: app.origin },
+                                data: { name, parentId: null },
+                            },
+                        );
+                        assert(response.ok(), `notebook: ${response.status()}`);
+                    }
+                    seeded = true;
+                    await page.reload();
+                }
+                const tree = page.locator(NOTES).getByRole("tree", {
+                    name: "笔记本",
+                    exact: true,
+                });
+                await tree.getByRole("treeitem", { name: "读书", exact: true })
+                    .waitFor();
+                // The stacked list; the lone footer entry keeps its compact
+                // size on a fine primary pointer (library-windows covers it)
+                // and is still probed for its hit area below.
+                const heights = await page.locator(
+                    `${NOTES} .documents-sidebar-scroll :is(${SIDEBAR_ENTRIES})`,
+                ).evaluateAll((entries) =>
+                    entries.map((entry) => ({
+                        label: entry.getAttribute("aria-label") ??
+                            entry.textContent?.trim(),
+                        height: entry.getBoundingClientRect().height,
+                    }))
+                );
+                // Recent, favourites, notebooks heading + two notebooks.
+                assert(heights.length >= 5, JSON.stringify(heights));
+                for (const entry of heights) {
+                    const detail = `${profile}: ${JSON.stringify(entry)}`;
+                    if (profile === "mouse") assert(entry.height < 44, detail);
+                    else assertEquals(entry.height, 44, detail);
+                }
+                if (profile === "mouse") continue;
+                assertEquals(
+                    await probeTargets(
+                        page,
+                        `${NOTES} .documents-sidebar`,
+                        SIDEBAR_ENTRIES,
+                    ),
+                    [],
+                    `${profile} sidebar`,
+                );
+            } finally {
+                await browser.close();
+            }
+        }
+    } finally {
         await app.close();
     }
 });

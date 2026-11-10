@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-10-002",
+  "captured": "2026-11-10",
+  "packet_version": "1.0",
+  "title": "`font-display` CSS at-rule descriptor",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -48,6 +48,7 @@ sources: [
 - 编辑器 transaction 来源与撤销：[ProseMirror Transaction Origin and Undo History](/concepts/prosemirror-transaction-origin-and-undo-history.md)
 - 强制颜色与高对比主题：[Forced Colors and High-Contrast Themes](/concepts/forced-colors-and-high-contrast-themes.md)
 - 外观首帧绘制：[First-Frame Theme Painting](/concepts/first-frame-theme-painting.md)
+- Web 字体加载与 CJK 切片：[Web Font Loading and CJK Subsetting](/concepts/web-font-loading-and-cjk-subsetting.md)
 - 综合架构：[[syntheses/searcher-system-architecture]]
 ## 来源
 

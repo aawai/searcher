@@ -165,6 +165,7 @@
   ],
   "concepts/first-frame-theme-painting": [
     "concepts/forced-colors-and-high-contrast-themes",
+    "concepts/web-font-loading-and-cjk-subsetting",
     "entities/searcher-项目",
     "sources/SRC-2026-11-09-006"
   ],
@@ -207,6 +208,7 @@
     "concepts/hono-security-middleware-vs-api-guard",
     "concepts/offline-first-与-local-draft-持久化架构",
     "concepts/pwa-service-worker-update-lifecycle",
+    "concepts/web-font-loading-and-cjk-subsetting",
     "sources/SRC-2026-10-28-001",
     "sources/SRC-2026-10-28-002",
     "sources/SRC-2026-11-04-002",
@@ -291,6 +293,7 @@
   "concepts/playwright-actionability-and-e2e-waits": [
     "concepts/contract-first-testing",
     "concepts/inert-and-top-layer-in-searcher-overlays",
+    "concepts/web-font-loading-and-cjk-subsetting",
     "sources/SRC-2026-11-01-002"
   ],
   "concepts/pointer-capture-and-drag-lifecycle": [
@@ -544,6 +547,14 @@
     "sources/SRC-2026-10-27-004",
     "sources/SRC-2026-10-31-004"
   ],
+  "concepts/web-font-loading-and-cjk-subsetting": [
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-10-001",
+    "sources/SRC-2026-11-10-002",
+    "sources/SRC-2026-11-10-003",
+    "sources/SRC-2026-11-10-004",
+    "sources/SRC-2026-11-10-005"
+  ],
   "concepts/whole-line-preview-truncation": [
     "entities/searcher-项目",
     "sources/SRC-2026-10-25-006"
@@ -718,6 +729,7 @@
     "concepts/view-transitions-shared-element",
     "concepts/wallpaper-accent-oklch-contrast-solver",
     "concepts/web-animations-api-runtime-architecture",
+    "concepts/web-font-loading-and-cjk-subsetting",
     "concepts/whole-line-preview-truncation",
     "concepts/xss-sanitization-and-trusted-types",
     "entities/deno-runtime",
@@ -785,6 +797,11 @@
     "sources/SRC-2026-11-09-004",
     "sources/SRC-2026-11-09-005",
     "sources/SRC-2026-11-09-006",
+    "sources/SRC-2026-11-10-001",
+    "sources/SRC-2026-11-10-002",
+    "sources/SRC-2026-11-10-003",
+    "sources/SRC-2026-11-10-004",
+    "sources/SRC-2026-11-10-005",
     "syntheses/searcher-system-architecture"
   ],
   "entities/shadcn-ui-system": [
@@ -1266,6 +1283,21 @@
     "concepts/first-frame-theme-painting",
     "concepts/forced-colors-and-high-contrast-themes"
   ],
+  "sources/SRC-2026-11-10-001": [
+    "concepts/web-font-loading-and-cjk-subsetting"
+  ],
+  "sources/SRC-2026-11-10-002": [
+    "concepts/web-font-loading-and-cjk-subsetting"
+  ],
+  "sources/SRC-2026-11-10-003": [
+    "concepts/web-font-loading-and-cjk-subsetting"
+  ],
+  "sources/SRC-2026-11-10-004": [
+    "concepts/web-font-loading-and-cjk-subsetting"
+  ],
+  "sources/SRC-2026-11-10-005": [
+    "concepts/web-font-loading-and-cjk-subsetting"
+  ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
   ],
@@ -1416,6 +1448,7 @@
   "sources/obs-2026-11-06-pr-392-main": [],
   "sources/obs-2026-11-10-0-1": [],
   "sources/obs-2026-11-10-a": [],
+  "sources/obs-2026-11-10-issue-394": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],

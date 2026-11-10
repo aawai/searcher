@@ -896,3 +896,21 @@
 ## [2026-11-10T03:07:44.378Z] observe
 - slug: "obs-2026-11-10-a", title: "窗口内容标题衬线（方案 A）已在生产实现", relevance: "high"
 
+## [2026-11-10T06:10:18.782Z] observe
+- slug: "obs-2026-11-10-issue-394", title: "视觉语言演进计划 Issue 394 已创建", relevance: "high"
+
+## [2026-11-10T08:00:36.765Z] capture
+- source_id: "SRC-2026-11-10-001", url: "https://web.dev/articles/font-best-practices", format: "web"
+
+## [2026-11-10T08:00:41.385Z] capture
+- source_id: "SRC-2026-11-10-002", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display", format: "web"
+
+## [2026-11-10T08:00:45.000Z] capture
+- source_id: "SRC-2026-11-10-003", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/unicode-range", format: "web"
+
+## [2026-11-10T08:00:47.964Z] capture
+- source_id: "SRC-2026-11-10-004", url: "https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/ready", format: "web"
+
+## [2026-11-10T08:00:50.031Z] capture
+- source_id: "SRC-2026-11-10-005", url: "https://web.dev/articles/css-size-adjust", format: "web"
+

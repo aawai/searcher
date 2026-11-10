@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-10T03:07:44.494Z",
+  "last_updated": "2026-11-10T08:02:25.481Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -403,6 +403,13 @@
       "domain": "engineering",
       "created": "2026-10-05",
       "updated": "2026-10-05"
+    },
+    "concepts/web-font-loading-and-cjk-subsetting": {
+      "type": "concept",
+      "title": "Web Font Loading and CJK Subsetting",
+      "domain": "engineering",
+      "created": "2026-11-10",
+      "updated": "2026-11-10"
     },
     "concepts/whole-line-preview-truncation": {
       "type": "concept",
@@ -1779,6 +1786,51 @@
       "source_id": "SRC-2026-11-09-006",
       "format": "web",
       "captured": "2026-11-09"
+    },
+    "sources/SRC-2026-11-10-001": {
+      "type": "source",
+      "title": "Best practices for fonts (web.dev)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-10-001/extracted.md",
+      "source_id": "SRC-2026-11-10-001",
+      "format": "web",
+      "captured": "2026-11-10"
+    },
+    "sources/SRC-2026-11-10-002": {
+      "type": "source",
+      "title": "`font-display` CSS at-rule descriptor (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-10-002/extracted.md",
+      "source_id": "SRC-2026-11-10-002",
+      "format": "web",
+      "captured": "2026-11-10"
+    },
+    "sources/SRC-2026-11-10-003": {
+      "type": "source",
+      "title": "`unicode-range` CSS at-rule descriptor (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-10-003/extracted.md",
+      "source_id": "SRC-2026-11-10-003",
+      "format": "web",
+      "captured": "2026-11-10"
+    },
+    "sources/SRC-2026-11-10-004": {
+      "type": "source",
+      "title": "FontFaceSet: ready property (MDN)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-10-004/extracted.md",
+      "source_id": "SRC-2026-11-10-004",
+      "format": "web",
+      "captured": "2026-11-10"
+    },
+    "sources/SRC-2026-11-10-005": {
+      "type": "source",
+      "title": "How to scale fonts with size-adjust (web.dev)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-10-005/extracted.md",
+      "source_id": "SRC-2026-11-10-005",
+      "format": "web",
+      "captured": "2026-11-10"
     },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",
@@ -4012,6 +4064,20 @@
       "relevance": "high",
       "observed_at": "2026-11-10T03:07:44.376Z",
       "source_context": "实施窗口内容刊头排版方案 A",
+      "created": "2026-11-10",
+      "updated": "2026-11-10"
+    },
+    "sources/obs-2026-11-10-issue-394": {
+      "type": "source",
+      "title": "Observation: 视觉语言演进计划 Issue 394 已创建",
+      "tags": [
+        "[\"ui\",\"visual-language\",\"plan\",\"issue-394\"]"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-10-issue-394",
+      "relevance": "high",
+      "observed_at": "2026-11-10T06:10:18.781Z",
+      "source_context": "创建视觉语言演进实施计划 Issue",
       "created": "2026-11-10",
       "updated": "2026-11-10"
     },

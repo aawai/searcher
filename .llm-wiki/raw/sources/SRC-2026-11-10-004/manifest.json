@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-10-004",
+  "captured": "2026-11-10",
+  "packet_version": "1.0",
+  "title": "FontFaceSet: ready property",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/ready",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
