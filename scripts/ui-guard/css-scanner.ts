@@ -7,6 +7,8 @@ import {
     isFontTokenName,
     isRadiusTokenName,
     isRegisteredAccentFill,
+    isRegisteredSerifRole,
+    usesSerifFamily,
     type VisualRegistry,
 } from "./registry.ts";
 
@@ -442,6 +444,21 @@ export function scanCssCode(
                 );
                 return;
             }
+        }
+
+        // Serif is an editorial role, limited to the selectors registered in
+        // Visual Language; every other text keeps the platform sans stack.
+        if (
+            (prop === "font-family" || prop === "font") &&
+            usesSerifFamily(value) &&
+            !isRegisteredSerifRole(file, selector, registry)
+        ) {
+            pushViolation(
+                "unregistered-serif",
+                prop,
+                `${selector} { ${prop}: ${value} }`,
+            );
+            return;
         }
 
         // Numeric z-index values must use an elevation token. Runtime token expressions

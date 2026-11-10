@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-09-004",
+  "captured": "2026-11-09",
+  "packet_version": "1.0",
+  "title": "`<system-color>` CSS type",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/system-color",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

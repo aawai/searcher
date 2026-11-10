@@ -11,5 +11,6 @@ API、安全与持久化约束以实现和契约为准。
 | [UI_UX_AUDIT_FIX_PLAN.md](UI_UX_AUDIT_FIX_PLAN.md)                     | 实施计划，文档声明“不表示任何修复已完成”；Design System 列为既有设计资料           |
 | [ZEN_MOBILE_NOTES_PLAN.md](ZEN_MOBILE_NOTES_PLAN.md)                   | 已实现并完成验收（Issue #191）                                                     |
 | [UI_MOTION_CONSISTENCY_PLAN.md](UI_MOTION_CONSISTENCY_PLAN.md)         | 已实施：动效、视觉一致性与页面原型修正                                             |
+| [EDITORIAL_WINDOWS_PLAN.md](EDITORIAL_WINDOWS_PLAN.md)                 | 已实施（方案 A）：窗口内容标题使用衬线，现行规则见 Visual Language                 |
 
 新增计划放在本目录，并在文首写明状态。

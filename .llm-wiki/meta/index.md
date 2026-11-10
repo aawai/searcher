@@ -15,29 +15,37 @@
 - [[concepts/csrf-defense-boundaries]] — CSRF Defense Boundaries *(created: 2026-10-26)*
 - [[concepts/css-container-queries]] — CSS Container Queries *(created: 2026-10-30)*
 - [[concepts/css-custom-property-fallback-and-registration]] — CSS Custom Property Fallback and Registration *(created: 2026-10-27)*
+- [[concepts/data-router-lifecycle]] — Data Router Lifecycle in Searcher *(created: 2026-11-07)*
 - [[concepts/database-queue-serialization]] — Database Queue Serialization *(created: 2026-09-25)*
 - [[concepts/deno-native-serve-architecture]] — Deno Native Serve Architecture *(created: unknown)*
 - [[concepts/deno-permission-boundaries]] — Deno Permission Boundaries *(created: 2026-10-26)*
 - [[concepts/dnd-kit-2d-grid-sorting-architecture]] — dnd-kit 2D Grid Sorting Architecture *(created: 2026-09-25)*
+- [[concepts/field-encryption-and-key-management]] — Field Encryption and Key Management *(created: 2026-11-07)*
+- [[concepts/first-frame-theme-painting]] — First-Frame Theme Painting *(created: 2026-11-09)*
+- [[concepts/forced-colors-and-high-contrast-themes]] — Forced Colors and High-Contrast Themes *(created: 2026-11-09)*
 - [[concepts/hono-middleware-pipeline-request-intake]] — Hono Middleware Pipeline & Request Intake *(created: 2026-09-25)*
 - [[concepts/hono-rpc-type-safe-client]] — Hono RPC & Type-Safe Client *(created: 2026-09-26)*
 - [[concepts/hono-security-middleware-vs-api-guard]] — Hono Security Middleware Compared with Searcher's API Guard *(created: 2026-10-31)*
 - [[concepts/http-cache-and-service-worker-boundaries]] — HTTP Cache and Service Worker Boundaries *(created: 2026-10-28)*
 - [[concepts/inert-and-top-layer-in-searcher-overlays]] — Inert and Top Layer in Searcher Overlays *(created: 2026-11-01)*
+- [[concepts/login-throttling-and-rate-limiting]] — Login Throttling and Rate Limiting *(created: 2026-11-08)*
 - [[concepts/markdown-sanitization-with-rehype-sanitize]] — Markdown Sanitization with rehype-sanitize *(created: 2026-11-01)*
 - [[concepts/modal-dialog-focus-and-semantics]] — Modal Dialog Focus and Semantics *(created: 2026-10-29)*
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
+- [[concepts/openai-compatible-streaming-and-tool-calls]] — OpenAI-Compatible Streaming and Tool Calls *(created: 2026-11-08)*
 - [[concepts/overscroll-containment-for-nested-scroll-areas]] — Overscroll Containment for Nested Scroll Areas *(created: 2026-10-31)*
 - [[concepts/password-hashing-and-pbkdf2-parameters]] — Password Hashing and PBKDF2 Parameters *(created: 2026-10-30)*
 - [[concepts/playwright-actionability-and-e2e-waits]] — Playwright Actionability and E2E Wait Conditions *(created: 2026-11-01)*
 - [[concepts/pointer-capture-and-drag-lifecycle]] — Pointer Capture and Drag Lifecycle in Searcher *(created: 2026-11-02)*
 - [[concepts/pointer-target-size]] — Pointer Target Size *(created: 2026-10-25)*
+- [[concepts/prosemirror-transaction-origin-and-undo-history]] — ProseMirror Transaction Origin and Undo History *(created: 2026-11-08)*
 - [[concepts/pwa-service-worker-update-lifecycle]] — PWA Service Worker Update Lifecycle *(created: 2026-10-24)*
 - [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
 - [[concepts/reduced-motion-replacement-strategy]] — Reduced Motion Replacement Strategy *(created: 2026-10-31)*
 - [[concepts/route-level-code-splitting-dynamic-bundling]] — Route-Level Code Splitting & Dynamic Bundling *(created: 2026-10-05)*
 - [[concepts/scrollbar-gutter-and-layout-stability]] — Scrollbar Gutter and Width-Driven Layout Stability *(created: 2026-11-01)*
+- [[concepts/searxng-web-search-integration]] — SearXNG Web Search Integration *(created: 2026-11-07)*
 - [[concepts/server-sent-events-sse-与实时事件流]] — Server-Sent Events (SSE) 与实时事件流 *(created: 2026-09-25)*
 - [[concepts/session-security-and-isolation]] — Session Security and Isolation *(created: 2026-09-25)*
 - [[concepts/shortest-column-masonry-layout]] — Shortest Column Masonry Layout *(created: 2026-09-25)*
@@ -46,6 +54,7 @@
 - [[concepts/sqlite-fts5-fulltext-search]] — SQLite FTS5 Fulltext Search *(created: 2026-09-25)*
 - [[concepts/sqlite-isolation-and-connection-boundaries]] — SQLite Isolation and Connection Boundaries *(created: 2026-10-26)*
 - [[concepts/sqlite-table-recreation-migration]] — SQLite Table Recreation Migration *(created: 2026-09-25)*
+- [[concepts/ssrf-and-outbound-fetch-boundaries]] — SSRF and Outbound Fetch Boundaries *(created: 2026-11-07)*
 - [[concepts/tailwind-v4-css-first-architecture]] — Tailwind v4 CSS First Architecture *(created: 2026-09-27)*
 - [[concepts/touch-action-gesture-ownership]] — Touch Action Gesture Ownership *(created: 2026-10-31)*
 - [[concepts/upload-validation-defense-in-depth]] — Upload Validation Defense in Depth *(created: 2026-11-02)*
@@ -197,9 +206,13 @@
 - [[sources/obs-2026-11-06-issue-370-pr-a-pr-374-b6-issue-373]] — Observation: Issue 370 PR-A 提交为 PR 374，B6 跟进为 Issue 373 *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-issue-370-pr-b-b3-pr-381-main]] — Observation: Issue 370 PR-B（B3）壁纸文字可读性经 PR 381 合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-issue-370-pr-c-b4-pr-380-main]] — Observation: Issue 370 PR-C（B4）窗口位置预设经 PR 380 合并 main *(created: 2026-11-06)*
+- [[sources/obs-2026-11-06-issue-383-pr-d-pr-391-main]] — Observation: Issue 383 PR-D 经 PR 391 合并 main 并关闭 *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-pr-374-main]] — Observation: PR 374 已合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-pr-385-main]] — Observation: PR 385 笔记标题焦点与抽屉错位合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-pr-386-main]] — Observation: 刊头应用图标与可选标签图标经 PR 386 合并 main *(created: 2026-11-06)*
+- [[sources/obs-2026-11-06-pr-392-main]] — Observation: 外观首帧闪烁经 PR 392 消除并合并 main *(created: 2026-11-06)*
+- [[sources/obs-2026-11-10-0-1]] — Observation: 窗口内容刊头排版：阶段0/1完成，待方案确认 *(created: 2026-11-10)*
+- [[sources/obs-2026-11-10-a]] — Observation: 窗口内容标题衬线（方案 A）已在生产实现 *(created: 2026-11-10)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -312,10 +325,26 @@
 - [[sources/SRC-2026-11-06-001]] — SQLite Write-Ahead Logging *(created: unknown)*
 - [[sources/SRC-2026-11-06-002]] — Request: credentials property *(created: unknown)*
 - [[sources/SRC-2026-11-06-003]] — Using HTTP cookies *(created: unknown)*
+- [[sources/SRC-2026-11-07-001]] — SearXNG Search API *(created: unknown)*
+- [[sources/SRC-2026-11-07-002]] — AesGcmParams (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-07-003]] — Server-Side Request Forgery Prevention Cheat Sheet (OWASP) *(created: unknown)*
+- [[sources/SRC-2026-11-07-004]] — Cryptographic Storage Cheat Sheet (OWASP) *(created: unknown)*
+- [[sources/SRC-2026-11-07-005]] — React Router createBrowserRouter *(created: unknown)*
+- [[sources/SRC-2026-11-08-002]] — Authentication Cheat Sheet (OWASP) *(created: unknown)*
+- [[sources/SRC-2026-11-08-003]] — Retry-After header (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-08-005]] — Function calling (OpenAI API guide) *(created: unknown)*
+- [[sources/SRC-2026-11-08-006]] — OpenAI TypeScript and JavaScript API Library (openai-node README) *(created: unknown)*
+- [[sources/SRC-2026-11-08-007]] — ProseMirror Guide *(created: unknown)*
+- [[sources/SRC-2026-11-09-001]] — `forced-colors` CSS media feature (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-09-002]] — `forced-color-adjust` CSS property (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-09-003]] — `prefers-contrast` CSS media feature (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-09-004]] — `<system-color>` CSS type (MDN) *(created: unknown)*
+- [[sources/SRC-2026-11-09-005]] — Understanding SC 1.4.6 Contrast (Enhanced) (W3C WCAG 2.2) *(created: unknown)*
+- [[sources/SRC-2026-11-09-006]] — `color-scheme` CSS property (MDN) *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-06T11:07:51.369Z* | *Total pages: 303*
+*Last updated: 2026-11-10T03:07:44.494Z* | *Total pages: 332*

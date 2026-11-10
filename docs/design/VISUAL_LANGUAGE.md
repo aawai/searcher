@@ -156,7 +156,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 
 四档正文阶梯加若干专用角色；字号只能取下表登记的 Token。
 
-字重只用 400 / 500 / 600。不用全大写或衬线标题；唯一例外是[首页刊头](#首页刊头home-masthead)：日数字、月份与置顶笔记标题使用 `--font-serif`（自托管 Noto Serif SC，只打包 600 字重，按 unicode-range 切片按需加载，`font-display: swap`），分节标题与星期允许字距拉伸。其余字体使用平台原生栈（Apple: SF + PingFang；Windows: Segoe UI + 微软雅黑；其他: Noto Sans SC），数字用 `font-variant-numeric: tabular-nums`。Markdown 正文标题由 `markdown.css` 用 `em` 相对缩放。字体族 Token 为 `--font-sans`、`--font-mono`、`--font-serif`。
+字重只用 400 / 500 / 600。不用全大写。衬线（`--font-serif`，自托管 Noto Serif SC，只打包 600 字重，按 unicode-range 切片按需加载，`font-display: swap`；`@font-face` 声明由入口 `web/src/main.tsx` 引入，随入口样式对所有路由可用，字体文件只在登记角色首次用到对应字符时下载）只用于本节末尾的衬线角色登记表列出的内容标题：[首页刊头](#首页刊头home-masthead)的日数字、月份与置顶笔记标题，以及窗口内容层的标题（笔记标题与正文 h1–h3 及其打印、AI 空状态标题与窗口内回答的 h1–h3、设置 / 账户窗口的页面标题）。窗口内容层的衬线标题沿用原有字号、字重与行高，只换字体族；正文、控件、分组列表与分组标题保持无衬线，因为只有 600 字重。**窗口外框**（标题栏、窗口按钮、操作菜单、对话框、菜单、Toast、任务栏）不属于内容层，一律无衬线。共享的 `.markdown` 基础规则保持无衬线：衬线标题由各消费面的宿主选择器显式开启，首页行内 AI 回答与独立页（登录、注册、404、管理后台、访客设置）不启用。字距拉伸只用于首页刊头的分节标题与星期。其余字体使用平台原生栈（Apple: SF + PingFang；Windows: Segoe UI + 微软雅黑；其他: Noto Sans SC），数字用 `font-variant-numeric: tabular-nums`。Markdown 正文标题由 `markdown.css` 用 `em` 相对缩放。字体族 Token 为 `--font-sans`、`--font-mono`、`--font-serif`。
 
 **字号阶梯登记。** `font-size` 只能引用本表的 Token，或 `inherit` / `1em` / `100%`。“尺寸 / 行高”列带行高的角色（正文除外，它是 `body` 的根字体、默认继承）在同一声明块内同时声明 `line-height`，`check:ui` 规则 `unpaired-font-line-height` 检查；`font-size: inherit` 同样连同 `line-height: inherit` 一起继承。名称为 `--font-*` 的 Token（字体族、字重、行高除外）必须登记于此，在哪个 CSS 文件定义都一样。
 
@@ -178,6 +178,24 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--font-masthead-day-size`        | 128 / 104          | 600         | 首页刊头日数字（`--font-serif`，专用）；窄屏 88 / 72 用同名 Token 的断点值                    |
 | `--font-masthead-month-size`      | 20 / 28            | 600         | 首页刊头月份（`--font-serif`，专用）                                                          |
 | `--font-masthead-entry-size`      | 20 / 28            | 600         | 首页刊头置顶笔记标题（`--font-serif`，专用）                                                  |
+
+**衬线角色登记。** `font-family` / `font` 引用 `--font-serif`（或直接写衬线字体族）只允许出现在下表的文件与选择器；新增必须先登记语义。`:hover`、`:focus-visible` 等状态变体随基础选择器登记。`check:ui` 的 `unregistered-serif` 规则读取本表执行；Tailwind 的 `font-serif` 工具类无法按选择器登记，由未登记视觉工具类规则拒绝。
+
+| 语义     | 文件                                               | 选择器                                                                            |
+| -------- | -------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 首页刊头 | `web/src/features/home-masthead/home-masthead.css` | `.home-masthead__day`                                                             |
+| 首页刊头 | `web/src/features/home-masthead/home-masthead.css` | `.home-masthead__month`                                                           |
+| 首页刊头 | `web/src/features/home-masthead/home-masthead.css` | `.home-masthead__entry-no`                                                        |
+| 首页刊头 | `web/src/features/home-masthead/home-masthead.css` | `.home-masthead__entry-title`                                                     |
+| 笔记标题 | `web/src/features/documents/document-editor.css`   | `.document-title-input`                                                           |
+| 笔记正文 | `web/src/features/documents/document-editor.css`   | `.document-continuous-editor .ProseMirror h1`                                     |
+| 笔记正文 | `web/src/features/documents/document-editor.css`   | `.document-continuous-editor .ProseMirror h2`                                     |
+| 笔记正文 | `web/src/features/documents/document-editor.css`   | `.document-continuous-editor .ProseMirror h3`                                     |
+| 笔记打印 | `web/src/features/documents/document-print.css`    | `.document-print-title`                                                           |
+| 笔记打印 | `web/src/features/documents/document-print.css`    | `.document-print-body :is(h1, h2, h3)`                                            |
+| AI 窗口  | `web/src/features/ask/ask-workspace.css`           | `.ask-empty-hero__title`                                                          |
+| AI 窗口  | `web/src/features/ask/ask-workspace.css`           | `.ask-thread__messages-inner .ask-assistant-body :is(h1, h2, h3)`                 |
+| 设置窗口 | `web/src/app/settings.css`                         | `.settings-layout[data-host-window="true"] :is(.settings-nav-title, .page-title)` |
 
 #### 间距、圆角、尺寸
 
@@ -310,7 +328,9 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 
 设置只有一层，不显示面包屑；面包屑只用于三层及以上的直达页面（如管理详情）。
 
-首页尺度三级：主体块是搜索框 + 应用底板（搜索输入用 `--font-search-input-size`，底板标签用 `--font-metadata-size`）；次级是首页刊头（日数字 `--font-masthead-day-size`、月份 `--font-masthead-month-size`、置顶标题 `--font-masthead-entry-size`，待办与“继续” `--font-body-size`，分节标题与元信息 `--font-metadata-size`）；辅助是首页顶栏字标（`--font-brand-size`）、主题、强调色与头像（沿用登记图标 / 控件尺寸，常态无底座）。刊头的大字只在壁纸焦点另一侧出现，不与搜索框争夺中轴；层级由块体、距离与字重共同表达，不将顶栏升格为页面标题；窗口标题仍用 `--font-title-size`。
+首页尺度三级：主体块是搜索框 + 应用底板（搜索输入用 `--font-search-input-size`，底板标签用 `--font-metadata-size`）；次级是首页刊头（日数字 `--font-masthead-day-size`、月份 `--font-masthead-month-size`、置顶标题 `--font-masthead-entry-size`，待办与“继续” `--font-body-size`，分节标题与元信息 `--font-metadata-size`）；辅助是首页顶栏字标（`--font-brand-size`）、主题、强调色与头像（沿用登记图标 / 控件尺寸，常态无底座）。刊头的大字只在壁纸焦点另一侧出现，不与搜索框争夺中轴；层级由块体、距离与字重共同表达，不将顶栏升格为页面标题；窗口标题栏的标题仍用 `--font-title-size` 无衬线。
+
+本次风格方向修订（窗口内容标题）：窗口内容层的标题采用与首页刊头同源的衬线，使首页与窗口的阅读标题一致；取代 2026-10-26 审计计划中“不增加第二套字体”的条件，范围限于[字号](#字号)一节的衬线角色登记表。不引入刊头的粗线、分节小标题、序号或列布局。owner 为各消费面的 feature CSS（`document-editor.css`、`document-print.css`、`ask-workspace.css`、`settings.css`），设置窗口以 `SettingsShell` 写入的 `data-host-window` 与独立页区分。验证：`unregistered-serif` 门禁及其正反例测试，笔记、AI、设置窗口在 390 / 768 / 1440 × light / dark 的实页，以及首页行内回答与访客设置页保持无衬线的实页检查。
 
 本次风格方向修订（首页刊头）：以「首页刊头」替换「首页笔记」（S / W 单元、分带吸附网格、卡片与“更多笔记”入口）与搜索框上方的“静”状态层；删除 `--home-note-*` Token、`HOME_NOTE_GRID`、`home-grid-cells.ts`、`HomeNoteCard.tsx`、`home-notes.css` 与布局 API。新增 `--font-serif`（自托管 Noto Serif SC 600）、三个刊头专用字号与刊头衬底 `--masthead-veil*`（`tokens.css`）。owner 为 `web/src/features/home-masthead/`；以位置 / 摘要 / 待办汇总纯函数单元测试、`glass-contrast.test.ts` 的刊头衬底探针、`check:ui`、home-masthead E2E 与 390 / 768 / 1024 / 1440 / 1920 × light / dark 实页验证。
 
@@ -339,7 +359,7 @@ shadcn/ui（Base UI primitive）提供交互与可访问性；外观由 `compone
 | reset、AppShell、顶栏、壁纸画布 | `web/src/styles/global.css`                                                                                                                                                 |
 | 场景布局与领域呈现              | 对应 feature / 领域 CSS（如 `launcher.css`、`home-notes.css`、`documents-workspace.css`、`document-editor.css`、`markdown.css`、`settings.css`；原 `notes.css` 已拆分退役） |
 
-feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 primitive 前须确认现有组件及其 variant 无法表达，且至少两个页面需要同一语义。`deno task check:ui` 在颜色语义属性、颜色语义自定义属性及支持的 TSX 静态样式 / SVG 属性 / 任意颜色类中以 `raw-color` 拒绝 hex、颜色函数和 CSS 命名色，包括渐变、阴影与 `var()` fallback 中的颜色；Token、`currentColor` 和 `transparent` 允许，字符串与 URL 内容不作颜色判定。此规则与 `unregistered-accent-fill` 独立：前者检查 raw 色值，后者检查强调色填充的文件和选择器登记。门禁还拒绝 raw 字号、圆角、阴影、间距与 z-index、未定义的 CSS 变量、未登记的字号 / 圆角 Token 及其定义，以及未登记的 Tailwind 视觉尺度与断点前缀。登记表由 `scripts/ui-guard/registry.ts` 从本文解析，表格缺失或格式错误时门禁失败；`tokens.css` 的登记工具类及断点还须与表中唯一来源一致。
+feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 primitive 前须确认现有组件及其 variant 无法表达，且至少两个页面需要同一语义。`deno task check:ui` 在颜色语义属性、颜色语义自定义属性及支持的 TSX 静态样式 / SVG 属性 / 任意颜色类中以 `raw-color` 拒绝 hex、颜色函数和 CSS 命名色，包括渐变、阴影与 `var()` fallback 中的颜色；Token、`currentColor` 和 `transparent` 允许，字符串与 URL 内容不作颜色判定。此规则与 `unregistered-accent-fill` 独立：前者检查 raw 色值，后者检查强调色填充的文件和选择器登记；`unregistered-serif` 以同一方式检查衬线字体族的文件和选择器登记。门禁还拒绝 raw 字号、圆角、阴影、间距与 z-index、未定义的 CSS 变量、未登记的字号 / 圆角 Token 及其定义，以及未登记的 Tailwind 视觉尺度与断点前缀。登记表由 `scripts/ui-guard/registry.ts` 从本文解析，表格缺失或格式错误时门禁失败；`tokens.css` 的登记工具类及断点还须与表中唯一来源一致。
 
 ### 例外
 
@@ -464,7 +484,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 - **交互**：条目点击或 Enter 打开笔记；悬停（仅可悬停的精细指针，触屏点按后不残留）或键盘聚焦时左侧出现 2px 强调色竖线、标题右移 4px 并在末尾显示 ↗（减少动态时不位移）。条目 `⋯` 菜单（悬停 / 聚焦出现，粗指针常显）：编辑笔记、上移、下移、取消固定、移至回收站（10 秒撤销）。鼠标移动 4px 或触控长按 250ms 拖动条目重排，键盘用菜单上移 / 下移；顺序写入 `homeSortOrder`。待办复选框可直接切换，笔记打开时与编辑器草稿同步。粗指针下复选框、`⋯` 与“复制命令”命中区 ≥44px。
 - **访客**：只显示刊头块（日期时间），没有导语栏、待办与置顶。
 - **动效**：窄屏刊头展开 / 收起用 `--motion-panel` + `--ease-out-expo` 让衬底与刊头从露出区伸展到整屏（高度过渡；衬底与日期块以下内容同时淡入），搜索框滑动同时长；减少动态时直接切换，搜索框直接停靠；条目悬停位移 `--motion-fast`；拖动重排的让位用 `--motion-base`。不做入场交错与循环动画。
-- 范围仅限首页；完整笔记列表、编辑器与冲突对话框属于窗口内容，不套用刊头排版。
+- 刊头的列布局、衬底、粗线、分节标题与序号仅限首页；完整笔记列表、编辑器与冲突对话框属于窗口内容，不套用这些排版。窗口内容层的标题与刊头共用衬线字体族，范围见 [字号](#字号) 的衬线角色登记。
 
 ### 动效
 

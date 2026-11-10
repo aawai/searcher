@@ -37,5 +37,6 @@ sources:
 - [Vite Bundler](/entities/vite-bundler.md)
 - [React 19 Framework](/entities/react-19-framework.md)
 - [Searcher 项目](/entities/searcher-项目.md)
+- [Data Router Lifecycle in Searcher](/concepts/data-router-lifecycle.md)
 - [Vite - Code Splitting Strategy](/sources/SRC-2026-10-05-001.md)
 - [Taming 'Large Chunks' in Vite + React](/sources/SRC-2026-10-05-002.md)

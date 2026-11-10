@@ -376,6 +376,12 @@
     margin: 0 auto;
 }
 
+/* Answer headings in the thread take the editorial serif role. The shared
+   `.markdown` rules stay sans, so the home answer card is unchanged. */
+.ask-thread__messages-inner .ask-assistant-body :is(h1, h2, h3) {
+    font-family: var(--font-serif);
+}
+
 .ask-thread__dock {
     position: relative;
     z-index: var(--elevation-local-20);
@@ -461,6 +467,7 @@
 
 .ask-empty-hero__title {
     margin: 0;
+    font-family: var(--font-serif);
     font-size: var(--font-page-title-size);
     line-height: var(--font-page-title-line-height);
     font-weight: var(--font-title-weight);

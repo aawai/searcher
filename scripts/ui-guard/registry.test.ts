@@ -57,6 +57,17 @@ Deno.test("registry - fails closed on a missing, empty or malformed table", () =
     );
 });
 
+Deno.test("registry - prose citing a registry name before its table does not move the table", () => {
+    const cited = FIXTURE_MARKDOWN.replace(
+        "**字号阶梯登记。**",
+        "衬线只用于 **衬线角色登记** 列出的标题。\n\n**字号阶梯登记。**",
+    );
+    assertEquals(
+        parseVisualRegistry(cited).serifRoles.map((e) => e.selector),
+        [".masthead__day"],
+    );
+});
+
 Deno.test("registry - breakpoint table fails closed on malformed or unordered boundaries", () => {
     for (const replacement of ["`641px`", "`0`", "`639.5`"]) {
         assertThrows(() =>

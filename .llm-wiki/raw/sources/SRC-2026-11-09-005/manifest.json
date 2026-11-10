@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-09-005",
+  "captured": "2026-11-09",
+  "packet_version": "1.0",
+  "title": "Understanding [SC 1.4.6](https://w3.org/TR/WCAG22#contrast-enhanced) Contrast (Enhanced) (Level AAA)",
+  "url": "https://www.w3.org/WAI/WCAG22/Understanding/contrast-enhanced.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

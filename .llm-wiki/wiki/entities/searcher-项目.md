@@ -40,6 +40,14 @@ sources: [
 - 数据库备份与恢复：[SQLite Backup and Recovery Boundaries](/concepts/sqlite-backup-and-recovery-boundaries.md)
 - 样式变量语义：[CSS Custom Property Fallback and Registration](/concepts/css-custom-property-fallback-and-registration.md)
 - 内容防护边界：[XSS Sanitization and Trusted Types](/concepts/xss-sanitization-and-trusted-types.md)
+- 出站请求与 SSRF：[SSRF and Outbound Fetch Boundaries](/concepts/ssrf-and-outbound-fetch-boundaries.md)、[SearXNG Web Search Integration](/concepts/searxng-web-search-integration.md)
+- 字段加密与密钥：[Field Encryption and Key Management](/concepts/field-encryption-and-key-management.md)
+- 前端路由生命周期：[Data Router Lifecycle in Searcher](/concepts/data-router-lifecycle.md)
+- 登录限流：[Login Throttling and Rate Limiting](/concepts/login-throttling-and-rate-limiting.md)
+- AI 流式与工具调用：[OpenAI-Compatible Streaming and Tool Calls](/concepts/openai-compatible-streaming-and-tool-calls.md)
+- 编辑器 transaction 来源与撤销：[ProseMirror Transaction Origin and Undo History](/concepts/prosemirror-transaction-origin-and-undo-history.md)
+- 强制颜色与高对比主题：[Forced Colors and High-Contrast Themes](/concepts/forced-colors-and-high-contrast-themes.md)
+- 外观首帧绘制：[First-Frame Theme Painting](/concepts/first-frame-theme-painting.md)
 - 综合架构：[[syntheses/searcher-system-architecture]]
 ## 来源
 

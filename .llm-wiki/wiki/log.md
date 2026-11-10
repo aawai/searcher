@@ -1,7 +1,43 @@
 # Wiki Update Log
 
+## 2026-11-10
+
+- **observe**: {"relevance":"high","slug":"obs-2026-11-10-a","title":"窗口内容标题衬线（方案 A）已在生产实现"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-10-0-1","title":"窗口内容刊头排版：阶段0/1完成，待方案确认"}
+
+## 2026-11-09
+
+- **capture**: {"format":"web","source_id":"SRC-2026-11-09-006","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-09-005","url":"https://www.w3.org/WAI/WCAG22/Understanding/contrast-enhanced.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-09-004","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/system-color"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-09-003","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-contrast"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-09-002","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/forced-color-adjust"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-09-001","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/@media/forced-colors"}
+
+## 2026-11-08
+
+- **discard**: {"discarded_captures":[{"reason":"duplicate capture from an interrupted run; extraction empty; superseded by SRC-2026-11-08-002","source_id":"SRC-2026-11-08-001","url":"https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"},{"reason":"Cloudflare challenge page captured instead of documentation","source_id":"SRC-2026-11-08-004","url":"https://platform.openai.com/docs/api-reference/chat-streaming"},{"captured_at":"2026-11-08T08:02:17.503Z","reason":"redirected to Milkdown homepage; no guide content","source_id":"SRC-2026-11-08-006","url":"https://milkdown.dev/docs/guide/using-plugins"}],"discarded_source_ids":["SRC-2026-11-08-001","SRC-2026-11-08-004","SRC-2026-11-08-006"],"note":"Packets and skeleton pages were removed before ingest. The capture allocator then reissued SRC-2026-11-08-006 for https://raw.githubusercontent.com/openai/openai-node/master/README.md (capture event 2026-11-08T08:02:43.140Z). From that capture onward, SRC-2026-11-08-006 refers only to the openai-node README."}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-08-007","url":"https://prosemirror.net/docs/guide/"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-08-006","url":"https://raw.githubusercontent.com/openai/openai-node/master/README.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-08-006","url":"https://milkdown.dev/docs/guide/using-plugins"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-08-005","url":"https://platform.openai.com/docs/guides/function-calling"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-08-004","url":"https://platform.openai.com/docs/api-reference/chat-streaming"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-08-003","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-08-002","url":"https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-08-001","url":"https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"}
+
+## 2026-11-07
+
+- **capture**: {"format":"web","source_id":"SRC-2026-11-07-005","url":"https://reactrouter.com/api/data-routers/createBrowserRouter"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-07-004","url":"https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-07-003","url":"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-07-002","url":"https://developer.mozilla.org/en-US/docs/Web/API/AesGcmParams"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-07-001","url":"https://docs.searxng.org/dev/search_api.html"}
+
 ## 2026-11-06
 
+- **observe**: {"relevance":"high","slug":"obs-2026-11-06-pr-392-main","title":"外观首帧闪烁经 PR 392 消除并合并 main"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-06-issue-383-pr-d-pr-391-main","title":"Issue 383 PR-D 经 PR 391 合并 main 并关闭"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-06-pr-386-main","title":"刊头应用图标与可选标签图标经 PR 386 合并 main"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-06-6-b-d-e","title":"应用图标重设计：6 个方向效果图，用户在 B/D/E 间比较"}
 - **observe**: {"relevance":"high","slug":"obs-2026-11-06-favicon","title":"浏览器标签 favicon 未随新图标更换的根因与修复"}

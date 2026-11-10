@@ -247,3 +247,36 @@ Deno.test("css-scanner - a registered accent selector is not registered for othe
         [],
     );
 });
+
+Deno.test("css-scanner - serif families are limited to the registered editorial roles", () => {
+    const masthead = "web/src/features/masthead.css";
+    const css = `
+        .masthead__day { font-family: var(--font-serif); }
+        .masthead__day:hover { font-family: var(--font-serif); }
+        .masthead__title { font-family: var(--font-serif); }
+        .masthead__quote { font: 600 20px/28px Georgia, Serif; }
+        .masthead__body { font-family: var(--font-sans); }
+        .masthead__code { font-family: ui-monospace, sans-serif; }
+    `;
+    assertEquals(rulesAndValues(masthead, css), [
+        [
+            "unregistered-serif",
+            ".masthead__title { font-family: var(--font-serif) }",
+        ],
+        [
+            "unregistered-serif",
+            ".masthead__quote { font: 600 20px/28px Georgia, Serif }",
+        ],
+    ]);
+    // The same selector in another stylesheet is a different, unregistered role.
+    assertEquals(
+        rulesAndValues(
+            "web/src/features/notes.css",
+            `.masthead__day { font-family: var(--font-serif); }`,
+        ),
+        [[
+            "unregistered-serif",
+            ".masthead__day { font-family: var(--font-serif) }",
+        ]],
+    );
+});

@@ -17,7 +17,8 @@ export type RuleId =
     | "unregistered-radius-token"
     | "unregistered-token-definition"
     | "native-form-control"
-    | "unregistered-accent-fill";
+    | "unregistered-accent-fill"
+    | "unregistered-serif";
 
 export interface UiViolation {
     file: string;

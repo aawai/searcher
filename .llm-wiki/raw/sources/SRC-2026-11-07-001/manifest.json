@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-07-001",
+  "captured": "2026-11-07",
+  "packet_version": "1.0",
+  "title": "Search API[¶](#search-api \"Link to this heading\")",
+  "url": "https://docs.searxng.org/dev/search_api.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

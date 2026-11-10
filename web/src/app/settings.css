@@ -138,6 +138,10 @@
     line-height: var(--font-page-title-line-height);
     font-weight: var(--font-title-weight);
 }
+/* Window content titles take the editorial serif role; standalone pages stay sans. */
+.settings-layout[data-host-window="true"] :is(.settings-nav-title, .page-title) {
+    font-family: var(--font-serif);
+}
 .settings-layout[data-host-narrow="true"] .settings-nav-list {
     gap: 0;
     overflow: hidden;

@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-08-007",
+  "captured": "2026-11-08",
+  "packet_version": "1.0",
+  "title": "ProseMirror Guide",
+  "url": "https://prosemirror.net/docs/guide/",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

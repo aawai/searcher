@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-07-004",
+  "captured": "2026-11-07",
+  "packet_version": "1.0",
+  "title": "Cryptographic Storage Cheat Sheet[¶](#cryptographic-storage-cheat-sheet \"Permanent link\")",
+  "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
