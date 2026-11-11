@@ -619,7 +619,8 @@ Deno.test("unified input keyboard, groups, capture, commands and availability #2
                 assertEquals(new URL(page.url()).pathname, "/");
                 assertEquals(new URL(page.url()).search, "");
                 await page.waitForFunction(() =>
-                    document.activeElement?.id === "search-query"
+                    document.activeElement ===
+                        document.querySelector(".wordmark-small")
                 );
             },
         );
@@ -763,8 +764,9 @@ Deno.test("focusing an empty search never opens suggestions", async () => {
             '[data-dock-id="notes"][data-window-status="minimized"]',
         ).waitFor();
         await page.waitForFunction(() =>
-            document.activeElement?.id === "search-query"
+            document.activeElement === document.querySelector(".wordmark-small")
         );
+        await search.focus();
         assertEquals(await search.getAttribute("aria-expanded"), "false");
         assertEquals(await search.inputValue(), "");
         await context.close();
