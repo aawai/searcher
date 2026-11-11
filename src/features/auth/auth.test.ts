@@ -7,27 +7,85 @@ import { createAuthTestApp } from "./test-app.ts";
 import type { Envelope, UserDto } from "@shared/contracts.ts";
 import { eq, sql } from "drizzle-orm";
 import { users } from "../../db/schema.ts";
-import { AUTH_CREDENTIAL_RULES } from "@shared/contracts.ts";
 const ORIGIN = "http://localhost:8000";
 
-async function setupTestApp() {
+async function setupTestApp(origin = ORIGIN) {
     const store = openDatabase(":memory:");
     await migrateDatabase(store);
 
     const auth = new AuthService({
         store,
-        origin: ORIGIN,
+        origin,
     });
 
     const app = createAuthTestApp({
         store,
         auth,
-        origin: ORIGIN,
+        origin,
         now: () => Date.now(),
     });
 
     return { store, auth, app };
 }
+
+Deno.test("auth security: multiple configured origins accept same-site requests with protocol-appropriate cookies", async () => {
+    const httpsOrigin = "https://search.example.com";
+    const { store, app } = await setupTestApp(`${ORIGIN},${httpsOrigin}`);
+    try {
+        for (
+            const [origin, username, secure] of [
+                [ORIGIN, "local_user", false],
+                [httpsOrigin, "remote_user", true],
+            ] as const
+        ) {
+            const response = await app.request(`${origin}/api/auth/register`, {
+                method: "POST",
+                headers: { origin, "content-type": "application/json" },
+                body: JSON.stringify({
+                    username,
+                    displayName: username,
+                    password: "Password123!",
+                }),
+            });
+            assertEquals(response.status, STATUS_CODE.OK);
+            assertEquals(
+                response.headers.get("set-cookie")?.includes("; Secure"),
+                secure,
+            );
+            const token = extractCookie(response, SESSION_COOKIE_NAME);
+            assertNotEquals(token, null);
+            const logout = await app.request(`${origin}/api/auth/logout`, {
+                method: "POST",
+                headers: { origin, cookie: `${SESSION_COOKIE_NAME}=${token}` },
+            });
+            assertEquals(logout.status, STATUS_CODE.OK);
+            assertEquals(
+                logout.headers.get("set-cookie")?.includes("; Secure"),
+                secure,
+            );
+            const unauthorized = await app.request(`${origin}/api/auth/me`, {
+                headers: { host: new URL(origin).host },
+            });
+            assertEquals(unauthorized.status, STATUS_CODE.Unauthorized);
+            assertEquals(
+                unauthorized.headers.get("set-cookie")?.includes("; Secure"),
+                secure,
+            );
+        }
+        const forbidden = await app.request(`${httpsOrigin}/api/auth/logout`, {
+            method: "POST",
+            headers: { origin: "https://untrusted.example.com" },
+        });
+        assertEquals(forbidden.status, STATUS_CODE.Forbidden);
+        const crossSite = await app.request(`${httpsOrigin}/api/auth/logout`, {
+            method: "POST",
+            headers: { origin: ORIGIN },
+        });
+        assertEquals(crossSite.status, STATUS_CODE.Forbidden);
+    } finally {
+        await store.close();
+    }
+});
 
 function extractCookie(response: Response, name: string): string | null {
     const setCookie = response.headers.get("set-cookie");
@@ -104,14 +162,13 @@ Deno.test({
 
 Deno.test("auth contract: registration enforces password length boundaries", async () => {
     const { store, app } = await setupTestApp();
-    const { minLength, maxLength } = AUTH_CREDENTIAL_RULES.password;
     try {
         for (
             const [length, expected] of [
-                [minLength - 1, STATUS_CODE.BadRequest],
-                [minLength, STATUS_CODE.OK],
-                [maxLength, STATUS_CODE.OK],
-                [maxLength + 1, STATUS_CODE.BadRequest],
+                [7, STATUS_CODE.BadRequest],
+                [8, STATUS_CODE.OK],
+                [128, STATUS_CODE.OK],
+                [129, STATUS_CODE.BadRequest],
             ]
         ) {
             const response = await app.request("/api/auth/register", {

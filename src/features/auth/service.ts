@@ -18,14 +18,16 @@ export interface AuthServiceOptions {
 
 export class AuthService {
     readonly #store: DatabaseStore;
-    readonly #origin: string;
+    readonly #origins: URL[];
     readonly #now: () => number;
     readonly #vault: CryptoVault;
     #dummyHashPromise: Promise<string>;
 
     constructor(options: AuthServiceOptions) {
         this.#store = options.store;
-        this.#origin = options.origin;
+        this.#origins = options.origin.split(",").map((value) =>
+            new URL(value.trim())
+        );
         this.#now = options.now ?? (() => Date.now());
         this.#vault = options.vault ??
             new CryptoVault({ passwordIterations: 600_000 });
@@ -40,13 +42,20 @@ export class AuthService {
         return await this.#dummyHashPromise;
     }
 
-    isSecureCookie(): boolean {
-        try {
-            const parsed = new URL(this.#origin);
-            return parsed.protocol === "https:";
-        } catch {
-            return false;
+    isSecureCookie(requestOrigin?: string, requestHost?: string): boolean {
+        let hostMatched = false;
+        let secureConfigured = false;
+        for (const origin of this.#origins) {
+            if (origin.origin === requestOrigin) {
+                return origin.protocol === "https:";
+            }
+            if (origin.protocol === "https:") secureConfigured = true;
+            if (requestHost && origin.host === requestHost) {
+                hostMatched = true;
+                if (origin.protocol === "https:") return true;
+            }
         }
+        return hostMatched ? false : secureConfigured;
     }
 
     async hashToken(token: string): Promise<string> {
@@ -277,8 +286,9 @@ export class AuthService {
     buildSessionCookieHeader(
         token: string,
         maxAgeSeconds: number = SESSION_NORMAL_MAX_AGE_SECONDS,
+        requestOrigin?: string,
     ): string {
-        const isSecure = this.isSecureCookie();
+        const isSecure = this.isSecureCookie(requestOrigin);
         let cookie =
             `${SESSION_COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;
         if (isSecure) {
@@ -287,8 +297,11 @@ export class AuthService {
         return cookie;
     }
 
-    buildClearSessionCookieHeader(): string {
-        const isSecure = this.isSecureCookie();
+    buildClearSessionCookieHeader(
+        requestOrigin?: string,
+        requestHost?: string,
+    ): string {
+        const isSecure = this.isSecureCookie(requestOrigin, requestHost);
         let cookie =
             `${SESSION_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
         if (isSecure) {

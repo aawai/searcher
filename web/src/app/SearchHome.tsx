@@ -71,7 +71,6 @@ import { ZenLayout } from "../features/home-layouts/ZenLayout.tsx";
 import {
     initialLibraryState,
     type LibraryAction,
-    libraryFocusTarget,
     libraryReducer,
     type LibrarySelection,
     shouldConfirmLibraryAction,
@@ -1673,14 +1672,7 @@ export function DesktopHost(
     const currentRoute = libraryState.documents.route;
     const editor = notesWindow !== null &&
         currentRoute.view !== "documents/root";
-    const returnLibraryFocus = useCallback(
-        () =>
-            libraryFocusTarget(
-                libraryOpener.current,
-                document.getElementById("search-query"),
-            ),
-        [],
-    );
+    const returnLibraryFocus = useCallback(() => libraryOpener.current, []);
     const registerDesktopFocus = windowManager?.registerDesktopFocus;
     useEffect(
         () => registerDesktopFocus?.(returnLibraryFocus),

@@ -31,7 +31,7 @@ Searcher 是单进程、同源部署的搜索主页，使用 Deno + Hono、React
 - 启动：`src/main.ts` 校验环境 → 打开数据库并执行迁移 → 创建 `AuthService` → `createApp` 注册路由 → `Deno.serve`。依赖通过 `AppDeps` 显式传入。
 - 请求：React feature → `apiFetch` → `/api/*` 请求体限制与 Origin 检查 → 路由会话鉴权、字段校验 → feature service → `DatabaseStore.run` → SQLite。响应统一 JSON envelope；前端解包为 DTO，401 清除登录态。
 - 存储：业务数据存于 SQLite，表结构以 `src/db/schema.ts`、`src/db/ai-schema.ts` 为准；壁纸与应用图标文件分别存于数据库旁的 `wallpapers/`、`icons/`。仅支持单进程和持久本地磁盘；备份与恢复（管理端 ZIP 快照，不含 `ENCRYPTION_KEY`）见 [docs/deployment.md](docs/deployment.md#备份与恢复)。
-- 部署：同一服务提供 API 与 `web/dist`；API 和 `/assets/*` 先处理，其余 GET/HEAD 返回 React shell，由 React Router 决定页面、canonical redirect 或客户端 404。不维护第二份前端页面白名单；未知 API 保持 JSON 404，缺失 assets 保持静态 404，非 GET/HEAD 不回退 HTML。生产必须设置精确 `APP_ORIGIN` 并先构建；非回环 origin 必须 HTTPS，TLS 由部署环境终止。
+- 部署：同一服务提供 API 与 `web/dist`；API 和 `/assets/*` 先处理，其余 GET/HEAD 返回 React shell，由 React Router 决定页面、canonical redirect 或客户端 404。不维护第二份前端页面白名单；未知 API 保持 JSON 404，缺失 assets 保持静态 404，非 GET/HEAD 不回退 HTML。生产必须在 `APP_ORIGIN` 设置一个或多个以逗号分隔的精确 origin 并先构建；非回环 origin 必须 HTTPS，TLS 由部署环境终止，反向代理须保留 Host。
 
 ## 目录与关键文件
 

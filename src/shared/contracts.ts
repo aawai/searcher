@@ -28,7 +28,7 @@ export function normalizeTheme(raw: unknown): ThemeId {
 /** Shared registration and credential-change validation limits. */
 export const AUTH_CREDENTIAL_RULES = {
     username: { minLength: 3, maxLength: 32 },
-    password: { minLength: 12, maxLength: 128 },
+    password: { minLength: 8, maxLength: 128 },
 } as const;
 export const AUTH_USERNAME_PATTERN =
     `^\\s*[a-zA-Z0-9_]{${AUTH_CREDENTIAL_RULES.username.minLength},${AUTH_CREDENTIAL_RULES.username.maxLength}}\\s*$`;

@@ -96,7 +96,9 @@ const MUTATING_METHODS: Record<string, true> = {
 export function createApiSecurityMiddleware(options: {
     origin: string;
 }) {
-    const expectedOrigin = options.origin;
+    const expectedOrigins = new Set(
+        options.origin.split(",").map((origin) => origin.trim()),
+    );
 
     return async function apiSecurityMiddleware(c: Context, next: Next) {
         c.header("Cache-Control", "no-store");
@@ -104,7 +106,11 @@ export function createApiSecurityMiddleware(options: {
         const method = c.req.method.toUpperCase();
         if (MUTATING_METHODS[method]) {
             const reqOrigin = c.req.header("origin");
-            if (!reqOrigin || reqOrigin !== expectedOrigin) {
+            if (
+                !reqOrigin || !expectedOrigins.has(reqOrigin) ||
+                (expectedOrigins.size > 1 &&
+                    new URL(reqOrigin).host !== new URL(c.req.url).host)
+            ) {
                 return failResponse(c, 403, "Origin 校验失败，禁止跨站请求");
             }
             const policy = resolveBodyPolicy(method, c.req.path);

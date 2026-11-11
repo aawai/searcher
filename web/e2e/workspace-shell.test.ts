@@ -233,7 +233,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                             document.activeElement ===
                                 (element?.isConnected
                                     ? element
-                                    : document.getElementById("search-query")),
+                                    : document.querySelector(
+                                        ".wordmark-small",
+                                    )),
                         opener,
                     ).catch(async (cause) => {
                         throw new Error(
@@ -383,7 +385,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                         document.activeElement ===
                             (element?.isConnected
                                 ? element
-                                : document.getElementById("search-query")),
+                                : document.querySelector(".wordmark-small")),
                     opener,
                 ).catch(async (cause) => {
                     throw new Error(
@@ -590,9 +592,9 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     await page.waitForFunction(
                         (el) =>
                             document.activeElement ===
-                                (el?.isConnected
-                                    ? el
-                                    : document.getElementById("search-query")),
+                                (el?.isConnected ? el : document.querySelector(
+                                    ".wordmark-small",
+                                )),
                         await workspaceNotesTrigger(page).elementHandle(),
                     );
                     assertEquals(
@@ -647,7 +649,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "mobile window closes, detaches and restores its opener or search fallback",
+        "mobile window closes, detaches and restores its opener or home fallback",
         async () => {
             await page.setViewportSize({ width: 390, height: 844 });
             await visit("/");
@@ -665,7 +667,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                     document.activeElement ===
                         (element?.isConnected
                             ? element
-                            : document.getElementById("search-query")),
+                            : document.querySelector(".wordmark-small")),
                 opener,
             ).catch(async (cause) => {
                 throw new Error(
