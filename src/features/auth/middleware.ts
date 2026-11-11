@@ -29,7 +29,13 @@ export function createSessionMiddleware(
         const token = parseCookie(cookieHeader, SESSION_COOKIE_NAME);
 
         if (!token) {
-            c.header("Set-Cookie", authService.buildClearSessionCookieHeader());
+            c.header(
+                "Set-Cookie",
+                authService.buildClearSessionCookieHeader(
+                    undefined,
+                    c.req.header("host"),
+                ),
+            );
             return failResponse(c, 401, "未登录或登录已失效");
         }
 
@@ -37,7 +43,13 @@ export function createSessionMiddleware(
             updateActivity: true,
         });
         if (!user) {
-            c.header("Set-Cookie", authService.buildClearSessionCookieHeader());
+            c.header(
+                "Set-Cookie",
+                authService.buildClearSessionCookieHeader(
+                    undefined,
+                    c.req.header("host"),
+                ),
+            );
             return failResponse(c, 401, "未登录或登录已失效");
         }
 

@@ -208,6 +208,7 @@ export function registerAuthRoutes(
                 auth.buildSessionCookieHeader(
                     session.token,
                     session.maxAgeSeconds,
+                    c.req.header("origin"),
                 ),
             );
 
@@ -298,6 +299,7 @@ export function registerAuthRoutes(
                 auth.buildSessionCookieHeader(
                     session.token,
                     session.maxAgeSeconds,
+                    c.req.header("origin"),
                 ),
             );
 
@@ -356,7 +358,10 @@ export function registerAuthRoutes(
         if (token) {
             await auth.revokeSession(token);
         }
-        c.header("Set-Cookie", auth.buildClearSessionCookieHeader());
+        c.header(
+            "Set-Cookie",
+            auth.buildClearSessionCookieHeader(c.req.header("origin")),
+        );
         return c.success(undefined, "退出成功");
     });
 
@@ -400,7 +405,10 @@ export function registerAuthRoutes(
                 currentToken &&
                 (await auth.hashToken(currentToken)).startsWith(targetSessionId)
             ) {
-                c.header("Set-Cookie", auth.buildClearSessionCookieHeader());
+                c.header(
+                    "Set-Cookie",
+                    auth.buildClearSessionCookieHeader(c.req.header("origin")),
+                );
             }
             return c.success(undefined, "已撤销该设备会话");
         },
@@ -575,7 +583,10 @@ export function registerAuthRoutes(
                 return failResponse(c, 401, "未登录或登录已失效");
             }
 
-            c.header("Set-Cookie", auth.buildClearSessionCookieHeader());
+            c.header(
+                "Set-Cookie",
+                auth.buildClearSessionCookieHeader(c.req.header("origin")),
+            );
             return c.success(undefined, "密码修改成功，已在所有设备退出");
         },
     );

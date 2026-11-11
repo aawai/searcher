@@ -6,8 +6,8 @@ Unraid、管理员与备份的常用操作；本文记录镜像构成、
 
 ## 运行与存储边界
 
-- 仅支持单进程、同源部署与持久本地磁盘。生产启动前构建前端，并设置精确的 `APP_ORIGIN`；
-  非回环 origin 必须 HTTPS，TLS 由部署环境终止。
+- 仅支持单进程、同源部署与持久本地磁盘。生产启动前构建前端，并在 `APP_ORIGIN` 中配置一个或多个以逗号分隔的精确 origin（包含协议和非默认端口，不含路径或尾斜杠）；非回环 origin 必须 HTTPS，TLS 由部署环境终止。
+- 多域名须全部指向同一服务，反向代理必须将浏览器访问的原始 `Host`（含非默认端口）传给 Searcher。写入请求的 Origin 必须在配置中，且配置多个 origin 时其 Host 必须与请求 Host 一致；不信任 `X-Forwarded-Host`。Cookie 不设置 Domain，不同域名须分别登录；账号数据共享，浏览器本地数据、离线缓存与匿名外观偏好按 origin 隔离。
 - 业务数据存于 SQLite，表结构以 `src/db/schema.ts`、`src/db/ai-schema.ts` 为准；
   壁纸与应用图标文件分别位于数据库旁的 `wallpapers/`、`icons/`。
 - 生产须提供固定的 `ENCRYPTION_KEY`，否则既有 AI Provider Key 无法解密；

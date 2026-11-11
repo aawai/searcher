@@ -92,7 +92,7 @@ const DEFAULT_WIDTHS: Record<WindowId, number> = {
     trash: 880,
 };
 
-type DesktopFocus = "search" | "opener" | null;
+type DesktopFocus = "opener" | null;
 
 interface StageValue {
     host: PageHost;
@@ -192,25 +192,18 @@ function WindowSession(
             ? { ...location, ...parsePath(aligned.to), state: null }
             : location;
         setState((current) => stateForLocation(current, shown, action));
-        // Back from the AI window by history or a link also lands in the search box.
-        if (
-            !focusDesktop.current && windowForLocation(previous) === "ai" &&
-            location.pathname === routes.home && !location.search
-        ) focusDesktop.current = "search";
         const focus = focusDesktop.current;
         if (focus && location.pathname === routes.home && !location.search) {
             focusDesktop.current = null;
             requestAnimationFrame(() => {
-                const opener = focus === "opener"
-                    ? desktopFocus.current?.()
-                    : null;
-                // An opener the home has since hidden (e.g. inside the closed
-                // narrow masthead) cannot take focus: fall back to search.
-                const target = opener && opener.isConnected &&
-                        !opener.closest("[inert]") && opener.checkVisibility()
+                const opener = desktopFocus.current?.();
+                // A hidden or removed opener cannot receive focus.
+                const target = opener && opener.id !== "search-query" &&
+                        opener.isConnected && !opener.closest("[inert]") &&
+                        opener.checkVisibility()
                     ? opener
-                    : null;
-                (target ?? document.getElementById("search-query"))?.focus();
+                    : document.querySelector<HTMLElement>(".wordmark-small");
+                target?.focus();
             });
         } else if (location.pathname !== routes.home) {
             focusDesktop.current = null;
@@ -240,7 +233,7 @@ function WindowSession(
             current.pathname === routes.home && !current.search && !current.hash
         ) return;
         pending.current = null;
-        focusDesktop.current = "search";
+        focusDesktop.current = null;
         navigate(routes.home);
     }, [navigate, navigationPending]);
 
@@ -248,7 +241,7 @@ function WindowSession(
         (
             id: WindowId,
             kind: "minimize" | "close",
-            focus: DesktopFocus = isLibraryWindow(id) ? "opener" : "search",
+            focus: DesktopFocus = isLibraryWindow(id) ? "opener" : null,
         ) => {
             if (navigationPending) return;
             const current = stateRef.current;

@@ -79,10 +79,3 @@ export function shouldConfirmLibraryAction(
         (action.action.type === "query" || action.action.type === "scope" ||
             action.action.type === "created"));
 }
-/** Returning focus never targets a detached trigger. */
-export function libraryFocusTarget<T extends { isConnected: boolean }>(
-    opener: T | null,
-    search: T | null,
-): T | null {
-    return opener?.isConnected ? opener : search;
-}

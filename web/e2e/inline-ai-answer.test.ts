@@ -788,11 +788,13 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
             );
 
             await t.step(
-                "going back to home focuses the search box",
+                "going back to home preserves the card without auto-focusing search",
                 async () => {
                     await page.goBack();
                     await searchBox(page).waitFor({ state: "visible" });
-                    await searchIsFocused(page);
+                    await page.waitForFunction(() =>
+                        document.activeElement?.id !== "search-query"
+                    );
                     await card(page).waitFor({ state: "visible" });
                     assertEquals(
                         (await card(page).locator(".inline-ai-body")
@@ -803,7 +805,7 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
             );
 
             await t.step(
-                "a second expansion uses a new name; the logo link also returns focus",
+                "a second expansion uses a new name; the logo link also returns to home",
                 async () => {
                     await askWithAltEnter(page, "再问一次路线图");
                     await page.waitForFunction(
@@ -821,7 +823,9 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                     await page.getByRole("link", { name: "Searcher 首页" })
                         .click();
                     await searchBox(page).waitFor({ state: "visible" });
-                    await searchIsFocused(page);
+                    await page.waitForFunction(() =>
+                        document.activeElement?.id !== "search-query"
+                    );
                 },
             );
 
@@ -893,7 +897,9 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                     );
                     assertEquals((await transitionsOf(page)).length, 0);
                     await page.goBack();
-                    await searchIsFocused(page);
+                    await page.waitForFunction(() =>
+                        document.activeElement?.id !== "search-query"
+                    );
                 } finally {
                     await context.close();
                 }

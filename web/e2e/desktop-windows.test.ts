@@ -35,13 +35,55 @@ Deno.test("C1 窗口保留局部路由与内容，返回桌面后可恢复，关
             ),
             "true",
         );
-        await page.locator('[data-dock-id="home"]').click();
+        const homeDock = page.locator('[data-dock-id="home"]');
+        await homeDock.click();
         await page.waitForURL(app.origin + "/");
         await page.waitForFunction(() =>
-            document.activeElement?.id === "search-query"
+            document.activeElement?.id !== "search-query"
         );
-        assert(await trash.isHidden());
-        assert(await page.locator('[data-window-id="settings"]').isHidden());
+        assertEquals(
+            await homeDock.evaluate((node) => document.activeElement === node),
+            true,
+        );
+        // Keyboard navigation from the dock does not jump to search query.
+        await page.keyboard.press("Tab");
+        assertEquals(
+            await page.evaluate(() =>
+                document.activeElement?.id === "search-query"
+            ),
+            false,
+        );
+        await page.keyboard.press("Shift+Tab");
+        assertEquals(
+            await homeDock.evaluate((node) => document.activeElement === node),
+            true,
+        );
+        await trash.waitFor({ state: "hidden" });
+        await page.locator('[data-window-id="settings"]').waitFor({
+            state: "hidden",
+        });
+        // Re-open trash and verify returning to desktop via keyboard activation
+        await page.locator('[data-dock-id="trash"]').click();
+        await page.waitForURL(app.origin + "/trash");
+        await page.waitForFunction(() =>
+            document.querySelector('[data-window-id="trash"]')?.contains(
+                document.activeElement,
+            )
+        );
+        await homeDock.focus();
+        await page.keyboard.press("Enter");
+        await page.waitForURL(app.origin + "/");
+        await page.waitForFunction(() =>
+            document.activeElement?.id !== "search-query"
+        );
+        assertEquals(
+            await homeDock.evaluate((node) => document.activeElement === node),
+            true,
+        );
+        await trash.waitFor({ state: "hidden" });
+        await page.locator('[data-window-id="settings"]').waitFor({
+            state: "hidden",
+        });
         await page.locator('[data-dock-id="trash"]').click();
         await page.waitForURL(app.origin + "/trash");
         assertEquals(
@@ -59,6 +101,33 @@ Deno.test("C1 窗口保留局部路由与内容，返回桌面后可恢复，关
                 "aria-selected",
             ),
             "true",
+        );
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("应用窗口的打开控件隐藏后，关闭窗口聚焦首页标志而非搜索框", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage({
+        viewport: { width: 1440, height: 900 },
+    });
+    try {
+        await loginAndVisit(page, app.origin, "/", user);
+        const opener = page.locator('[data-dock-id="apps"]');
+        await opener.click();
+        const frame = page.locator('[data-window-id="apps"]');
+        await frame.waitFor({ state: "visible" });
+        await opener.evaluate((element) => {
+            (element as HTMLElement).style.display = "none";
+        });
+        await frame.getByRole("button", { name: "关闭应用" }).click();
+        await page.waitForURL(app.origin + "/");
+        await page.waitForFunction(() =>
+            document.activeElement === document.querySelector(".wordmark-small")
         );
     } finally {
         await browser.close();

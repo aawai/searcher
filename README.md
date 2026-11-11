@@ -62,7 +62,7 @@ deno task dev
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `APP_ORIGIN` | 非生产为 `http://localhost:34567` | 浏览器访问的精确 origin，生产必填。非 loopback 必须为 HTTPS，TLS 由部署环境终止 |
+| `APP_ORIGIN` | 非生产为 `http://localhost:34567` | 浏览器访问的精确 origin，多个用逗号分隔；生产必填。非 loopback 必须为 HTTPS，TLS 由部署环境终止 |
 | `PORT` | `34567` | 监听端口 |
 | `DATABASE_PATH` | `./data/searcher.sqlite` | SQLite 路径；壁纸文件存于数据库旁的 `wallpapers/` |
 | `NODE_ENV` | — | `production` 时要求设置 `APP_ORIGIN` 且已构建 `web/dist` |
@@ -105,7 +105,7 @@ deno task admin:create -- <username>
 deno task admin:reset -- <username>   # 重置密码并撤销该用户已有会话
 ```
 
-密码只在真实终端隐藏输入并确认，不要写入命令行。
+注册、修改密码及管理员设置密码均要求 8–128 个字符。密码只在真实终端隐藏输入并确认，不要写入命令行。
 
 ### Docker / Unraid
 
@@ -131,7 +131,7 @@ Variables:
   SEARXNG_URL=<可选>
 ```
 
-- `APP_ORIGIN` 必须与浏览器实际访问的 origin 完全一致；可由 Nginx Proxy Manager、SWAG 等反向代理终止 TLS。
+- `APP_ORIGIN` 须列出浏览器实际访问的每个精确 origin，例如 `https://search.example.com,https://search.example.org`；反向代理需保留原始 `Host` 并终止 TLS。不同域名的登录 Cookie 相互独立。
 - `ENCRYPTION_KEY` 在容器重建或升级时不能变化。
 - Searcher 与 SearXNG 位于同一自定义 Docker network 时，`SEARXNG_URL` 可用容器内地址，如 `http://searxng:8080`。
 

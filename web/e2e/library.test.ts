@@ -160,7 +160,8 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                         await page.getByRole("option", { name: /\/notes/ })
                             .click();
                     },
-                    focus: () => search,
+                    focus: () =>
+                        page.getByRole("link", { name: "Searcher 首页" }),
                 },
                 {
                     name: "note suggestion",
@@ -174,7 +175,8 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                             .getByRole("option").filter({ hasText: title })
                             .click();
                     },
-                    focus: () => search,
+                    focus: () =>
+                        page.getByRole("link", { name: "Searcher 首页" }),
                 },
             ];
 
@@ -217,12 +219,16 @@ Deno.test("Workspace entries, responsive presentation, history and focus contrac
                     );
                     await assertInteractiveHome(page);
                     await closeLibrary(page);
-                    // Typing in the search box closed the narrow masthead,
-                    // hiding the opener: focus falls back to the search box.
+                    // A hidden opener in the narrow masthead falls back to the
+                    // home link, without focusing the search box.
                     const openerHidden = width < 1440 &&
                         (entry.name === "home note" ||
                             entry.name === "continue");
-                    await assertFocus(openerHidden ? search : entry.focus());
+                    await assertFocus(
+                        openerHidden
+                            ? page.getByRole("link", { name: "Searcher 首页" })
+                            : entry.focus(),
+                    );
                 });
             }
 

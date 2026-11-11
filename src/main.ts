@@ -11,20 +11,28 @@ function appOrigin(): string {
             ? undefined
             : "http://localhost:34567");
     if (!value) throw new Error("APP_ORIGIN is required in production");
-    const origin = new URL(value);
-    if (
-        origin.origin !== value ||
-        !["http:", "https:"].includes(origin.protocol)
-    ) {
-        throw new Error("APP_ORIGIN must be an exact HTTP(S) origin");
+    const origins = value.split(",").map((entry) => entry.trim());
+    for (const entry of origins) {
+        let origin: URL;
+        try {
+            origin = new URL(entry);
+        } catch {
+            throw new Error("APP_ORIGIN must contain exact HTTP(S) origins");
+        }
+        if (
+            origin.origin !== entry ||
+            !["http:", "https:"].includes(origin.protocol)
+        ) {
+            throw new Error("APP_ORIGIN must contain exact HTTP(S) origins");
+        }
+        if (
+            origin.protocol === "http:" &&
+            !["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname)
+        ) {
+            throw new Error("APP_ORIGIN requires HTTPS outside loopback");
+        }
     }
-    if (
-        origin.protocol === "http:" &&
-        !["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname)
-    ) {
-        throw new Error("APP_ORIGIN requires HTTPS outside loopback");
-    }
-    return origin.origin;
+    return origins.join(",");
 }
 
 if (import.meta.main) {
