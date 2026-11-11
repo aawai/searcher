@@ -2,7 +2,8 @@ import * as v from "@valibot/valibot";
 import { json, param, query, validator } from "@internal/validator/hono.ts";
 import type { Routes } from "@internal/hono/routes.ts";
 import { failResponse } from "@internal/hono/middleware/response.ts";
-import { and, count, desc, eq, isNull, like, or } from "drizzle-orm";
+import { and, count, desc, eq, isNull, or, type SQL, sql } from "drizzle-orm";
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import {
     type AdminUserDto,
     AUTH_CREDENTIAL_RULES,
@@ -70,8 +71,14 @@ const idParamSchema = v.pipe(
     v.minLength(1, "用户 ID 不能为空"),
 );
 
+// SQLite LIKE has no default escape character: declare one so `%`, `_` and
+// `\` in the keyword match literally.
 function escapeLike(str: string): string {
     return str.replace(/[%_\\]/g, "\\$&");
+}
+
+function likeLiteral(column: SQLiteColumn, pattern: string): SQL {
+    return sql`${column} LIKE ${pattern} ESCAPE '\\'`;
 }
 
 export function registerUserRoutes(
@@ -106,9 +113,9 @@ export function registerUserRoutes(
                 const notDeleted = isNull(users.softDeletedAt);
                 const searchCondition = searchTerm.length > 0
                     ? or(
-                        like(users.username, searchPattern),
-                        like(users.displayName, searchPattern),
-                        like(users.email, searchPattern),
+                        likeLiteral(users.username, searchPattern),
+                        likeLiteral(users.displayName, searchPattern),
+                        likeLiteral(users.email, searchPattern),
                     )
                     : undefined;
 

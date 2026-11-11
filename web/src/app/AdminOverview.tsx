@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 import type { ThemeId } from "@shared/contracts.ts";
 import { routes } from "./routes.ts";
 import { Button } from "../components/ui/button.tsx";
 import {
+    EmptyState,
     LoadingState,
+    SettingsGroup,
+    SettingsRow,
     StatusBanner,
 } from "../components/searcher/semantic.tsx";
 import { api } from "../lib/api.ts";
@@ -32,25 +35,39 @@ export interface SystemOverviewDto {
     settings: SystemSettingsDto;
 }
 
-export function AdminOverview({
-    onNavigateTab,
-}: {
-    onNavigateTab?: (tab: "users" | "settings" | "audit" | "backup") => void;
-}) {
+/** Admin tabs replace the history entry like the local navigation does. */
+function RowLink(
+    { to, label, accessibleLabel, replace = false }: {
+        to: string;
+        label: string;
+        accessibleLabel: string;
+        replace?: boolean;
+    },
+) {
+    return (
+        <Button
+            variant="ghost"
+            aria-label={accessibleLabel}
+            render={<Link to={to} replace={replace} />}
+        >
+            {label}
+            <ChevronRight size="1em" className="icon-sm" aria-hidden="true" />
+        </Button>
+    );
+}
+
+export function AdminOverview() {
     const [overview, setOverview] = useState<SystemOverviewDto | null>(null);
     const [loading, setLoading] = useState(true);
-    const [initialized, setInitialized] = useState(false);
     const [error, setError] = useState("");
 
     const loadOverview = async () => {
         setLoading(true);
         setError("");
         try {
-            const data = await api<SystemOverviewDto>(
-                "/api/admin/system/overview",
+            setOverview(
+                await api<SystemOverviewDto>("/api/admin/system/overview"),
             );
-            setOverview(data);
-            setInitialized(true);
         } catch (err) {
             setError(errorMessage(err));
         } finally {
@@ -62,119 +79,96 @@ export function AdminOverview({
         void loadOverview();
     }, []);
 
-    return (
-        <div className="semantic-section">
-            <div className="admin-toolbar-end">
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={loadOverview}
-                    disabled={loading}
-                >
-                    <RefreshCw
-                        size="1em"
-                        className={loading ? "animate-spin" : undefined}
-                    />
-                    <span>{loading ? "刷新中…" : "刷新"}</span>
-                </Button>
+    if (!overview) {
+        return (
+            <div className="semantic-section" data-content="grouped">
+                {loading
+                    ? <LoadingState>正在加载系统概览…</LoadingState>
+                    : (
+                        <EmptyState
+                            headingLevel={3}
+                            title="无法加载系统概览"
+                            description={error}
+                            action={
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => void loadOverview()}
+                                >
+                                    重试
+                                </Button>
+                            }
+                        />
+                    )}
             </div>
+        );
+    }
 
+    return (
+        <div className="semantic-section" data-content="grouped">
             {error && (
-                <StatusBanner tone="error">
-                    <div className="admin-banner-row">
-                        <span className="admin-banner-message">
-                            <AlertCircle size="1em" />
-                            <span>{error}</span>
-                        </span>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={loadOverview}
-                            disabled={loading}
-                        >
-                            <span>{loading ? "正在重试…" : "重试"}</span>
-                        </Button>
-                    </div>
+                <StatusBanner tone="error" density="compact">
+                    {error}
                 </StatusBanner>
             )}
-
-            {!initialized && loading && (
-                <LoadingState>正在加载系统概览…</LoadingState>
-            )}
-
-            {initialized && overview && (
-                <div className="admin-stats">
-                    <div className="admin-stat">
-                        <p className="admin-stat-label">用户规模</p>
-                        <p className="admin-stat-value">
-                            {overview.totalUsers}
-                        </p>
-                        <p className="admin-stat-sub">
-                            活跃 {overview.activeUsers} 人 · 禁用{" "}
-                            {overview.disabledUsers} 人
-                        </p>
-                        <Button
-                            variant="link"
-                            size="sm"
-                            className="admin-stat-action"
-                            render={
-                                <Link
-                                    to={routes.admin("users")}
-                                    onClick={() => onNavigateTab?.("users")}
-                                />
-                            }
-                        >
-                            管理用户
-                        </Button>
-                    </div>
-
-                    <div className="admin-stat">
-                        <p className="admin-stat-label">应用 / 笔记</p>
-                        <p className="admin-stat-value">
-                            {`${overview.totalWebApps} / ${overview.totalDocuments}`}
-                        </p>
-                    </div>
-
-                    <div className="admin-stat">
-                        <p className="admin-stat-label">AI 提供商 / 模型</p>
-                        <p className="admin-stat-value">
-                            {`${overview.totalAiProviders} / ${overview.totalAiModels}`}
-                        </p>
-                        <Button
-                            variant="link"
-                            size="sm"
-                            className="admin-stat-action"
-                            render={<Link to={routes.settings("ai")} />}
-                        >
-                            配置 AI 提供商
-                        </Button>
-                    </div>
-
-                    <div className="admin-stat">
-                        <p className="admin-stat-label">审计日志</p>
-                        <p className="admin-stat-value">
-                            {overview.totalAuditLogs}
-                        </p>
-                        <p className="admin-stat-sub">
-                            保留 {overview.settings.auditRetentionDays} 天
-                        </p>
-                        <Button
-                            variant="link"
-                            size="sm"
-                            className="admin-stat-action"
-                            render={
-                                <Link
-                                    to={routes.admin("audit")}
-                                    onClick={() => onNavigateTab?.("audit")}
-                                />
-                            }
-                        >
-                            查看审计日志
-                        </Button>
-                    </div>
-                </div>
-            )}
+            <SettingsGroup
+                title="概况"
+                actions={
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => void loadOverview()}
+                        disabled={loading}
+                    >
+                        <RefreshCw
+                            size="1em"
+                            className={loading ? "animate-spin" : undefined}
+                        />
+                        <span>{loading ? "刷新中…" : "刷新"}</span>
+                    </Button>
+                }
+            >
+                <SettingsRow title="用户">
+                    <span className="admin-value">
+                        {overview.totalUsers} 人 · 活跃 {overview.activeUsers}
+                        {" "}
+                        · 禁用 {overview.disabledUsers}
+                    </span>
+                    <RowLink
+                        to={routes.admin("users")}
+                        replace
+                        label="管理"
+                        accessibleLabel="管理用户"
+                    />
+                </SettingsRow>
+                <SettingsRow title="应用 / 笔记">
+                    <span className="admin-value">
+                        {overview.totalWebApps} / {overview.totalDocuments}
+                    </span>
+                </SettingsRow>
+                <SettingsRow title="AI 提供商 / 模型">
+                    <span className="admin-value">
+                        {overview.totalAiProviders} / {overview.totalAiModels}
+                    </span>
+                    <RowLink
+                        to={routes.settings("ai")}
+                        label="配置"
+                        accessibleLabel="配置 AI 提供商"
+                    />
+                </SettingsRow>
+                <SettingsRow title="审计日志">
+                    <span className="admin-value">
+                        {overview.totalAuditLogs} 条 · 保留{" "}
+                        {overview.settings.auditRetentionDays} 天
+                    </span>
+                    <RowLink
+                        to={routes.admin("audit")}
+                        replace
+                        label="查看"
+                        accessibleLabel="查看审计日志"
+                    />
+                </SettingsRow>
+            </SettingsGroup>
         </div>
     );
 }

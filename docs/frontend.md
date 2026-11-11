@@ -18,7 +18,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
 - 页面语义由 `components/searcher/` 拥有：`PageShell` / `PageHeader`
   管理页面骨架与唯一标题；`semantic.tsx` 提供 `Section`、`SettingsGroup`、
   `SettingsCard` / `SettingsRow`、`ActionGroup`、`EmptyState`、`StatusBanner`、
-  `LoadingState`、`UndoToast`、`LocalNavigation`、`ManagementTable`
+  `LoadingState`、`UndoToast`、`LocalNavigation`、`ManagementTable`、`Pagination`
   等共享语义组件。Feature 不另建同名反馈或分组容器。
 - 标题层级：独立内容页保持单一可见 `h1`（首页 `/` 不设页面 `h1`，以命名
   landmark 组织区域；应用 / 笔记窗口 `/?view=apps`、`/?view=notes` 的标题位于窗口标题栏，

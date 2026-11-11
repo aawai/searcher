@@ -672,10 +672,10 @@ Deno.test("production navigation contracts", async (t) => {
             for (
                 const [path, label] of [
                     ["/admin", "概览"],
-                    ["/admin/users", "用户管理"],
-                    ["/admin/settings", "系统设置"],
-                    ["/admin/audit", "审计日志"],
-                    ["/admin/backup", "备份与恢复"],
+                    ["/admin/users", "用户"],
+                    ["/admin/settings", "设置"],
+                    ["/admin/audit", "审计"],
+                    ["/admin/backup", "备份"],
                 ]
             ) {
                 await visit(path);
@@ -697,14 +697,14 @@ Deno.test("production navigation contracts", async (t) => {
             }).click();
             for (
                 const label of [
-                    "用户管理",
-                    "系统设置",
-                    "审计日志",
-                    "备份与恢复",
+                    "用户",
+                    "设置",
+                    "审计",
+                    "备份",
                 ]
             ) {
                 await page.getByRole("navigation", { name: "管理后台主导航" })
-                    .getByRole("link", { name: new RegExp("^" + label) })
+                    .getByRole("link", { name: label, exact: true })
                     .click();
             }
             await page.waitForURL(origin + "/admin/backup");
@@ -787,26 +787,26 @@ Deno.test("production navigation contracts", async (t) => {
                 true,
                 "/admin/backup",
             );
-            // The scrolled-out side fades so clipped tabs read as scrollable.
-            const edges = () =>
-                nav.evaluate((element) => ({
+            // Two-character labels keep all five tabs on one line at 320px,
+            // so neither side is clipped or faded.
+            const lastTab = await nav.getByRole("link", {
+                name: "备份",
+                exact: true,
+            }).boundingBox();
+            assertEquals(
+                !!lastTab && lastTab.x + lastTab.width <= 320,
+                true,
+                "last admin tab within viewport",
+            );
+            assertEquals(
+                await nav.evaluate((element) => ({
                     start: element.hasAttribute("data-overflow-start"),
                     end: element.hasAttribute("data-overflow-end"),
-                }));
-            await page.waitForFunction(() =>
-                document.querySelector(
-                    '[aria-label="管理后台主导航"][data-overflow-start]',
-                ) !== null
+                })),
+                { start: false, end: false },
             );
-            assertEquals(await edges(), { start: true, end: false });
             await nav.getByRole("link", { name: "概览", exact: true }).click();
             await page.waitForURL(origin + "/admin");
-            await page.waitForFunction(() =>
-                document.querySelector(
-                    '[aria-label="管理后台主导航"][data-overflow-end]',
-                ) !== null
-            );
-            assertEquals(await edges(), { start: false, end: true });
         },
     );
 });

@@ -152,6 +152,27 @@ export function registerSystemRoutes(
         return c.text(JSON.stringify(config, null, 2));
     });
 
+    // POST /api/admin/system/config/preview (dry run before import, writes nothing)
+    routes.post("/api/admin/system/config/preview", async (c) => {
+        const user = c.get("user");
+        if (user.role !== "admin") {
+            return failResponse(c, 403, "权限不足，仅管理员可访问");
+        }
+
+        let body: unknown;
+        try {
+            body = await c.req.json();
+        } catch {
+            return failResponse(c, 400, "无法解析 JSON 配置");
+        }
+
+        try {
+            return c.success(await service.previewConfigImport(body));
+        } catch (err) {
+            return failResponse(c, 400, (err as Error).message);
+        }
+    });
+
     // 5. POST /api/admin/system/config/import
     routes.post("/api/admin/system/config/import", async (c) => {
         const user = c.get("user");

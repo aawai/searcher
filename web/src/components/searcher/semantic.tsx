@@ -495,6 +495,52 @@ export function ManagementTable(
         </div>
     );
 }
+/**
+ * Footer of a paged management list: the total on the start side, page
+ * buttons on the end side only when there is more than one page.
+ */
+export function Pagination(
+    { total, page, pageCount, busy = false, onPageChange, label }: {
+        /** Already worded total, e.g. "共 6 位". */
+        total: string;
+        page: number;
+        pageCount: number;
+        busy?: boolean;
+        onPageChange: (page: number) => void;
+        label: string;
+    },
+) {
+    const paged = pageCount > 1;
+    return (
+        <nav className="pagination" aria-label={label}>
+            <span>
+                {paged ? `${total} · 第 ${page} / ${pageCount} 页` : total}
+            </span>
+            {paged && (
+                <ActionGroup>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={busy || page <= 1}
+                        onClick={() => onPageChange(page - 1)}
+                    >
+                        上一页
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={busy || page >= pageCount}
+                        onClick={() => onPageChange(page + 1)}
+                    >
+                        下一页
+                    </Button>
+                </ActionGroup>
+            )}
+        </nav>
+    );
+}
 export {
     type PresetSliderStage,
     SettingsPresetSlider,

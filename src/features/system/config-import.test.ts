@@ -342,6 +342,114 @@ Deno.test("Config Import: ownership isolation never overwrites user-scoped provi
         assertEquals(safeProvs[0].scope, "system");
     });
 });
+Deno.test("Config Import preview: counts what import would change without writing", async () => {
+    const { store, settingsStore, service } = await setupTestDb();
+    const now = Date.now();
+    await store.run(async (db) => {
+        await db.insert(users).values({
+            id: "owner",
+            username: "owner",
+            displayName: "Owner",
+            passwordHash: "hash",
+            role: "user",
+            disabled: false,
+            createdAt: now,
+            updatedAt: now,
+        });
+        await db.insert(aiProviders).values([
+            {
+                id: "sys-1",
+                ownerUserId: null,
+                scope: "system",
+                name: "Existing System",
+                baseUrl: "https://existing.example/v1",
+                encryptedApiKey: "v1:x",
+                enabled: true,
+                createdAt: now,
+                updatedAt: now,
+            },
+            {
+                id: "user-1",
+                ownerUserId: "owner",
+                scope: "user",
+                name: "Private",
+                baseUrl: "https://private.example/v1",
+                encryptedApiKey: "v1:y",
+                enabled: true,
+                createdAt: now,
+                updatedAt: now,
+            },
+        ]).run();
+    });
+    const before = await settingsStore.get();
+    const model = {
+        modelId: "m",
+        displayName: "M",
+        enabled: true,
+        visibleToUsers: true,
+        isDefault: false,
+    };
+    const payload = {
+        version: "1.0.0" as const,
+        settings: {
+            ...before,
+            auditRetentionDays: 30,
+            allowRegistration: !before.allowRegistration,
+        },
+        systemAiProviders: [
+            {
+                name: "Existing System",
+                baseUrl: "https://new.example/v1",
+                enabled: true,
+                models: [model],
+            },
+            {
+                name: "Private",
+                baseUrl: "https://evil.example/v1",
+                enabled: true,
+                models: [model],
+            },
+            {
+                name: "Fresh",
+                baseUrl: "https://fresh.example/v1",
+                enabled: true,
+                models: [model, { ...model, modelId: "n" }],
+            },
+            {
+                name: "Fresh",
+                baseUrl: "https://fresh2.example/v1",
+                enabled: true,
+                models: [],
+            },
+        ],
+    };
+
+    const preview = await service.previewConfigImport(payload);
+    assertEquals(preview, {
+        changedSettingsCount: 2,
+        createdProvidersCount: 1,
+        updatedProvidersCount: 2,
+        skippedProvidersCount: 1,
+        importedModelsCount: 3,
+    });
+    assertEquals(await settingsStore.get(), before);
+    const providerCount = await store.run(async (db) =>
+        (await db.select().from(aiProviders).all()).length
+    );
+    assertEquals(providerCount, 2);
+
+    const result = await service.importConfig(payload);
+    assertEquals(result.createdProvidersCount, preview.createdProvidersCount);
+    assertEquals(result.updatedProvidersCount, preview.updatedProvidersCount);
+    assertEquals(result.importedModelsCount, preview.importedModelsCount);
+
+    await assertRejects(
+        () => service.previewConfigImport({ version: "2.0.0" }),
+        Error,
+        "不兼容的配置文件版本",
+    );
+});
+
 Deno.test("Config Import: fails closed when ENCRYPTION_KEY missing without partial settings apply", async () => {
     const originalAppKey = Deno.env.get("APP_KEY");
     const originalAppSecret = Deno.env.get("APP_SECRET");

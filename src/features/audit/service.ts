@@ -1,29 +1,36 @@
 import type { DatabaseStore } from "../../db/database.ts";
 import { auditLogs } from "../../db/schema.ts";
 import { and, desc, eq, sql } from "drizzle-orm";
-
-export interface AuditLogEntry {
-    id: string;
-    actorUserId: string | null;
-    action: string;
-    targetType: string;
-    targetId: string | null;
-    metadataJson: string | null;
-    createdAt: number;
-}
+import type {
+    AuditAction,
+    AuditLogDto,
+    AuditTargetType,
+} from "@shared/contracts.ts";
 
 export interface RecordAuditOptions {
     actorUserId?: string | null;
-    action: string;
-    targetType: string;
+    action: AuditAction;
+    targetType: AuditTargetType;
     targetId?: string | null;
     metadata?: Record<string, unknown> | null;
+}
+
+function parseMetadata(json: string | null): Record<string, unknown> | null {
+    if (!json) return null;
+    try {
+        const parsed: unknown = JSON.parse(json);
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed as Record<string, unknown>
+            : null;
+    } catch {
+        return null;
+    }
 }
 
 export interface ListAuditOptions {
     limit?: number;
     offset?: number;
-    action?: string;
+    action?: AuditAction;
     actorUserId?: string;
 }
 
@@ -115,7 +122,7 @@ export class AuditService {
     }
 
     async list(options: ListAuditOptions = {}): Promise<{
-        items: AuditLogEntry[];
+        items: AuditLogDto[];
         total: number;
     }> {
         const limit = options.limit ?? 50;
@@ -174,7 +181,7 @@ export class AuditService {
                     action: r.action,
                     targetType: r.targetType,
                     targetId: r.targetId,
-                    metadataJson: r.metadataJson,
+                    metadata: parseMetadata(r.metadataJson),
                     createdAt: r.createdAt,
                 })),
                 total,

@@ -1,15 +1,16 @@
-import { type ChangeEvent, type ReactNode, useRef, useState } from "react";
 import {
-    AlertCircle,
-    CheckCircle2,
-    Download,
-    FileCheck,
-    RotateCcw,
-    Upload,
-} from "lucide-react";
+    type ChangeEvent,
+    type ReactNode,
+    type Ref,
+    useRef,
+    useState,
+} from "react";
+import { Download, FileCheck, RotateCcw, Upload } from "lucide-react";
+import type { ConfigImportPreviewDto } from "@shared/contracts.ts";
 import { Button } from "../components/ui/button.tsx";
 import {
     AlertDialog,
+    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -44,21 +45,56 @@ interface BackupManifest {
     };
 }
 
-interface FilePickerProps {
-    id: string;
-    label: string;
-    accept: string;
-    buttonText: string;
-    onFileSelect: (file: File) => void;
-    disabled?: boolean;
-    icon?: ReactNode;
-    selectedFileName?: string;
-    placeholder?: string;
+interface ConfigImportResult {
+    createdProvidersCount: number;
+    updatedProvidersCount: number;
+    importedModelsCount: number;
+}
+
+interface PendingConfigImport {
+    fileName: string;
+    config: unknown;
+    preview: ConfigImportPreviewDto;
+}
+
+/** Names everything the import changes, for the confirmation. */
+function describeConfigImport(preview: ConfigImportPreviewDto): string {
+    const changes: string[] = [];
+    if (preview.changedSettingsCount > 0) {
+        changes.push(`覆盖 ${preview.changedSettingsCount} 项系统设置`);
+    }
+    const providersTouched = preview.createdProvidersCount > 0 ||
+        preview.updatedProvidersCount > 0;
+    if (providersTouched) {
+        const counts = [
+            preview.createdProvidersCount > 0
+                ? `新建 ${preview.createdProvidersCount} 个`
+                : "",
+            preview.updatedProvidersCount > 0
+                ? `更新 ${preview.updatedProvidersCount} 个`
+                : "",
+        ].filter(Boolean);
+        changes.push(`${counts.join("、")} AI 提供商`);
+    }
+    if (preview.importedModelsCount > 0) {
+        changes.push(`同步 ${preview.importedModelsCount} 个模型`);
+    }
+    const sentences = [
+        changes.length > 0
+            ? `将${changes.join("，")}。`
+            : "文件与当前配置一致，导入不会改变任何设置。",
+    ];
+    if (preview.skippedProvidersCount > 0) {
+        sentences.push(
+            `同名的个人提供商 ${preview.skippedProvidersCount} 个保持不变。`,
+        );
+    }
+    if (providersTouched) sentences.push("文件中未列出的提供商保持不变。");
+    return sentences.join("");
 }
 
 function FilePicker({
     id,
-    label,
     accept,
     buttonText,
     onFileSelect,
@@ -66,9 +102,24 @@ function FilePicker({
     icon,
     selectedFileName,
     placeholder,
-}: FilePickerProps) {
+    describedBy,
+    buttonRef,
+}: {
+    id: string;
+    accept: string;
+    buttonText: string;
+    onFileSelect: (file: File) => void;
+    disabled?: boolean;
+    icon?: ReactNode;
+    selectedFileName?: string;
+    placeholder?: string;
+    describedBy?: string;
+    buttonRef?: Ref<HTMLButtonElement>;
+}) {
     const inputRef = useRef<HTMLInputElement>(null);
     const fileNameId = `${id}-filename`;
+    const descriptions = [selectedFileName ? fileNameId : null, describedBy]
+        .filter(Boolean).join(" ");
 
     function handleButtonClick() {
         if (inputRef.current) {
@@ -86,7 +137,7 @@ function FilePicker({
 
     return (
         <div className="admin-file-row">
-            <label htmlFor={id} className="sr-only">{label}</label>
+            {/* The visible button is the control; the native input only opens the picker. */}
             <input
                 ref={inputRef}
                 id={id}
@@ -99,41 +150,41 @@ function FilePicker({
                 aria-hidden="true"
             />
             <Button
+                ref={buttonRef}
                 type="button"
                 variant="outline"
                 disabled={disabled}
                 onClick={handleButtonClick}
-                aria-describedby={selectedFileName ? fileNameId : undefined}
+                aria-describedby={descriptions || undefined}
             >
                 {icon}
                 <span>{buttonText}</span>
             </Button>
             {selectedFileName
                 ? (
-                    <span
-                        id={fileNameId}
-                        className="admin-file-name"
-                        title={selectedFileName}
-                    >
+                    <span id={fileNameId} className="admin-file-name">
                         {selectedFileName}
                     </span>
                 )
                 : placeholder
-                ? <span className="admin-file-placeholder">{placeholder}</span>
+                ? <span className="admin-file-name">{placeholder}</span>
                 : null}
         </div>
     );
 }
 
 export function AdminBackupRestore() {
+    const configTriggerRef = useRef<HTMLButtonElement>(null);
     const restoreTriggerRef = useRef<HTMLButtonElement>(null);
 
-    const [configImporting, setConfigImporting] = useState(false);
+    const [configBusy, setConfigBusy] = useState(false);
     const [configSuccess, setConfigSuccess] = useState("");
     const [configError, setConfigError] = useState("");
-    const [selectedConfigFileName, setSelectedConfigFileName] = useState("");
+    const [configFileName, setConfigFileName] = useState("");
+    const [pendingImport, setPendingImport] = useState<
+        PendingConfigImport | null
+    >(null);
 
-    const [backupExporting, setBackupExporting] = useState(false);
     const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
     const [validating, setValidating] = useState(false);
     const [validatedManifest, setValidatedManifest] = useState<
@@ -148,57 +199,57 @@ export function AdminBackupRestore() {
     const [restoreError, setRestoreError] = useState("");
     const [restoreWarnings, setRestoreWarnings] = useState<string[]>([]);
 
-    function handleExportConfig() {
-        globalThis.open("/api/admin/system/config/export", "_blank");
-    }
-
     async function handleConfigFileChange(file: File) {
-        setSelectedConfigFileName(file.name);
-        setConfigImporting(true);
+        setConfigFileName(file.name);
         setConfigError("");
         setConfigSuccess("");
+        setConfigBusy(true);
         try {
-            const text = await file.text();
-            let parsed: unknown;
+            let config: unknown;
             try {
-                parsed = JSON.parse(text);
+                config = JSON.parse(await file.text());
             } catch {
                 throw new Error("无法解析 JSON 文件，格式不正确");
             }
-            const res = await api<{
-                importedProvidersCount: number;
-                createdProvidersCount?: number;
-                updatedProvidersCount?: number;
-                importedModelsCount?: number;
-            }>("/api/admin/system/config/import", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify(parsed),
-            });
-            const created = res.createdProvidersCount ?? 0;
-            const updated = res.updatedProvidersCount ??
-                res.importedProvidersCount;
-            const models = res.importedModelsCount ?? 0;
-            const parts = ["系统设置已同步"];
-            if (created > 0 || updated > 0) {
-                parts.push(`AI 提供商新建 ${created} 个、更新 ${updated} 个`);
-            }
-            if (models > 0) parts.push(`模型配置同步 ${models} 个`);
-            const keyWarning = created > 0
-                ? "。新提供商默认禁用，需在 AI 设置中配置 API Key 后启用"
-                : "";
-            setConfigSuccess(`配置已导入：${parts.join("，")}${keyWarning}。`);
+            const preview = await api<ConfigImportPreviewDto>(
+                "/api/admin/system/config/preview",
+                {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify(config),
+                },
+            );
+            setPendingImport({ fileName: file.name, config, preview });
         } catch (err) {
             setConfigError(errorMessage(err));
         } finally {
-            setConfigImporting(false);
+            setConfigBusy(false);
         }
     }
 
-    function handleExportFullBackup() {
-        setBackupExporting(true);
-        globalThis.open("/api/admin/backup/export", "_blank");
-        setTimeout(() => setBackupExporting(false), 2000);
+    async function handleConfirmImport() {
+        if (!pendingImport) return;
+        setConfigBusy(true);
+        try {
+            const res = await api<ConfigImportResult>(
+                "/api/admin/system/config/import",
+                {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify(pendingImport.config),
+                },
+            );
+            const keyNote = res.createdProvidersCount > 0
+                ? "新提供商默认禁用，在 AI 设置中配置 API Key 后启用。"
+                : "";
+            setConfigSuccess(`已导入「${pendingImport.fileName}」。${keyNote}`);
+            setPendingImport(null);
+        } catch (err) {
+            setConfigError(errorMessage(err));
+            setPendingImport(null);
+        } finally {
+            setConfigBusy(false);
+        }
     }
 
     function handleZipFileChange(file: File) {
@@ -207,6 +258,7 @@ export function AdminBackupRestore() {
         setValidationError("");
         setValidationWarnings([]);
         setRestoreSuccess("");
+        setRestoreError("");
         setRestoreWarnings([]);
     }
 
@@ -269,122 +321,80 @@ export function AdminBackupRestore() {
     }
 
     return (
-        <div className="admin-panel">
-            {configError && (
-                <StatusBanner tone="error" density="compact">
-                    <span className="admin-banner-message">
-                        <AlertCircle size="1em" />
-                        <span>{configError}</span>
-                    </span>
-                </StatusBanner>
-            )}
+        <div className="semantic-section" data-content="grouped">
             {configSuccess && (
                 <StatusBanner tone="success" density="compact">
-                    <span className="admin-banner-message">
-                        <CheckCircle2 size="1em" />
-                        <span>{configSuccess}</span>
-                    </span>
+                    {configSuccess}
                 </StatusBanner>
             )}
-
             <SettingsGroup
                 title="系统配置"
                 footer="仅含系统设置与 AI 提供商，不含用户数据和 API Key。"
             >
                 <SettingsRow title="导出配置">
                     <Button
-                        type="button"
                         variant="outline"
-                        onClick={handleExportConfig}
+                        render={
+                            <a
+                                href="/api/admin/system/config/export"
+                                download
+                            />
+                        }
                     >
                         <Download size="1em" />
                         <span>导出 JSON</span>
                     </Button>
                 </SettingsRow>
-                <SettingsRow title="导入配置">
+                <SettingsRow
+                    title="导入配置"
+                    message={configError
+                        ? <span role="alert">{configError}</span>
+                        : undefined}
+                    messageId="config-import-error"
+                    invalid={Boolean(configError)}
+                >
                     <FilePicker
                         id="config-import-file"
-                        label="选择配置 JSON 文件"
                         accept=".json,application/json"
-                        buttonText={configImporting ? "正在导入…" : "导入 JSON"}
+                        buttonText={configBusy ? "正在读取…" : "导入 JSON"}
                         icon={<Upload size="1em" />}
-                        disabled={configImporting}
-                        selectedFileName={selectedConfigFileName}
+                        disabled={configBusy}
+                        selectedFileName={configFileName || undefined}
+                        describedBy={configError
+                            ? "config-import-error"
+                            : undefined}
+                        buttonRef={configTriggerRef}
                         onFileSelect={handleConfigFileChange}
                     />
                 </SettingsRow>
             </SettingsGroup>
 
-            {validationError && (
-                <StatusBanner tone="error" density="compact">
-                    <span className="admin-banner-message">
-                        <AlertCircle size="1em" />
-                        <span>预检失败：{validationError}</span>
-                    </span>
-                </StatusBanner>
-            )}
-            {restoreError && (
-                <StatusBanner tone="error" density="compact">
-                    <span className="admin-banner-message">
-                        <AlertCircle size="1em" />
-                        <span>{restoreError}</span>
-                    </span>
-                </StatusBanner>
-            )}
-            {restoreSuccess && (
-                <StatusBanner tone="success" density="compact">
-                    <div className="admin-banner-row">
-                        <span className="admin-banner-message">
-                            <CheckCircle2 size="1em" />
-                            <span>{restoreSuccess}</span>
-                        </span>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => globalThis.location.reload()}
-                        >
-                            重新加载页面
-                        </Button>
-                    </div>
-                </StatusBanner>
-            )}
-            {restoreWarnings.length > 0 && (
-                <StatusBanner tone="warning" density="compact">
-                    <span className="admin-banner-message">
-                        <AlertCircle size="1em" />
-                        <span>{restoreWarnings.join(" ")}</span>
-                    </span>
-                </StatusBanner>
-            )}
-
-            <SettingsGroup
-                title="完整备份"
-                footer="还原前会先保存当前数据快照，失败时尝试回滚。"
-            >
+            <SettingsGroup title="完整备份">
                 <SettingsRow title="创建备份">
                     <Button
-                        type="button"
                         variant="default"
-                        onClick={handleExportFullBackup}
-                        disabled={backupExporting}
+                        render={<a href="/api/admin/backup/export" download />}
                     >
                         <Download size="1em" />
-                        <span>
-                            {backupExporting
-                                ? "正在生成备份…"
-                                : "下载备份 (ZIP)"}
-                        </span>
+                        <span>下载备份 (ZIP)</span>
                     </Button>
                 </SettingsRow>
                 <SettingsRow
                     title="备份文件"
                     className="settings-row--vertical"
+                    message={validationError
+                        ? (
+                            <span role="alert">
+                                预检失败：{validationError}
+                            </span>
+                        )
+                        : undefined}
+                    messageId="backup-validate-error"
+                    invalid={Boolean(validationError)}
                 >
                     <div className="admin-file-row">
                         <FilePicker
                             id="backup-restore-file"
-                            label="选择备份 ZIP 文件"
                             accept=".zip,application/zip"
                             buttonText="选择 ZIP 文件"
                             selectedFileName={selectedZipFile?.name}
@@ -396,6 +406,9 @@ export function AdminBackupRestore() {
                             variant="outline"
                             onClick={handlePreValidate}
                             disabled={!selectedZipFile || validating}
+                            aria-describedby={validationError
+                                ? "backup-validate-error"
+                                : undefined}
                         >
                             <FileCheck size="1em" />
                             <span>{validating ? "正在验证…" : "预检验证"}</span>
@@ -407,19 +420,11 @@ export function AdminBackupRestore() {
             {validatedManifest && (
                 <>
                     <StatusBanner tone="success" density="compact">
-                        <span className="admin-banner-message">
-                            <CheckCircle2 size="1em" />
-                            <span>
-                                备份文件校验通过，数据库完整性与外键检查正常。
-                            </span>
-                        </span>
+                        备份文件校验通过，数据库完整性与外键检查正常。
                     </StatusBanner>
                     {validationWarnings.length > 0 && (
                         <StatusBanner tone="warning" density="compact">
-                            <span className="admin-banner-message">
-                                <AlertCircle size="1em" />
-                                <span>{validationWarnings.join(" ")}</span>
-                            </span>
+                            {validationWarnings.join(" ")}
                         </StatusBanner>
                     )}
                     <SettingsGroup title="备份内容">
@@ -434,13 +439,9 @@ export function AdminBackupRestore() {
                                 {validatedManifest.counts.users}
                             </span>
                         </SettingsRow>
-                        <SettingsRow title="应用">
+                        <SettingsRow title="应用 / 笔记">
                             <span className="admin-value">
-                                {validatedManifest.counts.webapps}
-                            </span>
-                        </SettingsRow>
-                        <SettingsRow title="笔记">
-                            <span className="admin-value">
+                                {validatedManifest.counts.webapps} /{" "}
                                 {validatedManifest.counts.documents}
                             </span>
                         </SettingsRow>
@@ -457,6 +458,24 @@ export function AdminBackupRestore() {
                                 {validatedManifest.assets.iconsCount}
                             </span>
                         </SettingsRow>
+                    </SettingsGroup>
+
+                    {restoreError && (
+                        <StatusBanner tone="error" density="compact">
+                            {restoreError}
+                        </StatusBanner>
+                    )}
+                    {restoreSuccess && (
+                        <StatusBanner tone="success" density="compact">
+                            {restoreSuccess}
+                        </StatusBanner>
+                    )}
+                    {restoreWarnings.length > 0 && (
+                        <StatusBanner tone="warning" density="compact">
+                            {restoreWarnings.join(" ")}
+                        </StatusBanner>
+                    )}
+                    <SettingsGroup footer="还原前会先保存当前数据快照，失败时尝试回滚。">
                         <SettingsRow title="还原备份">
                             <Button
                                 ref={restoreTriggerRef}
@@ -469,9 +488,51 @@ export function AdminBackupRestore() {
                                 <span>还原此备份…</span>
                             </Button>
                         </SettingsRow>
+                        {restoreSuccess && (
+                            <SettingsRow title="使还原生效">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => globalThis.location.reload()}
+                                >
+                                    重新加载页面
+                                </Button>
+                            </SettingsRow>
+                        )}
                     </SettingsGroup>
                 </>
             )}
+
+            <AlertDialog
+                open={pendingImport !== null}
+                onOpenChange={(open) => {
+                    if (!configBusy && !open) setPendingImport(null);
+                }}
+            >
+                <AlertDialogContent finalFocus={configTriggerRef}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            导入「{pendingImport?.fileName}」？
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {pendingImport &&
+                                describeConfigImport(pendingImport.preview)}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={configBusy}>
+                            取消
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            type="button"
+                            disabled={configBusy}
+                            onClick={handleConfirmImport}
+                        >
+                            {configBusy ? "正在导入…" : "导入"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <AlertDialog
                 open={restoreModalOpen}
@@ -484,21 +545,20 @@ export function AdminBackupRestore() {
                         <AlertDialogTitle>还原此备份？</AlertDialogTitle>
                         <AlertDialogDescription>
                             将用「{selectedZipFile
-                                ?.name}」覆盖当前的数据库、系统设置、图标和壁纸。还原前会保存当前数据快照，失败时尝试回滚。
+                                ?.name}」覆盖当前的数据库、系统设置、图标和壁纸。
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={restoring}>
                             取消
                         </AlertDialogCancel>
-                        <Button
+                        <AlertDialogAction
                             type="button"
-                            variant="destructive"
                             disabled={restoring}
                             onClick={handleExecuteRestore}
                         >
-                            {restoring ? "正在还原…" : "确认还原"}
-                        </Button>
+                            {restoring ? "正在还原…" : "还原"}
+                        </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

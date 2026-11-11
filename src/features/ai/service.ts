@@ -25,7 +25,10 @@ import {
     resolveEffectiveCapability,
     resolveReasoningTransport,
 } from "./model-capabilities.ts";
-import type { AiGenerationDefaultsDto } from "@shared/contracts.ts";
+import type {
+    AiGenerationDefaultsDto,
+    AuditAction,
+} from "@shared/contracts.ts";
 import {
     type DiscoveredModelWithCapabilities,
     discoverProviderModels,
@@ -147,7 +150,7 @@ export class AiService {
     async #audit(
         db: SearchDatabase,
         actorUserId: string,
-        action: string,
+        action: AuditAction,
         targetId: string,
     ) {
         await db.insert(auditLogs).values({

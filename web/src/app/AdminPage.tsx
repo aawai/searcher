@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { type AdminTab, adminTab, routes } from "./routes.ts";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
@@ -9,6 +9,7 @@ import {
     LoadingState,
     LocalNavigation,
     ManagementTable,
+    Pagination,
     SettingsGroup,
     SettingsRow,
     StatusBanner,
@@ -22,16 +23,22 @@ import {
     TableRow,
 } from "../components/ui/table.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
-import {
-    AlertCircle,
-    ChevronDown,
-    MoreHorizontal,
-    RefreshCw,
-} from "lucide-react";
+import { ChevronDown, MoreHorizontal, RefreshCw } from "lucide-react";
 import { AdminOverview } from "./AdminOverview.tsx";
 import { AdminSystemSettings } from "./AdminSystemSettings.tsx";
 import { AdminBackupRestore } from "./AdminBackupRestore.tsx";
-import type { AdminUserDto } from "@shared/contracts.ts";
+import type {
+    AdminUserDto,
+    AuditAction,
+    AuditLogDto,
+} from "@shared/contracts.ts";
+import {
+    AUDIT_ACTION_GROUPS,
+    describeAuditAction,
+    describeAuditMetadata,
+    describeAuditTarget,
+    parseAuditActionFilter,
+} from "./admin-audit.ts";
 import {
     Dialog,
     DialogContent,
@@ -42,6 +49,7 @@ import {
 } from "../components/ui/dialog.tsx";
 import {
     AlertDialog,
+    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -65,21 +73,16 @@ import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import {
     NativeSelect,
+    NativeSelectOptGroup,
     NativeSelectOption,
 } from "../components/ui/native-select.tsx";
 import { api, json } from "../lib/api.ts";
+import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import "./admin.css";
 
-interface AuditLogItem {
-    id: string;
-    actorUserId: string;
-    action: string;
-    targetType: string;
-    targetId: string;
-    metadata: Record<string, unknown> | null;
-    createdAt: number;
-}
+const USERS_PAGE_SIZE = 50;
+const AUDIT_PAGE_SIZE = 25;
 
 interface UserListResponse {
     items: AdminUserDto[];
@@ -88,7 +91,7 @@ interface UserListResponse {
 }
 
 interface AuditLogResponse {
-    items: AuditLogItem[];
+    items: AuditLogDto[];
     page: number;
     limit: number;
     total: number;
@@ -107,40 +110,117 @@ function formatTime(timestamp: number): string {
     });
 }
 
-function actionLabel(action: string): { label: string; danger: boolean } {
-    switch (action) {
-        case "admin.user.create":
-            return { label: "创建用户", danger: false };
-        case "admin.user.disable":
-            return { label: "禁用用户", danger: false };
-        case "admin.user.enable":
-            return { label: "启用用户", danger: false };
-        case "admin.user.reset_password":
-            return { label: "重置密码", danger: false };
-        case "admin.user.delete":
-            return { label: "删除用户", danger: true };
-        default:
-            return { label: action, danger: false };
+/** Long ids show a prefix; the full id opens in a popover so it stays reachable by keyboard. */
+function AuditTargetId({ id }: { id: string }) {
+    if (id.length <= 10) {
+        return <span className="admin-audit-id">{id}</span>;
     }
+    const prefix = `${id.slice(0, 10)}…`;
+    return (
+        <Popover>
+            <PopoverTrigger
+                render={
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="admin-audit-id admin-audit-id-trigger"
+                        aria-label={`${prefix} 查看完整 ID`}
+                    />
+                }
+            >
+                {prefix}
+                <ChevronDown
+                    size="1em"
+                    className="icon-sm"
+                    aria-hidden="true"
+                />
+            </PopoverTrigger>
+            <PopoverContent aria-label="完整对象 ID">
+                <span className="admin-audit-id admin-audit-full-id">{id}</span>
+            </PopoverContent>
+        </Popover>
+    );
 }
 
+function AuditDetails(
+    { details, className }: {
+        details: { label: string; value: string }[];
+        className?: string;
+    },
+) {
+    return (
+        <ul className={cn("admin-audit-details", className)}>
+            {details.map(({ label, value }) => (
+                <li key={label}>
+                    <strong>{label}</strong> {value}
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+/**
+ * Below 768px the time and details columns fold into the action and object
+ * cells, so the two remaining columns fit a phone without squeezing text.
+ */
+function AuditLogRow({ log }: { log: AuditLogDto }) {
+    const action = describeAuditAction(log.action);
+    const target = describeAuditTarget(
+        log.targetType,
+        log.targetId,
+        log.metadata,
+    );
+    const details = describeAuditMetadata(log.metadata);
+    const time = formatTime(log.createdAt);
+    return (
+        <TableRow>
+            <TableCell className="admin-hide-narrow admin-nowrap admin-muted">
+                {time}
+            </TableCell>
+            <TableCell className="admin-audit-action">
+                <span className={action.danger ? "admin-danger" : undefined}>
+                    {action.label}
+                </span>
+                {action.rawKey && (
+                    <code className="admin-audit-id">{action.rawKey}</code>
+                )}
+                <time className="admin-audit-time admin-show-narrow">
+                    {time}
+                </time>
+            </TableCell>
+            <TableCell>
+                <span className="admin-audit-target">{target.label}</span>
+                {target.id && <AuditTargetId id={target.id} />}
+                {details.length > 0 && (
+                    <AuditDetails
+                        details={details}
+                        className="admin-show-narrow"
+                    />
+                )}
+            </TableCell>
+            <TableCell className="admin-hide-narrow">
+                {details.length > 0
+                    ? <AuditDetails details={details} />
+                    : <span className="admin-muted">—</span>}
+            </TableCell>
+        </TableRow>
+    );
+}
+
+// Two-character labels keep all five tabs on one line down to 360px.
 const adminTabLabels: Record<AdminTab, string> = {
     overview: "概览",
-    users: "用户管理",
-    settings: "系统设置",
-    audit: "审计日志",
-    backup: "备份与恢复",
+    users: "用户",
+    settings: "设置",
+    audit: "审计",
+    backup: "备份",
 };
 
 export function AdminPage() {
     const { user: currentUser } = useAppState();
     const location = useLocation();
-    const navigate = useNavigate();
     const activeTab = adminTab(location.pathname);
-
-    function setActiveTab(tab: AdminTab) {
-        navigate(routes.admin(tab), { replace: true });
-    }
 
     const [users, setUsers] = useState<AdminUserDto[]>([]);
     const [userTotal, setUserTotal] = useState(0);
@@ -185,15 +265,20 @@ export function AdminPage() {
     const [deleteBusy, setDeleteBusy] = useState(false);
     const [deleteError, setDeleteError] = useState("");
 
+    const [disableModalUser, setDisableModalUser] = useState<
+        AdminUserDto | null
+    >(null);
     const [togglingId, setTogglingId] = useState<string | null>(null);
 
-    const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+    const [auditLogs, setAuditLogs] = useState<AuditLogDto[]>([]);
     const [auditTotal, setAuditTotal] = useState(0);
     const [auditPage, setAuditPage] = useState(1);
     const [auditLoading, setAuditLoading] = useState(false);
     const [auditInitialized, setAuditInitialized] = useState(false);
     const [auditError, setAuditError] = useState("");
-    const [auditActionFilter, setAuditActionFilter] = useState("");
+    const [auditActionFilter, setAuditActionFilter] = useState<
+        AuditAction | ""
+    >("");
 
     async function loadUsers(page = userPage, q = submittedSearch) {
         if (currentUser?.role !== "admin") return;
@@ -219,7 +304,10 @@ export function AdminPage() {
         setAuditLoading(true);
         setAuditError("");
         try {
-            const qs = new URLSearchParams({ page: String(page), limit: "25" });
+            const qs = new URLSearchParams({
+                page: String(page),
+                limit: String(AUDIT_PAGE_SIZE),
+            });
             if (action) qs.set("action", action);
             const res = await api<AuditLogResponse>(
                 `/api/admin/audit-logs?${qs}`,
@@ -311,28 +399,20 @@ export function AdminPage() {
         }
     }
 
-    async function handleToggleDisable(targetUser: AdminUserDto) {
-        if (targetUser.id === currentUser?.id) {
-            setUserError("不能修改当前登录管理员的状态");
-            return;
-        }
-        if (targetUser.role === "admin") {
-            setUserError("不能禁用管理员账户");
-            return;
-        }
+    async function setUserDisabled(
+        targetUser: AdminUserDto,
+        disabled: boolean,
+    ) {
         setTogglingId(targetUser.id);
         setUserError("");
         setUserSuccess("");
-        const nextDisabled = !targetUser.disabled;
         try {
             await api(
                 `/api/admin/users/${targetUser.id}`,
-                json("PATCH", { disabled: nextDisabled }),
+                json("PATCH", { disabled }),
             );
             setUserSuccess(
-                `已${
-                    nextDisabled ? "禁用" : "启用"
-                }用户 @${targetUser.username}`,
+                `已${disabled ? "禁用" : "启用"}用户 @${targetUser.username}`,
             );
             await loadUsers();
         } catch (err) {
@@ -340,6 +420,25 @@ export function AdminPage() {
         } finally {
             setTogglingId(null);
         }
+    }
+
+    /** Enabling is harmless and immediate; disabling signs the user out everywhere, so it is confirmed first. */
+    function requestToggleDisable(
+        targetUser: AdminUserDto,
+        trigger: HTMLElement | null,
+    ) {
+        if (targetUser.disabled) {
+            void setUserDisabled(targetUser, false);
+            return;
+        }
+        modalTriggerRef.current = trigger;
+        setDisableModalUser(targetUser);
+    }
+
+    async function confirmDisable() {
+        if (!disableModalUser) return;
+        await setUserDisabled(disableModalUser, true);
+        setDisableModalUser(null);
     }
 
     async function handleResetPasswordSubmit(e: FormEvent) {
@@ -373,13 +472,8 @@ export function AdminPage() {
         e.preventDefault();
         if (!deleteModalUser) return;
         setDeleteError("");
-        if (
-            deleteConfirmText !== deleteModalUser.username &&
-            deleteConfirmText !== "CONFIRM"
-        ) {
-            setDeleteError(
-                `输入 @${deleteModalUser.username} 或 CONFIRM 以确认删除`,
-            );
+        if (deleteConfirmText !== deleteModalUser.username) {
+            setDeleteError(`输入 ${deleteModalUser.username} 以确认删除`);
             return;
         }
         setDeleteBusy(true);
@@ -455,8 +549,11 @@ export function AdminPage() {
         );
     }
 
-    const totalPages = Math.max(1, Math.ceil(userTotal / 50));
-    const auditTotalPages = Math.max(1, Math.ceil(auditTotal / 25));
+    const totalPages = Math.max(1, Math.ceil(userTotal / USERS_PAGE_SIZE));
+    const auditTotalPages = Math.max(
+        1,
+        Math.ceil(auditTotal / AUDIT_PAGE_SIZE),
+    );
     const resetUsername = resetModalUser?.username ?? "";
     const deleteUsername = deleteModalUser?.username ?? "";
 
@@ -494,18 +591,13 @@ export function AdminPage() {
                 }
             />
 
-            {activeTab === "overview" && (
-                <AdminOverview onNavigateTab={(t) => setActiveTab(t)} />
-            )}
+            {activeTab === "overview" && <AdminOverview />}
 
             {activeTab === "users" && (
                 <div className="semantic-section">
                     {userError && (
                         <StatusBanner tone="error" density="compact">
-                            <span className="admin-banner-message">
-                                <AlertCircle size="1em" />
-                                <span>{userError}</span>
-                            </span>
+                            {userError}
                         </StatusBanner>
                     )}
                     {userSuccess && (
@@ -516,28 +608,27 @@ export function AdminPage() {
 
                     <WorkspaceToolbar>
                         <form
-                            className="admin-search-form"
+                            role="search"
+                            className="admin-toolbar-field"
                             onSubmit={handleSearchSubmit}
                         >
                             <Input
                                 type="search"
                                 variant="search"
-                                className="admin-search-input"
                                 aria-label="搜索用户"
                                 placeholder="按用户名、显示名称或邮箱搜索"
                                 value={userSearch}
-                                onChange={(e) => setUserSearch(e.target.value)}
+                                onChange={(e) => {
+                                    // The field's own clear button is the one way to drop the search.
+                                    if (
+                                        e.target.value === "" && submittedSearch
+                                    ) {
+                                        clearSearch();
+                                        return;
+                                    }
+                                    setUserSearch(e.target.value);
+                                }}
                             />
-                            {submittedSearch && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearSearch}
-                                >
-                                    清除
-                                </Button>
-                            )}
                         </form>
                         <ActionGroup>
                             <Button
@@ -736,13 +827,18 @@ export function AdminPage() {
                                                                                 disabled={togglingId ===
                                                                                     u.id}
                                                                                 onClick={() =>
-                                                                                    void handleToggleDisable(
+                                                                                    requestToggleDisable(
                                                                                         u,
+                                                                                        actionTriggerRefs
+                                                                                            .current[
+                                                                                                u.id
+                                                                                            ] ??
+                                                                                            null,
                                                                                     )}
                                                                             >
                                                                                 {u.disabled
                                                                                     ? "启用用户"
-                                                                                    : "禁用用户"}
+                                                                                    : "禁用用户…"}
                                                                             </DropdownMenuItem>
                                                                         )}
                                                                     {!isSelf &&
@@ -775,42 +871,14 @@ export function AdminPage() {
                                         })}
                                     </TableBody>
                                 </ManagementTable>
-                                <div className="admin-pagination">
-                                    <span>
-                                        共 {userTotal} 位 · 第 {userPage} /{" "}
-                                        {totalPages} 页
-                                    </span>
-                                    <ActionGroup>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={userPage <= 1 ||
-                                                usersLoading}
-                                            onClick={() =>
-                                                void loadUsers(
-                                                    userPage - 1,
-                                                    submittedSearch,
-                                                )}
-                                        >
-                                            上一页
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={userPage >= totalPages ||
-                                                usersLoading}
-                                            onClick={() =>
-                                                void loadUsers(
-                                                    userPage + 1,
-                                                    submittedSearch,
-                                                )}
-                                        >
-                                            下一页
-                                        </Button>
-                                    </ActionGroup>
-                                </div>
+                                <Pagination
+                                    label="用户列表分页"
+                                    total={`共 ${userTotal} 位`}
+                                    page={userPage}
+                                    pageCount={totalPages}
+                                    busy={usersLoading}
+                                    onPageChange={setUserPage}
+                                />
                             </>
                         )}
                 </div>
@@ -822,76 +890,58 @@ export function AdminPage() {
                 <div className="semantic-section">
                     {auditError && (
                         <StatusBanner tone="error" density="compact">
-                            <span className="admin-banner-message">
-                                <AlertCircle size="1em" />
-                                <span>{auditError}</span>
-                            </span>
+                            {auditError}
                         </StatusBanner>
                     )}
                     <WorkspaceToolbar>
-                        <ActionGroup>
-                            <NativeSelect
-                                size="sm"
-                                aria-label="审计操作筛选"
-                                value={auditActionFilter}
-                                onChange={(e) => {
-                                    setAuditActionFilter(e.target.value);
-                                    setAuditPage(1);
-                                }}
-                            >
-                                <NativeSelectOption value="">
-                                    全部操作
-                                </NativeSelectOption>
-                                <NativeSelectOption value="admin.user.create">
-                                    创建用户
-                                </NativeSelectOption>
-                                <NativeSelectOption value="admin.user.disable">
-                                    禁用用户
-                                </NativeSelectOption>
-                                <NativeSelectOption value="admin.user.enable">
-                                    启用用户
-                                </NativeSelectOption>
-                                <NativeSelectOption value="admin.user.reset_password">
-                                    重置密码
-                                </NativeSelectOption>
-                                <NativeSelectOption value="admin.user.delete">
-                                    删除用户
-                                </NativeSelectOption>
-                            </NativeSelect>
-                            {auditActionFilter && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        setAuditActionFilter("");
-                                        setAuditPage(1);
-                                    }}
-                                >
-                                    清除筛选
-                                </Button>
-                            )}
-                        </ActionGroup>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            title="刷新审计日志"
-                            disabled={auditLoading}
-                            onClick={() =>
-                                void loadAuditLogs(
-                                    auditPage,
-                                    auditActionFilter,
-                                )}
+                        <NativeSelect
+                            className="admin-toolbar-field"
+                            aria-label="按操作筛选审计日志"
+                            value={auditActionFilter}
+                            onChange={(e) => {
+                                setAuditActionFilter(
+                                    parseAuditActionFilter(e.target.value),
+                                );
+                                setAuditPage(1);
+                            }}
                         >
-                            <RefreshCw
-                                size="1em"
-                                className={auditLoading
-                                    ? "animate-spin"
-                                    : undefined}
-                            />
-                            <span>刷新</span>
-                        </Button>
+                            <NativeSelectOption value="">
+                                全部操作
+                            </NativeSelectOption>
+                            {AUDIT_ACTION_GROUPS.map(({ group, actions }) => (
+                                <NativeSelectOptGroup key={group} label={group}>
+                                    {actions.map(({ value, label }) => (
+                                        <NativeSelectOption
+                                            key={value}
+                                            value={value}
+                                        >
+                                            {label}
+                                        </NativeSelectOption>
+                                    ))}
+                                </NativeSelectOptGroup>
+                            ))}
+                        </NativeSelect>
+                        <ActionGroup>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                title="刷新审计日志"
+                                disabled={auditLoading}
+                                onClick={() =>
+                                    void loadAuditLogs(
+                                        auditPage,
+                                        auditActionFilter,
+                                    )}
+                            >
+                                <RefreshCw
+                                    size="1em"
+                                    className={auditLoading
+                                        ? "animate-spin"
+                                        : undefined}
+                                />
+                                <span>{auditLoading ? "刷新中…" : "刷新"}</span>
+                            </Button>
+                        </ActionGroup>
                     </WorkspaceToolbar>
 
                     {!auditInitialized && auditLoading
@@ -942,148 +992,33 @@ export function AdminPage() {
                                 <ManagementTable>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>时间</TableHead>
+                                            <TableHead className="admin-hide-narrow">
+                                                时间
+                                            </TableHead>
                                             <TableHead>操作</TableHead>
                                             <TableHead>对象</TableHead>
-                                            <TableHead>明细</TableHead>
+                                            <TableHead className="admin-hide-narrow">
+                                                明细
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {auditLogs.map((log) => {
-                                            const { label, danger } =
-                                                actionLabel(log.action);
-                                            const entries = log.metadata
-                                                ? Object.entries(log.metadata)
-                                                : [];
-                                            return (
-                                                <TableRow key={log.id}>
-                                                    <TableCell className="admin-nowrap admin-muted">
-                                                        {formatTime(
-                                                            log.createdAt,
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="admin-audit-action">
-                                                        <span
-                                                            className={danger
-                                                                ? "admin-danger"
-                                                                : undefined}
-                                                        >
-                                                            {label}
-                                                        </span>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {log.targetType}
-                                                        <div>
-                                                            {log.targetId
-                                                                    .length > 10
-                                                                ? (
-                                                                    <Popover>
-                                                                        <PopoverTrigger
-                                                                            render={
-                                                                                <Button
-                                                                                    type="button"
-                                                                                    variant="ghost"
-                                                                                    size="sm"
-                                                                                    className="admin-audit-target-id"
-                                                                                    aria-label={`查看对象 ID ${log.targetId}`}
-                                                                                />
-                                                                            }
-                                                                        >
-                                                                            {`${
-                                                                                log.targetId
-                                                                                    .slice(
-                                                                                        0,
-                                                                                        10,
-                                                                                    )
-                                                                            }…`}
-                                                                            <ChevronDown
-                                                                                size="1em"
-                                                                                className="icon-sm"
-                                                                                aria-hidden="true"
-                                                                            />
-                                                                        </PopoverTrigger>
-                                                                        <PopoverContent aria-label="完整对象 ID">
-                                                                            <span className="admin-audit-full-id">
-                                                                                {log.targetId}
-                                                                            </span>
-                                                                        </PopoverContent>
-                                                                    </Popover>
-                                                                )
-                                                                : (
-                                                                    <span className="admin-audit-short-id">
-                                                                        {log.targetId}
-                                                                    </span>
-                                                                )}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {entries.length > 0
-                                                            ? (
-                                                                <ul className="admin-audit-details">
-                                                                    {entries
-                                                                        .map((
-                                                                            [
-                                                                                k,
-                                                                                v,
-                                                                            ],
-                                                                        ) => (
-                                                                            <li
-                                                                                key={k}
-                                                                            >
-                                                                                <strong>
-                                                                                    {k}
-                                                                                </strong>
-                                                                                {" "}
-                                                                                {String(
-                                                                                    v,
-                                                                                )}
-                                                                            </li>
-                                                                        ))}
-                                                                </ul>
-                                                            )
-                                                            : (
-                                                                <span className="admin-muted">
-                                                                    无
-                                                                </span>
-                                                            )}
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
+                                        {auditLogs.map((log) => (
+                                            <AuditLogRow
+                                                key={log.id}
+                                                log={log}
+                                            />
+                                        ))}
                                     </TableBody>
                                 </ManagementTable>
-                                <div className="admin-pagination">
-                                    <span>
-                                        共 {auditTotal} 条 · 第 {auditPage} /
-                                        {" "}
-                                        {auditTotalPages} 页
-                                    </span>
-                                    <ActionGroup>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={auditPage <= 1 ||
-                                                auditLoading}
-                                            onClick={() =>
-                                                setAuditPage(auditPage - 1)}
-                                        >
-                                            上一页
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={auditPage >=
-                                                    auditTotalPages ||
-                                                auditLoading}
-                                            onClick={() =>
-                                                setAuditPage(auditPage + 1)}
-                                        >
-                                            下一页
-                                        </Button>
-                                    </ActionGroup>
-                                </div>
+                                <Pagination
+                                    label="审计日志分页"
+                                    total={`共 ${auditTotal} 条`}
+                                    page={auditPage}
+                                    pageCount={auditTotalPages}
+                                    busy={auditLoading}
+                                    onPageChange={setAuditPage}
+                                />
                             </>
                         )}
                 </div>
@@ -1229,11 +1164,6 @@ export function AdminPage() {
                         className="admin-form"
                         onSubmit={handleResetPasswordSubmit}
                     >
-                        {resetError && (
-                            <StatusBanner tone="error" density="compact">
-                                {resetError}
-                            </StatusBanner>
-                        )}
                         <div className="admin-field">
                             <label
                                 className="admin-field-label"
@@ -1250,10 +1180,23 @@ export function AdminPage() {
                                 maxLength={128}
                                 autoComplete="new-password"
                                 placeholder="输入该用户的临时新密码"
+                                aria-invalid={Boolean(resetError) || undefined}
+                                aria-describedby={resetError
+                                    ? "reset-password-error"
+                                    : undefined}
                                 value={resetNewPassword}
                                 onChange={(e) =>
                                     setResetNewPassword(e.target.value)}
                             />
+                            {resetError && (
+                                <p
+                                    id="reset-password-error"
+                                    role="alert"
+                                    className="admin-field-message"
+                                >
+                                    {resetError}
+                                </p>
+                            )}
                         </div>
                         <DialogFooter>
                             <Button
@@ -1291,17 +1234,12 @@ export function AdminPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <form className="admin-form" onSubmit={handleDeleteSubmit}>
-                        {deleteError && (
-                            <StatusBanner tone="error" density="compact">
-                                {deleteError}
-                            </StatusBanner>
-                        )}
                         <div className="admin-field">
                             <label
                                 className="admin-field-label"
                                 htmlFor="delete-confirm-input"
                             >
-                                输入 @{deleteUsername} 确认
+                                输入用户名 {deleteUsername} 以确认
                             </label>
                             <Input
                                 id="delete-confirm-input"
@@ -1310,26 +1248,67 @@ export function AdminPage() {
                                 autoFocus
                                 autoComplete="off"
                                 placeholder={deleteUsername}
+                                aria-invalid={Boolean(deleteError) || undefined}
+                                aria-describedby={deleteError
+                                    ? "delete-confirm-error"
+                                    : undefined}
                                 value={deleteConfirmText}
                                 onChange={(e) =>
                                     setDeleteConfirmText(e.target.value)}
                             />
+                            {deleteError && (
+                                <p
+                                    id="delete-confirm-error"
+                                    role="alert"
+                                    className="admin-field-message"
+                                >
+                                    {deleteError}
+                                </p>
+                            )}
                         </div>
                         <AlertDialogFooter>
                             <AlertDialogCancel disabled={deleteBusy}>
                                 取消
                             </AlertDialogCancel>
-                            <Button
+                            <AlertDialogAction
                                 type="submit"
-                                variant="destructive"
-                                disabled={deleteBusy || !deleteModalUser ||
-                                    (deleteConfirmText !== deleteUsername &&
-                                        deleteConfirmText !== "CONFIRM")}
+                                disabled={deleteBusy ||
+                                    deleteConfirmText !== deleteUsername}
                             >
                                 {deleteBusy ? "正在删除…" : "删除用户"}
-                            </Button>
+                            </AlertDialogAction>
                         </AlertDialogFooter>
                     </form>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog
+                open={Boolean(disableModalUser)}
+                onOpenChange={(open) => {
+                    if (!togglingId && !open) setDisableModalUser(null);
+                }}
+            >
+                <AlertDialogContent finalFocus={modalTriggerRef}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            禁用 @{disableModalUser?.username}？
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            该用户的所有登录设备会立即退出，之后可以随时重新启用。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={Boolean(togglingId)}>
+                            取消
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            type="button"
+                            disabled={Boolean(togglingId)}
+                            onClick={() => void confirmDisable()}
+                        >
+                            {togglingId ? "正在禁用…" : "禁用"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
         </PageShell>

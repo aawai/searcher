@@ -87,14 +87,7 @@ Deno.test("AuditService: log persists metadata without secrets", async () => {
 
         const { items } = await audit.list();
         assertEquals(items.length, 1);
-        const metadataJson = items[0].metadataJson ?? "";
-        const stored = JSON.parse(metadataJson) as Record<string, unknown>;
-        assertEquals(stored.username, "dave");
-        assertEquals(stored.password, undefined);
-        assertEquals(stored.token, undefined);
-        assertEquals(stored.body, undefined);
-        assertEquals(metadataJson.includes("supersecretpassword"), false);
-        assertEquals(metadataJson.includes("sessiontoken"), false);
+        assertEquals(items[0].metadata, { username: "dave" });
     } finally {
         await store.close();
     }
