@@ -26,12 +26,17 @@ import { authDestination, routes } from "./routes.ts";
 import "./narrow-form.css";
 import "./auth.css";
 
+type AuthKind = "login" | "register";
 type RegistrationAvailability = "checking" | "open" | "closed" | "unknown";
 const usernameRules = AUTH_CREDENTIAL_RULES.username;
 const passwordRules = AUTH_CREDENTIAL_RULES.password;
 const usernamePattern = new RegExp(AUTH_USERNAME_PATTERN);
+const pageTitles: Record<AuthKind, string> = {
+    login: "登录",
+    register: "创建账户",
+};
 
-export function AuthPage({ kind }: { kind: "login" | "register" }) {
+export function AuthPage({ kind }: { kind: AuthKind }) {
     const navigate = useNavigate();
     const location = useLocation();
     const { login, user, ready } = useAppState();
@@ -42,8 +47,16 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
     const [busy, setBusy] = useState(false);
     const [usernameTouched, setUsernameTouched] = useState(false);
     const [passwordTouched, setPasswordTouched] = useState(false);
+    // A submit attempt belongs to the page it happened on, so switching
+    // between login and register starts without required-field errors.
+    const [attemptedKind, setAttemptedKind] = useState<AuthKind | null>(
+        null,
+    );
+    const usernameRef = useRef<HTMLInputElement>(null);
+    const displayNameRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
     const [registrationState, setRegistrationState] = useState<{
-        kind: "login" | "register";
+        kind: AuthKind;
         availability: RegistrationAvailability;
     }>({ kind, availability: "checking" });
     const availabilityRequestId = useRef(0);
@@ -90,27 +103,51 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
         }
     }, [ready, user, location.search, navigate]);
 
-    const usernameInvalid = kind === "register" && usernameTouched &&
-        !usernamePattern.test(username.trim().toLowerCase());
-    const passwordInvalid = kind === "register" && passwordTouched &&
-        (
-            password.length < passwordRules.minLength ||
-            password.length > passwordRules.maxLength
-        );
+    useEffect(() => {
+        const previousTitle = document.title;
+        document.title = `${pageTitles[kind]} · Searcher`;
+        return () => {
+            document.title = previousTitle;
+        };
+    }, [kind]);
+
+    const submitAttempted = attemptedKind === kind;
+    const usernameMalformed = !usernamePattern.test(
+        username.trim().toLowerCase(),
+    );
+    const passwordOutOfRange = password.length < passwordRules.minLength ||
+        password.length > passwordRules.maxLength;
+    const usernameMissing = submitAttempted && username.trim() === "";
+    const displayNameMissing = kind === "register" && submitAttempted &&
+        displayName.trim() === "";
+    const passwordMissing = submitAttempted && password === "";
+    const usernameInvalid = kind === "register"
+        ? usernameTouched && usernameMalformed
+        : usernameMissing;
+    const passwordInvalid = kind === "register"
+        ? passwordTouched && passwordOutOfRange
+        : passwordMissing;
 
     let registrationStatusMessage: string | null = null;
     if (registrationAvailability === "checking") {
-        registrationStatusMessage = kind === "register"
-            ? "正在检查注册状态…"
-            : "正在检查注册是否开放…";
+        registrationStatusMessage = "正在检查注册状态…";
     } else if (registrationAvailability === "closed") {
-        registrationStatusMessage = kind === "register"
-            ? "当前未开放注册，无法创建账户。"
-            : "当前未开放注册。";
+        registrationStatusMessage = "当前未开放注册，无法创建账户。";
     } else if (registrationAvailability === "unknown") {
-        registrationStatusMessage = kind === "register"
-            ? "暂时无法确认注册状态，重试检查前不会提交注册请求。"
-            : "暂时无法确认注册是否开放。";
+        registrationStatusMessage =
+            "暂时无法确认注册状态，重试检查前不会提交注册请求。";
+    }
+
+    function firstInvalidField(): HTMLInputElement | null {
+        if (kind === "login") {
+            if (username.trim() === "") return usernameRef.current;
+            if (password === "") return passwordRef.current;
+            return null;
+        }
+        if (usernameMalformed) return usernameRef.current;
+        if (displayName.trim() === "") return displayNameRef.current;
+        if (passwordOutOfRange) return passwordRef.current;
+        return null;
     }
 
     async function submit(event: SubmitEvent<HTMLFormElement>) {
@@ -123,6 +160,15 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                 message = "暂时无法确认注册状态，请重新检查后再提交。";
             }
             setError(message);
+            return;
+        }
+        setAttemptedKind(kind);
+        setUsernameTouched(true);
+        setPasswordTouched(true);
+        const invalidField = firstInvalidField();
+        if (invalidField) {
+            setError("");
+            invalidField.focus();
             return;
         }
         setError("");
@@ -153,12 +199,29 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
     const toggleToRegister = `${routes.register}${nextQuery}`;
     const toggleToLogin = `${routes.login}${nextQuery}`;
 
+    // Login only needs to know whether to offer the register link: hidden while
+    // the status is pending or closed, offered when the check failed so the
+    // register page can explain and retry. Nothing above the form changes.
+    const offerRegistration = registrationAvailability === "open" ||
+        registrationAvailability === "unknown";
+    const usernameMessage = kind === "register"
+        ? `用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 个字符，只能使用英文字母、数字或下划线。`
+        : usernameMissing
+        ? <span role="alert">请输入用户名</span>
+        : undefined;
+    const passwordMessage = kind === "register"
+        ? `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符。`
+        : passwordMissing
+        ? <span role="alert">请输入密码</span>
+        : undefined;
+
     return (
         <PageShell archetype="utility">
             <div className="narrow-form">
-                <PageHeader title={kind === "login" ? "登录" : "创建账户"} />
+                <PageHeader title={pageTitles[kind]} />
                 <div className="auth-body">
-                    {registrationAvailability !== "open" && (
+                    {kind === "register" &&
+                        registrationAvailability !== "open" && (
                         <div className="auth-registration">
                             <StatusBanner
                                 tone={registrationAvailability === "unknown"
@@ -182,48 +245,67 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                             )}
                         </div>
                     )}
-                    <form className="auth-fields" onSubmit={submit}>
+                    <form className="auth-fields" noValidate onSubmit={submit}>
                         <SettingsGroup>
                             <SettingsRow
+                                className="settings-row--vertical"
                                 title="用户名"
                                 labelFor="auth-username"
-                                message={kind === "register"
-                                    ? `用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 个字符，只能使用英文字母、数字或下划线。`
-                                    : undefined}
+                                message={usernameMessage}
                                 messageId="auth-username-hint"
                                 invalid={usernameInvalid}
                             >
                                 <Input
+                                    ref={usernameRef}
                                     id="auth-username"
                                     placeholder="例如：alice"
                                     autoComplete="username"
+                                    // Only where focusing cannot raise an
+                                    // on-screen keyboard over the form.
+                                    autoFocus={matchMedia("(pointer: fine)")
+                                        .matches}
                                     required
                                     minLength={usernameRules.minLength}
                                     maxLength={usernameRules.maxLength}
                                     pattern={kind === "register"
                                         ? AUTH_USERNAME_PATTERN
                                         : undefined}
-                                    aria-describedby={kind === "register"
+                                    aria-describedby={usernameMessage
                                         ? "auth-username-hint"
                                         : undefined}
                                     aria-invalid={usernameInvalid || undefined}
                                     value={username}
                                     onChange={(e) =>
                                         setUsername(e.target.value)}
-                                    onInvalid={() => setUsernameTouched(true)}
                                     onBlur={() => setUsernameTouched(true)}
                                 />
                             </SettingsRow>
                             {kind === "register" && (
                                 <SettingsRow
+                                    className="settings-row--vertical"
                                     title="显示名称"
                                     labelFor="auth-display-name"
+                                    message={displayNameMissing
+                                        ? (
+                                            <span role="alert">
+                                                请输入显示名称
+                                            </span>
+                                        )
+                                        : undefined}
+                                    messageId="auth-display-name-hint"
+                                    invalid={displayNameMissing}
                                 >
                                     <Input
+                                        ref={displayNameRef}
                                         id="auth-display-name"
                                         placeholder="例如：爱丽丝"
                                         required
                                         maxLength={40}
+                                        aria-describedby={displayNameMissing
+                                            ? "auth-display-name-hint"
+                                            : undefined}
+                                        aria-invalid={displayNameMissing ||
+                                            undefined}
                                         value={displayName}
                                         onChange={(e) =>
                                             setDisplayName(e.target.value)}
@@ -231,19 +313,19 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                                 </SettingsRow>
                             )}
                             <SettingsRow
+                                className="settings-row--vertical"
                                 title="密码"
                                 labelFor="auth-password"
-                                message={kind === "register"
-                                    ? `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符。`
-                                    : undefined}
+                                message={passwordMessage}
                                 messageId="auth-password-hint"
                                 invalid={passwordInvalid}
                             >
                                 <Input
+                                    ref={passwordRef}
                                     id="auth-password"
-                                    placeholder={kind === "login"
-                                        ? "输入登录密码"
-                                        : `至少 ${passwordRules.minLength} 个字符`}
+                                    placeholder={kind === "register"
+                                        ? `至少 ${passwordRules.minLength} 个字符`
+                                        : "区分大小写"}
                                     type="password"
                                     autoComplete={kind === "login"
                                         ? "current-password"
@@ -255,14 +337,13 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                                     maxLength={kind === "register"
                                         ? passwordRules.maxLength
                                         : undefined}
-                                    aria-describedby={kind === "register"
+                                    aria-describedby={passwordMessage
                                         ? "auth-password-hint"
                                         : undefined}
                                     aria-invalid={passwordInvalid || undefined}
                                     value={password}
                                     onChange={(e) =>
                                         setPassword(e.target.value)}
-                                    onInvalid={() => setPasswordTouched(true)}
                                     onBlur={() => setPasswordTouched(true)}
                                 />
                             </SettingsRow>
@@ -278,11 +359,7 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                                 (kind === "register" &&
                                     registrationAvailability !== "open")}
                         >
-                            {busy
-                                ? "处理中…"
-                                : kind === "login"
-                                ? "登录"
-                                : "创建账户"}
+                            {busy ? "处理中…" : pageTitles[kind]}
                         </Button>
                     </form>
                     {kind === "register"
@@ -296,7 +373,7 @@ export function AuthPage({ kind }: { kind: "login" | "register" }) {
                                 </Link>
                             </p>
                         )
-                        : registrationAvailability === "open" && (
+                        : offerRegistration && (
                             <p className="auth-footer">
                                 没有账户？<Link
                                     to={toggleToRegister}
