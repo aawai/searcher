@@ -275,7 +275,11 @@ export function registerAuthRoutes(
                 !foundUser || !isValidPassword || foundUser.disabled ||
                 foundUser.softDeletedAt !== null
             ) {
-                return failResponse(c, 400, "用户名或密码错误");
+                return failResponse(
+                    c,
+                    400,
+                    "用户名或密码错误。忘记密码请联系管理员重置。",
+                );
             }
 
             const rememberMe = data.rememberMe ?? false;

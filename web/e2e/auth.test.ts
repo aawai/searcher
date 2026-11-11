@@ -216,16 +216,18 @@ Deno.test("registration status 503 is not open and can recover after retry", asy
     });
 });
 
-Deno.test("login hides registration during an unavailable status check", async () => {
+Deno.test("login keeps the form in place and gates only the register link", async () => {
     await withPage(async (origin, page) => {
-        let availabilityChecks = 0;
+        let availability: "unavailable" | "closed" = "closed";
+        const check = Promise.withResolvers<void>();
+        let pendingCheck = check.promise;
         await page.route("**/api/auth/register", async (route) => {
             if (route.request().method() !== "GET") {
                 await route.continue();
                 return;
             }
-            availabilityChecks += 1;
-            if (availabilityChecks === 1) {
+            await pendingCheck;
+            if (availability === "unavailable") {
                 await route.fulfill({
                     status: 503,
                     contentType: "application/json",
@@ -240,29 +242,86 @@ Deno.test("login hides registration during an unavailable status check", async (
             await route.fulfill({
                 status: 200,
                 contentType: "application/json",
-                body: JSON.stringify(registrationAvailability(true)),
+                body: JSON.stringify(registrationAvailability(false)),
             });
         });
+        const registerLink = page.getByRole("link", {
+            name: "注册",
+            exact: true,
+        });
+        const statusMessages = page.locator(
+            ".auth-body :is([role=status], [role=alert])",
+        );
+        const usernameTop = () =>
+            page.locator("#auth-username").evaluate((element) =>
+                element.getBoundingClientRect().top
+            );
 
         await visit(page, origin, "/login");
-        assertEquals(
-            await page.getByRole("link", { name: "注册", exact: true }).count(),
-            0,
+        const pendingTop = await usernameTop();
+        assertEquals(await registerLink.count(), 0, "pending check");
+        assertEquals(await statusMessages.count(), 0, "pending check");
+        const closedResponse = page.waitForResponse("**/api/auth/register");
+        check.resolve();
+        await closedResponse;
+        await page.evaluate(() =>
+            new Promise((resolve) => requestAnimationFrame(resolve))
         );
-        const unavailableMessage = page.getByText(
-            "暂时无法确认注册是否开放",
-            { exact: false },
+        assertEquals(await registerLink.count(), 0, "closed registration");
+        assertEquals(await statusMessages.count(), 0, "closed registration");
+        assertEquals(await usernameTop(), pendingTop, "form position");
+
+        availability = "unavailable";
+        pendingCheck = Promise.resolve();
+        const unavailableResponse = page.waitForResponse(
+            "**/api/auth/register",
         );
-        await unavailableMessage.waitFor({ state: "visible" });
-        await page.getByRole("button", { name: "重新检查" }).click();
-        await page.getByRole("link", { name: "注册", exact: true }).waitFor({
-            state: "visible",
-        });
-        assertEquals(availabilityChecks, 2);
+        await visit(page, origin, "/login");
+        await unavailableResponse;
+        assertEquals(await registerLink.count(), 0, "unknown registration");
+        assertEquals(await statusMessages.count(), 0, "unknown registration");
+        assertEquals(await usernameTop(), pendingTop, "form position");
     });
 });
 
-Deno.test("login continues to show the existing invalid-credentials feedback", async () => {
+Deno.test("login reports empty fields in their rows without submitting", async () => {
+    await withPage(async (origin, page) => {
+        let loginPosts = 0;
+        await page.route("**/api/auth/login", async (route) => {
+            loginPosts += 1;
+            await route.continue();
+        });
+        await visit(page, origin, "/login");
+        assertEquals(await page.title(), "登录 · Searcher");
+        const username = page.locator("#auth-username");
+        const password = page.locator("#auth-password");
+        const submit = page.locator('form button[type="submit"]');
+        const focusedId = () => page.evaluate(() => document.activeElement?.id);
+
+        await submit.click();
+        assertEquals(await focusedId(), "auth-username");
+        assertEquals(await username.getAttribute("aria-invalid"), "true");
+        assertEquals(
+            await page.locator("#auth-username-hint").getByRole("alert")
+                .textContent(),
+            "请输入用户名",
+        );
+
+        await username.fill("someone");
+        await submit.click();
+        assertEquals(await focusedId(), "auth-password");
+        assertEquals(await username.getAttribute("aria-invalid"), null);
+        assertEquals(await password.getAttribute("aria-invalid"), "true");
+        assertEquals(
+            await page.locator("#auth-password-hint").getByRole("alert")
+                .textContent(),
+            "请输入密码",
+        );
+        assertEquals(loginPosts, 0);
+    });
+});
+
+Deno.test("login invalid credentials point to the administrator reset", async () => {
     await withPage(async (origin, page) => {
         await visit(page, origin, "/login");
         assertEquals(
@@ -274,9 +333,9 @@ Deno.test("login continues to show the existing invalid-credentials feedback", a
         await page.locator('form button[type="submit"]').click();
         const error = page.getByRole("alert");
         await error.waitFor({ state: "visible" });
-        assertStringIncludes(
-            await error.textContent() ?? "",
-            "用户名或密码错误",
+        assertEquals(
+            await error.textContent(),
+            "用户名或密码错误。忘记密码请联系管理员重置。",
         );
     });
 });

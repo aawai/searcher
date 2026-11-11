@@ -684,8 +684,9 @@ Deno.test("活动窗口下方的桌面不进入 Tab 顺序，焦点不被窗口�
     };
     try {
         await loginAndVisit(page, app.origin, "/", user);
-        // On its own the desktop stays in the Tab order.
-        const home = await traverse("Tab", 12);
+        // Start anywhere in the focus order and traverse far enough to reach
+        // the desktop after the header and taskbar controls.
+        const home = await traverse("Tab", 24);
         assert(home.some((stop) => stop.desktop), JSON.stringify(home));
 
         await page.locator('[data-dock-id="settings"]').click();

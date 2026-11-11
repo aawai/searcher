@@ -44,11 +44,12 @@
 
 @media (any-pointer: coarse), (hover: none) {
     .auth-footer a {
-        /* The target grows to the right so the word stays beside its prompt. */
+        /* The target grows to the right so the word stays beside its prompt;
+           the inline-flex box's baseline is the word's, so it stays on the
+           prompt's baseline. */
         display: inline-flex;
         align-items: center;
         min-width: var(--control-touch-target);
         min-height: var(--control-touch-target);
-        vertical-align: middle;
     }
 }
