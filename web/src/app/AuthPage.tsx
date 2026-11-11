@@ -199,21 +199,28 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
     const toggleToRegister = `${routes.register}${nextQuery}`;
     const toggleToLogin = `${routes.login}${nextQuery}`;
 
-    // Login only needs to know whether to offer the register link: hidden while
-    // the status is pending or closed, offered when the check failed so the
-    // register page can explain and retry. Nothing above the form changes.
-    const offerRegistration = registrationAvailability === "open" ||
-        registrationAvailability === "unknown";
-    const usernameMessage = kind === "register"
-        ? `用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 个字符，只能使用英文字母、数字或下划线。`
-        : usernameMissing
-        ? <span role="alert">请输入用户名</span>
-        : undefined;
-    const passwordMessage = kind === "register"
-        ? `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符。`
-        : passwordMissing
-        ? <span role="alert">请输入密码</span>
-        : undefined;
+    const offerRegistration = registrationAvailability === "open";
+    const usernameRule =
+        `用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 个字符，只能使用英文字母、数字或下划线。`;
+    const passwordRule =
+        `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符。`;
+    let usernameMessage: React.ReactNode;
+    let passwordMessage: React.ReactNode;
+    if (kind === "register") {
+        usernameMessage = usernameInvalid
+            ? <span role="alert">{usernameRule}</span>
+            : usernameRule;
+        passwordMessage = passwordInvalid
+            ? <span role="alert">{passwordRule}</span>
+            : passwordRule;
+    } else {
+        usernameMessage = usernameMissing
+            ? <span role="alert">请输入用户名</span>
+            : undefined;
+        passwordMessage = passwordMissing
+            ? <span role="alert">请输入密码</span>
+            : undefined;
+    }
 
     return (
         <PageShell archetype="utility">

@@ -172,7 +172,17 @@ export function OmniboxListbox(
                                 onPointerDown={(event) =>
                                     event.preventDefault()}
                                 onClick={() => onSelect(item)}
-                                onMouseEnter={() => onHover(item)}
+                                // Movement, not enter: a list that renders
+                                // under a resting cursor must not pick an
+                                // option that Enter would then run.
+                                onMouseMove={() => {
+                                    if (
+                                        !selected ||
+                                        view.selection?.source !== "pointer"
+                                    ) {
+                                        onHover(item);
+                                    }
+                                }}
                             >
                                 <div className="suggestion-item-main">
                                     <ItemIcon item={item} />

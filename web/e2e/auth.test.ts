@@ -273,8 +273,12 @@ Deno.test("login keeps the form in place and gates only the register link", asyn
 
         availability = "unavailable";
         pendingCheck = Promise.resolve();
+        const unavailableResponse = page.waitForResponse(
+            "**/api/auth/register",
+        );
         await visit(page, origin, "/login");
-        await registerLink.waitFor({ state: "visible" });
+        await unavailableResponse;
+        assertEquals(await registerLink.count(), 0, "unknown registration");
         assertEquals(await statusMessages.count(), 0, "unknown registration");
         assertEquals(await usernameTop(), pendingTop, "form position");
     });
