@@ -304,7 +304,7 @@ Deno.test("login reports empty fields in their rows without submitting", async (
         assertEquals(
             await page.locator("#auth-username-hint").getByRole("alert")
                 .textContent(),
-            "请输入用户名",
+            "请输入用户名或邮箱",
         );
 
         await username.fill("someone");
@@ -318,6 +318,35 @@ Deno.test("login reports empty fields in their rows without submitting", async (
             "请输入密码",
         );
         assertEquals(loginPosts, 0);
+    });
+});
+
+Deno.test("login accepts an email longer than the username limit", async () => {
+    await withPage(async (origin, page) => {
+        const email = `${"longidentifier".repeat(3)}@example.com`;
+        const password = "Long-email-password-199!";
+        const registered = await page.request.post(`${origin}/api/auth/register`, {
+            headers: { origin },
+            data: {
+                username: "long_email_user",
+                email,
+                displayName: "Long Email",
+                password,
+            },
+        });
+        assertEquals(registered.status(), 200);
+        const logout = await page.request.post(`${origin}/api/auth/logout`, {
+            headers: { origin },
+        });
+        assertEquals(logout.status(), 200);
+
+        await visit(page, origin, "/login");
+        const identifier = page.getByLabel("用户名或邮箱");
+        await identifier.fill(email);
+        assertEquals(await identifier.inputValue(), email);
+        await page.locator("#auth-password").fill(password);
+        await page.locator('form button[type="submit"]').click();
+        await page.waitForURL(`${origin}/`);
     });
 });
 
@@ -335,7 +364,7 @@ Deno.test("login invalid credentials point to the administrator reset", async ()
         await error.waitFor({ state: "visible" });
         assertEquals(
             await error.textContent(),
-            "用户名或密码错误。忘记密码请联系管理员重置。",
+            "用户名、邮箱或密码错误。忘记密码请联系管理员重置。",
         );
     });
 });

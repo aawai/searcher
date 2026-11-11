@@ -276,15 +276,14 @@ Deno.test("production shortcuts for Documents and Ask (#103)", async (t) => {
 
             // Conversation search dialog must appear
             const searchDialog = page.locator('[role="dialog"]').filter({
-                hasText: "会话内搜索",
+                hasText: "对话内搜索",
             });
             await searchDialog.waitFor({ state: "visible" });
 
             // Verify description has the unified shortcut hint
             const descText = await searchDialog.textContent();
             assert(
-                descText?.includes("快捷键: Ctrl + F") ||
-                    descText?.includes("快捷键: ⌘ F"),
+                /(?:Ctrl\s*\+\s*F|⌘\s*F)/.test(descText ?? ""),
                 `dialog description: ${descText}`,
             );
 

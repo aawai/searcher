@@ -52,10 +52,10 @@ const emailSchema = v.optional(
 );
 
 const displayNameSchema = v.pipe(
-    v.string("展示名称必须是字符串"),
+    v.string("显示名称必须是字符串"),
     v.trim(),
-    v.minLength(1, "展示名称长度为 1–40 个字符"),
-    v.maxLength(40, "展示名称长度为 1–40 个字符"),
+    v.minLength(1, "显示名称长度为 1–40 个字符"),
+    v.maxLength(40, "显示名称长度为 1–40 个字符"),
 );
 
 const passwordSchema = v.pipe(
@@ -541,8 +541,7 @@ export function registerUserRoutes(
                 return c.json({
                     code: 400,
                     status: false,
-                    message:
-                        "请确认删除操作：此操作将软删除该用户并撤销其全部会话",
+                    message: "请确认删除用户；该用户将无法登录，所有设备将退出",
                     data: {
                         requiresConfirmation: true,
                         userId: targetId,
@@ -581,7 +580,7 @@ export function registerUserRoutes(
                 },
             });
 
-            return c.success(undefined, "用户已软删除并撤销全部会话");
+            return c.success(undefined, "用户已删除，所有设备已退出");
         },
     );
 }

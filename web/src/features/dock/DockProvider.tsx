@@ -325,7 +325,7 @@ export function DockProviderSession({ userId, children }: DockSessionProps) {
                 });
             } catch (err) {
                 setError(
-                    err instanceof Error ? err.message : "更新固定应用失败",
+                    err instanceof Error ? err.message : "更新任务栏固定失败",
                 );
             }
         },

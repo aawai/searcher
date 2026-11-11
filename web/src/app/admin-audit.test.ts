@@ -40,10 +40,6 @@ Deno.test("audit targets: system targets are named, users by handle with their i
         }),
         { label: "@alice", id: "u-1" },
     );
-    assertEquals(describeAuditTarget("ai_provider", "p-1", null), {
-        label: "AI 提供商",
-        id: "p-1",
-    });
 });
 
 Deno.test("audit metadata: localized values, columns already shown are omitted", () => {

@@ -338,7 +338,7 @@ export function LibraryAppsView({
                             className="library-apps-scroll"
                             data-library-apps-scroll
                             tabIndex={0}
-                            aria-label="启动器空白区域"
+                            aria-label="应用窗口空白区域"
                         />
                     }
                 >
@@ -591,7 +591,7 @@ export function LibraryAppsView({
                             />
                         )}
                 </ContextMenuTrigger>
-                <ContextMenuContent aria-label="启动器空白区域操作">
+                <ContextMenuContent aria-label="应用窗口空白区域操作">
                     <ContextMenuItem
                         disabled={managing}
                         onClick={() => setCreating(true)}

@@ -74,7 +74,7 @@ function describeConfigImport(preview: ConfigImportPreviewDto): string {
                 ? `更新 ${preview.updatedProvidersCount} 个`
                 : "",
         ].filter(Boolean);
-        changes.push(`${counts.join("、")} AI 提供商`);
+        changes.push(`${counts.join("、")} AI 服务商`);
     }
     if (preview.importedModelsCount > 0) {
         changes.push(`同步 ${preview.importedModelsCount} 个模型`);
@@ -86,10 +86,10 @@ function describeConfigImport(preview: ConfigImportPreviewDto): string {
     ];
     if (preview.skippedProvidersCount > 0) {
         sentences.push(
-            `同名的个人提供商 ${preview.skippedProvidersCount} 个保持不变。`,
+            `同名的个人服务商 ${preview.skippedProvidersCount} 个保持不变。`,
         );
     }
-    if (providersTouched) sentences.push("文件中未列出的提供商保持不变。");
+    if (providersTouched) sentences.push("文件中未列出的服务商保持不变。");
     return sentences.join("");
 }
 
@@ -240,7 +240,7 @@ export function AdminBackupRestore() {
                 },
             );
             const keyNote = res.createdProvidersCount > 0
-                ? "新提供商默认禁用，在 AI 设置中配置 API Key 后启用。"
+                ? "新服务商默认禁用，在 AI 设置中配置 API Key 后启用。"
                 : "";
             setConfigSuccess(`已导入「${pendingImport.fileName}」。${keyNote}`);
             setPendingImport(null);
@@ -309,7 +309,7 @@ export function AdminBackupRestore() {
             }>("/api/admin/backup/restore", { method: "POST", body: formData });
             setRestoreWarnings(restored.warnings);
             setRestoreSuccess(
-                "已还原，恢复前快照已保存。重新加载页面后生效；若被登出，需重新登录。",
+                "备份已还原，还原前快照已保存。重新加载页面后生效；若被登出，需重新登录。",
             );
             setRestoreModalOpen(false);
         } catch (err) {
@@ -329,7 +329,7 @@ export function AdminBackupRestore() {
             )}
             <SettingsGroup
                 title="系统配置"
-                footer="仅含系统设置与 AI 提供商，不含用户数据和 API Key。"
+                footer="仅含系统设置与 AI 服务商，不含用户数据和 API Key。"
             >
                 <SettingsRow title="导出配置">
                     <Button
@@ -376,7 +376,7 @@ export function AdminBackupRestore() {
                         render={<a href="/api/admin/backup/export" download />}
                     >
                         <Download size="1em" />
-                        <span>下载备份 (ZIP)</span>
+                        <span>下载备份（ZIP）</span>
                     </Button>
                 </SettingsRow>
                 <SettingsRow
@@ -411,7 +411,7 @@ export function AdminBackupRestore() {
                                 : undefined}
                         >
                             <FileCheck size="1em" />
-                            <span>{validating ? "正在验证…" : "预检验证"}</span>
+                            <span>{validating ? "正在验证…" : "预检备份"}</span>
                         </Button>
                     </div>
                 </SettingsRow>
@@ -445,7 +445,7 @@ export function AdminBackupRestore() {
                                 {validatedManifest.counts.documents}
                             </span>
                         </SettingsRow>
-                        <SettingsRow title="AI 提供商 / 模型">
+                        <SettingsRow title="AI 服务商 / 模型">
                             <span className="admin-value">
                                 {validatedManifest.counts.aiProviders} /{" "}
                                 {validatedManifest.counts.aiModels}
@@ -557,7 +557,7 @@ export function AdminBackupRestore() {
                             disabled={restoring}
                             onClick={handleExecuteRestore}
                         >
-                            {restoring ? "正在还原…" : "还原"}
+                            {restoring ? "正在还原…" : "还原备份"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

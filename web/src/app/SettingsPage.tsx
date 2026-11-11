@@ -45,7 +45,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../components/ui/alert-dialog.tsx";
-import { Badge } from "../components/ui/badge.tsx";
 import { Button } from "../components/ui/button.tsx";
 import {
     DropdownMenu,
@@ -1187,7 +1186,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 )}
                 {tab === "ai" && (
                     <>
-                        <SettingsGroup footer="AI 仅在你主动提问时响应，不影响普通搜索。">
+                        <SettingsGroup>
                             <SettingsRow title="对话页面">
                                 <Button
                                     variant="ghost"
@@ -1216,16 +1215,11 @@ export function SettingsContent({ host }: { host: PageHost }) {
                         <SettingsGroup
                             title="同步"
                             footer={user
-                                ? "偏好设置、应用与笔记会在你的账户中双向同步。"
-                                : "登录后，偏好设置、应用与笔记会同步到你的账户。"}
+                                ? "偏好设置、应用与笔记保存在账户中；任务栏位置等设备布局只保存在当前设备。"
+                                : "访客外观仅保存在当前设备；登录后可使用账户中的应用、笔记和偏好设置。"}
                         >
                             <SettingsRow title="账户">
                                 {user ? user.displayName : "本地访客模式"}
-                            </SettingsRow>
-                            <SettingsRow title="状态">
-                                <Badge variant="secondary">
-                                    {user ? "已同步" : "未登录"}
-                                </Badge>
                             </SettingsRow>
                         </SettingsGroup>
                         {user && (

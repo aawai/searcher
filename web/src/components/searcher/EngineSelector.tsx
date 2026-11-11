@@ -149,9 +149,9 @@ export function EngineSelector(
         <DropdownMenu>
             <DropdownMenuTrigger
                 className="search-engine"
-                aria-label={`当前搜索引擎: ${
+                aria-label={`当前搜索引擎：${
                     current?.label || engine
-                }，点击切换`}
+                }；切换搜索引擎`}
             >
                 <EngineIcon id={engine || "bing"} className="icon-md" />
                 <ChevronDown size="1em" className="icon-sm" />

@@ -53,7 +53,7 @@ Deno.test("consequences distinguish kept history content from deleted temporary 
     assertEquals(
         lossDescriptions({ ...NOTHING, streaming: true }, "close"),
         [
-            "正在生成的回答将被中断；已生成的内容保留在历史会话中，标记为已中断。",
+            "正在生成的回答将被中断；已生成的内容保留在历史对话中，标记为已中断。",
         ],
     );
     assertEquals(
@@ -63,7 +63,7 @@ Deno.test("consequences distinguish kept history content from deleted temporary 
         ),
         [
             "正在生成的回答将被终止，且不会保留。",
-            "临时会话及其消息、附件和未发送的输入将被删除，无法恢复。",
+            "临时对话及其消息、附件和未发送的输入将被删除，无法恢复。",
         ],
     );
     assertEquals(lossDescriptions({ ...NOTHING, draft: true }, "switch"), []);

@@ -31,6 +31,7 @@ import {
     useState,
 } from "react";
 import { StatusBanner } from "../../components/searcher/semantic.tsx";
+import { pointerDragAccessibility } from "../../components/searcher/drag-accessibility.ts";
 import { Checkbox } from "../../components/ui/checkbox.tsx";
 import {
     DropdownMenu,
@@ -186,18 +187,19 @@ export function MastheadSections({
             {notes.length > 0 && (
                 <section
                     className="home-masthead__section"
-                    aria-label="置顶区域"
+                    aria-label="固定笔记区域"
                     {...focusContainer}
                 >
                     <div className="home-masthead__section-head">
                         <span className="home-masthead__section-title">
-                            置顶
+                            固定笔记
                         </span>
                         <span className="home-masthead__section-count">
                             {notes.length}
                         </span>
                     </div>
                     <DndContext
+                        accessibility={pointerDragAccessibility}
                         sensors={sensors}
                         collisionDetection={closestCenter}
                         onDragEnd={handleDragEnd}
@@ -208,7 +210,7 @@ export function MastheadSections({
                         >
                             <ol
                                 className="home-masthead__entries"
-                                aria-label="置顶笔记"
+                                aria-label="固定笔记"
                             >
                                 {notes.map((note, index) => (
                                     <SortableMastheadEntry

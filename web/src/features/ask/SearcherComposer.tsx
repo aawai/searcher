@@ -269,7 +269,7 @@ export function SearcherComposer({
                                         size="icon"
                                         className="ask-composer__icon-btn"
                                         aria-label="更多设置"
-                                        title="推理、检索与生成设置"
+                                        title="推理、搜索与生成设置"
                                     />
                                 }
                             >
@@ -354,7 +354,7 @@ export function SearcherComposer({
                                         <div className="ask-composer__tool-option">
                                             <div className="ask-composer__tool-label">
                                                 <label htmlFor="tool-web">
-                                                    联网搜索 (SearXNG)
+                                                    联网搜索（SearXNG）
                                                 </label>
                                                 {capabilities?.tools
                                                             .webSearch ===
@@ -366,7 +366,7 @@ export function SearcherComposer({
                                             </div>
                                             <Switch
                                                 id="tool-web"
-                                                aria-label="联网搜索 (SearXNG)"
+                                                aria-label="联网搜索（SearXNG）"
                                                 size="sm"
                                                 disabled={!supportsTools ||
                                                     capabilities?.tools
@@ -416,8 +416,8 @@ export function SearcherComposer({
                                     variant="default"
                                     size="icon"
                                     className="ask-composer__send-btn"
-                                    aria-label="发送问题 (Enter)"
-                                    title="发送问题 (Enter)"
+                                    aria-label="发送问题（Enter）"
+                                    title="发送问题（Enter）"
                                 >
                                     <ArrowUp size="1em" className="icon-md" />
                                 </Button>

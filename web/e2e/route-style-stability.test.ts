@@ -1956,7 +1956,7 @@ Deno.test(
                     name: "选择 ZIP 文件",
                 });
                 const preValidateBtn = page.getByRole("button", {
-                    name: "预检验证",
+                    name: "预检备份",
                 });
                 await chooseZipBtn.waitFor({ state: "visible" });
                 assertEquals(
@@ -1988,14 +1988,14 @@ Deno.test(
                 );
                 assertEquals(await preValidateBtn.isDisabled(), false);
 
-                // Tab from "选择 ZIP 文件" skips hidden file input and lands on "预检验证"
+                // Tab skips the hidden file input and reaches the precheck action.
                 await chooseZipBtn.focus();
                 await page.keyboard.press("Tab");
                 assertEquals(
-                    await page.evaluate(() =>
-                        document.activeElement?.textContent?.trim()
+                    await preValidateBtn.evaluate((button) =>
+                        button === document.activeElement
                     ),
-                    "预检验证",
+                    true,
                 );
 
                 const validateGate = Promise.withResolvers<void>();
@@ -2026,7 +2026,7 @@ Deno.test(
                     const manifestRowTitle of [
                         "生成时间",
                         "用户",
-                        "AI 提供商 / 模型",
+                        "AI 服务商 / 模型",
                         "还原备份",
                     ]
                 ) {

@@ -43,17 +43,17 @@ const AUDIT_ACTION_META: Record<AuditAction, AuditActionMeta> = {
     "admin.backup.create": { label: "创建备份", group: "系统", danger: false },
     "admin.backup.restore": { label: "还原备份", group: "系统", danger: true },
     "ai.provider.create": {
-        label: "添加 AI 提供商",
+        label: "添加 AI 服务商",
         group: "AI",
         danger: false,
     },
     "ai.provider.update": {
-        label: "修改 AI 提供商",
+        label: "修改 AI 服务商",
         group: "AI",
         danger: false,
     },
     "ai.provider.delete": {
-        label: "删除 AI 提供商",
+        label: "删除 AI 服务商",
         group: "AI",
         danger: true,
     },
@@ -109,7 +109,7 @@ const SYSTEM_TARGET_LABELS: Readonly<Record<string, string>> = {
 const TARGET_TYPE_LABELS: Readonly<Record<string, string>> = {
     user: "用户",
     system: "系统",
-    ai_provider: "AI 提供商",
+    ai_provider: "AI 服务商",
 };
 
 /**
@@ -179,7 +179,7 @@ const METADATA_FIELDS: Readonly<
                 : String(value),
     },
     importedProvidersCount: {
-        label: "导入提供商",
+        label: "导入服务商",
         format: (value) => `${String(value)} 个`,
     },
     manifestCreatedAt: {

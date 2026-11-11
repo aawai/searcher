@@ -498,7 +498,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             await page.getByText("暂无可用 AI 模型", { exact: true }).waitFor({
                 state: "visible",
             });
-            await page.getByRole("link", { name: "前往模型配置" }).waitFor({
+            await page.getByRole("link", { name: "前往 AI 设置" }).waitFor({
                 state: "visible",
             });
         },

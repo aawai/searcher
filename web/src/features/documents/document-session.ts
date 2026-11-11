@@ -893,7 +893,7 @@ export function createDocumentSession(
                     draft: null,
                     conflict: snapshot.document,
                     saveStatus: "conflict",
-                    error: "本地草稿版本落后于服务器版本，请选择如何解决冲突",
+                    error: "本地草稿与云端版本不一致，请选择如何解决冲突",
                 };
                 notify();
 

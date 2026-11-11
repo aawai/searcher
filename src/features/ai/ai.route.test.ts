@@ -1415,7 +1415,7 @@ Deno.test("AI Logo errors never disclose system credentials to ordinary users", 
             );
             assertEquals(
                 result.message.includes("check provider authentication"),
-                true,
+                false,
             );
         }
     } finally {

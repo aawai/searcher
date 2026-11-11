@@ -146,14 +146,14 @@ export function AdminOverview() {
                         {overview.totalWebApps} / {overview.totalDocuments}
                     </span>
                 </SettingsRow>
-                <SettingsRow title="AI 提供商 / 模型">
+                <SettingsRow title="AI 服务商 / 模型">
                     <span className="admin-value">
                         {overview.totalAiProviders} / {overview.totalAiModels}
                     </span>
                     <RowLink
                         to={routes.settings("ai")}
                         label="配置"
-                        accessibleLabel="配置 AI 提供商"
+                        accessibleLabel="配置 AI 服务商"
                     />
                 </SettingsRow>
                 <SettingsRow title="审计日志">

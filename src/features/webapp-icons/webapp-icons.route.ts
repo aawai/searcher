@@ -11,6 +11,10 @@ import { failResponse } from "@internal/hono/middleware/response.ts";
 import { json, validator } from "@internal/validator/hono.ts";
 import * as v from "@valibot/valibot";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
+import {
+    WEBAPP_ICON_UPLOAD_MAX_BYTES,
+    WEBAPP_ICON_UPLOAD_MAX_MIB,
+} from "../../shared/webapp-icon-limits.ts";
 import { WebAppIconService } from "./service.ts";
 
 const UrlSchema = v.pipe(
@@ -64,8 +68,12 @@ export function registerWebAppIconsRoutes(
             return failResponse(c, 400, "请提供有效的 icon 文件");
         }
 
-        if (file.size > 2 * 1024 * 1024) {
-            return failResponse(c, 413, "图标文件大小不能超过 2 MiB");
+        if (file.size > WEBAPP_ICON_UPLOAD_MAX_BYTES) {
+            return failResponse(
+                c,
+                413,
+                `图标文件大小不能超过 ${WEBAPP_ICON_UPLOAD_MAX_MIB} MiB`,
+            );
         }
 
         const buffer = await file.arrayBuffer();

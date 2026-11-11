@@ -62,7 +62,7 @@ function getCapabilitySourceLabel(source: string | undefined): string {
         case "manual":
             return "手动配置";
         case "provider":
-            return "Provider 自动发现";
+            return "服务商自动发现";
         case "preset":
             return "内置预设";
         case "inferred":
@@ -110,7 +110,7 @@ function describeReasoning(
     if (cap.status === "unsupported") {
         return { label: "无推理", title: "该模型不支持推理或已手动关闭" };
     }
-    return { label: "推理未知", title: "Provider 未声明推理支持状态" };
+    return { label: "推理未知", title: "服务商未声明推理支持状态" };
 }
 
 export function AiSettings({ host }: { host: PageHost }) {
@@ -169,7 +169,7 @@ export function AiSettings({ host }: { host: PageHost }) {
     if (!user) {
         return (
             <SettingsGroup>
-                <SettingsRow title="管理 Provider">
+                <SettingsRow title="管理 AI 服务商">
                     <Button
                         variant="outline"
                         render={<Link to={authPath("login", location)} />}
@@ -304,7 +304,7 @@ export function AiSettings({ host }: { host: PageHost }) {
             setApiKey("");
             setShowApiKey(false);
             setIsModalOpen(false);
-            setStatus("Provider 和模型已同步");
+            setStatus("服务商和模型已同步");
         } catch (e) {
             setError(errorMessage(e));
         } finally {
@@ -366,7 +366,7 @@ export function AiSettings({ host }: { host: PageHost }) {
             );
             setDeleteTarget(null);
             await load();
-            setStatus("Provider 已删除");
+            setStatus("服务商已删除");
         } catch (e) {
             setError(errorMessage(e));
         } finally {
@@ -412,7 +412,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                             variant: "ghost",
                                             size: "icon",
                                         })}
-                                        aria-label={`Provider 操作：${provider.name}`}
+                                        aria-label={`服务商操作：${provider.name}`}
                                         disabled={working}
                                     >
                                         <MoreHorizontal
@@ -562,7 +562,7 @@ export function AiSettings({ host }: { host: PageHost }) {
             })}
             <SettingsGroup
                 footer={providers.length === 0
-                    ? "尚未添加 Provider，添加后即可在首页使用 AI 问答。"
+                    ? "尚未添加 AI 服务商，请添加服务商并启用模型。"
                     : undefined}
             >
                 <Button
@@ -572,16 +572,16 @@ export function AiSettings({ host }: { host: PageHost }) {
                     onClick={openAdd}
                 >
                     <Plus size="1em" className="icon-md" />
-                    <span>添加 Provider</span>
+                    <span>添加 AI 服务商</span>
                 </Button>
             </SettingsGroup>
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent
-                    aria-label={editing ? "编辑 Provider" : "添加 Provider"}
+                    aria-label={editing ? "编辑 AI 服务商" : "添加 AI 服务商"}
                 >
                     <DialogHeader>
                         <DialogTitle>
-                            {editing ? "编辑 Provider" : "添加 Provider"}
+                            {editing ? "编辑 AI 服务商" : "添加 AI 服务商"}
                         </DialogTitle>
                         <DialogDescription>
                             OpenAI 兼容 API，保存时自动验证连接。
@@ -854,11 +854,11 @@ export function AiSettings({ host }: { host: PageHost }) {
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>删除 Provider？</AlertDialogTitle>
+                        <AlertDialogTitle>删除服务商？</AlertDialogTitle>
                         <AlertDialogDescription>
                             {activeDeleteTarget
                                 ? `“${activeDeleteTarget.name}” 及其模型将被永久删除。`
-                                : "该 Provider 及其模型将被永久删除。"}
+                                : "该服务商及其模型将被永久删除。"}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

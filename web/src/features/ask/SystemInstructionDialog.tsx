@@ -44,7 +44,7 @@ export function SystemInstructionDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>会话系统指令 (System Instruction)</DialogTitle>
+                    <DialogTitle>对话系统指令（System Instruction）</DialogTitle>
                     <DialogDescription>
                         定义 AI 在本对话中的身份与回答方式。
                     </DialogDescription>
@@ -52,7 +52,7 @@ export function SystemInstructionDialog({
 
                 <Textarea
                     rows={6}
-                    placeholder="例如：你是一位资深前端架构师，回答时言简意赅，只给出最核心的代码实现与必要的关键点说明..."
+                    placeholder="描述 AI 的角色和回答方式"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     className="ask-system-dialog__textarea"

@@ -1,6 +1,6 @@
 import { type SubmitEvent, useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
-import type { UserDto } from "@shared/contracts.ts";
+import { AUTH_CREDENTIAL_RULES, type UserDto } from "@shared/contracts.ts";
 import { Badge } from "../components/ui/badge.tsx";
 import { Button, buttonVariants } from "../components/ui/button.tsx";
 import {
@@ -37,6 +37,10 @@ import { authPath, routes } from "./routes.ts";
 import { SettingsShell } from "./SettingsShell.tsx";
 import "./account.css";
 import { type PageHost, usePagePresenter } from "./page-host.tsx";
+
+const passwordRules = AUTH_CREDENTIAL_RULES.password;
+const passwordRule =
+    `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符`;
 
 interface SessionDevice {
     id: string;
@@ -243,10 +247,13 @@ export function AccountContent({ host }: { host: PageHost }) {
         setPasswordFieldError(null);
         setPasswordSuccess("");
 
-        if (newPassword.length < 12) {
+        if (
+            newPassword.length < passwordRules.minLength ||
+            newPassword.length > passwordRules.maxLength
+        ) {
             setPasswordFieldError({
                 field: "new",
-                message: "新密码长度不能少于 12 个字符",
+                message: passwordRule,
             });
             newPasswordRef.current?.focus();
             return;
@@ -271,7 +278,7 @@ export function AccountContent({ host }: { host: PageHost }) {
             );
             if (!isCurrent()) return;
             setPasswordSuccess(
-                "密码修改成功！所有设备上的会话均已安全注销，请使用新密码重新登录。",
+                "密码修改成功，所有设备均已退出登录，请使用新密码重新登录。",
             );
             setCurrentPassword("");
             setNewPassword("");
@@ -399,7 +406,7 @@ export function AccountContent({ host }: { host: PageHost }) {
     }
 
     const isForcedReset = user.mustChangePassword;
-    const roleLabel = user.role === "admin" ? "系统管理员" : "标准用户";
+    const roleLabel = user.role === "admin" ? "管理员" : "普通用户";
     const hasOtherDevices = devices.some((device) => !device.isCurrent);
     const profileUnchanged = displayName === user.displayName &&
         email === (user.email ?? "");
@@ -468,7 +475,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                             <Input
                                 className="account-input"
                                 aria-label="显示名称"
-                                placeholder="例如：爱丽丝"
+                                placeholder="输入显示名称"
                                 type="text"
                                 required
                                 maxLength={40}
@@ -680,7 +687,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                                                 {passwordFieldError.message}
                                             </span>
                                         )
-                                        : "至少 12 个字符"}
+                                        : passwordRule}
                                     messageId="account-new-password-hint"
                                     invalid={passwordFieldError?.field ===
                                         "new"}
@@ -688,11 +695,11 @@ export function AccountContent({ host }: { host: PageHost }) {
                                     <Input
                                         ref={newPasswordRef}
                                         id="account-new-password"
-                                        placeholder="至少 12 个字符"
+                                        placeholder={`至少 ${passwordRules.minLength} 个字符`}
                                         type="password"
                                         required
-                                        minLength={12}
-                                        maxLength={128}
+                                        minLength={passwordRules.minLength}
+                                        maxLength={passwordRules.maxLength}
                                         autoComplete="new-password"
                                         aria-describedby="account-new-password-hint"
                                         aria-invalid={passwordFieldError
@@ -724,8 +731,8 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         placeholder="再次输入新密码"
                                         type="password"
                                         required
-                                        minLength={12}
-                                        maxLength={128}
+                                        minLength={passwordRules.minLength}
+                                        maxLength={passwordRules.maxLength}
                                         autoComplete="new-password"
                                         aria-describedby={passwordFieldError
                                                 ?.field === "confirm"

@@ -1363,7 +1363,11 @@ export function DocumentEditor({
                     className="document-editor-alert"
                     role="alert"
                 >
-                    <span>{uploadError || snapshot.error}</span>
+                    <span>
+                        {uploadError || snapshot.error}
+                        {!uploadError && snapshot.saveStatus === "error" &&
+                            " 当前修改仍在编辑器中，请重试保存。"}
+                    </span>
                     <Button
                         type="button"
                         variant="ghost"
@@ -1428,7 +1432,7 @@ export function DocumentEditor({
                         ref={setTitleInput}
                         type="text"
                         className="document-title-input"
-                        placeholder="未命名笔记…"
+                        placeholder="无标题笔记"
                         aria-label="笔记标题"
                         value={snapshot.title}
                         onPointerDown={(e) => {
@@ -1548,7 +1552,7 @@ export function DocumentEditor({
                                     }}
                                 >
                                     {snapshot.document?.isHomeFixed
-                                        ? "取消固定到首页"
+                                        ? "取消固定"
                                         : "固定到首页"}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />

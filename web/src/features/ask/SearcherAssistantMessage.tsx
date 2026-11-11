@@ -214,7 +214,7 @@ export function SearcherAssistantMessage() {
                                                     className="icon-sm"
                                                 />
                                                 {call.toolName === "webSearch"
-                                                    ? "网页搜索 (SearXNG)"
+                                                    ? "联网搜索"
                                                     : call.toolName ===
                                                             "documents"
                                                     ? "搜索笔记"
@@ -231,7 +231,7 @@ export function SearcherAssistantMessage() {
                                                     ? "执行失败"
                                                     : matchingResult
                                                     ? "执行完成"
-                                                    : "调用中..."}
+                                                    : "调用中…"}
                                             </span>
                                         </div>
                                         <div className="ask-tool-item__payload">
@@ -288,7 +288,7 @@ export function SearcherAssistantMessage() {
                                     ? sanitizeFailureReason(
                                         rawMessage?.failureReason,
                                     )
-                                    : "已保留当前内容，可以重试继续生成。"}
+                                    : "已保留当前内容，可以重试生成新的回答。"}
                             </p>
                         </div>
                     </div>

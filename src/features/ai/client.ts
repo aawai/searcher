@@ -249,18 +249,24 @@ export async function* streamOpenAIChat(
             return;
         }
         if (error instanceof OpenAI.APIError && error.status !== undefined) {
+            const guidance = error.status === 401 || error.status === 403
+                ? "请检查服务商的认证配置"
+                : error.status === 429
+                ? "请求过于频繁，请稍后再试"
+                : error.status === 404
+                ? "模型或服务地址不可用，请检查配置或选择其他模型"
+                : "请检查服务商状态和模型配置";
             yield {
                 type: "error",
-                error:
-                    `AI Provider 返回错误 HTTP ${error.status}: ${error.message}`,
+                error: `AI 服务商请求失败（HTTP ${error.status}），${guidance}。`,
             };
             return;
         }
         yield {
             type: "error",
-            error: `${
-                streaming ? "读取流发生异常" : "连接 AI Provider 失败"
-            }: ${error instanceof Error ? error.message : String(error)}`,
+            error: streaming
+                ? "读取 AI 服务商的回答失败，已生成的内容会保留。"
+                : "连接 AI 服务商失败，请检查网络和服务商配置。",
         };
     }
 }

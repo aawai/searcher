@@ -16,6 +16,10 @@ import type {
     WebAppGroup,
 } from "../../features/app-library/library-types.ts";
 import { useLogoSession } from "./useLogoSession.ts";
+import {
+    WEBAPP_ICON_UPLOAD_MAX_BYTES,
+    WEBAPP_ICON_UPLOAD_MAX_MIB,
+} from "../../../../src/shared/webapp-icon-limits.ts";
 
 export interface AppSessionOptions {
     sessionKey: string;
@@ -440,8 +444,11 @@ export function useAppSession(options: AppSessionOptions) {
         if (uploadPending.current) return;
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-            setIconError("图片文件大小不能超过 5MB");
+        if (file.size > WEBAPP_ICON_UPLOAD_MAX_BYTES) {
+            setIconError(
+                `图标文件大小不能超过 ${WEBAPP_ICON_UPLOAD_MAX_MIB} MiB`,
+            );
+            e.target.value = "";
             return;
         }
         const operation: IconOperation = {
@@ -471,7 +478,7 @@ export function useAppSession(options: AppSessionOptions) {
         } catch (err) {
             if (!isCurrentIcon(operation)) return;
             setIconError(
-                "上传图标出错: " +
+                "上传图标失败：" +
                     (err instanceof Error ? err.message : String(err)),
             );
         } finally {

@@ -46,9 +46,9 @@ export function ConversationSearchDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="ask-search-dialog">
                 <DialogHeader>
-                    <DialogTitle>会话内搜索</DialogTitle>
+                    <DialogTitle>对话内搜索</DialogTitle>
                     <DialogDescription>
-                        快捷键:{" "}
+                        快捷键：{" "}
                         {formatShortcut(SHORTCUTS.askFind.binding, platform)}
                     </DialogDescription>
                 </DialogHeader>
@@ -56,7 +56,7 @@ export function ConversationSearchDialog({
                 <div className="ask-search-dialog__field">
                     <Input
                         variant="search"
-                        placeholder="搜索本会话"
+                        placeholder="搜索本对话"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         autoFocus

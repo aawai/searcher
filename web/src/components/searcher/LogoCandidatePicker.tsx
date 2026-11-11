@@ -63,7 +63,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
 
     if (!models.length) {
         return (
-            <SettingsRow title="AI 生成" description="未配置图片模型">
+            <SettingsRow title="AI 生成" description="暂无可用模型，请在 AI 设置中添加服务商或联系管理员。">
                 <Link
                     to={routes.settings("ai")}
                     className={buttonVariants({
@@ -72,7 +72,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     })}
                     onClick={onClose}
                 >
-                    前往设置
+                    前往 AI 设置
                 </Link>
             </SettingsRow>
         );
@@ -145,7 +145,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                 <Input
                     id="ai-description-input"
                     type="text"
-                    placeholder="例如：个人探索与常用应用启动器"
+                    placeholder="简要描述应用的用途"
                     maxLength={300}
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}

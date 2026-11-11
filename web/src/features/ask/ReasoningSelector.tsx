@@ -46,13 +46,13 @@ export function ReasoningSelector({
                         variant="outline"
                         size="sm"
                         className="ask-composer__action-pill"
-                        aria-label={`选择推理强度: 当前为 ${currentLabel}`}
-                        title={`推理强度: ${currentLabel}`}
+                        aria-label={`选择推理强度：当前为 ${currentLabel}`}
+                        title={`推理强度：${currentLabel}`}
                     />
                 }
             >
                 <span className="ask-composer__pill-text">
-                    推理: {currentLabel}
+                    推理：{currentLabel}
                 </span>
                 <ChevronDown
                     size="1em"

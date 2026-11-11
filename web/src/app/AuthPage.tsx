@@ -215,7 +215,7 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
             : passwordRule;
     } else {
         usernameMessage = usernameMissing
-            ? <span role="alert">请输入用户名</span>
+            ? <span role="alert">请输入用户名或邮箱</span>
             : undefined;
         passwordMessage = passwordMissing
             ? <span role="alert">请输入密码</span>
@@ -256,7 +256,7 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                         <SettingsGroup>
                             <SettingsRow
                                 className="settings-row--vertical"
-                                title="用户名"
+                                title={kind === "login" ? "用户名或邮箱" : "用户名"}
                                 labelFor="auth-username"
                                 message={usernameMessage}
                                 messageId="auth-username-hint"
@@ -265,15 +265,21 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                 <Input
                                     ref={usernameRef}
                                     id="auth-username"
-                                    placeholder="例如：alice"
+                                    placeholder={kind === "login"
+                                        ? "请输入用户名或邮箱"
+                                        : "设置用户名"}
                                     autoComplete="username"
                                     // Only where focusing cannot raise an
                                     // on-screen keyboard over the form.
                                     autoFocus={matchMedia("(pointer: fine)")
                                         .matches}
                                     required
-                                    minLength={usernameRules.minLength}
-                                    maxLength={usernameRules.maxLength}
+                                    minLength={kind === "register"
+                                        ? usernameRules.minLength
+                                        : undefined}
+                                    maxLength={kind === "register"
+                                        ? usernameRules.maxLength
+                                        : undefined}
                                     pattern={kind === "register"
                                         ? AUTH_USERNAME_PATTERN
                                         : undefined}
@@ -305,7 +311,7 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                     <Input
                                         ref={displayNameRef}
                                         id="auth-display-name"
-                                        placeholder="例如：爱丽丝"
+                                        placeholder="设置显示名称"
                                         required
                                         maxLength={40}
                                         aria-describedby={displayNameMissing
@@ -332,7 +338,7 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                     id="auth-password"
                                     placeholder={kind === "register"
                                         ? `至少 ${passwordRules.minLength} 个字符`
-                                        : "区分大小写"}
+                                        : "请输入密码"}
                                     type="password"
                                     autoComplete={kind === "login"
                                         ? "current-password"

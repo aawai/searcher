@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { resolveEffectiveReasoningLevel } from "./ReasoningSelector.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
+import { REASONING_EFFORT_LABELS } from "./types.ts";
 
 function makeModel(
     supportsReasoning: boolean,
@@ -66,4 +67,12 @@ Deno.test("ReasoningSelector: falls back to undefined if all fallbacks fail", ()
     const model = makeModel(true, ["low"], null);
     const resolved = resolveEffectiveReasoningLevel(model, "xhigh", "high");
     assertEquals(resolved, undefined);
+});
+
+Deno.test("ReasoningSelector: distinct deepest levels retain their values", () => {
+    const model = makeModel(true, ["xhigh", "max"]);
+    assertEquals(REASONING_EFFORT_LABELS.xhigh, "极深");
+    assertEquals(REASONING_EFFORT_LABELS.max, "最大");
+    assertEquals(resolveEffectiveReasoningLevel(model, "xhigh"), "xhigh");
+    assertEquals(resolveEffectiveReasoningLevel(model, "max"), "max");
 });

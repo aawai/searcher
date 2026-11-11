@@ -48,9 +48,9 @@ const ConfigExportImportSchema = v.object({
         v.array(
             v.object({
                 name: v.pipe(
-                    v.string("Provider 名称必须为字符串"),
+                    v.string("服务商名称必须为字符串"),
                     v.trim(),
-                    v.minLength(1, "Provider 名称不能为空"),
+                    v.minLength(1, "服务商名称不能为空"),
                 ),
                 baseUrl: v.pipe(
                     v.string("Base URL 必须为有效网址"),

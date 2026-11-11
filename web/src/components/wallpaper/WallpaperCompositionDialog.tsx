@@ -245,7 +245,7 @@ export function WallpaperCompositionDialog({
                 <DialogHeader>
                     <DialogTitle>调整构图</DialogTitle>
                     <DialogDescription>
-                        拖动或用方向键设置焦点，保证竖屏时主体不被裁切。
+                        拖动或用方向键调整焦点，预览不同屏幕的裁切。
                     </DialogDescription>
                 </DialogHeader>
 
@@ -271,8 +271,7 @@ export function WallpaperCompositionDialog({
                     className="wallpaper-composition-hint"
                     data-testid="wallpaper-focal-hint"
                 >
-                    首页搜索框与应用底板会覆盖桌面视口约 38%
-                    高度处的中部区域（预览中已标出），构图时把焦点放在区域之外。
+                    搜索框和应用底板位于桌面预览的标记区域（约 38% 高度）；建议将主体放在区域外。
                 </p>
 
                 <div className="wallpaper-composition-previews">

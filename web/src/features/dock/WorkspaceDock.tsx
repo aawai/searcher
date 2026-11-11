@@ -36,6 +36,7 @@ import {
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
+import { keyboardDragAccessibility } from "../../components/searcher/drag-accessibility.ts";
 import {
     arrayMove,
     horizontalListSortingStrategy,
@@ -1040,6 +1041,7 @@ export function WorkspaceDock(
                     inert={barPresence.ending || undefined}
                 >
                     <DndContext
+                        accessibility={keyboardDragAccessibility}
                         sensors={sensors}
                         collisionDetection={closestCenter}
                         onDragStart={() => {
@@ -1294,7 +1296,7 @@ export function WorkspaceDock(
                                                 type="button"
                                                 className="dock-item dock-item--error"
                                                 role="alert"
-                                                aria-label={`任务栏同步错误：${error}，点击重试`}
+                                                aria-label={`任务栏同步错误：${error}，重试`}
                                                 onClick={() =>
                                                     void refreshApps()}
                                             >
@@ -1307,7 +1309,7 @@ export function WorkspaceDock(
                                         }
                                     />
                                     <TooltipContent>
-                                        同步提示：{error}（点击重试）
+                                        同步提示：{error}（可重试）
                                     </TooltipContent>
                                 </Tooltip>
                             )}
@@ -1423,7 +1425,7 @@ export function WorkspaceDock(
                                                 className="icon-md"
                                                 aria-hidden="true"
                                             />
-                                            取消固定
+                                            取消任务栏固定
                                         </DropdownMenuItem>
                                     </>
                                 )}

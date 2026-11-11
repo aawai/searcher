@@ -88,7 +88,7 @@ export class TemporaryLeaseOwner {
                     error.code < 500)
             ) {
                 this.warn(
-                    "临时会话租约暂时无法取得，请检查网络；过期后内容可能丢失，请及时复制。",
+                    "暂时无法保留临时对话，请检查网络并复制重要内容；内容可能丢失。",
                 );
                 if (initial) {
                     this.schedule(15000);
@@ -103,7 +103,7 @@ export class TemporaryLeaseOwner {
             } else {
                 this.current = null;
                 this.warn(
-                    "临时会话已过期或无法取得租约，请复制当前仍显示的内容。",
+                    "临时对话已过期或无法恢复，请复制当前仍显示的内容。",
                 );
             }
         }
@@ -119,7 +119,7 @@ export class TemporaryLeaseOwner {
         if (!current) return;
         const epoch = this.epoch;
         if (Date.now() >= current.lease.expiresAt) {
-            this.warn("临时会话租约可能已过期，请复制当前仍显示的内容。");
+            this.warn("临时对话的保留期限可能已过，请复制当前仍显示的内容。");
         }
         try {
             const lease = await api<TemporaryLease>(
@@ -137,11 +137,11 @@ export class TemporaryLeaseOwner {
                 error.code < 500
             ) {
                 this.current = null;
-                this.warn("临时会话已过期或无法恢复，请复制当前仍显示的内容。");
+                this.warn("临时对话已过期或无法恢复，请复制当前仍显示的内容。");
                 return;
             }
             this.warn(
-                "临时会话租约暂时无法续期，请检查网络；过期后内容可能丢失，请及时复制。",
+                "暂时无法继续保留临时对话，请检查网络并复制重要内容；内容可能丢失。",
             );
             this.schedule(15000);
         }

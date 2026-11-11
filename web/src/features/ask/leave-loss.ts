@@ -31,7 +31,7 @@ export function warnsOnUnload(loss: AskLoss): boolean {
 }
 
 export const LEAVE_TITLES: Record<AskLeave, string> = {
-    switch: "切换会话？",
+    switch: "切换对话？",
     close: "关闭 AI 问答？",
     logout: "退出登录？",
 };
@@ -49,11 +49,11 @@ export function lossDescriptions(loss: AskLoss, leave: AskLeave): string[] {
         items.push(
             loss.temporary
                 ? "正在生成的回答将被终止，且不会保留。"
-                : "正在生成的回答将被中断；已生成的内容保留在历史会话中，标记为已中断。",
+                : "正在生成的回答将被中断；已生成的内容保留在历史对话中，标记为已中断。",
         );
     }
     if (loss.temporary) {
-        items.push("临时会话及其消息、附件和未发送的输入将被删除，无法恢复。");
+        items.push("临时对话及其消息、附件和未发送的输入将被删除，无法恢复。");
         return items;
     }
     if (loss.attachments) items.push("未发送的附件将被丢弃。");
