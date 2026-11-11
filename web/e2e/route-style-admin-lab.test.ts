@@ -101,7 +101,7 @@ Deno.test("Admin backup actions retain readable semantic colors", async () => {
         reducedMotion: "reduce",
     });
     await loginAndVisit(page, app.origin, "/admin/backup", user);
-    const download = page.getByRole("link", { name: "下载备份 (ZIP)" });
+    const download = page.getByRole("link", { name: "下载备份（ZIP）" });
     await download.waitFor({ state: "visible" });
 
     async function measureContrast(button: Locator) {
@@ -192,7 +192,7 @@ Deno.test("Admin backup actions retain readable semantic colors", async () => {
             mimeType: "application/zip",
             buffer: await zip.body(),
         });
-        await page.getByRole("button", { name: "预检验证" }).click();
+        await page.getByRole("button", { name: "预检备份" }).click();
         const restore = page.getByRole("button", { name: "还原此备份…" });
         await restore.waitFor({ state: "visible" });
         const { foreground, ratio } = await measureContrast(restore);

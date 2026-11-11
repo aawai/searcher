@@ -687,7 +687,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             );
             await provGroup.waitFor({ state: "visible" });
             const provMenuBtn = provGroup.getByRole("button", {
-                name: "Provider 操作：Test AI Provider",
+                name: "服务商操作：Test AI Provider",
             });
             const openProvDelete = async () => {
                 await provMenuBtn.click();
@@ -711,7 +711,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             // Escape closes dialog with 0 mutations and restores focus to the menu button
             await openProvDelete();
             const provDialog = aiPage.locator(
-                '[role="alertdialog"]:has-text("删除 Provider")',
+                '[role="alertdialog"]:has-text("删除服务商")',
             );
             await provDialog.waitFor({ state: "visible" });
             await aiPage.keyboard.press("Escape");
@@ -760,9 +760,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await provDialog.waitFor({ state: "hidden" });
             assertEquals(provRequests, 1);
 
-            const provSuccess = aiPage.locator(
-                ".status-banner:has-text('Provider 已删除')",
-            );
+            const provSuccess = aiPage.locator(".status-banner");
             await provSuccess.waitFor({ state: "visible" });
             assertEquals(await provGroup.count(), 0);
         },

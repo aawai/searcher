@@ -28,6 +28,7 @@ import type {
     LauncherTile,
 } from "../../components/searcher/launcherTiles.ts";
 import { WebAppIcon } from "../../components/searcher/WebAppIcon.tsx";
+import { keyboardDragAccessibility } from "../../components/searcher/drag-accessibility.ts";
 import { focusContainer } from "../../components/ui/focus-recovery.ts";
 import {
     ActionCell,
@@ -355,6 +356,7 @@ export function WebAppLauncher({
 
     return (
         <DndContext
+            accessibility={keyboardDragAccessibility}
             sensors={sensors}
             collisionDetection={(args) => {
                 const targets = pointerWithin(args);
@@ -621,6 +623,7 @@ export function LibraryLauncherGrid({
 
     return (
         <DndContext
+            accessibility={keyboardDragAccessibility}
             sensors={sensors}
             collisionDetection={(args) => {
                 const targets = pointerWithin(args);

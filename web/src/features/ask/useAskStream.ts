@@ -537,7 +537,7 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
                 if (!parseResult.ok) {
                     acc.streamFailed = true;
                     const errorMsg =
-                        "接收到异常的数据流格式 (Malformed Stream)";
+                        "回答数据格式异常，生成未完成。";
                     acc.errorMessage = errorMsg;
                     setErrorRef.current(errorMsg);
                     publishStream();
@@ -588,10 +588,15 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
                 });
 
                 if (!response.ok || !response.body) {
+                    if (response.status === 401) {
+                        globalThis.dispatchEvent(new Event("searcher:auth-expired"));
+                    }
                     const payload = await response.json().catch(() => null);
                     throw new Error(
-                        payload?.message ??
-                            "请求失败 (HTTP " + response.status + ")",
+                        response.status === 401
+                            ? "登录已过期，请重新登录。"
+                            : payload?.message ??
+                                "请求失败（HTTP " + response.status + "）",
                     );
                 }
 
@@ -617,8 +622,8 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
                     acc.streamFailed = true;
                     throw new Error(
                         acc.meta
-                            ? "问答流在完成前断开"
-                            : "问答流未返回会话元数据",
+                            ? "回答连接在生成完成前断开，已生成的内容会保留。"
+                            : "回答未返回对话信息，生成未完成。",
                     );
                 }
             } catch (e) {

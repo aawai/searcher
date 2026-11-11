@@ -88,7 +88,7 @@ export function MessageDetailsDialog({
                         )
                         : (
                             <p className="ask-message-details__note">
-                                Provider 未返回 Token 使用量统计
+                                服务商未返回 Token 使用量统计
                             </p>
                         )}
                 </div>

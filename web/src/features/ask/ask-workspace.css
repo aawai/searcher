@@ -767,6 +767,9 @@
 /* Generation parameters popover. */
 [data-slot="popover-content"].ask-generation-settings__popover {
     width: min(calc(100vw - var(--space-7)), 320px);
+    max-height: min(70dvh, var(--available-height));
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .ask-generation-settings__head {

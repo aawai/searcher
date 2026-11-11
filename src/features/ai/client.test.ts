@@ -113,7 +113,7 @@ Deno.test("AI Client: models and chat never retry provider HTTP failures", async
             return Promise.resolve(
                 new Response(
                     JSON.stringify({
-                        error: { message: "provider unavailable" },
+                        error: { message: "provider unavailable: test-key" },
                     }),
                     { status, headers: { "Content-Type": "application/json" } },
                 ),
@@ -135,6 +135,14 @@ Deno.test("AI Client: models and chat never retry provider HTTP failures", async
             fetchFn,
         ));
         assertEquals(events.map((event) => event.type), ["error"]);
+        const failure = events[0];
+        if (failure.type !== "error" || !failure.error) {
+            throw new Error("Expected error event with a message");
+        }
+        assertEquals(failure.error.includes(`HTTP ${status}`), true);
+        assertEquals(failure.error.includes("test-key"), false);
+        if (status === 401) assertEquals(failure.error.includes("认证"), true);
+        if (status === 429) assertEquals(failure.error.includes("稍后"), true);
         assertEquals(urls, [
             "https://compatible.example/custom/v1/chat/completions",
         ]);

@@ -399,7 +399,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 const name of [
                     "重命名",
                     "收藏",
-                    "移动笔记本",
+                    "移动到笔记本",
                     "移至回收站",
                 ]
             ) {
@@ -728,7 +728,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
             await openEditor(doc.id);
             await more.click();
             await page.getByRole("menuitem", {
-                name: "取消固定到首页",
+                name: "取消固定",
                 exact: true,
             }).click();
             await waitForDocument(page, doc.id, (d) => !d.isHomeFixed);

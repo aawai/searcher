@@ -137,7 +137,7 @@ Deno.test("app form dialog session and icon contracts on home #141 #244", async 
                     for (
                         const [key, name] of [
                             ["ArrowLeft", "上传图片"],
-                            ["ArrowLeft", "自动获取"],
+                            ["ArrowLeft", "网站图标"],
                             ["ArrowRight", "上传图片"],
                             ["ArrowRight", "网络图片"],
                         ]
@@ -238,22 +238,31 @@ Deno.test("app form dialog session and icon contracts on home #141 #244", async 
                             await route.continue();
                         },
                     );
+                    await page.locator('input[type="file"]').setInputFiles({
+                        name: "too-large.png",
+                        mimeType: "image/png",
+                        buffer: Buffer.alloc(2 * 1024 * 1024 + 1),
+                    });
+                    await dialog.getByRole("alert").filter({
+                        hasText: "图标文件大小不能超过 2 MiB",
+                    }).waitFor();
+                    assertEquals(uploads, 0);
                     const requested = page.waitForRequest(
                         "**/api/webapp-icons/upload",
                     );
+                    const svg =
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="red"/></svg>';
                     await page.locator('input[type="file"]').setInputFiles({
                         name: "real-icon.svg",
                         mimeType: "image/svg+xml",
-                        buffer: Buffer.from(
-                            '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="red"/></svg>',
-                        ),
+                        buffer: Buffer.from(svg.padEnd(2 * 1024 * 1024, " ")),
                     });
                     await requested;
                     await page.setViewportSize({ width: 390, height: 640 });
                     await page.getByText("正在上传…", { exact: true })
                         .waitFor();
                     upload.resolve();
-                    await dialog.getByText("本地上传", { exact: true })
+                    await dialog.getByText("上传图片", { exact: true }).first()
                         .waitFor();
                     assertEquals(uploads, 1);
                     await page.unroute("**/api/webapp-icons/upload");

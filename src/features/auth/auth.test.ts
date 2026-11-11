@@ -7,6 +7,7 @@ import { createAuthTestApp } from "./test-app.ts";
 import type { Envelope, UserDto } from "@shared/contracts.ts";
 import { eq, sql } from "drizzle-orm";
 import { users } from "../../db/schema.ts";
+import { AUTH_CREDENTIAL_RULES } from "@shared/contracts.ts";
 const ORIGIN = "http://localhost:8000";
 
 async function setupTestApp() {
@@ -99,6 +100,38 @@ Deno.test({
             await store.close();
         }
     },
+});
+
+Deno.test("auth contract: registration enforces password length boundaries", async () => {
+    const { store, app } = await setupTestApp();
+    const { minLength, maxLength } = AUTH_CREDENTIAL_RULES.password;
+    try {
+        for (
+            const [length, expected] of [
+                [minLength - 1, STATUS_CODE.BadRequest],
+                [minLength, STATUS_CODE.OK],
+                [maxLength, STATUS_CODE.OK],
+                [maxLength + 1, STATUS_CODE.BadRequest],
+            ]
+        ) {
+            const response = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: { origin: ORIGIN, "content-type": "application/json" },
+                body: JSON.stringify({
+                    username: `boundary_${length}`,
+                    displayName: "Boundary",
+                    password: "a".repeat(length),
+                }),
+            });
+            assertEquals(
+                response.status,
+                expected,
+                `password length ${length}`,
+            );
+        }
+    } finally {
+        await store.close();
+    }
 });
 
 Deno.test({
@@ -410,6 +443,23 @@ Deno.test({
                 }),
             });
             assertEquals(loginByUserRes.status, STATUS_CODE.OK);
+
+            const failures = [];
+            for (
+                const username of ["david@example.com", "missing@example.com"]
+            ) {
+                const response = await app.request("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "origin": ORIGIN,
+                        "content-type": "application/json",
+                    },
+                    body: JSON.stringify({ username, password: "wrong" }),
+                });
+                assertEquals(response.status, STATUS_CODE.BadRequest);
+                failures.push(await response.json());
+            }
+            assertEquals(failures[0], failures[1]);
         } finally {
             await store.close();
         }

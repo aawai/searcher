@@ -254,7 +254,7 @@ export function useDocumentActions({
                         <DialogHeader>
                             <DialogTitle>重命名笔记</DialogTitle>
                             <DialogDescription>
-                                留空将使用无标题或正文首行作为显示名称。
+                                留空时使用正文中第一个可读标题或段落；没有可用内容时显示“无标题笔记”。
                             </DialogDescription>
                         </DialogHeader>
 
@@ -325,7 +325,7 @@ export function useDocumentActions({
                         onSubmit={handleMoveSubmit}
                     >
                         <DialogHeader>
-                            <DialogTitle>移动笔记本</DialogTitle>
+                            <DialogTitle>移动到笔记本</DialogTitle>
                         </DialogHeader>
 
                         {moveError && (
@@ -509,11 +509,11 @@ export function DocumentActionMenuItems(
                         ? "icon-md documents-pin-icon"
                         : "icon-md"}
                 />
-                <span>{item.isHomeFixed ? "移出首页" : "固定到首页"}</span>
+                <span>{item.isHomeFixed ? "取消固定" : "固定到首页"}</span>
             </Item>
             <Item onClick={actions.move}>
                 <FolderInput className="icon-md" />
-                <span>移动笔记本</span>
+                <span>移动到笔记本</span>
             </Item>
             {actions.showReorderActions && (
                 <>

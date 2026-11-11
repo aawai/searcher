@@ -32,6 +32,7 @@ import type {
     AuditAction,
     AuditLogDto,
 } from "@shared/contracts.ts";
+import { AUTH_CREDENTIAL_RULES } from "@shared/contracts.ts";
 import {
     AUDIT_ACTION_GROUPS,
     describeAuditAction,
@@ -83,6 +84,9 @@ import "./admin.css";
 
 const USERS_PAGE_SIZE = 50;
 const AUDIT_PAGE_SIZE = 25;
+const passwordRules = AUTH_CREDENTIAL_RULES.password;
+const passwordRule =
+    `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符`;
 
 interface UserListResponse {
     items: AdminUserDto[];
@@ -369,8 +373,11 @@ export function AdminPage() {
         e.preventDefault();
         setCreateError("");
         setCreatePasswordError("");
-        if (newPassword.length < 12) {
-            setCreatePasswordError("密码长度不能小于 12 个字符");
+        if (
+            newPassword.length < passwordRules.minLength ||
+            newPassword.length > passwordRules.maxLength
+        ) {
+            setCreatePasswordError(passwordRule);
             createPasswordRef.current?.focus();
             return;
         }
@@ -445,8 +452,11 @@ export function AdminPage() {
         e.preventDefault();
         if (!resetModalUser) return;
         setResetError("");
-        if (resetNewPassword.length < 12) {
-            setResetError("新密码长度不能少于 12 位");
+        if (
+            resetNewPassword.length < passwordRules.minLength ||
+            resetNewPassword.length > passwordRules.maxLength
+        ) {
+            setResetError(passwordRule);
             return;
         }
         setResetBusy(true);
@@ -473,7 +483,7 @@ export function AdminPage() {
         if (!deleteModalUser) return;
         setDeleteError("");
         if (deleteConfirmText !== deleteModalUser.username) {
-            setDeleteError(`输入 ${deleteModalUser.username} 以确认删除`);
+            setDeleteError(`输入用户名 ${deleteModalUser.username}（不含 @）以确认删除`);
             return;
         }
         setDeleteBusy(true);
@@ -745,7 +755,7 @@ export function AdminPage() {
                                                     </TableCell>
                                                     <TableCell className="admin-hide-narrow admin-nowrap">
                                                         {isAdmin
-                                                            ? "系统管理员"
+                                                            ? "管理员"
                                                             : "普通用户"}
                                                     </TableCell>
                                                     <TableCell className="admin-nowrap">
@@ -1056,7 +1066,7 @@ export function AdminPage() {
                                     autoFocus
                                     autoComplete="off"
                                     pattern="^[a-zA-Z0-9_]{3,32}$"
-                                    placeholder="例如：alice"
+                                    placeholder="设置用户名"
                                     aria-describedby="create-username-hint"
                                     value={newUsername}
                                     onChange={(e) =>
@@ -1073,7 +1083,7 @@ export function AdminPage() {
                                     required
                                     maxLength={40}
                                     autoComplete="off"
-                                    placeholder="例如：爱丽丝"
+                                    placeholder="设置显示名称"
                                     value={newDisplayName}
                                     onChange={(e) =>
                                         setNewDisplayName(e.target.value)}
@@ -1102,18 +1112,18 @@ export function AdminPage() {
                                             {createPasswordError}
                                         </span>
                                     )
-                                    : "至少 12 位，用户首次登录时使用"}
+                                    : `${passwordRule}，用户首次登录时使用`}
                                 messageId="create-password-hint"
                                 invalid={Boolean(createPasswordError)}
                             >
                                 <Input
                                     ref={createPasswordRef}
                                     id="create-password"
-                                    placeholder="至少 12 个字符"
+                                    placeholder={`至少 ${passwordRules.minLength} 个字符`}
                                     type="password"
                                     required
-                                    minLength={12}
-                                    maxLength={128}
+                                    minLength={passwordRules.minLength}
+                                    maxLength={passwordRules.maxLength}
                                     autoComplete="new-password"
                                     aria-describedby="create-password-hint"
                                     aria-invalid={Boolean(
@@ -1169,15 +1179,15 @@ export function AdminPage() {
                                 className="admin-field-label"
                                 htmlFor="reset-password-input"
                             >
-                                新密码（至少 12 位）
+                                新密码（{passwordRules.minLength}–{passwordRules.maxLength} 个字符）
                             </label>
                             <Input
                                 id="reset-password-input"
                                 type="password"
                                 required
                                 autoFocus
-                                minLength={12}
-                                maxLength={128}
+                                minLength={passwordRules.minLength}
+                                maxLength={passwordRules.maxLength}
                                 autoComplete="new-password"
                                 placeholder="输入该用户的临时新密码"
                                 aria-invalid={Boolean(resetError) || undefined}
@@ -1239,7 +1249,7 @@ export function AdminPage() {
                                 className="admin-field-label"
                                 htmlFor="delete-confirm-input"
                             >
-                                输入用户名 {deleteUsername} 以确认
+                                输入用户名 {deleteUsername}（不含 @）以确认
                             </label>
                             <Input
                                 id="delete-confirm-input"
@@ -1247,7 +1257,7 @@ export function AdminPage() {
                                 required
                                 autoFocus
                                 autoComplete="off"
-                                placeholder={deleteUsername}
+                                placeholder="输入用户名"
                                 aria-invalid={Boolean(deleteError) || undefined}
                                 aria-describedby={deleteError
                                     ? "delete-confirm-error"

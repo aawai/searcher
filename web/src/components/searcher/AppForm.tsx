@@ -18,6 +18,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../ui/alert-dialog.tsx";
+import { WEBAPP_ICON_UPLOAD_MAX_MIB } from "../../../../src/shared/webapp-icon-limits.ts";
 
 export function AppForm() {
     const session = useAppSessionContext();
@@ -115,9 +116,9 @@ export function AppForm() {
         </span>
     );
     const sourceLabel = appIconSource === "website"
-        ? "自动获取"
+        ? "网站图标"
         : appIconSource === "upload"
-        ? "本地上传"
+        ? "上传图片"
         : appIconSource === "url"
         ? "网络图片"
         : appIconSource === "ai"
@@ -184,7 +185,7 @@ export function AppForm() {
                             title="固定到首页"
                             description={appGroupId
                                 ? "文件夹成员随文件夹显示，固定状态由文件夹决定"
-                                : "只影响首页呈现，应用始终保留在应用面板"}
+                                : "只影响首页呈现，应用始终保留在应用窗口"}
                         >
                             <Switch
                                 id="app-home-fixed"
@@ -197,7 +198,7 @@ export function AppForm() {
                     )}
                 </SettingsGroup>
 
-                <SettingsGroup title="打开设置" headingLevel={3}>
+                <SettingsGroup>
                     <SettingsRow
                         title="打开方式"
                         description={appOpenMode === "global"
@@ -294,7 +295,7 @@ export function AppForm() {
                                     )}
                             >
                                 <RadioGroupItem value="auto">
-                                    自动获取
+                                    网站图标
                                 </RadioGroupItem>
                                 <RadioGroupItem value="upload">
                                     上传图片
@@ -356,9 +357,8 @@ export function AppForm() {
                                     {isUploadingIcon ? "正在上传…" : "上传图片"}
                                 </span>
                                 <span className="app-upload-hint">
-                                    支持
-                                    PNG、JPEG、WebP、AVIF、SVG、ICO，文件小于
-                                    5MB
+                                    支持 PNG、JPEG、WebP、AVIF、SVG、ICO，
+                                    文件不超过 {WEBAPP_ICON_UPLOAD_MAX_MIB} MiB
                                 </span>
                                 <input
                                     type="file"
@@ -447,7 +447,7 @@ export function AppForm() {
                                         该应用已存在，仍要继续添加吗？
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        启动器中已存在相同网址的应用。重复添加可用于设置不同的名称、图标或分组。
+                                        应用窗口中已存在相同网址的应用。重复添加可用于设置不同的名称、图标或文件夹。
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -476,7 +476,7 @@ export function AppForm() {
                                         网址已改变，是否重新获取网站图标？
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        检测到网址已变更。确认后将自动重新获取新网址的网站图标并保存；取消将保留原表单且不保存。
+                                        确认后将获取新网址的图标并保存；取消则保留当前内容，不会保存。
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>

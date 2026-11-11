@@ -408,6 +408,11 @@ Deno.test("production navigation contracts", async (t) => {
             await visit("/settings/data", guest);
             await guest.getByRole("heading", { name: "同步", exact: true })
                 .waitFor();
+            assertEquals(await guest.getByText("已同步", { exact: true }).count(), 0);
+            await guest.getByText(
+                "访客外观仅保存在当前设备；登录后可使用账户中的应用、笔记和偏好设置。",
+                { exact: true },
+            ).waitFor({ state: "visible" });
             assertEquals(
                 await guest.getByRole("link", { name: "打开设计实验室" })
                     .count(),
@@ -421,6 +426,11 @@ Deno.test("production navigation contracts", async (t) => {
 
             await visit("/settings/data");
             await page.getByRole("link", { name: "打开回收站" }).waitFor();
+            assertEquals(await page.getByText("已同步", { exact: true }).count(), 0);
+            await page.getByText(
+                "偏好设置、应用与笔记保存在账户中；任务栏位置等设备布局只保存在当前设备。",
+                { exact: true },
+            ).waitFor({ state: "visible" });
             assertEquals(
                 await page.getByRole("link", { name: "打开设计实验室" })
                     .count(),
@@ -712,7 +722,7 @@ Deno.test("production navigation contracts", async (t) => {
             await page.waitForURL(origin + "/");
             await visit("/admin");
             await page.getByRole("link", {
-                name: /^配置 AI 提供商/,
+                name: /^配置 AI 服务商/,
             }).click();
             await page.waitForURL(origin + "/settings/ai");
             await page.goBack();

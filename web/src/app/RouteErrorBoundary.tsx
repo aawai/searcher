@@ -66,7 +66,7 @@ export class RouteErrorBoundary extends React.Component<
                 >
                     <PageHeader
                         title="页面加载失败"
-                        description="网络不稳定或应用已更新，此页面的模块未能加载。"
+                        description="页面未能加载，请重新加载页面或返回首页。"
                         actions={
                             <>
                                 <Button

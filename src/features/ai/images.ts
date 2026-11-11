@@ -184,13 +184,13 @@ async function readJsonResponse(
         );
     }
     if (!text.trim()) {
-        throw new OpenAIClientError("图像 Provider 未返回内容");
+        throw new OpenAIClientError("图像服务商未返回内容");
     }
 
     try {
         return JSON.parse(text);
     } catch {
-        throw new OpenAIClientError("图像 Provider 返回格式无效");
+        throw new OpenAIClientError("图像服务商返回格式无效");
     }
 }
 
@@ -262,7 +262,7 @@ async function extractOpenAICandidate(
         !Array.isArray(parsed.data) ||
         parsed.data.length === 0
     ) {
-        throw new OpenAIClientError("图像 Provider 未返回图片候选");
+        throw new OpenAIClientError("图像服务商未返回图片候选");
     }
 
     return await candidateFromOpenAIItem(parsed.data[0], style);

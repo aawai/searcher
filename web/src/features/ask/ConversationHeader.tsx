@@ -144,8 +144,8 @@ export function ConversationHeader({
                         size="icon"
                         className="ask-header__icon-btn"
                         onClick={onOpenSearch}
-                        aria-label={`会话内搜索 (${searchHint})`}
-                        title={`会话内搜索 (${searchHint})`}
+                        aria-label={`对话内搜索（${searchHint}）`}
+                        title={`对话内搜索（${searchHint}）`}
                     >
                         <Search size="1em" className="icon-md" />
                     </Button>
@@ -184,7 +184,7 @@ export function ConversationHeader({
 
                         {messages.length > 0 && (
                             <DropdownMenuItem onClick={onOpenSearch}>
-                                <span>会话内搜索</span>
+                                <span>对话内搜索</span>
                                 <span className="ask-menu-shortcut">
                                     {searchHint}
                                 </span>

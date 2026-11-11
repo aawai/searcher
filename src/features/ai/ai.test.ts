@@ -272,7 +272,7 @@ Deno.test("AI Service: Provider creation requires /models discovery & sets defau
                     scope: "system",
                 }, false),
             Error,
-            "只有管理员可以创建系统级 AI Provider",
+            "只有管理员可以创建系统级 AI 服务商",
         );
 
         // 2. 管理员创建 system provider

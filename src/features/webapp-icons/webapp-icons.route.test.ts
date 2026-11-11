@@ -120,6 +120,22 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
         );
         const resBytes = new Uint8Array(await getRes.arrayBuffer());
         assertEquals((await sharp(resBytes).metadata()).width, 256);
+        const boundaryBytes = new Uint8Array(2 * 1024 * 1024);
+        boundaryBytes.set(imageBytes);
+        const boundary = new FormData();
+        boundary.append(
+            "icon",
+            new File([boundaryBytes], "boundary.png", { type: "image/png" }),
+        );
+        const boundaryRes = await app.request(
+            `${ORIGIN}/api/webapp-icons/upload`,
+            {
+                method: "POST",
+                headers: { Cookie: cookieHeader, Origin: ORIGIN },
+                body: boundary,
+            },
+        );
+        assertEquals(boundaryRes.status, STATUS_CODE.OK);
         const oversized = new FormData();
         oversized.append(
             "icon",

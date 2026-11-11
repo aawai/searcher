@@ -44,7 +44,7 @@ export const REASONING_EFFORT_LABELS: Record<ReasoningEffort, string> = {
     medium: "标准",
     high: "深入",
     xhigh: "极深",
-    max: "极深",
+    max: "最大",
     auto: "自动",
 };
 

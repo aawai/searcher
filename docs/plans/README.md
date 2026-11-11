@@ -13,5 +13,6 @@ API、安全与持久化约束以实现和契约为准。
 | [UI_MOTION_CONSISTENCY_PLAN.md](UI_MOTION_CONSISTENCY_PLAN.md)         | 已实施：动效、视觉一致性与页面原型修正                                                           |
 | [EDITORIAL_WINDOWS_PLAN.md](EDITORIAL_WINDOWS_PLAN.md)                 | 已实施（方案 A）：窗口内容标题使用衬线，现行规则见 Visual Language                               |
 | [VISUAL_EVOLUTION_PLAN.md](VISUAL_EVOLUTION_PLAN.md)                   | 部分实施：底线债、刊头衬底对比度、文件夹共享元素过渡与选中态浅染已实施；色彩与着色为原型，待选定 |
+| [SITE_COPY_OPTIMIZATION_PLAN.md](SITE_COPY_OPTIMIZATION_PLAN.md)       | 部分实施：文案与行为修正已落地，正在补全实页验收                                                 |
 
 新增计划放在本目录，并在文首写明状态。

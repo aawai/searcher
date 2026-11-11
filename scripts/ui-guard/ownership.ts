@@ -105,6 +105,8 @@ export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
         "DocumentPagination layout owner: physical paper height plus measured semantic gap; never visual styling",
     "--transform-origin":
         "Base UI popup runtime owner: anchor-relative transform origin for menu open/close transitions",
+    "--available-height":
+        "Base UI popover positioner runtime owner: viewport space available to the anchored popup",
 };
 
 /**

@@ -211,7 +211,7 @@ export class AiService {
             (isAdmin ? "system" : "user");
         if (scope === "system" && !isAdmin) {
             throw new AiServiceError(
-                "只有管理员可以创建系统级 AI Provider",
+                "只有管理员可以创建系统级 AI 服务商",
                 403,
             );
         }
@@ -234,14 +234,14 @@ export class AiService {
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
             throw new AiServiceError(
-                `未能从 Provider 获取到可用模型: ${msg}`,
+                `未能从服务商获取可用模型：${msg}`,
                 400,
             );
         }
 
         if (discovered.length === 0) {
             throw new AiServiceError(
-                "未能从 Provider 获取到可用模型，Provider 不可用",
+                "未能从服务商获取可用模型，服务商不可用",
                 400,
             );
         }
@@ -317,14 +317,14 @@ export class AiService {
         const existing = await this.#store.run(async (db) => {
             const [row] = await db.select().from(aiProviders)
                 .where(eq(aiProviders.id, providerId)).limit(1).all();
-            if (!row) throw new AiServiceError("Provider 不存在", 404);
+            if (!row) throw new AiServiceError("服务商不存在", 404);
             if (row.scope === "system" && !isAdmin) {
-                throw new AiServiceError("无权修改系统级 Provider", 403);
+                throw new AiServiceError("无权修改系统级服务商", 403);
             }
             if (
                 row.scope === "user" && row.ownerUserId !== userId && !isAdmin
             ) {
-                throw new AiServiceError("无权修改该 Provider", 403);
+                throw new AiServiceError("无权修改该服务商", 403);
             }
             return row;
         });
@@ -358,7 +358,7 @@ export class AiService {
             }
             if (discovered.length === 0) {
                 throw new AiServiceError(
-                    "更新后未能获取到可用模型，Provider 不可用",
+                    "更新后未能获取到可用模型，服务商不可用",
                     400,
                 );
             }
@@ -374,7 +374,7 @@ export class AiService {
                 .where(eq(aiProviders.id, providerId)).limit(1).all();
             if (!current || current.updatedAt !== existing.updatedAt) {
                 throw new AiServiceError(
-                    "Provider 已被其他操作修改，请重试",
+                    "服务商已被其他操作修改，请重试",
                     409,
                 );
             }
@@ -463,17 +463,17 @@ export class AiService {
                 .all();
 
             if (!existing) {
-                throw new AiServiceError("Provider 不存在", 404);
+                throw new AiServiceError("服务商不存在", 404);
             }
 
             if (existing.scope === "system" && !isAdmin) {
-                throw new AiServiceError("无权删除系统级 Provider", 403);
+                throw new AiServiceError("无权删除系统级服务商", 403);
             }
             if (
                 existing.scope === "user" && existing.ownerUserId !== userId &&
                 !isAdmin
             ) {
-                throw new AiServiceError("无权删除该 Provider", 403);
+                throw new AiServiceError("无权删除该服务商", 403);
             }
 
             await db.delete(aiProviders).where(eq(aiProviders.id, providerId))
@@ -490,14 +490,14 @@ export class AiService {
         const existing = await this.#store.run(async (db) => {
             const [row] = await db.select().from(aiProviders)
                 .where(eq(aiProviders.id, providerId)).limit(1).all();
-            if (!row) throw new AiServiceError("Provider 不存在", 404);
+            if (!row) throw new AiServiceError("服务商不存在", 404);
             if (row.scope === "system" && !isAdmin) {
-                throw new AiServiceError("无权操作系统级 Provider", 403);
+                throw new AiServiceError("无权操作系统级服务商", 403);
             }
             if (
                 row.scope === "user" && row.ownerUserId !== userId && !isAdmin
             ) {
-                throw new AiServiceError("无权操作该 Provider", 403);
+                throw new AiServiceError("无权操作该服务商", 403);
             }
             return row;
         });
@@ -519,7 +519,7 @@ export class AiService {
                 .where(eq(aiProviders.id, providerId)).limit(1).all();
             if (!current || current.updatedAt !== existing.updatedAt) {
                 throw new AiServiceError(
-                    "Provider 已被其他操作修改，请重试",
+                    "服务商已被其他操作修改，请重试",
                     409,
                 );
             }
@@ -673,7 +673,7 @@ export class AiService {
                 .all();
 
             if (!provider) {
-                throw new AiServiceError("Provider 不存在", 404);
+                throw new AiServiceError("服务商不存在", 404);
             }
 
             if (provider.scope === "system" && !isAdmin) {
@@ -1380,7 +1380,7 @@ export class AiService {
 
                     if (!provider) {
                         throw new AiServiceError(
-                            "指定的 AI Provider 不存在或已被禁用",
+                            "指定的 AI 服务商不存在或已被禁用",
                             404,
                         );
                     }
@@ -2297,10 +2297,12 @@ export class AiService {
                     finalStatus = "failed";
                     fullContent = "已达到工具调用轮数上限，未能生成最终回答";
                 }
-            } catch (err: unknown) {
+            } catch {
                 finalStatus = signal?.aborted ? "interrupted" : "failed";
-                const msg = err instanceof Error ? err.message : String(err);
-                yield { event: "error", data: msg };
+                yield {
+                    event: "error",
+                    data: signal?.aborted ? "请求已中断" : "回答生成失败，请重试。",
+                };
             } finally {
                 const finishedNow = this.#now();
                 if (signal?.aborted) {

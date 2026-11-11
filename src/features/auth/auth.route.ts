@@ -16,7 +16,7 @@ const usernameRules = AUTH_CREDENTIAL_RULES.username;
 const passwordRules = AUTH_CREDENTIAL_RULES.password;
 const usernamePattern = new RegExp(AUTH_USERNAME_PATTERN);
 const usernameLengthMessage =
-    `用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 位的字母、数字或下划线`;
+    `用户名需为 ${usernameRules.minLength}–${usernameRules.maxLength} 个字符，只能使用字母、数字或下划线`;
 const passwordLengthMessage =
     `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符`;
 const usernameSchema = v.pipe(
@@ -36,10 +36,10 @@ const emailSchema = v.optional(
 );
 
 const displayNameSchema = v.pipe(
-    v.string("展示名称必须是字符串"),
+    v.string("显示名称必须是字符串"),
     v.trim(),
-    v.minLength(1, "展示名称长度为 1–40 个字符"),
-    v.maxLength(40, "展示名称长度为 1–40 个字符"),
+    v.minLength(1, "显示名称长度为 1–40 个字符"),
+    v.maxLength(40, "显示名称长度为 1–40 个字符"),
 );
 
 const passwordSchema = v.pipe(
@@ -49,7 +49,7 @@ const passwordSchema = v.pipe(
 );
 
 const loginIdentifierSchema = v.pipe(
-    v.string("账号必须是字符串"),
+    v.string("用户名或邮箱必须是字符串"),
     v.trim(),
     v.toLowerCase(),
 );
@@ -278,7 +278,7 @@ export function registerAuthRoutes(
                 return failResponse(
                     c,
                     400,
-                    "用户名或密码错误。忘记密码请联系管理员重置。",
+                    "用户名、邮箱或密码错误。忘记密码请联系管理员重置。",
                 );
             }
 

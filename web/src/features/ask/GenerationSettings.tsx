@@ -90,7 +90,9 @@ export function GenerationSettings({
         try {
             await onResetDefault();
         } catch (err: unknown) {
-            setActionError(err instanceof Error ? err.message : "恢复预设失败");
+            setActionError(
+                err instanceof Error ? err.message : "清除已保存默认参数失败",
+            );
             setTimeout(() => setActionError(null), 3500);
         } finally {
             setResetting(false);
@@ -109,7 +111,7 @@ export function GenerationSettings({
                             isCustomized ? "is-active" : ""
                         }`}
                         aria-label="高级生成设置"
-                        title="高级生成设置 (Temperature, Top P, Max Tokens)"
+                        title="高级生成设置（Temperature、Top P、Max Tokens）"
                     />
                 }
             >
@@ -127,7 +129,7 @@ export function GenerationSettings({
                 <div className="ask-generation-settings__head">
                     <span className="ask-generation-settings__title">
                         生成参数{model
-                            ? ` (${model.displayName || model.modelId})`
+                            ? `（${model.displayName || model.modelId}）`
                             : ""}
                     </span>
                     <div className="ask-generation-settings__head-actions">
@@ -137,9 +139,9 @@ export function GenerationSettings({
                                 variant="ghost"
                                 size="sm"
                                 onClick={handleResetCurrent}
-                                title="恢复默认参数"
+                                title="清除当前采样和长度覆盖，推理强度不变"
                             >
-                                重置
+                                重置当前参数
                             </Button>
                         )}
                         <PopoverClose
@@ -158,6 +160,9 @@ export function GenerationSettings({
                 </div>
 
                 <div className="ask-generation-settings__body">
+                    <p className="ask-generation-settings__note">
+                        重置当前参数会清除当前采样和长度覆盖，依次使用已保存的模型默认、全局默认或服务商默认值；推理强度不变。
+                    </p>
                     {isStrict
                         ? (
                             <p className="ask-generation-settings__note">
@@ -168,7 +173,7 @@ export function GenerationSettings({
                             <>
                                 <div className="ask-generation-settings__field">
                                     <div className="ask-generation-settings__label">
-                                        <span>Temperature (随机性)</span>
+                                        <span>Temperature（随机性）</span>
                                         <span className="ask-generation-settings__value">
                                             {temperature.toFixed(2)}
                                         </span>
@@ -190,14 +195,14 @@ export function GenerationSettings({
                                         aria-label="Temperature"
                                     />
                                     <div className="ask-generation-settings__scale">
-                                        <span>严谨</span>
-                                        <span>创造</span>
+                                        <span>较低随机性</span>
+                                        <span>较高随机性</span>
                                     </div>
                                 </div>
 
                                 <div className="ask-generation-settings__field">
                                     <div className="ask-generation-settings__label">
-                                        <span>Top P (核采样)</span>
+                                        <span>Top P（核采样）</span>
                                         <span className="ask-generation-settings__value">
                                             {topP.toFixed(2)}
                                         </span>
@@ -221,7 +226,7 @@ export function GenerationSettings({
 
                     <div className="ask-generation-settings__field">
                         <div className="ask-generation-settings__label">
-                            <span>Max Tokens (最大长度)</span>
+                            <span>Max Tokens（最大长度）</span>
                             <span className="ask-generation-settings__value">
                                 {maxTokens}
                             </span>
@@ -248,9 +253,9 @@ export function GenerationSettings({
                                     size="sm"
                                     disabled={resetting}
                                     onClick={handleResetDefaultAction}
-                                    title="恢复模型全局预设默认"
+                                    title="清除该模型已保存的默认参数，当前参数将重新继承全局或模型默认值"
                                 >
-                                    {resetting ? "恢复中..." : "恢复预设"}
+                                    {resetting ? "清除中…" : "清除已保存默认参数"}
                                 </Button>
                             )}
                             {onSaveDefault && (
@@ -266,8 +271,8 @@ export function GenerationSettings({
                                     {savedNotice
                                         ? "已保存默认"
                                         : saving
-                                        ? "保存中..."
-                                        : "设为默认"}
+                                        ? "保存中…"
+                                        : "设为该模型默认"}
                                 </Button>
                             )}
                             {actionError && (

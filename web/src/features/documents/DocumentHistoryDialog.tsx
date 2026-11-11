@@ -211,7 +211,7 @@ export function DocumentHistoryDialog({
                                     <div className="document-history-preview-titles">
                                         <h4 className="document-history-preview-title">
                                             {selectedVersion.title ||
-                                                "（无标题）"}
+                                                "无标题笔记"}
                                         </h4>
                                         <span className="document-history-preview-meta">
                                             版本 #{selectedVersion.version} ·
@@ -237,7 +237,7 @@ export function DocumentHistoryDialog({
                                 <div className="document-history-content">
                                     <pre className="document-history-pre">
                                         {selectedVersion.body ||
-                                            "（空笔记）"}
+                                            "（正文为空）"}
                                     </pre>
                                 </div>
                             </div>

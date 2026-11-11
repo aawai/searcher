@@ -459,7 +459,7 @@ function AskWorkspaceContent(
                 handleSelectModel(previousModel.id);
             } else if (activeMessage?.modelId) {
                 setSelectedModelId(null);
-                setError("此会话使用的模型当前不可用，请选择模型后继续。");
+                setError("此对话使用的模型当前不可用，请选择模型后继续。");
                 setDrawerOpen(false);
                 return;
             }
@@ -647,7 +647,7 @@ function AskWorkspaceContent(
         id: model.id,
         label: model.displayName,
         provider: providers.find((p) => p.id === model.providerId)?.name ??
-            "Provider",
+            "服务商",
     }));
 
     return (
@@ -698,18 +698,16 @@ function AskWorkspaceContent(
                                 <EmptyState
                                     title="暂无可用 AI 模型"
                                     description={user.role === "admin"
-                                        ? "系统尚未配置或启用任何 AI 模型。请前往管理后台配置模型与提供商。"
-                                        : "当前系统暂无可用 AI 模型，请联系管理员进行配置。"}
-                                    action={user.role === "admin"
-                                        ? (
-                                            <Link
-                                                to={routes.admin("settings")}
-                                                className="button button--primary"
-                                            >
-                                                前往模型配置
-                                            </Link>
-                                        )
-                                        : undefined}
+                                        ? "请前往 AI 设置添加服务商或启用模型。"
+                                        : "请前往 AI 设置添加服务商，或联系管理员。"}
+                                    action={(
+                                        <Link
+                                            to={routes.settings("ai")}
+                                            className="button button--primary"
+                                        >
+                                            前往 AI 设置
+                                        </Link>
+                                    )}
                                 />
                             </div>
                         </div>

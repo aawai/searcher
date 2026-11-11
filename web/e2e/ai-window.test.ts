@@ -359,7 +359,7 @@ Deno.test("AI 窗口：后台保活、关闭 / 切换保护、临时会话与后
                     await dialog(page).waitFor();
                     assert(
                         (await dialog(page).textContent())?.includes(
-                            "已生成的内容保留在历史会话中",
+                            "已生成的内容保留在历史对话中",
                         ),
                     );
                     await dialog(page).getByRole("button", { name: "取消" })
@@ -422,7 +422,7 @@ Deno.test("AI 窗口：后台保活、关闭 / 切换保护、临时会话与后
                     await dialog(page).waitFor();
                     assert(
                         (await dialog(page).textContent())?.includes(
-                            "临时会话及其消息、附件和未发送的输入将被删除",
+                            "临时对话及其消息、附件和未发送的输入将被删除",
                         ),
                     );
                     await dialog(page).getByRole("button", { name: "取消" })
@@ -512,7 +512,7 @@ Deno.test("AI 窗口：后台保活、关闭 / 切换保护、临时会话与后
                     await dialog(page).waitFor();
                     assert(
                         (await dialog(page).textContent())?.includes(
-                            "切换会话？",
+                            "切换对话？",
                         ),
                     );
                     await dialog(page).getByRole("button", { name: "取消" })
@@ -773,6 +773,38 @@ Deno.test("AI 输入框聚焦环上缘不被消息区渐隐遮挡", async () => 
         }, strip.toString("base64"));
         assertEquals(pixels, [ring]);
         await context.close();
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("窄屏生成参数弹层可滚动，操作不会被视口裁切", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    try {
+        const context = await browser.newContext({
+            viewport: { width: 390, height: 844 },
+            reducedMotion: "reduce",
+        });
+        try {
+            const page = await context.newPage();
+            await loginAndVisit(page, app.origin, "/ask", user);
+            await composer(page).waitFor({ state: "visible" });
+            await page.getByRole("button", { name: "更多设置" }).click();
+            await page.getByRole("button", { name: "高级生成设置" }).click();
+            const popup = page.getByRole("dialog", { name: "生成参数设置" });
+            await popup.waitFor({ state: "visible" });
+            const popupBox = (await popup.boundingBox())!;
+            assert(popupBox.y >= 0 && popupBox.y + popupBox.height <= 844);
+            const save = popup.getByRole("button", { name: "设为该模型默认" });
+            await save.scrollIntoViewIfNeeded();
+            const saveBox = (await save.boundingBox())!;
+            assert(saveBox.y >= 0 && saveBox.y + saveBox.height <= 844);
+        } finally {
+            await context.close();
+        }
     } finally {
         await browser.close();
         await app.close();

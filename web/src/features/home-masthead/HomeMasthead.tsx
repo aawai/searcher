@@ -461,7 +461,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                             <span className="home-masthead__dek-status">
                                 {openTaskCount > 0 &&
                                     `${openTaskCount} 项待办 · `}
-                                {notes.length} 篇置顶
+                                {notes.length} 篇固定笔记
                             </span>
                         )}
                     </div>

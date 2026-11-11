@@ -36,10 +36,10 @@ import type {
 } from "./types.ts";
 
 const ProviderNameSchema = v.pipe(
-    v.string("Provider 名称必须为字符串"),
+    v.string("服务商名称必须为字符串"),
     v.trim(),
-    v.minLength(1, "Provider 名称不能为空"),
-    v.maxLength(100, "Provider 名称最多100个字符"),
+    v.minLength(1, "服务商名称不能为空"),
+    v.maxLength(100, "服务商名称最多 100 个字符"),
 );
 
 const BaseUrlSchema = v.pipe(
@@ -820,13 +820,10 @@ export function registerAiRoutes(
                             }\n\n`;
                             controller.enqueue(textEncoder.encode(eventStr));
                         }
-                    } catch (err: unknown) {
+                    } catch {
                         if (abortController.signal.aborted) return;
-                        const errMsg = err instanceof Error
-                            ? err.message
-                            : String(err);
                         const errPayload = `event: error\ndata: ${
-                            JSON.stringify(errMsg)
+                            JSON.stringify("回答生成失败，请重试。")
                         }\n\n`;
                         controller.enqueue(textEncoder.encode(errPayload));
                     } finally {
@@ -881,10 +878,12 @@ export function registerAiRoutes(
                     );
                 }
                 if (err instanceof OpenAIClientError) {
-                    return c.fail(
-                        400,
-                        err.message,
-                    );
+                    const message = err.statusCode === 429
+                        ? "图像服务商请求过于频繁，请稍后重试。"
+                        : err.statusCode === 401 || err.statusCode === 403
+                        ? "图像服务商拒绝了请求，请检查服务商配置。"
+                        : "图标生成失败，请检查服务商配置后重试。";
+                    return c.fail(400, message);
                 }
                 throw err;
             }

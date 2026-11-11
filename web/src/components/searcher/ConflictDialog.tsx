@@ -39,7 +39,7 @@ type ConflictChoice = "server" | "local" | "new";
 
 const DESTRUCTIVE_CONFIRM: Record<"server" | "local", string> = {
     server: "将丢弃你的本地修改，改用云端版本。此操作无法撤销。",
-    local: "将用你的本地修改覆盖云端版本，对方的更新会被替换。",
+    local: "将用你的本地修改覆盖云端版本，其他位置的更新会被替换。",
 };
 
 export function ConflictDialog({
@@ -110,7 +110,7 @@ export function ConflictDialog({
                             <div className="conflict-field">
                                 <span className="conflict-label">标题</span>
                                 <p className="conflict-value">
-                                    {localTitle || "（未命名标题）"}
+                                    {localTitle || "无标题笔记"}
                                 </p>
                             </div>
                             <div className="conflict-field">
@@ -128,7 +128,7 @@ export function ConflictDialog({
                             <div className="conflict-field">
                                 <span className="conflict-label">标题</span>
                                 <p className="conflict-value">
-                                    {serverVersion?.title || "（未命名标题）"}
+                                    {serverVersion?.title || "无标题笔记"}
                                 </p>
                             </div>
                             <div className="conflict-field">

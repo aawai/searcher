@@ -148,7 +148,7 @@ export function useLogoSession(options: LogoSessionOptions) {
         }
         const provider = providers.find((item) => item.id === model.providerId);
         if (!provider) {
-            onError("所选模型的 Provider 不可用");
+            onError("所选模型的服务商不可用，请选择其他模型");
             return;
         }
 
