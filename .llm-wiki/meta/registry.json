@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-10T08:02:25.481Z",
+  "last_updated": "2026-11-11T08:02:31.210Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -1831,6 +1831,42 @@
       "source_id": "SRC-2026-11-10-005",
       "format": "web",
       "captured": "2026-11-10"
+    },
+    "sources/SRC-2026-11-11-001": {
+      "type": "source",
+      "title": "ascent-override CSS descriptor",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-11-001/extracted.md",
+      "source_id": "SRC-2026-11-11-001",
+      "format": "web",
+      "captured": "2026-11-11"
+    },
+    "sources/SRC-2026-11-11-002": {
+      "type": "source",
+      "title": "descent-override CSS descriptor",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-11-002/extracted.md",
+      "source_id": "SRC-2026-11-11-002",
+      "format": "web",
+      "captured": "2026-11-11"
+    },
+    "sources/SRC-2026-11-11-003": {
+      "type": "source",
+      "title": "line-gap-override CSS descriptor",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-11-003/extracted.md",
+      "source_id": "SRC-2026-11-11-003",
+      "format": "web",
+      "captured": "2026-11-11"
+    },
+    "sources/SRC-2026-11-11-004": {
+      "type": "source",
+      "title": "SQLite ALTER TABLE 更新快照",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-11-004/extracted.md",
+      "source_id": "SRC-2026-11-11-004",
+      "format": "web",
+      "captured": "2026-11-11"
     },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",
@@ -4049,6 +4085,24 @@
       "created": "2026-11-10",
       "updated": "2026-11-10"
     },
+    "sources/obs-2026-11-10-2026-11-10": {
+      "type": "source",
+      "title": "Observation: 管理后台样式与约定实页复核 2026-11-10",
+      "tags": [
+        "admin",
+        "ui",
+        "audit",
+        "visual",
+        "accessibility"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-10-2026-11-10",
+      "relevance": "high",
+      "observed_at": "2026-11-10T10:01:00.300Z",
+      "source_context": "管理后台样式一致性与项目约定实页检查",
+      "created": "2026-11-10",
+      "updated": "2026-11-10"
+    },
     "sources/obs-2026-11-10-a": {
       "type": "source",
       "title": "Observation: 窗口内容标题衬线（方案 A）已在生产实现",
@@ -4067,6 +4121,23 @@
       "created": "2026-11-10",
       "updated": "2026-11-10"
     },
+    "sources/obs-2026-11-10-feat-admin-consistency": {
+      "type": "source",
+      "title": "Observation: 管理后台一致性修复已实施（分支 feat/admin-consistency，未提交）",
+      "tags": [
+        "admin",
+        "ui",
+        "audit",
+        "implementation"
+      ],
+      "status": "observation",
+      "slug": "obs-2026-11-10-feat-admin-consistency",
+      "relevance": "high",
+      "observed_at": "2026-11-10T10:40:16.111Z",
+      "source_context": "管理后台样式一致性与约定修复实施",
+      "created": "2026-11-10",
+      "updated": "2026-11-10"
+    },
     "sources/obs-2026-11-10-issue-394": {
       "type": "source",
       "title": "Observation: 视觉语言演进计划 Issue 394 已创建",
@@ -4078,6 +4149,16 @@
       "relevance": "high",
       "observed_at": "2026-11-10T06:10:18.781Z",
       "source_context": "创建视觉语言演进实施计划 Issue",
+      "created": "2026-11-10",
+      "updated": "2026-11-10"
+    },
+    "sources/obs-2026-11-10-pr-396-main": {
+      "type": "source",
+      "title": "Observation: 外观弹层与高对比强调色经 PR 396 合并 main",
+      "status": "observation",
+      "slug": "obs-2026-11-10-pr-396-main",
+      "relevance": "high",
+      "observed_at": "2026-11-10T09:38:41.738Z",
       "created": "2026-11-10",
       "updated": "2026-11-10"
     },

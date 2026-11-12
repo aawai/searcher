@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-11-001",
+  "captured": "2026-11-11",
+  "packet_version": "1.0",
+  "title": "`ascent-override` CSS at-rule descriptor",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@font-face/ascent-override",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

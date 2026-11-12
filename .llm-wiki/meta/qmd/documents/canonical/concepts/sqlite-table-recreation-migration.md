@@ -7,6 +7,7 @@ sources:
   - sources/SRC-2026-09-25-012
   - sources/SRC-2026-09-25-010
   - sources/sqlite-table-recreation-migration-zero-loss
+  - sources/SRC-2026-11-11-004
 ---
 
 # SQLite Table Recreation Migration (SQLite 12步表重构迁移模式)
@@ -18,9 +19,11 @@ sources:
 
 ## Definition
 
-由于 SQLite 将数据表的完整定义以纯文本形式保存在 `sqlite_schema` 内部，且原生
-`ALTER TABLE` 仅允许列重命名、表重命名与尾部追加列，任何涉及列约束修改（如 CHECK
-约束、非空约束、默认值替换）的操作均不能直接通过 SQL 语句就地完成。
+SQLite 将数据表定义以纯文本保存在 `sqlite_schema`。原生 `ALTER TABLE`
+支持重命名表和列、增加列、在限制条件下删除列；SQLite 3.53.0 起还支持设置或移除
+列的 `NOT NULL`。其他复杂约束或结构变更仍可能需要表重构，具体取决于运行时版本
+（[SQLite 官方文档 2026-11-11 快照](/sources/SRC-2026-11-11-004.md)）。
+该快照的第 8 节直接支持操作清单遗漏其第 6 节的 `ALTER COLUMN`，两节存在不一致。
 
 根据 [[sources/SRC-2026-09-25-012]]（SQLite ALTER TABLE 规范第 8
 节）的标准定义，健壮的表重构必须严格遵守以下执行纪律：
