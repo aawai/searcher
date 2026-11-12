@@ -10,6 +10,9 @@ sources:
   - sources/SRC-2026-11-10-003
   - sources/SRC-2026-11-10-004
   - sources/SRC-2026-11-10-005
+  - sources/SRC-2026-11-11-001
+  - sources/SRC-2026-11-11-002
+  - sources/SRC-2026-11-11-003
 ---
 
 # Web Font Loading and CJK Subsetting
@@ -19,7 +22,8 @@ sources:
 - **声明不等于下载。** `@font-face` 只登记字体；页面用到该字体且含 `unicode-range` 内的字符时才下载对应文件（[SRC-2026-11-10-001](/sources/SRC-2026-11-10-001.md)、[SRC-2026-11-10-003](/sources/SRC-2026-11-10-003.md)）。
 - **CJK 依赖切片。** CJK 字体可能超过 10,000 字，自托管时要自己做子集化；`preload` 会忽略 `unicode-range`，不适合切片字体（[SRC-2026-11-10-001](/sources/SRC-2026-11-10-001.md)）。
 - **`font-display` 决定未就绪时怎样显示文字。** 时间线分为 block、swap、failure 三段。`swap` 几乎不阻塞文字，字体到达后换入；`optional` 不换入，因此没有换入偏移，但晚到的字体不会被使用（[SRC-2026-11-10-002](/sources/SRC-2026-11-10-002.md)）。
-- **换入偏移可以用度量覆盖消除。** `size-adjust`，以及 `ascent-override`、`descent-override`、`line-gap-override`，可以让回退字体与 web font 占用相同的空间（[SRC-2026-11-10-005](/sources/SRC-2026-11-10-005.md)）。
+- **度量覆盖可以减少换入偏移。** `size-adjust`，以及 `ascent-override`、`descent-override`、`line-gap-override`，可用于使回退字体的度量更接近 web font（[SRC-2026-11-10-005](/sources/SRC-2026-11-10-005.md)）。
+- **兼容性与作用范围。** `ascent-override` 控制基线上方高度，`descent-override` 控制基线下方高度，`line-gap-override` 控制字体建议行距；默认 `normal` 使用字体自身的度量。MDN 标注三者支持范围有限，不能假设所有浏览器均支持；对齐也不保证消除所有布局偏移（[ascent](/sources/SRC-2026-11-11-001.md)、[descent](/sources/SRC-2026-11-11-002.md)、[line gap](/sources/SRC-2026-11-11-003.md)）。
 - **`document.fonts.ready`** 在当前的字体加载与布局都完成、且不再需要加载其他字体时 resolve。`loadingdone` 等事件可用于观察之后的加载（[SRC-2026-11-10-004](/sources/SRC-2026-11-10-004.md)）。
 
 ## Searcher 的做法（2026-11-10 读码）

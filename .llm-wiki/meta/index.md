@@ -213,8 +213,11 @@
 - [[sources/obs-2026-11-06-pr-386-main]] — Observation: 刊头应用图标与可选标签图标经 PR 386 合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-06-pr-392-main]] — Observation: 外观首帧闪烁经 PR 392 消除并合并 main *(created: 2026-11-06)*
 - [[sources/obs-2026-11-10-0-1]] — Observation: 窗口内容刊头排版：阶段0/1完成，待方案确认 *(created: 2026-11-10)*
+- [[sources/obs-2026-11-10-2026-11-10]] — Observation: 管理后台样式与约定实页复核 2026-11-10 *(created: 2026-11-10)*
 - [[sources/obs-2026-11-10-a]] — Observation: 窗口内容标题衬线（方案 A）已在生产实现 *(created: 2026-11-10)*
+- [[sources/obs-2026-11-10-feat-admin-consistency]] — Observation: 管理后台一致性修复已实施（分支 feat/admin-consistency，未提交） *(created: 2026-11-10)*
 - [[sources/obs-2026-11-10-issue-394]] — Observation: 视觉语言演进计划 Issue 394 已创建 *(created: 2026-11-10)*
+- [[sources/obs-2026-11-10-pr-396-main]] — Observation: 外观弹层与高对比强调色经 PR 396 合并 main *(created: 2026-11-10)*
 - [[sources/searcher-session-token-hash-is-not-salted]] — Searcher 会话 Token 使用无盐 SHA-256 *(created: 2026-10-29)*
 - [[sources/service-worker-bypass-does-not-bypass-http-cache]] — Service Worker 直通与 HTTP 缓存边界 *(created: 2026-10-28)*
 - [[sources/sqlite-table-recreation-migration-zero-loss]] — SQLite Table Recreation Migration Pattern with Zero Loss *(created: 2026-09-25)*
@@ -348,10 +351,14 @@
 - [[sources/SRC-2026-11-10-003]] — `unicode-range` CSS at-rule descriptor (MDN) *(created: unknown)*
 - [[sources/SRC-2026-11-10-004]] — FontFaceSet: ready property (MDN) *(created: unknown)*
 - [[sources/SRC-2026-11-10-005]] — How to scale fonts with size-adjust (web.dev) *(created: unknown)*
+- [[sources/SRC-2026-11-11-001]] — ascent-override CSS descriptor *(created: unknown)*
+- [[sources/SRC-2026-11-11-002]] — descent-override CSS descriptor *(created: unknown)*
+- [[sources/SRC-2026-11-11-003]] — line-gap-override CSS descriptor *(created: unknown)*
+- [[sources/SRC-2026-11-11-004]] — SQLite ALTER TABLE 更新快照 *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-10T08:02:25.481Z* | *Total pages: 339*
+*Last updated: 2026-11-11T08:02:31.210Z* | *Total pages: 346*

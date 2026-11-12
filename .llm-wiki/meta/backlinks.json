@@ -482,7 +482,8 @@
     "sources/SRC-2026-09-25-031",
     "sources/SRC-2026-09-25-032",
     "sources/SRC-2026-10-24-006",
-    "sources/SRC-2026-10-27-002"
+    "sources/SRC-2026-10-27-002",
+    "sources/SRC-2026-11-11-004"
   ],
   "concepts/ssrf-and-outbound-fetch-boundaries": [
     "concepts/field-encryption-and-key-management",
@@ -553,7 +554,10 @@
     "sources/SRC-2026-11-10-002",
     "sources/SRC-2026-11-10-003",
     "sources/SRC-2026-11-10-004",
-    "sources/SRC-2026-11-10-005"
+    "sources/SRC-2026-11-10-005",
+    "sources/SRC-2026-11-11-001",
+    "sources/SRC-2026-11-11-002",
+    "sources/SRC-2026-11-11-003"
   ],
   "concepts/whole-line-preview-truncation": [
     "entities/searcher-项目",
@@ -648,6 +652,7 @@
     "sources/SRC-2026-11-03-003",
     "sources/SRC-2026-11-05-003",
     "sources/SRC-2026-11-06-001",
+    "sources/SRC-2026-11-11-004",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -911,7 +916,8 @@
   "sources/SRC-2026-09-25-012": [
     "concepts/database-queue-serialization",
     "concepts/sqlite-table-recreation-migration",
-    "entities/drizzle-sqlite-store"
+    "entities/drizzle-sqlite-store",
+    "sources/SRC-2026-11-11-004"
   ],
   "sources/SRC-2026-09-25-013": [
     "concepts/dnd-kit-2d-grid-sorting-architecture"
@@ -1298,6 +1304,25 @@
   "sources/SRC-2026-11-10-005": [
     "concepts/web-font-loading-and-cjk-subsetting"
   ],
+  "sources/SRC-2026-11-11-001": [
+    "concepts/web-font-loading-and-cjk-subsetting",
+    "sources/SRC-2026-11-11-002",
+    "sources/SRC-2026-11-11-003"
+  ],
+  "sources/SRC-2026-11-11-002": [
+    "concepts/web-font-loading-and-cjk-subsetting",
+    "sources/SRC-2026-11-11-001",
+    "sources/SRC-2026-11-11-003"
+  ],
+  "sources/SRC-2026-11-11-003": [
+    "concepts/web-font-loading-and-cjk-subsetting",
+    "sources/SRC-2026-11-11-001",
+    "sources/SRC-2026-11-11-002"
+  ],
+  "sources/SRC-2026-11-11-004": [
+    "concepts/sqlite-table-recreation-migration",
+    "sources/SRC-2026-09-25-012"
+  ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
   ],
@@ -1447,8 +1472,11 @@
   "sources/obs-2026-11-06-pr-386-main": [],
   "sources/obs-2026-11-06-pr-392-main": [],
   "sources/obs-2026-11-10-0-1": [],
+  "sources/obs-2026-11-10-2026-11-10": [],
   "sources/obs-2026-11-10-a": [],
+  "sources/obs-2026-11-10-feat-admin-consistency": [],
   "sources/obs-2026-11-10-issue-394": [],
+  "sources/obs-2026-11-10-pr-396-main": [],
   "sources/searcher-session-token-hash-is-not-salted": [
     "concepts/session-security-and-isolation"
   ],

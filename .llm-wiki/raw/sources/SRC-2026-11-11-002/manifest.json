@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-11-002",
+  "captured": "2026-11-11",
+  "packet_version": "1.0",
+  "title": "`descent-override` CSS at-rule descriptor",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40font-face/descent-override",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

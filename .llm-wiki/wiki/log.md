@@ -1,7 +1,17 @@
 # Wiki Update Log
 
+## 2026-11-11
+
+- **capture**: {"format":"web","source_id":"SRC-2026-11-11-004","url":"https://www.sqlite.org/lang_altertable.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-11-003","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40font-face/line-gap-override"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-11-002","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40font-face/descent-override"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-11-001","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@font-face/ascent-override"}
+
 ## 2026-11-10
 
+- **observe**: {"relevance":"high","slug":"obs-2026-11-10-feat-admin-consistency","title":"管理后台一致性修复已实施（分支 feat/admin-consistency，未提交）"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-10-2026-11-10","title":"管理后台样式与约定实页复核 2026-11-10"}
+- **observe**: {"relevance":"high","slug":"obs-2026-11-10-pr-396-main","title":"外观弹层与高对比强调色经 PR 396 合并 main"}
 - **capture**: {"format":"web","source_id":"SRC-2026-11-10-005","url":"https://web.dev/articles/css-size-adjust"}
 - **capture**: {"format":"web","source_id":"SRC-2026-11-10-004","url":"https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/ready"}
 - **capture**: {"format":"web","source_id":"SRC-2026-11-10-003","url":"https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/unicode-range"}
