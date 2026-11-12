@@ -742,8 +742,6 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                 ] as const}
                                 select={(v) => set("tabIcon", v)}
                             />
-                        </SettingsGroup>
-                        <SettingsGroup title="首页">
                             <Choices
                                 title="控件形状"
                                 control="segmented"
@@ -774,6 +772,8 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                 values={GLASS_CHOICES}
                                 select={(v) => set("glassIntensity", v)}
                             />
+                        </SettingsGroup>
+                        <SettingsGroup title="首页">
                             {user && (
                                 <SettingsRow title="在首页显示应用">
                                     <Switch

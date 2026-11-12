@@ -179,17 +179,17 @@ workspace-contract、workspace-matrix、颜色层级与对比度、强制颜色�
 
 ### 玻璃效果
 
-数值契约由 `deno task test` 内的 `glass-contrast.test.ts` 和迁移测试覆盖（Floating 4 档、
-Material off / soft / regular × 亮 / 暗的对比度下限，`clear` 的 Material 不承诺对比度；
+数值契约由 `deno task test` 内的 `glass-contrast.test.ts` 和迁移测试覆盖（Floating 4 档按 `--material-thick-sheen-scale`、
+Material off / soft / regular × 亮 / 暗按 `--material-regular-sheen-scale` 合成校验对比度下限，`clear` 的 Material 不承诺对比度；
 `search_opacity` 的 `1`、`0.72`、`0.5`、`0.1` 边界）。实页验收不做档位 × 视口 × 主题 × 背景的全组合：
 
 - 默认档位：390 / 768 / 1440 × light/dark，无壁纸（纯色主题背景），共 6 张。
-- 档位差异：设计实验室并排四档，1440 × light/dark，共 2 张。
-- 照片壁纸：首页 1440 × light/dark，标准档，共 2 张。
-- `prefers-reduced-transparency`：1440 light 断言 Material 表面 fill
-  为实色、`backdrop-filter` 为 `none`、`--shadow-material-edge` 仍在。
-- 行为：`ui-ownership`
-  切换到“通透”，断言保存请求、`data-glass`、`--material-filter`、可读性说明与刷新后保持。
+- 档位差异：设计实验室每档重复同一高对比夹具背景并排比较四档 Material 与 Floating，1440 × light/dark，共 2 张。
+- 照片与纹理壁纸：首页 1440 × light/dark，在固定构图与默认均衡遮罩下用浅色照片、深色照片与高频纹理对照相邻档位（含标准与通透），检查常态搜索框、聚焦态搜索框（整组切到 Floating 厚材质，失焦恢复）与应用底板。
+- `prefers-reduced-transparency` / 高对比 / 强制颜色：断言 Material 与 Floating 表面 fill
+  均为实色、`--material-regular-filter` 与 `--material-thick-filter` 为 `none`、顶光缩放为 `0`、`--shadow-material-edge` 仍在。
+- 行为与控件形状：`ui-ownership`
+  验证顶部外观分组中的“玻璃效果”与“控件形状”：切换到“通透”断言保存请求、`data-glass`、`--material-regular-filter` / `--material-thick-filter`、聚焦搜索框厚材质切换、可读性说明与刷新后保持；切换到“胶囊”（`data-shape="pill"`）断言 `--shape-button-radius`、`--shape-field-radius`、`--shape-segment-radius`、`--shape-segment-inner-radius` 实际作用于代表性普通按钮、独立单行字段与分段控件 / 默认 Tab，搜索框内部同心关系及横向设置行内字段、图标按钮、多行输入等排除项不退化，且切换不丢焦点、不改值、不产生布局跳动。
 
 ### Documents
 
@@ -212,7 +212,7 @@ Host/主题/视图的实页截图；每次执行在父目录下
 登录 / 访客，在真实 Chromium 中逐个文字元素取字形外 2px 的背景像素，最不利的 5% 分位须满足
 1.4.3（取样方法见 [VISUAL_LANGUAGE · 验证与已知缺口](design/VISUAL_LANGUAGE.md#验证与已知缺口)）；
 1440 下一并取样宽屏刊头衬底上的文字。同一文件另以该方法实测 Floating 上的 `--muted`（头像菜单、文件夹计数、
-搜索建议分组标题 × `regular` / `clear`），并打印各元素最差值。普通浅 / 深主题覆盖所选壁纸；
+搜索建议分组标题 × `off` / `soft` / `regular` / `clear` 四档），并打印各元素最差值。普通浅 / 深主题覆盖所选壁纸；
 高对比浅 / 深主题的 Floating 所有档位均为不透明实色（`glass-contrast.test.ts` 验证），
 因此每档只测纯白壁纸，仍逐一实测三个浮层。
 取样前等待两帧截图一致，取样期间背景像素变化即失败，不重试。

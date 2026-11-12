@@ -557,6 +557,7 @@
    values and switches. Hover fills softly; focus and invalid states restore the
    primitive's own border so the 2px ring and danger edge stay intact. */
 .settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select"]) {
+    border-radius: var(--radius-input);
     padding-inline-start: var(--space-2);
     border-color: transparent;
     background: transparent;

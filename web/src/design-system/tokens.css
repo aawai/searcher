@@ -583,9 +583,20 @@
     --theme-preview-high-contrast-dark-edge: #FFFFFF;
 }
 
-/* User preference: pill-shaped search box and its inner controls. */
+/* Shape preferences affect standalone controls, never content containers. */
+:root,
+[data-shape="rounded"] {
+    --shape-button-radius: var(--control-radius);
+    --shape-field-radius: var(--radius-input);
+    --shape-segment-radius: var(--control-radius);
+    --shape-segment-inner-radius: calc(var(--shape-segment-radius) - var(--space-half));
+}
 [data-shape="pill"] {
     --search-radius: var(--radius-pill);
+    --shape-button-radius: var(--radius-pill);
+    --shape-field-radius: var(--radius-pill);
+    --shape-segment-radius: var(--radius-pill);
+    --shape-segment-inner-radius: calc(var(--shape-segment-radius) - var(--space-half));
 }
 
 /*
