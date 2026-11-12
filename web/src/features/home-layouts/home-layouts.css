@@ -63,9 +63,9 @@
     gap: var(--space-3);
     margin-block-end: var(--space-4);
     padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-regular-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
     border-radius: var(--radius-pill);
     box-shadow: var(--shadow-elevation-material);
 }

@@ -8,9 +8,9 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    background: var(--glass-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     border-radius: var(--radius-sheet);
     box-shadow: var(--shadow-elevation-floating);
     color: var(--foreground);

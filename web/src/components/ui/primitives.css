@@ -189,7 +189,7 @@
     max-width: 100%;
     padding: var(--space-half);
     gap: var(--space-half);
-    border-radius: var(--control-radius);
+    border-radius: var(--shape-segment-radius);
     background: var(--surface-soft);
 }
 
@@ -198,7 +198,7 @@
     justify-content: center;
     text-align: center;
     padding: 0 var(--space-3);
-    border-radius: calc(var(--control-radius) - 2px);
+    border-radius: var(--shape-segment-inner-radius);
     color: var(--muted);
     font-weight: var(--font-label-weight);
     white-space: nowrap;
@@ -479,6 +479,9 @@
         scale var(--motion-fast) var(--ease-standard);
 }
 
+.button:where(:not(.button--icon, .button--link, .button--content)) {
+    border-radius: var(--shape-button-radius);
+}
 /* Press feedback (T7). `scale` composes with any feature `transform` rather
    than replacing it; link and content triggers are not pressable surfaces. */
 .button:active:not(:disabled, [data-disabled], .button--link, .button--content) {
@@ -643,9 +646,9 @@
     max-width: min(320px, calc(100vw - var(--space-6)));
     padding: var(--space-1);
     border-radius: var(--radius);
-    background: var(--glass-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     box-shadow: var(--shadow-elevation-floating);
     color: var(--foreground);
     font-size: var(--font-body-size);
@@ -874,7 +877,7 @@
 .cn-input {
     height: var(--control-input-height);
     padding: 0 var(--space-3);
-    border-radius: var(--radius-input);
+    border-radius: var(--shape-field-radius);
 }
 
 .cn-textarea {
@@ -887,7 +890,7 @@
 [data-slot="native-select"] {
     height: var(--control-input-height);
     padding: 0 var(--space-7) 0 var(--space-3);
-    border-radius: var(--radius-input);
+    border-radius: var(--shape-field-radius);
     appearance: none;
 }
 
@@ -985,6 +988,10 @@
     color: var(--muted);
 }
 
+[data-slot="tabs-list"][data-variant="default"] {
+    border-radius: var(--shape-segment-radius);
+}
+
 [data-slot="tabs-list"][data-variant="line"] {
     padding: 0;
     gap: var(--space-1);
@@ -1007,6 +1014,10 @@
     cursor: pointer;
     transition: background var(--motion-fast) var(--ease-standard),
         color var(--motion-fast) var(--ease-standard);
+}
+
+[data-slot="tabs-list"][data-variant="default"] [data-slot="tabs-trigger"] {
+    border-radius: var(--shape-segment-inner-radius);
 }
 
 [data-slot="tabs-trigger"]:hover {
@@ -1288,9 +1299,9 @@
     max-width: calc(100vw - var(--space-6));
     padding: var(--space-3);
     border-radius: var(--radius);
-    background: var(--glass-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     box-shadow: var(--shadow-elevation-floating);
     color: var(--foreground);
     outline: none;

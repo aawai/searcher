@@ -13,9 +13,9 @@
     height: 56px;
     gap: 0;
     padding: var(--space-search-inset-block) var(--space-search-inset-inline);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-regular-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
     border-radius: var(--search-radius);
     box-shadow: var(--shadow-elevation-material);
     transition: background-color var(--motion-fast) var(--ease-standard),
@@ -24,7 +24,9 @@
 
 /* Focus lifts the fill to the thick material so typing stays legible over any wallpaper. */
 .search-frame:has(input:focus-visible) {
-    background: var(--glass-sheen), var(--material-thick);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     box-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge),
         var(--shadow-l2);
 }
@@ -169,9 +171,9 @@
     max-height: 360px;
     overflow-y: auto;
     padding: var(--space-1);
-    background: var(--glass-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     border-radius: var(--radius);
     box-shadow: var(--shadow-elevation-floating);
     z-index: var(--elevation-suggestions);

@@ -742,8 +742,6 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                 ] as const}
                                 select={(v) => set("tabIcon", v)}
                             />
-                        </SettingsGroup>
-                        <SettingsGroup title="首页">
                             <Choices
                                 title="控件形状"
                                 control="segmented"
@@ -761,13 +759,21 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     : highContrast
                                     ? "高对比主题下玻璃效果以实色显示，切换回其他主题即恢复"
                                     : appearance.glassIntensity === "clear"
-                                    ? "通透会透出壁纸，首页文字可读性随壁纸变化"
-                                    : undefined}
+                                    ? (
+                                        <>
+                                            通透会透出壁纸，首页文字可读性随壁纸变化
+                                            <br />
+                                            通透主要影响首页搜索框与应用底板；输入聚焦时及菜单等浮层优先保证可读性。
+                                        </>
+                                    )
+                                    : "通透主要影响首页搜索框与应用底板；输入聚焦时及菜单等浮层优先保证可读性。"}
                                 control="segmented"
                                 value={appearance.glassIntensity}
                                 values={GLASS_CHOICES}
                                 select={(v) => set("glassIntensity", v)}
                             />
+                        </SettingsGroup>
+                        <SettingsGroup title="首页">
                             {user && (
                                 <SettingsRow title="在首页显示应用">
                                     <Switch

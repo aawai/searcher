@@ -114,9 +114,9 @@
 .launcher-plate {
     padding: var(--space-4);
     border-radius: var(--radius-lg);
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-regular-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
     box-shadow: var(--shadow-elevation-material);
 }
 @media (max-width: 767px) {
@@ -329,9 +329,9 @@
     flex: none;
     border-radius: var(--radius-launcher-icon);
     box-sizing: border-box;
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-regular-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
     box-shadow: var(--shadow-glyph-edge), var(--shadow-elevation-glyph);
     overflow: hidden;
     transition: transform var(--motion-fast) var(--ease-standard),
@@ -371,7 +371,7 @@
 }
 @media (hover: hover) and (pointer: fine) {
     .launcher-folder-item:hover .launcher-folder-surface {
-        background: var(--glass-sheen), color-mix(in srgb,
+        background: var(--material-regular-sheen), color-mix(in srgb,
             var(--foreground) 8%, var(--material-regular));
     }
     /* Solid library panel: hover mixes into the soft fill, not the glass. */
@@ -536,9 +536,9 @@
 
 /* + and 更多（N） share the app icon geometry; the glyph is an action, not a site. */
 .launcher-action-cell .launcher-action-glyph {
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-regular-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
     box-shadow: var(--shadow-glyph-edge), var(--shadow-elevation-glyph);
     overflow: visible;
     color: var(--muted);
@@ -565,9 +565,9 @@
         var(--layout-home-content-max));
     padding: var(--space-4);
     border-radius: var(--radius-lg);
-    background: var(--glass-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     box-shadow: var(--shadow-elevation-floating);
     overflow: hidden;
 }

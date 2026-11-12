@@ -924,6 +924,31 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
                 0,
                 "dock nav unmounted or hidden while collapsed",
             );
+            const ballStyles = await page.evaluate(() => {
+                const root = document.documentElement;
+                const prevGlass = root.dataset.glass;
+                root.dataset.glass = "clear";
+                const el = document.querySelector<HTMLElement>(".dock-ball")!;
+                const cs = getComputedStyle(el);
+                const out = {
+                    bgImage: cs.backgroundImage,
+                    backdropFilter: cs.backdropFilter,
+                    borderRadius: cs.borderRadius,
+                };
+                if (prevGlass === undefined) delete root.dataset.glass;
+                else root.dataset.glass = prevGlass;
+                return out;
+            });
+            assert(
+                ballStyles.bgImage.includes("linear-gradient"),
+                `floating ball must include --material-thick-sheen gradient, got: ${ballStyles.bgImage}`,
+            );
+            assert(
+                ballStyles.backdropFilter.includes("blur(8px)") &&
+                    ballStyles.backdropFilter.includes("saturate(1.8)"),
+                `floating ball in clear tier must keep Floating thick filter, got: ${ballStyles.backdropFilter}`,
+            );
+            assertEquals(ballStyles.borderRadius, "999px");
 
             await page.waitForFunction(() =>
                 Number.parseFloat(
@@ -2265,24 +2290,41 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
 
             // 1. Home dock uses Floating glass sheen + 3-layer material edge + blur, and .dock-glyph uses 23% radius + 1px inner rim
             const homeStyles = await page.evaluate(() => {
+                const root = document.documentElement;
                 const bar = document.querySelector("nav.dock-bar")!;
                 const glyph = bar.querySelector(".dock-glyph")!;
                 const barCs = getComputedStyle(bar);
                 const glyphCs = getComputedStyle(glyph);
                 const glyphAfterCs = getComputedStyle(glyph, "::after");
-                return {
+                const base = {
                     bgImage: barCs.backgroundImage,
                     backdropFilter: barCs.backdropFilter,
                     boxShadow: barCs.boxShadow,
+                    barRadius: barCs.borderRadius,
                     glyphWidth: Number.parseFloat(glyphCs.width),
                     glyphRadius: Number.parseFloat(glyphCs.borderRadius),
                     glyphShadow: glyphCs.boxShadow,
                     glyphAfterShadow: glyphAfterCs.boxShadow,
                 };
+                const prevGlass = root.dataset.glass;
+                const prevShape = root.dataset.shape;
+                root.dataset.glass = "clear";
+                root.dataset.shape = "pill";
+                const clearPillCs = getComputedStyle(bar);
+                const clearPill = {
+                    bgImage: clearPillCs.backgroundImage,
+                    backdropFilter: clearPillCs.backdropFilter,
+                    barRadius: clearPillCs.borderRadius,
+                };
+                if (prevGlass === undefined) delete root.dataset.glass;
+                else root.dataset.glass = prevGlass;
+                if (prevShape === undefined) delete root.dataset.shape;
+                else root.dataset.shape = prevShape;
+                return { ...base, clearPill };
             });
             assert(
                 homeStyles.bgImage.includes("linear-gradient"),
-                `home dock must include --glass-sheen gradient, got: ${homeStyles.bgImage}`,
+                `home dock must include --material-thick-sheen gradient, got: ${homeStyles.bgImage}`,
             );
             assert(
                 homeStyles.backdropFilter.includes("blur"),
@@ -2291,6 +2333,20 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
             assert(
                 homeStyles.boxShadow.includes("inset"),
                 `home dock must include inset material edge shadow, got: ${homeStyles.boxShadow}`,
+            );
+            assertEquals(homeStyles.barRadius, "20px");
+            assert(
+                homeStyles.clearPill.bgImage.includes("linear-gradient") &&
+                    homeStyles.clearPill.backdropFilter.includes("blur(8px)") &&
+                    homeStyles.clearPill.backdropFilter.includes(
+                        "saturate(1.8)",
+                    ),
+                `home dock in clear tier must keep Floating thick filter/sheen, got: ${homeStyles.clearPill.backdropFilter}`,
+            );
+            assertEquals(
+                homeStyles.clearPill.barRadius,
+                "20px",
+                "dock bar container radius must not become pill under data-shape=pill",
             );
             assertEquals(homeStyles.glyphWidth, 28);
             assert(

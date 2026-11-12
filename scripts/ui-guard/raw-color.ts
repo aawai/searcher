@@ -616,7 +616,7 @@ export function isDomainColorException(
         if (
             normProp === "background" &&
             (normSelector === undefined ||
-                normSelector === ".design-lab-wallpaper")
+                normSelector === ".design-lab-glass-tier")
         ) {
             return cleanValue.replaceAll(/\s+/g, " ").trim() ===
                 DESIGN_LAB_GLASS_FIXTURE_BG;

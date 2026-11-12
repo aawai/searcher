@@ -252,19 +252,22 @@ for (const theme of THEMES) {
             const floating = [
                 `--glass-thick-${theme.scheme}`,
                 "--surface-l3",
+                "--material-thick-sheen-scale",
             ] as const;
             const surfaces = tier === "clear" ? [floating] : [
                 [
                     `--glass-regular-${theme.scheme}`,
                     "--material-solid",
+                    "--material-regular-sheen-scale",
                 ] as const,
                 floating,
             ];
             // The sheen fades linearly to 0 at 55% of the height; text starts no higher than 25% down.
-            const sheen = fillPercent(tokens, "--glass-sheen-peak") / 100 *
-                Number(resolve(tokens, "--glass-sheen-scale")) *
+            const sheenPeak = fillPercent(tokens, "--glass-sheen-peak") / 100 *
                 (1 - 0.25 / 0.55);
-            for (const [fillToken, baseToken] of surfaces) {
+            for (const [fillToken, baseToken, sheenScaleToken] of surfaces) {
+                const sheen = sheenPeak *
+                    Number(resolve(tokens, sheenScaleToken));
                 const alpha = fillPercent(tokens, fillToken) / 100;
                 const base = hex(resolve(tokens, baseToken));
                 const worst = (color: Rgb) =>
@@ -306,9 +309,15 @@ for (const theme of THEMES) {
                         fillPercent(tokens, fill) === 100,
                         `${tier} ${fill}`,
                     );
+                    assert(
+                        tokens.get(`--material-${kind}-filter`) === "none",
+                        `${tier} --material-${kind}-filter`,
+                    );
+                    assert(
+                        tokens.get(`--material-${kind}-sheen-scale`) === "0",
+                        `${tier} --material-${kind}-sheen-scale`,
+                    );
                 }
-                assert(tokens.get("--material-filter") === "none", tier);
-                assert(tokens.get("--glass-sheen-scale") === "0", tier);
                 assert(
                     fillPercent(tokens, `--masthead-veil-${theme.scheme}`) ===
                         100,
@@ -364,7 +373,11 @@ for (const theme of THEMES) {
             ["info", color("--foreground"), color("--surface-soft")],
             ["error", color("--danger"), tenPercentOfSurface("--danger")],
             ["success", color("--success"), tenPercentOfSurface("--success")],
-            ["warning", color("--warning"), mixedColor(tokens, "--warning-soft")],
+            [
+                "warning",
+                color("--warning"),
+                mixedColor(tokens, "--warning-soft"),
+            ],
         ];
         for (const [tone, text, tint] of tones) {
             const ratio = contrast(text, tint);
@@ -578,7 +591,7 @@ for (const theme of THEMES) {
                     fillPercent(tokens, `--glass-regular-${theme.scheme}`) /
                     100;
                 const peak = fillPercent(tokens, "--glass-sheen-peak") / 100 *
-                    Number(resolve(tokens, "--glass-sheen-scale"));
+                    Number(resolve(tokens, "--material-regular-sheen-scale"));
                 for (const backdrop of fixture.samples) {
                     // Only the fixture's bright regions exercise the reported
                     // white-on-light failure; dark regions test other concerns.
@@ -623,7 +636,7 @@ for (const theme of THEMES) {
         const alpha = fillPercent(tokens, `--glass-regular-${theme.scheme}`) /
             100;
         const peak = fillPercent(tokens, "--glass-sheen-peak") / 100 *
-            Number(resolve(tokens, "--glass-sheen-scale"));
+            Number(resolve(tokens, "--material-regular-sheen-scale"));
         const taskTokens = new Map([
             ...tokens,
             ...declarationsIn(markdownCss, ".markdown,\n.markdown-editor"),

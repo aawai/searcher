@@ -191,7 +191,7 @@ Deno.test("raw-color - rejects non-hex # tokens while catching valid 3/4/6/8-dig
 Deno.test("raw-color - domain exception: Design Lab glass fixture is restricted to exact selector and value", () => {
     const labOwner = "web/src/design-lab/design-lab.css";
     const validCss = `
-        .design-lab-wallpaper {
+        .design-lab-glass-tier {
             background:
                 radial-gradient(40% 60% at 15% 30%, #E5322D, transparent),
                 radial-gradient(40% 60% at 85% 70%, #1F6FEB, transparent),
@@ -204,7 +204,7 @@ Deno.test("raw-color - domain exception: Design Lab glass fixture is restricted 
     assertEquals(
         scanCss(
             labOwner,
-            validCss.replace(".design-lab-wallpaper", ".design-lab-material"),
+            validCss.replace(".design-lab-glass-tier", ".design-lab-material"),
         ).map((v) => v.rule),
         ["raw-color"],
     );
@@ -212,11 +212,11 @@ Deno.test("raw-color - domain exception: Design Lab glass fixture is restricted 
         scanCss("web/src/styles/global.css", validCss).map((v) => v.rule),
         ["raw-color"],
     );
-    // Other raw colors on .design-lab-wallpaper are rejected
+    // Other raw colors on .design-lab-glass-tier are rejected
     assertEquals(
         scanCss(
             labOwner,
-            `.design-lab-wallpaper { background: #E5322D; color: #1F6FEB; }`,
+            `.design-lab-glass-tier { background: #E5322D; color: #1F6FEB; }`,
         ).map((v) => [v.rule, v.property]),
         [
             ["raw-color", "background"],

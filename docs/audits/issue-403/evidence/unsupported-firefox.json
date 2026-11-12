@@ -1,0 +1,10 @@
+{
+  "supported": false,
+  "fill": "color(srgb 1 1 1)",
+  "sheen": "linear-gradient(color(srgb 0 0 0 / 0), rgba(0, 0, 0, 0) 55%), none",
+  "preference": "clear",
+  "regularFilter": "none",
+  "thickFilter": "none",
+  "regularScale": "0",
+  "thickScale": "0"
+}
