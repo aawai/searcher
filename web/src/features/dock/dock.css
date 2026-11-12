@@ -49,9 +49,9 @@
     display: flex;
     align-items: center;
     box-sizing: border-box;
-    background: var(--glass-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     border: none;
     box-shadow: var(--shadow-elevation-floating);
     border-radius: var(--radius-lg);
@@ -420,9 +420,9 @@
     min-height: var(--control-touch-target);
     border-radius: var(--radius-pill);
     border: none;
-    background: var(--glass-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     box-shadow: var(--shadow-elevation-floating);
     display: flex;
     align-items: center;

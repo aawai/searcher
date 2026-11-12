@@ -274,8 +274,8 @@
 .wallpaper-card__menu-trigger,
 .wallpaper-stage-context-preview__search-bar {
     background: var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
 }
 
 /* Recent uploads */

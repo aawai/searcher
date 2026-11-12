@@ -643,9 +643,9 @@
     max-width: min(320px, calc(100vw - var(--space-6)));
     padding: var(--space-1);
     border-radius: var(--radius);
-    background: var(--glass-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     box-shadow: var(--shadow-elevation-floating);
     color: var(--foreground);
     font-size: var(--font-body-size);
@@ -1288,9 +1288,9 @@
     max-width: calc(100vw - var(--space-6));
     padding: var(--space-3);
     border-radius: var(--radius);
-    background: var(--glass-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
     box-shadow: var(--shadow-elevation-floating);
     color: var(--foreground);
     outline: none;

@@ -199,15 +199,15 @@
     gap: var(--space-3);
     padding: var(--space-4);
     border-radius: var(--radius-sheet);
-    background:
-        radial-gradient(40% 60% at 15% 30%, #E5322D, transparent),
-        radial-gradient(40% 60% at 85% 70%, #1F6FEB, transparent),
-        repeating-linear-gradient(90deg, #111 0 14px, #F5F5F5 14px 28px);
 }
 .design-lab-glass-tier {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
+    background:
+        radial-gradient(40% 60% at 15% 30%, #E5322D, transparent),
+        radial-gradient(40% 60% at 85% 70%, #1F6FEB, transparent),
+        repeating-linear-gradient(90deg, #111 0 14px, #F5F5F5 14px 28px);
 }
 
 .design-lab-material {
@@ -217,8 +217,8 @@
     width: 160px;
     height: 88px;
     border-radius: var(--radius);
-    background: var(--glass-sheen), var(--material-regular);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-regular-sheen), var(--material-regular);
+    backdrop-filter: var(--material-regular-filter);
     box-shadow: var(--shadow-material-edge), var(--shadow-l2);
     color: var(--foreground);
     font-size: var(--font-body-size);
@@ -226,7 +226,8 @@
 }
 
 .design-lab-material-thick {
-    background: var(--glass-sheen), var(--material-thick);
+    background: var(--material-thick-sheen), var(--material-thick);
+    backdrop-filter: var(--material-thick-filter);
 }
 
 @media (max-width: 639px) {

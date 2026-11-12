@@ -706,7 +706,7 @@ Deno.test("floating muted text meets 4.5:1 on extreme wallpapers", async () => {
     } as const;
     const minima = new Map<string, { ratio: number; state: string }>();
     const failures: string[] = [];
-    for (const tier of ["regular", "clear"] as const) {
+    for (const tier of ["off", "soft", "regular", "clear"] as const) {
         const response = await page.request.patch(
             app.origin + "/api/preferences",
             {

@@ -680,8 +680,8 @@
     padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
     border-radius: var(--radius-lg);
     color: var(--foreground);
-    background: var(--glass-sheen), var(--material-thick);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-thick-sheen), var(--material-thick);
+    backdrop-filter: var(--material-thick-filter);
     box-shadow: var(--shadow-elevation-floating);
     z-index: var(--elevation-toast);
 }

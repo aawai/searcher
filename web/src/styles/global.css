@@ -298,9 +298,9 @@ a {
 .app-shell[data-home] :is(.wordmark-small, .top-actions a, .top-actions button):is(:hover, :focus-visible, [data-popup-open]),
 .app-shell[data-home] .top-actions .topbar-link--active,
 .app-shell[data-home] .top-actions .sync-failed-badge {
-    background: var(--glass-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-filter);
-    backdrop-filter: var(--material-filter);
+    background: var(--material-regular-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
     box-shadow: var(--shadow-material-edge);
 }
 /* The identity badge is a thumb: lighter than Material in both themes, with a
