@@ -935,3 +935,42 @@
 ## [2026-11-11T08:01:01.455Z] capture
 - source_id: "SRC-2026-11-11-004", url: "https://www.sqlite.org/lang_altertable.html", format: "web"
 
+## [2026-11-12T08:01:12.211Z] capture
+- source_id: "SRC-2026-11-12-001", url: "https://www.sqlite.org/atomiccommit.html", format: "web"
+
+## [2026-11-12T08:01:25.060Z] capture
+- source_id: "SRC-2026-11-12-002", url: "https://sqlite.org/tempfiles.html", format: "web"
+
+## [2026-11-12T08:01:27.752Z] capture
+- source_id: "SRC-2026-11-12-003", url: "https://www.sqlite.org/lockingv3.html", format: "web"
+
+## [2026-11-13T08:01:36.957Z] capture
+- source_id: "SRC-2026-11-13-001", url: "https://milkdown.dev/docs/guide/architecture-overview", format: "web"
+
+## [2026-11-13T08:01:38.540Z] capture
+- source_id: "SRC-2026-11-13-002", url: "https://milkdown.dev/docs/api/core", format: "web"
+
+## [2026-11-13T08:01:39.958Z] capture
+- source_id: "SRC-2026-11-13-003", url: "https://milkdown.dev/docs/api/ctx", format: "web"
+
+## [2026-11-13T08:01:41.149Z] capture
+- source_id: "SRC-2026-11-13-004", url: "https://milkdown.dev/docs/plugin/plugins-101", format: "web"
+
+## [2026-11-13T08:02:21.863Z] capture
+- source_id: "SRC-2026-11-13-005", url: "https://raw.githubusercontent.com/Milkdown/website/main/docs/guide/architecture-overview.md", format: "web"
+
+## [2026-11-13T08:02:22.987Z] capture
+- source_id: "SRC-2026-11-13-006", url: "https://raw.githubusercontent.com/Milkdown/website/main/docs/plugin/plugins-101.md", format: "web"
+
+## [2026-11-13T08:02:24.050Z] capture
+- source_id: "SRC-2026-11-13-007", url: "https://raw.githubusercontent.com/Milkdown/website/main/docs/plugin/composable-plugins.md", format: "web"
+
+## [2026-11-13T08:02:25.176Z] capture
+- source_id: "SRC-2026-11-13-008", url: "https://raw.githubusercontent.com/Milkdown/website/main/docs/plugin/using-plugins.md", format: "web"
+
+## [2026-11-13T08:04:00.195Z] ensure_page
+- page_type: "entity", title: "Milkdown Editor", path: "entities/milkdown-editor"
+
+## [2026-11-13T08:04:00.469Z] ensure_page
+- page_type: "concept", title: "Milkdown Plugin Ctx and Markdown Pipeline", path: "concepts/milkdown-plugin-ctx-and-markdown-pipeline"
+

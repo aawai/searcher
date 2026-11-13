@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-12-002",
+  "captured": "2026-11-12",
+  "packet_version": "1.0",
+  "title": "1. Introduction",
+  "url": "https://sqlite.org/tempfiles.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

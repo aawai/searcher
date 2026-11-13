@@ -30,6 +30,7 @@
 - [[concepts/inert-and-top-layer-in-searcher-overlays]] — Inert and Top Layer in Searcher Overlays *(created: 2026-11-01)*
 - [[concepts/login-throttling-and-rate-limiting]] — Login Throttling and Rate Limiting *(created: 2026-11-08)*
 - [[concepts/markdown-sanitization-with-rehype-sanitize]] — Markdown Sanitization with rehype-sanitize *(created: 2026-11-01)*
+- [[concepts/milkdown-plugin-ctx-and-markdown-pipeline]] — Milkdown Plugin Ctx and Markdown Pipeline *(created: 2026-11-13)*
 - [[concepts/modal-dialog-focus-and-semantics]] — Modal Dialog Focus and Semantics *(created: 2026-10-29)*
 - [[concepts/modal-layering-and-escape-dismissal]] — Modal Layering and Escape Dismissal *(created: 2026-09-27)*
 - [[concepts/offline-first-与-local-draft-持久化架构]] — Offline-First 与 Local Draft 持久化架构 *(created: 2026-09-25)*
@@ -72,6 +73,7 @@
 - [[entities/drizzle-sqlite-store]] — Drizzle SQLite Store *(created: 2026-09-25)*
 - [[entities/hono-framework]] — Hono Framework *(created: 2026-09-25)*
 - [[entities/indexeddb-本地存储引擎]] — IndexedDB 本地存储引擎 *(created: 2026-09-25)*
+- [[entities/milkdown-editor]] — Milkdown Editor *(created: 2026-11-13)*
 - [[entities/react-19-framework]] — React 19 Framework *(created: 2026-09-27)*
 - [[entities/searcher-项目]] — Searcher 项目 *(created: 2026-09-25)*
 - [[entities/shadcn-ui-system]] — shadcn UI System *(created: 2026-09-25)*
@@ -355,10 +357,21 @@
 - [[sources/SRC-2026-11-11-002]] — descent-override CSS descriptor *(created: unknown)*
 - [[sources/SRC-2026-11-11-003]] — line-gap-override CSS descriptor *(created: unknown)*
 - [[sources/SRC-2026-11-11-004]] — SQLite ALTER TABLE 更新快照 *(created: unknown)*
+- [[sources/SRC-2026-11-12-001]] — Atomic Commit In SQLite *(created: unknown)*
+- [[sources/SRC-2026-11-12-002]] — Temporary Files Used By SQLite *(created: unknown)*
+- [[sources/SRC-2026-11-12-003]] — File Locking And Concurrency In SQLite Version 3 *(created: unknown)*
+- [[sources/SRC-2026-11-13-001]] — https://milkdown.dev/docs/guide/architecture-overview (CSR 空壳，未提取正文) *(created: unknown)*
+- [[sources/SRC-2026-11-13-002]] — https://milkdown.dev/docs/api/core (CSR 空壳，未提取正文) *(created: unknown)*
+- [[sources/SRC-2026-11-13-003]] — https://milkdown.dev/docs/api/ctx (CSR 空壳，未提取正文) *(created: unknown)*
+- [[sources/SRC-2026-11-13-004]] — https://milkdown.dev/docs/plugin/plugins-101 (CSR 空壳，未提取正文) *(created: unknown)*
+- [[sources/SRC-2026-11-13-005]] — Architecture Overview (Milkdown) *(created: unknown)*
+- [[sources/SRC-2026-11-13-006]] — Plugins 101 (Milkdown) *(created: unknown)*
+- [[sources/SRC-2026-11-13-007]] — Composable Plugins (Milkdown) *(created: unknown)*
+- [[sources/SRC-2026-11-13-008]] — Using Plugins (Milkdown) *(created: unknown)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-11T08:02:31.210Z* | *Total pages: 346*
+*Last updated: 2026-11-13T08:04:15.457Z* | *Total pages: 359*

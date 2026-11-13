@@ -3,7 +3,7 @@ type: entity
 category: project
 title: "Searcher 项目"
 created: 2026-09-25
-updated: 2026-10-27
+updated: 2026-11-13
 sources: [
     sources/SRC-2026-09-25-001,
     sources/SRC-2026-09-25-002,
@@ -46,6 +46,7 @@ sources: [
 - 登录限流：[Login Throttling and Rate Limiting](/concepts/login-throttling-and-rate-limiting.md)
 - AI 流式与工具调用：[OpenAI-Compatible Streaming and Tool Calls](/concepts/openai-compatible-streaming-and-tool-calls.md)
 - 编辑器 transaction 来源与撤销：[ProseMirror Transaction Origin and Undo History](/concepts/prosemirror-transaction-origin-and-undo-history.md)
+- Markdown 编辑器内核：[Milkdown Editor](/entities/milkdown-editor.md)、[Milkdown Plugin Ctx and Markdown Pipeline](/concepts/milkdown-plugin-ctx-and-markdown-pipeline.md)
 - 强制颜色与高对比主题：[Forced Colors and High-Contrast Themes](/concepts/forced-colors-and-high-contrast-themes.md)
 - 外观首帧绘制：[First-Frame Theme Painting](/concepts/first-frame-theme-painting.md)
 - Web 字体加载与 CJK 切片：[Web Font Loading and CJK Subsetting](/concepts/web-font-loading-and-cjk-subsetting.md)

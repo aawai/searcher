@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-13-005",
+  "captured": "2026-11-13",
+  "packet_version": "1.0",
+  "title": "Architecture Overview",
+  "url": "https://raw.githubusercontent.com/Milkdown/website/main/docs/guide/architecture-overview.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

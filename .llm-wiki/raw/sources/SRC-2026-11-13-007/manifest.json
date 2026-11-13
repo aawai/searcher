@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-13-007",
+  "captured": "2026-11-13",
+  "packet_version": "1.0",
+  "title": "Composable Plugins",
+  "url": "https://raw.githubusercontent.com/Milkdown/website/main/docs/plugin/composable-plugins.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

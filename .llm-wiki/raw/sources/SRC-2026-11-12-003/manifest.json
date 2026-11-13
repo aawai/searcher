@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-12-003",
+  "captured": "2026-11-12",
+  "packet_version": "1.0",
+  "title": "https://www.sqlite.org/lockingv3.html",
+  "url": "https://www.sqlite.org/lockingv3.html",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

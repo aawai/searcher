@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-11T08:02:31.210Z",
+  "last_updated": "2026-11-13T08:04:15.457Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -183,6 +183,13 @@
       "domain": "engineering",
       "created": "2026-11-01",
       "updated": "2026-11-01"
+    },
+    "concepts/milkdown-plugin-ctx-and-markdown-pipeline": {
+      "type": "concept",
+      "title": "Milkdown Plugin Ctx and Markdown Pipeline",
+      "domain": "engineering",
+      "created": "2026-11-13",
+      "updated": "2026-11-13"
     },
     "concepts/modal-dialog-focus-and-semantics": {
       "type": "concept",
@@ -459,6 +466,13 @@
       "created": "2026-09-25",
       "updated": "2026-10-28"
     },
+    "entities/milkdown-editor": {
+      "type": "entity",
+      "title": "Milkdown Editor",
+      "category": "tool",
+      "created": "2026-11-13",
+      "updated": "2026-11-13"
+    },
     "entities/react-19-framework": {
       "type": "entity",
       "title": "React 19 Framework",
@@ -471,7 +485,7 @@
       "title": "Searcher 项目",
       "category": "project",
       "created": "2026-09-25",
-      "updated": "2026-10-27"
+      "updated": "2026-11-13"
     },
     "entities/shadcn-ui-system": {
       "type": "entity",
@@ -1867,6 +1881,105 @@
       "source_id": "SRC-2026-11-11-004",
       "format": "web",
       "captured": "2026-11-11"
+    },
+    "sources/SRC-2026-11-12-001": {
+      "type": "source",
+      "title": "Atomic Commit In SQLite",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-12-001/extracted.md",
+      "source_id": "SRC-2026-11-12-001",
+      "format": "web",
+      "captured": "2026-11-12"
+    },
+    "sources/SRC-2026-11-12-002": {
+      "type": "source",
+      "title": "Temporary Files Used By SQLite",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-12-002/extracted.md",
+      "source_id": "SRC-2026-11-12-002",
+      "format": "web",
+      "captured": "2026-11-12"
+    },
+    "sources/SRC-2026-11-12-003": {
+      "type": "source",
+      "title": "File Locking And Concurrency In SQLite Version 3",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-12-003/extracted.md",
+      "source_id": "SRC-2026-11-12-003",
+      "format": "web",
+      "captured": "2026-11-12"
+    },
+    "sources/SRC-2026-11-13-001": {
+      "type": "source",
+      "title": "https://milkdown.dev/docs/guide/architecture-overview (CSR 空壳，未提取正文)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-13-001/extracted.md",
+      "source_id": "SRC-2026-11-13-001",
+      "format": "web",
+      "captured": "2026-11-13"
+    },
+    "sources/SRC-2026-11-13-002": {
+      "type": "source",
+      "title": "https://milkdown.dev/docs/api/core (CSR 空壳，未提取正文)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-13-002/extracted.md",
+      "source_id": "SRC-2026-11-13-002",
+      "format": "web",
+      "captured": "2026-11-13"
+    },
+    "sources/SRC-2026-11-13-003": {
+      "type": "source",
+      "title": "https://milkdown.dev/docs/api/ctx (CSR 空壳，未提取正文)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-13-003/extracted.md",
+      "source_id": "SRC-2026-11-13-003",
+      "format": "web",
+      "captured": "2026-11-13"
+    },
+    "sources/SRC-2026-11-13-004": {
+      "type": "source",
+      "title": "https://milkdown.dev/docs/plugin/plugins-101 (CSR 空壳，未提取正文)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-13-004/extracted.md",
+      "source_id": "SRC-2026-11-13-004",
+      "format": "web",
+      "captured": "2026-11-13"
+    },
+    "sources/SRC-2026-11-13-005": {
+      "type": "source",
+      "title": "Architecture Overview (Milkdown)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-13-005/extracted.md",
+      "source_id": "SRC-2026-11-13-005",
+      "format": "web",
+      "captured": "2026-11-13"
+    },
+    "sources/SRC-2026-11-13-006": {
+      "type": "source",
+      "title": "Plugins 101 (Milkdown)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-13-006/extracted.md",
+      "source_id": "SRC-2026-11-13-006",
+      "format": "web",
+      "captured": "2026-11-13"
+    },
+    "sources/SRC-2026-11-13-007": {
+      "type": "source",
+      "title": "Composable Plugins (Milkdown)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-13-007/extracted.md",
+      "source_id": "SRC-2026-11-13-007",
+      "format": "web",
+      "captured": "2026-11-13"
+    },
+    "sources/SRC-2026-11-13-008": {
+      "type": "source",
+      "title": "Using Plugins (Milkdown)",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-13-008/extracted.md",
+      "source_id": "SRC-2026-11-13-008",
+      "format": "web",
+      "captured": "2026-11-13"
     },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",

@@ -24,6 +24,8 @@ sources:
 
 SQLite 官方还提醒：[运行时复制与文件锁风险](/sources/SRC-2026-10-29-003.md)（[原始 HTML](../../raw/sources/SRC-2026-10-29-003/original/source.html)，第 229–280、316–366 行）包括事务中直接复制产生不一致，以及在 Unix POSIX advisory lock 环境下同一进程绕过 SQLite 直接打开并关闭数据库文件可能解除其他连接的锁。3.51.0 引入的部分 WAL 多进程防御并非完整修复；不要将通用风险直接当作项目已存在的缺陷。
 
+[SQLite 原子提交](/sources/SRC-2026-11-12-001.md)及[临时文件](/sources/SRC-2026-11-12-002.md)说明 rollback journal 可用于崩溃恢复；不要将异常中断后留下的 journal 视为可随意清理的垃圾。WAL 使用不同的提交机制，数据库事务原子性不自动扩展到数据库外的应用文件。
+
 ## 验证与应用边界
 
 [SQLite PRAGMA](/sources/SRC-2026-10-27-002.md)（[raw](../../raw/sources/SRC-2026-10-27-002/extracted.md)，第 805–828、1056–1095 行）：完整 `PRAGMA integrity_check` 无错误时返回一行 `ok`，但不检查外键；`PRAGMA foreign_key_check` 每个违例返回一行。`quick_check` 省略 UNIQUE 和索引内容一致性检查，不能等同于完整检查。

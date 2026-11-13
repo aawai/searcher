@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-13-004",
+  "captured": "2026-11-13",
+  "packet_version": "1.0",
+  "title": "https://milkdown.dev/docs/plugin/plugins-101",
+  "url": "https://milkdown.dev/docs/plugin/plugins-101",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}
