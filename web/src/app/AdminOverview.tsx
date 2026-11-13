@@ -86,7 +86,6 @@ export function AdminOverview() {
                     ? <LoadingState>正在加载系统概览…</LoadingState>
                     : (
                         <EmptyState
-                            headingLevel={3}
                             title="无法加载系统概览"
                             description={error}
                             action={
@@ -141,11 +140,6 @@ export function AdminOverview() {
                         accessibleLabel="管理用户"
                     />
                 </SettingsRow>
-                <SettingsRow title="应用 / 笔记">
-                    <span className="admin-value">
-                        {overview.totalWebApps} / {overview.totalDocuments}
-                    </span>
-                </SettingsRow>
                 <SettingsRow title="AI 服务商 / 模型">
                     <span className="admin-value">
                         {overview.totalAiProviders} / {overview.totalAiModels}
@@ -167,6 +161,13 @@ export function AdminOverview() {
                         label="查看"
                         accessibleLabel="查看审计日志"
                     />
+                </SettingsRow>
+            </SettingsGroup>
+            <SettingsGroup title="内容">
+                <SettingsRow title="应用 / 笔记">
+                    <span className="admin-value">
+                        {overview.totalWebApps} / {overview.totalDocuments}
+                    </span>
                 </SettingsRow>
             </SettingsGroup>
         </div>

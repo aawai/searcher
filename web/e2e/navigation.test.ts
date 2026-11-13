@@ -188,6 +188,18 @@ Deno.test("production navigation contracts", async (t) => {
         },
     );
     await t.step(
+        "home page has a single sr-only h1 in main for guests",
+        async () => {
+            await visit("/");
+            assertEquals(
+                await page.locator("main.home").getByRole("heading", {
+                    level: 1,
+                }).allTextContents(),
+                ["Searcher"],
+            );
+        },
+    );
+    await t.step(
         "unknown pages and workspace children render the same recoverable 404 in a narrow column",
         async () => {
             const cases: [
@@ -408,7 +420,10 @@ Deno.test("production navigation contracts", async (t) => {
             await visit("/settings/data", guest);
             await guest.getByRole("heading", { name: "同步", exact: true })
                 .waitFor();
-            assertEquals(await guest.getByText("已同步", { exact: true }).count(), 0);
+            assertEquals(
+                await guest.getByText("已同步", { exact: true }).count(),
+                0,
+            );
             await guest.getByText(
                 "访客外观仅保存在当前设备；登录后可使用账户中的应用、笔记和偏好设置。",
                 { exact: true },
@@ -426,7 +441,10 @@ Deno.test("production navigation contracts", async (t) => {
 
             await visit("/settings/data");
             await page.getByRole("link", { name: "打开回收站" }).waitFor();
-            assertEquals(await page.getByText("已同步", { exact: true }).count(), 0);
+            assertEquals(
+                await page.getByText("已同步", { exact: true }).count(),
+                0,
+            );
             await page.getByText(
                 "偏好设置、应用与笔记保存在账户中；任务栏位置等设备布局只保存在当前设备。",
                 { exact: true },
@@ -659,6 +677,28 @@ Deno.test("production navigation contracts", async (t) => {
     await t.step(
         "admin exact children, tab Back and AI Provider workspace entry",
         async () => {
+            // Signed-in home has a single sr-only h1 in main, and non-admin
+            // /admin renders continuous heading levels (h1 -> h2).
+            await visit("/");
+            assertEquals(
+                await page.locator("main.home").getByRole("heading", {
+                    level: 1,
+                }).allTextContents(),
+                ["Searcher"],
+            );
+            await visit("/admin");
+            assertEquals(
+                await page.getByRole("heading", { level: 1 }).allTextContents(),
+                ["管理后台"],
+            );
+            assertEquals(
+                await page.getByRole("heading", { level: 2 }).allTextContents(),
+                ["无权访问"],
+            );
+            assertEquals(
+                await page.getByRole("heading", { level: 3 }).count(),
+                0,
+            );
             await store.run((db) =>
                 db.update(users).set({ role: "admin" }).where(
                     eq(users.username, username),
@@ -679,13 +719,43 @@ Deno.test("production navigation contracts", async (t) => {
                 httpOnly: true,
                 sameSite: "Lax",
             }]);
+            // /admin/overview canonically redirects to /admin without 404.
+            await visit("/admin/overview");
+            await page.waitForURL(origin + "/admin");
+            // Non-users tabs must not request /api/admin/users.
+            const nonUserTabUserRequests: string[] = [];
+            page.on("request", (req) => {
+                if (req.url().includes("/api/admin/users")) {
+                    nonUserTabUserRequests.push(req.url());
+                }
+            });
             for (
                 const [path, label] of [
                     ["/admin", "概览"],
-                    ["/admin/users", "用户"],
                     ["/admin/settings", "设置"],
                     ["/admin/audit", "审计"],
                     ["/admin/backup", "备份"],
+                ]
+            ) {
+                await visit(path);
+                const activeLink = page.getByRole("navigation", {
+                    name: "管理后台主导航",
+                }).getByRole("link", { name: label, exact: true });
+                await activeLink.waitFor();
+                assertEquals(
+                    await activeLink.getAttribute("aria-current"),
+                    "page",
+                );
+                assertEquals((await page.reload())?.status(), 200);
+            }
+            assertEquals(
+                nonUserTabUserRequests,
+                [],
+                "non-users admin tabs should not fetch /api/admin/users",
+            );
+            for (
+                const [path, label] of [
+                    ["/admin/users", "用户"],
                 ]
             ) {
                 await visit(path);
@@ -742,12 +812,15 @@ Deno.test("production navigation contracts", async (t) => {
         async () => {
             await visit("/admin/users");
             const opener = page.getByRole("button", {
-                name: "重置密码",
-                exact: true,
+                name: /的更多操作$/,
             }).first();
             const handle = await opener.elementHandle();
             assertEquals(handle !== null, true);
             await opener.click();
+            await page.getByRole("menuitem", {
+                name: "重置密码",
+                exact: true,
+            }).click();
             const dialog = page.getByRole("dialog");
             await dialog.waitFor({ state: "visible" });
             try {

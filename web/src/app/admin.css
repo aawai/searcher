@@ -30,28 +30,6 @@
     gap: var(--space-1);
 }
 
-.admin-row-reset {
-    transition: opacity var(--motion-fast) var(--ease-standard);
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .admin-row-reset {
-        opacity: 0;
-    }
-
-    tr:hover .admin-row-reset,
-    tr:focus-within .admin-row-reset,
-    .admin-row-reset:focus-visible {
-        opacity: 1;
-    }
-}
-
-@media (max-width: 767px) {
-    .admin-row-reset {
-        display: none;
-    }
-}
-
 .admin-cell-actions {
     width: 1%;
     white-space: nowrap;

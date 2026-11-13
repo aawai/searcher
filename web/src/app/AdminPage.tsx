@@ -328,20 +328,16 @@ export function AdminPage() {
     }
 
     useEffect(() => {
-        if (currentUser?.role === "admin" && activeTab) {
+        if (currentUser?.role === "admin" && activeTab === "users") {
             void loadUsers(userPage, submittedSearch);
-            if (activeTab === "audit") {
-                void loadAuditLogs(auditPage, auditActionFilter);
-            }
         }
-    }, [
-        currentUser,
-        activeTab,
-        userPage,
-        submittedSearch,
-        auditPage,
-        auditActionFilter,
-    ]);
+    }, [currentUser, activeTab, userPage, submittedSearch]);
+
+    useEffect(() => {
+        if (currentUser?.role === "admin" && activeTab === "audit") {
+            void loadAuditLogs(auditPage, auditActionFilter);
+        }
+    }, [currentUser, activeTab, auditPage, auditActionFilter]);
 
     useEffect(() => {
         if (activeTab !== "users") {
@@ -483,7 +479,9 @@ export function AdminPage() {
         if (!deleteModalUser) return;
         setDeleteError("");
         if (deleteConfirmText !== deleteModalUser.username) {
-            setDeleteError(`输入用户名 ${deleteModalUser.username}（不含 @）以确认删除`);
+            setDeleteError(
+                `输入用户名 ${deleteModalUser.username}（不含 @）以确认删除`,
+            );
             return;
         }
         setDeleteBusy(true);
@@ -534,7 +532,6 @@ export function AdminPage() {
             <PageShell archetype="management">
                 <PageHeader title="管理后台" />
                 <EmptyState
-                    headingLevel={3}
                     title="无权访问"
                     description="管理后台仅限管理员访问。"
                     action={currentUser
@@ -674,7 +671,6 @@ export function AdminPage() {
                         : userError && users.length === 0
                         ? (
                             <EmptyState
-                                headingLevel={3}
                                 title="无法加载用户列表"
                                 action={
                                     <Button
@@ -694,7 +690,6 @@ export function AdminPage() {
                         : users.length === 0
                         ? (
                             <EmptyState
-                                headingLevel={3}
                                 title={submittedSearch
                                     ? `没有匹配「${submittedSearch}」的用户`
                                     : "暂无用户"}
@@ -777,21 +772,6 @@ export function AdminPage() {
                                                     </TableCell>
                                                     <TableCell className="admin-cell-actions">
                                                         <div className="admin-row-actions">
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="admin-row-reset"
-                                                                onClick={(
-                                                                    event,
-                                                                ) => openResetModal(
-                                                                    u,
-                                                                    event
-                                                                        .currentTarget,
-                                                                )}
-                                                            >
-                                                                重置密码
-                                                            </Button>
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger
                                                                     render={
@@ -959,7 +939,6 @@ export function AdminPage() {
                         : auditError && auditLogs.length === 0
                         ? (
                             <EmptyState
-                                headingLevel={3}
                                 title="无法加载审计日志"
                                 action={
                                     <Button
@@ -979,7 +958,6 @@ export function AdminPage() {
                         : auditLogs.length === 0
                         ? (
                             <EmptyState
-                                headingLevel={3}
                                 title="暂无审计记录"
                                 action={auditActionFilter
                                     ? (
@@ -1179,7 +1157,8 @@ export function AdminPage() {
                                 className="admin-field-label"
                                 htmlFor="reset-password-input"
                             >
-                                新密码（{passwordRules.minLength}–{passwordRules.maxLength} 个字符）
+                                新密码（{passwordRules.minLength}–{passwordRules
+                                    .maxLength} 个字符）
                             </label>
                             <Input
                                 id="reset-password-input"

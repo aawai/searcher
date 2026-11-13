@@ -116,7 +116,6 @@ export function AdminSystemSettings() {
                     ? <LoadingState>正在加载系统设置…</LoadingState>
                     : (
                         <EmptyState
-                            headingLevel={3}
                             title="无法加载系统设置"
                             description={error}
                             action={

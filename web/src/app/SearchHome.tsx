@@ -1987,6 +1987,7 @@ export function DesktopHost(
                     className="home"
                     ref={homeRef}
                 >
+                    {host.active && <h1 className="sr-only">Searcher</h1>}
                     <StatusBanner
                         tone="error"
                         presentation="floating"
