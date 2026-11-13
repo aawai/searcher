@@ -22,7 +22,7 @@
 
 /* The property does not inherit, so a nested host never picks up its parent's
    target; only the host's own pseudo-element reads it. */
-:where(.switch, .button, .radio-item, .touch-target)::after {
+:where(.switch, .button, .radio-item, [data-slot="checkbox"], .touch-target)::after {
     --touch-target-size: inherit;
     content: "";
     position: absolute;
@@ -1133,6 +1133,7 @@
    -------------------------------------------------------------------------- */
 [data-slot="checkbox"] {
     position: relative;
+    --touch-target-size: var(--space-6);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1160,6 +1161,12 @@
 
 [data-slot="checkbox"][data-disabled] {
     opacity: .5;
+}
+
+@media (any-pointer: coarse), (hover: none) {
+    [data-slot="checkbox"] {
+        --touch-target-size: var(--control-touch-target);
+    }
 }
 
 /* --------------------------------------------------------------------------

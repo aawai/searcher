@@ -12,6 +12,8 @@ updated: 2026-10-26
 
 WAL 允许读写并行，但同一时刻仍只有一个 writer。旧读快照升级为写事务可能失败为 SQLITE_BUSY_SNAPSHOT；结束旧事务后重新建立事务，不能只在旧快照上重复 UPDATE。BEGIN IMMEDIATE 可提前申请写事务，不保证申请本身不争用。
 
+[SQLite rollback 锁参考](/sources/SRC-2026-11-12-003.md)描述 SHARED、RESERVED、PENDING 与 EXCLUSIVE 状态及 hot journal 恢复时的锁竞争；这些状态的描述不应直接套用到 WAL。其恢复文件与原子性背景另见 [SQLite 临时文件](/sources/SRC-2026-11-12-002.md) 和 [原子提交](/sources/SRC-2026-11-12-001.md)。
+
 ## 对应用层的意义
 
 [Database Queue Serialization](/concepts/database-queue-serialization.md) 解决共享连接上的异步任务交错，不是重复实现 SQLite 的连接间锁。推论：若队列仅覆盖部分异步事务，其余回调仍可能进入同一连接的事务上下文。

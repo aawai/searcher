@@ -205,6 +205,8 @@
 }
 
 .home-masthead__continue-item {
+    position: relative;
+    --touch-target-size: var(--space-6);
     display: inline-flex;
     align-items: baseline;
     gap: var(--space-1);
@@ -218,6 +220,10 @@
     font: inherit;
     text-decoration: none;
     cursor: pointer;
+}
+
+.home-masthead__continue-item::after {
+    inset-inline: min(0px, calc((100% - var(--touch-target-size)) / 2));
 }
 
 .home-masthead__continue-item:hover {
@@ -733,7 +739,10 @@
 
 /* Coarse pointer: >=44px hit areas and always-visible menu button */
 @media (any-pointer: coarse), (hover: none) {
-    .home-masthead__continue-item,
+    .home-masthead__continue-item {
+        --touch-target-size: var(--control-touch-target);
+    }
+
     .home-masthead__task,
     .home-masthead__copy-btn,
     .home-masthead__all-notes,

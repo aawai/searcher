@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
 import {
+    adminTab,
     askConversationId,
     authDestination,
     authPath,
@@ -55,4 +56,17 @@ Deno.test("ask conversation deep links round-trip ids, including reserved charac
     assertEquals(askConversationId("/ask/"), null);
     assertEquals(askConversationId("/settings/ai"), null);
     assertEquals(askConversationId("/ask/a/b"), null);
+});
+
+Deno.test("admin routes map overview canonically to /admin and reject unknown paths", () => {
+    assertEquals(routes.admin(), "/admin");
+    assertEquals(routes.admin("overview"), "/admin");
+    assertEquals(routes.admin("users"), "/admin/users");
+    assertEquals(adminTab("/admin"), "overview");
+    assertEquals(adminTab("/admin/overview"), null);
+    assertEquals(adminTab("/admin/users"), "users");
+    assertEquals(adminTab("/admin/settings"), "settings");
+    assertEquals(adminTab("/admin/audit"), "audit");
+    assertEquals(adminTab("/admin/backup"), "backup");
+    assertEquals(adminTab("/admin/nope"), null);
 });

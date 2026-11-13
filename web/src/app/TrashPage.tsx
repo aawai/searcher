@@ -96,10 +96,7 @@ function TrashRowActions(
                 type="button"
                 variant="ghost"
                 size="sm"
-                className={cn(
-                    "trash-danger",
-                    layout === "table" && "trash-purge",
-                )}
+                className="trash-danger"
                 onClick={row.onPurge}
                 disabled={row.disabled}
             >

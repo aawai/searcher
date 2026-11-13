@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-13-006",
+  "captured": "2026-11-13",
+  "packet_version": "1.0",
+  "title": "Plugins 101",
+  "url": "https://raw.githubusercontent.com/Milkdown/website/main/docs/plugin/plugins-101.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

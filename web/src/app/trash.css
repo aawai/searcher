@@ -1,4 +1,4 @@
-/* Trash: one hairline list per tab. Purge stays quiet until the row is hovered or focused. */
+/* Trash: one hairline list per tab. */
 
 .window-frame[data-window-id="trash"] .trash-page {
     margin-block-start: var(--space-4);
@@ -56,6 +56,8 @@
 }
 
 .trash-cell-end {
+    width: 1%;
+    white-space: nowrap;
     text-align: end;
 }
 
@@ -68,17 +70,6 @@
 
 .trash-page .trash-danger {
     color: var(--danger);
-}
-
-.trash-page .trash-purge {
-    opacity: 0;
-    transition: opacity var(--motion-fast) var(--ease-standard);
-}
-
-.trash-page tr:hover .trash-purge,
-.trash-page tr:focus-within .trash-purge,
-.trash-page .trash-purge:focus-visible {
-    opacity: 1;
 }
 
 .trash-mobile-list {
@@ -100,12 +91,6 @@
     flex-wrap: wrap;
     gap: var(--space-2);
     margin-block-start: var(--space-2);
-}
-
-@media (any-pointer: coarse), (hover: none) {
-    .trash-page .trash-purge {
-        opacity: 1;
-    }
 }
 
 .trash-page[data-host-narrow="true"] .trash-table-view {

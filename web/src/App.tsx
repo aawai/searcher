@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
     createBrowserRouter,
     Link,
+    Navigate,
     Outlet,
     RouterProvider,
     useLocation,
@@ -571,6 +572,10 @@ export function App() {
                     // route only renders the guest sign-in prompt.
                     { path: `${routes.ask}/:id?`, element: <AskRoute /> },
                     { path: routes.account, element: <AccountRoute /> },
+                    {
+                        path: `${routes.admin()}/overview`,
+                        element: <Navigate to={routes.admin()} replace />,
+                    },
                     { path: `${routes.admin()}/*`, element: <AdminPage /> },
                     { path: routes.trash, element: <TrashRoute /> },
                     { path: routes.share, element: <SharePage /> },

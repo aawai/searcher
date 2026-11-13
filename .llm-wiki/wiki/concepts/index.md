@@ -28,6 +28,7 @@
 - [Inert and Top Layer in Searcher Overlays](inert-and-top-layer-in-searcher-overlays.md)
 - [Login Throttling and Rate Limiting](login-throttling-and-rate-limiting.md)
 - [Markdown Sanitization with rehype-sanitize](markdown-sanitization-with-rehype-sanitize.md)
+- [Milkdown Plugin Ctx and Markdown Pipeline](milkdown-plugin-ctx-and-markdown-pipeline.md)
 - [Modal Dialog Focus and Semantics](modal-dialog-focus-and-semantics.md)
 - [Modal Layering and Escape Dismissal](modal-layering-and-escape-dismissal.md)
 - [Offline-First 与 Local Draft 持久化架构](offline-first-%E4%B8%8E-local-draft-%E6%8C%81%E4%B9%85%E5%8C%96%E6%9E%B6%E6%9E%84.md)

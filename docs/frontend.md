@@ -20,7 +20,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   `SettingsCard` / `SettingsRow`、`ActionGroup`、`EmptyState`、`StatusBanner`、
   `LoadingState`、`UndoToast`、`LocalNavigation`、`ManagementTable`、`Pagination`
   等共享语义组件。Feature 不另建同名反馈或分组容器。
-- 标题层级：独立内容页保持单一可见 `h1`（首页 `/` 不设页面 `h1`，以命名
+- 标题层级：独立内容页保持单一可见 `h1`（首页 `/` 在 `<main className="home">` 内提供 `.sr-only` 的 `h1`“Searcher”，并以命名
   landmark 组织区域；应用 / 笔记窗口 `/?view=apps`、`/?view=notes` 的标题位于窗口标题栏，
   窗口内分组与 `EmptyState` 使用 `headingLevel={3}`）。设置与账户
   共用 `SettingsShell`：`<nav aria-label="设置分类">` 含 `.settings-nav-title`
@@ -37,8 +37,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   管理后台 `PageHeader` 的 `h1` 为“管理后台”，`LocalNavigation`（`aria-label="管理后台主导航"`）
   只渲染导航链接、不渲染 Tab `h2`。Ask 访客态 `PageHeader` 为 `h1`“AI 问答”，
   登录态对话工作区以 `ConversationHeader` 的会话标题作为唯一 `h1`。
-  已知待单独修复的差距：管理后台部分 `EmptyState` 在没有上层 `h2` 时直接使用
-  `h3`（`AdminPage.tsx`）；登录用户无可用模型时 Ask 渲染空状态，但不渲染页面 `h1`
+  已知待单独修复的差距：登录用户无可用模型时 Ask 渲染空状态，但不渲染页面 `h1`
   （`AskPage.tsx`）。这些现状不改变上述标题层级要求。
 - 图标使用 Lucide，`size` 只允许 14、16、20（`check:ui` 强制）。语义映射：应用
   `AppWindow`、笔记 `NotebookPen`、总览 `LayoutGrid`、文件夹
@@ -139,7 +138,7 @@ deno task check:ui --update
 - `/ask` 是 AI 窗口的空会话，`/ask/:id` 是会话深链；同一窗口承载两者，在 `/ask` 发起的会话拿到 id 后以 replace 更新为 `/ask/:id`，侧栏切换为 push；窗口在后台时拿到 id 只更新窗口的局部地址，不改变页面地址，回到该历史条目时再 replace 对齐。登录用户由任务栏、顶栏或链接打开 AI 窗口；无模型时保留入口并显示不可用原因，访客不显示任务栏，直达 `/ask` 保留登录引导页。
 - `/?view=apps` 与 `/?view=notes` 打开或激活首页上的应用、笔记窗口；窗口切换、最小化均 push 浏览器历史，任务栏入口再次点击活动窗口会最小化它（不重置内容），关闭未保存笔记窗口须确认，浏览器返回 / 前进不提示。不再有资料库根视图或头像内的应用 / 笔记 / AI 导航。
 - 笔记窗口内部路由为 `documents/root`（无选中）、`documents/new`（含创建目标）和 `documents/edit`（含 id）；选中替换当前路由，不维护返回栈或将选中笔记写入 URL。侧栏的模式（`DocumentsScope`：`tree` / `recent` / `favorite`，搜索非空时为列表）保存在库状态中，树展开、选中节点与按笔记本懒加载的页面是 `DocumentsSidebar` 的局部状态；树语义组件 `NotesTree` 的键盘模型是纯函数（`tree-keyboard.ts`），创建目标解析与树条目构造在 `notes-tree-model.ts`，均有单测。节点菜单复用 `components/ui/context-menu.tsx`，⋯ 按钮向节点派发同一个 `contextmenu` 事件而不另建菜单。所有打开笔记入口共用离开保护；新建成功后 replace 为编辑路由而不重挂载编辑器。
-- `/settings` 与 `/settings/search` 均解析为 `search` 分类，不互相重定向；登录用户的设置和 `/account` 同属一个窗口，回收站为另一个窗口。设置内容按 Host 宽度（访客独立页按视口）选择布局：≥768px 双栏，<768px 的 `/settings` 为列表，分类与 `/account` 为详情并提供返回设置的链接。未知 Settings/Admin 子路径保持 404。
+- `/settings` 与 `/settings/search` 均解析为 `search` 分类，不互相重定向；`/admin/overview` 规范重定向至 `/admin`；登录用户的设置和 `/account` 同属一个窗口，回收站为另一个窗口。设置内容按 Host 宽度（访客独立页按视口）选择布局：≥768px 双栏，<768px 的 `/settings` 为列表，分类与 `/account` 为详情并提供返回设置的链接。未知 Settings/Admin 子路径保持 404。
 - 登录与注册保留经过校验的站内 `next`（含 query）；无来源或外部目标返回首页。成功后由
   页面上“已登录”状态这一处 replace 到目标，只导航一次（`/share` 这类一次性入口依赖它）。
 - `/share` 是分享目标，不渲染内容页，立即 replace 到首页或登录，见

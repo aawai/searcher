@@ -471,9 +471,16 @@ export function AccountContent({ host }: { host: PageHost }) {
                         <SettingsRow title="用户名">
                             <span>{user.username}</span>
                         </SettingsRow>
-                        <SettingsRow title="显示名称">
+                        <SettingsRow
+                            title="显示名称"
+                            className={host.narrow
+                                ? "settings-row--vertical"
+                                : undefined}
+                        >
                             <Input
-                                className="account-input"
+                                className={host.narrow
+                                    ? undefined
+                                    : "account-input"}
                                 aria-label="显示名称"
                                 placeholder="输入显示名称"
                                 type="text"
@@ -483,9 +490,16 @@ export function AccountContent({ host }: { host: PageHost }) {
                                 onChange={(e) => setDisplayName(e.target.value)}
                             />
                         </SettingsRow>
-                        <SettingsRow title="邮箱">
+                        <SettingsRow
+                            title="邮箱"
+                            className={host.narrow
+                                ? "settings-row--vertical"
+                                : undefined}
+                        >
                             <Input
-                                className="account-input"
+                                className={host.narrow
+                                    ? undefined
+                                    : "account-input"}
                                 aria-label="邮箱"
                                 type="email"
                                 autoComplete="email"

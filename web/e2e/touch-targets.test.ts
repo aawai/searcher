@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import type { Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
+import { hitSize } from "./helpers/touch-target.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 
 // Issue #369 T3 / T14: controls keep their visible size on every pointer; a
@@ -290,6 +291,153 @@ Deno.test("笔记侧栏条目：任何粗指针下可见放大到 44，命中区
                     [],
                     `${profile} sidebar`,
                 );
+            } finally {
+                await browser.close();
+            }
+        }
+    } finally {
+        await app.close();
+    }
+});
+
+Deno.test("刊头继续项、AI 复选框命中区与窄屏账户输入契约 #405", async () => {
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    let noteSeeded = false;
+    try {
+        for (const [profile, settings] of Object.entries(POINTER_PROFILES)) {
+            const browser = await chromium.launch({
+                args: ["--no-sandbox", `--blink-settings=${settings}`],
+            });
+            try {
+                const page = await browser.newPage({
+                    viewport: { width: 1440, height: 900 },
+                });
+                await loginAndVisit(page, app.origin, "/", user);
+                if (!noteSeeded) {
+                    const created = await page.request.post(
+                        `${app.origin}/api/documents`,
+                        {
+                            headers: { Origin: app.origin },
+                            data: {
+                                title: "周报笔记",
+                                body: "记录本周进度与待办。",
+                            },
+                        },
+                    );
+                    assert(created.ok(), `seed doc: ${created.status()}`);
+                    noteSeeded = true;
+                    await page.reload();
+                } else {
+                    await page.goto(app.origin + "/");
+                }
+                await page.waitForFunction(() =>
+                    document.querySelector(".home-masthead")?.getAttribute(
+                        "data-mode",
+                    ) === "side"
+                );
+                const continueItem = page.locator(
+                    ".home-masthead__continue-item",
+                );
+                await continueItem.waitFor({ state: "visible" });
+                const desktopHit = await hitSize(continueItem);
+                const minDesktop = profile === "mouse" ? 24 : 44;
+                assert(
+                    desktopHit.height >= minDesktop,
+                    `${profile} 1440 continue-item height: ${desktopHit.height}`,
+                );
+                if (profile !== "mouse") {
+                    assertEquals(
+                        await probeTargets(
+                            page,
+                            ".home-masthead",
+                            ".home-masthead__continue-item",
+                        ),
+                        [],
+                        `${profile} 1440 continue-item`,
+                    );
+                }
+
+                await page.setViewportSize({ width: 390, height: 844 });
+                await page.waitForFunction(() =>
+                    document.querySelector(".home-masthead")?.getAttribute(
+                        "data-mode",
+                    ) === "narrow"
+                );
+                const peek = page.locator(".home-masthead__peek");
+                if (await peek.isVisible()) {
+                    await peek.click();
+                }
+                await page.waitForFunction(() =>
+                    document.querySelector(".home-masthead__sheet")
+                        ?.getAttribute("data-open") === "true"
+                );
+                await continueItem.waitFor({ state: "visible" });
+                await continueItem.evaluate((el) =>
+                    Promise.all(
+                        el.closest(".home-masthead")?.getAnimations({
+                            subtree: true,
+                        }).map((anim) => anim.finished) ?? [],
+                    )
+                );
+                const mobileHit = await hitSize(continueItem);
+                assert(
+                    mobileHit.height >= minDesktop,
+                    `${profile} 390 continue-item height: ${mobileHit.height}`,
+                );
+                if (profile !== "mouse") {
+                    assertEquals(
+                        await probeTargets(
+                            page,
+                            ".home-masthead",
+                            ".home-masthead__continue-item",
+                        ),
+                        [],
+                        `${profile} 390 continue-item`,
+                    );
+                }
+
+                // AI settings checkboxes: >=24px on fine mouse, >=44px on touch/hybrid.
+                await openSettings(page, app.origin, "ai");
+                const checkbox = page.locator(
+                    `${SETTINGS} [data-slot="checkbox"]`,
+                ).first();
+                await checkbox.waitFor({ state: "visible" });
+                const checkboxHit = await hitSize(checkbox);
+                assert(
+                    checkboxHit.width >= minDesktop &&
+                        checkboxHit.height >= minDesktop,
+                    `${profile} checkbox hit: ${JSON.stringify(checkboxHit)}`,
+                );
+                if (profile !== "mouse") {
+                    assertEquals(
+                        await probeTargets(
+                            page,
+                            SETTINGS,
+                            '[data-slot="checkbox"]',
+                        ),
+                        [],
+                        `${profile} ai checkboxes`,
+                    );
+                }
+
+                // Account email input at 390x844 fits admin@example.com without clipping.
+                if (profile === "mouse") {
+                    await page.goto(`${app.origin}/account`);
+                    const emailInput = page.getByLabel("邮箱", { exact: true });
+                    await emailInput.waitFor({ state: "visible" });
+                    await emailInput.fill("admin@example.com");
+                    const overflow = await emailInput.evaluate((node) => ({
+                        scrollWidth: node.scrollWidth,
+                        clientWidth: node.clientWidth,
+                    }));
+                    assert(
+                        overflow.scrollWidth <= overflow.clientWidth,
+                        `390 account email clipped: ${
+                            JSON.stringify(overflow)
+                        }`,
+                    );
+                }
             } finally {
                 await browser.close();
             }

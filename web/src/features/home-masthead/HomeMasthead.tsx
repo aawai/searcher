@@ -417,7 +417,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                                             ? (
                                                 <Link
                                                     key={`conversation:${entry.id}`}
-                                                    className="home-masthead__continue-item"
+                                                    className="home-masthead__continue-item touch-target"
                                                     to={routes.askConversation(
                                                         entry.id,
                                                     )}
@@ -435,7 +435,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                                                 <button
                                                     key={`document:${entry.id}`}
                                                     type="button"
-                                                    className="home-masthead__continue-item"
+                                                    className="home-masthead__continue-item touch-target"
                                                     onClick={() =>
                                                         onOpenDocument(
                                                             entry.id,

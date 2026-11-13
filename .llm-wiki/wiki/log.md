@@ -1,5 +1,24 @@
 # Wiki Update Log
 
+## 2026-11-13
+
+- **ensure\_page**: {"page_type":"concept","path":"concepts/milkdown-plugin-ctx-and-markdown-pipeline","title":"Milkdown Plugin Ctx and Markdown Pipeline"}
+- **ensure\_page**: {"page_type":"entity","path":"entities/milkdown-editor","title":"Milkdown Editor"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-13-008","url":"https://raw.githubusercontent.com/Milkdown/website/main/docs/plugin/using-plugins.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-13-007","url":"https://raw.githubusercontent.com/Milkdown/website/main/docs/plugin/composable-plugins.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-13-006","url":"https://raw.githubusercontent.com/Milkdown/website/main/docs/plugin/plugins-101.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-13-005","url":"https://raw.githubusercontent.com/Milkdown/website/main/docs/guide/architecture-overview.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-13-004","url":"https://milkdown.dev/docs/plugin/plugins-101"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-13-003","url":"https://milkdown.dev/docs/api/ctx"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-13-002","url":"https://milkdown.dev/docs/api/core"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-13-001","url":"https://milkdown.dev/docs/guide/architecture-overview"}
+
+## 2026-11-12
+
+- **capture**: {"format":"web","source_id":"SRC-2026-11-12-003","url":"https://www.sqlite.org/lockingv3.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-12-002","url":"https://sqlite.org/tempfiles.html"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-12-001","url":"https://www.sqlite.org/atomiccommit.html"}
+
 ## 2026-11-11
 
 - **capture**: {"format":"web","source_id":"SRC-2026-11-11-004","url":"https://www.sqlite.org/lang_altertable.html"}

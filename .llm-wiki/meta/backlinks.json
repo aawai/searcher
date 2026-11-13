@@ -124,6 +124,7 @@
     "sources/SRC-2026-09-25-031",
     "sources/SRC-2026-09-25-032",
     "sources/SRC-2026-10-26-001",
+    "sources/SRC-2026-11-12-003",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -232,6 +233,15 @@
     "concepts/xss-sanitization-and-trusted-types",
     "sources/SRC-2026-11-01-003"
   ],
+  "concepts/milkdown-plugin-ctx-and-markdown-pipeline": [
+    "concepts/prosemirror-transaction-origin-and-undo-history",
+    "entities/milkdown-editor",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-13-005",
+    "sources/SRC-2026-11-13-006",
+    "sources/SRC-2026-11-13-007",
+    "sources/SRC-2026-11-13-008"
+  ],
   "concepts/modal-dialog-focus-and-semantics": [
     "concepts/inert-and-top-layer-in-searcher-overlays",
     "concepts/modal-layering-and-escape-dismissal",
@@ -259,6 +269,7 @@
   "concepts/offline-first-与-local-draft-持久化架构": [
     "concepts/browser-storage-persistence-and-eviction",
     "concepts/first-frame-theme-painting",
+    "concepts/milkdown-plugin-ctx-and-markdown-pipeline",
     "concepts/prosemirror-transaction-origin-and-undo-history",
     "concepts/pwa-service-worker-update-lifecycle",
     "entities/indexeddb-本地存储引擎",
@@ -310,9 +321,13 @@
     "sources/SRC-2026-10-31-003"
   ],
   "concepts/prosemirror-transaction-origin-and-undo-history": [
+    "concepts/milkdown-plugin-ctx-and-markdown-pipeline",
     "concepts/offline-first-与-local-draft-持久化架构",
+    "entities/milkdown-editor",
     "entities/searcher-项目",
-    "sources/SRC-2026-11-08-007"
+    "sources/SRC-2026-11-08-007",
+    "sources/SRC-2026-11-13-005",
+    "sources/SRC-2026-11-13-007"
   ],
   "concepts/pwa-service-worker-update-lifecycle": [
     "concepts/browser-storage-persistence-and-eviction",
@@ -339,6 +354,7 @@
     "concepts/data-router-lifecycle",
     "concepts/prosemirror-transaction-origin-and-undo-history",
     "concepts/pwa-service-worker-update-lifecycle",
+    "entities/milkdown-editor",
     "entities/react-19-framework",
     "entities/vite-bundler",
     "sources/SRC-2026-10-05-001",
@@ -458,7 +474,9 @@
     "sources/SRC-2026-11-03-003",
     "sources/SRC-2026-11-05-003",
     "sources/SRC-2026-11-06-001",
-    "sources/SRC-2026-11-07-004"
+    "sources/SRC-2026-11-07-004",
+    "sources/SRC-2026-11-12-001",
+    "sources/SRC-2026-11-12-002"
   ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
@@ -470,7 +488,10 @@
     "entities/drizzle-sqlite-store",
     "sources/SRC-2026-10-26-001",
     "sources/SRC-2026-10-29-003",
-    "sources/SRC-2026-11-05-003"
+    "sources/SRC-2026-11-05-003",
+    "sources/SRC-2026-11-12-001",
+    "sources/SRC-2026-11-12-002",
+    "sources/SRC-2026-11-12-003"
   ],
   "concepts/sqlite-table-recreation-migration": [
     "concepts/database-queue-serialization",
@@ -690,6 +711,15 @@
     "sources/SRC-2026-10-28-003",
     "sources/SRC-2026-10-28-005"
   ],
+  "entities/milkdown-editor": [
+    "concepts/milkdown-plugin-ctx-and-markdown-pipeline",
+    "concepts/prosemirror-transaction-origin-and-undo-history",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-13-005",
+    "sources/SRC-2026-11-13-006",
+    "sources/SRC-2026-11-13-007",
+    "sources/SRC-2026-11-13-008"
+  ],
   "entities/react-19-framework": [
     "concepts/data-router-lifecycle",
     "concepts/react-19-actions-and-transitions",
@@ -714,6 +744,7 @@
     "concepts/forced-colors-and-high-contrast-themes",
     "concepts/hono-middleware-pipeline-request-intake",
     "concepts/login-throttling-and-rate-limiting",
+    "concepts/milkdown-plugin-ctx-and-markdown-pipeline",
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/openai-compatible-streaming-and-tool-calls",
     "concepts/password-hashing-and-pbkdf2-parameters",
@@ -742,6 +773,7 @@
     "entities/drizzle-sqlite-store",
     "entities/hono-framework",
     "entities/indexeddb-本地存储引擎",
+    "entities/milkdown-editor",
     "entities/react-19-framework",
     "entities/shadcn-ui-system",
     "entities/valibot-schema-validator",
@@ -1322,6 +1354,45 @@
   "sources/SRC-2026-11-11-004": [
     "concepts/sqlite-table-recreation-migration",
     "sources/SRC-2026-09-25-012"
+  ],
+  "sources/SRC-2026-11-12-001": [
+    "concepts/sqlite-backup-and-recovery-boundaries",
+    "concepts/sqlite-isolation-and-connection-boundaries"
+  ],
+  "sources/SRC-2026-11-12-002": [
+    "concepts/sqlite-backup-and-recovery-boundaries",
+    "concepts/sqlite-isolation-and-connection-boundaries"
+  ],
+  "sources/SRC-2026-11-12-003": [
+    "concepts/sqlite-isolation-and-connection-boundaries"
+  ],
+  "sources/SRC-2026-11-13-001": [
+    "sources/SRC-2026-11-13-005"
+  ],
+  "sources/SRC-2026-11-13-002": [],
+  "sources/SRC-2026-11-13-003": [],
+  "sources/SRC-2026-11-13-004": [
+    "sources/SRC-2026-11-13-006"
+  ],
+  "sources/SRC-2026-11-13-005": [
+    "concepts/milkdown-plugin-ctx-and-markdown-pipeline",
+    "entities/milkdown-editor",
+    "sources/SRC-2026-11-13-001",
+    "sources/SRC-2026-11-13-002",
+    "sources/SRC-2026-11-13-003"
+  ],
+  "sources/SRC-2026-11-13-006": [
+    "concepts/milkdown-plugin-ctx-and-markdown-pipeline",
+    "sources/SRC-2026-11-13-003",
+    "sources/SRC-2026-11-13-004"
+  ],
+  "sources/SRC-2026-11-13-007": [
+    "concepts/milkdown-plugin-ctx-and-markdown-pipeline"
+  ],
+  "sources/SRC-2026-11-13-008": [
+    "concepts/milkdown-plugin-ctx-and-markdown-pipeline",
+    "entities/milkdown-editor",
+    "sources/SRC-2026-11-13-002"
   ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"

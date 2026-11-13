@@ -210,6 +210,14 @@
       "role": "canonical",
       "type": "concept"
     },
+    "documents/canonical/concepts/milkdown-plugin-ctx-and-markdown-pipeline.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/milkdown-plugin-ctx-and-markdown-pipeline.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "concepts/milkdown-plugin-ctx-and-markdown-pipeline",
+      "contentHash": "1349e6d4c8c31b41bd056d40ac0f5e56349db834a6105145a05a1cce6a374277",
+      "role": "canonical",
+      "type": "concept"
+    },
     "documents/canonical/concepts/modal-dialog-focus-and-semantics.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/modal-dialog-focus-and-semantics.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -286,7 +294,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/prosemirror-transaction-origin-and-undo-history.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/prosemirror-transaction-origin-and-undo-history",
-      "contentHash": "956ebbaa46c7674adb8046c1e0513cd1f7c3625099ab4544a7917c858be4e7e7",
+      "contentHash": "284c41b1fba058ee3b199662cc0ed1c4025d7a2941906d22481432a45ed94779",
       "role": "canonical",
       "type": "concept"
     },
@@ -374,7 +382,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/sqlite-backup-and-recovery-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/sqlite-backup-and-recovery-boundaries",
-      "contentHash": "525d4e5a4826ccf888e61526d1e169e4d6a5272c387919904bcc0d2016085017",
+      "contentHash": "d1d825cbfee92783ed75939f4067c304b8863bde5e5c553871408aa35a94c058",
       "role": "canonical",
       "type": "concept"
     },
@@ -390,7 +398,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/concepts/sqlite-isolation-and-connection-boundaries.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "concepts/sqlite-isolation-and-connection-boundaries",
-      "contentHash": "aee2b49952263bdb2aed66c3a22b76cce075f2a63117265f6524954745f99e98",
+      "contentHash": "ac8d613328c854301b84ca44af45a25d310efa75a2a5f09253c7f8fb2d0f5b36",
       "role": "canonical",
       "type": "concept"
     },
@@ -522,6 +530,14 @@
       "role": "canonical",
       "type": "entity"
     },
+    "documents/canonical/entities/milkdown-editor.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/milkdown-editor.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "entities/milkdown-editor",
+      "contentHash": "976cc1fb7606cde4e28842c7c998e8e64c305bbfde60a692fbc6a17e0e932247",
+      "role": "canonical",
+      "type": "entity"
+    },
     "documents/canonical/entities/react-19-framework.md": {
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/react-19-framework.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
@@ -534,7 +550,7 @@
       "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/entities/searcher-项目.md",
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "entities/searcher-项目",
-      "contentHash": "210db1e3e37414d4cb0bc56752982275839fab8826678afe1290986493c2f946",
+      "contentHash": "aa6b7b14e5722f8aa14180b6fad87e520e3143bb480a83ab548471fb2eb3b58a",
       "role": "canonical",
       "type": "entity"
     },
@@ -1623,6 +1639,94 @@
       "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
       "pageId": "sources/SRC-2026-11-11-004",
       "contentHash": "3cc848f10840b80526dc028ea813603f7f36c534e1cc2aa52adbf3a835e11fa8",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-12-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-12-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-12-001",
+      "contentHash": "84cc158bfc72217e9fdcb1a1e1dd7b627cbee13df79ac67acc9a3f7b1b136bc0",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-12-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-12-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-12-002",
+      "contentHash": "1fbbb274495bc1cf26b5c4a505300a94e1c317e3989ebff7bd8fd60b42fbfcc4",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-12-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-12-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-12-003",
+      "contentHash": "17d04d92c2cdf6665d084f7016f7a2c6241a6a53173e51b2986050a9eb3d64e7",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-13-001.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-13-001.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-13-001",
+      "contentHash": "3371a30b81092a36e78346b9769e8f9fac91d8ba5b197dd82e5507a122bb0a89",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-13-002.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-13-002.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-13-002",
+      "contentHash": "583b6461c72703805629e4c428d41d25ba16f6170164429722cc7bd0a4a93b26",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-13-003.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-13-003.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-13-003",
+      "contentHash": "7876989561c58dde5af128855052be13d1f8b358127d9ecf19c76d6c20b1ed32",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-13-004.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-13-004.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-13-004",
+      "contentHash": "a4771b2ec73c9c94928c1d9f2ba2dac86ed4b5a5ad5dfe193996a60c61a13281",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-13-005.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-13-005.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-13-005",
+      "contentHash": "3691261f7a494e22b915383def7bf0f0adaded2ec5f9df915cf0449f675a5b94",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-13-006.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-13-006.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-13-006",
+      "contentHash": "754bbc6a99c411dff6caf0ce85c957738878162b89ebbfe2f63208ea32eda42f",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-13-007.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-13-007.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-13-007",
+      "contentHash": "ed447f56f7bf2443a31a0c0bd8a558de5c5e69c6b35f2bbbe32e8ffc4bb050a5",
+      "role": "evidence",
+      "type": "source"
+    },
+    "documents/evidence/sources/SRC-2026-11-13-008.md": {
+      "sourcePath": "/home/aawei/searcher/.llm-wiki/wiki/sources/SRC-2026-11-13-008.md",
+      "vaultId": "7df972e5-7ec0-457f-8e49-9045e238829f",
+      "pageId": "sources/SRC-2026-11-13-008",
+      "contentHash": "a7a05cde454d3808cd391420d283c6fedf6a2312c5be853af67404be683c2eb8",
       "role": "evidence",
       "type": "source"
     },
