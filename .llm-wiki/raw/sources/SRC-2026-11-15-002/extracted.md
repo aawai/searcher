@@ -1,0 +1,796 @@
+* [Skip to main content](#content)
+* [Skip to search](#mdn-search)
+
+[MDN](/en-US/)
+
+HTML
+
+[HTML: Markup language](/en-US/docs/Web/HTML)
+
+HTML reference
+:   * [Elements](/en-US/docs/Web/HTML/Reference/Elements)
+    * [Global attributes](/en-US/docs/Web/HTML/Reference/Global_attributes)
+    * [Attributes](/en-US/docs/Web/HTML/Reference/Attributes)
+    * [See all…](/en-US/docs/Web/HTML/Reference "See all HTML references")
+
+HTML guides
+:   * [Responsive images](/en-US/docs/Web/HTML/Guides/Responsive_images)
+    * [HTML cheatsheet](/en-US/docs/Web/HTML/Guides/Cheatsheet)
+    * [Date & time formats](/en-US/docs/Web/HTML/Guides/Date_and_time_formats)
+    * [See all…](/en-US/docs/Web/HTML/Guides "See all HTML guides")
+
+Markup languages
+:   * [SVG](/en-US/docs/Web/SVG)
+    * [MathML](/en-US/docs/Web/MathML)
+    * [XML](/en-US/docs/Web/XML)
+
+CSS
+
+[CSS: Styling language](/en-US/docs/Web/CSS)
+
+CSS reference
+:   * [Properties](/en-US/docs/Web/CSS/Reference/Properties)
+    * [Selectors](/en-US/docs/Web/CSS/Reference/Selectors)
+    * [At-rules](/en-US/docs/Web/CSS/Reference/At-rules)
+    * [Values](/en-US/docs/Web/CSS/Reference/Values)
+    * [See all…](/en-US/docs/Web/CSS/Reference "See all CSS references")
+
+CSS guides
+:   * [Box model](/en-US/docs/Web/CSS/Guides/Box_model/Introduction)
+    * [Animations](/en-US/docs/Web/CSS/Guides/Animations/Using)
+    * [Flexbox](/en-US/docs/Web/CSS/Guides/Flexible_box_layout/Basic_concepts)
+    * [Colors](/en-US/docs/Web/CSS/Guides/Colors/Applying_color)
+    * [See all…](/en-US/docs/Web/CSS/Guides "See all CSS guides")
+
+Layout cookbook
+:   * [Column layouts](/en-US/docs/Web/CSS/How_to/Layout_cookbook/Column_layouts)
+    * [Centering an element](/en-US/docs/Web/CSS/How_to/Layout_cookbook/Center_an_element)
+    * [Card component](/en-US/docs/Web/CSS/How_to/Layout_cookbook/Card)
+    * [See all…](/en-US/docs/Web/CSS/How_to/Layout_cookbook)
+
+JavaScriptJS
+
+[JavaScript: Scripting language](/en-US/docs/Web/JavaScript)
+
+JS reference
+:   * [Standard built-in objects](/en-US/docs/Web/JavaScript/Reference/Global_Objects)
+    * [Expressions & operators](/en-US/docs/Web/JavaScript/Reference/Operators)
+    * [Statements & declarations](/en-US/docs/Web/JavaScript/Reference/Statements)
+    * [Functions](/en-US/docs/Web/JavaScript/Reference/Functions)
+    * [See all…](/en-US/docs/Web/JavaScript/Reference "See all JavaScript references")
+
+JS guides
+:   * [Control flow & error handling](/en-US/docs/Web/JavaScript/Guide/Control_flow_and_error_handling)
+    * [Loops and iteration](/en-US/docs/Web/JavaScript/Guide/Loops_and_iteration)
+    * [Working with objects](/en-US/docs/Web/JavaScript/Guide/Working_with_objects)
+    * [Using classes](/en-US/docs/Web/JavaScript/Guide/Using_classes)
+    * [See all…](/en-US/docs/Web/JavaScript/Guide "See all JavaScript guides")
+
+Web APIs
+
+[Web APIs: Programming interfaces](/en-US/docs/Web/API)
+
+Web API reference
+:   * [File system API](/en-US/docs/Web/API/File_System_API)
+    * [Fetch API](/en-US/docs/Web/API/Fetch_API)
+    * [Geolocation API](/en-US/docs/Web/API/Geolocation_API)
+    * [HTML DOM API](/en-US/docs/Web/API/HTML_DOM_API)
+    * [Push API](/en-US/docs/Web/API/Push_API)
+    * [Service worker API](/en-US/docs/Web/API/Service_Worker_API)
+    * [See all…](/en-US/docs/Web/API "See all Web API guides")
+
+Web API guides
+:   * [Using the Web animation API](/en-US/docs/Web/API/Web_Animations_API/Using_the_Web_Animations_API)
+    * [Using the Fetch API](/en-US/docs/Web/API/Fetch_API/Using_Fetch)
+    * [Working with the History API](/en-US/docs/Web/API/History_API/Working_with_the_History_API)
+    * [Using the Web speech API](/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API)
+    * [Using web workers](/en-US/docs/Web/API/Web_Workers_API/Using_web_workers)
+
+All
+
+[All web technology](/en-US/docs/Web)
+
+Technologies
+:   * [Accessibility](/en-US/docs/Web/Accessibility)
+    * [HTTP](/en-US/docs/Web/HTTP)
+    * [URI](/en-US/docs/Web/URI)
+    * [Web extensions](/en-US/docs/Mozilla/Add-ons/WebExtensions)
+    * [WebAssembly](/en-US/docs/WebAssembly)
+    * [WebDriver](/en-US/docs/Web/WebDriver)
+    * [See all…](/en-US/docs/Web "See all web technology references")
+
+Topics
+:   * [Media](/en-US/docs/Web/Media)
+    * [Performance](/en-US/docs/Web/Performance)
+    * [Privacy](/en-US/docs/Web/Privacy)
+    * [Security](/en-US/docs/Web/Security)
+    * [Progressive web apps](/en-US/docs/Web/Progressive_web_apps)
+
+Learn
+
+[Learn web development](/en-US/docs/Learn_web_development)
+
+Frontend developer course
+:   * [Getting started modules](/en-US/docs/Learn_web_development/Getting_started)
+    * [Core modules](/en-US/docs/Learn_web_development/Core)
+    * [MDN Curriculum](/en-US/curriculum/)
+    * [Check out the video course from Scrimba, our partner](https://scrimba.com/frontend-path-c0j?via=mdn-learn-navbar)
+
+Learn HTML
+:   * [Structuring content with HTML module](/en-US/docs/Learn_web_development/Core/Structuring_content)
+
+Learn CSS
+:   * [CSS styling basics module](/en-US/docs/Learn_web_development/Core/Styling_basics)
+    * [CSS layout module](/en-US/docs/Learn_web_development/Core/CSS_layout)
+
+Learn JavaScript
+:   * [Dynamic scripting with JavaScript module](/en-US/docs/Learn_web_development/Core/Scripting)
+
+Tools
+
+Discover our tools
+
+* [Playground](/en-US/play)
+* [HTTP Observatory](/en-US/observatory)
+
+* [Border-image generator](/en-US/docs/Web/CSS/Guides/Backgrounds_and_borders/Border-image_generator)
+* [Border-radius generator](/en-US/docs/Web/CSS/Guides/Backgrounds_and_borders/Border-radius_generator)
+* [Box-shadow generator](/en-US/docs/Web/CSS/Guides/Backgrounds_and_borders/Box-shadow_generator)
+* [Color format converter](/en-US/docs/Web/CSS/Guides/Colors/Color_format_converter)
+* [Color mixer](/en-US/docs/Web/CSS/Guides/Colors/Color_mixer)
+* [Shape generator](/en-US/docs/Web/CSS/Guides/Shapes/Shape_generator)
+
+About
+
+Get to know MDN better
+
+* [About MDN](/en-US/about)
+* [Advertise with us](/en-US/advertising)
+
+* [Community](/en-US/community)
+* [MDN on GitHub](https://github.com/mdn)
+
+[Blog](/en-US/blog/)
+
+Toggle sidebar
+
+1. [Web](/en-US/docs/Web)
+2. [HTTP](/en-US/docs/Web/HTTP)
+3. [Guides](/en-US/docs/Web/HTTP/Guides)
+4. [Fetch metadata](/en-US/docs/Web/HTTP/Guides/Fetch_metadata)
+
+Theme
+
+* OS default
+* Light
+* Dark
+
+English (US)
+
+[ ]
+
+Remember language
+
+Learn more
+
+* [Deutsch](/de/docs/Web/HTTP/Guides/Fetch_metadata)
+* [English (US)](/en-US/docs/Web/HTTP/Guides/Fetch_metadata)
+* [Français](/fr/docs/Web/HTTP/Guides/Fetch_metadata)
+* [中文 (简体)](/zh-CN/docs/Web/HTTP/Guides/Fetch_metadata)
+
+# Fetch metadata
+
+**Fetch metadata** is the term for a group of HTTP request headers that give the server information about the context in which the request is being made.
+
+Among other things, fetch metadata allows the server to know:
+
+* Whether the request represents a navigation between documents, or a request for a subresource, or was explicitly made from JavaScript, for example using the [`fetch()`](/en-US/docs/Web/API/Window/fetch "fetch()") API.
+* The relationship between the requester of the resource and the resource being requested: whether they are same-[origin](/en-US/docs/Glossary/Origin), or same-[site](/en-US/docs/Glossary/Site), or from completely different sites.
+
+By using the information in these headers to allow or deny specific requests, a server can implement a defense against [*cross-origin attacks*](#cross-origin_attacks) such as [cross-site request forgeries (CSRF)](/en-US/docs/Web/Security/Attacks/CSRF) and various [cross-site leaks](/en-US/docs/Web/Security/Attacks/XS-Leaks).
+
+## In this article
+
+* [Fetch metadata headers](#fetch_metadata_headers)
+* [Cross-origin attacks](#cross-origin_attacks)
+* [Resource isolation policy](#resource_isolation_policy)
+* [See also](#see_also)
+
+## [Fetch metadata headers](#fetch_metadata_headers)
+
+The [Fetch metadata specification](https://w3c.github.io/webappsec-fetch-metadata/ "External link (opens in new tab)") defines four fetch metadata headers:
+
+* [`Sec-Fetch-Site`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Site)
+* [`Sec-Fetch-Mode`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Mode)
+* [`Sec-Fetch-User`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-User)
+* [`Sec-Fetch-Dest`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Dest)
+
+Like all `Sec-` prefixed headers, these are [forbidden request headers](/en-US/docs/Glossary/Forbidden_request_header), which means they can't be set or modified by the website's front-end code. Also, fetch metadata headers are only sent in requests to [potentially trustworthy URLs](/en-US/docs/Web/Security/Defenses/Secure_Contexts#potentially_trustworthy_urls), so servers on non-secure (`http://`) origins will not receive these headers.
+
+### [Sec-Fetch-Dest](#sec-fetch-dest)
+
+This header indicates the *destination* of the request. This attribute is defined in the Fetch API, where it is exposed as the [`Request.destination`](/en-US/docs/Web/API/Request/destination) property.
+
+We could think of it, roughly, as the way the returned resource would be used.
+
+For most [replaced elements](/en-US/docs/Glossary/Replaced_elements), the value of the header names the element that this resource will be used for, such as `iframe`, `object`, `audio`, or `video`. A value of `image` indicates that the resource will be used as an image referenced by a replaced element such as an HTML [`<img>`](/en-US/docs/Web/HTML/Reference/Elements/img) element, a CSS [`background-image`](/en-US/docs/Web/CSS/Reference/Properties/background-image) property, an SVG [`<image>`](/en-US/docs/Web/SVG/Reference/Element/image), or any other place in the web platform that use images loaded from subresources.
+
+Some other interesting destination values include:
+
+[`document`](#document)
+:   The request is for a new document that is the target of a top-level navigation (for example, the user clicking a link in the page or submitting a form).
+
+[`script`](#script)
+:   The resource will be used as a script loaded from an HTML [`<script>`](/en-US/docs/Web/HTML/Reference/Elements/script) element or a call to [`importScripts()`](/en-US/docs/Web/API/WorkerGlobalScope/importScripts "importScripts()") in a web worker.
+
+    More specific values are used to indicate other places where the resource is used as a script, such as worklets (`audioworklet` and `paintworklet`) and workers (`sharedworker`, `serviceworker`, and `worker`).
+
+[`empty`](#empty)
+:   The request does not have a defined destination: among other possible causes, this is the value given if the request is the result of a [`fetch()`](/en-US/docs/Web/API/Window/fetch "fetch()") call.
+
+For the complete set of possible values, see the [reference page](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Site) for this header.
+
+### [Sec-Fetch-Mode](#sec-fetch-mode)
+
+This header indicates the *mode* of the request. Like *destination*, the mode is defined in the [Fetch API](/en-US/docs/Web/API/Fetch_API), where it is exposed as the [`Request.mode`](/en-US/docs/Web/API/Request/mode) property.
+
+Its most commonly used values are:
+
+[`navigate`](#navigate)
+:   The request represents a navigation between documents (for example, the user clicking a link).
+
+[`no-cors`](#no-cors)
+:   The request was made in `no-cors` mode.
+
+    This means that it is allowed cross-origin without the server sending the appropriate [CORS](/en-US/docs/Web/HTTP/Guides/CORS) headers, with the restriction that the response can't be accessed by JavaScript running in the client (it is *opaque*).
+
+    This is the default mode for pages that load subresources such as images, fonts, scripts, and stylesheets, and explains why a different site is by default allowed to use your site's subresources, even if you haven't configured CORS to allow it.
+
+[`cors`](#cors)
+:   If the request is cross-origin, then the server must respond with the appropriate [CORS](/en-US/docs/Web/HTTP/Guides/CORS) headers, or the request will fail. If the server does respond with the appropriate CORS headers, then the response body and certain headers will be made available to the caller.
+
+    This is most often found for cross-origin requests made from JavaScript using the [Fetch API](/en-US/docs/Web/API/Fetch_API), when the requester needs access to the returned resource (for example, a fetch call to retrieve some JSON from the server).
+
+[`same-origin`](#same-origin)
+:   The request is only allowed if the requester is same-origin with the resource being requested.
+
+### [Sec-Fetch-Site](#sec-fetch-site)
+
+This header indicates the relationship between the origin of the resource being requested and the origin of the requester of the resource.
+
+It indicates whether the requester is from:
+
+* The same [origin](/en-US/docs/Glossary/Origin) as the requested resource.
+* A different origin, but the same [site](/en-US/docs/Glossary/Site).
+* A different site.
+
+For example, if a user clicks a link in a page at `https://books.example.org/authors`, the browser makes a request to fetch the document specified in the link target. The following table shows values of the associated `Sec-Fetch-Site` header for different link target values:
+
+| Link target | `Sec-Fetch-Site` value |
+| --- | --- |
+| `https://books.example.org/titles` | `same-origin` |
+| `https://login.example.org/` | `same-site` |
+| `https://books.example.com/titles` | `cross-site` |
+
+Similar mappings apply for other HTTP requests, such as:
+
+* Form submissions via the [`action`](/en-US/docs/Web/HTML/Reference/Elements/form#action) attribute of a [`<form>`](/en-US/docs/Web/HTML/Reference/Elements/form) element.
+* Requests for subresources such as images, fonts, or scripts.
+* Requests made using the [`fetch()`](/en-US/docs/Web/API/Window/fetch "fetch()") API.
+
+The `Sec-Fetch-Site` header may also have the value `none` for requests that don't have a site as the requester, including, for example, requests made when the user types a URL into the browser's address bar or clicks a bookmark. The specification calls these [directly user-initiated requests](https://w3c.github.io/webappsec-fetch-metadata/#directly-user-initiated "External link (opens in new tab)").
+
+### [Sec-Fetch-User](#sec-fetch-user)
+
+This header is included only if the request was initiated by a user action (such as a click on a link), and if included, always has the value `?1`.
+
+## [Cross-origin attacks](#cross-origin_attacks)
+
+Fetch metadata is especially useful as a defense against *cross-origin attacks*. These attacks typically target a user who has an account with a legitimate site, and is signed into this site. The attacker creates a website that makes a *cross-origin request* to the legitimate site, and then tricks the user into executing that request.
+
+**Note:**
+We use the term *cross-origin* attack in this guide, although many attacks are conventionally called *cross-site* attacks.
+
+An [origin](/en-US/docs/Glossary/Origin) is a more restrictive concept than a [site](/en-US/docs/Glossary/Site). In particular, a site includes a domain's subdomains, and an origin does not: so `https://example.org` and `https://login.example.org` are the same site, but different origins.
+
+This means that while all cross-site attacks are cross-origin attacks, some cross-origin attacks are *not* cross-site attacks. For example, if an attacker gains control of a subdomain of a site, then they can attack the site using *cross-origin*, *same-site* requests. To include these attacks, we use the more restrictive term.
+
+For example, the attacker's site might contain a [`<form>`](/en-US/docs/Web/HTML/Reference/Elements/form) element that submits to the legitimate site. For some cross-origin attacks, no user interaction is needed at all: the attacker's page can just execute a [`fetch()`](/en-US/docs/Web/API/Window/fetch "fetch()") request to the legitimate site on page load, and then the user only has to open the attacker's page for the cross-origin request to be executed.
+
+Because the request came from the user's browser, it will include any cookies set for the user by the legitimate site, including cookies that the legitimate site uses to identify users. The request will therefore be given the privileges for that user.
+
+We can distinguish two sorts of cross-origin attack:
+
+* [Cross-site request forgery (CSRF)](/en-US/docs/Web/Security/Attacks/CSRF) attacks: in these attacks, the cross-origin request performs some consequential action in the legitimate server, using parameters supplied by the attacker. For example, the request asks the server to transfer money from the target user's account into the attacker's account.
+* [Cross-site leaks](/en-US/docs/Web/Security/Attacks/XS-Leaks): in these attacks, the attacker uses the request to gain information about the user's relationship with the target site, often through side channels such as [error events](/en-US/docs/Web/Security/Attacks/XS-Leaks#leaking_page_existence_using_error_events).
+
+Most websites will want to deny some cross-origin requests while allowing others: for example, if you deny all cross-origin requests, no one will be able to navigate to your site from a different site!
+
+Using fetch metadata, a server can construct a policy for allowing or denying cross-origin requests based on the details of their context.
+
+## [Resource isolation policy](#resource_isolation_policy)
+
+A common type of policy is called a *resource isolation policy*. When the server receives a request, it examines the request's fetch metadata headers to allow only:
+
+* Same-origin requests (and sometimes same-site requests, if you trust your subdomains).
+* Top-level navigational requests from another origin, so users can get to your site by clicking links in other sites.
+* Requests to specific endpoints that are meant to be accessed cross-origin, including any that use [CORS](/en-US/docs/Web/HTTP/Guides/CORS).
+
+For example, the following [Express](/en-US/docs/Learn_web_development/Extensions/Server-side/Express_Nodejs) code allows only same-origin requests, directly user-initiated requests, and navigations.
+
+js
+
+```
+function isAllowed(req) {
+  // Allow same-origin requests
+  // Allow directly user-initiated requests (from bookmarks, address bar etc.)
+  const secFetchSite = req.headers["sec-fetch-site"];
+  if (secFetchSite === "same-origin" || secFetchSite === "none") {
+    return true;
+  }
+
+  // Allow cross-site navigations, such as clicking links
+  const secFetchMode = req.headers["sec-fetch-mode"];
+  if (secFetchMode === "navigate" && req.method === "GET") {
+    return true;
+  }
+
+  // Deny everything else
+  return false;
+}
+
+app.get("/admin", (req, res) => {
+  res.setHeader("Vary", "sec-fetch-site, sec-fetch-mode");
+  if (isAllowed(req)) {
+    // Respond with the admin page if the user is admin
+    getAdminPage(req, res);
+  } else {
+    res.status(403).send("Forbidden");
+  }
+});
+```
+
+Note that it also sends the [`Vary`](/en-US/docs/Web/HTTP/Reference/Headers/Vary) response header. This ensures that if the response is cached, the cached response will only be given to requests with the same values for the Fetch metadata headers we are using.
+
+The [Resource Isolation Policy](https://xsleaks.dev/docs/defenses/isolation-policies/resource-isolation/ "External link (opens in new tab)") page provides more sample code for a resource isolation policy.
+
+## [See also](#see_also)
+
+* [CSRF](/en-US/docs/Web/Security/Attacks/CSRF)
+* [Cross-site leaks](/en-US/docs/Web/Security/Attacks/XS-Leaks)
+* [Protect your resources from web attacks with Fetch Metadata](https://web.dev/articles/fetch-metadata "External link (opens in new tab)") (web.dev)
+* [Fetch Metadata](https://xsleaks.dev/docs/defenses/opt-in/fetch-metadata/ "External link (opens in new tab)") (XS-Leaks Wiki)
+
+## Help improve MDN
+
+Was this page helpful to you?
+
+Yes
+
+No
+
+[Learn how to contribute](/en-US/docs/MDN/Community/Getting_started)
+
+This page was last modified on Sep 28, 2026 by [MDN contributors](/en-US/docs/Web/HTTP/Guides/Fetch_metadata/contributors.txt).
+
+[View this page on GitHub](https://github.com/mdn/content/blob/main/files/en-us/web/http/guides/fetch_metadata/index.md?plain=1 "Folder: en-us/web/http/guides/fetch_metadata (Opens in a new tab)") • [Report a problem with this content](https://github.com/mdn/content/issues/new?template=page-report.yml&mdn-url=https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FGuides%2FFetch_metadata&metadata=%3C%21--+Do+not+make+changes+below+this+line+--%3E%0A%3Cdetails%3E%0A%3Csummary%3EPage+report+details%3C%2Fsummary%3E%0A%0A*+Folder%3A+%60en-us%2Fweb%2Fhttp%2Fguides%2Ffetch_metadata%60%0A*+MDN+URL%3A+https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FHTTP%2FGuides%2FFetch_metadata%0A*+GitHub+URL%3A+https%3A%2F%2Fgithub.com%2Fmdn%2Fcontent%2Fblob%2Fmain%2Ffiles%2Fen-us%2Fweb%2Fhttp%2Fguides%2Ffetch_metadata%2Findex.md%0A*+Last+commit%3A+https%3A%2F%2Fgithub.com%2Fmdn%2Fcontent%2Fcommit%2F7e4e8954972d77196e4beedca4a3f8610da34dc9%0A*+Document+last+modified%3A+2026-09-28T00%3A05%3A00.000Z%0A%0A%3C%2Fdetails%3E "This will take you to GitHub to file a new issue.")
+
+Filter sidebar
+
+Clear filter input
+
+1. [HTTP](/en-US/docs/Web/HTTP)
+2. [Guides](/en-US/docs/Web/HTTP/Guides)
+3. [Overview of HTTP](/en-US/docs/Web/HTTP/Guides/Overview)
+4. [Evolution of HTTP](/en-US/docs/Web/HTTP/Guides/Evolution_of_HTTP)
+5. [A typical HTTP session](/en-US/docs/Web/HTTP/Guides/Session)
+6. [HTTP messages](/en-US/docs/Web/HTTP/Guides/Messages)
+7. [Media types](/en-US/docs/Web/HTTP/Guides/MIME_types)
+   1. [Common types](/en-US/docs/Web/HTTP/Guides/MIME_types/Common_types)
+8. [Compression in HTTP](/en-US/docs/Web/HTTP/Guides/Compression)
+9. [HTTP caching](/en-US/docs/Web/HTTP/Guides/Caching)
+10. [HTTP authentication](/en-US/docs/Web/HTTP/Guides/Authentication)
+11. [Using HTTP cookies](/en-US/docs/Web/HTTP/Guides/Cookies)
+12. [Redirections in HTTP](/en-US/docs/Web/HTTP/Guides/Redirections)
+13. [Conditional requests](/en-US/docs/Web/HTTP/Guides/Conditional_requests)
+14. [Range requests](/en-US/docs/Web/HTTP/Guides/Range_requests)
+15. [Client hints](/en-US/docs/Web/HTTP/Guides/Client_hints)
+16. [User-Agent reduction](/en-US/docs/Web/HTTP/Guides/User-agent_reduction)
+17. [Compression Dictionary Transport](/en-US/docs/Web/HTTP/Guides/Compression_dictionary_transport)
+18. [Network Error Logging](/en-US/docs/Web/HTTP/Guides/Network_Error_Logging)
+19. [Content negotiation](/en-US/docs/Web/HTTP/Guides/Content_negotiation)
+    1. [Default Accept values](/en-US/docs/Web/HTTP/Guides/Content_negotiation/List_of_default_Accept_values)
+20. [Browser detection using the UA string](/en-US/docs/Web/HTTP/Guides/Browser_detection_using_the_user_agent)
+21. [Connection management in HTTP/1.x](/en-US/docs/Web/HTTP/Guides/Connection_management_in_HTTP_1.x)
+22. [Protocol upgrade mechanism](/en-US/docs/Web/HTTP/Guides/Protocol_upgrade_mechanism)
+23. [Proxy servers and tunneling](/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling)
+    1. [Proxy Auto-Configuration (PAC) file](/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file)
+24. Security and privacy
+    1. [HTTP Observatory](/en-US/observatory)
+    2. [Practical implementation guides](/en-US/docs/Web/Security/Practical_implementation_guides)
+    3. [Permissions Policy](/en-US/docs/Web/HTTP/Guides/Permissions_Policy)
+    4. [IFrame credentialless](/en-US/docs/Web/HTTP/Guides/IFrame_credentialless)
+    5. *[Fetch metadata](/en-US/docs/Web/HTTP/Guides/Fetch_metadata)*
+    6. [Cross-Origin Resource Sharing (CORS)](/en-US/docs/Web/HTTP/Guides/CORS)
+    7. [CORS errors](/en-US/docs/Web/HTTP/Guides/CORS/Errors)
+       1. [`Reason: CORS disabled`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSDisabled)
+       2. [`Reason: CORS header 'Access-Control-Allow-Origin' does not match 'xyz'`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSAllowOriginNotMatchingOrigin)
+       3. [`Reason: CORS header 'Access-Control-Allow-Origin' missing`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSMissingAllowOrigin)
+       4. [`Reason: CORS header 'Origin' cannot be added`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSOriginHeaderNotAdded)
+       5. [`Reason: CORS preflight channel did not succeed`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSPreflightDidNotSucceed)
+       6. [`Reason: CORS request did not succeed`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSDidNotSucceed)
+       7. [`Reason: CORS request external redirect not allowed`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSExternalRedirectNotAllowed)
+       8. [`Reason: CORS request not HTTP`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSRequestNotHttp)
+       9. [`Reason: Credential is not supported if the CORS header 'Access-Control-Allow-Origin' is '*'`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSNotSupportingCredentials)
+       10. [`Reason: Did not find method in CORS header 'Access-Control-Allow-Methods'`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSMethodNotFound)
+       11. [`Reason: expected 'true' in CORS header 'Access-Control-Allow-Credentials'`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSMissingAllowCredentials)
+       12. [`Reason: invalid token 'xyz' in CORS header 'Access-Control-Allow-Headers'`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSInvalidAllowHeader)
+       13. [`Reason: invalid token 'xyz' in CORS header 'Access-Control-Allow-Methods'`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSInvalidAllowMethod)
+       14. [`Reason: missing token 'xyz' in CORS header 'Access-Control-Allow-Headers' from CORS preflight channel`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSMissingAllowHeaderFromPreflight)
+       15. [`Reason: Multiple CORS header 'Access-Control-Allow-Origin' not allowed`](/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSMultipleAllowOriginNotAllowed)
+    8. [Content Security Policy (CSP)](/en-US/docs/Web/HTTP/Guides/CSP)
+       1. [Errors and warnings](/en-US/docs/Web/HTTP/Guides/CSP/Errors)
+25. [Reference](/en-US/docs/Web/HTTP/Reference)
+26. [HTTP headers](/en-US/docs/Web/HTTP/Reference/Headers)
+    1. [`Accept`](/en-US/docs/Web/HTTP/Reference/Headers/Accept)
+    2. [`Accept-CH`](/en-US/docs/Web/HTTP/Reference/Headers/Accept-CH)
+    3. [`Accept-Encoding`](/en-US/docs/Web/HTTP/Reference/Headers/Accept-Encoding)
+    4. [`Accept-Language`](/en-US/docs/Web/HTTP/Reference/Headers/Accept-Language)
+    5. [`Accept-Patch`](/en-US/docs/Web/HTTP/Reference/Headers/Accept-Patch)
+    6. [`Accept-Post`](/en-US/docs/Web/HTTP/Reference/Headers/Accept-Post)
+    7. [`Accept-Query`](/en-US/docs/Web/HTTP/Reference/Headers/Accept-Query)
+    8. [`Accept-Ranges`](/en-US/docs/Web/HTTP/Reference/Headers/Accept-Ranges)
+    9. [`Access-Control-Allow-Credentials`](/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Credentials)
+    10. [`Access-Control-Allow-Headers`](/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Headers)
+    11. [`Access-Control-Allow-Methods`](/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Methods)
+    12. [`Access-Control-Allow-Origin`](/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Origin)
+    13. [`Access-Control-Expose-Headers`](/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Expose-Headers)
+    14. [`Access-Control-Max-Age`](/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Max-Age)
+    15. [`Access-Control-Request-Headers`](/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Request-Headers)
+    16. [`Access-Control-Request-Method`](/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Request-Method)
+    17. [`Activate-Storage-Access`](/en-US/docs/Web/HTTP/Reference/Headers/Activate-Storage-Access)
+    18. [`Age`](/en-US/docs/Web/HTTP/Reference/Headers/Age)
+    19. [`Allow`](/en-US/docs/Web/HTTP/Reference/Headers/Allow)
+    20. [`Alt-Svc`](/en-US/docs/Web/HTTP/Reference/Headers/Alt-Svc)
+    21. [`Alt-Used`](/en-US/docs/Web/HTTP/Reference/Headers/Alt-Used)
+    22. [`Attribution-Reporting-Eligible`](/en-US/docs/Web/HTTP/Reference/Headers/Attribution-Reporting-Eligible)
+    23. [`Attribution-Reporting-Register-Source`](/en-US/docs/Web/HTTP/Reference/Headers/Attribution-Reporting-Register-Source)
+    24. [`Attribution-Reporting-Register-Trigger`](/en-US/docs/Web/HTTP/Reference/Headers/Attribution-Reporting-Register-Trigger)
+    25. [`Authorization`](/en-US/docs/Web/HTTP/Reference/Headers/Authorization)
+    26. [`Available-Dictionary`](/en-US/docs/Web/HTTP/Reference/Headers/Available-Dictionary)
+    27. [`Cache-Control`](/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control)
+    28. [`Clear-Site-Data`](/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data)
+    29. [`Connection`](/en-US/docs/Web/HTTP/Reference/Headers/Connection)
+    30. [`Content-Digest`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Digest)
+    31. [`Content-Disposition`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition)
+    32. [`Content-DPR`](/en-US/docs/Web/HTTP/Reference/Headers/Content-DPR)
+    33. [`Content-Encoding`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Encoding)
+    34. [`Content-Language`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Language)
+    35. [`Content-Length`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Length)
+    36. [`Content-Location`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Location)
+    37. [`Content-Range`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Range)
+    38. [`Content-Security-Policy`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy)
+    39. [`Content-Security-Policy-Report-Only`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy-Report-Only)
+    40. [`Content-Type`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Type)
+    41. [`Cookie`](/en-US/docs/Web/HTTP/Reference/Headers/Cookie)
+    42. [`Critical-CH`](/en-US/docs/Web/HTTP/Reference/Headers/Critical-CH)
+    43. [`Cross-Origin-Embedder-Policy`](/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy)
+    44. [`Cross-Origin-Embedder-Policy-Report-Only`](/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy-Report-Only)
+    45. [`Cross-Origin-Opener-Policy`](/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy)
+    46. [`Cross-Origin-Resource-Policy`](/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Resource-Policy)
+    47. [`Date`](/en-US/docs/Web/HTTP/Reference/Headers/Date)
+    48. [`Device-Memory`](/en-US/docs/Web/HTTP/Reference/Headers/Device-Memory)
+    49. [`Dictionary-ID`](/en-US/docs/Web/HTTP/Reference/Headers/Dictionary-ID)
+    50. [`DNT`](/en-US/docs/Web/HTTP/Reference/Headers/DNT)
+    51. [`Downlink`](/en-US/docs/Web/HTTP/Reference/Headers/Downlink)
+    52. [`DPR`](/en-US/docs/Web/HTTP/Reference/Headers/DPR)
+    53. [`Early-Data`](/en-US/docs/Web/HTTP/Reference/Headers/Early-Data)
+    54. [`ECT`](/en-US/docs/Web/HTTP/Reference/Headers/ECT)
+    55. [`ETag`](/en-US/docs/Web/HTTP/Reference/Headers/ETag)
+    56. [`Expect`](/en-US/docs/Web/HTTP/Reference/Headers/Expect)
+    57. [`Expect-CT`](/en-US/docs/Web/HTTP/Reference/Headers/Expect-CT)
+    58. [`Expires`](/en-US/docs/Web/HTTP/Reference/Headers/Expires)
+    59. [`Forwarded`](/en-US/docs/Web/HTTP/Reference/Headers/Forwarded)
+    60. [`From`](/en-US/docs/Web/HTTP/Reference/Headers/From)
+    61. [`Host`](/en-US/docs/Web/HTTP/Reference/Headers/Host)
+    62. [`Idempotency-Key`](/en-US/docs/Web/HTTP/Reference/Headers/Idempotency-Key)
+    63. [`If-Match`](/en-US/docs/Web/HTTP/Reference/Headers/If-Match)
+    64. [`If-Modified-Since`](/en-US/docs/Web/HTTP/Reference/Headers/If-Modified-Since)
+    65. [`If-None-Match`](/en-US/docs/Web/HTTP/Reference/Headers/If-None-Match)
+    66. [`If-Range`](/en-US/docs/Web/HTTP/Reference/Headers/If-Range)
+    67. [`If-Unmodified-Since`](/en-US/docs/Web/HTTP/Reference/Headers/If-Unmodified-Since)
+    68. [`Integrity-Policy`](/en-US/docs/Web/HTTP/Reference/Headers/Integrity-Policy)
+    69. [`Integrity-Policy-Report-Only`](/en-US/docs/Web/HTTP/Reference/Headers/Integrity-Policy-Report-Only)
+    70. [`Keep-Alive`](/en-US/docs/Web/HTTP/Reference/Headers/Keep-Alive)
+    71. [`Last-Modified`](/en-US/docs/Web/HTTP/Reference/Headers/Last-Modified)
+    72. [`Link`](/en-US/docs/Web/HTTP/Reference/Headers/Link)
+    73. [`Location`](/en-US/docs/Web/HTTP/Reference/Headers/Location)
+    74. [`Max-Forwards`](/en-US/docs/Web/HTTP/Reference/Headers/Max-Forwards)
+    75. [`NEL`](/en-US/docs/Web/HTTP/Reference/Headers/NEL)
+    76. [`No-Vary-Search`](/en-US/docs/Web/HTTP/Reference/Headers/No-Vary-Search)
+    77. [`Observe-Browsing-Topics`](/en-US/docs/Web/HTTP/Reference/Headers/Observe-Browsing-Topics)
+    78. [`Origin`](/en-US/docs/Web/HTTP/Reference/Headers/Origin)
+    79. [`Origin-Agent-Cluster`](/en-US/docs/Web/HTTP/Reference/Headers/Origin-Agent-Cluster)
+    80. [`Permissions-Policy`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy)
+    81. [`Permissions-Policy-Report-Only`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy-Report-Only)
+    82. [`Pragma`](/en-US/docs/Web/HTTP/Reference/Headers/Pragma)
+    83. [`Prefer`](/en-US/docs/Web/HTTP/Reference/Headers/Prefer)
+    84. [`Preference-Applied`](/en-US/docs/Web/HTTP/Reference/Headers/Preference-Applied)
+    85. [`Priority`](/en-US/docs/Web/HTTP/Reference/Headers/Priority)
+    86. [`Proxy-Authenticate`](/en-US/docs/Web/HTTP/Reference/Headers/Proxy-Authenticate)
+    87. [`Proxy-Authorization`](/en-US/docs/Web/HTTP/Reference/Headers/Proxy-Authorization)
+    88. [`Range`](/en-US/docs/Web/HTTP/Reference/Headers/Range)
+    89. [`Referer`](/en-US/docs/Web/HTTP/Reference/Headers/Referer)
+    90. [`Referrer-Policy`](/en-US/docs/Web/HTTP/Reference/Headers/Referrer-Policy)
+    91. [`Refresh`](/en-US/docs/Web/HTTP/Reference/Headers/Refresh)
+    92. [`Report-To`](/en-US/docs/Web/HTTP/Reference/Headers/Report-To)
+    93. [`Reporting-Endpoints`](/en-US/docs/Web/HTTP/Reference/Headers/Reporting-Endpoints)
+    94. [`Repr-Digest`](/en-US/docs/Web/HTTP/Reference/Headers/Repr-Digest)
+    95. [`Retry-After`](/en-US/docs/Web/HTTP/Reference/Headers/Retry-After)
+    96. [`RTT`](/en-US/docs/Web/HTTP/Reference/Headers/RTT)
+    97. [`Save-Data`](/en-US/docs/Web/HTTP/Reference/Headers/Save-Data)
+    98. [`Sec-Browsing-Topics`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Browsing-Topics)
+    99. [`Sec-CH-Device-Memory`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-Device-Memory)
+    100. [`Sec-CH-DPR`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-DPR)
+    101. [`Sec-CH-Prefers-Color-Scheme`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-Prefers-Color-Scheme)
+    102. [`Sec-CH-Prefers-Reduced-Motion`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-Prefers-Reduced-Motion)
+    103. [`Sec-CH-Prefers-Reduced-Transparency`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-Prefers-Reduced-Transparency)
+    104. [`Sec-CH-UA`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA)
+    105. [`Sec-CH-UA-Arch`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-Arch)
+    106. [`Sec-CH-UA-Bitness`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-Bitness)
+    107. [`Sec-CH-UA-Form-Factors`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-Form-Factors)
+    108. [`Sec-CH-UA-Full-Version`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-Full-Version)
+    109. [`Sec-CH-UA-Full-Version-List`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-Full-Version-List)
+    110. [`Sec-CH-UA-Mobile`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-Mobile)
+    111. [`Sec-CH-UA-Model`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-Model)
+    112. [`Sec-CH-UA-Platform`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-Platform)
+    113. [`Sec-CH-UA-Platform-Version`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-Platform-Version)
+    114. [`Sec-CH-UA-WoW64`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-UA-WoW64)
+    115. [`Sec-CH-Viewport-Height`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-Viewport-Height)
+    116. [`Sec-CH-Viewport-Width`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-Viewport-Width)
+    117. [`Sec-CH-Width`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-CH-Width)
+    118. [`Sec-Fetch-Dest`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Dest)
+    119. [`Sec-Fetch-Mode`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Mode)
+    120. [`Sec-Fetch-Site`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Site)
+    121. [`Sec-Fetch-Storage-Access`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-Storage-Access)
+    122. [`Sec-Fetch-User`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Fetch-User)
+    123. [`Sec-GPC`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-GPC)
+    124. [`Sec-Private-State-Token`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Private-State-Token)
+    125. [`Sec-Private-State-Token-Crypto-Version`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Private-State-Token-Crypto-Version)
+    126. [`Sec-Private-State-Token-Lifetime`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Private-State-Token-Lifetime)
+    127. [`Sec-Purpose`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Purpose)
+    128. [`Sec-Redemption-Record`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Redemption-Record)
+    129. [`Sec-Speculation-Tags`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-Speculation-Tags)
+    130. [`Sec-WebSocket-Accept`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-WebSocket-Accept)
+    131. [`Sec-WebSocket-Extensions`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-WebSocket-Extensions)
+    132. [`Sec-WebSocket-Key`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-WebSocket-Key)
+    133. [`Sec-WebSocket-Protocol`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-WebSocket-Protocol)
+    134. [`Sec-WebSocket-Version`](/en-US/docs/Web/HTTP/Reference/Headers/Sec-WebSocket-Version)
+    135. [`Server`](/en-US/docs/Web/HTTP/Reference/Headers/Server)
+    136. [`Server-Timing`](/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing)
+    137. [`Service-Worker`](/en-US/docs/Web/HTTP/Reference/Headers/Service-Worker)
+    138. [`Service-Worker-Allowed`](/en-US/docs/Web/HTTP/Reference/Headers/Service-Worker-Allowed)
+    139. [`Service-Worker-Navigation-Preload`](/en-US/docs/Web/HTTP/Reference/Headers/Service-Worker-Navigation-Preload)
+    140. [`Set-Cookie`](/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie)
+    141. [`Set-Login`](/en-US/docs/Web/HTTP/Reference/Headers/Set-Login)
+    142. [`SourceMap`](/en-US/docs/Web/HTTP/Reference/Headers/SourceMap)
+    143. [`Speculation-Rules`](/en-US/docs/Web/HTTP/Reference/Headers/Speculation-Rules)
+    144. [`Strict-Transport-Security`](/en-US/docs/Web/HTTP/Reference/Headers/Strict-Transport-Security)
+    145. [`Supports-Loading-Mode`](/en-US/docs/Web/HTTP/Reference/Headers/Supports-Loading-Mode)
+    146. [`TE`](/en-US/docs/Web/HTTP/Reference/Headers/TE)
+    147. [`Timing-Allow-Origin`](/en-US/docs/Web/HTTP/Reference/Headers/Timing-Allow-Origin)
+    148. [`Tk`](/en-US/docs/Web/HTTP/Reference/Headers/Tk)
+    149. [`Trailer`](/en-US/docs/Web/HTTP/Reference/Headers/Trailer)
+    150. [`Transfer-Encoding`](/en-US/docs/Web/HTTP/Reference/Headers/Transfer-Encoding)
+    151. [`Upgrade`](/en-US/docs/Web/HTTP/Reference/Headers/Upgrade)
+    152. [`Upgrade-Insecure-Requests`](/en-US/docs/Web/HTTP/Reference/Headers/Upgrade-Insecure-Requests)
+    153. [`Use-As-Dictionary`](/en-US/docs/Web/HTTP/Reference/Headers/Use-As-Dictionary)
+    154. [`User-Agent`](/en-US/docs/Web/HTTP/Reference/Headers/User-Agent)
+    155. [`Vary`](/en-US/docs/Web/HTTP/Reference/Headers/Vary)
+    156. [`Via`](/en-US/docs/Web/HTTP/Reference/Headers/Via)
+    157. [`Viewport-Width`](/en-US/docs/Web/HTTP/Reference/Headers/Viewport-Width)
+    158. [`Want-Content-Digest`](/en-US/docs/Web/HTTP/Reference/Headers/Want-Content-Digest)
+    159. [`Want-Repr-Digest`](/en-US/docs/Web/HTTP/Reference/Headers/Want-Repr-Digest)
+    160. [`Warning`](/en-US/docs/Web/HTTP/Reference/Headers/Warning)
+    161. [`Width`](/en-US/docs/Web/HTTP/Reference/Headers/Width)
+    162. [`WWW-Authenticate`](/en-US/docs/Web/HTTP/Reference/Headers/WWW-Authenticate)
+    163. [`X-Content-Type-Options`](/en-US/docs/Web/HTTP/Reference/Headers/X-Content-Type-Options)
+    164. [`X-DNS-Prefetch-Control`](/en-US/docs/Web/HTTP/Reference/Headers/X-DNS-Prefetch-Control)
+    165. [`X-Forwarded-For`](/en-US/docs/Web/HTTP/Reference/Headers/X-Forwarded-For)
+    166. [`X-Forwarded-Host`](/en-US/docs/Web/HTTP/Reference/Headers/X-Forwarded-Host)
+    167. [`X-Forwarded-Proto`](/en-US/docs/Web/HTTP/Reference/Headers/X-Forwarded-Proto)
+    168. [`X-Frame-Options`](/en-US/docs/Web/HTTP/Reference/Headers/X-Frame-Options)
+    169. [`X-Permitted-Cross-Domain-Policies`](/en-US/docs/Web/HTTP/Reference/Headers/X-Permitted-Cross-Domain-Policies)
+    170. [`X-Powered-By`](/en-US/docs/Web/HTTP/Reference/Headers/X-Powered-By)
+    171. [`X-Robots-Tag`](/en-US/docs/Web/HTTP/Reference/Headers/X-Robots-Tag)
+    172. [`X-XSS-Protection`](/en-US/docs/Web/HTTP/Reference/Headers/X-XSS-Protection)
+27. [HTTP request methods](/en-US/docs/Web/HTTP/Reference/Methods)
+    1. [`CONNECT`](/en-US/docs/Web/HTTP/Reference/Methods/CONNECT)
+    2. [`DELETE`](/en-US/docs/Web/HTTP/Reference/Methods/DELETE)
+    3. [`GET`](/en-US/docs/Web/HTTP/Reference/Methods/GET)
+    4. [`HEAD`](/en-US/docs/Web/HTTP/Reference/Methods/HEAD)
+    5. [`OPTIONS`](/en-US/docs/Web/HTTP/Reference/Methods/OPTIONS)
+    6. [`PATCH`](/en-US/docs/Web/HTTP/Reference/Methods/PATCH)
+    7. [`POST`](/en-US/docs/Web/HTTP/Reference/Methods/POST)
+    8. [`PUT`](/en-US/docs/Web/HTTP/Reference/Methods/PUT)
+    9. [`QUERY`](/en-US/docs/Web/HTTP/Reference/Methods/QUERY)
+    10. [`TRACE`](/en-US/docs/Web/HTTP/Reference/Methods/TRACE)
+28. [HTTP response status codes](/en-US/docs/Web/HTTP/Reference/Status)
+    1. [`100 Continue`](/en-US/docs/Web/HTTP/Reference/Status/100)
+    2. [`101 Switching Protocols`](/en-US/docs/Web/HTTP/Reference/Status/101)
+    3. [`103 Early Hints`](/en-US/docs/Web/HTTP/Reference/Status/103)
+    4. [`200 OK`](/en-US/docs/Web/HTTP/Reference/Status/200)
+    5. [`201 Created`](/en-US/docs/Web/HTTP/Reference/Status/201)
+    6. [`202 Accepted`](/en-US/docs/Web/HTTP/Reference/Status/202)
+    7. [`203 Non-Authoritative Information`](/en-US/docs/Web/HTTP/Reference/Status/203)
+    8. [`204 No Content`](/en-US/docs/Web/HTTP/Reference/Status/204)
+    9. [`205 Reset Content`](/en-US/docs/Web/HTTP/Reference/Status/205)
+    10. [`206 Partial Content`](/en-US/docs/Web/HTTP/Reference/Status/206)
+    11. [`207 Multi-Status`](/en-US/docs/Web/HTTP/Reference/Status/207)
+    12. [`208 Already Reported`](/en-US/docs/Web/HTTP/Reference/Status/208)
+    13. [`226 IM Used`](/en-US/docs/Web/HTTP/Reference/Status/226)
+    14. [`300 Multiple Choices`](/en-US/docs/Web/HTTP/Reference/Status/300)
+    15. [`301 Moved Permanently`](/en-US/docs/Web/HTTP/Reference/Status/301)
+    16. [`302 Found`](/en-US/docs/Web/HTTP/Reference/Status/302)
+    17. [`303 See Other`](/en-US/docs/Web/HTTP/Reference/Status/303)
+    18. [`304 Not Modified`](/en-US/docs/Web/HTTP/Reference/Status/304)
+    19. [`307 Temporary Redirect`](/en-US/docs/Web/HTTP/Reference/Status/307)
+    20. [`308 Permanent Redirect`](/en-US/docs/Web/HTTP/Reference/Status/308)
+    21. [`400 Bad Request`](/en-US/docs/Web/HTTP/Reference/Status/400)
+    22. [`401 Unauthorized`](/en-US/docs/Web/HTTP/Reference/Status/401)
+    23. [`402 Payment Required`](/en-US/docs/Web/HTTP/Reference/Status/402)
+    24. [`403 Forbidden`](/en-US/docs/Web/HTTP/Reference/Status/403)
+    25. [`404 Not Found`](/en-US/docs/Web/HTTP/Reference/Status/404)
+    26. [`405 Method Not Allowed`](/en-US/docs/Web/HTTP/Reference/Status/405)
+    27. [`406 Not Acceptable`](/en-US/docs/Web/HTTP/Reference/Status/406)
+    28. [`407 Proxy Authentication Required`](/en-US/docs/Web/HTTP/Reference/Status/407)
+    29. [`408 Request Timeout`](/en-US/docs/Web/HTTP/Reference/Status/408)
+    30. [`409 Conflict`](/en-US/docs/Web/HTTP/Reference/Status/409)
+    31. [`410 Gone`](/en-US/docs/Web/HTTP/Reference/Status/410)
+    32. [`411 Length Required`](/en-US/docs/Web/HTTP/Reference/Status/411)
+    33. [`412 Precondition Failed`](/en-US/docs/Web/HTTP/Reference/Status/412)
+    34. [`413 Content Too Large`](/en-US/docs/Web/HTTP/Reference/Status/413)
+    35. [`414 URI Too Long`](/en-US/docs/Web/HTTP/Reference/Status/414)
+    36. [`415 Unsupported Media Type`](/en-US/docs/Web/HTTP/Reference/Status/415)
+    37. [`416 Range Not Satisfiable`](/en-US/docs/Web/HTTP/Reference/Status/416)
+    38. [`417 Expectation Failed`](/en-US/docs/Web/HTTP/Reference/Status/417)
+    39. [`418 I'm a teapot`](/en-US/docs/Web/HTTP/Reference/Status/418)
+    40. [`421 Misdirected Request`](/en-US/docs/Web/HTTP/Reference/Status/421)
+    41. [`422 Unprocessable Content`](/en-US/docs/Web/HTTP/Reference/Status/422)
+    42. [`423 Locked`](/en-US/docs/Web/HTTP/Reference/Status/423)
+    43. [`424 Failed Dependency`](/en-US/docs/Web/HTTP/Reference/Status/424)
+    44. [`425 Too Early`](/en-US/docs/Web/HTTP/Reference/Status/425)
+    45. [`426 Upgrade Required`](/en-US/docs/Web/HTTP/Reference/Status/426)
+    46. [`428 Precondition Required`](/en-US/docs/Web/HTTP/Reference/Status/428)
+    47. [`429 Too Many Requests`](/en-US/docs/Web/HTTP/Reference/Status/429)
+    48. [`431 Request Header Fields Too Large`](/en-US/docs/Web/HTTP/Reference/Status/431)
+    49. [`451 Unavailable For Legal Reasons`](/en-US/docs/Web/HTTP/Reference/Status/451)
+    50. [`500 Internal Server Error`](/en-US/docs/Web/HTTP/Reference/Status/500)
+    51. [`501 Not Implemented`](/en-US/docs/Web/HTTP/Reference/Status/501)
+    52. [`502 Bad Gateway`](/en-US/docs/Web/HTTP/Reference/Status/502)
+    53. [`503 Service Unavailable`](/en-US/docs/Web/HTTP/Reference/Status/503)
+    54. [`504 Gateway Timeout`](/en-US/docs/Web/HTTP/Reference/Status/504)
+    55. [`505 HTTP Version Not Supported`](/en-US/docs/Web/HTTP/Reference/Status/505)
+    56. [`506 Variant Also Negotiates`](/en-US/docs/Web/HTTP/Reference/Status/506)
+    57. [`507 Insufficient Storage`](/en-US/docs/Web/HTTP/Reference/Status/507)
+    58. [`508 Loop Detected`](/en-US/docs/Web/HTTP/Reference/Status/508)
+    59. [`510 Not Extended`](/en-US/docs/Web/HTTP/Reference/Status/510)
+    60. [`511 Network Authentication Required`](/en-US/docs/Web/HTTP/Reference/Status/511)
+29. [CSP directives](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy#directives)
+    1. [`base-uri`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/base-uri)
+    2. [`block-all-mixed-content`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/block-all-mixed-content)
+    3. [`child-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/child-src)
+    4. [`connect-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/connect-src)
+    5. [`default-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/default-src)
+    6. [`fenced-frame-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/fenced-frame-src)
+    7. [`font-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/font-src)
+    8. [`form-action`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/form-action)
+    9. [`frame-ancestors`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors)
+    10. [`frame-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-src)
+    11. [`img-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/img-src)
+    12. [`manifest-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/manifest-src)
+    13. [`media-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/media-src)
+    14. [`object-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/object-src)
+    15. [`prefetch-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/prefetch-src)
+    16. [`report-to`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/report-to)
+    17. [`report-uri`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/report-uri)
+    18. [`require-trusted-types-for`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/require-trusted-types-for)
+    19. [`sandbox`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/sandbox)
+    20. [`script-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/script-src)
+    21. [`script-src-attr`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/script-src-attr)
+    22. [`script-src-elem`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/script-src-elem)
+    23. [`style-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/style-src)
+    24. [`style-src-attr`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/style-src-attr)
+    25. [`style-src-elem`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/style-src-elem)
+    26. [`trusted-types`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/trusted-types)
+    27. [`upgrade-insecure-requests`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/upgrade-insecure-requests)
+    28. [`worker-src`](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/worker-src)
+30. [Permissions-Policy directives](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy#directives)
+    1. [`accelerometer`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/accelerometer)
+    2. [`ambient-light-sensor`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/ambient-light-sensor)
+    3. [`aria-notify`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/aria-notify)
+    4. [`attribution-reporting`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/attribution-reporting)
+    5. [`autoplay`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/autoplay)
+    6. [`bluetooth`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/bluetooth)
+    7. [`browsing-topics`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/browsing-topics)
+    8. [`camera`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/camera)
+    9. [`captured-surface-control`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/captured-surface-control)
+    10. [`ch-ua-high-entropy-values`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/ch-ua-high-entropy-values)
+    11. [`compute-pressure`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/compute-pressure)
+    12. [`cross-origin-isolated`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/cross-origin-isolated)
+    13. [`deferred-fetch`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/deferred-fetch)
+    14. [`deferred-fetch-minimal`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/deferred-fetch-minimal)
+    15. [`display-capture`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/display-capture)
+    16. [`encrypted-media`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/encrypted-media)
+    17. [`fullscreen`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/fullscreen)
+    18. [`gamepad`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/gamepad)
+    19. [`geolocation`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/geolocation)
+    20. [`gyroscope`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/gyroscope)
+    21. [`hid`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/hid)
+    22. [`identity-credentials-get`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/identity-credentials-get)
+    23. [`idle-detection`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/idle-detection)
+    24. [`language-detector`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/language-detector)
+    25. [`language-model`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/language-model)
+    26. [`local-fonts`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/local-fonts)
+    27. [`local-network`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/local-network)
+    28. [`local-network-access`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/local-network-access)
+    29. [`loopback-network`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/loopback-network)
+    30. [`magnetometer`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/magnetometer)
+    31. [`microphone`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/microphone)
+    32. [`midi`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/midi)
+    33. [`on-device-speech-recognition`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/on-device-speech-recognition)
+    34. [`otp-credentials`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/otp-credentials)
+    35. [`payment`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/payment)
+    36. [`picture-in-picture`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/picture-in-picture)
+    37. [`private-state-token-issuance`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/private-state-token-issuance)
+    38. [`private-state-token-redemption`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/private-state-token-redemption)
+    39. [`publickey-credentials-create`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/publickey-credentials-create)
+    40. [`publickey-credentials-get`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/publickey-credentials-get)
+    41. [`screen-wake-lock`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/screen-wake-lock)
+    42. [`serial`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/serial)
+    43. [`speaker-selection`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/speaker-selection)
+    44. [`storage-access`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/storage-access)
+    45. [`summarizer`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/summarizer)
+    46. [`translator`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/translator)
+    47. [`unload`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/unload)
+    48. [`usb`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/usb)
+    49. [`web-share`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/web-share)
+    50. [`window-management`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/window-management)
+    51. [`xr-spatial-tracking`](/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy/xr-spatial-tracking)
+31. [HTTP resources and specifications](/en-US/docs/Web/HTTP/Reference/Resources_and_specifications)
+
+[MDN](/)
+
+Your blueprint for a better internet.
+
+MDN
+:   * [About](/en-US/about)
+    * [Blog](/en-US/blog/)
+    * [Mozilla careers](https://www.mozilla.org/en-US/careers/listings/)
+    * [Advertise with us](/en-US/advertising)
+    * [MDN Plus](/en-US/plus)
+    * [Product help](https://support.mozilla.org/products/mdn-plus)
+
+Contribute
+:   * [MDN Community](/en-US/community)
+    * [Community resources](/en-US/docs/MDN/Community)
+    * [Writing guidelines](/en-US/docs/MDN/Writing_guidelines)
+    * [MDN Discord](/discord)
+    * [MDN on GitHub](https://github.com/mdn)
+
+Developers
+:   * [Web technologies](/en-US/docs/Web)
+    * [Learn web development](/en-US/docs/Learn_web_development)
+    * [Guides](/en-US/docs/MDN/Guides)
+    * [Tutorials](/en-US/docs/MDN/Tutorials)
+    * [Glossary](/en-US/docs/Glossary)
+    * [Hacks blog](https://hacks.mozilla.org/)
+
+[Mozilla](https://www.mozilla.org/)
+
+* [Website Privacy Notice](https://www.mozilla.org/privacy/websites/)
+* [Telemetry Settings](https://www.mozilla.org/en-US/privacy/websites/data-preferences/)
+* [Legal](https://www.mozilla.org/about/legal/terms/mozilla)
+* [Community Participation Guidelines](https://www.mozilla.org/about/governance/policies/participation/)
+
+Portions of this content are ©1998–2026 by individual mozilla.org contributors. Content available under [a Creative Commons license](/docs/MDN/Writing_guidelines/Attrib_copyright_license).

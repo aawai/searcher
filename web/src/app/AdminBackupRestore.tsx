@@ -26,6 +26,7 @@ import {
 import { api } from "../lib/api.ts";
 import { errorMessage } from "./state.tsx";
 import "./admin.css";
+import { AdminPanelHeader } from "./AdminShell.tsx";
 
 interface BackupManifest {
     version: "1.0.0";
@@ -322,6 +323,7 @@ export function AdminBackupRestore() {
 
     return (
         <div className="semantic-section" data-content="grouped">
+            <AdminPanelHeader title="备份" />
             {configSuccess && (
                 <StatusBanner tone="success" density="compact">
                     {configSuccess}
@@ -329,6 +331,7 @@ export function AdminBackupRestore() {
             )}
             <SettingsGroup
                 title="系统配置"
+                headingLevel={3}
                 footer="仅含系统设置与 AI 服务商，不含用户数据和 API Key。"
             >
                 <SettingsRow title="导出配置">
@@ -360,6 +363,7 @@ export function AdminBackupRestore() {
                         icon={<Upload size="1em" />}
                         disabled={configBusy}
                         selectedFileName={configFileName || undefined}
+                        placeholder="未选择文件"
                         describedBy={configError
                             ? "config-import-error"
                             : undefined}
@@ -369,10 +373,10 @@ export function AdminBackupRestore() {
                 </SettingsRow>
             </SettingsGroup>
 
-            <SettingsGroup title="完整备份">
+            <SettingsGroup title="完整备份" headingLevel={3}>
                 <SettingsRow title="创建备份">
                     <Button
-                        variant="default"
+                        variant="outline"
                         render={<a href="/api/admin/backup/export" download />}
                     >
                         <Download size="1em" />
@@ -397,10 +401,25 @@ export function AdminBackupRestore() {
                             id="backup-restore-file"
                             accept=".zip,application/zip"
                             buttonText="选择 ZIP 文件"
+                            disabled={validating || restoring}
                             selectedFileName={selectedZipFile?.name}
                             placeholder="未选择文件"
                             onFileSelect={handleZipFileChange}
                         />
+                        {selectedZipFile && (
+                            <Button type="button" variant="outline" disabled={validating || restoring}
+                                onClick={() => {
+                                    setSelectedZipFile(null);
+                                    setValidatedManifest(null);
+                                    setValidationError("");
+                                    setValidationWarnings([]);
+                                    setRestoreError("");
+                                    setRestoreSuccess("");
+                                    setRestoreWarnings([]);
+                                }}>
+                                清除文件
+                            </Button>
+                        )}
                         <Button
                             type="button"
                             variant="outline"
@@ -415,98 +434,54 @@ export function AdminBackupRestore() {
                         </Button>
                     </div>
                 </SettingsRow>
-            </SettingsGroup>
-
-            {validatedManifest && (
-                <>
-                    <StatusBanner tone="success" density="compact">
-                        备份文件校验通过，数据库完整性与外键检查正常。
-                    </StatusBanner>
-                    {validationWarnings.length > 0 && (
-                        <StatusBanner tone="warning" density="compact">
-                            {validationWarnings.join(" ")}
-                        </StatusBanner>
-                    )}
-                    <SettingsGroup title="备份内容">
+                {validatedManifest && (
+                    <>
+                        <SettingsRow title="预检结果" className="settings-row--vertical">
+                            <StatusBanner tone="success" density="compact">
+                                备份文件校验通过，数据库完整性与外键检查正常。
+                            </StatusBanner>
+                            {validationWarnings.length > 0 && (
+                                <StatusBanner tone="warning" density="compact">
+                                    {validationWarnings.join(" ")}
+                                </StatusBanner>
+                            )}
+                        </SettingsRow>
                         <SettingsRow title="生成时间">
-                            <span className="admin-value">
-                                {new Date(validatedManifest.createdAt)
-                                    .toLocaleString("zh-CN")}
-                            </span>
+                            {new Date(validatedManifest.createdAt).toLocaleString("zh-CN")}
                         </SettingsRow>
-                        <SettingsRow title="用户">
-                            <span className="admin-value">
-                                {validatedManifest.counts.users}
-                            </span>
-                        </SettingsRow>
+                        <SettingsRow title="用户">{validatedManifest.counts.users}</SettingsRow>
                         <SettingsRow title="应用 / 笔记">
-                            <span className="admin-value">
-                                {validatedManifest.counts.webapps} /{" "}
-                                {validatedManifest.counts.documents}
-                            </span>
+                            {validatedManifest.counts.webapps} / {validatedManifest.counts.documents}
                         </SettingsRow>
                         <SettingsRow title="AI 服务商 / 模型">
-                            <span className="admin-value">
-                                {validatedManifest.counts.aiProviders} /{" "}
-                                {validatedManifest.counts.aiModels}
-                            </span>
+                            {validatedManifest.counts.aiProviders} / {validatedManifest.counts.aiModels}
                         </SettingsRow>
                         <SettingsRow title="壁纸 / 图标">
-                            <span className="admin-value">
-                                {validatedManifest.assets.wallpapersCount} /
-                                {" "}
-                                {validatedManifest.assets.iconsCount}
-                            </span>
+                            {validatedManifest.assets.wallpapersCount} / {validatedManifest.assets.iconsCount}
                         </SettingsRow>
-                    </SettingsGroup>
-
-                    {restoreError && (
-                        <StatusBanner tone="error" density="compact">
-                            {restoreError}
-                        </StatusBanner>
-                    )}
-                    {restoreSuccess && (
-                        <StatusBanner tone="success" density="compact">
-                            {restoreSuccess}
-                        </StatusBanner>
-                    )}
-                    {restoreWarnings.length > 0 && (
-                        <StatusBanner tone="warning" density="compact">
-                            {restoreWarnings.join(" ")}
-                        </StatusBanner>
-                    )}
-                    <SettingsGroup footer="还原前会先保存当前数据快照，失败时尝试回滚。">
-                        <SettingsRow title="还原备份">
-                            <Button
-                                ref={restoreTriggerRef}
-                                type="button"
-                                variant="destructive"
-                                disabled={restoring}
-                                onClick={() => setRestoreModalOpen(true)}
-                            >
+                        <SettingsRow title="还原备份" className="settings-row--vertical"
+                            description="还原前会先保存当前数据快照，失败时尝试回滚。">
+                            {restoreError && <StatusBanner tone="error" density="compact">{restoreError}</StatusBanner>}
+                            {restoreSuccess && <StatusBanner tone="success" density="compact">{restoreSuccess}</StatusBanner>}
+                            {restoreWarnings.length > 0 && <StatusBanner tone="warning" density="compact">{restoreWarnings.join(" ")}</StatusBanner>}
+                            <Button ref={restoreTriggerRef} type="button" variant="destructive"
+                                disabled={restoring} onClick={() => setRestoreModalOpen(true)}>
                                 <RotateCcw size="1em" />
                                 <span>还原此备份…</span>
                             </Button>
+                            {restoreSuccess && <Button type="button" variant="outline" onClick={() => globalThis.location.reload()}>重新加载页面</Button>}
                         </SettingsRow>
-                        {restoreSuccess && (
-                            <SettingsRow title="使还原生效">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => globalThis.location.reload()}
-                                >
-                                    重新加载页面
-                                </Button>
-                            </SettingsRow>
-                        )}
-                    </SettingsGroup>
-                </>
-            )}
+                    </>
+                )}
+            </SettingsGroup>
 
             <AlertDialog
                 open={pendingImport !== null}
                 onOpenChange={(open) => {
-                    if (!configBusy && !open) setPendingImport(null);
+                    if (!configBusy && !open) {
+                        setPendingImport(null);
+                        setConfigFileName("");
+                    }
                 }}
             >
                 <AlertDialogContent finalFocus={configTriggerRef}>

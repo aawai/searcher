@@ -20,6 +20,7 @@ import type { SystemSettingsDto } from "./AdminOverview.tsx";
 import { normalizeTheme, THEME_IDS } from "@shared/contracts.ts";
 import { THEME_LABELS } from "../design-system/theme.ts";
 import "./admin.css";
+import { AdminPanelHeader } from "./AdminShell.tsx";
 
 const RETENTION_MIN = 1;
 const RETENTION_MAX = 3650;
@@ -39,9 +40,17 @@ export function AdminSystemSettings() {
         defaultTheme: "system",
         defaultSearchTarget: "same",
     });
+    const [savedSettings, setSavedSettings] = useState<SystemSettingsDto | null>(null);
     // The field keeps what was typed; an empty or out-of-range value is an
     // error of the field, never silently replaced.
     const [retentionInput, setRetentionInput] = useState("90");
+    const isDirty = savedSettings !== null && (
+        retentionInput !== String(savedSettings.auditRetentionDays) ||
+        settings.allowRegistration !== savedSettings.allowRegistration ||
+        settings.defaultEngine !== savedSettings.defaultEngine ||
+        settings.defaultTheme !== savedSettings.defaultTheme ||
+        settings.defaultSearchTarget !== savedSettings.defaultSearchTarget
+    );
     const [retentionError, setRetentionError] = useState("");
     const retentionRef = useRef<HTMLInputElement>(null);
     const [initialized, setInitialized] = useState(false);
@@ -58,6 +67,7 @@ export function AdminSystemSettings() {
 
     function applySettings(next: SystemSettingsDto) {
         setSettings(next);
+        setSavedSettings(next);
         setRetentionInput(String(next.auditRetentionDays));
         setRetentionError("");
     }
@@ -112,6 +122,7 @@ export function AdminSystemSettings() {
     if (!initialized) {
         return (
             <div className="semantic-section" data-content="grouped">
+                <AdminPanelHeader title="设置" />
                 {loading
                     ? <LoadingState>正在加载系统设置…</LoadingState>
                     : (
@@ -140,6 +151,7 @@ export function AdminSystemSettings() {
             className="semantic-section"
             data-content="grouped"
         >
+            <AdminPanelHeader title="设置" />
             {error && (
                 <StatusBanner tone="error" density="compact">
                     {error}
@@ -155,6 +167,7 @@ export function AdminSystemSettings() {
 
             <SettingsGroup
                 title="注册"
+                headingLevel={3}
                 footer="关闭后访客无法自行注册，管理员仍可创建用户。"
             >
                 <SettingsRow title="允许访客注册">
@@ -173,6 +186,7 @@ export function AdminSystemSettings() {
 
             <SettingsGroup
                 title="审计"
+                headingLevel={3}
                 footer="超出保留期限的审计记录会被自动清理。"
             >
                 <SettingsRow
@@ -187,6 +201,8 @@ export function AdminSystemSettings() {
                     <Input
                         ref={retentionRef}
                         id="auditRetentionDays"
+                        data-field="standalone"
+                        className="admin-retention-input"
                         placeholder={`${RETENTION_MIN}–${RETENTION_MAX}`}
                         type="number"
                         inputMode="numeric"
@@ -208,6 +224,7 @@ export function AdminSystemSettings() {
 
             <SettingsGroup
                 title="新账户默认值"
+                headingLevel={3}
                 footer="新账户与未登录访客使用这些默认值，已有用户的设置不变。"
             >
                 <SettingsRow title="搜索引擎">
@@ -282,11 +299,19 @@ export function AdminSystemSettings() {
             </SettingsGroup>
 
             <ActionGroup>
-                <Button
-                    variant="default"
-                    type="submit"
-                    disabled={saving || loading}
-                >
+                {isDirty && (
+                    <>
+                        <span>有未保存的更改</span>
+                        <Button type="button" variant="outline" disabled={saving}
+                            onClick={() => {
+                                if (savedSettings) applySettings(savedSettings);
+                                setError("");
+                            }}>
+                            放弃
+                        </Button>
+                    </>
+                )}
+                <Button variant="default" type="submit" disabled={saving || loading || !isDirty}>
                     <span>{saving ? "正在保存…" : "保存设置"}</span>
                 </Button>
             </ActionGroup>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, RefreshCw } from "lucide-react";
-import type { ThemeId } from "@shared/contracts.ts";
+import type { AuditLogDto, ThemeId } from "@shared/contracts.ts";
 import { routes } from "./routes.ts";
 import { Button } from "../components/ui/button.tsx";
 import {
@@ -11,6 +11,8 @@ import {
     SettingsRow,
     StatusBanner,
 } from "../components/searcher/semantic.tsx";
+import { AdminPanelHeader } from "./AdminShell.tsx";
+import { describeAuditAction, describeAuditTarget } from "./admin-audit.ts";
 import { api } from "../lib/api.ts";
 import { errorMessage } from "./state.tsx";
 import "./admin.css";
@@ -35,8 +37,29 @@ export interface SystemOverviewDto {
     settings: SystemSettingsDto;
 }
 
-/** Admin tabs replace the history entry like the local navigation does. */
-function RowLink(
+interface RecentAuditResponse {
+    items: AuditLogDto[];
+}
+
+function formatRecentTime(timestamp: number): string {
+    if (!timestamp) return "—";
+    return new Date(timestamp).toLocaleString("zh-CN", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+    });
+}
+
+function formatActor(log: AuditLogDto): string {
+    if (log.actorUsername) return `@${log.actorUsername}`;
+    if (log.actorUserId) return "已删除用户";
+    return "系统";
+}
+
+/** Admin tabs replace the history entry like the sidebar navigation does. */
+function DrillLink(
     { to, label, accessibleLabel, replace = false }: {
         to: string;
         label: string;
@@ -47,10 +70,11 @@ function RowLink(
     return (
         <Button
             variant="ghost"
+            className="admin-kpi-link"
             aria-label={accessibleLabel}
             render={<Link to={to} replace={replace} />}
         >
-            {label}
+            <span>{label}</span>
             <ChevronRight size="1em" className="icon-sm" aria-hidden="true" />
         </Button>
     );
@@ -58,18 +82,30 @@ function RowLink(
 
 export function AdminOverview() {
     const [overview, setOverview] = useState<SystemOverviewDto | null>(null);
+    const [recentLogs, setRecentLogs] = useState<AuditLogDto[]>([]);
+    const [recentError, setRecentError] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     const loadOverview = async () => {
         setLoading(true);
         setError("");
+        setRecentError("");
         try {
-            setOverview(
-                await api<SystemOverviewDto>("/api/admin/system/overview"),
-            );
-        } catch (err) {
-            setError(errorMessage(err));
+            const [overviewRes, auditRes] = await Promise.allSettled([
+                api<SystemOverviewDto>("/api/admin/system/overview"),
+                api<RecentAuditResponse>("/api/admin/audit-logs?limit=5"),
+            ]);
+            if (overviewRes.status === "fulfilled") {
+                setOverview(overviewRes.value);
+            } else {
+                setError(errorMessage(overviewRes.reason));
+            }
+            if (auditRes.status === "fulfilled") {
+                setRecentLogs(auditRes.value.items);
+            } else {
+                setRecentError(errorMessage(auditRes.reason));
+            }
         } finally {
             setLoading(false);
         }
@@ -79,9 +115,25 @@ export function AdminOverview() {
         void loadOverview();
     }, []);
 
+    const refreshButton = (
+        <Button
+            type="button"
+            variant="outline"
+            onClick={() => void loadOverview()}
+            disabled={loading}
+        >
+            <RefreshCw
+                size="1em"
+                className={loading ? "animate-spin" : undefined}
+            />
+            <span>{loading ? "刷新中…" : "刷新"}</span>
+        </Button>
+    );
+
     if (!overview) {
         return (
             <div className="semantic-section" data-content="grouped">
+                <AdminPanelHeader title="概览" actions={refreshButton} />
                 {loading
                     ? <LoadingState>正在加载系统概览…</LoadingState>
                     : (
@@ -105,70 +157,125 @@ export function AdminOverview() {
 
     return (
         <div className="semantic-section" data-content="grouped">
+            <AdminPanelHeader title="概览" actions={refreshButton} />
             {error && (
                 <StatusBanner tone="error" density="compact">
                     {error}
                 </StatusBanner>
             )}
-            <SettingsGroup
-                title="概况"
-                actions={
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => void loadOverview()}
-                        disabled={loading}
-                    >
-                        <RefreshCw
-                            size="1em"
-                            className={loading ? "animate-spin" : undefined}
+
+            <div className="admin-kpi-grid">
+                <div className="admin-kpi-card">
+                    <div className="admin-kpi-head">
+                        <span className="admin-kpi-label">用户</span>
+                        <DrillLink
+                            to={routes.admin("users")}
+                            replace
+                            label="管理"
+                            accessibleLabel="管理用户"
                         />
-                        <span>{loading ? "刷新中…" : "刷新"}</span>
-                    </Button>
-                }
-            >
-                <SettingsRow title="用户">
-                    <span className="admin-value">
-                        {overview.totalUsers} 人 · 活跃 {overview.activeUsers}
-                        {" "}
-                        · 禁用 {overview.disabledUsers}
-                    </span>
-                    <RowLink
-                        to={routes.admin("users")}
-                        replace
-                        label="管理"
-                        accessibleLabel="管理用户"
-                    />
-                </SettingsRow>
-                <SettingsRow title="AI 服务商 / 模型">
-                    <span className="admin-value">
-                        {overview.totalAiProviders} / {overview.totalAiModels}
-                    </span>
-                    <RowLink
-                        to={routes.settings("ai")}
-                        label="配置"
-                        accessibleLabel="配置 AI 服务商"
-                    />
-                </SettingsRow>
-                <SettingsRow title="审计日志">
-                    <span className="admin-value">
-                        {overview.totalAuditLogs} 条 · 保留{" "}
-                        {overview.settings.auditRetentionDays} 天
-                    </span>
-                    <RowLink
+                    </div>
+                    <div className="admin-kpi-value">
+                        {overview.totalUsers}
+                    </div>
+                    <div className="admin-kpi-sub">
+                        活跃 {overview.activeUsers} · 禁用{" "}
+                        {overview.disabledUsers}
+                    </div>
+                </div>
+
+                <div className="admin-kpi-card">
+                    <div className="admin-kpi-head">
+                        <span className="admin-kpi-label">内容规模</span>
+                    </div>
+                    <div className="admin-kpi-value">
+                        {overview.totalWebApps + overview.totalDocuments}
+                    </div>
+                    <div className="admin-kpi-sub">
+                        应用 {overview.totalWebApps} · 笔记{" "}
+                        {overview.totalDocuments}
+                    </div>
+                </div>
+
+                <div className="admin-kpi-card">
+                    <div className="admin-kpi-head">
+                        <span className="admin-kpi-label">AI 服务</span>
+                        <DrillLink
+                            to={routes.settings("ai")}
+                            label="配置"
+                            accessibleLabel="配置 AI 服务商"
+                        />
+                    </div>
+                    <div className="admin-kpi-value">
+                        {overview.totalAiProviders}
+                    </div>
+                    <div className="admin-kpi-sub">
+                        服务商 {overview.totalAiProviders} · 模型{" "}
+                        {overview.totalAiModels}
+                    </div>
+                </div>
+
+                <div className="admin-kpi-card">
+                    <div className="admin-kpi-head">
+                        <span className="admin-kpi-label">审计与策略</span>
+                        <DrillLink
+                            to={routes.admin("audit")}
+                            replace
+                            label="查看"
+                            accessibleLabel="查看审计日志"
+                        />
+                    </div>
+                    <div className="admin-kpi-value">
+                        {overview.totalAuditLogs}
+                    </div>
+                    <div className="admin-kpi-sub">
+                        保留 {overview.settings.auditRetentionDays} 天 ·{" "}
+                        {overview.settings.allowRegistration
+                            ? "开放注册"
+                            : "关闭注册"}
+                    </div>
+                </div>
+            </div>
+
+            <SettingsGroup
+                title="最近关键操作"
+                headingLevel={3}
+                actions={
+                    <DrillLink
                         to={routes.admin("audit")}
                         replace
-                        label="查看"
-                        accessibleLabel="查看审计日志"
+                        label="全部记录"
+                        accessibleLabel="查看全部审计记录"
                     />
-                </SettingsRow>
-            </SettingsGroup>
-            <SettingsGroup title="内容">
-                <SettingsRow title="应用 / 笔记">
-                    <span className="admin-value">
-                        {overview.totalWebApps} / {overview.totalDocuments}
-                    </span>
-                </SettingsRow>
+                }
+            >
+                {recentError
+                    ? (
+                        <StatusBanner tone="error" density="compact">
+                            无法加载最近操作：{recentError}
+                        </StatusBanner>
+                    )
+                    : recentLogs.length === 0
+                    ? <EmptyState density="inline" title="暂无操作记录" />
+                    : recentLogs.map((log) => {
+                        const action = describeAuditAction(log.action);
+                        const target = describeAuditTarget(
+                            log.targetType,
+                            log.targetId,
+                            log.metadata,
+                        );
+                        return (
+                            <SettingsRow
+                                key={log.id}
+                                title={action.label}
+                                description={`${formatActor(log)} → ${target.label}`}
+                            >
+                                <time className="admin-audit-time">
+                                    {formatRecentTime(log.createdAt)}
+                                </time>
+                            </SettingsRow>
+                        );
+                    })}
             </SettingsGroup>
         </div>
     );

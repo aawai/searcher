@@ -812,15 +812,12 @@ Deno.test("production navigation contracts", async (t) => {
         async () => {
             await visit("/admin/users");
             const opener = page.getByRole("button", {
-                name: /的更多操作$/,
+                name: "重置密码",
+                exact: true,
             }).first();
             const handle = await opener.elementHandle();
             assertEquals(handle !== null, true);
             await opener.click();
-            await page.getByRole("menuitem", {
-                name: "重置密码",
-                exact: true,
-            }).click();
             const dialog = page.getByRole("dialog");
             await dialog.waitFor({ state: "visible" });
             try {

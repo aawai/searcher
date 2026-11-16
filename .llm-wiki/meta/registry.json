@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-11-13T08:04:15.457Z",
+  "last_updated": "2026-11-15T08:01:43.817Z",
   "pages": {
     "concepts/abortcontroller-and-request-cancellation": {
       "type": "concept",
@@ -29,6 +29,13 @@
       "domain": "accessibility",
       "created": "2026-10-24",
       "updated": "2026-10-24"
+    },
+    "concepts/assistant-ui-scoped-context-and-attachment-adapter": {
+      "type": "concept",
+      "title": "Assistant UI Scoped Context and Attachment Adapter",
+      "domain": "engineering",
+      "created": "2026-11-14",
+      "updated": "2026-11-14"
     },
     "concepts/backdrop-filter-backdrop-root": {
       "type": "concept",
@@ -114,6 +121,13 @@
       "title": "dnd-kit 2D Grid Sorting Architecture",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "concepts/externalstoreruntime-and-branchable-message-repository": {
+      "type": "concept",
+      "title": "ExternalStoreRuntime and Branchable Message Repository",
+      "domain": "engineering",
+      "created": "2026-11-14",
+      "updated": "2026-11-14"
     },
     "concepts/field-encryption-and-key-management": {
       "type": "concept",
@@ -278,6 +292,13 @@
       "created": "2026-09-27",
       "updated": "2026-10-24"
     },
+    "concepts/react-external-store-snapshot-contract": {
+      "type": "concept",
+      "title": "React External Store Snapshot Contract",
+      "domain": "engineering",
+      "created": "2026-11-15",
+      "updated": "2026-11-15"
+    },
     "concepts/reduced-motion-replacement-strategy": {
       "type": "concept",
       "title": "Reduced Motion Replacement Strategy",
@@ -430,6 +451,13 @@
       "title": "XSS Sanitization and Trusted Types",
       "created": "2026-10-27",
       "updated": "2026-10-27"
+    },
+    "entities/assistant-ui-framework": {
+      "type": "entity",
+      "title": "assistant-ui Framework",
+      "category": "tool",
+      "created": "2026-11-14",
+      "updated": "2026-11-14"
     },
     "entities/deno-runtime": {
       "type": "entity",
@@ -1980,6 +2008,87 @@
       "source_id": "SRC-2026-11-13-008",
       "format": "web",
       "captured": "2026-11-13"
+    },
+    "sources/SRC-2026-11-14-001": {
+      "type": "source",
+      "title": "ExternalStoreRuntime",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-14-001/extracted.md",
+      "source_id": "SRC-2026-11-14-001",
+      "format": "web",
+      "captured": "2026-11-14"
+    },
+    "sources/SRC-2026-11-14-002": {
+      "type": "source",
+      "title": "Message Conversion",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-14-002/extracted.md",
+      "source_id": "SRC-2026-11-14-002",
+      "format": "web",
+      "captured": "2026-11-14"
+    },
+    "sources/SRC-2026-11-14-003": {
+      "type": "source",
+      "title": "External Store Runtime",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-14-003/extracted.md",
+      "source_id": "SRC-2026-11-14-003",
+      "format": "web",
+      "captured": "2026-11-14"
+    },
+    "sources/SRC-2026-11-14-004": {
+      "type": "source",
+      "title": "Assistant Context API",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-14-004/extracted.md",
+      "source_id": "SRC-2026-11-14-004",
+      "format": "web",
+      "captured": "2026-11-14"
+    },
+    "sources/SRC-2026-11-14-005": {
+      "type": "source",
+      "title": "File Attachments",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-14-005/extracted.md",
+      "source_id": "SRC-2026-11-14-005",
+      "format": "web",
+      "captured": "2026-11-14"
+    },
+    "sources/SRC-2026-11-14-006": {
+      "type": "source",
+      "title": "Message Branching",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-14-006/extracted.md",
+      "source_id": "SRC-2026-11-14-006",
+      "format": "web",
+      "captured": "2026-11-14"
+    },
+    "sources/SRC-2026-11-15-001": {
+      "type": "source",
+      "title": "How To Corrupt An SQLite Database File",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-15-001/extracted.md",
+      "source_id": "SRC-2026-11-15-001",
+      "format": "web",
+      "captured": "2026-11-15"
+    },
+    "sources/SRC-2026-11-15-002": {
+      "type": "source",
+      "title": "Fetch metadata",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-15-002/extracted.md",
+      "source_id": "SRC-2026-11-15-002",
+      "format": "web",
+      "captured": "2026-11-15"
+    },
+    "sources/SRC-2026-11-15-003": {
+      "type": "source",
+      "title": "React useSyncExternalStore",
+      "status": "ingested",
+      "raw_path": "raw/sources/SRC-2026-11-15-003/extracted.md",
+      "source_id": "SRC-2026-11-15-003",
+      "format": "web",
+      "captured": "2026-11-15"
     },
     "sources/css-var-fallback-consumer-value-boundary": {
       "type": "source",
@@ -4301,6 +4410,15 @@
       "slug": "sqlite-table-recreation-migration-zero-loss",
       "created": "2026-09-25",
       "updated": "2026-09-25"
+    },
+    "sources/wiki-discovery-duplicate-sources": {
+      "type": "source",
+      "title": "Wiki 来源发现需先核对既有 URL",
+      "category": "workflow",
+      "status": "insight",
+      "slug": "wiki-discovery-duplicate-sources",
+      "created": "2026-11-15",
+      "updated": "2026-11-15"
     },
     "syntheses/searcher-system-architecture": {
       "type": "synthesis",

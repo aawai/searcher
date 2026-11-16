@@ -257,7 +257,7 @@
     --layout-ask-workbench-max: clamp(1280px, 82vw, 1760px);
     --layout-ask-message-max: clamp(900px, 55vw, 1040px);
     --layout-ask-composer-max: clamp(760px, 50vw, 920px);
-    --layout-management-max: 1100px;
+    --layout-management-max: 1160px;
     --layout-settings-max: 960px;
     --layout-settings-sidebar: 220px;
     --layout-settings-panel-max: 680px;

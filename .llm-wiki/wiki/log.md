@@ -1,5 +1,25 @@
 # Wiki Update Log
 
+## 2026-11-15
+
+- **retro**: {"category":"workflow","slug":"wiki-discovery-duplicate-sources","title":"Wiki 来源发现需先核对既有 URL"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/react-external-store-snapshot-contract","title":"React External Store Snapshot Contract"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-15-003","url":"https://react.dev/reference/react/useSyncExternalStore"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-15-002","url":"https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Fetch_metadata"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-15-001","url":"https://sqlite.org/howtocorrupt.html"}
+
+## 2026-11-14
+
+- **ensure\_page**: {"page_type":"concept","path":"concepts/assistant-ui-scoped-context-and-attachment-adapter","title":"Assistant UI Scoped Context and Attachment Adapter"}
+- **ensure\_page**: {"page_type":"concept","path":"concepts/externalstoreruntime-and-branchable-message-repository","title":"ExternalStoreRuntime and Branchable Message Repository"}
+- **ensure\_page**: {"page_type":"entity","path":"entities/assistant-ui-framework","title":"assistant-ui Framework"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-14-006","url":"https://www.assistant-ui.com/docs/guides/branching.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-14-005","url":"https://www.assistant-ui.com/docs/guides/attachments.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-14-004","url":"https://www.assistant-ui.com/docs/guides/context-api.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-14-003","url":"https://www.assistant-ui.com/docs/api-reference/external-store/runtime.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-14-002","url":"https://www.assistant-ui.com/docs/api-reference/external-store/message-conversion.md"}
+- **capture**: {"format":"web","source_id":"SRC-2026-11-14-001","url":"https://www.assistant-ui.com/docs/runtimes/custom/external-store.md"}
+
 ## 2026-11-13
 
 - **ensure\_page**: {"page_type":"concept","path":"concepts/milkdown-plugin-ctx-and-markdown-pipeline","title":"Milkdown Plugin Ctx and Markdown Pipeline"}

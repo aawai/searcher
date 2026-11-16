@@ -40,6 +40,7 @@ sources:
 
 ## 关联
 
+- [assistant-ui Framework](/entities/assistant-ui-framework.md)、[ExternalStoreRuntime and Branchable Message Repository](/concepts/externalstoreruntime-and-branchable-message-repository.md)
 - [Server-Sent Events 与实时事件流](/concepts/server-sent-events-sse-与实时事件流.md)
 - [AbortController and Request Cancellation](/concepts/abortcontroller-and-request-cancellation.md)
 - [SearXNG Web Search Integration](/concepts/searxng-web-search-integration.md)

@@ -248,47 +248,34 @@ Deno.test("Admin user table keeps short status and role labels readable", async 
     });
     assertEquals(created.status, 200);
     await page.reload();
-    const demoRow = page.locator("tbody tr").filter({
-        hasText: "后台演示用户",
-    });
-    const adminRow = page.locator("tbody tr").filter({
-        hasText: "Stability Tester",
-    });
-    await demoRow.waitFor({ state: "visible" });
-    await adminRow.waitFor({ state: "visible" });
-
     async function assertShortLabels() {
         for (const width of [390, 768]) {
             await page.setViewportSize({ width, height: 844 });
-            for (const row of [demoRow, adminRow]) {
-                const status = row.locator("td").nth(2).locator("span");
-                const lines = await status.evaluate((element) => {
-                    const range = document.createRange();
-                    range.selectNodeContents(element);
-                    return new Set(
-                        Array.from(
-                            range.getClientRects(),
-                            (rect) => Math.round(rect.top),
-                        ),
-                    ).size;
+            const selector = width < 768 ? ".admin-user-row" : "tbody tr";
+            const demo = page.locator(selector).filter({ hasText: "后台演示用户" });
+            const admin = page.locator(selector).filter({ hasText: "Stability Tester" });
+            await demo.waitFor({ state: "visible" });
+            await admin.waitFor({ state: "visible" });
+            const role = admin.getByText("管理员", { exact: true });
+            await role.waitFor({ state: "visible" });
+            const lines = await role.evaluate((element) => {
+                const range = document.createRange();
+                range.selectNodeContents(element);
+                return new Set(Array.from(range.getClientRects(), (rect) => Math.round(rect.top))).size;
+            });
+            assertEquals(lines, 1, `${width}px: role must fit one line`);
+            if (width === 768) {
+                const identityWidth = await admin.locator("td").first().evaluate((cell) => cell.getBoundingClientRect().width);
+                assert(identityWidth >= 144, `user identity column is squeezed to ${identityWidth}px`);
+                const visible = await admin.getByRole("button", { name: "重置密码" }).evaluate((button) => {
+                    const container = button.closest('[data-slot="table-container"]')!;
+                    const box = button.getBoundingClientRect();
+                    const bounds = container.getBoundingClientRect();
+                    return box.left >= bounds.left && box.right <= bounds.right;
                 });
-                assertEquals(lines, 1, `${width}px: status must fit one line`);
+                assert(visible, "self reset action must be fully visible at 768px");
             }
-            if (width >= 768) {
-                const lines = await adminRow.locator("td").nth(1).evaluate(
-                    (element) => {
-                        const range = document.createRange();
-                        range.selectNodeContents(element);
-                        return new Set(
-                            Array.from(
-                                range.getClientRects(),
-                                (rect) => Math.round(rect.top),
-                            ),
-                        ).size;
-                    },
-                );
-                assertEquals(lines, 1, `${width}px: role must fit one line`);
-            }
+            assertEquals(await admin.getByRole("button", { name: "重置密码" }).count(), 1);
         }
     }
     await assertShortLabels();
@@ -304,7 +291,8 @@ Deno.test("Admin user table keeps short status and role labels readable", async 
     );
     assertEquals(status, 200);
     await page.reload();
-    await demoRow.getByText("已禁用").waitFor({ state: "visible" });
+    await page.locator("tbody tr").filter({ hasText: "后台演示用户" })
+        .getByText("已禁用").waitFor({ state: "visible" });
     await assertShortLabels();
 });
 
@@ -328,6 +316,7 @@ Deno.test("Admin audit exposes the complete object ID to keyboard and touch", as
         hasTouch: true,
         reducedMotion: "reduce",
     });
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
     await loginAndVisit(page, app.origin, "/admin/users", user);
     const created = await page.evaluate(async () => {
         const response = await fetch("/api/admin/users", {
@@ -350,23 +339,27 @@ Deno.test("Admin audit exposes the complete object ID to keyboard and touch", as
     );
     assertEquals(backup.status(), 200);
     await page.goto(`${app.origin}/admin/audit`);
-    const row = page.locator("tbody tr").filter({ hasText: "创建用户" });
-    await row.waitFor({ state: "visible" });
-    const shortRow = page.locator("tbody tr").filter({ hasText: "创建备份" });
-    await shortRow.waitFor({ state: "visible" });
-    const shortTarget = shortRow.locator("td").nth(2);
+    const event = page.locator(".admin-mobile-list .admin-audit-event").filter({
+        hasText: "创建用户",
+    });
+    await event.waitFor({ state: "visible" });
+    const shortEvent = page.locator(".admin-mobile-list .admin-audit-event")
+        .filter({ hasText: "创建备份" });
+    await shortEvent.waitFor({ state: "visible" });
     assertEquals(
-        await shortTarget.getByText("备份", { exact: true }).count(),
+        await shortEvent.getByText("备份", { exact: true }).count(),
         1,
     );
     assertEquals(
-        await shortTarget.getByRole("button").count(),
+        await shortEvent.getByRole("button").count(),
         0,
         "A named system target must not add a redundant tab stop",
     );
-    await row.locator("td").nth(2).getByText("@audit_demo", { exact: true })
+    await event.getByText("@audit_demo", { exact: true })
         .waitFor({ state: "visible" });
-    const trigger = row.getByRole("button", { name: /查看完整 ID$/ });
+    await event.getByText(`@${user.username}`, { exact: true })
+        .waitFor({ state: "visible" });
+    const trigger = event.getByRole("button", { name: /查看完整 ID$/ });
     assertEquals(
         await trigger.count(),
         1,
@@ -379,18 +372,19 @@ Deno.test("Admin audit exposes the complete object ID to keyboard and touch", as
         true,
         "The accessible name starts with the visible ID prefix",
     );
-    const actionLines = await row.locator("td").nth(1).locator("span").evaluate(
-        (element) => {
-            const range = document.createRange();
-            range.selectNodeContents(element);
-            return new Set(
-                Array.from(
-                    range.getClientRects(),
-                    (rect) => Math.round(rect.top),
-                ),
-            ).size;
-        },
-    );
+    const actionLines = await event.locator(".admin-audit-action > span")
+        .evaluate(
+            (element) => {
+                const range = document.createRange();
+                range.selectNodeContents(element);
+                return new Set(
+                    Array.from(
+                        range.getClientRects(),
+                        (rect) => Math.round(rect.top),
+                    ),
+                ).size;
+            },
+        );
     assertEquals(actionLines, 1, "Short audit actions must fit one line");
     const box = await trigger.boundingBox();
     assert(box && box.width >= 44 && box.height >= 44);
@@ -401,6 +395,14 @@ Deno.test("Admin audit exposes the complete object ID to keyboard and touch", as
     await popover.getByText(created.id, { exact: true }).waitFor({
         state: "visible",
     });
+    await popover.getByRole("button", { name: "复制对象 ID" }).waitFor({
+        state: "visible",
+    });
+    await popover.getByRole("button", { name: "复制对象 ID" }).click();
+    await popover.getByRole("button", { name: "已复制对象 ID" }).waitFor({
+        state: "visible",
+    });
+    assertEquals(await page.evaluate(() => navigator.clipboard.readText()), created.id);
     await page.keyboard.press("Escape");
     await popover.waitFor({ state: "hidden" });
     assertEquals(
@@ -414,4 +416,61 @@ Deno.test("Admin audit exposes the complete object ID to keyboard and touch", as
     });
     await page.touchscreen.tap(5, 5);
     await popover.waitFor({ state: "hidden" });
+
+    await page.setViewportSize({ width: 768, height: 844 });
+    await page.goto(`${app.origin}/admin/audit`);
+    await page.locator("th", { hasText: "操作者" }).waitFor({
+        state: "visible",
+    });
+    const desktopRow = page.locator("tbody tr").filter({ hasText: "创建用户" });
+    await desktopRow.getByText(`@${user.username}`, { exact: true }).waitFor({
+        state: "visible",
+    });
+    const targetCell = desktopRow.locator(".admin-audit-target-cell");
+    const targetWidth = await targetCell.evaluate((cell) => cell.getBoundingClientRect().width);
+    assert(targetWidth >= 108, `audit target column is squeezed to ${targetWidth}px`);
+    await desktopRow.locator(".admin-audit-tablet-time").waitFor({ state: "visible" });
+    const search = page.getByRole("searchbox", { name: "搜索审计日志" });
+    await search.fill("audit_demo");
+    const filtered = page.waitForResponse((response) =>
+        response.url().includes("/api/admin/audit-logs?") &&
+        new URL(response.url()).searchParams.get("q") === "audit_demo" &&
+        response.status() === 200
+    );
+    await search.press("Enter");
+    await filtered;
+    await desktopRow.waitFor({ state: "visible" });
+    await page.waitForFunction(() => document.querySelectorAll(".admin-desktop-view tbody tr").length === 1);
+});
+
+Deno.test("Admin settings can discard and save changes", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+    const user = await app.seedAskFixtureUser();
+    await app.store.run((db) =>
+        db.update(users).set({ role: "admin" }).where(eq(users.id, user.userId)).run()
+    );
+    const browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+    cleanup.defer(() => browser.close());
+    const page = await browser.newPage();
+    await loginAndVisit(page, app.origin, "/admin/settings", user);
+    const input = page.locator("#auditRetentionDays");
+    await input.waitFor({ state: "visible" });
+    const initial = await input.inputValue();
+    const changed = initial === "91" ? "92" : "91";
+    const save = page.getByRole("button", { name: "保存设置" });
+    assertEquals(await save.isDisabled(), true);
+    await input.fill(changed);
+    assertEquals(await save.isDisabled(), false);
+    await page.getByRole("button", { name: "放弃" }).click();
+    assertEquals(await input.inputValue(), initial);
+    assertEquals(await save.isDisabled(), true);
+    await input.fill(changed);
+    await save.click();
+    await page.getByText("系统设置已保存").waitFor({ state: "visible" });
+    assertEquals(await save.isDisabled(), true);
+    await page.reload();
+    await page.locator("#auditRetentionDays").waitFor({ state: "visible" });
+    assertEquals(await page.locator("#auditRetentionDays").inputValue(), changed);
 });

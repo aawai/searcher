@@ -44,6 +44,7 @@ sources:
 - 前端路由生命周期：[Data Router Lifecycle in Searcher](/concepts/data-router-lifecycle.md)
 - 登录限流：[Login Throttling and Rate Limiting](/concepts/login-throttling-and-rate-limiting.md)
 - AI 流式与工具调用：[OpenAI-Compatible Streaming and Tool Calls](/concepts/openai-compatible-streaming-and-tool-calls.md)
+- AI 对话运行时与原语：[assistant-ui Framework](/entities/assistant-ui-framework.md)、[ExternalStoreRuntime and Branchable Message Repository](/concepts/externalstoreruntime-and-branchable-message-repository.md)、[Assistant UI Scoped Context and Attachment Adapter](/concepts/assistant-ui-scoped-context-and-attachment-adapter.md)
 - 编辑器 transaction 来源与撤销：[ProseMirror Transaction Origin and Undo History](/concepts/prosemirror-transaction-origin-and-undo-history.md)
 - Markdown 编辑器内核：[Milkdown Editor](/entities/milkdown-editor.md)、[Milkdown Plugin Ctx and Markdown Pipeline](/concepts/milkdown-plugin-ctx-and-markdown-pipeline.md)
 - 强制颜色与高对比主题：[Forced Colors and High-Contrast Themes](/concepts/forced-colors-and-high-contrast-themes.md)

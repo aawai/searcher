@@ -1,0 +1,75 @@
+# Message Branching
+URL: /docs/guides/branching
+
+Edit messages or regenerate AI responses, then switch between alternative replies. Branching navigation built into assistant-ui's React chat UI.
+
+> For AI agents: a documentation index is available at [llms.txt](/llms.txt). Use `.md` for canonical markdown pages; `.mdx` is kept as a backwards-compatible alias on supported URL paths.
+
+Branching lets users navigate between alternative versions of a message. A new branch is created when:
+
+- A user message is edited
+- An assistant message is reloaded (reload creates a new branch on the same message)
+
+assistant-ui tracks branches by observing changes to the `messages` array.
+
+## Shortest Working Pattern
+
+\[interactive preview omitted]
+
+Place a branch picker inside your message component:
+
+```
+import { BranchPickerPrimitive } from "@assistant-ui/react";
+
+const BranchPicker = () => (
+  <BranchPickerPrimitive.Root hideWhenSingleBranch>
+    <BranchPickerPrimitive.Previous />
+    <BranchPickerPrimitive.Number /> / <BranchPickerPrimitive.Count />
+    <BranchPickerPrimitive.Next />
+  </BranchPickerPrimitive.Root>
+);
+```
+
+`BranchPickerPrimitive.Previous` and `.Next` automatically disable at branch boundaries and while a run is in flight (unless the runtime supports `switchBranchDuringRun`). For the full primitive API, see [BranchPickerPrimitive](/docs/primitives/branch-picker).
+
+## Triggering Reload
+
+`ActionBarPrimitive.Reload` creates a new branch on an assistant message and re-runs from there:
+
+```
+import { ActionBarPrimitive, MessagePrimitive } from "@assistant-ui/react";
+
+const AssistantMessage = () => (
+  <MessagePrimitive.Root>
+    <MessagePrimitive.Parts />
+    <ActionBarPrimitive.Root>
+      <ActionBarPrimitive.Reload />
+    </ActionBarPrimitive.Root>
+  </MessagePrimitive.Root>
+);
+```
+
+`Reload` is disabled while `thread.isRunning` or `thread.isDisabled` is true. See [ActionBarPrimitive](/docs/primitives/action-bar) for the full reference.
+
+## Programmatic Branch Navigation
+
+For headless or keyboard-shortcut flows, navigate directly to a branch by id via `aui.message.switchToBranch`:
+
+```
+import { useAui } from "@assistant-ui/react";
+
+const SwitchToBranch = ({ branchId }: { branchId: string }) => {
+  const aui = useAui();
+  return (
+    <button onClick={() => aui.message.switchToBranch({ branchId })}>
+      Go to branch
+    </button>
+  );
+};
+```
+
+This must be called inside a message context (e.g. nested within `MessagePrimitive.Root`).
+
+## Grouped Parts After Branching
+
+Each branch is a distinct message version with its own content parts. `MessagePrimitive.GroupedParts` provides hierarchical adjacent grouping of those parts, useful when a message mixes tool calls and text across branches. See the [MessagePrimitive](/docs/primitives/message) reference for `GroupedParts` usage.

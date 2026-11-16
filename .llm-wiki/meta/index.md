@@ -8,6 +8,7 @@
 - [[concepts/accessible-grid-drag-keyboard-and-announcements]] — Accessible Grid Drag — Keyboard and Announcements *(created: 2026-10-25)*
 - [[concepts/archive-extraction-zip-slip-and-decompression-limits]] — Archive Extraction: Zip Slip and Decompression Limits *(created: 2026-11-02)*
 - [[concepts/aria-combobox-grouped-suggestions]] — ARIA Combobox Grouped Suggestions *(created: 2026-10-24)*
+- [[concepts/assistant-ui-scoped-context-and-attachment-adapter]] — Assistant UI Scoped Context and Attachment Adapter *(created: 2026-11-14)*
 - [[concepts/backdrop-filter-backdrop-root]] — Backdrop Filter Backdrop Root *(created: 2026-10-30)*
 - [[concepts/browser-storage-persistence-and-eviction]] — Browser Storage Persistence and Eviction *(created: 2026-10-28)*
 - [[concepts/content-security-policy-strict-deployment]] — Content Security Policy Strict Deployment *(created: 2026-10-30)*
@@ -20,6 +21,7 @@
 - [[concepts/deno-native-serve-architecture]] — Deno Native Serve Architecture *(created: unknown)*
 - [[concepts/deno-permission-boundaries]] — Deno Permission Boundaries *(created: 2026-10-26)*
 - [[concepts/dnd-kit-2d-grid-sorting-architecture]] — dnd-kit 2D Grid Sorting Architecture *(created: 2026-09-25)*
+- [[concepts/externalstoreruntime-and-branchable-message-repository]] — ExternalStoreRuntime and Branchable Message Repository *(created: 2026-11-14)*
 - [[concepts/field-encryption-and-key-management]] — Field Encryption and Key Management *(created: 2026-11-07)*
 - [[concepts/first-frame-theme-painting]] — First-Frame Theme Painting *(created: 2026-11-09)*
 - [[concepts/forced-colors-and-high-contrast-themes]] — Forced Colors and High-Contrast Themes *(created: 2026-11-09)*
@@ -43,6 +45,7 @@
 - [[concepts/prosemirror-transaction-origin-and-undo-history]] — ProseMirror Transaction Origin and Undo History *(created: 2026-11-08)*
 - [[concepts/pwa-service-worker-update-lifecycle]] — PWA Service Worker Update Lifecycle *(created: 2026-10-24)*
 - [[concepts/react-19-actions-and-transitions]] — React 19 Actions and Transitions *(created: 2026-09-27)*
+- [[concepts/react-external-store-snapshot-contract]] — React External Store Snapshot Contract *(created: 2026-11-15)*
 - [[concepts/reduced-motion-replacement-strategy]] — Reduced Motion Replacement Strategy *(created: 2026-10-31)*
 - [[concepts/route-level-code-splitting-dynamic-bundling]] — Route-Level Code Splitting & Dynamic Bundling *(created: 2026-10-05)*
 - [[concepts/scrollbar-gutter-and-layout-stability]] — Scrollbar Gutter and Width-Driven Layout Stability *(created: 2026-11-01)*
@@ -68,6 +71,7 @@
 
 ## Entitys
 
+- [[entities/assistant-ui-framework]] — assistant-ui Framework *(created: 2026-11-14)*
 - [[entities/deno-runtime]] — Deno Runtime *(created: 2026-09-25)*
 - [[entities/dnd-kit-system]] — dnd-kit System *(created: 2026-09-25)*
 - [[entities/drizzle-sqlite-store]] — Drizzle SQLite Store *(created: 2026-09-25)*
@@ -368,10 +372,20 @@
 - [[sources/SRC-2026-11-13-006]] — Plugins 101 (Milkdown) *(created: unknown)*
 - [[sources/SRC-2026-11-13-007]] — Composable Plugins (Milkdown) *(created: unknown)*
 - [[sources/SRC-2026-11-13-008]] — Using Plugins (Milkdown) *(created: unknown)*
+- [[sources/SRC-2026-11-14-001]] — ExternalStoreRuntime *(created: unknown)*
+- [[sources/SRC-2026-11-14-002]] — Message Conversion *(created: unknown)*
+- [[sources/SRC-2026-11-14-003]] — External Store Runtime *(created: unknown)*
+- [[sources/SRC-2026-11-14-004]] — Assistant Context API *(created: unknown)*
+- [[sources/SRC-2026-11-14-005]] — File Attachments *(created: unknown)*
+- [[sources/SRC-2026-11-14-006]] — Message Branching *(created: unknown)*
+- [[sources/SRC-2026-11-15-001]] — How To Corrupt An SQLite Database File *(created: unknown)*
+- [[sources/SRC-2026-11-15-002]] — Fetch metadata *(created: unknown)*
+- [[sources/SRC-2026-11-15-003]] — React useSyncExternalStore *(created: unknown)*
+- [[sources/wiki-discovery-duplicate-sources]] — Wiki 来源发现需先核对既有 URL *(created: 2026-11-15)*
 
 ## Synthesiss
 
 - [[syntheses/searcher-system-architecture]] — Searcher System Architecture *(created: 2026-09-25)*
 
 ---
-*Last updated: 2026-11-13T08:04:15.457Z* | *Total pages: 359*
+*Last updated: 2026-11-15T08:01:43.817Z* | *Total pages: 373*

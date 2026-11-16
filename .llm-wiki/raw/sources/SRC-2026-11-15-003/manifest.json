@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-15-003",
+  "captured": "2026-11-15",
+  "packet_version": "1.0",
+  "title": "https://react.dev/reference/react/useSyncExternalStore",
+  "url": "https://react.dev/reference/react/useSyncExternalStore",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

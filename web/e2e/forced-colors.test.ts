@@ -33,7 +33,7 @@ function paint(page: Page, selector: string, pseudo?: string) {
 }
 
 /** A system colour keyword as computed in this scheme. */
-function systemColor(page: Page, keyword: "Canvas" | "Highlight") {
+function systemColor(page: Page, keyword: "Canvas" | "CanvasText" | "Highlight") {
     return page.evaluate((keyword) => {
         const probe = document.createElement("div");
         probe.style.background = keyword;
@@ -279,8 +279,8 @@ Deno.test("设置与管理导航当前项有颜色以外的字重线索 #370", a
             );
         });
         await page.goto(`${app.origin}/admin/users`);
-        await page.locator(".local-navigation a").first().waitFor();
-        const admin = await weights(".local-navigation a");
+        await page.locator(".admin-nav-item").first().waitFor();
+        const admin = await weights(".admin-nav-item");
         const adminCurrent = admin.filter(([state]) => state === "page");
         assertEquals(adminCurrent.length, 1, JSON.stringify(admin));
         for (const [state, weight] of admin) {
@@ -292,6 +292,17 @@ Deno.test("设置与管理导航当前项有颜色以外的字重线索 #370", a
                 );
             }
         }
+        await page.emulateMedia({ forcedColors: "active" });
+        await page.waitForFunction(() => matchMedia("(forced-colors: active)").matches);
+        const highlight = await systemColor(page, "Highlight");
+        await page.waitForFunction((color) =>
+            getComputedStyle(document.querySelector('.admin-nav-item[aria-current="page"]')!).backgroundColor === color,
+        highlight);
+        const adminFill = await paint(page, '.admin-nav-item[aria-current="page"]');
+        assertEquals(adminFill.background, highlight);
+        await page.locator('.admin-nav-item[aria-current="page"]').focus();
+        const focused = await paint(page, '.admin-nav-item[aria-current="page"]');
+        assertEquals(focused.outline, `2px ${await systemColor(page, "CanvasText")}`);
     } finally {
         await browser.close();
         await app.close();
