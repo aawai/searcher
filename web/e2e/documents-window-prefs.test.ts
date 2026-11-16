@@ -346,12 +346,21 @@ Deno.test("侧栏和大纲预设支持指针、键盘与触屏并保留宽度", 
             edge: "调整左边" | "调整右边",
             key: "ArrowLeft" | "ArrowRight",
         ) => {
-            await frame(page).getByRole("button", { name: "笔记窗口菜单" })
-                .click();
+            const menuTrigger = frame(page).getByRole("button", {
+                name: "笔记窗口菜单",
+            });
+            await menuTrigger.click();
             await page.getByRole("menuitem", { name: edge }).click();
             await hint.waitFor();
+            // Base UI returns focus to the trigger after selection. Enter must
+            // commit the resize rather than reopen that focused menu.
+            await page.waitForFunction(() =>
+                document.activeElement?.getAttribute("aria-label") ===
+                    "笔记窗口菜单"
+            );
             for (let i = 0; i < 18; i++) await page.keyboard.press(key);
             await page.keyboard.press("Enter");
+            assertEquals(await menuTrigger.getAttribute("aria-expanded"), "false");
             await hint.waitFor({ state: "hidden" });
         };
         const resizeHost = async (key: "ArrowLeft" | "ArrowRight") => {

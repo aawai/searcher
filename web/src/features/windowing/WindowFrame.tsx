@@ -330,7 +330,7 @@ export function WindowFrame(
         setOperation(null);
         setAnnouncement("已取消窗口调整");
     });
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!operation || !geometry || !active || !open || minimized) return;
         const keydown = (event: KeyboardEvent) => {
             if (
@@ -343,6 +343,7 @@ export function WindowFrame(
             ) return;
             if (event.key === "Enter") {
                 event.preventDefault();
+                event.stopPropagation();
                 setOperation(null);
                 setAnnouncement("已完成窗口调整");
                 return;
@@ -360,6 +361,7 @@ export function WindowFrame(
                 : 0;
             if (!dx && !dy) return;
             event.preventDefault();
+            event.stopPropagation();
             setBounds((previous) => {
                 const current = project(
                     previous ?? operation.before,
@@ -383,8 +385,10 @@ export function WindowFrame(
                 operation.kind === "move" ? "窗口位置已调整" : "窗口尺寸已调整",
             );
         };
-        globalThis.addEventListener("keydown", keydown);
-        return () => globalThis.removeEventListener("keydown", keydown);
+        // The menu restores focus to its trigger; consume operation keys before
+        // the focused button can reopen the menu on Enter.
+        globalThis.addEventListener("keydown", keydown, true);
+        return () => globalThis.removeEventListener("keydown", keydown, true);
     }, [operation, geometry, active, open, minimized, stack]);
 
     useEffect(() => {
