@@ -1,5 +1,6 @@
 {
   "concepts/abortcontroller-and-request-cancellation": [
+    "concepts/externalstoreruntime-and-branchable-message-repository",
     "concepts/openai-compatible-streaming-and-tool-calls",
     "concepts/server-sent-events-sse-与实时事件流",
     "concepts/ssrf-and-outbound-fetch-boundaries",
@@ -26,6 +27,16 @@
     "concepts/react-19-actions-and-transitions",
     "entities/searcher-项目",
     "sources/SRC-2026-10-24-010"
+  ],
+  "concepts/assistant-ui-scoped-context-and-attachment-adapter": [
+    "concepts/externalstoreruntime-and-branchable-message-repository",
+    "entities/assistant-ui-framework",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-14-001",
+    "sources/SRC-2026-11-14-003",
+    "sources/SRC-2026-11-14-004",
+    "sources/SRC-2026-11-14-005",
+    "sources/SRC-2026-11-14-006"
   ],
   "concepts/backdrop-filter-backdrop-root": [
     "concepts/forced-colors-and-high-contrast-themes",
@@ -86,7 +97,8 @@
     "sources/SRC-2026-11-03-002",
     "sources/SRC-2026-11-05-001",
     "sources/SRC-2026-11-05-002",
-    "sources/SRC-2026-11-06-002"
+    "sources/SRC-2026-11-06-002",
+    "sources/SRC-2026-11-15-002"
   ],
   "concepts/css-container-queries": [
     "concepts/scrollbar-gutter-and-layout-stability",
@@ -155,6 +167,18 @@
     "sources/SRC-2026-09-25-024",
     "sources/SRC-2026-09-25-026",
     "sources/SRC-2026-10-25-005"
+  ],
+  "concepts/externalstoreruntime-and-branchable-message-repository": [
+    "concepts/assistant-ui-scoped-context-and-attachment-adapter",
+    "concepts/openai-compatible-streaming-and-tool-calls",
+    "concepts/react-external-store-snapshot-contract",
+    "entities/assistant-ui-framework",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-14-001",
+    "sources/SRC-2026-11-14-002",
+    "sources/SRC-2026-11-14-003",
+    "sources/SRC-2026-11-14-004",
+    "sources/SRC-2026-11-14-006"
   ],
   "concepts/field-encryption-and-key-management": [
     "concepts/openai-compatible-streaming-and-tool-calls",
@@ -280,7 +304,9 @@
     "sources/SRC-2026-11-08-007"
   ],
   "concepts/openai-compatible-streaming-and-tool-calls": [
+    "concepts/externalstoreruntime-and-branchable-message-repository",
     "concepts/server-sent-events-sse-与实时事件流",
+    "entities/assistant-ui-framework",
     "entities/searcher-项目",
     "sources/SRC-2026-11-08-005",
     "sources/SRC-2026-11-08-006"
@@ -344,6 +370,10 @@
     "entities/react-19-framework",
     "sources/SRC-2026-09-27-004"
   ],
+  "concepts/react-external-store-snapshot-contract": [
+    "concepts/externalstoreruntime-and-branchable-message-repository",
+    "sources/SRC-2026-11-15-003"
+  ],
   "concepts/reduced-motion-replacement-strategy": [
     "concepts/forced-colors-and-high-contrast-themes",
     "concepts/playwright-actionability-and-e2e-waits",
@@ -376,6 +406,7 @@
     "concepts/abortcontroller-and-request-cancellation",
     "concepts/openai-compatible-streaming-and-tool-calls",
     "concepts/searxng-web-search-integration",
+    "entities/assistant-ui-framework",
     "entities/deno-runtime",
     "entities/searcher-项目",
     "sources/SRC-2026-09-25-035",
@@ -417,6 +448,7 @@
     "sources/SRC-2026-11-06-002",
     "sources/SRC-2026-11-06-003",
     "sources/SRC-2026-11-08-002",
+    "sources/SRC-2026-11-15-002",
     "sources/searcher-session-token-hash-is-not-salted",
     "syntheses/searcher-system-architecture"
   ],
@@ -476,7 +508,8 @@
     "sources/SRC-2026-11-06-001",
     "sources/SRC-2026-11-07-004",
     "sources/SRC-2026-11-12-001",
-    "sources/SRC-2026-11-12-002"
+    "sources/SRC-2026-11-12-002",
+    "sources/SRC-2026-11-15-001"
   ],
   "concepts/sqlite-fts5-fulltext-search": [
     "sources/SRC-2026-09-25-021",
@@ -535,11 +568,13 @@
   ],
   "concepts/upload-validation-defense-in-depth": [
     "concepts/archive-extraction-zip-slip-and-decompression-limits",
+    "concepts/assistant-ui-scoped-context-and-attachment-adapter",
     "concepts/csrf-defense-boundaries",
     "concepts/ssrf-and-outbound-fetch-boundaries",
     "sources/SRC-2026-11-02-003",
     "sources/SRC-2026-11-02-005",
-    "sources/SRC-2026-11-07-003"
+    "sources/SRC-2026-11-07-003",
+    "sources/SRC-2026-11-14-005"
   ],
   "concepts/view-transitions-shared-element": [
     "concepts/data-router-lifecycle",
@@ -594,6 +629,18 @@
     "sources/SRC-2026-10-29-001",
     "sources/SRC-2026-10-30-003",
     "sources/SRC-2026-11-01-003"
+  ],
+  "entities/assistant-ui-framework": [
+    "concepts/assistant-ui-scoped-context-and-attachment-adapter",
+    "concepts/externalstoreruntime-and-branchable-message-repository",
+    "concepts/openai-compatible-streaming-and-tool-calls",
+    "entities/searcher-项目",
+    "sources/SRC-2026-11-14-001",
+    "sources/SRC-2026-11-14-002",
+    "sources/SRC-2026-11-14-003",
+    "sources/SRC-2026-11-14-004",
+    "sources/SRC-2026-11-14-005",
+    "sources/SRC-2026-11-14-006"
   ],
   "entities/deno-runtime": [
     "concepts/deno-native-serve-architecture",
@@ -674,6 +721,7 @@
     "sources/SRC-2026-11-05-003",
     "sources/SRC-2026-11-06-001",
     "sources/SRC-2026-11-11-004",
+    "sources/SRC-2026-11-15-001",
     "sources/sqlite-table-recreation-migration-zero-loss",
     "syntheses/searcher-system-architecture"
   ],
@@ -723,22 +771,29 @@
   "entities/react-19-framework": [
     "concepts/data-router-lifecycle",
     "concepts/react-19-actions-and-transitions",
+    "concepts/react-external-store-snapshot-contract",
     "concepts/route-level-code-splitting-dynamic-bundling",
     "concepts/view-transitions-shared-element",
+    "entities/assistant-ui-framework",
     "entities/vite-bundler",
     "sources/SRC-2026-09-27-004",
     "sources/SRC-2026-10-05-001",
     "sources/SRC-2026-10-05-002",
     "sources/SRC-2026-10-24-009",
-    "sources/SRC-2026-11-07-005"
+    "sources/SRC-2026-11-07-005",
+    "sources/SRC-2026-11-14-001",
+    "sources/SRC-2026-11-14-004",
+    "sources/SRC-2026-11-15-003"
   ],
   "entities/searcher-项目": [
     "concepts/accessible-grid-drag-keyboard-and-announcements",
     "concepts/aria-combobox-grouped-suggestions",
+    "concepts/assistant-ui-scoped-context-and-attachment-adapter",
     "concepts/contract-first-testing",
     "concepts/data-router-lifecycle",
     "concepts/database-queue-serialization",
     "concepts/dnd-kit-2d-grid-sorting-architecture",
+    "concepts/externalstoreruntime-and-branchable-message-repository",
     "concepts/field-encryption-and-key-management",
     "concepts/first-frame-theme-painting",
     "concepts/forced-colors-and-high-contrast-themes",
@@ -768,6 +823,7 @@
     "concepts/web-font-loading-and-cjk-subsetting",
     "concepts/whole-line-preview-truncation",
     "concepts/xss-sanitization-and-trusted-types",
+    "entities/assistant-ui-framework",
     "entities/deno-runtime",
     "entities/dnd-kit-system",
     "entities/drizzle-sqlite-store",
@@ -848,6 +904,7 @@
     "concepts/modal-dialog-focus-and-semantics",
     "concepts/modal-layering-and-escape-dismissal",
     "concepts/tailwind-v4-css-first-architecture",
+    "entities/assistant-ui-framework",
     "entities/dnd-kit-system",
     "entities/react-19-framework",
     "entities/searcher-项目",
@@ -1170,7 +1227,8 @@
   ],
   "sources/SRC-2026-10-29-003": [
     "concepts/sqlite-backup-and-recovery-boundaries",
-    "entities/drizzle-sqlite-store"
+    "entities/drizzle-sqlite-store",
+    "sources/SRC-2026-11-15-001"
   ],
   "sources/SRC-2026-10-30-001": [
     "concepts/password-hashing-and-pbkdf2-parameters"
@@ -1254,7 +1312,8 @@
     "concepts/browser-storage-persistence-and-eviction"
   ],
   "sources/SRC-2026-11-05-001": [
-    "concepts/csrf-defense-boundaries"
+    "concepts/csrf-defense-boundaries",
+    "sources/SRC-2026-11-15-002"
   ],
   "sources/SRC-2026-11-05-002": [
     "concepts/session-security-and-isolation"
@@ -1393,6 +1452,41 @@
     "concepts/milkdown-plugin-ctx-and-markdown-pipeline",
     "entities/milkdown-editor",
     "sources/SRC-2026-11-13-002"
+  ],
+  "sources/SRC-2026-11-14-001": [
+    "concepts/externalstoreruntime-and-branchable-message-repository",
+    "entities/assistant-ui-framework"
+  ],
+  "sources/SRC-2026-11-14-002": [
+    "concepts/externalstoreruntime-and-branchable-message-repository"
+  ],
+  "sources/SRC-2026-11-14-003": [
+    "concepts/assistant-ui-scoped-context-and-attachment-adapter",
+    "concepts/externalstoreruntime-and-branchable-message-repository",
+    "entities/assistant-ui-framework"
+  ],
+  "sources/SRC-2026-11-14-004": [
+    "concepts/assistant-ui-scoped-context-and-attachment-adapter",
+    "entities/assistant-ui-framework"
+  ],
+  "sources/SRC-2026-11-14-005": [
+    "concepts/assistant-ui-scoped-context-and-attachment-adapter",
+    "entities/assistant-ui-framework"
+  ],
+  "sources/SRC-2026-11-14-006": [
+    "concepts/externalstoreruntime-and-branchable-message-repository",
+    "entities/assistant-ui-framework"
+  ],
+  "sources/SRC-2026-11-15-001": [
+    "concepts/sqlite-backup-and-recovery-boundaries",
+    "sources/wiki-discovery-duplicate-sources"
+  ],
+  "sources/SRC-2026-11-15-002": [
+    "concepts/csrf-defense-boundaries",
+    "sources/wiki-discovery-duplicate-sources"
+  ],
+  "sources/SRC-2026-11-15-003": [
+    "concepts/react-external-store-snapshot-contract"
   ],
   "sources/css-var-fallback-consumer-value-boundary": [
     "concepts/css-custom-property-fallback-and-registration"
@@ -1559,6 +1653,7 @@
     "entities/drizzle-sqlite-store",
     "sources/SRC-2026-09-25-012"
   ],
+  "sources/wiki-discovery-duplicate-sources": [],
   "syntheses/searcher-system-architecture": [
     "concepts/contract-first-testing",
     "concepts/database-queue-serialization",

@@ -1,6 +1,7 @@
 import type { DatabaseStore } from "../../db/database.ts";
-import { auditLogs } from "../../db/schema.ts";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { auditLogs, users } from "../../db/schema.ts";
+import { and, desc, eq, or, type SQL, sql } from "drizzle-orm";
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import type {
     AuditAction,
     AuditLogDto,
@@ -27,11 +28,20 @@ function parseMetadata(json: string | null): Record<string, unknown> | null {
     }
 }
 
+export type AuditCategory = "user" | "system" | "ai";
+
 export interface ListAuditOptions {
     limit?: number;
     offset?: number;
     action?: AuditAction;
+    category?: AuditCategory;
+    q?: string;
     actorUserId?: string;
+}
+
+
+function likeLiteral(column: SQLiteColumn, pattern: string): SQL {
+    return sql`${column} LIKE ${pattern} ESCAPE '\\'`;
 }
 
 /**
@@ -129,21 +139,46 @@ export class AuditService {
         const offset = options.offset ?? 0;
 
         return await this.#store.run(async (db) => {
-            const conditions = [];
+            const conditions: SQL[] = [];
             if (options.action) {
                 conditions.push(eq(auditLogs.action, options.action));
             }
+            if (options.category === "user") {
+                conditions.push(likeLiteral(auditLogs.action, "admin.user.%"));
+            } else if (options.category === "system") {
+                const systemCond = or(
+                    likeLiteral(auditLogs.action, "admin.system.%"),
+                    likeLiteral(auditLogs.action, "admin.backup.%"),
+                );
+                if (systemCond) conditions.push(systemCond);
+            } else if (options.category === "ai") {
+                conditions.push(likeLiteral(auditLogs.action, "ai.%"));
+            }
             if (options.actorUserId) {
                 conditions.push(eq(auditLogs.actorUserId, options.actorUserId));
+            }
+            const searchTerm = options.q?.trim() ?? "";
+            if (searchTerm.length > 0) {
+                const searchPattern = `%${
+                    searchTerm.replace(/[%_\\]/g, "\\$&")
+                }%`;
+                const searchCond = or(
+                    likeLiteral(users.username, searchPattern),
+                    likeLiteral(users.displayName, searchPattern),
+                    likeLiteral(auditLogs.targetId, searchPattern),
+                    likeLiteral(auditLogs.metadataJson, searchPattern),
+                );
+                if (searchCond) conditions.push(searchCond);
             }
 
             const whereClause = conditions.length > 0
                 ? and(...conditions)
                 : undefined;
 
-            const countQuery = db.select({ count: sql<number>`count(*)` }).from(
-                auditLogs,
-            );
+            const countQuery = db
+                .select({ count: sql<number>`count(*)` })
+                .from(auditLogs)
+                .leftJoin(users, eq(auditLogs.actorUserId, users.id));
             const countRows = whereClause
                 ? await countQuery.where(whereClause).all()
                 : await countQuery.all();
@@ -153,13 +188,16 @@ export class AuditService {
                 .select({
                     id: auditLogs.id,
                     actorUserId: auditLogs.actorUserId,
+                    actorUsername: users.username,
+                    actorDisplayName: users.displayName,
                     action: auditLogs.action,
                     targetType: auditLogs.targetType,
                     targetId: auditLogs.targetId,
                     metadataJson: auditLogs.metadataJson,
                     createdAt: auditLogs.createdAt,
                 })
-                .from(auditLogs);
+                .from(auditLogs)
+                .leftJoin(users, eq(auditLogs.actorUserId, users.id));
 
             const rows = whereClause
                 ? await baseQuery
@@ -178,6 +216,8 @@ export class AuditService {
                 items: rows.map((r) => ({
                     id: r.id,
                     actorUserId: r.actorUserId,
+                    actorUsername: r.actorUsername ?? null,
+                    actorDisplayName: r.actorDisplayName ?? null,
                     action: r.action,
                     targetType: r.targetType,
                     targetId: r.targetId,

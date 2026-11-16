@@ -1,0 +1,685 @@
+# File Attachments
+URL: /docs/guides/attachments
+
+Let users attach images, PDFs, and other files to AI chat messages in React. Drag-drop, paste, and vision-model support, built into assistant-ui.
+
+> For AI agents: a documentation index is available at [llms.txt](/llms.txt). Use `.md` for canonical markdown pages; `.mdx` is kept as a backwards-compatible alias on supported URL paths.
+
+Let users attach images, documents, and other files to their messages.
+
+\[interactive preview omitted]
+
+## Overview
+
+The attachment system consists of:
+
+- **Attachment Adapters**: Backend logic for processing attachment files
+- **UI Components**: Pre-built components for attachment display and interaction
+- **Runtime Integration**: Attachment support in the assistant-ui runtimes
+
+## Setup
+
+To set this up, run `npx assistant-ui@latest setup --products guides/attachments` if available; otherwise follow these steps.
+
+1. ### Install UI Components
+
+   Add the attachment UI components to your project:
+
+   With the style-aware registry configured in components.json ("@assistant-ui": "https\://r.assistant-ui.com/styles/{style}/{name}.json"), the flavor resolves from the project style automatically:
+
+   ```bash
+   npx shadcn@latest add @assistant-ui/attachment
+   ```
+
+   Or add by direct URL without registry configuration:
+
+   ```bash
+   npx shadcn@latest add https://r.assistant-ui.com/base/attachment.json
+   ```
+
+   Or install manually:
+
+   ```bash
+   npm install @assistant-ui/react@^0.15.36 zustand
+   ```
+
+   ```bash
+   npx shadcn@latest add dialog tooltip avatar button
+   ```
+
+   Then copy these files (packaged registry content; the source links show where each ships from):
+
+   - [components/assistant-ui/elements/attachment.aui.tsx](https://r.assistant-ui.com/base/files/attachment/components/assistant-ui/elements/attachment.aui.tsx) ([source](https://github.com/assistant-ui/assistant-ui/blob/main/packages/ui/src/components/react/assistant-ui/elements/attachment.aui.tsx))
+   - [components/assistant-ui/elements/tooltip-icon-button.tsx](https://r.assistant-ui.com/base/files/tooltip-icon-button/components/assistant-ui/elements/tooltip-icon-button.tsx) ([source](https://github.com/assistant-ui/assistant-ui/blob/main/packages/ui/src/components/react/assistant-ui/elements/tooltip-icon-button.tsx))
+   - [components/assistant-ui/elements/attachment-state.ts](https://r.assistant-ui.com/base/files/elements-attachment-state/components/assistant-ui/elements/attachment-state.ts) ([source](https://github.com/assistant-ui/assistant-ui/blob/main/packages/ui/src/components/react/assistant-ui/elements/attachment-state.ts))
+   - [hooks/use-attachment-src.ts](https://r.assistant-ui.com/base/files/use-attachment-src/hooks/use-attachment-src.ts) ([source](https://github.com/assistant-ui/assistant-ui/blob/main/packages/ui/src/hooks/use-attachment-src.ts))
+
+   ```bash
+   curl -fsSL --create-dirs \
+     -o 'components/assistant-ui/elements/attachment.aui.tsx' https://r.assistant-ui.com/base/files/attachment/components/assistant-ui/elements/attachment.aui.tsx \
+     -o 'components/assistant-ui/elements/tooltip-icon-button.tsx' https://r.assistant-ui.com/base/files/tooltip-icon-button/components/assistant-ui/elements/tooltip-icon-button.tsx \
+     -o 'components/assistant-ui/elements/attachment-state.ts' https://r.assistant-ui.com/base/files/elements-attachment-state/components/assistant-ui/elements/attachment-state.ts \
+     -o 'hooks/use-attachment-src.ts' https://r.assistant-ui.com/base/files/use-attachment-src/hooks/use-attachment-src.ts
+   ```
+
+   This adds `/components/assistant-ui/elements/attachment.aui.tsx` to your project.
+
+   > [!tip]
+   >
+   > Adjust these components (styling, layout, behavior) to match your application's design system.
+
+2. ### Set up Runtime (No Configuration Required)
+
+   `useChatRuntime` supports attachments without additional configuration:
+
+   ```
+   import { useChatRuntime } from "@assistant-ui/ai-sdk";
+
+   const runtime = useChatRuntime();
+   ```
+
+   > [!info]
+   >
+   > For file uploads with other runtimes, such as `useLocalRuntime`, pass an attachment adapter. Use a [built-in adapter](#built-in-attachment-adapters) or [create your own](#creating-custom-attachment-adapters). [External-source attachments](#external-source-attachments) can be added without one.
+
+3. ### Add UI Components
+
+   Integrate the attachment components into your chat interface. See [Attachment UI components](/elements/attachment) for the full install and usage guide.
+
+## Built-in Attachment Adapters
+
+### AI SDK Runtime (Default)
+
+When using `useChatRuntime`, the built-in adapter accepts all file types and converts them to base64 data URLs. This works well for images and small files.
+
+> [!warn]
+>
+> Most models only support **image** attachments. Sending unsupported file types (audio, video, PDF, etc.) will result in an API error. Check your model provider's documentation for supported input types.
+
+To restrict accepted file types, pass a custom adapter:
+
+```
+const runtime = useChatRuntime({
+  adapters: {
+    attachments: new SimpleImageAttachmentAdapter(), // only images
+  },
+});
+```
+
+### SimpleImageAttachmentAdapter
+
+Handles image files and converts them to data URLs for display in the chat UI.
+
+```
+const imageAdapter = new SimpleImageAttachmentAdapter();
+// Accepts: image/* (JPEG, PNG, GIF, etc.)
+```
+
+### SimpleTextAttachmentAdapter
+
+Processes text files and wraps content in formatted tags:
+
+```
+const textAdapter = new SimpleTextAttachmentAdapter();
+// Accepts: text/plain, text/html, text/markdown, etc.
+```
+
+### CompositeAttachmentAdapter
+
+Combines multiple adapters to support various file types:
+
+```
+const compositeAdapter = new CompositeAttachmentAdapter([
+  new SimpleImageAttachmentAdapter(),
+  new SimpleTextAttachmentAdapter(),
+]);
+```
+
+## Creating Custom Attachment Adapters
+
+The examples below implement custom adapters for images and PDFs. For the status shapes of `PendingAttachment` and `CompleteAttachment`, see [Composer and attachment state](/elements/composer-attachments#composer-and-attachment-state).
+
+### Vision-Capable Image Adapter
+
+Send images to vision-capable LLMs like GPT-6, Claude Sonnet 5, or Gemini 3.8 Flash:
+
+```
+import {
+  AttachmentAdapter,
+  PendingAttachment,
+  CompleteAttachment,
+} from "@assistant-ui/react";
+
+class VisionImageAdapter implements AttachmentAdapter {
+  accept = "image/jpeg,image/png,image/webp,image/gif";
+
+  async add({ file }: { file: File }): Promise<PendingAttachment> {
+    // Validate file size (e.g., 20MB limit for most LLMs)
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    if (file.size > maxSize) {
+      throw new Error("Image size exceeds 20MB limit");
+    }
+
+    // Return pending attachment while processing
+    return {
+      id: crypto.randomUUID(),
+      type: "image",
+      name: file.name,
+      file,
+      status: { type: "requires-action", reason: "composer-send" },
+    };
+  }
+
+  async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
+    // Convert image to base64 data URL
+    const base64 = await this.fileToBase64DataURL(attachment.file);
+
+    // Return in assistant-ui format with image content
+    return {
+      id: attachment.id,
+      type: "image",
+      name: attachment.name,
+      content: [
+        {
+          type: "image",
+          image: base64, // data:image/jpeg;base64,... format
+        },
+      ],
+      status: { type: "complete" },
+    };
+  }
+
+  async remove(attachment: PendingAttachment): Promise<void> {
+    // Cleanup if needed (e.g., revoke object URLs if you created any)
+  }
+
+  private async fileToBase64DataURL(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        // FileReader result is already a data URL
+        resolve(reader.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+}
+```
+
+### PDF Document Adapter
+
+Handle PDF files by extracting text or converting to base64 for processing:
+
+```
+import {
+  AttachmentAdapter,
+  PendingAttachment,
+  CompleteAttachment,
+} from "@assistant-ui/react";
+
+class PDFAttachmentAdapter implements AttachmentAdapter {
+  accept = "application/pdf";
+
+  async add({ file }: { file: File }): Promise<PendingAttachment> {
+    // Validate file size
+    const maxSize = 10 * 1024 * 1024; // 10MB limit
+    if (file.size > maxSize) {
+      throw new Error("PDF size exceeds 10MB limit");
+    }
+
+    return {
+      id: crypto.randomUUID(),
+      type: "document",
+      name: file.name,
+      file,
+      status: { type: "requires-action", reason: "composer-send" },
+    };
+  }
+
+  async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
+    // Option 1: Extract text from PDF (requires pdf parsing library)
+    // const text = await this.extractTextFromPDF(attachment.file);
+
+    // Option 2: Convert to base64 for API processing
+    const base64Data = await this.fileToBase64(attachment.file);
+
+    return {
+      id: attachment.id,
+      type: "document",
+      name: attachment.name,
+      content: [
+        {
+          type: "text",
+          text: `[PDF Document: ${attachment.name}]\nBase64 data: ${base64Data.substring(0, 50)}...`,
+        },
+      ],
+      status: { type: "complete" },
+    };
+  }
+
+  async remove(attachment: PendingAttachment): Promise<void> {
+    // Cleanup if needed
+  }
+
+  private async fileToBase64(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    bytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+    return btoa(binary);
+  }
+
+  // Optional: Extract text from PDF using a library like pdf.js
+  private async extractTextFromPDF(file: File): Promise<string> {
+    // Implementation would use pdf.js or similar
+    // This is a placeholder
+    return "Extracted PDF text content";
+  }
+}
+```
+
+## Using Custom Adapters
+
+### With LocalRuntime
+
+When using `LocalRuntime`, you need to handle images in your `ChatModelAdapter` (the adapter that connects to your AI backend):
+
+```
+import { useLocalRuntime, ChatModelAdapter } from "@assistant-ui/react";
+
+// This adapter connects LocalRuntime to your AI backend
+const MyModelAdapter: ChatModelAdapter = {
+  async run({ messages, abortSignal }) {
+    // Convert messages to format expected by your vision-capable API
+    const formattedMessages = messages.map((msg) => {
+      if (
+        msg.role === "user" &&
+        msg.content.some((part) => part.type === "image")
+      ) {
+        // Format for GPT-6 or similar vision models
+        return {
+          role: "user",
+          content: msg.content.map((part) => {
+            if (part.type === "text") {
+              return { type: "text", text: part.text };
+            }
+            if (part.type === "image") {
+              return {
+                type: "image_url",
+                image_url: { url: part.image },
+              };
+            }
+            return part;
+          }),
+        };
+      }
+
+      // Regular text messages
+      return {
+        role: msg.role,
+        content: msg.content
+          .filter((c) => c.type === "text")
+          .map((c) => c.text)
+          .join("\n"),
+      };
+    });
+
+    // Send to your vision-capable API
+    const response = await fetch("/api/vision-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: formattedMessages }),
+      signal: abortSignal,
+    });
+
+    const data = await response.json();
+    return {
+      content: [{ type: "text", text: data.message }],
+    };
+  },
+};
+
+// Create runtime with vision image adapter
+const runtime = useLocalRuntime(MyModelAdapter, {
+  adapters: {
+    attachments: new VisionImageAdapter(),
+  },
+});
+```
+
+## Advanced Features
+
+### Progress Updates
+
+Report upload progress by writing `add()` as an async generator. Each call adds one attachment, so every yield must carry the same `id`. Yields with another `id` are ignored:
+
+```
+class UploadAttachmentAdapter implements AttachmentAdapter {
+  accept = "*";
+
+  async *add({ file }: { file: File }) {
+    const id = generateId();
+
+    // Initial pending state
+    yield {
+      id,
+      type: "file",
+      name: file.name,
+      file,
+      status: { type: "running", reason: "uploading", progress: 0 },
+    } as PendingAttachment;
+
+    // Simulate upload progress
+    for (let progress = 10; progress <= 90; progress += 10) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      yield {
+        id,
+        type: "file",
+        name: file.name,
+        file,
+        status: { type: "running", reason: "uploading", progress },
+      } as PendingAttachment;
+    }
+
+    // Yield final progress so the 100% state reaches the composer
+    yield {
+      id,
+      type: "file",
+      name: file.name,
+      file,
+      status: { type: "running", reason: "uploading", progress: 100 },
+    } as PendingAttachment;
+  }
+
+  async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
+    // Upload the file and return complete attachment
+    const url = await this.uploadFile(attachment.file);
+
+    return {
+      id: attachment.id,
+      type: attachment.type,
+      name: attachment.name,
+      content: [
+        {
+          type: "file",
+          data: url, // or base64 data
+          mimeType: attachment.file.type,
+        },
+      ],
+      status: { type: "complete" },
+    };
+  }
+
+  async remove(attachment: PendingAttachment): Promise<void> {
+    // Cleanup logic
+  }
+
+  private async uploadFile(file: File): Promise<string> {
+    // Your upload logic here
+    return "https://example.com/file-url";
+  }
+}
+```
+
+### Sending Before an Upload Finishes
+
+A user can send while an attachment is still uploading. The message leaves the composer right away and appears as the thread's last message, where its attachments keep reporting their upload status; the composer is empty and ready for the next message, and the send button is unavailable until the message has been handed to the runtime.
+
+Nothing reaches the runtime until every attachment is complete. An attachment still uploading inside `add()` is waited for, so `send()` is never called on an attachment the adapter cannot finalize yet. A send that fails, or that the user cancels while its attachments are prepared, takes its content back into the composer: the text returns ahead of anything typed since, the attachments return with it, and each one that failed carries `status: { type: "incomplete", reason: "error" }` with its own message so it can be retried or removed.
+
+The message the composer is preparing is available as `composer.submission`. Once it is handed to the runtime it moves to `composer.inTransit`, where it stays until the thread shows the runtime's own message, so it never leaves the conversation in between. The thread row that renders either one carries it as `message.submission`:
+
+```
+const sending = useAuiState((s) => s.composer.submission !== undefined);
+```
+
+### Aborting Work in `send()`
+
+`send()` receives an options object whose `signal` aborts when the send is abandoned: the user cancels it while its attachments are prepared, or the thread is torn down for good. A thread is torn down in these cases:
+
+- A thread built on the tap-native `ExternalThread`: the component rendering its `AuiProvider` unmounts.
+- A runtime's thread: its thread list discards it, as when the component calling `useLocalRuntime` unmounts or an external store runtime switches `threadId`.
+- A `useExternalStoreRuntime` that no thread list hosts: the component calling it unmounts.
+
+Hiding a thread, for example inside `<Activity>`, never aborts its send, and the message is still delivered. The built-in adapters that read the file in `send()` stop reading when the signal aborts. A custom adapter that does slow work there should pass the signal on:
+
+```
+async send(
+  attachment: PendingAttachment,
+  options?: { signal?: AbortSignal },
+): Promise<CompleteAttachment> {
+  const response = await fetch("/api/convert", {
+    method: "POST",
+    body: attachment.file,
+    signal: options?.signal,
+  });
+  const { url } = await response.json();
+  return {
+    ...attachment,
+    status: { type: "complete" },
+    content: [
+      {
+        type: "file",
+        data: url,
+        mimeType: attachment.contentType ?? "",
+        filename: attachment.name,
+      },
+    ],
+  };
+}
+```
+
+A result that arrives after the signal aborts is discarded either way, so an adapter that ignores the signal only wastes the work it keeps doing.
+
+### Validation and Error Handling
+
+Validate files in the adapter's `add()` method:
+
+```
+class ValidatedImageAdapter implements AttachmentAdapter {
+  accept = "image/*";
+  maxSizeBytes = 5 * 1024 * 1024; // 5MB
+
+  async add({ file }: { file: File }): Promise<PendingAttachment> {
+    // Validate file size
+    if (file.size > this.maxSizeBytes) {
+      return {
+        id: generateId(),
+        type: "image",
+        name: file.name,
+        file,
+        status: {
+          type: "incomplete",
+          reason: "error",
+        },
+      };
+    }
+
+    // Validate image dimensions
+    try {
+      const dimensions = await this.getImageDimensions(file);
+      if (dimensions.width > 4096 || dimensions.height > 4096) {
+        throw new Error("Image dimensions exceed 4096x4096");
+      }
+    } catch (error) {
+      return {
+        id: generateId(),
+        type: "image",
+        name: file.name,
+        file,
+        status: {
+          type: "incomplete",
+          reason: "error",
+        },
+      };
+    }
+
+    // Return valid attachment
+    return {
+      id: generateId(),
+      type: "image",
+      name: file.name,
+      file,
+      status: { type: "requires-action", reason: "composer-send" },
+    };
+  }
+
+  private async getImageDimensions(file: File) {
+    // Implementation to check image dimensions
+  }
+}
+```
+
+To surface failures in the UI, subscribe to `composer.attachmentAddError`. It fires whenever an add operation produces a failure, in either of two ways:
+
+1. `addAttachment()` rejects: no adapter is configured, the file type does not match `accept`, or the adapter's `add()` throws.
+2. `addAttachment()` resolves but the adapter returned (or, for async-iterator adapters, yielded) an attachment whose `status.reason === "error"`. The promise resolves successfully, yet the event still fires so the UI can react.
+
+The event payload carries a `reason` discriminator and a human-readable `message`, so you can branch UI on the failure mode:
+
+| `reason`        | When It Fires                                                                                                                                                                                                                                                                             |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no-adapter`    | `addAttachment(File)` was called but no `AttachmentAdapter` is configured.                                                                                                                                                                                                                |
+| `not-accepted`  | The file's content type (or filename extension) did not match `adapter.accept`. External `CreateAttachment` descriptors also trigger this when their `contentType` does not match `adapter.accept`.                                                                                       |
+| `adapter-error` | The adapter's `add()` threw, or returned/yielded an attachment with `status.reason === "error"`. If the adapter produced any attachment before failing, the errored attachment is also visible in `composer.attachments`; if it threw before producing one, the event is the only signal. |
+
+```
+import { toast } from "sonner"; // or your toast library of choice
+import { useAuiEvent } from "@assistant-ui/react";
+
+function AttachmentErrorToast() {
+  useAuiEvent("composer.attachmentAddError", ({ reason, message }) => {
+    if (reason === "not-accepted") {
+      toast.error("This file type is not supported.");
+    } else if (reason === "no-adapter") {
+      toast.error("Attachments are not configured for this composer.");
+    } else {
+      toast.error(message || "Attachment failed to upload.");
+    }
+  });
+  return null;
+}
+```
+
+`attachmentId` is included when the failure is associated with an attachment that was registered (typically `adapter-error` cases). It is `undefined` for `no-adapter` and `not-accepted` failures because those reject before any attachment is registered.
+
+### External Source Attachments
+
+Add attachments from external sources (URLs, API data, CMS references) without needing a `File` object or an `AttachmentAdapter`:
+
+```
+const aui = useAui();
+
+// Add an attachment from an external source
+await aui.composer.addAttachment({
+  name: "report.pdf",
+  contentType: "application/pdf",
+  content: [{ type: "text", text: "Extracted document content..." }],
+});
+
+// Optionally provide id and type
+await aui.composer.addAttachment({
+  id: "cms-doc-123",
+  type: "document",
+  name: "Product Spec",
+  content: [{ type: "text", text: "Product specification content..." }],
+});
+```
+
+External attachments are added as complete attachments directly. They bypass the `AttachmentAdapter`'s `add()` step (no upload), but `adapter.accept` is still enforced when an `AttachmentAdapter` is configured: a `CreateAttachment` whose `contentType` does not match `adapter.accept` is rejected and emits `composer.attachmentAddError`. If `contentType` is omitted, the descriptor's filename extension is matched against `adapter.accept` only when `accept` itself contains explicit extension entries (e.g. `.png,.pdf`); MIME-wildcard `accept` strings such as `image/*` always require a matching `contentType`. When no `AttachmentAdapter` is configured, external attachments are added without any content-type check, and they can be removed without an adapter.
+
+### Multiple File Selection
+
+Enable multi-file selection with custom limits:
+
+```
+const aui = useAui();
+
+const handleMultipleFiles = async (files: FileList) => {
+  const maxFiles = 5;
+  const filesToAdd = Array.from(files).slice(0, maxFiles);
+
+  for (const file of filesToAdd) {
+    await aui.composer.addAttachment(file);
+  }
+};
+```
+
+## Backend Integration
+
+### With Vercel AI SDK
+
+Attachments are sent to the backend as file content parts.
+
+## Runtime Support
+
+Attachments work with all assistant-ui runtimes:
+
+- **AI SDK Runtime**: `useChatRuntime`
+- **External Store**: `useExternalStoreRuntime`
+- **LangGraph**: `useLangGraphRuntime`
+- **Custom Runtimes**: Any runtime implementing the attachment interface
+
+## Large File Uploads
+
+The built-in adapters convert files to base64 data URLs in memory. For large files (long audio, video, etc.), this can cause performance issues. Instead, upload to a server and pass the URL:
+
+```
+class ServerUploadAdapter implements AttachmentAdapter {
+  accept = "*";
+  private urls = new Map<string, string>();
+
+  async *add({ file }: { file: File }) {
+    const id = crypto.randomUUID();
+    yield {
+      id, type: "file" as const, name: file.name, file,
+      contentType: file.type,
+      status: { type: "running" as const, reason: "uploading" as const, progress: 0 },
+    };
+
+    const form = new FormData();
+    form.append("file", file);
+    const { url } = await fetch("/api/upload", { method: "POST", body: form }).then(r => r.json());
+    this.urls.set(id, url);
+
+    yield {
+      id, type: "file" as const, name: file.name, file,
+      contentType: file.type,
+      status: { type: "requires-action" as const, reason: "composer-send" as const },
+    };
+  }
+
+  async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
+    const url = this.urls.get(attachment.id)!;
+    this.urls.delete(attachment.id);
+    return {
+      ...attachment, status: { type: "complete" },
+      content: [{ type: "file", data: url, mimeType: attachment.contentType ?? "", filename: attachment.name }],
+    };
+  }
+
+  async remove() {}
+}
+```
+
+> [!tip]
+>
+> [assistant-ui Cloud](/docs/cloud/ai-sdk) includes `CloudFileAttachmentAdapter`, which uploads through `cloud.files.generatePresignedUploadUrl` and persists the returned `publicUrl` with the message. For a private bucket, `cloud.files.generatePresignedDownloadUrl({ key })` or `cloud.files.generatePresignedDownloadUrl({ url })` returns a signed read URL together with its expiry.
+
+## Best Practices
+
+1. **File Size Limits**: Always validate file sizes to prevent memory issues
+2. **Type Validation**: Verify file types match your `accept` pattern
+3. **Error Handling**: Provide clear error messages for failed uploads
+4. **Progress Feedback**: Show upload progress for better UX
+5. **Security**: Validate and sanitize file content before processing
+6. **Accessibility**: Ensure attachment UI is keyboard navigable
+
+## Resources
+
+- [Attachment UI Components](/elements/attachment) - UI implementation details
+- [API Reference](/docs/api-reference/overview) - Detailed type definitions

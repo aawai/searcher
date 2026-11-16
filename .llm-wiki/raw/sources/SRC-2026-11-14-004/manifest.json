@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-14-004",
+  "captured": "2026-11-14",
+  "packet_version": "1.0",
+  "title": "Assistant Context API",
+  "url": "https://www.assistant-ui.com/docs/guides/context-api.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

@@ -25,6 +25,22 @@ const actionSchema = v.optional(
     ]),
 );
 
+const categorySchema = v.optional(
+    v.union([
+        v.literal(""),
+        v.picklist(["user", "system", "ai"], "不支持的审计分类"),
+    ]),
+);
+
+const searchSchema = v.optional(
+    v.pipe(
+        v.string("搜索关键词必须是字符串"),
+        v.trim(),
+        v.maxLength(64, "搜索关键词不能超过 64 个字符"),
+    ),
+    "",
+);
+
 export function registerAuditRoutes(
     routes: Routes<AppEnv>,
     deps: AppDeps,
@@ -42,6 +58,8 @@ export function registerAuditRoutes(
             page: query(pageSchema),
             limit: query(limitSchema),
             action: query(actionSchema),
+            category: query(categorySchema),
+            q: query(searchSchema),
         }),
         async (c, data) => {
             const currentUser = c.get("user");
@@ -57,8 +75,9 @@ export function registerAuditRoutes(
                 limit,
                 offset,
                 action: data.action || undefined,
+                category: data.category || undefined,
+                q: data.q || undefined,
             });
-
             return c.success({
                 items: result.items,
                 page,

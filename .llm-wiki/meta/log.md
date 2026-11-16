@@ -974,3 +974,45 @@
 ## [2026-11-13T08:04:00.469Z] ensure_page
 - page_type: "concept", title: "Milkdown Plugin Ctx and Markdown Pipeline", path: "concepts/milkdown-plugin-ctx-and-markdown-pipeline"
 
+## [2026-11-14T08:01:29.222Z] capture
+- source_id: "SRC-2026-11-14-001", url: "https://www.assistant-ui.com/docs/runtimes/custom/external-store.md", format: "web"
+
+## [2026-11-14T08:01:30.501Z] capture
+- source_id: "SRC-2026-11-14-002", url: "https://www.assistant-ui.com/docs/api-reference/external-store/message-conversion.md", format: "web"
+
+## [2026-11-14T08:01:31.812Z] capture
+- source_id: "SRC-2026-11-14-003", url: "https://www.assistant-ui.com/docs/api-reference/external-store/runtime.md", format: "web"
+
+## [2026-11-14T08:01:33.007Z] capture
+- source_id: "SRC-2026-11-14-004", url: "https://www.assistant-ui.com/docs/guides/context-api.md", format: "web"
+
+## [2026-11-14T08:01:34.211Z] capture
+- source_id: "SRC-2026-11-14-005", url: "https://www.assistant-ui.com/docs/guides/attachments.md", format: "web"
+
+## [2026-11-14T08:01:35.633Z] capture
+- source_id: "SRC-2026-11-14-006", url: "https://www.assistant-ui.com/docs/guides/branching.md", format: "web"
+
+## [2026-11-14T08:02:25.464Z] ensure_page
+- page_type: "entity", title: "assistant-ui Framework", path: "entities/assistant-ui-framework"
+
+## [2026-11-14T08:02:25.738Z] ensure_page
+- page_type: "concept", title: "ExternalStoreRuntime and Branchable Message Repository", path: "concepts/externalstoreruntime-and-branchable-message-repository"
+
+## [2026-11-14T08:02:25.743Z] ensure_page
+- page_type: "concept", title: "Assistant UI Scoped Context and Attachment Adapter", path: "concepts/assistant-ui-scoped-context-and-attachment-adapter"
+
+## [2026-11-15T08:00:36.022Z] capture
+- source_id: "SRC-2026-11-15-001", url: "https://sqlite.org/howtocorrupt.html", format: "web"
+
+## [2026-11-15T08:00:39.252Z] capture
+- source_id: "SRC-2026-11-15-002", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Fetch_metadata", format: "web"
+
+## [2026-11-15T08:00:42.522Z] capture
+- source_id: "SRC-2026-11-15-003", url: "https://react.dev/reference/react/useSyncExternalStore", format: "web"
+
+## [2026-11-15T08:01:04.166Z] ensure_page
+- page_type: "concept", title: "React External Store Snapshot Contract", path: "concepts/react-external-store-snapshot-contract"
+
+## [2026-11-15T08:01:43.788Z] retro
+- slug: "wiki-discovery-duplicate-sources", title: "Wiki 来源发现需先核对既有 URL", category: "workflow"
+

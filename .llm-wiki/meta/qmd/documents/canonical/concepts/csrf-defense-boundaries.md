@@ -22,6 +22,8 @@ MDN 进一步区分[同源策略](/sources/SRC-2026-11-03-002.md)与 [CSRF 防�
 
 [MDN Fetch Metadata 指南](/sources/SRC-2026-11-05-001.md)区分 same-site 与 same-origin，并展示允许同源请求、必要的顶层导航和明确开放端点的资源隔离策略；响应若依赖这些请求头且可缓存，需使用相应的 `Vary`。该示例不代表项目已实施 Fetch Metadata。
 
+[本次 MDN 捕获](/sources/SRC-2026-11-15-002.md)是同一指南，不是独立佐证；脚本不能设置 `Sec-` 头，但头缺失和非浏览器客户端必须按部署契约处理。
+
 [MDN Request.credentials](/sources/SRC-2026-11-06-002.md)区分默认的同源凭据模式与允许跨源凭据的 `include`；该设置本身不是服务端 CSRF 防护。
 
 ## 项目适用性

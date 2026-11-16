@@ -193,6 +193,8 @@ export type AuditTargetType = typeof AUDIT_TARGET_TYPES[number];
 export interface AuditLogDto {
     id: string;
     actorUserId: string | null;
+    actorUsername?: string | null;
+    actorDisplayName?: string | null;
     action: string;
     targetType: string;
     targetId: string | null;

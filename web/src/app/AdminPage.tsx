@@ -1,20 +1,17 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { type AdminTab, adminTab, routes } from "./routes.ts";
+import { adminTab, routes } from "./routes.ts";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import {
-    ActionGroup,
     EmptyState,
     LoadingState,
-    LocalNavigation,
     ManagementTable,
     Pagination,
-    SettingsGroup,
-    SettingsRow,
     StatusBanner,
     WorkspaceToolbar,
 } from "../components/searcher/semantic.tsx";
+import { AdminPanelHeader, AdminShell } from "./AdminShell.tsx";
 import {
     TableBody,
     TableCell,
@@ -23,7 +20,7 @@ import {
     TableRow,
 } from "../components/ui/table.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
-import { ChevronDown, MoreHorizontal, RefreshCw } from "lucide-react";
+import { Check, ChevronDown, Copy, MoreHorizontal, RefreshCw } from "lucide-react";
 import { AdminOverview } from "./AdminOverview.tsx";
 import { AdminSystemSettings } from "./AdminSystemSettings.tsx";
 import { AdminBackupRestore } from "./AdminBackupRestore.tsx";
@@ -80,9 +77,10 @@ import {
 import { api, json } from "../lib/api.ts";
 import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import "./admin.css";
 
-const USERS_PAGE_SIZE = 50;
+const USERS_PAGE_SIZE = 20;
 const AUDIT_PAGE_SIZE = 25;
 const passwordRules = AUTH_CREDENTIAL_RULES.password;
 const passwordRule =
@@ -114,12 +112,32 @@ function formatTime(timestamp: number): string {
     });
 }
 
-/** Long ids show a prefix; the full id opens in a popover so it stays reachable by keyboard. */
+function formatAuditActor(log: AuditLogDto): string {
+    if (log.actorUsername) return `@${log.actorUsername}`;
+    if (log.actorUserId) return "已删除用户";
+    return "系统";
+}
+
+/** Long ids show a prefix; the full id opens in a popover with copy support. */
 function AuditTargetId({ id }: { id: string }) {
+    const [copied, setCopied] = useState(false);
+    const [copyError, setCopyError] = useState(false);
     if (id.length <= 10) {
         return <span className="admin-audit-id">{id}</span>;
     }
     const prefix = `${id.slice(0, 10)}…`;
+    async function handleCopy() {
+        setCopyError(false);
+        try {
+            if (!navigator.clipboard) throw new Error("剪贴板不可用");
+            await navigator.clipboard.writeText(id);
+            setCopied(true);
+            globalThis.setTimeout(() => setCopied(false), 1500);
+        } catch {
+            setCopied(false);
+            setCopyError(true);
+        }
+    }
     return (
         <Popover>
             <PopoverTrigger
@@ -140,8 +158,42 @@ function AuditTargetId({ id }: { id: string }) {
                     aria-hidden="true"
                 />
             </PopoverTrigger>
-            <PopoverContent aria-label="完整对象 ID">
-                <span className="admin-audit-id admin-audit-full-id">{id}</span>
+            <PopoverContent
+                side="bottom"
+                align="start"
+                className="admin-audit-id-popover"
+                aria-label="完整对象 ID"
+            >
+                <div className="admin-audit-popover-row">
+                    <span className="admin-audit-id admin-audit-full-id">
+                        {id}
+                    </span>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label={copied ? "已复制对象 ID" : "复制对象 ID"}
+                        onClick={() => void handleCopy()}
+                    >
+                        {copied
+                            ? (
+                                <Check
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
+                            )
+                            : (
+                                <Copy
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
+                            )}
+                        <span>{copied ? "已复制" : "复制"}</span>
+                    </Button>
+                </div>
+                {copyError && <p role="alert">复制失败，请手动选择并复制 ID。</p>}
             </PopoverContent>
         </Popover>
     );
@@ -164,10 +216,6 @@ function AuditDetails(
     );
 }
 
-/**
- * Below 768px the time and details columns fold into the action and object
- * cells, so the two remaining columns fit a phone without squeezing text.
- */
 function AuditLogRow({ log }: { log: AuditLogDto }) {
     const action = describeAuditAction(log.action);
     const target = describeAuditTarget(
@@ -179,8 +227,11 @@ function AuditLogRow({ log }: { log: AuditLogDto }) {
     const time = formatTime(log.createdAt);
     return (
         <TableRow>
-            <TableCell className="admin-hide-narrow admin-nowrap admin-muted">
+            <TableCell className="admin-audit-date-column admin-nowrap admin-muted">
                 {time}
+            </TableCell>
+            <TableCell className="admin-audit-actor">
+                {formatAuditActor(log)}
             </TableCell>
             <TableCell className="admin-audit-action">
                 <span className={action.danger ? "admin-danger" : undefined}>
@@ -189,21 +240,13 @@ function AuditLogRow({ log }: { log: AuditLogDto }) {
                 {action.rawKey && (
                     <code className="admin-audit-id">{action.rawKey}</code>
                 )}
-                <time className="admin-audit-time admin-show-narrow">
-                    {time}
-                </time>
+                <time className="admin-audit-time admin-audit-tablet-time">{time}</time>
             </TableCell>
-            <TableCell>
+            <TableCell className="admin-audit-target-cell">
                 <span className="admin-audit-target">{target.label}</span>
                 {target.id && <AuditTargetId id={target.id} />}
-                {details.length > 0 && (
-                    <AuditDetails
-                        details={details}
-                        className="admin-show-narrow"
-                    />
-                )}
             </TableCell>
-            <TableCell className="admin-hide-narrow">
+            <TableCell>
                 {details.length > 0
                     ? <AuditDetails details={details} />
                     : <span className="admin-muted">—</span>}
@@ -212,15 +255,40 @@ function AuditLogRow({ log }: { log: AuditLogDto }) {
     );
 }
 
-// Two-character labels keep all five tabs on one line down to 360px.
-const adminTabLabels: Record<AdminTab, string> = {
-    overview: "概览",
-    users: "用户",
-    settings: "设置",
-    audit: "审计",
-    backup: "备份",
-};
-
+function AuditEventItem({ log }: { log: AuditLogDto }) {
+    const action = describeAuditAction(log.action);
+    const target = describeAuditTarget(
+        log.targetType,
+        log.targetId,
+        log.metadata,
+    );
+    const details = describeAuditMetadata(log.metadata);
+    const time = formatTime(log.createdAt);
+    return (
+        <article role="listitem" className="admin-audit-event">
+            <div className="admin-audit-event-head">
+                <div className="admin-audit-action">
+                    <span className={action.danger ? "admin-danger" : undefined}>
+                        {action.label}
+                    </span>
+                    {action.rawKey && (
+                        <code className="admin-audit-id">{action.rawKey}</code>
+                    )}
+                </div>
+                <time className="admin-audit-time">{time}</time>
+            </div>
+            <div className="admin-audit-event-target">
+                <span className="admin-audit-actor">
+                    {formatAuditActor(log)}
+                </span>
+                <span className="admin-muted" aria-hidden="true">→</span>
+                <span className="admin-audit-target">{target.label}</span>
+                {target.id && <AuditTargetId id={target.id} />}
+            </div>
+            {details.length > 0 && <AuditDetails details={details} />}
+        </article>
+    );
+}
 export function AdminPage() {
     const { user: currentUser } = useAppState();
     const location = useLocation();
@@ -231,6 +299,7 @@ export function AdminPage() {
     const [userPage, setUserPage] = useState(1);
     const [userSearch, setUserSearch] = useState("");
     const [submittedSearch, setSubmittedSearch] = useState("");
+    const [userFilter, setUserFilter] = useState<"all" | "admin" | "disabled">("all");
     const [usersLoading, setUsersLoading] = useState(false);
     const [usersInitialized, setUsersInitialized] = useState(false);
     const [userError, setUserError] = useState("");
@@ -243,6 +312,7 @@ export function AdminPage() {
     const actionTriggerRefs = useRef<Record<string, HTMLElement | null>>(
         {},
     );
+    const mobileActionRefs = useRef<Record<string, HTMLElement | null>>({});
     const createTriggerRef = useRef<HTMLButtonElement>(null);
 
     const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -283,6 +353,8 @@ export function AdminPage() {
     const [auditActionFilter, setAuditActionFilter] = useState<
         AuditAction | ""
     >("");
+    const [auditSearch, setAuditSearch] = useState("");
+    const [submittedAuditSearch, setSubmittedAuditSearch] = useState("");
 
     async function loadUsers(page = userPage, q = submittedSearch) {
         if (currentUser?.role !== "admin") return;
@@ -290,6 +362,7 @@ export function AdminPage() {
         setUserError("");
         try {
             const qs = new URLSearchParams({ page: String(page) });
+            qs.set("filter", userFilter);
             if (q.trim()) qs.set("q", q);
             const res = await api<UserListResponse>(`/api/admin/users?${qs}`);
             setUsers(res.items);
@@ -303,7 +376,11 @@ export function AdminPage() {
         }
     }
 
-    async function loadAuditLogs(page = auditPage, action = auditActionFilter) {
+    async function loadAuditLogs(
+        page = auditPage,
+        action = auditActionFilter,
+        q = submittedAuditSearch,
+    ) {
         if (currentUser?.role !== "admin") return;
         setAuditLoading(true);
         setAuditError("");
@@ -313,6 +390,7 @@ export function AdminPage() {
                 limit: String(AUDIT_PAGE_SIZE),
             });
             if (action) qs.set("action", action);
+            if (q.trim()) qs.set("q", q.trim());
             const res = await api<AuditLogResponse>(
                 `/api/admin/audit-logs?${qs}`,
             );
@@ -331,13 +409,23 @@ export function AdminPage() {
         if (currentUser?.role === "admin" && activeTab === "users") {
             void loadUsers(userPage, submittedSearch);
         }
-    }, [currentUser, activeTab, userPage, submittedSearch]);
+    }, [currentUser, activeTab, userPage, submittedSearch, userFilter]);
 
     useEffect(() => {
         if (currentUser?.role === "admin" && activeTab === "audit") {
-            void loadAuditLogs(auditPage, auditActionFilter);
+            void loadAuditLogs(
+                auditPage,
+                auditActionFilter,
+                submittedAuditSearch,
+            );
         }
-    }, [currentUser, activeTab, auditPage, auditActionFilter]);
+    }, [
+        currentUser,
+        activeTab,
+        auditPage,
+        auditActionFilter,
+        submittedAuditSearch,
+    ]);
 
     useEffect(() => {
         if (activeTab !== "users") {
@@ -356,6 +444,18 @@ export function AdminPage() {
         setUserSearch("");
         setUserPage(1);
         setSubmittedSearch("");
+    }
+
+    function handleAuditSearchSubmit(e: FormEvent) {
+        e.preventDefault();
+        setAuditPage(1);
+        setSubmittedAuditSearch(auditSearch);
+    }
+
+    function clearAuditSearch() {
+        setAuditSearch("");
+        setAuditPage(1);
+        setSubmittedAuditSearch("");
     }
 
     function openCreateModal(trigger: HTMLElement) {
@@ -565,43 +665,49 @@ export function AdminPage() {
     const deleteUsername = deleteModalUser?.username ?? "";
 
     return (
-        <PageShell archetype="management">
-            <PageHeader
-                title="管理后台"
-                navigation={
-                    <LocalNavigation
-                        compact
-                        label="管理后台主导航"
-                        items={[
-                            {
-                                label: adminTabLabels.overview,
-                                to: routes.admin("overview"),
-                            },
-                            {
-                                label: adminTabLabels.users,
-                                to: routes.admin("users"),
-                            },
-                            {
-                                label: adminTabLabels.settings,
-                                to: routes.admin("settings"),
-                            },
-                            {
-                                label: adminTabLabels.audit,
-                                to: routes.admin("audit"),
-                            },
-                            {
-                                label: adminTabLabels.backup,
-                                to: routes.admin("backup"),
-                            },
-                        ]}
-                    />
-                }
-            />
-
+        <AdminShell activeTab={activeTab}>
             {activeTab === "overview" && <AdminOverview />}
 
             {activeTab === "users" && (
                 <div className="semantic-section">
+                    <AdminPanelHeader
+                        title="用户"
+                        meta={usersInitialized ? `共 ${userTotal} 位` : undefined}
+                        actions={
+                            <>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    title="刷新用户列表"
+                                    disabled={usersLoading}
+                                    onClick={() =>
+                                        void loadUsers(
+                                            userPage,
+                                            submittedSearch,
+                                        )}
+                                >
+                                    <RefreshCw
+                                        size="1em"
+                                        className={usersLoading
+                                            ? "animate-spin"
+                                            : undefined}
+                                    />
+                                    <span>
+                                        {usersLoading ? "刷新中…" : "刷新"}
+                                    </span>
+                                </Button>
+                                <Button
+                                    ref={createTriggerRef}
+                                    type="button"
+                                    variant="default"
+                                    onClick={(event) =>
+                                        openCreateModal(event.currentTarget)}
+                                >
+                                    添加用户
+                                </Button>
+                            </>
+                        }
+                    />
                     {userError && (
                         <StatusBanner tone="error" density="compact">
                             {userError}
@@ -637,33 +743,21 @@ export function AdminPage() {
                                 }}
                             />
                         </form>
-                        <ActionGroup>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                title="刷新用户列表"
-                                disabled={usersLoading}
-                                onClick={() =>
-                                    void loadUsers(userPage, submittedSearch)}
-                            >
-                                <RefreshCw
-                                    size="1em"
-                                    className={usersLoading
-                                        ? "animate-spin"
-                                        : undefined}
-                                />
-                                <span>{usersLoading ? "刷新中…" : "刷新"}</span>
-                            </Button>
-                            <Button
-                                ref={createTriggerRef}
-                                type="button"
-                                variant="default"
-                                onClick={(event) =>
-                                    openCreateModal(event.currentTarget)}
-                            >
-                                添加用户
-                            </Button>
-                        </ActionGroup>
+                        <RadioGroup
+                            variant="segmented"
+                            aria-label="筛选用户"
+                            value={userFilter}
+                            onValueChange={(value) => {
+                                if (value === "all" || value === "admin" || value === "disabled") {
+                                    setUserFilter(value);
+                                    setUserPage(1);
+                                }
+                            }}
+                        >
+                            <RadioGroupItem value="all">全部</RadioGroupItem>
+                            <RadioGroupItem value="admin">管理员</RadioGroupItem>
+                            <RadioGroupItem value="disabled">已禁用</RadioGroupItem>
+                        </RadioGroup>
                     </WorkspaceToolbar>
 
                     {!usersInitialized && usersLoading
@@ -708,6 +802,7 @@ export function AdminPage() {
                         )
                         : (
                             <>
+                                <div className="admin-desktop-view admin-users-table">
                                 <ManagementTable>
                                     <TableHeader>
                                         <TableRow>
@@ -716,7 +811,7 @@ export function AdminPage() {
                                                 角色
                                             </TableHead>
                                             <TableHead>状态</TableHead>
-                                            <TableHead className="admin-hide-narrow">
+                                            <TableHead className="admin-user-date-column">
                                                 创建时间
                                             </TableHead>
                                             <TableHead className="admin-cell-actions">
@@ -747,6 +842,9 @@ export function AdminPage() {
                                                                 ? " · 当前登录"
                                                                 : ""}
                                                         </span>
+                                                        <span className="admin-user-handle admin-user-date-inline">
+                                                            创建时间：{formatTime(u.createdAt)}
+                                                        </span>
                                                     </TableCell>
                                                     <TableCell className="admin-hide-narrow admin-nowrap">
                                                         {isAdmin
@@ -765,13 +863,19 @@ export function AdminPage() {
                                                                 : "正常"}
                                                         </span>
                                                     </TableCell>
-                                                    <TableCell className="admin-hide-narrow admin-nowrap admin-muted">
+                                                    <TableCell className="admin-user-date-column admin-muted">
                                                         {formatTime(
                                                             u.createdAt,
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="admin-cell-actions">
                                                         <div className="admin-row-actions">
+                                                            {isSelf ? (
+                                                                <Button type="button" variant="outline" size="sm"
+                                                                    onClick={(event) => openResetModal(u, event.currentTarget)}>
+                                                                    重置密码
+                                                                </Button>
+                                                            ) : (
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger
                                                                     render={
@@ -854,6 +958,7 @@ export function AdminPage() {
                                                                         )}
                                                                 </DropdownMenuContent>
                                                             </DropdownMenu>
+                                                            )}
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
@@ -861,6 +966,45 @@ export function AdminPage() {
                                         })}
                                     </TableBody>
                                 </ManagementTable>
+                                </div>
+                                <div className="admin-mobile-list" role="list" aria-label="用户列表">
+                                    {users.map((u) => (
+                                        <div role="listitem" className="admin-user-row" key={u.id}>
+                                            <div className="admin-user-row-head">
+                                                <div>
+                                                    <span className="admin-user-name">{u.displayName || u.username}</span>
+                                                    <span>{u.role === "admin" ? "管理员" : "普通用户"}</span>
+                                                    {u.disabled && <span className="admin-danger"> · 已禁用</span>}
+                                                </div>
+                                                {u.id === currentUser?.id ? (
+                                                    <Button type="button" variant="outline" size="sm"
+                                                        onClick={(event) => openResetModal(u, event.currentTarget)}>重置密码</Button>
+                                                ) : (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger render={
+                                                            <Button ref={(node) => { mobileActionRefs.current[u.id] = node; }}
+                                                                type="button" variant="ghost" size="icon"
+                                                                aria-label={`用户 @${u.username} 的更多操作`} />
+                                                        }><MoreHorizontal size="1em" /></DropdownMenuTrigger>
+                                                        <DropdownMenuContent>
+                                                            <DropdownMenuItem onClick={() => openResetModal(u, mobileActionRefs.current[u.id] ?? null)}>重置密码</DropdownMenuItem>
+                                                            {u.role !== "admin" && <DropdownMenuItem disabled={togglingId === u.id}
+                                                                onClick={() => requestToggleDisable(u, mobileActionRefs.current[u.id] ?? null)}>
+                                                                {u.disabled ? "启用用户" : "禁用用户…"}
+                                                            </DropdownMenuItem>}
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem variant="destructive"
+                                                                onClick={() => openDeleteModal(u, mobileActionRefs.current[u.id] ?? null)}>删除用户</DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
+                                            </div>
+                                            <span className="admin-user-handle">
+                                                @{u.username}{u.email ? ` · ${u.email}` : ""}{u.id === currentUser?.id ? " · 当前登录" : ""} · {formatTime(u.createdAt)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                                 <Pagination
                                     label="用户列表分页"
                                     total={`共 ${userTotal} 位`}
@@ -878,12 +1022,63 @@ export function AdminPage() {
 
             {activeTab === "audit" && (
                 <div className="semantic-section">
+                    <AdminPanelHeader
+                        title="审计"
+                        meta={auditInitialized ? `共 ${auditTotal} 条` : undefined}
+                        actions={
+                            <Button
+                                type="button"
+                                variant="outline"
+                                title="刷新审计日志"
+                                disabled={auditLoading}
+                                onClick={() =>
+                                    void loadAuditLogs(
+                                        auditPage,
+                                        auditActionFilter,
+                                        submittedAuditSearch,
+                                    )}
+                            >
+                                <RefreshCw
+                                    size="1em"
+                                    className={auditLoading
+                                        ? "animate-spin"
+                                        : undefined}
+                                />
+                                <span>
+                                    {auditLoading ? "刷新中…" : "刷新"}
+                                </span>
+                            </Button>
+                        }
+                    />
                     {auditError && (
                         <StatusBanner tone="error" density="compact">
                             {auditError}
                         </StatusBanner>
                     )}
                     <WorkspaceToolbar>
+                        <form
+                            role="search"
+                            className="admin-toolbar-field"
+                            onSubmit={handleAuditSearchSubmit}
+                        >
+                            <Input
+                                type="search"
+                                variant="search"
+                                aria-label="搜索审计日志"
+                                placeholder="按操作者、对象 ID 或明细搜索"
+                                value={auditSearch}
+                                onChange={(e) => {
+                                    if (
+                                        e.target.value === "" &&
+                                        submittedAuditSearch
+                                    ) {
+                                        clearAuditSearch();
+                                        return;
+                                    }
+                                    setAuditSearch(e.target.value);
+                                }}
+                            />
+                        </form>
                         <NativeSelect
                             className="admin-toolbar-field"
                             aria-label="按操作筛选审计日志"
@@ -911,27 +1106,6 @@ export function AdminPage() {
                                 </NativeSelectOptGroup>
                             ))}
                         </NativeSelect>
-                        <ActionGroup>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                title="刷新审计日志"
-                                disabled={auditLoading}
-                                onClick={() =>
-                                    void loadAuditLogs(
-                                        auditPage,
-                                        auditActionFilter,
-                                    )}
-                            >
-                                <RefreshCw
-                                    size="1em"
-                                    className={auditLoading
-                                        ? "animate-spin"
-                                        : undefined}
-                                />
-                                <span>{auditLoading ? "刷新中…" : "刷新"}</span>
-                            </Button>
-                        </ActionGroup>
                     </WorkspaceToolbar>
 
                     {!auditInitialized && auditLoading
@@ -948,6 +1122,7 @@ export function AdminPage() {
                                             void loadAuditLogs(
                                                 auditPage,
                                                 auditActionFilter,
+                                                submittedAuditSearch,
                                             )}
                                     >
                                         重试
@@ -958,14 +1133,19 @@ export function AdminPage() {
                         : auditLogs.length === 0
                         ? (
                             <EmptyState
-                                title="暂无审计记录"
-                                action={auditActionFilter
+                                title={auditActionFilter || submittedAuditSearch
+                                    ? "没有匹配的审计记录"
+                                    : "暂无审计记录"}
+                                action={auditActionFilter ||
+                                        submittedAuditSearch
                                     ? (
                                         <Button
                                             type="button"
                                             variant="outline"
                                             onClick={() => {
                                                 setAuditActionFilter("");
+                                                setAuditSearch("");
+                                                setSubmittedAuditSearch("");
                                                 setAuditPage(1);
                                             }}
                                         >
@@ -977,28 +1157,39 @@ export function AdminPage() {
                         )
                         : (
                             <>
-                                <ManagementTable>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="admin-hide-narrow">
-                                                时间
-                                            </TableHead>
-                                            <TableHead>操作</TableHead>
-                                            <TableHead>对象</TableHead>
-                                            <TableHead className="admin-hide-narrow">
-                                                明细
-                                            </TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {auditLogs.map((log) => (
-                                            <AuditLogRow
-                                                key={log.id}
-                                                log={log}
-                                            />
-                                        ))}
-                                    </TableBody>
-                                </ManagementTable>
+                                <div className="admin-desktop-view">
+                                    <ManagementTable>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="admin-audit-date-column">时间</TableHead>
+                                                <TableHead>操作者</TableHead>
+                                                <TableHead>操作</TableHead>
+                                                <TableHead>对象</TableHead>
+                                                <TableHead>明细</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {auditLogs.map((log) => (
+                                                <AuditLogRow
+                                                    key={log.id}
+                                                    log={log}
+                                                />
+                                            ))}
+                                        </TableBody>
+                                    </ManagementTable>
+                                </div>
+                                <div
+                                    className="admin-mobile-list"
+                                    role="list"
+                                    aria-label="审计日志列表"
+                                >
+                                    {auditLogs.map((log) => (
+                                        <AuditEventItem
+                                            key={log.id}
+                                            log={log}
+                                        />
+                                    ))}
+                                </div>
                                 <Pagination
                                     label="审计日志分页"
                                     total={`共 ${auditTotal} 条`}
@@ -1020,7 +1211,7 @@ export function AdminPage() {
                     if (!createBusy) setCreateModalOpen(open);
                 }}
             >
-                <DialogContent finalFocus={modalTriggerRef} surface="grouped">
+                <DialogContent finalFocus={modalTriggerRef}>
                     <DialogHeader>
                         <DialogTitle>创建新用户</DialogTitle>
                     </DialogHeader>
@@ -1030,89 +1221,105 @@ export function AdminPage() {
                                 {createError}
                             </StatusBanner>
                         )}
-                        <SettingsGroup>
-                            <SettingsRow
-                                title="用户名"
-                                labelFor="create-username"
-                                message="3–32 位字母、数字或下划线"
-                                messageId="create-username-hint"
+                        <div className="admin-field">
+                            <label
+                                className="admin-field-label"
+                                htmlFor="create-username"
                             >
-                                <Input
-                                    id="create-username"
-                                    type="text"
-                                    required
-                                    autoFocus
-                                    autoComplete="off"
-                                    pattern="^[a-zA-Z0-9_]{3,32}$"
-                                    placeholder="设置用户名"
-                                    aria-describedby="create-username-hint"
-                                    value={newUsername}
-                                    onChange={(e) =>
-                                        setNewUsername(e.target.value)}
-                                />
-                            </SettingsRow>
-                            <SettingsRow
-                                title="显示名称"
-                                labelFor="create-display-name"
+                                用户名
+                            </label>
+                            <Input
+                                id="create-username"
+                                type="text"
+                                required
+                                autoFocus
+                                autoComplete="off"
+                                pattern="^[a-zA-Z0-9_]{3,32}$"
+                                placeholder="设置用户名"
+                                aria-describedby="create-username-hint"
+                                value={newUsername}
+                                onChange={(e) => setNewUsername(e.target.value)}
+                            />
+                            <p
+                                id="create-username-hint"
+                                className="admin-field-hint"
                             >
-                                <Input
-                                    id="create-display-name"
-                                    type="text"
-                                    required
-                                    maxLength={40}
-                                    autoComplete="off"
-                                    placeholder="设置显示名称"
-                                    value={newDisplayName}
-                                    onChange={(e) =>
-                                        setNewDisplayName(e.target.value)}
-                                />
-                            </SettingsRow>
-                            <SettingsRow
-                                title="邮箱（可选）"
-                                labelFor="create-email"
+                                3–32 位字母、数字或下划线
+                            </p>
+                        </div>
+                        <div className="admin-field">
+                            <label
+                                className="admin-field-label"
+                                htmlFor="create-display-name"
                             >
-                                <Input
-                                    id="create-email"
-                                    type="email"
-                                    autoComplete="off"
-                                    placeholder="alice@example.com"
-                                    value={newEmail}
-                                    onChange={(e) =>
-                                        setNewEmail(e.target.value)}
-                                />
-                            </SettingsRow>
-                            <SettingsRow
-                                title="初始密码"
-                                labelFor="create-password"
-                                message={createPasswordError
-                                    ? (
-                                        <span role="alert">
-                                            {createPasswordError}
-                                        </span>
-                                    )
-                                    : `${passwordRule}，用户首次登录时使用`}
-                                messageId="create-password-hint"
-                                invalid={Boolean(createPasswordError)}
+                                显示名称
+                            </label>
+                            <Input
+                                id="create-display-name"
+                                type="text"
+                                required
+                                maxLength={40}
+                                autoComplete="off"
+                                placeholder="设置显示名称"
+                                value={newDisplayName}
+                                onChange={(e) =>
+                                    setNewDisplayName(e.target.value)}
+                            />
+                        </div>
+                        <div className="admin-field">
+                            <label
+                                className="admin-field-label"
+                                htmlFor="create-email"
                             >
-                                <Input
-                                    ref={createPasswordRef}
-                                    id="create-password"
-                                    placeholder={`至少 ${passwordRules.minLength} 个字符`}
-                                    type="password"
-                                    required
-                                    minLength={passwordRules.minLength}
-                                    maxLength={passwordRules.maxLength}
-                                    autoComplete="new-password"
-                                    aria-describedby="create-password-hint"
-                                    aria-invalid={Boolean(
-                                        createPasswordError,
-                                    ) || undefined}
-                                    value={newPassword}
-                                    onChange={(e) =>
-                                        setNewPassword(e.target.value)}
-                                />
-                            </SettingsRow>
-                        </SettingsGroup>
+                                邮箱（可选）
+                            </label>
+                            <Input
+                                id="create-email"
+                                type="email"
+                                autoComplete="off"
+                                placeholder="alice@example.com"
+                                value={newEmail}
+                                onChange={(e) => setNewEmail(e.target.value)}
+                            />
+                        </div>
+                        <div className="admin-field">
+                            <label
+                                className="admin-field-label"
+                                htmlFor="create-password"
+                            >
+                                初始密码
+                            </label>
+                            <Input
+                                ref={createPasswordRef}
+                                id="create-password"
+                                placeholder={`至少 ${passwordRules.minLength} 个字符`}
+                                type="password"
+                                required
+                                minLength={passwordRules.minLength}
+                                maxLength={passwordRules.maxLength}
+                                autoComplete="new-password"
+                                aria-describedby="create-password-hint"
+                                aria-invalid={Boolean(createPasswordError) ||
+                                    undefined}
+                                value={newPassword}
+                                onChange={(e) => {
+                                    setNewPassword(e.target.value);
+                                    if (createPasswordError) {
+                                        setCreatePasswordError("");
+                                    }
+                                }}
+                            />
+                            <p
+                                id="create-password-hint"
+                                role={createPasswordError ? "alert" : undefined}
+                                className={createPasswordError
+                                    ? "admin-field-message"
+                                    : "admin-field-hint"}
+                            >
+                                {createPasswordError ||
+                                    `${passwordRule}，用户首次登录时使用`}
+                            </p>
+                        </div>
                         <DialogFooter>
                             <Button
                                 type="button"
@@ -1300,6 +1507,6 @@ export function AdminPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </PageShell>
+        </AdminShell>
     );
 }

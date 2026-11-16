@@ -2,6 +2,7 @@
 
 ## Concepts
 
+- [assistant-ui Framework](assistant-ui-framework.md)
 - [Deno Runtime](deno-runtime.md)
 - [dnd-kit System](dnd-kit-system.md)
 - [Drizzle SQLite Store](drizzle-sqlite-store.md)

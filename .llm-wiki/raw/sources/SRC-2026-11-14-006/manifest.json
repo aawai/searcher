@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-14-006",
+  "captured": "2026-11-14",
+  "packet_version": "1.0",
+  "title": "Message Branching",
+  "url": "https://www.assistant-ui.com/docs/guides/branching.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

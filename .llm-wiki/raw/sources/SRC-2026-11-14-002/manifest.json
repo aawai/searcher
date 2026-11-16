@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-14-002",
+  "captured": "2026-11-14",
+  "packet_version": "1.0",
+  "title": "Message Conversion",
+  "url": "https://www.assistant-ui.com/docs/api-reference/external-store/message-conversion.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

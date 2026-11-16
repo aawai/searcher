@@ -24,6 +24,8 @@ sources:
 
 SQLite 官方还提醒：[运行时复制与文件锁风险](/sources/SRC-2026-10-29-003.md)（[原始 HTML](../../raw/sources/SRC-2026-10-29-003/original/source.html)，第 229–280、316–366 行）包括事务中直接复制产生不一致，以及在 Unix POSIX advisory lock 环境下同一进程绕过 SQLite 直接打开并关闭数据库文件可能解除其他连接的锁。3.51.0 引入的部分 WAL 多进程防御并非完整修复；不要将通用风险直接当作项目已存在的缺陷。
 
+同一官方文档的[本次捕获](/sources/SRC-2026-11-15-001.md)还列举 sqlite3_rsync、`VACUUM INTO` 与 Backup API 作为在线复制选项；它不是独立来源。
+
 [SQLite 原子提交](/sources/SRC-2026-11-12-001.md)及[临时文件](/sources/SRC-2026-11-12-002.md)说明 rollback journal 可用于崩溃恢复；不要将异常中断后留下的 journal 视为可随意清理的垃圾。WAL 使用不同的提交机制，数据库事务原子性不自动扩展到数据库外的应用文件。
 
 ## 验证与应用边界

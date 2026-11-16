@@ -26,6 +26,13 @@ const pageSchema = v.pipe(
     v.transform((val) => parseInt(val, 10)),
 );
 
+const limitSchema = v.pipe(
+    v.optional(v.string(), "20"),
+    v.regex(/^[1-9]\d*$/, "条数必须为正整数"),
+    v.transform((value) => Math.min(50, Number(value))),
+);
+const filterSchema = v.optional(v.picklist(["all", "admin", "disabled"]), "all");
+
 const searchSchema = v.optional(
     v.pipe(
         v.string("搜索关键词必须是字符串"),
@@ -96,6 +103,8 @@ export function registerUserRoutes(
         validator({
             page: query(pageSchema),
             q: query(searchSchema),
+            limit: query(limitSchema),
+            filter: query(filterSchema),
         }),
         async (c, data) => {
             const currentUser = c.get("user");
@@ -104,7 +113,7 @@ export function registerUserRoutes(
             }
 
             const page = data.page ?? 1;
-            const pageSize = 50;
+            const pageSize = data.limit;
             const offset = (page - 1) * pageSize;
             const searchTerm = data.q ?? "";
 
@@ -119,9 +128,12 @@ export function registerUserRoutes(
                     )
                     : undefined;
 
-                const whereClause = searchCondition
-                    ? and(notDeleted, searchCondition)
-                    : notDeleted;
+                const whereClause = and(
+                    notDeleted,
+                    searchCondition,
+                    data.filter === "admin" ? eq(users.role, "admin") : undefined,
+                    data.filter === "disabled" ? eq(users.disabled, true) : undefined,
+                );
 
                 const countQuery = db
                     .select({ total: count() })

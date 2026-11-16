@@ -1,0 +1,10 @@
+{
+  "id": "SRC-2026-11-14-001",
+  "captured": "2026-11-14",
+  "packet_version": "1.0",
+  "title": "ExternalStoreRuntime",
+  "url": "https://www.assistant-ui.com/docs/runtimes/custom/external-store.md",
+  "format": "web",
+  "extractor": "markitdown",
+  "extraction_status": "success"
+}

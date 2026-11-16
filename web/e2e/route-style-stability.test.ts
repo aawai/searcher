@@ -739,7 +739,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
             const page = await context.newPage();
             await loginAndVisit(page, app.origin, "/admin", user);
             const actions = page.locator(
-                'main[data-archetype="management"] .settings-row a',
+                'main[data-archetype="management"] .admin-panel a',
             );
             await actions.first().waitFor({ state: "visible" });
             // Row buttons keep their visible size; A2 asks for a 44px hit area.
@@ -1663,6 +1663,7 @@ Deno.test(
                             const iRect = el.getBoundingClientRect();
                             return {
                                 active: document.activeElement === el,
+                                vertical: row?.classList.contains("settings-row--vertical") ?? false,
                                 textAlign: cs.textAlign,
                                 hasFocusIndicator: cs.boxShadow !== "none" ||
                                     (cs.outlineStyle !== "none" &&
@@ -1683,9 +1684,10 @@ Deno.test(
                             `/account[${fieldName}]@${vp.width}: input must receive focus`,
                         );
                         assert(
-                            fieldCheck.textAlign === "end" ||
-                                fieldCheck.textAlign === "right",
-                            `/account[${fieldName}]@${vp.width}: inline input must right-align value (got ${fieldCheck.textAlign})`,
+                            fieldCheck.vertical
+                                ? fieldCheck.textAlign === "start" || fieldCheck.textAlign === "left"
+                                : fieldCheck.textAlign === "end" || fieldCheck.textAlign === "right",
+                            `/account[${fieldName}]@${vp.width}: alignment must match row layout (got ${fieldCheck.textAlign})`,
                         );
                         assert(
                             fieldCheck.hasFocusIndicator,
@@ -1988,8 +1990,13 @@ Deno.test(
                 );
                 assertEquals(await preValidateBtn.isDisabled(), false);
 
-                // Tab skips the hidden file input and reaches the precheck action.
+                // The hidden input is skipped; clearing the selected file precedes precheck.
                 await chooseZipBtn.focus();
+                await page.keyboard.press("Tab");
+                assertEquals(
+                    await page.getByRole("button", { name: "清除文件" }).evaluate((button) => button === document.activeElement),
+                    true,
+                );
                 await page.keyboard.press("Tab");
                 assertEquals(
                     await preValidateBtn.evaluate((button) =>

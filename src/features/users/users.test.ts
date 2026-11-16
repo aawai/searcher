@@ -421,3 +421,43 @@ Deno.test({
         }
     },
 });
+
+Deno.test("admin user list paginates and filters before counting", async () => {
+    const { store, auth, app } = await setupTestApp();
+    try {
+        const now = Date.now();
+        const adminId = crypto.randomUUID();
+        await store.run(async (db) => {
+            await db.insert(users).values(Array.from({ length: 26 }, (_, i) => ({
+                id: i === 0 ? adminId : crypto.randomUUID(),
+                username: `pageuser${i}`,
+                displayName: `User ${i}`,
+                passwordHash: "dummyhash",
+                role: i === 0 ? "admin" as const : "user" as const,
+                disabled: i === 1,
+                authVersion: 1,
+                createdAt: now + i,
+                updatedAt: now + i,
+            })));
+        });
+        const { token } = await auth.createSession(adminId, 1);
+        async function list(query: string) {
+            const response = await app.request(`/api/admin/users${query}`, {
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${token}` },
+            });
+            assertEquals(response.status, 200);
+            const body = await response.json() as Envelope<{ items: AdminUserDto[]; total: number }>;
+            return body.data!;
+        }
+        const first = await list("");
+        assertEquals(first.total, 26);
+        assertEquals(first.items.length, 20);
+        assertEquals((await list("?page=2")).items.length, 6);
+        assertEquals((await list("?limit=50")).items.length, 26);
+        assertEquals((await list("?filter=admin")).items.map((u) => u.username), ["pageuser0"]);
+        assertEquals((await list("?filter=disabled")).items.map((u) => u.username), ["pageuser1"]);
+        assertEquals((await list("?filter=disabled&q=pageuser2")).total, 0);
+    } finally {
+        await store.close();
+    }
+});
