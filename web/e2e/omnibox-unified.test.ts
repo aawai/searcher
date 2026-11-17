@@ -775,3 +775,117 @@ Deno.test("focusing an empty search never opens suggestions", async () => {
         await app.close();
     }
 });
+
+Deno.test("suggestions stay within short/landscape viewport and clear the dock", async () => {
+    const app = await startProductionApp();
+    const credentials = await app.seedAskFixtureUser({
+        username: "omnibox_viewport",
+        password: "Omnibox-viewport-password-237!",
+    });
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    try {
+        const context = await browser.newContext({
+            viewport: { width: 844, height: 390 },
+        });
+        await mockWeb(context);
+        const page = await context.newPage();
+        await loginAndVisit(page, app.origin, "/", credentials);
+        const search = page.locator("#search-query");
+        await search.waitFor({ state: "visible" });
+        await page.locator(".dock-bar").waitFor({ state: "visible" });
+        await page.waitForFunction(() =>
+            parseFloat(
+                getComputedStyle(document.documentElement).getPropertyValue(
+                    "--dock-inset-bottom",
+                ),
+            ) > 0
+        );
+
+        await search.fill("/");
+        await page.getByRole("option").first().waitFor({ state: "visible" });
+
+        const landscape = await page.evaluate(() => {
+            const suggestions = document.querySelector<HTMLElement>(
+                ".search-suggestions",
+            );
+            const dock = document.querySelector<HTMLElement>(".dock-bar");
+            const input = document.querySelector<HTMLInputElement>(
+                "#search-query",
+            );
+            if (!suggestions || !dock || !input) {
+                throw new Error(
+                    "Missing search-suggestions, dock-bar, or input",
+                );
+            }
+            const rect = suggestions.getBoundingClientRect();
+            const dockRect = dock.getBoundingClientRect();
+            return {
+                bottom: rect.bottom,
+                height: rect.height,
+                scrollHeight: suggestions.scrollHeight,
+                clientHeight: suggestions.clientHeight,
+                innerHeight: globalThis.innerHeight,
+                docScrollHeight: document.documentElement.scrollHeight,
+                dockTop: dockRect.top,
+                maxHeight: getComputedStyle(suggestions).maxHeight,
+                inputPaddingStart: getComputedStyle(input).paddingInlineStart,
+            };
+        });
+
+        assertEquals(landscape.inputPaddingStart, "4px");
+        assert(
+            landscape.bottom <= landscape.innerHeight,
+            `suggestions overflow viewport: ${JSON.stringify(landscape)}`,
+        );
+        assert(
+            landscape.bottom <= landscape.dockTop,
+            `suggestions overlap .dock-bar: ${JSON.stringify(landscape)}`,
+        );
+        assert(
+            landscape.docScrollHeight <= landscape.innerHeight,
+            `document overflows viewport vertically: ${
+                JSON.stringify(landscape)
+            }`,
+        );
+        assert(
+            landscape.scrollHeight > landscape.clientHeight,
+            `expected scrollable suggestions list on 844x390: ${
+                JSON.stringify(landscape)
+            }`,
+        );
+
+        // Resize to a short portrait phone and verify resize bounds update cleanly.
+        await page.setViewportSize({ width: 320, height: 568 });
+        await page.waitForFunction(() => {
+            const suggestions = document.querySelector<HTMLElement>(
+                ".search-suggestions",
+            );
+            const dock = document.querySelector<HTMLElement>(".dock-bar");
+            if (!suggestions || !dock) return false;
+            const rect = suggestions.getBoundingClientRect();
+            const dockRect = dock.getBoundingClientRect();
+            return rect.bottom <= globalThis.innerHeight &&
+                rect.bottom <= dockRect.top &&
+                parseFloat(getComputedStyle(suggestions).maxHeight) > 140;
+        });
+
+        // Resize back to desktop and verify maxHeight expands up to 360px.
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await page.waitForFunction(() => {
+            const suggestions = document.querySelector<HTMLElement>(
+                ".search-suggestions",
+            );
+            return suggestions !== null &&
+                getComputedStyle(suggestions).maxHeight === "360px";
+        });
+
+        await context.close();
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});

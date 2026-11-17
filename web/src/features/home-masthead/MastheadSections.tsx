@@ -469,7 +469,7 @@ function SortableMastheadEntry({
                         {summary.kind === "code" && (
                             <button
                                 type="button"
-                                className="home-masthead__copy-btn"
+                                className="home-masthead__copy-btn touch-target"
                                 onPointerDown={(e) => e.stopPropagation()}
                                 onClick={(e) => {
                                     e.stopPropagation();

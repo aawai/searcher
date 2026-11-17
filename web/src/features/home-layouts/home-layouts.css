@@ -47,11 +47,23 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    transition: opacity var(--motion-panel) var(--ease-out-expo);
+}
+
+.pinned-area[data-masthead-sheet="open"] {
+    opacity: 0;
+    pointer-events: none;
 }
 
 @media (max-width: 767px) {
     .pinned-area {
         margin: var(--space-6) auto var(--space-8);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pinned-area {
+        transition: none;
     }
 }
 

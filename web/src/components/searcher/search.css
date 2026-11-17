@@ -84,7 +84,8 @@
     outline: none;
     background: transparent;
     color: var(--foreground);
-    padding: 0 var(--space-2) 0 0;
+    padding-block: 0;
+    padding-inline: var(--space-1) var(--space-2);
     font-size: var(--font-search-input-size);
     line-height: var(--font-title-line-height);
 }

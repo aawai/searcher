@@ -24,6 +24,7 @@
    The fade follows a smootherstep curve over --masthead-veil-fade-length: a
    linear ramp leaves a visible edge where it starts and ends. */
 .home-masthead__veil {
+    --masthead-veil-opaque-width: 100%;
     --masthead-veil-fade-length: var(--layout-masthead-veil-fade);
     --masthead-veil-ramp: var(--foreground) 0
         calc(100% - var(--masthead-veil-fade-length)),
@@ -79,6 +80,30 @@
     position: absolute;
     inset: 0;
     background: var(--masthead-veil);
+}
+
+/* Under opaque veil conditions, constrain the side veil within
+   MASTHEAD_SEARCH_GAP (32px) of the column's outer edge so it stops cleanly
+   before the central search box instead of extending across the wallpaper. */
+[data-contrast="more"] .home-masthead__veil:not([data-side="top"]),
+[data-glass="off"] .home-masthead__veil:not([data-side="top"]) {
+    max-width: var(--masthead-veil-opaque-width);
+    --masthead-veil-fade-length: var(--space-6);
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+    .home-masthead__veil:not([data-side="top"]) {
+        max-width: var(--masthead-veil-opaque-width);
+        --masthead-veil-fade-length: var(--space-6);
+    }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter:
+    blur(1px))) {
+    .home-masthead__veil:not([data-side="top"]) {
+        max-width: var(--masthead-veil-opaque-width);
+        --masthead-veil-fade-length: var(--space-6);
+    }
 }
 
 /* Only the body scrolls; it shrinks to fit the column so the footer below it
@@ -515,6 +540,8 @@
 }
 
 .home-masthead__copy-btn {
+    position: relative;
+    --touch-target-size: var(--space-6);
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
@@ -527,6 +554,11 @@
     line-height: var(--font-metadata-line-height);
     font-weight: var(--font-title-weight);
     cursor: pointer;
+}
+
+.home-masthead__copy-btn::after {
+    inset-block: calc((100% - var(--touch-target-size)) / 2);
+    inset-inline: min(0px, calc((100% - var(--touch-target-size)) / 2));
 }
 
 .home-masthead__copy-btn:hover {
@@ -551,6 +583,8 @@
 }
 
 .home-masthead__all-notes {
+    position: relative;
+    --touch-target-size: var(--space-6);
     display: inline-flex;
     align-items: center;
     padding: 0;
@@ -561,6 +595,11 @@
     font: inherit;
     font-weight: var(--font-title-weight);
     cursor: pointer;
+}
+
+.home-masthead__all-notes::after {
+    inset-block: calc((100% - var(--touch-target-size)) / 2);
+    inset-inline: min(0px, calc((100% - var(--touch-target-size)) / 2));
 }
 
 .home-masthead__all-notes:hover {
@@ -596,6 +635,13 @@
     opacity: var(--masthead-peek-veil-opacity);
 }
 
+/* Narrow mode uses the compact day scale regardless of viewport width (e.g.
+   >=768px with a side Dock or insufficient column clearance). */
+.home-masthead[data-mode="narrow"] {
+    --font-masthead-day-size: 88px;
+    --font-masthead-day-line-height: 72px;
+}
+
 .home-masthead[data-mode="narrow"][data-collapsed="true"] :is(.home-masthead__header, .home-masthead__dek) {
     -webkit-text-stroke: var(--masthead-text-stroke);
     paint-order: stroke fill;
@@ -621,22 +667,27 @@
 
 /* Collapsed: only the first block (the date block, or the dek without a date
    and time) shows; the dek's rule and everything below it are hidden. The
-   peek reaches MASTHEAD_PEEK_HALO_ROOM (--space-6) below the block and only
-   its last --space-4 fades: the serif day's glyph overflows its line box by
-   a few pixels and stays solid, while the text halo never ends in a clipped
-   edge. The peek button above it expands. */
+   peek reaches MASTHEAD_PEEK_HALO_ROOM (--space-6) below the block and fades
+   only within the measured slack (--peek-fade-tail <= --space-4) so tight
+   viewports never fade into the day glyph baseline. */
 .home-masthead__sheet[data-open="false"] {
+    --peek-fade-tail: var(--space-4);
     pointer-events: none;
     -webkit-mask-image: linear-gradient(
         to bottom,
-        var(--foreground) 0 calc(100% - var(--space-4)),
+        var(--foreground) 0 calc(100% - var(--peek-fade-tail)),
         transparent 100%
     );
     mask-image: linear-gradient(
         to bottom,
-        var(--foreground) 0 calc(100% - var(--space-4)),
+        var(--foreground) 0 calc(100% - var(--peek-fade-tail)),
         transparent 100%
     );
+}
+
+.home-masthead[data-peek-hidden="true"] .home-masthead__sheet[data-open="false"],
+.home-masthead[data-peek-hidden="true"] .home-masthead__veil[data-side="top"][data-open="false"] {
+    opacity: 0;
 }
 
 .home-masthead__sheet[data-open="false"] .home-masthead__scroll {
@@ -739,7 +790,9 @@
 
 /* Coarse pointer: >=44px hit areas and always-visible menu button */
 @media (any-pointer: coarse), (hover: none) {
-    .home-masthead__continue-item {
+    .home-masthead__continue-item,
+    .home-masthead__copy-btn,
+    .home-masthead__all-notes {
         --touch-target-size: var(--control-touch-target);
     }
 

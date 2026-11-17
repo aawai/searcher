@@ -259,6 +259,12 @@ export function isRuntimeLayoutGeometryException(
     if (path === "web/src/features/home-masthead/HomeMasthead.tsx") {
         if (prop === "height" && normValue === "peekHeight") return true;
     }
+    // Search suggestions panel max-height bounded to remaining viewport/dock space.
+    if (path === "web/src/components/searcher/SearcherSearchInput.tsx") {
+        if (prop === "maxHeight" && normValue === "suggestionsMaxHeight") {
+            return true;
+        }
+    }
     if (!RUNTIME_LAYOUT_PROPS[prop] || !isRuntimeLayoutOwner(file)) {
         return false;
     }

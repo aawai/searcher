@@ -1098,6 +1098,150 @@ Deno.test("home app library (#244)", async (t) => {
                 }
             },
         );
+
+        await t.step(
+            "narrow masthead sheet open at 390x844 with showHomeApps hides and makes pinned-area inert",
+            async () => {
+                const { page, context } = await bigLibraryPage(
+                    browser,
+                    app.origin,
+                    {
+                        viewport: { width: 390, height: 844 },
+                        isMobile: true,
+                        hasTouch: true,
+                    },
+                );
+                try {
+                    await waitForPlannedHome(page, 4);
+                    const noteStatus = await page.evaluate(async () => {
+                        const response = await fetch("/api/documents", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                title: "窄屏叠层测试笔记",
+                                body: "pinned masthead entry",
+                                isHomeFixed: true,
+                            }),
+                        });
+                        return response.status;
+                    });
+                    assertEquals(noteStatus, 200);
+                    await page.reload();
+                    await waitForPlannedHome(page, 4);
+                    await page.locator(".home-masthead__peek").waitFor({
+                        state: "visible",
+                    });
+                    assertEquals(
+                        await page.locator(".home-masthead").getAttribute(
+                            "data-mode",
+                        ),
+                        "narrow",
+                    );
+                    assertEquals(
+                        await page.locator(".home-masthead").getAttribute(
+                            "data-collapsed",
+                        ),
+                        "true",
+                    );
+
+                    const readPinnedState = () =>
+                        page.evaluate(() => {
+                            const el = document.querySelector<HTMLElement>(
+                                ".pinned-area",
+                            );
+                            if (!el) return null;
+                            const style = getComputedStyle(el);
+                            return {
+                                mastheadSheet: el.getAttribute(
+                                    "data-masthead-sheet",
+                                ),
+                                inert: el.inert,
+                                opacity: style.opacity,
+                                pointerEvents: style.pointerEvents,
+                            };
+                        });
+
+                    const before = await readPinnedState();
+                    assertEquals(before, {
+                        mastheadSheet: null,
+                        inert: false,
+                        opacity: "1",
+                        pointerEvents: "auto",
+                    });
+
+                    await page.locator(".home-masthead__peek").tap();
+                    await page.locator(
+                        '.home-masthead__sheet[data-open="true"]',
+                    ).waitFor({ state: "visible" });
+                    await page.waitForFunction(() => {
+                        const el = document.querySelector<HTMLElement>(
+                            ".pinned-area",
+                        );
+                        return el?.getAttribute("data-masthead-sheet") ===
+                                "open" &&
+                            el.inert === true &&
+                            getComputedStyle(el).opacity === "0" &&
+                            getComputedStyle(el).pointerEvents === "none";
+                    });
+
+                    // Confirm the expanded sheet's bottom bar (全部笔记 → / 收起)
+                    // is hit-testable and not occluded by .pinned-area.
+                    for (
+                        const selector of [
+                            ".home-masthead__all-notes",
+                            ".home-masthead__collapse",
+                        ]
+                    ) {
+                        const hit = await page.evaluate((sel) => {
+                            const target = document.querySelector<HTMLElement>(
+                                sel,
+                            );
+                            if (!target) return false;
+                            const rect = target.getBoundingClientRect();
+                            const atPoint = document.elementFromPoint(
+                                rect.x + rect.width / 2,
+                                rect.y + rect.height / 2,
+                            );
+                            return atPoint !== null &&
+                                target.contains(atPoint);
+                        }, selector);
+                        assert(
+                            hit,
+                            `${selector} must be hit-testable when sheet is open`,
+                        );
+                    }
+
+                    await page.locator(".home-masthead__collapse").tap();
+                    await page.locator(".home-masthead__peek").waitFor({
+                        state: "visible",
+                    });
+                    assertEquals(
+                        await page.locator(".home-masthead").getAttribute(
+                            "data-mode",
+                        ),
+                        "narrow",
+                    );
+                    assertEquals(
+                        await page.locator(".home-masthead").getAttribute(
+                            "data-collapsed",
+                        ),
+                        "true",
+                    );
+                    await page.waitForFunction(() => {
+                        const el = document.querySelector<HTMLElement>(
+                            ".pinned-area",
+                        );
+                        return el?.getAttribute("data-masthead-sheet") ===
+                                null &&
+                            el.inert === false &&
+                            getComputedStyle(el).opacity === "1" &&
+                            getComputedStyle(el).pointerEvents === "auto";
+                    });
+                } finally {
+                    await context.close();
+                }
+            },
+        );
         await t.step(
             "folder Material follows glass tiers and reduced-transparency on the real page",
             async () => {
