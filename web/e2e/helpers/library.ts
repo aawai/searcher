@@ -38,6 +38,12 @@ export async function switchDocumentMode(
         .click();
 }
 
+async function waitForEditorFocusBarrier(target: Locator): Promise<void> {
+    await target.evaluate(() =>
+        new Promise<void>((settled) => setTimeout(settled, 20))
+    );
+}
+
 /**
  * Clicks into rich-editor text and returns once ProseMirror has settled the
  * focus. When the editor gains focus, ProseMirror re-applies its own selection
@@ -47,9 +53,16 @@ export async function switchDocumentMode(
  */
 export async function clickIntoEditor(target: Locator): Promise<void> {
     await target.click();
-    await target.evaluate(() =>
-        new Promise<void>((settled) => setTimeout(settled, 20))
-    );
+    await waitForEditorFocusBarrier(target);
+}
+
+/**
+ * Focuses the rich-editor host and waits for ProseMirror's 20 ms focus timer
+ * before sending keyboard navigation (e.g. Control+End) or edits.
+ */
+export async function focusEditor(target: Locator): Promise<void> {
+    await target.focus();
+    await waitForEditorFocusBarrier(target);
 }
 
 /**
