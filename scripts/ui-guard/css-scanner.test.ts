@@ -201,6 +201,8 @@ Deno.test("css-scanner - accent background and fill are limited to registered se
         .card--glow { background-image: linear-gradient(var(--accent), transparent); }
         .icon--tinted { fill: var(--accent); }
         .card--tint { background: var(--accent-soft); }
+        .card--subtle { background: var(--accent-subtle); }
+        .card--tinted-border { border-color: var(--accent-border); }
         .card--outline { border-color: var(--accent); color: var(--accent); }
         @media (max-width: 767px) {
             .card--mobile { background-color: var(--accent); }
@@ -218,6 +220,18 @@ Deno.test("css-scanner - accent background and fill are limited to registered se
         [
             "unregistered-accent-fill",
             ".icon--tinted { fill: var(--accent) }",
+        ],
+        [
+            "unregistered-accent-fill",
+            ".card--tint { background: var(--accent-soft) }",
+        ],
+        [
+            "unregistered-accent-fill",
+            ".card--subtle { background: var(--accent-subtle) }",
+        ],
+        [
+            "unregistered-accent-fill",
+            ".card--tinted-border { border-color: var(--accent-border) }",
         ],
         [
             "unregistered-accent-fill",

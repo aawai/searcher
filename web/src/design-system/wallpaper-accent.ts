@@ -61,15 +61,15 @@ type Rgb = readonly [number, number, number];
  */
 const SURFACES = {
     light: {
-        background: [0xf4, 0xf4, 0xf5],
-        surface: [0xff, 0xff, 0xff],
-        surfaceSoft: [0xeb, 0xeb, 0xee],
+        background: [0xf5, 0xf1, 0xea],
+        surface: [0xff, 0xfc, 0xf7],
+        surfaceSoft: [0xec, 0xe7, 0xdf],
         softMix: 0.09,
     },
     dark: {
-        background: [0x11, 0x11, 0x13],
-        surface: [0x1c, 0x1c, 0x1f],
-        surfaceSoft: [0x2a, 0x2a, 0x2e],
+        background: [0x15, 0x13, 0x10],
+        surface: [0x21, 0x1e, 0x1a],
+        surfaceSoft: [0x30, 0x2b, 0x25],
         softMix: 0.12,
     },
 } as const satisfies Record<
@@ -86,8 +86,8 @@ const SURFACES = {
  * High contrast surfaces, mirroring `[data-contrast="more"]` in `tokens.css`:
  * every opaque surface the accent is read on (`--background`, `--surface`,
  * `--surface-soft`, `--surface-highlight`, `--surface-grouped-canvas`), the
- * accent tints (`--accent-soft-mix` over `--surface`, `--accent-subtle-mix`
- * over `--surface-soft`) and the fixed `--accent-foreground`.
+ * interactive soft tint (`--accent-soft-mix` over `--surface`) and the fixed
+ * `--accent-foreground`. (`--accent-subtle` aliases neutral `--surface-soft`.)
  */
 const HIGH_CONTRAST_SURFACES = {
     light: {
@@ -98,9 +98,7 @@ const HIGH_CONTRAST_SURFACES = {
             [0xf2, 0xf2, 0xf2],
         ],
         surface: [0xff, 0xff, 0xff],
-        surfaceSoft: [0xed, 0xed, 0xed],
         softMix: 0.12,
-        subtleMix: 0.18,
         foreground: [0xff, 0xff, 0xff],
     },
     dark: {
@@ -111,9 +109,7 @@ const HIGH_CONTRAST_SURFACES = {
             [0x14, 0x14, 0x14],
         ],
         surface: [0x00, 0x00, 0x00],
-        surfaceSoft: [0x1f, 0x1f, 0x1f],
         softMix: 0.18,
-        subtleMix: 0.24,
         foreground: [0x00, 0x00, 0x00],
     },
 } as const satisfies Record<
@@ -121,9 +117,7 @@ const HIGH_CONTRAST_SURFACES = {
     {
         surfaces: readonly Rgb[];
         surface: Rgb;
-        surfaceSoft: Rgb;
         softMix: number;
-        subtleMix: number;
         foreground: Rgb;
     }
 >;
@@ -389,7 +383,7 @@ export function accentPalette(
     // black (light) and dimmed white (dark), rounded conservatively.
     // Light: the 5th-percentile veil pixel measured over black at 1440
     // (wallpaper-readability), lighter than the flat composite.
-    const backdrop: Rgb = theme === "light" ? [176, 176, 177] : [65, 65, 66];
+    const backdrop: Rgb = theme === "light" ? [182, 179, 174] : [66, 65, 64];
     let mastheadLightness = theme === "light" ? 0.56 : 0.74;
     let masthead: string;
     for (;;) {
@@ -428,7 +422,7 @@ export function highContrastAccentContrast(
     theme: "light" | "dark",
     palette: HighContrastAccent,
 ): AccentContrast[] {
-    const { surfaces, surface, surfaceSoft, softMix, subtleMix, foreground } =
+    const { surfaces, surface, softMix, foreground } =
         HIGH_CONTRAST_SURFACES[theme];
     const accent = rgb(palette.accent);
     const pairs: [string, Rgb, Rgb, number][] = [
@@ -442,12 +436,6 @@ export function highContrastAccentContrast(
             "强调色文字 / 浅底",
             accent,
             mix(accent, softMix, surface),
-            TEXT_CONTRAST,
-        ],
-        [
-            "强调色文字 / 次浅底",
-            accent,
-            mix(accent, subtleMix, surfaceSoft),
             TEXT_CONTRAST,
         ],
         ...(["accent", "hover", "active"] as const).map((

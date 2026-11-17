@@ -7,8 +7,8 @@
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
-    "background_color": "#F4F4F5",
-    "theme_color": "#F4F4F5",
+    "background_color": "#F5F1EA",
+    "theme_color": "#F5F1EA",
     "share_target": {
         "action": "/share",
         "method": "GET",

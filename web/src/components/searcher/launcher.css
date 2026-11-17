@@ -383,7 +383,7 @@
 .launcher-tile.is-folder-drop-target .launcher-folder-surface {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-    background: var(--accent-subtle);
+    background: var(--accent-soft);
     transform: scale(1.02);
 }
 /* Reduced motion: a drop target keeps its outline and fill without the 2% grow. */

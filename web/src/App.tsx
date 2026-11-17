@@ -80,7 +80,6 @@ const OmniboxLab = lazy(() =>
 );
 const MotionLab = lazy(() => import("./design-lab/MotionLab.tsx"));
 const AccentLab = lazy(() => import("./design-lab/AccentLab.tsx"));
-const PaletteLab = lazy(() => import("./design-lab/PaletteLab.tsx"));
 const WindowLab = lazy(() => import("./design-lab/WindowLab.tsx"));
 const MarkdownEditorSpike = lazy(() =>
     import("./spikes/markdown-editor/MarkdownEditorSpike.tsx")
@@ -558,7 +557,6 @@ export function App() {
                     { path: "/design-lab/motion", element: <MotionLab /> },
                     { path: "/design-lab/windows", element: <WindowLab /> },
                     { path: "/design-lab/accent", element: <AccentLab /> },
-                    { path: "/design-lab/palette", element: <PaletteLab /> },
                     { path: routes.login, element: <AuthPage kind="login" /> },
                     {
                         path: routes.register,

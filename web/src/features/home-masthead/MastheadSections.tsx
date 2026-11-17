@@ -28,6 +28,7 @@ import {
     type MouseEvent as ReactMouseEvent,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from "react";
 import { StatusBanner } from "../../components/searcher/semantic.tsx";
@@ -55,7 +56,7 @@ const INTERACTIVE_SELECTOR =
 export interface MastheadSectionsProps {
     notes: readonly HomeNoteItem[];
     now: Date;
-    onOpenNote: (note: HomeNoteItem) => void;
+    onOpenNote: (note: HomeNoteItem, source?: HTMLElement | null) => void;
     onToggleTask: (note: HomeNoteItem, index: number, checked: boolean) => void;
     onUnpin: (note: HomeNoteItem) => void;
     onDelete: (note: HomeNoteItem) => Promise<void>;
@@ -223,7 +224,8 @@ export function MastheadSections({
                                             kind: "text",
                                             segments: [],
                                         }}
-                                        onOpen={() => onOpenNote(note)}
+                                        onOpen={(source) =>
+                                            onOpenNote(note, source)}
                                         onMoveUp={index > 0
                                             ? () =>
                                                 handleMoveByOffset(index, -1)
@@ -270,13 +272,14 @@ function SortableMastheadEntry({
     total: number;
     now: Date;
     summary: MastheadEntrySummary;
-    onOpen: () => void;
+    onOpen: (source: HTMLElement | null) => void;
     onMoveUp?: () => void;
     onMoveDown?: () => void;
     onUnpin: () => void;
     onDelete: () => void;
     onCopyCode: (code: string) => Promise<void>;
 }) {
+    const entryRef = useRef<HTMLElement>(null);
     const {
         attributes,
         listeners,
@@ -300,14 +303,14 @@ function SortableMastheadEntry({
         ) {
             return;
         }
-        onOpen();
+        onOpen(entryRef.current);
     };
 
     const handleKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
         if (event.target !== event.currentTarget) return;
         if (event.key === "Enter") {
             event.preventDefault();
-            onOpen();
+            onOpen(entryRef.current);
             return;
         }
         listeners?.onKeyDown?.(event);
@@ -325,6 +328,7 @@ function SortableMastheadEntry({
             }}
         >
             <article
+                ref={entryRef}
                 {...attributes}
                 {...listeners}
                 tabIndex={0}
@@ -370,7 +374,7 @@ function SortableMastheadEntry({
                                     <DropdownMenuItem
                                         onClick={(e) => {
                                             e?.stopPropagation();
-                                            onOpen();
+                                            onOpen(entryRef.current);
                                         }}
                                     >
                                         <ExternalLink

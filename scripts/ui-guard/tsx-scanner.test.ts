@@ -260,7 +260,7 @@ Deno.test("tsx-scanner - inline font-size and radius accept registered Tokens on
     );
 });
 
-Deno.test("tsx-scanner - accent fills as Tailwind utilities are rejected, tints and text are not", () => {
+Deno.test("tsx-scanner - accent fills, tints and border-colors as Tailwind utilities are rejected, text and ring are not", () => {
     const code = `
         export function Sample() {
             return (
@@ -268,7 +268,8 @@ Deno.test("tsx-scanner - accent fills as Tailwind utilities are rejected, tints 
                     <i className="bg-primary" />
                     <i className="data-[checked]:bg-accent/50" />
                     <i className="fill-accent" />
-                    <i className="bg-accent-soft text-primary border-accent ring-primary" />
+                    <i className="bg-accent-soft bg-accent-subtle border-accent-border" />
+                    <i className="text-primary border-accent ring-primary" />
                 </div>
             );
         }
@@ -282,6 +283,9 @@ Deno.test("tsx-scanner - accent fills as Tailwind utilities are rejected, tints 
             ["unregistered-accent-fill", "bg-primary"],
             ["unregistered-accent-fill", "data-[checked]:bg-accent/50"],
             ["unregistered-accent-fill", "fill-accent"],
+            ["unregistered-accent-fill", "bg-accent-soft"],
+            ["unregistered-accent-fill", "bg-accent-subtle"],
+            ["unregistered-accent-fill", "border-accent-border"],
         ],
     );
 });
