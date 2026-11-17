@@ -4,16 +4,16 @@
 [Visual Language](../design/VISUAL_LANGUAGE.md) 为准；业务
 API、安全与持久化约束以实现和契约为准。
 
-| 计划                                                                   | 文档自述状态                                                                                     |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [WORKSPACE_FINAL_REFACTOR_PLAN.md](WORKSPACE_FINAL_REFACTOR_PLAN.md)   | 历史基线（原 Final / Canonical）：Widgets 已移除，现行首页规则见 docs/workspace.md               |
-| [WORKSPACE_LAYOUT_REDESIGN_PLAN.md](WORKSPACE_LAYOUT_REDESIGN_PLAN.md) | 未标注；被 WORKSPACE_FINAL_REFACTOR_PLAN 列为历史背景                                            |
-| [UI_UX_AUDIT_FIX_PLAN.md](UI_UX_AUDIT_FIX_PLAN.md)                     | 实施计划，文档声明“不表示任何修复已完成”；Design System 列为既有设计资料                         |
-| [ZEN_MOBILE_NOTES_PLAN.md](ZEN_MOBILE_NOTES_PLAN.md)                   | 已实现并完成验收（Issue #191）                                                                   |
-| [UI_MOTION_CONSISTENCY_PLAN.md](UI_MOTION_CONSISTENCY_PLAN.md)         | 已实施：动效、视觉一致性与页面原型修正                                                           |
-| [EDITORIAL_WINDOWS_PLAN.md](EDITORIAL_WINDOWS_PLAN.md)                 | 已实施（方案 A）：窗口内容标题使用衬线，现行规则见 Visual Language                               |
-| [VISUAL_EVOLUTION_PLAN.md](VISUAL_EVOLUTION_PLAN.md)                   | 部分实施：底线债、刊头衬底对比度、文件夹共享元素过渡与选中态浅染已实施；色彩与着色为原型，待选定 |
-| [SITE_COPY_OPTIMIZATION_PLAN.md](SITE_COPY_OPTIMIZATION_PLAN.md)       | 部分实施：文案与行为修正已落地，正在补全实页验收                                                 |
-| [ADMIN_MANAGEMENT_REDESIGN_PLAN.md](ADMIN_MANAGEMENT_REDESIGN_PLAN.md) | 部分实施：管理后台主要功能已修改，完整回归和实页验收待完成 |
+| 计划                                                                   | 文档自述状态                                                                                            |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| [WORKSPACE_FINAL_REFACTOR_PLAN.md](WORKSPACE_FINAL_REFACTOR_PLAN.md)   | 历史基线（原 Final / Canonical）：Widgets 已移除，现行首页规则见 docs/workspace.md                      |
+| [WORKSPACE_LAYOUT_REDESIGN_PLAN.md](WORKSPACE_LAYOUT_REDESIGN_PLAN.md) | 未标注；被 WORKSPACE_FINAL_REFACTOR_PLAN 列为历史背景                                                   |
+| [UI_UX_AUDIT_FIX_PLAN.md](UI_UX_AUDIT_FIX_PLAN.md)                     | 实施计划，文档声明“不表示任何修复已完成”；Design System 列为既有设计资料                                |
+| [ZEN_MOBILE_NOTES_PLAN.md](ZEN_MOBILE_NOTES_PLAN.md)                   | 已实现并完成验收（Issue #191）                                                                          |
+| [UI_MOTION_CONSISTENCY_PLAN.md](UI_MOTION_CONSISTENCY_PLAN.md)         | 已实施：动效、视觉一致性与页面原型修正                                                                  |
+| [EDITORIAL_WINDOWS_PLAN.md](EDITORIAL_WINDOWS_PLAN.md)                 | 已实施（方案 A）：窗口内容标题使用衬线，现行规则见 Visual Language                                      |
+| [VISUAL_EVOLUTION_PLAN.md](VISUAL_EVOLUTION_PLAN.md)                   | 已实施（2026-11-17）：全部阶段已转正落地，`/design-lab/palette` 原型已移除，规则已并入 Visual Language  |
+| [SITE_COPY_OPTIMIZATION_PLAN.md](SITE_COPY_OPTIMIZATION_PLAN.md)       | 已完成（2026-11-17）：文案、行为与 Stage D 失败注入 / 窄 Host / 404 / 分享入口实页验收及 E2E 验证已补齐 |
+| [ADMIN_MANAGEMENT_REDESIGN_PLAN.md](ADMIN_MANAGEMENT_REDESIGN_PLAN.md) | 已实施（2026-11-17）：完整回归与跨视口（390–1440）/ 跨主题 / 胶囊形态实页矩阵验收已完成                 |
 
 新增计划放在本目录，并在文首写明状态。
