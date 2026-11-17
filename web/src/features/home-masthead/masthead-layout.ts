@@ -29,6 +29,10 @@ export const MASTHEAD_PEEK_HALO_ROOM = 24;
  *  shows and reaches this far below the peek, so its fade
  *  (`--layout-masthead-peek-fade`, 200px) ends below the peek. */
 export const MASTHEAD_PEEK_VEIL_TAIL = 120;
+/** Maximum bottom fade length on the collapsed narrow sheet (`--space-4`). */
+export const MASTHEAD_PEEK_FADE_MAX = 16;
+/** Slack kept solid below the collapsed first block before the mask fades. */
+export const MASTHEAD_PEEK_FADE_BUFFER = 2;
 
 export type MastheadPlacement =
     | {
@@ -204,6 +208,59 @@ export function mastheadPlacement(
         column,
         veilWidth,
     };
+}
+
+export interface MastheadPeekMetrics {
+    height: number;
+    fadeTail: number;
+    hidden: boolean;
+}
+
+/**
+ * Computes the collapsed narrow peek height, bottom fade tail and whether the
+ * peek must hide because even the first block cannot fit above the search box.
+ */
+export function mastheadPeekMetrics(
+    availablePeekHeight: number,
+    blockHeight: number | null,
+): MastheadPeekMetrics {
+    const boundedAvailable = Math.max(
+        0,
+        Number.isFinite(availablePeekHeight) ? availablePeekHeight : 0,
+    );
+    if (blockHeight === null || !Number.isFinite(blockHeight)) {
+        return {
+            height: boundedAvailable,
+            fadeTail: MASTHEAD_PEEK_FADE_MAX,
+            hidden: false,
+        };
+    }
+    const measuredBlock = Math.max(0, blockHeight);
+    const height = Math.min(
+        boundedAvailable,
+        measuredBlock + MASTHEAD_PEEK_HALO_ROOM,
+    );
+    const fadeTail = Math.min(
+        MASTHEAD_PEEK_FADE_MAX,
+        Math.max(0, height - measuredBlock - MASTHEAD_PEEK_FADE_BUFFER),
+    );
+    return {
+        height,
+        fadeTail,
+        hidden: boundedAvailable < measuredBlock,
+    };
+}
+
+/**
+ * Side veil width under opaque veil conditions (`data-contrast="more"`,
+ * `data-glass="off"`, reduced transparency, or forced colors): stops within
+ * `MASTHEAD_SEARCH_GAP` of the column's outer edge instead of spanning 600px
+ * across the center wallpaper.
+ */
+export function mastheadSideOpaqueVeilWidth(veilWidth: number): number {
+    if (!Number.isFinite(veilWidth)) return MASTHEAD_SEARCH_GAP;
+    const outerEdge = Math.max(0, veilWidth - MASTHEAD_VEIL_TAIL);
+    return outerEdge + MASTHEAD_SEARCH_GAP;
 }
 
 /** Splits a local `Date` into the typographic parts shown by the masthead. */

@@ -192,7 +192,14 @@ export function ZenLayout(
             </section>
 
             {user && showHomeApps && (
-                <section className="pinned-area" aria-label="应用库与固定内容">
+                <section
+                    className="pinned-area"
+                    aria-label="应用库与固定内容"
+                    data-masthead-sheet={dockShift === null
+                        ? undefined
+                        : "open"}
+                    inert={dockShift !== null}
+                >
                     {libraryView}
                 </section>
             )}

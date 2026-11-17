@@ -23,10 +23,11 @@ import { useCalmClock } from "../home-calm/useHomeCalm.ts";
 import type { HomeNoteItem } from "../home-layouts/home-notes.ts";
 import type { SafeRect } from "../home-layouts/home-viewport.ts";
 import {
-    MASTHEAD_PEEK_HALO_ROOM,
     MASTHEAD_PEEK_VEIL_TAIL,
     mastheadDateParts,
+    mastheadPeekMetrics,
     mastheadPlacement,
+    mastheadSideOpaqueVeilWidth,
     resolveMastheadSwipe,
 } from "./masthead-layout.ts";
 import "./home-masthead.css";
@@ -148,6 +149,8 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
+    const sideVeilRef = useRef<HTMLDivElement>(null);
+    const sheetRef = useRef<HTMLDivElement>(null);
     const peekRef = useRef<HTMLButtonElement>(null);
     const [overflowBottom, setOverflowBottom] = useState(false);
 
@@ -209,6 +212,37 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         observer.observe(block);
         return () => observer.disconnect();
     }, [isNarrow, showDate, showTime, showContinue, notes.length]);
+
+    const sideOpaqueVeilWidth = placement.mode === "side"
+        ? mastheadSideOpaqueVeilWidth(placement.veilWidth)
+        : null;
+    useLayoutEffect(() => {
+        const veil = sideVeilRef.current;
+        if (!veil || sideOpaqueVeilWidth === null) return;
+        veil.style.setProperty(
+            "--masthead-veil-opaque-width",
+            `${sideOpaqueVeilWidth}px`,
+        );
+    }, [sideOpaqueVeilWidth]);
+
+    const peekMetrics = placement.mode === "narrow"
+        ? mastheadPeekMetrics(placement.peek.height, peekBlockHeight)
+        : null;
+    const peekHeight = peekMetrics?.height ?? 0;
+    const peekFadeTail = peekMetrics?.fadeTail ?? 0;
+    const peekHidden = isNarrow &&
+        effectiveCollapsed &&
+        (peekMetrics?.hidden ?? false);
+
+    useLayoutEffect(() => {
+        const sheet = sheetRef.current;
+        if (!sheet) return;
+        if (isNarrow && effectiveCollapsed) {
+            sheet.style.setProperty("--peek-fade-tail", `${peekFadeTail}px`);
+        } else {
+            sheet.style.removeProperty("--peek-fade-tail");
+        }
+    }, [isNarrow, effectiveCollapsed, peekFadeTail]);
 
     useEffect(() => {
         onSearchDockChange(searchDock);
@@ -502,7 +536,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const allNotesButton = hasNotes && (
         <button
             type="button"
-            className="home-masthead__all-notes"
+            className="home-masthead__all-notes touch-target"
             onClick={onOpenNotes}
         >
             全部笔记 →
@@ -520,6 +554,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 data-collapsed="false"
             >
                 <div
+                    ref={sideVeilRef}
                     className="home-masthead__veil"
                     data-side={placement.side}
                     aria-hidden="true"
@@ -555,12 +590,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const peekLabel = peekTaskCount > 0
         ? `展开首页刊头，${peekTaskCount} 项待办`
         : "展开首页刊头";
-    const peekHeight = peekBlockHeight === null
-        ? placement.peek.height
-        : Math.min(
-            placement.peek.height,
-            peekBlockHeight + MASTHEAD_PEEK_HALO_ROOM,
-        );
     return (
         <section
             className="home-masthead"
@@ -568,6 +597,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             {...focusContainer}
             data-mode="narrow"
             data-collapsed={effectiveCollapsed ? "true" : "false"}
+            data-peek-hidden={peekHidden ? "true" : undefined}
         >
             {
                 /* Collapsed, the sheet shrinks to the peek (the first block)
@@ -589,6 +619,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 {veilWallpaper}
             </div>
             <div
+                ref={sheetRef}
                 className="home-masthead__column home-masthead__sheet"
                 data-open={!effectiveCollapsed ? "true" : "false"}
                 inert={effectiveCollapsed}
@@ -625,7 +656,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                     </div>
                 )}
             </div>
-            {!isGuest && effectiveCollapsed && (
+            {!isGuest && effectiveCollapsed && !peekHidden && (
                 <button
                     ref={peekRef}
                     type="button"

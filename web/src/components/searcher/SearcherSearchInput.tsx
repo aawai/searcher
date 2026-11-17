@@ -52,6 +52,31 @@ export type Reachability = Record<
 const EMPTY_REACHABILITY: Reachability = {};
 const EMPTY_APPS: OmniboxApp[] = [];
 const EMPTY_FOLDERS: OmniboxFolder[] = [];
+const SUGGESTIONS_MIN_MAX_HEIGHT = 120;
+const SUGGESTIONS_MAX_HEIGHT = 360;
+const DEFAULT_SUGGESTIONS_GAP = 8;
+const DEFAULT_SUGGESTIONS_MARGIN = 16;
+
+function computeSuggestionsMaxHeight({
+    frameBottom,
+    viewportBottom,
+    gap,
+    margin,
+}: {
+    frameBottom: number;
+    viewportBottom: number;
+    gap: number;
+    margin: number;
+}): number {
+    const suggestionsTop = frameBottom + gap;
+    const hardCeiling = Math.max(
+        0,
+        Math.floor(viewportBottom - suggestionsTop),
+    );
+    const available = Math.floor(viewportBottom - margin - suggestionsTop);
+    const usableMin = Math.min(SUGGESTIONS_MIN_MAX_HEIGHT, hardCeiling);
+    return Math.max(usableMin, Math.min(SUGGESTIONS_MAX_HEIGHT, available));
+}
 
 export function SearcherSearchInput(
     {
@@ -122,6 +147,10 @@ export function SearcherSearchInput(
     const listboxId = useId();
     const ownField = useRef<HTMLInputElement>(null);
     const field = inputRef ?? ownField;
+    const frameRef = useRef<HTMLDivElement>(null);
+    const [suggestionsMaxHeight, setSuggestionsMaxHeight] = useState<
+        number | null
+    >(null);
     // IME 组合态：组合期间的方向键、Enter 属于输入法候选操作，不能驱动联想或提交。
     const composingRef = useRef(false);
     const capturingRef = useRef(false);
@@ -211,6 +240,96 @@ export function SearcherSearchInput(
     const isOpen = focused && !dismissed &&
         (items.length > 0 || onlineUnavailable);
     const suggestionPresence = usePresence<HTMLDivElement>(isOpen);
+
+    useLayoutEffect(() => {
+        if (!suggestionPresence.mounted) {
+            setSuggestionsMaxHeight(null);
+            return;
+        }
+        const frame = frameRef.current;
+        if (!frame) return;
+
+        let raf = 0;
+        const measure = () => {
+            const rootStyle = getComputedStyle(document.documentElement);
+            const dockInsetBottom = Math.max(
+                0,
+                parseFloat(rootStyle.getPropertyValue("--dock-inset-bottom")) ||
+                    0,
+            );
+            const margin =
+                parseFloat(rootStyle.getPropertyValue("--space-4")) ||
+                DEFAULT_SUGGESTIONS_MARGIN;
+            const gap = parseFloat(rootStyle.getPropertyValue("--space-2")) ||
+                DEFAULT_SUGGESTIONS_GAP;
+            const vv = globalThis.visualViewport;
+            const vvBottom = vv
+                ? vv.offsetTop + vv.height
+                : globalThis.innerHeight;
+            // The dock is fixed to the layout viewport bottom, while visualViewport
+            // tracks soft keyboards and pinch-zoom offsets; clamp to whichever edge
+            // is higher so suggestions clear both without double-subtracting.
+            const effectiveBottom = Math.min(
+                vvBottom,
+                globalThis.innerHeight - dockInsetBottom,
+            );
+            const next = computeSuggestionsMaxHeight({
+                frameBottom: frame.getBoundingClientRect().bottom,
+                viewportBottom: effectiveBottom,
+                gap,
+                margin,
+            });
+            setSuggestionsMaxHeight((prev) => (prev === next ? prev : next));
+        };
+
+        const schedule = () => {
+            cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(measure);
+        };
+
+        measure();
+
+        const vv = globalThis.visualViewport;
+        globalThis.addEventListener("resize", schedule);
+        globalThis.addEventListener("scroll", schedule, { passive: true });
+        vv?.addEventListener("resize", schedule);
+        vv?.addEventListener("scroll", schedule);
+
+        const resizeObserver = typeof ResizeObserver !== "undefined"
+            ? new ResizeObserver(schedule)
+            : null;
+        resizeObserver?.observe(frame);
+        const hero = frame.closest<HTMLElement>(".hero");
+        if (hero) {
+            resizeObserver?.observe(hero, { box: "border-box" });
+            hero.addEventListener("transitionend", schedule);
+        }
+
+        const mutationObserver = typeof MutationObserver !== "undefined"
+            ? new MutationObserver(schedule)
+            : null;
+        mutationObserver?.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["style"],
+        });
+
+        return () => {
+            cancelAnimationFrame(raf);
+            globalThis.removeEventListener("resize", schedule);
+            globalThis.removeEventListener("scroll", schedule);
+            vv?.removeEventListener("resize", schedule);
+            vv?.removeEventListener("scroll", schedule);
+            resizeObserver?.disconnect();
+            hero?.removeEventListener("transitionend", schedule);
+            mutationObserver?.disconnect();
+        };
+    }, [
+        suggestionPresence.mounted,
+        isOpen,
+        query,
+        items,
+        onlineUnavailable,
+    ]);
 
     useEffect(() => {
         if (!isOpen || selectedIndex < 0) return;
@@ -413,7 +532,7 @@ export function SearcherSearchInput(
                 role="search"
                 onSubmit={handleSubmit}
             >
-                <div className="search-frame">
+                <div className="search-frame" ref={frameRef}>
                     <EngineSelector
                         engine={engine}
                         onEngineChange={onEngineChange}
@@ -495,6 +614,9 @@ export function SearcherSearchInput(
                 <div
                     className="search-suggestions"
                     ref={suggestionPresence.ref}
+                    style={suggestionsMaxHeight === null
+                        ? undefined
+                        : { maxHeight: suggestionsMaxHeight }}
                     data-ending-style={suggestionPresence.ending
                         ? ""
                         : undefined}

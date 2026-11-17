@@ -6,7 +6,9 @@ import {
     formatRelativeNoteTime,
     mastheadColumnWidth,
     mastheadDateParts,
+    mastheadPeekMetrics,
     mastheadPlacement,
+    mastheadSideOpaqueVeilWidth,
     resolveMastheadSwipe,
 } from "./masthead-layout.ts";
 import {
@@ -178,6 +180,59 @@ Deno.test("mastheadPlacement: exact fit width boundary and narrow fallback when 
     // Column width scales with 19vw up to 372px.
     assertEquals(mastheadColumnWidth(1440), 296);
     assertEquals(mastheadColumnWidth(2000), 372);
+
+    // >=768px with right Dock where neither side fits enters narrow mode.
+    const { availableRect: tabletDockRect } = homeViewport(
+        1024,
+        768,
+        56,
+        32,
+        { right: 68 },
+    );
+    const tabletNarrow = mastheadPlacement({
+        viewportWidth: 1024,
+        availableRect: tabletDockRect,
+        searchRect: { x: 192, y: 264, width: 640, height: 56 },
+        focalX: 0.5,
+    });
+    assertEquals(tabletNarrow.mode, "narrow");
+});
+
+Deno.test("mastheadPeekMetrics and mastheadSideOpaqueVeilWidth: keep collapsed peek glyph unclipped and constrain opaque veil within search gap", () => {
+    assertEquals(mastheadPeekMetrics(200, null), {
+        height: 200,
+        fadeTail: 16,
+        hidden: false,
+    });
+    // Plenty of room: full 24px halo room and 16px fade tail below block.
+    assertEquals(mastheadPeekMetrics(200, 72), {
+        height: 96,
+        fadeTail: 16,
+        hidden: false,
+    });
+    // Tight room: fade tail shrinks to slack below block + 2px buffer so the
+    // day glyph baseline stays 100% opaque.
+    assertEquals(mastheadPeekMetrics(84, 72), {
+        height: 84,
+        fadeTail: 10,
+        hidden: false,
+    });
+    // Exact / near-exact fit: fade tail drops to 0.
+    assertEquals(mastheadPeekMetrics(74, 72), {
+        height: 74,
+        fadeTail: 0,
+        hidden: false,
+    });
+    // Ultra-short landscape (e.g. 844x390): block cannot fit above search -> hide.
+    assertEquals(mastheadPeekMetrics(40, 72), {
+        height: 40,
+        fadeTail: 0,
+        hidden: true,
+    });
+
+    // Opaque side veil stops within MASTHEAD_SEARCH_GAP (32px) past column edge.
+    assertEquals(mastheadSideOpaqueVeilWidth(72 + 296 + 600), 72 + 296 + 32);
+    assertEquals(mastheadSideOpaqueVeilWidth(32 + 296 + 600), 32 + 296 + 32);
 });
 
 Deno.test("mastheadDateParts: formats day number, weekday, Chinese month name and 24h time", () => {
