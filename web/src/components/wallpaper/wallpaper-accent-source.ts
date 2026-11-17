@@ -111,6 +111,8 @@ export function applyWallpaperAccent(
     element: HTMLElement,
     accent: WallpaperAccent | null,
 ): void {
+    if (accent) element.dataset.wallpaperTint = "true";
+    else delete element.dataset.wallpaperTint;
     for (
         const [slot, property] of Object.entries(WALLPAPER_ACCENT_PROPERTIES)
     ) {

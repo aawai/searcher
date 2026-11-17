@@ -47,7 +47,7 @@ export interface HomeLayoutProps {
     openCreateApp: (groupId?: string) => void;
     softDeleteApp: (app: ExtendedWebApp) => Promise<void>;
     // home notes
-    openNote: (note: HomeNoteItem) => void;
+    openNote: (note: HomeNoteItem, source?: HTMLElement | null) => void;
     deleteNote: (note: HomeNoteItem) => Promise<void>;
     updateNote: (
         note: HomeNoteItem,

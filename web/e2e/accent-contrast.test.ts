@@ -12,6 +12,7 @@ interface PaletteSnapshot {
     accentHover: RGB;
     accentActive: RGB;
     accentSoft: RGB;
+    accentSubtle: RGB;
     ring: RGB;
     background: RGB;
     surface: RGB;
@@ -58,6 +59,12 @@ const contrastChecks: readonly {
         background: "accentSoft",
         minimum: 4.5,
         description: "selected accent text on accent-soft radio surface",
+    },
+    {
+        foreground: "accent",
+        background: "accentSubtle",
+        minimum: 4.5,
+        description: "tinted marker accent text on accent-subtle",
     },
     {
         foreground: "ring",
@@ -179,6 +186,7 @@ Deno.test("accent palette meets WCAG contrast in light and dark themes", async (
                         accentHover: sample("--accent-hover"),
                         accentActive: sample("--accent-active"),
                         accentSoft: sample("--accent-soft"),
+                        accentSubtle: sample("--accent-subtle"),
                         ring: sample("--ring"),
                         background: sample("--background"),
                         surface: sample("--surface"),
@@ -224,17 +232,29 @@ Deno.test("current items use readable accent-soft in notes, AI and settings", as
             `${app.origin}/api/documents`,
             {
                 headers: { Origin: app.origin },
-                data: { title: "浅染测试笔记", body: "内容" },
+                data: {
+                    title: "浅染测试笔记",
+                    body: "内容",
+                    isHomeFixed: true,
+                },
             },
         );
         assert(response.ok());
 
-        const check = async (row: string, text: string) => {
+        const check = async (
+            row: string,
+            text: string,
+            expectedToken: "--accent-soft" | "--accent-subtle" =
+                "--accent-soft",
+        ) => {
             await page.locator(row).first().waitFor({ state: "visible" });
             for (const theme of themes) {
                 for (const accent of ACCENTS) {
                     const result = await page.locator(row).first().evaluate(
-                        async (element, { theme, accent, text }) => {
+                        async (
+                            element,
+                            { theme, accent, text, expectedToken },
+                        ) => {
                             document.documentElement.dataset.theme = theme;
                             document.documentElement.dataset.accent = accent;
                             const { promise, resolve } = Promise.withResolvers<
@@ -256,7 +276,7 @@ Deno.test("current items use readable accent-soft in notes, AI and settings", as
                                 );
                             }
                             const probe = document.createElement("span");
-                            probe.style.background = "var(--accent-soft)";
+                            probe.style.background = `var(${expectedToken})`;
                             document.body.append(probe);
                             const background =
                                 getComputedStyle(element).backgroundColor;
@@ -281,7 +301,12 @@ Deno.test("current items use readable accent-soft in notes, AI and settings", as
                                 fill: rgb(background),
                             };
                         },
-                        { theme: theme.id, accent: accent.id, text },
+                        {
+                            theme: theme.id,
+                            accent: accent.id,
+                            text,
+                            expectedToken,
+                        },
                     );
                     assertEquals(
                         result.background,
@@ -299,10 +324,16 @@ Deno.test("current items use readable accent-soft in notes, AI and settings", as
             }
         };
 
+        await page.reload();
+        await check(".home-masthead__section-title", "", "--accent-subtle");
+        await check(".home-masthead__entry-no", "", "--accent-subtle");
+
         await page.goto(`${app.origin}/?view=notes`);
         await ensureSidebarOpen(page);
-        await page.getByRole("treeitem", { name: "浅染测试笔记", exact: true })
-            .click();
+        await page.getByRole("treeitem", {
+            name: "浅染测试笔记，已固定到首页",
+            exact: true,
+        }).click();
         await check(
             ".documents-tree-row[data-selected]",
             ".documents-tree-label",
@@ -318,6 +349,36 @@ Deno.test("current items use readable accent-soft in notes, AI and settings", as
         await check(".ask-sidebar__item.is-active", ".ask-sidebar__item-title");
         await page.goto(`${app.origin}/settings/appearance`);
         await check(".settings-nav-item[aria-current='page']", "svg");
+        await check(
+            ".window-frame .settings-group-title",
+            "",
+            "--accent-subtle",
+        );
+
+        // Empty-state badge in Trash stays readable in light/dark and turns neutral under high contrast.
+        await page.goto(`${app.origin}/trash`);
+        await check(
+            '.empty-state:not([data-density="inline"]) :is(h2, h3)',
+            "",
+            "--accent-subtle",
+        );
+        for (const theme of themes) {
+            const hcMatch = await page.locator(
+                '.empty-state:not([data-density="inline"]) :is(h2, h3)',
+            ).first().evaluate((el, id) => {
+                document.documentElement.dataset.theme = id;
+                document.documentElement.dataset.contrast = "more";
+                const probe = document.createElement("span");
+                probe.style.background = "var(--surface-soft)";
+                document.body.append(probe);
+                const actual = getComputedStyle(el).backgroundColor;
+                const neutral = getComputedStyle(probe).backgroundColor;
+                probe.remove();
+                delete document.documentElement.dataset.contrast;
+                return { actual, neutral };
+            }, theme.id);
+            assertEquals(hcMatch.actual, hcMatch.neutral);
+        }
     } finally {
         await browser.close();
         await app.close();

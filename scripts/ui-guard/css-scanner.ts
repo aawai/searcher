@@ -59,8 +59,35 @@ const ACCENT_FILL_PROPS: Record<string, true> = {
     fill: true,
 };
 
-/** `--accent`, `--accent-hover` and `--accent-active`; tints such as `--accent-soft` are not fills. */
+const ACCENT_TINT_OR_BORDER_PROPS: Record<string, true> = {
+    ...ACCENT_FILL_PROPS,
+    border: true,
+    "border-color": true,
+    "border-top": true,
+    "border-right": true,
+    "border-bottom": true,
+    "border-left": true,
+    "border-block": true,
+    "border-block-start": true,
+    "border-block-end": true,
+    "border-inline": true,
+    "border-inline-start": true,
+    "border-inline-end": true,
+    "border-top-color": true,
+    "border-right-color": true,
+    "border-bottom-color": true,
+    "border-left-color": true,
+    "border-block-color": true,
+    "border-inline-color": true,
+    "border-block-start-color": true,
+    "border-block-end-color": true,
+    "border-inline-start-color": true,
+    "border-inline-end-color": true,
+};
+
+/** `--accent`, `--accent-hover` and `--accent-active` fills, plus `--accent-soft` / `--accent-subtle` / `--accent-border` tints and borders. */
 const ACCENT_FAMILY_FILL = /var\(\s*--accent(?:-hover|-active)?\s*\)/;
+const ACCENT_TINT_OR_BORDER = /var\(\s*--accent-(?:soft|subtle|border)\s*\)/;
 export function isResponsiveCssMetric(value: string): boolean {
     const v = value.trim();
     if (v.includes("env(safe-area-inset-")) {
@@ -432,9 +459,11 @@ export function scanCssCode(
             pushViolation("raw-color", prop, `${prop}: ${value}`);
         }
 
-        // Accent fills are limited to the semantics registered in Visual Language.
+        // Accent fills, tints and border-colors are limited to the semantics registered in Visual Language.
         if (
-            ACCENT_FILL_PROPS[prop] && ACCENT_FAMILY_FILL.test(value)
+            (ACCENT_FILL_PROPS[prop] && ACCENT_FAMILY_FILL.test(value)) ||
+            (ACCENT_TINT_OR_BORDER_PROPS[prop] &&
+                ACCENT_TINT_OR_BORDER.test(value))
         ) {
             if (!isRegisteredAccentFill(file, selector, registry)) {
                 pushViolation(

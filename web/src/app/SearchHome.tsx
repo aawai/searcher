@@ -21,7 +21,11 @@ import {
     useRef,
     useState,
 } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
+import {
+    runSharedElementTransition,
+    supportsSharedElementTransition,
+} from "../lib/shared-element.ts";
 import {
     type PageHost,
     PageHostProvider,
@@ -375,6 +379,8 @@ export function DesktopHost(
     libraryRef.current = libraryState;
     const libraryOpen = activeLibrary !== null;
     const libraryOpener = useRef<HTMLElement | null>(null);
+    const pendingNoteOpenerRef = useRef<HTMLElement | null>(null);
+    const noteTransitioningRef = useRef(false);
     const homeRef = useRef<HTMLElement>(null);
     const home = useHomeViewport();
     const [appForm, setAppForm] = useState<AppFormTarget | null>(null);
@@ -1356,8 +1362,136 @@ export function DesktopHost(
         }
     }
     // Paper actions
-    function openNote(paper: HomeNoteItem) {
-        openDocument(paper.id);
+    function resolveNoteOpener(fallback: HTMLElement): HTMLElement {
+        const active = document.activeElement;
+        const menu = active?.closest('[role="menu"]');
+        const labelledBy = menu?.getAttribute("aria-labelledby");
+        if (labelledBy) {
+            const trigger = document.getElementById(labelledBy);
+            if (trigger) return trigger;
+        }
+        if (active instanceof HTMLElement && active !== document.body) {
+            return active;
+        }
+        return fallback;
+    }
+
+    function waitForMountedNoteTarget(
+        findTarget: () => HTMLElement | null,
+    ): Promise<HTMLElement | null> {
+        const current = findTarget();
+        if (current) return Promise.resolve(current);
+        return new Promise((resolve) => {
+            const finish = (target: HTMLElement | null) => {
+                observer.disconnect();
+                clearTimeout(timer);
+                resolve(target);
+            };
+            const check = () => {
+                const target = findTarget();
+                if (target) {
+                    finish(target);
+                    return;
+                }
+                const frame = document.querySelector<HTMLElement>(
+                    '[data-window-id="notes"]',
+                );
+                if (!frame || frame.hidden) {
+                    finish(null);
+                }
+            };
+            const observer = new MutationObserver(check);
+            const timer = setTimeout(() => finish(findTarget()), 2000);
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ["hidden"],
+            });
+            check();
+        });
+    }
+
+    function focusSharedNoteTarget(target: HTMLElement | null) {
+        if (!target || !target.isConnected) return;
+        const frame = target.closest<HTMLElement>('[data-window-id="notes"]');
+        if (!frame || frame.hidden) return;
+        const active = document.activeElement;
+        if (active instanceof HTMLElement && target.contains(active)) return;
+        const titlebar = frame.querySelector<HTMLElement>(
+            ".window-frame__titlebar",
+        );
+        // Promote fallback titlebar/body/stale sidebar focus into the opened note;
+        // existing notes never auto-focus the title input (documents-focus contract).
+        if (
+            active &&
+            active !== document.body &&
+            active !== titlebar &&
+            active !== frame &&
+            !(frame.contains(active) && !target.contains(active))
+        ) {
+            return;
+        }
+        const firstFocusable = Array.from(
+            target.querySelectorAll<HTMLElement>(
+                'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"]), input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])',
+            ),
+        ).find((el) =>
+            !el.classList.contains("document-title-input") &&
+            el.tabIndex >= 0 &&
+            el.checkVisibility()
+        );
+        firstFocusable?.focus({ preventScroll: true });
+    }
+
+    function openNote(paper: HomeNoteItem, source?: HTMLElement | null) {
+        if (!currentUserIdRef.current || pendingActionRef.current) return;
+        const action: LibraryAction = {
+            type: "select",
+            selection: { kind: "notes" },
+            route: { view: "documents/edit", id: paper.id },
+        };
+        if (
+            !source ||
+            !source.isConnected ||
+            shouldConfirmLibraryAction(dirtyForm.current, action)
+        ) {
+            openDocument(paper.id);
+            return;
+        }
+        if (noteTransitioningRef.current) return;
+        pendingNoteOpenerRef.current = resolveNoteOpener(source);
+        noteTransitioningRef.current = true;
+        const selector = `[data-window-id="notes"] [data-shared-target="${
+            CSS.escape(`note-${paper.id}`)
+        }"]`;
+        const findTarget = () => document.querySelector<HTMLElement>(selector);
+        const transition = runSharedElementTransition({
+            source,
+            update: () => {
+                restoreIntentRef.current++;
+                flushSync(() => {
+                    setIsManagingApps(false);
+                    dispatchLibrary(action);
+                });
+                if (activeLibrary !== "notes") {
+                    navigate("/?view=notes", { flushSync: true });
+                }
+            },
+            findTarget,
+        });
+        void transition
+            .then(async () => {
+                const target = findTarget() ??
+                    (supportsSharedElementTransition()
+                        ? null
+                        : await waitForMountedNoteTarget(findTarget));
+                focusSharedNoteTarget(target);
+            })
+            .finally(() => {
+                noteTransitioningRef.current = false;
+                pendingNoteOpenerRef.current = null;
+            });
     }
 
     async function updateNote(
@@ -1694,11 +1828,13 @@ export function DesktopHost(
             const active = document.activeElement;
             const menu = active?.closest('[role="menu"]');
             const labelledBy = menu?.getAttribute("aria-labelledby");
-            libraryOpener.current = labelledBy
-                ? document.getElementById(labelledBy)
-                : active instanceof HTMLElement && active !== document.body
-                ? active
-                : null;
+            libraryOpener.current = pendingNoteOpenerRef.current ??
+                (labelledBy
+                    ? document.getElementById(labelledBy)
+                    : active instanceof HTMLElement && active !== document.body
+                    ? active
+                    : null);
+            pendingNoteOpenerRef.current = null;
         }
         wasLibraryOpen.current = libraryOpen;
     }, [libraryOpen]);

@@ -303,10 +303,11 @@ function checkTailwindClass(
         };
     }
 
-    // Accent fills as Tailwind utilities: bg-primary, fill-accent/50, data-[checked]:bg-accent.
-    // A utility cannot be registered by CSS selector, so it is always rejected.
+    // Accent fills, tints and border-colors as Tailwind utilities cannot be registered by CSS selector.
     if (
-        /^(?:bg|fill|from|via|to)-(?:primary|accent)(?:\/\d+)?$/
+        /^(?:bg|fill|from|via|to)-(?:primary|accent(?:-(?:soft|subtle|border))?)(?:\/\d+)?$/
+            .test(base) ||
+        /^border(?:-[trblxyse])?-accent-(?:soft|subtle|border)(?:\/\d+)?$/
             .test(base)
     ) {
         return {
