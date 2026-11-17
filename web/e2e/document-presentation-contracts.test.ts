@@ -9,6 +9,7 @@ import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
 import {
     clickIntoEditor,
+    focusEditor,
     libraryWindow,
     openNoteRows,
     switchDocumentMode,
@@ -876,7 +877,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
         page,
         fixtureDocument.id,
     );
-    await editor.evaluate((node) => (node as HTMLElement).focus());
+    await focusEditor(editor);
     await page.keyboard.press("Control+End");
     await page.keyboard.insertText(`\n\n${VIEW_SWITCH_MARKER}`);
 
@@ -1006,7 +1007,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
     await waitForPaginationMode(page, "continuous");
     const patchesBeforeInFlight = bodyPatchRequests.length;
     const inFlightGate = await holdFirstDocumentPatch(page, fixtureDocument.id);
-    await editor.evaluate((node) => (node as HTMLElement).focus());
+    await focusEditor(editor);
     await page.keyboard.press("Control+End");
     await page.keyboard.insertText(`\n\n${IN_FLIGHT_MARKER}`);
 
@@ -1064,7 +1065,7 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
             (await editor.textContent() ?? "").includes(IN_FLIGHT_MARKER),
         "rich page mode still shows both saved user edits",
     );
-    await editor.evaluate((node) => (node as HTMLElement).focus());
+    await focusEditor(editor);
     await page.waitForFunction(() => {
         const activeEditor = document.querySelector(".ProseMirror");
         return activeEditor !== null && document.activeElement === activeEditor;
