@@ -94,7 +94,7 @@ function NotesReference() {
         title.current?.focus();
     };
     return (
-        <Section title="置顶条目 → 笔记窗口（对照）">
+        <Section title="置顶条目 → 笔记窗口（实验）">
             <p>从关闭、已打开或最小化状态打开同一笔记；窗口不叠加入场动效。</p>
             <div className="motion-lab-notes-actions">
                 <Button

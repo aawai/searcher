@@ -1,6 +1,6 @@
 # 视觉语言演进：实施计划
 
-状态：已完成全部规划阶段与转正验收（2026-11-17；依据 2026-11-10 决定及 2026-11-17 确认按选定方案全部落地），跟踪 Issue #394。阶段 1（1.1–1.5）、阶段 2（2.1–2.2）、阶段 3（第一步文件夹 + 第二步刊头置顶条目 → 笔记窗口）、阶段 4（4.1 暖调中性色阶、4.2 窗口标题栏 6% 壁纸着色、4.3 选中态浅染、4.4 非交互结构标记着色及 `check:ui` 门禁）均已合入生产并同步修订 [Visual Language](../design/VISUAL_LANGUAGE.md)；`/design-lab/palette` 原型已在转正后删除。窗口内容的刊头排版已另行实施（[EDITORIAL_WINDOWS_PLAN.md](EDITORIAL_WINDOWS_PLAN.md)），不在本计划内。现行规则以 [Visual Language](../design/VISUAL_LANGUAGE.md) 为准。
+状态：决定已确认（2026-11-10，见[已确定](#已确定)），跟踪 Issue #394。已实施：阶段 1（1.1–1.5）、阶段 2.1、阶段 3 第一步（文件夹）与 4.3；2.2 实测与 4.1 / 4.2 / 4.4 原型（`/design-lab/palette`）见各节，转正待人类在原型上选定；阶段 3 第二步只在 `/design-lab/motion` 验证，未进入生产。依据 2026-11-10 对视觉语言演进方向的讨论；窗口内容的刊头排版已另行实施（[EDITORIAL_WINDOWS_PLAN.md](EDITORIAL_WINDOWS_PLAN.md)），不在本计划内。现行规则以 [Visual Language](../design/VISUAL_LANGUAGE.md) 为准；本计划转正的部分须同步修订该契约。
 
 ## 现状基线（HEAD `383bd0e`）
 
@@ -145,15 +145,3 @@ D5 批准修订「强调色用途」：在交互语义与色样之外，新增�
 - 每个 PR：`deno task check:ui` → focused 单元 / e2e → 按 [UI_CHECKLIST 实页矩阵](../design/UI_CHECKLIST.md#实页矩阵)选择影响面；颜色 Token、边界或选中态变化另覆盖高对比浅 / 深。
 - e2e 执行遵循 [docs/testing.md](../testing.md#验证调度) 的并发隔离与首轮限时；完整门禁可复用当前 revision 的 CI 分片并集。
 - 用户可观察变化（1.1–1.4、阶段 2、3、4.3，以及 4.1 / 4.2 / 4.4 转正后）写入 `CHANGELOG.md` 的 `## [Unreleased]`。
-
-## 转正决定与最终验收记录（2026-11-17）
-
-- **4.1 中性色色温（选定暖调中性色阶）**：浅色 `#F5F1EA` / `#FFFCF7` / `#ECE7DF`，深色 `#151310` / `#211E1A` / `#302B25`（`--surface-l3: #282420`）；浅色预设微调 `orange`（`#bd3e0a`）、`emerald`（`#147b3b`）与 `amber`（`#ad4f08`）以维持 4.5:1 对比度，高对比主题保持 `#FFFFFF` / `#000000`。
-- **4.2 壁纸派生范围（选定窗口标题栏 6% 壁纸着色）**：`[data-wallpaper-tint="true"]` 时 `--surface-window-titlebar` 在 `--surface-l3` 上混入 6% `--wallpaper-accent`，内容区保持 `--surface-l3` 实色，无壁纸与高对比主题保持中性；`--canvas-derived*` 已移除生产消费保留为色板测试样本。
-- **4.4 非交互强调色着色（选定淡染与边框徽标）**：`--accent-subtle`（`--surface` 上混合 4.5% 浅 / 6% 深，单色系 3.5% / 5%）配 `--accent-border` 应用于 `.home-masthead__section-title`、`.home-masthead__entry-no`、`.window-frame .settings-group-title` 与 `.empty-state:not([data-density="inline"]) h2 / h3`；高对比主题映射为中性 `--surface-soft` 与 `--border`；`.launcher-tile.is-folder-drop-target .launcher-folder-surface` 恢复为 `--accent-soft`；`scripts/ui-guard` 扩展 `unregistered-accent-fill` 覆盖 `--accent-soft` / `--accent-subtle` / `--accent-border` 填充与边框色；`/design-lab/palette` 已移除。
-- **阶段 3 第二步（刊头条目 → 笔记窗口）**：`HomeMasthead` / `MastheadSections` 将置顶条目容器传入 `openNote`，`DocumentEditor` 就绪与错误态暴露 `data-shared-target="note-${id}"`，`SearchHome` 通过 `runSharedElementTransition` 与 `flushSync` 处理打开、最小化恢复与焦点落地；`MotionLab` 对照标题同步为“置顶条目 → 笔记窗口（对照）”。
-- **验证结果（末次代码变更后实测）**：
-  - `deno task test`：925 passed（51 steps），0 failed（含 `web/src/design-system/`、`web/src/components/wallpaper/`、`scripts/ui-guard/`）。
-  - `deno task check:ui`（273 files / 0 violations）、`deno task check:bundle`、`deno task check:e2e`、`deno task build` 全部通过。
-  - E2E（隔离数据库 + `E2E_TIMEOUT_MS=5000`）：`wallpaper-readability.test.ts` 完整 7 壁纸矩阵通过（Floating 最差值 4.71:1 / 5.23:1 / 5.14:1）；`home-masthead-document`、`accent-contrast`、`wallpaper-accent`、`high-contrast` 等 `scripts/e2e/suites.ts` 全部 79 个 E2E 文件按域分批全部通过。
-  - 实页视觉矩阵：隔离数据库 + `web/dist` 下检查首页（1440×900 / 390×844 × 浅色 / 深色 / 高对比浅 / 高对比深 × 橙色壁纸）、设置窗口、回收站空状态与窄屏笔记窗口，确认零横向溢出（`scrollWidth <= innerWidth`）、标题栏微弱着色与内容实色分层、淡染徽标与高对比中性回退均符合预期。

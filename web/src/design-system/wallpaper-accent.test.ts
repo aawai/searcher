@@ -69,7 +69,6 @@ function contrastFailures(theme: Theme, palette: AccentPalette): string[] {
     const surface = hex(tokens.get("--surface")!);
     const accent = hex(palette.accent);
     const soft = mix(accent, percent(tokens, "--accent-soft-mix"), surface);
-    const subtle = mix(accent, percent(tokens, "--accent-subtle-mix"), surface);
     // Balanced readability mask followed by the unchanged masthead veil.
     // Black is the light theme's least favourable wallpaper; dimmed white
     // is the dark theme's least favourable wallpaper.
@@ -96,7 +95,6 @@ function contrastFailures(theme: Theme, palette: AccentPalette): string[] {
             4.5,
         ],
         ["accent text on accent-soft", accent, soft, 4.5],
-        ["accent text on accent-subtle", accent, subtle, 4.5],
         [
             "focus ring on background",
             accent,
@@ -128,21 +126,14 @@ function highContrastFailures(
     theme: Theme,
     palette: HighContrastAccent,
 ): string[] {
-    const hcAccentLayer = declarations(
-        '[data-contrast="more"],\n[data-contrast="more"] [data-accent]',
-    );
-    const layers = [
-        themeTokens(theme),
-        declarations('[data-contrast="more"]'),
-        ...(theme === "dark"
-            ? [declarations('[data-theme="dark"][data-contrast="more"]')]
-            : []),
-        hcAccentLayer,
-    ];
+    const layers = [themeTokens(theme), declarations('[data-contrast="more"]')];
+    if (theme === "dark") {
+        layers.push(declarations('[data-theme="dark"][data-contrast="more"]'));
+    }
     const tokens = new Map(layers.flatMap((layer) => [...layer]));
-    const foreground = hcAccentLayer.get("--accent-foreground")!.match(
-        /^light-dark\(([^,]+), ([^)]+)\)$/,
-    )!;
+    const foreground = declarations(
+        '[data-contrast="more"],\n[data-contrast="more"] [data-accent]',
+    ).get("--accent-foreground")!.match(/^light-dark\(([^,]+), ([^)]+)\)$/)!;
     const color = (name: string) => {
         const value = tokens.get(name)!;
         const reference = value.match(/^var\((--[\w-]+)\)$/);
@@ -157,7 +148,6 @@ function highContrastFailures(
             "--surface-highlight",
             "--surface-grouped-canvas",
             "--surface-l3",
-            "--accent-subtle",
         ].map((name): [string, Rgb, number] => [name, color(name), 7]),
         [
             "--accent-soft",
@@ -165,6 +155,15 @@ function highContrastFailures(
                 accent,
                 percent(tokens, "--accent-soft-mix"),
                 color("--surface"),
+            ),
+            4.5,
+        ],
+        [
+            "--accent-subtle",
+            mix(
+                accent,
+                percent(tokens, "--accent-subtle-mix"),
+                color("--surface-soft"),
             ),
             4.5,
         ],

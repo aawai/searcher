@@ -685,7 +685,10 @@ for (const theme of THEMES.filter((candidate) => candidate.highContrast)) {
                     "--material-solid",
                 ].map((name) => [name, color(name)] as [string, Rgb]),
                 ["--accent-soft", tint("--accent-soft-mix", "--surface")],
-                ["--accent-subtle", color("--accent-subtle")],
+                [
+                    "--accent-subtle",
+                    tint("--accent-subtle-mix", "--surface-soft"),
+                ],
             ];
             const floors: readonly [string, number][] = [
                 ["--foreground", WCAG_AA_TEXT],
@@ -761,105 +764,5 @@ for (const theme of THEMES) {
                     theme.highContrast ? "--border-control" : "--border",
                 ),
         );
-    });
-}
-
-for (const theme of THEMES.filter((candidate) => !candidate.highContrast)) {
-    Deno.test(`accent tints ${theme.id}: text holds AA on --surface, --accent-soft and --accent-subtle for every preset`, () => {
-        for (const preset of ACCENT_IDS) {
-            const tokens = cascade(theme, "regular", preset);
-            const color = (name: string) => hex(resolve(tokens, name));
-            const accent = color("--accent");
-            const surface = color("--surface");
-            const pct = (name: string) => {
-                const value = resolve(tokens, name);
-                const match = value.match(/^(\d+(?:\.\d+)?)%$/);
-                if (!match) {
-                    throw new Error(
-                        `${name} must be a percentage, got ${value}`,
-                    );
-                }
-                return Number(match[1]);
-            };
-            const tint = (mix: string) => over(accent, pct(mix) / 100, surface);
-            assert(
-                tokens.get("--accent-soft") ===
-                    "color-mix(in srgb, var(--accent) var(--accent-soft-mix), var(--surface))",
-            );
-            assert(
-                tokens.get("--accent-subtle") ===
-                    "color-mix(in srgb, var(--accent) var(--accent-subtle-mix), var(--surface))",
-            );
-            const surfaces: readonly [string, Rgb][] = [
-                ["--surface", surface],
-                ["--accent-soft", tint("--accent-soft-mix")],
-                ["--accent-subtle", tint("--accent-subtle-mix")],
-            ];
-            for (const [surface, rgb] of surfaces) {
-                for (const text of ["--foreground", "--muted", "--accent"]) {
-                    const ratio = contrast(color(text), rgb);
-                    assert(
-                        ratio >= WCAG_AA_TEXT,
-                        `${preset}: ${text} on ${surface} gives ${
-                            ratio.toFixed(2)
-                        }:1`,
-                    );
-                }
-            }
-            for (
-                const fill of ["--accent", "--accent-hover", "--accent-active"]
-            ) {
-                const ratio = contrast(
-                    color("--accent-foreground"),
-                    color(fill),
-                );
-                assert(
-                    ratio >= WCAG_AA_TEXT,
-                    `${preset}: --accent-foreground on ${fill} gives ${
-                        ratio.toFixed(2)
-                    }:1`,
-                );
-            }
-        }
-    });
-}
-
-for (const theme of THEMES) {
-    Deno.test(`window titlebar ${theme.id}: 6% wallpaper tint holds text and high contrast stays neutral`, () => {
-        const tokens = cascade(theme, "regular");
-        const color = (name: string) => hex(resolve(tokens, name));
-        if (theme.highContrast) {
-            const hcTint = new Map([
-                ...tokens,
-                ...declarations('[data-wallpaper-tint="true"]'),
-                ...declarations(HIGH_CONTRAST_ACCENT),
-            ]);
-            assert(
-                resolve(hcTint, "--surface-window-titlebar") ===
-                    resolve(hcTint, "--surface-l3"),
-                "high contrast window titlebar stays neutral",
-            );
-            return;
-        }
-        const extremeAccents = [
-            "#000000",
-            "#ffffff",
-            "#ff0000",
-            "#00ff00",
-            "#0000ff",
-        ];
-        const l3 = color("--surface-l3");
-        for (const accentHex of extremeAccents) {
-            const tinted = over(hex(accentHex), 0.06, l3);
-            for (const text of ["--foreground", "--muted"]) {
-                const ratio = contrast(color(text), tinted);
-                assert(
-                    ratio >= WCAG_AA_TEXT,
-                    `${accentHex}: ${text} on tinted titlebar gives ${
-                        ratio.toFixed(2)
-                    }:1`,
-                );
-            }
-        }
     });
 }

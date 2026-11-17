@@ -5,12 +5,12 @@
     /* Shared website glyphs use the same squircle in grids and app previews. */
     --radius-launcher-ratio: .23;
 
-    /* Color roles: warm paper-white neutral scale in light/dark; pure white/black in high contrast. */
-    --background: #F5F1EA;
+    /* Color roles: neutral, no hue cast. */
+    --background: #F4F4F5;
     --foreground: #1D1D1F;
-    --surface: #FFFCF7;
-    --surface-solid: #FFFCF7;
-    --surface-soft: #ECE7DF;
+    --surface: #FFFFFF;
+    --surface-solid: #FFFFFF;
+    --surface-soft: #EBEBEE;
     /* Menu and suggestion highlight: translucent, so it reads on solid and every glass level. */
     --surface-highlight: rgb(0 0 0 / 0.08);
     /* Thumb of switches, segmented selection, tabs and sliders: lighter than its track in both themes. */
@@ -38,20 +38,19 @@
     --warning-border: color-mix(in srgb, var(--warning) 40%, var(--border));
     --ring: var(--accent);
     --accent-soft-mix: 9%;
-    --accent-subtle-mix: 4.5%;
+    --accent-subtle-mix: 15%;
     --accent-border-mix: 32%;
     --accent-mono-soft-mix: 7%;
-    --accent-mono-subtle-mix: 3.5%;
+    --accent-mono-subtle-mix: 12%;
     --accent-mono-border-mix: 28%;
     --accent-soft: color-mix(in srgb, var(--accent) var(--accent-soft-mix), var(--surface));
-    --accent-subtle: color-mix(in srgb, var(--accent) var(--accent-subtle-mix), var(--surface));
+    --accent-subtle: color-mix(in srgb, var(--accent) var(--accent-subtle-mix), var(--surface-soft));
     --accent-border: color-mix(in srgb, var(--accent) var(--accent-border-mix), var(--border));
 
     /* Layers: canvas, content, floating, overlay. Content has no shadow. */
     --surface-l0: var(--background);
     --surface-l2: var(--surface-solid);
     --surface-l3: var(--surface-solid);
-    --surface-window-titlebar: var(--surface-l3);
     /* Canvas behind grouped lists inside an Overlay: groups (`--surface`) must read against it. */
     --surface-grouped-canvas: var(--background);
     --surface-scrim: rgb(0 0 0 / 0.32);
@@ -309,14 +308,14 @@
 
 [data-theme="dark"] {
     color-scheme: dark;
-    --background: #151310;
+    --background: #111113;
     --foreground: #F5F5F7;
-    --surface: #211E1A;
-    --surface-solid: #211E1A;
-    --surface-soft: #302B25;
+    --surface: #1C1C1F;
+    --surface-solid: #1C1C1F;
+    --surface-soft: #2A2A2E;
     --surface-highlight: rgb(255 255 255 / 0.10);
     --surface-control-thumb: #636366;
-    --surface-l3: #282420;
+    --surface-l3: #242428;
     --surface-grouped-canvas: var(--surface-l3);
     --muted: #A1A1A6;
     --masthead-muted: #c6c6cb;
@@ -331,9 +330,9 @@
     --success: #87d9b2;
     --warning: #f6cc75;
     --accent-soft-mix: 12%;
-    --accent-subtle-mix: 6%;
+    --accent-subtle-mix: 18%;
     --accent-mono-soft-mix: 10%;
-    --accent-mono-subtle-mix: 5%;
+    --accent-mono-subtle-mix: 16%;
     --accent-mono-border-mix: 30%;
     --surface-scrim: rgb(0 0 0 / 0.5);
     --shadow-l2: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 24px -6px rgb(0 0 0 / 0.5);
@@ -393,7 +392,7 @@
     --accent-hc-active: light-dark(#31006d, #f4f1ff);
 }
 [data-accent="orange"] {
-    --accent: light-dark(#bd3e0a, #fb923c);
+    --accent: light-dark(#c2410c, #fb923c);
     --accent-hover: light-dark(#9a3412, #fdba74);
     --accent-active: light-dark(#7c2d12, #fed7aa);
     --accent-foreground: light-dark(#ffffff, #2a1205);
@@ -413,7 +412,7 @@
     --accent-hc-active: light-dark(#510013, #fff1f2);
 }
 [data-accent="emerald"] {
-    --accent: light-dark(#147b3b, #4ade80);
+    --accent: light-dark(#157e3d, #4ade80);
     --accent-hover: light-dark(#166534, #86efac);
     --accent-active: light-dark(#14532d, #bbf7d0);
     --accent-foreground: light-dark(#ffffff, #052e16);
@@ -423,7 +422,7 @@
     --accent-hc-active: light-dark(#00290e, #b2ffc5);
 }
 [data-accent="amber"] {
-    --accent: light-dark(#ad4f08, #fbbf24);
+    --accent: light-dark(#b25209, #fbbf24);
     --accent-hover: light-dark(#92400e, #fcd34d);
     --accent-active: light-dark(#78350f, #fde68a);
     --accent-foreground: light-dark(#ffffff, #2e1905);
@@ -469,9 +468,6 @@
     --accent-hc-hover: var(--wallpaper-accent-hc-hover);
     --accent-hc-active: var(--wallpaper-accent-hc-active);
 }
-[data-wallpaper-tint="true"] {
-    --surface-window-titlebar: color-mix(in srgb, var(--wallpaper-accent) 6%, var(--surface-l3));
-}
 
 /*
  * High contrast themes (`data-contrast="more"`, set with the light or dark
@@ -505,6 +501,8 @@
     --success: #00632E;
     --warning: #6B4700;
     --accent-soft-mix: 12%;
+    --accent-subtle-mix: 18%;
+    --accent-border-mix: 70%;
     --surface-scrim: rgb(0 0 0 / 0.5);
     /* A 1px frame replaces depth; the drop stays small. */
     --shadow-frame: 0 0 0 1px var(--border-control);
@@ -544,6 +542,7 @@
     --success: #6EEB9E;
     --warning: #FFD45C;
     --accent-soft-mix: 18%;
+    --accent-subtle-mix: 24%;
     --surface-scrim: rgb(0 0 0 / 0.7);
     --shadow-l2: var(--shadow-frame), 0 4px 12px -6px rgb(0 0 0 / 0.6);
     --shadow-l3: var(--shadow-frame), 0 12px 28px -12px rgb(0 0 0 / 0.7);
@@ -559,9 +558,6 @@
     --accent-active: var(--accent-hc-active);
     --accent-foreground: light-dark(#FFFFFF, #000000);
     --masthead-accent-text: var(--accent);
-    --accent-subtle: var(--surface-soft);
-    --accent-border: var(--border);
-    --surface-window-titlebar: var(--surface-l3);
 }
 
 /* Theme preview tiles (ThemeChoices): colour samples of each theme, readable
@@ -569,12 +565,12 @@
    --border-control (lines) and edge (--border; --border-control in high
    contrast); glass-contrast.test.ts keeps them equal. */
 :root {
-    --theme-preview-light-canvas: #F5F1EA;
-    --theme-preview-light-surface: #FFFCF7;
+    --theme-preview-light-canvas: #F4F4F5;
+    --theme-preview-light-surface: #FFFFFF;
     --theme-preview-light-line: #86868B;
     --theme-preview-light-edge: rgb(0 0 0 / 0.09);
-    --theme-preview-dark-canvas: #151310;
-    --theme-preview-dark-surface: #211E1A;
+    --theme-preview-dark-canvas: #111113;
+    --theme-preview-dark-surface: #1C1C1F;
     --theme-preview-dark-line: #747479;
     --theme-preview-dark-edge: rgb(255 255 255 / 0.10);
     --theme-preview-high-contrast-light-canvas: #FFFFFF;

@@ -1253,10 +1253,7 @@ export function DocumentEditor({
     // 16. Initial Loading & Fatal Error state
     if (!isNewSession && !snapshot.document && !snapshot.error) {
         return (
-            <div
-                className="document-editor-container document-editor-state"
-                data-note-id={documentId}
-            >
+            <div className="document-editor-container document-editor-state">
                 {leading && (
                     <header
                         key="editor-header"
@@ -1272,13 +1269,7 @@ export function DocumentEditor({
 
     if (!isNewSession && snapshot.error && !snapshot.document) {
         return (
-            <div
-                className="document-editor-container document-editor-state"
-                data-note-id={documentId}
-                data-shared-target={documentId
-                    ? `note-${documentId}`
-                    : undefined}
-            >
+            <div className="document-editor-container document-editor-state">
                 {leading && (
                     <header
                         key="editor-header"
@@ -1319,8 +1310,6 @@ export function DocumentEditor({
                 "--document-outline-width": `${effectiveOutlineWidth}px`,
             } as CSSProperties}
             data-workspace-editor
-            data-note-id={documentId}
-            data-shared-target={documentId ? `note-${documentId}` : undefined}
             onKeyDown={handleContainerKeyDown}
             onBlur={handleContainerBlur}
         >

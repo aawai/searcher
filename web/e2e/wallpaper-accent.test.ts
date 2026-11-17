@@ -127,15 +127,9 @@ Deno.test("accent follows the wallpaper by default, stays a manual override and 
             return { context, page, errors };
         };
 
-        // Guest, first visit: "跟随壁纸" is selected and without a wallpaper the accent is blue (no titlebar tint).
+        // Guest, first visit: "跟随壁纸" is selected and without a wallpaper the accent is blue.
         const guest = await open();
         await guest.page.goto(`${app.origin}/settings/appearance`);
-        assertEquals(
-            await guest.page.evaluate(() =>
-                document.documentElement.dataset.wallpaperTint
-            ),
-            undefined,
-        );
         await guest.page.getByRole("radio", {
             name: "跟随壁纸",
             exact: true,
@@ -192,83 +186,7 @@ Deno.test("accent follows the wallpaper by default, stays a manual override and 
         );
         const [r, g, b] = (await tokens(device.page, ["--accent"]))["--accent"];
         assert(r > g && g > b, `orange wallpaper accent ${[r, g, b]}`);
-        assertEquals(
-            await device.page.evaluate(() =>
-                document.documentElement.dataset.wallpaperTint
-            ),
-            "true",
-        );
         await assertAccentContrast(device.page);
-
-        // Window titlebar mixes 6% wallpaper tint in light/dark while content stays opaque --surface-l3; high contrast stays neutral.
-        const checkWindowTitlebar = async (
-            hc: boolean,
-            radioName: string,
-            expectedTheme: "light" | "dark",
-        ) => {
-            await device.page.getByRole("radio", {
-                name: radioName,
-                exact: true,
-            })
-                .click();
-            await device.page.waitForFunction(
-                ({ theme, hc }) =>
-                    document.documentElement.dataset.theme === theme &&
-                    (document.documentElement.dataset.contrast === "more") ===
-                        hc,
-                { theme: expectedTheme, hc },
-            );
-            const sample = await device.page.evaluate(() => {
-                const frame = document.querySelector<HTMLElement>(
-                    '[data-window-id="settings"]',
-                );
-                const titlebar = frame?.querySelector<HTMLElement>(
-                    ".window-frame__titlebar",
-                );
-                const title = frame?.querySelector<HTMLElement>(
-                    ".window-frame__title",
-                );
-                if (!frame || !titlebar || !title) {
-                    throw new Error("missing settings window titlebar");
-                }
-                const canvas = document.createElement("canvas");
-                canvas.width = 1;
-                canvas.height = 1;
-                const ctx = canvas.getContext("2d")!;
-                const rgb = (value: string): [number, number, number] => {
-                    ctx.clearRect(0, 0, 1, 1);
-                    ctx.fillStyle = value;
-                    ctx.fillRect(0, 0, 1, 1);
-                    const p = ctx.getImageData(0, 0, 1, 1).data;
-                    return [p[0], p[1], p[2]];
-                };
-                return {
-                    frameBg: rgb(getComputedStyle(frame).backgroundColor),
-                    barBg: rgb(getComputedStyle(titlebar).backgroundColor),
-                    titleColor: rgb(getComputedStyle(title).color),
-                };
-            });
-            if (hc) {
-                assertEquals(sample.barBg, sample.frameBg);
-            } else {
-                assertNotEquals(sample.barBg, sample.frameBg);
-            }
-            assert(
-                contrast(sample.titleColor, sample.barBg) >= 4.5,
-                `${radioName} titlebar contrast too low`,
-            );
-        };
-        await checkWindowTitlebar(false, "浅色", "light");
-        await checkWindowTitlebar(false, "深色", "dark");
-        await checkWindowTitlebar(true, "高对比浅色", "light");
-        await checkWindowTitlebar(true, "高对比深色", "dark");
-        const lightSaved = device.page.waitForResponse((response) =>
-            response.url().endsWith("/api/preferences") &&
-            response.request().method() === "PATCH" && response.ok()
-        );
-        await device.page.getByRole("radio", { name: "浅色", exact: true })
-            .click();
-        await lightSaved;
 
         // Changing the wallpaper re-derives immediately.
         const tealAccent = await upload(device.page, teal);

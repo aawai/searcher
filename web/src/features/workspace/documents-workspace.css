@@ -146,11 +146,6 @@
         transition: none;
     }
 }
-/* Avoid stacking layout/drawer transitions on top of a shared-element morph. */
-:root.shared-element-transition :is(.documents-layout, .documents-layout > .documents-editor-pane, .documents-sidebar--drawer, .documents-outline-drawer) {
-    transition: none;
-    animation: none;
-}
 .documents-editor-pane {
     display: flex;
     flex: 1;

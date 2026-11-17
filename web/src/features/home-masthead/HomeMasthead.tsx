@@ -64,7 +64,7 @@ export interface HomeMastheadProps {
     availableRect: SafeRect;
     /** Measured search box rect in viewport px; null before first measure. */
     searchRect: SafeRect | null;
-    onOpenNote: (note: HomeNoteItem, source?: HTMLElement | null) => void;
+    onOpenNote: (note: HomeNoteItem) => void;
     onOpenDocument: (id: string) => void;
     onOpenNotes: () => void;
     onToggleTask: (note: HomeNoteItem, index: number, checked: boolean) => void;

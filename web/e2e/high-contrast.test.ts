@@ -388,7 +388,7 @@ Deno.test("主题首帧：访客与账号载入时直接呈现所存主题，不
         await waitForTheme(page, "dark", false);
         const guest = await reloadRecording(page, false);
         assertEquals(new Set(guest.themes), new Set(["dark/-"]));
-        assertEquals(guest.firstFrame.themeColor, "#151310");
+        assertEquals(guest.firstFrame.themeColor, "#111113");
         assertEquals(guest.firstFrame.icon, "/icons/favicon-keycap.svg");
 
         await loginAndVisit(page, app.origin, "/settings/appearance", user);

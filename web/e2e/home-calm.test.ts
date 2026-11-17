@@ -372,8 +372,8 @@ Deno.test("home calm layer: date, optional time, 继续 and the plain theme canv
                     const surface = page.getByTestId("home-wallpaper-surface");
                     for (
                         const [scheme, color] of [
-                            ["light", "rgb(245, 241, 234)"],
-                            ["dark", "rgb(21, 19, 16)"],
+                            ["light", "rgb(244, 244, 245)"],
+                            ["dark", "rgb(17, 17, 19)"],
                         ] as const
                     ) {
                         await page.emulateMedia({ colorScheme: scheme });

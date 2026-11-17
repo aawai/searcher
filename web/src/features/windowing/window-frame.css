@@ -48,9 +48,6 @@
     flex: none;
     min-height: var(--control-touch-target);
     padding-inline: var(--space-4) var(--space-1);
-    background: var(--surface-window-titlebar);
-    border-start-start-radius: inherit;
-    border-start-end-radius: inherit;
     border-bottom: var(--space-hairline) solid var(--border);
     user-select: none;
     touch-action: none;
@@ -265,10 +262,4 @@
 .window-frame:has([data-window-fullscreen]) .window-frame__actions,
 .window-frame:has([data-window-fullscreen]) .window-frame__resize {
     display: none;
-}
-
-/* Never stack window transitions on top of a shared-element transition. */
-:root.shared-element-transition .window-frame {
-    animation: none;
-    transition: none;
 }

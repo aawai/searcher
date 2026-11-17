@@ -1,6 +1,6 @@
 # 管理后台方案 A 系统级重构实施计划
 
-> **状态**：已实施并完成回归与实页矩阵验收（2026-11-17）；见第五节验收记录。
+> **状态**：部分实施；管理壳层、概览、审计、用户筛选与备份流程已修改，完整回归和实页验收仍未完成。本文中的验收清单不是已通过记录。
 >
 > **已知限制**：`audit_logs.actor_user_id` 在用户彻底删除时由外键设为 `NULL`，现有数据无法区分已删除操作者与系统操作；现有记录会显示为“系统”。要实现两者区分，需要先确定并迁移持久化契约。
 
@@ -175,11 +175,3 @@
    - `web/e2e/bundle-loading.test.ts`
 4. **实页视觉矩阵**：在隔离数据库 + 生产构建下对 `/admin`、`/admin/users`、`/admin/settings`、`/admin/audit`、`/admin/backup` 覆盖 `390×844`（coarse）、`768×1024`（coarse）、`1024×768`、`1440×900` × `light / dark / high-contrast-light / high-contrast-dark` 及 `data-shape="pill"`，逐张核验截图、对比度、焦点路径与触屏命中区。
 5. **文档与变更日志**：同步更新 `docs/plans/README.md` 状态，并在最终实现合入时于 `CHANGELOG.md` 的 `## [Unreleased]` 记录外部可观察变更。
-
----
-
-## 五、验收与实页矩阵结果（2026-11-17）
-
-1. **后端与门禁**：`deno task test`（925 passed / 0 failed）、`deno task check:ui`（273 files / 0 violations）、`deno task check:agents`、`deno task check:e2e`、`deno task check:bundle` 与 `deno task build` 均通过。
-2. **受影响 E2E 集合**：`navigation.test.ts`、`forced-colors.test.ts`、`route-style-admin-lab.test.ts`、`route-style-stability.test.ts`、`ui-ownership.test.ts`、`bundle-loading.test.ts` 已在 `E2E_TIMEOUT_MS=5000` 下全部通过（随全量 79 个 E2E 文件分批验证完成）。
-3. **实页视觉矩阵**：在隔离数据库 + `web/dist` 生产构建下遍历 `/admin`、`/admin/users`、`/admin/settings`、`/admin/audit`、`/admin/backup` × `390×844`（coarse）/ `768×1024`（coarse）/ `1024×768` / `1440×900` × `light` / `dark` / `high-contrast-light` / `high-contrast-dark` × `data-shape="pill"`，全组合 `scrollWidth <= innerWidth` 无横向溢出；已审阅 `1440`（含胶囊形态）、`768`、`390` 及高对比深色代表截图与 `/admin/backup` 无效包预检失败提示（“预检失败：备份 ZIP 未完整解包”）。对比度、键盘焦点与触屏命中区由 `accent-contrast`、`touch-targets`、`route-style-admin-lab`、`forced-colors` 等 E2E 门禁协同覆盖。
