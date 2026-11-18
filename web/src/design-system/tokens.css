@@ -125,18 +125,18 @@
         "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", monospace;
     --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
     --font-metadata-size: 0.75rem;
-    --font-metadata-line-height: 1.3333;
+    --font-metadata-line-height: calc(16 / 12);
     --font-body-size: 0.875rem;
-    --font-body-line-height: 1.5714;
+    --font-body-line-height: calc(22 / 14);
     --font-title-size: 1.0625rem;
-    --font-title-line-height: 1.4118;
+    --font-title-line-height: calc(24 / 17);
     --font-page-title-size: 1.5rem;
-    --font-page-title-line-height: 1.3333;
+    --font-page-title-line-height: calc(32 / 24);
     --font-search-input-size: 1.0625rem;
     /* iOS zooms focused fields below 1rem (16px) on touch devices. */
     --font-input-touch-size: 1rem;
     --font-code-size: 0.8125rem;
-    --font-code-line-height: 1.5385;
+    --font-code-line-height: calc(20 / 13);
     --font-brand-size: 1.1875rem;
     --font-body-weight: 400;
     --font-label-weight: 500;

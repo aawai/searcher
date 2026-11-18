@@ -665,7 +665,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             await visit("/account");
             const accountShapes = await page.evaluate(() => {
                 const inlineInput = document.querySelector<HTMLInputElement>(
-                    'input[aria-label="显示名称"]',
+                    "#account-display-name",
                 )!;
                 const restRadius = getComputedStyle(inlineInput).borderRadius;
                 inlineInput.focus();
