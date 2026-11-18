@@ -494,7 +494,7 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
 
             // 2. Clear action returns focus to the search input
             await search().fill("DocumentsQueryToClear");
-            const clearBtn = panel.locator(".workspace-search-clear");
+            const clearBtn = panel.locator(".search-field-clear");
             await clearBtn.waitFor({ state: "visible" });
             await clearBtn.focus();
             await page.keyboard.press("Enter");

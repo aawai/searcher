@@ -288,24 +288,45 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                 assertEquals(toolbarGeometry.titleMismatchCount, 0);
                 assertEquals(toolbarGeometry.hasInternalPagebreakLabel, false);
 
-                const headerTargets = await page.locator(
-                    ".document-editor-header button",
-                ).evaluateAll((buttons) => {
-                    const target = Number.parseFloat(
-                        getComputedStyle(document.documentElement)
-                            .getPropertyValue("--control-touch-target"),
-                    );
-                    return buttons.map((button) => {
-                        const rect = (button as HTMLElement)
-                            .getBoundingClientRect();
-                        return rect.width >= target - 1 &&
-                            rect.height >= target - 1;
-                    });
+                const touchContext = await browser.newContext({
+                    viewport: { width: 390, height: 844 },
+                    isMobile: true,
+                    hasTouch: true,
+                    storageState: await context.storageState(),
                 });
-                assert(
-                    headerTargets.length > 0 && headerTargets.every(Boolean),
-                    "coarse-width header buttons must meet the shared touch target",
-                );
+                try {
+                    const touchPage = await touchContext.newPage();
+                    await touchPage.goto(app.origin + "/");
+                    await openNoteRows(touchPage);
+                    await touchPage.locator(
+                        `[data-document-id="${doc.id}"] h4 button`,
+                    ).click();
+                    await touchPage.getByRole("textbox", {
+                        name: "笔记标题",
+                        exact: true,
+                    }).waitFor();
+                    const headerTargets = await touchPage.locator(
+                        ".document-editor-header button",
+                    ).evaluateAll((buttons) => {
+                        const target = Number.parseFloat(
+                            getComputedStyle(document.documentElement)
+                                .getPropertyValue("--control-touch-target"),
+                        );
+                        return buttons.map((button) => {
+                            const rect = (button as HTMLElement)
+                                .getBoundingClientRect();
+                            return rect.width >= target - 1 &&
+                                rect.height >= target - 1;
+                        });
+                    });
+                    assert(
+                        headerTargets.length > 0 &&
+                            headerTargets.every(Boolean),
+                        "coarse-pointer header buttons must meet the shared touch target",
+                    );
+                } finally {
+                    await touchContext.close();
+                }
 
                 await page.getByRole("button", {
                     name: "更多笔记操作",
