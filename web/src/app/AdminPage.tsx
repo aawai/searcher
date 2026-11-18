@@ -20,7 +20,15 @@ import {
     TableRow,
 } from "../components/ui/table.tsx";
 import { NotFoundPage } from "./NotFoundPage.tsx";
-import { Check, ChevronDown, Copy, MoreHorizontal, RefreshCw } from "lucide-react";
+import {
+    Check,
+    ChevronDown,
+    Copy,
+    Eye,
+    EyeOff,
+    MoreHorizontal,
+    RefreshCw,
+} from "lucide-react";
 import { AdminOverview } from "./AdminOverview.tsx";
 import { AdminSystemSettings } from "./AdminSystemSettings.tsx";
 import { AdminBackupRestore } from "./AdminBackupRestore.tsx";
@@ -193,7 +201,9 @@ function AuditTargetId({ id }: { id: string }) {
                         <span>{copied ? "已复制" : "复制"}</span>
                     </Button>
                 </div>
-                {copyError && <p role="alert">复制失败，请手动选择并复制 ID。</p>}
+                {copyError && (
+                    <p role="alert">复制失败，请手动选择并复制 ID。</p>
+                )}
             </PopoverContent>
         </Popover>
     );
@@ -240,7 +250,9 @@ function AuditLogRow({ log }: { log: AuditLogDto }) {
                 {action.rawKey && (
                     <code className="admin-audit-id">{action.rawKey}</code>
                 )}
-                <time className="admin-audit-time admin-audit-tablet-time">{time}</time>
+                <time className="admin-audit-time admin-audit-tablet-time">
+                    {time}
+                </time>
             </TableCell>
             <TableCell className="admin-audit-target-cell">
                 <span className="admin-audit-target">{target.label}</span>
@@ -268,7 +280,9 @@ function AuditEventItem({ log }: { log: AuditLogDto }) {
         <article role="listitem" className="admin-audit-event">
             <div className="admin-audit-event-head">
                 <div className="admin-audit-action">
-                    <span className={action.danger ? "admin-danger" : undefined}>
+                    <span
+                        className={action.danger ? "admin-danger" : undefined}
+                    >
                         {action.label}
                     </span>
                     {action.rawKey && (
@@ -299,7 +313,9 @@ export function AdminPage() {
     const [userPage, setUserPage] = useState(1);
     const [userSearch, setUserSearch] = useState("");
     const [submittedSearch, setSubmittedSearch] = useState("");
-    const [userFilter, setUserFilter] = useState<"all" | "admin" | "disabled">("all");
+    const [userFilter, setUserFilter] = useState<"all" | "admin" | "disabled">(
+        "all",
+    );
     const [usersLoading, setUsersLoading] = useState(false);
     const [usersInitialized, setUsersInitialized] = useState(false);
     const [userError, setUserError] = useState("");
@@ -320,6 +336,7 @@ export function AdminPage() {
     const [newDisplayName, setNewDisplayName] = useState("");
     const [newEmail, setNewEmail] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [showCreatePassword, setShowCreatePassword] = useState(false);
     const [createBusy, setCreateBusy] = useState(false);
     const [createError, setCreateError] = useState("");
     const [createPasswordError, setCreatePasswordError] = useState("");
@@ -329,6 +346,7 @@ export function AdminPage() {
         null,
     );
     const [resetNewPassword, setResetNewPassword] = useState("");
+    const [showResetPassword, setShowResetPassword] = useState(false);
     const [resetBusy, setResetBusy] = useState(false);
     const [resetError, setResetError] = useState("");
 
@@ -462,6 +480,7 @@ export function AdminPage() {
         modalTriggerRef.current = trigger;
         setCreateError("");
         setCreatePasswordError("");
+        setShowCreatePassword(false);
         setCreateModalOpen(true);
     }
 
@@ -607,6 +626,7 @@ export function AdminPage() {
     function openResetModal(target: AdminUserDto, trigger: HTMLElement | null) {
         modalTriggerRef.current = trigger;
         setResetNewPassword("");
+        setShowResetPassword(false);
         setResetError("");
         setResetModalUser(target);
     }
@@ -672,7 +692,9 @@ export function AdminPage() {
                 <div className="semantic-section">
                     <AdminPanelHeader
                         title="用户"
-                        meta={usersInitialized ? `共 ${userTotal} 位` : undefined}
+                        meta={usersInitialized
+                            ? `共 ${userTotal} 位`
+                            : undefined}
                         actions={
                             <>
                                 <Button
@@ -726,6 +748,7 @@ export function AdminPage() {
                             onSubmit={handleSearchSubmit}
                         >
                             <Input
+                                name="userSearch"
                                 type="search"
                                 variant="search"
                                 aria-label="搜索用户"
@@ -748,15 +771,22 @@ export function AdminPage() {
                             aria-label="筛选用户"
                             value={userFilter}
                             onValueChange={(value) => {
-                                if (value === "all" || value === "admin" || value === "disabled") {
+                                if (
+                                    value === "all" || value === "admin" ||
+                                    value === "disabled"
+                                ) {
                                     setUserFilter(value);
                                     setUserPage(1);
                                 }
                             }}
                         >
                             <RadioGroupItem value="all">全部</RadioGroupItem>
-                            <RadioGroupItem value="admin">管理员</RadioGroupItem>
-                            <RadioGroupItem value="disabled">已禁用</RadioGroupItem>
+                            <RadioGroupItem value="admin">
+                                管理员
+                            </RadioGroupItem>
+                            <RadioGroupItem value="disabled">
+                                已禁用
+                            </RadioGroupItem>
                         </RadioGroup>
                     </WorkspaceToolbar>
 
@@ -803,204 +833,325 @@ export function AdminPage() {
                         : (
                             <>
                                 <div className="admin-desktop-view admin-users-table">
-                                <ManagementTable>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>用户</TableHead>
-                                            <TableHead className="admin-hide-narrow">
-                                                角色
-                                            </TableHead>
-                                            <TableHead>状态</TableHead>
-                                            <TableHead className="admin-user-date-column">
-                                                创建时间
-                                            </TableHead>
-                                            <TableHead className="admin-cell-actions">
-                                                <span className="sr-only">
-                                                    操作
-                                                </span>
-                                            </TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {users.map((u) => {
-                                            const isSelf =
-                                                u.id === currentUser?.id;
-                                            const isAdmin = u.role === "admin";
-                                            return (
-                                                <TableRow key={u.id}>
-                                                    <TableCell>
-                                                        <span className="admin-user-name">
-                                                            {u.displayName ||
-                                                                u.username}
-                                                        </span>
-                                                        <span className="admin-user-handle">
-                                                            @{u.username}
-                                                            {u.email
-                                                                ? ` · ${u.email}`
-                                                                : ""}
-                                                            {isSelf
-                                                                ? " · 当前登录"
-                                                                : ""}
-                                                        </span>
-                                                        <span className="admin-user-handle admin-user-date-inline">
-                                                            创建时间：{formatTime(u.createdAt)}
-                                                        </span>
-                                                    </TableCell>
-                                                    <TableCell className="admin-hide-narrow admin-nowrap">
-                                                        {isAdmin
-                                                            ? "管理员"
-                                                            : "普通用户"}
-                                                    </TableCell>
-                                                    <TableCell className="admin-nowrap">
-                                                        <span
-                                                            className={u
-                                                                    .disabled
-                                                                ? "admin-danger"
-                                                                : undefined}
-                                                        >
-                                                            {u.disabled
-                                                                ? "已禁用"
-                                                                : "正常"}
-                                                        </span>
-                                                    </TableCell>
-                                                    <TableCell className="admin-user-date-column admin-muted">
-                                                        {formatTime(
-                                                            u.createdAt,
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="admin-cell-actions">
-                                                        <div className="admin-row-actions">
-                                                            {isSelf ? (
-                                                                <Button type="button" variant="outline" size="sm"
-                                                                    onClick={(event) => openResetModal(u, event.currentTarget)}>
-                                                                    重置密码
-                                                                </Button>
-                                                            ) : (
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger
-                                                                    render={
-                                                                        <Button
-                                                                            ref={(
-                                                                                node,
-                                                                            ) => {
-                                                                                actionTriggerRefs
-                                                                                    .current[
-                                                                                        u.id
-                                                                                    ] = node;
-                                                                            }}
-                                                                            type="button"
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            aria-label={`用户 @${u.username} 的更多操作`}
-                                                                            title="更多操作"
-                                                                        />
-                                                                    }
-                                                                >
-                                                                    <MoreHorizontal size="1em" />
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent
-                                                                    sideOffset={4}
-                                                                >
-                                                                    <DropdownMenuItem
-                                                                        onClick={() =>
-                                                                            openResetModal(
-                                                                                u,
-                                                                                actionTriggerRefs
-                                                                                    .current[
-                                                                                        u.id
-                                                                                    ] ??
-                                                                                    null,
-                                                                            )}
-                                                                    >
-                                                                        重置密码
-                                                                    </DropdownMenuItem>
-                                                                    {!isSelf &&
-                                                                        !isAdmin &&
-                                                                        (
-                                                                            <DropdownMenuItem
-                                                                                disabled={togglingId ===
-                                                                                    u.id}
-                                                                                onClick={() =>
-                                                                                    requestToggleDisable(
-                                                                                        u,
-                                                                                        actionTriggerRefs
-                                                                                            .current[
-                                                                                                u.id
-                                                                                            ] ??
-                                                                                            null,
-                                                                                    )}
-                                                                            >
-                                                                                {u.disabled
-                                                                                    ? "启用用户"
-                                                                                    : "禁用用户…"}
-                                                                            </DropdownMenuItem>
-                                                                        )}
-                                                                    {!isSelf &&
-                                                                        (
-                                                                            <DropdownMenuSeparator />
-                                                                        )}
-                                                                    {!isSelf &&
-                                                                        (
-                                                                            <DropdownMenuItem
-                                                                                variant="destructive"
-                                                                                onClick={() =>
-                                                                                    openDeleteModal(
-                                                                                        u,
-                                                                                        actionTriggerRefs
-                                                                                            .current[
-                                                                                                u.id
-                                                                                            ] ??
-                                                                                            null,
-                                                                                    )}
-                                                                            >
-                                                                                删除用户
-                                                                            </DropdownMenuItem>
-                                                                        )}
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
+                                    <ManagementTable caption="用户列表">
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead scope="col">
+                                                    用户
+                                                </TableHead>
+                                                <TableHead
+                                                    scope="col"
+                                                    className="admin-hide-narrow"
+                                                >
+                                                    角色
+                                                </TableHead>
+                                                <TableHead scope="col">
+                                                    状态
+                                                </TableHead>
+                                                <TableHead
+                                                    scope="col"
+                                                    className="admin-user-date-column"
+                                                >
+                                                    创建时间
+                                                </TableHead>
+                                                <TableHead
+                                                    scope="col"
+                                                    className="admin-cell-actions"
+                                                >
+                                                    <span className="sr-only">
+                                                        操作
+                                                    </span>
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {users.map((u) => {
+                                                const isSelf =
+                                                    u.id === currentUser?.id;
+                                                const isAdmin =
+                                                    u.role === "admin";
+                                                return (
+                                                    <TableRow key={u.id}>
+                                                        <TableCell>
+                                                            <span className="admin-user-name">
+                                                                {u.displayName ||
+                                                                    u.username}
+                                                            </span>
+                                                            <span className="admin-user-handle">
+                                                                @{u.username}
+                                                                {u.email
+                                                                    ? ` · ${u.email}`
+                                                                    : ""}
+                                                                {isSelf
+                                                                    ? " · 当前登录"
+                                                                    : ""}
+                                                            </span>
+                                                            <span className="admin-user-handle admin-user-date-inline">
+                                                                创建时间：{formatTime(
+                                                                    u.createdAt,
+                                                                )}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="admin-hide-narrow admin-nowrap">
+                                                            {isAdmin
+                                                                ? "管理员"
+                                                                : "普通用户"}
+                                                        </TableCell>
+                                                        <TableCell className="admin-nowrap">
+                                                            <span
+                                                                className={u
+                                                                        .disabled
+                                                                    ? "admin-danger"
+                                                                    : undefined}
+                                                            >
+                                                                {u.disabled
+                                                                    ? "已禁用"
+                                                                    : "正常"}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="admin-user-date-column admin-muted">
+                                                            {formatTime(
+                                                                u.createdAt,
                                                             )}
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
-                                    </TableBody>
-                                </ManagementTable>
+                                                        </TableCell>
+                                                        <TableCell className="admin-cell-actions">
+                                                            <div className="admin-row-actions">
+                                                                {isSelf
+                                                                    ? (
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={(
+                                                                                event,
+                                                                            ) => openResetModal(
+                                                                                u,
+                                                                                event
+                                                                                    .currentTarget,
+                                                                            )}
+                                                                        >
+                                                                            重置密码
+                                                                        </Button>
+                                                                    )
+                                                                    : (
+                                                                        <DropdownMenu>
+                                                                            <DropdownMenuTrigger
+                                                                                render={
+                                                                                    <Button
+                                                                                        ref={(
+                                                                                            node,
+                                                                                        ) => {
+                                                                                            actionTriggerRefs
+                                                                                                .current[
+                                                                                                    u.id
+                                                                                                ] = node;
+                                                                                        }}
+                                                                                        type="button"
+                                                                                        variant="ghost"
+                                                                                        size="icon"
+                                                                                        aria-label={`用户 @${u.username} 的更多操作`}
+                                                                                        title="更多操作"
+                                                                                    />
+                                                                                }
+                                                                            >
+                                                                                <MoreHorizontal size="1em" />
+                                                                            </DropdownMenuTrigger>
+                                                                            <DropdownMenuContent
+                                                                                sideOffset={4}
+                                                                            >
+                                                                                <DropdownMenuItem
+                                                                                    onClick={() =>
+                                                                                        openResetModal(
+                                                                                            u,
+                                                                                            actionTriggerRefs
+                                                                                                .current[
+                                                                                                    u.id
+                                                                                                ] ??
+                                                                                                null,
+                                                                                        )}
+                                                                                >
+                                                                                    重置密码
+                                                                                </DropdownMenuItem>
+                                                                                {!isSelf &&
+                                                                                    !isAdmin &&
+                                                                                    (
+                                                                                        <DropdownMenuItem
+                                                                                            disabled={togglingId ===
+                                                                                                u.id}
+                                                                                            onClick={() =>
+                                                                                                requestToggleDisable(
+                                                                                                    u,
+                                                                                                    actionTriggerRefs
+                                                                                                        .current[
+                                                                                                            u.id
+                                                                                                        ] ??
+                                                                                                        null,
+                                                                                                )}
+                                                                                        >
+                                                                                            {u.disabled
+                                                                                                ? "启用用户"
+                                                                                                : "禁用用户…"}
+                                                                                        </DropdownMenuItem>
+                                                                                    )}
+                                                                                {!isSelf &&
+                                                                                    (
+                                                                                        <DropdownMenuSeparator />
+                                                                                    )}
+                                                                                {!isSelf &&
+                                                                                    (
+                                                                                        <DropdownMenuItem
+                                                                                            variant="destructive"
+                                                                                            onClick={() =>
+                                                                                                openDeleteModal(
+                                                                                                    u,
+                                                                                                    actionTriggerRefs
+                                                                                                        .current[
+                                                                                                            u.id
+                                                                                                        ] ??
+                                                                                                        null,
+                                                                                                )}
+                                                                                        >
+                                                                                            删除用户
+                                                                                        </DropdownMenuItem>
+                                                                                    )}
+                                                                            </DropdownMenuContent>
+                                                                        </DropdownMenu>
+                                                                    )}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </ManagementTable>
                                 </div>
-                                <div className="admin-mobile-list" role="list" aria-label="用户列表">
+                                <div
+                                    className="admin-mobile-list"
+                                    role="list"
+                                    aria-label="用户列表"
+                                >
                                     {users.map((u) => (
-                                        <div role="listitem" className="admin-user-row" key={u.id}>
+                                        <div
+                                            role="listitem"
+                                            className="admin-user-row"
+                                            key={u.id}
+                                        >
                                             <div className="admin-user-row-head">
                                                 <div>
-                                                    <span className="admin-user-name">{u.displayName || u.username}</span>
-                                                    <span>{u.role === "admin" ? "管理员" : "普通用户"}</span>
-                                                    {u.disabled && <span className="admin-danger"> · 已禁用</span>}
+                                                    <span className="admin-user-name">
+                                                        {u.displayName ||
+                                                            u.username}
+                                                    </span>
+                                                    <span>
+                                                        {u.role === "admin"
+                                                            ? "管理员"
+                                                            : "普通用户"}
+                                                    </span>
+                                                    {u.disabled && (
+                                                        <span className="admin-danger">
+                                                            · 已禁用
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                {u.id === currentUser?.id ? (
-                                                    <Button type="button" variant="outline" size="sm"
-                                                        onClick={(event) => openResetModal(u, event.currentTarget)}>重置密码</Button>
-                                                ) : (
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger render={
-                                                            <Button ref={(node) => { mobileActionRefs.current[u.id] = node; }}
-                                                                type="button" variant="ghost" size="icon"
-                                                                aria-label={`用户 @${u.username} 的更多操作`} />
-                                                        }><MoreHorizontal size="1em" /></DropdownMenuTrigger>
-                                                        <DropdownMenuContent>
-                                                            <DropdownMenuItem onClick={() => openResetModal(u, mobileActionRefs.current[u.id] ?? null)}>重置密码</DropdownMenuItem>
-                                                            {u.role !== "admin" && <DropdownMenuItem disabled={togglingId === u.id}
-                                                                onClick={() => requestToggleDisable(u, mobileActionRefs.current[u.id] ?? null)}>
-                                                                {u.disabled ? "启用用户" : "禁用用户…"}
-                                                            </DropdownMenuItem>}
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem variant="destructive"
-                                                                onClick={() => openDeleteModal(u, mobileActionRefs.current[u.id] ?? null)}>删除用户</DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                )}
+                                                {u.id === currentUser?.id
+                                                    ? (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={(event) =>
+                                                                openResetModal(
+                                                                    u,
+                                                                    event
+                                                                        .currentTarget,
+                                                                )}
+                                                        >
+                                                            重置密码
+                                                        </Button>
+                                                    )
+                                                    : (
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger
+                                                                render={
+                                                                    <Button
+                                                                        ref={(
+                                                                            node,
+                                                                        ) => {
+                                                                            mobileActionRefs
+                                                                                .current[
+                                                                                    u.id
+                                                                                ] = node;
+                                                                        }}
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        aria-label={`用户 @${u.username} 的更多操作`}
+                                                                    />
+                                                                }
+                                                            >
+                                                                <MoreHorizontal size="1em" />
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent>
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        openResetModal(
+                                                                            u,
+                                                                            mobileActionRefs
+                                                                                .current[
+                                                                                    u.id
+                                                                                ] ??
+                                                                                null,
+                                                                        )}
+                                                                >
+                                                                    重置密码
+                                                                </DropdownMenuItem>
+                                                                {u.role !==
+                                                                        "admin" &&
+                                                                    (
+                                                                        <DropdownMenuItem
+                                                                            disabled={togglingId ===
+                                                                                u.id}
+                                                                            onClick={() =>
+                                                                                requestToggleDisable(
+                                                                                    u,
+                                                                                    mobileActionRefs
+                                                                                        .current[
+                                                                                            u.id
+                                                                                        ] ??
+                                                                                        null,
+                                                                                )}
+                                                                        >
+                                                                            {u.disabled
+                                                                                ? "启用用户"
+                                                                                : "禁用用户…"}
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem
+                                                                    variant="destructive"
+                                                                    onClick={() =>
+                                                                        openDeleteModal(
+                                                                            u,
+                                                                            mobileActionRefs
+                                                                                .current[
+                                                                                    u.id
+                                                                                ] ??
+                                                                                null,
+                                                                        )}
+                                                                >
+                                                                    删除用户
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    )}
                                             </div>
                                             <span className="admin-user-handle">
-                                                @{u.username}{u.email ? ` · ${u.email}` : ""}{u.id === currentUser?.id ? " · 当前登录" : ""} · {formatTime(u.createdAt)}
+                                                @{u.username}
+                                                {u.email ? ` · ${u.email}` : ""}
+                                                {u.id === currentUser?.id
+                                                    ? " · 当前登录"
+                                                    : ""} ·{" "}
+                                                {formatTime(u.createdAt)}
                                             </span>
                                         </div>
                                     ))}
@@ -1024,7 +1175,9 @@ export function AdminPage() {
                 <div className="semantic-section">
                     <AdminPanelHeader
                         title="审计"
-                        meta={auditInitialized ? `共 ${auditTotal} 条` : undefined}
+                        meta={auditInitialized
+                            ? `共 ${auditTotal} 条`
+                            : undefined}
                         actions={
                             <Button
                                 type="button"
@@ -1062,6 +1215,7 @@ export function AdminPage() {
                             onSubmit={handleAuditSearchSubmit}
                         >
                             <Input
+                                name="auditSearch"
                                 type="search"
                                 variant="search"
                                 aria-label="搜索审计日志"
@@ -1158,14 +1312,27 @@ export function AdminPage() {
                         : (
                             <>
                                 <div className="admin-desktop-view">
-                                    <ManagementTable>
+                                    <ManagementTable caption="审计日志">
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead className="admin-audit-date-column">时间</TableHead>
-                                                <TableHead>操作者</TableHead>
-                                                <TableHead>操作</TableHead>
-                                                <TableHead>对象</TableHead>
-                                                <TableHead>明细</TableHead>
+                                                <TableHead
+                                                    scope="col"
+                                                    className="admin-audit-date-column"
+                                                >
+                                                    时间
+                                                </TableHead>
+                                                <TableHead scope="col">
+                                                    操作者
+                                                </TableHead>
+                                                <TableHead scope="col">
+                                                    操作
+                                                </TableHead>
+                                                <TableHead scope="col">
+                                                    对象
+                                                </TableHead>
+                                                <TableHead scope="col">
+                                                    明细
+                                                </TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -1230,10 +1397,14 @@ export function AdminPage() {
                             </label>
                             <Input
                                 id="create-username"
+                                name="username"
                                 type="text"
                                 required
                                 autoFocus
                                 autoComplete="off"
+                                autoCorrect="off"
+                                autoCapitalize="none"
+                                spellCheck={false}
                                 pattern="^[a-zA-Z0-9_]{3,32}$"
                                 placeholder="设置用户名"
                                 aria-describedby="create-username-hint"
@@ -1256,6 +1427,7 @@ export function AdminPage() {
                             </label>
                             <Input
                                 id="create-display-name"
+                                name="displayName"
                                 type="text"
                                 required
                                 maxLength={40}
@@ -1275,8 +1447,10 @@ export function AdminPage() {
                             </label>
                             <Input
                                 id="create-email"
+                                name="email"
                                 type="email"
                                 autoComplete="off"
+                                spellCheck={false}
                                 placeholder="alice@example.com"
                                 value={newEmail}
                                 onChange={(e) => setNewEmail(e.target.value)}
@@ -1289,26 +1463,60 @@ export function AdminPage() {
                             >
                                 初始密码
                             </label>
-                            <Input
-                                ref={createPasswordRef}
-                                id="create-password"
-                                placeholder={`至少 ${passwordRules.minLength} 个字符`}
-                                type="password"
-                                required
-                                minLength={passwordRules.minLength}
-                                maxLength={passwordRules.maxLength}
-                                autoComplete="new-password"
-                                aria-describedby="create-password-hint"
-                                aria-invalid={Boolean(createPasswordError) ||
-                                    undefined}
-                                value={newPassword}
-                                onChange={(e) => {
-                                    setNewPassword(e.target.value);
-                                    if (createPasswordError) {
-                                        setCreatePasswordError("");
-                                    }
-                                }}
-                            />
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    ref={createPasswordRef}
+                                    id="create-password"
+                                    name="password"
+                                    className="min-w-0 flex-1"
+                                    placeholder={`至少 ${passwordRules.minLength} 个字符`}
+                                    type={showCreatePassword
+                                        ? "text"
+                                        : "password"}
+                                    required
+                                    minLength={passwordRules.minLength}
+                                    maxLength={passwordRules.maxLength}
+                                    autoComplete="new-password"
+                                    aria-describedby="create-password-hint"
+                                    aria-invalid={Boolean(
+                                        createPasswordError,
+                                    ) || undefined}
+                                    value={newPassword}
+                                    onChange={(e) => {
+                                        setNewPassword(e.target.value);
+                                        if (createPasswordError) {
+                                            setCreatePasswordError("");
+                                        }
+                                    }}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    aria-pressed={showCreatePassword}
+                                    aria-label={showCreatePassword
+                                        ? "隐藏密码"
+                                        : "显示密码"}
+                                    onClick={() =>
+                                        setShowCreatePassword((prev) => !prev)}
+                                >
+                                    {showCreatePassword
+                                        ? (
+                                            <EyeOff
+                                                size="1em"
+                                                className="icon-md"
+                                                aria-hidden="true"
+                                            />
+                                        )
+                                        : (
+                                            <Eye
+                                                size="1em"
+                                                className="icon-md"
+                                                aria-hidden="true"
+                                            />
+                                        )}
+                                </Button>
+                            </div>
                             <p
                                 id="create-password-hint"
                                 role={createPasswordError ? "alert" : undefined}
@@ -1367,23 +1575,57 @@ export function AdminPage() {
                                 新密码（{passwordRules.minLength}–{passwordRules
                                     .maxLength} 个字符）
                             </label>
-                            <Input
-                                id="reset-password-input"
-                                type="password"
-                                required
-                                autoFocus
-                                minLength={passwordRules.minLength}
-                                maxLength={passwordRules.maxLength}
-                                autoComplete="new-password"
-                                placeholder="输入该用户的临时新密码"
-                                aria-invalid={Boolean(resetError) || undefined}
-                                aria-describedby={resetError
-                                    ? "reset-password-error"
-                                    : undefined}
-                                value={resetNewPassword}
-                                onChange={(e) =>
-                                    setResetNewPassword(e.target.value)}
-                            />
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    id="reset-password-input"
+                                    name="password"
+                                    className="min-w-0 flex-1"
+                                    type={showResetPassword
+                                        ? "text"
+                                        : "password"}
+                                    required
+                                    autoFocus
+                                    minLength={passwordRules.minLength}
+                                    maxLength={passwordRules.maxLength}
+                                    autoComplete="new-password"
+                                    placeholder="输入该用户的临时新密码"
+                                    aria-invalid={Boolean(resetError) ||
+                                        undefined}
+                                    aria-describedby={resetError
+                                        ? "reset-password-error"
+                                        : undefined}
+                                    value={resetNewPassword}
+                                    onChange={(e) =>
+                                        setResetNewPassword(e.target.value)}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    aria-pressed={showResetPassword}
+                                    aria-label={showResetPassword
+                                        ? "隐藏密码"
+                                        : "显示密码"}
+                                    onClick={() =>
+                                        setShowResetPassword((prev) => !prev)}
+                                >
+                                    {showResetPassword
+                                        ? (
+                                            <EyeOff
+                                                size="1em"
+                                                className="icon-md"
+                                                aria-hidden="true"
+                                            />
+                                        )
+                                        : (
+                                            <Eye
+                                                size="1em"
+                                                className="icon-md"
+                                                aria-hidden="true"
+                                            />
+                                        )}
+                                </Button>
+                            </div>
                             {resetError && (
                                 <p
                                     id="reset-password-error"
@@ -1439,6 +1681,7 @@ export function AdminPage() {
                             </label>
                             <Input
                                 id="delete-confirm-input"
+                                name="confirmUsername"
                                 type="text"
                                 required
                                 autoFocus

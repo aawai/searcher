@@ -260,7 +260,7 @@ function WindowSession(
                 }));
                 return;
             }
-            const next = [...current.windows].reverse().find((window) =>
+            const next = current.windows.findLast((window) =>
                 window.id !== id && window.status === "visible"
             );
             const target = next ? locationUrl(next.location) : routes.home;

@@ -1,7 +1,7 @@
 import type { Context, MiddlewareHandler } from "hono";
 import { failResponse } from "@internal/hono/middleware/response.ts";
 import type { AppEnv } from "../../serve/env.ts";
-import { AuthService, SESSION_COOKIE_NAME } from "./service.ts";
+import { AuthService } from "./service.ts";
 
 export function parseCookie(
     cookieHeader: string | undefined,
@@ -26,14 +26,20 @@ export function createSessionMiddleware(
 ): MiddlewareHandler<AppEnv> {
     return async function sessionMiddleware(c: Context<AppEnv>, next) {
         const cookieHeader = c.req.header("cookie");
-        const token = parseCookie(cookieHeader, SESSION_COOKIE_NAME);
+        const requestOrigin = c.req.header("origin");
+        const requestHost = c.req.header("host");
+        const cookieName = authService.getSessionCookieName(
+            requestOrigin,
+            requestHost,
+        );
+        const token = parseCookie(cookieHeader, cookieName);
 
         if (!token) {
             c.header(
                 "Set-Cookie",
                 authService.buildClearSessionCookieHeader(
-                    undefined,
-                    c.req.header("host"),
+                    requestOrigin,
+                    requestHost,
                 ),
             );
             return failResponse(c, 401, "未登录或登录已失效");
@@ -46,8 +52,8 @@ export function createSessionMiddleware(
             c.header(
                 "Set-Cookie",
                 authService.buildClearSessionCookieHeader(
-                    undefined,
-                    c.req.header("host"),
+                    requestOrigin,
+                    requestHost,
                 ),
             );
             return failResponse(c, 401, "未登录或登录已失效");

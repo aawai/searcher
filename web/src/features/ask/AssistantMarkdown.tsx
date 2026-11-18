@@ -52,13 +52,18 @@ function CodeBlock({
                                 <Check
                                     size="1em"
                                     className="icon-sm"
+                                    aria-hidden="true"
                                 />
                                 <span>已复制</span>
                             </>
                         )
                         : (
                             <>
-                                <Copy size="1em" className="icon-sm" />
+                                <Copy
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
                                 <span>复制</span>
                             </>
                         )}
@@ -72,7 +77,8 @@ function CodeBlock({
             <pre
                 className="ask-codeblock__pre"
                 tabIndex={0}
-                aria-label="代码内容"
+                role="region"
+                aria-label="代码块"
             >
                 <code className={className}>{children}</code>
             </pre>

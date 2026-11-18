@@ -172,10 +172,7 @@ export function MastheadSections({
                                 <span className="home-masthead__task-text">
                                     {task.text}
                                 </span>
-                                <span
-                                    className="home-masthead__task-source"
-                                    title={task.noteTitle}
-                                >
+                                <span className="home-masthead__task-source">
                                     {task.noteTitle}
                                 </span>
                             </li>
@@ -310,7 +307,19 @@ function SortableMastheadEntry({
             onOpen();
             return;
         }
+        if (event.key === " ") {
+            event.preventDefault();
+            return;
+        }
         listeners?.onKeyDown?.(event);
+    };
+
+    const handleKeyUp = (event: ReactKeyboardEvent<HTMLElement>) => {
+        if (event.target !== event.currentTarget) return;
+        if (event.key === " ") {
+            event.preventDefault();
+            onOpen();
+        }
     };
 
     return (
@@ -327,6 +336,7 @@ function SortableMastheadEntry({
             <article
                 {...attributes}
                 {...listeners}
+                role="button"
                 tabIndex={0}
                 className="home-masthead__entry"
                 data-note-id={note.id}
@@ -335,6 +345,7 @@ function SortableMastheadEntry({
                 aria-label={note.displayTitle}
                 onClick={handleClick}
                 onKeyDown={handleKeyDown}
+                onKeyUp={handleKeyUp}
             >
                 <span className="home-masthead__entry-no" aria-hidden="true">
                     {orderNumber}
@@ -352,11 +363,11 @@ function SortableMastheadEntry({
                                 <DropdownMenuTrigger
                                     className="home-masthead__entry-menu-btn"
                                     aria-label="更多操作"
-                                    title="更多操作"
                                 >
                                     <MoreHorizontal
                                         size="1em"
                                         className="icon-sm"
+                                        aria-hidden="true"
                                     />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
@@ -376,6 +387,7 @@ function SortableMastheadEntry({
                                         <ExternalLink
                                             size="1em"
                                             className="icon-sm"
+                                            aria-hidden="true"
                                         />
                                         <span>编辑笔记</span>
                                     </DropdownMenuItem>
@@ -389,6 +401,7 @@ function SortableMastheadEntry({
                                         <ArrowUp
                                             size="1em"
                                             className="icon-sm"
+                                            aria-hidden="true"
                                         />
                                         <span>上移</span>
                                     </DropdownMenuItem>
@@ -402,6 +415,7 @@ function SortableMastheadEntry({
                                         <ArrowDown
                                             size="1em"
                                             className="icon-sm"
+                                            aria-hidden="true"
                                         />
                                         <span>下移</span>
                                     </DropdownMenuItem>
@@ -414,6 +428,7 @@ function SortableMastheadEntry({
                                         <PinOff
                                             size="1em"
                                             className="icon-sm"
+                                            aria-hidden="true"
                                         />
                                         <span>取消固定</span>
                                     </DropdownMenuItem>
@@ -428,6 +443,7 @@ function SortableMastheadEntry({
                                         <Trash2
                                             size="1em"
                                             className="icon-sm"
+                                            aria-hidden="true"
                                         />
                                         <span>移至回收站</span>
                                     </DropdownMenuItem>

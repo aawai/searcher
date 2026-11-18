@@ -224,7 +224,12 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                     } 个 AI 图标候选`}
                                 >
                                     <div className="app-ai-candidate-img-box">
-                                        <img src={candidate.dataUrl} alt="" />
+                                        <img
+                                            src={candidate.dataUrl}
+                                            alt=""
+                                            width={128}
+                                            height={128}
+                                        />
                                     </div>
                                     <div className="app-ai-candidate-footer">
                                         <span className="app-ai-candidate-radio-dot">

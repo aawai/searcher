@@ -72,6 +72,8 @@ function ComposerAttachmentChip() {
                 <img
                     src={image.image}
                     alt="图片附件预览"
+                    width={20}
+                    height={20}
                     className="ask-attachment-preview"
                 />
             )}
@@ -79,6 +81,7 @@ function ComposerAttachmentChip() {
                 <AlertCircle
                     size="1em"
                     className="icon-sm"
+                    aria-hidden="true"
                 />
             )}
             <span className="ask-composer__attachment-name">
@@ -92,7 +95,7 @@ function ComposerAttachmentChip() {
                     className="ask-composer__attachment-remove"
                     aria-label="移除附件"
                 >
-                    <X size="1em" className="icon-sm" />
+                    <X size="1em" className="icon-sm" aria-hidden="true" />
                 </Button>
             </AttachmentPrimitive.Remove>
         </AttachmentPrimitive.Root>
@@ -199,6 +202,7 @@ export function SearcherComposer({
                         <AlertCircle
                             size="1em"
                             className="icon-sm"
+                            aria-hidden="true"
                         />
                         <span className="ask-composer__attachment-error-msg">
                             {attachmentError}
@@ -211,7 +215,11 @@ export function SearcherComposer({
                             className="ask-composer__attachment-error-close"
                             aria-label="关闭附件错误"
                         >
-                            <X size="1em" className="icon-sm" />
+                            <X
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
                         </Button>
                     </div>
                 )}
@@ -242,7 +250,11 @@ export function SearcherComposer({
                                         />
                                     }
                                 >
-                                    <Paperclip size="1em" className="icon-md" />
+                                    <Paperclip
+                                        size="1em"
+                                        className="icon-md"
+                                        aria-hidden="true"
+                                    />
                                 </TooltipTrigger>
                             </ComposerPrimitive.AddAttachment>
                             <TooltipContent>
@@ -268,12 +280,15 @@ export function SearcherComposer({
                                         variant="ghost"
                                         size="icon"
                                         className="ask-composer__icon-btn"
-                                        aria-label="更多设置"
-                                        title="推理、搜索与生成设置"
+                                        aria-label="更多设置（推理、搜索与生成）"
                                     />
                                 }
                             >
-                                <Ellipsis size="1em" className="icon-md" />
+                                <Ellipsis
+                                    size="1em"
+                                    className="icon-md"
+                                    aria-hidden="true"
+                                />
                                 {hasActiveTools && (
                                     <span
                                         className="ask-composer__active-dot"
@@ -411,31 +426,53 @@ export function SearcherComposer({
                     </div>
                     <div className="ask-composer__tools-right">
                         <ThreadPrimitive.If running={false}>
-                            <ComposerPrimitive.Send asChild>
-                                <Button
-                                    variant="default"
-                                    size="icon"
-                                    className="ask-composer__send-btn"
-                                    aria-label="发送问题（Enter）"
-                                    title="发送问题（Enter）"
-                                >
-                                    <ArrowUp size="1em" className="icon-md" />
-                                </Button>
-                            </ComposerPrimitive.Send>
+                            <Tooltip>
+                                <ComposerPrimitive.Send asChild>
+                                    <TooltipTrigger
+                                        render={
+                                            <Button
+                                                variant="default"
+                                                size="icon"
+                                                className="ask-composer__send-btn"
+                                                aria-label="发送问题（Enter）"
+                                            />
+                                        }
+                                    >
+                                        <ArrowUp
+                                            size="1em"
+                                            className="icon-md"
+                                            aria-hidden="true"
+                                        />
+                                    </TooltipTrigger>
+                                </ComposerPrimitive.Send>
+                                <TooltipContent>
+                                    发送问题（Enter）
+                                </TooltipContent>
+                            </Tooltip>
                         </ThreadPrimitive.If>
 
                         <ThreadPrimitive.If running>
-                            <ComposerPrimitive.Cancel asChild>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="ask-composer__send-btn"
-                                    aria-label="停止生成"
-                                    title="停止生成"
-                                >
-                                    <Square size="1em" className="icon-md" />
-                                </Button>
-                            </ComposerPrimitive.Cancel>
+                            <Tooltip>
+                                <ComposerPrimitive.Cancel asChild>
+                                    <TooltipTrigger
+                                        render={
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="ask-composer__send-btn"
+                                                aria-label="停止生成"
+                                            />
+                                        }
+                                    >
+                                        <Square
+                                            size="1em"
+                                            className="icon-md"
+                                            aria-hidden="true"
+                                        />
+                                    </TooltipTrigger>
+                                </ComposerPrimitive.Cancel>
+                                <TooltipContent>停止生成</TooltipContent>
+                            </Tooltip>
                         </ThreadPrimitive.If>
                     </div>
                 </div>

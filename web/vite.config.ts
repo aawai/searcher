@@ -114,7 +114,7 @@ export default defineConfig({
         outDir: "dist",
         emptyOutDir: true,
         manifest: "manifest.json",
-        target: ["chrome107", "edge107", "firefox104", "safari16"],
+        target: ["chrome110", "edge110", "firefox115", "safari16"],
         rolldownOptions: {
             output: {
                 strictExecutionOrder: true,

@@ -34,6 +34,8 @@ export function WebAppGlyph({ app, className = "" }: {
                     <img
                         src={effective}
                         alt=""
+                        width={48}
+                        height={48}
                         loading="lazy"
                         onError={() => setFailedSource(source)}
                     />

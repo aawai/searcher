@@ -413,3 +413,88 @@ Deno.test("Static cache: protected API retains authentication and no-store", asy
         await ctx.cleanup();
     }
 });
+
+Deno.test("Security headers: global headers, CSP inline script hash, and HSTS on HTTPS", async () => {
+    const tempDir = await Deno.makeTempDir({ prefix: "searcher_sec_test_" });
+    const inlineScript = "console.log('first-frame');";
+    const digest = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(inlineScript),
+    );
+    const expectedHash = `'sha256-${
+        btoa(String.fromCharCode(...new Uint8Array(digest)))
+    }'`;
+    const htmlContent =
+        `<!doctype html><html><head><script>${inlineScript}</script><script type="module" src="/assets/main.js"></script></head><body></body></html>`;
+    await Deno.writeTextFile(`${tempDir}/index.html`, htmlContent);
+
+    const store = openDatabase(":memory:");
+    await migrateDatabase(store);
+    const httpsOrigin = "https://search.example.com";
+    const origins = `${ORIGIN},${httpsOrigin}`;
+    const auth = new AuthService({ store, origin: origins });
+    const app = createApp({ store, auth, origin: origins }, {
+        frontendPath: tempDir,
+    });
+
+    try {
+        const httpRes = await app.request(`${ORIGIN}/`);
+        assertEquals(httpRes.status, 200);
+        assertEquals(httpRes.headers.get("x-content-type-options"), "nosniff");
+        assertEquals(httpRes.headers.get("x-frame-options"), "SAMEORIGIN");
+        assertEquals(httpRes.headers.get("referrer-policy"), "strict-origin");
+        assertEquals(
+            httpRes.headers.get("permissions-policy"),
+            "camera=(), geolocation=(), microphone=()",
+        );
+        assertEquals(
+            httpRes.headers.get("cross-origin-opener-policy"),
+            "same-origin-allow-popups",
+        );
+        assertEquals(
+            httpRes.headers.get("cross-origin-resource-policy"),
+            "same-origin",
+        );
+        assertEquals(httpRes.headers.get("strict-transport-security"), null);
+
+        const csp = httpRes.headers.get("content-security-policy") ?? "";
+        assertStringIncludes(csp, `script-src 'self' ${expectedHash}`);
+        assertStringIncludes(csp, "object-src 'none'");
+        assertStringIncludes(csp, "base-uri 'none'");
+        assertStringIncludes(csp, "frame-ancestors 'self'");
+
+        const httpsRes = await app.request(`${httpsOrigin}/api/auth/register`);
+        assertEquals(httpsRes.status, 200);
+        assertEquals(
+            httpsRes.headers.get("strict-transport-security"),
+            "max-age=31536000; includeSubDomains",
+        );
+        assertEquals(httpsRes.headers.get("x-content-type-options"), "nosniff");
+    } finally {
+        await store.close();
+        await Deno.remove(tempDir, { recursive: true });
+    }
+});
+
+Deno.test("Security headers: missing index.html in dev mode does not crash API requests", async () => {
+    const tempDir = await Deno.makeTempDir({
+        prefix: "searcher_missing_html_",
+    });
+    const store = openDatabase(":memory:");
+    await migrateDatabase(store);
+    const auth = new AuthService({ store, origin: ORIGIN });
+    const app = createApp({ store, auth, origin: ORIGIN }, {
+        frontendPath: tempDir,
+    });
+
+    try {
+        const res = await app.request(`${ORIGIN}/api/auth/register`);
+        assertEquals(res.status, 200);
+        const csp = res.headers.get("content-security-policy") ?? "";
+        assertStringIncludes(csp, "script-src 'self'");
+        assertStringIncludes(csp, "object-src 'none'");
+    } finally {
+        await store.close();
+        await Deno.remove(tempDir, { recursive: true });
+    }
+});

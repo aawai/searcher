@@ -262,7 +262,7 @@ export default function WindowLab() {
         patch(id, { minimized: true });
         if (active === id) {
             setActive(
-                [...order].reverse().find((item) =>
+                order.findLast((item) =>
                     item !== id && windows[item] && !windows[item]?.minimized
                 ) ?? null,
             );
@@ -277,7 +277,7 @@ export default function WindowLab() {
         setOrder((prev) => prev.filter((item) => item !== id));
         if (active === id) {
             setActive(
-                [...order].reverse().find((item) =>
+                order.findLast((item) =>
                     item !== id && windows[item] && !windows[item]?.minimized
                 ) ?? null,
             );

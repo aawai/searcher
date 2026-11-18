@@ -27,8 +27,8 @@ function TableRow(props: React.ComponentProps<"tr">) {
     return <tr data-slot="table-row" {...props} />;
 }
 
-function TableHead(props: React.ComponentProps<"th">) {
-    return <th data-slot="table-head" {...props} />;
+function TableHead({ scope = "col", ...props }: React.ComponentProps<"th">) {
+    return <th data-slot="table-head" scope={scope} {...props} />;
 }
 
 function TableCell(props: React.ComponentProps<"td">) {

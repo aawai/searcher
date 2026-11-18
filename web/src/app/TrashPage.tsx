@@ -139,12 +139,12 @@ function TrashSection(
             {...focusContainer}
         >
             <div className="trash-table-view">
-                <ManagementTable>
+                <ManagementTable caption={label}>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{columnTitle}</TableHead>
-                            <TableHead>删除时间</TableHead>
-                            <TableHead className="trash-cell-end">
+                            <TableHead scope="col">{columnTitle}</TableHead>
+                            <TableHead scope="col">删除时间</TableHead>
+                            <TableHead scope="col" className="trash-cell-end">
                                 操作
                             </TableHead>
                         </TableRow>

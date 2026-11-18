@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from "lucide-react";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import {
@@ -43,6 +44,7 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
     const [username, setUsername] = useState("");
     const [displayName, setDisplayName] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [usernameTouched, setUsernameTouched] = useState(false);
@@ -256,7 +258,9 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                         <SettingsGroup>
                             <SettingsRow
                                 className="settings-row--vertical"
-                                title={kind === "login" ? "用户名或邮箱" : "用户名"}
+                                title={kind === "login"
+                                    ? "用户名或邮箱"
+                                    : "用户名"}
                                 labelFor="auth-username"
                                 message={usernameMessage}
                                 messageId="auth-username-hint"
@@ -265,10 +269,14 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                 <Input
                                     ref={usernameRef}
                                     id="auth-username"
+                                    name="username"
                                     placeholder={kind === "login"
                                         ? "请输入用户名或邮箱"
                                         : "设置用户名"}
                                     autoComplete="username"
+                                    autoCorrect="off"
+                                    autoCapitalize="none"
+                                    spellCheck={false}
                                     // Only where focusing cannot raise an
                                     // on-screen keyboard over the form.
                                     autoFocus={matchMedia("(pointer: fine)")
@@ -311,6 +319,8 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                     <Input
                                         ref={displayNameRef}
                                         id="auth-display-name"
+                                        name="displayName"
+                                        autoComplete="name"
                                         placeholder="设置显示名称"
                                         required
                                         maxLength={40}
@@ -333,32 +343,66 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                 messageId="auth-password-hint"
                                 invalid={passwordInvalid}
                             >
-                                <Input
-                                    ref={passwordRef}
-                                    id="auth-password"
-                                    placeholder={kind === "register"
-                                        ? `至少 ${passwordRules.minLength} 个字符`
-                                        : "请输入密码"}
-                                    type="password"
-                                    autoComplete={kind === "login"
-                                        ? "current-password"
-                                        : "new-password"}
-                                    required
-                                    minLength={kind === "login"
-                                        ? 1
-                                        : passwordRules.minLength}
-                                    maxLength={kind === "register"
-                                        ? passwordRules.maxLength
-                                        : undefined}
-                                    aria-describedby={passwordMessage
-                                        ? "auth-password-hint"
-                                        : undefined}
-                                    aria-invalid={passwordInvalid || undefined}
-                                    value={password}
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)}
-                                    onBlur={() => setPasswordTouched(true)}
-                                />
+                                <div className="flex w-full items-center gap-2">
+                                    <Input
+                                        ref={passwordRef}
+                                        id="auth-password"
+                                        name="password"
+                                        className="min-w-0 flex-1"
+                                        placeholder={kind === "register"
+                                            ? `至少 ${passwordRules.minLength} 个字符`
+                                            : "请输入密码"}
+                                        type={showPassword
+                                            ? "text"
+                                            : "password"}
+                                        autoComplete={kind === "login"
+                                            ? "current-password"
+                                            : "new-password"}
+                                        required
+                                        minLength={kind === "login"
+                                            ? 1
+                                            : passwordRules.minLength}
+                                        maxLength={kind === "register"
+                                            ? passwordRules.maxLength
+                                            : undefined}
+                                        aria-describedby={passwordMessage
+                                            ? "auth-password-hint"
+                                            : undefined}
+                                        aria-invalid={passwordInvalid ||
+                                            undefined}
+                                        value={password}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)}
+                                        onBlur={() => setPasswordTouched(true)}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        aria-pressed={showPassword}
+                                        aria-label={showPassword
+                                            ? "隐藏密码"
+                                            : "显示密码"}
+                                        onClick={() =>
+                                            setShowPassword((prev) => !prev)}
+                                    >
+                                        {showPassword
+                                            ? (
+                                                <EyeOff
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                            )
+                                            : (
+                                                <Eye
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                            )}
+                                    </Button>
+                                </div>
                             </SettingsRow>
                         </SettingsGroup>
                         {error && (

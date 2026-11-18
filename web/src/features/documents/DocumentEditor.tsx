@@ -1449,7 +1449,12 @@ export function DocumentEditor({
                         onCompositionEnd={() => session.setComposing(false)}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                                if (e.nativeEvent.isComposing) return;
+                                if (
+                                    e.nativeEvent.isComposing ||
+                                    e.keyCode === 229
+                                ) {
+                                    return;
+                                }
                                 e.preventDefault();
                                 if (richMode) editorHandleRef.current?.focus();
                             }

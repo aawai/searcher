@@ -6,6 +6,7 @@ import type { DatabaseStore } from "../../db/database.ts";
 import { sessions, users } from "../../db/schema.ts";
 
 export const SESSION_COOKIE_NAME = "searcher_session";
+export const SECURE_SESSION_COOKIE_NAME = "__Host-searcher_session";
 export const SESSION_NORMAL_MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // 7 days
 export const SESSION_REMEMBER_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
 export const SESSION_MAX_AGE_SECONDS = SESSION_NORMAL_MAX_AGE_SECONDS;
@@ -283,14 +284,24 @@ export class AuthService {
         return await this.#vault.passwords.verify(candidate, hash);
     }
 
+    getSessionCookieName(requestOrigin?: string, requestHost?: string): string {
+        return this.isSecureCookie(requestOrigin, requestHost)
+            ? SECURE_SESSION_COOKIE_NAME
+            : SESSION_COOKIE_NAME;
+    }
+
     buildSessionCookieHeader(
         token: string,
         maxAgeSeconds: number = SESSION_NORMAL_MAX_AGE_SECONDS,
         requestOrigin?: string,
+        requestHost?: string,
     ): string {
-        const isSecure = this.isSecureCookie(requestOrigin);
+        const isSecure = this.isSecureCookie(requestOrigin, requestHost);
+        const cookieName = isSecure
+            ? SECURE_SESSION_COOKIE_NAME
+            : SESSION_COOKIE_NAME;
         let cookie =
-            `${SESSION_COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;
+            `${cookieName}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;
         if (isSecure) {
             cookie += "; Secure";
         }
@@ -302,8 +313,11 @@ export class AuthService {
         requestHost?: string,
     ): string {
         const isSecure = this.isSecureCookie(requestOrigin, requestHost);
+        const cookieName = isSecure
+            ? SECURE_SESSION_COOKIE_NAME
+            : SESSION_COOKIE_NAME;
         let cookie =
-            `${SESSION_COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
+            `${cookieName}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
         if (isSecure) {
             cookie += "; Secure";
         }

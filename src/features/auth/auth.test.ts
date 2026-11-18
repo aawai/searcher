@@ -2,7 +2,11 @@ import { assertEquals, assertNotEquals } from "@std/assert";
 import { STATUS_CODE } from "@std/http";
 import { openDatabase } from "../../db/database.ts";
 import { migrateDatabase } from "../../db/migrate.ts";
-import { AuthService, SESSION_COOKIE_NAME } from "./service.ts";
+import {
+    AuthService,
+    SECURE_SESSION_COOKIE_NAME,
+    SESSION_COOKIE_NAME,
+} from "./service.ts";
 import { createAuthTestApp } from "./test-app.ts";
 import type { Envelope, UserDto } from "@shared/contracts.ts";
 import { eq, sql } from "drizzle-orm";
@@ -38,6 +42,9 @@ Deno.test("auth security: multiple configured origins accept same-site requests 
                 [httpsOrigin, "remote_user", true],
             ] as const
         ) {
+            const cookieName = secure
+                ? SECURE_SESSION_COOKIE_NAME
+                : SESSION_COOKIE_NAME;
             const response = await app.request(`${origin}/api/auth/register`, {
                 method: "POST",
                 headers: { origin, "content-type": "application/json" },
@@ -48,29 +55,44 @@ Deno.test("auth security: multiple configured origins accept same-site requests 
                 }),
             });
             assertEquals(response.status, STATUS_CODE.OK);
-            assertEquals(
-                response.headers.get("set-cookie")?.includes("; Secure"),
-                secure,
-            );
-            const token = extractCookie(response, SESSION_COOKIE_NAME);
+            const setCookie = response.headers.get("set-cookie") ?? "";
+            assertEquals(setCookie.startsWith(`${cookieName}=`), true);
+            assertEquals(setCookie.includes("; Secure"), secure);
+            const token = extractCookie(response, cookieName);
             assertNotEquals(token, null);
+
+            const me = await app.request(`${origin}/api/auth/me`, {
+                headers: {
+                    host: new URL(origin).host,
+                    cookie: `${cookieName}=${token}`,
+                },
+            });
+            assertEquals(me.status, STATUS_CODE.OK);
+
             const logout = await app.request(`${origin}/api/auth/logout`, {
                 method: "POST",
-                headers: { origin, cookie: `${SESSION_COOKIE_NAME}=${token}` },
+                headers: { origin, cookie: `${cookieName}=${token}` },
             });
             assertEquals(logout.status, STATUS_CODE.OK);
+            const logoutSetCookie = logout.headers.get("set-cookie") ?? "";
+            assertEquals(logoutSetCookie.startsWith(`${cookieName}=`), true);
+            assertEquals(logoutSetCookie.includes("; Secure"), secure);
             assertEquals(
-                logout.headers.get("set-cookie")?.includes("; Secure"),
-                secure,
+                logout.headers.get("clear-site-data"),
+                '"cookies", "cache"',
             );
+
             const unauthorized = await app.request(`${origin}/api/auth/me`, {
                 headers: { host: new URL(origin).host },
             });
             assertEquals(unauthorized.status, STATUS_CODE.Unauthorized);
+            const unauthorizedSetCookie =
+                unauthorized.headers.get("set-cookie") ?? "";
             assertEquals(
-                unauthorized.headers.get("set-cookie")?.includes("; Secure"),
-                secure,
+                unauthorizedSetCookie.startsWith(`${cookieName}=`),
+                true,
             );
+            assertEquals(unauthorizedSetCookie.includes("; Secure"), secure);
         }
         const forbidden = await app.request(`${httpsOrigin}/api/auth/logout`, {
             method: "POST",

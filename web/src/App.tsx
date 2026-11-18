@@ -26,7 +26,15 @@ import {
     wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import { SearchHome } from "./app/SearchHome.tsx";
-import { authPath, routes, settingsTab } from "./app/routes.ts";
+import {
+    type AdminTab,
+    adminTab,
+    askConversationId,
+    authPath,
+    routes,
+    type SettingsTab,
+    settingsTab,
+} from "./app/routes.ts";
 import { DockProvider } from "./features/dock/DockProvider.tsx";
 import { WorkspaceDock } from "./features/dock/WorkspaceDock.tsx";
 import {
@@ -69,6 +77,11 @@ import {
     DialogFooter,
     DialogTitle,
 } from "./components/ui/dialog.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "./components/ui/tooltip.tsx";
 
 const DesignLab = lazy(() =>
     import("./design-lab/DesignLab.tsx").then((m) => ({ default: m.DesignLab }))
@@ -115,6 +128,47 @@ const NotFoundPage = lazy(() =>
     import("./app/NotFoundPage.tsx").then((m) => ({ default: m.NotFoundPage }))
 );
 
+function routeDocumentTitle(pathname: string): string | null {
+    if (pathname === routes.login || pathname === routes.register) return null;
+    if (pathname === routes.home) return "Searcher";
+    const sTab = settingsTab(pathname);
+    if (sTab) {
+        const labels: Record<SettingsTab, string> = {
+            search: "搜索设置",
+            appearance: "外观设置",
+            ai: "AI 设置",
+            data: "数据与同步",
+            shortcuts: "快捷键",
+        };
+        return `${labels[sTab]} · Searcher`;
+    }
+    if (pathname.startsWith(`${routes.settings()}/`)) {
+        return "页面不存在 · Searcher";
+    }
+    if (pathname === routes.account) return "账户与安全 · Searcher";
+    if (pathname === routes.ask || askConversationId(pathname) !== null) {
+        return "AI 问答 · Searcher";
+    }
+    const aTab = adminTab(pathname);
+    if (aTab) {
+        const labels: Record<AdminTab, string> = {
+            overview: "管理后台",
+            users: "用户管理 · 管理后台",
+            settings: "系统设置 · 管理后台",
+            audit: "审计日志 · 管理后台",
+            backup: "备份与恢复 · 管理后台",
+        };
+        return `${labels[aTab]} · Searcher`;
+    }
+    if (pathname.startsWith(`${routes.admin()}/`)) {
+        return "页面不存在 · Searcher";
+    }
+    if (pathname === routes.trash) return "回收站 · Searcher";
+    if (pathname === routes.share) return "保存分享 · Searcher";
+    if (pathname.startsWith(routes.designLab)) return "Design Lab · Searcher";
+    return "页面不存在 · Searcher";
+}
+
 /** The top bar's AI entry activates the single AI window instead of starting a new page. */
 function AiTopbarLink({ pathname }: { pathname: string }) {
     const windowManager = useWindowManager();
@@ -122,22 +176,28 @@ function AiTopbarLink({ pathname }: { pathname: string }) {
         ? windowManager.activeId === "ai"
         : pathname === routes.ask;
     return (
-        <Link
-            to={routes.ask}
-            viewTransition
-            className={active
-                ? "topbar-link topbar-link--active"
-                : "topbar-link"}
-            aria-label="AI 问答"
-            title="AI 问答"
-            onClick={(event) => {
-                if (!windowManager) return;
-                event.preventDefault();
-                windowManager.open("ai");
-            }}
-        >
-            <Sparkles size="1em" className="icon-lg" />
-        </Link>
+        <Tooltip>
+            <TooltipTrigger
+                render={
+                    <Link
+                        to={routes.ask}
+                        viewTransition
+                        className={active
+                            ? "topbar-link topbar-link--active"
+                            : "topbar-link"}
+                        aria-label="AI 问答"
+                        onClick={(event) => {
+                            if (!windowManager) return;
+                            event.preventDefault();
+                            windowManager.open("ai");
+                        }}
+                    />
+                }
+            >
+                <Sparkles size="1em" className="icon-lg" aria-hidden="true" />
+            </TooltipTrigger>
+            <TooltipContent>AI 问答</TooltipContent>
+        </Tooltip>
     );
 }
 
@@ -193,6 +253,13 @@ function Layout() {
         setLogoutBusy(false);
         setError("");
     }, [authSession]);
+
+    useEffect(() => {
+        const title = routeDocumentTitle(location.pathname);
+        if (title !== null) {
+            document.title = title;
+        }
+    }, [location.pathname]);
 
     async function requestLogout(force = false) {
         const session = authSession;
@@ -260,6 +327,9 @@ function Layout() {
                         testId="home-wallpaper-surface"
                     />
                 )}
+                <a href="#main-content" className="sr-only skip-link">
+                    跳到主要内容
+                </a>
                 <header className="topbar">
                     <Link
                         className="wordmark-small"
@@ -286,17 +356,27 @@ function Layout() {
                                 void setAppearance({ accent })}
                         />
                         {!desktopTopbar && (
-                            <Link
-                                to={routes.settings()}
-                                viewTransition
-                                className={isSettingsPage
-                                    ? "topbar-link topbar-link--active"
-                                    : "topbar-link"}
-                                aria-label="设置"
-                                title="设置"
-                            >
-                                <Settings size="1em" className="icon-lg" />
-                            </Link>
+                            <Tooltip>
+                                <TooltipTrigger
+                                    render={
+                                        <Link
+                                            to={routes.settings()}
+                                            viewTransition
+                                            className={isSettingsPage
+                                                ? "topbar-link topbar-link--active"
+                                                : "topbar-link"}
+                                            aria-label="设置"
+                                        />
+                                    }
+                                >
+                                    <Settings
+                                        size="1em"
+                                        className="icon-lg"
+                                        aria-hidden="true"
+                                    />
+                                </TooltipTrigger>
+                                <TooltipContent>设置</TooltipContent>
+                            </Tooltip>
                         )}
                         {(user || !isAuthPage) && (
                             <Separator
@@ -327,7 +407,6 @@ function Layout() {
                                     <DropdownMenuTrigger
                                         className="user-avatar-trigger"
                                         aria-label={`用户菜单：${user.displayName}`}
-                                        title={user.displayName}
                                     >
                                         <span className="user-avatar-badge">
                                             {(user.displayName || user.username)
@@ -349,6 +428,7 @@ function Layout() {
                                             <UserRound
                                                 size="1em"
                                                 className="icon-md"
+                                                aria-hidden="true"
                                             />
                                             <span>账户与安全</span>
                                         </DropdownMenuItem>
@@ -361,6 +441,7 @@ function Layout() {
                                             <Settings
                                                 size="1em"
                                                 className="icon-md"
+                                                aria-hidden="true"
                                             />
                                             <span>设置</span>
                                         </DropdownMenuItem>
@@ -374,6 +455,7 @@ function Layout() {
                                                 <Shield
                                                     size="1em"
                                                     className="icon-md"
+                                                    aria-hidden="true"
                                                 />
                                                 <span>管理后台</span>
                                             </DropdownMenuItem>
@@ -387,6 +469,7 @@ function Layout() {
                                             <Trash2
                                                 size="1em"
                                                 className="icon-md"
+                                                aria-hidden="true"
                                             />
                                             <span>回收站</span>
                                         </DropdownMenuItem>
@@ -400,6 +483,7 @@ function Layout() {
                                             <LogOut
                                                 size="1em"
                                                 className="icon-md"
+                                                aria-hidden="true"
                                             />
                                             <span>退出登录</span>
                                         </DropdownMenuItem>
@@ -414,7 +498,11 @@ function Layout() {
                                     className="user-link"
                                     aria-label="登录"
                                 >
-                                    <LogIn size="1em" className="icon-lg" />
+                                    <LogIn
+                                        size="1em"
+                                        className="icon-lg"
+                                        aria-hidden="true"
+                                    />
                                     <span>登录</span>
                                 </Link>
                             )}
