@@ -1,5 +1,5 @@
 import { type SubmitEvent, useEffect, useRef, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Eye, EyeOff, RefreshCw } from "lucide-react";
 import { AUTH_CREDENTIAL_RULES, type UserDto } from "@shared/contracts.ts";
 import { Badge } from "../components/ui/badge.tsx";
 import { Button, buttonVariants } from "../components/ui/button.tsx";
@@ -155,6 +155,9 @@ export function AccountContent({ host }: { host: PageHost }) {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [passwordSaving, setPasswordSaving] = useState(false);
     const [passwordSuccess, setPasswordSuccess] = useState("");
     const [passwordError, setPasswordError] = useState("");
@@ -301,6 +304,9 @@ export function AccountContent({ host }: { host: PageHost }) {
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
+        setShowCurrentPassword(false);
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
         setPasswordSuccess("");
         setPasswordError("");
         setPasswordFieldError(null);
@@ -473,17 +479,20 @@ export function AccountContent({ host }: { host: PageHost }) {
                         </SettingsRow>
                         <SettingsRow
                             title="显示名称"
+                            labelFor="account-display-name"
                             className={host.narrow
                                 ? "settings-row--vertical"
                                 : undefined}
                         >
                             <Input
+                                id="account-display-name"
+                                name="displayName"
                                 className={host.narrow
                                     ? undefined
                                     : "account-input"}
-                                aria-label="显示名称"
                                 placeholder="输入显示名称"
                                 type="text"
+                                autoComplete="name"
                                 required
                                 maxLength={40}
                                 value={displayName}
@@ -492,17 +501,20 @@ export function AccountContent({ host }: { host: PageHost }) {
                         </SettingsRow>
                         <SettingsRow
                             title="邮箱"
+                            labelFor="account-email"
                             className={host.narrow
                                 ? "settings-row--vertical"
                                 : undefined}
                         >
                             <Input
+                                id="account-email"
+                                name="email"
                                 className={host.narrow
                                     ? undefined
                                     : "account-input"}
-                                aria-label="邮箱"
                                 type="email"
                                 autoComplete="email"
+                                spellCheck={false}
                                 placeholder="name@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -683,14 +695,46 @@ export function AccountContent({ host }: { host: PageHost }) {
                                 >
                                     <Input
                                         id="account-current-password"
+                                        name="currentPassword"
                                         placeholder="用于确认是你本人"
-                                        type="password"
+                                        type={showCurrentPassword
+                                            ? "text"
+                                            : "password"}
                                         required
                                         autoComplete="current-password"
                                         value={currentPassword}
                                         onChange={(e) =>
                                             setCurrentPassword(e.target.value)}
                                     />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        aria-pressed={showCurrentPassword}
+                                        aria-label={showCurrentPassword
+                                            ? "隐藏密码"
+                                            : "显示密码"}
+                                        onClick={() =>
+                                            setShowCurrentPassword((prev) =>
+                                                !prev
+                                            )}
+                                    >
+                                        {showCurrentPassword
+                                            ? (
+                                                <EyeOff
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                            )
+                                            : (
+                                                <Eye
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                            )}
+                                    </Button>
                                 </SettingsRow>
                                 <SettingsRow
                                     title="新密码"
@@ -709,8 +753,11 @@ export function AccountContent({ host }: { host: PageHost }) {
                                     <Input
                                         ref={newPasswordRef}
                                         id="account-new-password"
+                                        name="newPassword"
                                         placeholder={`至少 ${passwordRules.minLength} 个字符`}
-                                        type="password"
+                                        type={showNewPassword
+                                            ? "text"
+                                            : "password"}
                                         required
                                         minLength={passwordRules.minLength}
                                         maxLength={passwordRules.maxLength}
@@ -723,6 +770,33 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         onChange={(e) =>
                                             setNewPassword(e.target.value)}
                                     />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        aria-pressed={showNewPassword}
+                                        aria-label={showNewPassword
+                                            ? "隐藏密码"
+                                            : "显示密码"}
+                                        onClick={() =>
+                                            setShowNewPassword((prev) => !prev)}
+                                    >
+                                        {showNewPassword
+                                            ? (
+                                                <EyeOff
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                            )
+                                            : (
+                                                <Eye
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                            )}
+                                    </Button>
                                 </SettingsRow>
                                 <SettingsRow
                                     title="确认新密码"
@@ -742,8 +816,11 @@ export function AccountContent({ host }: { host: PageHost }) {
                                     <Input
                                         ref={confirmPasswordRef}
                                         id="account-confirm-password"
+                                        name="confirmPassword"
                                         placeholder="再次输入新密码"
-                                        type="password"
+                                        type={showConfirmPassword
+                                            ? "text"
+                                            : "password"}
                                         required
                                         minLength={passwordRules.minLength}
                                         maxLength={passwordRules.maxLength}
@@ -759,6 +836,35 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         onChange={(e) =>
                                             setConfirmPassword(e.target.value)}
                                     />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        aria-pressed={showConfirmPassword}
+                                        aria-label={showConfirmPassword
+                                            ? "隐藏密码"
+                                            : "显示密码"}
+                                        onClick={() =>
+                                            setShowConfirmPassword((prev) =>
+                                                !prev
+                                            )}
+                                    >
+                                        {showConfirmPassword
+                                            ? (
+                                                <EyeOff
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                            )
+                                            : (
+                                                <Eye
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                            )}
+                                    </Button>
                                 </SettingsRow>
                             </SettingsGroup>
 

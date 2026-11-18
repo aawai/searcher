@@ -527,78 +527,87 @@ export function SearcherSearchInput(
 
     return (
         <div className="search-form-wrap" onKeyDown={handleKeyDown}>
-            <form
-                className="search-form"
-                role="search"
-                onSubmit={handleSubmit}
-            >
-                <div className="search-frame" ref={frameRef}>
-                    <EngineSelector
-                        engine={engine}
-                        onEngineChange={onEngineChange}
-                        reachability={reachability}
-                        onCheck={onCheck}
-                        isChecking={isChecking}
-                    />
-                    <label className="sr-only" htmlFor="search-query">
-                        输入搜索词
-                    </label>
-                    <input
-                        ref={field}
-                        id="search-query"
-                        autoComplete="off"
-                        role="combobox"
-                        aria-autocomplete="list"
-                        aria-expanded={isOpen}
-                        aria-controls={isOpen ? listboxId : undefined}
-                        aria-activedescendant={isOpen && selectedIndex >= 0
-                            ? `${listboxId}-${selectedIndex}`
-                            : undefined}
-                        value={query}
-                        onChange={(e) => {
-                            setQuery(e.target.value);
-                            setFocused(true);
-                            setDismissed(false);
-                            setSelection(null);
-                        }}
-                        onCompositionStart={() => {
-                            composingRef.current = true;
-                        }}
-                        onCompositionEnd={() => {
-                            composingRef.current = false;
-                        }}
-                        onFocus={() => {
-                            setFocused(true);
-                            setDismissed(false);
-                        }}
-                        onBlur={() => {
-                            setFocused(false);
-                            setSelection(null);
-                        }}
-                        placeholder="搜索或输入网址"
-                        disabled={disabled}
-                    />
-                    <Tooltip>
-                        <TooltipTrigger
-                            render={<span className="search-submit-tooltip" />}
-                        >
-                            <Button
-                                className="search-submit"
-                                variant="ghost"
-                                type="submit"
-                                disabled={disabled || !query.trim()}
-                                aria-label="搜索"
+            <search>
+                <form
+                    className="search-form"
+                    onSubmit={handleSubmit}
+                >
+                    <div className="search-frame" ref={frameRef}>
+                        <EngineSelector
+                            engine={engine}
+                            onEngineChange={onEngineChange}
+                            reachability={reachability}
+                            onCheck={onCheck}
+                            isChecking={isChecking}
+                        />
+                        <label className="sr-only" htmlFor="search-query">
+                            输入搜索词
+                        </label>
+                        <input
+                            ref={field}
+                            id="search-query"
+                            name="q"
+                            autoComplete="off"
+                            enterKeyHint="search"
+                            autoCorrect="off"
+                            autoCapitalize="none"
+                            spellCheck={false}
+                            role="combobox"
+                            aria-autocomplete="list"
+                            aria-expanded={isOpen}
+                            aria-controls={isOpen ? listboxId : undefined}
+                            aria-activedescendant={isOpen && selectedIndex >= 0
+                                ? `${listboxId}-${selectedIndex}`
+                                : undefined}
+                            value={query}
+                            onChange={(e) => {
+                                setQuery(e.target.value);
+                                setFocused(true);
+                                setDismissed(false);
+                                setSelection(null);
+                            }}
+                            onCompositionStart={() => {
+                                composingRef.current = true;
+                            }}
+                            onCompositionEnd={() => {
+                                composingRef.current = false;
+                            }}
+                            onFocus={() => {
+                                setFocused(true);
+                                setDismissed(false);
+                            }}
+                            onBlur={() => {
+                                setFocused(false);
+                                setSelection(null);
+                            }}
+                            placeholder="搜索或输入网址"
+                            disabled={disabled}
+                        />
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <span className="search-submit-tooltip" />
+                                }
                             >
-                                <Search size="1em" className="icon-lg" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            {formatShortcut(SHORTCUTS.focusSearch.binding)}{" "}
-                            聚焦搜索
-                        </TooltipContent>
-                    </Tooltip>
-                </div>
-            </form>
+                                <Button
+                                    className="search-submit"
+                                    variant="ghost"
+                                    type="submit"
+                                    disabled={disabled || !query.trim()}
+                                    aria-label="搜索"
+                                >
+                                    <Search size="1em" className="icon-lg" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {formatShortcut(SHORTCUTS.focusSearch.binding)}
+                                {" "}
+                                聚焦搜索
+                            </TooltipContent>
+                        </Tooltip>
+                    </div>
+                </form>
+            </search>
 
             <span
                 className="sr-only"

@@ -916,6 +916,12 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                         }}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
+                                                if (
+                                                    e.nativeEvent.isComposing ||
+                                                    e.keyCode === 229
+                                                ) {
+                                                    return;
+                                                }
                                                 e.preventDefault();
                                                 void handleApplyDraft();
                                             }
@@ -1104,6 +1110,8 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                     index +
                                                                     1
                                                                 }`}
+                                                                width={160}
+                                                                height={160}
                                                                 loading="lazy"
                                                             />
                                                         </button>
