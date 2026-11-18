@@ -6,19 +6,13 @@ html {
     min-width: 320px;
 }
 /* Scrollbars stay out of sight until their area scrolls (`data-scrolling`, set
-   by scroll-activity.ts and cleared after 800ms) or the pointer is on the area.
-   Standard scrollbar-color / scrollbar-width: auto are the base rules; legacy
-   ::-webkit-scrollbar fallbacks live inside @supports not (scrollbar-color: auto)
-   for older WebKit/Blink browsers on fine-pointer devices. */
-* {
-    scrollbar-width: auto;
-    scrollbar-color: transparent transparent;
-}
-[data-scrolling],
-:where(*):hover {
-    scrollbar-color: var(--scrollbar-thumb) transparent;
-}
-@supports not (scrollbar-color: auto) {
+   by scroll-activity.ts and cleared after 800ms) or the pointer is on the thumb.
+   Chromium keeps arrow buttons when only the standard properties are set, so it
+   is styled through ::-webkit-scrollbar with the buttons removed; touch devices
+   keep their native overlay scrollbars. Browsers without the pseudo-element
+   (Firefox) use the standard properties and reveal the thumb while the area is
+   scrolled or hovered. */
+@supports selector(::-webkit-scrollbar) {
     @media (any-pointer: fine) {
         ::-webkit-scrollbar {
             inline-size: var(--scrollbar-size);
@@ -44,6 +38,16 @@ html {
         ::-webkit-scrollbar-thumb:hover {
             background-color: var(--scrollbar-thumb-hover);
         }
+    }
+}
+@supports not selector(::-webkit-scrollbar) {
+    * {
+        scrollbar-width: auto;
+        scrollbar-color: transparent transparent;
+    }
+    [data-scrolling],
+    :where(*):hover {
+        scrollbar-color: var(--scrollbar-thumb) transparent;
     }
 }
 body {
@@ -85,6 +89,28 @@ a {
     clip-path: inset(50%);
     white-space: nowrap;
     border: 0;
+}
+.skip-link:not(:focus-visible) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: var(--space-visually-hidden-offset);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+.skip-link:focus-visible {
+    position: fixed;
+    inset-block-start: var(--space-2);
+    inset-inline-start: var(--space-2);
+    z-index: calc(var(--elevation-toast) + 1);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--control-radius);
+    background: var(--surface-solid);
+    color: var(--foreground);
+    box-shadow: var(--shadow-l2);
 }
 .app-shell {
     min-height: 100dvh;

@@ -125,18 +125,18 @@
         "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", monospace;
     --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
     --font-metadata-size: 0.75rem;
-    --font-metadata-line-height: calc(16 / 12);
+    --font-metadata-line-height: 1rem;
     --font-body-size: 0.875rem;
-    --font-body-line-height: calc(22 / 14);
+    --font-body-line-height: 1.375rem;
     --font-title-size: 1.0625rem;
-    --font-title-line-height: calc(24 / 17);
+    --font-title-line-height: 1.5rem;
     --font-page-title-size: 1.5rem;
-    --font-page-title-line-height: calc(32 / 24);
+    --font-page-title-line-height: 2rem;
     --font-search-input-size: 1.0625rem;
     /* iOS zooms focused fields below 1rem (16px) on touch devices. */
     --font-input-touch-size: 1rem;
     --font-code-size: 0.8125rem;
-    --font-code-line-height: calc(20 / 13);
+    --font-code-line-height: 1.25rem;
     --font-brand-size: 1.1875rem;
     --font-body-weight: 400;
     --font-label-weight: 500;
@@ -146,11 +146,11 @@
     --font-markdown-section-size: 1.2em;
     --font-markdown-subsection-size: 1.1em;
     --font-masthead-day-size: 8rem;
-    --font-masthead-day-line-height: 0.8125;
+    --font-masthead-day-line-height: 6.5rem;
     --font-masthead-month-size: 1.25rem;
-    --font-masthead-month-line-height: 1.4;
+    --font-masthead-month-line-height: 1.75rem;
     --font-masthead-entry-size: 1.25rem;
-    --font-masthead-entry-line-height: 1.4;
+    --font-masthead-entry-line-height: 1.75rem;
 
     /* Spacing: 4px grid. */
     /* Grid-gap hairline dividers between cells sharing one surface. */
@@ -873,7 +873,7 @@
         /* iOS zooms focused inputs below 1rem (16px). */
         --font-search-input-size: 1rem;
         --font-masthead-day-size: 5.5rem;
-        --font-masthead-day-line-height: 0.8182;
+        --font-masthead-day-line-height: 4.5rem;
         --sheet-width: 100vw;
         --window-margin: var(--space-2);
     }
