@@ -1,5 +1,9 @@
 import { assertEquals } from "@std/assert";
-import { type Geometry, presetRect } from "./window-geometry.ts";
+import {
+    DEFAULT_WINDOW_WIDTHS,
+    type Geometry,
+    presetRect,
+} from "./window-geometry.ts";
 
 // 1440×900 with a 72px bottom Dock and 16px margins on every side.
 const g: Geometry = {
@@ -58,4 +62,17 @@ Deno.test("default size grows around the current center and stays inside the are
         width: 840,
         height: 680,
     });
+});
+
+Deno.test("DEFAULT_WINDOW_WIDTHS matches --window-*-width tokens", async () => {
+    const css = await Deno.readTextFile(
+        new URL("../../design-system/tokens.css", import.meta.url),
+    );
+    for (const [id, width] of Object.entries(DEFAULT_WINDOW_WIDTHS)) {
+        assertEquals(css.includes(`--window-${id}-width: ${width}px;`), true);
+        assertEquals(
+            new RegExp(`--window-${id}-height:\\s*\\d+px;`).test(css),
+            true,
+        );
+    }
 });

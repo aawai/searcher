@@ -2,6 +2,7 @@ import { lazy, Suspense, useRef, useState } from "react";
 import { usePageHost } from "../../app/page-host.tsx";
 import { ExternalLink, Maximize2, X } from "lucide-react";
 import { routes } from "../../app/routes.ts";
+import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { usePresence } from "../../components/ui/presence.ts";
 import { runSharedElementTransition } from "../../lib/shared-element.ts";
@@ -151,32 +152,44 @@ export function InlineAnswerCard(
                             >
                                 {source.type === "document"
                                     ? (
-                                        <button
+                                        <Button
                                             type="button"
+                                            variant="content"
                                             className="inline-ai-source"
                                             onClick={() =>
                                                 onOpenDocument(
                                                     source.documentId,
                                                 )}
                                         >
-                                            <span className="inline-ai-source-kind">
+                                            <Badge
+                                                variant="secondary"
+                                                className="inline-ai-source-kind"
+                                            >
                                                 笔记
-                                            </span>
+                                            </Badge>
                                             <span className="inline-ai-source-title">
                                                 {source.title}
                                             </span>
-                                        </button>
+                                        </Button>
                                     )
                                     : (
-                                        <a
+                                        <Button
+                                            variant="content"
                                             className="inline-ai-source"
-                                            href={source.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                            render={
+                                                <a
+                                                    href={source.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                />
+                                            }
                                         >
-                                            <span className="inline-ai-source-kind">
+                                            <Badge
+                                                variant="secondary"
+                                                className="inline-ai-source-kind"
+                                            >
                                                 网页
-                                            </span>
+                                            </Badge>
                                             <span className="inline-ai-source-title">
                                                 {source.title || source.url}
                                             </span>
@@ -184,7 +197,7 @@ export function InlineAnswerCard(
                                                 size="1em"
                                                 className="icon-sm"
                                             />
-                                        </a>
+                                        </Button>
                                     )}
                             </li>
                         ))}

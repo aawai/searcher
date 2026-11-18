@@ -7,6 +7,7 @@ import { THEME_LABELS, toggleThemeScheme } from "../../design-system/theme.ts";
 import { THEME_ICONS } from "./theme-icons.ts";
 import { accentLabel, AccentSwatches } from "./AccentSwatches.tsx";
 import { ThemeChoices } from "./ThemeChoices.tsx";
+import { Button } from "../ui/button.tsx";
 import {
     Popover,
     PopoverContent,
@@ -43,14 +44,17 @@ export function ThemeToggle(
     const Icon = THEME_ICONS[value];
     const label = `切换到${THEME_LABELS[next]}`;
     return (
-        <button
+        <Button
             type="button"
+            variant="ghost"
+            size="icon"
+            className="appearance-toggle"
             onClick={() => onValueChange(next)}
             aria-label={label}
             title={label}
         >
             <Icon size="1em" className="icon-lg" />
-        </button>
+        </Button>
     );
 }
 
@@ -73,9 +77,16 @@ export function AppearancePicker(
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger
-                className="appearance-picker-trigger"
-                aria-label={label}
-                title={label}
+                render={
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="appearance-picker-trigger"
+                        aria-label={label}
+                        title={label}
+                    />
+                }
             >
                 <span
                     className="appearance-picker-chip"
@@ -130,7 +141,11 @@ export function AppearancePicker(
                         onClick={() => setOpen(false)}
                     >
                         更多外观设置
-                        <ChevronRight aria-hidden="true" />
+                        <ChevronRight
+                            size="1em"
+                            className="icon-sm"
+                            aria-hidden="true"
+                        />
                     </Link>
                 </section>
             </PopoverContent>

@@ -94,9 +94,8 @@ function TrashRowActions(
             </Button>
             <Button
                 type="button"
-                variant="ghost"
+                variant="ghost-danger"
                 size="sm"
-                className="trash-danger"
                 onClick={row.onPurge}
                 disabled={row.disabled}
             >

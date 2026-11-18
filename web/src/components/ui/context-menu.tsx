@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { Check } from "lucide-react";
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";
 import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
@@ -96,6 +97,18 @@ function ContextMenuSeparator(
     );
 }
 
+function ContextMenuLabel(
+    { className, ...props }: ComponentProps<"div">,
+) {
+    return (
+        <div
+            data-slot="context-menu-label"
+            className={cn("menu-label", className)}
+            {...props}
+        />
+    );
+}
+
 function ContextMenuRadioGroup(props: ContextMenuPrimitive.RadioGroup.Props) {
     return <ContextMenuPrimitive.RadioGroup {...props} />;
 }
@@ -125,6 +138,7 @@ export {
     ContextMenu,
     ContextMenuContent,
     ContextMenuItem,
+    ContextMenuLabel,
     ContextMenuRadioGroup,
     ContextMenuRadioItem,
     ContextMenuSeparator,

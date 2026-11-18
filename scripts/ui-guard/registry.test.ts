@@ -128,6 +128,16 @@ Deno.test("registry - border-radius accepts registered Tokens, keywords and Toke
         checkRadius("calc(56px * var(--radius))", FIXTURE_REGISTRY),
         "raw",
     );
+    const withRatio = parseVisualRegistry(
+        FIXTURE_MARKDOWN.replace(
+            "| `--radius`         | 12 | 卡片 |",
+            "| `--radius`         | 12 | 卡片 |\n| `--radius-launcher-ratio` | 0.23 | 比例 |",
+        ),
+    );
+    assertEquals(
+        checkRadius("var(--radius-launcher-ratio)", withRatio),
+        "unregistered",
+    );
 });
 
 Deno.test("registry - accent fill matches per file, ignoring interaction-state pseudo-classes", () => {

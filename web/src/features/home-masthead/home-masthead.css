@@ -85,10 +85,16 @@
 /* Under opaque veil conditions, constrain the side veil within
    MASTHEAD_SEARCH_GAP (32px) of the column's outer edge so it stops cleanly
    before the central search box instead of extending across the wallpaper. */
-[data-contrast="more"] .home-masthead__veil:not([data-side="top"]),
 [data-glass="off"] .home-masthead__veil:not([data-side="top"]) {
     max-width: var(--masthead-veil-opaque-width);
     --masthead-veil-fade-length: var(--space-6);
+}
+
+@media (forced-colors: none) {
+    [data-contrast="more"] .home-masthead__veil:not([data-side="top"]) {
+        max-width: var(--masthead-veil-opaque-width);
+        --masthead-veil-fade-length: var(--space-6);
+    }
 }
 
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
@@ -229,7 +235,7 @@
     align-items: baseline;
 }
 
-.home-masthead__continue-item {
+:is(.home-masthead__continue-item, [data-slot="button"].home-masthead__continue-item) {
     position: relative;
     --touch-target-size: var(--space-6);
     display: inline-flex;
@@ -237,6 +243,7 @@
     gap: var(--space-1);
     min-width: 0;
     max-width: 100%;
+    min-height: 0;
     padding: 0;
     border: 0;
     border-radius: var(--radius-sm);
@@ -251,11 +258,13 @@
     inset-inline: min(0px, calc((100% - var(--touch-target-size)) / 2));
 }
 
-.home-masthead__continue-item:hover {
-    color: var(--foreground);
+@media (hover: hover) {
+    :is(.home-masthead__continue-item, [data-slot="button"].home-masthead__continue-item):hover {
+        color: var(--foreground);
+    }
 }
 
-.home-masthead__continue-item:focus-visible {
+:is(.home-masthead__continue-item, [data-slot="button"].home-masthead__continue-item):focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
@@ -492,9 +501,11 @@
     cursor: pointer;
 }
 
-.home-masthead__entry-menu-btn:hover {
-    background: var(--surface-soft);
-    color: var(--foreground);
+@media (hover: hover) {
+    .home-masthead__entry-menu-btn:hover {
+        background: var(--surface-soft);
+        color: var(--foreground);
+    }
 }
 
 .home-masthead__entry-menu-btn:focus-visible {
@@ -539,12 +550,13 @@
     color: var(--muted);
 }
 
-.home-masthead__copy-btn {
+[data-slot="button"].home-masthead__copy-btn {
     position: relative;
     --touch-target-size: var(--space-6);
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
+    min-height: 0;
     padding: 0;
     border: 0;
     border-radius: var(--radius-sm);
@@ -561,11 +573,13 @@
     inset-inline: min(0px, calc((100% - var(--touch-target-size)) / 2));
 }
 
-.home-masthead__copy-btn:hover {
-    text-decoration: underline;
+@media (hover: hover) {
+    [data-slot="button"].home-masthead__copy-btn:hover {
+        text-decoration: underline;
+    }
 }
 
-.home-masthead__copy-btn:focus-visible {
+[data-slot="button"].home-masthead__copy-btn:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
@@ -582,11 +596,12 @@
     line-height: var(--font-body-line-height);
 }
 
-.home-masthead__all-notes {
+[data-slot="button"].home-masthead__all-notes {
     position: relative;
     --touch-target-size: var(--space-6);
     display: inline-flex;
     align-items: center;
+    min-height: 0;
     padding: 0;
     border: 0;
     border-radius: var(--radius-sm);
@@ -603,11 +618,13 @@
     inset-inline: min(0px, calc((100% - var(--touch-target-size)) / 2));
 }
 
-.home-masthead__all-notes:hover {
-    text-decoration: underline;
+@media (hover: hover) {
+    [data-slot="button"].home-masthead__all-notes:hover {
+        text-decoration: underline;
+    }
 }
 
-.home-masthead__all-notes:focus-visible {
+[data-slot="button"].home-masthead__all-notes:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
@@ -639,8 +656,8 @@
 /* Narrow mode uses the compact day scale regardless of viewport width (e.g.
    >=768px with a side Dock or insufficient column clearance). */
 .home-masthead[data-mode="narrow"] {
-    --font-masthead-day-size: 88px;
-    --font-masthead-day-line-height: 72px;
+    --font-masthead-day-size: 5.5rem;
+    --font-masthead-day-line-height: 4.5rem;
 }
 
 .home-masthead[data-mode="narrow"][data-collapsed="true"] :is(.home-masthead__header, .home-masthead__dek) {
@@ -714,9 +731,11 @@
     display: none;
 }
 
-.home-masthead__peek {
+[data-slot="button"].home-masthead__peek {
     position: fixed;
     z-index: var(--elevation-canvas);
+    min-width: 0;
+    min-height: 0;
     padding: 0;
     border: 0;
     border-radius: var(--radius-sm);
@@ -724,7 +743,7 @@
     cursor: pointer;
 }
 
-.home-masthead__peek:focus-visible {
+[data-slot="button"].home-masthead__peek:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
@@ -763,7 +782,7 @@
     transform: translateY(var(--masthead-dock-shift));
 }
 
-.home-masthead__collapse {
+[data-slot="button"].home-masthead__collapse {
     margin-inline-start: auto;
     display: inline-flex;
     align-items: center;
@@ -780,27 +799,29 @@
     cursor: pointer;
 }
 
-.home-masthead__collapse:hover {
-    color: var(--foreground);
+@media (hover: hover) {
+    [data-slot="button"].home-masthead__collapse:hover {
+        color: var(--foreground);
+    }
 }
 
-.home-masthead__collapse:focus-visible {
+[data-slot="button"].home-masthead__collapse:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
 
 /* Coarse pointer: >=44px hit areas and always-visible menu button */
 @media (any-pointer: coarse), (hover: none) {
-    .home-masthead__continue-item,
-    .home-masthead__copy-btn,
-    .home-masthead__all-notes {
+    :is(.home-masthead__continue-item, [data-slot="button"].home-masthead__continue-item),
+    [data-slot="button"].home-masthead__copy-btn,
+    [data-slot="button"].home-masthead__all-notes {
         --touch-target-size: var(--control-touch-target);
     }
 
     .home-masthead__task,
-    .home-masthead__copy-btn,
-    .home-masthead__all-notes,
-    .home-masthead__collapse {
+    [data-slot="button"].home-masthead__copy-btn,
+    [data-slot="button"].home-masthead__all-notes,
+    [data-slot="button"].home-masthead__collapse {
         min-height: var(--control-touch-target);
     }
 

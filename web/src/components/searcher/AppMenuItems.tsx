@@ -1,6 +1,11 @@
-import { ContextMenuItem, ContextMenuSeparator } from "../ui/context-menu.tsx";
+import {
+    ContextMenuItem,
+    ContextMenuLabel,
+    ContextMenuSeparator,
+} from "../ui/context-menu.tsx";
 import {
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuSeparator,
 } from "../ui/dropdown-menu.tsx";
 import type { LauncherApp, LauncherGroup } from "./launcherTiles.ts";
@@ -41,9 +46,12 @@ export function AppMenuItems(
     const Separator = Item === ContextMenuItem
         ? ContextMenuSeparator
         : DropdownMenuSeparator;
+    const Label = Item === ContextMenuItem
+        ? ContextMenuLabel
+        : DropdownMenuLabel;
     return (
         <>
-            <div className="launcher-menu-title">{app.name}</div>
+            <Label className="launcher-menu-title">{app.name}</Label>
             <Item onClick={() => actions.onOpen(app)}>
                 打开
             </Item>

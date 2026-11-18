@@ -56,7 +56,7 @@
 @media (hover: hover) {
     .admin-nav-item:hover {
         color: var(--foreground);
-        background: color-mix(in srgb, var(--foreground) 6%, transparent);
+        background: var(--surface-hover);
     }
 }
 
@@ -155,7 +155,7 @@
 @media (hover: hover) {
     .admin-back-link:hover {
         color: var(--foreground);
-        background: color-mix(in srgb, var(--foreground) 6%, transparent);
+        background: var(--surface-hover);
     }
 }
 

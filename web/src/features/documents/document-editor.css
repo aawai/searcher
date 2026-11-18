@@ -105,12 +105,6 @@
 
 .document-title-input::placeholder {
     color: var(--muted);
-    opacity: 0.5;
-}
-
-/* Keep placeholder contrast without overriding system forced colours. */
-[data-contrast="more"] .document-title-input::placeholder {
-    opacity: 1;
 }
 
 .document-title-input:focus-visible:not([data-focus-origin="pointer"]) {
@@ -159,7 +153,7 @@
 
 .document-save-status[data-status="conflict"] {
     color: var(--danger);
-    font-weight: 600;
+    font-weight: var(--font-title-weight);
 }
 
 /* Metadata Bar (Word count, reading time) */
@@ -331,8 +325,8 @@
     margin: 0 var(--space-1);
 }
 
-/* Narrow / coarse-pointer editor controls remain touch sized and horizontally scrollable. */
-@media (any-pointer: coarse), (max-width: 639px) {
+/* Touch-capable or non-hover pointers keep 44x44px hit targets. */
+@media (any-pointer: coarse), (hover: none) {
     .document-editor-header button,
     .document-editor-header [role="button"],
     .document-editor-toolbar button,
@@ -343,6 +337,10 @@
         min-width: var(--control-touch-target);
         padding: var(--space-2);
     }
+}
+
+/* Narrow editor layout keeps the toolbar sticky and horizontally scrollable. */
+@media (max-width: 639px) {
     .document-toolbar-container {
         position: sticky;
         top: 0;
@@ -473,7 +471,7 @@
     font-family: var(--font-serif);
     font-size: var(--font-markdown-section-size);
     line-height: 1.3;
-    font-weight: 600;
+    font-weight: var(--font-title-weight);
     margin: var(--space-markdown-heading-before) 0
         var(--space-markdown-heading-after);
     color: var(--foreground);
@@ -484,7 +482,7 @@
     font-family: var(--font-serif);
     font-size: var(--font-markdown-subsection-size);
     line-height: 1.35;
-    font-weight: 600;
+    font-weight: var(--font-title-weight);
     margin: var(--space-markdown-heading-before) 0
         var(--space-markdown-heading-after);
     color: var(--foreground);
@@ -496,7 +494,7 @@
 .document-continuous-editor .ProseMirror h6 {
     font-size: 1em;
     line-height: 1.4;
-    font-weight: 600;
+    font-weight: var(--font-title-weight);
     margin: var(--space-markdown-heading-before) 0
         var(--space-markdown-heading-after);
     color: var(--foreground);
@@ -576,7 +574,7 @@
 
 .document-continuous-editor .ProseMirror th {
     background-color: var(--surface-soft);
-    font-weight: 600;
+    font-weight: var(--font-title-weight);
 }
 
 .document-continuous-editor .ProseMirror a {
@@ -593,7 +591,6 @@
     position: relative;
     text-align: center;
     user-select: none;
-    opacity: 0.6;
 }
 
 .document-continuous-editor .milkdown-pagebreak-separator {
@@ -630,7 +627,7 @@
     width: 100%;
 }
 
-.document-source-textarea {
+[data-slot="textarea"].document-source-textarea {
     width: 100%;
     flex: 1;
     min-height: 400px;
@@ -641,17 +638,14 @@
     padding-block-end: var(--document-status-clearance);
     background-color: var(--surface-soft);
     color: var(--foreground);
-    border: none;
-    border-radius: var(--radius);
-    outline: none;
+    border-radius: var(--multiline-radius);
     resize: vertical;
     box-sizing: border-box;
     tab-size: 2;
 }
 
-.document-source-textarea:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
+[data-slot="textarea"].document-source-textarea:not(:focus-visible, [aria-invalid="true"]) {
+    border-color: transparent;
 }
 
 /* Outline Panel (Headings tree) */
@@ -803,16 +797,13 @@
 }
 
 /* Editor alerts: save, upload, initialization, paper settings */
-.document-editor-alert {
+.document-editor-container > .document-editor-alert {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
     padding: var(--space-2) var(--space-4);
-    background-color: var(--surface-soft);
-    color: var(--danger);
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
+    border-radius: 0;
     flex-shrink: 0;
 }
 

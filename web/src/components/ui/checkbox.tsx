@@ -1,6 +1,5 @@
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox";
 import { Check } from "lucide-react";
-import { cn } from "../../lib/utils.ts";
 
 function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
     return (
@@ -8,13 +7,10 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
             data-slot="checkbox"
             nativeButton
             render={<button type="button" />}
-            className={cn("peer", className)}
+            className={className}
             {...props}
         >
-            <CheckboxPrimitive.Indicator
-                data-slot="checkbox-indicator"
-                className="flex items-center justify-center"
-            >
+            <CheckboxPrimitive.Indicator data-slot="checkbox-indicator">
                 <Check size="1em" className="icon-sm" />
             </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Root>

@@ -21,6 +21,7 @@ import {
     Terminal,
     Wrench,
 } from "lucide-react";
+import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { AssistantMarkdown } from "./AssistantMarkdown.tsx";
 import { MessageDetailsDialog } from "./MessageDetailsDialog.tsx";
@@ -103,9 +104,12 @@ export function SearcherAssistantMessage() {
                                         {source.type === "document"
                                             ? (
                                                 <>
-                                                    <span className="ask-source-card__kind">
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="ask-source-card__kind"
+                                                    >
                                                         笔记
-                                                    </span>
+                                                    </Badge>
                                                     <ArrowRight
                                                         size="1em"
                                                         className="icon-sm ask-source-card__icon"
@@ -129,9 +133,10 @@ export function SearcherAssistantMessage() {
 
                             if (source.type === "document") {
                                 return (
-                                    <button
+                                    <Button
                                         key={key}
                                         type="button"
+                                        variant="content"
                                         className="ask-source-card"
                                         title={source.title}
                                         aria-label={`打开笔记：${source.title}`}
@@ -144,21 +149,26 @@ export function SearcherAssistantMessage() {
                                             })}
                                     >
                                         {content}
-                                    </button>
+                                    </Button>
                                 );
                             }
 
                             return (
-                                <a
+                                <Button
                                     key={key}
-                                    href={source.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                    variant="content"
                                     className="ask-source-card"
                                     title={source.title}
+                                    render={
+                                        <a
+                                            href={source.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        />
+                                    }
                                 >
                                     {content}
-                                </a>
+                                </Button>
                             );
                         })}
                     </div>

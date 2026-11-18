@@ -32,6 +32,7 @@ import {
 } from "react";
 import { StatusBanner } from "../../components/searcher/semantic.tsx";
 import { pointerDragAccessibility } from "../../components/searcher/drag-accessibility.ts";
+import { Button } from "../../components/ui/button.tsx";
 import { Checkbox } from "../../components/ui/checkbox.tsx";
 import {
     DropdownMenu,
@@ -483,8 +484,9 @@ function SortableMastheadEntry({
                             </time>
                         )}
                         {summary.kind === "code" && (
-                            <button
+                            <Button
                                 type="button"
+                                variant="link"
                                 className="home-masthead__copy-btn touch-target"
                                 onPointerDown={(e) => e.stopPropagation()}
                                 onClick={(e) => {
@@ -498,7 +500,7 @@ function SortableMastheadEntry({
                                     aria-hidden="true"
                                 />
                                 <span>复制命令</span>
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>

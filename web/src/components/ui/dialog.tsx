@@ -46,13 +46,30 @@ function DialogBackdrop({
 }
 
 /** `surface="grouped"`: the panel is the grouped-list canvas for a grouped form. */
-type DialogPopupProps = DialogPrimitive.Popup.Props & { surface?: "grouped" };
+export type DialogSize = "sm" | "md" | "lg" | "wide";
+export type DialogPlacement = "center" | "top" | "anchored";
+export type DialogPopupProps = DialogPrimitive.Popup.Props & {
+    surface?: "grouped";
+    size?: DialogSize;
+    placement?: DialogPlacement;
+    scrollable?: boolean;
+};
 
-function DialogPopup({ className, surface, ...props }: DialogPopupProps) {
+function DialogPopup({
+    className,
+    surface,
+    size = "md",
+    placement = "center",
+    scrollable = false,
+    ...props
+}: DialogPopupProps) {
     return (
         <DialogPrimitive.Popup
             data-slot="dialog-content"
             data-surface={surface}
+            data-size={size}
+            data-placement={placement}
+            data-scrollable={scrollable || undefined}
             className={cn("dialog-panel", className)}
             {...props}
         />
@@ -63,7 +80,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
     return (
         <DialogPrimitive.Title
             data-slot="dialog-title"
-            className={cn("sheet-title", className)}
+            className={className}
             {...props}
         />
     );
@@ -86,7 +103,7 @@ function DialogClose({ className, ...props }: DialogPrimitive.Close.Props) {
     return (
         <DialogPrimitive.Close
             data-slot="dialog-close"
-            className={cn("dialog-close", className)}
+            className={className}
             {...props}
         />
     );
@@ -107,11 +124,13 @@ function DialogHeader({
 
 function DialogFooter({
     className,
+    bordered = false,
     ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement> & { bordered?: boolean }) {
     return (
         <div
             data-slot="dialog-footer"
+            data-bordered={bordered || undefined}
             className={className}
             {...props}
         />

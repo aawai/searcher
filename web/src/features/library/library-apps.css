@@ -87,7 +87,8 @@
 .library-apps-result-glyph {
     width: var(--space-8);
     height: var(--space-8);
-    border-radius: var(--radius);
+    --radius-launcher-icon: calc(var(--space-8) * var(--radius-launcher-ratio));
+    border-radius: var(--radius-launcher-icon);
     font-size: var(--font-body-size);
 }
 .library-apps-result-text {

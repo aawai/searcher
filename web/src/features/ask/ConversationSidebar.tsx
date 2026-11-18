@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { MoreHorizontal, Plus, Search, X } from "lucide-react";
+import { MoreHorizontal, Plus, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
-import { Input } from "../../components/ui/input.tsx";
+import { SearchField } from "../../components/searcher/semantic.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -92,32 +92,13 @@ export function ConversationSidebar({
                     <span>新建对话</span>
                 </Button>
 
-                <div className="ask-sidebar__search-wrap">
-                    <Search
-                        size="1em"
-                        className="icon-sm ask-sidebar__search-icon"
-                    />
-                    <Input
-                        variant="search"
-                        className="ask-sidebar__search-input"
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                        placeholder="搜索"
-                        aria-label="搜索历史对话"
-                    />
-                    {filter && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setFilter("")}
-                            className="ask-sidebar__search-clear"
-                            aria-label="清空搜索"
-                        >
-                            <X size="1em" className="icon-sm" />
-                        </Button>
-                    )}
-                </div>
+                <SearchField
+                    value={filter}
+                    onValueChange={setFilter}
+                    clearLabel="清空搜索"
+                    placeholder="搜索"
+                    aria-label="搜索历史对话"
+                />
             </div>
 
             <div

@@ -48,15 +48,38 @@ function normalizeSnippet(s: string): string {
     return s.replaceAll(/\s+/g, " ").trim();
 }
 
+function splitTopLevelCommas(value: string): string[] {
+    const parts: string[] = [];
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < value.length; i++) {
+        const ch = value[i];
+        if (ch === "(") depth++;
+        else if (ch === ")") depth = Math.max(0, depth - 1);
+        else if (ch === "," && depth === 0) {
+            parts.push(value.slice(start, i).trim());
+            start = i + 1;
+        }
+    }
+    parts.push(value.slice(start).trim());
+    return parts.filter(Boolean);
+}
+
 function isAllowedShadow(value: string): boolean {
-    const v = value.trim();
+    const v = stripQuotes(value).replace(/\s*!important$/i, "").trim();
     if (
-        v === "none" || v === "'none'" || v === '"none"' || v === "inherit" ||
-        v === "initial" || v === "undefined"
+        v === "none" || v === "inherit" || v === "initial" ||
+        v === "undefined"
     ) {
         return true;
     }
-    return v.includes("var(--shadow");
+    const layers = splitTopLevelCommas(v);
+    if (layers.length === 0) return false;
+    return layers.every((layer) =>
+        /^var\(\s*--shadow-[a-z0-9-]+\s*\)$/.test(layer) ||
+        /^(?:inset\s+)?0(?:px)?\s+0(?:px)?\s+0(?:px)?\s+(?:\d+(?:\.\d+)?px|var\(\s*--[a-z0-9-]+\s*\))\s+.+$/
+            .test(layer)
+    );
 }
 
 function stripQuotes(value: string): string {
@@ -303,10 +326,10 @@ function checkTailwindClass(
         };
     }
 
-    // Accent fills as Tailwind utilities: bg-primary, fill-accent/50, data-[checked]:bg-accent.
+    // Accent fills as Tailwind utilities: bg-primary, fill-accent/50, bg-[var(--accent)], bg-accent/[0.5].
     // A utility cannot be registered by CSS selector, so it is always rejected.
     if (
-        /^(?:bg|fill|from|via|to)-(?:primary|accent)(?:\/\d+)?$/
+        /^(?:bg|fill|from|via|to)-(?:(?:primary|accent)(?:\/(?:\d+|\[[^\]]+\]))?|\[var\(--(?:accent(?:-hc)?(?:-hover|-active)?|wallpaper-accent(?:-hc)?(?:-hover|-active)?)\)\](?:\/(?:\d+|\[[^\]]+\]))?)$/
             .test(base)
     ) {
         return {
@@ -317,6 +340,18 @@ function checkTailwindClass(
             line,
             column: col,
             fingerprint: `unregistered-accent-fill:className:${cls}`,
+        };
+    }
+
+    if (base === "uppercase") {
+        return {
+            file,
+            rule: "forbidden-text-transform",
+            property: "className",
+            value: cls,
+            line,
+            column: col,
+            fingerprint: `forbidden-text-transform:className:${cls}`,
         };
     }
 

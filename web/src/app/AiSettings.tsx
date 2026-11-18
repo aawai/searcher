@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { PageHost } from "./page-host.tsx";
-import { Eye, EyeOff, MoreHorizontal, Plus, RotateCcw } from "lucide-react";
+import { MoreHorizontal, Plus, RotateCcw } from "lucide-react";
 import type {
     AiModelDto,
     AiProviderDto,
@@ -52,6 +52,7 @@ import { errorMessage, useAppState } from "./state.tsx";
 import { authPath } from "./routes.ts";
 import "./settings.css";
 import {
+    SecretInput,
     SettingsGroup,
     SettingsRow,
     StatusBanner,
@@ -121,7 +122,6 @@ export function AiSettings({ host }: { host: PageHost }) {
     const [name, setName] = useState("");
     const [baseUrl, setBaseUrl] = useState("");
     const [apiKey, setApiKey] = useState("");
-    const [showApiKey, setShowApiKey] = useState(false);
     const [scope, setScope] = useState<"user" | "system">("user");
     const [editing, setEditing] = useState<string | null>(null);
     const [discoveryMode, setDiscoveryMode] = useState<DiscoveryMode>("auto");
@@ -186,7 +186,6 @@ export function AiSettings({ host }: { host: PageHost }) {
         setBaseUrl("");
         setApiKey("");
         setDiscoveryMode("auto");
-        setShowApiKey(false);
         setError("");
         setIsModalOpen(true);
     }
@@ -200,7 +199,6 @@ export function AiSettings({ host }: { host: PageHost }) {
             (provider as { discoveryMode?: DiscoveryMode }).discoveryMode ??
                 "auto",
         );
-        setShowApiKey(false);
         setError("");
         setIsModalOpen(true);
     }
@@ -302,7 +300,6 @@ export function AiSettings({ host }: { host: PageHost }) {
             setName("");
             setBaseUrl("");
             setApiKey("");
-            setShowApiKey(false);
             setIsModalOpen(false);
             setStatus("服务商和模型已同步");
         } catch (e) {
@@ -473,89 +470,95 @@ export function AiSettings({ host }: { host: PageHost }) {
                                     isDefault: true,
                                 })}
                         >
-                        {providerModels.map((model) => {
-                            const reasoning = describeReasoning(
-                                resolveEffectiveCapability(
-                                    model.metadataJson,
-                                    model.modelId,
-                                ),
-                            );
-                            const summary = [
-                                model.displayName !== model.modelId
-                                    ? model.modelId
-                                    : null,
-                                model.supportsText ? "文本" : null,
-                                model.supportsVision ? "视觉" : null,
-                                model.supportsTools ? "工具" : null,
-                                model.supportsStreaming ? "流式" : null,
-                            ].filter(Boolean).join(" · ");
-                            return (
-                                <SettingsRow
-                                    key={model.id}
-                                    className={manageable
-                                        ? "settings-row--vertical"
-                                        : undefined}
-                                    title={model.displayName}
-                                    description={
-                                        <span className="ai-model-meta">
-                                            {summary}
-                                            {summary && " · "}
-                                            <span title={reasoning.title}>
-                                                {reasoning.label}
+                            {providerModels.map((model) => {
+                                const reasoning = describeReasoning(
+                                    resolveEffectiveCapability(
+                                        model.metadataJson,
+                                        model.modelId,
+                                    ),
+                                );
+                                const summary = [
+                                    model.displayName !== model.modelId
+                                        ? model.modelId
+                                        : null,
+                                    model.supportsText ? "文本" : null,
+                                    model.supportsVision ? "视觉" : null,
+                                    model.supportsTools ? "工具" : null,
+                                    model.supportsStreaming ? "流式" : null,
+                                ].filter(Boolean).join(" · ");
+                                return (
+                                    <SettingsRow
+                                        key={model.id}
+                                        className={manageable
+                                            ? "settings-row--vertical"
+                                            : undefined}
+                                        title={model.displayName}
+                                        description={
+                                            <span className="ai-model-meta">
+                                                {summary}
+                                                {summary && " · "}
+                                                <span title={reasoning.title}>
+                                                    {reasoning.label}
+                                                </span>
                                             </span>
-                                        </span>
-                                    }
-                                >
-                                    {manageable && (
-                                        <div className="ai-model-controls">
-                                            <label className="ai-model-toggle">
-                                                <Checkbox
-                                                    aria-label={`启用 ${model.displayName}`}
-                                                    checked={model.enabled}
-                                                    onCheckedChange={(checked) =>
-                                                        void changeModel(
+                                        }
+                                    >
+                                        {manageable && (
+                                            <div className="ai-model-controls">
+                                                <label className="ai-model-toggle">
+                                                    <Checkbox
+                                                        aria-label={`启用 ${model.displayName}`}
+                                                        checked={model.enabled}
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) => void changeModel(
                                                             model.id,
-                                                            { enabled: checked },
+                                                            {
+                                                                enabled:
+                                                                    checked,
+                                                            },
                                                         )}
-                                                />
-                                                启用
-                                            </label>
-                                            <label className="ai-model-toggle">
-                                                <Checkbox
-                                                    aria-label={`可见 ${model.displayName}`}
-                                                    checked={model.visibleToUsers}
-                                                    onCheckedChange={(checked) =>
-                                                        void changeModel(
+                                                    />
+                                                    启用
+                                                </label>
+                                                <label className="ai-model-toggle">
+                                                    <Checkbox
+                                                        aria-label={`可见 ${model.displayName}`}
+                                                        checked={model
+                                                            .visibleToUsers}
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) => void changeModel(
                                                             model.id,
                                                             {
                                                                 visibleToUsers:
                                                                     checked,
                                                             },
                                                         )}
-                                                />
-                                                可见
-                                            </label>
-                                            <RadioGroupItem
-                                                value={model.id}
-                                                className="ai-model-toggle"
-                                                aria-label={`设为默认 ${model.displayName}`}
-                                            >
-                                                默认
-                                            </RadioGroupItem>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() =>
-                                                    openModelConfig(model)}
-                                            >
-                                                推理设置
-                                            </Button>
-                                        </div>
-                                    )}
-                                </SettingsRow>
-                            );
-                        })}
+                                                    />
+                                                    可见
+                                                </label>
+                                                <RadioGroupItem
+                                                    value={model.id}
+                                                    className="ai-model-toggle"
+                                                    aria-label={`设为默认 ${model.displayName}`}
+                                                >
+                                                    默认
+                                                </RadioGroupItem>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        openModelConfig(model)}
+                                                >
+                                                    推理设置
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </SettingsRow>
+                                );
+                            })}
                         </RadioGroup>
                     </SettingsGroup>
                 );
@@ -629,44 +632,19 @@ export function AiSettings({ host }: { host: PageHost }) {
                         </label>
                         <div className="field">
                             <label htmlFor="ai-api-key">API Key</label>
-                            <div className="ai-api-key-row">
-                                <Input
-                                    id="ai-api-key"
-                                    required={!editing}
-                                    type={showApiKey ? "text" : "password"}
-                                    autoComplete="off"
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder={editing
-                                        ? "留空保持现有 Key"
-                                        : "输入 API Key"}
-                                    className="ai-api-key-input"
-                                />
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => setShowApiKey(!showApiKey)}
-                                    aria-label={showApiKey
-                                        ? "隐藏 API Key"
-                                        : "显示 API Key"}
-                                    title={showApiKey ? "隐藏" : "显示"}
-                                >
-                                    {showApiKey
-                                        ? (
-                                            <EyeOff
-                                                size="1em"
-                                                className="icon-md"
-                                            />
-                                        )
-                                        : (
-                                            <Eye
-                                                size="1em"
-                                                className="icon-md"
-                                            />
-                                        )}
-                                </Button>
-                            </div>
+                            <SecretInput
+                                key={`${editing ?? "new"}-${isModalOpen}`}
+                                id="ai-api-key"
+                                required={!editing}
+                                autoComplete="off"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                                placeholder={editing
+                                    ? "留空保持现有 Key"
+                                    : "输入 API Key"}
+                                showLabel="显示 API Key"
+                                hideLabel="隐藏 API Key"
+                            />
                             <p className="ai-field-hint">加密保存在服务端。</p>
                         </div>
                         {!editing && user.role === "admin" && (

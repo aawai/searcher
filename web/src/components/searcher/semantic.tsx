@@ -10,7 +10,8 @@ import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { Card } from "../ui/card.tsx";
 import { Button } from "../ui/button.tsx";
-import { X } from "lucide-react";
+import { Input } from "../ui/input.tsx";
+import { Eye, EyeOff, Search, X } from "lucide-react";
 import { Table, TableCaption } from "../ui/table.tsx";
 import { usePresence } from "../ui/presence.ts";
 import { cn } from "../../lib/utils.ts";
@@ -190,18 +191,22 @@ export function EmptyState(
         headingLevel = 2,
         density = "default",
         className,
-    }: {
+        ...props
+    }: Omit<ComponentProps<"div">, "title"> & {
         title?: string;
         description?: string;
         action?: ReactNode;
         headingLevel?: 2 | 3;
         density?: "default" | "compact" | "inline";
-        className?: string;
     },
 ) {
     const Heading = headingLevel === 3 ? "h3" : "h2";
     return (
-        <div className={cn("empty-state", className)} data-density={density}>
+        <div
+            className={cn("empty-state", className)}
+            data-density={density}
+            {...props}
+        >
             {title && <Heading>{title}</Heading>}
             {description && <p>{description}</p>}
             {action && <ActionGroup>{action}</ActionGroup>}
@@ -264,10 +269,9 @@ export function LoadingState(
         density = "default",
         className,
         announce = true,
-    }: {
-        children?: ReactNode;
+        ...props
+    }: ComponentProps<"div"> & {
         density?: "default" | "compact";
-        className?: string;
         announce?: boolean;
     },
 ) {
@@ -277,6 +281,7 @@ export function LoadingState(
             data-density={density}
             role={announce ? "status" : "presentation"}
             aria-live={announce ? "polite" : "off"}
+            {...props}
         >
             {children}
         </div>
@@ -413,11 +418,13 @@ export function WorkspaceToolbar(
     return <div className={cn("workspace-toolbar", className)} {...props} />;
 }
 export function LocalNavigation(
-    { items, label, compact = false }: {
-        items: { label: string; to: string }[];
-        label: string;
-        compact?: boolean;
-    },
+    { items, label, compact = false, className, ...props }:
+        & Omit<ComponentProps<"nav">, "children">
+        & {
+            items: { label: string; to: string }[];
+            label: string;
+            compact?: boolean;
+        },
 ) {
     const location = useLocation();
     const navigationRef = useRef<HTMLElement>(null);
@@ -464,9 +471,10 @@ export function LocalNavigation(
     return (
         <nav
             ref={navigationRef}
-            className="local-navigation"
+            className={cn("local-navigation", className)}
             data-compact={compact || undefined}
             aria-label={label}
+            {...props}
         >
             {items.map((item) => (
                 <Link
@@ -484,10 +492,12 @@ export function LocalNavigation(
     );
 }
 export function ManagementTable(
-    { children, caption }: { children: ReactNode; caption?: string },
+    { children, caption, className, ...props }: ComponentProps<"div"> & {
+        caption?: string;
+    },
 ) {
     return (
-        <div className="management-table">
+        <div className={cn("management-table", className)} {...props}>
             <Table>
                 {caption && <TableCaption>{caption}</TableCaption>}
                 {children}
@@ -500,7 +510,16 @@ export function ManagementTable(
  * buttons on the end side only when there is more than one page.
  */
 export function Pagination(
-    { total, page, pageCount, busy = false, onPageChange, label }: {
+    {
+        total,
+        page,
+        pageCount,
+        busy = false,
+        onPageChange,
+        label,
+        className,
+        ...props
+    }: Omit<ComponentProps<"nav">, "children"> & {
         /** Already worded total, e.g. "共 6 位". */
         total: string;
         page: number;
@@ -512,7 +531,11 @@ export function Pagination(
 ) {
     const paged = pageCount > 1;
     return (
-        <nav className="pagination" aria-label={label}>
+        <nav
+            className={cn("pagination", className)}
+            aria-label={label}
+            {...props}
+        >
             <span>
                 {paged ? `${total} · 第 ${page} / ${pageCount} 页` : total}
             </span>
@@ -541,6 +564,143 @@ export function Pagination(
         </nav>
     );
 }
+export type SearchFieldProps =
+    & Omit<
+        ComponentProps<typeof Input>,
+        "type" | "variant" | "value" | "onChange"
+    >
+    & {
+        value: string;
+        onValueChange: (value: string) => void;
+        clearLabel?: string;
+        wrapperClassName?: string;
+        inputRef?: Ref<HTMLInputElement>;
+    };
+
+export function SearchField({
+    value,
+    onValueChange,
+    clearLabel = "清除搜索",
+    wrapperClassName,
+    className,
+    disabled = false,
+    inputRef,
+    ref,
+    ...props
+}: SearchFieldProps) {
+    const ownRef = useRef<HTMLInputElement | null>(null);
+    const assignRef = (
+        target: Ref<HTMLInputElement> | undefined,
+        node: HTMLInputElement | null,
+    ) => {
+        if (typeof target === "function") target(node);
+        else if (target) {
+            (target as { current: HTMLInputElement | null }).current = node;
+        }
+    };
+    const setRef = (node: HTMLInputElement | null) => {
+        ownRef.current = node;
+        assignRef(inputRef, node);
+        assignRef(ref, node);
+    };
+    return (
+        <div className={cn("search-field", wrapperClassName)}>
+            <Search
+                size="1em"
+                className="icon-md search-field-icon"
+                aria-hidden="true"
+            />
+            <Input
+                ref={setRef}
+                type="search"
+                variant="search"
+                className={cn("search-field-input", className)}
+                value={value}
+                onChange={(event) => onValueChange(event.target.value)}
+                disabled={disabled}
+                {...props}
+            />
+            {Boolean(value) && !disabled && (
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="search-field-clear"
+                    onClick={() => {
+                        onValueChange("");
+                        ownRef.current?.focus();
+                    }}
+                    aria-label={clearLabel}
+                >
+                    <X size="1em" className="icon-sm" aria-hidden="true" />
+                </Button>
+            )}
+        </div>
+    );
+}
+
+export type SecretInputProps =
+    & Omit<ComponentProps<typeof Input>, "type">
+    & {
+        showLabel?: string;
+        hideLabel?: string;
+        defaultVisible?: boolean;
+        wrapperClassName?: string;
+        toggleClassName?: string;
+    };
+
+export function SecretInput({
+    showLabel = "显示密码",
+    hideLabel = "隐藏密码",
+    defaultVisible = false,
+    wrapperClassName,
+    toggleClassName,
+    className,
+    disabled,
+    ...props
+}: SecretInputProps) {
+    const [visible, setVisible] = useState(defaultVisible);
+    return (
+        <div
+            className={cn("secret-field", wrapperClassName)}
+            data-slot="secret-field"
+        >
+            <Input
+                type={visible ? "text" : "password"}
+                className={cn("secret-field-input", className)}
+                disabled={disabled}
+                {...props}
+            />
+            <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={cn("secret-field-toggle", toggleClassName)}
+                aria-pressed={visible}
+                aria-label={visible ? hideLabel : showLabel}
+                disabled={disabled}
+                onClick={() => setVisible((prev) => !prev)}
+            >
+                {visible
+                    ? (
+                        <EyeOff
+                            size="1em"
+                            className="icon-md"
+                            aria-hidden="true"
+                        />
+                    )
+                    : (
+                        <Eye
+                            size="1em"
+                            className="icon-md"
+                            aria-hidden="true"
+                        />
+                    )}
+            </Button>
+        </div>
+    );
+}
+
 export {
     type PresetSliderStage,
     SettingsPresetSlider,

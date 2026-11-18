@@ -444,7 +444,12 @@ export function checkRadius(
             .test(word);
         if (!isVar && !isCalc) return "raw";
         if (refs.length === 0) return "raw";
-        if (!refs.every((ref) => registry.radiusTokens.has(ref))) {
+        if (
+            !refs.every((ref) =>
+                ref !== "--radius-launcher-ratio" &&
+                registry.radiusTokens.has(ref)
+            )
+        ) {
             result = "unregistered";
         }
     }

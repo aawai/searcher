@@ -16,6 +16,9 @@ export const MEDIA_QUERIES = {
     belowMedium: `(max-width: ${BREAKPOINTS.medium - 1}px)`,
     belowWide: `(max-width: ${BREAKPOINTS.wide - 1}px)`,
     coarsePointer: "(any-pointer: coarse)",
+    touchTarget: "(any-pointer: coarse), (hover: none)",
+    fineHoverPointer: "(hover: hover) and (pointer: fine)",
+    /** @deprecated Use `touchTarget` for pointer sizing and `belowSmall` for width compaction. */
     editorCompact: `(any-pointer: coarse), (max-width: ${
         BREAKPOINTS.small - 1
     }px)`,

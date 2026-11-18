@@ -57,7 +57,10 @@ import {
     DialogHeader,
     DialogTitle,
 } from "../../components/ui/dialog.tsx";
-import { LoadingState } from "../../components/searcher/semantic.tsx";
+import {
+    LoadingState,
+    StatusBanner,
+} from "../../components/searcher/semantic.tsx";
 import { PaneResizeHandle } from "../../components/searcher/PaneResizeHandle.tsx";
 import {
     BookOpen,
@@ -662,8 +665,8 @@ export function DocumentEditor({
             if (
                 !container.isConnected ||
                 !container.contains(document.activeElement) ||
-                !globalThis.matchMedia(MEDIA_QUERIES.editorCompact)
-                    .matches
+                !(globalThis.matchMedia(MEDIA_QUERIES.touchTarget).matches ||
+                    globalThis.matchMedia(MEDIA_QUERIES.belowSmall).matches)
             ) return;
 
             const toolbar = container.querySelector<HTMLElement>(
@@ -1359,9 +1362,9 @@ export function DocumentEditor({
             {/* Error banner if upload or save error */}
             {(uploadError ||
                 (snapshot.error && (!hasConflict || conflictDismissed))) && (
-                <div
+                <StatusBanner
+                    tone="error"
                     className="document-editor-alert"
-                    role="alert"
                 >
                     <span>
                         {uploadError || snapshot.error}
@@ -1387,14 +1390,14 @@ export function DocumentEditor({
                             ? "重试保存"
                             : "关闭"}
                     </Button>
-                </div>
+                </StatusBanner>
             )}
 
             {/* Init error banner with retry */}
             {initError && (
-                <div
+                <StatusBanner
+                    tone="error"
                     className="document-editor-alert"
-                    role="alert"
                 >
                     <span>编辑器初始化失败：{initError}</span>
                     <Button
@@ -1408,20 +1411,21 @@ export function DocumentEditor({
                     >
                         重试加载
                     </Button>
-                </div>
+                </StatusBanner>
             )}
 
             {paperError && (
-                <div role="alert" className="document-editor-alert">
+                <StatusBanner tone="error" className="document-editor-alert">
                     <span>{paperError}</span>
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => void loadPaper()}
+                        onClick={() =>
+                            void loadPaper()}
                     >
                         重试纸张设置
                     </Button>
-                </div>
+                </StatusBanner>
             )}
             {/* Header & Controls */}
             <header key="editor-header" className="document-editor-header">
@@ -1696,7 +1700,7 @@ export function DocumentEditor({
                         {/* Source Mode Container */}
                         {viewMode === "source" && (
                             <div className="document-source-editor">
-                                <textarea
+                                <Textarea
                                     ref={sourceTextareaRef}
                                     className="document-source-textarea"
                                     placeholder="在此输入 Markdown 正文…"

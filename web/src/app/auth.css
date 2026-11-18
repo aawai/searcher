@@ -2,7 +2,7 @@
    over the wallpaper-derived canvas. The page title is the only heading. */
 
 .auth-page {
-    min-height: calc(100dvh - 56px - var(--space-page-block) - var(--space-10));
+    min-height: calc(100dvh - var(--topbar-height) - var(--space-page-block) - var(--space-10));
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -87,41 +87,6 @@
 
 .auth-field-message[data-tone="danger"] {
     color: var(--danger);
-}
-
-.auth-password-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    min-width: 0;
-}
-
-.auth-password-wrap > .cn-input {
-    padding-inline-end: var(--space-8);
-}
-
-.auth-password-wrap > .auth-password-toggle {
-    position: absolute;
-    inset-inline-end: var(--space-1);
-    width: var(--control-compact-height);
-    min-height: var(--control-compact-height);
-    color: var(--muted);
-}
-
-@media (hover: hover) {
-    .auth-password-wrap > .auth-password-toggle:hover {
-        color: var(--foreground);
-    }
-}
-
-@media (any-pointer: coarse), (hover: none) {
-    .auth-password-wrap > .cn-input {
-        padding-inline-end: var(--space-9);
-    }
-    .auth-password-wrap > .auth-password-toggle {
-        width: var(--control-height);
-        min-height: var(--control-height);
-    }
 }
 
 .auth-submit {

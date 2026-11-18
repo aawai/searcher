@@ -78,3 +78,40 @@ Deno.test("Escape layer subscriptions observe active overlay changes", () => {
     assertEquals(snapshots, [true, false]);
     unsubscribe();
 });
+
+Deno.test("tooltip Escape layer takes top priority without activating modal overlay state", () => {
+    const stack = new EscapeLayerStack();
+    const handled: string[] = [];
+    stack.register("host", () => handled.push("host"));
+    stack.register("overlay", () => handled.push("dialog"));
+    const unregisterTooltip = stack.register("tooltip");
+
+    assertEquals(stack.hasLayer("tooltip"), true);
+    assertEquals(stack.hasLayer("overlay"), true);
+
+    const eventOverDialog = escapeEvent();
+    stack.capture(eventOverDialog);
+    assertEquals(stack.dispatch(eventOverDialog), true);
+    assert(eventOverDialog.defaultPrevented);
+    assertEquals(handled, []);
+
+    unregisterTooltip();
+    assertEquals(stack.hasLayer("tooltip"), false);
+
+    // Only a tooltip over host must not count as an active modal "overlay".
+    const dockStack = new EscapeLayerStack();
+    dockStack.register("host", () => handled.push("host"));
+    const unregisterDockTooltip = dockStack.register("tooltip");
+
+    assertEquals(dockStack.hasLayer("tooltip"), true);
+    assertEquals(dockStack.hasLayer("overlay"), false);
+
+    const eventOverHost = escapeEvent();
+    dockStack.capture(eventOverHost);
+    assertEquals(dockStack.dispatch(eventOverHost), true);
+    assert(eventOverHost.defaultPrevented);
+    assertEquals(handled, []);
+
+    unregisterDockTooltip();
+    assertEquals(dockStack.hasLayer("overlay"), false);
+});

@@ -280,3 +280,55 @@ Deno.test("css-scanner - serif families are limited to the registered editorial 
         ]],
     );
 });
+
+Deno.test("css-scanner - hardened Stage 4 checks (logical props, calc/shadow layers, accent-hc, font-weight, uppercase)", () => {
+    const css = `
+        .bad-logical {
+            padding-inline-start: 14px;
+            margin-block-end: 12px;
+            border-start-start-radius: 9px;
+        }
+        .bad-calc {
+            padding: calc(13px + var(--space-1));
+        }
+        .bad-shadow {
+            box-shadow: var(--shadow-l2), 0 4px 12px var(--border);
+        }
+        .bad-accent {
+            background: color-mix(in srgb, var(--accent-hc) 80%, transparent);
+            fill: var(--wallpaper-accent);
+        }
+        .bad-type {
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .good {
+            padding-inline-end: var(--control-touch-target);
+            padding-block-start: calc(var(--control-touch-target) + var(--space-4) + 1px);
+            padding-bottom: max(var(--space-3), env(safe-area-inset-bottom, 12px));
+            box-shadow: 0 0 0 2px var(--ring), var(--shadow-l2);
+            font-weight: var(--font-title-weight);
+            border-start-start-radius: var(--radius);
+        }
+    `;
+    assertEquals(rulesAndValues("web/src/features/hardened.css", css), [
+        ["raw-spacing-literal", "padding-inline-start: 14px"],
+        ["raw-spacing-literal", "margin-block-end: 12px"],
+        ["raw-border-radius", "border-start-start-radius: 9px"],
+        ["raw-spacing-literal", "padding: calc(13px + var(--space-1))"],
+        [
+            "raw-box-shadow",
+            "box-shadow: var(--shadow-l2), 0 4px 12px var(--border)",
+        ],
+        [
+            "unregistered-accent-fill",
+            ".bad-accent { background: color-mix(in srgb, var(--accent-hc) 80%, transparent) }",
+        ],
+        [
+            "unregistered-accent-fill",
+            ".bad-accent { fill: var(--wallpaper-accent) }",
+        ],
+        ["raw-font-weight", "font-weight: 700"],
+        ["forbidden-text-transform", "text-transform: uppercase"],
+    ]);
+});

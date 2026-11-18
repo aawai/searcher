@@ -6,7 +6,7 @@ import { NativeSelect, NativeSelectOption } from "../ui/native-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
 import { Switch } from "../ui/switch.tsx";
 import { LogoCandidatePicker } from "./LogoCandidatePicker.tsx";
-import { SettingsGroup, SettingsRow } from "./semantic.tsx";
+import { SettingsGroup, SettingsRow, StatusBanner } from "./semantic.tsx";
 import { WebAppGlyph } from "./WebAppIcon.tsx";
 import {
     AlertDialog,
@@ -128,9 +128,12 @@ export function AppForm() {
         <form onSubmit={handleSubmit} className="app-dialog-form">
             <div className="app-dialog-body">
                 {formError && (
-                    <p role="alert" className="error app-dialog-form-error">
+                    <StatusBanner
+                        tone="error"
+                        className="app-dialog-form-error"
+                    >
                         {formError}
-                    </p>
+                    </StatusBanner>
                 )}
 
                 <SettingsGroup title="基础信息" headingLevel={3}>

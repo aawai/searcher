@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAppState } from "../../app/state.tsx";
 import { authPath, routes } from "../../app/routes.ts";
 import { LoadingState } from "../../components/searcher/semantic.tsx";
+import { PageShell } from "../../components/searcher/PageShell.tsx";
 import {
     sharedNote,
     type SharedNoteHandoff,
@@ -43,5 +44,9 @@ export function SharePage() {
         const handoff: SharedNoteHandoff = { sharedNote: note };
         navigate(routes.home, { replace: true, state: handoff });
     }, [location.search, navigate, user]);
-    return <LoadingState className="page">正在记录…</LoadingState>;
+    return (
+        <PageShell archetype="utility">
+            <LoadingState>正在记录…</LoadingState>
+        </PageShell>
+    );
 }

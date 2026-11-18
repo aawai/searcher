@@ -107,7 +107,9 @@ export function AdminShell({
         };
 
         const revealActive = () => {
-            const active = nav.querySelector<HTMLElement>("[aria-current=page]");
+            const active = nav.querySelector<HTMLElement>(
+                "[aria-current=page]",
+            );
             if (active && nav.scrollWidth > nav.clientWidth + 1) {
                 const bounds = nav.getBoundingClientRect();
                 const item = active.getBoundingClientRect();
@@ -171,7 +173,7 @@ export function AdminShell({
                             className="icon-md"
                             aria-hidden="true"
                         />
-                        <span>返回桌面</span>
+                        <span>返回首页</span>
                     </Link>
                 </aside>
                 <section

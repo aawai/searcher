@@ -1,0 +1,235 @@
+/* ==========================================================================
+   Wallpaper Domain Stylesheet - Surface, stage context preview, composition
+   ========================================================================== */
+
+.wallpaper-surface {
+    container-type: size;
+    position: fixed;
+    inset: 0;
+    z-index: var(--elevation-wallpaper);
+    isolation: isolate;
+    overflow: hidden;
+    pointer-events: none;
+    /* No wallpaper: the plain theme background (light / dark). */
+    background: var(--background);
+}
+
+.wallpaper-surface--embedded {
+    position: absolute;
+    z-index: var(--elevation-local-0);
+}
+
+.wallpaper-surface__image {
+    position: absolute;
+    inset: 0;
+    background-image: var(--wallpaper-image);
+    background-position: var(--wallpaper-position);
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: var(--wallpaper-dim);
+}
+
+.wallpaper-surface__mask {
+    position: absolute;
+    inset: 0;
+    z-index: var(--elevation-local-2);
+    background: var(--surface-l0);
+    opacity: var(--wallpaper-mask);
+}
+
+.wallpaper-surface--derived .wallpaper-surface__image {
+    inset: calc(-1 * var(--space-10));
+}
+
+.wallpaper-surface--derived .wallpaper-surface__mask {
+    background: var(--canvas-derived);
+    opacity: 1;
+    -webkit-backdrop-filter: var(--canvas-derived-filter);
+    backdrop-filter: var(--canvas-derived-filter);
+}
+
+/* Static simulation of the home search over the wallpaper */
+.wallpaper-stage-context-preview {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-20%);
+    pointer-events: none;
+    user-select: none;
+    z-index: var(--elevation-local-2);
+}
+
+.wallpaper-stage-context-preview__search-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: min(72%, 280px);
+    height: var(--control-height);
+    padding: 0 var(--space-3);
+    border-radius: var(--search-radius);
+    background: var(--material-regular);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
+    box-shadow: var(--shadow-l2);
+    color: var(--muted);
+}
+
+.wallpaper-stage-context-preview__placeholder {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+/* Composition dialog */
+.dialog-panel.wallpaper-composition-dialog {
+    width: min(94vw, 860px);
+    max-height: min(90dvh, 780px);
+    overflow-y: auto;
+}
+
+.wallpaper-composition-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+}
+
+.wallpaper-composition-readout {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.wallpaper-composition-readout code {
+    font-family: var(--font-mono);
+    font-size: var(--font-code-size);
+    line-height: var(--font-code-line-height);
+}
+
+.wallpaper-composition-previews {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+@media (min-width: 768px) {
+    .wallpaper-composition-previews {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+}
+
+.wallpaper-composition-preview-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.wallpaper-composition-preview-card--desktop {
+    flex: 1;
+    min-width: 0;
+}
+
+.wallpaper-composition-preview-card--mobile {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .wallpaper-composition-preview-card--mobile {
+        width: 200px;
+        flex-shrink: 0;
+    }
+}
+
+.wallpaper-composition-preview-card__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-label-weight);
+}
+
+.wallpaper-preview-container {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--control-radius);
+    cursor: crosshair;
+    user-select: none;
+    touch-action: none;
+}
+
+.wallpaper-preview-container:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+.wallpaper-preview-container--desktop {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+}
+
+.wallpaper-preview-container--mobile {
+    aspect-ratio: 9 / 19.5;
+    height: var(--wallpaper-preview-mobile-height);
+    max-width: 100%;
+    align-self: center;
+}
+
+.wallpaper-focal-marker {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: var(--elevation-local-20);
+}
+
+.wallpaper-focal-marker__ring {
+    width: var(--wallpaper-focal-marker-size);
+    height: var(--wallpaper-focal-marker-size);
+    border: 2px solid var(--wallpaper-overlay-contrast);
+    border-radius: 50%;
+    box-shadow: var(--shadow-l2);
+}
+
+.wallpaper-focal-marker__dot {
+    position: absolute;
+    width: var(--wallpaper-focal-marker-dot-size);
+    height: var(--wallpaper-focal-marker-dot-size);
+    border-radius: 50%;
+    background: var(--wallpaper-overlay-contrast);
+}
+
+/* Home search + plate footprint at 1440x900: 34% top, 88% bottom, 640px content column. */
+.wallpaper-cover-band {
+    position: absolute;
+    inset-block-start: 34%;
+    inset-block-end: 12%;
+    inset-inline: 28%;
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--surface-scrim) 40%, transparent);
+    box-shadow: var(--shadow-material-edge);
+    pointer-events: none;
+    z-index: var(--elevation-local-1);
+}
+
+.wallpaper-composition-hint {
+    margin: 0 0 var(--space-3);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}

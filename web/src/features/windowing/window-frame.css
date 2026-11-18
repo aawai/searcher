@@ -101,47 +101,37 @@
     gap: var(--space-window-title-gap);
     cursor: default;
 }
-.window-frame__button,
+:is([data-slot="button"], [data-slot="dropdown-menu-trigger"]).window-frame__button,
 .window-frame__toolbar .button--icon {
     width: var(--window-title-button-size);
     min-width: var(--window-title-button-size);
     height: var(--window-title-button-size);
     min-height: var(--window-title-button-size);
 }
-.window-frame__button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 0;
-    border-radius: var(--control-radius);
-    background: transparent;
-    cursor: pointer;
-}
 /* One colour grammar for every icon button in the title bar, the window's own
    and those a view portals into the toolbar: muted at rest, foreground while
    hovered, pressed or holding an open menu, accent when toggled on. */
-.window-frame__button,
+:is([data-slot="button"], [data-slot="dropdown-menu-trigger"]).window-frame__button,
 .window-frame__toolbar .button--icon {
     color: var(--muted);
 }
 @media (hover: hover) {
-    .window-frame__button:hover,
+    :is([data-slot="button"], [data-slot="dropdown-menu-trigger"]).window-frame__button:hover,
     .window-frame__toolbar .button--icon:hover {
         background: var(--surface-soft);
         color: var(--foreground);
     }
 }
-.window-frame__button:is(:active, [data-popup-open]),
+:is([data-slot="button"], [data-slot="dropdown-menu-trigger"]).window-frame__button:is(:active, [data-popup-open]),
 .window-frame__toolbar .button--icon:is(:active, [data-popup-open]) {
     color: var(--foreground);
 }
-.window-frame__button[aria-pressed="true"],
+:is([data-slot="button"], [data-slot="dropdown-menu-trigger"]).window-frame__button[aria-pressed="true"],
 .window-frame__toolbar .button--icon[aria-pressed="true"] {
     background: var(--accent-soft);
     color: var(--accent);
 }
-.window-frame__button:focus-visible {
+:is([data-slot="button"], [data-slot="dropdown-menu-trigger"]).window-frame__button:focus-visible {
     outline: var(--space-half) solid var(--ring);
     outline-offset: calc(-1 * var(--space-half));
 }

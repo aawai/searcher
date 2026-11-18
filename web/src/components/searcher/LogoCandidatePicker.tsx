@@ -19,6 +19,8 @@ import { Button, buttonVariants } from "../ui/button.tsx";
 import { routes } from "../../app/routes.ts";
 import { Input } from "../ui/input.tsx";
 import { NativeSelect } from "../ui/native-select.tsx";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
+import { cn } from "../../lib/utils.ts";
 import { SettingsRow } from "./semantic.tsx";
 
 /** The AI source of the app form's icon group: rows inside that group. */
@@ -63,7 +65,10 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
 
     if (!models.length) {
         return (
-            <SettingsRow title="AI 生成" description="暂无可用模型，请在 AI 设置中添加服务商或联系管理员。">
+            <SettingsRow
+                title="AI 生成"
+                description="暂无可用模型，请在 AI 设置中添加服务商或联系管理员。"
+            >
                 <Link
                     to={routes.settings("ai")}
                     className={buttonVariants({
@@ -200,25 +205,32 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     title="生成结果"
                     className="settings-row--vertical"
                 >
-                    <div
+                    <RadioGroup
                         className="app-ai-candidates-grid"
-                        role="radiogroup"
                         aria-label="AI 图标候选"
+                        disabled={busy}
+                        value={selectedCandidateIndex !== null
+                            ? String(selectedCandidateIndex)
+                            : ""}
+                        onValueChange={(value) => {
+                            const index = Number(value);
+                            const candidate = candidates[index];
+                            if (Number.isInteger(index) && candidate) {
+                                void choose(candidate, index);
+                            }
+                        }}
                     >
                         {candidates.map((candidate, index) => {
                             const isSelected = selectedCandidateIndex === index;
                             return (
-                                <button
-                                    type="button"
-                                    role="radio"
-                                    aria-checked={isSelected}
-                                    className={`app-ai-candidate-card${
-                                        isSelected ? " is-selected" : ""
-                                    }`}
+                                <RadioGroupItem
                                     key={index}
+                                    value={String(index)}
                                     disabled={busy}
-                                    onClick={() =>
-                                        void choose(candidate, index)}
+                                    className={cn(
+                                        "app-ai-candidate-card",
+                                        isSelected && "is-selected",
+                                    )}
                                     aria-label={`选用第 ${
                                         index + 1
                                     } 个 AI 图标候选`}
@@ -232,7 +244,10 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                         />
                                     </div>
                                     <div className="app-ai-candidate-footer">
-                                        <span className="app-ai-candidate-radio-dot">
+                                        <span
+                                            className="app-ai-candidate-radio-dot"
+                                            aria-hidden="true"
+                                        >
                                             {isSelected && (
                                                 <Check
                                                     size="1em"
@@ -242,10 +257,10 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                         </span>
                                         <span>图标 {index + 1}</span>
                                     </div>
-                                </button>
+                                </RadioGroupItem>
                             );
                         })}
-                    </div>
+                    </RadioGroup>
                 </SettingsRow>
             )}
             <AlertDialog
@@ -268,12 +283,12 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                     应用名称、域名和用途将发送至以下服务商，可能产生费用。
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
-                            <div className="app-ai-confirm-body min-h-0 overflow-y-auto">
+                            <div className="app-ai-confirm-body">
                                 <div className="app-ai-confirm-item">
                                     <span className="app-ai-confirm-label">
                                         服务商
                                     </span>
-                                    <span className="app-ai-confirm-value font-medium">
+                                    <span className="app-ai-confirm-value app-ai-confirm-value--emphasis">
                                         {confirmSnapshot.providerName}{" "}
                                         ({confirmSnapshot.baseUrl})
                                     </span>
@@ -310,7 +325,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                     <span className="app-ai-confirm-label">
                                         应用名称
                                     </span>
-                                    <span className="app-ai-confirm-value font-medium">
+                                    <span className="app-ai-confirm-value app-ai-confirm-value--emphasis">
                                         {confirmSnapshot.siteName}
                                     </span>
                                 </div>

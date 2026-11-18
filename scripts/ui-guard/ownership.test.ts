@@ -1202,3 +1202,58 @@ Deno.test("Ownership integration: scanOwnership reports bare feature class overr
         await Deno.remove(dir, { recursive: true });
     }
 });
+
+Deno.test("Ownership integration: Stage 4 ownership updates (Rule A prefixes, Rule C TSX style, Rule F semantic slider & wallpaper)", async () => {
+    const dir = await Deno.makeTempDir({ prefix: "ownership-stage4-" });
+    try {
+        await Deno.mkdir(`${dir}/web/src/styles`, { recursive: true });
+        await Deno.mkdir(`${dir}/web/src/components/searcher`, {
+            recursive: true,
+        });
+        await Deno.mkdir(`${dir}/web/src/components/wallpaper`, {
+            recursive: true,
+        });
+        await Deno.mkdir(`${dir}/web/src/design-system`, { recursive: true });
+        await Deno.mkdir(`${dir}/web/src/app`, { recursive: true });
+
+        await Deno.writeTextFile(
+            `${dir}/web/src/design-system/tokens.css`,
+            `:root { --accent: #3b82f6; }\n`,
+        );
+        await Deno.writeTextFile(
+            `${dir}/web/src/styles/global.css`,
+            `.auth-leak { color: var(--accent); }\n`,
+        );
+        await Deno.writeTextFile(
+            `${dir}/web/src/components/searcher/semantic.css`,
+            `.settings-preset-slider { display: flex; }\n`,
+        );
+        await Deno.writeTextFile(
+            `${dir}/web/src/components/wallpaper/wallpaper.css`,
+            `.wallpaper-surface { position: fixed; }\n`,
+        );
+        await Deno.writeTextFile(
+            `${dir}/web/src/app/Probe.tsx`,
+            `export function Probe() {\n    return <div style={{ color: "var(--missing-tsx-token)" }} />;\n}\n`,
+        );
+
+        const result = await scanOwnership(dir, dir);
+        assertEquals(
+            result.byRule["feature-selector-in-global"].map((v) => v.snippet),
+            [".auth-leak"],
+        );
+        assertEquals(
+            result.byRule["css-prefix-ownership"].map((v) => [
+                v.file,
+                v.snippet,
+            ]),
+            [["web/src/styles/global.css", ".auth-leak"]],
+        );
+        assertEquals(
+            result.byRule["undefined-css-token"].map((v) => v.snippet),
+            ["var(--missing-tsx-token)"],
+        );
+    } finally {
+        await Deno.remove(dir, { recursive: true });
+    }
+});

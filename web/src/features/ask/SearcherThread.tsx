@@ -134,12 +134,13 @@ export function SearcherThread({
                                     : "配置模型后即可开始提问。"}
                             </h2>
                             {!selectedModelId && (
-                                <Link
-                                    to={routes.settings("ai")}
-                                    className="button button--primary ask-empty-hero__cta"
+                                <Button
+                                    variant="default"
+                                    className="ask-empty-hero__cta"
+                                    render={<Link to={routes.settings("ai")} />}
                                 >
                                     配置模型
-                                </Link>
+                                </Button>
                             )}
                         </div>
 

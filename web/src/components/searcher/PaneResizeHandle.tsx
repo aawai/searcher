@@ -7,9 +7,6 @@ import {
     ContextMenuTrigger,
 } from "../ui/context-menu.tsx";
 
-// CSS is bundled by Vite; Deno tests do not load stylesheet imports.
-if (typeof Deno === "undefined") void import("./pane-resize-handle.css");
-
 interface PaneResizeHandleProps {
     className?: string;
     label: string;

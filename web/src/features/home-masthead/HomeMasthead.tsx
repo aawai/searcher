@@ -14,6 +14,7 @@ import type { HomeContinueDto, UserDto } from "@shared/contracts.ts";
 import type { WallpaperPresentation } from "@shared/wallpaper-presentation.ts";
 import { usePageHost } from "../../app/page-host.tsx";
 import { routes } from "../../app/routes.ts";
+import { Button } from "../../components/ui/button.tsx";
 import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
 import { focusContainer } from "../../components/ui/focus-recovery.ts";
 import { WallpaperSurface } from "../../components/wallpaper/WallpaperSurface.tsx";
@@ -466,9 +467,10 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                                                 </Link>
                                             )
                                             : (
-                                                <button
+                                                <Button
                                                     key={`document:${entry.id}`}
                                                     type="button"
+                                                    variant="link"
                                                     className="home-masthead__continue-item touch-target"
                                                     onClick={() =>
                                                         onOpenDocument(
@@ -481,7 +483,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                                                     <span className="home-masthead__continue-title">
                                                         {entry.title}
                                                     </span>
-                                                </button>
+                                                </Button>
                                             )
                                     )}
                                 </nav>
@@ -534,13 +536,14 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         </div>
     );
     const allNotesButton = hasNotes && (
-        <button
+        <Button
             type="button"
+            variant="link"
             className="home-masthead__all-notes touch-target"
             onClick={onOpenNotes}
         >
             全部笔记 →
-        </button>
+        </Button>
     );
 
     if (placement.mode === "side") {
@@ -636,8 +639,10 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 {!isGuest && (
                     <div className="home-masthead__sheet-bar">
                         {allNotesButton}
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="sm"
                             className="home-masthead__collapse"
                             aria-expanded={!effectiveCollapsed}
                             aria-label="收起首页刊头"
@@ -652,14 +657,15 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                                 aria-hidden="true"
                             />
                             <span>收起</span>
-                        </button>
+                        </Button>
                     </div>
                 )}
             </div>
             {!isGuest && effectiveCollapsed && !peekHidden && (
-                <button
+                <Button
                     ref={peekRef}
                     type="button"
+                    variant="content"
                     className="home-masthead__peek"
                     aria-expanded="false"
                     aria-label={peekLabel}

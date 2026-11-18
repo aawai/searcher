@@ -38,28 +38,25 @@ function normalizePath(file: string): string {
 function isDragOwner(file: string): boolean {
     const p = normalizePath(file);
     return (
-        p.endsWith("SearchHome.tsx") ||
-        p.endsWith("WebAppLauncher.tsx") ||
-        p.endsWith("HomeNotes.tsx") ||
-        p.endsWith("HomeMasthead.tsx") ||
-        p.endsWith("MastheadSections.tsx") ||
-        p.includes("/fixtures/drag/")
+        p === "web/src/app/SearchHome.tsx" ||
+        p === "web/src/features/app-library/WebAppLauncher.tsx" ||
+        p === "web/src/features/home-masthead/HomeMasthead.tsx" ||
+        p === "web/src/features/home-masthead/MastheadSections.tsx"
     );
 }
 
 function isWallpaperOwner(file: string): boolean {
     const p = normalizePath(file);
-    return p.endsWith("/components/wallpaper/WallpaperSurface.tsx") ||
-        p.endsWith("global.css");
+    return p === "web/src/components/wallpaper/WallpaperSurface.tsx" ||
+        p === "web/src/styles/global.css";
 }
 
 function isSwatchOwner(file: string): boolean {
     const p = normalizePath(file);
     return (
-        p.endsWith("SettingsPage.tsx") ||
-        p.endsWith("AiSettings.tsx") ||
-        p.endsWith("DesignLab.tsx") ||
-        p.includes("/fixtures/swatch/")
+        p === "web/src/app/SettingsPage.tsx" ||
+        p === "web/src/app/AiSettings.tsx" ||
+        p === "web/src/design-lab/DesignLab.tsx"
     );
 }
 
@@ -78,9 +75,8 @@ export function isWallpaperFilterException(
     }
 
     if (RUNTIME_CSS_VARIABLE_REGISTRY[prop]) {
-        return normalizePath(file).endsWith(
-            "/components/wallpaper/WallpaperSurface.tsx",
-        );
+        return normalizePath(file) ===
+            "web/src/components/wallpaper/WallpaperSurface.tsx";
     }
 
     if (!isWallpaperOwner(file)) {
@@ -173,13 +169,11 @@ const RUNTIME_LAYOUT_PROPS: Record<string, true> = {
 function isRuntimeLayoutOwner(file: string): boolean {
     const p = normalizePath(file);
     return (
-        p.endsWith("SearchHome.tsx") ||
-        p.endsWith("WebAppLauncher.tsx") ||
-        p.endsWith("HomeNotes.tsx") ||
-        p.endsWith("HomeMasthead.tsx") ||
-        p.endsWith("design-lab/HomeGridLab.tsx") ||
-        p.endsWith("design-lab/AccentLab.tsx") ||
-        p.includes("/fixtures/layout/")
+        p === "web/src/app/SearchHome.tsx" ||
+        p === "web/src/features/app-library/WebAppLauncher.tsx" ||
+        p === "web/src/features/home-masthead/HomeMasthead.tsx" ||
+        p === "web/src/design-lab/HomeGridLab.tsx" ||
+        p === "web/src/design-lab/AccentLab.tsx"
     );
 }
 
@@ -292,14 +286,6 @@ export function isDomainValueException(
     value: string,
 ): boolean {
     const norm = value.trim();
-    const p = normalizePath(file);
-
-    // Home note cell coordinates (scoped to HomeNotes)
-    if (p.endsWith("HomeNotes.tsx") || p.includes("/fixtures/papers/")) {
-        if ((prop === "left" || prop === "top") && norm.includes("point.")) {
-            return true;
-        }
-    }
 
     // Dynamic accent color preview swatches (scoped strictly to swatch owners and runtime expressions)
     if (isSwatchOwner(file)) {
@@ -346,16 +332,6 @@ export function isPrimitiveOwningGeometry(
         return false;
     }
 
-    if (
-        prop === "boxShadow" ||
-        prop === "background" ||
-        prop === "backgroundColor" ||
-        prop === "color" ||
-        prop === "borderColor"
-    ) {
-        return false;
-    }
-
     return true;
 }
 
@@ -384,13 +360,6 @@ export function isDesignSystemAllowed(
     ) {
         return value.replaceAll(/\s+/g, "") ===
             "calc(var(--space-8)+var(--dock-inset-bottom,0px))";
-    }
-    if (
-        normFile === "web/src/features/home-layouts/home-notes.css" &&
-        prop === "inset-block-end"
-    ) {
-        return value.replaceAll(/\s+/g, "") ===
-            "calc(var(--space-2)+var(--dock-inset-bottom,0px))";
     }
     if (
         normFile === "web/src/features/home-layouts/home-layouts.css" &&

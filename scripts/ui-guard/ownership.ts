@@ -59,6 +59,13 @@ export const GLOBAL_FEATURE_PREFIXES: readonly string[] = [
     "webapp-",
     "launcher-",
     "dock-",
+    "auth-",
+    "inline-ai-",
+    "home-masthead",
+    "document-",
+    "documents-",
+    "window-frame",
+    "wallpaper-",
 ] as const;
 
 /**
@@ -206,6 +213,29 @@ export const CANONICAL_SEMANTIC_CLASS_OWNERS: Record<
     "settings-group-header": ["web/src/components/searcher/semantic.css"],
     "settings-group-title": ["web/src/components/searcher/semantic.css"],
     "settings-group-footer": ["web/src/components/searcher/semantic.css"],
+    "settings-preset-slider": ["web/src/components/searcher/semantic.css"],
+    "settings-preset-slider__marks": [
+        "web/src/components/searcher/semantic.css",
+    ],
+    "settings-preset-slider__mark": [
+        "web/src/components/searcher/semantic.css",
+    ],
+    "settings-preset-slider__mark--active": [
+        "web/src/components/searcher/semantic.css",
+    ],
+    "settings-preset-slider__mark-tick": [
+        "web/src/components/searcher/semantic.css",
+    ],
+    "settings-preset-slider__mark-label": [
+        "web/src/components/searcher/semantic.css",
+    ],
+    "search-field": ["web/src/components/searcher/semantic.css"],
+    "search-field-icon": ["web/src/components/searcher/semantic.css"],
+    "search-field-input": ["web/src/components/searcher/semantic.css"],
+    "search-field-clear": ["web/src/components/searcher/semantic.css"],
+    "secret-field": ["web/src/components/searcher/semantic.css"],
+    "secret-field-input": ["web/src/components/searcher/semantic.css"],
+    "secret-field-toggle": ["web/src/components/searcher/semantic.css"],
     "pane-resize-handle": [
         "web/src/components/searcher/pane-resize-handle.css",
     ],
@@ -236,6 +266,22 @@ export const CSS_PREFIX_OWNER_MAP: Record<string, readonly string[]> = {
     "auth-": ["web/src/app/auth.css"],
     "design-lab-": ["web/src/design-lab/design-lab.css"],
     "dock-": ["web/src/features/dock/dock.css"],
+    "wallpaper-": [
+        "web/src/components/wallpaper/wallpaper.css",
+        "web/src/app/settings.css",
+        "web/src/features/home-masthead/home-masthead.css",
+    ],
+    "home-masthead": ["web/src/features/home-masthead/home-masthead.css"],
+    "document-": [
+        "web/src/features/documents/document-editor.css",
+        "web/src/features/documents/document-pagination.css",
+        "web/src/features/documents/document-print.css",
+        "web/src/features/workspace/documents-workspace.css",
+    ],
+    "documents-": [
+        "web/src/features/workspace/documents-workspace.css",
+        "web/src/features/workspace/workspace.css",
+    ],
 };
 
 /**
@@ -447,6 +493,7 @@ export function checkRuleB_PageLayout(
 export function checkRuleC_UndefinedCssTokens(
     cssFiles: { file: string; content: string }[],
     tokensCssContent: string,
+    tsxFiles: { file: string; content: string }[] = [],
 ): OwnershipViolation[] {
     const violations: OwnershipViolation[] = [];
 
@@ -460,6 +507,8 @@ export function checkRuleC_UndefinedCssTokens(
         globalTokens.add(`--${match[1]}`);
     }
 
+    const allCssTokens = new Set<string>(globalTokens);
+
     // 2. For each CSS file, collect local definitions and verify all var(--xxx) references
     for (const { file, content } of cssFiles) {
         const normPath = file.replaceAll("\\", "/");
@@ -469,7 +518,9 @@ export function checkRuleC_UndefinedCssTokens(
         const localTokens = new Set<string>();
         const localMatches = cleanContent.matchAll(/--([a-zA-Z0-9_-]+)\s*:/g);
         for (const match of localMatches) {
-            localTokens.add(`--${match[1]}`);
+            const name = `--${match[1]}`;
+            localTokens.add(name);
+            allCssTokens.add(name);
         }
 
         // Var references
@@ -500,6 +551,50 @@ export function checkRuleC_UndefinedCssTokens(
                 });
             }
         }
+    }
+
+    // 3. Verify var(--xxx) references inside TSX style attributes
+    for (const { file, content } of tsxFiles) {
+        const normPath = file.replaceAll("\\", "/");
+        const source = ts.createSourceFile(
+            file,
+            content,
+            ts.ScriptTarget.Latest,
+            true,
+            ts.ScriptKind.TSX,
+        );
+        visitNodes(source, (node) => {
+            if (
+                !ts.isJsxAttribute(node) ||
+                node.name.getText(source) !== "style" || !node.initializer
+            ) return;
+            visitNodes(node.initializer, (lit) => {
+                if (!ts.isStringLiteralLike(lit)) return;
+                const varRegex = /var\(\s*--([a-zA-Z0-9_-]+)/g;
+                let varMatch: RegExpExecArray | null;
+                while ((varMatch = varRegex.exec(lit.text)) !== null) {
+                    const varName = `--${varMatch[1]}`;
+                    if (
+                        !allCssTokens.has(varName) &&
+                        !RUNTIME_CSS_VARIABLE_REGISTRY[varName]
+                    ) {
+                        const { line, character } = source
+                            .getLineAndCharacterOfPosition(
+                                lit.getStart(source),
+                            );
+                        violations.push({
+                            rule: "undefined-css-token",
+                            file: normPath,
+                            line: line + 1,
+                            column: character + 1,
+                            message:
+                                `CSS variable '${varName}' in TSX style is not defined in tokens.css, CSS scope, or runtime-token registry.`,
+                            snippet: `var(${varName})`,
+                        });
+                    }
+                }
+            });
+        });
     }
 
     return violations;
@@ -1466,10 +1561,14 @@ export async function scanOwnership(
         }
     }
 
-    // Rule C: undefined-css-token across all CSS files
+    // Rule C: undefined-css-token across all CSS files and TSX style attributes
     if (tokensCssContent.length > 0 || cssFiles.length > 0) {
         violations.push(
-            ...checkRuleC_UndefinedCssTokens(cssFiles, tokensCssContent),
+            ...checkRuleC_UndefinedCssTokens(
+                cssFiles,
+                tokensCssContent,
+                tsxFiles,
+            ),
         );
     }
 

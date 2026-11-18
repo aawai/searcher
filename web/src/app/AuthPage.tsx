@@ -1,6 +1,5 @@
-import { Eye, EyeOff } from "lucide-react";
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { StatusBanner } from "../components/searcher/semantic.tsx";
+import { SecretInput, StatusBanner } from "../components/searcher/semantic.tsx";
 import {
     type SubmitEvent,
     useCallback,
@@ -39,7 +38,6 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
     const [username, setUsername] = useState("");
     const [displayName, setDisplayName] = useState("");
     const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [usernameTouched, setUsernameTouched] = useState(false);
@@ -252,7 +250,11 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                 )}
                             </div>
                         )}
-                        <form className="auth-fields" noValidate onSubmit={submit}>
+                        <form
+                            className="auth-fields"
+                            noValidate
+                            onSubmit={submit}
+                        >
                             <div className="auth-field">
                                 <label
                                     className="auth-field-label"
@@ -353,66 +355,33 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                 >
                                     密码
                                 </label>
-                                <div className="auth-password-wrap">
-                                    <Input
-                                        ref={passwordRef}
-                                        id="auth-password"
-                                        name="password"
-                                        placeholder={kind === "register"
-                                            ? `至少 ${passwordRules.minLength} 个字符`
-                                            : "请输入密码"}
-                                        type={showPassword
-                                            ? "text"
-                                            : "password"}
-                                        autoComplete={kind === "login"
-                                            ? "current-password"
-                                            : "new-password"}
-                                        required
-                                        minLength={kind === "login"
-                                            ? 1
-                                            : passwordRules.minLength}
-                                        maxLength={kind === "register"
-                                            ? passwordRules.maxLength
-                                            : undefined}
-                                        aria-describedby={passwordMessage
-                                            ? "auth-password-hint"
-                                            : undefined}
-                                        aria-invalid={passwordInvalid ||
-                                            undefined}
-                                        value={password}
-                                        onChange={(e) =>
-                                            setPassword(e.target.value)}
-                                        onBlur={() => setPasswordTouched(true)}
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="auth-password-toggle"
-                                        aria-pressed={showPassword}
-                                        aria-label={showPassword
-                                            ? "隐藏密码"
-                                            : "显示密码"}
-                                        onClick={() =>
-                                            setShowPassword((prev) => !prev)}
-                                    >
-                                        {showPassword
-                                            ? (
-                                                <EyeOff
-                                                    size="1em"
-                                                    className="icon-md"
-                                                    aria-hidden="true"
-                                                />
-                                            )
-                                            : (
-                                                <Eye
-                                                    size="1em"
-                                                    className="icon-md"
-                                                    aria-hidden="true"
-                                                />
-                                            )}
-                                    </Button>
-                                </div>
+                                <SecretInput
+                                    ref={passwordRef}
+                                    id="auth-password"
+                                    name="password"
+                                    placeholder={kind === "register"
+                                        ? `至少 ${passwordRules.minLength} 个字符`
+                                        : "请输入密码"}
+                                    autoComplete={kind === "login"
+                                        ? "current-password"
+                                        : "new-password"}
+                                    required
+                                    minLength={kind === "login"
+                                        ? 1
+                                        : passwordRules.minLength}
+                                    maxLength={kind === "register"
+                                        ? passwordRules.maxLength
+                                        : undefined}
+                                    aria-describedby={passwordMessage
+                                        ? "auth-password-hint"
+                                        : undefined}
+                                    aria-invalid={passwordInvalid ||
+                                        undefined}
+                                    value={password}
+                                    onChange={(e) =>
+                                        setPassword(e.target.value)}
+                                    onBlur={() => setPasswordTouched(true)}
+                                />
                                 {passwordMessage && (
                                     <p
                                         id="auth-password-hint"
@@ -426,7 +395,9 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                 )}
                             </div>
                             {error && (
-                                <StatusBanner tone="error">{error}</StatusBanner>
+                                <StatusBanner tone="error">
+                                    {error}
+                                </StatusBanner>
                             )}
                             <Button
                                 variant="default"

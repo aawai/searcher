@@ -42,6 +42,8 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
         });
         const page = await browser.newPage({
             viewport: { width: 390, height: 844 },
+            isMobile: true,
+            hasTouch: true,
         });
         const conversationId = `ask_ux_204_${crypto.randomUUID()}`;
         const requests: ChatStreamRequest[] = [];
