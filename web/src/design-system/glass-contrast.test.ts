@@ -529,10 +529,13 @@ for (const theme of THEMES) {
 Deno.test("large text roles: match the size tokens that reach 24px", () => {
     const sizes = new Map<string, number[]>();
     for (
-        const [, name, px] of css.matchAll(
-            /(--font-[\w-]+-size)\s*:\s*(\d+(?:\.\d+)?)px\s*;/g,
+        const [, name, value, unit] of css.matchAll(
+            /(--font-[\w-]+-size)\s*:\s*(\d+(?:\.\d+)?)(px|rem)\s*;/g,
         )
-    ) sizes.set(name, [...(sizes.get(name) ?? []), Number(px)]);
+    ) {
+        const px = unit === "rem" ? Number(value) * 16 : Number(value);
+        sizes.set(name, [...(sizes.get(name) ?? []), px]);
+    }
     const reachesLarge = [...sizes]
         .filter(([, values]) => values.some((px) => px >= LARGE_TEXT_MIN_PX))
         .map(([name]) => name)

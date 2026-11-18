@@ -644,7 +644,7 @@
     border: none;
     border-radius: var(--radius);
     outline: none;
-    resize: none;
+    resize: vertical;
     box-sizing: border-box;
     tab-size: 2;
 }

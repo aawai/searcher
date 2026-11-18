@@ -913,7 +913,7 @@
 }
 
 .ask-user-edit-textarea {
-    resize: none;
+    resize: vertical;
 }
 
 .ask-user-edit-actions {
@@ -1410,7 +1410,7 @@
 }
 
 .ask-system-dialog__textarea {
-    resize: none;
+    resize: vertical;
 }
 
 .ask-system-dialog__note {
@@ -1458,6 +1458,12 @@
     .ask-sidebar__item:focus-within [data-slot="dropdown-menu-trigger"].ask-sidebar__item-menu-btn,
     .ask-sidebar__item [data-slot="dropdown-menu-trigger"].ask-sidebar__item-menu-btn[aria-expanded="true"] {
         opacity: 1;
+    }
+}
+
+@media (any-pointer: coarse) {
+    .ask-composer__textarea {
+        font-size: var(--font-input-touch-size);
     }
 }
 
