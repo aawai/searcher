@@ -419,11 +419,11 @@ Deno.test("auth surfaces keep responsive geometry and accent switch links in bot
                                     const box = control.getBoundingClientRect();
                                     return { left: box.left, right: box.right };
                                 });
-                                // The page column shares one axis; field labels
-                                // sit on the grouped list's own inner line.
+                                // The panel shares one inner content axis across
+                                // its heading, form fields, labels, and footer.
                                 const axes = [
                                     ...surface.querySelectorAll(
-                                        "h1, form, .settings-card, .auth-footer",
+                                        "h1, form, .auth-footer",
                                     ),
                                 ].map((element) =>
                                     element.getBoundingClientRect().left
@@ -478,7 +478,7 @@ Deno.test("auth surfaces keep responsive geometry and accent switch links in bot
                                     geometry.labelAxes.every((left) =>
                                         Math.abs(left - geometry.labelAxes[0]) <
                                             1 &&
-                                        left > geometry.axes[0]
+                                        Math.abs(left - geometry.axes[0]) < 1
                                     ),
                                 scenario + " field label axis",
                             );

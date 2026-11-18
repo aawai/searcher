@@ -1,11 +1,6 @@
 import { Eye, EyeOff } from "lucide-react";
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { PageHeader } from "../components/searcher/PageHeader.tsx";
-import {
-    SettingsGroup,
-    SettingsRow,
-    StatusBanner,
-} from "../components/searcher/semantic.tsx";
+import { StatusBanner } from "../components/searcher/semantic.tsx";
 import {
     type SubmitEvent,
     useCallback,
@@ -225,47 +220,48 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
     }
 
     return (
-        <PageShell archetype="utility">
+        <PageShell archetype="utility" className="auth-page">
             <div className="narrow-form">
-                <PageHeader title={pageTitles[kind]} />
-                <div className="auth-body">
-                    {kind === "register" &&
-                        registrationAvailability !== "open" && (
-                        <div className="auth-registration">
-                            <StatusBanner
-                                tone={registrationAvailability === "unknown"
-                                    ? "warning"
-                                    : "info"}
-                            >
-                                {registrationStatusMessage}
-                            </StatusBanner>
-                            {registrationAvailability !== "checking" && (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="auth-retry"
-                                    disabled={busy}
-                                    onClick={() =>
-                                        void refreshRegistrationAvailability()}
+                <div className="auth-panel">
+                    <header className="auth-header">
+                        <h1 className="auth-title">{pageTitles[kind]}</h1>
+                    </header>
+                    <div className="auth-body">
+                        {kind === "register" &&
+                            registrationAvailability !== "open" && (
+                            <div className="auth-registration">
+                                <StatusBanner
+                                    tone={registrationAvailability === "unknown"
+                                        ? "warning"
+                                        : "info"}
                                 >
-                                    重新检查
-                                </Button>
-                            )}
-                        </div>
-                    )}
-                    <form className="auth-fields" noValidate onSubmit={submit}>
-                        <SettingsGroup>
-                            <SettingsRow
-                                className="settings-row--vertical"
-                                title={kind === "login"
-                                    ? "用户名或邮箱"
-                                    : "用户名"}
-                                labelFor="auth-username"
-                                message={usernameMessage}
-                                messageId="auth-username-hint"
-                                invalid={usernameInvalid}
-                            >
+                                    {registrationStatusMessage}
+                                </StatusBanner>
+                                {registrationAvailability !== "checking" && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="auth-retry"
+                                        disabled={busy}
+                                        onClick={() =>
+                                            void refreshRegistrationAvailability()}
+                                    >
+                                        重新检查
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                        <form className="auth-fields" noValidate onSubmit={submit}>
+                            <div className="auth-field">
+                                <label
+                                    className="auth-field-label"
+                                    htmlFor="auth-username"
+                                >
+                                    {kind === "login"
+                                        ? "用户名或邮箱"
+                                        : "用户名"}
+                                </label>
                                 <Input
                                     ref={usernameRef}
                                     id="auth-username"
@@ -300,22 +296,26 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                         setUsername(e.target.value)}
                                     onBlur={() => setUsernameTouched(true)}
                                 />
-                            </SettingsRow>
+                                {usernameMessage && (
+                                    <p
+                                        id="auth-username-hint"
+                                        className="auth-field-message"
+                                        data-tone={usernameInvalid
+                                            ? "danger"
+                                            : undefined}
+                                    >
+                                        {usernameMessage}
+                                    </p>
+                                )}
+                            </div>
                             {kind === "register" && (
-                                <SettingsRow
-                                    className="settings-row--vertical"
-                                    title="显示名称"
-                                    labelFor="auth-display-name"
-                                    message={displayNameMissing
-                                        ? (
-                                            <span role="alert">
-                                                请输入显示名称
-                                            </span>
-                                        )
-                                        : undefined}
-                                    messageId="auth-display-name-hint"
-                                    invalid={displayNameMissing}
-                                >
+                                <div className="auth-field">
+                                    <label
+                                        className="auth-field-label"
+                                        htmlFor="auth-display-name"
+                                    >
+                                        显示名称
+                                    </label>
                                     <Input
                                         ref={displayNameRef}
                                         id="auth-display-name"
@@ -333,22 +333,31 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                         onChange={(e) =>
                                             setDisplayName(e.target.value)}
                                     />
-                                </SettingsRow>
+                                    {displayNameMissing && (
+                                        <p
+                                            id="auth-display-name-hint"
+                                            className="auth-field-message"
+                                            data-tone="danger"
+                                        >
+                                            <span role="alert">
+                                                请输入显示名称
+                                            </span>
+                                        </p>
+                                    )}
+                                </div>
                             )}
-                            <SettingsRow
-                                className="settings-row--vertical"
-                                title="密码"
-                                labelFor="auth-password"
-                                message={passwordMessage}
-                                messageId="auth-password-hint"
-                                invalid={passwordInvalid}
-                            >
-                                <div className="flex w-full items-center gap-2">
+                            <div className="auth-field">
+                                <label
+                                    className="auth-field-label"
+                                    htmlFor="auth-password"
+                                >
+                                    密码
+                                </label>
+                                <div className="auth-password-wrap">
                                     <Input
                                         ref={passwordRef}
                                         id="auth-password"
                                         name="password"
-                                        className="min-w-0 flex-1"
                                         placeholder={kind === "register"
                                             ? `至少 ${passwordRules.minLength} 个字符`
                                             : "请输入密码"}
@@ -377,8 +386,9 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                     />
                                     <Button
                                         type="button"
-                                        variant="outline"
+                                        variant="ghost"
                                         size="icon"
+                                        className="auth-password-toggle"
                                         aria-pressed={showPassword}
                                         aria-label={showPassword
                                             ? "隐藏密码"
@@ -403,43 +413,54 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                                             )}
                                     </Button>
                                 </div>
-                            </SettingsRow>
-                        </SettingsGroup>
-                        {error && (
-                            <StatusBanner tone="error">{error}</StatusBanner>
-                        )}
-                        <Button
-                            variant="default"
-                            type="submit"
-                            className="auth-submit"
-                            disabled={busy ||
-                                (kind === "register" &&
-                                    registrationAvailability !== "open")}
-                        >
-                            {busy ? "处理中…" : pageTitles[kind]}
-                        </Button>
-                    </form>
-                    {kind === "register"
-                        ? (
-                            <p className="auth-footer">
-                                已有账户？<Link
-                                    to={toggleToLogin}
-                                    viewTransition
-                                >
-                                    登录
-                                </Link>
-                            </p>
-                        )
-                        : offerRegistration && (
-                            <p className="auth-footer">
-                                没有账户？<Link
-                                    to={toggleToRegister}
-                                    viewTransition
-                                >
-                                    注册
-                                </Link>
-                            </p>
-                        )}
+                                {passwordMessage && (
+                                    <p
+                                        id="auth-password-hint"
+                                        className="auth-field-message"
+                                        data-tone={passwordInvalid
+                                            ? "danger"
+                                            : undefined}
+                                    >
+                                        {passwordMessage}
+                                    </p>
+                                )}
+                            </div>
+                            {error && (
+                                <StatusBanner tone="error">{error}</StatusBanner>
+                            )}
+                            <Button
+                                variant="default"
+                                type="submit"
+                                className="auth-submit"
+                                disabled={busy ||
+                                    (kind === "register" &&
+                                        registrationAvailability !== "open")}
+                            >
+                                {busy ? "处理中…" : pageTitles[kind]}
+                            </Button>
+                        </form>
+                        {kind === "register"
+                            ? (
+                                <p className="auth-footer">
+                                    已有账户？<Link
+                                        to={toggleToLogin}
+                                        viewTransition
+                                    >
+                                        登录
+                                    </Link>
+                                </p>
+                            )
+                            : offerRegistration && (
+                                <p className="auth-footer">
+                                    没有账户？<Link
+                                        to={toggleToRegister}
+                                        viewTransition
+                                    >
+                                        注册
+                                    </Link>
+                                </p>
+                            )}
+                    </div>
                 </div>
             </div>
         </PageShell>
