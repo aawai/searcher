@@ -7,6 +7,7 @@ import { largeDocumentMarkdown } from "./fixtures/document.ts";
 import { waitForDocument } from "./helpers/document-state.ts";
 import {
     clickIntoEditor,
+    focusEditor,
     openNoteRows,
     switchDocumentMode,
 } from "./helpers/library.ts";
@@ -360,7 +361,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                 );
 
                 const editor = page.locator(".ProseMirror");
-                await editor.focus();
+                await focusEditor(editor);
                 await page.keyboard.press("Control+End");
                 await page.keyboard.insertText(" 菜单焦点草稿");
                 await page.waitForFunction(() =>
@@ -418,7 +419,7 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         '[role="toolbar"] button[aria-label="粗体"]',
                     )?.getAttribute("aria-pressed") === "true"
                 );
-                await editor.focus();
+                await focusEditor(editor);
                 await page.keyboard.press("Control+End");
                 await page.keyboard.press("Shift+ArrowLeft");
                 await page.setViewportSize({ width: 390, height: 360 });

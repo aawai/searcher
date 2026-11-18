@@ -248,6 +248,33 @@ function getDocumentToolbarState(
     };
 }
 
+/**
+ * Resolves the live caret rect inside ProseMirror, preferring the current DOM
+ * selection so viewport adjustments do not chase a stale pre-flush head.
+ */
+function resolveEditorCaretRect(
+    view: MarkdownEditorHandle["view"],
+): { top: number; bottom: number } {
+    const selection = globalThis.getSelection();
+    if (
+        selection &&
+        selection.rangeCount > 0 &&
+        selection.focusNode &&
+        view.dom.contains(selection.focusNode)
+    ) {
+        try {
+            const pos = view.posAtDOM(
+                selection.focusNode,
+                selection.focusOffset,
+            );
+            return view.coordsAtPos(pos);
+        } catch {
+            // Fall back to ProseMirror state when DOM focus is on a transient node.
+        }
+    }
+    return view.coordsAtPos(view.state.selection.head);
+}
+
 export interface DocumentEditorProps {
     documentId?: string;
     target?: { notebookId: string | null; isHomeFixed: boolean };
@@ -727,9 +754,7 @@ export function DocumentEditor({
 
                 for (let attempt = 0; attempt < 2; attempt += 1) {
                     const bounds = getVisibleContentBounds();
-                    const caret = view.coordsAtPos(
-                        view.state.selection.head,
-                    );
+                    const caret = resolveEditorCaretRect(view);
                     if (caret.top < bounds.top - 1) {
                         scrollArea.scrollTop -= bounds.top - caret.top;
                     } else if (caret.bottom > bounds.bottom + 1) {
@@ -738,9 +763,7 @@ export function DocumentEditor({
                     }
 
                     const updatedBounds = getVisibleContentBounds();
-                    const updatedCaret = view.coordsAtPos(
-                        view.state.selection.head,
-                    );
+                    const updatedCaret = resolveEditorCaretRect(view);
                     if (
                         updatedCaret.top >= updatedBounds.top - 1 &&
                         updatedCaret.bottom <= updatedBounds.bottom + 1
@@ -777,6 +800,14 @@ export function DocumentEditor({
             });
         };
 
+        const resizeObserver = typeof ResizeObserver !== "undefined"
+            ? new ResizeObserver(scheduleAdjustment)
+            : null;
+        resizeObserver?.observe(container);
+        const scrollArea = container.querySelector<HTMLElement>(
+            ".document-editor-scroll-area",
+        );
+        if (scrollArea) resizeObserver?.observe(scrollArea);
         globalThis.addEventListener("resize", scheduleAdjustment);
         viewport?.addEventListener("resize", scheduleAdjustment);
         viewport?.addEventListener("scroll", scheduleAdjustment, {
@@ -784,6 +815,7 @@ export function DocumentEditor({
         });
         return () => {
             cancelAnimationFrame(frame);
+            resizeObserver?.disconnect();
             globalThis.removeEventListener("resize", scheduleAdjustment);
             viewport?.removeEventListener("resize", scheduleAdjustment);
             viewport?.removeEventListener("scroll", scheduleAdjustment);
