@@ -4,6 +4,13 @@ import { homeViewport } from "../home-layouts/home-viewport.ts";
 import { setTaskChecked } from "../home-layouts/note-tasks.ts";
 import {
     formatRelativeNoteTime,
+    MASTHEAD_DEFAULT_SEARCH_HEIGHT,
+    MASTHEAD_MAX_WIDTH,
+    MASTHEAD_MIN_WIDTH,
+    MASTHEAD_PEEK_FADE_MAX,
+    MASTHEAD_PEEK_VEIL_TAIL,
+    MASTHEAD_VEIL_TAIL,
+    MASTHEAD_VW_RATIO,
     mastheadColumnWidth,
     mastheadDateParts,
     mastheadPeekMetrics,
@@ -535,4 +542,34 @@ Deno.test("formatRelativeNoteTime and resolveMastheadSwipe cover time labels and
         }),
         null,
     );
+});
+
+Deno.test("masthead layout constants mirror design tokens", async () => {
+    const css = await Deno.readTextFile(
+        new URL("../../design-system/tokens.css", import.meta.url),
+    );
+    const vw = Math.round(MASTHEAD_VW_RATIO * 100);
+    assertEquals(
+        css.includes(
+            `--layout-masthead-col: clamp(${MASTHEAD_MIN_WIDTH}px, ${vw}vw, ${MASTHEAD_MAX_WIDTH}px);`,
+        ),
+        true,
+    );
+    assertEquals(
+        css.includes(
+            `--layout-masthead-veil-fade: ${MASTHEAD_VEIL_TAIL + 40}px;`,
+        ),
+        true,
+    );
+    assertEquals(
+        css.includes(
+            `--layout-masthead-peek-fade: ${MASTHEAD_PEEK_VEIL_TAIL + 80}px;`,
+        ),
+        true,
+    );
+    assertEquals(
+        css.includes(`--topbar-height: ${MASTHEAD_DEFAULT_SEARCH_HEIGHT}px;`),
+        true,
+    );
+    assertEquals(MASTHEAD_PEEK_FADE_MAX, 16);
 });

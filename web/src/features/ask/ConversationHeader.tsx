@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, MoreHorizontal, Pencil, Search } from "lucide-react";
+import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
@@ -125,12 +126,13 @@ export function ConversationHeader({
                     </h1>
 
                     {isTemporary && (
-                        <span
+                        <Badge
+                            variant="secondary"
                             className="ask-header__temp-badge"
                             title="临时对话：切换或离开后不会保存"
                         >
                             临时对话
-                        </span>
+                        </Badge>
                     )}
                 </div>
             </div>

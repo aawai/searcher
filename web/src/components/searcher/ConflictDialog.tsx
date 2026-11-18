@@ -94,7 +94,7 @@ export function ConflictDialog({
                 onDismiss();
             }}
         >
-            <DialogContent className="conflict-dialog">
+            <DialogContent className="conflict-dialog" size="wide" scrollable>
                 <DialogHeader>
                     <DialogTitle>发现版本冲突</DialogTitle>
                 </DialogHeader>
@@ -148,7 +148,7 @@ export function ConflictDialog({
                     </StatusBanner>
                 )}
 
-                <DialogFooter className="conflict-actions">
+                <DialogFooter bordered className="conflict-actions">
                     <Button
                         type="button"
                         variant="ghost"

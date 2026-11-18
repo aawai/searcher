@@ -10,7 +10,11 @@ import {
     useSyncExternalStore,
 } from "react";
 
-export type EscapeLayerKind = "host" | "overlay" | "window-overlay";
+export type EscapeLayerKind =
+    | "host"
+    | "overlay"
+    | "window-overlay"
+    | "tooltip";
 
 type EscapeLayer = {
     kind: EscapeLayerKind;
@@ -22,6 +26,7 @@ const LAYER_PRIORITY: Record<EscapeLayerKind, number> = {
     host: 0,
     overlay: 1,
     "window-overlay": 1,
+    tooltip: 2,
 };
 
 /** Tracks active Escape owners; event snapshots keep closing overlays from falling through. */
@@ -91,7 +96,8 @@ export class EscapeLayerStack {
             if (
                 !top ||
                 LAYER_PRIORITY[layer.kind] > LAYER_PRIORITY[top.kind] ||
-                (layer.kind === top.kind && layer.order > top.order)
+                (LAYER_PRIORITY[layer.kind] === LAYER_PRIORITY[top.kind] &&
+                    layer.order > top.order)
             ) {
                 top = layer;
             }

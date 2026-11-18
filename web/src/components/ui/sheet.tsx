@@ -85,7 +85,7 @@ function SheetClose({ className, ...props }: SheetPrimitive.Close.Props) {
     return (
         <SheetPrimitive.Close
             data-slot="sheet-close"
-            className={cn("sheet-close", className)}
+            className={className}
             {...props}
         />
     );

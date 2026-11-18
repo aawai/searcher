@@ -86,12 +86,6 @@
     line-height: var(--font-body-line-height);
 }
 
-.account-danger,
-.account-danger:hover,
-.account-danger:focus-visible {
-    color: var(--danger);
-}
-
 .account-password-dialog {
     max-width: var(--layout-auth-max);
 }

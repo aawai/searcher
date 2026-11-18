@@ -13,16 +13,26 @@
     position: absolute;
     inset-block: 0;
     inset-inline-start: 0;
-    width: 2px;
+    width: var(--space-half);
 }
-.pane-resize-handle:hover::after {
-    background: var(--border);
+@media (hover: hover) {
+    .pane-resize-handle:hover::after {
+        background: var(--border);
+    }
 }
 .pane-resize-handle:focus-visible::after {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
 }
-@media (any-pointer: coarse) {
+@media (forced-colors: active) {
+    .pane-resize-handle:hover::after {
+        background: CanvasText;
+    }
+    .pane-resize-handle:focus-visible::after {
+        outline-color: Highlight;
+    }
+}
+@media (any-pointer: coarse), (hover: none) {
     .pane-resize-handle {
         flex-basis: var(--control-touch-target);
         width: var(--control-touch-target);

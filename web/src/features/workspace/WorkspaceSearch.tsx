@@ -1,7 +1,4 @@
-import { useRef } from "react";
-import { Search, X } from "lucide-react";
-import { Button } from "../../components/ui/button.tsx";
-import { Input } from "../../components/ui/input.tsx";
+import { SearchField } from "../../components/searcher/semantic.tsx";
 
 export interface WorkspaceSearchProps {
     value: string;
@@ -18,41 +15,14 @@ export function WorkspaceSearch({
     disabled = false,
     ariaLabel,
 }: WorkspaceSearchProps) {
-    const search = useRef<HTMLDivElement>(null);
     return (
-        <div ref={search} className="workspace-search-wrap">
-            <Search
-                size="1em"
-                className="icon-md workspace-search-icon"
-                aria-hidden="true"
-            />
-            <Input
-                type="search"
-                variant="search"
-                data-workspace-search=""
-                className="workspace-search-input"
-                placeholder={placeholder}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                disabled={disabled}
-                aria-label={ariaLabel}
-            />
-            {Boolean(value) && !disabled && (
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="workspace-search-clear"
-                    onClick={() => {
-                        onChange("");
-                        search.current?.querySelector<HTMLInputElement>("input")
-                            ?.focus();
-                    }}
-                    aria-label="清除搜索"
-                >
-                    <X size="1em" className="icon-sm" />
-                </Button>
-            )}
-        </div>
+        <SearchField
+            data-workspace-search=""
+            placeholder={placeholder}
+            value={value}
+            onValueChange={onChange}
+            disabled={disabled}
+            aria-label={ariaLabel}
+        />
     );
 }

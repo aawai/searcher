@@ -23,6 +23,39 @@ Deno.test("JS media queries track the documented exclusive width boundaries", as
 
 Deno.test("default notes host is persistent at the measured boundary", () => {
     assertEquals(hasPersistentNotesSidebar(958), true);
-    assertEquals(hasPersistentNotesSidebar(BREAKPOINTS.notesSidebar - 1), false);
+    assertEquals(
+        hasPersistentNotesSidebar(BREAKPOINTS.notesSidebar - 1),
+        false,
+    );
     assertEquals(hasPersistentNotesSidebar(BREAKPOINTS.notesSidebar), true);
+});
+
+Deno.test("pointer touch queries and width layout queries stay strictly separated", () => {
+    assertEquals(
+        MEDIA_QUERIES.touchTarget,
+        "(any-pointer: coarse), (hover: none)",
+    );
+    assertEquals(
+        MEDIA_QUERIES.fineHoverPointer,
+        "(hover: hover) and (pointer: fine)",
+    );
+    for (
+        const widthQuery of [
+            MEDIA_QUERIES.belowSmall,
+            MEDIA_QUERIES.belowMedium,
+            MEDIA_QUERIES.belowWide,
+        ]
+    ) {
+        assertEquals(widthQuery.includes("pointer"), false);
+        assertEquals(widthQuery.includes("hover"), false);
+    }
+    for (
+        const pointerQuery of [
+            MEDIA_QUERIES.coarsePointer,
+            MEDIA_QUERIES.touchTarget,
+            MEDIA_QUERIES.fineHoverPointer,
+        ]
+    ) {
+        assertEquals(pointerQuery.includes("width"), false);
+    }
 });

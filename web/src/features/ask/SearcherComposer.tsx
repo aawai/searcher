@@ -28,6 +28,7 @@ import {
     TooltipTrigger,
 } from "../../components/ui/tooltip.tsx";
 import { Switch } from "../../components/ui/switch.tsx";
+import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
 import type {
@@ -183,12 +184,12 @@ export function SearcherComposer({
                         aria-label="已启用的检索工具"
                     >
                         {activeTools.map((tool) => (
-                            <span
+                            <Badge
                                 key={tool}
-                                className="ask-composer__tool-chip"
+                                variant="secondary"
                             >
                                 {tool}
-                            </span>
+                            </Badge>
                         ))}
                     </div>
                 )}

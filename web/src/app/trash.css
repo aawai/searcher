@@ -68,10 +68,6 @@
     gap: var(--space-2);
 }
 
-.trash-page .trash-danger {
-    color: var(--danger);
-}
-
 .trash-mobile-list {
     display: none;
 }

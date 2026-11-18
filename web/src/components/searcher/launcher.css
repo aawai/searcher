@@ -635,6 +635,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+    min-height: 0;
+    overflow-y: auto;
     font-size: var(--font-body-size);
     color: var(--foreground);
     padding: var(--space-1) 0;
@@ -660,13 +662,17 @@
     min-width: 0;
 }
 
+.app-ai-confirm-value--emphasis {
+    font-weight: var(--font-label-weight);
+}
+
 .app-ai-confirm-hint {
     margin-top: var(--space-1);
     padding-top: var(--space-2);
     border-top: 1px solid var(--border);
     font-size: var(--font-metadata-size);
     color: var(--muted);
-    line-height: 1.4;
+    line-height: var(--font-metadata-line-height);
 }
 
 /* Launcher drag overlay elevation */
@@ -676,11 +682,6 @@
 
 .launcher-menu-title {
     max-width: var(--workspace-width);
-    padding: var(--space-1) var(--space-2);
-    color: var(--muted);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    font-weight: var(--font-label-weight);
     overflow-wrap: anywhere;
     white-space: normal;
 }

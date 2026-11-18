@@ -554,3 +554,29 @@ Deno.test("tsx-scanner - choice inputs must come from components/ui", () => {
         [],
     );
 });
+
+Deno.test("tsx-scanner - hardened Stage 4 checks (arbitrary accent fills, shadow layers, uppercase)", () => {
+    const code = `
+        <>
+            <div className="bg-[var(--accent)] fill-[var(--accent-hc)] bg-accent/[0.5] uppercase" />
+            <div style={{ boxShadow: "var(--shadow-l2), 0 4px 12px var(--border)" }} />
+            <div style={{ boxShadow: "0 0 0 2px var(--ring), var(--shadow-l2)" }} />
+        </>
+    `;
+    assertEquals(
+        scanTsxCode("web/src/app/AuditProbe.tsx", code).map((v) => [
+            v.rule,
+            v.value,
+        ]),
+        [
+            ["unregistered-accent-fill", "bg-[var(--accent)]"],
+            ["unregistered-accent-fill", "fill-[var(--accent-hc)]"],
+            ["unregistered-accent-fill", "bg-accent/[0.5]"],
+            ["forbidden-text-transform", "uppercase"],
+            [
+                "raw-box-shadow",
+                'boxShadow: "var(--shadow-l2), 0 4px 12px var(--border)"',
+            ],
+        ],
+    );
+});

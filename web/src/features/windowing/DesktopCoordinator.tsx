@@ -45,6 +45,7 @@ import {
     type WindowManager,
     WindowManagerContext,
 } from "./window-context.tsx";
+import { DEFAULT_WINDOW_WIDTHS } from "./window-geometry.ts";
 import {
     locationUrl,
     type PendingWindowAction,
@@ -83,13 +84,6 @@ const WINDOW_TITLES: Record<WindowId, string> = {
     ai: "AI 问答",
     settings: "设置",
     trash: "回收站",
-};
-const DEFAULT_WIDTHS: Record<WindowId, number> = {
-    apps: 640,
-    notes: 960,
-    ai: 960,
-    settings: 840,
-    trash: 880,
 };
 
 type DesktopFocus = "opener" | null;
@@ -154,7 +148,7 @@ function WindowSession(
         )
     );
     const [widths, setWidths] = useState<Record<WindowId, number>>(
-        DEFAULT_WIDTHS,
+        DEFAULT_WINDOW_WIDTHS,
     );
     const stateRef = useRef(state);
     stateRef.current = state;

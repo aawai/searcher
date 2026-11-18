@@ -1,5 +1,16 @@
 /** Free-window geometry: every placement is computed inside one work area. */
 
+import type { WindowId } from "./window-context.tsx";
+
+/** Default window widths matching `--window-*-width` in `tokens.css`. */
+export const DEFAULT_WINDOW_WIDTHS: Record<WindowId, number> = {
+    apps: 640,
+    notes: 960,
+    ai: 960,
+    settings: 840,
+    trash: 880,
+};
+
 export type Rect = { x: number; y: number; width: number; height: number };
 export type Geometry = {
     /** Viewport minus safe areas, `--window-margin`, Dock, ball and banner. */

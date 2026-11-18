@@ -13,6 +13,7 @@
     --surface-soft: #EBEBEE;
     /* Menu and suggestion highlight: translucent, so it reads on solid and every glass level. */
     --surface-highlight: rgb(0 0 0 / 0.08);
+    --surface-hover: color-mix(in srgb, var(--foreground) 6%, transparent);
     /* Thumb of switches, segmented selection, tabs and sliders: lighter than its track in both themes. */
     --surface-control-thumb: #FFFFFF;
     --muted: #66666B;
@@ -35,7 +36,6 @@
     --success: #1f7352;
     --warning: #8c5d00;
     --warning-soft: color-mix(in srgb, var(--warning) 12%, var(--surface));
-    --warning-border: color-mix(in srgb, var(--warning) 40%, var(--border));
     --ring: var(--accent);
     --accent-soft-mix: 9%;
     --accent-subtle-mix: 15%;
@@ -49,15 +49,14 @@
 
     /* Layers: canvas, content, floating, overlay. Content has no shadow. */
     --surface-l0: var(--background);
-    --surface-l2: var(--surface-solid);
     --surface-l3: var(--surface-solid);
     /* Canvas behind grouped lists inside an Overlay: groups (`--surface`) must read against it. */
     --surface-grouped-canvas: var(--background);
     --surface-scrim: rgb(0 0 0 / 0.32);
     --shadow-l2: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 8px 24px -6px rgb(0 0 0 / 0.16);
     --shadow-l3: 0 0 0 0.5px rgb(0 0 0 / 0.08), 0 24px 56px -12px rgb(0 0 0 / 0.28);
+    --opacity-disabled: 0.5;
     --shadow-control-thumb: 0 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.20);
-    --shadow-choice-selected: inset 0 0 0 1px var(--accent);
     /* Text field focus: 1px inset that, with the --ring border, makes a 2px ring. */
     --shadow-field-focus: inset 0 0 0 1px var(--ring);
     --shadow-field-invalid-focus: inset 0 0 0 1px var(--danger);
@@ -103,12 +102,12 @@
     --elevation-popover: 70;
     --elevation-menu: 80;
     --elevation-suggestions: 90;
-    --elevation-toast: 100;
+    --elevation-tooltip: 100;
+    --elevation-toast: 110;
     /* Local child layers are meaningful only inside their owning stack. */
     --elevation-local-0: 0;
     --elevation-local-1: 1;
     --elevation-local-2: 2;
-    --elevation-local-3: 3;
     --elevation-local-4: 4;
     --elevation-local-5: 5;
     --elevation-local-10: 10;
@@ -170,7 +169,6 @@
     --space-page-block: var(--space-7);
     --space-section: var(--space-6);
     --space-section-gap: var(--space-7);
-    --space-card: var(--space-4);
     --space-card-gap: var(--space-3);
     --space-card-padding: var(--space-4);
     --space-row-gap: var(--space-3);
@@ -180,17 +178,10 @@
     --space-home-hero-inset: var(--home-hero-inset);
     --space-search-inset-block: 6px;
     --space-search-inset-inline: var(--space-2);
-    --space-model-pill-block: 5px;
-    --space-model-pill-inline: 9px;
-    --space-note-card-block: var(--space-3);
-    --space-note-card-inline: var(--space-4);
-    --space-note-heading-divider: var(--space-1);
-    --space-note-footer-divider: var(--space-2);
     --space-markdown-heading-before: var(--space-2);
     --space-markdown-heading-after: var(--space-1);
     --space-markdown-list-indent: var(--space-5);
     --space-visually-hidden-offset: -1px;
-    --layout-note-actions-reserve: 56px;
 
     /* Radius: concentric by layer. */
     --control-radius: 10px;
@@ -210,6 +201,7 @@
     --radius-dock-glyph: calc(var(--control-compact-height) * var(--radius-launcher-ratio));
 
     /* Sizes. */
+    --topbar-height: 56px;
     --control-height: 36px;
     --control-input-height: 36px;
     --control-compact-height: 28px;
@@ -263,6 +255,9 @@
     --layout-settings-panel-max: 680px;
     --layout-auth-max: 380px;
     --layout-form-max: 560px;
+    --dialog-width-sm: 400px;
+    --dialog-width-md: 480px;
+    --dialog-width-lg: var(--layout-form-max);
     --layout-search-max: 640px;
     --layout-home-content-max: 640px;
     --layout-masthead-col: clamp(296px, 19vw, 372px);
@@ -282,16 +277,16 @@
     --home-grid-wide-coarse-gap: 8px;
     --home-grid-cell: var(--home-grid-wide-cell);
     --home-grid-gap: var(--home-grid-wide-gap);
-    --space-home-grid-gap: var(--home-grid-gap);
     --home-grid-axis: 50%;
     --home-grid-viewport-inset: var(--space-page-inline);
     --home-grid-content-width: min(var(--layout-home-content-max), calc(100vw - 2 * var(--space-4)));
     --home-grid-inline-start: calc(var(--home-grid-axis) - var(--home-grid-content-width) / 2);
     --home-grid-inline-end: calc(var(--home-grid-axis) + var(--home-grid-content-width) / 2);
-    --home-grid-block-start: calc(56px + var(--home-hero-inset));
+    --home-grid-block-start: calc(var(--topbar-height) + var(--home-hero-inset));
     /* ≥768px: 38% viewport centre minus topbar (56px) and half search height
        (28px). Phones override it below. */
-    --home-hero-inset: max(80px, calc(38dvh - 84px));
+    --home-hero-inset: max(80px, calc(38dvh - var(--topbar-height) - 28px));
+    --home-hero-inset-engaged: var(--home-hero-inset);
     --layout-sheet-max: 960px;
     --sheet-width: min(65vw, var(--layout-sheet-max));
     --workspace-width: 400px;
@@ -509,7 +504,6 @@
     --shadow-l2: var(--shadow-frame), 0 4px 12px -6px rgb(0 0 0 / 0.2);
     --shadow-l3: var(--shadow-frame), 0 12px 28px -12px rgb(0 0 0 / 0.3);
     --shadow-control-thumb: 0 0 0 1px var(--border-control);
-    --shadow-choice-selected: inset 0 0 0 2px var(--accent);
     --shadow-document-paper: 0 0 0 1px var(--border);
     --material-solid: var(--surface-solid);
     /* The frame in --shadow-l2 edges Material; no rim or sheen. */
@@ -558,6 +552,23 @@
     --accent-active: var(--accent-hc-active);
     --accent-foreground: light-dark(#FFFFFF, #000000);
     --masthead-accent-text: var(--accent);
+}
+
+/* Re-evaluate derived semantic colors and shadows on every theme / accent /
+   high-contrast scope so nested previews read their local palette, not :root. */
+:root,
+[data-theme],
+[data-accent],
+[data-contrast] {
+    --warning-soft: color-mix(in srgb, var(--warning) 12%, var(--surface));
+    --ring: var(--accent);
+    --accent-soft: color-mix(in srgb, var(--accent) var(--accent-soft-mix), var(--surface));
+    --accent-subtle: color-mix(in srgb, var(--accent) var(--accent-subtle-mix), var(--surface-soft));
+    --accent-border: color-mix(in srgb, var(--accent) var(--accent-border-mix), var(--border));
+    --surface-hover: color-mix(in srgb, var(--foreground) 6%, transparent);
+    --shadow-field-focus: inset 0 0 0 1px var(--ring);
+    --shadow-field-invalid-focus: inset 0 0 0 1px var(--danger);
+    --shadow-swatch-selected: 0 0 0 2px var(--surface-solid), 0 0 0 4px var(--accent);
 }
 
 /* Theme preview tiles (ThemeChoices): colour samples of each theme, readable
@@ -706,11 +717,6 @@
 :root {
     --wallpaper-text-core: 5px;
 }
-@media (forced-colors: active) {
-    :root {
-        --wallpaper-text-core: 0px;
-    }
-}
 :root,
 [data-theme] {
     --wallpaper-text-stroke: var(--wallpaper-text-core) var(--surface-solid);
@@ -723,6 +729,14 @@
         drop-shadow(0 0 var(--space-1) color-mix(in srgb, var(--surface-solid) 90%, transparent));
     /* Hairline divider between top-bar groups on the wallpaper. */
     --border-on-wallpaper: color-mix(in srgb, var(--foreground) 28%, transparent);
+}
+@media (forced-colors: active) {
+    :root,
+    [data-theme] {
+        --wallpaper-text-core: 0px;
+        --wallpaper-text-halo: none;
+        --wallpaper-icon-halo: none;
+    }
 }
 
 /* Wallpaper-derived canvas (览; permitted for settings-class pages): the
@@ -773,15 +787,24 @@
     --masthead-veil-filter: none;
 }
 :root,
-[data-theme] {
+[data-theme],
+[data-glass] {
     --masthead-veil-mix: var(--masthead-veil-light);
     --masthead-veil: color-mix(in srgb, var(--background) var(--masthead-veil-mix), transparent);
     --masthead-text-stroke: var(--wallpaper-text-core) var(--background);
     --masthead-text-halo: 0 0 4px var(--background), 0 0 8px var(--background),
         0 0 16px var(--background), 0 0 28px var(--background);
 }
-[data-theme="dark"] {
+[data-theme="dark"],
+[data-theme="dark"] [data-glass] {
     --masthead-veil-mix: var(--masthead-veil-dark);
+}
+@media (forced-colors: active) {
+    :root,
+    [data-theme],
+    [data-glass] {
+        --masthead-text-halo: none;
+    }
 }
 
 /* Without backdrop-filter, or when the OS reduces transparency, every tier renders as `off`. */
@@ -866,7 +889,7 @@
         /* Centre of the free area between the top bar and the Dock (about
            48% of the viewport); while the search box is in use it rises to
            --home-hero-inset-engaged so suggestions clear the soft keyboard. */
-        --home-hero-inset: max(64px, calc(48dvh - 84px));
+        --home-hero-inset: max(64px, calc(48dvh - var(--topbar-height) - 28px));
         --home-hero-inset-engaged: clamp(64px, 16dvh, 140px);
         --space-search-inset-block: var(--space-1);
         --space-search-inset-inline: 6px;
@@ -908,7 +931,6 @@
     --color-muted: var(--muted);
     --color-border: var(--border);
     --radius-control: var(--control-radius);
-    --radius-input: var(--input-radius);
     --breakpoint-sm: 640px;
     --breakpoint-md: 768px;
     --breakpoint-lg: 1024px;

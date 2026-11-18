@@ -8,6 +8,7 @@ import {
     LoadingState,
     ManagementTable,
     Pagination,
+    SecretInput,
     StatusBanner,
     WorkspaceToolbar,
 } from "../components/searcher/semantic.tsx";
@@ -24,8 +25,6 @@ import {
     Check,
     ChevronDown,
     Copy,
-    Eye,
-    EyeOff,
     MoreHorizontal,
     RefreshCw,
 } from "lucide-react";
@@ -336,7 +335,6 @@ export function AdminPage() {
     const [newDisplayName, setNewDisplayName] = useState("");
     const [newEmail, setNewEmail] = useState("");
     const [newPassword, setNewPassword] = useState("");
-    const [showCreatePassword, setShowCreatePassword] = useState(false);
     const [createBusy, setCreateBusy] = useState(false);
     const [createError, setCreateError] = useState("");
     const [createPasswordError, setCreatePasswordError] = useState("");
@@ -346,7 +344,6 @@ export function AdminPage() {
         null,
     );
     const [resetNewPassword, setResetNewPassword] = useState("");
-    const [showResetPassword, setShowResetPassword] = useState(false);
     const [resetBusy, setResetBusy] = useState(false);
     const [resetError, setResetError] = useState("");
 
@@ -480,7 +477,6 @@ export function AdminPage() {
         modalTriggerRef.current = trigger;
         setCreateError("");
         setCreatePasswordError("");
-        setShowCreatePassword(false);
         setCreateModalOpen(true);
     }
 
@@ -626,7 +622,6 @@ export function AdminPage() {
     function openResetModal(target: AdminUserDto, trigger: HTMLElement | null) {
         modalTriggerRef.current = trigger;
         setResetNewPassword("");
-        setShowResetPassword(false);
         setResetError("");
         setResetModalUser(target);
     }
@@ -660,7 +655,7 @@ export function AdminPage() {
                                 variant="default"
                                 render={<Link to={routes.home} />}
                             >
-                                返回主页
+                                返回首页
                             </Button>
                         )
                         : (
@@ -1463,60 +1458,30 @@ export function AdminPage() {
                             >
                                 初始密码
                             </label>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    ref={createPasswordRef}
-                                    id="create-password"
-                                    name="password"
-                                    className="min-w-0 flex-1"
-                                    placeholder={`至少 ${passwordRules.minLength} 个字符`}
-                                    type={showCreatePassword
-                                        ? "text"
-                                        : "password"}
-                                    required
-                                    minLength={passwordRules.minLength}
-                                    maxLength={passwordRules.maxLength}
-                                    autoComplete="new-password"
-                                    aria-describedby="create-password-hint"
-                                    aria-invalid={Boolean(
-                                        createPasswordError,
-                                    ) || undefined}
-                                    value={newPassword}
-                                    onChange={(e) => {
-                                        setNewPassword(e.target.value);
-                                        if (createPasswordError) {
-                                            setCreatePasswordError("");
-                                        }
-                                    }}
-                                />
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    aria-pressed={showCreatePassword}
-                                    aria-label={showCreatePassword
-                                        ? "隐藏密码"
-                                        : "显示密码"}
-                                    onClick={() =>
-                                        setShowCreatePassword((prev) => !prev)}
-                                >
-                                    {showCreatePassword
-                                        ? (
-                                            <EyeOff
-                                                size="1em"
-                                                className="icon-md"
-                                                aria-hidden="true"
-                                            />
-                                        )
-                                        : (
-                                            <Eye
-                                                size="1em"
-                                                className="icon-md"
-                                                aria-hidden="true"
-                                            />
-                                        )}
-                                </Button>
-                            </div>
+                            <SecretInput
+                                key={createModalOpen
+                                    ? "create-open"
+                                    : "create-closed"}
+                                ref={createPasswordRef}
+                                id="create-password"
+                                name="password"
+                                placeholder={`至少 ${passwordRules.minLength} 个字符`}
+                                required
+                                minLength={passwordRules.minLength}
+                                maxLength={passwordRules.maxLength}
+                                autoComplete="new-password"
+                                aria-describedby="create-password-hint"
+                                aria-invalid={Boolean(
+                                    createPasswordError,
+                                ) || undefined}
+                                value={newPassword}
+                                onChange={(e) => {
+                                    setNewPassword(e.target.value);
+                                    if (createPasswordError) {
+                                        setCreatePasswordError("");
+                                    }
+                                }}
+                            />
                             <p
                                 id="create-password-hint"
                                 role={createPasswordError ? "alert" : undefined}
@@ -1575,57 +1540,25 @@ export function AdminPage() {
                                 新密码（{passwordRules.minLength}–{passwordRules
                                     .maxLength} 个字符）
                             </label>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    id="reset-password-input"
-                                    name="password"
-                                    className="min-w-0 flex-1"
-                                    type={showResetPassword
-                                        ? "text"
-                                        : "password"}
-                                    required
-                                    autoFocus
-                                    minLength={passwordRules.minLength}
-                                    maxLength={passwordRules.maxLength}
-                                    autoComplete="new-password"
-                                    placeholder="输入该用户的临时新密码"
-                                    aria-invalid={Boolean(resetError) ||
-                                        undefined}
-                                    aria-describedby={resetError
-                                        ? "reset-password-error"
-                                        : undefined}
-                                    value={resetNewPassword}
-                                    onChange={(e) =>
-                                        setResetNewPassword(e.target.value)}
-                                />
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    aria-pressed={showResetPassword}
-                                    aria-label={showResetPassword
-                                        ? "隐藏密码"
-                                        : "显示密码"}
-                                    onClick={() =>
-                                        setShowResetPassword((prev) => !prev)}
-                                >
-                                    {showResetPassword
-                                        ? (
-                                            <EyeOff
-                                                size="1em"
-                                                className="icon-md"
-                                                aria-hidden="true"
-                                            />
-                                        )
-                                        : (
-                                            <Eye
-                                                size="1em"
-                                                className="icon-md"
-                                                aria-hidden="true"
-                                            />
-                                        )}
-                                </Button>
-                            </div>
+                            <SecretInput
+                                key={resetModalUser?.id ?? "reset-closed"}
+                                id="reset-password-input"
+                                name="password"
+                                required
+                                autoFocus
+                                minLength={passwordRules.minLength}
+                                maxLength={passwordRules.maxLength}
+                                autoComplete="new-password"
+                                placeholder="输入该用户的临时新密码"
+                                aria-invalid={Boolean(resetError) ||
+                                    undefined}
+                                aria-describedby={resetError
+                                    ? "reset-password-error"
+                                    : undefined}
+                                value={resetNewPassword}
+                                onChange={(e) =>
+                                    setResetNewPassword(e.target.value)}
+                            />
                             {resetError && (
                                 <p
                                     id="reset-password-error"

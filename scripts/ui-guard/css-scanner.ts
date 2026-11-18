@@ -19,14 +19,22 @@ const CSS_SPACING_PROPS: Record<string, true> = {
     "margin-left": true,
     "margin-right": true,
     "margin-inline": true,
+    "margin-inline-start": true,
+    "margin-inline-end": true,
     "margin-block": true,
+    "margin-block-start": true,
+    "margin-block-end": true,
     padding: true,
     "padding-top": true,
     "padding-bottom": true,
     "padding-left": true,
     "padding-right": true,
     "padding-inline": true,
+    "padding-inline-start": true,
+    "padding-inline-end": true,
     "padding-block": true,
+    "padding-block-start": true,
+    "padding-block-end": true,
     gap: true,
     "row-gap": true,
     "column-gap": true,
@@ -38,18 +46,73 @@ const CSS_RADIUS_PROPS: Record<string, true> = {
     "border-top-right-radius": true,
     "border-bottom-left-radius": true,
     "border-bottom-right-radius": true,
+    "border-start-start-radius": true,
+    "border-start-end-radius": true,
+    "border-end-start-radius": true,
+    "border-end-end-radius": true,
 };
 
 function normalizeSnippet(s: string): string {
     return s.replaceAll(/\s+/g, " ").trim();
 }
 
+function splitTopLevelCommas(value: string): string[] {
+    const parts: string[] = [];
+    let depth = 0;
+    let start = 0;
+    for (let i = 0; i < value.length; i++) {
+        const ch = value[i];
+        if (ch === "(") depth++;
+        else if (ch === ")") depth = Math.max(0, depth - 1);
+        else if (ch === "," && depth === 0) {
+            parts.push(value.slice(start, i).trim());
+            start = i + 1;
+        }
+    }
+    parts.push(value.slice(start).trim());
+    return parts.filter(Boolean);
+}
+
+function stripCssCalls(value: string, names: readonly string[]): string {
+    let out = "";
+    let i = 0;
+    while (i < value.length) {
+        const rest = value.slice(i);
+        const match = /^(var|env)\(/i.exec(rest);
+        if (
+            match &&
+            names.includes(match[1].toLowerCase()) &&
+            (i === 0 || !/[a-z0-9_-]/i.test(value[i - 1]))
+        ) {
+            let depth = 1;
+            let j = i + match[0].length;
+            while (j < value.length && depth > 0) {
+                if (value[j] === "(") depth++;
+                else if (value[j] === ")") depth--;
+                j++;
+            }
+            out += " ";
+            i = j;
+            continue;
+        }
+        out += value[i];
+        i++;
+    }
+    return out;
+}
+
 function isAllowedCssShadow(value: string): boolean {
-    const v = value.trim();
+    const v = value.replace(/\s*!important$/i, "").trim();
     if (v === "none" || v === "inherit" || v === "initial" || v === "unset") {
         return true;
     }
-    return v.includes("var(--shadow");
+    const layers = splitTopLevelCommas(v);
+    if (layers.length === 0) return false;
+    return layers.every((layer) =>
+        /^var\(\s*--shadow-[a-z0-9-]+\s*\)$/.test(layer) ||
+        /^(?:inset\s+)?0(?:px)?\s+0(?:px)?\s+0(?:px)?\s+(?:\d+(?:\.\d+)?px|var\(\s*--[a-z0-9-]+\s*\))\s+.+$/
+            .test(layer)
+    );
 }
 
 const ACCENT_FILL_PROPS: Record<string, true> = {
@@ -59,10 +122,23 @@ const ACCENT_FILL_PROPS: Record<string, true> = {
     fill: true,
 };
 
-/** `--accent`, `--accent-hover` and `--accent-active`; tints such as `--accent-soft` are not fills. */
-const ACCENT_FAMILY_FILL = /var\(\s*--accent(?:-hover|-active)?\s*\)/;
+/** `--accent*` and `--wallpaper-accent*` fills (excluding tints/foreground). */
+const ACCENT_FAMILY_FILL =
+    /var\(\s*--(?:accent(?:-hc)?(?:-hover|-active)?|wallpaper-accent(?:-hc)?(?:-hover|-active)?)(?=\s*[,)])/;
 export function isResponsiveCssMetric(value: string): boolean {
     const v = value.trim();
+    const stripped = stripCssCalls(v, ["var", "env"]);
+    for (
+        const m of stripped.matchAll(
+            /\b(\d+(?:\.\d+)?)(px|rem|em|pt)\b/gi,
+        )
+    ) {
+        const num = Number(m[1]);
+        const unit = m[2].toLowerCase();
+        if (num === 0) continue;
+        if (unit === "px" && num === 1) continue;
+        return false;
+    }
     if (v.includes("env(safe-area-inset-")) {
         return true;
     }
@@ -80,7 +156,8 @@ export function isResponsiveCssMetric(value: string): boolean {
             v.includes("cq") ||
             v.includes("env(") ||
             v.includes("var(--") ||
-            v.includes("%")
+            v.includes("%") ||
+            /\d+(?:\.\d+)?lh\b/.test(v)
         );
     }
     return false;
@@ -103,7 +180,11 @@ function isAllowedCssSpacing(value: string): boolean {
         if (isResponsiveCssMetric(p)) {
             return true;
         }
-        return p.includes("var(--space-") || p.includes("var(--layout-");
+        return p.includes("var(--space-") ||
+            p.includes("var(--layout-") ||
+            p.includes("var(--control-") ||
+            p.includes("var(--home-hero-inset") ||
+            p.includes("var(--document-status-clearance");
     });
 }
 
@@ -522,6 +603,32 @@ export function scanCssCode(
                     verdict === "raw"
                         ? "raw-border-radius"
                         : "unregistered-radius-token",
+                    prop,
+                    `${prop}: ${value}`,
+                );
+            }
+            return;
+        }
+
+        // font-weight: only 400/500/600, normal, inherit/initial/unset, or var(--font-*-weight)
+        if (prop === "font-weight") {
+            const cleanWeight = value.replace(/\s*!important$/i, "").trim();
+            if (
+                !/^(?:400|500|600|normal|inherit|initial|unset|var\(\s*--[a-z0-9-]+\s*\))$/i
+                    .test(cleanWeight)
+            ) {
+                pushViolation("raw-font-weight", prop, `${prop}: ${value}`);
+            }
+            return;
+        }
+
+        // text-transform: uppercase is forbidden by Visual Language
+        if (prop === "text-transform") {
+            const cleanTransform = value.replace(/\s*!important$/i, "").trim()
+                .toLowerCase();
+            if (cleanTransform === "uppercase") {
+                pushViolation(
+                    "forbidden-text-transform",
                     prop,
                     `${prop}: ${value}`,
                 );

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
     Dialog,
     DialogBackdrop,
+    DialogFooter,
     DialogPopup,
     DialogPortal,
     DialogTitle,
@@ -18,6 +19,7 @@ import {
 } from "../../components/ui/alert-dialog.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import { Button } from "../../components/ui/button.tsx";
+import { StatusBanner } from "../../components/searcher/semantic.tsx";
 import type { LauncherGroup } from "../../components/searcher/launcherTiles.ts";
 
 export interface FolderNameDialogProps {
@@ -96,19 +98,13 @@ export function FolderNameDialog({
                         </div>
 
                         {error && (
-                            <p
-                                role="alert"
-                                className="error m-0"
-                            >
-                                {error}
-                            </p>
+                            <StatusBanner tone="error">{error}</StatusBanner>
                         )}
 
-                        <div className="flex items-center justify-end gap-2">
+                        <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="sm"
                                 disabled={isSubmitting}
                                 onClick={() => onOpenChange(false)}
                             >
@@ -116,7 +112,7 @@ export function FolderNameDialog({
                             </Button>
                             <Button
                                 type="submit"
-                                size="sm"
+                                variant="default"
                                 disabled={!trimmed || isSubmitting}
                             >
                                 {isSubmitting
@@ -125,7 +121,7 @@ export function FolderNameDialog({
                                         : "保存中…")
                                     : (mode === "create" ? "创建" : "保存")}
                             </Button>
-                        </div>
+                        </DialogFooter>
                     </form>
                 </DialogPopup>
             </DialogPortal>

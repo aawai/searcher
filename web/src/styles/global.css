@@ -42,7 +42,7 @@ html {
 }
 @supports not selector(::-webkit-scrollbar) {
     * {
-        scrollbar-width: auto;
+        scrollbar-width: thin;
         scrollbar-color: transparent transparent;
     }
     [data-scrolling],
@@ -69,7 +69,7 @@ button {
 }
 button:disabled {
     cursor: not-allowed;
-    opacity: .55;
+    opacity: var(--opacity-disabled);
 }
 a {
     color: inherit;
@@ -112,55 +112,20 @@ a {
     color: var(--foreground);
     box-shadow: var(--shadow-l2);
 }
+@media (forced-colors: active) {
+    .skip-link:focus-visible {
+        border: 1px solid CanvasText;
+    }
+}
 .app-shell {
     min-height: 100dvh;
     position: relative;
     isolation: isolate;
 }
-.wallpaper-surface {
-    container-type: size;
-    position: fixed;
-    inset: 0;
-    z-index: var(--elevation-wallpaper);
-    isolation: isolate;
-    overflow: hidden;
-    pointer-events: none;
-    /* No wallpaper: the plain theme background (light / dark). */
-    background: var(--background);
-}
-.wallpaper-surface--embedded {
-    position: absolute;
-    z-index: var(--elevation-local-0);
-}
-.wallpaper-surface__image {
-    position: absolute;
-    inset: 0;
-    background-image: var(--wallpaper-image);
-    background-position: var(--wallpaper-position);
-    background-size: cover;
-    background-repeat: no-repeat;
-    filter: var(--wallpaper-dim);
-}
-.wallpaper-surface__mask {
-    position: absolute;
-    inset: 0;
-    z-index: var(--elevation-local-2);
-    background: var(--surface-l0);
-    opacity: var(--wallpaper-mask);
-}
-.wallpaper-surface--derived .wallpaper-surface__image {
-    inset: calc(-1 * var(--space-10));
-}
-.wallpaper-surface--derived .wallpaper-surface__mask {
-    background: var(--canvas-derived);
-    opacity: 1;
-    -webkit-backdrop-filter: var(--canvas-derived-filter);
-    backdrop-filter: var(--canvas-derived-filter);
-}
 .topbar {
     /* Hit target of every top-bar control; touch raises it to 44px. */
     --topbar-target: var(--control-height);
-    height: 56px;
+    height: var(--topbar-height);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -206,8 +171,10 @@ a {
 .wordmark-small:lang(zh) {
     letter-spacing: normal;
 }
-.wordmark-small:hover {
-    background: var(--surface-soft);
+@media (hover: hover) {
+    .wordmark-small:hover {
+        background: var(--surface-soft);
+    }
 }
 /* The brand's only accent: the wordmark's full stop. */
 .wordmark-dot {
@@ -223,7 +190,7 @@ a {
 }
 .topbar:has(.sync-failed-badge) {
     height: auto;
-    min-height: 56px;
+    min-height: var(--topbar-height);
 }
 .top-actions:has(.sync-failed-badge) {
     flex-wrap: wrap;
@@ -254,11 +221,13 @@ a {
     background: transparent;
     transition: background var(--motion-fast) var(--ease-standard);
 }
-.top-actions a:hover,
-.top-actions button:hover,
-.top-actions [data-popup-open] {
-    background: var(--surface-soft);
+@media (hover: hover) {
+    .top-actions a:hover,
+    .top-actions button:hover {
+        background: var(--surface-soft);
+    }
 }
+.top-actions [data-popup-open],
 .top-actions .topbar-link--active {
     background: var(--surface-soft);
 }
@@ -326,7 +295,15 @@ a {
 .app-shell[data-home] .top-actions-separator {
     background: var(--border-on-wallpaper);
 }
-.app-shell[data-home] :is(.wordmark-small, .top-actions a, .top-actions button):is(:hover, :focus-visible, [data-popup-open]),
+@media (hover: hover) {
+    .app-shell[data-home] :is(.wordmark-small, .top-actions a, .top-actions button):hover {
+        background: var(--material-regular-sheen), var(--material-regular);
+        -webkit-backdrop-filter: var(--material-regular-filter);
+        backdrop-filter: var(--material-regular-filter);
+        box-shadow: var(--shadow-material-edge);
+    }
+}
+.app-shell[data-home] :is(.wordmark-small, .top-actions a, .top-actions button):is(:focus-visible, [data-popup-open]),
 .app-shell[data-home] .top-actions .topbar-link--active,
 .app-shell[data-home] .top-actions .sync-failed-badge {
     background: var(--material-regular-sheen), var(--material-regular);
@@ -339,6 +316,12 @@ a {
 .app-shell[data-home] .user-avatar-badge {
     background: var(--surface-control-thumb);
     box-shadow: var(--shadow-avatar-edge);
+}
+@media (forced-colors: active) {
+    .app-shell[data-home] .top-actions .sync-failed-badge:not(:focus-visible),
+    .app-shell[data-home] .user-avatar-badge {
+        outline: 1px solid CanvasText;
+    }
 }
 .user-menu-identity {
     display: grid;

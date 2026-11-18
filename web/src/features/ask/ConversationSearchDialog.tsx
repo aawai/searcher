@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -8,7 +7,7 @@ import {
     DialogTitle,
 } from "../../components/ui/dialog.tsx";
 import { Button } from "../../components/ui/button.tsx";
-import { Input } from "../../components/ui/input.tsx";
+import { SearchField } from "../../components/searcher/semantic.tsx";
 import type { AiMessageDto } from "./types.ts";
 import {
     formatShortcut,
@@ -53,28 +52,13 @@ export function ConversationSearchDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="ask-search-dialog__field">
-                    <Input
-                        variant="search"
-                        placeholder="搜索本对话"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        autoFocus
-                        className="ask-search-dialog__input"
-                    />
-                    {query && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setQuery("")}
-                            className="ask-search-dialog__clear"
-                            aria-label="清空搜索"
-                        >
-                            <X size="1em" className="icon-sm" />
-                        </Button>
-                    )}
-                </div>
+                <SearchField
+                    placeholder="搜索本对话"
+                    value={query}
+                    onValueChange={setQuery}
+                    clearLabel="清空搜索"
+                    autoFocus
+                />
 
                 <p className="ask-search-dialog__status">
                     {trimmed

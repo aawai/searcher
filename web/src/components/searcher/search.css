@@ -59,8 +59,10 @@
     transition: background var(--motion-fast) var(--ease-standard);
 }
 
-.search-engine:hover {
-    background: var(--surface-soft);
+@media (hover: hover) {
+    .search-engine:hover {
+        background: var(--surface-soft);
+    }
 }
 
 .engine-mark {
@@ -132,8 +134,10 @@
     cursor: pointer;
 }
 
-.model-trigger:hover {
-    color: var(--foreground);
+@media (hover: hover) {
+    .model-trigger:hover {
+        color: var(--foreground);
+    }
 }
 
 .model-pill-label {
@@ -317,7 +321,7 @@
     }
 }
 
-@media (any-pointer: coarse) {
+@media (any-pointer: coarse), (hover: none) {
     .search-frame {
         padding-block: 0;
     }

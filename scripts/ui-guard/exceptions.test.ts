@@ -143,29 +143,38 @@ Deno.test("runtime exceptions - image drag transform and denial of unrelated tra
     );
 });
 
-Deno.test("runtime exceptions - domain values and denial of arbitrary dynamic colors", () => {
-    // Home paper domain coordinates (in HomeNotes.tsx)
+Deno.test("runtime exceptions - retired HomeNotes and spoofed owner paths are denied", () => {
+    // Retired HomeNotes.tsx is no longer exempted
     assertEquals(
         isDomainValueException(
             "web/src/features/home-layouts/HomeNotes.tsx",
             "left",
             "`${point.x}px`",
         ),
-        true,
+        false,
     );
     assertEquals(
-        isDomainValueException(
+        isDragTransformException(
             "web/src/features/home-layouts/HomeNotes.tsx",
-            "top",
-            "`${point.y}px`",
+            "opacity",
+            "isDragging ? 0.5 : 1",
         ),
-        true,
+        false,
+    );
+    // Spoofed basenames outside exact repo-relative owner paths are denied
+    assertEquals(
+        isDragTransformException(
+            "web/src/evil/SearchHome.tsx",
+            "opacity",
+            "isDragging ? 0.5 : 1",
+        ),
+        false,
     );
     assertEquals(
         isDomainValueException(
-            "web/src/features/home-layouts/HomeNotes.tsx",
-            "--note-tilt",
-            "getNoteTilt(note.id)",
+            "web/src/evil/SettingsPage.tsx",
+            "background",
+            "getAccentLight(id)",
         ),
         false,
     );
@@ -370,7 +379,6 @@ Deno.test("viewport and physical paper exceptions reject unrelated visual values
 Deno.test("taskbar inset exemption is restricted to registered dock consumers", () => {
     const shell = "web/src/components/searcher/semantic.css";
     const homeLayouts = "web/src/features/home-layouts/home-layouts.css";
-    const homeNotes = "web/src/features/home-layouts/home-notes.css";
     for (
         const [file, property, value] of [
             [shell, "margin-bottom", "var(--dock-inset-bottom, 0px)"],
@@ -378,11 +386,6 @@ Deno.test("taskbar inset exemption is restricted to registered dock consumers", 
                 shell,
                 "inset-block-end",
                 "calc(var(--space-8) + var(--dock-inset-bottom, 0px))",
-            ],
-            [
-                homeNotes,
-                "inset-block-end",
-                "calc(var(--space-2) + var(--dock-inset-bottom, 0px))",
             ],
             [
                 homeLayouts,
@@ -399,6 +402,11 @@ Deno.test("taskbar inset exemption is restricted to registered dock consumers", 
             [shell, "padding-bottom", "var(--dock-inset-bottom)"],
             [shell, "margin-bottom", "var(--dock-inset-bottom, 24px)"],
             [shell, "inset-block-end", "var(--dock-inset-bottom, 0px)"],
+            [
+                "web/src/features/home-layouts/home-notes.css",
+                "inset-block-end",
+                "calc(var(--space-2) + var(--dock-inset-bottom, 0px))",
+            ],
             [
                 "web/src/features/dock/dock.css",
                 "margin-bottom",

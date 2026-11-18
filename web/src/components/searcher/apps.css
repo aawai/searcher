@@ -81,8 +81,11 @@
     transition: background var(--motion-fast) var(--ease-standard);
 }
 
-.app-upload-dropzone:hover {
-    background: color-mix(in srgb, var(--surface-soft) 92%, var(--foreground));
+@media (hover: hover) {
+    .app-upload-dropzone:hover {
+        background: color-mix(in srgb, var(--surface-soft) 92%,
+            var(--foreground));
+    }
 }
 .app-upload-input {
     position: absolute;
@@ -133,14 +136,14 @@
     color: var(--muted);
 }
 
-.app-ai-candidates-grid {
+[data-slot="radio-group"].app-ai-candidates-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-control-gap);
     width: 100%;
 }
 
-.app-ai-candidate-card {
+[data-slot="radio-group-item"].app-ai-candidate-card {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -149,19 +152,28 @@
     border: none;
     border-radius: var(--radius);
     background: var(--surface-soft);
+    white-space: normal;
     cursor: pointer;
     transition: background var(--motion-fast) var(--ease-standard);
 }
 
-.app-ai-candidate-card:hover {
-    background: color-mix(in srgb, var(--surface-soft) 92%, var(--foreground));
+[data-slot="radio-group-item"].app-ai-candidate-card > .radio-circle {
+    display: none;
 }
 
-.app-ai-candidate-card.is-selected {
+@media (hover: hover) {
+    [data-slot="radio-group-item"].app-ai-candidate-card:hover {
+        background: color-mix(in srgb, var(--surface-soft) 92%,
+            var(--foreground));
+    }
+}
+
+[data-slot="radio-group-item"].app-ai-candidate-card.is-selected,
+[data-slot="radio-group-item"].app-ai-candidate-card[data-checked] {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
-.app-ai-candidate-card:focus-visible {
+[data-slot="radio-group-item"].app-ai-candidate-card:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
@@ -210,6 +222,23 @@
     background: var(--accent);
 }
 
+@media (forced-colors: active) {
+    [data-slot="radio-group-item"].app-ai-candidate-card.is-selected,
+    [data-slot="radio-group-item"].app-ai-candidate-card[data-checked] {
+        outline: 2px solid Highlight;
+    }
+    .app-ai-candidate-card.is-selected .app-ai-candidate-radio-dot,
+    [data-slot="radio-group-item"].app-ai-candidate-card[data-checked] .app-ai-candidate-radio-dot {
+        forced-color-adjust: none;
+        border-color: Highlight;
+        background: Highlight;
+        color: HighlightText;
+    }
+    [data-slot="radio-group-item"].app-ai-candidate-card[data-checked]:focus-visible {
+        outline-color: CanvasText;
+    }
+}
+
 /* The footer shares the dialog's grouped canvas: a hairline, no band. */
 .app-dialog-footer {
     padding: var(--space-3) var(--space-5);
@@ -222,7 +251,7 @@
 }
 
 @media (max-width: 639px) {
-    .app-ai-candidates-grid {
+    [data-slot="radio-group"].app-ai-candidates-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
@@ -252,7 +281,7 @@
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
-    width: min(calc(100vw - var(--space-6)), 560px);
+    width: min(calc(100vw - var(--space-6)), var(--dialog-width-lg));
     max-height: calc(100dvh - 2 * var(--app-form-dialog-top));
     padding: 0;
     overflow: hidden;

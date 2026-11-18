@@ -632,12 +632,12 @@ function AskWorkspaceContent(
                 <PageHeader title="AI 问答" />
                 <div className="ask-guest__content">
                     <p>AI 问答需要登录账号。</p>
-                    <Link
-                        className="button button--primary"
-                        to={authPath("login", location)}
+                    <Button
+                        variant="default"
+                        render={<Link to={authPath("login", location)} />}
                     >
                         登录后提问
-                    </Link>
+                    </Button>
                 </div>
             </PageShell>
         );
@@ -692,6 +692,7 @@ function AskWorkspaceContent(
                                     >
                                         <Menu size="1em" className="icon-md" />
                                     </Button>
+                                    <h1 className="sr-only">AI 问答</h1>
                                 </div>
                             </header>
                             <div className="ask-workspace__empty">
@@ -700,14 +701,18 @@ function AskWorkspaceContent(
                                     description={user.role === "admin"
                                         ? "请前往 AI 设置添加服务商或启用模型。"
                                         : "请前往 AI 设置添加服务商，或联系管理员。"}
-                                    action={(
-                                        <Link
-                                            to={routes.settings("ai")}
-                                            className="button button--primary"
+                                    action={
+                                        <Button
+                                            variant="default"
+                                            render={
+                                                <Link
+                                                    to={routes.settings("ai")}
+                                                />
+                                            }
                                         >
                                             前往 AI 设置
-                                        </Link>
-                                    )}
+                                        </Button>
+                                    }
                                 />
                             </div>
                         </div>

@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { Check } from "lucide-react";
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
@@ -104,6 +105,18 @@ function DropdownMenuContent({
     );
 }
 
+function DropdownMenuLabel(
+    { className, ...props }: ComponentProps<"div">,
+) {
+    return (
+        <div
+            data-slot="dropdown-menu-label"
+            className={cn("menu-label", className)}
+            {...props}
+        />
+    );
+}
+
 function DropdownMenuRadioGroup(props: MenuPrimitive.RadioGroup.Props) {
     return <MenuPrimitive.RadioGroup {...props} />;
 }
@@ -113,6 +126,7 @@ function DropdownMenuRadioItem(
 ) {
     return (
         <MenuPrimitive.RadioItem
+            data-slot="dropdown-menu-item"
             className={cn("menu-item", className)}
             {...props}
         >
@@ -132,6 +146,7 @@ export {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuPopup,
     DropdownMenuPortal,
     DropdownMenuPositioner,

@@ -584,8 +584,10 @@ export function WindowFrame(
                             >
                                 <DropdownMenuTrigger
                                     render={
-                                        <button
+                                        <Button
                                             type="button"
+                                            variant="ghost"
+                                            size="icon"
                                             className="window-frame__button touch-target"
                                             aria-label={`${title}窗口菜单`}
                                         />
@@ -644,18 +646,22 @@ export function WindowFrame(
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             className="window-frame__button touch-target"
                             data-window-dismiss
                             aria-label={`最小化${title}`}
                             onClick={onMinimize}
                         >
                             <Minus size="1em" className="icon-md" />
-                        </button>
+                        </Button>
                         {geometry?.wide && (
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
+                                size="icon"
                                 className="window-frame__button touch-target"
                                 aria-label={`${
                                     maximized ? "还原" : "最大化"
@@ -675,17 +681,19 @@ export function WindowFrame(
                                             className="icon-md"
                                         />
                                     )}
-                            </button>
+                            </Button>
                         )}
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             className="window-frame__button touch-target"
                             data-window-dismiss
                             aria-label={`关闭${title}`}
                             onClick={onClose}
                         >
                             <X size="1em" className="icon-md" />
-                        </button>
+                        </Button>
                     </div>
                 </header>
                 {operation && (

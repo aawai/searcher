@@ -1,5 +1,5 @@
 import { type SubmitEvent, useEffect, useRef, useState } from "react";
-import { Eye, EyeOff, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { AUTH_CREDENTIAL_RULES, type UserDto } from "@shared/contracts.ts";
 import { Badge } from "../components/ui/badge.tsx";
 import { Button, buttonVariants } from "../components/ui/button.tsx";
@@ -26,6 +26,7 @@ import {
 } from "../components/ui/alert-dialog.tsx";
 import {
     EmptyState,
+    SecretInput,
     SettingsGroup,
     SettingsRow,
     StatusBanner,
@@ -155,9 +156,6 @@ export function AccountContent({ host }: { host: PageHost }) {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [passwordSaving, setPasswordSaving] = useState(false);
     const [passwordSuccess, setPasswordSuccess] = useState("");
     const [passwordError, setPasswordError] = useState("");
@@ -304,9 +302,6 @@ export function AccountContent({ host }: { host: PageHost }) {
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-        setShowCurrentPassword(false);
-        setShowNewPassword(false);
-        setShowConfirmPassword(false);
         setPasswordSuccess("");
         setPasswordError("");
         setPasswordFieldError(null);
@@ -551,9 +546,8 @@ export function AccountContent({ host }: { host: PageHost }) {
                             {hasOtherDevices && (
                                 <Button
                                     type="button"
-                                    variant="ghost"
+                                    variant="ghost-danger"
                                     size="sm"
-                                    className="account-danger"
                                     disabled={devicesLoading ||
                                         revokeDevicePending ||
                                         revokeOthersPending ||
@@ -636,8 +630,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         <Button
                                             type="button"
                                             size="sm"
-                                            variant="ghost"
-                                            className="account-danger"
+                                            variant="ghost-danger"
                                             disabled={devicesLoading ||
                                                 revokeDevicePending ||
                                                 logoutCurrentPending ||
@@ -693,48 +686,19 @@ export function AccountContent({ host }: { host: PageHost }) {
                                     title="当前密码"
                                     labelFor="account-current-password"
                                 >
-                                    <Input
+                                    <SecretInput
+                                        key={passwordDialogOpen
+                                            ? "current-open"
+                                            : "current-closed"}
                                         id="account-current-password"
                                         name="currentPassword"
                                         placeholder="用于确认是你本人"
-                                        type={showCurrentPassword
-                                            ? "text"
-                                            : "password"}
                                         required
                                         autoComplete="current-password"
                                         value={currentPassword}
                                         onChange={(e) =>
                                             setCurrentPassword(e.target.value)}
                                     />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        aria-pressed={showCurrentPassword}
-                                        aria-label={showCurrentPassword
-                                            ? "隐藏密码"
-                                            : "显示密码"}
-                                        onClick={() =>
-                                            setShowCurrentPassword((prev) =>
-                                                !prev
-                                            )}
-                                    >
-                                        {showCurrentPassword
-                                            ? (
-                                                <EyeOff
-                                                    size="1em"
-                                                    className="icon-md"
-                                                    aria-hidden="true"
-                                                />
-                                            )
-                                            : (
-                                                <Eye
-                                                    size="1em"
-                                                    className="icon-md"
-                                                    aria-hidden="true"
-                                                />
-                                            )}
-                                    </Button>
                                 </SettingsRow>
                                 <SettingsRow
                                     title="新密码"
@@ -750,14 +714,14 @@ export function AccountContent({ host }: { host: PageHost }) {
                                     invalid={passwordFieldError?.field ===
                                         "new"}
                                 >
-                                    <Input
+                                    <SecretInput
+                                        key={passwordDialogOpen
+                                            ? "new-open"
+                                            : "new-closed"}
                                         ref={newPasswordRef}
                                         id="account-new-password"
                                         name="newPassword"
                                         placeholder={`至少 ${passwordRules.minLength} 个字符`}
-                                        type={showNewPassword
-                                            ? "text"
-                                            : "password"}
                                         required
                                         minLength={passwordRules.minLength}
                                         maxLength={passwordRules.maxLength}
@@ -770,33 +734,6 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         onChange={(e) =>
                                             setNewPassword(e.target.value)}
                                     />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        aria-pressed={showNewPassword}
-                                        aria-label={showNewPassword
-                                            ? "隐藏密码"
-                                            : "显示密码"}
-                                        onClick={() =>
-                                            setShowNewPassword((prev) => !prev)}
-                                    >
-                                        {showNewPassword
-                                            ? (
-                                                <EyeOff
-                                                    size="1em"
-                                                    className="icon-md"
-                                                    aria-hidden="true"
-                                                />
-                                            )
-                                            : (
-                                                <Eye
-                                                    size="1em"
-                                                    className="icon-md"
-                                                    aria-hidden="true"
-                                                />
-                                            )}
-                                    </Button>
                                 </SettingsRow>
                                 <SettingsRow
                                     title="确认新密码"
@@ -813,14 +750,14 @@ export function AccountContent({ host }: { host: PageHost }) {
                                     invalid={passwordFieldError?.field ===
                                         "confirm"}
                                 >
-                                    <Input
+                                    <SecretInput
+                                        key={passwordDialogOpen
+                                            ? "confirm-open"
+                                            : "confirm-closed"}
                                         ref={confirmPasswordRef}
                                         id="account-confirm-password"
                                         name="confirmPassword"
                                         placeholder="再次输入新密码"
-                                        type={showConfirmPassword
-                                            ? "text"
-                                            : "password"}
                                         required
                                         minLength={passwordRules.minLength}
                                         maxLength={passwordRules.maxLength}
@@ -836,35 +773,6 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         onChange={(e) =>
                                             setConfirmPassword(e.target.value)}
                                     />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        aria-pressed={showConfirmPassword}
-                                        aria-label={showConfirmPassword
-                                            ? "隐藏密码"
-                                            : "显示密码"}
-                                        onClick={() =>
-                                            setShowConfirmPassword((prev) =>
-                                                !prev
-                                            )}
-                                    >
-                                        {showConfirmPassword
-                                            ? (
-                                                <EyeOff
-                                                    size="1em"
-                                                    className="icon-md"
-                                                    aria-hidden="true"
-                                                />
-                                            )
-                                            : (
-                                                <Eye
-                                                    size="1em"
-                                                    className="icon-md"
-                                                    aria-hidden="true"
-                                                />
-                                            )}
-                                    </Button>
                                 </SettingsRow>
                             </SettingsGroup>
 

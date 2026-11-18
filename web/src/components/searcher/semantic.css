@@ -84,8 +84,10 @@
     border-radius: var(--control-radius);
     overflow-wrap: anywhere;
 }
-.page-breadcrumb-link:hover {
-    color: var(--foreground);
+@media (hover: hover) {
+    .page-breadcrumb-link:hover {
+        color: var(--foreground);
+    }
 }
 
 /* Section: page-level grouping with a 17px title. */
@@ -249,11 +251,11 @@
 }
 /* Form rows: a text field takes the width the label leaves, wrapping under
    the label once both no longer fit; a unit after the field stays beside it. */
-.settings-row:not(.settings-row--vertical) .settings-row-control:has(> .cn-input) {
+.settings-row:not(.settings-row--vertical) .settings-row-control:has(> .cn-input, > .secret-field) {
     flex: 2 1 var(--settings-row-label-min);
     flex-wrap: nowrap;
 }
-.settings-row:not(.settings-row--vertical) .settings-row-control:has(> .cn-input) > :not(.cn-input) {
+.settings-row:not(.settings-row--vertical) .settings-row-control:has(> .cn-input, > .secret-field) > :not(.cn-input, .secret-field) {
     flex: none;
 }
 /* The field's hint or error: the row's second line, owned by its field. */
@@ -339,8 +341,10 @@
     border: var(--space-hairline) solid var(--border);
     border-radius: inherit;
 }
-.theme-choice:hover .theme-choice-preview::after {
-    border-color: var(--border-control);
+@media (hover: hover) {
+    .theme-choice:hover .theme-choice-preview::after {
+        border-color: var(--border-control);
+    }
 }
 .theme-choice[data-checked] .theme-choice-preview {
     box-shadow: var(--shadow-swatch-selected);
@@ -456,6 +460,37 @@
    thumb (lighter than Material, hairline edge), the same grammar as the
    identity badge, so it reads on any wallpaper; its 2×2 dots show the current
    accent and its pressed shade beside the theme's foreground and muted ink. */
+.appearance-toggle,
+.appearance-picker-trigger {
+    min-width: var(--control-height);
+    min-height: var(--control-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--control-radius);
+    background: transparent;
+    color: var(--foreground);
+    cursor: pointer;
+    transition: background var(--motion-fast) var(--ease-standard);
+}
+@media (hover: hover) {
+    .appearance-toggle:hover,
+    .appearance-picker-trigger:hover {
+        background: var(--surface-soft);
+    }
+}
+.appearance-picker-trigger[data-popup-open] {
+    background: var(--surface-soft);
+}
+@media (any-pointer: coarse), (hover: none) {
+    .appearance-toggle,
+    .appearance-picker-trigger {
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+    }
+}
 .appearance-picker-chip {
     display: grid;
     grid-template-columns: repeat(2, calc(var(--icon-lg) / 4));
@@ -543,9 +578,11 @@
     font-size: var(--font-body-size);
     text-decoration: none;
 }
-.appearance-picker-more:hover {
-    background: var(--surface-highlight);
-    color: var(--foreground);
+@media (hover: hover) {
+    .appearance-picker-more:hover {
+        background: var(--surface-highlight);
+        color: var(--foreground);
+    }
 }
 .appearance-picker-more > svg {
     width: var(--icon-sm);
@@ -569,8 +606,13 @@
 }
 /* Fields also pull into the row's block padding, so a row holding a field is
    as tall as a row holding a value; the field keeps its own hit height. */
-.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select-wrapper"]) {
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select-wrapper"], .secret-field) {
     margin-block: calc(-1 * var(--space-2));
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control .secret-field > .cn-input:not([data-field="standalone"]) {
+    margin-block: 0;
+    margin-inline-end: 0;
+    padding-inline-end: var(--space-9);
 }
 .settings-row:not(.settings-row--vertical) .settings-row-control [data-slot="native-select"] {
     text-align-last: end;
@@ -684,6 +726,7 @@
     border-radius: var(--radius-lg);
     color: var(--foreground);
     background: var(--material-thick-sheen), var(--material-thick);
+    -webkit-backdrop-filter: var(--material-thick-filter);
     backdrop-filter: var(--material-thick-filter);
     box-shadow: var(--shadow-elevation-floating);
     z-index: var(--elevation-toast);
@@ -796,8 +839,10 @@
     transition: background var(--motion-fast) var(--ease-standard),
         color var(--motion-fast) var(--ease-standard);
 }
-.local-navigation a:hover {
-    color: var(--foreground);
+@media (hover: hover) {
+    .local-navigation a:hover {
+        color: var(--foreground);
+    }
 }
 /* The current item also takes the title weight: the fill alone is a colour
    cue (1.4.1), and forced colours erase it (A7). */
@@ -902,4 +947,151 @@
         width: 100%;
         margin: 0;
     }
+}
+
+/* Search field with clear action */
+.search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+}
+.search-field-icon {
+    position: absolute;
+    inset-inline-start: var(--space-3);
+    color: var(--muted);
+    pointer-events: none;
+    z-index: var(--elevation-local-1);
+}
+.search-field > .cn-input.search-field-input {
+    padding-inline-start: var(--space-8);
+    padding-inline-end: var(--space-8);
+}
+.search-field-input::-webkit-search-cancel-button {
+    appearance: none;
+}
+.search-field-clear {
+    position: absolute;
+    inset-inline-end: var(--space-1);
+    width: calc(var(--control-input-height) - 2 * var(--space-1));
+    height: calc(var(--control-input-height) - 2 * var(--space-1));
+    min-height: 0;
+    padding: 0;
+    color: var(--muted);
+}
+@media (hover: hover) {
+    .search-field-clear:hover {
+        color: var(--foreground);
+    }
+}
+@media (any-pointer: coarse), (hover: none) {
+    .search-field > .cn-input.search-field-input {
+        padding-inline-end: var(--control-touch-target);
+    }
+    .search-field-clear {
+        width: var(--control-touch-target);
+        height: var(--control-touch-target);
+        inset-inline-end: 0;
+    }
+}
+
+/* Password / secret input with inline visibility toggle */
+.secret-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+}
+.secret-field > .cn-input.secret-field-input {
+    padding-inline-end: var(--space-9);
+}
+.secret-field-toggle {
+    position: absolute;
+    inset-inline-end: var(--space-1);
+    width: calc(var(--control-input-height) - 2 * var(--space-1));
+    height: calc(var(--control-input-height) - 2 * var(--space-1));
+    min-height: 0;
+    padding: 0;
+    color: var(--muted);
+}
+@media (hover: hover) {
+    .secret-field-toggle:hover {
+        color: var(--foreground);
+    }
+}
+@media (any-pointer: coarse), (hover: none) {
+    .secret-field > .cn-input.secret-field-input,
+    .settings-row:not(.settings-row--vertical) .settings-row-control .secret-field > .cn-input:not([data-field="standalone"]) {
+        padding-inline-end: var(--control-touch-target);
+    }
+    .secret-field-toggle {
+        width: var(--control-touch-target);
+        height: var(--control-touch-target);
+        inset-inline-end: 0;
+    }
+}
+
+/* Preset slider (readability / stages) */
+.settings-preset-slider {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 100%;
+}
+.settings-preset-slider__marks {
+    display: flex;
+    justify-content: space-between;
+    width: calc(100% + var(--space-2));
+    margin-inline: calc(-1 * var(--space-1));
+    min-height: var(--control-compact-height);
+    margin-top: var(--space-1);
+    user-select: none;
+}
+.settings-preset-slider__mark {
+    position: relative;
+    flex: 0 0 var(--space-2);
+    width: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color var(--motion-fast) var(--ease-standard);
+    touch-action: manipulation;
+}
+.settings-preset-slider__mark:only-child {
+    margin-inline: auto;
+}
+@media (hover: hover) {
+    .settings-preset-slider__mark:hover:not(:disabled) {
+        color: var(--foreground);
+    }
+}
+.settings-preset-slider__mark--active {
+    color: var(--foreground);
+    font-weight: var(--font-label-weight);
+}
+.settings-preset-slider__mark-tick {
+    width: var(--space-half);
+    height: var(--space-1);
+    border-radius: var(--radius-inline-code);
+    background: var(--border);
+}
+.settings-preset-slider__mark--active .settings-preset-slider__mark-tick {
+    background: var(--accent);
+}
+.settings-preset-slider__mark-label {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    white-space: nowrap;
+}
+.settings-preset-slider[data-disabled="true"] {
+    opacity: var(--opacity-disabled);
+    pointer-events: none;
 }

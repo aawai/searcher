@@ -2,8 +2,15 @@ import { type ReactNode, type RefObject, useEffect, useRef } from "react";
 import { MEDIA_QUERIES } from "../../design-system/breakpoints.ts";
 import { useEscapeLayer } from "./escape-layer-stack.tsx";
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-const TEXT_ENTRY = 'textarea, [contenteditable]:not([contenteditable="false"]), input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="reset"], [type="range"], [type="color"], [type="file"])';
+const FOCUSABLE =
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const TEXT_ENTRY =
+    'textarea, [contenteditable]:not([contenteditable="false"]), input:not([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="reset"], [type="range"], [type="color"], [type="file"])';
+
+function isVisibleFocusable(element: HTMLElement): boolean {
+    return element.getClientRects().length > 0 &&
+        !element.closest("[inert], [aria-hidden='true']");
+}
 
 /**
  * Opening focuses `initialFocus`'s element when it names one, else the first
@@ -15,16 +22,28 @@ function initialFocusTarget(
     overlay: HTMLElement,
     preferred: HTMLElement | null,
 ): HTMLElement {
-    const first = preferred ?? overlay.querySelector<HTMLElement>(FOCUSABLE);
+    const first =
+        (preferred && isVisibleFocusable(preferred) ? preferred : null) ??
+            Array.from(overlay.querySelectorAll<HTMLElement>(FOCUSABLE))
+                .find(isVisibleFocusable);
     if (!first) return overlay;
-    const touch = globalThis.matchMedia?.(MEDIA_QUERIES.coarsePointer).matches;
+    const touch = globalThis.matchMedia?.(MEDIA_QUERIES.touchTarget).matches;
     return touch && first.matches(TEXT_ENTRY) ? overlay : first;
 }
 
 /** Modal overlay confined to its positioned parent rather than the viewport. */
 export function WindowOverlay({
-    open, onOpenChange, children, className, label, restoreFocusRef,
-    restoreFocus = true, modal = true, active = true, role = "dialog", initialFocus,
+    open,
+    onOpenChange,
+    children,
+    className,
+    label,
+    restoreFocusRef,
+    restoreFocus = true,
+    modal = true,
+    active = true,
+    role = "dialog",
+    initialFocus,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -46,31 +65,65 @@ export function WindowOverlay({
     restoreRef.current = restoreFocus;
     const initialFocusRef = useRef(initialFocus);
     initialFocusRef.current = initialFocus;
-    useEscapeLayer(open && modal && active, () => closeRef.current(false), "window-overlay");
+    useEscapeLayer(
+        open && modal && active,
+        () => closeRef.current(false),
+        "window-overlay",
+    );
     useEffect(() => {
         if (!open || !modal || !ref.current) return;
         const overlay = ref.current;
         const siblings = Array.from(overlay.parentElement?.children ?? [])
-            .filter((element): element is HTMLElement => element instanceof HTMLElement && element !== overlay);
+            .filter((element): element is HTMLElement =>
+                element instanceof HTMLElement && element !== overlay
+            );
         const previous = siblings.map((element) => element.inert);
-        siblings.forEach((element) => { element.inert = true; });
+        siblings.forEach((element) => {
+            element.inert = true;
+        });
         // Portalled children bubble through their React owner, not this overlay.
         // Listen on the DOM node so they participate in the same focus trap.
         const trapFocus = (event: KeyboardEvent) => {
             if (event.key !== "Tab") return;
-            const elements = Array.from(overlay.querySelectorAll<HTMLElement>(FOCUSABLE))
-                .filter((element) => element.getClientRects().length > 0);
-            if (!elements.length) { event.preventDefault(); overlay.focus(); return; }
-            const index = elements.indexOf(document.activeElement as HTMLElement);
-            if (event.shiftKey && index <= 0) { event.preventDefault(); elements[elements.length - 1].focus(); }
-            else if (!event.shiftKey && (index < 0 || index === elements.length - 1)) { event.preventDefault(); elements[0].focus(); }
+            const elements = Array.from(
+                overlay.querySelectorAll<HTMLElement>(FOCUSABLE),
+            )
+                .filter(isVisibleFocusable);
+            if (!elements.length) {
+                event.preventDefault();
+                overlay.focus();
+                return;
+            }
+            const index = elements.indexOf(
+                document.activeElement as HTMLElement,
+            );
+            if (event.shiftKey && index <= 0) {
+                event.preventDefault();
+                elements[elements.length - 1].focus();
+            } else if (
+                !event.shiftKey && (index < 0 || index === elements.length - 1)
+            ) {
+                event.preventDefault();
+                elements[0].focus();
+            }
         };
         overlay.addEventListener("keydown", trapFocus);
-        initialFocusTarget(overlay, initialFocusRef.current?.(overlay) ?? null).focus();
+        initialFocusTarget(overlay, initialFocusRef.current?.(overlay) ?? null)
+            .focus();
         return () => {
             overlay.removeEventListener("keydown", trapFocus);
-            siblings.forEach((element, index) => { element.inert = previous[index]; });
-            if (restoreRef.current) restoreFocusRef?.current?.focus();
+            siblings.forEach((element, index) => {
+                element.inert = previous[index];
+            });
+            const restoreTarget = restoreFocusRef?.current;
+            if (
+                restoreRef.current &&
+                restoreTarget &&
+                restoreTarget.isConnected &&
+                isVisibleFocusable(restoreTarget)
+            ) {
+                restoreTarget.focus();
+            }
         };
     }, [open, modal, restoreFocusRef]);
     return (

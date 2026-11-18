@@ -10,10 +10,12 @@ import "./styles/global.css";
 // each unicode-range slice downloads when a registered serif role first uses it.
 import "@fontsource/noto-serif-sc/600.css";
 import "./components/ui/primitives.css";
+import "./components/wallpaper/wallpaper.css";
 import "./components/searcher/search.css";
 import "./components/searcher/apps.css";
 import "./components/searcher/conflict-dialog.css";
 import "./components/searcher/launcher.css";
+import "./components/searcher/pane-resize-handle.css";
 import "./components/searcher/semantic.css";
 installScrollActivity();
 installFocusRecovery();
