@@ -582,7 +582,7 @@ function Layout() {
                     </DialogContent>
                 </Dialog>
                 {!ready
-                    ? <LoadingState className="page">正在加载…</LoadingState>
+                    ? <LoadingState className="page" announce>正在加载…</LoadingState>
                     : (
                         <>
                             <DesktopStage />

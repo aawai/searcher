@@ -771,7 +771,10 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                     assert(record.before[0].startsWith("shared-"));
                     sharedNames.push(record.before[0]);
                     await page.waitForFunction(
-                        "window.__transitions[0]?.finished === true",
+                        () =>
+                            (window as unknown as {
+                                __transitions?: Array<{ finished?: boolean }>;
+                            }).__transitions?.[0]?.finished === true,
                     );
                     assertEquals(
                         await page.evaluate(() =>
@@ -927,7 +930,12 @@ Deno.test("inline AI answer card: streaming, sources, Escape layers, expansion #
                             .click();
                         await page.waitForURL(/\/ask\/[^/?]+$/);
                         await page.waitForFunction(
-                            "window.__transitions[0]?.animations != null",
+                            () =>
+                                (window as unknown as {
+                                    __transitions?: Array<{
+                                        animations?: unknown;
+                                    }>;
+                                }).__transitions?.[0]?.animations != null,
                         );
                         const [record] = await transitionsOf(page);
                         const animations = record.animations!;

@@ -330,9 +330,16 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
             if (!glyphRange) {
                 throw new Error("The first-page glyph is unavailable");
             }
+            const rawToken = getComputedStyle(document.documentElement)
+                .getPropertyValue("--font-body-size").trim();
+            const rootFontSize = parseFloat(
+                getComputedStyle(document.documentElement).fontSize,
+            );
+            const resolvedToken = rawToken.endsWith("rem")
+                ? `${parseFloat(rawToken) * rootFontSize}px`
+                : rawToken;
             return {
-                fontToken: getComputedStyle(document.documentElement)
-                    .getPropertyValue("--font-body-size").trim(),
+                fontToken: resolvedToken,
                 fontSize: getComputedStyle(editor).fontSize,
                 glyphHeight: glyphRange.getBoundingClientRect().height,
             };

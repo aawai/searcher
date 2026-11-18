@@ -598,6 +598,7 @@
 }
 
 .home-masthead__all-notes::after {
+    min-height: var(--touch-target-size);
     inset-block: calc((100% - var(--touch-target-size)) / 2);
     inset-inline: min(0px, calc((100% - var(--touch-target-size)) / 2));
 }
