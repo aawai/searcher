@@ -148,6 +148,15 @@ a {
     background: var(--surface-l0);
     opacity: var(--wallpaper-mask);
 }
+.wallpaper-surface--derived .wallpaper-surface__image {
+    inset: calc(-1 * var(--space-10));
+}
+.wallpaper-surface--derived .wallpaper-surface__mask {
+    background: var(--canvas-derived);
+    opacity: 1;
+    -webkit-backdrop-filter: var(--canvas-derived-filter);
+    backdrop-filter: var(--canvas-derived-filter);
+}
 .topbar {
     /* Hit target of every top-bar control; touch raises it to 44px. */
     --topbar-target: var(--control-height);

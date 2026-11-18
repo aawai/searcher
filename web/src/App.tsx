@@ -224,6 +224,7 @@ function Layout() {
     } = useAppState();
     const hasVisibleDesktop = isHomePage ||
         Boolean(user && windowForLocation(location) !== null);
+    const showWallpaper = hasVisibleDesktop || isAuthPage;
     // Signed-in desktops reach AI and settings through the dock and the user
     // menu; the top bar keeps only theme and identity whichever window is open.
     const desktopTopbar = Boolean(user) && hasVisibleDesktop;
@@ -320,11 +321,14 @@ function Layout() {
                     ? "true"
                     : undefined}
             >
-                {hasVisibleDesktop && (
+                {showWallpaper && (
                     <WallpaperSurface
                         source={appearance.wallpaper}
                         presentation={presentation}
-                        testId="home-wallpaper-surface"
+                        derived={!hasVisibleDesktop && isAuthPage}
+                        testId={hasVisibleDesktop
+                            ? "home-wallpaper-surface"
+                            : "auth-wallpaper-surface"}
                     />
                 )}
                 <a href="#main-content" className="skip-link">

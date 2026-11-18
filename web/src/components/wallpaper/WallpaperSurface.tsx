@@ -13,6 +13,7 @@ export interface WallpaperSurfaceProps {
     className?: string;
     style?: CSSProperties;
     embedded?: boolean;
+    derived?: boolean;
     testId?: string;
     children?: ReactNode;
 }
@@ -38,6 +39,7 @@ export function WallpaperSurface({
     className,
     style,
     embedded = false,
+    derived = false,
     testId,
     children,
 }: WallpaperSurfaceProps) {
@@ -55,6 +57,7 @@ export function WallpaperSurface({
             className={cn(
                 "wallpaper-surface",
                 embedded && "wallpaper-surface--embedded",
+                derived && "wallpaper-surface--derived",
                 className,
             )}
             data-substrate={substrate}
