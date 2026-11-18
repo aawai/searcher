@@ -424,31 +424,76 @@ Deno.test("production launcher contracts - Issue #47 / #244", async (t) => {
     await t.step(
         "folder morph snapshots, reduced motion and unsupported fallback",
         async () => {
-            await page.addScriptTag({
-                content: `(() => {
-            window.folderTransitions = [];
-            const original = document.startViewTransition.bind(document);
-            const named = () => [...document.querySelectorAll("*")]
-                .filter(e => e.style.viewTransitionName && e.style.viewTransitionName !== "none")
-                .map(e => e.style.viewTransitionName);
-            document.startViewTransition = callback => {
-                const record = { before: named(), after: null, animations: null };
-                window.folderTransitions.push(record);
-                const transition = original(async () => {
-                    await callback();
-                    record.after = named();
-                });
-                transition.ready.then(() => {
-                    record.animations = document.documentElement.getAnimations({ subtree: true })
-                        .map(a => ({
-                            pseudo: a.effect?.pseudoElement,
-                            properties: [...new Set(a.effect.getKeyframes().flatMap(f => Object.keys(f)))]
-                                .filter(k => !["offset", "easing", "composite", "computedOffset"].includes(k))
-                        })).filter(a => a.pseudo?.startsWith("::view-transition"));
-                });
-                return transition;
-            };
-        })()`,
+            await page.evaluate(() => {
+                const win = window as unknown as {
+                    folderTransitions: Array<{
+                        before: string[];
+                        after: string[] | null;
+                        animations:
+                            | Array<{
+                                pseudo: string | null | undefined;
+                                properties: string[];
+                            }>
+                            | null;
+                    }>;
+                };
+                win.folderTransitions = [];
+                const original = document.startViewTransition.bind(document);
+                const named = () =>
+                    [...document.querySelectorAll("*")]
+                        .filter((e) => {
+                            const name = (e as HTMLElement).style
+                                .viewTransitionName;
+                            return name && name !== "none";
+                        })
+                        .map((e) =>
+                            (e as HTMLElement).style.viewTransitionName
+                        );
+                document.startViewTransition = ((
+                    callback: () => Promise<void> | void,
+                ) => {
+                    const record: {
+                        before: string[];
+                        after: string[] | null;
+                        animations:
+                            | Array<{
+                                pseudo: string | null | undefined;
+                                properties: string[];
+                            }>
+                            | null;
+                    } = { before: named(), after: null, animations: null };
+                    win.folderTransitions.push(record);
+                    const transition = original(async () => {
+                        await callback();
+                        record.after = named();
+                    });
+                    transition.ready.then(() => {
+                        record.animations = document.documentElement
+                            .getAnimations({ subtree: true })
+                            .map((a) => ({
+                                pseudo: (a.effect as KeyframeEffect | null)
+                                    ?.pseudoElement,
+                                properties: [
+                                    ...new Set(
+                                        (a.effect as KeyframeEffect)
+                                            .getKeyframes()
+                                            .flatMap((f) => Object.keys(f)),
+                                    ),
+                                ].filter((k) =>
+                                    ![
+                                        "offset",
+                                        "easing",
+                                        "composite",
+                                        "computedOffset",
+                                    ].includes(k)
+                                ),
+                            }))
+                            .filter((a) =>
+                                a.pseudo?.startsWith("::view-transition")
+                            );
+                    });
+                    return transition;
+                }) as typeof document.startViewTransition;
             });
             type Record = {
                 before: string[];

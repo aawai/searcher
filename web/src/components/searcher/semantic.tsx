@@ -263,7 +263,7 @@ export function LoadingState(
         children = "正在加载…",
         density = "default",
         className,
-        announce = false,
+        announce = true,
     }: {
         children?: ReactNode;
         density?: "default" | "compact";
