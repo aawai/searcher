@@ -6,7 +6,6 @@ import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import { PreferencesService, PreferencesValidationError } from "./service.ts";
 import { WallpaperService } from "../wallpaper/service.ts";
 import { parseCookie } from "../auth/middleware.ts";
-import { SESSION_COOKIE_NAME } from "../auth/service.ts";
 import {
     ACCENT_PREFERENCES,
     CANONICAL_REASONING_EFFORTS,
@@ -185,7 +184,11 @@ export function registerPreferencesRoutes(
     const wallpaper = deps.wallpaper ?? new WallpaperService();
     routes.public.get("/api/preferences", async (c) => {
         const cookieHeader = c.req.header("cookie");
-        const token = parseCookie(cookieHeader, SESSION_COOKIE_NAME);
+        const cookieName = deps.auth.getSessionCookieName(
+            c.req.header("origin"),
+            c.req.header("host"),
+        );
+        const token = parseCookie(cookieHeader, cookieName);
         let user = null;
         if (token) {
             user = await deps.auth.authenticateSessionToken(token, {

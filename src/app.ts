@@ -35,6 +35,42 @@ const frontend = new URL("../web/dist/", import.meta.url);
 const frontendPath = decodeURIComponent(frontend.pathname);
 const staticNotFound = (c: Context) => c.text("Not Found", 404);
 
+async function computeInlineScriptHashes(
+    indexHtmlPath: string,
+): Promise<string[]> {
+    let html: string;
+    try {
+        html = await Deno.readTextFile(indexHtmlPath);
+    } catch (error) {
+        if (error instanceof Deno.errors.NotFound) {
+            return [];
+        }
+        throw error;
+    }
+
+    const hashes: string[] = [];
+    const encoder = new TextEncoder();
+    const scriptRegex = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+    for (const match of html.matchAll(scriptRegex)) {
+        const attrs = match[1] ?? "";
+        const body = match[2] ?? "";
+        if (/\bsrc\s*=/i.test(attrs) || body.length === 0) {
+            continue;
+        }
+        const digest = await crypto.subtle.digest(
+            "SHA-256",
+            encoder.encode(body),
+        );
+        const bytes = new Uint8Array(digest);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        hashes.push(`'sha256-${btoa(binary)}'`);
+    }
+    return hashes;
+}
+
 export interface CreateAppOptions {
     frontendPath?: string;
 }
@@ -67,6 +103,26 @@ export function createApp(
         now: sharedDeps.now,
     });
     const app = new Hono<AppEnv>();
+    let cspHeaderPromise: Promise<string> | null = null;
+    const getCspHeader = (): Promise<string> => {
+        if (!cspHeaderPromise) {
+            cspHeaderPromise = computeInlineScriptHashes(
+                `${staticRoot}/index.html`,
+            ).then((hashes) => {
+                const scriptSrc = ["'self'", ...hashes, "'report-sample'"].join(
+                    " ",
+                );
+                return [
+                    `script-src ${scriptSrc}`,
+                    "object-src 'none'",
+                    "base-uri 'none'",
+                    "frame-ancestors 'self'",
+                ].join("; ");
+            });
+        }
+        return cspHeaderPromise;
+    };
+
     app.use("*", responseMiddleware);
     app.onError(errorResponse);
     app.notFound(notFoundResponse);
@@ -76,6 +132,27 @@ export function createApp(
             Deno.env.get("NODE_ENV") === "test" ? false : "console",
         ),
     );
+    app.use("*", async (c, next) => {
+        await next();
+        c.header("X-Content-Type-Options", "nosniff");
+        c.header("X-Frame-Options", "SAMEORIGIN");
+        c.header("Referrer-Policy", "strict-origin");
+        c.header(
+            "Permissions-Policy",
+            "camera=(), geolocation=(), microphone=()",
+        );
+        c.header("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+        c.header("Cross-Origin-Resource-Policy", "same-origin");
+        c.header("Content-Security-Policy", await getCspHeader());
+
+        const requestHost = c.req.header("host") ?? new URL(c.req.url).host;
+        if (deps.auth.isSecureCookie(c.req.header("origin"), requestHost)) {
+            c.header(
+                "Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains",
+            );
+        }
+    });
     app.use("/api/*", createBodyLimitMiddleware());
     app.use("/api/*", createApiSecurityMiddleware({ origin: deps.origin }));
 

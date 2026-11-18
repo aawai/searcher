@@ -209,6 +209,7 @@ export function registerAuthRoutes(
                     session.token,
                     session.maxAgeSeconds,
                     c.req.header("origin"),
+                    c.req.header("host"),
                 ),
             );
 
@@ -300,6 +301,7 @@ export function registerAuthRoutes(
                     session.token,
                     session.maxAgeSeconds,
                     c.req.header("origin"),
+                    c.req.header("host"),
                 ),
             );
 
@@ -360,8 +362,13 @@ export function registerAuthRoutes(
         }
         c.header(
             "Set-Cookie",
-            auth.buildClearSessionCookieHeader(c.req.header("origin")),
+            auth.buildClearSessionCookieHeader(
+                c.req.header("origin"),
+                c.req.header("host"),
+            ),
         );
+        // Omit "storage" so offline document drafts (IndexedDB) and guest appearance preferences (localStorage) survive logout.
+        c.header("Clear-Site-Data", '"cookies", "cache"');
         return c.success(undefined, "退出成功");
     });
 
@@ -407,7 +414,10 @@ export function registerAuthRoutes(
             ) {
                 c.header(
                     "Set-Cookie",
-                    auth.buildClearSessionCookieHeader(c.req.header("origin")),
+                    auth.buildClearSessionCookieHeader(
+                        c.req.header("origin"),
+                        c.req.header("host"),
+                    ),
                 );
             }
             return c.success(undefined, "已撤销该设备会话");
@@ -585,7 +595,10 @@ export function registerAuthRoutes(
 
             c.header(
                 "Set-Cookie",
-                auth.buildClearSessionCookieHeader(c.req.header("origin")),
+                auth.buildClearSessionCookieHeader(
+                    c.req.header("origin"),
+                    c.req.header("host"),
+                ),
             );
             return c.success(undefined, "密码修改成功，已在所有设备退出");
         },
