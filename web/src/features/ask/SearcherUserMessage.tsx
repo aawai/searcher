@@ -54,6 +54,8 @@ export function SearcherUserMessage() {
                                             <img
                                                 src={part.data || part.url}
                                                 alt={part.name}
+                                                width={20}
+                                                height={20}
                                                 className="ask-user-attachment-img"
                                             />
                                         )
@@ -61,12 +63,10 @@ export function SearcherUserMessage() {
                                             <FileText
                                                 size="1em"
                                                 className="icon-sm"
+                                                aria-hidden="true"
                                             />
                                         )}
-                                    <span
-                                        className="ask-user-attachment-name"
-                                        title={part.name}
-                                    >
+                                    <span className="ask-user-attachment-name">
                                         {part.name}
                                     </span>
                                 </div>
@@ -117,7 +117,11 @@ export function SearcherUserMessage() {
                             className="ask-branch-pager__btn"
                             aria-label="上一个提问版本"
                         >
-                            <ChevronLeft size="1em" className="icon-sm" />
+                            <ChevronLeft
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
                         </Button>
                     </BranchPickerPrimitive.Previous>
                     <span className="ask-branch-pager__indicator">
@@ -131,7 +135,11 @@ export function SearcherUserMessage() {
                             className="ask-branch-pager__btn"
                             aria-label="下一个提问版本"
                         >
-                            <ChevronRight size="1em" className="icon-sm" />
+                            <ChevronRight
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
                         </Button>
                     </BranchPickerPrimitive.Next>
                 </BranchPickerPrimitive.Root>
@@ -143,16 +151,22 @@ export function SearcherUserMessage() {
                             size="icon"
                             className="ask-action-icon-btn"
                             aria-label={copied ? "已复制" : "复制"}
-                            title={copied ? "已复制" : "复制"}
                         >
                             {copied
                                 ? (
                                     <Check
                                         size="1em"
                                         className="icon-sm"
+                                        aria-hidden="true"
                                     />
                                 )
-                                : <Copy size="1em" className="icon-sm" />}
+                                : (
+                                    <Copy
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                )}
                         </Button>
                     </ActionBarPrimitive.Copy>
 
@@ -162,10 +176,13 @@ export function SearcherUserMessage() {
                                 variant="ghost"
                                 size="icon"
                                 className="ask-action-icon-btn"
-                                aria-label="编辑提问"
-                                title="编辑提问并从此处分支"
+                                aria-label="编辑提问并从此处分支"
                             >
-                                <Pencil size="1em" className="icon-sm" />
+                                <Pencil
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
                             </Button>
                         </ActionBarPrimitive.Edit>
                     )}

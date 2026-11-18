@@ -68,6 +68,8 @@ Deno.test("NoteMarkdown: renders code block with tabIndex for keyboard scrolling
     );
     assertEquals(html.includes("<pre"), true);
     assertEquals(html.includes('tabindex="0"'), true);
+    assertEquals(html.includes('role="region"'), true);
+    assertEquals(html.includes('aria-label="代码块"'), true);
     assertEquals(html.includes("<code"), true);
     assertEquals(html.includes("const x = 1;"), true);
 });

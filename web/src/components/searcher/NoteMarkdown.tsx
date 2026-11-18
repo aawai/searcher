@@ -53,7 +53,7 @@ export function NoteMarkdown(
                 ...props
             }: ComponentPropsWithoutRef<"pre"> & { node?: unknown },
         ) => (
-            <pre {...props} tabIndex={0}>
+            <pre {...props} tabIndex={0} role="region" aria-label="代码块">
                         {children}
             </pre>
         ),
