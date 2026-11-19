@@ -16,8 +16,14 @@ import {
 import { Button, buttonVariants } from "../ui/button.tsx";
 import { routes } from "../../app/routes.ts";
 import { Input } from "../ui/input.tsx";
-import { NativeSelect } from "../ui/native-select.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../ui/select.tsx";
 import { cn } from "../../lib/utils.ts";
 import { SettingsRow } from "./semantic.tsx";
 
@@ -81,61 +87,83 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
         );
     }
 
+    const modelItems = Object.fromEntries(
+        models.map((item) => [
+            item.id,
+            `${item.displayName} · ${
+                providers.find((provider) => provider.id === item.providerId)
+                    ?.name ?? "未知"
+            } · ${item.modelId}`,
+        ]),
+    );
+
     return (
         <>
             <SettingsRow title="模型" labelFor="ai-model-select">
-                <NativeSelect
-                    id="ai-model-select"
+                <Select
+                    items={modelItems}
                     value={selectedId}
-                    onChange={(event) => setSelectedId(event.target.value)}
+                    onValueChange={(next) => {
+                        if (next !== null) setSelectedId(next);
+                    }}
                     disabled={busy}
                 >
-                    {models.map((item) => (
-                        <option key={item.id} value={item.id}>
-                            {item.displayName} ·{" "}
-                            {providers.find((provider) =>
-                                provider.id === item.providerId
-                            )?.name ?? "未知"} · {item.modelId}
-                        </option>
-                    ))}
-                </NativeSelect>
+                    <SelectTrigger id="ai-model-select" aria-label="模型">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {models.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                                {modelItems[item.id]}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </SettingsRow>
             <SettingsRow title="风格" labelFor="ai-style-select">
-                <NativeSelect
-                    id="ai-style-select"
+                <Select
+                    items={LOGO_STYLE_LABELS}
                     value={style}
-                    onChange={(event) =>
-                        setStyle(event.target.value as LogoStyle)}
+                    onValueChange={(next) => {
+                        if (next !== null) setStyle(next as LogoStyle);
+                    }}
                     disabled={busy}
                 >
-                    {LOGO_STYLES.map((styleKey) => (
-                        <option key={styleKey} value={styleKey}>
-                            {LOGO_STYLE_LABELS[styleKey]}
-                        </option>
-                    ))}
-                </NativeSelect>
+                    <SelectTrigger id="ai-style-select" aria-label="风格">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {LOGO_STYLES.map((styleKey) => (
+                            <SelectItem key={styleKey} value={styleKey}>
+                                {LOGO_STYLE_LABELS[styleKey]}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </SettingsRow>
             <SettingsRow
                 title="图片协议"
-                labelFor="ai-image-protocol"
                 message="仅用于本次生成，不修改模型配置。"
                 messageId="ai-image-protocol-hint"
             >
-                <NativeSelect
+                <RadioGroup
                     id="ai-image-protocol"
+                    variant="segmented"
+                    aria-label="图片协议"
+                    aria-describedby="ai-image-protocol-hint"
                     value={imageProtocol}
                     disabled={busy}
-                    aria-describedby="ai-image-protocol-hint"
-                    onChange={(event) => {
-                        const value = event.target.value;
-                        if (
-                            value === "openai" || value === "gemini"
-                        ) setImageProtocol(value);
+                    onValueChange={(next) => {
+                        if (next === "openai" || next === "gemini") {
+                            setImageProtocol(next);
+                        }
                     }}
                 >
-                    <option value="openai">OpenAI Images</option>
-                    <option value="gemini">Gemini 原生</option>
-                </NativeSelect>
+                    <RadioGroupItem value="openai">
+                        OpenAI Images
+                    </RadioGroupItem>
+                    <RadioGroupItem value="gemini">Gemini 原生</RadioGroupItem>
+                </RadioGroup>
             </SettingsRow>
             <SettingsRow
                 title="用途（可选）"

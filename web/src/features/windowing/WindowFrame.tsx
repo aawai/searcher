@@ -12,7 +12,9 @@ import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuGroup,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
@@ -599,50 +601,87 @@ export function WindowFrame(
                                     />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    {PRESETS.map((
-                                        [preset, label, announcement],
-                                    ) => (
-                                        <DropdownMenuItem
-                                            key={preset}
-                                            onClick={() =>
-                                                applyPreset(
-                                                    preset,
-                                                    announcement,
-                                                )}
-                                        >
-                                            {label}
-                                        </DropdownMenuItem>
-                                    ))}
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuLabel>
+                                            布局预设
+                                        </DropdownMenuLabel>
+                                        {PRESETS.map((
+                                            [preset, label, announcement],
+                                        ) => (
+                                            <DropdownMenuItem
+                                                key={preset}
+                                                onClick={() =>
+                                                    applyPreset(
+                                                        preset,
+                                                        announcement,
+                                                    )}
+                                            >
+                                                {label}
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuGroup>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        disabled={!geometry?.wide || maximized}
-                                        onClick={() => beginOperation("move")}
-                                    >
-                                        移动窗口
-                                    </DropdownMenuItem>
-                                    {([
-                                        ["n", "上边"],
-                                        ["s", "下边"],
-                                        ["w", "左边"],
-                                        ["e", "右边"],
-                                        ["nw", "左上角"],
-                                        ["ne", "右上角"],
-                                        ["sw", "左下角"],
-                                        ["se", "右下角"],
-                                    ] as const).map(([direction, label]) => (
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuLabel>
+                                            移动与调整
+                                        </DropdownMenuLabel>
                                         <DropdownMenuItem
-                                            key={direction}
                                             disabled={!geometry?.wide ||
                                                 maximized}
                                             onClick={() =>
-                                                beginOperation(
-                                                    "resize",
-                                                    direction,
-                                                )}
+                                                beginOperation("move")}
                                         >
-                                            调整{label}
+                                            移动窗口
                                         </DropdownMenuItem>
-                                    ))}
+                                        {([
+                                            ["n", "上边"],
+                                            ["s", "下边"],
+                                            ["w", "左边"],
+                                            ["e", "右边"],
+                                        ] as const).map((
+                                            [direction, label],
+                                        ) => (
+                                            <DropdownMenuItem
+                                                key={direction}
+                                                disabled={!geometry?.wide ||
+                                                    maximized}
+                                                onClick={() =>
+                                                    beginOperation(
+                                                        "resize",
+                                                        direction,
+                                                    )}
+                                            >
+                                                调整{label}
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuGroup>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuLabel>
+                                            调整边角
+                                        </DropdownMenuLabel>
+                                        {([
+                                            ["nw", "左上角"],
+                                            ["ne", "右上角"],
+                                            ["sw", "左下角"],
+                                            ["se", "右下角"],
+                                        ] as const).map((
+                                            [direction, label],
+                                        ) => (
+                                            <DropdownMenuItem
+                                                key={direction}
+                                                disabled={!geometry?.wide ||
+                                                    maximized}
+                                                onClick={() =>
+                                                    beginOperation(
+                                                        "resize",
+                                                        direction,
+                                                    )}
+                                            >
+                                                调整{label}
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}

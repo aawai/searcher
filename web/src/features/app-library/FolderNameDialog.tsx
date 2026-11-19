@@ -19,7 +19,10 @@ import {
 } from "../../components/ui/alert-dialog.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import { Button } from "../../components/ui/button.tsx";
-import { StatusBanner } from "../../components/searcher/semantic.tsx";
+import {
+    FormField,
+    StatusBanner,
+} from "../../components/searcher/semantic.tsx";
 import type { LauncherGroup } from "../../components/searcher/launcherTiles.ts";
 
 export interface FolderNameDialogProps {
@@ -79,13 +82,10 @@ export function FolderNameDialog({
                         onSubmit={handleSubmit}
                         className="launcher-folder-dialog-form"
                     >
-                        <div className="launcher-folder-dialog-field">
-                            <label
-                                htmlFor="folder-name-input"
-                                className="launcher-folder-dialog-label"
-                            >
-                                文件夹名称
-                            </label>
+                        <FormField
+                            label="文件夹名称"
+                            labelFor="folder-name-input"
+                        >
                             <Input
                                 id="folder-name-input"
                                 autoFocus
@@ -95,7 +95,7 @@ export function FolderNameDialog({
                                 disabled={isSubmitting}
                                 maxLength={50}
                             />
-                        </div>
+                        </FormField>
 
                         {error && (
                             <StatusBanner tone="error">{error}</StatusBanner>

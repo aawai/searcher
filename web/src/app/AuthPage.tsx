@@ -1,5 +1,10 @@
 import { PageShell } from "../components/searcher/PageShell.tsx";
-import { SecretInput, StatusBanner } from "../components/searcher/semantic.tsx";
+import {
+    FormField,
+    FormFields,
+    SecretInput,
+    StatusBanner,
+} from "../components/searcher/semantic.tsx";
 import {
     type SubmitEvent,
     useCallback,
@@ -255,145 +260,127 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                             noValidate
                             onSubmit={submit}
                         >
-                            <div className="auth-field">
-                                <label
-                                    className="auth-field-label"
-                                    htmlFor="auth-username"
-                                >
-                                    {kind === "login"
+                            <FormFields>
+                                <FormField
+                                    label={kind === "login"
                                         ? "用户名或邮箱"
                                         : "用户名"}
-                                </label>
-                                <Input
-                                    ref={usernameRef}
-                                    id="auth-username"
-                                    name="username"
-                                    placeholder={kind === "login"
-                                        ? "请输入用户名或邮箱"
-                                        : "设置用户名"}
-                                    autoComplete="username"
-                                    autoCorrect="off"
-                                    autoCapitalize="none"
-                                    spellCheck={false}
-                                    // Only where focusing cannot raise an
-                                    // on-screen keyboard over the form.
-                                    autoFocus={matchMedia("(pointer: fine)")
-                                        .matches}
-                                    required
-                                    minLength={kind === "register"
-                                        ? usernameRules.minLength
+                                    labelFor="auth-username"
+                                    hint={usernameInvalid
+                                        ? undefined
+                                        : usernameMessage}
+                                    error={usernameInvalid
+                                        ? usernameMessage
                                         : undefined}
-                                    maxLength={kind === "register"
-                                        ? usernameRules.maxLength
-                                        : undefined}
-                                    pattern={kind === "register"
-                                        ? AUTH_USERNAME_PATTERN
-                                        : undefined}
-                                    aria-describedby={usernameMessage
-                                        ? "auth-username-hint"
-                                        : undefined}
-                                    aria-invalid={usernameInvalid || undefined}
-                                    value={username}
-                                    onChange={(e) =>
-                                        setUsername(e.target.value)}
-                                    onBlur={() => setUsernameTouched(true)}
-                                />
-                                {usernameMessage && (
-                                    <p
-                                        id="auth-username-hint"
-                                        className="auth-field-message"
-                                        data-tone={usernameInvalid
-                                            ? "danger"
-                                            : undefined}
-                                    >
-                                        {usernameMessage}
-                                    </p>
-                                )}
-                            </div>
-                            {kind === "register" && (
-                                <div className="auth-field">
-                                    <label
-                                        className="auth-field-label"
-                                        htmlFor="auth-display-name"
-                                    >
-                                        显示名称
-                                    </label>
-                                    <Input
-                                        ref={displayNameRef}
-                                        id="auth-display-name"
-                                        name="displayName"
-                                        autoComplete="name"
-                                        placeholder="设置显示名称"
-                                        required
-                                        maxLength={40}
-                                        aria-describedby={displayNameMissing
-                                            ? "auth-display-name-hint"
-                                            : undefined}
-                                        aria-invalid={displayNameMissing ||
-                                            undefined}
-                                        value={displayName}
-                                        onChange={(e) =>
-                                            setDisplayName(e.target.value)}
-                                    />
-                                    {displayNameMissing && (
-                                        <p
-                                            id="auth-display-name-hint"
-                                            className="auth-field-message"
-                                            data-tone="danger"
-                                        >
-                                            <span role="alert">
-                                                请输入显示名称
-                                            </span>
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                            <div className="auth-field">
-                                <label
-                                    className="auth-field-label"
-                                    htmlFor="auth-password"
+                                    messageId="auth-username-hint"
+                                    invalid={usernameInvalid}
                                 >
-                                    密码
-                                </label>
-                                <SecretInput
-                                    ref={passwordRef}
-                                    id="auth-password"
-                                    name="password"
-                                    placeholder={kind === "register"
-                                        ? `至少 ${passwordRules.minLength} 个字符`
-                                        : "请输入密码"}
-                                    autoComplete={kind === "login"
-                                        ? "current-password"
-                                        : "new-password"}
-                                    required
-                                    minLength={kind === "login"
-                                        ? 1
-                                        : passwordRules.minLength}
-                                    maxLength={kind === "register"
-                                        ? passwordRules.maxLength
-                                        : undefined}
-                                    aria-describedby={passwordMessage
-                                        ? "auth-password-hint"
-                                        : undefined}
-                                    aria-invalid={passwordInvalid ||
-                                        undefined}
-                                    value={password}
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)}
-                                    onBlur={() => setPasswordTouched(true)}
-                                />
-                                {passwordMessage && (
-                                    <p
-                                        id="auth-password-hint"
-                                        className="auth-field-message"
-                                        data-tone={passwordInvalid
-                                            ? "danger"
+                                    <Input
+                                        ref={usernameRef}
+                                        id="auth-username"
+                                        name="username"
+                                        placeholder={kind === "login"
+                                            ? "请输入用户名或邮箱"
+                                            : "设置用户名"}
+                                        autoComplete="username"
+                                        autoCorrect="off"
+                                        autoCapitalize="none"
+                                        spellCheck={false}
+                                        // Only where focusing cannot raise an
+                                        // on-screen keyboard over the form.
+                                        autoFocus={matchMedia("(pointer: fine)")
+                                            .matches}
+                                        required
+                                        minLength={kind === "register"
+                                            ? usernameRules.minLength
                                             : undefined}
+                                        maxLength={kind === "register"
+                                            ? usernameRules.maxLength
+                                            : undefined}
+                                        pattern={kind === "register"
+                                            ? AUTH_USERNAME_PATTERN
+                                            : undefined}
+                                        aria-describedby={usernameMessage
+                                            ? "auth-username-hint"
+                                            : undefined}
+                                        aria-invalid={usernameInvalid ||
+                                            undefined}
+                                        value={username}
+                                        onChange={(e) =>
+                                            setUsername(e.target.value)}
+                                        onBlur={() => setUsernameTouched(true)}
+                                    />
+                                </FormField>
+                                {kind === "register" && (
+                                    <FormField
+                                        label="显示名称"
+                                        labelFor="auth-display-name"
+                                        error={displayNameMissing
+                                            ? "请输入显示名称"
+                                            : undefined}
+                                        messageId="auth-display-name-hint"
+                                        invalid={displayNameMissing}
                                     >
-                                        {passwordMessage}
-                                    </p>
+                                        <Input
+                                            ref={displayNameRef}
+                                            id="auth-display-name"
+                                            name="displayName"
+                                            autoComplete="name"
+                                            placeholder="设置显示名称"
+                                            required
+                                            maxLength={40}
+                                            aria-describedby={displayNameMissing
+                                                ? "auth-display-name-hint"
+                                                : undefined}
+                                            aria-invalid={displayNameMissing ||
+                                                undefined}
+                                            value={displayName}
+                                            onChange={(e) =>
+                                                setDisplayName(e.target.value)}
+                                        />
+                                    </FormField>
                                 )}
-                            </div>
+                                <FormField
+                                    label="密码"
+                                    labelFor="auth-password"
+                                    hint={passwordInvalid
+                                        ? undefined
+                                        : passwordMessage}
+                                    error={passwordInvalid
+                                        ? passwordMessage
+                                        : undefined}
+                                    messageId="auth-password-hint"
+                                    invalid={passwordInvalid}
+                                >
+                                    <SecretInput
+                                        ref={passwordRef}
+                                        id="auth-password"
+                                        name="password"
+                                        placeholder={kind === "register"
+                                            ? `至少 ${passwordRules.minLength} 个字符`
+                                            : "请输入密码"}
+                                        autoComplete={kind === "login"
+                                            ? "current-password"
+                                            : "new-password"}
+                                        required
+                                        minLength={kind === "login"
+                                            ? 1
+                                            : passwordRules.minLength}
+                                        maxLength={kind === "register"
+                                            ? passwordRules.maxLength
+                                            : undefined}
+                                        aria-describedby={passwordMessage
+                                            ? "auth-password-hint"
+                                            : undefined}
+                                        aria-invalid={passwordInvalid ||
+                                            undefined}
+                                        value={password}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)}
+                                        onBlur={() => setPasswordTouched(true)}
+                                    />
+                                </FormField>
+                            </FormFields>
                             {error && (
                                 <StatusBanner tone="error">
                                     {error}

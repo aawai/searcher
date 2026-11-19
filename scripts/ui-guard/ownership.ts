@@ -114,6 +114,8 @@ export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
         "Base UI popup runtime owner: anchor-relative transform origin for menu open/close transitions",
     "--available-height":
         "Base UI popover positioner runtime owner: viewport space available to the anchored popup",
+    "--anchor-width":
+        "Base UI select/popover positioner runtime owner: trigger width matched by the anchored popup",
 };
 
 /**
@@ -1160,6 +1162,7 @@ export const PRIMITIVE_COMPONENT_SLOTS: Record<string, string> = {
     RadioGroupItem: "radio-group-item",
     Button: "button",
     NativeSelect: "native-select-wrapper",
+    SelectTrigger: "select-trigger",
     Slider: "slider",
     Tabs: "tabs",
     TabsList: "tabs-list",

@@ -661,15 +661,15 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 backdropFilter: homeResting.backdropFilter,
             });
 
-            // Account page (/account): inline settings-row fields stay 12px while standalone buttons become pill
+            // Account page (/account): standalone profile fields and buttons become pill while avatar stays circular
             await visit("/account");
             const accountShapes = await page.evaluate(() => {
-                const inlineInput = document.querySelector<HTMLInputElement>(
+                const profileInput = document.querySelector<HTMLInputElement>(
                     "#account-display-name",
                 )!;
-                const restRadius = getComputedStyle(inlineInput).borderRadius;
-                inlineInput.focus();
-                const focusRadius = getComputedStyle(inlineInput).borderRadius;
+                const restRadius = getComputedStyle(profileInput).borderRadius;
+                profileInput.focus();
+                const focusRadius = getComputedStyle(profileInput).borderRadius;
                 const standaloneBtn = Array.from(
                     document.querySelectorAll<HTMLElement>("button"),
                 ).find((b) => b.textContent?.trim() === "修改密码")!;
@@ -686,8 +686,8 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                     avatarHeight: avatar.getBoundingClientRect().height,
                 };
             });
-            assertEquals(accountShapes.restRadius, "12px");
-            assertEquals(accountShapes.focusRadius, "12px");
+            assertEquals(accountShapes.restRadius, "999px");
+            assertEquals(accountShapes.focusRadius, "999px");
             assertEquals(accountShapes.standaloneBtnRadius, "999px");
             assertEquals(accountShapes.avatarWidth, accountShapes.avatarHeight);
             assert(

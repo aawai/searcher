@@ -794,11 +794,13 @@ Deno.test("窄屏生成参数弹层可滚动，操作不会被视口裁切", asy
             await composer(page).waitFor({ state: "visible" });
             await page.getByRole("button", { name: "更多设置" }).click();
             await page.getByRole("button", { name: "高级生成设置" }).click();
-            const popup = page.getByRole("dialog", { name: "生成参数设置" });
+            const popup = page.getByRole("dialog", { name: "问答设置" });
             await popup.waitFor({ state: "visible" });
+            const region = popup.getByRole("region", { name: "生成参数设置" });
+            await region.waitFor({ state: "visible" });
             const popupBox = (await popup.boundingBox())!;
             assert(popupBox.y >= 0 && popupBox.y + popupBox.height <= 844);
-            const save = popup.getByRole("button", { name: "设为该模型默认" });
+            const save = region.getByRole("button", { name: "设为该模型默认" });
             await save.scrollIntoViewIfNeeded();
             const saveBox = (await save.boundingBox())!;
             assert(saveBox.y >= 0 && saveBox.y + saveBox.height <= 844);

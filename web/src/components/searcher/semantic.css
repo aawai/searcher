@@ -273,13 +273,24 @@
     color: var(--danger);
 }
 @media (max-width: 639px) {
-    .settings-row:has([data-variant="swatch"]) {
+    .settings-row:has([data-variant="swatch"]),
+    .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .settings-row:has([data-variant="swatch"]) .settings-row-label {
+    .settings-row:has([data-variant="swatch"]) .settings-row-label,
+    .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) .settings-row-label {
         flex: none;
+    }
+
+    .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) .settings-row-control {
+        justify-content: flex-start;
+        margin-inline-start: 0;
+    }
+
+    .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) [data-slot="radio-group"][data-variant="segmented"] {
+        margin-block: 0;
     }
 
     .settings-row-control:has([data-variant="swatch"]) {
@@ -312,7 +323,7 @@
    under every theme and keep their colours in forced colours. */
 [data-slot="radio-group"].theme-choices {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, var(--space-10)));
+    grid-template-columns: repeat(auto-fit, minmax(56px, var(--space-10)));
     gap: var(--space-2);
 }
 .theme-choices .theme-choice {
@@ -407,7 +418,7 @@
     line-height: var(--font-metadata-line-height);
     color: var(--muted);
     text-align: center;
-    white-space: normal;
+    white-space: nowrap;
 }
 .theme-choice[data-checked] .theme-choice-caption {
     color: var(--foreground);
@@ -593,7 +604,7 @@
    The field pulls its inset into the row gutter so the value lines up with plain
    values and switches. Hover fills softly; focus and invalid states restore the
    primitive's own border so the 2px ring and danger edge stay intact. */
-.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"]) {
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"], [data-slot="select-trigger"]:not([data-field="standalone"])) {
     border-radius: var(--radius-input);
     padding-inline-start: var(--space-2);
     border-color: transparent;
@@ -606,7 +617,7 @@
 }
 /* Fields also pull into the row's block padding, so a row holding a field is
    as tall as a row holding a value; the field keeps its own hit height. */
-.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select-wrapper"], .secret-field) {
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input, [data-slot="native-select-wrapper"], [data-slot="select-trigger"]:not([data-field="standalone"]), .secret-field) {
     margin-block: calc(-1 * var(--space-2));
 }
 .settings-row:not(.settings-row--vertical) .settings-row-control .secret-field > .cn-input:not([data-field="standalone"]) {
@@ -617,29 +628,71 @@
 .settings-row:not(.settings-row--vertical) .settings-row-control [data-slot="native-select"] {
     text-align-last: end;
 }
-.settings-row:not(.settings-row--vertical) .settings-row-control [data-slot="native-select-wrapper"] {
+.settings-row:not(.settings-row--vertical) .settings-row-control [data-slot="native-select-wrapper"],
+.settings-row:not(.settings-row--vertical) .settings-row-control [data-slot="select-trigger"]:not([data-field="standalone"]) {
     width: auto;
     margin-inline-end: calc(-1 * var(--space-2));
 }
 @media (hover: hover) {
-    .settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"]):hover:not(:disabled) {
+    .settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"], [data-slot="select-trigger"]:not([data-field="standalone"])):hover:not(:disabled, [data-disabled]) {
         background: var(--surface-soft);
     }
 }
-.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"])[aria-invalid="true"] {
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"], [data-slot="select-trigger"]:not([data-field="standalone"]))[aria-invalid="true"] {
     border-color: var(--danger);
 }
-.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"]):focus-visible {
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"], [data-slot="select-trigger"]:not([data-field="standalone"])):focus-visible {
     border-color: var(--ring);
 }
-.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"])[aria-invalid="true"]:focus-visible {
+.settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"], [data-slot="select-trigger"]:not([data-field="standalone"]))[aria-invalid="true"]:focus-visible {
     border-color: var(--danger);
 }
 /* High contrast theme: inline fields show the field frame at rest. */
 @media (forced-colors: none) {
-    [data-contrast="more"] .settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"]):not(:focus-visible, [aria-invalid="true"]) {
+    [data-contrast="more"] .settings-row:not(.settings-row--vertical) .settings-row-control :is(.cn-input:not([data-field="standalone"]), [data-slot="native-select"], [data-slot="select-trigger"]:not([data-field="standalone"])):not(:focus-visible, [aria-invalid="true"]) {
         border-color: var(--field-border);
     }
+}
+
+/* Standalone form fields (FormFields / FormField). */
+.form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+.form-field-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+.form-field-label {
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
+    color: var(--foreground);
+}
+.form-field-end {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+.form-field-message {
+    min-width: 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    overflow-wrap: anywhere;
+}
+.form-field-message[data-tone="danger"] {
+    color: var(--danger);
 }
 
 /* Feedback. */

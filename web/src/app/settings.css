@@ -387,16 +387,6 @@
     display: grid;
     gap: var(--space-4);
 }
-.ai-field-hint,
-.ai-form-error {
-    margin: 0;
-}
-.ai-field-hint {
-    color: var(--muted);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-}
-.ai-form-actions,
 .model-config-action-group {
     display: flex;
     flex-wrap: wrap;

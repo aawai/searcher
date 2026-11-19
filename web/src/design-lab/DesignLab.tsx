@@ -9,9 +9,12 @@ import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import { Textarea } from "../components/ui/textarea.tsx";
 import {
-    NativeSelect,
-    NativeSelectOption,
-} from "../components/ui/native-select.tsx";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../components/ui/select.tsx";
 import { Slider } from "../components/ui/slider.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
@@ -333,18 +336,21 @@ export function DesignLab() {
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                     />
-                    <NativeSelect
-                        aria-label="默认引擎"
+                    <Select
+                        items={{ bing: "必应", google: "谷歌" }}
                         value={engine}
-                        onChange={(e) => setEngine(e.target.value)}
+                        onValueChange={(next) => {
+                            if (next !== null) setEngine(next);
+                        }}
                     >
-                        <NativeSelectOption value="bing">
-                            必应
-                        </NativeSelectOption>
-                        <NativeSelectOption value="google">
-                            谷歌
-                        </NativeSelectOption>
-                    </NativeSelect>
+                        <SelectTrigger aria-label="默认引擎">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="bing">必应</SelectItem>
+                            <SelectItem value="google">谷歌</SelectItem>
+                        </SelectContent>
+                    </Select>
                     <Textarea
                         aria-label="系统指令"
                         placeholder="例如：回答时先给结论"
@@ -543,19 +549,21 @@ export function DesignLab() {
                         />
                     </SettingsRow>
                     <SettingsRow title="默认引擎">
-                        <NativeSelect
-                            size="sm"
-                            aria-label="默认引擎（列表）"
+                        <Select
+                            items={{ bing: "必应", google: "谷歌" }}
                             value={engine}
-                            onChange={(e) => setEngine(e.target.value)}
+                            onValueChange={(next) => {
+                                if (next !== null) setEngine(next);
+                            }}
                         >
-                            <NativeSelectOption value="bing">
-                                必应
-                            </NativeSelectOption>
-                            <NativeSelectOption value="google">
-                                谷歌
-                            </NativeSelectOption>
-                        </NativeSelect>
+                            <SelectTrigger size="sm" aria-label="默认引擎（列表）">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="bing">必应</SelectItem>
+                                <SelectItem value="google">谷歌</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </SettingsRow>
                     <SettingsRow title="清除缓存">
                         <Button variant="outline" size="sm">清除</Button>

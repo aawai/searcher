@@ -1,11 +1,15 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/button.tsx";
+import { Checkbox } from "../components/ui/checkbox.tsx";
 import { Input } from "../components/ui/input.tsx";
-import { Switch } from "../components/ui/switch.tsx";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import {
-    NativeSelect,
-    NativeSelectOption,
-} from "../components/ui/native-select.tsx";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../components/ui/select.tsx";
 import {
     ActionGroup,
     EmptyState,
@@ -14,13 +18,21 @@ import {
     SettingsRow,
     StatusBanner,
 } from "../components/searcher/semantic.tsx";
+import { ThemeChoices } from "../components/searcher/ThemeChoices.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage } from "./state.tsx";
 import type { SystemSettingsDto } from "./AdminOverview.tsx";
-import { normalizeTheme, THEME_IDS } from "@shared/contracts.ts";
-import { THEME_LABELS } from "../design-system/theme.ts";
+import { normalizeTheme } from "@shared/contracts.ts";
 import "./admin.css";
 import { AdminPanelHeader } from "./AdminShell.tsx";
+
+const DEFAULT_ENGINE_ITEMS: Record<SystemSettingsDto["defaultEngine"], string> =
+    {
+        bing: "Bing (必应)",
+        google: "Google (谷歌)",
+        baidu: "Baidu (百度)",
+        duckduckgo: "DuckDuckGo",
+    };
 
 const RETENTION_MIN = 1;
 const RETENTION_MAX = 3650;
@@ -170,8 +182,8 @@ export function AdminSystemSettings() {
                 headingLevel={3}
                 footer="关闭后访客无法自行注册，管理员仍可创建用户。"
             >
-                <SettingsRow title="允许访客注册">
-                    <Switch
+                <SettingsRow title="允许访客注册" labelFor="allowRegistration">
+                    <Checkbox
                         id="allowRegistration"
                         aria-label="允许访客注册"
                         checked={settings.allowRegistration}
@@ -228,73 +240,67 @@ export function AdminSystemSettings() {
                 footer="新账户与未登录访客使用这些默认值，已有用户的设置不变。"
             >
                 <SettingsRow title="搜索引擎">
-                    <NativeSelect
-                        aria-label="默认搜索引擎"
+                    <Select
+                        items={DEFAULT_ENGINE_ITEMS}
                         value={settings.defaultEngine}
-                        onChange={(e) =>
-                            setSettings({
-                                ...settings,
-                                defaultEngine: e.target
-                                    .value as SystemSettingsDto[
+                        onValueChange={(next) => {
+                            if (next !== null) {
+                                setSettings({
+                                    ...settings,
+                                    defaultEngine: next as SystemSettingsDto[
                                         "defaultEngine"
                                     ],
-                            })}
+                                });
+                            }
+                        }}
                     >
-                        <NativeSelectOption value="bing">
-                            Bing (必应)
-                        </NativeSelectOption>
-                        <NativeSelectOption value="google">
-                            Google (谷歌)
-                        </NativeSelectOption>
-                        <NativeSelectOption value="baidu">
-                            Baidu (百度)
-                        </NativeSelectOption>
-                        <NativeSelectOption value="duckduckgo">
-                            DuckDuckGo
-                        </NativeSelectOption>
-                    </NativeSelect>
+                        <SelectTrigger aria-label="默认搜索引擎">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="bing">Bing (必应)</SelectItem>
+                            <SelectItem value="google">
+                                Google (谷歌)
+                            </SelectItem>
+                            <SelectItem value="baidu">Baidu (百度)</SelectItem>
+                            <SelectItem value="duckduckgo">
+                                DuckDuckGo
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
                 </SettingsRow>
 
-                <SettingsRow title="界面主题">
-                    <NativeSelect
-                        aria-label="默认界面主题"
+                <SettingsRow
+                    title="界面主题"
+                    className="settings-row--vertical"
+                >
+                    <ThemeChoices
                         value={settings.defaultTheme}
-                        onChange={(e) =>
+                        label="默认界面主题"
+                        onChange={(next) =>
                             setSettings({
                                 ...settings,
-                                defaultTheme: normalizeTheme(
-                                    e.target.value,
-                                ),
+                                defaultTheme: normalizeTheme(next),
                             })}
-                    >
-                        {THEME_IDS.map((id) => (
-                            <NativeSelectOption key={id} value={id}>
-                                {THEME_LABELS[id]}
-                            </NativeSelectOption>
-                        ))}
-                    </NativeSelect>
+                    />
                 </SettingsRow>
 
                 <SettingsRow title="结果打开方式">
-                    <NativeSelect
+                    <RadioGroup
+                        variant="segmented"
                         aria-label="搜索结果打开方式"
                         value={settings.defaultSearchTarget}
-                        onChange={(e) =>
+                        onValueChange={(next) =>
                             setSettings({
                                 ...settings,
-                                defaultSearchTarget: e.target
-                                    .value as SystemSettingsDto[
-                                        "defaultSearchTarget"
-                                    ],
+                                defaultSearchTarget: next as SystemSettingsDto[
+                                    "defaultSearchTarget"
+                                ],
                             })}
                     >
-                        <NativeSelectOption value="same">
-                            当前标签页打开
-                        </NativeSelectOption>
-                        <NativeSelectOption value="new">
-                            新标签页打开
-                        </NativeSelectOption>
-                    </NativeSelect>
+                        <RadioGroupItem value="same">当前标签页</RadioGroupItem>
+                        <RadioGroupItem value="new">新标签页</RadioGroupItem>
+                    </RadioGroup>
                 </SettingsRow>
             </SettingsGroup>
 

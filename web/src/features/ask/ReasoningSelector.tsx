@@ -1,12 +1,4 @@
-import { ChevronDown } from "lucide-react";
-import { Button } from "../../components/ui/button.tsx";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu.tsx";
+import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
 import { REASONING_EFFORT_LABELS, type ReasoningEffort } from "./types.ts";
 
@@ -33,58 +25,27 @@ export function ReasoningSelector({
         return null;
     }
 
-    const currentLabel = value
-        ? (REASONING_EFFORT_LABELS[value] ?? value)
-        : "默认";
-
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger
-                render={
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="ask-composer__action-pill"
-                        aria-label={`选择推理强度：当前为 ${currentLabel}`}
-                        title={`推理强度：${currentLabel}`}
-                    />
-                }
+        <section className="ask-composer__section">
+            <h3 className="ask-composer__section-title">推理强度</h3>
+            <RadioGroup
+                variant="segmented"
+                className="ask-composer__reasoning-group"
+                aria-label="推理强度"
+                value={value ?? PROVIDER_DEFAULT}
+                onValueChange={(next) =>
+                    onChange(
+                        availableLevels.find((level) => level === next),
+                    )}
             >
-                <span className="ask-composer__pill-text">
-                    推理：{currentLabel}
-                </span>
-                <ChevronDown
-                    size="1em"
-                    className="icon-sm ask-composer__pill-arrow"
-                />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent sideOffset={6} aria-label="可用推理强度">
-                <DropdownMenuRadioGroup
-                    value={value ?? PROVIDER_DEFAULT}
-                    onValueChange={(next) =>
-                        onChange(
-                            availableLevels.find((level) => level === next),
-                        )}
-                >
-                    <DropdownMenuRadioItem
-                        value={PROVIDER_DEFAULT}
-                        closeOnClick
-                    >
-                        默认
-                    </DropdownMenuRadioItem>
-                    {availableLevels.map((level) => (
-                        <DropdownMenuRadioItem
-                            key={level}
-                            value={level}
-                            closeOnClick
-                        >
-                            {REASONING_EFFORT_LABELS[level] ?? level}
-                        </DropdownMenuRadioItem>
-                    ))}
-                </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-        </DropdownMenu>
+                <RadioGroupItem value={PROVIDER_DEFAULT}>默认</RadioGroupItem>
+                {availableLevels.map((level) => (
+                    <RadioGroupItem key={level} value={level}>
+                        {REASONING_EFFORT_LABELS[level] ?? level}
+                    </RadioGroupItem>
+                ))}
+            </RadioGroup>
+        </section>
     );
 }
 

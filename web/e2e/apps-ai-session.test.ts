@@ -67,14 +67,14 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         await page.locator("#app-name-input").fill("AI 会话草稿");
         await page.getByRole("button", { name: "更换图标", exact: true })
             .click();
-        await page.getByRole("radio", { name: "AI 生成", exact: true }).click();
+        await page.getByRole("tab", { name: "AI 生成", exact: true }).click();
         await page.locator("#ai-description-input").fill("保留用途描述");
-        await page.locator("#ai-style-select").selectOption("geometric");
+        await page.locator("#ai-style-select").click();
+        await page.getByRole("option", { name: "几何", exact: true }).click();
         for (
             const id of [
                 "ai-model-select",
                 "ai-style-select",
-                "ai-image-protocol",
             ]
         ) {
             const rect = await page.locator(`#${id}`).evaluate((element) => {
@@ -85,6 +85,33 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
                 rect.width >= 44 && rect.height >= 44,
                 true,
                 `${id} must be touch-accessible: ${JSON.stringify(rect)}`,
+            );
+        }
+        const protocolRadios = page.getByRole("radiogroup", {
+            name: "图片协议",
+            exact: true,
+        }).getByRole("radio");
+        assertEquals(await protocolRadios.count(), 2);
+        for (let i = 0; i < 2; i++) {
+            const rect = await protocolRadios.nth(i).evaluate((element) => {
+                const bounds = element.getBoundingClientRect();
+                const after = getComputedStyle(element, "::after");
+                const hitWidth = Math.max(
+                    bounds.width,
+                    parseFloat(after.width) || 0,
+                );
+                const hitHeight = Math.max(
+                    bounds.height,
+                    parseFloat(after.height) || 0,
+                );
+                return { width: hitWidth, height: hitHeight };
+            });
+            assertEquals(
+                rect.width >= 44 && rect.height >= 44,
+                true,
+                `ai-image-protocol[${i}] must be touch-accessible: ${
+                    JSON.stringify(rect)
+                }`,
             );
         }
         await page.getByRole("button", { name: "生成图标", exact: true })
@@ -136,8 +163,8 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
             "保留用途描述",
         );
         assertEquals(
-            await page.locator("#ai-style-select").inputValue(),
-            "geometric",
+            (await page.locator("#ai-style-select").textContent())?.trim(),
+            "几何",
         );
         const uploadRelease = Promise.withResolvers<void>();
         let uploads = 0;
@@ -150,7 +177,7 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         await candidate.click();
         await upload;
         await page.setViewportSize({ width: 390, height: 844 });
-        await page.getByRole("radio", { name: "网络图片", exact: true })
+        await page.getByRole("tab", { name: "网络图片", exact: true })
             .click();
         await page.locator('input[placeholder="https://example.com/icon.png"]')
             .fill("https://manual.invalid/icon.png");
@@ -161,7 +188,7 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
             await page.locator('img[src^="/api/webapp-icons/"]').count(),
             0,
         );
-        await page.getByRole("radio", { name: "AI 生成", exact: true }).click();
+        await page.getByRole("tab", { name: "AI 生成", exact: true }).click();
         await candidate.waitFor();
         await dialog.getByRole("button", { name: "取消", exact: true })
             .click();
@@ -172,7 +199,7 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         await dialog.waitFor();
         await page.getByRole("button", { name: "更换图标", exact: true })
             .click();
-        await page.getByRole("radio", { name: "AI 生成", exact: true }).click();
+        await page.getByRole("tab", { name: "AI 生成", exact: true }).click();
         await page.locator("#ai-description-input").waitFor();
         assertEquals(
             await page.locator("#ai-description-input").inputValue(),

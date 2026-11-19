@@ -19,9 +19,12 @@ import { api, json } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import {
-    NativeSelect,
-    NativeSelectOption,
-} from "../../components/ui/native-select.tsx";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../../components/ui/select.tsx";
 import {
     Dialog,
     DialogContent,
@@ -51,7 +54,10 @@ import {
     ContextMenuItem,
     ContextMenuSeparator,
 } from "../../components/ui/context-menu.tsx";
-import { StatusBanner } from "../../components/searcher/semantic.tsx";
+import {
+    FormField,
+    StatusBanner,
+} from "../../components/searcher/semantic.tsx";
 import { useAppState } from "../../app/state.tsx";
 import { notifyTrashChange } from "../../app/trash-events.ts";
 
@@ -273,13 +279,11 @@ export function useDocumentActions({
                             </StatusBanner>
                         )}
 
-                        <div className="documents-dialog-field">
-                            <label
-                                htmlFor={renameTitleId}
-                                className="documents-dialog-label"
-                            >
-                                笔记标题
-                            </label>
+                        <FormField
+                            label="笔记标题"
+                            labelFor={renameTitleId}
+                            labelEnd={`${titleInput.length} / ${DOCUMENT_TITLE_MAX_LENGTH}`}
+                        >
                             <Input
                                 id={renameTitleId}
                                 value={titleInput}
@@ -289,11 +293,7 @@ export function useDocumentActions({
                                 placeholder="无标题笔记"
                                 autoFocus
                             />
-                            <span className="documents-dialog-counter">
-                                {titleInput.length} /{" "}
-                                {DOCUMENT_TITLE_MAX_LENGTH}
-                            </span>
-                        </div>
+                        </FormField>
 
                         <DialogFooter>
                             <Button
@@ -343,33 +343,41 @@ export function useDocumentActions({
                             </StatusBanner>
                         )}
 
-                        <div className="documents-dialog-field">
-                            <label
-                                htmlFor={moveNotebookId}
-                                className="documents-dialog-label"
-                            >
-                                所属笔记本
-                            </label>
-                            <NativeSelect
-                                id={moveNotebookId}
+                        <FormField
+                            label="所属笔记本"
+                            labelFor={moveNotebookId}
+                        >
+                            <Select
+                                items={{
+                                    "": "根目录",
+                                    ...Object.fromEntries(
+                                        notebooks.map((nb) => [nb.id, nb.name]),
+                                    ),
+                                }}
                                 value={targetNotebookId ?? ""}
-                                onChange={(e) =>
-                                    setTargetNotebookId(e.target.value || null)}
+                                onValueChange={(next) => {
+                                    if (next !== null) {
+                                        setTargetNotebookId(next || null);
+                                    }
+                                }}
                                 disabled={isMoving}
                             >
-                                <NativeSelectOption value="">
-                                    根目录
-                                </NativeSelectOption>
-                                {notebooks.map((nb) => (
-                                    <NativeSelectOption
-                                        key={nb.id}
-                                        value={nb.id}
-                                    >
-                                        {nb.name}
-                                    </NativeSelectOption>
-                                ))}
-                            </NativeSelect>
-                        </div>
+                                <SelectTrigger
+                                    id={moveNotebookId}
+                                    aria-label="所属笔记本"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">根目录</SelectItem>
+                                    {notebooks.map((nb) => (
+                                        <SelectItem key={nb.id} value={nb.id}>
+                                            {nb.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
 
                         <DialogFooter>
                             <Button

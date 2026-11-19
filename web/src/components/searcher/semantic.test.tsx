@@ -2,8 +2,9 @@ import { assertEquals } from "@std/assert";
 import ReactDOMServer from "react-dom/server";
 import { Button } from "../ui/button.tsx";
 import { DialogFooter } from "../ui/dialog.tsx";
+import { Input } from "../ui/input.tsx";
 import { Switch } from "../ui/switch.tsx";
-import { SearchField, SecretInput } from "./semantic.tsx";
+import { FormField, SearchField, SecretInput } from "./semantic.tsx";
 
 Deno.test("SearchField: renders clear button only when non-empty and enabled", () => {
     const emptyHtml = ReactDOMServer.renderToString(
@@ -77,4 +78,41 @@ Deno.test("UI variants: Button ghost-danger, Switch sm, and DialogFooter bordere
         <DialogFooter bordered>操作</DialogFooter>,
     );
     assertEquals(footerHtml.includes('data-bordered="true"'), true);
+});
+
+Deno.test("FormField: renders label, trailing accessory, hint and alert error with messageId", () => {
+    const hintHtml = ReactDOMServer.renderToString(
+        <FormField
+            label="用户名"
+            labelFor="u-input"
+            labelEnd="3/32"
+            hint="字母或数字"
+            messageId="u-hint"
+        >
+            <Input id="u-input" placeholder="输入用户名" aria-describedby="u-hint" />
+        </FormField>,
+    );
+    assertEquals(hintHtml.includes('for="u-input"'), true);
+    assertEquals(hintHtml.includes("3/32"), true);
+    assertEquals(hintHtml.includes('id="u-hint"'), true);
+    assertEquals(hintHtml.includes('role="alert"'), false);
+
+    const errorHtml = ReactDOMServer.renderToString(
+        <FormField
+            label="密码"
+            labelFor="p-input"
+            error="密码过短"
+            messageId="p-err"
+        >
+            <Input
+                id="p-input"
+                placeholder="输入密码"
+                aria-invalid="true"
+                aria-describedby="p-err"
+            />
+        </FormField>,
+    );
+    assertEquals(errorHtml.includes('role="alert"'), true);
+    assertEquals(errorHtml.includes('data-tone="danger"'), true);
+    assertEquals(errorHtml.includes("密码过短"), true);
 });

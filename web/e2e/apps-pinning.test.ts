@@ -222,7 +222,7 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
         await add.click();
         const form = page.locator(".app-form-dialog");
         await form.waitFor();
-        const toggle = form.getByRole("switch", {
+        const toggle = form.getByRole("checkbox", {
             name: "固定到首页",
             exact: true,
         });
@@ -301,7 +301,7 @@ Deno.test("Apps pin and unpin from home and the library #285 Y8", async (t) => {
         const form = page.locator(".app-form-dialog");
         await form.waitFor();
         assertEquals(
-            await form.getByRole("switch", {
+            await form.getByRole("checkbox", {
                 name: "固定到首页",
                 exact: true,
             }).getAttribute("aria-checked"),

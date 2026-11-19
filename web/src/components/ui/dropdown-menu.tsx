@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { Check } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 import { cn } from "../../lib/utils.ts";
@@ -105,6 +105,10 @@ function DropdownMenuContent({
     );
 }
 
+function DropdownMenuGroup(props: MenuPrimitive.Group.Props) {
+    return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />;
+}
+
 function DropdownMenuLabel(
     { className, ...props }: ComponentProps<"div">,
 ) {
@@ -142,9 +146,54 @@ function DropdownMenuRadioItem(
     );
 }
 
+function DropdownMenuSub(props: MenuPrimitive.SubmenuRoot.Props) {
+    return (
+        <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
+    );
+}
+
+function DropdownMenuSubTrigger({
+    className,
+    children,
+    ...props
+}: MenuPrimitive.SubmenuTrigger.Props) {
+    return (
+        <MenuPrimitive.SubmenuTrigger
+            data-slot="dropdown-menu-sub-trigger"
+            className={cn("menu-item", className)}
+            {...props}
+        >
+            {children}
+            <ChevronRight
+                size="1em"
+                className="menu-item-indicator icon-sm"
+                aria-hidden="true"
+            />
+        </MenuPrimitive.SubmenuTrigger>
+    );
+}
+
+function DropdownMenuSubContent({
+    children,
+    className,
+    sideOffset = 4,
+    ...props
+}: MenuPrimitive.Popup.Props & { sideOffset?: number }) {
+    return (
+        <DropdownMenuPortal>
+            <DropdownMenuPositioner sideOffset={sideOffset}>
+                <DropdownMenuPopup className={className} {...props}>
+                    {children}
+                </DropdownMenuPopup>
+            </DropdownMenuPositioner>
+        </DropdownMenuPortal>
+    );
+}
+
 export {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuPopup,
@@ -153,5 +202,8 @@ export {
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
     DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 };

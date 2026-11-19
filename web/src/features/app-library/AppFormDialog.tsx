@@ -1,4 +1,5 @@
-import { AppForm } from "../../components/searcher/AppForm.tsx";
+import { lazy, Suspense } from "react";
+import { LoadingState } from "../../components/searcher/semantic.tsx";
 import {
     Dialog,
     DialogBackdrop,
@@ -6,6 +7,12 @@ import {
     DialogPortal,
     DialogTitle,
 } from "../../components/ui/dialog.tsx";
+
+const LazyAppForm = lazy(() =>
+    import("../../components/searcher/AppForm.tsx").then((m) => ({
+        default: m.AppForm,
+    }))
+);
 
 /** What the home add/edit dialog is showing; null while it is closed. */
 export type AppFormTarget =
@@ -35,7 +42,9 @@ export function AppFormDialog({ target, onRequestClose }: {
                     <DialogTitle className="app-form-dialog-title">
                         {target.mode === "create" ? "添加应用" : "编辑应用"}
                     </DialogTitle>
-                    <AppForm />
+                    <Suspense fallback={<LoadingState>正在加载表单…</LoadingState>}>
+                        <LazyAppForm />
+                    </Suspense>
                 </DialogPopup>
             </DialogPortal>
         </Dialog>

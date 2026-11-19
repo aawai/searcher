@@ -53,6 +53,10 @@ import {
 } from "@shared/dock.ts";
 import { routes } from "../../app/routes.ts";
 import { useAppState } from "../../app/state.tsx";
+import {
+    SettingsGroup,
+    SettingsRow,
+} from "../../components/searcher/semantic.tsx";
 import { WebAppGlyph } from "../../components/searcher/WebAppIcon.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
@@ -65,13 +69,18 @@ import {
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuGroup,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuPopup,
     DropdownMenuPortal,
     DropdownMenuPositioner,
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
     DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import { useEscapeLayerActive } from "../../components/ui/escape-layer-stack.tsx";
@@ -1229,59 +1238,96 @@ export function WorkspaceDock(
                                         pinnedApps.length > 0 && (
                                         <>
                                             <DropdownMenuSeparator />
-                                            {pinnedApps.map((app) => (
-                                                <div
-                                                    className="dock-overflow-row"
-                                                    role="none"
-                                                    key={app.id}
-                                                >
-                                                    <DropdownMenuItem
-                                                        data-dock-overflow-app={app
-                                                            .id}
-                                                        onClick={() =>
-                                                            handleOpenApp(app)}
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuLabel>
+                                                    已固定应用
+                                                </DropdownMenuLabel>
+                                                {pinnedApps.map((
+                                                    app,
+                                                    appIndex,
+                                                ) => (
+                                                    <DropdownMenuSub
+                                                        key={app.id}
                                                     >
-                                                        <WebAppGlyph
-                                                            app={app}
-                                                            className="dock-glyph"
-                                                        />
-                                                        <span className="dock-overflow-name">
-                                                            {app.name}
-                                                        </span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        className="dock-overflow-action"
-                                                        aria-label={`${app.name} 的操作`}
-                                                        onClick={() => {
-                                                            const anchor =
-                                                                optionsRef
-                                                                    .current;
-                                                            if (anchor) {
-                                                                requestAnimationFrame(
-                                                                    () =>
-                                                                        setItemMenu(
-                                                                            {
-                                                                                kind:
-                                                                                    "app",
-                                                                                id: app
-                                                                                    .id,
-                                                                                anchor,
-                                                                                touch:
-                                                                                    true,
-                                                                            },
-                                                                        ),
-                                                                );
-                                                            }
-                                                        }}
-                                                    >
-                                                        <MoreHorizontal
-                                                            size="1em"
-                                                            className="icon-md"
-                                                            aria-hidden="true"
-                                                        />
-                                                    </DropdownMenuItem>
-                                                </div>
-                                            ))}
+                                                        <DropdownMenuSubTrigger
+                                                            data-dock-overflow-app={app
+                                                                .id}
+                                                        >
+                                                            <WebAppGlyph
+                                                                app={app}
+                                                                className="dock-glyph"
+                                                            />
+                                                            <span className="dock-overflow-name">
+                                                                {app.name}
+                                                            </span>
+                                                        </DropdownMenuSubTrigger>
+                                                        <DropdownMenuSubContent>
+                                                            <DropdownMenuItem
+                                                                onClick={() =>
+                                                                    handleOpenApp(
+                                                                        app,
+                                                                    )}
+                                                            >
+                                                                打开
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                disabled={appIndex ===
+                                                                    0}
+                                                                onClick={() =>
+                                                                    handleMoveApp(
+                                                                        app.id,
+                                                                        -1,
+                                                                    )}
+                                                            >
+                                                                <PreviousIcon
+                                                                    size="1em"
+                                                                    className="icon-md"
+                                                                    aria-hidden="true"
+                                                                />
+                                                                {vertical
+                                                                    ? "向上移动"
+                                                                    : "向左移动"}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                disabled={appIndex ===
+                                                                    pinnedApps
+                                                                            .length -
+                                                                        1}
+                                                                onClick={() =>
+                                                                    handleMoveApp(
+                                                                        app.id,
+                                                                        1,
+                                                                    )}
+                                                            >
+                                                                <NextIcon
+                                                                    size="1em"
+                                                                    className="icon-md"
+                                                                    aria-hidden="true"
+                                                                />
+                                                                {vertical
+                                                                    ? "向下移动"
+                                                                    : "向右移动"}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                aria-label="取消任务栏固定"
+                                                                onClick={() =>
+                                                                    void setPinned(
+                                                                        app.id,
+                                                                        false,
+                                                                    )}
+                                                            >
+                                                                <PinOff
+                                                                    size="1em"
+                                                                    className="icon-md"
+                                                                    aria-hidden="true"
+                                                                />
+                                                                取消任务栏固定
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuSubContent>
+                                                    </DropdownMenuSub>
+                                                ))}
+                                            </DropdownMenuGroup>
                                         </>
                                     )}
                                 </DropdownMenuContent>
@@ -1439,6 +1485,7 @@ export function WorkspaceDock(
                 <DialogContent
                     aria-label="管理任务栏"
                     className="dock-management"
+                    surface="grouped"
                     data-dock-modal="management"
                 >
                     <DialogHeader className="dock-management-header">
@@ -1462,11 +1509,8 @@ export function WorkspaceDock(
                     </DialogHeader>
                     <div className="dock-management-content">
                         {!isMobile && (
-                            <div className="dock-management-layout">
-                                <div className="dock-management-row">
-                                    <span className="dock-management-label">
-                                        位置
-                                    </span>
+                            <SettingsGroup>
+                                <SettingsRow title="位置">
                                     <RadioGroup
                                         variant="segmented"
                                         value={layout.edge}
@@ -1489,29 +1533,27 @@ export function WorkspaceDock(
                                             右侧
                                         </RadioGroupItem>
                                     </RadioGroup>
-                                </div>
-                            </div>
+                                </SettingsRow>
+                            </SettingsGroup>
                         )}
-                        <section className="dock-management-section">
-                            <h4 className="dock-management-heading">
-                                系统入口
-                            </h4>
+                        <SettingsGroup title="系统入口" headingLevel={3}>
                             {preferences.systemOrder.map((id) => {
                                 const { label, icon: Icon } =
                                     DOCK_SYSTEM_ITEMS[id];
                                 return (
-                                    <div
-                                        className="dock-management-system-row"
+                                    <SettingsRow
                                         key={id}
+                                        title={
+                                            <span className="dock-management-system-label">
+                                                <Icon
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                                {label}
+                                            </span>
+                                        }
                                     >
-                                        <span className="dock-management-system-label">
-                                            <Icon
-                                                size="1em"
-                                                className="icon-md"
-                                                aria-hidden="true"
-                                            />
-                                            {label}
-                                        </span>
                                         <Switch
                                             checked={!preferences
                                                 .hiddenSystemIds.includes(id)}
@@ -1523,10 +1565,10 @@ export function WorkspaceDock(
                                             aria-label={`显示 ${label}`}
                                             data-dock-system-toggle={id}
                                         />
-                                    </div>
+                                    </SettingsRow>
                                 );
                             })}
-                        </section>
+                        </SettingsGroup>
                     </div>
                 </DialogContent>
             </Dialog>

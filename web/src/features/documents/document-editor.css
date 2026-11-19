@@ -200,8 +200,27 @@
 .document-editor-status-actions,
 .document-metadata-bar {
     pointer-events: auto;
-    background: var(--surface-l3);
+    background: color-mix(in srgb, var(--surface-l3) 88%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
     border-radius: var(--control-radius);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .document-editor-status-actions,
+    .document-metadata-bar {
+        background: var(--surface-l3);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
+[data-contrast="more"] .document-editor-status-actions,
+[data-contrast="more"] .document-metadata-bar {
+    background: var(--surface-l3);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
 }
 
 .document-metadata-bar {
@@ -209,59 +228,31 @@
     min-height: var(--control-compact-height);
 }
 
-/* Mode switch: the current-mode icon; hovering it (or pinning it by click,
-   Enter or tap) reveals the other modes to its right, inside the same corner
-   surface. While expanded the icon takes the selected fill, so one filled
-   item marks the current mode. Every button is exactly as tall as the status
-   row so it never extends the editor's scroll range. When compact, an
-   enlarged hit area keeps the touch target for a touch screen beside the
-   trackpad; the footer's --space-2 inset leaves room for it below. */
+/* Compact labelled mode trigger in the bottom-left status capsule. */
 .document-mode-switch {
     display: flex;
     align-items: center;
-    gap: var(--space-1);
 }
 
-.document-mode-switch .document-view-switch {
-    animation: document-mode-reveal var(--motion-fast) var(--ease-standard);
-}
-
-@keyframes document-mode-reveal {
-    from {
-        opacity: 0;
-        clip-path: inset(0 100% 0 0);
-    }
-    to {
-        opacity: 1;
-        clip-path: inset(0);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .document-mode-switch .document-view-switch {
-        animation: none;
-    }
-}
-
-.document-mode-switch [data-slot="button"] {
+.document-mode-switch [data-slot="button"].document-mode-trigger {
     position: relative;
-    width: var(--control-touch-target);
-    min-width: var(--control-touch-target);
     height: var(--control-touch-target);
     min-height: var(--control-touch-target);
+    padding-inline: var(--space-2);
+    gap: var(--space-1);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+.document-mode-chevron {
+    color: var(--muted);
 }
 
 @media (hover: hover) and (pointer: fine) and (min-width: 640px) {
-    .document-mode-switch [data-slot="button"] {
-        width: var(--control-compact-height);
-        min-width: var(--control-compact-height);
+    .document-mode-switch [data-slot="button"].document-mode-trigger {
         height: var(--control-compact-height);
         min-height: var(--control-compact-height);
         --touch-target-size: var(--control-touch-target);
-    }
-    /* Options sit side by side: grow their hit areas only vertically. */
-    .document-view-switch [data-slot="button"]::after {
-        inset-inline: 0;
     }
 }
 

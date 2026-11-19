@@ -19,8 +19,8 @@ export type DocumentModeLabel = "编辑" | "分页" | "Markdown 源码";
 const MODE_TRIGGER_PREFIX = "切换编辑模式，当前：";
 
 /**
- * Switches the editor view through its status-corner mode switch. The switch
- * offers only the other modes, so choosing the current one is a no-op.
+ * Switches the editor view through its status-corner mode dropdown. Choosing
+ * the current mode is a no-op.
  */
 export async function switchDocumentMode(
     scope: Page | Locator,
@@ -33,8 +33,9 @@ export async function switchDocumentMode(
         ?.slice(MODE_TRIGGER_PREFIX.length);
     if (current === (mode === "Markdown 源码" ? "源码" : mode)) return;
     await trigger.click();
-    await scope.getByRole("group", { name: "视图模式", exact: true })
-        .getByRole("button", { name: mode, exact: true })
+    const root = "page" in scope ? scope.page() : scope;
+    await root.getByRole("menu")
+        .getByRole("menuitemradio", { name: mode, exact: true })
         .click();
 }
 

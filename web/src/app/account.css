@@ -58,11 +58,6 @@
     margin-bottom: var(--space-6);
 }
 
-.account-input {
-    width: 100%;
-    max-width: 15rem;
-}
-
 .account-status {
     margin-top: var(--space-3);
 }

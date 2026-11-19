@@ -1,12 +1,6 @@
 import { useState } from "react";
-import { Settings2, X } from "lucide-react";
+import { ChevronDown, Settings2 } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
-import {
-    Popover,
-    PopoverClose,
-    PopoverContent,
-    PopoverTrigger,
-} from "../../components/ui/popover.tsx";
 import { Slider } from "../../components/ui/slider.tsx";
 import type { UserGenerationConfig } from "@shared/contracts.ts";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
@@ -100,39 +94,51 @@ export function GenerationSettings({
     }
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger
-                render={
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className={`ask-composer__icon-btn ${
-                            isCustomized ? "is-active" : ""
-                        }`}
-                        aria-label="高级生成设置"
-                        title="高级生成设置（Temperature、Top P、Max Tokens）"
+        <section className="ask-composer__section ask-generation-settings">
+            <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="ask-generation-settings__toggle"
+                aria-expanded={open}
+                aria-controls="ask-generation-settings-body"
+                onClick={() => setOpen((prev) => !prev)}
+            >
+                <span className="ask-generation-settings__toggle-label">
+                    <Settings2
+                        size="1em"
+                        className="icon-sm"
+                        aria-hidden="true"
                     />
-                }
-            >
-                <Settings2 size="1em" className="icon-md" />
-                {isCustomized && <span className="ask-composer__active-dot" />}
-            </PopoverTrigger>
+                    <span>高级生成设置</span>
+                    {isCustomized && (
+                        <span className="ask-generation-settings__status">
+                            已自定义
+                        </span>
+                    )}
+                </span>
+                <ChevronDown
+                    size="1em"
+                    className={`icon-sm ask-generation-settings__chevron${
+                        open ? " is-open" : ""
+                    }`}
+                    aria-hidden="true"
+                />
+            </Button>
 
-            <PopoverContent
-                side="top"
-                align="start"
-                sideOffset={8}
-                className="ask-generation-settings__popover"
-                aria-label="生成参数设置"
-            >
-                <div className="ask-generation-settings__head">
-                    <span className="ask-generation-settings__title">
-                        生成参数{model
-                            ? `（${model.displayName || model.modelId}）`
-                            : ""}
-                    </span>
-                    <div className="ask-generation-settings__head-actions">
+            {open && (
+                <div
+                    id="ask-generation-settings-body"
+                    role="region"
+                    aria-label="生成参数设置"
+                    className="ask-generation-settings__body"
+                >
+                    <div className="ask-generation-settings__head">
+                        <span className="ask-generation-settings__title">
+                            生成参数{model
+                                ? `（${model.displayName || model.modelId}）`
+                                : ""}
+                        </span>
                         {isCustomized && (
                             <Button
                                 type="button"
@@ -144,22 +150,8 @@ export function GenerationSettings({
                                 重置当前参数
                             </Button>
                         )}
-                        <PopoverClose
-                            render={
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label="关闭"
-                                />
-                            }
-                        >
-                            <X size="1em" className="icon-sm" />
-                        </PopoverClose>
                     </div>
-                </div>
 
-                <div className="ask-generation-settings__body">
                     <p className="ask-generation-settings__note">
                         重置当前参数会清除当前采样和长度覆盖，依次使用已保存的模型默认、全局默认或服务商默认值；推理强度不变。
                     </p>
@@ -283,7 +275,7 @@ export function GenerationSettings({
                         </div>
                     )}
                 </div>
-            </PopoverContent>
-        </Popover>
+            )}
+        </section>
     );
 }
