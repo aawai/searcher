@@ -350,6 +350,7 @@ export function AdminBackupRestore() {
                 </SettingsRow>
                 <SettingsRow
                     title="导入配置"
+                    description={configFileName || undefined}
                     message={configError
                         ? <span role="alert">{configError}</span>
                         : undefined}
@@ -362,8 +363,6 @@ export function AdminBackupRestore() {
                         buttonText={configBusy ? "正在读取…" : "导入 JSON"}
                         icon={<Upload size="1em" />}
                         disabled={configBusy}
-                        selectedFileName={configFileName || undefined}
-                        placeholder="未选择文件"
                         describedBy={configError
                             ? "config-import-error"
                             : undefined}
@@ -385,7 +384,7 @@ export function AdminBackupRestore() {
                 </SettingsRow>
                 <SettingsRow
                     title="备份文件"
-                    className="settings-row--vertical"
+                    description={selectedZipFile?.name}
                     message={validationError
                         ? (
                             <span role="alert">
@@ -397,15 +396,6 @@ export function AdminBackupRestore() {
                     invalid={Boolean(validationError)}
                 >
                     <div className="admin-file-row">
-                        <FilePicker
-                            id="backup-restore-file"
-                            accept=".zip,application/zip"
-                            buttonText="选择 ZIP 文件"
-                            disabled={validating || restoring}
-                            selectedFileName={selectedZipFile?.name}
-                            placeholder="未选择文件"
-                            onFileSelect={handleZipFileChange}
-                        />
                         {selectedZipFile && (
                             <Button type="button" variant="outline" disabled={validating || restoring}
                                 onClick={() => {
@@ -420,18 +410,27 @@ export function AdminBackupRestore() {
                                 清除文件
                             </Button>
                         )}
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handlePreValidate}
-                            disabled={!selectedZipFile || validating}
-                            aria-describedby={validationError
-                                ? "backup-validate-error"
-                                : undefined}
-                        >
-                            <FileCheck size="1em" />
-                            <span>{validating ? "正在验证…" : "预检备份"}</span>
-                        </Button>
+                        <FilePicker
+                            id="backup-restore-file"
+                            accept=".zip,application/zip"
+                            buttonText={selectedZipFile ? "重新选择" : "选择 ZIP 文件"}
+                            disabled={validating || restoring}
+                            onFileSelect={handleZipFileChange}
+                        />
+                        {selectedZipFile && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handlePreValidate}
+                                disabled={validating}
+                                aria-describedby={validationError
+                                    ? "backup-validate-error"
+                                    : undefined}
+                            >
+                                <FileCheck size="1em" />
+                                <span>{validating ? "正在验证…" : "预检备份"}</span>
+                            </Button>
+                        )}
                     </div>
                 </SettingsRow>
                 {validatedManifest && (

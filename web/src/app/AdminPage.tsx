@@ -1280,7 +1280,7 @@ export function AdminPage() {
                             {auditError}
                         </StatusBanner>
                     )}
-                    <WorkspaceToolbar>
+                    <WorkspaceToolbar className="admin-audit-toolbar">
                         <form
                             role="search"
                             className="admin-toolbar-field"
@@ -1313,7 +1313,7 @@ export function AdminPage() {
                             }}
                         >
                             <SelectTrigger
-                                className="admin-toolbar-field"
+                                className="admin-toolbar-select"
                                 aria-label="按操作筛选审计日志"
                             >
                                 <SelectValue />
