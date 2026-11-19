@@ -727,7 +727,7 @@ Deno.test("笔记窗口底部：回收站与模式图标、字数同一中线，
                         '[data-window-id="notes"] .window-frame__content',
                     ).bottom;
                     const mode = document.querySelector(
-                        ".document-mode-trigger",
+                        '.document-mode-switch [role="radio"]',
                     )!;
                     const modeBox = mode.getBoundingClientRect();
                     const modeX = modeBox.left + modeBox.width / 2;

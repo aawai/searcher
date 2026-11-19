@@ -1,95 +1,65 @@
-import { ChevronDown, FileCode2, FileText, Pencil } from "lucide-react";
-import { Button } from "../../components/ui/button.tsx";
+import { FileCode2, FileText, Pencil } from "lucide-react";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu.tsx";
+    RadioGroup,
+    RadioGroupItem,
+} from "../../components/ui/radio-group.tsx";
 
 export type DocumentViewMode = "continuous" | "page" | "source";
 
 const MODES = [
-    { mode: "continuous", label: "编辑", current: "编辑", Icon: Pencil },
-    { mode: "page", label: "分页", current: "分页", Icon: FileText },
+    { mode: "continuous", label: "编辑", caption: "编辑", Icon: Pencil },
+    { mode: "page", label: "分页", caption: "分页", Icon: FileText },
     {
         mode: "source",
         label: "Markdown 源码",
-        current: "源码",
+        caption: "源码",
         Icon: FileCode2,
     },
 ] as const;
 
-/**
- * Compact labelled mode trigger opening a radio menu for continuous editing,
- * paginated preview, and Markdown source mode.
- */
 export function DocumentModeSwitch({
     mode,
     pageDisabled,
+    hasRichEditorFocus,
     onChange,
 }: {
     mode: DocumentViewMode;
     pageDisabled: boolean;
+    hasRichEditorFocus: () => boolean;
     onChange: (mode: DocumentViewMode) => void;
 }) {
-    const active = MODES.find((item) => item.mode === mode) ?? MODES[0];
-    const ActiveIcon = active.Icon;
-
     return (
-        <div className="document-mode-switch">
-            <DropdownMenu>
-                <DropdownMenuTrigger
-                    render={
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            aria-label={`切换编辑模式，当前：${active.current}`}
-                            title="切换编辑模式"
-                            className="document-mode-trigger"
-                        />
-                    }
+        <RadioGroup
+            aria-label="视图模式"
+            className="document-mode-switch"
+            variant="segmented"
+            value={mode}
+            onValueChange={(next) => {
+                const option = MODES.find((item) => item.mode === next);
+                if (option) onChange(option.mode);
+            }}
+        >
+            {MODES.map(({ mode: option, label, caption, Icon }) => (
+                <RadioGroupItem
+                    key={option}
+                    value={option}
+                    aria-label={label}
+                    disabled={option === "page" && pageDisabled}
+                    onPointerDown={(event) => {
+                        // Like a formatting command, a rich layout change must
+                        // not move focus out of ProseMirror and reset its selection.
+                        if (
+                            event.button === 0 && mode !== "source" &&
+                            option !== "source" && hasRichEditorFocus()
+                        ) {
+                            event.preventDefault();
+                        }
+                    }}
                 >
-                    <ActiveIcon className="icon-sm" aria-hidden="true" />
-                    <span>{active.current}</span>
-                    <ChevronDown
-                        className="icon-sm document-mode-chevron"
-                        aria-hidden="true"
-                    />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                    sideOffset={6}
-                    aria-label="视图模式"
-                    className="document-view-switch"
-                >
-                    <DropdownMenuRadioGroup
-                        value={mode}
-                        onValueChange={(next) => {
-                            if (
-                                next === "continuous" ||
-                                next === "page" ||
-                                next === "source"
-                            ) {
-                                onChange(next);
-                            }
-                        }}
-                    >
-                        {MODES.map(({ mode: option, label, Icon }) => (
-                            <DropdownMenuRadioItem
-                                key={option}
-                                value={option}
-                                disabled={option === "page" && pageDisabled}
-                                closeOnClick
-                            >
-                                <Icon className="icon-sm" aria-hidden="true" />
-                                <span>{label}</span>
-                            </DropdownMenuRadioItem>
-                        ))}
-                    </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
+                    <Icon className="icon-sm" aria-hidden="true" />
+                    <span>{caption}</span>
+                </RadioGroupItem>
+            ))}
+        </RadioGroup>
     );
 }

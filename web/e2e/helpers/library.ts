@@ -16,27 +16,13 @@ export function workspaceAppsTrigger(page: Page): Locator {
 
 export type DocumentModeLabel = "编辑" | "分页" | "Markdown 源码";
 
-const MODE_TRIGGER_PREFIX = "切换编辑模式，当前：";
-
-/**
- * Switches the editor view through its status-corner mode dropdown. Choosing
- * the current mode is a no-op.
- */
 export async function switchDocumentMode(
     scope: Page | Locator,
     mode: DocumentModeLabel,
 ): Promise<void> {
-    const trigger = scope.getByRole("button", {
-        name: new RegExp(`^${MODE_TRIGGER_PREFIX}`),
-    });
-    const current = (await trigger.getAttribute("aria-label"))
-        ?.slice(MODE_TRIGGER_PREFIX.length);
-    if (current === (mode === "Markdown 源码" ? "源码" : mode)) return;
-    await trigger.click();
-    const root = "page" in scope ? scope.page() : scope;
-    await root.getByRole("menu")
-        .getByRole("menuitemradio", { name: mode, exact: true })
-        .click();
+    const option = scope.getByRole("radiogroup", { name: "视图模式" })
+        .getByRole("radio", { name: mode, exact: true });
+    if (!await option.isChecked()) await option.click();
 }
 
 async function waitForEditorFocusBarrier(target: Locator): Promise<void> {

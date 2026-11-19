@@ -323,7 +323,9 @@
    under every theme and keep their colours in forced colours. */
 [data-slot="radio-group"].theme-choices {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(56px, var(--space-10)));
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    grid-template-columns: repeat(5, minmax(0, var(--space-10)));
     gap: var(--space-2);
 }
 .theme-choices .theme-choice {
@@ -418,7 +420,8 @@
     line-height: var(--font-metadata-line-height);
     color: var(--muted);
     text-align: center;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 .theme-choice[data-checked] .theme-choice-caption {
     color: var(--foreground);

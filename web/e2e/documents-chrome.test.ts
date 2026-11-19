@@ -250,8 +250,7 @@ Deno.test("笔记窗口控件：侧栏折叠 / 展开按钮、创建图标位置
         await search.waitFor();
 
         // Toolbar: the status bar has no format icon; chevron collapses, Aa expands.
-        await frame.getByRole("button", { name: /^切换编辑模式，当前：/ })
-            .waitFor();
+        await frame.getByRole("radiogroup", { name: "视图模式" }).waitFor();
         assertEquals(
             await frame.getByRole("button", { name: "格式工具栏", exact: true })
                 .count(),

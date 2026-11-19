@@ -18,6 +18,16 @@
     position: relative;
     isolation: isolate;
     box-sizing: border-box;
+    --document-mode-target: var(--control-touch-target);
+    --document-mode-track-height: calc(
+        var(--document-mode-target) + 2 * (var(--space-half) + var(--space-hairline))
+    );
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
+    .document-editor-container {
+        --document-mode-target: var(--control-compact-height);
+    }
 }
 
 /* Header & Top Bar */
@@ -53,13 +63,6 @@
     gap: var(--space-control-gap);
     flex-wrap: wrap;
     margin-left: auto;
-}
-
-.document-view-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    flex-shrink: 0;
 }
 
 .document-copy-status {
@@ -181,23 +184,11 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-control-gap);
-    block-size: var(--control-touch-target);
+    block-size: var(--document-mode-target);
     pointer-events: none;
 }
 
-@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
-    .document-editor-status-bar {
-        block-size: var(--control-compact-height);
-    }
-}
-
-.document-editor-status-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-.document-editor-status-actions,
+[data-slot="radio-group"][data-variant="segmented"].document-mode-switch,
 .document-metadata-bar {
     pointer-events: auto;
     background: color-mix(in srgb, var(--surface-l3) 88%, transparent);
@@ -207,8 +198,28 @@
     border-radius: var(--control-radius);
 }
 
+[data-slot="radio-group"][data-variant="segmented"].document-mode-switch {
+    flex: none;
+    min-width: 0;
+    border-radius: var(--shape-segment-radius);
+}
+
+[data-slot="radio-group"][data-variant="segmented"].document-mode-switch .radio-item {
+    position: relative;
+    --touch-target-size: var(--control-touch-target);
+    min-height: var(--document-mode-target);
+    padding-inline: var(--space-2);
+    gap: var(--space-1);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+}
+
+[data-slot="radio-group"][data-variant="segmented"].document-mode-switch .radio-item[data-checked] {
+    font-weight: var(--font-title-weight);
+}
+
 @media (prefers-reduced-transparency: reduce) {
-    .document-editor-status-actions,
+    [data-slot="radio-group"][data-variant="segmented"].document-mode-switch,
     .document-metadata-bar {
         background: var(--surface-l3);
         -webkit-backdrop-filter: none;
@@ -216,7 +227,7 @@
     }
 }
 
-[data-contrast="more"] .document-editor-status-actions,
+[data-contrast="more"] [data-slot="radio-group"][data-variant="segmented"].document-mode-switch,
 [data-contrast="more"] .document-metadata-bar {
     background: var(--surface-l3);
     -webkit-backdrop-filter: none;
@@ -228,31 +239,22 @@
     min-height: var(--control-compact-height);
 }
 
-/* Compact labelled mode trigger in the bottom-left status capsule. */
-.document-mode-switch {
-    display: flex;
-    align-items: center;
-}
+@container (max-width: 432px) {
+    .document-mode-switch .icon-sm {
+        display: none;
+    }
 
-.document-mode-trigger.button {
-    position: relative;
-    height: var(--control-touch-target);
-    min-height: var(--control-touch-target);
-    padding-inline: var(--space-2);
-    gap: var(--space-1);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-}
+    .document-editor-status-bar {
+        block-size: auto;
+        min-block-size: var(--document-mode-target);
+    }
 
-.document-mode-chevron {
-    color: var(--muted);
-}
-
-@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
-    .document-mode-trigger.button {
-        height: var(--control-compact-height);
-        min-height: var(--control-compact-height);
-        --touch-target-size: var(--control-touch-target);
+    .document-metadata-bar {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0 var(--space-2);
+        text-align: end;
+        min-inline-size: 0;
     }
 }
 
@@ -413,7 +415,7 @@
        on this box would not extend the scroll range). Follows the status
        bar's row height and inset. */
     --document-status-clearance: calc(
-        var(--control-touch-target) + var(--space-2) + var(--space-3)
+        var(--document-mode-track-height) + var(--space-2) + var(--space-3)
     );
     display: flex;
     flex-direction: column;
@@ -425,10 +427,11 @@
     scroll-behavior: smooth;
 }
 
-@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
+@container (max-width: 432px) {
     .document-editor-scroll-area {
         --document-status-clearance: calc(
-            var(--control-height) + var(--space-2) + var(--space-3)
+            max(var(--document-mode-track-height), 3 * var(--font-metadata-line-height) + 2 * var(--space-hairline)) +
+                var(--space-2) + var(--space-3)
         );
     }
 }
