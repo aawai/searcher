@@ -563,7 +563,7 @@ Deno.test("masthead layout constants mirror design tokens", async () => {
     );
     assertEquals(
         css.includes(
-            `--layout-masthead-peek-fade: ${MASTHEAD_PEEK_VEIL_TAIL + 80}px;`,
+            `--layout-masthead-peek-fade: ${MASTHEAD_PEEK_VEIL_TAIL}px;`,
         ),
         true,
     );

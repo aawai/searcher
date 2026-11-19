@@ -38,7 +38,7 @@
     min-height: var(--control-height);
     padding: 0 var(--space-3);
     border-radius: var(--control-radius);
-    color: var(--muted);
+    color: var(--foreground);
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
     font-weight: var(--font-label-weight);
@@ -75,7 +75,7 @@
     min-width: 0;
 }
 
-/* 1.4.1: active item pairs weight 600 + left bar with soft tint. */
+/* 1.4.1: active item pairs weight 600 with soft tint and accent icon, matching SettingsShell. */
 .admin-nav-item[aria-current="page"] {
     background: var(--accent-soft);
     color: var(--foreground);
@@ -86,16 +86,6 @@
     color: var(--accent);
 }
 
-.admin-nav-item[aria-current="page"]::before {
-    content: "";
-    position: absolute;
-    inset-inline-start: 0;
-    inset-block: var(--space-2);
-    width: 2px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-}
-
 @media (forced-colors: active) {
     .admin-nav-item[aria-current="page"] {
         forced-color-adjust: none;
@@ -104,9 +94,6 @@
     }
     .admin-nav-item[aria-current="page"] > .admin-nav-icon {
         color: HighlightText;
-    }
-    .admin-nav-item[aria-current="page"]::before {
-        background: HighlightText;
     }
     .admin-nav-item[aria-current="page"]:focus-visible {
         outline-color: CanvasText;
@@ -120,9 +107,6 @@
     }
     [data-contrast="more"] .admin-nav-item[aria-current="page"] > .admin-nav-icon {
         color: var(--accent-foreground);
-    }
-    [data-contrast="more"] .admin-nav-item[aria-current="page"]::before {
-        display: none;
     }
     [data-contrast="more"] .admin-nav-item[aria-current="page"]:focus-visible {
         outline-color: var(--foreground);

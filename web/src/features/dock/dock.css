@@ -275,7 +275,7 @@
 
 @media (hover: hover) {
     .dock-item:hover {
-        background: var(--surface-soft);
+        background: var(--surface-highlight);
     }
 }
 
@@ -283,9 +283,9 @@
     transform: scale(0.94);
 }
 
-/* Active system entry */
+/* Active system entry: accent glyph + long length bar below/beside, no opaque
+   fill over the translucent Dock glass. */
 .dock-item[data-active="true"] {
-    background: var(--accent-soft);
     color: var(--accent);
 }
 

@@ -60,8 +60,9 @@
 }
 
 @media (hover: hover) {
-    .search-engine:hover {
-        background: var(--surface-soft);
+    .search-engine:hover,
+    .search-frame [data-slot="button"].search-submit:hover {
+        background: var(--surface-highlight);
     }
 }
 

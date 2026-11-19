@@ -369,8 +369,20 @@
     padding: 0 var(--space-2);
     transform: translateX(-50%);
 }
+/* Avoid stacking glass over glass: when the home plate is visible, folder and
+   action surfaces drop the second backdrop-filter and read through a subtle
+   translucent tint on the plate instead. */
+.launcher-plate:not([data-plate="hidden"]) .launcher-folder-surface,
+.launcher-plate:not([data-plate="hidden"]) .launcher-action-cell .launcher-action-glyph {
+    background: var(--surface-highlight);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
 @media (hover: hover) and (pointer: fine) {
-    .launcher-folder-item:hover .launcher-folder-surface {
+    .launcher-plate:not([data-plate="hidden"]) .launcher-folder-item:hover .launcher-folder-surface {
+        background: color-mix(in srgb, var(--foreground) 12%, transparent);
+    }
+    .launcher-plate[data-plate="hidden"] .launcher-folder-item:hover .launcher-folder-surface {
         background: var(--material-regular-sheen), color-mix(in srgb,
             var(--foreground) 8%, var(--material-regular));
     }

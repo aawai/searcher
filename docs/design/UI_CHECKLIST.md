@@ -25,7 +25,7 @@ UI PR 在描述中逐项勾选；不适用写原因。依据 [VISUAL_LANGUAGE.md
 - [ ] **A2**：粗指针下可操作目标的命中区 ≥ 44×44（可见尺寸可更小，命中区由 `primitives.css` 的共享伪元素规则扩展）；相邻目标的扩展区互不覆盖，间距不足时改为可见放大；仅悬停出现的操作在触屏常显或进入 `⋯` 菜单。另在 1440 + 触屏笔记本（主指针精细、存在触屏）检查紧凑控件的命中区。
 - [ ] **A3 / A4**：`prefers-reduced-motion` 下无非必要的位移、缩放、旋转与尺寸 / 位置插值；`prefers-reduced-transparency` 或不支持 `backdrop-filter` 时为可读实色。
 - [ ] **A5**：Escape 每次只关闭最上一层；焦点回到触发控件，触发控件已不存在时回到其所在容器（新增条目会在聚焦时消失的集合以 `focusContainer` 标记，见 [默认交互实现](VISUAL_LANGUAGE.md#默认交互实现)）。
-- [ ] **A6**：首页改动涉及壁纸、遮罩、光晕或直接落在壁纸上的文字时，`web/e2e/wallpaper-readability.test.ts` 通过；新增直接落在壁纸上的文字消费 `--wallpaper-text-stroke` / `--masthead-text-stroke` 与光晕 Token 并进入其取样范围；默认遮罩（`balanced`）与默认玻璃档位下在浅 / 深 / 高频纹理壁纸上实页审阅描边观感。
+- [ ] **A6**：首页改动涉及壁纸、遮罩、衬底、顶栏胶囊或直接落在壁纸上的文字时，`web/e2e/wallpaper-readability.test.ts` 通过；首页顶栏采用轻材质胶囊、窄屏刊头采用顶部渐隐模糊衬底；仅关闭应用底板时的应用名称消费 `--wallpaper-text-stroke` 与 `--wallpaper-text-halo` 并进入取样范围；默认遮罩（`balanced`）与默认玻璃档位下在浅 / 深 / 高频纹理壁纸上实页审阅观感。
 - [ ] **A7**：`forced-colors: active` 下控件、状态与焦点指示可辨；新增靠阴影划出边界的表面、靠底色或阴影表达的选中态，按 [默认交互实现](VISUAL_LANGUAGE.md#默认交互实现) 补系统色规则并进入 `web/e2e/forced-colors.test.ts`。
 - [ ] **高对比主题**：新增靠阴影、底色或强调色表达的边界与选中态，在高对比浅色 / 深色下按 [高对比主题](VISUAL_LANGUAGE.md#高对比主题) 的逐元素对照表可辨；组件的应用高亮配色规则包在 `@media (forced-colors: none)` 内，`forced-colors: active` 时仍由系统色主导；新增颜色对进入 `glass-contrast.test.ts` 的高对比用例。
 

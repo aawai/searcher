@@ -5,12 +5,11 @@
     color: var(--foreground);
 }
 
-/* On the veil (wide column, expanded narrow sheet) secondary and accent text
-   take the veil-specific tokens, hover and focus states included. The
-   collapsed narrow peek is printed directly on the wallpaper with its own
-   stroke and halo and keeps the page tokens. Tokens derived at the root
+/* Every masthead state (wide column, collapsed narrow peek, expanded narrow
+   sheet) sits over the masthead veil and takes the veil-specific secondary and
+   accent tokens, hover and focus states included. Tokens derived at the root
    (--ring, --accent-soft) are already resolved and stay unchanged. */
-.home-masthead:not([data-mode="narrow"][data-collapsed="true"]) {
+.home-masthead {
     --muted: var(--masthead-muted);
     --accent: var(--masthead-accent-text);
 }
@@ -658,12 +657,6 @@
 .home-masthead[data-mode="narrow"] {
     --font-masthead-day-size: 5.5rem;
     --font-masthead-day-line-height: 4.5rem;
-}
-
-.home-masthead[data-mode="narrow"][data-collapsed="true"] :is(.home-masthead__header, .home-masthead__dek) {
-    -webkit-text-stroke: var(--masthead-text-stroke);
-    paint-order: stroke fill;
-    text-shadow: var(--masthead-text-halo);
 }
 
 .home-masthead__sheet {

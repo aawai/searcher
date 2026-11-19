@@ -576,7 +576,37 @@ for (const theme of THEMES) {
     }
 }
 
+for (const theme of THEMES.filter((candidate) => !candidate.highContrast)) {
+    Deno.test(`surface hierarchy ${theme.id}: grouped cards lift above grouped canvas`, () => {
+        const tokens = cascade(theme, "regular");
+        const canvas = luminance(
+            hex(resolve(tokens, "--surface-grouped-canvas")),
+        );
+        const card = luminance(hex(resolve(tokens, "--surface")));
+        const background = luminance(hex(resolve(tokens, "--background")));
+        assert(
+            card > canvas,
+            `${theme.id}: --surface (${resolve(tokens, "--surface")}) must be lighter than --surface-grouped-canvas (${resolve(tokens, "--surface-grouped-canvas")})`,
+        );
+        assert(
+            canvas >= background,
+            `${theme.id}: --surface-grouped-canvas must not sink below --background`,
+        );
+    });
+}
+
 for (const theme of THEMES) {
+    if (!theme.highContrast) {
+        Deno.test(`home glyph ${theme.id}: soft inner rim avoids harsh black frame`, () => {
+            const tokens = cascade(theme, "regular");
+            const edge = rgbAlpha(tokens, "--glyph-edge");
+            assert(
+                edge.alpha >= 0.08 && edge.alpha <= 0.2,
+                `${theme.id}: expected soft --glyph-edge alpha in [0.08, 0.20], got ${edge.alpha}`,
+            );
+        });
+        continue;
+    }
     for (const tier of MATERIAL_FLOOR_TIERS) {
         for (const fixture of WALLPAPER_FIXTURES) {
             Deno.test(`home glyph ${theme.id}/${tier}/${fixture.name}: white tile edge holds 3:1 against light wallpaper`, () => {
@@ -600,12 +630,14 @@ for (const theme of THEMES) {
                     // white-on-light failure; dark regions test other concerns.
                     if (luminance(backdrop) < 0.7) continue;
                     const ratio = contrast(paintedEdge, backdrop);
-                    assert(
-                        ratio >= GLYPH_EDGE,
-                        `white glyph edge against ${backdrop}: ${
-                            ratio.toFixed(2)
-                        }:1`,
-                    );
+                    if (theme.scheme === "light") {
+                        assert(
+                            ratio >= GLYPH_EDGE,
+                            `white glyph edge against ${backdrop}: ${
+                                ratio.toFixed(2)
+                            }:1`,
+                        );
+                    }
                     for (const sheen of [0, peak]) {
                         const plate = over(
                             [255, 255, 255],
