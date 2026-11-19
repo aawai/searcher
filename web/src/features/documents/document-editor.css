@@ -234,7 +234,7 @@
     align-items: center;
 }
 
-.document-mode-switch [data-slot="button"].document-mode-trigger {
+.document-mode-trigger.button {
     position: relative;
     height: var(--control-touch-target);
     min-height: var(--control-touch-target);
@@ -249,7 +249,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) and (min-width: 640px) {
-    .document-mode-switch [data-slot="button"].document-mode-trigger {
+    .document-mode-trigger.button {
         height: var(--control-compact-height);
         min-height: var(--control-compact-height);
         --touch-target-size: var(--control-touch-target);
@@ -360,8 +360,7 @@
     .document-editor-header [role="button"],
     .document-editor-toolbar button,
     .document-editor-toolbar [role="button"],
-    .document-toolbar-collapse,
-    .document-editor-status-actions button {
+    .document-toolbar-collapse {
         min-height: var(--control-touch-target);
         min-width: var(--control-touch-target);
         padding: var(--space-2);

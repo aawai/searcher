@@ -42,7 +42,9 @@ export function AppFormDialog({ target, onRequestClose }: {
                     <DialogTitle className="app-form-dialog-title">
                         {target.mode === "create" ? "添加应用" : "编辑应用"}
                     </DialogTitle>
-                    <Suspense fallback={<LoadingState>正在加载表单…</LoadingState>}>
+                    <Suspense
+                        fallback={<LoadingState>正在加载表单…</LoadingState>}
+                    >
                         <LazyAppForm />
                     </Suspense>
                 </DialogPopup>
