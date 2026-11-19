@@ -232,7 +232,7 @@ Deno.test("Production Route Style Stability E2E Suite", async (t) => {
                 .boundingBox();
             assert(frameBox);
             assert(
-                Math.abs(pageShellBox.width - (frameBox.width - 2)) <= 1,
+                Math.abs(pageShellBox.width - frameBox.width) <= 1,
                 `PageShell must fill the maximized AI window (shell ${pageShellBox.width}, window ${frameBox.width})`,
             );
             assertEquals(

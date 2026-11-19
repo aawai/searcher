@@ -1267,6 +1267,7 @@ Deno.test("home app library (#244)", async (t) => {
                     const appearance = async (
                         theme: "light" | "dark",
                         glassIntensity: "off" | "soft" | "regular" | "clear",
+                        showHomeAppPlate = false,
                     ) => {
                         await page.evaluate(async (preferences) => {
                             const response = await fetch("/api/preferences", {
@@ -1277,7 +1278,7 @@ Deno.test("home app library (#244)", async (t) => {
                             if (!response.ok) {
                                 throw new Error(await response.text());
                             }
-                        }, { theme, glassIntensity });
+                        }, { theme, glassIntensity, showHomeAppPlate });
                         await page.reload();
                         await page.waitForFunction(
                             ({ theme, glassIntensity }) =>
@@ -1338,6 +1339,18 @@ Deno.test("home app library (#244)", async (t) => {
                                 });
                             },
                         );
+                    // When the home plate is visible, folders drop the second
+                    // backdrop-filter to avoid stacking glass over glass.
+                    await appearance("light", "regular", true);
+                    for (const surface of await surfaces()) {
+                        assertEquals(surface.filter, "none");
+                        assert(
+                            surface.edge !== "none",
+                            "Folder on plate keeps its edge",
+                        );
+                    }
+                    // When the plate is hidden, folders sit directly on the
+                    // wallpaper and follow every glass tier.
                     for (const theme of ["light", "dark"] as const) {
                         const alpha: number[] = [];
                         for (

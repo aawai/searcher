@@ -340,7 +340,7 @@ Deno.test("粗指针可通过窗口菜单拖动调整尺寸并取消或完成", 
         await page.reload();
         await frame.waitFor({ state: "visible" });
         await beginResize();
-        await drag(before.x + 60, before.y + 22, 48);
+        await drag(before.x + 60, before.y + 22, 60);
         await frame.getByText("拖动标题栏调整所选边").waitFor({
             state: "detached",
         });
