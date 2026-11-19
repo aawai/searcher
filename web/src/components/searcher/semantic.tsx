@@ -576,7 +576,9 @@ export function ManagementTable(
     return (
         <div className={cn("management-table", className)} {...props}>
             <Table>
-                {caption && <TableCaption>{caption}</TableCaption>}
+                {caption && (
+                    <TableCaption className="sr-only">{caption}</TableCaption>
+                )}
                 {children}
             </Table>
         </div>

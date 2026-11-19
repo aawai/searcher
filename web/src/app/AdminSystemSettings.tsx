@@ -11,7 +11,6 @@ import {
     SelectValue,
 } from "../components/ui/select.tsx";
 import {
-    ActionGroup,
     EmptyState,
     LoadingState,
     SettingsGroup,
@@ -163,7 +162,36 @@ export function AdminSystemSettings() {
             className="semantic-section"
             data-content="grouped"
         >
-            <AdminPanelHeader title="设置" />
+            <AdminPanelHeader
+                title="设置"
+                meta={isDirty ? "有未保存的更改" : undefined}
+                actions={
+                    <>
+                        {isDirty && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={saving}
+                                onClick={() => {
+                                    if (savedSettings) {
+                                        applySettings(savedSettings);
+                                    }
+                                    setError("");
+                                }}
+                            >
+                                放弃
+                            </Button>
+                        )}
+                        <Button
+                            variant="default"
+                            type="submit"
+                            disabled={saving || loading || !isDirty}
+                        >
+                            <span>{saving ? "正在保存…" : "保存设置"}</span>
+                        </Button>
+                    </>
+                }
+            />
             {error && (
                 <StatusBanner tone="error" density="compact">
                     {error}
@@ -303,24 +331,6 @@ export function AdminSystemSettings() {
                     </RadioGroup>
                 </SettingsRow>
             </SettingsGroup>
-
-            <ActionGroup>
-                {isDirty && (
-                    <>
-                        <span>有未保存的更改</span>
-                        <Button type="button" variant="outline" disabled={saving}
-                            onClick={() => {
-                                if (savedSettings) applySettings(savedSettings);
-                                setError("");
-                            }}>
-                            放弃
-                        </Button>
-                    </>
-                )}
-                <Button variant="default" type="submit" disabled={saving || loading || !isDirty}>
-                    <span>{saving ? "正在保存…" : "保存设置"}</span>
-                </Button>
-            </ActionGroup>
         </form>
     );
 }

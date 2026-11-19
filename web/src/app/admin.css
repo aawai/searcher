@@ -315,6 +315,16 @@
     max-width: calc(var(--control-height) * 12);
 }
 
+.admin-audit-toolbar {
+    justify-content: flex-start;
+    gap: var(--space-3);
+}
+
+.admin-toolbar-select {
+    flex: 0 1 calc(var(--control-height) * 6);
+    min-width: 0;
+}
+
 .admin-user-name {
     display: block;
     font-size: var(--font-body-size);
@@ -434,10 +444,17 @@
 
 /* Retention days is an explicit numeric field paired with a unit inside a settings row. */
 [data-slot="input"].admin-retention-input {
-    width: calc(var(--control-height) * 3);
+    width: 5.5em;
     flex: 0 0 auto;
-    text-align: end;
+    text-align: center;
     font-variant-numeric: tabular-nums;
+    appearance: textfield;
+}
+
+[data-slot="input"].admin-retention-input::-webkit-inner-spin-button,
+[data-slot="input"].admin-retention-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .admin-file-row {
