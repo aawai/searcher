@@ -10,6 +10,7 @@ on:
             - "web/**"
             - "src/**"
             - ".github/workflows/workspace-acceptance.yml"
+            - ".github/actions/install-chromium/**"
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
@@ -58,7 +59,8 @@ jobs:
               if: matrix.shard == 'workspace-a'
               run: deno test -A scripts/e2e/
             - name: Install Chromium
-              run: npx --yes playwright@1.56.1 install chromium
+              timeout-minutes: 12
+              uses: ./.github/actions/install-chromium
             - name: Run ${{ matrix.shard }} production E2E
               env:
                   E2E_REPORT_DIR: artifacts/e2e/${{ matrix.shard }}

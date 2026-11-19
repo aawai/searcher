@@ -1,0 +1,45 @@
+name: Install Playwright Chromium
+description: Install Playwright Chromium with per-attempt timeout and retry to prevent hung downloads.
+
+inputs:
+    playwright-version:
+        description: Playwright version used to install Chromium
+        required: false
+        default: "1.56.1"
+    attempts:
+        description: Maximum number of install attempts
+        required: false
+        default: "3"
+    attempt-timeout:
+        description: Timeout per attempt passed to GNU timeout (e.g. 3m)
+        required: false
+        default: "3m"
+
+runs:
+    using: composite
+    steps:
+        - name: Install Chromium with timeout and retry
+          shell: bash
+          env:
+              PLAYWRIGHT_VERSION: ${{ inputs.playwright-version }}
+              MAX_ATTEMPTS: ${{ inputs.attempts }}
+              ATTEMPT_TIMEOUT: ${{ inputs.attempt-timeout }}
+          run: |
+              set -euo pipefail
+              for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+                  echo "Installing Chromium with playwright@${PLAYWRIGHT_VERSION} (attempt ${attempt}/${MAX_ATTEMPTS}, timeout ${ATTEMPT_TIMEOUT})..."
+                  set +e
+                  timeout --kill-after=15s "$ATTEMPT_TIMEOUT" \
+                      npx --yes "playwright@${PLAYWRIGHT_VERSION}" install chromium
+                  status=$?
+                  set -e
+                  if [ "$status" -eq 0 ]; then
+                      exit 0
+                  fi
+                  echo "::warning::Playwright Chromium install attempt ${attempt}/${MAX_ATTEMPTS} failed with exit code ${status}."
+                  if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+                      sleep 5
+                  fi
+              done
+              echo "::error::Failed to install Playwright Chromium after ${MAX_ATTEMPTS} attempts."
+              exit 1
