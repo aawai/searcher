@@ -19,9 +19,9 @@ import {
     ArrowRight,
     ArrowUp,
     type Home,
-    LayoutGrid,
     Minimize2,
     MoreHorizontal,
+    PanelBottom,
     PinOff,
     Settings2,
     X,
@@ -944,7 +944,7 @@ export function WorkspaceDock(
                         setLayout({ collapsed: false });
                     }}
                 >
-                    <LayoutGrid
+                    <PanelBottom
                         size="1em"
                         className="icon-lg"
                         aria-hidden="true"

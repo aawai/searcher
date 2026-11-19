@@ -500,6 +500,7 @@ export function AdminBackupRestore() {
                         </AlertDialogCancel>
                         <AlertDialogAction
                             type="button"
+                            variant="default"
                             disabled={configBusy}
                             onClick={handleConfirmImport}
                         >

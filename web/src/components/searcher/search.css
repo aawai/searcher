@@ -163,7 +163,7 @@
     flex-shrink: 0;
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
-    opacity: .7;
+    color: var(--muted);
 }
 
 /* Suggestions are a floating layer: solid surface, one shadow. */
@@ -227,7 +227,10 @@
 .suggestion-app-icon {
     --launcher-icon: var(--icon-lg);
     --space-launcher-glyph-padding: var(--space-1);
-    border-radius: var(--control-radius);
+    --radius-launcher-icon: calc(
+        var(--launcher-icon) * var(--radius-launcher-ratio)
+    );
+    border-radius: var(--radius-launcher-icon);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     flex-shrink: 0;
@@ -281,7 +284,7 @@
     white-space: nowrap;
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
-    opacity: .7;
+    color: var(--muted);
 }
 
 .search-suggestions-status {
@@ -292,10 +295,21 @@
     line-height: var(--font-metadata-line-height);
 }
 
-/* Engine reachability: a dot in the menu row; time and latency live in its tooltip. */
-.status-dot {
+/* Engine reachability: online dot or warning icon with time/latency tooltip. */
+.engine-status {
     flex-shrink: 0;
     margin-inline-start: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.engine-status--failed {
+    color: var(--danger);
+}
+
+.status-dot {
+    display: block;
     width: var(--space-2);
     height: var(--space-2);
     border-radius: 50%;
@@ -306,7 +320,8 @@
     background: var(--success);
 }
 
-/* The current-engine check follows the dot at the row end. */
+/* The current-engine check follows the reachability indicator at the row end. */
+.engine-status + .menu-item-indicator,
 .status-dot + .menu-item-indicator {
     margin-inline-start: 0;
 }

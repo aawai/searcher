@@ -181,7 +181,7 @@ export function ConversationHeader({
                         <DropdownMenuItem
                             onClick={() => setInstructionOpen(true)}
                         >
-                            系统指令...
+                            系统指令…
                         </DropdownMenuItem>
 
                         {messages.length > 0 && (

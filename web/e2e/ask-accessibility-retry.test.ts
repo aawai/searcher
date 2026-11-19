@@ -353,7 +353,7 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
 
         await page.getByRole("button", { name: "更多设置" }).click();
         await page.getByRole("button", { name: "选择 AI 模型" }).click();
-        await page.getByRole("menuitem", { name: /无工具模型/ }).click();
+        await page.getByRole("menuitemradio", { name: /无工具模型/ }).click();
         await page.getByRole("button", { name: "更多设置" }).click();
         await page.getByText(
             "当前模型不支持工具调用。切换到支持工具的模型后，可使用搜索笔记、搜索应用和联网搜索。",
@@ -370,7 +370,7 @@ Deno.test("Ask: mobile guidance, local failure and interrupted retry (#204)", as
             true,
         );
         await page.getByRole("button", { name: "选择 AI 模型" }).click();
-        await page.getByRole("menuitem", { name: /标准稳定模型/ }).click();
+        await page.getByRole("menuitemradio", { name: /标准稳定模型/ }).click();
         await page.getByRole("button", { name: "更多设置" }).click();
         const documentSwitch = page.getByRole("switch", { name: "搜索笔记" });
         const appsSwitch = page.getByRole("switch", { name: "搜索应用" });

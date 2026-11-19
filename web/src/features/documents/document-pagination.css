@@ -92,6 +92,7 @@
     height: var(--page-height);
     background: var(--surface-document-paper, var(--surface-solid));
     border: 1px solid var(--border);
+    box-shadow: var(--shadow-document-paper);
     pointer-events: none;
 }
 
@@ -207,6 +208,13 @@
     line-height: var(--font-metadata-line-height);
     border-block: 1px dashed var(--border);
     background: var(--surface-soft);
+}
+
+.pagination-viewport[data-mode="continuous"] .milkdown-pagebreak-separator {
+    display: inline-block;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
 }
 
 .pagination-viewport[data-mode="page"] :is(.milkdown-pagebreak, .document-pagebreak-node, .pagebreak-node) {

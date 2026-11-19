@@ -547,6 +547,7 @@ export function LibraryAppsView({
                                     title="文件夹中还没有应用"
                                     action={
                                         <Button
+                                            variant="default"
                                             onClick={() =>
                                                 onAddApp(activeFolder.group.id)}
                                         >
@@ -584,7 +585,10 @@ export function LibraryAppsView({
                                 density="compact"
                                 title="还没有应用"
                                 action={
-                                    <Button onClick={() => onAddApp()}>
+                                    <Button
+                                        variant="default"
+                                        onClick={() => onAddApp()}
+                                    >
                                         添加应用
                                     </Button>
                                 }

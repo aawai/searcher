@@ -422,7 +422,6 @@ export function DesignLab() {
                 <div className="design-lab-row">
                     <Badge>默认</Badge>
                     <Badge variant="secondary">次要</Badge>
-                    <Badge variant="outline">描边</Badge>
                     <Badge variant="destructive">危险</Badge>
                 </div>
             </Section>

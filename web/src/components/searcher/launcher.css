@@ -627,7 +627,7 @@
 }
 
 /* AI icon candidate generator (used by LogoCandidatePicker). */
-[data-slot="alert-dialog-content"].app-ai-confirm-dialog {
+[data-slot="dialog-content"].app-ai-confirm-dialog {
     grid-template-rows: auto minmax(0, 1fr) auto;
 }
 

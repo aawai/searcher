@@ -131,7 +131,7 @@ Deno.test("document editor opens share events and preserve conflict drafts", asy
                 ? route.abort("failed")
                 : route.continue(),
     );
-    await conflict.getByRole("button", { name: "复制草稿", exact: true })
+    await conflict.getByRole("button", { name: "另存副本", exact: true })
         .click();
     await conflict.getByRole("alert").waitFor();
     assertEquals(await dirty.textContent(), "不得丢失的本地草稿");
@@ -140,7 +140,7 @@ Deno.test("document editor opens share events and preserve conflict drafts", asy
         response.request().method() === "POST" &&
         new URL(response.url()).pathname === "/api/documents"
     );
-    await conflict.getByRole("button", { name: "复制草稿", exact: true })
+    await conflict.getByRole("button", { name: "另存副本", exact: true })
         .click();
     const copy = (await (await copyResponse).json()).data as {
         id: string;
@@ -149,10 +149,11 @@ Deno.test("document editor opens share events and preserve conflict drafts", asy
     assertEquals(copy.body, localMarkdown);
     await conflict.waitFor({ state: "hidden" });
     await page.waitForFunction(
-        () =>
+        (expected) =>
             document.querySelector(
                 ".document-editor-container .ProseMirror",
-            )?.textContent === "另一设备的新正文",
+            )?.textContent?.trim() === expected.trim(),
+        localMarkdown,
     );
     const saved = await page.evaluate(async ({ original, copy }) => {
         const read = async (id: string) =>

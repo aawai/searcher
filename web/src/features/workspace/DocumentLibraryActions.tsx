@@ -60,6 +60,7 @@ export interface DocumentLibraryActionsProps {
     notebooks: DocumentNotebookDto[];
     onChanged: () => void;
     onTrashed?: (id: string) => void;
+    onError?: (message: string) => void;
     showReorderActions?: boolean;
     onMoveUp?: () => void;
     onMoveDown?: () => void;
@@ -70,6 +71,7 @@ export function useDocumentActions({
     notebooks,
     onChanged,
     onTrashed,
+    onError,
     showReorderActions,
     onMoveUp,
     onMoveDown,
@@ -210,7 +212,9 @@ export function useDocumentActions({
             );
             onChanged();
         } catch (err) {
-            setFavoriteError(err instanceof Error ? err.message : String(err));
+            const msg = err instanceof Error ? err.message : String(err);
+            if (onError) onError(`无法更新笔记：${msg}`);
+            else setFavoriteError(msg);
         } finally {
             setIsFavoriting(false);
         }
@@ -231,7 +235,9 @@ export function useDocumentActions({
             );
             onChanged();
         } catch (err) {
-            setFavoriteError(err instanceof Error ? err.message : String(err));
+            const msg = err instanceof Error ? err.message : String(err);
+            if (onError) onError(`无法更新笔记：${msg}`);
+            else setFavoriteError(msg);
         } finally {
             setIsFavoriting(false);
         }
@@ -428,18 +434,18 @@ export function useDocumentActions({
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Favorite Error Dialog */}
-            <AlertDialog
+            {/* Non-destructive action error fallback when no inline host handler is passed */}
+            <Dialog
                 open={favoriteError !== null}
                 onOpenChange={(open) => !open && setFavoriteError(null)}
             >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>操作失败</AlertDialogTitle>
-                        <AlertDialogDescription>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>操作失败</DialogTitle>
+                        <DialogDescription>
                             无法更新笔记。
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
+                        </DialogDescription>
+                    </DialogHeader>
 
                     <StatusBanner
                         tone="error"
@@ -448,15 +454,17 @@ export function useDocumentActions({
                         {favoriteError}
                     </StatusBanner>
 
-                    <AlertDialogFooter>
-                        <AlertDialogCancel
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
                             onClick={() => setFavoriteError(null)}
                         >
                             关闭
-                        </AlertDialogCancel>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 

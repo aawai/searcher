@@ -89,11 +89,12 @@ Deno.test("apps AI snapshot, candidates and selection stay in one session #141",
         }
         await page.getByRole("button", { name: "生成图标", exact: true })
             .click();
-        await page.getByRole("alertdialog").waitFor();
+        await page.getByRole("dialog", { name: "生成 AI 图标" }).waitFor();
         await page.setViewportSize({ width: 390, height: 844 });
-        await page.getByRole("alertdialog").getByText("保留用途描述", {
-            exact: true,
-        }).waitFor();
+        await page.getByRole("dialog", { name: "生成 AI 图标" }).getByText(
+            "保留用途描述",
+            { exact: true },
+        ).waitFor();
         const generated = Promise.withResolvers<void>();
         const png = await page.evaluate(() => {
             const canvas = document.createElement("canvas");

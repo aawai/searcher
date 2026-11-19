@@ -84,7 +84,7 @@ export function SystemInstructionDialog({
                         onClick={() => void handleSave()}
                         disabled={saving}
                     >
-                        {saving ? "保存中..." : "保存指令"}
+                        {saving ? "保存中…" : "保存指令"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

@@ -325,6 +325,44 @@
     margin: 0 var(--space-1);
 }
 
+.document-editor-toolbar-divider[data-line-break="true"] {
+    visibility: hidden;
+}
+
+.document-editor-toolbar [data-slot="button"][aria-pressed="true"] {
+    background-color: var(--accent-soft);
+    color: var(--accent);
+}
+
+@media (hover: hover) {
+    .document-editor-toolbar [data-slot="button"][aria-pressed="true"]:hover {
+        background-color: var(--accent-soft);
+        color: var(--accent);
+    }
+}
+
+@media (forced-colors: active) {
+    .document-editor-toolbar [data-slot="button"][aria-pressed="true"] {
+        background-color: Highlight;
+        color: HighlightText;
+        forced-color-adjust: none;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
+    .document-editor-toolbar,
+    .document-editor-toolbar-group {
+        gap: var(--space-half);
+    }
+    .document-editor-toolbar [data-slot="button"],
+    .document-toolbar-collapse {
+        width: var(--control-compact-height);
+        min-width: var(--control-compact-height);
+        height: var(--control-compact-height);
+        min-height: var(--control-compact-height);
+    }
+}
+
 /* Touch-capable or non-hover pointers keep 44x44px hit targets. */
 @media (any-pointer: coarse), (hover: none) {
     .document-editor-header button,
@@ -502,11 +540,10 @@
 }
 
 .document-continuous-editor .ProseMirror blockquote {
-    border-left: 2px solid var(--muted);
+    border-left: 3px solid var(--border);
     padding-left: var(--space-control-gap);
     margin: var(--space-1) 0;
     color: var(--muted);
-    font-style: italic;
 }
 
 /* The reset strips list markers; restore them as rendered Markdown does.
@@ -531,8 +568,8 @@
 
 .document-continuous-editor .ProseMirror hr {
     border: none;
-    border-top: 1px solid var(--border-subtle);
-    margin: var(--space-section) 0;
+    border-top: 1px solid var(--border);
+    margin: var(--space-3) 0;
 }
 
 .document-continuous-editor .ProseMirror code {
@@ -540,7 +577,7 @@
     color: var(--foreground);
     font-family: var(--font-mono);
     font-size: var(--font-inline-code-size);
-    padding: var(--space-1) var(--space-2);
+    padding: calc(var(--space-1) / 2) var(--space-1);
     border-radius: var(--radius-inline-code);
 }
 
@@ -548,6 +585,9 @@
     background-color: var(--surface-soft);
     padding: var(--space-row-gap);
     border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: var(--font-code-size);
+    line-height: var(--font-code-line-height);
     overflow-x: auto;
     margin: var(--space-3) 0;
 }
@@ -583,23 +623,6 @@
     text-underline-offset: 2px;
 }
 
-/* Light Continuous Page Break Separator */
-.document-continuous-editor .document-pagebreak-node,
-.document-continuous-editor .pagebreak-node {
-    margin: var(--space-6) 0;
-    border-top: 1px dashed var(--muted);
-    position: relative;
-    text-align: center;
-    user-select: none;
-}
-
-.document-continuous-editor .milkdown-pagebreak-separator {
-    display: inline-block;
-    background: var(--surface-soft);
-    color: var(--muted);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-}
 .document-continuous-editor li[data-item-type="task"] {
     display: flex;
     align-items: baseline;

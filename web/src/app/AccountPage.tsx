@@ -26,6 +26,7 @@ import {
 } from "../components/ui/alert-dialog.tsx";
 import {
     EmptyState,
+    LoadingState,
     SecretInput,
     SettingsGroup,
     SettingsRow,
@@ -462,6 +463,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                         actions={
                             <Button
                                 type="submit"
+                                variant="default"
                                 size="sm"
                                 disabled={profileSaving || profileUnchanged}
                             >
@@ -569,7 +571,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                                 <RefreshCw
                                     size="1em"
                                     className={cn(
-                                        "icon-md",
+                                        "icon-sm",
                                         devicesLoading && "animate-spin",
                                     )}
                                 />
@@ -582,15 +584,21 @@ export function AccountContent({ host }: { host: PageHost }) {
                 >
                     {devicesLoading && devices.length === 0
                         ? (
-                            <p className="account-device-empty">
+                            <LoadingState
+                                density="compact"
+                                className="account-device-empty"
+                            >
                                 正在加载登录设备…
-                            </p>
+                            </LoadingState>
                         )
                         : devices.length === 0
                         ? (
-                            <p className="account-device-empty">
-                                暂无活跃设备记录
-                            </p>
+                            <EmptyState
+                                density="inline"
+                                headingLevel={3}
+                                title="暂无活跃设备记录"
+                                className="account-device-empty"
+                            />
                         )
                         : (
                             <div className="account-device-list">
@@ -799,6 +807,7 @@ export function AccountContent({ host }: { host: PageHost }) {
                                 </Button>
                                 <Button
                                     type="submit"
+                                    variant="default"
                                     disabled={passwordSaving ||
                                         !currentPassword ||
                                         !newPassword ||

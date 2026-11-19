@@ -18,7 +18,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
 import { getLocal, setLocal } from "../../lib/local.ts";
 import { useAppState } from "../../app/state.tsx";
 import {
-    formatShortcut,
     isEditableShortcutTarget,
     matchesShortcut,
     type SearchQuickCommand,
@@ -599,11 +598,7 @@ export function SearcherSearchInput(
                                     <Search size="1em" className="icon-lg" />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                                {formatShortcut(SHORTCUTS.focusSearch.binding)}
-                                {" "}
-                                聚焦搜索
-                            </TooltipContent>
+                            <TooltipContent>搜索（Enter）</TooltipContent>
                         </Tooltip>
                     </div>
                 </form>

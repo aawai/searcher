@@ -4,10 +4,7 @@ import { useRender } from "@base-ui/react/use-render";
 type BadgeVariant =
     | "default"
     | "secondary"
-    | "destructive"
-    | "outline"
-    | "ghost"
-    | "link";
+    | "destructive";
 
 function Badge({
     className,

@@ -2,7 +2,8 @@ import { ChevronDown } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
 
@@ -40,19 +41,26 @@ export function ModelSelector(
                 className="model-menu"
                 aria-label="可用模型"
             >
-                {models.map((model) => (
-                    <DropdownMenuItem
-                        key={model.id}
-                        onClick={() => onChange(model.id)}
-                    >
-                        <span className="model-option-label">
-                            {model.label}
-                        </span>
-                        <span className="model-option-provider">
-                            {model.provider}
-                        </span>
-                    </DropdownMenuItem>
-                ))}
+                <DropdownMenuRadioGroup
+                    aria-label="可用模型"
+                    value={selected ?? ""}
+                    onValueChange={onChange}
+                >
+                    {models.map((model) => (
+                        <DropdownMenuRadioItem
+                            key={model.id}
+                            value={model.id}
+                            closeOnClick
+                        >
+                            <span className="model-option-label">
+                                {model.label}
+                            </span>
+                            <span className="model-option-provider">
+                                {model.provider}
+                            </span>
+                        </DropdownMenuRadioItem>
+                    ))}
+                </DropdownMenuRadioGroup>
             </DropdownMenuContent>
         </DropdownMenu>
     );

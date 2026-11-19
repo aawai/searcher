@@ -9,7 +9,12 @@ import { Button } from "../components/ui/button.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { authPath } from "./routes.ts";
 import { notifyTrashChange, subscribeTrashChanges } from "./trash-events.ts";
-import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs.tsx";
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "../components/ui/tabs.tsx";
 import {
     EmptyState,
     LoadingState,
@@ -479,13 +484,12 @@ export function TrashContent({ host }: { host: PageHost }) {
             {host.inWindow
                 ? <h1 className="sr-only">回收站</h1>
                 : <PageHeader title="回收站" actions={refreshButton} />}
-            <div className="trash-toolbar">
-                <Tabs
-                    value={tab}
-                    onValueChange={(val) =>
-                        setTab(val as "webapps" | "documents")}
-                    className="trash-tabs"
-                >
+            <Tabs
+                value={tab}
+                onValueChange={(val) => setTab(val as "webapps" | "documents")}
+                className="trash-tabs"
+            >
+                <div className="trash-toolbar">
                     <TabsList>
                         <TabsTrigger value="webapps">
                             应用 {webapps.length}
@@ -494,21 +498,19 @@ export function TrashContent({ host }: { host: PageHost }) {
                             笔记 {documents.length}
                         </TabsTrigger>
                     </TabsList>
-                </Tabs>
-                {host.inWindow && refreshButton}
-            </div>
-            {status && (
-                <StatusBanner tone="success" className="trash-status">
-                    {status}
-                </StatusBanner>
-            )}
-            {error && (
-                <StatusBanner tone="error" className="trash-status">
-                    {error}
-                </StatusBanner>
-            )}
-            {tab === "webapps"
-                ? (
+                    {host.inWindow && refreshButton}
+                </div>
+                {status && (
+                    <StatusBanner tone="success" className="trash-status">
+                        {status}
+                    </StatusBanner>
+                )}
+                {error && (
+                    <StatusBanner tone="error" className="trash-status">
+                        {error}
+                    </StatusBanner>
+                )}
+                <TabsContent value="webapps">
                     <TrashSection
                         label="已删除的应用"
                         emptyTitle="没有已删除的应用"
@@ -516,8 +518,8 @@ export function TrashContent({ host }: { host: PageHost }) {
                         rows={webappRows}
                         loading={pending}
                     />
-                )
-                : (
+                </TabsContent>
+                <TabsContent value="documents">
                     <TrashSection
                         label="已删除的笔记"
                         emptyTitle="没有已删除的笔记"
@@ -525,7 +527,8 @@ export function TrashContent({ host }: { host: PageHost }) {
                         rows={documentRows}
                         loading={pending}
                     />
-                )}
+                </TabsContent>
+            </Tabs>
 
             <AlertDialog
                 open={host.active && deleteTarget !== null}

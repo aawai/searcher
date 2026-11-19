@@ -1,4 +1,4 @@
-import { ChevronDown, RotateCw } from "lucide-react";
+import { AlertTriangle, ChevronDown, RotateCw } from "lucide-react";
 import { ENGINE_IDS, type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
     DropdownMenu,
@@ -9,6 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../ui/dropdown-menu.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
 import type { Reachability } from "./SearcherSearchInput.tsx";
 
 // Brand engine paths, viewBoxes, and colors remain unchanged; sizes use icon tokens.
@@ -172,6 +173,14 @@ export function EngineSelector(
                 >
                     {SEARCH_ENGINES.map((item) => {
                         const status = reachability[item.id];
+                        const statusText = status
+                            ? `${
+                                status.ok ? "最近检测可连接" : "最近检测失败"
+                            }（${
+                                new Date(status.checkedAt)
+                                    .toLocaleString()
+                            } · ${status.latency}ms）`
+                            : "";
                         return (
                             <DropdownMenuRadioItem
                                 key={item.id}
@@ -181,20 +190,37 @@ export function EngineSelector(
                                 <EngineIcon id={item.id} className="icon-md" />
                                 <span>{item.label}</span>
                                 {status && (
-                                    <span
-                                        className={status.ok
-                                            ? "status-dot online"
-                                            : "status-dot"}
-                                        role="img"
-                                        aria-label={`${
-                                            status.ok
-                                                ? "最近检测可连接"
-                                                : "最近检测失败"
-                                        }（${
-                                            new Date(status.checkedAt)
-                                                .toLocaleString()
-                                        } · ${status.latency}ms）`}
-                                    />
+                                    <Tooltip>
+                                        <TooltipTrigger
+                                            render={
+                                                <span
+                                                    className={status.ok
+                                                        ? "engine-status engine-status--online"
+                                                        : "engine-status engine-status--failed"}
+                                                    role="img"
+                                                    aria-label={statusText}
+                                                >
+                                                    {status.ok
+                                                        ? (
+                                                            <span
+                                                                className="status-dot online"
+                                                                aria-hidden="true"
+                                                            />
+                                                        )
+                                                        : (
+                                                            <AlertTriangle
+                                                                size="1em"
+                                                                className="icon-sm"
+                                                                aria-hidden="true"
+                                                            />
+                                                        )}
+                                                </span>
+                                            }
+                                        />
+                                        <TooltipContent>
+                                            {statusText}
+                                        </TooltipContent>
+                                    </Tooltip>
                                 )}
                             </DropdownMenuRadioItem>
                         );
