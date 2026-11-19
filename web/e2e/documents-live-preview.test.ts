@@ -1,7 +1,7 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { chromium } from "./helpers/browser.ts";
 import { loginAndVisit, startProductionApp } from "./helpers/production-app.ts";
-import { openNoteRows, switchDocumentMode } from "./helpers/library.ts";
+import { openNoteRows } from "./helpers/library.ts";
 
 Deno.test("Document live preview: opening and switching preserve canonical Markdown without saves", async () => {
     await using cleanup = new AsyncDisposableStack();
@@ -51,13 +51,11 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
         }),
         ["list-item", "disc"],
     );
-    await page.getByRole("button", {
-        name: "切换编辑模式，当前：编辑",
-        exact: true,
-    }).waitFor({ state: "visible" });
-    await switchDocumentMode(page, "Markdown 源码");
-    await page.getByRole("button", { name: "编辑", exact: true })
-        .waitFor({ state: "hidden" });
+    const modes = page.getByRole("radiogroup", { name: "视图模式" });
+    const edit = modes.getByRole("radio", { name: "编辑", exact: true });
+    const source = modes.getByRole("radio", { name: "Markdown 源码" });
+    await source.click();
+    assertEquals(await source.isChecked(), true);
     assertEquals(
         await page.getByRole("textbox", {
             name: "Markdown 源码正文",
@@ -65,10 +63,50 @@ Deno.test("Document live preview: opening and switching preserve canonical Markd
         }).inputValue(),
         body,
     );
-    await switchDocumentMode(page, "编辑");
+    await source.press("ArrowRight");
+    assertEquals(await edit.isChecked(), true);
+    assertEquals(
+        await edit.evaluate((el) => el === document.activeElement),
+        true,
+    );
     await page.locator('.document-editor-scroll-area [contenteditable="true"]')
         .waitFor();
     // Cross the autosave debounce; mode hydration must never create a transaction to save.
     await page.waitForTimeout(1800);
     assertEquals(writes, []);
+
+    const touch = await browser.newPage({
+        viewport: { width: 320, height: 700 },
+        hasTouch: true,
+        isMobile: true,
+    });
+    await loginAndVisit(touch, app.origin, "/", credentials);
+    await openNoteRows(touch);
+    await touch.locator("[data-document-id] h4 button").filter({
+        hasText: "Live contract",
+    }).tap();
+    const touchModes = touch.getByRole("radiogroup", { name: "视图模式" });
+    const pageMode = touchModes.getByRole("radio", {
+        name: "分页",
+        exact: true,
+    });
+    await pageMode.tap();
+    assertEquals(await pageMode.isChecked(), true);
+    await touch.locator('[data-pagination-mode="page"][data-page-count]')
+        .waitFor();
+    const [segments, stats] = await Promise.all([
+        touchModes.boundingBox(),
+        touch.locator(".document-metadata-bar").boundingBox(),
+    ]);
+    assert(segments && stats);
+    assert(
+        segments.x + segments.width <= stats.x && stats.x + stats.width <= 320,
+    );
+    const targets = await touchModes.getByRole("radio").evaluateAll((radios) =>
+        radios.map((radio) => {
+            const { width, height } = radio.getBoundingClientRect();
+            return width >= 44 && height >= 44;
+        })
+    );
+    assertEquals(targets, [true, true, true]);
 });

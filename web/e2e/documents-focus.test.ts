@@ -217,9 +217,8 @@ Deno.test("Documents focus boundaries, IME composition and leave flush contracts
             const countBefore = writes.length;
             await title.focus();
             await prosemirror.focus();
-            await editor.getByRole("button", {
-                name: /^切换编辑模式，当前：/,
-            }).focus();
+            await editor.getByRole("radio", { name: "编辑", exact: true })
+                .focus();
             await assertRejects(
                 () =>
                     page.waitForRequest(

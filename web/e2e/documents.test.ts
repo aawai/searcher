@@ -252,10 +252,11 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                     exact: true,
                 });
                 await toolbar.waitFor({ state: "visible" });
-                await page.getByRole("button", {
-                    name: "切换编辑模式，当前：编辑",
+                await page.getByRole("radio", {
+                    name: "编辑",
                     exact: true,
-                }).waitFor({ state: "visible" });
+                    checked: true,
+                }).waitFor();
 
                 const toolbarGeometry = await toolbar.evaluate((element) => {
                     const buttons = Array.from(

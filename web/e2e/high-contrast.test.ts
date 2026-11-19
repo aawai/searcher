@@ -98,6 +98,33 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，强调色按
             "高对比浅色",
             "高对比深色",
         ]);
+        for (
+            const viewport of [
+                { width: 1280, height: 900 },
+                { width: 320, height: 700 },
+            ]
+        ) {
+            await page.setViewportSize(viewport);
+            const tiles = await page.locator(`${settings} .theme-choices`)
+                .getByRole("radio").evaluateAll((radios) =>
+                    radios.map((radio) => {
+                        const { x, y, right } = radio.getBoundingClientRect();
+                        return { x, y, right };
+                    })
+                );
+            const detail = `${viewport.width}px: ${JSON.stringify(tiles)}`;
+            assertEquals(tiles.length, 5, detail);
+            assert(
+                tiles.every(({ y }) => Math.abs(y - tiles[0].y) < 1),
+                detail,
+            );
+            assert(
+                tiles.slice(1).every(({ x }, index) => x >= tiles[index].right),
+                detail,
+            );
+            assert(tiles[0].x >= 0 && tiles[4].right <= viewport.width, detail);
+        }
+        await page.setViewportSize({ width: 1280, height: 900 });
         await page.getByRole("radio", { name: "高对比浅色", exact: true })
             .check();
         await waitForTheme(page, "light", true);

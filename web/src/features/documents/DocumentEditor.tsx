@@ -1860,13 +1860,11 @@ export function DocumentEditor({
                 )}
             </div>
             <div className="document-editor-status-bar">
-                <div className="document-editor-status-actions">
-                    <DocumentModeSwitch
-                        mode={viewMode}
-                        pageDisabled={snapshot.loading}
-                        onChange={handleViewChange}
-                    />
-                </div>
+                <DocumentModeSwitch
+                    mode={viewMode}
+                    pageDisabled={snapshot.loading}
+                    onChange={handleViewChange}
+                />
                 <div className="document-metadata-bar">
                     <span>
                         {analysis.wordCount > 0
