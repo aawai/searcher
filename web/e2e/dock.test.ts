@@ -1929,7 +1929,7 @@ Deno.test("workspace dock: touch drag, long-press actions, and overflow manageme
         )
     );
     await dockOptionsMenu(page).tap();
-    await page.getByRole("menuitem", { name: "Overflow 2 的操作" }).tap();
+    await page.getByRole("menuitem", { name: "Overflow 2" }).tap();
     await page.getByRole("menuitem", { name: "取消任务栏固定" }).tap();
     await page.waitForFunction(async (id) => {
         const response = await fetch("/api/preferences");

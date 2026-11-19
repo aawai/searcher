@@ -741,12 +741,20 @@ Deno.test("Zen document presentations preserve editor, layout and save contracts
         exact: true,
     }).click();
     const settingsDialog = page.getByRole("dialog");
-    await settingsDialog.getByLabel("纸张规格", { exact: true }).selectOption(
-        targetPaperSize,
-    );
-    await settingsDialog.getByLabel("版面方向", { exact: true }).selectOption(
-        initialSettings.orientation,
-    );
+    await settingsDialog.getByRole("radiogroup", {
+        name: "纸张规格",
+        exact: true,
+    }).getByRole("radio", {
+        name: targetPaperSize === "a4" ? "A4" : "US Letter",
+        exact: true,
+    }).click();
+    await settingsDialog.getByRole("radiogroup", {
+        name: "版面方向",
+        exact: true,
+    }).getByRole("radio", {
+        name: initialSettings.orientation === "portrait" ? "纵向" : "横向",
+        exact: true,
+    }).click();
     await settingsDialog.getByRole("button", {
         name: "保存设置",
         exact: true,

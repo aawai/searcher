@@ -5,6 +5,8 @@ import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import {
     EmptyState,
+    FormField,
+    FormFields,
     LoadingState,
     ManagementTable,
     Pagination,
@@ -78,10 +80,23 @@ import {
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import {
-    NativeSelect,
-    NativeSelectOptGroup,
-    NativeSelectOption,
-} from "../components/ui/native-select.tsx";
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectGroupLabel,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../components/ui/select.tsx";
+
+const AUDIT_ACTION_ITEMS: Record<string, string> = {
+    "": "全部操作",
+    ...Object.fromEntries(
+        AUDIT_ACTION_GROUPS.flatMap(({ actions }) =>
+            actions.map(({ value, label }) => [value, label])
+        ),
+    ),
+};
 import { api, json } from "../lib/api.ts";
 import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
@@ -1219,33 +1234,45 @@ export function AdminPage() {
                                 }}
                             />
                         </form>
-                        <NativeSelect
-                            className="admin-toolbar-field"
-                            aria-label="按操作筛选审计日志"
+                        <Select
+                            items={AUDIT_ACTION_ITEMS}
                             value={auditActionFilter}
-                            onChange={(e) => {
-                                setAuditActionFilter(
-                                    parseAuditActionFilter(e.target.value),
-                                );
-                                setAuditPage(1);
+                            onValueChange={(next) => {
+                                if (next !== null) {
+                                    setAuditActionFilter(
+                                        parseAuditActionFilter(next),
+                                    );
+                                    setAuditPage(1);
+                                }
                             }}
                         >
-                            <NativeSelectOption value="">
-                                全部操作
-                            </NativeSelectOption>
-                            {AUDIT_ACTION_GROUPS.map(({ group, actions }) => (
-                                <NativeSelectOptGroup key={group} label={group}>
-                                    {actions.map(({ value, label }) => (
-                                        <NativeSelectOption
-                                            key={value}
-                                            value={value}
-                                        >
-                                            {label}
-                                        </NativeSelectOption>
-                                    ))}
-                                </NativeSelectOptGroup>
-                            ))}
-                        </NativeSelect>
+                            <SelectTrigger
+                                className="admin-toolbar-field"
+                                aria-label="按操作筛选审计日志"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="">全部操作</SelectItem>
+                                {AUDIT_ACTION_GROUPS.map((
+                                    { group, actions },
+                                ) => (
+                                    <SelectGroup key={group}>
+                                        <SelectGroupLabel>
+                                            {group}
+                                        </SelectGroupLabel>
+                                        {actions.map(({ value, label }) => (
+                                            <SelectItem
+                                                key={value}
+                                                value={value}
+                                            >
+                                                {label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </WorkspaceToolbar>
 
                     {!auditInitialized && auditLoading
@@ -1374,116 +1401,98 @@ export function AdminPage() {
                                 {createError}
                             </StatusBanner>
                         )}
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="create-username"
+                        <FormFields>
+                            <FormField
+                                label="用户名"
+                                labelFor="create-username"
+                                hint="3–32 位字母、数字或下划线"
+                                messageId="create-username-hint"
                             >
-                                用户名
-                            </label>
-                            <Input
-                                id="create-username"
-                                name="username"
-                                type="text"
-                                required
-                                autoFocus
-                                autoComplete="off"
-                                autoCorrect="off"
-                                autoCapitalize="none"
-                                spellCheck={false}
-                                pattern="^[a-zA-Z0-9_]{3,32}$"
-                                placeholder="设置用户名"
-                                aria-describedby="create-username-hint"
-                                value={newUsername}
-                                onChange={(e) => setNewUsername(e.target.value)}
-                            />
-                            <p
-                                id="create-username-hint"
-                                className="admin-field-hint"
+                                <Input
+                                    id="create-username"
+                                    name="username"
+                                    type="text"
+                                    required
+                                    autoFocus
+                                    autoComplete="off"
+                                    autoCorrect="off"
+                                    autoCapitalize="none"
+                                    spellCheck={false}
+                                    pattern="^[a-zA-Z0-9_]{3,32}$"
+                                    placeholder="设置用户名"
+                                    aria-describedby="create-username-hint"
+                                    value={newUsername}
+                                    onChange={(e) =>
+                                        setNewUsername(e.target.value)}
+                                />
+                            </FormField>
+                            <FormField
+                                label="显示名称"
+                                labelFor="create-display-name"
                             >
-                                3–32 位字母、数字或下划线
-                            </p>
-                        </div>
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="create-display-name"
+                                <Input
+                                    id="create-display-name"
+                                    name="displayName"
+                                    type="text"
+                                    required
+                                    maxLength={40}
+                                    autoComplete="off"
+                                    placeholder="设置显示名称"
+                                    value={newDisplayName}
+                                    onChange={(e) =>
+                                        setNewDisplayName(e.target.value)}
+                                />
+                            </FormField>
+                            <FormField
+                                label="邮箱（可选）"
+                                labelFor="create-email"
                             >
-                                显示名称
-                            </label>
-                            <Input
-                                id="create-display-name"
-                                name="displayName"
-                                type="text"
-                                required
-                                maxLength={40}
-                                autoComplete="off"
-                                placeholder="设置显示名称"
-                                value={newDisplayName}
-                                onChange={(e) =>
-                                    setNewDisplayName(e.target.value)}
-                            />
-                        </div>
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="create-email"
+                                <Input
+                                    id="create-email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="off"
+                                    spellCheck={false}
+                                    placeholder="alice@example.com"
+                                    value={newEmail}
+                                    onChange={(e) =>
+                                        setNewEmail(e.target.value)}
+                                />
+                            </FormField>
+                            <FormField
+                                label="初始密码"
+                                labelFor="create-password"
+                                hint={`${passwordRule}，用户首次登录时使用`}
+                                error={createPasswordError || undefined}
+                                messageId="create-password-hint"
+                                invalid={Boolean(createPasswordError)}
                             >
-                                邮箱（可选）
-                            </label>
-                            <Input
-                                id="create-email"
-                                name="email"
-                                type="email"
-                                autoComplete="off"
-                                spellCheck={false}
-                                placeholder="alice@example.com"
-                                value={newEmail}
-                                onChange={(e) => setNewEmail(e.target.value)}
-                            />
-                        </div>
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="create-password"
-                            >
-                                初始密码
-                            </label>
-                            <SecretInput
-                                key={createModalOpen
-                                    ? "create-open"
-                                    : "create-closed"}
-                                ref={createPasswordRef}
-                                id="create-password"
-                                name="password"
-                                placeholder={`至少 ${passwordRules.minLength} 个字符`}
-                                required
-                                minLength={passwordRules.minLength}
-                                maxLength={passwordRules.maxLength}
-                                autoComplete="new-password"
-                                aria-describedby="create-password-hint"
-                                aria-invalid={Boolean(
-                                    createPasswordError,
-                                ) || undefined}
-                                value={newPassword}
-                                onChange={(e) => {
-                                    setNewPassword(e.target.value);
-                                    if (createPasswordError) {
-                                        setCreatePasswordError("");
-                                    }
-                                }}
-                            />
-                            <p
-                                id="create-password-hint"
-                                role={createPasswordError ? "alert" : undefined}
-                                className={createPasswordError
-                                    ? "admin-field-message"
-                                    : "admin-field-hint"}
-                            >
-                                {createPasswordError ||
-                                    `${passwordRule}，用户首次登录时使用`}
-                            </p>
-                        </div>
+                                <SecretInput
+                                    key={createModalOpen
+                                        ? "create-open"
+                                        : "create-closed"}
+                                    ref={createPasswordRef}
+                                    id="create-password"
+                                    name="password"
+                                    placeholder={`至少 ${passwordRules.minLength} 个字符`}
+                                    required
+                                    minLength={passwordRules.minLength}
+                                    maxLength={passwordRules.maxLength}
+                                    autoComplete="new-password"
+                                    aria-describedby="create-password-hint"
+                                    aria-invalid={Boolean(
+                                        createPasswordError,
+                                    ) || undefined}
+                                    value={newPassword}
+                                    onChange={(e) => {
+                                        setNewPassword(e.target.value);
+                                        if (createPasswordError) {
+                                            setCreatePasswordError("");
+                                        }
+                                    }}
+                                />
+                            </FormField>
+                        </FormFields>
                         <DialogFooter>
                             <Button
                                 type="button"
@@ -1523,14 +1532,13 @@ export function AdminPage() {
                         className="admin-form"
                         onSubmit={handleResetPasswordSubmit}
                     >
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="reset-password-input"
-                            >
-                                新密码（{passwordRules.minLength}–{passwordRules
-                                    .maxLength} 个字符）
-                            </label>
+                        <FormField
+                            label={`新密码（${passwordRules.minLength}–${passwordRules.maxLength} 个字符）`}
+                            labelFor="reset-password-input"
+                            error={resetError || undefined}
+                            messageId="reset-password-error"
+                            invalid={Boolean(resetError)}
+                        >
                             <SecretInput
                                 key={resetModalUser?.id ?? "reset-closed"}
                                 id="reset-password-input"
@@ -1550,16 +1558,7 @@ export function AdminPage() {
                                 onChange={(e) =>
                                     setResetNewPassword(e.target.value)}
                             />
-                            {resetError && (
-                                <p
-                                    id="reset-password-error"
-                                    role="alert"
-                                    className="admin-field-message"
-                                >
-                                    {resetError}
-                                </p>
-                            )}
-                        </div>
+                        </FormField>
                         <DialogFooter>
                             <Button
                                 type="button"
@@ -1596,13 +1595,13 @@ export function AdminPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <form className="admin-form" onSubmit={handleDeleteSubmit}>
-                        <div className="admin-field">
-                            <label
-                                className="admin-field-label"
-                                htmlFor="delete-confirm-input"
-                            >
-                                输入用户名 {deleteUsername}（不含 @）以确认
-                            </label>
+                        <FormField
+                            label={`输入用户名 ${deleteUsername}（不含 @）以确认`}
+                            labelFor="delete-confirm-input"
+                            error={deleteError || undefined}
+                            messageId="delete-confirm-error"
+                            invalid={Boolean(deleteError)}
+                        >
                             <Input
                                 id="delete-confirm-input"
                                 name="confirmUsername"
@@ -1619,16 +1618,7 @@ export function AdminPage() {
                                 onChange={(e) =>
                                     setDeleteConfirmText(e.target.value)}
                             />
-                            {deleteError && (
-                                <p
-                                    id="delete-confirm-error"
-                                    role="alert"
-                                    className="admin-field-message"
-                                >
-                                    {deleteError}
-                                </p>
-                            )}
-                        </div>
+                        </FormField>
                         <DialogFooter>
                             <Button
                                 type="button"

@@ -26,6 +26,8 @@ import {
 } from "../components/ui/alert-dialog.tsx";
 import {
     EmptyState,
+    FormField,
+    FormFields,
     LoadingState,
     SecretInput,
     SettingsGroup,
@@ -477,16 +479,11 @@ export function AccountContent({ host }: { host: PageHost }) {
                         <SettingsRow
                             title="显示名称"
                             labelFor="account-display-name"
-                            className={host.narrow
-                                ? "settings-row--vertical"
-                                : undefined}
+                            className="settings-row--vertical"
                         >
                             <Input
                                 id="account-display-name"
                                 name="displayName"
-                                className={host.narrow
-                                    ? undefined
-                                    : "account-input"}
                                 placeholder="输入显示名称"
                                 type="text"
                                 autoComplete="name"
@@ -499,16 +496,11 @@ export function AccountContent({ host }: { host: PageHost }) {
                         <SettingsRow
                             title="邮箱"
                             labelFor="account-email"
-                            className={host.narrow
-                                ? "settings-row--vertical"
-                                : undefined}
+                            className="settings-row--vertical"
                         >
                             <Input
                                 id="account-email"
                                 name="email"
-                                className={host.narrow
-                                    ? undefined
-                                    : "account-input"}
                                 type="email"
                                 autoComplete="email"
                                 spellCheck={false}
@@ -672,10 +664,7 @@ export function AccountContent({ host }: { host: PageHost }) {
             >
                 <DialogPortal>
                     <DialogBackdrop />
-                    <DialogPopup
-                        className="account-password-dialog"
-                        surface="grouped"
-                    >
+                    <DialogPopup className="account-password-dialog">
                         <form
                             className="account-password-form"
                             onSubmit={handleChangePassword}
@@ -689,9 +678,9 @@ export function AccountContent({ host }: { host: PageHost }) {
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <SettingsGroup>
-                                <SettingsRow
-                                    title="当前密码"
+                            <FormFields>
+                                <FormField
+                                    label="当前密码"
                                     labelFor="account-current-password"
                                 >
                                     <SecretInput
@@ -707,17 +696,14 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         onChange={(e) =>
                                             setCurrentPassword(e.target.value)}
                                     />
-                                </SettingsRow>
-                                <SettingsRow
-                                    title="新密码"
+                                </FormField>
+                                <FormField
+                                    label="新密码"
                                     labelFor="account-new-password"
-                                    message={passwordFieldError?.field === "new"
-                                        ? (
-                                            <span role="alert">
-                                                {passwordFieldError.message}
-                                            </span>
-                                        )
-                                        : passwordRule}
+                                    hint={passwordRule}
+                                    error={passwordFieldError?.field === "new"
+                                        ? passwordFieldError.message
+                                        : undefined}
                                     messageId="account-new-password-hint"
                                     invalid={passwordFieldError?.field ===
                                         "new"}
@@ -742,17 +728,13 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         onChange={(e) =>
                                             setNewPassword(e.target.value)}
                                     />
-                                </SettingsRow>
-                                <SettingsRow
-                                    title="确认新密码"
+                                </FormField>
+                                <FormField
+                                    label="确认新密码"
                                     labelFor="account-confirm-password"
-                                    message={passwordFieldError?.field ===
+                                    error={passwordFieldError?.field ===
                                             "confirm"
-                                        ? (
-                                            <span role="alert">
-                                                {passwordFieldError.message}
-                                            </span>
-                                        )
+                                        ? passwordFieldError.message
                                         : undefined}
                                     messageId="account-confirm-password-error"
                                     invalid={passwordFieldError?.field ===
@@ -781,8 +763,8 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         onChange={(e) =>
                                             setConfirmPassword(e.target.value)}
                                     />
-                                </SettingsRow>
-                            </SettingsGroup>
+                                </FormField>
+                            </FormFields>
 
                             {passwordSuccess && (
                                 <StatusBanner tone="success">

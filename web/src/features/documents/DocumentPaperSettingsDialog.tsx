@@ -22,10 +22,7 @@ import {
 } from "../../components/ui/dialog.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
-import {
-    NativeSelect,
-    NativeSelectOption,
-} from "../../components/ui/native-select.tsx";
+import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group.tsx";
 import { api, json } from "../../lib/api.ts";
 import {
     SettingsGroup,
@@ -116,6 +113,16 @@ function DocumentPaperSettingsForm({
         setError(null);
     }, [settings]);
 
+    const activePreset = (["standard", "narrow", "wide"] as const).find(
+        (key) => {
+            const presetMm = MARGIN_PRESETS[key];
+            return margins.top === presetMm &&
+                margins.right === presetMm &&
+                margins.bottom === presetMm &&
+                margins.left === presetMm;
+        },
+    ) ?? null;
+
     const applyPreset = (presetMm: number) => {
         setMargins({
             top: presetMm,
@@ -192,46 +199,41 @@ function DocumentPaperSettingsForm({
                 className="document-paper-form"
             >
                 <SettingsGroup>
-                    <SettingsRow title="纸张规格" labelFor="paper-size-select">
-                        <NativeSelect
+                    <SettingsRow title="纸张规格">
+                        <RadioGroup
                             id="paper-size-select"
+                            variant="segmented"
+                            aria-label="纸张规格"
                             value={paperSize}
                             disabled={submitting}
-                            onChange={(e) =>
-                                setPaperSize(
-                                    e.target.value as "a4" | "letter",
-                                )}
+                            onValueChange={(next) =>
+                                setPaperSize(next as "a4" | "letter")}
                         >
-                            <NativeSelectOption value="a4">
-                                A4 (210 × 297 mm)
-                            </NativeSelectOption>
-                            <NativeSelectOption value="letter">
-                                US Letter (215.9 × 279.4 mm)
-                            </NativeSelectOption>
-                        </NativeSelect>
+                            <RadioGroupItem value="a4">A4</RadioGroupItem>
+                            <RadioGroupItem value="letter">
+                                US Letter
+                            </RadioGroupItem>
+                        </RadioGroup>
                     </SettingsRow>
-                    <SettingsRow
-                        title="版面方向"
-                        labelFor="paper-orientation-select"
-                    >
-                        <NativeSelect
+                    <SettingsRow title="版面方向">
+                        <RadioGroup
                             id="paper-orientation-select"
+                            variant="segmented"
+                            aria-label="版面方向"
                             value={orientation}
                             disabled={submitting}
-                            onChange={(e) =>
+                            onValueChange={(next) =>
                                 setOrientation(
-                                    e.target.value as
-                                        | "portrait"
-                                        | "landscape",
+                                    next as "portrait" | "landscape",
                                 )}
                         >
-                            <NativeSelectOption value="portrait">
+                            <RadioGroupItem value="portrait">
                                 纵向
-                            </NativeSelectOption>
-                            <NativeSelectOption value="landscape">
+                            </RadioGroupItem>
+                            <RadioGroupItem value="landscape">
                                 横向
-                            </NativeSelectOption>
-                        </NativeSelect>
+                            </RadioGroupItem>
+                        </RadioGroup>
                     </SettingsRow>
                 </SettingsGroup>
 
@@ -245,6 +247,7 @@ function DocumentPaperSettingsForm({
                             type="button"
                             variant="outline"
                             size="sm"
+                            aria-pressed={activePreset === "standard"}
                             disabled={submitting}
                             onClick={() => applyPreset(MARGIN_PRESETS.standard)}
                         >
@@ -254,6 +257,7 @@ function DocumentPaperSettingsForm({
                             type="button"
                             variant="outline"
                             size="sm"
+                            aria-pressed={activePreset === "narrow"}
                             disabled={submitting}
                             onClick={() => applyPreset(MARGIN_PRESETS.narrow)}
                         >
@@ -263,6 +267,7 @@ function DocumentPaperSettingsForm({
                             type="button"
                             variant="outline"
                             size="sm"
+                            aria-pressed={activePreset === "wide"}
                             disabled={submitting}
                             onClick={() => applyPreset(MARGIN_PRESETS.wide)}
                         >

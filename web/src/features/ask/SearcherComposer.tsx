@@ -162,6 +162,11 @@ export function SearcherComposer({
             : undefined,
     ].filter((tool): tool is string => tool !== undefined);
     const hasActiveTools = activeTools.length > 0;
+    const hasCustomGeneration = generationConfig.temperature !== undefined ||
+        generationConfig.topP !== undefined ||
+        generationConfig.maxTokens !== undefined ||
+        generationConfig.reasoningEffort !== undefined;
+    const hasActiveSettings = hasActiveTools || hasCustomGeneration;
     return (
         <div className="ask-composer-container">
             <ComposerPrimitive.Root
@@ -290,7 +295,7 @@ export function SearcherComposer({
                                     className="icon-md"
                                     aria-hidden="true"
                                 />
-                                {hasActiveTools && (
+                                {hasActiveSettings && (
                                     <span
                                         className="ask-composer__active-dot"
                                         aria-hidden="true"
@@ -401,27 +406,25 @@ export function SearcherComposer({
                                     </div>
                                 </section>
 
-                                <div className="ask-composer__generation-controls">
-                                    <ReasoningSelector
-                                        model={activeModel}
-                                        value={generationConfig.reasoningEffort}
-                                        onChange={(reasoningEffort) =>
-                                            onChangeGenerationConfig({
-                                                ...generationConfig,
-                                                reasoningEffort,
-                                            })}
-                                    />
-                                    <GenerationSettings
-                                        config={generationConfig}
-                                        onChange={onChangeGenerationConfig}
-                                        model={activeModel}
-                                        isReasoningStrict={activeModel
-                                            ?.isReasoningStrict}
-                                        onSaveDefault={onSaveDefaultGenerationConfig}
-                                        onResetDefault={onResetDefaultGenerationConfig}
-                                        isDefault={isDefaultGenerationConfig}
-                                    />
-                                </div>
+                                <ReasoningSelector
+                                    model={activeModel}
+                                    value={generationConfig.reasoningEffort}
+                                    onChange={(reasoningEffort) =>
+                                        onChangeGenerationConfig({
+                                            ...generationConfig,
+                                            reasoningEffort,
+                                        })}
+                                />
+                                <GenerationSettings
+                                    config={generationConfig}
+                                    onChange={onChangeGenerationConfig}
+                                    model={activeModel}
+                                    isReasoningStrict={activeModel
+                                        ?.isReasoningStrict}
+                                    onSaveDefault={onSaveDefaultGenerationConfig}
+                                    onResetDefault={onResetDefaultGenerationConfig}
+                                    isDefault={isDefaultGenerationConfig}
+                                />
                             </PopoverContent>
                         </Popover>
                     </div>

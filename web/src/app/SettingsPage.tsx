@@ -56,9 +56,12 @@ import { useEscapeLayer } from "../components/ui/escape-layer-stack.tsx";
 import { focusContainer } from "../components/ui/focus-recovery.ts";
 import { Input } from "../components/ui/input.tsx";
 import {
-    NativeSelect,
-    NativeSelectOption,
-} from "../components/ui/native-select.tsx";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../components/ui/select.tsx";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { WallpaperCompositionDialog } from "../components/wallpaper/WallpaperCompositionDialog.tsx";
@@ -141,19 +144,27 @@ function Choices<T extends string>(
 ) {
     let input: ReactNode;
     if (control === "select") {
+        const items = Object.fromEntries(values) as Record<T, string>;
         input = (
             <div className="settings-choice-select">
-                <NativeSelect
-                    value={value}
-                    onChange={(e) => select(e.target.value as T)}
-                    aria-label={title}
+                <Select
+                    items={items}
+                    value={value as T}
+                    onValueChange={(next) => {
+                        if (next !== null) select(next as T);
+                    }}
                 >
-                    {values.map(([id, label]) => (
-                        <NativeSelectOption key={id} value={id}>
-                            {label}
-                        </NativeSelectOption>
-                    ))}
-                </NativeSelect>
+                    <SelectTrigger aria-label={title}>
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {values.map(([id, label]) => (
+                            <SelectItem key={id} value={id}>
+                                {label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
         );
     } else {

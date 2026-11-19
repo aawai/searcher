@@ -711,9 +711,20 @@ Deno.test("#147: production page layout, editing, paper settings and print flow"
             exact: true,
         }).click();
         const dialog = page.getByRole("dialog");
-        await dialog.getByLabel("纸张规格", { exact: true }).selectOption(size);
-        await dialog.getByLabel("版面方向", { exact: true })
-            .selectOption(orientation);
+        await dialog.getByRole("radiogroup", {
+            name: "纸张规格",
+            exact: true,
+        }).getByRole("radio", {
+            name: size === "a4" ? "A4" : "US Letter",
+            exact: true,
+        }).click();
+        await dialog.getByRole("radiogroup", {
+            name: "版面方向",
+            exact: true,
+        }).getByRole("radio", {
+            name: orientation === "portrait" ? "纵向" : "横向",
+            exact: true,
+        }).click();
         await dialog.getByRole("button", { name: "保存设置", exact: true })
             .click();
         await dialog.waitFor({ state: "hidden" });

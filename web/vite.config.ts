@@ -200,6 +200,12 @@ export default defineConfig({
                                 return "markdown-vendor";
                             }
                             if (
+                                pkg === "@base-ui/react" &&
+                                id.includes("/select/")
+                            ) {
+                                return "ui-select-vendor";
+                            }
+                            if (
                                 pkg === "@base-ui/react" ||
                                 pkg.startsWith("@dnd-kit/") ||
                                 pkg === "lucide-react"

@@ -397,27 +397,27 @@ Deno.test("刊头继续项、AI 复选框命中区与窄屏账户输入契约 #4
                     );
                 }
 
-                // AI settings checkboxes: >=24px on fine mouse, >=44px on touch/hybrid.
+                // AI settings switches: >=24px on fine mouse, >=44px on touch/hybrid.
                 await openSettings(page, app.origin, "ai");
-                const checkbox = page.locator(
-                    `${SETTINGS} [data-slot="checkbox"]`,
+                const toggleSwitch = page.locator(
+                    `${SETTINGS} [data-slot="switch"]`,
                 ).first();
-                await checkbox.waitFor({ state: "visible" });
-                const checkboxHit = await hitSize(checkbox);
+                await toggleSwitch.waitFor({ state: "visible" });
+                const switchHit = await hitSize(toggleSwitch);
                 assert(
-                    checkboxHit.width >= minDesktop &&
-                        checkboxHit.height >= minDesktop,
-                    `${profile} checkbox hit: ${JSON.stringify(checkboxHit)}`,
+                    switchHit.width >= minDesktop &&
+                        switchHit.height >= minDesktop,
+                    `${profile} switch hit: ${JSON.stringify(switchHit)}`,
                 );
                 if (profile !== "mouse") {
                     assertEquals(
                         await probeTargets(
                             page,
                             SETTINGS,
-                            '[data-slot="checkbox"]',
+                            '[data-slot="switch"]',
                         ),
                         [],
-                        `${profile} ai checkboxes`,
+                        `${profile} ai switches`,
                     );
                 }
 

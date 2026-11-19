@@ -8,9 +8,12 @@ import { api, json } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
 import {
-    NativeSelect,
-    NativeSelectOption,
-} from "../../components/ui/native-select.tsx";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../../components/ui/select.tsx";
 import {
     Dialog,
     DialogContent,
@@ -28,7 +31,11 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "../../components/ui/alert-dialog.tsx";
-import { StatusBanner } from "../../components/searcher/semantic.tsx";
+import {
+    FormField,
+    FormFields,
+    StatusBanner,
+} from "../../components/searcher/semantic.tsx";
 export interface DocumentNotebookOperationsProps {
     notebooks: DocumentNotebookDto[];
     onChanged: () => void;
@@ -362,50 +369,64 @@ function CreateNotebookDialog(
                     </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="documents-dialog-form">
-                    <div className="documents-dialog-field">
-                        <label
-                            htmlFor="create-notebook-name"
-                            className="documents-dialog-label"
+                    <FormFields>
+                        <FormField
+                            label="笔记本名称"
+                            labelFor="create-notebook-name"
                         >
-                            笔记本名称
-                        </label>
-                        <Input
-                            id="create-notebook-name"
-                            autoFocus
-                            placeholder="输入笔记本名称…"
-                            value={name}
-                            onChange={(e) => onName(e.target.value)}
-                            disabled={pending}
-                            maxLength={100}
-                        />
-                    </div>
+                            <Input
+                                id="create-notebook-name"
+                                autoFocus
+                                placeholder="输入笔记本名称…"
+                                value={name}
+                                onChange={(e) => onName(e.target.value)}
+                                disabled={pending}
+                                maxLength={100}
+                            />
+                        </FormField>
 
-                    <div className="documents-dialog-field">
-                        <label
-                            htmlFor="create-notebook-parent"
-                            className="documents-dialog-label"
+                        <FormField
+                            label="所属父笔记本"
+                            labelFor="create-notebook-parent"
                         >
-                            所属父笔记本
-                        </label>
-                        <NativeSelect
-                            id="create-notebook-parent"
-                            value={parentId}
-                            onChange={(e) => onParent(e.target.value)}
-                            disabled={pending}
-                        >
-                            <NativeSelectOption value="">
-                                无（作为根笔记本）
-                            </NativeSelectOption>
-                            {roots.map((root) => (
-                                <NativeSelectOption
-                                    key={root.id}
-                                    value={root.id}
+                            <Select
+                                items={{
+                                    "": "无（作为根笔记本）",
+                                    ...Object.fromEntries(
+                                        roots.map((root) => [
+                                            root.id,
+                                            root.name,
+                                        ]),
+                                    ),
+                                }}
+                                value={parentId}
+                                onValueChange={(next) => {
+                                    if (next !== null) onParent(next);
+                                }}
+                                disabled={pending}
+                            >
+                                <SelectTrigger
+                                    id="create-notebook-parent"
+                                    aria-label="所属父笔记本"
                                 >
-                                    {root.name}
-                                </NativeSelectOption>
-                            ))}
-                        </NativeSelect>
-                    </div>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">
+                                        无（作为根笔记本）
+                                    </SelectItem>
+                                    {roots.map((root) => (
+                                        <SelectItem
+                                            key={root.id}
+                                            value={root.id}
+                                        >
+                                            {root.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
+                    </FormFields>
 
                     {error && (
                         <StatusBanner tone="error" density="compact">
@@ -463,13 +484,10 @@ function RenameNotebookDialog(
                     <DialogTitle>重命名笔记本</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="documents-dialog-form">
-                    <div className="documents-dialog-field">
-                        <label
-                            htmlFor="rename-notebook-name"
-                            className="documents-dialog-label"
-                        >
-                            笔记本名称
-                        </label>
+                    <FormField
+                        label="笔记本名称"
+                        labelFor="rename-notebook-name"
+                    >
                         <Input
                             id="rename-notebook-name"
                             autoFocus
@@ -479,7 +497,7 @@ function RenameNotebookDialog(
                             disabled={pending}
                             maxLength={100}
                         />
-                    </div>
+                    </FormField>
 
                     {error && (
                         <StatusBanner tone="error" density="compact">
@@ -541,40 +559,54 @@ function MoveNotebookDialog(
                     <DialogTitle>移动笔记本</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={onSubmit} className="documents-dialog-form">
-                    <div className="documents-dialog-field">
-                        <label
-                            htmlFor="move-notebook-parent"
-                            className="documents-dialog-label"
-                        >
-                            所属父笔记本
-                        </label>
-                        {hasChildren
-                            ? (
-                                <p className="documents-dialog-hint">
-                                    含有子笔记本的根笔记本不能移动为子笔记本。
-                                </p>
-                            )
-                            : (
-                                <NativeSelect
+                    <FormField
+                        label="所属父笔记本"
+                        labelFor={hasChildren
+                            ? undefined
+                            : "move-notebook-parent"}
+                        hint={hasChildren
+                            ? "含有子笔记本的根笔记本不能移动为子笔记本。"
+                            : undefined}
+                    >
+                        {!hasChildren && (
+                            <Select
+                                items={{
+                                    "": "无（作为根笔记本）",
+                                    ...Object.fromEntries(
+                                        parents.map((root) => [
+                                            root.id,
+                                            root.name,
+                                        ]),
+                                    ),
+                                }}
+                                value={parentId}
+                                onValueChange={(next) => {
+                                    if (next !== null) onParent(next);
+                                }}
+                                disabled={pending}
+                            >
+                                <SelectTrigger
                                     id="move-notebook-parent"
-                                    value={parentId}
-                                    onChange={(e) => onParent(e.target.value)}
-                                    disabled={pending}
+                                    aria-label="所属父笔记本"
                                 >
-                                    <NativeSelectOption value="">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">
                                         无（作为根笔记本）
-                                    </NativeSelectOption>
+                                    </SelectItem>
                                     {parents.map((root) => (
-                                        <NativeSelectOption
+                                        <SelectItem
                                             key={root.id}
                                             value={root.id}
                                         >
                                             {root.name}
-                                        </NativeSelectOption>
+                                        </SelectItem>
                                     ))}
-                                </NativeSelect>
-                            )}
-                    </div>
+                                </SelectContent>
+                            </Select>
+                        )}
+                    </FormField>
 
                     {error && (
                         <StatusBanner tone="error" density="compact">

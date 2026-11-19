@@ -1709,8 +1709,6 @@ Deno.test(
                     for (
                         const [rowTitle, selectLabel] of [
                             ["搜索引擎", "默认搜索引擎"],
-                            ["界面主题", "默认界面主题"],
-                            ["结果打开方式", "搜索结果打开方式"],
                         ] as const
                     ) {
                         const snap = await measureSettingsRowByTitle(
@@ -1769,6 +1767,24 @@ Deno.test(
                                 selectCheck.rightEdgeGap <= 32,
                             `/admin/settings[${rowTitle}]@${vp.width}: inline select must sit at right edge of row (gap=${selectCheck.rightEdgeGap}px)`,
                         );
+                    }
+                    for (
+                        const [rowTitle, groupLabel] of [
+                            ["界面主题", "默认界面主题"],
+                            ["结果打开方式", "搜索结果打开方式"],
+                        ] as const
+                    ) {
+                        const snap = await measureSettingsRowByTitle(
+                            page,
+                            rowTitle,
+                        );
+                        assertShortLabelReadingCapacity(
+                            snap,
+                            `/admin/settings[${rowTitle}]@${vp.width}`,
+                        );
+                        await page.getByRole("radiogroup", {
+                            name: groupLabel,
+                        }).waitFor({ state: "visible" });
                     }
                 }
             },
@@ -1882,10 +1898,10 @@ Deno.test(
                 // Tab order and model toggle + reasoning dialog on /settings/ai
                 await page.setViewportSize({ width: 390, height: 844 });
                 await spaNavigate(page, "/settings/ai");
-                const enableCheckbox = page.getByRole("checkbox", {
+                const enableSwitch = page.getByRole("switch", {
                     name: "启用 标准稳定模型",
                 });
-                const visibleCheckbox = page.getByRole("checkbox", {
+                const visibleSwitch = page.getByRole("switch", {
                     name: "可见 标准稳定模型",
                 });
                 const defaultRadio = page.getByRole("radio", {
@@ -1894,9 +1910,9 @@ Deno.test(
                 const reasoningBtn = page.getByRole("button", {
                     name: "推理设置",
                 });
-                await enableCheckbox.waitFor({ state: "visible" });
+                await enableSwitch.waitFor({ state: "visible" });
 
-                await enableCheckbox.focus();
+                await enableSwitch.focus();
                 assertEquals(
                     await page.evaluate(() =>
                         document.activeElement?.getAttribute("aria-label")
@@ -1925,17 +1941,17 @@ Deno.test(
                     "推理设置",
                 );
 
-                assertEquals(await visibleCheckbox.isChecked(), true);
-                await visibleCheckbox.click();
+                assertEquals(await visibleSwitch.isChecked(), true);
+                await visibleSwitch.click();
                 await page.waitForFunction(() =>
                     document.querySelector(
-                        '[role="checkbox"][aria-label="可见 标准稳定模型"]',
+                        '[role="switch"][aria-label="可见 标准稳定模型"]',
                     )?.getAttribute("aria-checked") === "false"
                 );
-                await visibleCheckbox.click();
+                await visibleSwitch.click();
                 await page.waitForFunction(() =>
                     document.querySelector(
-                        '[role="checkbox"][aria-label="可见 标准稳定模型"]',
+                        '[role="switch"][aria-label="可见 标准稳定模型"]',
                     )?.getAttribute("aria-checked") === "true"
                 );
                 assertEquals(await defaultRadio.isChecked(), true);

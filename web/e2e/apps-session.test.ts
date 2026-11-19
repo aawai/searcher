@@ -156,14 +156,16 @@ Deno.test("app edit dialog keeps every field and its confirmations across viewpo
             .waitFor();
         await page.locator("#app-url-input").fill("https://edited.invalid/");
         await page.locator("#app-name-input").fill("编辑中的全部字段");
-        await page.locator("#app-group-select").selectOption({
-            label: "编辑目标文件夹",
-        });
+        await page.locator("#app-group-select").click();
+        await page.getByRole("option", {
+            name: "编辑目标文件夹",
+            exact: true,
+        }).click();
         await page.getByRole("radio", { name: "新标签页", exact: true })
             .click();
         await page.getByRole("button", { name: "更换图标", exact: true })
             .click();
-        await page.getByRole("radio", { name: "网络图片", exact: true })
+        await page.getByRole("tab", { name: "网络图片", exact: true })
             .click();
         await iconUrl.fill("https://unsubmitted.invalid/icon.png");
         await page.getByRole("button", { name: "保存修改", exact: true })
@@ -183,8 +185,7 @@ Deno.test("app edit dialog keeps every field and its confirmations across viewpo
                 "编辑中的全部字段",
             );
             assertEquals(
-                await page.locator("#app-group-select option:checked")
-                    .textContent(),
+                (await page.locator("#app-group-select").textContent())?.trim(),
                 "编辑目标文件夹",
             );
             assertEquals(

@@ -23,6 +23,7 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "../components/ui/dialog.tsx";
@@ -44,19 +45,30 @@ import {
     DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu.tsx";
 import {
-    NativeSelect,
-    NativeSelectOption,
-} from "../components/ui/native-select.tsx";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "../components/ui/select.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { authPath } from "./routes.ts";
 import "./settings.css";
 import {
+    FormField,
+    FormFields,
     SecretInput,
     SettingsGroup,
     SettingsRow,
     StatusBanner,
 } from "../components/searcher/semantic.tsx";
+
+const DISCOVERY_MODE_ITEMS: Record<DiscoveryMode, string> = {
+    auto: "自动",
+    "openai-compatible": "OpenAI 兼容",
+    cliproxyapi: "CLIProxyAPIHome",
+};
 
 function getCapabilitySourceLabel(source: string | undefined): string {
     switch (source) {
@@ -506,7 +518,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                         {manageable && (
                                             <div className="ai-model-controls">
                                                 <label className="ai-model-toggle">
-                                                    <Checkbox
+                                                    <Switch
                                                         aria-label={`启用 ${model.displayName}`}
                                                         checked={model.enabled}
                                                         onCheckedChange={(
@@ -522,7 +534,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                                     启用
                                                 </label>
                                                 <label className="ai-model-toggle">
-                                                    <Checkbox
+                                                    <Switch
                                                         aria-label={`可见 ${model.displayName}`}
                                                         checked={model
                                                             .visibleToUsers}
@@ -591,87 +603,110 @@ export function AiSettings({ host }: { host: PageHost }) {
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={save} className="ai-provider-form">
-                        <label className="field">
-                            名称
-                            <Input
-                                required
-                                maxLength={100}
-                                value={name}
-                                placeholder="例如：OpenAI、DeepSeek、Ollama"
-                                onChange={(e) => setName(e.target.value)}
-                            />
-                        </label>
-                        <label className="field">
-                            Base URL
-                            <Input
-                                required
-                                type="url"
-                                placeholder="https://api.openai.com/v1"
-                                value={baseUrl}
-                                onChange={(e) => setBaseUrl(e.target.value)}
-                            />
-                        </label>
-                        <label className="field">
-                            发现模式
-                            <NativeSelect
-                                value={discoveryMode}
-                                onChange={(e) => setDiscoveryMode(
-                                    e.target.value as DiscoveryMode,
-                                )}
+                        <FormFields>
+                            <FormField label="名称" labelFor="ai-provider-name">
+                                <Input
+                                    id="ai-provider-name"
+                                    required
+                                    maxLength={100}
+                                    value={name}
+                                    placeholder="例如：OpenAI、DeepSeek、Ollama"
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                            </FormField>
+                            <FormField
+                                label="Base URL"
+                                labelFor="ai-provider-base-url"
                             >
-                                <NativeSelectOption value="auto">
-                                    自动
-                                </NativeSelectOption>
-                                <NativeSelectOption value="openai-compatible">
-                                    OpenAI 兼容
-                                </NativeSelectOption>
-                                <NativeSelectOption value="cliproxyapi">
-                                    CLIProxyAPIHome
-                                </NativeSelectOption>
-                            </NativeSelect>
-                        </label>
-                        <div className="field">
-                            <label htmlFor="ai-api-key">API Key</label>
-                            <SecretInput
-                                key={`${editing ?? "new"}-${isModalOpen}`}
-                                id="ai-api-key"
-                                required={!editing}
-                                autoComplete="off"
-                                value={apiKey}
-                                onChange={(e) => setApiKey(e.target.value)}
-                                placeholder={editing
-                                    ? "留空保持现有 Key"
-                                    : "输入 API Key"}
-                                showLabel="显示 API Key"
-                                hideLabel="隐藏 API Key"
-                            />
-                            <p className="ai-field-hint">加密保存在服务端。</p>
-                        </div>
-                        {!editing && user.role === "admin" && (
-                            <label className="field">
-                                范围
-                                <NativeSelect
-                                    value={scope}
-                                    onChange={(e) =>
-                                        setScope(
-                                            e.target.value as "user" | "system",
-                                        )}
+                                <Input
+                                    id="ai-provider-base-url"
+                                    required
+                                    type="url"
+                                    placeholder="https://api.openai.com/v1"
+                                    value={baseUrl}
+                                    onChange={(e) => setBaseUrl(e.target.value)}
+                                />
+                            </FormField>
+                            <FormField
+                                label="发现模式"
+                                labelFor="ai-discovery-mode"
+                            >
+                                <Select
+                                    items={DISCOVERY_MODE_ITEMS}
+                                    value={discoveryMode}
+                                    onValueChange={(next) => {
+                                        if (next !== null) {
+                                            setDiscoveryMode(
+                                                next as DiscoveryMode,
+                                            );
+                                        }
+                                    }}
                                 >
-                                    <NativeSelectOption value="user">
-                                        仅自己
-                                    </NativeSelectOption>
-                                    <NativeSelectOption value="system">
-                                        所有用户
-                                    </NativeSelectOption>
-                                </NativeSelect>
-                            </label>
-                        )}
+                                    <SelectTrigger
+                                        id="ai-discovery-mode"
+                                        aria-label="发现模式"
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="auto">
+                                            自动
+                                        </SelectItem>
+                                        <SelectItem value="openai-compatible">
+                                            OpenAI 兼容
+                                        </SelectItem>
+                                        <SelectItem value="cliproxyapi">
+                                            CLIProxyAPIHome
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </FormField>
+                            <FormField
+                                label="API Key"
+                                labelFor="ai-api-key"
+                                hint="加密保存在服务端。"
+                                messageId="ai-api-key-hint"
+                            >
+                                <SecretInput
+                                    key={`${editing ?? "new"}-${isModalOpen}`}
+                                    id="ai-api-key"
+                                    required={!editing}
+                                    autoComplete="off"
+                                    aria-describedby="ai-api-key-hint"
+                                    value={apiKey}
+                                    onChange={(e) => setApiKey(e.target.value)}
+                                    placeholder={editing
+                                        ? "留空保持现有 Key"
+                                        : "输入 API Key"}
+                                    showLabel="显示 API Key"
+                                    hideLabel="隐藏 API Key"
+                                />
+                            </FormField>
+                            {!editing && user.role === "admin" && (
+                                <FormField label="范围">
+                                    <RadioGroup
+                                        variant="segmented"
+                                        aria-label="范围"
+                                        value={scope}
+                                        onValueChange={(next) =>
+                                            setScope(
+                                                next as "user" | "system",
+                                            )}
+                                    >
+                                        <RadioGroupItem value="user">
+                                            仅自己
+                                        </RadioGroupItem>
+                                        <RadioGroupItem value="system">
+                                            所有用户
+                                        </RadioGroupItem>
+                                    </RadioGroup>
+                                </FormField>
+                            )}
+                        </FormFields>
                         {error && (
-                            <p role="alert" className="error ai-form-error">
-                                {error}
-                            </p>
+                            <StatusBanner tone="error">{error}</StatusBanner>
                         )}
-                        <div className="ai-form-actions">
+                        <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -690,7 +725,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                     ? "保存并验证"
                                     : "验证并添加"}
                             </Button>
-                        </div>
+                        </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
@@ -710,7 +745,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                     {configuringModel && (
                         <div className="model-config-dialog-body">
                             <div className="reasoning-toggle-row">
-                                <Switch
+                                <Checkbox
                                     id="manual-reasoning-toggle"
                                     checked={manualReasoningEnabled}
                                     aria-label="开启该模型的推理能力"
@@ -724,15 +759,12 @@ export function AiSettings({ host }: { host: PageHost }) {
                                 </label>
                             </div>
                             {manualReasoningEnabled && (
-                                <>
-                                    <div
-                                        className="field"
+                                <FormFields>
+                                    <FormField
+                                        label="支持的强度"
                                         role="group"
-                                        aria-labelledby="reasoning-levels-label"
+                                        aria-label="支持的强度"
                                     >
-                                        <span id="reasoning-levels-label">
-                                            支持的强度
-                                        </span>
                                         <div className="reasoning-levels-grid">
                                             {CANONICAL_REASONING_EFFORTS.map(
                                                 (effort) => (
@@ -762,32 +794,52 @@ export function AiSettings({ host }: { host: PageHost }) {
                                                 ),
                                             )}
                                         </div>
-                                    </div>
-                                    <label className="field">
-                                        默认强度
-                                        <NativeSelect
+                                    </FormField>
+                                    <FormField
+                                        label="默认强度"
+                                        labelFor="ai-reasoning-default-level"
+                                    >
+                                        <Select
+                                            items={Object.fromEntries(
+                                                selectedLevels.map((lvl) => [
+                                                    lvl,
+                                                    getReasoningEffortLabel(
+                                                        lvl,
+                                                    ),
+                                                ]),
+                                            )}
                                             value={defaultLevel}
-                                            onChange={(e) =>
-                                                setDefaultLevel(
-                                                    e.target
-                                                        .value as ReasoningEffort,
-                                                )}
                                             disabled={selectedLevels.length ===
                                                 0}
+                                            onValueChange={(next) => {
+                                                if (next !== null) {
+                                                    setDefaultLevel(
+                                                        next as ReasoningEffort,
+                                                    );
+                                                }
+                                            }}
                                         >
-                                            {selectedLevels.map((lvl) => (
-                                                <NativeSelectOption
-                                                    key={lvl}
-                                                    value={lvl}
-                                                >
-                                                    {getReasoningEffortLabel(
-                                                        lvl,
-                                                    )}
-                                                </NativeSelectOption>
-                                            ))}
-                                        </NativeSelect>
-                                    </label>
-                                </>
+                                            <SelectTrigger
+                                                id="ai-reasoning-default-level"
+                                                aria-label="默认强度"
+                                            >
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {selectedLevels.map((lvl) => (
+                                                    <SelectItem
+                                                        key={lvl}
+                                                        value={lvl}
+                                                    >
+                                                        {getReasoningEffortLabel(
+                                                            lvl,
+                                                        )}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </FormField>
+                                </FormFields>
                             )}
                             <div className="model-config-actions">
                                 <Button

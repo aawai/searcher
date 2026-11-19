@@ -36,6 +36,11 @@ import {
     ContextMenuContent,
     ContextMenuTrigger,
 } from "../../components/ui/context-menu.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu.tsx";
 import { focusContainer } from "../../components/ui/focus-recovery.ts";
 import type { TreeEntry } from "./notes-tree-model.ts";
 import { treeKeyAction } from "./tree-keyboard.ts";
@@ -334,7 +339,7 @@ export function NotesTreeRow({
     label: string;
     children: ReactNode;
     /** Items of the shared node menu; omitted for rows without actions. */
-    menu?: ReactNode;
+    menu?: (kind: "context" | "dropdown") => ReactNode;
     actionLabel?: string;
     /** Rendered after the row, e.g. dialogs owned by the node. */
     after?: ReactNode;
@@ -354,25 +359,13 @@ export function NotesTreeRow({
         setDragRef(node);
         setDropRef(node);
     }, [setDragRef, setDropRef]);
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [contextMenuOpen, setContextMenuOpen] = useState(false);
+    const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
     const touch = useRef<
         { x: number; y: number; time: number; moved: boolean } | null
     >(null);
     const selected = tree.selectedId === entry.id;
-    const openMenuFromButton = (event: ReactMouseEvent<HTMLButtonElement>) => {
-        const row = event.currentTarget.closest<HTMLElement>("[data-tree-id]");
-        const rect = event.currentTarget.getBoundingClientRect();
-        row?.dispatchEvent(
-            new MouseEvent("contextmenu", {
-                bubbles: true,
-                cancelable: true,
-                view: window,
-                button: 2,
-                clientX: rect.left,
-                clientY: rect.bottom,
-            }),
-        );
-    };
+    const isActive = tree.activeId === entry.id;
     const rowProps = {
         ref: setRowRef,
         onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
@@ -454,20 +447,31 @@ export function NotesTreeRow({
         },
     };
     const action = menu && (
-        <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="documents-row-action documents-tree-action"
-            data-tree-action=""
-            tabIndex={-1}
-            aria-label={actionLabel}
-            title={actionLabel}
-            aria-haspopup="menu"
-            onClick={openMenuFromButton}
+        <DropdownMenu
+            open={dropdownMenuOpen}
+            onOpenChange={setDropdownMenuOpen}
         >
-            <MoreHorizontal className="icon-md" />
-        </Button>
+            <DropdownMenuTrigger
+                render={
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="documents-row-action documents-tree-action"
+                        data-tree-action=""
+                        tabIndex={isActive ? 0 : -1}
+                        aria-label={actionLabel}
+                        title={actionLabel}
+                        onClick={(event) => event.stopPropagation()}
+                    />
+                }
+            >
+                <MoreHorizontal className="icon-md" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent aria-label={actionLabel}>
+                {menu("dropdown")}
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
     if (!menu) {
         return (
@@ -480,9 +484,9 @@ export function NotesTreeRow({
     return (
         <>
             <ContextMenu
-                open={menuOpen}
+                open={contextMenuOpen}
                 onOpenChange={(open) => {
-                    if (!open || !touch.current) setMenuOpen(open);
+                    if (!open || !touch.current) setContextMenuOpen(open);
                 }}
             >
                 <ContextMenuTrigger {...rowProps}>
@@ -490,7 +494,7 @@ export function NotesTreeRow({
                     {action}
                 </ContextMenuTrigger>
                 <ContextMenuContent aria-label={actionLabel}>
-                    {menu}
+                    {menu("context")}
                 </ContextMenuContent>
             </ContextMenu>
             {after}

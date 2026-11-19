@@ -10,6 +10,8 @@ function Switch(
         <SwitchPrimitive.Root
             data-slot="switch"
             data-size={size}
+            nativeButton
+            render={<button type="button" />}
             className={cn("switch", className)}
             {...props}
         >

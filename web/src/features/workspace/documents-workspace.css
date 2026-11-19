@@ -354,7 +354,7 @@
 .documents-tree-row[data-selected] {
     background: var(--accent-soft);
     color: var(--foreground);
-    font-weight: var(--font-label-weight);
+    font-weight: var(--font-title-weight);
 }
 .documents-tree-label,
 .documents-tree-more,
@@ -379,9 +379,6 @@
 .documents-tree-chevron-slot {
     flex: none;
     width: var(--icon-sm);
-}
-.documents-tree-row[data-kind="note"] {
-    cursor: default;
 }
 [data-slot="button"].documents-tree-action {
     flex: none;
@@ -544,33 +541,6 @@
 .documents-dialog-form > [data-slot="dialog-header"],
 .documents-dialog-form > [data-slot="dialog-footer"] {
     margin: 0;
-}
-.documents-dialog-fields {
-    display: grid;
-    gap: var(--space-4);
-}
-.documents-dialog-field {
-    display: grid;
-    gap: var(--space-2);
-}
-.documents-dialog-label {
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-    font-weight: var(--font-label-weight);
-    color: var(--foreground);
-}
-.documents-dialog-counter {
-    justify-self: end;
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    font-variant-numeric: tabular-nums;
-    color: var(--muted);
-}
-.documents-dialog-hint {
-    margin: 0;
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-    color: var(--muted);
 }
 
 /* Row actions stay out of sight until the row is hovered or focused. */

@@ -1,6 +1,9 @@
+import { Button } from "../../components/ui/button.tsx";
 import {
     Dialog,
+    DialogClose,
     DialogContent,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "../../components/ui/dialog.tsx";
@@ -92,6 +95,14 @@ export function MessageDetailsDialog({
                             </p>
                         )}
                 </div>
+
+                <DialogFooter>
+                    <DialogClose
+                        render={<Button type="button" variant="outline" />}
+                    >
+                        关闭
+                    </DialogClose>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

@@ -98,7 +98,7 @@ export function SettingsRow(
     }:
         & ComponentProps<"div">
         & {
-            title: string;
+            title: ReactNode;
             description?: ReactNode;
             labelFor?: string;
             message?: ReactNode;
@@ -178,6 +178,83 @@ export function SettingsGroup(
 }
 export function ActionGroup({ className, ...props }: ComponentProps<"div">) {
     return <div className={cn("action-group", className)} {...props} />;
+}
+
+/**
+ * Vertical stack of standalone form fields with consistent spacing.
+ */
+export function FormFields({ className, ...props }: ComponentProps<"div">) {
+    return (
+        <div
+            data-slot="form-fields"
+            className={cn("form-fields", className)}
+            {...props}
+        />
+    );
+}
+
+/**
+ * Standalone form field: label above, full-width bordered control below,
+ * optional trailing counter/accessory, and hint or error bound via `messageId`.
+ */
+export function FormField(
+    {
+        label,
+        labelFor,
+        labelEnd,
+        hint,
+        error,
+        messageId,
+        invalid,
+        className,
+        children,
+        ...props
+    }: ComponentProps<"div"> & {
+        label: ReactNode;
+        labelFor?: string;
+        labelEnd?: ReactNode;
+        hint?: ReactNode;
+        error?: ReactNode;
+        messageId?: string;
+        invalid?: boolean;
+    },
+) {
+    const isInvalid = invalid ?? Boolean(error);
+    const message = error ?? hint;
+    return (
+        <div
+            data-slot="form-field"
+            className={cn("form-field", className)}
+            {...props}
+        >
+            <div className="form-field-header">
+                {labelFor
+                    ? (
+                        <label
+                            htmlFor={labelFor}
+                            className="form-field-label"
+                        >
+                            {label}
+                        </label>
+                    )
+                    : <span className="form-field-label">{label}</span>}
+                {labelEnd && (
+                    <span className="form-field-end">{labelEnd}</span>
+                )}
+            </div>
+            {children}
+            {message && (
+                <div
+                    id={messageId}
+                    role={isInvalid ? "alert" : undefined}
+                    className="form-field-message"
+                    data-tone={isInvalid ? "danger" : undefined}
+                >
+                    {message}
+                </div>
+            )}
+        </div>
+    );
 }
 /**
  * `inline`: the empty state of a list that is itself an entry of that list,

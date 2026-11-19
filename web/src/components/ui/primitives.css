@@ -559,10 +559,28 @@
     background: var(--surface-soft);
 }
 
+.button--subtle[aria-pressed="true"] {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: var(--font-label-weight);
+}
+
 @media (hover: hover) {
     .button--subtle:hover {
         background: color-mix(in srgb, var(--foreground) 10%,
             var(--surface-soft));
+    }
+
+    .button--subtle[aria-pressed="true"]:hover {
+        background: var(--accent-soft);
+    }
+}
+
+@media (forced-colors: active) {
+    .button--subtle[aria-pressed="true"] {
+        background: Highlight;
+        color: HighlightText;
+        border-color: Highlight;
     }
 }
 
@@ -662,8 +680,27 @@
 /* --------------------------------------------------------------------------
    Menus (dropdown + context): floating layer
    -------------------------------------------------------------------------- */
-[data-slot="dropdown-menu-positioner"] {
+[data-slot="dropdown-menu-positioner"],
+[data-slot="select-positioner"] {
     z-index: var(--elevation-menu);
+}
+
+.select-popup {
+    min-width: max(200px, var(--anchor-width, 200px));
+}
+
+.select-list {
+    max-height: min(320px, var(--available-height, 320px));
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.select-item-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .context-menu-positioner {
@@ -754,8 +791,9 @@
     color: inherit;
 }
 
-/* Radio items keep the indicator slot so a check never shifts the row. */
-.menu-item-indicator[data-unchecked] {
+/* Radio and select items keep the indicator slot so a check never shifts the row. */
+.menu-item-indicator[data-unchecked],
+[data-slot="select-item"]:not([data-selected]) > .menu-item-indicator {
     visibility: hidden;
 }
 
@@ -866,7 +904,8 @@
    -------------------------------------------------------------------------- */
 .cn-input,
 .cn-textarea,
-[data-slot="native-select"] {
+[data-slot="native-select"],
+[data-slot="select-trigger"] {
     width: 100%;
     min-width: 0;
     border: 1px solid var(--field-border);
@@ -897,7 +936,8 @@
 @media (hover: hover) {
     .cn-input:not([data-variant="search"]):hover:not(:disabled, :focus-visible, [aria-invalid="true"]),
     .cn-textarea:hover:not(:disabled, :focus-visible, [aria-invalid="true"]),
-    [data-slot="native-select"]:hover:not(:disabled, :focus-visible, [aria-invalid="true"]) {
+    [data-slot="native-select"]:hover:not(:disabled, :focus-visible, [aria-invalid="true"]),
+    [data-slot="select-trigger"]:hover:not(:disabled, [data-disabled], :focus-visible, [aria-invalid="true"]) {
         border-color: var(--field-border-hover);
     }
 }
@@ -927,6 +967,43 @@
     padding: 0 var(--space-6) 0 var(--space-2);
 }
 
+[data-slot="select-trigger"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    height: var(--control-input-height);
+    padding: 0 var(--space-2) 0 var(--space-3);
+    border-radius: var(--shape-field-radius);
+    text-align: start;
+    cursor: default;
+    user-select: none;
+}
+
+[data-slot="select-trigger"][data-size="sm"] {
+    height: var(--control-compact-height);
+    padding: 0 var(--space-2);
+}
+
+.select-trigger-value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.select-trigger-indicator {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: var(--muted);
+}
+
+[data-slot="select-value"][data-placeholder] {
+    color: var(--muted);
+}
+
 .cn-input::placeholder,
 .cn-textarea::placeholder {
     color: var(--muted);
@@ -934,27 +1011,31 @@
 
 .cn-input:focus-visible,
 .cn-textarea:focus-visible,
-[data-slot="native-select"]:focus-visible {
+[data-slot="native-select"]:focus-visible,
+[data-slot="select-trigger"]:focus-visible {
     border-color: var(--ring);
     box-shadow: var(--shadow-field-focus);
 }
 
 .cn-input[aria-invalid="true"],
 .cn-textarea[aria-invalid="true"],
-[data-slot="native-select"][aria-invalid="true"] {
+[data-slot="native-select"][aria-invalid="true"],
+[data-slot="select-trigger"][aria-invalid="true"] {
     border-color: var(--danger);
 }
 
 .cn-input[aria-invalid="true"]:focus-visible,
 .cn-textarea[aria-invalid="true"]:focus-visible,
-[data-slot="native-select"][aria-invalid="true"]:focus-visible {
+[data-slot="native-select"][aria-invalid="true"]:focus-visible,
+[data-slot="select-trigger"][aria-invalid="true"]:focus-visible {
     box-shadow: var(--shadow-field-invalid-focus);
 }
 
 @media (prefers-reduced-motion: reduce) {
     .cn-input,
     .cn-textarea,
-    [data-slot="native-select"] {
+    [data-slot="native-select"],
+    [data-slot="select-trigger"] {
         transition: none;
     }
 }
@@ -963,7 +1044,8 @@
 @media (forced-colors: active) {
     .cn-input:focus-visible,
     .cn-textarea:focus-visible,
-    [data-slot="native-select"]:focus-visible {
+    [data-slot="native-select"]:focus-visible,
+    [data-slot="select-trigger"]:focus-visible {
         outline: 2px solid Highlight;
         outline-offset: -2px;
     }
@@ -971,7 +1053,9 @@
 
 .cn-input:disabled,
 .cn-textarea:disabled,
-[data-slot="native-select"]:disabled {
+[data-slot="native-select"]:disabled,
+[data-slot="select-trigger"]:disabled,
+[data-slot="select-trigger"][data-disabled] {
     cursor: not-allowed;
     opacity: var(--opacity-disabled);
 }
@@ -987,7 +1071,8 @@
 
 @media (any-pointer: coarse), (hover: none) {
     .cn-input,
-    [data-slot="native-select"] {
+    [data-slot="native-select"],
+    [data-slot="select-trigger"] {
         min-height: var(--control-touch-target);
     }
 }
@@ -996,7 +1081,8 @@
 @media (any-pointer: coarse) {
     .cn-input,
     .cn-textarea,
-    [data-slot="native-select"] {
+    [data-slot="native-select"],
+    [data-slot="select-trigger"] {
         font-size: var(--font-input-touch-size);
     }
 }

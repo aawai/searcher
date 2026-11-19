@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "../../components/ui/dialog.tsx";
@@ -108,6 +110,14 @@ export function ConversationSearchDialog({
                         </div>
                     )}
                 </div>
+
+                <DialogFooter>
+                    <DialogClose
+                        render={<Button type="button" variant="outline" />}
+                    >
+                        关闭
+                    </DialogClose>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

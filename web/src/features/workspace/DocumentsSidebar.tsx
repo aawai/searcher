@@ -45,6 +45,10 @@ import {
     ContextMenuItem,
     ContextMenuSeparator,
 } from "../../components/ui/context-menu.tsx";
+import {
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+} from "../../components/ui/dropdown-menu.tsx";
 import { useDocumentNotebookOperations } from "./document-notebook-operations.tsx";
 import {
     DocumentActionMenuItems,
@@ -791,63 +795,73 @@ export function DocumentsSidebar({
                         entry={entry}
                         label={notebook.name}
                         actionLabel={`笔记本操作：${notebook.name}`}
-                        menu={
-                            <>
-                                <ContextMenuItem
-                                    onClick={() => newNote(notebook.id)}
-                                >
-                                    <Plus className="icon-md" />
-                                    <span>新建笔记</span>
-                                </ContextMenuItem>
-                                {depth === 0 && (
-                                    <ContextMenuItem
-                                        onClick={() =>
-                                            ops.createNotebook(notebook.id)}
+                        menu={(kind) => {
+                            const Item = kind === "context"
+                                ? ContextMenuItem
+                                : DropdownMenuItem;
+                            const Separator = kind === "context"
+                                ? ContextMenuSeparator
+                                : DropdownMenuSeparator;
+                            return (
+                                <>
+                                    <Item
+                                        onClick={() => newNote(notebook.id)}
                                     >
-                                        <FolderPlus className="icon-md" />
-                                        <span>新建子笔记本</span>
-                                    </ContextMenuItem>
-                                )}
-                                <ContextMenuItem
-                                    onClick={() => ops.rename(notebook)}
-                                >
-                                    <Pencil className="icon-md" />
-                                    <span>重命名</span>
-                                </ContextMenuItem>
-                                <ContextMenuItem
-                                    disabled={hasChildren}
-                                    onClick={() => ops.move(notebook)}
-                                >
-                                    <FolderInput className="icon-md" />
-                                    <span>移动到…</span>
-                                </ContextMenuItem>
-                                <ContextMenuItem
-                                    disabled={siblingIndex === 0}
-                                    onClick={() =>
-                                        ops.reorder(entry.node, "up")}
-                                >
-                                    <ArrowUp className="icon-md" />
-                                    <span>上移</span>
-                                </ContextMenuItem>
-                                <ContextMenuItem
-                                    disabled={siblingIndex ===
-                                        siblings.length - 1}
-                                    onClick={() =>
-                                        ops.reorder(entry.node, "down")}
-                                >
-                                    <ArrowDown className="icon-md" />
-                                    <span>下移</span>
-                                </ContextMenuItem>
-                                <ContextMenuSeparator />
-                                <ContextMenuItem
-                                    variant="destructive"
-                                    onClick={() => ops.remove(notebook)}
-                                >
-                                    <Trash2 className="icon-md" />
-                                    <span>删除笔记本</span>
-                                </ContextMenuItem>
-                            </>
-                        }
+                                        <Plus className="icon-md" />
+                                        <span>新建笔记</span>
+                                    </Item>
+                                    {depth === 0 && (
+                                        <Item
+                                            onClick={() =>
+                                                ops.createNotebook(
+                                                    notebook.id,
+                                                )}
+                                        >
+                                            <FolderPlus className="icon-md" />
+                                            <span>新建子笔记本</span>
+                                        </Item>
+                                    )}
+                                    <Item
+                                        onClick={() => ops.rename(notebook)}
+                                    >
+                                        <Pencil className="icon-md" />
+                                        <span>重命名</span>
+                                    </Item>
+                                    <Item
+                                        disabled={hasChildren}
+                                        onClick={() => ops.move(notebook)}
+                                    >
+                                        <FolderInput className="icon-md" />
+                                        <span>移动到…</span>
+                                    </Item>
+                                    <Item
+                                        disabled={siblingIndex === 0}
+                                        onClick={() =>
+                                            ops.reorder(entry.node, "up")}
+                                    >
+                                        <ArrowUp className="icon-md" />
+                                        <span>上移</span>
+                                    </Item>
+                                    <Item
+                                        disabled={siblingIndex ===
+                                            siblings.length - 1}
+                                        onClick={() =>
+                                            ops.reorder(entry.node, "down")}
+                                    >
+                                        <ArrowDown className="icon-md" />
+                                        <span>下移</span>
+                                    </Item>
+                                    <Separator />
+                                    <Item
+                                        variant="destructive"
+                                        onClick={() => ops.remove(notebook)}
+                                    >
+                                        <Trash2 className="icon-md" />
+                                        <span>删除笔记本</span>
+                                    </Item>
+                                </>
+                            );
+                        }}
                     >
                         <Chevron expanded={entry.expanded} />
                         <span className="documents-tree-label">
@@ -1314,7 +1328,9 @@ function TreeNoteRow(
                 item.isHomeFixed ? "，已固定到首页" : ""
             }`}
             actionLabel={`笔记操作：${item.displayTitle}`}
-            menu={<DocumentActionMenuItems actions={actions} menu="context" />}
+            menu={(kind) => (
+                <DocumentActionMenuItems actions={actions} menu={kind} />
+            )}
             after={actions.dialogs}
         >
             {/* Holds a notebook chevron's place, so names at one level share a column. */}
