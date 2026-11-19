@@ -1216,109 +1216,93 @@ Deno.test(
                             );
                         }
 
+                        const chooseZip = page.getByRole("button", {
+                            name: "选择 ZIP 文件",
+                            exact: true,
+                        });
+                        await chooseZip.click({ trial: true });
+                        const zipName = "searcher-backup.zip";
+                        await page.locator("#backup-restore-file")
+                            .setInputFiles({
+                                name: zipName,
+                                mimeType: "application/zip",
+                                buffer: Buffer.from("unvalidated-file"),
+                            });
+                        const backupRow = page.locator(".settings-row").filter({
+                            has: page.getByText("备份文件", { exact: true }),
+                        });
+                        await backupRow.getByText(zipName, { exact: true })
+                            .waitFor({ state: "visible" });
                         const backupFileSnap = await measureSettingsRowByTitle(
                             page,
                             "备份文件",
                         );
-                        assert(
-                            backupFileSnap.labelRect.height <=
-                                backupFileSnap.titleLineHeight * 1.5,
-                            `${backupTag}: "备份文件" label height must stay single-line (got ${backupFileSnap.labelRect.height}px)`,
+                        assertShortLabelReadingCapacity(
+                            backupFileSnap,
+                            backupTag,
                         );
-
-                        const backupFileItems = await page.evaluate(() => {
-                            const toBox = (rect: DOMRect) => ({
-                                x: rect.x,
-                                y: rect.y,
-                                width: rect.width,
-                                height: rect.height,
-                                left: rect.left,
-                                top: rect.top,
-                                right: rect.right,
-                                bottom: rect.bottom,
-                            });
-                            const row = Array.from(
-                                document.querySelectorAll<HTMLElement>(
-                                    ".settings-row",
-                                ),
-                            ).find(
-                                (r) =>
-                                    r.querySelector(".settings-row-title")
-                                        ?.textContent?.trim() === "备份文件",
+                        const actions = await backupRow.getByRole("button")
+                            .evaluateAll((buttons) =>
+                                buttons.map((button) => {
+                                    const {
+                                        x,
+                                        y,
+                                        width,
+                                        height,
+                                        left,
+                                        top,
+                                        right,
+                                        bottom,
+                                    } = button.getBoundingClientRect();
+                                    return {
+                                        name: button.textContent?.trim(),
+                                        box: {
+                                            x,
+                                            y,
+                                            width,
+                                            height,
+                                            left,
+                                            top,
+                                            right,
+                                            bottom,
+                                        },
+                                    };
+                                })
                             );
-                            if (!row) return null;
-                            const buttons = Array.from(
-                                row.querySelectorAll<HTMLElement>("button"),
-                            );
-                            const statusEl = row.querySelector<HTMLElement>(
-                                ".admin-file-name",
-                            );
-                            if (buttons.length !== 2 || !statusEl) return null;
-                            const chooseBtn = buttons[0];
-                            chooseBtn.scrollIntoView({ block: "nearest" });
-                            const chooseRect = chooseBtn
-                                .getBoundingClientRect();
-                            const hit = document.elementFromPoint(
-                                chooseRect.left + chooseRect.width / 2,
-                                chooseRect.top + chooseRect.height / 2,
-                            );
-                            return {
-                                chooseBox: toBox(chooseRect),
-                                chooseReachable: Boolean(
-                                    hit &&
-                                        (chooseBtn === hit ||
-                                            chooseBtn.contains(hit)),
-                                ),
-                                statusBox: toBox(
-                                    statusEl.getBoundingClientRect(),
-                                ),
-                                validateBox: toBox(
-                                    buttons[1].getBoundingClientRect(),
-                                ),
-                            };
-                        });
-                        assert(
-                            backupFileItems,
-                            `${backupTag}: "备份文件" controls must exist`,
+                        assertEquals(
+                            actions.map(({ name }) => name),
+                            ["清除文件", "重新选择", "预检备份"],
+                            `${backupTag}: selected ZIP actions in reading order`,
                         );
-                        assert(
-                            backupFileItems.chooseReachable,
-                            `${backupTag}: "选择 ZIP 文件" button must be hit-test reachable`,
-                        );
-                        if (
-                            backupFileSnap.controlRect.top >=
-                                backupFileSnap.labelRect.bottom - 1
-                        ) {
+                        const items = [
+                            ...actions.map(({ name, box }) =>
+                                [name, box] as const
+                            ),
+                            [zipName, backupFileSnap.descRect] as const,
+                        ];
+                        for (const [name, box] of items) {
                             assert(
-                                Math.abs(
-                                    backupFileItems.chooseBox.left -
-                                        backupFileSnap.labelRect.left,
-                                ) <= 2,
-                                `${backupTag}: stacked backup file controls must align with label start (chooseLeft=${backupFileItems.chooseBox.left}, labelLeft=${backupFileSnap.labelRect.left})`,
-                            );
-                        }
-                        for (
-                            const [name, box] of [
-                                ["chooseBtn", backupFileItems.chooseBox],
-                                ["fileStatus", backupFileItems.statusBox],
-                                ["validateBtn", backupFileItems.validateBox],
-                            ] as const
-                        ) {
-                            assert(
-                                box.left >= backupFileSnap.rowRect.left - 1 &&
+                                box && box.width > 0 && box.height > 0 &&
+                                    box.left >=
+                                        backupFileSnap.rowRect.left - 1 &&
                                     box.right <=
                                         backupFileSnap.rowRect.right + 1 &&
                                     box.right <= vp.width + 1,
-                                `${backupTag}: ${name} must stay within row and viewport`,
+                                `${backupTag}: ${name} must be visible and stay within row and viewport`,
                             );
                         }
-                        assert(
-                            !boxesOverlap(
-                                backupFileItems.chooseBox,
-                                backupFileItems.validateBox,
-                            ),
-                            `${backupTag}: choose ZIP and pre-validate buttons must not overlap`,
-                        );
+                        for (
+                            const [index, { name, box }] of actions.entries()
+                        ) {
+                            for (const other of actions.slice(index + 1)) {
+                                assert(
+                                    !boxesOverlap(box, other.box),
+                                    `${backupTag}: ${name} must not overlap ${other.name}`,
+                                );
+                            }
+                        }
+                        await page.getByRole("button", { name: "预检备份" })
+                            .click({ trial: true });
 
                         if (vp.screenshotThemes.length > 0) {
                             await page.screenshot({
@@ -1459,7 +1443,7 @@ Deno.test(
                     );
                 });
 
-                // Long filenames on /admin/backup (both horizontal "导入配置" and vertical "备份文件")
+                // Both config and ZIP filenames are shown as row descriptions.
                 await spaNavigate(page, "/admin/backup");
                 await page.getByRole("heading", { name: "完整备份" }).waitFor({
                     state: "visible",
@@ -1479,9 +1463,6 @@ Deno.test(
                     mimeType: "application/json",
                     buffer: configBytes,
                 });
-                await page.locator("#config-import-file-filename").waitFor({
-                    state: "visible",
-                });
                 await page.getByRole("alertdialog").getByRole("button", {
                     name: "导入",
                     exact: true,
@@ -1496,7 +1477,7 @@ Deno.test(
                     mimeType: "application/zip",
                     buffer: Buffer.from("unvalidated-file"),
                 });
-                await page.locator("#backup-restore-file-filename").waitFor({
+                await page.getByText(longZipFileName, { exact: true }).waitFor({
                     state: "visible",
                 });
 
@@ -1509,9 +1490,9 @@ Deno.test(
                 ) {
                     await page.setViewportSize(vp);
                     for (
-                        const [rowTitle, fileId] of [
-                            ["导入配置", "config-import-file-filename"],
-                            ["备份文件", "backup-restore-file-filename"],
+                        const [rowTitle, fileName] of [
+                            ["导入配置", longConfigFileName],
+                            ["备份文件", longZipFileName],
                         ] as const
                     ) {
                         const rowSnap = await measureSettingsRowByTitle(
@@ -1522,53 +1503,49 @@ Deno.test(
                             rowSnap,
                             `/admin/backup long filename ${rowTitle}@${vp.width}`,
                         );
-                        const fileMetrics = await page.evaluate(
-                            ({ targetTitle, targetFileId }) => {
-                                const row = Array.from(
-                                    document.querySelectorAll<HTMLElement>(
-                                        ".settings-row",
-                                    ),
-                                ).find(
-                                    (r) =>
-                                        r.querySelector(".settings-row-title")
-                                            ?.textContent?.trim() ===
-                                            targetTitle,
+                        const row = page.locator(".settings-row").filter({
+                            has: page.getByText(rowTitle, { exact: true }),
+                        });
+                        const file = row.getByText(fileName, { exact: true });
+                        await file.waitFor({ state: "visible" });
+                        assertEquals(rowSnap.descText, fileName);
+                        const fileMetrics = await file.evaluate((fileEl) => {
+                            const row = fileEl.closest(".settings-row");
+                            if (!row) {
+                                throw new Error(
+                                    "Filename is outside its settings row",
                                 );
-                                const fileEl = document.getElementById(
-                                    targetFileId,
-                                );
-                                if (!row || !fileEl) return null;
-                                const rowRect = row.getBoundingClientRect();
-                                const fileRect = fileEl.getBoundingClientRect();
-                                const buttons = Array.from(
-                                    row.querySelectorAll<HTMLElement>("button"),
-                                ).map((b) => {
-                                    const r = b.getBoundingClientRect();
-                                    return {
-                                        text: b.textContent?.trim() ?? "",
-                                        inside: r.left >= rowRect.left - 1 &&
-                                            r.right <= rowRect.right + 1 &&
-                                            r.right <=
-                                                globalThis.innerWidth + 1 &&
-                                            r.width > 0 &&
-                                            r.height > 0,
-                                    };
-                                });
+                            }
+                            const rowRect = row.getBoundingClientRect();
+                            const fileRect = fileEl.getBoundingClientRect();
+                            const buttons = Array.from(
+                                row.querySelectorAll<HTMLElement>("button"),
+                            ).map((b) => {
+                                const r = b.getBoundingClientRect();
                                 return {
-                                    fileWidth: fileRect.width,
-                                    fileInsideRow:
-                                        fileRect.left >= rowRect.left - 1 &&
-                                        fileRect.right <= rowRect.right + 1 &&
-                                        fileRect.right <=
-                                            globalThis.innerWidth + 1,
-                                    buttons,
+                                    text: b.textContent?.trim() ?? "",
+                                    inside: r.left >= rowRect.left - 1 &&
+                                        r.right <= rowRect.right + 1 &&
+                                        r.right <= globalThis.innerWidth + 1 &&
+                                        r.width > 0 &&
+                                        r.height > 0,
                                 };
-                            },
-                            { targetTitle: rowTitle, targetFileId: fileId },
-                        );
+                            });
+                            return {
+                                fileWidth: fileRect.width,
+                                fileInsideRow:
+                                    fileRect.left >= rowRect.left - 1 &&
+                                    fileRect.right <= rowRect.right + 1 &&
+                                    fileRect.right <= globalThis.innerWidth + 1,
+                                fileTextFits:
+                                    fileEl.scrollWidth <= fileEl.clientWidth,
+                                buttons,
+                            };
+                        });
                         assert(
-                            fileMetrics && fileMetrics.fileWidth >= 60 &&
+                            fileMetrics.fileWidth >= 60 &&
                                 fileMetrics.fileInsideRow &&
+                                fileMetrics.fileTextFits &&
                                 fileMetrics.buttons.every((b) => b.inside),
                             `/admin/backup long filename ${rowTitle}@${vp.width}: filename and buttons must stay readable and inside row (${
                                 JSON.stringify(fileMetrics)
@@ -1663,7 +1640,9 @@ Deno.test(
                             const iRect = el.getBoundingClientRect();
                             return {
                                 active: document.activeElement === el,
-                                vertical: row?.classList.contains("settings-row--vertical") ?? false,
+                                vertical: row?.classList.contains(
+                                    "settings-row--vertical",
+                                ) ?? false,
                                 textAlign: cs.textAlign,
                                 hasFocusIndicator: cs.boxShadow !== "none" ||
                                     (cs.outlineStyle !== "none" &&
@@ -1685,8 +1664,10 @@ Deno.test(
                         );
                         assert(
                             fieldCheck.vertical
-                                ? fieldCheck.textAlign === "start" || fieldCheck.textAlign === "left"
-                                : fieldCheck.textAlign === "end" || fieldCheck.textAlign === "right",
+                                ? fieldCheck.textAlign === "start" ||
+                                    fieldCheck.textAlign === "left"
+                                : fieldCheck.textAlign === "end" ||
+                                    fieldCheck.textAlign === "right",
                             `/account[${fieldName}]@${vp.width}: alignment must match row layout (got ${fieldCheck.textAlign})`,
                         );
                         assert(
@@ -1977,13 +1958,11 @@ Deno.test(
                     name: "预检备份",
                 });
                 await chooseZipBtn.waitFor({ state: "visible" });
-                assertEquals(
-                    await page.locator(
-                        ".settings-row:has(#backup-restore-file) .admin-file-name",
-                    ).textContent(),
-                    "未选择文件",
-                );
-                assertEquals(await preValidateBtn.isDisabled(), true);
+                await preValidateBtn.waitFor({ state: "hidden" });
+                const clearFileBtn = page.getByRole("button", {
+                    name: "清除文件",
+                });
+                await clearFileBtn.waitFor({ state: "hidden" });
 
                 const backupZipRes = await page.request.get(
                     `${app.origin}/api/admin/backup/export`,
@@ -1996,21 +1975,23 @@ Deno.test(
                     mimeType: "application/zip",
                     buffer: realZipBytes,
                 });
-                await page.locator("#backup-restore-file-filename").waitFor({
-                    state: "visible",
-                });
-                assertEquals(
-                    await page.locator("#backup-restore-file-filename")
-                        .textContent(),
+                const selectedFile = page.getByText(
                     "searcher-backup-2026-10-26.zip",
+                    { exact: true },
                 );
-                assertEquals(await preValidateBtn.isDisabled(), false);
+                await selectedFile.waitFor({ state: "visible" });
+                assertEquals(await preValidateBtn.isEnabled(), true);
 
-                // The hidden input is skipped; clearing the selected file precedes precheck.
-                await chooseZipBtn.focus();
+                // The hidden input that follows Clear is skipped by keyboard navigation.
+                const reselectBtn = page.getByRole("button", {
+                    name: "重新选择",
+                });
+                await clearFileBtn.focus();
                 await page.keyboard.press("Tab");
                 assertEquals(
-                    await page.getByRole("button", { name: "清除文件" }).evaluate((button) => button === document.activeElement),
+                    await reselectBtn.evaluate((button) =>
+                        button === document.activeElement
+                    ),
                     true,
                 );
                 await page.keyboard.press("Tab");
@@ -2062,6 +2043,13 @@ Deno.test(
                         `/admin/backup manifest[${manifestRowTitle}]@390x844`,
                     );
                 }
+
+                await clearFileBtn.click();
+                await selectedFile.waitFor({ state: "hidden" });
+                await preValidateBtn.waitFor({ state: "hidden" });
+                await page.getByRole("button", { name: "还原此备份…" })
+                    .waitFor({ state: "hidden" });
+                await chooseZipBtn.waitFor({ state: "visible" });
             },
         );
 
