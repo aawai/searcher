@@ -20,10 +20,12 @@ const MODES = [
 export function DocumentModeSwitch({
     mode,
     pageDisabled,
+    hasRichEditorFocus,
     onChange,
 }: {
     mode: DocumentViewMode;
     pageDisabled: boolean;
+    hasRichEditorFocus: () => boolean;
     onChange: (mode: DocumentViewMode) => void;
 }) {
     return (
@@ -43,6 +45,16 @@ export function DocumentModeSwitch({
                     value={option}
                     aria-label={label}
                     disabled={option === "page" && pageDisabled}
+                    onPointerDown={(event) => {
+                        // Like a formatting command, a rich layout change must
+                        // not move focus out of ProseMirror and reset its selection.
+                        if (
+                            event.button === 0 && mode !== "source" &&
+                            option !== "source" && hasRichEditorFocus()
+                        ) {
+                            event.preventDefault();
+                        }
+                    }}
                 >
                     <Icon className="icon-sm" aria-hidden="true" />
                     <span>{caption}</span>
