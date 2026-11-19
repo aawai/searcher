@@ -18,12 +18,14 @@ import {
     ArrowLeft,
     ArrowRight,
     ArrowUp,
+    ExternalLink,
     type Home,
     Minimize2,
     MoreHorizontal,
     PanelBottom,
     PinOff,
     Settings2,
+    SquareArrowOutUpRight,
     X,
 } from "lucide-react";
 import {
@@ -1216,7 +1218,7 @@ export function WorkspaceDock(
                                     >
                                         <Settings2
                                             size="1em"
-                                            className="icon-md"
+                                            className="icon-sm"
                                             aria-hidden="true"
                                         />
                                         管理
@@ -1229,7 +1231,7 @@ export function WorkspaceDock(
                                     >
                                         <Minimize2
                                             size="1em"
-                                            className="icon-md"
+                                            className="icon-sm"
                                             aria-hidden="true"
                                         />
                                         收起
@@ -1268,6 +1270,11 @@ export function WorkspaceDock(
                                                                         app,
                                                                     )}
                                                             >
+                                                                <ExternalLink
+                                                                    size="1em"
+                                                                    className="icon-sm"
+                                                                    aria-hidden="true"
+                                                                />
                                                                 打开
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
@@ -1281,7 +1288,7 @@ export function WorkspaceDock(
                                                             >
                                                                 <PreviousIcon
                                                                     size="1em"
-                                                                    className="icon-md"
+                                                                    className="icon-sm"
                                                                     aria-hidden="true"
                                                                 />
                                                                 {vertical
@@ -1301,7 +1308,7 @@ export function WorkspaceDock(
                                                             >
                                                                 <NextIcon
                                                                     size="1em"
-                                                                    className="icon-md"
+                                                                    className="icon-sm"
                                                                     aria-hidden="true"
                                                                 />
                                                                 {vertical
@@ -1319,7 +1326,7 @@ export function WorkspaceDock(
                                                             >
                                                                 <PinOff
                                                                     size="1em"
-                                                                    className="icon-md"
+                                                                    className="icon-sm"
                                                                     aria-hidden="true"
                                                                 />
                                                                 取消任务栏固定
@@ -1409,6 +1416,11 @@ export function WorkspaceDock(
                                                     "current",
                                                 )}
                                         >
+                                            <ExternalLink
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
                                             在当前标签页打开
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
@@ -1418,6 +1430,11 @@ export function WorkspaceDock(
                                                     "new_tab",
                                                 )}
                                         >
+                                            <SquareArrowOutUpRight
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
                                             在新标签页打开
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
@@ -1433,7 +1450,7 @@ export function WorkspaceDock(
                                 >
                                     <PreviousIcon
                                         size="1em"
-                                        className="icon-md"
+                                        className="icon-sm"
                                         aria-hidden="true"
                                     />
                                     {vertical ? "向上移动" : "向左移动"}
@@ -1448,7 +1465,7 @@ export function WorkspaceDock(
                                 >
                                     <NextIcon
                                         size="1em"
-                                        className="icon-md"
+                                        className="icon-sm"
                                         aria-hidden="true"
                                     />
                                     {vertical ? "向下移动" : "向右移动"}
@@ -1468,7 +1485,7 @@ export function WorkspaceDock(
                                         >
                                             <PinOff
                                                 size="1em"
-                                                className="icon-md"
+                                                className="icon-sm"
                                                 aria-hidden="true"
                                             />
                                             取消任务栏固定

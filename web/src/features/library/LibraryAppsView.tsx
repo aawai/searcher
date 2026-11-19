@@ -1,5 +1,15 @@
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, MoreHorizontal } from "lucide-react";
+import {
+    ArrowLeft,
+    Check,
+    FolderPlus,
+    LayoutGrid,
+    Maximize2,
+    Minimize2,
+    MoreHorizontal,
+    Pencil,
+    Trash2,
+} from "lucide-react";
 import { arrayMove } from "@dnd-kit/sortable";
 import type {
     ExtendedWebApp,
@@ -290,10 +300,30 @@ export function LibraryAppsView({
                             disabled={managing}
                             onClick={() => setCreating(true)}
                         >
-                            新建文件夹
+                            <FolderPlus
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                            <span>新建文件夹</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={toggleManaging}>
-                            {managing ? "完成整理" : "整理布局"}
+                            {managing
+                                ? (
+                                    <Check
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                )
+                                : (
+                                    <LayoutGrid
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                            <span>{managing ? "完成整理" : "整理布局"}</span>
                         </DropdownMenuItem>
                         {activeFolder && (
                             <>
@@ -301,7 +331,12 @@ export function LibraryAppsView({
                                     onClick={() =>
                                         setRenaming(activeFolder.group)}
                                 >
-                                    重命名
+                                    <Pencil
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                    <span>重命名</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() =>
@@ -313,17 +348,39 @@ export function LibraryAppsView({
                                                 : "large",
                                         )}
                                 >
-                                    显示为{activeFolder.group.folderSize ===
-                                            "large"
-                                        ? "小"
-                                        : "大"}文件夹
+                                    {activeFolder.group.folderSize === "large"
+                                        ? (
+                                            <Minimize2
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
+                                        )
+                                        : (
+                                            <Maximize2
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
+                                        )}
+                                    <span>
+                                        显示为{activeFolder.group.folderSize ===
+                                                "large"
+                                            ? "小"
+                                            : "大"}文件夹
+                                    </span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     variant="destructive"
                                     onClick={() =>
                                         setDeleting(activeFolder.group)}
                                 >
-                                    删除文件夹
+                                    <Trash2
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                    <span>删除文件夹</span>
                                 </DropdownMenuItem>
                             </>
                         )}
@@ -600,10 +657,30 @@ export function LibraryAppsView({
                         disabled={managing}
                         onClick={() => setCreating(true)}
                     >
-                        新建文件夹
+                        <FolderPlus
+                            size="1em"
+                            className="icon-sm"
+                            aria-hidden="true"
+                        />
+                        <span>新建文件夹</span>
                     </ContextMenuItem>
                     <ContextMenuItem onClick={toggleManaging}>
-                        {managing ? "完成整理" : "整理布局"}
+                        {managing
+                            ? (
+                                <Check
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
+                            )
+                            : (
+                                <LayoutGrid
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
+                            )}
+                        <span>{managing ? "完成整理" : "整理布局"}</span>
                     </ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>

@@ -32,6 +32,11 @@ import { MoreHorizontal } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
 import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
+import {
     ContextMenu,
     ContextMenuContent,
     ContextMenuTrigger,
@@ -451,23 +456,29 @@ export function NotesTreeRow({
             open={dropdownMenuOpen}
             onOpenChange={setDropdownMenuOpen}
         >
-            <DropdownMenuTrigger
-                render={
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="documents-row-action documents-tree-action"
-                        data-tree-action=""
-                        tabIndex={isActive ? 0 : -1}
-                        aria-label={actionLabel}
-                        title={actionLabel}
-                        onClick={(event) => event.stopPropagation()}
-                    />
-                }
-            >
-                <MoreHorizontal className="icon-md" />
-            </DropdownMenuTrigger>
+            <Tooltip>
+                <TooltipTrigger
+                    render={
+                        <DropdownMenuTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="documents-row-action documents-tree-action"
+                                    data-tree-action=""
+                                    tabIndex={isActive ? 0 : -1}
+                                    aria-label={actionLabel}
+                                    onClick={(event) => event.stopPropagation()}
+                                />
+                            }
+                        />
+                    }
+                >
+                    <MoreHorizontal className="icon-md" />
+                </TooltipTrigger>
+                <TooltipContent>{actionLabel}</TooltipContent>
+            </Tooltip>
             <DropdownMenuContent aria-label={actionLabel}>
                 {menu("dropdown")}
             </DropdownMenuContent>

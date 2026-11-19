@@ -28,8 +28,12 @@ import {
     Check,
     ChevronDown,
     Copy,
+    KeyRound,
     MoreHorizontal,
     RefreshCw,
+    Trash2,
+    UserCheck,
+    UserX,
 } from "lucide-react";
 import { AdminOverview } from "./AdminOverview.tsx";
 import { AdminSystemSettings } from "./AdminSystemSettings.tsx";
@@ -976,7 +980,14 @@ export function AdminPage() {
                                                                                                 null,
                                                                                         )}
                                                                                 >
-                                                                                    重置密码
+                                                                                    <KeyRound
+                                                                                        size="1em"
+                                                                                        className="icon-sm"
+                                                                                        aria-hidden="true"
+                                                                                    />
+                                                                                    <span>
+                                                                                        重置密码
+                                                                                    </span>
                                                                                 </DropdownMenuItem>
                                                                                 {!isSelf &&
                                                                                     !isAdmin &&
@@ -995,8 +1006,25 @@ export function AdminPage() {
                                                                                                 )}
                                                                                         >
                                                                                             {u.disabled
-                                                                                                ? "启用用户"
-                                                                                                : "禁用用户…"}
+                                                                                                ? (
+                                                                                                    <UserCheck
+                                                                                                        size="1em"
+                                                                                                        className="icon-sm"
+                                                                                                        aria-hidden="true"
+                                                                                                    />
+                                                                                                )
+                                                                                                : (
+                                                                                                    <UserX
+                                                                                                        size="1em"
+                                                                                                        className="icon-sm"
+                                                                                                        aria-hidden="true"
+                                                                                                    />
+                                                                                                )}
+                                                                                            <span>
+                                                                                                {u.disabled
+                                                                                                    ? "启用用户"
+                                                                                                    : "禁用用户…"}
+                                                                                            </span>
                                                                                         </DropdownMenuItem>
                                                                                     )}
                                                                                 {!isSelf &&
@@ -1017,7 +1045,14 @@ export function AdminPage() {
                                                                                                         null,
                                                                                                 )}
                                                                                         >
-                                                                                            删除用户
+                                                                                            <Trash2
+                                                                                                size="1em"
+                                                                                                className="icon-sm"
+                                                                                                aria-hidden="true"
+                                                                                            />
+                                                                                            <span>
+                                                                                                删除用户
+                                                                                            </span>
                                                                                         </DropdownMenuItem>
                                                                                     )}
                                                                             </DropdownMenuContent>
@@ -1109,7 +1144,14 @@ export function AdminPage() {
                                                                                 null,
                                                                         )}
                                                                 >
-                                                                    重置密码
+                                                                    <KeyRound
+                                                                        size="1em"
+                                                                        className="icon-sm"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                    <span>
+                                                                        重置密码
+                                                                    </span>
                                                                 </DropdownMenuItem>
                                                                 {u.role !==
                                                                         "admin" &&
@@ -1128,8 +1170,25 @@ export function AdminPage() {
                                                                                 )}
                                                                         >
                                                                             {u.disabled
-                                                                                ? "启用用户"
-                                                                                : "禁用用户…"}
+                                                                                ? (
+                                                                                    <UserCheck
+                                                                                        size="1em"
+                                                                                        className="icon-sm"
+                                                                                        aria-hidden="true"
+                                                                                    />
+                                                                                )
+                                                                                : (
+                                                                                    <UserX
+                                                                                        size="1em"
+                                                                                        className="icon-sm"
+                                                                                        aria-hidden="true"
+                                                                                    />
+                                                                                )}
+                                                                            <span>
+                                                                                {u.disabled
+                                                                                    ? "启用用户"
+                                                                                    : "禁用用户…"}
+                                                                            </span>
                                                                         </DropdownMenuItem>
                                                                     )}
                                                                 <DropdownMenuSeparator />
@@ -1145,7 +1204,14 @@ export function AdminPage() {
                                                                                 null,
                                                                         )}
                                                                 >
-                                                                    删除用户
+                                                                    <Trash2
+                                                                        size="1em"
+                                                                        className="icon-sm"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                    <span>
+                                                                        删除用户
+                                                                    </span>
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>

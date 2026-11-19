@@ -700,6 +700,7 @@
 
 [data-slot="button"].ask-composer__send-btn {
     flex-shrink: 0;
+    border-radius: var(--shape-button-radius);
 }
 
 /* The model selector is owned elsewhere; it only needs to shrink inside the toolbar. */

@@ -180,7 +180,7 @@
     background: var(--material-thick-sheen), var(--material-thick);
     -webkit-backdrop-filter: var(--material-thick-filter);
     backdrop-filter: var(--material-thick-filter);
-    border-radius: var(--radius);
+    border-radius: var(--shape-suggestions-radius);
     box-shadow: var(--shadow-elevation-floating);
     z-index: var(--elevation-suggestions);
     transition: opacity var(--motion-fast) var(--ease-standard);
@@ -204,7 +204,7 @@
     justify-content: space-between;
     gap: var(--space-3);
     padding: 0 var(--space-3);
-    border-radius: var(--control-radius);
+    border-radius: var(--shape-suggestions-inner-radius);
     color: var(--foreground);
     text-align: left;
     font-size: var(--font-body-size);

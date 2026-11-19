@@ -23,6 +23,11 @@ import {
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import { AssistantMarkdown } from "./AssistantMarkdown.tsx";
 import { MessageDetailsDialog } from "./MessageDetailsDialog.tsx";
 import type { AskMessageDto } from "./types.ts";
@@ -353,50 +358,72 @@ export function SearcherAssistantMessage() {
                 </BranchPickerPrimitive.Root>
 
                 <ActionBarPrimitive.Root className="ask-assistant-actions">
-                    <ActionBarPrimitive.Copy asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="ask-action-icon-btn"
-                            aria-label={copied ? "已复制全文" : "复制全文"}
-                            title={copied ? "已复制全文" : "复制全文"}
-                        >
-                            {copied
-                                ? (
-                                    <Check
-                                        size="1em"
-                                        className="icon-sm"
+                    <Tooltip>
+                        <ActionBarPrimitive.Copy asChild>
+                            <TooltipTrigger
+                                render={
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="ask-action-icon-btn"
+                                        aria-label={copied
+                                            ? "已复制全文"
+                                            : "复制全文"}
                                     />
-                                )
-                                : <Copy size="1em" className="icon-sm" />}
-                        </Button>
-                    </ActionBarPrimitive.Copy>
+                                }
+                            >
+                                {copied
+                                    ? (
+                                        <Check
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
+                                    )
+                                    : <Copy size="1em" className="icon-sm" />}
+                            </TooltipTrigger>
+                        </ActionBarPrimitive.Copy>
+                        <TooltipContent>
+                            {copied ? "已复制全文" : "复制全文"}
+                        </TooltipContent>
+                    </Tooltip>
 
                     {!isInterrupted && !isFailed && (
-                        <ActionBarPrimitive.Reload asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="ask-action-icon-btn"
-                                aria-label="重新生成"
-                                title="重新生成"
-                            >
-                                <RotateCcw size="1em" className="icon-sm" />
-                            </Button>
-                        </ActionBarPrimitive.Reload>
+                        <Tooltip>
+                            <ActionBarPrimitive.Reload asChild>
+                                <TooltipTrigger
+                                    render={
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="ask-action-icon-btn"
+                                            aria-label="重新生成"
+                                        />
+                                    }
+                                >
+                                    <RotateCcw size="1em" className="icon-sm" />
+                                </TooltipTrigger>
+                            </ActionBarPrimitive.Reload>
+                            <TooltipContent>重新生成</TooltipContent>
+                        </Tooltip>
                     )}
 
                     {rawMessage && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDetailsOpen(true)}
-                            className="ask-action-icon-btn"
-                            aria-label="消息详情"
-                            title="消息详情"
-                        >
-                            <Info size="1em" className="icon-sm" />
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setDetailsOpen(true)}
+                                        className="ask-action-icon-btn"
+                                        aria-label="消息详情"
+                                    />
+                                }
+                            >
+                                <Info size="1em" className="icon-sm" />
+                            </TooltipTrigger>
+                            <TooltipContent>消息详情</TooltipContent>
+                        </Tooltip>
                     )}
                 </ActionBarPrimitive.Root>
             </div>

@@ -7,8 +7,29 @@ import {
     useRef,
     useState,
 } from "react";
-import { Maximize2, Minimize2, Minus, MoreHorizontal, X } from "lucide-react";
+import {
+    ArrowDown,
+    ArrowDownLeft,
+    ArrowDownRight,
+    ArrowLeft,
+    ArrowRight,
+    ArrowUp,
+    ArrowUpLeft,
+    ArrowUpRight,
+    LayoutTemplate,
+    Maximize2,
+    Minimize2,
+    Minus,
+    MoreHorizontal,
+    Move,
+    X,
+} from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -584,22 +605,29 @@ export function WindowFrame(
                                 open={menuOpen}
                                 onOpenChange={setMenuOpen}
                             >
-                                <DropdownMenuTrigger
-                                    render={
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="window-frame__button touch-target"
-                                            aria-label={`${title}窗口菜单`}
+                                <Tooltip>
+                                    <TooltipTrigger
+                                        render={
+                                            <DropdownMenuTrigger
+                                                render={
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="window-frame__button touch-target"
+                                                        aria-label={`${title}窗口菜单`}
+                                                    />
+                                                }
+                                            />
+                                        }
+                                    >
+                                        <MoreHorizontal
+                                            size="1em"
+                                            className="icon-md"
                                         />
-                                    }
-                                >
-                                    <MoreHorizontal
-                                        size="1em"
-                                        className="icon-md"
-                                    />
-                                </DropdownMenuTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent>窗口菜单</TooltipContent>
+                                </Tooltip>
                                 <DropdownMenuContent>
                                     <DropdownMenuGroup>
                                         <DropdownMenuLabel>
@@ -616,7 +644,12 @@ export function WindowFrame(
                                                         announcement,
                                                     )}
                                             >
-                                                {label}
+                                                <LayoutTemplate
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                    aria-hidden="true"
+                                                />
+                                                <span>{label}</span>
                                             </DropdownMenuItem>
                                         ))}
                                     </DropdownMenuGroup>
@@ -631,15 +664,20 @@ export function WindowFrame(
                                             onClick={() =>
                                                 beginOperation("move")}
                                         >
-                                            移动窗口
+                                            <Move
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
+                                            <span>移动窗口</span>
                                         </DropdownMenuItem>
                                         {([
-                                            ["n", "上边"],
-                                            ["s", "下边"],
-                                            ["w", "左边"],
-                                            ["e", "右边"],
+                                            ["n", "上边", ArrowUp],
+                                            ["s", "下边", ArrowDown],
+                                            ["w", "左边", ArrowLeft],
+                                            ["e", "右边", ArrowRight],
                                         ] as const).map((
-                                            [direction, label],
+                                            [direction, label, DirIcon],
                                         ) => (
                                             <DropdownMenuItem
                                                 key={direction}
@@ -651,7 +689,12 @@ export function WindowFrame(
                                                         direction,
                                                     )}
                                             >
-                                                调整{label}
+                                                <DirIcon
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                    aria-hidden="true"
+                                                />
+                                                <span>调整{label}</span>
                                             </DropdownMenuItem>
                                         ))}
                                     </DropdownMenuGroup>
@@ -661,12 +704,12 @@ export function WindowFrame(
                                             调整边角
                                         </DropdownMenuLabel>
                                         {([
-                                            ["nw", "左上角"],
-                                            ["ne", "右上角"],
-                                            ["sw", "左下角"],
-                                            ["se", "右下角"],
+                                            ["nw", "左上角", ArrowUpLeft],
+                                            ["ne", "右上角", ArrowUpRight],
+                                            ["sw", "左下角", ArrowDownLeft],
+                                            ["se", "右下角", ArrowDownRight],
                                         ] as const).map((
-                                            [direction, label],
+                                            [direction, label, DirIcon],
                                         ) => (
                                             <DropdownMenuItem
                                                 key={direction}
@@ -678,61 +721,89 @@ export function WindowFrame(
                                                         direction,
                                                     )}
                                             >
-                                                调整{label}
+                                                <DirIcon
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                    aria-hidden="true"
+                                                />
+                                                <span>调整{label}</span>
                                             </DropdownMenuItem>
                                         ))}
                                     </DropdownMenuGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="window-frame__button touch-target"
-                            data-window-dismiss
-                            aria-label={`最小化${title}`}
-                            onClick={onMinimize}
-                        >
-                            <Minus size="1em" className="icon-md" />
-                        </Button>
-                        {geometry?.wide && (
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="window-frame__button touch-target"
-                                aria-label={`${
-                                    maximized ? "还原" : "最大化"
-                                }${title}`}
-                                onClick={toggleMaximize}
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="window-frame__button touch-target"
+                                        data-window-dismiss
+                                        aria-label={`最小化${title}`}
+                                        onClick={onMinimize}
+                                    />
+                                }
                             >
-                                {maximized
-                                    ? (
-                                        <Minimize2
-                                            size="1em"
-                                            className="icon-md"
+                                <Minus size="1em" className="icon-md" />
+                            </TooltipTrigger>
+                            <TooltipContent>最小化</TooltipContent>
+                        </Tooltip>
+                        {geometry?.wide && (
+                            <Tooltip>
+                                <TooltipTrigger
+                                    render={
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="window-frame__button touch-target"
+                                            aria-label={`${
+                                                maximized ? "还原" : "最大化"
+                                            }${title}`}
+                                            onClick={toggleMaximize}
                                         />
-                                    )
-                                    : (
-                                        <Maximize2
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                    )}
-                            </Button>
+                                    }
+                                >
+                                    {maximized
+                                        ? (
+                                            <Minimize2
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                        )
+                                        : (
+                                            <Maximize2
+                                                size="1em"
+                                                className="icon-md"
+                                            />
+                                        )}
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {maximized ? "还原" : "最大化"}
+                                </TooltipContent>
+                            </Tooltip>
                         )}
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="window-frame__button touch-target"
-                            data-window-dismiss
-                            aria-label={`关闭${title}`}
-                            onClick={onClose}
-                        >
-                            <X size="1em" className="icon-md" />
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="window-frame__button touch-target"
+                                        data-window-dismiss
+                                        aria-label={`关闭${title}`}
+                                        onClick={onClose}
+                                    />
+                                }
+                            >
+                                <X size="1em" className="icon-md" />
+                            </TooltipTrigger>
+                            <TooltipContent>关闭</TooltipContent>
+                        </Tooltip>
                     </div>
                 </header>
                 {operation && (

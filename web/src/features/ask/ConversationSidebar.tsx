@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, Plus, X } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import { SearchField } from "../../components/searcher/semantic.tsx";
 import {
@@ -175,7 +175,12 @@ export function ConversationSidebar({
                                                                     item,
                                                                 )}
                                                         >
-                                                            重命名
+                                                            <Pencil
+                                                                size="1em"
+                                                                className="icon-sm"
+                                                                aria-hidden="true"
+                                                            />
+                                                            <span>重命名</span>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem
@@ -186,7 +191,12 @@ export function ConversationSidebar({
                                                                     item.title,
                                                                 )}
                                                         >
-                                                            删除
+                                                            <Trash2
+                                                                size="1em"
+                                                                className="icon-sm"
+                                                                aria-hidden="true"
+                                                            />
+                                                            <span>删除</span>
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>

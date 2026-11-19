@@ -1,4 +1,18 @@
 import {
+    ArrowDown,
+    ArrowUp,
+    Check,
+    ExternalLink,
+    FolderInput,
+    FolderOutput,
+    Image,
+    LayoutGrid,
+    Pencil,
+    Pin,
+    PinOff,
+    Trash2,
+} from "lucide-react";
+import {
     ContextMenuItem,
     ContextMenuLabel,
     ContextMenuSeparator,
@@ -53,10 +67,30 @@ export function AppMenuItems(
         <>
             <Label className="launcher-menu-title">{app.name}</Label>
             <Item onClick={() => actions.onOpen(app)}>
-                打开
+                <ExternalLink
+                    size="1em"
+                    className="icon-sm"
+                    aria-hidden="true"
+                />
+                <span>打开</span>
             </Item>
             <Item onClick={() => void dock.setPinned(app.id, !dockPinned)}>
-                {dockPinned ? "取消任务栏固定" : "固定到任务栏"}
+                {dockPinned
+                    ? (
+                        <PinOff
+                            size="1em"
+                            className="icon-sm"
+                            aria-hidden="true"
+                        />
+                    )
+                    : (
+                        <Pin
+                            size="1em"
+                            className="icon-sm"
+                            aria-hidden="true"
+                        />
+                    )}
+                <span>{dockPinned ? "取消任务栏固定" : "固定到任务栏"}</span>
             </Item>
             {actions.onSetHomeFixed && !app.groupId &&
                 (actions.homeSurface !== "home" || app.isHomeFixed) && (
@@ -64,12 +98,42 @@ export function AppMenuItems(
                     onClick={() =>
                         actions.onSetHomeFixed!(app, !app.isHomeFixed)}
                 >
-                    {app.isHomeFixed ? "取消固定" : "固定到首页"}
+                    {app.isHomeFixed
+                        ? (
+                            <PinOff
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                        )
+                        : (
+                            <Pin
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                        )}
+                    <span>{app.isHomeFixed ? "取消固定" : "固定到首页"}</span>
                 </Item>
             )}
             {actions.onToggleManaging && (
                 <Item onClick={actions.onToggleManaging}>
-                    {managing ? "完成整理" : "整理布局"}
+                    {managing
+                        ? (
+                            <Check
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                        )
+                        : (
+                            <LayoutGrid
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                        )}
+                    <span>{managing ? "完成整理" : "整理布局"}</span>
                 </Item>
             )}
             {reorder && (
@@ -78,22 +142,38 @@ export function AppMenuItems(
                         disabled={!reorder.canMoveUp}
                         onClick={() => reorder.move(-1)}
                     >
-                        上移
+                        <ArrowUp
+                            size="1em"
+                            className="icon-sm"
+                            aria-hidden="true"
+                        />
+                        <span>上移</span>
                     </Item>
                     <Item
                         disabled={!reorder.canMoveDown}
                         onClick={() => reorder.move(1)}
                     >
-                        下移
+                        <ArrowDown
+                            size="1em"
+                            className="icon-sm"
+                            aria-hidden="true"
+                        />
+                        <span>下移</span>
                     </Item>
                 </>
             )}
             <Item onClick={() => actions.onEdit(app)}>
-                编辑
+                <Pencil size="1em" className="icon-sm" aria-hidden="true" />
+                <span>编辑</span>
             </Item>
             {app.groupId && (
                 <Item onClick={() => actions.onMove(app, null)}>
-                    移出文件夹
+                    <FolderOutput
+                        size="1em"
+                        className="icon-sm"
+                        aria-hidden="true"
+                    />
+                    <span>移出文件夹</span>
                 </Item>
             )}
             {groups.filter((group) => group.id !== app.groupId).map((
@@ -103,15 +183,22 @@ export function AppMenuItems(
                     key={group.id}
                     onClick={() => actions.onMove(app, group.id)}
                 >
-                    移至文件夹 {group.name}
+                    <FolderInput
+                        size="1em"
+                        className="icon-sm"
+                        aria-hidden="true"
+                    />
+                    <span>移至文件夹 {group.name}</span>
                 </Item>
             ))}
             <Item onClick={() => (actions.onChangeIcon ?? actions.onEdit)(app)}>
-                更换图标
+                <Image size="1em" className="icon-sm" aria-hidden="true" />
+                <span>更换图标</span>
             </Item>
             <Separator />
             <Item variant="destructive" onClick={() => actions.onDelete(app)}>
-                移至回收站
+                <Trash2 size="1em" className="icon-sm" aria-hidden="true" />
+                <span>移至回收站</span>
             </Item>
         </>
     );

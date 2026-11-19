@@ -2,6 +2,22 @@ import { Tooltip as Primitive } from "@base-ui/react/tooltip";
 import { useEscapeLayerForOpenState } from "./escape-layer-stack.tsx";
 import { cn } from "../../lib/utils.ts";
 
+export function TooltipProvider({
+    delay = 400,
+    closeDelay = 0,
+    timeout = 400,
+    ...props
+}: Primitive.Provider.Props) {
+    return (
+        <Primitive.Provider
+            delay={delay}
+            closeDelay={closeDelay}
+            timeout={timeout}
+            {...props}
+        />
+    );
+}
+
 export function Tooltip({
     open,
     defaultOpen,

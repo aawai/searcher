@@ -14,6 +14,7 @@ import {
     PopoverTitle,
     PopoverTrigger,
 } from "../ui/popover.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.tsx";
 
 const PREFERS_DARK_QUERY = "(prefers-color-scheme: dark)";
 
@@ -44,17 +45,23 @@ export function ThemeToggle(
     const Icon = THEME_ICONS[value];
     const label = `切换到${THEME_LABELS[next]}`;
     return (
-        <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="appearance-toggle"
-            onClick={() => onValueChange(next)}
-            aria-label={label}
-            title={label}
-        >
-            <Icon size="1em" className="icon-lg" />
-        </Button>
+        <Tooltip>
+            <TooltipTrigger
+                render={
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="appearance-toggle"
+                        onClick={() => onValueChange(next)}
+                        aria-label={label}
+                    />
+                }
+            >
+                <Icon size="1em" className="icon-lg" />
+            </TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+        </Tooltip>
     );
 }
 
@@ -76,41 +83,47 @@ export function AppearancePicker(
     const label = `外观：${THEME_LABELS[theme]}，${accentLabel(accent)}`;
     return (
         <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger
-                render={
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="appearance-picker-trigger"
-                        aria-label={label}
-                        title={label}
-                    />
-                }
-            >
-                <span
-                    className="appearance-picker-chip"
-                    data-accent={accent}
-                    aria-hidden="true"
+            <Tooltip>
+                <TooltipTrigger
+                    render={
+                        <PopoverTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="appearance-picker-trigger"
+                                    aria-label={label}
+                                />
+                            }
+                        />
+                    }
                 >
                     <span
-                        className="appearance-picker-chip-dot"
-                        data-tone="accent"
-                    />
-                    <span
-                        className="appearance-picker-chip-dot"
-                        data-tone="foreground"
-                    />
-                    <span
-                        className="appearance-picker-chip-dot"
-                        data-tone="accent-active"
-                    />
-                    <span
-                        className="appearance-picker-chip-dot"
-                        data-tone="muted"
-                    />
-                </span>
-            </PopoverTrigger>
+                        className="appearance-picker-chip"
+                        data-accent={accent}
+                        aria-hidden="true"
+                    >
+                        <span
+                            className="appearance-picker-chip-dot"
+                            data-tone="accent"
+                        />
+                        <span
+                            className="appearance-picker-chip-dot"
+                            data-tone="foreground"
+                        />
+                        <span
+                            className="appearance-picker-chip-dot"
+                            data-tone="accent-active"
+                        />
+                        <span
+                            className="appearance-picker-chip-dot"
+                            data-tone="muted"
+                        />
+                    </span>
+                </TooltipTrigger>
+                <TooltipContent>{label}</TooltipContent>
+            </Tooltip>
             <PopoverContent
                 className="appearance-picker"
                 side="bottom"

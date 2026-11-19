@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { Menu, MoreHorizontal, Pencil, Search } from "lucide-react";
+import {
+    Bookmark,
+    Clock,
+    Download,
+    FileCode,
+    Menu,
+    MoreHorizontal,
+    Pencil,
+    Search,
+    SlidersHorizontal,
+    Trash2,
+} from "lucide-react";
 import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
@@ -9,6 +20,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import type { AiConversationDto, AiMessageDto } from "./types.ts";
 import { RenameConversationDialog } from "./RenameConversationDialog.tsx";
 import { SystemInstructionDialog } from "./SystemInstructionDialog.tsx";
@@ -140,52 +156,81 @@ export function ConversationHeader({
             <div className="ask-header__right">
                 {/* Search button (enabled when messages exist) */}
                 {messages.length > 0 && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="ask-header__icon-btn"
-                        onClick={onOpenSearch}
-                        aria-label={`对话内搜索（${searchHint}）`}
-                        title={`对话内搜索（${searchHint}）`}
-                    >
-                        <Search size="1em" className="icon-md" />
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="ask-header__icon-btn"
+                                    onClick={onOpenSearch}
+                                    aria-label={`对话内搜索（${searchHint}）`}
+                                />
+                            }
+                        >
+                            <Search size="1em" className="icon-md" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            对话内搜索（{searchHint}）
+                        </TooltipContent>
+                    </Tooltip>
                 )}
 
                 {/* More options menu - ALWAYS available even on new conversations */}
                 <DropdownMenu>
-                    <DropdownMenuTrigger
-                        render={
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="ask-header__icon-btn"
-                                aria-label="更多操作"
-                                title="更多操作"
-                            />
-                        }
-                    >
-                        <MoreHorizontal size="1em" className="icon-md" />
-                    </DropdownMenuTrigger>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <DropdownMenuTrigger
+                                    render={
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="ask-header__icon-btn"
+                                            aria-label="更多操作"
+                                        />
+                                    }
+                                />
+                            }
+                        >
+                            <MoreHorizontal size="1em" className="icon-md" />
+                        </TooltipTrigger>
+                        <TooltipContent>更多操作</TooltipContent>
+                    </Tooltip>
                     <DropdownMenuContent sideOffset={6} aria-label="对话菜单">
                         {conversation && (
                             <DropdownMenuItem
                                 onClick={() => setRenameOpen(true)}
                             >
-                                重命名
+                                <Pencil
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
+                                <span>重命名</span>
                             </DropdownMenuItem>
                         )}
 
                         <DropdownMenuItem
                             onClick={() => setInstructionOpen(true)}
                         >
-                            系统指令…
+                            <SlidersHorizontal
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                            <span>系统指令…</span>
                         </DropdownMenuItem>
 
                         {messages.length > 0 && (
                             <DropdownMenuItem onClick={onOpenSearch}>
+                                <Search
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
                                 <span>对话内搜索</span>
                                 <span className="ask-menu-shortcut">
                                     {searchHint}
@@ -196,7 +241,24 @@ export function ConversationHeader({
                         <DropdownMenuItem
                             onClick={() => void onToggleHistory(isTemporary)}
                         >
-                            {isTemporary ? "保存此对话" : "转为临时对话"}
+                            {isTemporary
+                                ? (
+                                    <Bookmark
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                )
+                                : (
+                                    <Clock
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                            <span>
+                                {isTemporary ? "保存此对话" : "转为临时对话"}
+                            </span>
                         </DropdownMenuItem>
 
                         {messages.length > 0 && (
@@ -205,12 +267,22 @@ export function ConversationHeader({
                                 <DropdownMenuItem
                                     onClick={() => handleExport("markdown")}
                                 >
-                                    导出为 Markdown
+                                    <Download
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                    <span>导出为 Markdown</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => handleExport("json")}
                                 >
-                                    导出为 JSON
+                                    <FileCode
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                    <span>导出为 JSON</span>
                                 </DropdownMenuItem>
                             </>
                         )}
@@ -222,7 +294,12 @@ export function ConversationHeader({
                                     variant="destructive"
                                     onClick={() => void onDelete()}
                                 >
-                                    删除对话
+                                    <Trash2
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                    <span>删除对话</span>
                                 </DropdownMenuItem>
                             </>
                         )}

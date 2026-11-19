@@ -40,6 +40,11 @@ import { api, ApiError } from "../../lib/api.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
 import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -1513,72 +1518,100 @@ export function DocumentEditor({
 
                     <div className="document-editor-header-actions">
                         {!showToolbar && (
-                            <Button
-                                ref={formatButtonRef}
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                aria-label="显示格式工具栏"
-                                title="显示格式工具栏"
-                                aria-pressed={false}
-                                onClick={toggleToolbar}
-                            >
-                                <Type size="1em" className="icon-sm" />
-                            </Button>
+                            <Tooltip>
+                                <TooltipTrigger
+                                    render={
+                                        <Button
+                                            ref={formatButtonRef}
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            aria-label="显示格式工具栏"
+                                            aria-pressed={false}
+                                            onClick={toggleToolbar}
+                                        />
+                                    }
+                                >
+                                    <Type size="1em" className="icon-sm" />
+                                </TooltipTrigger>
+                                <TooltipContent>显示格式工具栏</TooltipContent>
+                            </Tooltip>
                         )}
-                        <Button
-                            ref={outlineButtonRef}
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label="大纲"
-                            title="大纲"
-                            aria-pressed={visibleOutline}
-                            disabled={viewMode === "source"}
-                            onClick={() => {
-                                if (narrow) {
-                                    onOutlineDrawerChange(!outlineDrawerOpen);
-                                } else {
-                                    updateOutline(!showOutline);
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <Button
+                                        ref={outlineButtonRef}
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label="大纲"
+                                        aria-pressed={visibleOutline}
+                                        disabled={viewMode === "source"}
+                                        onClick={() => {
+                                            if (narrow) {
+                                                onOutlineDrawerChange(
+                                                    !outlineDrawerOpen,
+                                                );
+                                            } else {
+                                                updateOutline(!showOutline);
+                                            }
+                                        }}
+                                    />
                                 }
-                            }}
-                        >
-                            <BookOpen size="1em" className="icon-sm" />
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label="历史"
-                            title="历史"
-                            onClick={async () => {
-                                if (snapshot.saveStatus === "dirty") {
-                                    await session.save("manual");
-                                }
-                                setHistoryOpen(true);
-                            }}
-                        >
-                            <History size="1em" className="icon-sm" />
-                        </Button>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
+                            >
+                                <BookOpen size="1em" className="icon-sm" />
+                            </TooltipTrigger>
+                            <TooltipContent>大纲</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger
                                 render={
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        aria-label="更多笔记操作"
-                                        title="更多笔记操作"
-                                    >
-                                        <MoreHorizontal
-                                            size="1em"
-                                            className="icon-sm"
-                                            aria-hidden="true"
-                                        />
-                                    </Button>
+                                        aria-label="历史"
+                                        onClick={async () => {
+                                            if (
+                                                snapshot.saveStatus === "dirty"
+                                            ) {
+                                                await session.save("manual");
+                                            }
+                                            setHistoryOpen(true);
+                                        }}
+                                    />
                                 }
-                                aria-label="更多笔记操作"
-                            />
+                            >
+                                <History size="1em" className="icon-sm" />
+                            </TooltipTrigger>
+                            <TooltipContent>历史</TooltipContent>
+                        </Tooltip>
+                        <DropdownMenu>
+                            <Tooltip>
+                                <TooltipTrigger
+                                    render={
+                                        <DropdownMenuTrigger
+                                            render={
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label="更多笔记操作"
+                                                />
+                                            }
+                                            aria-label="更多笔记操作"
+                                        />
+                                    }
+                                >
+                                    <MoreHorizontal
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                </TooltipTrigger>
+                                <TooltipContent>更多笔记操作</TooltipContent>
+                            </Tooltip>
                             <DropdownMenuContent
                                 sideOffset={4}
                                 data-document-editor-owner={documentEditorOwner}
@@ -1595,7 +1628,7 @@ export function DocumentEditor({
                                     }}
                                 >
                                     <Pin
-                                        className="icon-md"
+                                        className="icon-sm"
                                         aria-hidden="true"
                                     />
                                     <span>
@@ -1610,7 +1643,7 @@ export function DocumentEditor({
                                     onClick={() => setPaperOpen(true)}
                                 >
                                     <Settings
-                                        className="icon-md"
+                                        className="icon-sm"
                                         aria-hidden="true"
                                     />
                                     <span>纸张设置</span>
@@ -1625,7 +1658,7 @@ export function DocumentEditor({
                                     }}
                                 >
                                     <Printer
-                                        className="icon-md"
+                                        className="icon-sm"
                                         aria-hidden="true"
                                     />
                                     <span>打印或另存为 PDF</span>
@@ -1636,13 +1669,13 @@ export function DocumentEditor({
                                     {copied
                                         ? (
                                             <Check
-                                                className="icon-md"
+                                                className="icon-sm"
                                                 aria-hidden="true"
                                             />
                                         )
                                         : (
                                             <Copy
-                                                className="icon-md"
+                                                className="icon-sm"
                                                 aria-hidden="true"
                                             />
                                         )}
@@ -1652,7 +1685,7 @@ export function DocumentEditor({
                                     onClick={handleExportMarkdown}
                                 >
                                     <Download
-                                        className="icon-md"
+                                        className="icon-sm"
                                         aria-hidden="true"
                                     />
                                     <span>导出 Markdown 文件</span>
@@ -1696,19 +1729,25 @@ export function DocumentEditor({
                         onInsertPageBreak={handleInsertPageBreak}
                         onUploadImage={handleUploadImageClick}
                     />
-                    <Button
-                        ref={toolbarCollapseRef}
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="document-toolbar-collapse"
-                        aria-label="隐藏格式工具栏"
-                        title="隐藏格式工具栏"
-                        aria-pressed
-                        onClick={toggleToolbar}
-                    >
-                        <ChevronUp size="1em" className="icon-md" />
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <Button
+                                    ref={toolbarCollapseRef}
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="document-toolbar-collapse"
+                                    aria-label="隐藏格式工具栏"
+                                    aria-pressed
+                                    onClick={toggleToolbar}
+                                />
+                            }
+                        >
+                            <ChevronUp size="1em" className="icon-md" />
+                        </TooltipTrigger>
+                        <TooltipContent>隐藏格式工具栏</TooltipContent>
+                    </Tooltip>
                 </div>
             )}
 
