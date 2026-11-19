@@ -4,6 +4,11 @@ import { ExternalLink, Maximize2, X } from "lucide-react";
 import { routes } from "../../app/routes.ts";
 import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import { usePresence } from "../../components/ui/presence.ts";
 import { runSharedElementTransition } from "../../lib/shared-element.ts";
 import { ASK_SHARED_TARGET } from "../ask/shared-target.ts";
@@ -96,16 +101,22 @@ export function InlineAnswerCard(
                         <Maximize2 size="1em" className="icon-sm" />
                         展开
                     </Button>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label="关闭回答"
-                        title="关闭回答（Esc）"
-                        onClick={onClose}
-                    >
-                        <X size="1em" className="icon-md" />
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="关闭回答"
+                                    onClick={onClose}
+                                />
+                            }
+                        >
+                            <X size="1em" className="icon-md" />
+                        </TooltipTrigger>
+                        <TooltipContent>关闭回答（Esc）</TooltipContent>
+                    </Tooltip>
                 </div>
             </header>
             <p className="sr-only" role="status">

@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { PageHost } from "./page-host.tsx";
-import { MoreHorizontal, Plus, RotateCcw } from "lucide-react";
+import {
+    MoreHorizontal,
+    Pencil,
+    Plus,
+    RefreshCw,
+    RotateCcw,
+    Trash2,
+} from "lucide-react";
 import type {
     AiModelDto,
     AiProviderDto,
@@ -433,14 +440,24 @@ export function AiSettings({ host }: { host: PageHost }) {
                                         <DropdownMenuItem
                                             onClick={() => openEdit(provider)}
                                         >
-                                            编辑
+                                            <Pencil
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
+                                            <span>编辑</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             disabled={working}
                                             onClick={() =>
                                                 void refresh(provider.id)}
                                         >
-                                            刷新模型
+                                            <RefreshCw
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
+                                            <span>刷新模型</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
@@ -448,7 +465,12 @@ export function AiSettings({ host }: { host: PageHost }) {
                                             disabled={working || isDeleting}
                                             onClick={() => openDelete(provider)}
                                         >
-                                            删除
+                                            <Trash2
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
+                                            <span>删除</span>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>

@@ -83,6 +83,7 @@ import {
 import {
     Tooltip,
     TooltipContent,
+    TooltipProvider,
     TooltipTrigger,
 } from "./components/ui/tooltip.tsx";
 
@@ -434,7 +435,7 @@ function Layout() {
                                         >
                                             <UserRound
                                                 size="1em"
-                                                className="icon-md"
+                                                className="icon-sm"
                                                 aria-hidden="true"
                                             />
                                             <span>账户与安全</span>
@@ -447,7 +448,7 @@ function Layout() {
                                         >
                                             <Settings
                                                 size="1em"
-                                                className="icon-md"
+                                                className="icon-sm"
                                                 aria-hidden="true"
                                             />
                                             <span>设置</span>
@@ -461,7 +462,7 @@ function Layout() {
                                             >
                                                 <Shield
                                                     size="1em"
-                                                    className="icon-md"
+                                                    className="icon-sm"
                                                     aria-hidden="true"
                                                 />
                                                 <span>管理后台</span>
@@ -475,7 +476,7 @@ function Layout() {
                                         >
                                             <Trash2
                                                 size="1em"
-                                                className="icon-md"
+                                                className="icon-sm"
                                                 aria-hidden="true"
                                             />
                                             <span>回收站</span>
@@ -489,7 +490,7 @@ function Layout() {
                                         >
                                             <LogOut
                                                 size="1em"
-                                                className="icon-md"
+                                                className="icon-sm"
                                                 aria-hidden="true"
                                             />
                                             <span>退出登录</span>
@@ -645,11 +646,13 @@ export function App() {
                 path: routes.home,
                 element: (
                     <AppState>
-                        <DockProvider>
-                            <NavigationGuardProvider>
-                                <Layout />
-                            </NavigationGuardProvider>
-                        </DockProvider>
+                        <TooltipProvider>
+                            <DockProvider>
+                                <NavigationGuardProvider>
+                                    <Layout />
+                                </NavigationGuardProvider>
+                            </DockProvider>
+                        </TooltipProvider>
                     </AppState>
                 ),
                 // Page links need the data router's navigation options, including

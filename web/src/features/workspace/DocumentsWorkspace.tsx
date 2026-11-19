@@ -17,6 +17,11 @@ import {
     LoadingState,
 } from "../../components/searcher/semantic.tsx";
 import { Button } from "../../components/ui/button.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import { DocumentsSidebar } from "./DocumentsSidebar.tsx";
 import { WindowOverlay } from "../../components/ui/window-overlay.tsx";
 import { PaneResizeHandle } from "../../components/searcher/PaneResizeHandle.tsx";
@@ -172,33 +177,42 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
         props.fullScreen || (props.sidebarPersistent && props.sidebarOpen)
             ? null
             : (
-                <Button
-                    ref={setSidebarTrigger}
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="笔记侧栏"
-                    title="展开笔记侧栏"
-                    aria-expanded={props.sidebarOpen}
-                    aria-pressed={props.sidebarOpen}
-                    aria-controls="notes-sidebar"
-                    // While the drawer is open its own collapse button is the
-                    // control; this one sits on the inert card underneath.
-                    aria-hidden={!props.sidebarPersistent && props.sidebarOpen
-                        ? true
-                        : undefined}
-                    onClick={() => {
-                        setRestoreDrawerFocus(true);
-                        toggleFocus.current = "expand";
-                        if (!props.sidebarOpen) {
-                            setOutlineRestoreFocus(false);
-                            setOutlineOpen(false);
+                <Tooltip>
+                    <TooltipTrigger
+                        render={
+                            <Button
+                                ref={setSidebarTrigger}
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                aria-label="笔记侧栏"
+                                aria-expanded={props.sidebarOpen}
+                                aria-pressed={props.sidebarOpen}
+                                aria-controls="notes-sidebar"
+                                // While the drawer is open its own collapse button is the
+                                // control; this one sits on the inert card underneath.
+                                aria-hidden={!props.sidebarPersistent &&
+                                        props.sidebarOpen
+                                    ? true
+                                    : undefined}
+                                onClick={() => {
+                                    setRestoreDrawerFocus(true);
+                                    toggleFocus.current = "expand";
+                                    if (!props.sidebarOpen) {
+                                        setOutlineRestoreFocus(false);
+                                        setOutlineOpen(false);
+                                    }
+                                    props.onSidebarOpenChange(
+                                        !props.sidebarOpen,
+                                    );
+                                }}
+                            />
                         }
-                        props.onSidebarOpenChange(!props.sidebarOpen);
-                    }}
-                >
-                    <PanelLeftOpen size="1em" className="icon-md" />
-                </Button>
+                    >
+                        <PanelLeftOpen size="1em" className="icon-md" />
+                    </TooltipTrigger>
+                    <TooltipContent>展开笔记侧栏</TooltipContent>
+                </Tooltip>
             );
     useEffect(() => {
         if (props.sidebarOpen) setRestoreDrawerFocus(true);

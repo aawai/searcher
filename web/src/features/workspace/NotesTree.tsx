@@ -461,7 +461,6 @@ export function NotesTreeRow({
                         data-tree-action=""
                         tabIndex={isActive ? 0 : -1}
                         aria-label={actionLabel}
-                        title={actionLabel}
                         onClick={(event) => event.stopPropagation()}
                     />
                 }

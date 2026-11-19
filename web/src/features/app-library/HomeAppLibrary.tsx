@@ -10,7 +10,7 @@ import {
     useState,
 } from "react";
 import { flushSync } from "react-dom";
-import { Plus } from "lucide-react";
+import { Check, FolderPlus, LayoutGrid, Plus } from "lucide-react";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Button } from "../../components/ui/button.tsx";
 import {
@@ -653,10 +653,26 @@ function BlankMenu({ managing, onCreateFolder, onToggleManaging }: {
     return (
         <ContextMenuContent aria-label="应用库空白区域操作">
             <ContextMenuItem disabled={managing} onClick={onCreateFolder}>
-                新建文件夹
+                <FolderPlus size="1em" className="icon-sm" aria-hidden="true" />
+                <span>新建文件夹</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={onToggleManaging}>
-                {managing ? "完成整理" : "整理布局"}
+                {managing
+                    ? (
+                        <Check
+                            size="1em"
+                            className="icon-sm"
+                            aria-hidden="true"
+                        />
+                    )
+                    : (
+                        <LayoutGrid
+                            size="1em"
+                            className="icon-sm"
+                            aria-hidden="true"
+                        />
+                    )}
+                <span>{managing ? "完成整理" : "整理布局"}</span>
             </ContextMenuItem>
         </ContextMenuContent>
     );

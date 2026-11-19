@@ -1,5 +1,16 @@
 import { useRef } from "react";
-import { Folder, FolderInput, GripVertical } from "lucide-react";
+import {
+    Folder,
+    FolderInput,
+    FolderOpen,
+    GripVertical,
+    Maximize2,
+    Minimize2,
+    Pencil,
+    Pin,
+    PinOff,
+    Trash2,
+} from "lucide-react";
 import {
     ContextMenu,
     ContextMenuContent,
@@ -251,7 +262,12 @@ export function FolderTile({
             </ContextMenuTrigger>
             <ContextMenuContent aria-label={`${tile.group.name} 的操作`}>
                 <ContextMenuItem onClick={openFolder}>
-                    打开文件夹
+                    <FolderOpen
+                        size="1em"
+                        className="icon-sm"
+                        aria-hidden="true"
+                    />
+                    <span>打开文件夹</span>
                 </ContextMenuItem>
                 {actions.onSetGroupHomeFixed &&
                     (actions.homeSurface !== "home" ||
@@ -264,7 +280,26 @@ export function FolderTile({
                                     !tile.group.isHomeFixed,
                                 )}
                         >
-                            {tile.group.isHomeFixed ? "取消固定" : "固定到首页"}
+                            {tile.group.isHomeFixed
+                                ? (
+                                    <PinOff
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                )
+                                : (
+                                    <Pin
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                )}
+                            <span>
+                                {tile.group.isHomeFixed
+                                    ? "取消固定"
+                                    : "固定到首页"}
+                            </span>
                         </ContextMenuItem>
                     )}
                 <ContextMenuItem
@@ -274,19 +309,36 @@ export function FolderTile({
                             large ? "small" : "large",
                         )}
                 >
-                    显示为{large ? "小" : "大"}文件夹
+                    {large
+                        ? (
+                            <Minimize2
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                        )
+                        : (
+                            <Maximize2
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                        )}
+                    <span>显示为{large ? "小" : "大"}文件夹</span>
                 </ContextMenuItem>
                 <ContextMenuItem
                     onClick={() => actions.onRenameFolder(tile.group)}
                 >
-                    重命名
+                    <Pencil size="1em" className="icon-sm" aria-hidden="true" />
+                    <span>重命名</span>
                 </ContextMenuItem>
                 <ContextMenuSeparator />
                 <ContextMenuItem
                     variant="destructive"
                     onClick={() => actions.onDeleteFolder(tile.group)}
                 >
-                    删除文件夹
+                    <Trash2 size="1em" className="icon-sm" aria-hidden="true" />
+                    <span>删除文件夹</span>
                 </ContextMenuItem>
             </ContextMenuContent>
         </ContextMenu>

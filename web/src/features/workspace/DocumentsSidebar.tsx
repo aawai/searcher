@@ -32,6 +32,11 @@ import {
     type DocumentSummaryDto,
 } from "@shared/documents.ts";
 import { api, json } from "../../lib/api.ts";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import type { DocumentEventSubscriptions } from "../documents/document-event-subscriptions.ts";
 import type { DocumentsRoute, DocumentsScope } from "./workspace-state.ts";
 import { WorkspaceSearch } from "./WorkspaceSearch.tsx";
@@ -972,21 +977,27 @@ export function DocumentsSidebar({
                     />
                 </div>
                 {onCollapse && (
-                    <Button
-                        ref={collapseRef}
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="documents-heading-action"
-                        aria-label="笔记侧栏"
-                        title="收起笔记侧栏"
-                        aria-expanded
-                        aria-pressed
-                        aria-controls="notes-sidebar"
-                        onClick={onCollapse}
-                    >
-                        <PanelLeftClose className="icon-md" />
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <Button
+                                    ref={collapseRef}
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="documents-heading-action"
+                                    aria-label="笔记侧栏"
+                                    aria-expanded
+                                    aria-pressed
+                                    aria-controls="notes-sidebar"
+                                    onClick={onCollapse}
+                                />
+                            }
+                        >
+                            <PanelLeftClose className="icon-md" />
+                        </TooltipTrigger>
+                        <TooltipContent>收起笔记侧栏</TooltipContent>
+                    </Tooltip>
                 )}
             </div>
             <div className="documents-sidebar-scroll">
@@ -1074,31 +1085,50 @@ export function DocumentsSidebar({
                                 )}
                             </Button>
                         </HeadingTag>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="documents-heading-action"
-                            aria-label="新建笔记"
-                            title={createTargetTitle(createTarget)}
-                            onClick={() => newNote(createTarget.notebookId)}
-                        >
-                            <Plus className="icon-md" />
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="documents-heading-action"
-                            aria-label="新建笔记本"
-                            title={parentName
-                                ? `新建子笔记本（在「${parentName}」下）`
-                                : "新建笔记本"}
-                            disabled={ops.isPending}
-                            onClick={() =>
-                                ops.createNotebook(newNotebookParent ?? "")}
-                        >
-                            <FolderPlus className="icon-md" />
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="documents-heading-action"
+                                        aria-label="新建笔记"
+                                        onClick={() =>
+                                            newNote(createTarget.notebookId)}
+                                    />
+                                }
+                            >
+                                <Plus className="icon-md" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {createTargetTitle(createTarget)}
+                            </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="documents-heading-action"
+                                        aria-label="新建笔记本"
+                                        disabled={ops.isPending}
+                                        onClick={() =>
+                                            ops.createNotebook(
+                                                newNotebookParent ?? "",
+                                            )}
+                                    />
+                                }
+                            >
+                                <FolderPlus className="icon-md" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {parentName
+                                    ? `新建子笔记本（在「${parentName}」下）`
+                                    : "新建笔记本"}
+                            </TooltipContent>
+                        </Tooltip>
                     </div>
                     {treeMode
                         ? (

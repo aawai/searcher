@@ -39,6 +39,7 @@ export class EscapeLayerStack {
     private readonly dispatchedEvents = new WeakSet<KeyboardEvent>();
     private readonly subscribers = new Set<() => void>();
     private nextOrder = 0;
+    private lastEscapeAt = -Infinity;
 
     subscribe = (listener: () => void): () => void => {
         this.subscribers.add(listener);
@@ -59,7 +60,12 @@ export class EscapeLayerStack {
 
     capture(event: KeyboardEvent): void {
         if (event.key !== "Escape" || event.isComposing) return;
+        this.lastEscapeAt = performance.now();
         this.eventLayers.set(event, this.topLayer());
+    }
+
+    isRecentEscape(windowMs = 600): boolean {
+        return performance.now() - this.lastEscapeAt < windowMs;
     }
 
     dispatch(event: KeyboardEvent): boolean {
@@ -166,12 +172,19 @@ export function useEscapeLayerForOpenState<Details>(
     const [uncontrolledOpen, setUncontrolledOpen] = useState(
         defaultOpen ?? false,
     );
+    useEffect(() => {
+        if (!enabled && open === undefined) setUncontrolledOpen(false);
+    }, [enabled, open]);
     useEscapeLayer(enabled && (open ?? uncontrolledOpen), undefined, kind);
 
     return (nextOpen, details) => {
         if (open === undefined) setUncontrolledOpen(nextOpen);
         onOpenChange?.(nextOpen, details);
     };
+}
+
+export function useOptionalEscapeLayerStack(): EscapeLayerStack | null {
+    return useContext(EscapeLayerContext);
 }
 
 export function useEscapeLayerStack(): EscapeLayerStack {

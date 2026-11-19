@@ -596,13 +596,15 @@
     --theme-preview-high-contrast-dark-edge: #FFFFFF;
 }
 
-/* Shape preferences affect standalone controls, never content containers. */
+/* Shape preferences affect standalone controls and search suggestions, never content containers. */
 :root,
 [data-shape="rounded"] {
     --shape-button-radius: var(--control-radius);
     --shape-field-radius: var(--radius-input);
     --shape-segment-radius: var(--control-radius);
     --shape-segment-inner-radius: calc(var(--shape-segment-radius) - var(--space-half));
+    --shape-suggestions-radius: var(--radius);
+    --shape-suggestions-inner-radius: calc(var(--shape-suggestions-radius) - var(--space-1));
 }
 [data-shape="pill"] {
     --search-radius: var(--radius-pill);
@@ -610,6 +612,8 @@
     --shape-field-radius: var(--radius-pill);
     --shape-segment-radius: var(--radius-pill);
     --shape-segment-inner-radius: calc(var(--shape-segment-radius) - var(--space-half));
+    --shape-suggestions-radius: var(--radius-lg);
+    --shape-suggestions-inner-radius: calc(var(--shape-suggestions-radius) - var(--space-1));
 }
 
 /*

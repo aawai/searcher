@@ -603,19 +603,19 @@ Deno.test("production documents library workspace contracts", async (t) => {
                 name: "创建目标笔记本",
                 exact: true,
             }).click();
-            assertEquals(
-                await create.getAttribute("title"),
-                "新建笔记（在「创建目标笔记本」）",
-            );
+            await create.hover();
+            await page.getByRole("tooltip", {
+                name: "新建笔记（在「创建目标笔记本」）",
+            }).waitFor({ state: "visible" });
             const inNotebook = await saveNew("笔记本目标");
             assertEquals(inNotebook.notebookId, notebook.id);
             assertEquals(inNotebook.isHomeFixed, false);
             await tree.getByRole("treeitem", { name: "笔记本目标" }).waitFor();
             await showRecentList();
-            assertEquals(
-                await create.getAttribute("title"),
-                "新建笔记（根目录）",
-            );
+            await create.hover();
+            await page.getByRole("tooltip", {
+                name: "新建笔记（根目录）",
+            }).waitFor({ state: "visible" });
             const recent = await saveNew("最近目标");
             assertEquals(recent.notebookId, null);
             assertEquals(recent.isHomeFixed, false);

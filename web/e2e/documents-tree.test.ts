@@ -361,41 +361,31 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         await ui.item("阅读").waitFor();
         await ui.item("读书").waitFor({ state: "detached" });
 
+        const expectTooltip = async (
+            locator: ReturnType<typeof page.locator>,
+            expected: string,
+        ) => {
+            await locator.hover();
+            await page.getByRole("tooltip", { name: expected }).waitFor({
+                state: "visible",
+            });
+        };
         // Create target follows the selection; the tooltip names it.
         await ui.item("工作").click(); // selected and collapsed
         await ui.item("周报").waitFor({ state: "detached" });
         await ui.item("工作").click(); // expanded again, still selected
-        assertEquals(
-            await ui.newNote.getAttribute("title"),
-            "新建笔记（在「工作」）",
-        );
-        assertEquals(
-            await ui.newNotebook.getAttribute("title"),
-            "新建子笔记本（在「工作」下）",
-        );
+        await expectTooltip(ui.newNote, "新建笔记（在「工作」）");
+        await expectTooltip(ui.newNotebook, "新建子笔记本（在「工作」下）");
         await ui.item("周报").click();
-        assertEquals(
-            await ui.newNote.getAttribute("title"),
-            "新建笔记（在「周报」）",
-        );
-        assertEquals(
-            await ui.newNotebook.getAttribute("title"),
-            "新建笔记本",
-            "no third level",
-        );
+        await expectTooltip(ui.newNote, "新建笔记（在「周报」）");
+        await expectTooltip(ui.newNotebook, "新建笔记本");
         await ui.item("工作笔记").click();
         assertEquals(await ui.title.inputValue(), "工作笔记");
-        assertEquals(
-            await ui.newNote.getAttribute("title"),
-            "新建笔记（在「工作」）",
-        );
+        await expectTooltip(ui.newNote, "新建笔记（在「工作」）");
 
         // Deferred creation lands in the tree: expanded, selected, no home-fix.
         await ui.item("阅读").click(); // select 阅读 and open it
-        assertEquals(
-            await ui.newNote.getAttribute("title"),
-            "新建笔记（在「阅读」）",
-        );
+        await expectTooltip(ui.newNote, "新建笔记（在「阅读」）");
         const created = page.waitForResponse((response) =>
             response.request().method() === "POST" &&
             new URL(response.url()).pathname === "/api/documents" &&
@@ -423,10 +413,7 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         );
         await ui.frame.getByRole("button", { name: /^打开笔记：/ }).first()
             .waitFor();
-        assertEquals(
-            await ui.newNote.getAttribute("title"),
-            "新建笔记（根目录）",
-        );
+        await expectTooltip(ui.newNote, "新建笔记（根目录）");
         await ui.frame.getByRole("button", { name: "收藏", exact: true })
             .click();
         await ui.frame.getByRole("button", { name: "打开笔记：散记置顶" })
@@ -448,10 +435,7 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
         await ui.frame.getByRole("button", { name: "打开笔记：新读书笔记" })
             .waitFor();
         assertEquals(await ui.mode(), "list");
-        assertEquals(
-            await ui.newNote.getAttribute("title"),
-            "新建笔记（根目录）",
-        );
+        await expectTooltip(ui.newNote, "新建笔记（根目录）");
         await ui.search.fill("");
         await ui.frame.getByRole("button", { name: "打开笔记：散记置顶" })
             .waitFor();
@@ -508,10 +492,7 @@ Deno.test("笔记本树：右键 / ⋯ / 键盘菜单、创建目标、模式切
                 .count(),
             0,
         );
-        assertEquals(
-            await ui.newNote.getAttribute("title"),
-            "新建笔记（根目录）",
-        );
+        await expectTooltip(ui.newNote, "新建笔记（根目录）");
         await ui.frame.getByRole("button", { name: "回收站", exact: true })
             .click();
         await page.waitForURL(app.origin + "/trash");

@@ -15,7 +15,14 @@ import {
     type WallpaperReadability,
 } from "@shared/wallpaper-presentation.ts";
 import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
-import { Check, ChevronRight, MoreHorizontal, Upload } from "lucide-react";
+import {
+    Check,
+    ChevronRight,
+    Crop,
+    MoreHorizontal,
+    Trash2,
+    Upload,
+} from "lucide-react";
 import { AccentSwatches } from "../components/searcher/AccentSwatches.tsx";
 import { ThemeChoices } from "../components/searcher/ThemeChoices.tsx";
 import { isHighContrastTheme } from "../design-system/theme.ts";
@@ -1163,7 +1170,14 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                                 disabled
                                                                                 data-testid="wallpaper-menu-set-current"
                                                                             >
-                                                                                当前正在使用
+                                                                                <Check
+                                                                                    size="1em"
+                                                                                    className="icon-sm"
+                                                                                    aria-hidden="true"
+                                                                                />
+                                                                                <span>
+                                                                                    当前正在使用
+                                                                                </span>
                                                                             </DropdownMenuItem>
                                                                         )
                                                                         : (
@@ -1174,7 +1188,14 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                                     )}
                                                                                 data-testid="wallpaper-menu-set-current"
                                                                             >
-                                                                                设为当前壁纸
+                                                                                <Check
+                                                                                    size="1em"
+                                                                                    className="icon-sm"
+                                                                                    aria-hidden="true"
+                                                                                />
+                                                                                <span>
+                                                                                    设为当前壁纸
+                                                                                </span>
                                                                             </DropdownMenuItem>
                                                                         )}
                                                                     <DropdownMenuItem
@@ -1184,7 +1205,14 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                             )}
                                                                         data-testid="wallpaper-menu-adjust-focal"
                                                                     >
-                                                                        调整构图
+                                                                        <Crop
+                                                                            size="1em"
+                                                                            className="icon-sm"
+                                                                            aria-hidden="true"
+                                                                        />
+                                                                        <span>
+                                                                            调整构图
+                                                                        </span>
                                                                     </DropdownMenuItem>
                                                                     <DropdownMenuItem
                                                                         variant="destructive"
@@ -1194,7 +1222,14 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                             )}
                                                                         data-testid="wallpaper-menu-delete"
                                                                     >
-                                                                        删除
+                                                                        <Trash2
+                                                                            size="1em"
+                                                                            className="icon-sm"
+                                                                            aria-hidden="true"
+                                                                        />
+                                                                        <span>
+                                                                            删除
+                                                                        </span>
                                                                     </DropdownMenuItem>
                                                                 </DropdownMenuContent>
                                                             </DropdownMenu>

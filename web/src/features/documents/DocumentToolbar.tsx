@@ -23,6 +23,11 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import type { MarkdownEditorCommand } from "../markdown-editor/types.ts";
 
 export interface DocumentToolbarProps {
@@ -255,29 +260,38 @@ export function DocumentToolbar({
                             const index = buttonIndex++;
                             const Icon = button.Icon;
                             return (
-                                <Button
-                                    key={button.label}
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label={button.label}
-                                    title={button.label}
-                                    aria-pressed={button.pressed}
-                                    disabled={button.disabled}
-                                    tabIndex={index === tabStopIndex ? 0 : -1}
-                                    data-toolbar-index={index}
-                                    onPointerDown={handlePointerDown}
-                                    onClick={(event) => {
-                                        event.preventDefault();
-                                        button.onAction();
-                                    }}
-                                >
-                                    <Icon
-                                        size="1em"
-                                        className="icon-md"
-                                        aria-hidden="true"
-                                    />
-                                </Button>
+                                <Tooltip key={button.label}>
+                                    <TooltipTrigger
+                                        render={
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                aria-label={button.label}
+                                                aria-pressed={button.pressed}
+                                                disabled={button.disabled}
+                                                tabIndex={index === tabStopIndex
+                                                    ? 0
+                                                    : -1}
+                                                data-toolbar-index={index}
+                                                onPointerDown={handlePointerDown}
+                                                onClick={(event) => {
+                                                    event.preventDefault();
+                                                    button.onAction();
+                                                }}
+                                            />
+                                        }
+                                    >
+                                        <Icon
+                                            size="1em"
+                                            className="icon-md"
+                                            aria-hidden="true"
+                                        />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {button.label}
+                                    </TooltipContent>
+                                </Tooltip>
                             );
                         })}
                     </div>
