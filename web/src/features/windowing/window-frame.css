@@ -17,9 +17,14 @@
     min-height: 0;
     background: var(--surface-l3);
     color: var(--foreground);
-    border: var(--space-hairline) solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-l3);
+}
+
+@media (forced-colors: active) {
+    .window-frame {
+        outline: 1px solid CanvasText;
+    }
 }
 
 .window-frame[hidden] {
@@ -157,11 +162,11 @@
     min-height: 0;
     overflow: auto;
 }
-/* Grouped lists need a canvas that differs from their own surface. */
-.window-frame[data-window-id="settings"] .window-frame__content {
+/* Grouped lists and management tables need a canvas that differs from their own
+   --surface cards; apply it to the whole frame so the title bar forms no band. */
+.window-frame[data-window-id="settings"],
+.window-frame[data-window-id="trash"] {
     background: var(--surface-grouped-canvas);
-    border-end-start-radius: inherit;
-    border-end-end-radius: inherit;
 }
 .window-frame__resize {
     position: absolute;

@@ -10,6 +10,7 @@
    -------------------------------------------------------------------------- */
 .ask-page-shell {
     --page-shell-workbench-max: var(--layout-ask-workbench-max);
+    --ask-host-bg: var(--background);
 }
 
 /* In the AI window the workspace fills the frame and its thread scrolls inside it. */
@@ -19,6 +20,7 @@
     overflow: hidden;
 }
 .window-frame__content > .ask-page-shell {
+    --ask-host-bg: var(--surface-l3);
     flex: 1;
     width: 100%;
     max-width: none;
@@ -65,6 +67,7 @@
     flex-shrink: 0;
     width: 260px;
     height: 100%;
+    border-inline-end: var(--space-hairline) solid var(--border);
 }
 
 .ask-sidebar__content {
@@ -86,6 +89,15 @@
 
 [data-slot="button"].ask-sidebar__new-btn {
     width: 100%;
+    background: var(--surface-solid);
+    border: var(--space-hairline) solid var(--field-border);
+}
+
+@media (hover: hover) {
+    [data-slot="button"].ask-sidebar__new-btn:hover {
+        background: var(--surface-hover);
+        border-color: var(--field-border-hover);
+    }
 }
 
 .ask-sidebar__list {
@@ -406,7 +418,7 @@
     right: 0;
     left: 0;
     height: var(--space-7);
-    background: linear-gradient(to top, var(--surface-l3) 30%, transparent);
+    background: linear-gradient(to top, var(--ask-host-bg) 30%, transparent);
     pointer-events: none;
 }
 
@@ -1000,7 +1012,7 @@
     padding: var(--space-3);
     border: 0;
     border-radius: var(--radius);
-    background: var(--surface-solid);
+    background: var(--surface-soft);
     color: inherit;
     font: inherit;
     text-align: left;
@@ -1011,7 +1023,7 @@
 
 @media (hover: hover) {
     [data-slot="button"].ask-source-card:hover {
-        background: color-mix(in srgb, var(--foreground) 4%, var(--surface-solid));
+        background: color-mix(in srgb, var(--foreground) 6%, var(--surface-soft));
     }
 }
 
@@ -1180,7 +1192,7 @@
     gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius);
-    background: var(--surface-solid);
+    background: var(--surface-soft);
 }
 
 .ask-interrupted-banner__content {

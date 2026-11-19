@@ -71,6 +71,15 @@
 
 .trash-mobile-list {
     display: none;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding-inline: var(--space-4);
+}
+
+@media (forced-colors: none) {
+    [data-contrast="more"] .trash-mobile-list {
+        border: var(--space-hairline) solid var(--border);
+    }
 }
 
 .trash-mobile-card {
@@ -80,7 +89,7 @@
 }
 
 .trash-mobile-card + .trash-mobile-card {
-    border-block-start: 1px solid var(--border-subtle);
+    border-block-start: var(--space-hairline) solid var(--border-subtle);
 }
 
 .trash-card-actions {

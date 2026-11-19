@@ -70,7 +70,7 @@
     --glass-edge-top: rgb(255 255 255 / 1);
     --glass-edge-ring: rgb(255 255 255 / 0.7);
     --glass-edge-bottom: rgb(0 0 0 / 0.07);
-    --glyph-edge: rgb(0 0 0 / 0.5);
+    --glyph-edge: rgb(0 0 0 / 0.12);
     /* Light catching the top of the glass: peak white at the top edge, fading out by 55% of the height. Scaled by the tier. */
     --glass-sheen-peak: 60%;
 
@@ -262,9 +262,9 @@
     --layout-home-content-max: 640px;
     --layout-masthead-col: clamp(296px, 19vw, 372px);
     --layout-masthead-veil-fade: 640px;
-    /* Collapsed narrow masthead in the solid fallbacks: the top veil's fade,
-       ending MASTHEAD_PEEK_VEIL_TAIL (masthead-layout.ts) below the peek. */
-    --layout-masthead-peek-fade: 200px;
+    /* Collapsed narrow masthead: the top veil fades below the peek over
+       MASTHEAD_PEEK_VEIL_TAIL (masthead-layout.ts). */
+    --layout-masthead-peek-fade: 120px;
     --layout-masthead-panel-max: var(--layout-form-max);
     /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
     --home-grid-wide-cell: 76px;
@@ -305,13 +305,13 @@
     color-scheme: dark;
     --background: #111113;
     --foreground: #F5F5F7;
-    --surface: #1C1C1F;
-    --surface-solid: #1C1C1F;
+    --surface: #1F1F23;
+    --surface-solid: #1F1F23;
     --surface-soft: #2A2A2E;
     --surface-highlight: rgb(255 255 255 / 0.10);
     --surface-control-thumb: #636366;
-    --surface-l3: #242428;
-    --surface-grouped-canvas: var(--surface-l3);
+    --surface-l3: var(--surface-solid);
+    --surface-grouped-canvas: #161619;
     --muted: #A1A1A6;
     --masthead-muted: #c6c6cb;
     --border: rgb(255 255 255 / 0.10);
@@ -339,6 +339,7 @@
     --glass-edge-top: rgb(255 255 255 / 0.32);
     --glass-edge-ring: rgb(255 255 255 / 0.12);
     --glass-edge-bottom: rgb(0 0 0 / 0.35);
+    --glyph-edge: rgb(255 255 255 / 0.14);
     --glass-sheen-peak: 6%;
 }
 
@@ -540,6 +541,7 @@
     --surface-scrim: rgb(0 0 0 / 0.7);
     --shadow-l2: var(--shadow-frame), 0 4px 12px -6px rgb(0 0 0 / 0.6);
     --shadow-l3: var(--shadow-frame), 0 12px 28px -12px rgb(0 0 0 / 0.7);
+    --glyph-edge: rgb(255 255 255 / 0.6);
 }
 
 /* High contrast accent: on <html> and on every nested `data-accent` scope (the
@@ -581,7 +583,7 @@
     --theme-preview-light-line: #86868B;
     --theme-preview-light-edge: rgb(0 0 0 / 0.09);
     --theme-preview-dark-canvas: #111113;
-    --theme-preview-dark-surface: #1C1C1F;
+    --theme-preview-dark-surface: #1F1F23;
     --theme-preview-dark-line: #747479;
     --theme-preview-dark-edge: rgb(255 255 255 / 0.10);
     --theme-preview-high-contrast-light-canvas: #FFFFFF;
@@ -702,18 +704,16 @@
     --material-thick-sheen: linear-gradient(180deg, color-mix(in srgb, white calc(var(--glass-sheen-peak) * var(--material-thick-sheen-scale)), transparent), transparent 55%);
 }
 
-/* Text and glyphs set directly on the wallpaper (home app labels, the home top
-   bar, the collapsed narrow masthead) keep A6 on any wallpaper with a halo in
-   two parts. The core is a solid outline in the surface colour: a stroke of
-   --wallpaper-text-core painted under the glyph (`paint-order: stroke fill`),
-   so only its outer half (2.5px) shows. Following WCAG 1.4.3 (Understanding,
-   note 5) an outline that fills the letters' inner details is the text's
-   background; wallpaper-readability.test.ts samples the 2px next to each
-   glyph, inside the core's antialiased edge. A soft glow outside it eases the
-   edge into the wallpaper. Icons take the same core as a 2px square dilation
-   of chained zero-blur drop-shadows, which follow an SVG's strokes. Forced
-   colours repaint a text stroke in the text colour, filling the letters in,
-   so the core is dropped there; the system palette owns contrast (A7). */
+/* Text set directly on the wallpaper (home app labels when the plate is hidden)
+   keeps A6 on any wallpaper with a halo in two parts. The core is a solid
+   outline in the surface colour: a stroke of --wallpaper-text-core painted
+   under the glyph (`paint-order: stroke fill`), so only its outer half (2.5px)
+   shows. Following WCAG 1.4.3 (Understanding, note 5) an outline that fills
+   the letters' inner details is the text's background; wallpaper-readability.test.ts
+   samples the 2px next to each glyph, inside the core's antialiased edge. A
+   soft glow outside it eases the edge into the wallpaper. Forced colours
+   repaint a text stroke in the text colour, filling the letters in, so the
+   core is dropped there; the system palette owns contrast (A7). */
 :root {
     --wallpaper-text-core: 5px;
 }
@@ -722,11 +722,6 @@
     --wallpaper-text-stroke: var(--wallpaper-text-core) var(--surface-solid);
     --wallpaper-text-halo: 0 0 var(--space-2) color-mix(in srgb, var(--surface-solid) 90%, transparent),
         0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent);
-    --wallpaper-icon-halo: drop-shadow(1px 0 0 var(--surface-solid)) drop-shadow(-1px 0 0 var(--surface-solid))
-        drop-shadow(0 1px 0 var(--surface-solid)) drop-shadow(0 -1px 0 var(--surface-solid))
-        drop-shadow(1px 0 0 var(--surface-solid)) drop-shadow(-1px 0 0 var(--surface-solid))
-        drop-shadow(0 1px 0 var(--surface-solid)) drop-shadow(0 -1px 0 var(--surface-solid))
-        drop-shadow(0 0 var(--space-1) color-mix(in srgb, var(--surface-solid) 90%, transparent));
     /* Hairline divider between top-bar groups on the wallpaper. */
     --border-on-wallpaper: color-mix(in srgb, var(--foreground) 28%, transparent);
 }
@@ -735,7 +730,6 @@
     [data-theme] {
         --wallpaper-text-core: 0px;
         --wallpaper-text-halo: none;
-        --wallpaper-icon-halo: none;
     }
 }
 
@@ -768,16 +762,13 @@
 }
 
 /* Home masthead veil: a translucent --background wash over a strongly blurred
-   wallpaper, so the wallpaper's colour still shows behind the column. The
-   collapsed narrow masthead (the peek) has no veil at all: it reads as
-   printed on the wallpaper and its text carries the wallpaper halo's solid
-   core in --background (--masthead-text-stroke) under --masthead-text-halo, a
-   soft --background glow. The glass `off` tier and the fallbacks below make
-   the veil solid and show it behind the peek too. */
+   wallpaper, so the wallpaper's colour still shows behind the column and the
+   collapsed narrow peek without harsh text strokes. The glass `off` tier and
+   the fallbacks below make the veil solid. */
 :root {
     --masthead-veil-light: 66%;
     --masthead-veil-dark: 50%;
-    --masthead-peek-veil-opacity: 0;
+    --masthead-peek-veil-opacity: 1;
     --masthead-veil-filter: blur(28px) saturate(1.35);
 }
 [data-glass="off"] {
@@ -791,20 +782,10 @@
 [data-glass] {
     --masthead-veil-mix: var(--masthead-veil-light);
     --masthead-veil: color-mix(in srgb, var(--background) var(--masthead-veil-mix), transparent);
-    --masthead-text-stroke: var(--wallpaper-text-core) var(--background);
-    --masthead-text-halo: 0 0 4px var(--background), 0 0 8px var(--background),
-        0 0 16px var(--background), 0 0 28px var(--background);
 }
 [data-theme="dark"],
 [data-theme="dark"] [data-glass] {
     --masthead-veil-mix: var(--masthead-veil-dark);
-}
-@media (forced-colors: active) {
-    :root,
-    [data-theme],
-    [data-glass] {
-        --masthead-text-halo: none;
-    }
 }
 
 /* Without backdrop-filter, or when the OS reduces transparency, every tier renders as `off`. */
