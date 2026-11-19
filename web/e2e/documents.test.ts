@@ -272,11 +272,16 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                         tabStopCount: buttons.filter((button) =>
                             !button.disabled && button.tabIndex === 0
                         ).length,
-                        titleMismatchCount: buttons.filter((button) =>
-                            button.title !== button.getAttribute("aria-label")
+                        missingLabelCount: buttons.filter((button) =>
+                            !button.getAttribute("aria-label")
+                        ).length,
+                        nativeTitleCount: buttons.filter((button) =>
+                            button.hasAttribute("title")
                         ).length,
                         hasInternalPagebreakLabel: buttons.some((button) =>
-                            button.title.includes("<!--")
+                            (button.getAttribute("aria-label") ?? "").includes(
+                                "<!--",
+                            )
                         ),
                     };
                 });
@@ -286,7 +291,8 @@ Deno.test("Documents production responsive modes and large-document integrity (#
                 );
                 assertEquals(toolbarGeometry.rowCount, 1);
                 assertEquals(toolbarGeometry.tabStopCount, 1);
-                assertEquals(toolbarGeometry.titleMismatchCount, 0);
+                assertEquals(toolbarGeometry.missingLabelCount, 0);
+                assertEquals(toolbarGeometry.nativeTitleCount, 0);
                 assertEquals(toolbarGeometry.hasInternalPagebreakLabel, false);
 
                 const touchContext = await browser.newContext({

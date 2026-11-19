@@ -629,8 +629,8 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                     homeFocused.suggestionsFilter.includes("saturate(1.8)"),
                 `search suggestions must use Floating thick filter, got: ${homeFocused.suggestionsFilter}`,
             );
-            assertEquals(homeFocused.suggestionsRadius, "14px");
-            assertEquals(homeFocused.suggestionItemRadius, "10px");
+            assertEquals(homeFocused.suggestionsRadius, "20px");
+            assertEquals(homeFocused.suggestionItemRadius, "16px");
 
             // Blurring restores resting clear Material fill, filter and sheen
             await searchInput.evaluate((el: HTMLInputElement) => el.blur());

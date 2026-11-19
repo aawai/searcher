@@ -605,7 +605,7 @@ export function WindowFrame(
                                 open={menuOpen}
                                 onOpenChange={setMenuOpen}
                             >
-                                <Tooltip>
+                                <Tooltip disabled={menuOpen}>
                                     <TooltipTrigger
                                         render={
                                             <DropdownMenuTrigger
