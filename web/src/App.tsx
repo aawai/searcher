@@ -55,7 +55,7 @@ import {
     RouteLoadingFallback,
 } from "./app/RouteErrorBoundary.tsx";
 import { Button } from "./components/ui/button.tsx";
-import { LoadingState } from "./components/searcher/semantic.tsx";
+import { LoadingState, StatusBanner } from "./components/searcher/semantic.tsx";
 import {
     AppearancePicker,
     ThemeToggle,
@@ -71,12 +71,15 @@ import {
     DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu.tsx";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-} from "./components/ui/dialog.tsx";
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "./components/ui/alert-dialog.tsx";
 import {
     Tooltip,
     TooltipContent,
@@ -554,37 +557,40 @@ function Layout() {
                         </Button>
                     </aside>
                 )}
-                {error && <p role="alert" className="error">{error}</p>}
-                <Dialog
+                {error && <StatusBanner tone="error">{error}</StatusBanner>}
+                <AlertDialog
                     open={logoutSession?.isCurrent() ?? false}
                     onOpenChange={(open) => {
                         if (!open && !logoutBusy) setLogoutSession(null);
                     }}
                 >
-                    <DialogContent aria-label="退出登录确认">
-                        <DialogTitle>有未同步的笔记草稿</DialogTitle>
-                        <DialogDescription>
-                            退出后草稿仍保留在此浏览器，重新登录可继续同步。
-                        </DialogDescription>
-                        <DialogFooter>
-                            <Button
-                                type="button"
+                    <AlertDialogContent aria-label="退出登录确认">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                有未同步的笔记草稿
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                退出后草稿仍保留在此浏览器，重新登录可继续同步。
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel
                                 disabled={logoutBusy}
                                 onClick={() => setLogoutSession(null)}
                             >
                                 先去同步
-                            </Button>
-                            <Button
+                            </AlertDialogCancel>
+                            <AlertDialogAction
                                 type="button"
                                 variant="destructive"
                                 disabled={logoutBusy}
                                 onClick={() => void requestLogout(true)}
                             >
                                 仍要退出
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
                 {!ready
                     ? (
                         <LoadingState className="page" announce>

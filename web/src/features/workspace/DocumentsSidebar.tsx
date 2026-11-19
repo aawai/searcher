@@ -107,13 +107,22 @@ const errorText = (cause: unknown, fallback: string) =>
     cause instanceof Error ? cause.message : fallback;
 
 function DocumentSummaryRow(
-    { item, notebooks, onChanged, onOpenDocument, selected, onTrashed }: {
+    {
+        item,
+        notebooks,
+        onChanged,
+        onOpenDocument,
+        selected,
+        onTrashed,
+        onActionError,
+    }: {
         item: DocumentSummaryDto;
         notebooks: DocumentNotebookDto[];
         onChanged: () => void;
         onOpenDocument: (id: string) => void;
         selected: boolean;
         onTrashed: (id: string) => void;
+        onActionError?: (message: string) => void;
     },
 ) {
     const displayTitle = item.displayTitle;
@@ -147,6 +156,7 @@ function DocumentSummaryRow(
                 <DocumentLibraryActions
                     item={item}
                     onTrashed={onTrashed}
+                    onError={onActionError}
                     notebooks={notebooks}
                     onChanged={onChanged}
                 />
@@ -632,6 +642,7 @@ export function DocumentsSidebar({
         pages,
     ]);
     const [moveError, setMoveError] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
     const moveTreeItem = async (
         move: Extract<TreeDropResult, { valid: true }>,
     ) => {
@@ -881,6 +892,7 @@ export function DocumentsSidebar({
                                 })
                             : undefined}
                         onChanged={refresh}
+                        onActionError={setActionError}
                         onTrashed={(id) => {
                             if (
                                 state.view === "documents/edit" &&
@@ -981,6 +993,20 @@ export function DocumentsSidebar({
                 {moveError && (
                     <StatusBanner tone="error" density="compact">
                         {moveError}
+                    </StatusBanner>
+                )}
+                {actionError && (
+                    <StatusBanner tone="error" density="compact">
+                        <div className="documents-status-row">
+                            <span>{actionError}</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setActionError(null)}
+                            >
+                                关闭
+                            </Button>
+                        </div>
                     </StatusBanner>
                 )}
                 <div
@@ -1177,6 +1203,7 @@ export function DocumentsSidebar({
                                                     state.id === item.id}
                                                 notebooks={notebooks}
                                                 onChanged={refresh}
+                                                onActionError={setActionError}
                                                 onOpenDocument={(id) =>
                                                     void openNote(id)}
                                                 onTrashed={(id) => {
@@ -1251,11 +1278,20 @@ function Chevron({ expanded }: { expanded: boolean }) {
 
 /** A note node: its own row, the shared note menu and the dialogs those actions open. */
 function TreeNoteRow(
-    { entry, notebooks, onChanged, onTrashed, onMoveUp, onMoveDown }: {
+    {
+        entry,
+        notebooks,
+        onChanged,
+        onTrashed,
+        onActionError,
+        onMoveUp,
+        onMoveDown,
+    }: {
         entry: Extract<TreeEntry, { kind: "note" }>;
         notebooks: DocumentNotebookDto[];
         onChanged: () => void;
         onTrashed: (id: string) => void;
+        onActionError?: (message: string) => void;
         onMoveUp?: () => void;
         onMoveDown?: () => void;
     },
@@ -1266,6 +1302,7 @@ function TreeNoteRow(
         notebooks,
         onChanged,
         onTrashed,
+        onError: onActionError,
         showReorderActions: true,
         onMoveUp,
         onMoveDown,

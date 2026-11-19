@@ -15,6 +15,7 @@
 
 .trash-tabs {
     margin: 0;
+    gap: 0;
 }
 
 .trash-status {

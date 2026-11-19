@@ -79,11 +79,8 @@
 }
 
 .account-device-empty {
-    margin: 0;
     padding: var(--space-3) var(--space-card-padding);
-    color: var(--muted);
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
+    text-align: start;
 }
 
 .account-password-dialog {

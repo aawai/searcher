@@ -70,6 +70,7 @@ import {
     Download,
     History,
     MoreHorizontal,
+    Pin,
     Printer,
     RefreshCw,
     Settings,
@@ -477,6 +478,7 @@ export function DocumentEditor({
     };
 
     // 3. UI states (outline toggle, history dialog, copy status, errors)
+    const mergeTextareaId = useId();
     const [linkOpen, setLinkOpen] = useState(false);
     const [linkHref, setLinkHref] = useState("");
     const [devicePreferences, setDevicePreferences] = useState(() =>
@@ -1570,7 +1572,7 @@ export function DocumentEditor({
                                     >
                                         <MoreHorizontal
                                             size="1em"
-                                            className="icon-md"
+                                            className="icon-sm"
                                             aria-hidden="true"
                                         />
                                     </Button>
@@ -1592,9 +1594,15 @@ export function DocumentEditor({
                                             });
                                     }}
                                 >
-                                    {snapshot.document?.isHomeFixed
-                                        ? "取消固定"
-                                        : "固定到首页"}
+                                    <Pin
+                                        className="icon-md"
+                                        aria-hidden="true"
+                                    />
+                                    <span>
+                                        {snapshot.document?.isHomeFixed
+                                            ? "取消固定"
+                                            : "固定到首页"}
+                                    </span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -1899,7 +1907,16 @@ export function DocumentEditor({
                             placeholder="https://example.com"
                         />
                         <DialogFooter>
-                            <Button type="submit">插入链接</Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setLinkOpen(false)}
+                            >
+                                取消
+                            </Button>
+                            <Button type="submit" variant="default">
+                                插入链接
+                            </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -1926,22 +1943,22 @@ export function DocumentEditor({
                 localBody={snapshot.body}
                 onResolve={handleResolveConflict}
                 onDismiss={() => setConflictDismissed(true)}
-                onCopyDraft={async () => {
-                    const copyId = await session.resolveConflict("new");
-                    if (copyId === null) {
-                        throw new Error(
-                            session.getSnapshot().error ?? "复制草稿失败",
-                        );
-                    }
-                    onChanged?.();
-                }}
                 mergeContent={
-                    <Textarea
-                        aria-label="合并内容"
-                        placeholder="编辑合并后的正文"
-                        value={mergeBody}
-                        onChange={(event) => setMergeBody(event.target.value)}
-                    />
+                    <div className="conflict-field">
+                        <label
+                            className="conflict-label"
+                            htmlFor={mergeTextareaId}
+                        >
+                            合并内容
+                        </label>
+                        <Textarea
+                            id={mergeTextareaId}
+                            placeholder="编辑合并后的正文"
+                            value={mergeBody}
+                            onChange={(event) =>
+                                setMergeBody(event.target.value)}
+                        />
+                    </div>
                 }
                 onMerge={async () => {
                     session.edit({ body: mergeBody });

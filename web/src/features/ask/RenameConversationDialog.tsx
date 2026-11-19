@@ -56,7 +56,7 @@ export function RenameConversationDialog({
                     <Input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        placeholder="输入对话标题..."
+                        placeholder="输入对话标题…"
                         autoFocus
                     />
 
@@ -74,7 +74,7 @@ export function RenameConversationDialog({
                             type="submit"
                             disabled={submitting || !title.trim()}
                         >
-                            {submitting ? "保存中..." : "保存"}
+                            {submitting ? "保存中…" : "保存"}
                         </Button>
                     </DialogFooter>
                 </form>

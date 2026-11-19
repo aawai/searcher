@@ -8,6 +8,7 @@ import {
     LoadingState,
     ManagementTable,
     Pagination,
+    SearchField,
     SecretInput,
     StatusBanner,
     WorkspaceToolbar,
@@ -742,22 +743,17 @@ export function AdminPage() {
                             className="admin-toolbar-field"
                             onSubmit={handleSearchSubmit}
                         >
-                            <Input
+                            <SearchField
                                 name="userSearch"
-                                type="search"
-                                variant="search"
                                 aria-label="搜索用户"
                                 placeholder="按用户名、显示名称或邮箱搜索"
                                 value={userSearch}
-                                onChange={(e) => {
-                                    // The field's own clear button is the one way to drop the search.
-                                    if (
-                                        e.target.value === "" && submittedSearch
-                                    ) {
+                                onValueChange={(next) => {
+                                    if (next === "" && submittedSearch) {
                                         clearSearch();
                                         return;
                                     }
-                                    setUserSearch(e.target.value);
+                                    setUserSearch(next);
                                 }}
                             />
                         </form>
@@ -1209,22 +1205,17 @@ export function AdminPage() {
                             className="admin-toolbar-field"
                             onSubmit={handleAuditSearchSubmit}
                         >
-                            <Input
+                            <SearchField
                                 name="auditSearch"
-                                type="search"
-                                variant="search"
                                 aria-label="搜索审计日志"
                                 placeholder="按操作者、对象 ID 或明细搜索"
                                 value={auditSearch}
-                                onChange={(e) => {
-                                    if (
-                                        e.target.value === "" &&
-                                        submittedAuditSearch
-                                    ) {
+                                onValueChange={(next) => {
+                                    if (next === "" && submittedAuditSearch) {
                                         clearAuditSearch();
                                         return;
                                     }
-                                    setAuditSearch(e.target.value);
+                                    setAuditSearch(next);
                                 }}
                             />
                         </form>
@@ -1590,20 +1581,20 @@ export function AdminPage() {
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog
+            <Dialog
                 open={Boolean(deleteModalUser)}
                 onOpenChange={(open) => {
                     if (!deleteBusy && !open) setDeleteModalUser(null);
                 }}
             >
-                <AlertDialogContent finalFocus={modalTriggerRef}>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>删除用户</AlertDialogTitle>
-                        <AlertDialogDescription>
+                <DialogContent finalFocus={modalTriggerRef}>
+                    <DialogHeader>
+                        <DialogTitle>删除用户</DialogTitle>
+                        <DialogDescription>
                             删除 @{deleteUsername}{" "}
                             后，其会话将被立即终止，笔记、应用和偏好将无法访问。此操作不可撤销。
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
+                        </DialogDescription>
+                    </DialogHeader>
                     <form className="admin-form" onSubmit={handleDeleteSubmit}>
                         <div className="admin-field">
                             <label
@@ -1638,21 +1629,27 @@ export function AdminPage() {
                                 </p>
                             )}
                         </div>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel disabled={deleteBusy}>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={deleteBusy}
+                                onClick={() => setDeleteModalUser(null)}
+                            >
                                 取消
-                            </AlertDialogCancel>
-                            <AlertDialogAction
+                            </Button>
+                            <Button
                                 type="submit"
+                                variant="destructive"
                                 disabled={deleteBusy ||
                                     deleteConfirmText !== deleteUsername}
                             >
                                 {deleteBusy ? "正在删除…" : "删除用户"}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
+                            </Button>
+                        </DialogFooter>
                     </form>
-                </AlertDialogContent>
-            </AlertDialog>
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog
                 open={Boolean(disableModalUser)}

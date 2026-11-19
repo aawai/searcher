@@ -714,6 +714,7 @@ export function WindowFrame(
                             取消调整
                         </Button>
                         <Button
+                            variant="default"
                             onClick={() => {
                                 setOperation(null);
                                 setAnnouncement("已完成窗口调整");

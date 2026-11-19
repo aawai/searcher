@@ -1142,9 +1142,7 @@
     color: var(--accent-foreground);
 }
 
-[data-slot="badge"][data-variant="secondary"],
-[data-slot="badge"][data-variant="outline"],
-[data-slot="badge"][data-variant="ghost"] {
+[data-slot="badge"][data-variant="secondary"] {
     background: var(--surface-soft);
     color: var(--muted);
 }
@@ -1152,10 +1150,6 @@
 [data-slot="badge"][data-variant="destructive"] {
     background: color-mix(in srgb, var(--danger) 14%, transparent);
     color: var(--danger);
-}
-
-[data-slot="badge"][data-variant="link"] {
-    color: var(--accent);
 }
 
 /* --------------------------------------------------------------------------

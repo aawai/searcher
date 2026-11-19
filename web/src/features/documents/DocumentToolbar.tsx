@@ -1,5 +1,5 @@
 import type { FocusEvent, KeyboardEvent, PointerEvent } from "react";
-import { useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import {
     Bold,
     Code,
@@ -59,6 +59,37 @@ export function DocumentToolbar({
     disabled = false,
 }: DocumentToolbarProps) {
     const [rovingIndex, setRovingIndex] = useState(0);
+    const toolbarRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const toolbar = toolbarRef.current;
+        if (!toolbar || typeof ResizeObserver === "undefined") return;
+
+        const updateDividers = () => {
+            const dividers = toolbar.querySelectorAll<HTMLElement>(
+                ":scope > .document-editor-toolbar-divider",
+            );
+            for (const divider of dividers) {
+                const prev = divider.previousElementSibling as
+                    | HTMLElement
+                    | null;
+                const next = divider.nextElementSibling as HTMLElement | null;
+                const wrapped = Boolean(
+                    prev && next && prev.offsetTop !== next.offsetTop,
+                );
+                if (wrapped) {
+                    divider.setAttribute("data-line-break", "true");
+                } else {
+                    divider.removeAttribute("data-line-break");
+                }
+            }
+        };
+
+        updateDividers();
+        const observer = new ResizeObserver(updateDividers);
+        observer.observe(toolbar);
+        return () => observer.disconnect();
+    }, []);
     const handlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
         if (event.button === 0) {
             event.preventDefault();
@@ -198,6 +229,7 @@ export function DocumentToolbar({
 
     return (
         <div
+            ref={toolbarRef}
             className="document-editor-toolbar"
             role="toolbar"
             aria-label="笔记编辑格式工具栏"
@@ -207,48 +239,49 @@ export function DocumentToolbar({
             onKeyDown={handleKeyDown}
         >
             {groups.map((group, groupIndex) => (
-                <div
-                    key={group.label}
-                    className="document-editor-toolbar-group"
-                    role="group"
-                    aria-label={group.label}
-                >
+                <Fragment key={group.label}>
                     {groupIndex > 0 && (
                         <div
                             className="document-editor-toolbar-divider"
                             aria-hidden="true"
                         />
                     )}
-                    {group.buttons.map((button) => {
-                        const index = buttonIndex++;
-                        const Icon = button.Icon;
-                        return (
-                            <Button
-                                key={button.label}
-                                type="button"
-                                variant={button.pressed ? "outline" : "ghost"}
-                                size="icon"
-                                aria-label={button.label}
-                                title={button.label}
-                                aria-pressed={button.pressed}
-                                disabled={button.disabled}
-                                tabIndex={index === tabStopIndex ? 0 : -1}
-                                data-toolbar-index={index}
-                                onPointerDown={handlePointerDown}
-                                onClick={(event) => {
-                                    event.preventDefault();
-                                    button.onAction();
-                                }}
-                            >
-                                <Icon
-                                    size="1em"
-                                    className="icon-md"
-                                    aria-hidden="true"
-                                />
-                            </Button>
-                        );
-                    })}
-                </div>
+                    <div
+                        className="document-editor-toolbar-group"
+                        role="group"
+                        aria-label={group.label}
+                    >
+                        {group.buttons.map((button) => {
+                            const index = buttonIndex++;
+                            const Icon = button.Icon;
+                            return (
+                                <Button
+                                    key={button.label}
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={button.label}
+                                    title={button.label}
+                                    aria-pressed={button.pressed}
+                                    disabled={button.disabled}
+                                    tabIndex={index === tabStopIndex ? 0 : -1}
+                                    data-toolbar-index={index}
+                                    onPointerDown={handlePointerDown}
+                                    onClick={(event) => {
+                                        event.preventDefault();
+                                        button.onAction();
+                                    }}
+                                >
+                                    <Icon
+                                        size="1em"
+                                        className="icon-md"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
+                            );
+                        })}
+                    </div>
+                </Fragment>
             ))}
         </div>
     );

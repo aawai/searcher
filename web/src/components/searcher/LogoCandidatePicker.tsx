@@ -6,15 +6,13 @@ import {
 } from "../../../../src/features/ai/types.ts";
 import { LOGO_STYLE_LABELS, type LogoSession } from "./useLogoSession.ts";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "../ui/alert-dialog.tsx";
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "../ui/dialog.tsx";
 import { Button, buttonVariants } from "../ui/button.tsx";
 import { routes } from "../../app/routes.ts";
 import { Input } from "../ui/input.tsx";
@@ -263,7 +261,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     </RadioGroup>
                 </SettingsRow>
             )}
-            <AlertDialog
+            <Dialog
                 open={confirmOpen}
                 onOpenChange={(open) => {
                     setConfirmOpen(open);
@@ -272,17 +270,17 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     }
                 }}
             >
-                <AlertDialogContent className="app-ai-confirm-dialog">
+                <DialogContent className="app-ai-confirm-dialog">
                     {confirmSnapshot && (
                         <>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>
+                            <DialogHeader>
+                                <DialogTitle>
                                     生成 AI 图标
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
+                                </DialogTitle>
+                                <DialogDescription>
                                     应用名称、域名和用途将发送至以下服务商，可能产生费用。
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
+                                </DialogDescription>
+                            </DialogHeader>
                             <div className="app-ai-confirm-body">
                                 <div className="app-ai-confirm-item">
                                     <span className="app-ai-confirm-label">
@@ -353,11 +351,20 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                     将生成 3 个原创图标，非官方品牌标志。
                                 </div>
                             </div>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel disabled={busy}>
+                            <DialogFooter>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={busy}
+                                    onClick={() => {
+                                        setConfirmOpen(false);
+                                        setConfirmSnapshot(null);
+                                    }}
+                                >
                                     取消
-                                </AlertDialogCancel>
-                                <AlertDialogAction
+                                </Button>
+                                <Button
+                                    type="button"
                                     variant="default"
                                     disabled={busy}
                                     onClick={() => {
@@ -370,12 +377,12 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                     }}
                                 >
                                     确认生成
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
+                                </Button>
+                            </DialogFooter>
                         </>
                     )}
-                </AlertDialogContent>
-            </AlertDialog>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

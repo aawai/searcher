@@ -91,7 +91,9 @@ export function SearcherUserMessage() {
                                     </Button>
                                 </ComposerPrimitive.Cancel>
                                 <ComposerPrimitive.Send asChild>
-                                    <Button size="sm">保存并发送</Button>
+                                    <Button variant="default" size="sm">
+                                        保存并发送
+                                    </Button>
                                 </ComposerPrimitive.Send>
                             </div>
                         </ComposerPrimitive.Root>

@@ -15,7 +15,7 @@ import {
     type WallpaperReadability,
 } from "@shared/wallpaper-presentation.ts";
 import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
-import { Check, ChevronRight, MoreVertical, Upload } from "lucide-react";
+import { Check, ChevronRight, MoreHorizontal, Upload } from "lucide-react";
 import { AccentSwatches } from "../components/searcher/AccentSwatches.tsx";
 import { ThemeChoices } from "../components/searcher/ThemeChoices.tsx";
 import { isHighContrastTheme } from "../design-system/theme.ts";
@@ -1140,7 +1140,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                     }`}
                                                                     data-testid={`wallpaper-menu-trigger-${record.id}`}
                                                                 >
-                                                                    <MoreVertical
+                                                                    <MoreHorizontal
                                                                         size="1em"
                                                                         className="icon-md"
                                                                     />
