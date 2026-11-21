@@ -52,12 +52,12 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
         searchRect,
         focalX: 0.5,
     });
-    // 40px of spare width between the margin and the search gap becomes edge inset.
+    // 40px of spare width is split evenly between the outer margin and search gap.
     assertEquals(atHalf, {
         mode: "side",
         side: "left",
-        column: { x: 72, y: 88, width: 296, height: 780 },
-        veilWidth: 72 + 296 + 600,
+        column: { x: 52, y: 88, width: 296, height: 780 },
+        veilWidth: 52 + 296 + 600,
     });
 
     const focalRight = mastheadPlacement({
@@ -69,7 +69,7 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
     assertEquals(focalRight.mode, "side");
     if (focalRight.mode === "side") {
         assertEquals(focalRight.side, "left");
-        assertEquals(focalRight.column.x, 72);
+        assertEquals(focalRight.column.x, 52);
     }
 
     const focalLeft = mastheadPlacement({
@@ -81,8 +81,8 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
     assertEquals(focalLeft, {
         mode: "side",
         side: "right",
-        column: { x: 1440 - 32 - 296 - 40, y: 88, width: 296, height: 780 },
-        veilWidth: 72 + 296 + 600,
+        column: { x: 1440 - 32 - 296 - 20, y: 88, width: 296, height: 780 },
+        veilWidth: 52 + 296 + 600,
     });
 });
 
@@ -103,7 +103,7 @@ Deno.test("mastheadPlacement: falls back to opposite side when dock or search bl
     assertEquals(fallbackRight.mode, "side");
     if (fallbackRight.mode === "side") {
         assertEquals(fallbackRight.side, "right");
-        assertEquals(fallbackRight.column.x, 1440 - 32 - 296 - 40);
+        assertEquals(fallbackRight.column.x, 1440 - 32 - 296 - 20);
     }
 
     // Dock on right (68px) with focalX < 0.5 (preferring right): falls back to left.
@@ -119,7 +119,7 @@ Deno.test("mastheadPlacement: falls back to opposite side when dock or search bl
     assertEquals(fallbackLeft.mode, "side");
     if (fallbackLeft.mode === "side") {
         assertEquals(fallbackLeft.side, "left");
-        assertEquals(fallbackLeft.column.x, 72);
+        assertEquals(fallbackLeft.column.x, 52);
     }
 });
 

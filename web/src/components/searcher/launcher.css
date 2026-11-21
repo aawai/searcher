@@ -113,7 +113,7 @@
 }
 .launcher-plate {
     padding: var(--space-4);
-    border-radius: var(--radius-lg);
+    border-radius: var(--shape-plate-radius);
     background: var(--material-regular-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-regular-filter);
     backdrop-filter: var(--material-regular-filter);
@@ -350,7 +350,7 @@
 /* Large folders frame the icon outer edges; the name follows row two labels. */
 .launcher-folder-item--large .launcher-folder-surface {
     --launcher-surface-size: calc(var(--launcher-col-w) + var(--launcher-gap-x) + var(--launcher-icon));
-    --launcher-mini-size: min(var(--launcher-icon), calc((var(--launcher-surface-size) - var(--space-5) - 2 * var(--space-2) - 2 * var(--space-1)) / 3));
+    --launcher-mini-size: min(var(--launcher-icon), calc((var(--launcher-surface-size) - 2 * var(--space-3) - 2 * var(--space-1)) / 3));
     position: absolute;
     top: var(--launcher-pad-t);
     left: calc((var(--launcher-col-w) - var(--launcher-icon)) / 2);
@@ -374,7 +374,7 @@
    translucent tint on the plate instead. */
 .launcher-plate:not([data-plate="hidden"]) .launcher-folder-surface,
 .launcher-plate:not([data-plate="hidden"]) .launcher-action-cell .launcher-action-glyph {
-    background: var(--surface-highlight);
+    background: var(--surface-hover);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
 }
@@ -435,7 +435,7 @@
     grid-template-columns: repeat(3, var(--launcher-mini-size));
     grid-template-rows: repeat(3, var(--launcher-mini-size));
     gap: var(--space-1);
-    padding: var(--space-2);
+    padding: var(--space-3);
 }
 .launcher-folder-item--small .launcher-folder-preview--empty {
     grid-template-columns: 1fr;

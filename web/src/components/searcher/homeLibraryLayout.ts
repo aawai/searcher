@@ -41,7 +41,7 @@ export function effectiveRows(
     const dockBottom = Number.isFinite(dockInsetBottom)
         ? Math.max(0, dockInsetBottom)
         : 0;
-    const clearance = Math.max(bottomClearance, dockBottom + rowGap);
+    const clearance = Math.max(bottomClearance, dockBottom + Math.max(rowGap, 16));
     const raw = Math.floor(
         (layoutViewportHeight - gridTop - clearance - platePadding + rowGap) /
             rowPitch,

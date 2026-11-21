@@ -825,9 +825,25 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             assertEquals(homeRounded.submitRadius, "8px");
             assertEquals(homeRounded.suggestionsRadius, "12px");
             assertEquals(homeRounded.suggestionItemRadius, "8px");
-            assertEquals(homeRounded.wordmarkRadius, "8px");
+            assertEquals(homeRounded.wordmarkRadius, "10px");
             assertEquals(homeRounded.topActionsRadius, "10px");
             assertEquals(homeRounded.topBtnRadius, "6px");
+
+            const plateRadii = await page.evaluate(() => {
+                const probe = document.createElement("div");
+                probe.className = "launcher-plate";
+                probe.style.position = "fixed";
+                probe.style.visibility = "hidden";
+                document.body.append(probe);
+                const rounded = getComputedStyle(probe).borderRadius;
+                document.documentElement.dataset.shape = "pill";
+                const pill = getComputedStyle(probe).borderRadius;
+                document.documentElement.dataset.shape = "rounded";
+                probe.remove();
+                return { rounded, pill };
+            });
+            assertEquals(plateRadii.rounded, "14px");
+            assertEquals(plateRadii.pill, "20px");
 
             await visit("/settings/appearance");
             await updatePreferences({

@@ -230,6 +230,22 @@ Deno.test("高对比主题：设置、顶栏与快捷指令入口，强调色按
         assertEquals(frame.background, "color(srgb 0 0 0)");
         assert(frame.backdrop === "none", frame.backdrop);
         assert(frame.shadow.includes("rgb(255, 255, 255)"), frame.shadow);
+        const topbarShadows = await page.evaluate(() => ({
+            wordmark: getComputedStyle(
+                document.querySelector(".app-shell[data-home] .wordmark-small")!,
+            ).boxShadow,
+            actions: getComputedStyle(
+                document.querySelector(".app-shell[data-home] .top-actions")!,
+            ).boxShadow,
+        }));
+        assert(
+            topbarShadows.wordmark.includes("rgb(255, 255, 255)"),
+            topbarShadows.wordmark,
+        );
+        assert(
+            topbarShadows.actions.includes("rgb(255, 255, 255)"),
+            topbarShadows.actions,
+        );
         assertEquals(
             await toggle.getAttribute("aria-label"),
             "切换到高对比浅色",

@@ -439,7 +439,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 </header>
             )}
 
-            {(hasHeader || hasSignedInContent) && (
+            {!isGuest && (hasHeader || hasSignedInContent) && (
                 <div className="home-masthead__dek">
                     <div className="home-masthead__dek-row">
                         {continueList.length > 0

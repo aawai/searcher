@@ -57,7 +57,7 @@
 
 @media (max-width: 767px) {
     .pinned-area {
-        margin: var(--space-6) auto var(--space-8);
+        margin: var(--space-4) auto var(--space-8);
     }
 }
 

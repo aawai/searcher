@@ -14,9 +14,15 @@
 }
 
 .dock-container[data-edge="top"] {
-    top: max(var(--space-3), env(safe-area-inset-top, var(--space-3)));
+    top: max(
+        calc((var(--topbar-height) - var(--dock-size)) / 2),
+        env(safe-area-inset-top, 0px)
+    );
     left: 50%;
     transform: translateX(-50%);
+    max-width: calc(
+        100vw - 2 * (var(--space-page-inline) + var(--space-10) * 2 + var(--space-7))
+    );
 }
 
 .dock-container[data-edge="left"] {
@@ -67,6 +73,7 @@
 .dock-container[data-edge="top"] .dock-bar {
     --dock-travel-x: 0px;
     --dock-travel-y: calc(-1 * var(--space-2));
+    max-width: 100%;
 }
 
 .dock-container[data-edge="left"] .dock-bar {
@@ -202,9 +209,39 @@
     );
 }
 
+.dock-group--system[data-overflow-start] {
+    --dock-system-fade-start: var(--space-4);
+}
+
+.dock-group--system[data-overflow-end] {
+    --dock-system-fade-end: var(--space-4);
+}
+
+.dock-group--system:is([data-overflow-start], [data-overflow-end]) {
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        var(--foreground) var(--dock-system-fade-start, 0px),
+        var(--foreground) calc(100% - var(--dock-system-fade-end, 0px)),
+        transparent
+    );
+    mask-image: linear-gradient(
+        to right,
+        transparent,
+        var(--foreground) var(--dock-system-fade-start, 0px),
+        var(--foreground) calc(100% - var(--dock-system-fade-end, 0px)),
+        transparent
+    );
+}
+
+.dock-container[data-edge="top"] .dock-group--apps {
+    flex: 0 1 auto;
+    min-width: var(--dock-item-size);
+}
+
 @media (max-width: 767px) {
     .dock-group--system {
-        flex-shrink: 1;
+        flex: 0 1 auto;
         min-width: 0;
         overflow-x: auto;
         overflow-y: hidden;
@@ -216,7 +253,8 @@
     }
 
     .dock-group--apps {
-        flex: 1 1 0;
+        flex: 0 1 auto;
+        min-width: var(--dock-item-size);
         max-width: none;
     }
 }

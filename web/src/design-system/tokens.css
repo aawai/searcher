@@ -266,7 +266,7 @@
     /* Collapsed narrow masthead: the top veil fades below the peek over
        MASTHEAD_PEEK_VEIL_TAIL (masthead-layout.ts). */
     --layout-masthead-peek-fade: 120px;
-    --layout-masthead-panel-max: var(--layout-form-max);
+    --layout-masthead-panel-max: var(--layout-home-content-max);
     /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
     --home-grid-wide-cell: 76px;
     --home-grid-wide-gap: 12px;
@@ -609,6 +609,7 @@
     --shape-suggestions-inner-radius: calc(var(--shape-suggestions-radius) - var(--space-1));
     --shape-dock-radius: 10px;
     --shape-dock-inner-radius: calc(var(--shape-dock-radius) - var(--space-1));
+    --shape-plate-radius: var(--radius);
 }
 @media (any-pointer: coarse), (hover: none) {
     :root,
@@ -629,6 +630,8 @@
     --shape-suggestions-inner-radius: calc(var(--shape-suggestions-radius) - var(--space-1));
     --shape-dock-radius: var(--radius-pill);
     --shape-dock-inner-radius: var(--radius-pill);
+    --shape-plate-radius: var(--radius-lg);
+    --space-search-inset-inline: 10px;
 }
 
 /*
@@ -899,6 +902,9 @@
         --font-masthead-day-line-height: 4.5rem;
         --sheet-width: 100vw;
         --window-margin: var(--space-2);
+    }
+    [data-shape="pill"] {
+        --space-search-inset-inline: var(--space-2);
     }
 }
 
