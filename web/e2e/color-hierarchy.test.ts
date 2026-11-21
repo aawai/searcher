@@ -27,14 +27,14 @@ Deno.test("home color hierarchy keeps avatar and primary icons neutral and the e
             );
             const identity = await page.evaluate(() => {
                 const probe = document.createElement("span");
-                probe.style.background = "var(--surface-control-thumb)";
+                probe.style.background = "var(--surface-soft)";
                 probe.style.color = "var(--accent)";
                 document.body.append(probe);
                 const badge = getComputedStyle(
                     document.querySelector(".user-avatar-badge")!,
                 );
                 const result = {
-                    // On the home group the badge is a thumb, never accent.
+                    // Across all routes the badge stays neutral (--surface-soft), never accent.
                     badge: badge.backgroundColor ===
                         getComputedStyle(probe).backgroundColor,
                     badgeText: badge.color === getComputedStyle(
