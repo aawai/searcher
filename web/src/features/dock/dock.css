@@ -230,15 +230,15 @@
 .dock-container[data-edge="bottom"] .dock-divider,
 .dock-container[data-edge="top"] .dock-divider {
     width: var(--space-hairline);
-    height: var(--space-6);
-    margin: 0 var(--space-half);
+    height: var(--space-4);
+    margin: 0 var(--space-1);
 }
 
 .dock-container[data-edge="left"] .dock-divider,
 .dock-container[data-edge="right"] .dock-divider {
     height: var(--space-hairline);
-    width: var(--space-6);
-    margin: var(--space-half) 0;
+    width: var(--space-4);
+    margin: var(--space-1) 0;
 }
 
 /* Dock items */
@@ -252,7 +252,7 @@
     height: var(--dock-item-size);
     min-width: var(--dock-item-size);
     min-height: var(--dock-item-size);
-    /* Concentric with the bar: inset from --radius-lg in rounded mode, pill in pill mode. */
+    /* Concentric with the bar: inset from --shape-dock-radius in rounded mode, pill in pill mode. */
     border-radius: var(--shape-dock-inner-radius);
     border: none;
     background: transparent;
@@ -303,7 +303,7 @@
 }
 
 .dock-item[data-active="true"] {
-    --dock-mark-length: var(--space-4);
+    --dock-mark-length: var(--space-3);
 }
 
 .dock-item[data-window-status]::after,

@@ -198,6 +198,26 @@ Deno.test("命中区与可见尺寸分离：标题栏按指针压缩，触屏命
                         );
                     }
                 }
+                const shapeRadii = await page.evaluate(() => {
+                    const root = document.documentElement;
+                    const bar = document.querySelector("nav.dock-bar")!;
+                    const prev = root.dataset.shape;
+                    root.dataset.shape = "rounded";
+                    const rounded = getComputedStyle(bar).borderRadius;
+                    root.dataset.shape = "pill";
+                    const pill = getComputedStyle(bar).borderRadius;
+                    if (prev === undefined) delete root.dataset.shape;
+                    else root.dataset.shape = prev;
+                    return { rounded, pill };
+                });
+                assertEquals(
+                    shapeRadii,
+                    {
+                        rounded: profile === "mouse" ? "10px" : "12px",
+                        pill: "999px",
+                    },
+                    `${profile} dock shape radii`,
+                );
                 if (profile === "mouse") continue;
                 assertEquals(
                     await probeTargets(
