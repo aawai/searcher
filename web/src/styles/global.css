@@ -282,78 +282,32 @@ a {
             (var(--dock-size) - var(--space-6)) / 2
         );
     }
-    .app-shell[data-home][data-dock-edge="right"] > .topbar {
-        padding-inline-end: calc(
-            max(var(--space-3), env(safe-area-inset-right, var(--space-3))) +
-            (var(--dock-size) - var(--topbar-target)) / 2 - var(--space-1)
-        );
-    }
-    .app-shell[data-home][data-dock-edge="left"] > .topbar {
-        padding-inline-start: calc(
-            max(var(--space-3), env(safe-area-inset-left, var(--space-3))) +
-            (var(--dock-size) - var(--topbar-target) - 2 * var(--space-1)) / 2
-        );
-    }
 }
-/* Home: the wordmark and top-actions sit in restrained Material frames over the
-   wallpaper so text and icons stay legible on any wallpaper (A6) without harsh
-   solid strokes or chained drop-shadows. Their radii follow the control shape
-   preference, while controls inside top-actions use translucent
-   --surface-highlight on hover, focus or open popup (never stacking a second
-   backdrop-filter). */
-.app-shell[data-home] .wordmark-small,
-.app-shell[data-home] .top-actions {
-    background: var(--material-regular-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-regular-filter);
-    backdrop-filter: var(--material-regular-filter);
-    box-shadow: var(--shadow-elevation-material);
+/* Home with a wallpaper image: a subtle top-edge veil keeps the flat wordmark
+   and top-actions legible on any wallpaper (A6) without boxing them in cards. */
+.app-shell[data-home][data-wallpaper-image="true"] > .topbar {
+    position: relative;
+    isolation: isolate;
 }
-.app-shell[data-home] .wordmark-small {
-    min-width: calc(var(--topbar-target) + 2 * var(--space-1));
-    min-height: calc(var(--topbar-target) + 2 * var(--space-1));
-    border-radius: var(--shape-dock-radius);
-    margin-inline-start: 0;
-    padding-inline: var(--space-3);
-}
-.app-shell[data-home] .top-actions {
-    border-radius: var(--shape-dock-radius);
-    padding: var(--space-1);
-}
-.app-shell[data-home] .top-actions :is(a, button) {
-    border-radius: var(--shape-dock-inner-radius);
-}
-.app-shell[data-home] .top-actions :is(.user-link, .user-avatar-trigger) {
-    margin-inline-end: 0;
-}
-.app-shell[data-home] .top-actions-separator[data-orientation="vertical"] {
-    margin-inline: var(--space-1);
-    background: var(--border);
-}
-@media (hover: hover) {
-    .app-shell[data-home] .wordmark-small:hover {
-        background: var(--material-regular-sheen),
-            color-mix(in srgb, var(--foreground) 6%, var(--material-regular));
-    }
-    .app-shell[data-home] .top-actions :is(a, button):hover {
-        background: var(--surface-highlight);
-    }
-}
-.app-shell[data-home] .top-actions :is(a, button):is(:focus-visible, [data-popup-open]),
-.app-shell[data-home] .top-actions .topbar-link--active {
-    background: var(--surface-highlight);
-}
-/* The identity badge is a thumb: lighter than Material in both themes, with a
-   hairline edge where the two are close. */
-.app-shell[data-home] .user-avatar-badge {
-    background: var(--surface-control-thumb);
-    box-shadow: var(--shadow-avatar-edge);
-}
-@media (forced-colors: active) {
-    .app-shell[data-home] .wordmark-small:not(:focus-visible),
-    .app-shell[data-home] .top-actions,
-    .app-shell[data-home] .user-avatar-badge {
-        outline: 1px solid CanvasText;
-    }
+.app-shell[data-home][data-wallpaper-image="true"] > .topbar::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 calc(-1 * var(--space-10)) 0;
+    z-index: var(--elevation-wallpaper);
+    pointer-events: none;
+    background: var(--masthead-veil);
+    -webkit-backdrop-filter: var(--masthead-veil-filter);
+    backdrop-filter: var(--masthead-veil-filter);
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        var(--foreground) 0 var(--topbar-height),
+        transparent 100%
+    );
+    mask-image: linear-gradient(
+        to bottom,
+        var(--foreground) 0 var(--topbar-height),
+        transparent 100%
+    );
 }
 .user-menu-identity {
     display: grid;
