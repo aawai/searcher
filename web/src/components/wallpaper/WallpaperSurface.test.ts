@@ -25,6 +25,10 @@ Deno.test("WallpaperSurface: formatWallpaperCss escapes URLs and rejects unsuppo
         'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==")',
     );
 
+    // Built-in botanical scenes render via canvas, not CSS url()
+    assertEquals(formatWallpaperCss("scene:botanical:auto"), "none");
+    assertEquals(formatWallpaperCss("scene:botanical:ginkgo"), "none");
+
     // Rejection of unsupported or unsafe sources
     assertEquals(
         formatWallpaperCss("http://insecure.example.com/bg.jpg"),
@@ -56,9 +60,20 @@ Deno.test("WallpaperSurface: substrate classifies image and rejected sources", (
         source: "linear-gradient(135deg, #555, #aaa)",
         embedded: true,
     }));
+    const scene = renderToStaticMarkup(createElement(WallpaperSurface, {
+        source: "scene:botanical:ginkgo",
+    }));
+    const disabledScene = renderToStaticMarkup(createElement(WallpaperSurface, {
+        source: "scene:botanical:ginkgo",
+        disableScene: true,
+    }));
     assertMatch(image, /data-substrate="image"/);
     assertMatch(rejected, /data-substrate="canvas"/);
     assertMatch(gradient, /data-substrate="canvas"/);
+    assertMatch(scene, /data-substrate="canvas"/);
+    assertMatch(scene, /data-wallpaper-scene="ginkgo"/);
+    assertNotMatch(scene, /wallpaper-surface__image/);
+    assertNotMatch(disabledScene, /data-wallpaper-scene/);
     assertNotMatch(rejected, /wallpaper-surface__image/);
     assertNotMatch(gradient, /wallpaper-surface__image/);
 });

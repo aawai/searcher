@@ -29,6 +29,16 @@
     filter: var(--wallpaper-dim);
 }
 
+.wallpaper-surface__scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: var(--elevation-local-1);
+    pointer-events: none;
+}
+
 .wallpaper-surface__mask {
     position: absolute;
     inset: 0;

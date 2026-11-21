@@ -1,6 +1,8 @@
 import type { GlassIntensity } from "@shared/contracts.ts";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
+    type BotanicalSpecies,
+    formatBotanicalSceneSource,
     parseWallpaperSource,
     type WallpaperComposition,
 } from "@shared/wallpaper.ts";
@@ -197,6 +199,16 @@ function Choices<T extends string>(
     );
 }
 
+const BOTANICAL_SCENE_CHOICES: ReadonlyArray<
+    readonly [BotanicalSpecies, string]
+> = [
+    ["auto", "每日"],
+    ["ginkgo", "银杏"],
+    ["eucalyptus", "尤加利"],
+    ["plum", "寒梅"],
+    ["fern", "蕨类"],
+];
+
 export interface WallpaperHistoryRecord {
     id: string;
     url: string;
@@ -233,7 +245,12 @@ export function SettingsContent({ host }: { host: PageHost }) {
     >([]);
     const [uploadingWallpaper, setUploadingWallpaper] = useState(false);
     const currentWallpaperSource = parseWallpaperSource(appearance.wallpaper);
+    const isSceneWallpaper = currentWallpaperSource?.type === "scene";
+    const activeBotanicalSpecies = isSceneWallpaper
+        ? currentWallpaperSource.species
+        : "";
     const currentSourceHidden = currentWallpaperSource?.type === "uploaded" ||
+        isSceneWallpaper ||
         appearance.wallpaper.startsWith("data:");
     const [wallpaperDraft, setWallpaperDraft] = useState<string>(
         currentSourceHidden ? "" : appearance.wallpaper,
@@ -270,10 +287,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
     }, []);
 
     useEffect(() => {
-        if (
-            !appearance.wallpaper.startsWith("data:") &&
-            parseWallpaperSource(appearance.wallpaper)?.type !== "uploaded"
-        ) {
+        if (parseWallpaperSource(appearance.wallpaper)?.type === "remote") {
             setWallpaperDraft(appearance.wallpaper);
         } else {
             setWallpaperDraft("");
@@ -455,7 +469,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
             return;
         }
         const parsed = parseWallpaperSource(trimmed);
-        if (!parsed) {
+        if (!parsed || parsed.type !== "remote") {
             setDraftError(
                 "请输入有效的图片链接（https，不含账号密码）",
             );
@@ -477,6 +491,22 @@ export function SettingsContent({ host }: { host: PageHost }) {
             if (authSession.isCurrent()) setDraftError("同步壁纸失败，请重试");
         } finally {
             if (authSession.isCurrent()) setIsApplyingDraft(false);
+        }
+    }
+
+    async function handleSelectBotanicalScene(species: BotanicalSpecies) {
+        const nextSource = formatBotanicalSceneSource(species);
+        if (nextSource === appearance.wallpaper) return;
+        setDraftError(null);
+        try {
+            await setAppearance({ wallpaper: nextSource });
+            showToast("已应用内置插画");
+        } catch (error) {
+            showToast(
+                error instanceof Error
+                    ? error.message
+                    : "设置内置插画失败，请重试",
+            );
         }
     }
 
@@ -971,6 +1001,34 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     )}
                                 </div>
                             </SettingsRow>
+                            <SettingsRow
+                                title="内置插画"
+                                description="每日一枝按日期自动轮换；高对比主题与系统强制颜色下自动隐藏，减少动效下静态呈现。"
+                                className="settings-row--vertical"
+                            >
+                                <RadioGroup
+                                    variant="segmented"
+                                    value={activeBotanicalSpecies}
+                                    onValueChange={(next) =>
+                                        void handleSelectBotanicalScene(
+                                            next as BotanicalSpecies,
+                                        )}
+                                    aria-label="内置插画"
+                                    data-testid="wallpaper-scene-group"
+                                >
+                                    {BOTANICAL_SCENE_CHOICES.map(
+                                        ([id, label]) => (
+                                            <RadioGroupItem
+                                                key={id}
+                                                value={id}
+                                                data-testid={`wallpaper-scene-${id}`}
+                                            >
+                                                {label}
+                                            </RadioGroupItem>
+                                        ),
+                                    )}
+                                </RadioGroup>
+                            </SettingsRow>
                             {hasWallpaper && (
                                 <>
                                     <SettingsRow
@@ -992,26 +1050,28 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                 <WallpaperStageContextPreview />
                                             </div>
                                             <ActionGroup>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        const focal =
-                                                            currentPresentation
-                                                                .composition;
-                                                        setCompositionTarget(
-                                                            {
-                                                                id: "current",
-                                                                url: appearance
-                                                                    .wallpaper,
-                                                                ...focal,
-                                                            },
-                                                        );
-                                                    }}
-                                                    data-testid="wallpaper-current-adjust-focal-btn"
-                                                >
-                                                    调整构图
-                                                </Button>
+                                                {!isSceneWallpaper && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            const focal =
+                                                                currentPresentation
+                                                                    .composition;
+                                                            setCompositionTarget(
+                                                                {
+                                                                    id: "current",
+                                                                    url: appearance
+                                                                        .wallpaper,
+                                                                    ...focal,
+                                                                },
+                                                            );
+                                                        }}
+                                                        data-testid="wallpaper-current-adjust-focal-btn"
+                                                    >
+                                                        调整构图
+                                                    </Button>
+                                                )}
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
@@ -1025,44 +1085,46 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                             </ActionGroup>
                                         </div>
                                     </SettingsRow>
-                                    <SettingsRow
-                                        title="可读性"
-                                        description={readabilityBelowDefault
-                                            ? (
-                                                <span data-testid="wallpaper-readability-note">
-                                                    低于“{DEFAULT_READABILITY_LABEL}”时，首页文字在部分壁纸上可能低于可读性标准
-                                                </span>
-                                            )
-                                            : undefined}
-                                        className="settings-row--vertical"
-                                    >
-                                        <SettingsPresetSlider
-                                            stages={WALLPAPER_READABILITY_STAGES}
-                                            value={effectivePresentation
-                                                .readability}
-                                            aria-label="可读性"
-                                            testId="wallpaper-readability-slider"
-                                            onChange={(v) => {
-                                                setDraftPresentation(
-                                                    (prev) => ({
-                                                        ...(prev ??
-                                                            currentPresentation),
+                                    {!isSceneWallpaper && (
+                                        <SettingsRow
+                                            title="可读性"
+                                            description={readabilityBelowDefault
+                                                ? (
+                                                    <span data-testid="wallpaper-readability-note">
+                                                        低于“{DEFAULT_READABILITY_LABEL}”时，首页文字在部分壁纸上可能低于可读性标准
+                                                    </span>
+                                                )
+                                                : undefined}
+                                            className="settings-row--vertical"
+                                        >
+                                            <SettingsPresetSlider
+                                                stages={WALLPAPER_READABILITY_STAGES}
+                                                value={effectivePresentation
+                                                    .readability}
+                                                aria-label="可读性"
+                                                testId="wallpaper-readability-slider"
+                                                onChange={(v) => {
+                                                    setDraftPresentation(
+                                                        (prev) => ({
+                                                            ...(prev ??
+                                                                currentPresentation),
+                                                            readability:
+                                                                v as WallpaperReadability,
+                                                        }),
+                                                    );
+                                                }}
+                                                onCommit={(v) => {
+                                                    setDraftPresentation(
+                                                        null,
+                                                    );
+                                                    updatePresentation({
                                                         readability:
                                                             v as WallpaperReadability,
-                                                    }),
-                                                );
-                                            }}
-                                            onCommit={(v) => {
-                                                setDraftPresentation(
-                                                    null,
-                                                );
-                                                updatePresentation({
-                                                    readability:
-                                                        v as WallpaperReadability,
-                                                });
-                                            }}
-                                        />
-                                    </SettingsRow>
+                                                    });
+                                                }}
+                                            />
+                                        </SettingsRow>
+                                    )}
                                 </>
                             )}
                         </SettingsGroup>

@@ -148,6 +148,21 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 ?.showHomeApps,
             false,
         );
+        const sceneRes = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: first,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ backgroundImage: "scene:botanical:ginkgo" }),
+        });
+        assertEquals(sceneRes.status, 200);
+        assertEquals(
+            (await sceneRes.json() as Envelope<PreferencesDto>).data
+                ?.backgroundImage,
+            "scene:botanical:ginkgo",
+        );
         const other = await app.request("/api/preferences", {
             headers: { cookie: second },
         });
@@ -212,6 +227,8 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                     },
                 },
                 { backgroundImage: "https://user:pass@example.com/a.png" },
+                { backgroundImage: "scene:botanical:unknown" },
+                { backgroundImage: "scene:other:auto" },
                 { showHomeApps: "yes" },
                 { showHomeApps: 1 },
                 { showHomeAppPlate: "yes" },

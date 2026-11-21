@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
 import {
+    formatBotanicalSceneSource,
     normalizeWallpaperCompositions,
     parseWallpaperSource,
 } from "./wallpaper.ts";
@@ -53,7 +54,24 @@ Deno.test("wallpaper shared: parseWallpaperSource validates uploaded and remote 
         null,
     );
 
-    // 5. Empty / null / invalid strings
+    // 5. Built-in botanical scene sources
+    assertEquals(parseWallpaperSource(formatBotanicalSceneSource("auto")), {
+        type: "scene",
+        scene: "botanical",
+        species: "auto",
+        value: "scene:botanical:auto",
+    });
+    assertEquals(parseWallpaperSource("SCENE:BOTANICAL:GINKGO"), {
+        type: "scene",
+        scene: "botanical",
+        species: "ginkgo",
+        value: "scene:botanical:ginkgo",
+    });
+    assertEquals(parseWallpaperSource("scene:botanical:unknown"), null);
+    assertEquals(parseWallpaperSource("scene:other:auto"), null);
+    assertEquals(parseWallpaperSource("scene:botanical:"), null);
+
+    // 6. Empty / null / invalid strings
     assertEquals(parseWallpaperSource(""), null);
     assertEquals(parseWallpaperSource("   "), null);
 });
