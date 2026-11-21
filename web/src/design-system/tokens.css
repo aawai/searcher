@@ -726,16 +726,19 @@
     --material-thick-sheen: linear-gradient(180deg, color-mix(in srgb, white calc(var(--glass-sheen-peak) * var(--material-thick-sheen-scale)), transparent), transparent 55%);
 }
 
-/* Text set directly on the wallpaper (home app labels when the plate is hidden)
-   keeps A6 on any wallpaper with a halo in two parts. The core is a solid
-   outline in the surface colour: a stroke of --wallpaper-text-core painted
-   under the glyph (`paint-order: stroke fill`), so only its outer half (2.5px)
-   shows. Following WCAG 1.4.3 (Understanding, note 5) an outline that fills
-   the letters' inner details is the text's background; wallpaper-readability.test.ts
+/* Text and glyphs set directly on the wallpaper (home app labels when the plate is
+   hidden, and the home top bar over an image wallpaper) keep A6 on any
+   wallpaper with a halo in two parts. The core is a solid outline in the
+   surface colour: a stroke of --wallpaper-text-core painted under the glyph
+   (`paint-order: stroke fill`), so only its outer half (2.5px) shows.
+   Following WCAG 1.4.3 (Understanding, note 5) an outline that fills the
+   letters' inner details is the text's background; wallpaper-readability.test.ts
    samples the 2px next to each glyph, inside the core's antialiased edge. A
-   soft glow outside it eases the edge into the wallpaper. Forced colours
-   repaint a text stroke in the text colour, filling the letters in, so the
-   core is dropped there; the system palette owns contrast (A7). */
+   soft glow outside it eases the edge into the wallpaper. Icons take the same
+   core as a 2px square dilation of chained zero-blur drop-shadows, which
+   follow an SVG's strokes. Forced colours repaint a text stroke in the text
+   colour, filling the letters in, so the core is dropped there; the system
+   palette owns contrast (A7). */
 :root {
     --wallpaper-text-core: 5px;
 }
@@ -744,6 +747,11 @@
     --wallpaper-text-stroke: var(--wallpaper-text-core) var(--surface-solid);
     --wallpaper-text-halo: 0 0 var(--space-2) color-mix(in srgb, var(--surface-solid) 90%, transparent),
         0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent);
+    --wallpaper-icon-halo: drop-shadow(1px 0 0 var(--surface-solid)) drop-shadow(-1px 0 0 var(--surface-solid))
+        drop-shadow(0 1px 0 var(--surface-solid)) drop-shadow(0 -1px 0 var(--surface-solid))
+        drop-shadow(1px 0 0 var(--surface-solid)) drop-shadow(-1px 0 0 var(--surface-solid))
+        drop-shadow(0 1px 0 var(--surface-solid)) drop-shadow(0 -1px 0 var(--surface-solid))
+        drop-shadow(0 0 var(--space-1) color-mix(in srgb, var(--surface-solid) 90%, transparent));
     /* Hairline divider between top-bar groups on the wallpaper. */
     --border-on-wallpaper: color-mix(in srgb, var(--foreground) 28%, transparent);
 }
@@ -752,6 +760,7 @@
     [data-theme] {
         --wallpaper-text-core: 0px;
         --wallpaper-text-halo: none;
+        --wallpaper-icon-halo: none;
     }
 }
 
