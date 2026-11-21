@@ -120,6 +120,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const veilWallpaper = (
         <WallpaperSurface
             embedded
+            disableScene
             source={wallpaper.source}
             presentation={wallpaper.presentation}
             className="home-masthead__veil-wallpaper"

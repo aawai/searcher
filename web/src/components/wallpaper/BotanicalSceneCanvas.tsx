@@ -1,0 +1,322 @@
+import { useEffect, useRef } from "react";
+import type { BotanicalSpecies } from "@shared/wallpaper.ts";
+import {
+    buildBotanicalPalette,
+    formatLocalDateKey,
+    generateBotanicalScene,
+    renderBotanicalFrame,
+    resolveBotanicalSpecies,
+    type BotanicalPalette,
+    type BotanicalPointerState,
+    type BotanicalScene,
+} from "./botanical-engine.ts";
+
+export interface BotanicalSceneCanvasProps {
+    species: BotanicalSpecies;
+    embedded?: boolean;
+    testId?: string;
+}
+
+const PLAYED_STORAGE_KEY = "searcher:botanical-played";
+const GROWTH_DURATION_SEC = 2.55;
+
+function readPlayedKey(): string {
+    try {
+        return sessionStorage.getItem(PLAYED_STORAGE_KEY) ?? "";
+    } catch {
+        return "";
+    }
+}
+
+function writePlayedKey(key: string): void {
+    try {
+        sessionStorage.setItem(PLAYED_STORAGE_KEY, key);
+    } catch {
+        // Ignore storage errors in restricted environments.
+    }
+}
+
+function isEditableElement(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+    const tag = target.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable;
+}
+
+function readThemePalette(): {
+    hidden: boolean;
+    palette: BotanicalPalette;
+} {
+    const root = document.documentElement;
+    const forcedColors = window.matchMedia("(forced-colors: active)").matches;
+    const highContrast = root.dataset.contrast === "more";
+    const isDark = root.dataset.theme === "dark";
+    const computed = getComputedStyle(root);
+    const accent = computed.getPropertyValue("--accent");
+    const foreground = computed.getPropertyValue("--foreground");
+    return {
+        hidden: forcedColors || highContrast,
+        palette: buildBotanicalPalette(isDark, accent, foreground),
+    };
+}
+
+export default function BotanicalSceneCanvas({
+    species,
+    embedded = false,
+    testId,
+}: BotanicalSceneCanvasProps) {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const reducedMotionQuery = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        );
+        const forcedColorsQuery = window.matchMedia("(forced-colors: active)");
+
+        let width = 0;
+        let height = 0;
+        let dpr = Math.min(window.devicePixelRatio || 1, 2);
+        let scene: BotanicalScene | null = null;
+        let paletteState = readThemePalette();
+        let reducedMotion = reducedMotionQuery.matches;
+        let pageHidden = document.hidden;
+        let searchFocused = !embedded &&
+            isEditableElement(document.activeElement);
+        let windCalm = searchFocused ? 0.14 : 1.0;
+        let frameSeq = 0;
+        let prevFrameSec = 0;
+        let rafId: number | null = null;
+
+        const dateKey = formatLocalDateKey(new Date());
+        const concreteSpecies = resolveBotanicalSpecies(species, dateKey);
+        const playSignature = `${dateKey}:${species}`;
+        const shouldAnimateGrowth = !embedded && !reducedMotion &&
+            readPlayedKey() !== playSignature;
+        if (shouldAnimateGrowth) {
+            writePlayedKey(playSignature);
+        }
+
+        const startSec = performance.now() / 1000;
+        const growthStartSec = shouldAnimateGrowth
+            ? startSec
+            : startSec - GROWTH_DURATION_SEC - 1;
+        let lastDriftSpawn = growthStartSec + GROWTH_DURATION_SEC + 1.4;
+
+        const drifters: Parameters<typeof renderBotanicalFrame>[0]["drifters"] =
+            [];
+        const pointer: BotanicalPointerState = {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            lastT: 0,
+            lastRustleSpawn: 0,
+        };
+
+        const cancelLoop = () => {
+            if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+        };
+
+        const renderFrame = (nowMs: number) => {
+            rafId = null;
+            if (!scene || width <= 0 || height <= 0) return;
+            if (paletteState.hidden) {
+                ctx.clearRect(0, 0, width, height);
+                return;
+            }
+
+            frameSeq++;
+            const timeSec = nowMs / 1000;
+            const dt = prevFrameSec > 0
+                ? Math.min(timeSec - prevFrameSec, 0.05)
+                : 0.016;
+            prevFrameSec = timeSec;
+
+            const targetCalm = searchFocused ? 0.14 : 1.0;
+            windCalm += (targetCalm - windCalm) * Math.min(1, dt * 4.5);
+
+            const staticMode = embedded || reducedMotion;
+            const rawProgress = staticMode
+                ? 1
+                : Math.max(
+                    0,
+                    Math.min(1, (timeSec - growthStartSec) / GROWTH_DURATION_SEC),
+                );
+
+            lastDriftSpawn = renderBotanicalFrame({
+                ctx,
+                scene,
+                width,
+                height,
+                timeSec,
+                dt,
+                rawProgress,
+                reducedMotion: staticMode,
+                windCalm,
+                searchFocused,
+                embedded,
+                palette: paletteState.palette,
+                pointer,
+                drifters,
+                lastDriftSpawn,
+                frameSeq,
+            });
+
+            if (!staticMode && !pageHidden) {
+                rafId = requestAnimationFrame(renderFrame);
+            }
+        };
+
+        const scheduleRender = () => {
+            cancelLoop();
+            prevFrameSec = 0;
+            rafId = requestAnimationFrame(renderFrame);
+        };
+
+        const measureAndRebuild = () => {
+            const host = canvas.parentElement;
+            const nextW = Math.round(
+                embedded && host ? host.clientWidth : window.innerWidth,
+            );
+            const nextH = Math.round(
+                embedded && host ? host.clientHeight : window.innerHeight,
+            );
+            if (nextW <= 0 || nextH <= 0) return;
+            const nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+            if (
+                scene && nextW === width && nextH === height && nextDpr === dpr
+            ) {
+                return;
+            }
+            width = nextW;
+            height = nextH;
+            dpr = nextDpr;
+            canvas.width = Math.round(width * dpr);
+            canvas.height = Math.round(height * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            scene = generateBotanicalScene(
+                concreteSpecies,
+                width,
+                height,
+                dateKey,
+                embedded,
+            );
+            drifters.length = 0;
+            scheduleRender();
+        };
+
+        const refreshTheme = () => {
+            paletteState = readThemePalette();
+            if (paletteState.hidden) {
+                cancelLoop();
+                ctx.clearRect(0, 0, width, height);
+            } else {
+                scheduleRender();
+            }
+        };
+
+        const onReducedMotionChange = (e: MediaQueryListEvent) => {
+            reducedMotion = e.matches;
+            drifters.length = 0;
+            scheduleRender();
+        };
+
+        const onForcedColorsChange = () => {
+            refreshTheme();
+        };
+
+        const onVisibilityChange = () => {
+            pageHidden = document.hidden;
+            if (pageHidden) {
+                cancelLoop();
+            } else if (!embedded && !reducedMotion && !paletteState.hidden) {
+                scheduleRender();
+            }
+        };
+
+        const onFocusIn = (e: FocusEvent) => {
+            if (isEditableElement(e.target)) searchFocused = true;
+        };
+
+        const onFocusOut = () => {
+            searchFocused = isEditableElement(document.activeElement);
+        };
+
+        const onPointerMove = (e: PointerEvent) => {
+            const now = performance.now();
+            const dt = Math.max(8, now - pointer.lastT) / 1000;
+            if (pointer.lastT > 0) {
+                pointer.vx = (e.clientX - pointer.x) / dt;
+                pointer.vy = (e.clientY - pointer.y) / dt;
+            }
+            pointer.x = e.clientX;
+            pointer.y = e.clientY;
+            pointer.lastT = now;
+        };
+
+        const themeObserver = new MutationObserver(refreshTheme);
+        themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["data-theme", "data-contrast", "data-accent", "style"],
+        });
+
+        let resizeObserver: ResizeObserver | null = null;
+        if (embedded && canvas.parentElement && typeof ResizeObserver !== "undefined") {
+            resizeObserver = new ResizeObserver(measureAndRebuild);
+            resizeObserver.observe(canvas.parentElement);
+        } else {
+            window.addEventListener("resize", measureAndRebuild);
+        }
+
+        reducedMotionQuery.addEventListener("change", onReducedMotionChange);
+        forcedColorsQuery.addEventListener("change", onForcedColorsChange);
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        if (!embedded) {
+            document.addEventListener("focusin", onFocusIn);
+            document.addEventListener("focusout", onFocusOut);
+            window.addEventListener("pointermove", onPointerMove, {
+                passive: true,
+            });
+        }
+
+        measureAndRebuild();
+
+        return () => {
+            cancelLoop();
+            themeObserver.disconnect();
+            resizeObserver?.disconnect();
+            window.removeEventListener("resize", measureAndRebuild);
+            reducedMotionQuery.removeEventListener(
+                "change",
+                onReducedMotionChange,
+            );
+            forcedColorsQuery.removeEventListener(
+                "change",
+                onForcedColorsChange,
+            );
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+            if (!embedded) {
+                document.removeEventListener("focusin", onFocusIn);
+                document.removeEventListener("focusout", onFocusOut);
+                window.removeEventListener("pointermove", onPointerMove);
+            }
+        };
+    }, [species, embedded]);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className="wallpaper-surface__scene"
+            data-testid={testId ? `${testId}-scene` : undefined}
+            data-botanical-species={species}
+            aria-hidden="true"
+        />
+    );
+}

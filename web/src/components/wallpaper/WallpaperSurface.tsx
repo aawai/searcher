@@ -1,4 +1,9 @@
-import type { CSSProperties, ReactNode } from "react";
+import {
+    type CSSProperties,
+    lazy,
+    type ReactNode,
+    Suspense,
+} from "react";
 import { cn } from "../../lib/utils.ts";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
 import {
@@ -7,6 +12,8 @@ import {
     type WallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 
+const BotanicalSceneCanvas = lazy(() => import("./BotanicalSceneCanvas.tsx"));
+
 export interface WallpaperSurfaceProps {
     source?: string | null;
     presentation?: WallpaperPresentation | null;
@@ -14,6 +21,7 @@ export interface WallpaperSurfaceProps {
     style?: CSSProperties;
     embedded?: boolean;
     derived?: boolean;
+    disableScene?: boolean;
     testId?: string;
     children?: ReactNode;
 }
@@ -29,7 +37,7 @@ export function formatWallpaperCss(source: string | null | undefined): string {
             : "none";
     }
     const parsed = parseWallpaperSource(trimmed);
-    if (!parsed) return "none";
+    if (!parsed || parsed.type === "scene") return "none";
     return `url(${JSON.stringify(parsed.value)})`;
 }
 
@@ -40,9 +48,17 @@ export function WallpaperSurface({
     style,
     embedded = false,
     derived = false,
+    disableScene = false,
     testId,
     children,
 }: WallpaperSurfaceProps) {
+    const parsed = typeof source === "string"
+        ? parseWallpaperSource(source)
+        : null;
+    const botanicalSpecies = !disableScene && !derived &&
+            parsed?.type === "scene"
+        ? parsed.species
+        : null;
     const wallpaperCss = formatWallpaperCss(source);
     const substrate = wallpaperCss === "none" ? "canvas" : "image";
     const intent = presentation ?? DEFAULT_WALLPAPER_PRESENTATION;
@@ -64,6 +80,7 @@ export function WallpaperSurface({
             data-wallpaper-image={wallpaperCss.startsWith("url(")
                 ? "true"
                 : undefined}
+            data-wallpaper-scene={botanicalSpecies ?? undefined}
             data-testid={testId}
             style={{
                 ...style,
@@ -80,6 +97,15 @@ export function WallpaperSurface({
                     className="wallpaper-surface__image"
                     data-testid={testId ? `${testId}-image` : undefined}
                 />
+            )}
+            {botanicalSpecies && typeof window !== "undefined" && (
+                <Suspense fallback={null}>
+                    <BotanicalSceneCanvas
+                        species={botanicalSpecies}
+                        embedded={embedded}
+                        testId={testId}
+                    />
+                </Suspense>
             )}
             <div className="wallpaper-surface__mask" />
             {children}
