@@ -278,29 +278,37 @@ a {
             (var(--dock-size) - var(--space-6)) / 2
         );
     }
+    .app-shell[data-home][data-dock-edge="right"] > .topbar {
+        padding-inline-end: calc(
+            max(var(--space-3), env(safe-area-inset-right, var(--space-3))) +
+            (var(--dock-size) - var(--topbar-target)) / 2 - var(--space-1)
+        );
+    }
 }
-/* Home: the wordmark and top-actions sit in restrained Material pills over the
+/* Home: the wordmark and top-actions sit in restrained Material frames over the
    wallpaper so text and icons stay legible on any wallpaper (A6) without harsh
-   solid strokes or chained drop-shadows. Controls inside the pill use translucent
+   solid strokes or chained drop-shadows. Their radii follow the control shape
+   preference, while controls inside top-actions use translucent
    --surface-highlight on hover, focus or open popup (never stacking a second
    backdrop-filter). */
 .app-shell[data-home] .wordmark-small,
 .app-shell[data-home] .top-actions {
-    border-radius: var(--radius-pill);
     background: var(--material-regular-sheen), var(--material-regular);
     -webkit-backdrop-filter: var(--material-regular-filter);
     backdrop-filter: var(--material-regular-filter);
     box-shadow: var(--shadow-material-edge);
 }
 .app-shell[data-home] .wordmark-small {
+    border-radius: var(--shape-button-radius);
     margin-inline-start: 0;
     padding-inline: var(--space-3);
 }
 .app-shell[data-home] .top-actions {
+    border-radius: var(--shape-dock-radius);
     padding: var(--space-1);
 }
 .app-shell[data-home] .top-actions :is(a, button) {
-    border-radius: var(--radius-pill);
+    border-radius: var(--shape-dock-inner-radius);
 }
 .app-shell[data-home] .top-actions :is(.user-link, .user-avatar-trigger) {
     margin-inline-end: 0;

@@ -184,13 +184,13 @@
     --space-visually-hidden-offset: -1px;
 
     /* Radius: concentric by layer. */
-    --control-radius: 10px;
-    --input-radius: 12px;
+    --control-radius: 8px;
+    --input-radius: 8px;
     --multiline-radius: 12px;
     --radius: 14px;
     --radius-lg: 20px;
     --radius-pill: 999px;
-    --search-radius: var(--radius-lg);
+    --search-radius: 12px;
     --search-inner-radius: max(var(--control-radius), calc(var(--search-radius) - 8px));
     --radius-input: var(--input-radius);
     --radius-multiline: var(--multiline-radius);
@@ -597,17 +597,27 @@
     --theme-preview-high-contrast-dark-edge: #FFFFFF;
 }
 
-/* Shape preferences affect standalone controls, dock and search suggestions, never content containers. */
+/* Shape preferences affect standalone controls, home top-bar chrome, dock and search suggestions, never content containers. */
 :root,
 [data-shape="rounded"] {
+    --search-radius: 12px;
     --shape-button-radius: var(--control-radius);
     --shape-field-radius: var(--radius-input);
     --shape-segment-radius: var(--control-radius);
     --shape-segment-inner-radius: calc(var(--shape-segment-radius) - var(--space-half));
-    --shape-suggestions-radius: var(--radius);
+    --shape-suggestions-radius: 12px;
     --shape-suggestions-inner-radius: calc(var(--shape-suggestions-radius) - var(--space-1));
-    --shape-dock-radius: var(--radius-lg);
+    --shape-dock-radius: 10px;
     --shape-dock-inner-radius: calc(var(--shape-dock-radius) - var(--space-1));
+}
+@media (any-pointer: coarse), (hover: none) {
+    :root,
+    [data-shape="rounded"] {
+        --dock-size: 56px;
+        --dock-item-size: 44px;
+        --dock-glyph-size: var(--control-compact-height);
+        --shape-dock-radius: 12px;
+    }
 }
 [data-shape="pill"] {
     --search-radius: var(--radius-pill);
@@ -619,13 +629,6 @@
     --shape-suggestions-inner-radius: calc(var(--shape-suggestions-radius) - var(--space-1));
     --shape-dock-radius: var(--radius-pill);
     --shape-dock-inner-radius: var(--radius-pill);
-}
-@media (any-pointer: coarse), (hover: none) {
-    :root {
-        --dock-size: 56px;
-        --dock-item-size: 44px;
-        --dock-glyph-size: var(--control-compact-height);
-    }
 }
 
 /*

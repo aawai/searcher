@@ -2140,7 +2140,28 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                     [960, 720],
                     `${edge} dock open note window keeps the default notes size`,
                 );
-                await closeWindow(page, "notes");
+                // Verify home top-bar avatar badge shares the horizontal axis with the right-docked bar.
+                if (edge === "right") {
+                    await closeWindow(page, "notes");
+                    const axis = await page.evaluate(() => {
+                        const bar = document.querySelector("nav.dock-bar")!
+                            .getBoundingClientRect();
+                        const avatar = document.querySelector(
+                            ".user-avatar-badge",
+                        )!
+                            .getBoundingClientRect();
+                        return {
+                            dockCenterX: bar.left + bar.width / 2,
+                            avatarCenterX: avatar.left + avatar.width / 2,
+                        };
+                    });
+                    assert(
+                        Math.abs(axis.dockCenterX - axis.avatarCenterX) <= 1,
+                        `right dock axis (${axis.dockCenterX}) must align with home topbar avatar (${axis.avatarCenterX})`,
+                    );
+                } else {
+                    await closeWindow(page, "notes");
+                }
             }
         },
     );
@@ -2342,8 +2363,8 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                 homeStyles.boxShadow.includes("inset"),
                 `home dock must include inset material edge shadow, got: ${homeStyles.boxShadow}`,
             );
-            assertEquals(homeStyles.barRadius, "20px");
-            assertEquals(homeStyles.itemRadius, "16px");
+            assertEquals(homeStyles.barRadius, "10px");
+            assertEquals(homeStyles.itemRadius, "6px");
             assertEquals(homeStyles.barHeight, 44);
             assertEquals(homeStyles.itemHeight, 36);
             assert(

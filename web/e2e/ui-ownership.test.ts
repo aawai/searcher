@@ -265,7 +265,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
 
             // Default regular tier shows the scope explanation without the clear risk warning
             await page.getByText(
-                "通透主要影响首页搜索框与应用底板；输入聚焦时及菜单等浮层优先保证可读性。",
+                "通透主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。",
             ).waitFor();
             assertEquals(
                 await page.getByText(
@@ -322,18 +322,18 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                     cardRadius: getComputedStyle(card).borderRadius,
                 };
             });
-            assertEquals(roundedSettingsMetrics.shapeGroup.radius, "10px");
-            assertEquals(roundedSettingsMetrics.pillRadio.radius, "8px");
-            assertEquals(roundedSettingsMetrics.field.radius, "12px");
-            assertEquals(roundedSettingsMetrics.applyBtn.radius, "10px");
-            assertEquals(roundedSettingsMetrics.uploadIconBtn.radius, "10px");
-            assertEquals(roundedSettingsMetrics.windowBtn.radius, "10px");
+            assertEquals(roundedSettingsMetrics.shapeGroup.radius, "8px");
+            assertEquals(roundedSettingsMetrics.pillRadio.radius, "6px");
+            assertEquals(roundedSettingsMetrics.field.radius, "8px");
+            assertEquals(roundedSettingsMetrics.applyBtn.radius, "8px");
+            assertEquals(roundedSettingsMetrics.uploadIconBtn.radius, "8px");
+            assertEquals(roundedSettingsMetrics.windowBtn.radius, "8px");
             assertEquals(roundedSettingsMetrics.switchRadius, "999px");
             assertEquals(roundedSettingsMetrics.cardRadius, "14px");
 
             // Switch shape via keyboard: focus stays on the selected radio, field value and geometry do not jump
             const roundedRadio = page.getByRole("radio", {
-                name: "圆角",
+                name: "利落",
                 exact: true,
             });
             await roundedRadio.focus();
@@ -397,8 +397,8 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             );
             assertEquals(pillSettingsMetrics.applyBtn.radius, "999px");
             // Exclusions remain unchanged under pill
-            assertEquals(pillSettingsMetrics.uploadIconBtn.radius, "10px");
-            assertEquals(pillSettingsMetrics.windowBtn.radius, "10px");
+            assertEquals(pillSettingsMetrics.uploadIconBtn.radius, "8px");
+            assertEquals(pillSettingsMetrics.windowBtn.radius, "8px");
             assertEquals(pillSettingsMetrics.switchRadius, "999px");
             assertEquals(pillSettingsMetrics.cardRadius, "14px");
             // Geometry (width & height) is invariant across rounded -> pill
@@ -440,7 +440,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 "通透会透出壁纸，首页文字可读性随壁纸变化",
             ).waitFor();
             await page.getByText(
-                "通透主要影响首页搜索框与应用底板；输入聚焦时及菜单等浮层优先保证可读性。",
+                "通透主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。",
             ).waitFor();
 
             // High contrast and reduced-transparency notices take priority over clear help text while keeping saved glass preference
@@ -527,7 +527,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 "clear",
             );
 
-            // Cross-page consumer verification on Home (/): concentric search radii and full material switch on focus/blur
+            // Cross-page consumer verification on Home (/): concentric search radii, topbar chrome, and full material switch on focus/blur
             await visit("/");
             const homeResting = await page.evaluate(() => {
                 const frame = document.querySelector<HTMLElement>(
@@ -539,11 +539,23 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 const submit = frame.querySelector<HTMLElement>(
                     ".search-submit",
                 )!;
+                const wordmark = document.querySelector<HTMLElement>(
+                    ".wordmark-small",
+                )!;
+                const topActions = document.querySelector<HTMLElement>(
+                    ".top-actions",
+                )!;
+                const topBtn = topActions.querySelector<HTMLElement>(
+                    "button",
+                )!;
                 const cs = getComputedStyle(frame);
                 return {
                     frameRadius: cs.borderRadius,
                     engineRadius: getComputedStyle(engine).borderRadius,
                     submitRadius: getComputedStyle(submit).borderRadius,
+                    wordmarkRadius: getComputedStyle(wordmark).borderRadius,
+                    topActionsRadius: getComputedStyle(topActions).borderRadius,
+                    topBtnRadius: getComputedStyle(topBtn).borderRadius,
                     bgColor: cs.backgroundColor,
                     bgImage: cs.backgroundImage,
                     backdropFilter: cs.backdropFilter,
@@ -553,6 +565,9 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             assertEquals(homeResting.frameRadius, "999px");
             assertEquals(homeResting.engineRadius, "991px");
             assertEquals(homeResting.submitRadius, "991px");
+            assertEquals(homeResting.wordmarkRadius, "999px");
+            assertEquals(homeResting.topActionsRadius, "999px");
+            assertEquals(homeResting.topBtnRadius, "999px");
             assert(
                 homeResting.backdropFilter.includes("blur(6px)") &&
                     homeResting.backdropFilter.includes("saturate(1.6)"),
@@ -722,7 +737,7 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             assertEquals(trashTabsPill.triggerRadius, "997px");
 
             await visit("/settings/appearance");
-            await page.getByRole("radio", { name: "圆角", exact: true })
+            await page.getByRole("radio", { name: "利落", exact: true })
                 .click();
             await page.waitForFunction(
                 () => document.documentElement.dataset.shape === "rounded",
@@ -747,8 +762,8 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                     triggerHeight: Math.round(triggerRect.height * 100) / 100,
                 };
             });
-            assertEquals(trashTabsRounded.listRadius, "10px");
-            assertEquals(trashTabsRounded.triggerRadius, "8px");
+            assertEquals(trashTabsRounded.listRadius, "8px");
+            assertEquals(trashTabsRounded.triggerRadius, "6px");
             assertEquals(trashTabsRounded.listWidth, trashTabsPill.listWidth);
             assertEquals(trashTabsRounded.listHeight, trashTabsPill.listHeight);
             assertEquals(
@@ -760,8 +775,14 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 trashTabsPill.triggerHeight,
             );
 
-            // Home search in rounded mode keeps 20px frame and 12px concentric inner controls (overriding 10px button default)
+            // Home search and topbar chrome in rounded (利落) mode use crisp precision radii
             await visit("/");
+            const roundedSearchInput = page.locator("#search-query");
+            await roundedSearchInput.focus();
+            await roundedSearchInput.fill("/");
+            await page.locator(".search-suggestions").waitFor({
+                state: "visible",
+            });
             const homeRounded = await page.evaluate(() => {
                 const frame = document.querySelector<HTMLElement>(
                     ".search-frame",
@@ -772,15 +793,41 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
                 const submit = frame.querySelector<HTMLElement>(
                     ".search-submit",
                 )!;
+                const suggestions = document.querySelector<HTMLElement>(
+                    ".search-suggestions",
+                )!;
+                const suggestionItem = suggestions.querySelector<HTMLElement>(
+                    ".suggestion-item",
+                )!;
+                const wordmark = document.querySelector<HTMLElement>(
+                    ".wordmark-small",
+                )!;
+                const topActions = document.querySelector<HTMLElement>(
+                    ".top-actions",
+                )!;
+                const topBtn = topActions.querySelector<HTMLElement>(
+                    "button",
+                )!;
                 return {
                     frameRadius: getComputedStyle(frame).borderRadius,
                     engineRadius: getComputedStyle(engine).borderRadius,
                     submitRadius: getComputedStyle(submit).borderRadius,
+                    suggestionsRadius: getComputedStyle(suggestions).borderRadius,
+                    suggestionItemRadius:
+                        getComputedStyle(suggestionItem).borderRadius,
+                    wordmarkRadius: getComputedStyle(wordmark).borderRadius,
+                    topActionsRadius: getComputedStyle(topActions).borderRadius,
+                    topBtnRadius: getComputedStyle(topBtn).borderRadius,
                 };
             });
-            assertEquals(homeRounded.frameRadius, "20px");
-            assertEquals(homeRounded.engineRadius, "12px");
-            assertEquals(homeRounded.submitRadius, "12px");
+            assertEquals(homeRounded.frameRadius, "12px");
+            assertEquals(homeRounded.engineRadius, "8px");
+            assertEquals(homeRounded.submitRadius, "8px");
+            assertEquals(homeRounded.suggestionsRadius, "12px");
+            assertEquals(homeRounded.suggestionItemRadius, "8px");
+            assertEquals(homeRounded.wordmarkRadius, "8px");
+            assertEquals(homeRounded.topActionsRadius, "10px");
+            assertEquals(homeRounded.topBtnRadius, "6px");
 
             await visit("/settings/appearance");
             await updatePreferences({
