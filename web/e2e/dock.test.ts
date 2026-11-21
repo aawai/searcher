@@ -941,12 +941,12 @@ Deno.test("workspace dock: desktop four edges, collapsible floating ball with re
             });
             assert(
                 ballStyles.bgImage.includes("linear-gradient"),
-                `floating ball must include --material-thick-sheen gradient, got: ${ballStyles.bgImage}`,
+                `floating ball must include --material-regular-sheen gradient, got: ${ballStyles.bgImage}`,
             );
             assert(
-                ballStyles.backdropFilter.includes("blur(8px)") &&
-                    ballStyles.backdropFilter.includes("saturate(1.8)"),
-                `floating ball in clear tier must keep Floating thick filter, got: ${ballStyles.backdropFilter}`,
+                ballStyles.backdropFilter.includes("blur(6px)") &&
+                    ballStyles.backdropFilter.includes("saturate(1.6)"),
+                `floating ball in clear tier must keep Material regular filter, got: ${ballStyles.backdropFilter}`,
             );
             assertEquals(ballStyles.borderRadius, "999px");
 
@@ -2288,12 +2288,15 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
             await page.reload();
             await dockNav(page).waitFor({ state: "visible" });
 
-            // 1. Home dock uses Floating glass sheen + 3-layer material edge + blur, and .dock-glyph uses 23% radius + 1px inner rim
+            // 1. Home dock uses Material glass sheen + 3-layer material edge + blur,
+            // follows data-shape=pill, and uses compact fine-pointer geometry (44px bar, 36px item, 24px glyph).
             const homeStyles = await page.evaluate(() => {
                 const root = document.documentElement;
                 const bar = document.querySelector("nav.dock-bar")!;
+                const item = bar.querySelector(".dock-item")!;
                 const glyph = bar.querySelector(".dock-glyph")!;
                 const barCs = getComputedStyle(bar);
+                const itemCs = getComputedStyle(item);
                 const glyphCs = getComputedStyle(glyph);
                 const glyphAfterCs = getComputedStyle(glyph, "::after");
                 const base = {
@@ -2301,6 +2304,9 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                     backdropFilter: barCs.backdropFilter,
                     boxShadow: barCs.boxShadow,
                     barRadius: barCs.borderRadius,
+                    barHeight: Math.round(bar.getBoundingClientRect().height),
+                    itemHeight: Math.round(item.getBoundingClientRect().height),
+                    itemRadius: itemCs.borderRadius,
                     glyphWidth: Number.parseFloat(glyphCs.width),
                     glyphRadius: Number.parseFloat(glyphCs.borderRadius),
                     glyphShadow: glyphCs.boxShadow,
@@ -2311,10 +2317,12 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                 root.dataset.glass = "clear";
                 root.dataset.shape = "pill";
                 const clearPillCs = getComputedStyle(bar);
+                const clearPillItemCs = getComputedStyle(item);
                 const clearPill = {
                     bgImage: clearPillCs.backgroundImage,
                     backdropFilter: clearPillCs.backdropFilter,
                     barRadius: clearPillCs.borderRadius,
+                    itemRadius: clearPillItemCs.borderRadius,
                 };
                 if (prevGlass === undefined) delete root.dataset.glass;
                 else root.dataset.glass = prevGlass;
@@ -2324,7 +2332,7 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
             });
             assert(
                 homeStyles.bgImage.includes("linear-gradient"),
-                `home dock must include --material-thick-sheen gradient, got: ${homeStyles.bgImage}`,
+                `home dock must include --material-regular-sheen gradient, got: ${homeStyles.bgImage}`,
             );
             assert(
                 homeStyles.backdropFilter.includes("blur"),
@@ -2335,23 +2343,31 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
                 `home dock must include inset material edge shadow, got: ${homeStyles.boxShadow}`,
             );
             assertEquals(homeStyles.barRadius, "20px");
+            assertEquals(homeStyles.itemRadius, "16px");
+            assertEquals(homeStyles.barHeight, 44);
+            assertEquals(homeStyles.itemHeight, 36);
             assert(
                 homeStyles.clearPill.bgImage.includes("linear-gradient") &&
-                    homeStyles.clearPill.backdropFilter.includes("blur(8px)") &&
+                    homeStyles.clearPill.backdropFilter.includes("blur(6px)") &&
                     homeStyles.clearPill.backdropFilter.includes(
-                        "saturate(1.8)",
+                        "saturate(1.6)",
                     ),
-                `home dock in clear tier must keep Floating thick filter/sheen, got: ${homeStyles.clearPill.backdropFilter}`,
+                `home dock in clear tier must match Material regular filter/sheen, got: ${homeStyles.clearPill.backdropFilter}`,
             );
             assertEquals(
                 homeStyles.clearPill.barRadius,
-                "20px",
-                "dock bar container radius must not become pill under data-shape=pill",
+                "999px",
+                "dock bar container radius must become pill under data-shape=pill",
             );
-            assertEquals(homeStyles.glyphWidth, 28);
+            assertEquals(
+                homeStyles.clearPill.itemRadius,
+                "999px",
+                "dock item radius must become pill under data-shape=pill",
+            );
+            assertEquals(homeStyles.glyphWidth, 24);
             assert(
-                Math.abs(homeStyles.glyphRadius - 28 * 0.23) < 0.2,
-                `dock-glyph radius must be 28 * 0.23 (6.44px), got: ${homeStyles.glyphRadius}`,
+                Math.abs(homeStyles.glyphRadius - 24 * 0.23) < 0.2,
+                `dock-glyph radius must be 24 * 0.23 (5.52px), got: ${homeStyles.glyphRadius}`,
             );
             assert(
                 homeStyles.glyphShadow.includes("inset") &&
@@ -2360,7 +2376,7 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
             );
 
             // 2. Over the AI window the desktop is still visible: the dock keeps
-            // its Floating material instead of a solid fallback.
+            // its Material glass instead of a solid fallback.
             await dockSystemButton(page, "AI 问答").click();
             await page.waitForURL((url) => url.pathname.startsWith("/ask"));
             await page.locator('[data-window-id="ai"]').waitFor({
@@ -2391,7 +2407,7 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
             await page.locator(".app-shell[data-home]").waitFor();
             await dockNav(page).waitFor({ state: "visible" });
 
-            // 3. 390x844 mobile viewport: all dock items have equal height (44px) and overflowing apps group has mask-image
+            // 3. 390x844 narrow viewport (fine pointer): all dock items have equal height (36px) and overflowing apps group has mask-image
             await page.setViewportSize({ width: 390, height: 844 });
             await page.waitForFunction(() => {
                 const group = document.querySelector(".dock-group--apps");
@@ -2420,8 +2436,8 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
             for (const h of mobileMetrics.heights) {
                 assertEquals(
                     h,
-                    44,
-                    `all mobile dock items must be 44px tall, got: ${
+                    36,
+                    `all fine-pointer narrow dock items must be 36px tall, got: ${
                         mobileMetrics.heights.join(",")
                     }`,
                 );
@@ -2447,8 +2463,8 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
             );
             await page.keyboard.press("Escape");
             await menu.waitFor({ state: "hidden" });
-            // At 360px the system group can scroll without hiding the options.
-            await page.setViewportSize({ width: 360, height: 844 });
+            // When the bar is narrower than the six system items, the system group scrolls without hiding options.
+            await page.setViewportSize({ width: 290, height: 844 });
             const systemGroup = dockNav(page).locator(".dock-group--system");
             await page.waitForFunction(() => {
                 const group = document.querySelector(".dock-group--system");

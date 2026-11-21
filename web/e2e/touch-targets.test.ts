@@ -148,6 +148,56 @@ Deno.test("命中区与可见尺寸分离：标题栏按指针压缩，触屏命
                         detail,
                     );
                 }
+                // Dock items: 36px on fine-only mouse, 44px on hybrid/touch with non-overlapping 44px hit areas.
+                const dockGeometry = await page.locator("nav.dock-bar .dock-item")
+                    .evaluateAll((els) =>
+                        els.map((el) => {
+                            const rect = el.getBoundingClientRect();
+                            const cx = rect.left + rect.width / 2;
+                            const cy = rect.top + rect.height / 2;
+                            const points: [string, number, number][] = [
+                                ["centre", cx, cy],
+                                ["left", rect.left + 1, cy],
+                                ["right", rect.right - 1, cy],
+                                ["top", cx, rect.top + 1],
+                                ["bottom", cx, rect.bottom - 1],
+                            ];
+                            const misses = points
+                                .filter(([, x, y]) => {
+                                    const hit = document.elementFromPoint(x, y);
+                                    return !(hit && el.contains(hit));
+                                })
+                                .map(([point]) => point);
+                            return {
+                                width: Math.round(rect.width),
+                                height: Math.round(rect.height),
+                                left: rect.left,
+                                right: rect.right,
+                                misses,
+                            };
+                        })
+                    );
+                assert(dockGeometry.length >= 6, `${profile} dock items`);
+                const expectedDockSize = profile === "mouse" ? 36 : 44;
+                for (let i = 0; i < dockGeometry.length; i++) {
+                    const item = dockGeometry[i];
+                    assertEquals(
+                        [item.width, item.height],
+                        [expectedDockSize, expectedDockSize],
+                        `${profile} dock item: ${JSON.stringify(item)}`,
+                    );
+                    assertEquals(
+                        item.misses,
+                        [],
+                        `${profile} dock item hit points: ${JSON.stringify(item)}`,
+                    );
+                    if (i > 0) {
+                        assert(
+                            dockGeometry[i - 1].right <= item.left + 0.5,
+                            `${profile} dock items overlap: ${JSON.stringify([dockGeometry[i - 1], item])}`,
+                        );
+                    }
+                }
                 if (profile === "mouse") continue;
                 assertEquals(
                     await probeTargets(
