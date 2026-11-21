@@ -25,7 +25,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 1. **输入即意图。** 用户在统一输入框里键入的内容决定去向，不要求先选模式。归属：统一输入框（#237）、捕获入口（#238）。
 2. **只有一个场景。** 首页就是桌面。应用、笔记、AI 问答、设置 / 账户与回收站是叠在首页上的桌面窗口；不另建第二张桌面或资料库总览。首页应用库顺序与任务栏固定顺序相互独立。
 3. **频率决定距离。** 高频内容在首页表面；登录用户通过任务栏进入首页、全部应用、全部笔记、AI 问答、设置与回收站。首页只显示固定子集，应用与笔记窗口保留全部对象；账户、设置与回收站也可由头像菜单进入。
-4. **一套材质。** 壁纸是画布；首页物体（搜索框、应用底板）为 Material，首页刊头只在壁纸层加一层渐隐的模糊衬底；菜单与建议等浮层为 Floating，承载阅读与编辑的叠层（窗口、侧栏、Sheet、对话框）为 Overlay 实色，内容页为实色；不引入单独的拟物材质。归属：#285 Y3、Y4。
+4. **一套材质。** 壁纸是画布；首页物体（搜索框、应用底板、任务栏）为 Material，首页刊头只在壁纸层加一层渐隐的模糊衬底；菜单与建议等浮层为 Floating，承载阅读与编辑的叠层（窗口、侧栏、Sheet、对话框）为 Overlay 实色，内容页为实色；不引入单独的拟物材质。归属：#285 Y3、Y4。
 5. **中部留给壁纸。** 大多数壁纸的主体在画面中部，首页中部只放搜索框（与用户开启的应用底板）；个人内容排成一列刊头，放在壁纸焦点的另一侧，不在主体上铺放卡片。首页物体共用中轴与断点，物体之间不叠放。
 6. **比喻要有功能。** 只有带来实际操作的比喻才保留：“桌面”可整理窗口与任务栏而保留；“拉远”与拟物纸张没有对应操作，不保留；“刊头”承载日期、待办与置顶笔记的阅读顺序，因此是排版，不是卡片或实物纸张。
 
@@ -200,12 +200,12 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 #### 间距、圆角、尺寸
 
 - 间距：4 的倍数，`--space-1`…`--space-10` = 4/8/12/16/20/24/32/36/48/64；`--space-half`（2）只用于分段控件内衬等紧贴间隙，`--space-hairline`（1）只用于共享表面的网格分隔线。
-- 圆角按层级同心：`--control-radius` 10（按钮、分段控件基础圆角）·`--input-radius` / `--multiline-radius` 12（文本字段与下拉选择基础圆角、多行输入）·`--radius` 14（分组列表、卡片、菜单）·`--radius-lg` 20（对话框、窗口、Sheet、搜索框默认圆角、应用底板、Dock）·`--radius-pill` 999（徽标、“胶囊”控件形状）。外观偏好“控件形状”通过语义映射 Token `--shape-button-radius`、`--shape-field-radius`、`--shape-segment-radius`、`--shape-segment-inner-radius` 与 `--search-radius` 作用，不覆盖上述基础尺度。应用图标使用 `launcher.css` 的 `--radius-launcher-icon`（约 23% 边长的圆角方形）；复选框与行内代码用 `--radius-sm` 4。其余专用角色与别名见下表。
+- 圆角按层级同心：`--control-radius` 10（按钮、分段控件基础圆角）·`--input-radius` / `--multiline-radius` 12（文本字段与下拉选择基础圆角、多行输入）·`--radius` 14（分组列表、卡片、菜单）·`--radius-lg` 20（对话框、窗口、Sheet、搜索框默认圆角、应用底板、Dock 默认圆角）·`--radius-pill` 999（徽标、“胶囊”控件形状）。外观偏好“控件形状”通过语义映射 Token `--shape-button-radius`、`--shape-field-radius`、`--shape-segment-radius`、`--shape-segment-inner-radius`、`--shape-dock-radius`、`--shape-dock-inner-radius` 与 `--search-radius` 作用，不覆盖上述基础尺度。应用图标使用 `launcher.css` 的 `--radius-launcher-icon`（约 23% 边长的圆角方形）；复选框与行内代码用 `--radius-sm` 4。其余专用角色与别名见下表。
 - 控件高度与状态透明度：`--topbar-height` 56、`--control-height` 36、`--control-compact-height` 28、粗指针命中区 `--control-touch-target` 44；列表行最小高度 `--row-min-height` 44；禁用态统一消费 `--opacity-disabled`（0.5）。
 - 窗口与对话框尺寸：`--window-apps-width/height`（640×640）、`--window-notes-width/height`（960×720）、`--window-ai-width/height`（960×720）、`--window-settings-width/height`、`--window-trash-width/height` 为 1440×900 下的桌面初始矩形，见 [C1 / C2 / C3](#c1设置与回收站窗口)；对话框宽度阶梯 `--dialog-width-sm/md/lg` = 400 / 480 / 560；`--workspace-width`（400）只作为提示与菜单文本的宽度上限；全局层级 `--elevation-tooltip`（100）位于 `--elevation-suggestions`（90）之上、`--elevation-toast`（110）之下。
 - 图标：`--icon-sm/md/lg` = 14/16/20，Lucide 默认描边。
 
-**圆角阶梯登记。** `border-radius` 只能引用本表的 Token，或 `0`、`999px`、`50%`、`inherit`；允许 `calc(<登记 Token> ± Npx)` 表达同心内缩，其他 `calc()` 不允许。名称为 `--radius`、`--radius-*` 或 `--*-radius` 的 Token 必须登记于此，在哪个 CSS 文件定义都一样。别名与其目标同值，新代码优先使用目标 Token。圆角容器内贴着内边距的圆角子项取“容器圆角 − 内边距”：菜单项与建议项 `calc(var(--radius) - 4px)` 或等值的 `--control-radius`，分段 / Tab 选项 `--shape-segment-inner-radius`（`calc(var(--shape-segment-radius) - var(--space-half))`），Dock 项与撤销提示内按钮 `calc(var(--radius-lg) - 4px)`，AI 图标候选图 `calc(var(--radius) - 8px)`；附件错误条取 `--radius`，使内缩 4px 的关闭按钮保持 `--control-radius`。子项不触及容器圆角（居中的标题栏按钮、首页搜索框内控件、网格图块）或圆角按比例缩放（文件夹缩略图）时不适用。
+**圆角阶梯登记。** `border-radius` 只能引用本表的 Token，或 `0`、`999px`、`50%`、`inherit`；允许 `calc(<登记 Token> ± Npx)` 表达同心内缩，其他 `calc()` 不允许。名称为 `--radius`、`--radius-*` 或 `--*-radius` 的 Token 必须登记于此，在哪个 CSS 文件定义都一样。别名与其目标同值，新代码优先使用目标 Token。圆角容器内贴着内边距的圆角子项取“容器圆角 − 内边距”：菜单项与建议项 `calc(var(--radius) - 4px)` 或等值的 `--control-radius`，分段 / Tab 选项 `--shape-segment-inner-radius`（`calc(var(--shape-segment-radius) - var(--space-half))`），Dock 项 `--shape-dock-inner-radius`（圆角模式 `calc(var(--shape-dock-radius) - var(--space-1))`，胶囊模式 `--radius-pill`），撤销提示内按钮 `calc(var(--radius-lg) - 4px)`，AI 图标候选图 `calc(var(--radius) - 8px)`；附件错误条取 `--radius`，使内缩 4px 的关闭按钮保持 `--control-radius`。子项不触及容器圆角（居中的标题栏按钮、首页搜索框内控件、网格图块）或圆角按比例缩放（文件夹缩略图）时不适用。
 
 | Token                          | 值                                                                                   | 用途                                                                                                                                                        |
 | ------------------------------ | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -221,10 +221,12 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--shape-segment-inner-radius`     | `calc(var(--shape-segment-radius) - var(--space-half))`                              | 上述分段容器内 `.radio-item` 与 `[data-slot="tabs-trigger"]`，与外壳同心                                                                                    |
 | `--shape-suggestions-radius`       | `--radius` / `--radius-lg`                                                           | 搜索建议浮层（`.search-suggestions`）；胶囊模式下协调至 `--radius-lg`（20px）                                                                               |
 | `--shape-suggestions-inner-radius` | `calc(var(--shape-suggestions-radius) - var(--space-1))`                             | 搜索建议条目（`.suggestion-item`），与搜索建议浮层同心                                                                                                      |
+| `--shape-dock-radius`              | `--radius-lg` / `--radius-pill`                                                      | 任务栏容器（`.dock-bar`）；随“控件形状”偏好变化                                                                                                             |
+| `--shape-dock-inner-radius`        | `calc(var(--shape-dock-radius) - var(--space-1))` / `--radius-pill`                  | 任务栏项（`.dock-item`）与拖拽预览，与任务栏外壳同心                                                                                                        |
 | `--multiline-radius`           | 12                                                                                   | 多行输入（Textarea、编辑区）                                                                                                                                |
 | `--radius-multiline`           | `--multiline-radius`                                                                 | 别名                                                                                                                                                        |
 | `--radius`                     | 14                                                                                   | 分组列表、卡片、菜单                                                                                                                                        |
-| `--radius-lg`                  | 20                                                                                   | 对话框、窗口、Sheet、Dock                                                                                                                                   |
+| `--radius-lg`                  | 20                                                                                   | 对话框、窗口、Sheet、Dock 默认圆角                                                                                                                          |
 | `--radius-sheet`               | `--radius-lg`                                                                        | Sheet 别名                                                                                                                                                  |
 | `--radius-pill`                | 999                                                                                  | 徽标、“胶囊”控件形状                                                                                                                                        |
 | `--search-radius`              | `--radius-lg` / `--radius-pill`                                                      | 搜索框；随“控件形状”偏好变化                                                                                                                                |
@@ -233,7 +235,7 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | `--radius-launcher-ratio`      | 0.23                                                                                 | 应用图标圆角占边长的比例，仅用于下面三项                                                                                                                    |
 | `--radius-launcher-icon`       | `--launcher-icon × ratio`                                                            | 首页、工作区与应用表单预览图标（`launcher.css` / `apps.css`）                                                                                               |
 | `--radius-launcher-mini`       | `14px × ratio` / `--launcher-mini-size × ratio` / `--launcher-mini-size / 2 × ratio` | 文件夹预览缩略图（唯一 owner `launcher.css`：小文件夹 2×2 的 14px 图块、大文件夹 3×3 预览图块，以及第 9 格 2×2 余数子图以预览格位一半 `22px` 缺省基准折算） |
-| `--radius-dock-glyph`          | `--control-compact-height（28px）× ratio`                                            | 任务栏紧凑应用图标（`tokens.css` 定义，`dock.css` 消费）                                                                                                    |
+| `--radius-dock-glyph`          | `--dock-glyph-size（精细 24px / 粗指针 28px）× ratio`                                | 任务栏紧凑应用图标（`tokens.css` 定义，`dock.css` 消费）                                                                                                    |
 
 #### Tailwind 视觉工具类与响应式前缀
 
@@ -274,8 +276,8 @@ Searcher 是个人起始页：壁纸是画布，搜索是唯一焦点，应用�
 | Canvas   | `--background` / 壁纸 / 壁纸派生画布                                            | 无                            | 页面、首页                                                        |
 | Content  | `--surface`                                                                     | 无                            | 分组列表、笔记库列表                                              |
 | 图标块   | 图标画布 / `--material-regular`                                                 | `--shadow-elevation-glyph`    | 应用、文件夹预览、“+”、“更多（N）”                                |
-| Material | `--material-regular` + `--material-regular-filter` + `--material-regular-sheen` | `--shadow-elevation-material` | 常态搜索框、应用底板、首页顶栏控件的悬停 / 聚焦 / 弹层打开态      |
-| Floating | `--material-thick` + `--material-thick-filter` + `--material-thick-sheen`       | `--shadow-elevation-floating` | 菜单、Popover、建议列表、文件夹弹层、撤销提示、任务栏、聚焦搜索框 |
+| Material | `--material-regular` + `--material-regular-filter` + `--material-regular-sheen` | `--shadow-elevation-material` | 常态搜索框、应用底板、任务栏、首页顶栏控件的悬停 / 聚焦 / 弹层打开态 |
+| Floating | `--material-thick` + `--material-thick-filter` + `--material-thick-sheen`       | `--shadow-elevation-floating` | 菜单、Popover、建议列表、文件夹弹层、撤销提示、聚焦搜索框            |
 | Overlay  | `--surface-l3`                                                                  | `--shadow-l3`                 | 对话框、窗口、Sheet                                               |
 
 首页高度收敛为贴面图标块 → Material（搜索框 / 应用底板）→ Floating 三档，每档只消费一个组合阴影 Token；图标块组合 `--glyph-edge` 内环与极淡投影，Material / Floating 组合 `--shadow-material-edge` 与各档投影，不以 z-index 推导阴影强度。首页刊头的衬底是壁纸层上渐隐的整高模糊层（`--masthead-veil`，见 [首页刊头](#首页刊头home-masthead)），不属于高度阶梯，不加阴影与边缘。#285 Y3 起不再有 Paper 层。
@@ -389,7 +391,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 验证：CSS / TSX 门禁的正确 owner、属性、值和反例测试、生产 `check:ui`，以及各领域既有对比度测试；用户壁纸与运行时几何不因此转成固定颜色或静态视觉值。
 
-任务栏运行时避让：`WorkspaceDock` 实测停靠容器几何，以像素值在 `:root` 设置 `--dock-inset-top/right/bottom/left`，使 Portal 内的浮层与首页共享避让；AppShell 的 `data-dock-edge` 标记有效方向。`PageShell` 在 `semantic.css` 中以四向 margin 消费这些几何值，浮动 `StatusBanner` / `UndoToast` 在 `semantic.css`、首页流式容器 `.home` 在 `home-layouts.css` 中按各自停靠边消费 `--dock-inset-*`，不把它们视为可任意设置的视觉间距；窗口（含应用 / 笔记）由 `features/windowing` 的几何模块直接实测任务栏并投影矩形。`exceptions.ts` 仅放行对应文件和属性的精确变量表达式。`--dock-size`（56px）、`--dock-item-size` / `--dock-ball-size`（44px）由 `tokens.css` 拥有；验证内容与任务栏不相交、收起释放空间、Portal 继承与模态期间布局稳定。
+任务栏运行时避让：`WorkspaceDock` 实测停靠容器几何，以像素值在 `:root` 设置 `--dock-inset-top/right/bottom/left`，使 Portal 内的浮层与首页共享避让；AppShell 的 `data-dock-edge` 标记有效方向。`PageShell` 在 `semantic.css` 中以四向 margin 消费这些几何值，浮动 `StatusBanner` / `UndoToast` 在 `semantic.css`、首页流式容器 `.home` 在 `home-layouts.css` 中按各自停靠边消费 `--dock-inset-*`，不把它们视为可任意设置的视觉间距；窗口（含应用 / 笔记）由 `features/windowing` 的几何模块直接实测任务栏并投影矩形。`exceptions.ts` 仅放行对应文件和属性的精确变量表达式。`--dock-size`（精细 44px / 粗指针 56px）、`--dock-item-size`（精细 36px / 粗指针 44px）、`--dock-glyph-size`（精细 24px / 粗指针 28px）与 `--dock-ball-size`（44px）由 `tokens.css` 拥有；验证内容与任务栏不相交、收起释放空间、Portal 继承与模态期间布局稳定。
 
 表达式扫描补全（#320）不改变上述视觉规则。以下运行时几何在 `exceptions.ts` 按精确 owner / 属性 / 表达式登记：`WorkspaceDock.tsx` 的 dnd-kit `transition`、悬浮球指针坐标减去半径的 `left/top` 与安全区域内归一化 `topRatio` 定位；`LibraryPopup.tsx` 的锚点 `top` 与扣除锚点及 `--space-4` 的视口剩余 `maxHeight`；实验通道 `HomeGridLab.tsx` 的计算位置 `top: blockTop`。它们表达拖拽反馈、吸边或锚定容量，不放行静态字号、颜色或任意坐标。验证由真实 scanner 输入的合法对照与错误 owner / 静态值反例，以及全库 `check:ui` 提供；本次仅变更门禁，不改变生产 UI。
 
@@ -398,7 +400,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 以下偏好由用户在“设置 → 外观”中选择，是系统允许的离散变体，由 Token 或单一 owner 实现，不得扩展为任意数值：
 
 - 主题（跟随系统 / 浅色 / 深色 / 高对比浅色 / 高对比深色）与强调色（跟随壁纸或 9 种调色板）：`tokens.css`；壁纸派生见 [强调色来源](#强调色来源)，高对比见 [高对比主题](#高对比主题)。
-- 控件形状（圆角 / 胶囊，API `searchShape`）：位于“设置 → 外观”顶部分组。`tokens.css` 定义 `--shape-button-radius`、`--shape-field-radius`、`--shape-segment-radius`、`--shape-segment-inner-radius`、`--shape-suggestions-radius` 与 `--search-radius`，`[data-shape="pill"]` 将独立控件统一切换到 `--radius-pill`（搜索框内控件与分段子项分别按 `--search-inner-radius`、`--shape-segment-inner-radius` 同心内缩），作用于首页搜索框、AI 输入框发送/停止主操作按钮（`.ask-composer__send-btn`）、普通独立按钮、独立单行输入与原生下拉触发器、分段控件与默认分段式 Tab；搜索建议浮层（`.search-suggestions`）在胶囊模式下由 `--shape-suggestions-radius` 协调过渡至 `--radius-lg`（20px，与 `.inline-ai-card`、`.dock-bar` 同级，`.suggestion-item` 同步按 `calc(var(--shape-suggestions-radius) - var(--space-1))` 同心内缩）。横向设置行内字段、撤销提示内按钮、通用图标按钮、窗口标题栏按钮、下划线式 Tab、多行输入、展示徽标 / 芯片以及 Dock / 行内 AI 卡片 / 窗口 / 浮层等容器保持原有几何，不变成 `999px` 胶囊。
+- 控件形状（圆角 / 胶囊，API `searchShape`）：位于“设置 → 外观”顶部分组。`tokens.css` 定义 `--shape-button-radius`、`--shape-field-radius`、`--shape-segment-radius`、`--shape-segment-inner-radius`、`--shape-suggestions-radius`、`--shape-dock-radius`、`--shape-dock-inner-radius` 与 `--search-radius`，`[data-shape="pill"]` 将独立控件与任务栏统一切换到 `--radius-pill`（搜索框内控件与分段子项分别按 `--search-inner-radius`、`--shape-segment-inner-radius` 同心内缩，任务栏项同步按 `--shape-dock-inner-radius` 切换为胶囊/圆形），作用于首页搜索框、任务栏（`.dock-bar`）、AI 输入框发送/停止主操作按钮（`.ask-composer__send-btn`）、普通独立按钮、独立单行输入与原生下拉触发器、分段控件与默认分段式 Tab；搜索建议浮层（`.search-suggestions`）在胶囊模式下由 `--shape-suggestions-radius` 协调过渡至 `--radius-lg`（20px，与 `.inline-ai-card` 同级，`.suggestion-item` 同步按 `calc(var(--shape-suggestions-radius) - var(--space-1))` 同心内缩）。横向设置行内字段、撤销提示内按钮、通用图标按钮、窗口标题栏按钮、下划线式 Tab、多行输入、展示徽标 / 芯片以及行内 AI 卡片 / 窗口 / 浮层等容器保持原有几何，不变成 `999px` 胶囊。
 - 玻璃效果（关闭 / 轻 / 标准 / 通透，默认标准，API `glassIntensity`）：位于“设置 → 外观”顶部分组。`<html data-glass>` 选择 `tokens.css` 中的档位取值，按表面职责分别固定 Material（`--material-regular`、`--material-regular-filter`、`--material-regular-sheen-scale`、`--material-regular-sheen`）与 Floating（`--material-thick`、`--material-thick-filter`、`--material-thick-sheen-scale`、`--material-thick-sheen`）的填充、模糊 / 饱和度与顶光缩放，不再共用单一滤镜或顶光 Token。
 - 显示应用名称：统一控制首页网格、文件夹弹层与应用窗口的应用 / 文件夹名称；隐藏保留可访问名称及提示，不改变尺寸。任务栏系统入口与常用应用均只显示图标、不显示底部可见文字，保留无障碍名称。
 - 显示应用底板（登录用户）：关闭时首页应用网格不绘制底板，几何不变，见 [组件语法](#组件语法) 的应用底板。
@@ -417,7 +419,7 @@ feature CSS 不重新定义基础控件的 surface / radius / shadow；新增 pr
 
 ### 材质与画布原则
 
-**材质只出现在壁纸之上。** 搜索框与应用底板使用 Material，首页刊头衬底是壁纸层上的专用模糊衬底；菜单、Popover、建议列表及悬浮任务栏使用 Floating 厚材质，消费全局玻璃档位。应用 / 笔记 / AI 窗口承载阅读、编辑与对话，使用 Overlay 实色，不改变首页壁纸；任务栏在所有窗口之上保持 Floating 材质。
+**材质只出现在壁纸之上。** 搜索框、应用底板与任务栏使用 Material，首页刊头衬底是壁纸层上的专用模糊衬底；菜单、Popover、建议列表等承载次要文字信息的浮层使用 Floating 厚材质，消费全局玻璃档位。应用 / 笔记 / AI 窗口承载阅读、编辑与对话，使用 Overlay 实色，不改变首页壁纸；任务栏在所有窗口之上保持 Material 材质。
 
 **登录、设置等独立页面可以使用壁纸派生画布，内容层仍为实色。** 壁纸派生画布是同一张壁纸（无壁纸时为主题背景色 `--background`）经 `--canvas-derived-filter` 模糊、再盖一层 `--canvas-derived`（`--background` 按 `--canvas-derived-mix` 混合，浅色 94%、深色 84%）后的画布，允许登录 / 注册、设置、账户、管理等独立页面使用，避免文字直接落在任意壁纸上；目前登录 / 注册页已使用该画布，登录用户的设置、账户、AI 与回收站均是实色窗口。分组列表、表格、面板、对话框等内容层保持实色（`--surface` / `--surface-l3`），不得改为材质。直接放在派生画布上的文字（页面标题、分组标题与脚注）按正文要求：`--foreground` 与 `--muted` 在深 / 浅照片极值与饱和色背景上均 ≥ 4.5:1，由 `design-system/glass-contrast.test.ts` 检验，低于下限的混合比例不得合入。`prefers-reduced-transparency: reduce` 或不支持 `backdrop-filter` 时派生画布为实色 `--background`。
 

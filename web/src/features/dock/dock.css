@@ -49,12 +49,12 @@
     display: flex;
     align-items: center;
     box-sizing: border-box;
-    background: var(--material-thick-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-thick-filter);
-    backdrop-filter: var(--material-thick-filter);
+    background: var(--material-regular-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
     border: none;
-    box-shadow: var(--shadow-elevation-floating);
-    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-elevation-material);
+    border-radius: var(--shape-dock-radius);
     padding: var(--space-1);
     gap: var(--space-1);
     user-select: none;
@@ -250,10 +250,10 @@
     justify-content: center;
     width: var(--dock-item-size);
     height: var(--dock-item-size);
-    min-width: var(--control-touch-target);
-    min-height: var(--control-touch-target);
-    /* Concentric with the bar: --radius-lg minus its --space-1 padding. */
-    border-radius: calc(var(--radius-lg) - 4px);
+    min-width: var(--dock-item-size);
+    min-height: var(--dock-item-size);
+    /* Concentric with the bar: inset from --radius-lg in rounded mode, pill in pill mode. */
+    border-radius: var(--shape-dock-inner-radius);
     border: none;
     background: transparent;
     color: var(--foreground);
@@ -358,17 +358,17 @@
 @media (max-width: 767px) {
     .dock-item--system {
         width: auto;
-        min-width: var(--control-touch-target);
+        min-width: var(--dock-item-size);
         height: var(--dock-item-size);
-        min-height: var(--control-touch-target);
+        min-height: var(--dock-item-size);
         padding: 0 var(--space-2);
     }
 }
 
 /* Icon glyph in dock */
 .dock-glyph {
-    width: var(--control-compact-height);
-    height: var(--control-compact-height);
+    width: var(--dock-glyph-size);
+    height: var(--dock-glyph-size);
     font-size: var(--font-body-size);
     border-radius: var(--radius-dock-glyph);
     box-shadow: var(--shadow-glyph-edge), var(--shadow-elevation-glyph);
@@ -383,7 +383,7 @@
     box-shadow: var(--shadow-l3);
     background: var(--surface-solid);
     border: var(--space-hairline) solid var(--border);
-    border-radius: calc(var(--radius-lg) - 4px);
+    border-radius: var(--shape-dock-inner-radius);
     z-index: var(--elevation-drag);
 }
 
@@ -424,10 +424,10 @@
     min-height: var(--control-touch-target);
     border-radius: var(--radius-pill);
     border: none;
-    background: var(--material-thick-sheen), var(--material-thick);
-    -webkit-backdrop-filter: var(--material-thick-filter);
-    backdrop-filter: var(--material-thick-filter);
-    box-shadow: var(--shadow-elevation-floating);
+    background: var(--material-regular-sheen), var(--material-regular);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
+    box-shadow: var(--shadow-elevation-material);
     display: flex;
     align-items: center;
     justify-content: center;

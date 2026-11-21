@@ -198,7 +198,7 @@
     --radius-sheet: var(--radius-lg);
     --radius-sm: 4px;
     --radius-inline-code: var(--radius-sm);
-    --radius-dock-glyph: calc(var(--control-compact-height) * var(--radius-launcher-ratio));
+    --radius-dock-glyph: calc(var(--dock-glyph-size) * var(--radius-launcher-ratio));
 
     /* Sizes. */
     --topbar-height: 56px;
@@ -212,9 +212,10 @@
     --icon-md: 16px;
     --icon-lg: 20px;
 
-    /* Dock geometry and layout insets. */
-    --dock-size: 56px;
-    --dock-item-size: 44px;
+    /* Dock geometry and layout insets: compact on fine pointers, 44px targets on coarse. */
+    --dock-size: 44px;
+    --dock-item-size: 36px;
+    --dock-glyph-size: var(--space-6);
     --dock-ball-size: 44px;
     --dock-inset-top: 0px;
     --dock-inset-bottom: 0px;
@@ -596,7 +597,7 @@
     --theme-preview-high-contrast-dark-edge: #FFFFFF;
 }
 
-/* Shape preferences affect standalone controls and search suggestions, never content containers. */
+/* Shape preferences affect standalone controls, dock and search suggestions, never content containers. */
 :root,
 [data-shape="rounded"] {
     --shape-button-radius: var(--control-radius);
@@ -605,6 +606,8 @@
     --shape-segment-inner-radius: calc(var(--shape-segment-radius) - var(--space-half));
     --shape-suggestions-radius: var(--radius);
     --shape-suggestions-inner-radius: calc(var(--shape-suggestions-radius) - var(--space-1));
+    --shape-dock-radius: var(--radius-lg);
+    --shape-dock-inner-radius: calc(var(--shape-dock-radius) - var(--space-1));
 }
 [data-shape="pill"] {
     --search-radius: var(--radius-pill);
@@ -614,6 +617,15 @@
     --shape-segment-inner-radius: calc(var(--shape-segment-radius) - var(--space-half));
     --shape-suggestions-radius: var(--radius-lg);
     --shape-suggestions-inner-radius: calc(var(--shape-suggestions-radius) - var(--space-1));
+    --shape-dock-radius: var(--radius-pill);
+    --shape-dock-inner-radius: var(--radius-pill);
+}
+@media (any-pointer: coarse), (hover: none) {
+    :root {
+        --dock-size: 56px;
+        --dock-item-size: 44px;
+        --dock-glyph-size: var(--control-compact-height);
+    }
 }
 
 /*
