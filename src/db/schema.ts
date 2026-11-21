@@ -79,6 +79,7 @@ export const preferences = sqliteTable("preferences", {
     tabIcon: text("tab_icon", { enum: ["editorial", "keycap"] })
         .notNull().default("editorial"),
     backgroundImage: text("background_image"),
+    botanicalScene: text("botanical_scene"),
     wallpaperMask: real("wallpaper_mask").notNull().default(0.36),
     searchTarget: text("search_target", { enum: ["same", "new"] })
         .notNull().default("same"),

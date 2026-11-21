@@ -5,7 +5,12 @@ import {
     Suspense,
 } from "react";
 import { cn } from "../../lib/utils.ts";
-import { parseWallpaperSource } from "@shared/wallpaper.ts";
+import {
+    type BotanicalSpecies,
+    normalizeBotanicalSpecies,
+    parseBotanicalSceneSource,
+    parseWallpaperSource,
+} from "@shared/wallpaper.ts";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
     WALLPAPER_READABILITY_MASKS,
@@ -16,6 +21,7 @@ const BotanicalSceneCanvas = lazy(() => import("./BotanicalSceneCanvas.tsx"));
 
 export interface WallpaperSurfaceProps {
     source?: string | null;
+    botanicalScene?: BotanicalSpecies | null;
     presentation?: WallpaperPresentation | null;
     className?: string;
     style?: CSSProperties;
@@ -36,13 +42,16 @@ export function formatWallpaperCss(source: string | null | undefined): string {
             ? `url(${JSON.stringify(trimmed)})`
             : "none";
     }
-    const parsed = parseWallpaperSource(trimmed);
-    if (!parsed || parsed.type === "scene") return "none";
+    const parsed = typeof source === "string"
+        ? parseWallpaperSource(source)
+        : null;
+    if (!parsed) return "none";
     return `url(${JSON.stringify(parsed.value)})`;
 }
 
 export function WallpaperSurface({
     source,
+    botanicalScene,
     presentation,
     className,
     style,
@@ -52,12 +61,9 @@ export function WallpaperSurface({
     testId,
     children,
 }: WallpaperSurfaceProps) {
-    const parsed = typeof source === "string"
-        ? parseWallpaperSource(source)
-        : null;
-    const botanicalSpecies = !disableScene && !derived &&
-            parsed?.type === "scene"
-        ? parsed.species
+    const botanicalSpecies = !disableScene && !derived
+        ? (normalizeBotanicalSpecies(botanicalScene) ??
+            parseBotanicalSceneSource(source))
         : null;
     const wallpaperCss = formatWallpaperCss(source);
     const substrate = wallpaperCss === "none" ? "canvas" : "image";
@@ -98,6 +104,7 @@ export function WallpaperSurface({
                     data-testid={testId ? `${testId}-image` : undefined}
                 />
             )}
+            <div className="wallpaper-surface__mask" />
             {botanicalSpecies && typeof window !== "undefined" && (
                 <Suspense fallback={null}>
                     <BotanicalSceneCanvas
@@ -107,7 +114,6 @@ export function WallpaperSurface({
                     />
                 </Suspense>
             )}
-            <div className="wallpaper-surface__mask" />
             {children}
         </div>
     );

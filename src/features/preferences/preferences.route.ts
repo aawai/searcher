@@ -19,6 +19,7 @@ import {
     type WallpaperPresentation,
 } from "../../shared/wallpaper-presentation.ts";
 import {
+    BOTANICAL_SPECIES,
     parseWallpaperSource,
     type WallpaperComposition,
 } from "../../shared/wallpaper.ts";
@@ -65,6 +66,9 @@ const BackgroundImage = v.optional(v.nullable(v.pipe(
         return parseWallpaperSource(value) !== null;
     }, "壁纸必须是 HTTPS 地址或本人上传的壁纸"),
 )));
+const BotanicalScene = v.optional(
+    v.nullable(v.picklist(BOTANICAL_SPECIES, "内置插画种类无效")),
+);
 const WallpaperCompositions = v.optional(
     v.nullable(
         v.record(
@@ -219,6 +223,7 @@ export function registerPreferencesRoutes(
             showHomeContinue: json(ShowHomeContinue),
             homeMastheadCollapsed: json(HomeMastheadCollapsed),
             backgroundImage: json(BackgroundImage),
+            botanicalScene: json(BotanicalScene),
             wallpaperPresentations: json(WallpaperPresentations),
             aiGenerationDefaults: json(AiGenerationDefaults),
             wallpaperCompositions: json(WallpaperCompositions),

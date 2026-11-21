@@ -328,6 +328,7 @@ function Layout() {
                 {showWallpaper && (
                     <WallpaperSurface
                         source={appearance.wallpaper}
+                        botanicalScene={appearance.botanicalScene}
                         presentation={presentation}
                         derived={!hasVisibleDesktop && isAuthPage}
                         testId={hasVisibleDesktop

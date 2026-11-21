@@ -21,8 +21,30 @@ export const BOTANICAL_SPECIES = [
 
 export type BotanicalSpecies = typeof BOTANICAL_SPECIES[number];
 
-export function formatBotanicalSceneSource(species: BotanicalSpecies): string {
-    return `scene:botanical:${species}`;
+const BOTANICAL_SCENE_PREFIX = "scene:botanical:";
+const BOTANICAL_SPECIES_SET: ReadonlySet<string> = new Set(BOTANICAL_SPECIES);
+
+export function normalizeBotanicalSpecies(
+    raw: unknown,
+): BotanicalSpecies | null {
+    if (typeof raw !== "string") return null;
+    const normalized = raw.trim().toLowerCase();
+    return BOTANICAL_SPECIES_SET.has(normalized)
+        ? normalized as BotanicalSpecies
+        : null;
+}
+
+export function parseBotanicalSceneSource(
+    value: unknown,
+): BotanicalSpecies | null {
+    if (typeof value !== "string") return null;
+    const trimmed = value.trim();
+    if (!trimmed.toLowerCase().startsWith(BOTANICAL_SCENE_PREFIX)) {
+        return null;
+    }
+    return normalizeBotanicalSpecies(
+        trimmed.slice(BOTANICAL_SCENE_PREFIX.length),
+    );
 }
 
 export type WallpaperSource =
@@ -33,42 +55,17 @@ export type WallpaperSource =
     | {
         type: "remote";
         value: string;
-    }
-    | {
-        type: "scene";
-        scene: "botanical";
-        species: BotanicalSpecies;
-        value: string;
     };
 
 const UUID_REGEX =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const BOTANICAL_SCENE_PREFIX = "scene:botanical:";
-const BOTANICAL_SPECIES_SET: ReadonlySet<string> = new Set(BOTANICAL_SPECIES);
 
 export function parseWallpaperSource(value: string): WallpaperSource | null {
     if (typeof value !== "string") return null;
     const trimmed = value.trim();
     if (!trimmed || trimmed.length > 2048) return null;
 
-    // 1. Built-in botanical scene: scene:botanical:<species>
-    if (trimmed.toLowerCase().startsWith(BOTANICAL_SCENE_PREFIX)) {
-        const species = trimmed.slice(BOTANICAL_SCENE_PREFIX.length)
-            .toLowerCase();
-        if (BOTANICAL_SPECIES_SET.has(species)) {
-            const typedSpecies = species as BotanicalSpecies;
-            return {
-                type: "scene",
-                scene: "botanical",
-                species: typedSpecies,
-                value: formatBotanicalSceneSource(typedSpecies),
-            };
-        }
-        return null;
-    }
-
-    // 2. Uploaded wallpaper: /api/wallpaper/:uuid
+    // 1. Uploaded wallpaper: /api/wallpaper/:uuid
     if (trimmed.startsWith("/api/wallpaper/")) {
         const id = trimmed.slice("/api/wallpaper/".length);
         if (UUID_REGEX.test(id)) {

@@ -61,10 +61,14 @@ Deno.test("WallpaperSurface: substrate classifies image and rejected sources", (
         embedded: true,
     }));
     const scene = renderToStaticMarkup(createElement(WallpaperSurface, {
-        source: "scene:botanical:ginkgo",
+        botanicalScene: "ginkgo",
+    }));
+    const combined = renderToStaticMarkup(createElement(WallpaperSurface, {
+        source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
+        botanicalScene: "plum",
     }));
     const disabledScene = renderToStaticMarkup(createElement(WallpaperSurface, {
-        source: "scene:botanical:ginkgo",
+        botanicalScene: "ginkgo",
         disableScene: true,
     }));
     assertMatch(image, /data-substrate="image"/);
@@ -73,6 +77,9 @@ Deno.test("WallpaperSurface: substrate classifies image and rejected sources", (
     assertMatch(scene, /data-substrate="canvas"/);
     assertMatch(scene, /data-wallpaper-scene="ginkgo"/);
     assertNotMatch(scene, /wallpaper-surface__image/);
+    assertMatch(combined, /data-substrate="image"/);
+    assertMatch(combined, /data-wallpaper-scene="plum"/);
+    assertMatch(combined, /wallpaper-surface__image/);
     assertNotMatch(disabledScene, /data-wallpaper-scene/);
     assertNotMatch(rejected, /wallpaper-surface__image/);
     assertNotMatch(gradient, /wallpaper-surface__image/);
