@@ -565,9 +565,9 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             assertEquals(homeResting.frameRadius, "999px");
             assertEquals(homeResting.engineRadius, "991px");
             assertEquals(homeResting.submitRadius, "991px");
-            assertEquals(homeResting.wordmarkRadius, "999px");
-            assertEquals(homeResting.topActionsRadius, "999px");
-            assertEquals(homeResting.topBtnRadius, "999px");
+            assertEquals(homeResting.wordmarkRadius, "8px");
+            assertEquals(homeResting.topActionsRadius, "0px");
+            assertEquals(homeResting.topBtnRadius, "8px");
             assert(
                 homeResting.backdropFilter.includes("blur(6px)") &&
                     homeResting.backdropFilter.includes("saturate(1.6)"),
@@ -825,9 +825,9 @@ Deno.test("UI Ownership and scoping contracts", async (t) => {
             assertEquals(homeRounded.submitRadius, "8px");
             assertEquals(homeRounded.suggestionsRadius, "12px");
             assertEquals(homeRounded.suggestionItemRadius, "8px");
-            assertEquals(homeRounded.wordmarkRadius, "10px");
-            assertEquals(homeRounded.topActionsRadius, "10px");
-            assertEquals(homeRounded.topBtnRadius, "6px");
+            assertEquals(homeRounded.wordmarkRadius, "8px");
+            assertEquals(homeRounded.topActionsRadius, "0px");
+            assertEquals(homeRounded.topBtnRadius, "8px");
 
             const plateRadii = await page.evaluate(() => {
                 const probe = document.createElement("div");

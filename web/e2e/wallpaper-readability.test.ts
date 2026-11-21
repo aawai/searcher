@@ -153,25 +153,73 @@ async function routeWallpapers(
 const wallpaperUrl = (name: WallpaperName) => `${WALLPAPER_ORIGIN}/${name}.png`;
 
 /** Waits until the wallpaper image has loaded and the home has settled. */
-async function settle(page: Page, name: WallpaperName, theme: Theme) {
+async function settle(
+    page: Page,
+    name: WallpaperName,
+    theme: Theme,
+    who?: "user" | "guest",
+    width?: number,
+) {
     await page.waitForFunction(
-        ({ url, scheme, contrast }) => {
+        ({ url, scheme, contrast, who, width }) => {
             const image = document.querySelector(
                 '[data-testid="home-wallpaper-surface-image"]',
             );
             const root = document.documentElement;
-            return root.dataset.theme === scheme &&
-                (root.dataset.contrast === "more") === contrast &&
-                image !== null &&
-                getComputedStyle(image).backgroundImage.includes(url) &&
-                performance.getEntriesByName(url).some((entry) =>
+            if (
+                root.dataset.theme !== scheme ||
+                (root.dataset.contrast === "more") !== contrast ||
+                image === null ||
+                !getComputedStyle(image).backgroundImage.includes(url) ||
+                !performance.getEntriesByName(url).some((entry) =>
                     (entry as PerformanceResourceTiming).responseEnd > 0
-                );
+                )
+            ) {
+                return false;
+            }
+            if (who === "user") {
+                if (
+                    document.querySelector(
+                        '.launcher-plate[data-plate="hidden"] .webapp-name',
+                    ) === null
+                ) {
+                    return false;
+                }
+                if (width !== undefined && width < 768) {
+                    if (
+                        document.querySelector(
+                            '.home-masthead[data-mode="narrow"][data-collapsed="true"] .home-masthead__peek-tasks',
+                        ) === null
+                    ) {
+                        return false;
+                    }
+                } else if (width !== undefined && width >= 768) {
+                    if (
+                        document.querySelector(
+                            '.home-masthead[data-mode="side"] .home-masthead__section-title',
+                        ) === null ||
+                        document.querySelector(
+                            '.home-masthead[data-mode="side"] .home-masthead__entry-no',
+                        ) === null ||
+                        document.querySelector(
+                            '.home-masthead[data-mode="side"] .home-masthead__entry-title',
+                        ) === null ||
+                        document.querySelector(
+                            '.home-masthead[data-mode="side"] .home-masthead__all-notes',
+                        ) === null
+                    ) {
+                        return false;
+                    }
+                }
+            }
+            return true;
         },
         {
             url: wallpaperUrl(name),
             scheme: theme.scheme,
             contrast: theme.contrast,
+            who,
+            width,
         },
     );
     await page.evaluate(async () => {
@@ -582,7 +630,7 @@ Deno.test("A6: home text on the wallpaper meets 1.4.3 on extreme wallpapers at t
                 for (const viewport of WIDTHS) {
                     await page.setViewportSize(viewport);
                     await page.goto(new URL("/", page.url()).href);
-                    await settle(page, name, theme);
+                    await settle(page, name, theme, who, viewport.width);
                     const results = await measure(page);
                     const state =
                         `${who} ${name} ${viewport.width} ${theme.id}`;
@@ -618,6 +666,18 @@ Deno.test("A6: home text on the wallpaper meets 1.4.3 on extreme wallpapers at t
             cleanup.defer(() => context.close());
             const page = await context.newPage();
             await routeWallpapers(context, await wallpaperPngs(page));
+            await context.route("**/api/webapps/*/fetch-icon", (route) =>
+                route.fulfill({
+                    status: 400,
+                    contentType: "application/json",
+                    body: JSON.stringify({
+                        error: {
+                            code: "BAD_REQUEST",
+                            message: "stubbed in A6 test",
+                        },
+                    }),
+                })
+            );
             await registerHomeNoteUser(page, app.origin, "a6_reader");
             await createHomeNote(page, {
                 title: "置顶笔记",
