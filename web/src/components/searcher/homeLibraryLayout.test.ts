@@ -170,6 +170,19 @@ Deno.test("effective rows account for the bottom plate padding", () => {
         }),
         3,
     );
+    // Mobile coarse pointer (rowGap = 4, dockInsetBottom = 64): enforces at least
+    // 16px clearance above the Dock (64 + 16 = 80px), dropping a row when < 80px remains.
+    assertEquals(
+        effectiveRows({
+            layoutViewportHeight: 844,
+            gridTop: 480,
+            rowPitch: 72,
+            rowGap: 4,
+            platePadding: 8,
+            dockInsetBottom: 64,
+        }),
+        3,
+    );
 });
 
 Deno.test("large folder counts as 4 cells and 4 full rows fit exactly", () => {

@@ -210,8 +210,13 @@ Deno.test("masthead placement: side follows wallpaper focalX at 1440 and narrow 
                         "data-collapsed",
                     ) === "true"
                 );
-                // 56px top bar + clamp(64px, 16dvh, 140px).
-                const engagedY = 56 + Math.min(140, Math.max(64, 844 * 0.16));
+                // Top bar height + clamp(64px, 16dvh, 140px).
+                const topbarBottom = await page.evaluate(() =>
+                    document.querySelector(".topbar")?.getBoundingClientRect()
+                        .bottom ?? 56
+                );
+                const engagedY = topbarBottom +
+                    Math.min(140, Math.max(64, 844 * 0.16));
                 await page.waitForFunction((engagedY) => {
                     const box = document.querySelector(".search-form-wrap")
                         ?.getBoundingClientRect();
@@ -300,7 +305,7 @@ Deno.test("masthead overflow: a long pinned list fades at the bottom on first pa
     const fixture = await openHomeNotesFixture({
         viewport: { width: 1440, height: 900 },
     });
-    const { page } = fixture;
+    const { page, app } = fixture;
     const total = 8;
     try {
         for (let index = 0; index < total; index++) {
@@ -384,7 +389,7 @@ Deno.test("masthead targets, narrow day scale/short landscape peek, and opaque v
     const fixture = await openHomeNotesFixture({
         viewport: { width: 1440, height: 900 },
     });
-    const { page } = fixture;
+    const { page, app } = fixture;
     try {
         await createHomeNote(page, {
             title: "命令笔记",
@@ -606,6 +611,25 @@ Deno.test("masthead targets, narrow day scale/short landscape peek, and opaque v
                 );
             },
         );
+
+        await t.step("guest home renders masthead without dek", async () => {
+            const guestContext = await page.context().browser()!.newContext({
+                viewport: { width: 1440, height: 900 },
+            });
+            try {
+                const guestPage = await guestContext.newPage();
+                await guestPage.goto(app.origin + "/");
+                await guestPage.locator(".home-masthead__header").waitFor({
+                    state: "visible",
+                });
+                assertEquals(
+                    await guestPage.locator(".home-masthead__dek").count(),
+                    0,
+                );
+            } finally {
+                await guestContext.close();
+            }
+        });
     } finally {
         await fixture.close();
     }

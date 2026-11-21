@@ -783,7 +783,7 @@
     min-height: var(--control-compact-height);
     padding: 0 var(--space-3);
     border: 0;
-    border-radius: var(--radius-pill);
+    border-radius: var(--shape-button-radius);
     background: var(--surface-soft);
     color: var(--muted);
     font-size: var(--font-metadata-size);

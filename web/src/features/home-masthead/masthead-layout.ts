@@ -189,7 +189,10 @@ export function mastheadPlacement(
     const slack = side === "left"
         ? search.x - MASTHEAD_SEARCH_GAP - (leftX + columnWidth)
         : rightX - (search.x + search.width + MASTHEAD_SEARCH_GAP);
-    const inset = Math.min(MASTHEAD_EDGE_INSET_MAX, Math.max(0, slack));
+    const inset = Math.min(
+        MASTHEAD_EDGE_INSET_MAX,
+        Math.max(0, Math.round(slack / 2)),
+    );
     const x = side === "left" ? leftX + inset : rightX - inset;
     const column: SafeRect = {
         x,

@@ -2518,3 +2518,116 @@ Deno.test("workspace dock: four-edge clearance for library windows, open note wi
         },
     );
 });
+
+Deno.test("workspace dock: mobile coarse-pointer keeps pinned apps visible and 768px top dock clears topbar", async () => {
+    await using cleanup = new AsyncDisposableStack();
+    const app = await startProductionApp();
+    cleanup.defer(() => app.close());
+
+    const browser = await chromium.launch({
+        handleSIGTERM: false,
+        headless: true,
+        args: ["--no-sandbox"],
+    });
+    cleanup.defer(() => browser.close());
+
+    const context = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
+    });
+    cleanup.defer(() => context.close());
+    const page = await context.newPage();
+
+    await registerFreshUser(page, app.origin, "dock_mobile_top_reg");
+    const appIds: string[] = [];
+    for (let i = 1; i <= 6; i++) {
+        const created = await createWebApp(context, app.origin, {
+            name: `DockApp${i}`,
+            url: `https://dock-app-${i}.example.test/`,
+        });
+        appIds.push(created.id);
+    }
+    await page.evaluate(async (ids) => {
+        await fetch("/api/preferences", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                dock: {
+                    systemOrder: [
+                        "home",
+                        "apps",
+                        "notes",
+                        "ai",
+                        "settings",
+                        "trash",
+                    ],
+                    hiddenSystemIds: [],
+                    appIds: ids,
+                },
+            }),
+        });
+    }, appIds);
+    await page.reload();
+    await dockNav(page).waitFor({ state: "visible" });
+
+    // Coarse 390px: both system group and pinned apps group keep usable width.
+    const mobileWidths = await page.evaluate(() => {
+        const sys = document.querySelector(".dock-group--system")!
+            .getBoundingClientRect();
+        const apps = document.querySelector(".dock-group--apps")!
+            .getBoundingClientRect();
+        return { sysWidth: sys.width, appsWidth: apps.width };
+    });
+    assert(
+        mobileWidths.appsWidth >= 44,
+        `expected mobile .dock-group--apps >= 44px, got ${mobileWidths.appsWidth}`,
+    );
+    assert(
+        mobileWidths.sysWidth >= 44,
+        `expected mobile .dock-group--system >= 44px, got ${mobileWidths.sysWidth}`,
+    );
+
+    // 768px desktop top dock: no overlap with wordmark/top-actions and aligned vertically.
+    const desktopCtx = await browser.newContext({
+        viewport: { width: 768, height: 900 },
+    });
+    cleanup.defer(() => desktopCtx.close());
+    const desktopPage = await desktopCtx.newPage();
+    await loginAndVisit(desktopPage, app.origin, "/", {
+        username: "dock_mobile_top_reg",
+        password: "Dock-password-2026!",
+    });
+    await setDockEdgeViaManagement(desktopPage, "顶部");
+    await desktopPage.locator('.dock-container[data-edge="top"]').waitFor({
+        state: "visible",
+    });
+
+    const topMetrics = await desktopPage.evaluate(() => {
+        const dock = document.querySelector(".dock-bar")!
+            .getBoundingClientRect();
+        const wordmark = document.querySelector(".wordmark-small")!
+            .getBoundingClientRect();
+        const actions = document.querySelector(".top-actions")!
+            .getBoundingClientRect();
+        return {
+            dockLeft: dock.left,
+            dockRight: dock.right,
+            dockCenterY: dock.top + dock.height / 2,
+            wordmarkRight: wordmark.right,
+            actionsLeft: actions.left,
+            actionsCenterY: actions.top + actions.height / 2,
+        };
+    });
+    assert(
+        topMetrics.dockLeft >= topMetrics.wordmarkRight,
+        `top dock overlaps wordmark: ${JSON.stringify(topMetrics)}`,
+    );
+    assert(
+        topMetrics.dockRight <= topMetrics.actionsLeft,
+        `top dock overlaps top-actions: ${JSON.stringify(topMetrics)}`,
+    );
+    assert(
+        Math.abs(topMetrics.dockCenterY - topMetrics.actionsCenterY) <= 1,
+        `top dock vertical center misaligned: ${JSON.stringify(topMetrics)}`,
+    );
+});

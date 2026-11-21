@@ -387,6 +387,7 @@ export function WorkspaceDock(
     const ballPresence = usePresence<HTMLButtonElement>(
         isMounted && isCollapsed,
     );
+    const systemGroupRef = useRef<HTMLDivElement | null>(null);
     const appsGroupRef = useRef<HTMLDivElement | null>(null);
 
     // Visible system items in configured order
@@ -415,6 +416,36 @@ export function WorkspaceDock(
             setItemMenu(null);
         }
     }, [itemMenu, isMounted, isCollapsed, pinnedApps, visibleSystemIds]);
+
+    useLayoutEffect(() => {
+        const group = systemGroupRef.current;
+        if (!group) return;
+        const isVertical = effectiveEdge === "left" ||
+            effectiveEdge === "right";
+        if (!barPresence.mounted || visibleSystemIds.length === 0 || isVertical) {
+            group.removeAttribute("data-overflow-start");
+            group.removeAttribute("data-overflow-end");
+            return;
+        }
+        const markEdges = () => {
+            const end = group.scrollWidth - group.clientWidth;
+            const startOverflow = group.scrollLeft > 1;
+            const endOverflow = group.scrollLeft < end - 1;
+            group.toggleAttribute("data-overflow-start", startOverflow);
+            group.toggleAttribute("data-overflow-end", endOverflow);
+        };
+        markEdges();
+        const observer = new ResizeObserver(markEdges);
+        observer.observe(group);
+        for (const child of group.children) {
+            observer.observe(child);
+        }
+        group.addEventListener("scroll", markEdges, { passive: true });
+        return () => {
+            observer.disconnect();
+            group.removeEventListener("scroll", markEdges);
+        };
+    }, [barPresence.mounted, visibleSystemIds.length, effectiveEdge]);
 
     useLayoutEffect(() => {
         const group = appsGroupRef.current;
@@ -1103,7 +1134,10 @@ export function WorkspaceDock(
                         >
                             {/* System items group */}
                             {visibleSystemIds.length > 0 && (
-                                <div className="dock-group dock-group--system">
+                                <div
+                                    ref={systemGroupRef}
+                                    className="dock-group dock-group--system"
+                                >
                                     <SortableContext
                                         items={visibleSystemIds.map((id) =>
                                             `system:${id}`
