@@ -35,14 +35,14 @@
     width: 100%;
     height: 100%;
     display: block;
-    z-index: var(--elevation-local-1);
+    z-index: var(--elevation-local-2);
     pointer-events: none;
 }
 
 .wallpaper-surface__mask {
     position: absolute;
     inset: 0;
-    z-index: var(--elevation-local-2);
+    z-index: var(--elevation-local-1);
     background: var(--surface-l0);
     opacity: var(--wallpaper-mask);
 }

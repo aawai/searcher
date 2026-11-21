@@ -2,7 +2,6 @@ import type { GlassIntensity } from "@shared/contracts.ts";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
     type BotanicalSpecies,
-    formatBotanicalSceneSource,
     parseWallpaperSource,
     type WallpaperComposition,
 } from "@shared/wallpaper.ts";
@@ -245,12 +244,17 @@ export function SettingsContent({ host }: { host: PageHost }) {
     >([]);
     const [uploadingWallpaper, setUploadingWallpaper] = useState(false);
     const currentWallpaperSource = parseWallpaperSource(appearance.wallpaper);
-    const isSceneWallpaper = currentWallpaperSource?.type === "scene";
-    const activeBotanicalSpecies = isSceneWallpaper
-        ? currentWallpaperSource.species
-        : "";
+    const hasImageWallpaper = Boolean(appearance.wallpaper);
+    const hasBotanicalScene = appearance.botanicalScene !== null;
+    const [lastBotanicalSpecies, setLastBotanicalSpecies] = useState<
+        BotanicalSpecies
+    >(appearance.botanicalScene ?? "auto");
+    useEffect(() => {
+        if (appearance.botanicalScene) {
+            setLastBotanicalSpecies(appearance.botanicalScene);
+        }
+    }, [appearance.botanicalScene]);
     const currentSourceHidden = currentWallpaperSource?.type === "uploaded" ||
-        isSceneWallpaper ||
         appearance.wallpaper.startsWith("data:");
     const [wallpaperDraft, setWallpaperDraft] = useState<string>(
         currentSourceHidden ? "" : appearance.wallpaper,
@@ -494,12 +498,26 @@ export function SettingsContent({ host }: { host: PageHost }) {
         }
     }
 
-    async function handleSelectBotanicalScene(species: BotanicalSpecies) {
-        const nextSource = formatBotanicalSceneSource(species);
-        if (nextSource === appearance.wallpaper) return;
-        setDraftError(null);
+    async function handleToggleBotanicalScene(enabled: boolean) {
+        const nextScene = enabled ? lastBotanicalSpecies : null;
+        if (nextScene === appearance.botanicalScene) return;
         try {
-            await setAppearance({ wallpaper: nextSource });
+            await setAppearance({ botanicalScene: nextScene });
+            showToast(enabled ? "已启用内置插画" : "已停用内置插画");
+        } catch (error) {
+            showToast(
+                error instanceof Error
+                    ? error.message
+                    : "切换内置插画失败，请重试",
+            );
+        }
+    }
+
+    async function handleSelectBotanicalScene(species: BotanicalSpecies) {
+        setLastBotanicalSpecies(species);
+        if (species === appearance.botanicalScene) return;
+        try {
+            await setAppearance({ botanicalScene: species });
             showToast("已应用内置插画");
         } catch (error) {
             showToast(
@@ -513,10 +531,10 @@ export function SettingsContent({ host }: { host: PageHost }) {
     async function handleClearCurrentWallpaper() {
         try {
             await setAppearance({ wallpaper: "" });
-            showToast("已停止使用当前壁纸，恢复默认背景");
+            showToast("已停用当前壁纸");
         } catch (error) {
             showToast(
-                error instanceof Error ? error.message : "清除壁纸失败，请重试",
+                error instanceof Error ? error.message : "停用壁纸失败，请重试",
             );
         }
     }
@@ -1003,17 +1021,30 @@ export function SettingsContent({ host }: { host: PageHost }) {
                             </SettingsRow>
                             <SettingsRow
                                 title="内置插画"
-                                description="每日一枝按日期自动轮换；高对比主题与系统强制颜色下自动隐藏，减少动效下静态呈现。"
+                                description="每日一枝植物墨线，可与壁纸叠加使用；高对比主题与系统强制颜色下自动隐藏，减少动效下静态呈现。"
+                            >
+                                <Switch
+                                    checked={hasBotanicalScene}
+                                    onCheckedChange={(checked) =>
+                                        void handleToggleBotanicalScene(
+                                            checked,
+                                        )}
+                                    aria-label="启用内置插画"
+                                    data-testid="wallpaper-scene-switch"
+                                />
+                            </SettingsRow>
+                            <SettingsRow
+                                title="插画枝型"
                                 className="settings-row--vertical"
                             >
                                 <RadioGroup
                                     variant="segmented"
-                                    value={activeBotanicalSpecies}
+                                    value={appearance.botanicalScene ?? ""}
                                     onValueChange={(next) =>
                                         void handleSelectBotanicalScene(
                                             next as BotanicalSpecies,
                                         )}
-                                    aria-label="内置插画"
+                                    aria-label="插画枝型"
                                     data-testid="wallpaper-scene-group"
                                 >
                                     {BOTANICAL_SCENE_CHOICES.map(
@@ -1029,10 +1060,10 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     )}
                                 </RadioGroup>
                             </SettingsRow>
-                            {hasWallpaper && (
+                            {(hasImageWallpaper || hasBotanicalScene) && (
                                 <>
                                     <SettingsRow
-                                        title="当前壁纸"
+                                        title="当前背景"
                                         className="settings-row--vertical"
                                     >
                                         <div className="wallpaper-current">
@@ -1043,14 +1074,16 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                 <WallpaperSurface
                                                     source={appearance
                                                         .wallpaper}
+                                                    botanicalScene={appearance
+                                                        .botanicalScene}
                                                     presentation={effectivePresentation}
                                                     embedded
                                                     testId="wallpaper-current-preview"
                                                 />
                                                 <WallpaperStageContextPreview />
                                             </div>
-                                            <ActionGroup>
-                                                {!isSceneWallpaper && (
+                                            {hasImageWallpaper && (
+                                                <ActionGroup>
                                                     <Button
                                                         type="button"
                                                         variant="outline"
@@ -1071,21 +1104,21 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                     >
                                                         调整构图
                                                     </Button>
-                                                )}
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    onClick={() =>
-                                                        void handleClearCurrentWallpaper()}
-                                                    aria-label="移除当前壁纸"
-                                                    data-testid="wallpaper-clear-btn"
-                                                >
-                                                    移除
-                                                </Button>
-                                            </ActionGroup>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            void handleClearCurrentWallpaper()}
+                                                        aria-label="停用当前壁纸"
+                                                        data-testid="wallpaper-clear-btn"
+                                                    >
+                                                        停用壁纸
+                                                    </Button>
+                                                </ActionGroup>
+                                            )}
                                         </div>
                                     </SettingsRow>
-                                    {!isSceneWallpaper && (
+                                    {hasImageWallpaper && (
                                         <SettingsRow
                                             title="可读性"
                                             description={readabilityBelowDefault

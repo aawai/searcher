@@ -1,7 +1,8 @@
 import { assertEquals } from "@std/assert";
 import {
-    formatBotanicalSceneSource,
+    normalizeBotanicalSpecies,
     normalizeWallpaperCompositions,
+    parseBotanicalSceneSource,
     parseWallpaperSource,
 } from "./wallpaper.ts";
 
@@ -54,22 +55,15 @@ Deno.test("wallpaper shared: parseWallpaperSource validates uploaded and remote 
         null,
     );
 
-    // 5. Built-in botanical scene sources
-    assertEquals(parseWallpaperSource(formatBotanicalSceneSource("auto")), {
-        type: "scene",
-        scene: "botanical",
-        species: "auto",
-        value: "scene:botanical:auto",
-    });
-    assertEquals(parseWallpaperSource("SCENE:BOTANICAL:GINKGO"), {
-        type: "scene",
-        scene: "botanical",
-        species: "ginkgo",
-        value: "scene:botanical:ginkgo",
-    });
-    assertEquals(parseWallpaperSource("scene:botanical:unknown"), null);
-    assertEquals(parseWallpaperSource("scene:other:auto"), null);
-    assertEquals(parseWallpaperSource("scene:botanical:"), null);
+    // 5. Built-in botanical scene helpers (separate from image wallpaper sources)
+    assertEquals(normalizeBotanicalSpecies("auto"), "auto");
+    assertEquals(normalizeBotanicalSpecies(" GINKGO "), "ginkgo");
+    assertEquals(normalizeBotanicalSpecies("unknown"), null);
+    assertEquals(parseBotanicalSceneSource("scene:botanical:auto"), "auto");
+    assertEquals(parseBotanicalSceneSource("SCENE:BOTANICAL:GINKGO"), "ginkgo");
+    assertEquals(parseBotanicalSceneSource("scene:botanical:unknown"), null);
+    assertEquals(parseBotanicalSceneSource("scene:other:auto"), null);
+    assertEquals(parseWallpaperSource("scene:botanical:ginkgo"), null);
 
     // 6. Empty / null / invalid strings
     assertEquals(parseWallpaperSource(""), null);

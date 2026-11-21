@@ -155,13 +155,49 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 cookie: first,
                 "content-type": "application/json",
             },
-            body: JSON.stringify({ backgroundImage: "scene:botanical:ginkgo" }),
+            body: JSON.stringify({
+                backgroundImage: "https://example.com/layered-bg.jpg",
+                botanicalScene: "ginkgo",
+            }),
         });
         assertEquals(sceneRes.status, 200);
+        const sceneBody = await sceneRes.json() as Envelope<PreferencesDto>;
         assertEquals(
-            (await sceneRes.json() as Envelope<PreferencesDto>).data
-                ?.backgroundImage,
-            "scene:botanical:ginkgo",
+            sceneBody.data?.backgroundImage,
+            "https://example.com/layered-bg.jpg",
+        );
+        assertEquals(sceneBody.data?.botanicalScene, "ginkgo");
+
+        // Disabling image wallpaper keeps botanicalScene active
+        const clearBgRes = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: first,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ backgroundImage: null }),
+        });
+        assertEquals(clearBgRes.status, 200);
+        const clearBgBody = await clearBgRes.json() as Envelope<PreferencesDto>;
+        assertEquals(clearBgBody.data?.backgroundImage, null);
+        assertEquals(clearBgBody.data?.botanicalScene, "ginkgo");
+
+        // Disabling botanicalScene independently
+        const clearSceneRes = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: first,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ botanicalScene: null }),
+        });
+        assertEquals(clearSceneRes.status, 200);
+        assertEquals(
+            (await clearSceneRes.json() as Envelope<PreferencesDto>).data
+                ?.botanicalScene,
+            null,
         );
         const other = await app.request("/api/preferences", {
             headers: { cookie: second },
@@ -227,8 +263,9 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                     },
                 },
                 { backgroundImage: "https://user:pass@example.com/a.png" },
-                { backgroundImage: "scene:botanical:unknown" },
-                { backgroundImage: "scene:other:auto" },
+                { backgroundImage: "scene:botanical:ginkgo" },
+                { botanicalScene: "unknown" },
+                { botanicalScene: "GINKGO" },
                 { showHomeApps: "yes" },
                 { showHomeApps: 1 },
                 { showHomeAppPlate: "yes" },

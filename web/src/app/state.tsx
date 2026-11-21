@@ -18,6 +18,9 @@ import {
     wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import {
+    type BotanicalSpecies,
+    normalizeBotanicalSpecies,
+    parseBotanicalSceneSource,
     parseWallpaperSource,
     type WallpaperComposition,
 } from "@shared/wallpaper.ts";
@@ -73,6 +76,7 @@ export type Appearance = {
     engine: EngineId;
     target: "current" | "new_tab";
     wallpaper: string;
+    botanicalScene: BotanicalSpecies | null;
     wallpaperPresentations: Record<string, WallpaperPresentation>;
     showAppLabels: boolean;
     /** 登录用户的跨设备偏好：首页是否显示应用库。 */
@@ -96,6 +100,7 @@ const initial: Appearance = {
     engine: "bing",
     target: "current",
     wallpaper: "",
+    botanicalScene: null,
     wallpaperPresentations: {},
     showAppLabels: true,
     showHomeApps: false,
@@ -119,6 +124,7 @@ export function normalizeAppearance(raw: unknown): Appearance {
     if (saved.target === "current" || saved.target === "new_tab") {
         result.target = saved.target;
     }
+    result.botanicalScene = normalizeBotanicalSpecies(saved.botanicalScene);
     const source = typeof saved.wallpaper === "string" ? saved.wallpaper : "";
     if (source.startsWith("data:")) {
         const comma = source.indexOf(",");
@@ -136,7 +142,12 @@ export function normalizeAppearance(raw: unknown): Appearance {
             result.wallpaper = source;
         }
     } else {
-        result.wallpaper = parseWallpaperSource(source)?.value ?? "";
+        const legacyScene = parseBotanicalSceneSource(source);
+        if (legacyScene) {
+            result.botanicalScene ??= legacyScene;
+        } else {
+            result.wallpaper = parseWallpaperSource(source)?.value ?? "";
+        }
     }
     result.wallpaperPresentations = normalizeWallpaperPresentations(
         saved.wallpaperPresentations,
@@ -411,6 +422,7 @@ export function AppState({ children }: { children: ReactNode }) {
                         ? "new_tab"
                         : "current",
                     wallpaper: prefs.backgroundImage ?? "",
+                    botanicalScene: prefs.botanicalScene ?? null,
                     wallpaperPresentations: prefs.wallpaperPresentations,
                     showAppLabels: prefs.showAppLabels,
                     showHomeApps: prefs.showHomeApps,
@@ -512,6 +524,9 @@ export function AppState({ children }: { children: ReactNode }) {
             }
             if (next.wallpaper !== undefined) {
                 updates.backgroundImage = next.wallpaper || null;
+            }
+            if (next.botanicalScene !== undefined) {
+                updates.botanicalScene = next.botanicalScene;
             }
             if (next.wallpaperPresentations !== undefined) {
                 updates.wallpaperPresentations = next.wallpaperPresentations;
