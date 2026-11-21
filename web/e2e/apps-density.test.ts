@@ -469,7 +469,7 @@ function assertDensity(
     const plateBottom = metrics.grid.bottom + metrics.platePadding;
     const clearance = Math.max(
         BOTTOM_CLEARANCE,
-        metrics.dockBottom + metrics.rowGap,
+        metrics.dockBottom + Math.max(metrics.rowGap, 16),
     );
     assert(
         plateBottom <= viewportHeight - clearance + 0.75,
