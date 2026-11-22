@@ -1,14 +1,13 @@
-name: Complete Documents, Routing and Supplemental E2E
+name: Complete Documents, Workspace, Routing and Supplemental E2E
 
 on:
     push:
         branches: [main]
-    pull_request:
-        branches: [main]
+    workflow_dispatch:
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
-    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    group: ${{ github.workflow }}-${{ format('run-{0}', github.run_id) }}
+    cancel-in-progress: false
 
 permissions:
     contents: read
@@ -22,6 +21,8 @@ jobs:
             fail-fast: false
             matrix:
                 suite:
+                    - workspace-a
+                    - workspace-b
                     - documents-core
                     - pagination-short
                     - pagination-manual
@@ -42,9 +43,8 @@ jobs:
             - name: Run complete ${{ matrix.suite }} production E2E
               env:
                   E2E_REPORT_DIR: artifacts/e2e/${{ matrix.suite }}
-                  # Only documents-core holds many isolated files; the others
-                  # are one-file pagination shards or short serial suites.
-                  E2E_SCHEDULE: ${{ matrix.suite == 'documents-core' && '--parallel' || '--serial' }}
+                  # Multi-file shards run in parallel; single-file pagination shards and short suites run serially.
+                  E2E_SCHEDULE: ${{ (matrix.suite == 'documents-core' || matrix.suite == 'workspace-a' || matrix.suite == 'workspace-b') && '--parallel' || '--serial' }}
                   DENO_JOBS: "2"
               run: |
                   mkdir -p "$E2E_REPORT_DIR"
