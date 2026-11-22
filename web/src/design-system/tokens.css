@@ -262,10 +262,7 @@
     --layout-search-max: 640px;
     --layout-home-content-max: 640px;
     --layout-masthead-col: clamp(296px, 19vw, 372px);
-    --layout-masthead-veil-fade: 320px;
-    /* Collapsed narrow masthead: the top veil fades below the peek over
-       MASTHEAD_PEEK_VEIL_TAIL (masthead-layout.ts). */
-    --layout-masthead-peek-fade: 120px;
+    --layout-masthead-veil-fade: 640px;
     --layout-masthead-panel-max: var(--layout-home-content-max);
     /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
     --home-grid-wide-cell: 76px;
@@ -792,32 +789,45 @@
     --wallpaper-dim: brightness(0.55);
 }
 
-/* Home masthead veil: a translucent --background wash over a two-stage blurred
-   copy of the wallpaper, so the wallpaper's colour still shows behind the
-   column without double-exposure ghosting. In opaque fallbacks (glass `off`,
-   high contrast, reduced transparency, forced colours, no backdrop-filter) the
-   veil renders as a crisp solid band with a 1px border instead of a soft fade. */
+/* Home masthead veil: a translucent --background wash over a strongly blurred
+   wallpaper, so the wallpaper's colour still shows behind the column. The
+   collapsed narrow masthead (the peek) has no veil in translucent glass: it
+   reads as printed on the wallpaper and its text carries the wallpaper halo's
+   solid core in --background (--masthead-text-stroke) under
+   --masthead-text-halo when an image wallpaper is active. The glass `off` tier
+   and the fallbacks below make the veil solid and show it behind the peek
+   with a crisp 1px border. */
 :root {
     --masthead-veil-light: 66%;
     --masthead-veil-dark: 50%;
+    --masthead-peek-veil-opacity: 0;
     --masthead-veil-filter: blur(28px) saturate(1.35);
-    --masthead-veil-soft-filter: blur(10px) saturate(1.15);
 }
 [data-glass="off"] {
     --masthead-veil-light: 100%;
     --masthead-veil-dark: 100%;
+    --masthead-peek-veil-opacity: 1;
     --masthead-veil-filter: none;
-    --masthead-veil-soft-filter: none;
 }
 :root,
 [data-theme],
 [data-glass] {
     --masthead-veil-mix: var(--masthead-veil-light);
     --masthead-veil: color-mix(in srgb, var(--background) var(--masthead-veil-mix), transparent);
+    --masthead-text-stroke: var(--wallpaper-text-core) var(--background);
+    --masthead-text-halo: 0 0 4px var(--background), 0 0 8px var(--background),
+        0 0 16px var(--background), 0 0 28px var(--background);
 }
 [data-theme="dark"],
 [data-theme="dark"] [data-glass] {
     --masthead-veil-mix: var(--masthead-veil-dark);
+}
+@media (forced-colors: active) {
+    :root,
+    [data-theme],
+    [data-glass] {
+        --masthead-text-halo: none;
+    }
 }
 
 /* Without backdrop-filter, or when the OS reduces transparency, every tier renders as `off`. */
@@ -839,7 +849,7 @@
         --masthead-veil-light: 100%;
         --masthead-veil-dark: 100%;
         --masthead-veil-filter: none;
-        --masthead-veil-soft-filter: none;
+        --masthead-peek-veil-opacity: 1;
     }
 }
 /* Forced colours keep a background's alpha while repainting it Canvas, so a
@@ -861,7 +871,7 @@
         --masthead-veil-light: 100%;
         --masthead-veil-dark: 100%;
         --masthead-veil-filter: none;
-        --masthead-veil-soft-filter: none;
+        --masthead-peek-veil-opacity: 1;
     }
 }
 /* High contrast theme: the same opaque path. A system palette still wins; the
@@ -882,7 +892,7 @@
     --masthead-veil-light: 100%;
     --masthead-veil-dark: 100%;
     --masthead-veil-filter: none;
-    --masthead-veil-soft-filter: none;
+    --masthead-peek-veil-opacity: 1;
 }
 
 /* Wide home: the search box and plate grow with the viewport while the cell

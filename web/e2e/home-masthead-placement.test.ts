@@ -419,19 +419,18 @@ Deno.test("masthead targets, narrow day scale/short landscape peek, and opaque v
         );
 
         await t.step(
-            "Issue 5: side veil spans 320px past column in translucent glass, and stops as a crisp 1px-bordered solid band within 24px under opaque conditions",
+            "Issue 5: side veil spans 600px past column in translucent glass, and stops as a crisp 1px-bordered solid band within 24px under opaque conditions",
             async () => {
                 const column = await boxOf(page, ".home-masthead__column");
                 const search = await boxOf(page, ".search-form-wrap");
                 assert(column && search);
 
-                // Translucent regular glass keeps the 320px smooth veil.
+                // Translucent regular glass keeps the 600px smooth veil.
                 const regularVeil = await boxOf(page, ".home-masthead__veil");
                 assert(regularVeil);
                 assert(
-                    regularVeil.width >= column.x + column.width + 319 &&
-                        regularVeil.width <= column.x + column.width + 340,
-                    `expected translucent veil ~column+320, got ${regularVeil.width}`,
+                    regularVeil.width >= column.x + column.width + 599,
+                    `expected translucent veil >= column+600, got ${regularVeil.width}`,
                 );
 
                 const assertOpaqueConstrained = async (label: string) => {

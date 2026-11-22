@@ -114,11 +114,8 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const focalX = wallpaper.source
         ? wallpaper.presentation.composition.focalX
         : 0.5;
-    // Statically filtered copies of the wallpaper: rasterized once, unlike a
+    // A statically filtered copy of the wallpaper: rasterized once, unlike a
     // backdrop-filter that re-samples whenever a window moves above it.
-    // Two stages (soft mid-blur + primary heavy blur) decouple blur from the
-    // tint wash so the fade into sharp wallpaper stays free of double-exposure
-    // ghosting.
     const veilWallpaper = (
         <WallpaperSurface
             embedded
@@ -127,16 +124,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             presentation={wallpaper.presentation}
             className="home-masthead__veil-wallpaper"
         />
-    );
-    const veilLayers = (
-        <>
-            <div className="home-masthead__veil-layer home-masthead__veil-layer--soft">
-                {veilWallpaper}
-            </div>
-            <div className="home-masthead__veil-layer home-masthead__veil-layer--primary">
-                {veilWallpaper}
-            </div>
-        </>
     );
     const placement = useMemo(
         () =>
@@ -589,7 +576,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                     aria-hidden="true"
                     style={{ width: placement.veilWidth }}
                 >
-                    {veilLayers}
+                    {veilWallpaper}
                 </div>
                 <div
                     className="home-masthead__column"
@@ -627,12 +614,13 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             data-mode="narrow"
             data-collapsed={effectiveCollapsed ? "true" : "false"}
             data-peek-hidden={peekHidden ? "true" : undefined}
+            data-wallpaper-image={wallpaper.source ? "true" : undefined}
         >
             {
-                /* Collapsed, the top veil sits closely behind the peek and fades
-                below it in translucent glass (or stops with a 1px rule in
-                opaque fallbacks); open, both cover the home down to the
-                docked search box. */
+                /* Collapsed, the sheet shrinks to the peek (the first block)
+                and the veil is hidden except in the solid fallbacks (where it
+                stops 16px below the peek with a 1px rule); open, both cover
+                the home down to the docked search box. */
             }
             <div
                 ref={topVeilRef}
@@ -641,7 +629,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 data-open={!effectiveCollapsed ? "true" : "false"}
                 aria-hidden="true"
             >
-                {veilLayers}
+                {veilWallpaper}
             </div>
             <div
                 ref={sheetRef}
