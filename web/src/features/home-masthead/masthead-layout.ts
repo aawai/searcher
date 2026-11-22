@@ -25,12 +25,9 @@ export const MASTHEAD_PEEK_SEARCH_GAP = 8;
  *  block, or the dek when the date and time are off); the peek reaches this
  *  far below it so the text halo is not clipped. */
 export const MASTHEAD_PEEK_HALO_ROOM = 24;
-/** Below the collapsed peek's first block, only a minimal solid buffer is kept
- *  so the day glyph baseline and A6 2px halo stay inside the 100% veil before
- *  the 200px fade (--layout-masthead-peek-fade) begins. */
-export const MASTHEAD_PEEK_VEIL_SOLID_PAD = 4;
-/** Fade length below the collapsed peek's solid zone
- *  (`--layout-masthead-peek-fade`, 200px). */
+/** In the glass `off` tier and the solid fallbacks the collapsed top veil
+ *  shows and reaches this far below the peek, so its fade
+ *  (`--layout-masthead-peek-fade`, 200px) ends below the peek. */
 export const MASTHEAD_PEEK_VEIL_TAIL = 200;
 /** Maximum bottom fade length on the collapsed narrow sheet (`--space-4`). */
 export const MASTHEAD_PEEK_FADE_MAX = 16;
@@ -255,28 +252,6 @@ export function mastheadPeekMetrics(
         fadeTail,
         hidden: boundedAvailable < measuredBlock,
     };
-}
-
-/**
- * Total height of the collapsed narrow top veil: starts at `peekY` + the
- * measured first block (without the extra halo plateau), adds a 4px solid
- * buffer, and extends by `MASTHEAD_PEEK_VEIL_TAIL` (200px) for the fade.
- */
-export function mastheadPeekVeilHeight(
-    peekY: number,
-    peekHeight: number,
-    blockHeight: number | null,
-): number {
-    const boundedY = Math.max(0, Number.isFinite(peekY) ? peekY : 0);
-    const boundedPeek = Math.max(
-        0,
-        Number.isFinite(peekHeight) ? peekHeight : 0,
-    );
-    const contentHeight = blockHeight !== null && Number.isFinite(blockHeight)
-        ? Math.min(boundedPeek, Math.max(0, blockHeight))
-        : boundedPeek;
-    return boundedY + contentHeight + MASTHEAD_PEEK_VEIL_SOLID_PAD +
-        MASTHEAD_PEEK_VEIL_TAIL;
 }
 
 /**

@@ -8,14 +8,12 @@ import {
     MASTHEAD_MAX_WIDTH,
     MASTHEAD_MIN_WIDTH,
     MASTHEAD_PEEK_FADE_MAX,
-    MASTHEAD_PEEK_VEIL_SOLID_PAD,
     MASTHEAD_PEEK_VEIL_TAIL,
     MASTHEAD_VEIL_TAIL,
     MASTHEAD_VW_RATIO,
     mastheadColumnWidth,
     mastheadDateParts,
     mastheadPeekMetrics,
-    mastheadPeekVeilHeight,
     mastheadPlacement,
     mastheadSideOpaqueVeilWidth,
     resolveMastheadSwipe,
@@ -242,17 +240,6 @@ Deno.test("mastheadPeekMetrics and mastheadSideOpaqueVeilWidth: keep collapsed p
     // Opaque side veil stops within MASTHEAD_SEARCH_GAP (32px) past column edge.
     assertEquals(mastheadSideOpaqueVeilWidth(72 + 296 + 600), 72 + 296 + 32);
     assertEquals(mastheadSideOpaqueVeilWidth(32 + 296 + 600), 32 + 296 + 32);
-});
-
-Deno.test("mastheadPeekVeilHeight: starts fade 4px below measured first block and clamps to peekHeight", () => {
-    assertEquals(MASTHEAD_PEEK_VEIL_SOLID_PAD, 4);
-    assertEquals(MASTHEAD_PEEK_VEIL_TAIL, 200);
-    // Uses blockHeight (72) rather than peekHeight (96 = 72 + 24 halo room).
-    assertEquals(mastheadPeekVeilHeight(72, 96, 72), 72 + 72 + 4 + 200);
-    // Falls back to peekHeight before blockHeight is measured.
-    assertEquals(mastheadPeekVeilHeight(72, 96, null), 72 + 96 + 4 + 200);
-    // Clamps blockHeight to peekHeight on tight viewports.
-    assertEquals(mastheadPeekVeilHeight(72, 60, 72), 72 + 60 + 4 + 200);
 });
 
 Deno.test("mastheadDateParts: formats day number, weekday, Chinese month name and 24h time", () => {

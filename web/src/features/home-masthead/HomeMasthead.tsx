@@ -24,9 +24,9 @@ import { useCalmClock } from "../home-calm/useHomeCalm.ts";
 import type { HomeNoteItem } from "../home-layouts/home-notes.ts";
 import type { SafeRect } from "../home-layouts/home-viewport.ts";
 import {
+    MASTHEAD_PEEK_VEIL_TAIL,
     mastheadDateParts,
     mastheadPeekMetrics,
-    mastheadPeekVeilHeight,
     mastheadPlacement,
     mastheadSideOpaqueVeilWidth,
     resolveMastheadSwipe,
@@ -602,12 +602,12 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             data-mode="narrow"
             data-collapsed={effectiveCollapsed ? "true" : "false"}
             data-peek-hidden={peekHidden ? "true" : undefined}
+            data-wallpaper-image={wallpaper.source ? "true" : undefined}
         >
             {
                 /* Collapsed, the sheet shrinks to the peek (the first block)
-                and the top veil covers the peek plus a 4px buffer before
-                fading over 200px; open, both cover the home down to the docked
-                search box. */
+                and the veil is hidden except in the solid fallbacks; open,
+                both cover the home down to the docked search box. */
             }
             <div
                 className="home-masthead__veil"
@@ -616,20 +616,12 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 aria-hidden="true"
                 style={effectiveCollapsed
                     ? {
-                        height: mastheadPeekVeilHeight(
-                            placement.peek.y,
-                            peekHeight,
-                            peekBlockHeight,
-                        ),
+                        height: placement.peek.y + peekHeight +
+                            MASTHEAD_PEEK_VEIL_TAIL,
                     }
                     : undefined}
             >
-                <div className="home-masthead__veil-layer home-masthead__veil-layer--soft">
-                    {veilWallpaper}
-                </div>
-                <div className="home-masthead__veil-layer home-masthead__veil-layer--primary">
-                    {veilWallpaper}
-                </div>
+                {veilWallpaper}
             </div>
             <div
                 ref={sheetRef}
