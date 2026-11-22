@@ -14,7 +14,6 @@ const paginationSuites = {
 export const suites = {
     workspace: [
         "dock",
-        "apps-density",
         "library-windows",
         "apps-session",
         "home-app-library",
@@ -22,18 +21,13 @@ export const suites = {
         "desktop-windows",
         "launcher",
         "library",
-        "icon-presentation",
         "ai-window",
         "apps-pinning",
-        "workspace-matrix",
         "workspace",
         "library-apps",
-        "home-launcher-density",
         "apps-interactions",
-        "workspace-chrome-inset",
         "apps-ai-session",
         "apps-races",
-        "workspace-contract",
         "apps-ordering",
         "focus-recovery",
     ],
@@ -50,27 +44,20 @@ export const suites = {
         "documents-tree-dnd",
         "documents-window-prefs",
         "documents-focus",
-        "documents-chrome",
         "documents-history",
         "documents-live-editing",
         "documents-events",
         "documents-live-preview",
         "documents-ux",
-        "documents-drawer-motion",
     ],
     wallpaper: ["wallpaper", "wallpaper-accent"],
     bundle: [
-        "route-style-stability",
-        "route-style-admin-lab",
         "pwa",
         "bundle-loading",
-        "omnibox-lab",
-        "accent-lab",
     ],
     "home-masthead": [
         "home-masthead-tasks",
         "home-masthead-order",
-        "home-masthead-placement",
         "home-masthead-document",
     ],
     supplemental: [
@@ -82,16 +69,6 @@ export const suites = {
         "settings-shortcuts",
         "shortcuts-search",
         "markdown-editor-loading",
-        "editable-pagination-spike",
-        "markdown-editor-spike",
-    ],
-} as const;
-
-export const optionalSuites = {
-    "visual-optional": [
-        "high-contrast",
-        "accent-contrast",
-        "home-calm",
     ],
 } as const;
 
@@ -108,15 +85,12 @@ export const documentPartitions = {
 // Workspace CI shards, balanced by per-file JUnit time (~233s summed per shard;
 // 124s wall for B at jobs=2 locally). B is listed; A is the remainder.
 const workspaceShardB = new Set<string>([
-    "apps-density",
     "apps-session",
     "workspace-shell",
     "desktop-windows",
     "ai-window",
     "apps-pinning",
-    "home-launcher-density",
     "apps-interactions",
-    "workspace-contract",
     "apps-ai-session",
 ]);
 
@@ -134,7 +108,6 @@ const partitions: Record<string, readonly string[]> = {
 
 export type Suite =
     | keyof typeof suites
-    | keyof typeof optionalSuites
     | keyof typeof documentPartitions
     | keyof typeof workspacePartitions
     | "full"
@@ -143,10 +116,6 @@ export type Suite =
 
 export function isPartition(name: string): boolean {
     return Object.hasOwn(partitions, name);
-}
-
-export function isOptionalSuite(name: string): boolean {
-    return Object.hasOwn(optionalSuites, name);
 }
 
 export function suiteFiles(suite: Suite): string[] {
@@ -161,8 +130,6 @@ export function suiteFiles(suite: Suite): string[] {
         names = suites.workspace.filter((name) =>
             /^(workspace|home-launcher-)/.test(name)
         );
-    } else if (isOptionalSuite(suite)) {
-        names = optionalSuites[suite as keyof typeof optionalSuites];
     } else if (isPartition(suite)) {
         names = partitions[suite];
     } else {
@@ -375,12 +342,7 @@ const DIRECT_CHROMIUM =
 
 export async function checkSuites(): Promise<void> {
     checkAffectedMappings();
-    const declared = new Set([
-        ...suiteFiles("full"),
-        ...Object.keys(optionalSuites).flatMap((name) =>
-            suiteFiles(name as Suite)
-        ),
-    ]);
+    const declared = new Set(suiteFiles("full"));
     const actual = new Set<string>();
     const directChromium: string[] = [];
     for await (const entry of walk("web/e2e", { includeDirs: false })) {

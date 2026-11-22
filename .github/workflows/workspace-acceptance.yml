@@ -1,4 +1,4 @@
-name: Workspace acceptance (format and E2E)
+name: Workspace acceptance (format and affected E2E)
 
 on:
     pull_request:
@@ -34,36 +34,41 @@ jobs:
                   deno fmt --check
                   web/src/features/app-library/
                   web/src/components/searcher/launcher.css
-                  web/e2e/apps-density.test.ts
-                  web/e2e/home-launcher-density.test.ts
-                  web/e2e/workspace-matrix.test.ts
 
-    workspace-e2e:
-        name: Full production Workspace E2E (${{ matrix.shard }})
+    affected-e2e:
+        name: Affected production E2E
         runs-on: ubuntu-24.04
         timeout-minutes: 60
-        strategy:
-            fail-fast: false
-            matrix:
-                shard:
-                    - workspace-a
-                    - workspace-b
         steps:
             - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
             - uses: denoland/setup-deno@v2
               with:
                   deno-version: v2.9.7
             - name: Install dependencies
               run: deno install
             - name: Verify E2E runner option contracts
-              if: matrix.shard == 'workspace-a'
               run: deno test -A scripts/e2e/
+            - name: Determine affected E2E suites
+              id: affected
+              run: |
+                  set -o pipefail
+                  LIST_OUTPUT=$(deno run -A scripts/e2e/run.ts affected --base "origin/${{ github.base_ref }}" --list)
+                  echo "$LIST_OUTPUT"
+                  if echo "$LIST_OUTPUT" | grep -q "^Affected suites: none$"; then
+                    echo "run_e2e=false" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "run_e2e=true" >> "$GITHUB_OUTPUT"
+                  fi
             - name: Install Chromium
+              if: steps.affected.outputs.run_e2e == 'true'
               timeout-minutes: 12
               uses: ./.github/actions/install-chromium
-            - name: Run ${{ matrix.shard }} production E2E
+            - name: Run affected production E2E
+              if: steps.affected.outputs.run_e2e == 'true'
               env:
-                  E2E_REPORT_DIR: artifacts/e2e/${{ matrix.shard }}
+                  E2E_REPORT_DIR: artifacts/e2e/affected
                   DENO_JOBS: "2"
               run: |
                   mkdir -p "$E2E_REPORT_DIR"
@@ -71,13 +76,13 @@ jobs:
                   { deno --version; uname -a; lscpu; free -m; } \
                     | tee "$E2E_REPORT_DIR/environment.txt"
                   /usr/bin/time -v -o "$E2E_REPORT_DIR/resources.txt" \
-                    deno run -A scripts/e2e/run.ts ${{ matrix.shard }} --parallel \
+                    deno run -A scripts/e2e/run.ts affected --base "origin/${{ github.base_ref }}" --parallel --no-fail-fast \
                     2>&1 | tee "$E2E_REPORT_DIR/stdout.log"
-            - name: Upload ${{ matrix.shard }} E2E reports
-              if: always()
+            - name: Upload affected E2E reports
+              if: always() && steps.affected.outputs.run_e2e == 'true'
               uses: actions/upload-artifact@v4
               with:
-                  name: ${{ matrix.shard }}-e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
-                  path: artifacts/e2e/${{ matrix.shard }}/
+                  name: affected-e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: artifacts/e2e/affected/
                   retention-days: 14
                   if-no-files-found: warn

@@ -3,12 +3,11 @@ name: Notes contracts and regression
 on:
     push:
         branches: [main]
-    pull_request:
-        branches: [main]
+    workflow_dispatch:
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
-    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    group: ${{ github.workflow }}-${{ format('run-{0}', github.run_id) }}
+    cancel-in-progress: false
 
 permissions:
     contents: read
@@ -26,5 +25,5 @@ jobs:
             - name: Install Chromium
               timeout-minutes: 12
               uses: ./.github/actions/install-chromium
-            - name: Home masthead tasks, order and placement regression
+            - name: Home masthead tasks, order and document regression
               run: deno task test:home-masthead

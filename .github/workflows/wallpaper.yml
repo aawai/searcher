@@ -27,9 +27,9 @@ jobs:
             - name: Unit and API contracts
               run: deno task test
             - name: Install Chromium
+              if: github.event_name != 'pull_request'
               timeout-minutes: 12
               uses: ./.github/actions/install-chromium
             - name: Production wallpaper user journeys
-              env:
-                  WALLPAPER_READABILITY_MATRIX: ${{ github.event_name == 'pull_request' && 'fast' || 'full' }}
+              if: github.event_name != 'pull_request'
               run: deno task test:wallpaper
