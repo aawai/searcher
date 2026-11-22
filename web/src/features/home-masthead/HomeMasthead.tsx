@@ -24,7 +24,6 @@ import { useCalmClock } from "../home-calm/useHomeCalm.ts";
 import type { HomeNoteItem } from "../home-layouts/home-notes.ts";
 import type { SafeRect } from "../home-layouts/home-viewport.ts";
 import {
-    MASTHEAD_PEEK_VEIL_TAIL,
     mastheadDateParts,
     mastheadPeekMetrics,
     mastheadPlacement,
@@ -115,8 +114,11 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const focalX = wallpaper.source
         ? wallpaper.presentation.composition.focalX
         : 0.5;
-    // A statically filtered copy of the wallpaper: rasterized once, unlike a
+    // Statically filtered copies of the wallpaper: rasterized once, unlike a
     // backdrop-filter that re-samples whenever a window moves above it.
+    // Two stages (soft mid-blur + primary heavy blur) decouple blur from the
+    // tint wash so the fade into sharp wallpaper stays free of double-exposure
+    // ghosting.
     const veilWallpaper = (
         <WallpaperSurface
             embedded
@@ -125,6 +127,16 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             presentation={wallpaper.presentation}
             className="home-masthead__veil-wallpaper"
         />
+    );
+    const veilLayers = (
+        <>
+            <div className="home-masthead__veil-layer home-masthead__veil-layer--soft">
+                {veilWallpaper}
+            </div>
+            <div className="home-masthead__veil-layer home-masthead__veil-layer--primary">
+                {veilWallpaper}
+            </div>
+        </>
     );
     const placement = useMemo(
         () =>
@@ -152,6 +164,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const scrollRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const sideVeilRef = useRef<HTMLDivElement>(null);
+    const topVeilRef = useRef<HTMLDivElement>(null);
     const sheetRef = useRef<HTMLDivElement>(null);
     const peekRef = useRef<HTMLButtonElement>(null);
     const [overflowBottom, setOverflowBottom] = useState(false);
@@ -245,6 +258,18 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             sheet.style.removeProperty("--peek-fade-tail");
         }
     }, [isNarrow, effectiveCollapsed, peekFadeTail]);
+
+    const narrowPeekBottom = placement.mode === "narrow"
+        ? placement.peek.y + peekHeight
+        : null;
+    useLayoutEffect(() => {
+        const topVeil = topVeilRef.current;
+        if (!topVeil || narrowPeekBottom === null) return;
+        topVeil.style.setProperty(
+            "--masthead-peek-height",
+            `${narrowPeekBottom}px`,
+        );
+    }, [narrowPeekBottom]);
 
     useEffect(() => {
         onSearchDockChange(searchDock);
@@ -564,7 +589,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                     aria-hidden="true"
                     style={{ width: placement.veilWidth }}
                 >
-                    {veilWallpaper}
+                    {veilLayers}
                 </div>
                 <div
                     className="home-masthead__column"
@@ -602,26 +627,21 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             data-mode="narrow"
             data-collapsed={effectiveCollapsed ? "true" : "false"}
             data-peek-hidden={peekHidden ? "true" : undefined}
-            data-wallpaper-image={wallpaper.source ? "true" : undefined}
         >
             {
-                /* Collapsed, the sheet shrinks to the peek (the first block)
-                and the veil is hidden except in the solid fallbacks; open,
-                both cover the home down to the docked search box. */
+                /* Collapsed, the top veil sits closely behind the peek and fades
+                below it in translucent glass (or stops with a 1px rule in
+                opaque fallbacks); open, both cover the home down to the
+                docked search box. */
             }
             <div
+                ref={topVeilRef}
                 className="home-masthead__veil"
                 data-side="top"
                 data-open={!effectiveCollapsed ? "true" : "false"}
                 aria-hidden="true"
-                style={effectiveCollapsed
-                    ? {
-                        height: placement.peek.y + peekHeight +
-                            MASTHEAD_PEEK_VEIL_TAIL,
-                    }
-                    : undefined}
             >
-                {veilWallpaper}
+                {veilLayers}
             </div>
             <div
                 ref={sheetRef}

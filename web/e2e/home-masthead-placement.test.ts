@@ -419,34 +419,54 @@ Deno.test("masthead targets, narrow day scale/short landscape peek, and opaque v
         );
 
         await t.step(
-            "Issue 5: side veil spans 600px past column in translucent glass, and stops within 32px gap under opaque conditions",
+            "Issue 5: side veil spans 320px past column in translucent glass, and stops as a crisp 1px-bordered solid band within 24px under opaque conditions",
             async () => {
                 const column = await boxOf(page, ".home-masthead__column");
                 const search = await boxOf(page, ".search-form-wrap");
                 assert(column && search);
 
-                // Translucent regular glass keeps the 600px smooth veil.
+                // Translucent regular glass keeps the 320px smooth veil.
                 const regularVeil = await boxOf(page, ".home-masthead__veil");
                 assert(regularVeil);
                 assert(
-                    regularVeil.width >= column.x + column.width + 599,
-                    `expected translucent veil >= column+600, got ${regularVeil.width}`,
+                    regularVeil.width >= column.x + column.width + 319 &&
+                        regularVeil.width <= column.x + column.width + 340,
+                    `expected translucent veil ~column+320, got ${regularVeil.width}`,
                 );
 
                 const assertOpaqueConstrained = async (label: string) => {
                     const veil = await boxOf(page, ".home-masthead__veil");
                     assert(veil, `${label}: veil missing`);
                     assert(
-                        veil.x + veil.width <= column.x + column.width + 33,
+                        veil.x + veil.width <= column.x + column.width + 25,
                         `${label}: opaque veil (${
                             veil.x + veil.width
-                        }) exceeded 32px gap past column (${
+                        }) exceeded 24px padding past column (${
                             column.x + column.width
                         })`,
                     );
                     assert(
                         !intersects(veil, search),
                         `${label}: opaque veil overlapped search box`,
+                    );
+                    const veilStyles = await page.locator(
+                        ".home-masthead__veil",
+                    ).evaluate((el) => {
+                        const cs = getComputedStyle(el);
+                        return {
+                            maskImage: cs.maskImage,
+                            borderRightWidth: cs.borderRightWidth,
+                        };
+                    });
+                    assertEquals(
+                        veilStyles.maskImage,
+                        "none",
+                        `${label}: expected no feather mask on opaque veil`,
+                    );
+                    assertEquals(
+                        veilStyles.borderRightWidth,
+                        "1px",
+                        `${label}: expected 1px crisp border on opaque veil`,
                     );
                 };
 
