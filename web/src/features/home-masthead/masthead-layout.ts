@@ -9,8 +9,11 @@ export const MASTHEAD_SEARCH_GAP = 32;
 /** Extra breathing room between the page margin and the column, taken only from spare width. */
 export const MASTHEAD_EDGE_INSET_MAX = 48;
 /** The veil reaches this far past the column's outer edge, so its fade
- *  (`--layout-masthead-veil-fade`, 640px) starts 40px inside the column. */
-export const MASTHEAD_VEIL_TAIL = 600;
+ *  (`--layout-masthead-veil-fade`, 320px) starts right at the column edge. */
+export const MASTHEAD_VEIL_TAIL = 320;
+/** Padding past the column's outer edge for opaque side veils, keeping at
+ *  least 8px clear of the search box even at the 1360px tightest fit. */
+export const MASTHEAD_OPAQUE_VEIL_PADDING = 24;
 export const MASTHEAD_SWIPE_THRESHOLD = 48;
 
 export type MastheadSide = "left" | "right";
@@ -23,12 +26,11 @@ export const MASTHEAD_SHEET_SEARCH_GAP = 24;
 export const MASTHEAD_PEEK_SEARCH_GAP = 8;
 /** The collapsed narrow masthead shows only its first block (the date
  *  block, or the dek when the date and time are off); the peek reaches this
- *  far below it so the text halo is not clipped. */
+ *  far below it so the layout stays unclipped. */
 export const MASTHEAD_PEEK_HALO_ROOM = 24;
-/** In the glass `off` tier and the solid fallbacks the collapsed top veil
- *  shows and reaches this far below the peek, so its fade
- *  (`--layout-masthead-peek-fade`, 200px) ends below the peek. */
-export const MASTHEAD_PEEK_VEIL_TAIL = 200;
+/** In translucent glass the collapsed top veil extends this far below the peek,
+ *  matching `--layout-masthead-peek-fade` (120px). */
+export const MASTHEAD_PEEK_VEIL_TAIL = 120;
 /** Maximum bottom fade length on the collapsed narrow sheet (`--space-4`). */
 export const MASTHEAD_PEEK_FADE_MAX = 16;
 /** Slack kept solid below the collapsed first block before the mask fades. */
@@ -256,14 +258,14 @@ export function mastheadPeekMetrics(
 
 /**
  * Side veil width under opaque veil conditions (`data-contrast="more"`,
- * `data-glass="off"`, reduced transparency, or forced colors): stops within
- * `MASTHEAD_SEARCH_GAP` of the column's outer edge instead of spanning 600px
- * across the center wallpaper.
+ * `data-glass="off"`, reduced transparency, or forced colors): stops at
+ * `MASTHEAD_OPAQUE_VEIL_PADDING` (24px) past the column's outer edge with a
+ * crisp 1px border instead of spanning across the center wallpaper.
  */
 export function mastheadSideOpaqueVeilWidth(veilWidth: number): number {
-    if (!Number.isFinite(veilWidth)) return MASTHEAD_SEARCH_GAP;
+    if (!Number.isFinite(veilWidth)) return MASTHEAD_OPAQUE_VEIL_PADDING;
     const outerEdge = Math.max(0, veilWidth - MASTHEAD_VEIL_TAIL);
-    return outerEdge + MASTHEAD_SEARCH_GAP;
+    return outerEdge + MASTHEAD_OPAQUE_VEIL_PADDING;
 }
 
 /** Splits a local `Date` into the typographic parts shown by the masthead. */
