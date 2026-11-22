@@ -6,6 +6,7 @@ import {
     generateBotanicalScene,
     renderBotanicalFrame,
     resolveBotanicalSpecies,
+    resolveBotanicalViewport,
     type BotanicalPalette,
     type BotanicalPointerState,
     type BotanicalScene,
@@ -80,6 +81,7 @@ export default function BotanicalSceneCanvas({
         let width = 0;
         let height = 0;
         let dpr = Math.min(window.devicePixelRatio || 1, 2);
+        let viewport = resolveBotanicalViewport(0, 0, embedded);
         let scene: BotanicalScene | null = null;
         let paletteState = readThemePalette();
         let reducedMotion = reducedMotionQuery.matches;
@@ -128,7 +130,7 @@ export default function BotanicalSceneCanvas({
             rafId = null;
             if (!scene || width <= 0 || height <= 0) return;
             if (paletteState.hidden) {
-                ctx.clearRect(0, 0, width, height);
+                ctx.clearRect(0, 0, viewport.sceneWidth, viewport.sceneHeight);
                 return;
             }
 
@@ -153,8 +155,8 @@ export default function BotanicalSceneCanvas({
             lastDriftSpawn = renderBotanicalFrame({
                 ctx,
                 scene,
-                width,
-                height,
+                width: viewport.sceneWidth,
+                height: viewport.sceneHeight,
                 timeSec,
                 dt,
                 rawProgress,
@@ -198,13 +200,21 @@ export default function BotanicalSceneCanvas({
             width = nextW;
             height = nextH;
             dpr = nextDpr;
+            viewport = resolveBotanicalViewport(width, height, embedded);
             canvas.width = Math.round(width * dpr);
             canvas.height = Math.round(height * dpr);
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.setTransform(
+                dpr * viewport.renderScale,
+                0,
+                0,
+                dpr * viewport.renderScale,
+                0,
+                0,
+            );
             scene = generateBotanicalScene(
                 concreteSpecies,
-                width,
-                height,
+                viewport.sceneWidth,
+                viewport.sceneHeight,
                 dateKey,
                 embedded,
             );
@@ -216,7 +226,7 @@ export default function BotanicalSceneCanvas({
             paletteState = readThemePalette();
             if (paletteState.hidden) {
                 cancelLoop();
-                ctx.clearRect(0, 0, width, height);
+                ctx.clearRect(0, 0, viewport.sceneWidth, viewport.sceneHeight);
             } else {
                 scheduleRender();
             }
