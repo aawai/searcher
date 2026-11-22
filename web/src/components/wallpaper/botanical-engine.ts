@@ -121,6 +121,34 @@ export interface BotanicalScene {
     scale: number;
 }
 
+export interface BotanicalViewportMetrics {
+    sceneWidth: number;
+    sceneHeight: number;
+    renderScale: number;
+}
+
+/**
+ * Resolves the virtual coordinate space for botanical scene generation.
+ * Embedded previews render a full desktop-proportioned scene (1440px wide)
+ * scaled down to fit the preview container without cropping or distortion.
+ */
+export function resolveBotanicalViewport(
+    width: number,
+    height: number,
+    embedded: boolean,
+): BotanicalViewportMetrics {
+    if (!embedded || width <= 0 || height <= 0) {
+        return { sceneWidth: width, sceneHeight: height, renderScale: 1 };
+    }
+    const sceneWidth = 1440;
+    const sceneHeight = Math.max(1, Math.round(sceneWidth * (height / width)));
+    return {
+        sceneWidth,
+        sceneHeight,
+        renderScale: width / sceneWidth,
+    };
+}
+
 export interface BotanicalPalette {
     stroke: (tint: TintRole, alpha?: number) => string;
     vein: (tint: TintRole, alpha?: number) => string;
@@ -455,39 +483,52 @@ export function generateBotanicalScene(
     const rng = mulberry32(hashString(`${dateKey}:${species}:v6`));
     const rand = (lo: number, hi: number) => lo + rng() * (hi - lo);
     const isNarrow = !embedded && w < 720;
-    const isWide = !embedded && w >= 1024;
-    const S = embedded
-        ? clamp(Math.min(w / 520, h / 320), 0.32, 0.85)
-        : isNarrow
-        ? clamp(Math.min(w / 460, h / 820), 0.72, 0.92)
+    const isWide = embedded || w >= 1024;
+    const S = isNarrow
+        ? clamp(Math.min(w / 500, h / 860), 0.62, 0.82)
         : clamp(Math.min(w / 1440, h / 900), 0.56, 1.18);
 
     const branches: BranchData[] = [];
     const ornaments: BotanicalOrnament[] = [];
-    const rootX = w + 16 * S;
-    const rootY = h + 16 * S;
+    const narrowRootY = h - Math.max(92, h * 0.115);
+    const rootX = isNarrow ? w + 10 * S : w + 16 * S;
+    const rootY = isNarrow ? narrowRootY : h + 16 * S;
 
-    if (isWide) {
-        const tr0 = { x: w + 10, y: rand(96, 118) * S };
-        const tr3 = {
-            x: w - rand(180, 225) * S,
-            y: tr0.y + rand(112, 142) * S,
-        };
+    if (isWide || isNarrow) {
+        const echoScale = isNarrow ? 0.9 : 1;
+        const tr0 = isNarrow
+            ? { x: w + 8, y: rand(215, 235) * S }
+            : { x: w + 10, y: rand(96, 118) * S };
+        const tr3 = isNarrow
+            ? {
+                x: w - rand(130, 158) * S,
+                y: tr0.y + rand(72, 92) * S,
+            }
+            : {
+                x: w - rand(180, 225) * S,
+                y: tr0.y + rand(112, 142) * S,
+            };
         const echo = sampleBranch(
             tr0,
-            { x: tr0.x - 75 * S, y: tr0.y + 8 * S },
-            { x: tr3.x + 65 * S, y: tr3.y - 46 * S },
+            {
+                x: tr0.x - (isNarrow ? 50 : 75) * S,
+                y: tr0.y + (isNarrow ? 6 : 8) * S,
+            },
+            {
+                x: tr3.x + (isNarrow ? 42 : 65) * S,
+                y: tr3.y - (isNarrow ? 30 : 46) * S,
+            },
             tr3,
             {
                 steps: 26,
-                widthStart: 1.3 * S,
+                widthStart: (isNarrow ? 1.05 : 1.3) * S,
                 widthEnd: 0.42 * S,
                 t0: 0.22,
                 t1: 0.62,
                 flexSpan: 0.95,
                 phase: 2.6,
                 ghost: true,
-                wobble: 0.9 * S,
+                wobble: 0.9 * S * echoScale,
             },
             rng,
         );
@@ -513,9 +554,9 @@ export function generateBotanicalScene(
                     branch: echo,
                     idx,
                     angleOffset: lf.ang,
-                    size: lf.sz * S,
+                    size: lf.sz * S * echoScale,
                     notch: 0.22,
-                    stemLen: 12 * S,
+                    stemLen: 12 * S * echoScale,
                     tint: lf.tint,
                     profile: lf.profile,
                     t0: lerp(echo.t0, echo.t1, lf.u) + 0.04,
@@ -529,7 +570,7 @@ export function generateBotanicalScene(
             const us = [0.34, 0.56, 0.76, 0.95];
             us.forEach((u, i) => {
                 const idx = Math.round(u * (echo.points.length - 1));
-                const sz = lerp(23, 12, i / 3) * S;
+                const sz = lerp(23, 12, i / 3) * S * echoScale;
                 for (const side of [-1, 1] as const) {
                     if (i === 3 && side === -1) continue;
                     ornaments.push({
@@ -540,7 +581,7 @@ export function generateBotanicalScene(
                         angleOffset: i === 3 ? 0.08 : side * 0.85,
                         rx: sz,
                         ry: sz * (i === 1 ? 0.55 : 0.82),
-                        stemLen: 5 * S,
+                        stemLen: 5 * S * echoScale,
                         tint: i === 2 && side === 1 ? "sub" : "ink",
                         profile: i === 1 && side === -1,
                         t0: lerp(echo.t0, echo.t1, u) + 0.04,
@@ -571,7 +612,7 @@ export function generateBotanicalScene(
                     branch: echo,
                     idx,
                     angleOffset: sp.ang,
-                    size: sp.sz * S,
+                    size: sp.sz * S * echoScale,
                     rotation: rand(0, 6.28),
                     tint: sp.tint,
                     profile: false,
@@ -587,7 +628,7 @@ export function generateBotanicalScene(
                 const u = lerp(0.18, 0.94, i / 10);
                 const idx = Math.round(u * (echo.points.length - 1));
                 const env = Math.sin(Math.pow(u, 0.75) * Math.PI);
-                const pl = 42 * S * (0.2 + env * 0.85);
+                const pl = 42 * S * echoScale * (0.2 + env * 0.85);
                 for (const side of [-1, 1] as const) {
                     ornaments.push({
                         kind: "fernPinna",
@@ -613,65 +654,84 @@ export function generateBotanicalScene(
     }
 
     if (species === "ginkgo") {
-        if (!isNarrow) {
-            const g0 = { x: rootX - 10 * S, y: rootY - 70 * S };
-            const g3 = {
+        const ginkgoLeafScale = isNarrow ? 0.84 : 1;
+        const g0 = isNarrow
+            ? { x: rootX - 6 * S, y: rootY - 26 * S }
+            : { x: rootX - 10 * S, y: rootY - 70 * S };
+        const g3 = isNarrow
+            ? {
+                x: w - rand(105, 138) * S,
+                y: rootY - rand(195, 225) * S,
+            }
+            : {
                 x: w - rand(160, 215) * S,
                 y: h - rand(460, 525) * S,
             };
-            const ghost = sampleBranch(
-                g0,
-                { x: g0.x - 45 * S, y: g0.y - 195 * S },
-                { x: g3.x + 68 * S, y: g3.y + 115 * S },
-                g3,
-                {
-                    steps: 28,
-                    widthStart: 1.25 * S,
-                    widthEnd: 0.45 * S,
-                    t0: 0.08,
-                    t1: 0.52,
-                    flexSpan: 1.05,
-                    phase: 1.8,
-                    ghost: true,
-                    wobble: 1.3 * S,
-                },
-                rng,
-            );
-            branches.push(ghost);
-            [0.52, 0.78, 1.0].forEach((u, i) => {
-                const idx = Math.round(u * (ghost.points.length - 1));
-                ornaments.push({
-                    kind: "ginkgo",
-                    ghost: true,
-                    branch: ghost,
-                    idx,
-                    angleOffset: i % 2 === 0 ? -0.62 : 0.52,
-                    size: rand(35, 43) * S,
-                    notch: rand(0.18, 0.28),
-                    stemLen: rand(12, 18) * S,
-                    tint: i === 2 ? "sub" : "ink",
-                    profile: i === 1,
-                    t0: lerp(ghost.t0, ghost.t1, u) + 0.05,
-                    t1: lerp(ghost.t0, ghost.t1, u) + 0.34,
-                    phase: rand(0, 6.28),
-                    push: 0,
-                    vel: 0,
-                });
+        const ghost = sampleBranch(
+            g0,
+            {
+                x: g0.x - (isNarrow ? 28 : 45) * S,
+                y: g0.y - (isNarrow ? 105 : 195) * S,
+            },
+            {
+                x: g3.x + (isNarrow ? 42 : 68) * S,
+                y: g3.y + (isNarrow ? 65 : 115) * S,
+            },
+            g3,
+            {
+                steps: 28,
+                widthStart: (isNarrow ? 1.1 : 1.25) * S,
+                widthEnd: 0.45 * S,
+                t0: 0.08,
+                t1: 0.52,
+                flexSpan: 1.05,
+                phase: 1.8,
+                ghost: true,
+                wobble: 1.3 * S * ginkgoLeafScale,
+            },
+            rng,
+        );
+        branches.push(ghost);
+        [0.52, 0.78, 1.0].forEach((u, i) => {
+            const idx = Math.round(u * (ghost.points.length - 1));
+            ornaments.push({
+                kind: "ginkgo",
+                ghost: true,
+                branch: ghost,
+                idx,
+                angleOffset: i % 2 === 0 ? -0.62 : 0.52,
+                size: rand(35, 43) * S * ginkgoLeafScale,
+                notch: rand(0.18, 0.28),
+                stemLen: rand(12, 18) * S * ginkgoLeafScale,
+                tint: i === 2 ? "sub" : "ink",
+                profile: i === 1,
+                t0: lerp(ghost.t0, ghost.t1, u) + 0.05,
+                t1: lerp(ghost.t0, ghost.t1, u) + 0.34,
+                phase: rand(0, 6.28),
+                push: 0,
+                vel: 0,
             });
-        }
+        });
 
-        const mainLen = (isNarrow ? 360 : 590) * S;
-        const p0 = { x: rootX - rand(52, 95) * S, y: rootY };
-        const p3 = {
-            x: w - rand(300, 375) * S,
-            y: h - mainLen * rand(0.75, 0.85),
-        };
+        const mainLen = (isNarrow ? 250 : 590) * S;
+        const p0 = isNarrow
+            ? { x: rootX - rand(10, 22) * S, y: rootY }
+            : { x: rootX - rand(52, 95) * S, y: rootY };
+        const p3 = isNarrow
+            ? {
+                x: w - rand(225, 260) * S,
+                y: rootY - rand(195, 225) * S,
+            }
+            : {
+                x: w - rand(300, 375) * S,
+                y: h - mainLen * rand(0.75, 0.85),
+            };
         const p1 = {
-            x: p0.x - rand(42, 84) * S,
+            x: p0.x - (isNarrow ? rand(24, 48) : rand(42, 84)) * S,
             y: p0.y - mainLen * 0.34,
         };
         const p2 = {
-            x: p3.x + rand(84, 136) * S,
+            x: p3.x + (isNarrow ? rand(48, 78) : rand(84, 136)) * S,
             y: p3.y + mainLen * 0.26,
         };
 
@@ -682,24 +742,31 @@ export function generateBotanicalScene(
             p3,
             {
                 steps: 40,
-                widthStart: 2.55 * S,
+                widthStart: (isNarrow ? 2.1 : 2.55) * S,
                 widthEnd: 0.75 * S,
                 t0: 0.0,
                 t1: 0.46,
                 flexSpan: 0.95,
                 phase: 0,
-                wobble: 1.4 * S,
+                wobble: 1.4 * S * ginkgoLeafScale,
             },
             rng,
         );
         branches.push(main);
 
-        const subs = [
-            { u: 0.28, dir: -1, len: 215 * S, lift: 115 * S },
-            { u: 0.48, dir: 1, len: 180 * S, lift: 120 * S },
-            { u: 0.66, dir: -1, len: 168 * S, lift: 85 * S },
-            { u: 0.82, dir: 1, len: 118 * S, lift: 72 * S },
-        ];
+        const subs = isNarrow
+            ? [
+                { u: 0.28, dir: -1, len: 128 * S, lift: 68 * S },
+                { u: 0.48, dir: 1, len: 106 * S, lift: 72 * S },
+                { u: 0.66, dir: -1, len: 96 * S, lift: 52 * S },
+                { u: 0.82, dir: 1, len: 72 * S, lift: 44 * S },
+            ]
+            : [
+                { u: 0.28, dir: -1, len: 215 * S, lift: 115 * S },
+                { u: 0.48, dir: 1, len: 180 * S, lift: 120 * S },
+                { u: 0.66, dir: -1, len: 168 * S, lift: 85 * S },
+                { u: 0.82, dir: 1, len: 118 * S, lift: 72 * S },
+            ];
         const subTints: readonly (readonly [TintRole, TintRole, TintRole, TintRole])[] =
             [
                 ["accent", "ink", "sub", "ink"],
@@ -788,9 +855,9 @@ export function generateBotanicalScene(
                         branch: sub,
                         idx: lIdx,
                         angleOffset: lf.ang + rand(-0.08, 0.08),
-                        size: lf.sz * rand(0.92, 1.08) * S,
+                        size: lf.sz * rand(0.92, 1.08) * S * ginkgoLeafScale,
                         notch: rand(0.18, 0.28),
-                        stemLen: rand(12, 19) * S,
+                        stemLen: rand(12, 19) * S * ginkgoLeafScale,
                         tint: lf.tint,
                         profile: lf.profile,
                         t0: lt + li * 0.05,
@@ -821,9 +888,9 @@ export function generateBotanicalScene(
                 branch: main,
                 idx: lIdx,
                 angleOffset: ls.ang,
-                size: ls.sz * S,
+                size: ls.sz * S * ginkgoLeafScale,
                 notch: rand(0.18, 0.28),
-                stemLen: rand(13, 19) * S,
+                stemLen: rand(13, 19) * S * ginkgoLeafScale,
                 tint: ls.tint,
                 profile: ls.profile,
                 t0: main.t1 - 0.04 + li * 0.06,
@@ -834,8 +901,12 @@ export function generateBotanicalScene(
             });
         });
     } else if (species === "eucalyptus") {
+        const eucLeafScale = isNarrow ? 0.86 : 1;
         const configs = isNarrow
-            ? [{ ghost: false, len: 390, rx: 65, tx: 225, ty: 0.84, count: 9, t0: 0 }]
+            ? [
+                { ghost: true, len: 255, rx: 4, tx: 135, ty: 0.86, count: 6, t0: 0.12 },
+                { ghost: false, len: 310, rx: 14, tx: 255, ty: 0.72, count: 8, t0: 0.00 },
+            ]
             : [
                 { ghost: true, len: 460, rx: 14, tx: 130, ty: 0.92, count: 8, t0: 0.10 },
                 { ghost: false, len: 645, rx: 98, tx: 445, ty: 0.72, count: 10, t0: 0.00 },
@@ -844,18 +915,21 @@ export function generateBotanicalScene(
 
         configs.forEach((cfg, ci) => {
             const len = cfg.len * S;
-            const p0 = { x: rootX - cfg.rx * S, y: rootY + 12 * S };
+            const p0 = {
+                x: rootX - cfg.rx * S,
+                y: isNarrow ? rootY + 6 * S : rootY + 12 * S,
+            };
             const p3 = {
                 x: w - cfg.tx * S * rand(0.95, 1.05),
-                y: h - len * cfg.ty,
+                y: (isNarrow ? rootY : h) - len * cfg.ty,
             };
             const p1 = {
-                x: p0.x - rand(45, 80) * S,
+                x: p0.x - (isNarrow ? rand(28, 48) : rand(45, 80)) * S,
                 y: p0.y - len * 0.45,
             };
             const p2 = {
-                x: p3.x + rand(125, 180) * S,
-                y: p3.y - rand(16, 42) * S,
+                x: p3.x + (isNarrow ? rand(75, 110) : rand(125, 180)) * S,
+                y: p3.y - (isNarrow ? rand(10, 24) : rand(16, 42)) * S,
             };
 
             const stem = sampleBranch(
@@ -872,7 +946,7 @@ export function generateBotanicalScene(
                     flexSpan: 1.12,
                     phase: ci * 1.4,
                     ghost: cfg.ghost,
-                    wobble: 1.1 * S,
+                    wobble: 1.1 * S * eucLeafScale,
                 },
                 rng,
             );
@@ -884,7 +958,7 @@ export function generateBotanicalScene(
                 const u = lerp(0.18, 0.94, easedT);
                 const idx = Math.round(u * (stem.points.length - 1));
                 const env = Math.sin(u * Math.PI * 0.82 + 0.25);
-                const sz = lerp(29, 12.5, Math.pow(u, 1.15)) * S *
+                const sz = lerp(29, 12.5, Math.pow(u, 1.15)) * S * eucLeafScale *
                     (0.86 + env * 0.24);
 
                 for (const side of [-1, 1] as const) {
@@ -911,7 +985,7 @@ export function generateBotanicalScene(
                         angleOffset: side * rand(0.68, 1.08),
                         rx: sz * rand(0.90, 1.10),
                         ry: sz * (isProfile ? rand(0.42, 0.54) : rand(0.78, 0.96)),
-                        stemLen: rand(5, 9) * S,
+                        stemLen: rand(5, 9) * S * eucLeafScale,
                         tint,
                         profile: isProfile,
                         t0: ts,
@@ -928,9 +1002,9 @@ export function generateBotanicalScene(
                 branch: stem,
                 idx: stem.points.length - 1,
                 angleOffset: rand(-0.1, 0.1),
-                rx: 12 * S,
-                ry: 9 * S,
-                stemLen: 3 * S,
+                rx: 12 * S * eucLeafScale,
+                ry: 9 * S * eucLeafScale,
+                stemLen: 3 * S * eucLeafScale,
                 tint: "accent",
                 profile: false,
                 t0: stem.t1,
@@ -941,72 +1015,95 @@ export function generateBotanicalScene(
             });
         });
     } else if (species === "plum") {
-        if (!isNarrow) {
-            const g0 = { x: rootX - 10 * S, y: rootY - 95 * S };
-            const g3 = {
+        const plumScale = isNarrow ? 0.86 : 1;
+        const g0 = isNarrow
+            ? { x: rootX - 6 * S, y: rootY - 30 * S }
+            : { x: rootX - 10 * S, y: rootY - 95 * S };
+        const g3 = isNarrow
+            ? {
+                x: w - rand(120, 150) * S,
+                y: rootY - rand(195, 225) * S,
+            }
+            : {
                 x: w - rand(195, 250) * S,
                 y: h - rand(460, 525) * S,
             };
-            const ghost = sampleBranch(
-                g0,
-                {
-                    x: lerp(g0.x, g3.x, 0.35) + 22 * S,
-                    y: lerp(g0.y, g3.y, 0.35) - 28 * S,
-                },
-                {
-                    x: lerp(g0.x, g3.x, 0.70) - 18 * S,
-                    y: lerp(g0.y, g3.y, 0.70) + 16 * S,
-                },
-                g3,
-                {
-                    steps: 26,
-                    widthStart: 1.55 * S,
-                    widthEnd: 0.45 * S,
-                    t0: 0.10,
-                    t1: 0.54,
-                    flexSpan: 0.85,
-                    phase: 2.0,
-                    ghost: true,
-                    wobble: 1.5 * S,
-                },
-                rng,
-            );
-            branches.push(ghost);
-            [0.60, 0.84, 0.98].forEach((u, i) => {
-                const idx = Math.round(u * (ghost.points.length - 1));
-                const isBud = i === 2;
-                ornaments.push({
-                    kind: isBud ? "plumBud" : "plumBlossom",
-                    ghost: true,
-                    branch: ghost,
-                    idx,
-                    angleOffset: i % 2 === 0 ? -0.6 : 0.6,
-                    size: (isBud ? 4.8 : rand(14, 18)) * S,
-                    rotation: rand(0, 6.28),
-                    tint: "accent",
-                    profile: false,
-                    t0: lerp(ghost.t0, ghost.t1, u) + 0.08,
-                    t1: lerp(ghost.t0, ghost.t1, u) + 0.36,
-                    phase: rand(0, 6.28),
-                    push: 0,
-                    vel: 0,
-                });
+        const ghost = sampleBranch(
+            g0,
+            {
+                x: lerp(g0.x, g3.x, 0.35) + 22 * S * plumScale,
+                y: lerp(g0.y, g3.y, 0.35) - 28 * S * plumScale,
+            },
+            {
+                x: lerp(g0.x, g3.x, 0.70) - 18 * S * plumScale,
+                y: lerp(g0.y, g3.y, 0.70) + 16 * S * plumScale,
+            },
+            g3,
+            {
+                steps: 26,
+                widthStart: 1.55 * S * plumScale,
+                widthEnd: 0.45 * S,
+                t0: 0.10,
+                t1: 0.54,
+                flexSpan: 0.85,
+                phase: 2.0,
+                ghost: true,
+                wobble: 1.5 * S * plumScale,
+            },
+            rng,
+        );
+        branches.push(ghost);
+        [0.60, 0.84, 0.98].forEach((u, i) => {
+            const idx = Math.round(u * (ghost.points.length - 1));
+            const isBud = i === 2;
+            ornaments.push({
+                kind: isBud ? "plumBud" : "plumBlossom",
+                ghost: true,
+                branch: ghost,
+                idx,
+                angleOffset: i % 2 === 0 ? -0.6 : 0.6,
+                size: (isBud ? 4.8 : rand(14, 18)) * S * plumScale,
+                rotation: rand(0, 6.28),
+                tint: "accent",
+                profile: false,
+                t0: lerp(ghost.t0, ghost.t1, u) + 0.08,
+                t1: lerp(ghost.t0, ghost.t1, u) + 0.36,
+                phase: rand(0, 6.28),
+                push: 0,
+                vel: 0,
             });
-        }
+        });
 
-        const p0 = { x: rootX - rand(40, 72) * S, y: rootY - rand(6, 26) * S };
-        const mid1 = {
-            x: w - rand(195, 232) * S,
-            y: h - rand(165, 200) * S,
-        };
-        const mid2 = {
-            x: w - rand(285, 332) * S,
-            y: h - rand(320, 360) * S,
-        };
-        const tip = {
-            x: w - rand(465, 525) * S,
-            y: h - rand(380, 428) * S,
-        };
+        const p0 = isNarrow
+            ? { x: rootX - rand(8, 20) * S, y: rootY }
+            : { x: rootX - rand(40, 72) * S, y: rootY - rand(6, 26) * S };
+        const mid1 = isNarrow
+            ? {
+                x: w - rand(110, 132) * S,
+                y: rootY - rand(72, 92) * S,
+            }
+            : {
+                x: w - rand(195, 232) * S,
+                y: h - rand(165, 200) * S,
+            };
+        const mid2 = isNarrow
+            ? {
+                x: w - rand(180, 208) * S,
+                y: rootY - rand(148, 174) * S,
+            }
+            : {
+                x: w - rand(285, 332) * S,
+                y: h - rand(320, 360) * S,
+            };
+        const tip = isNarrow
+            ? {
+                x: w - rand(278, 312) * S,
+                y: rootY - rand(182, 210) * S,
+            }
+            : {
+                x: w - rand(465, 525) * S,
+                y: h - rand(380, 428) * S,
+            };
 
         const seg1 = sampleBranch(
             p0,
@@ -1112,12 +1209,19 @@ export function generateBotanicalScene(
             ));
         });
 
-        const twigs = [
-            { parent: seg1, u: 0.78, ang: -1.92, len: 205 * S },
-            { parent: seg2, u: 0.52, ang: -1.36, len: 185 * S },
-            { parent: seg2, u: 0.92, ang: -2.28, len: 150 * S },
-            { parent: seg3, u: 0.58, ang: -1.58, len: 108 * S },
-        ];
+        const twigs = isNarrow
+            ? [
+                { parent: seg1, u: 0.78, ang: -1.92, len: 112 * S },
+                { parent: seg2, u: 0.52, ang: -1.36, len: 100 * S },
+                { parent: seg2, u: 0.92, ang: -2.28, len: 82 * S },
+                { parent: seg3, u: 0.58, ang: -1.58, len: 62 * S },
+            ]
+            : [
+                { parent: seg1, u: 0.78, ang: -1.92, len: 205 * S },
+                { parent: seg2, u: 0.52, ang: -1.36, len: 185 * S },
+                { parent: seg2, u: 0.92, ang: -2.28, len: 150 * S },
+                { parent: seg3, u: 0.58, ang: -1.58, len: 108 * S },
+            ];
         twigs.forEach((tw, ti) => {
             const pIdx = Math.round(tw.u * (tw.parent.points.length - 1));
             const anc = tw.parent.points[pIdx];
@@ -1128,12 +1232,12 @@ export function generateBotanicalScene(
                 y: anc.y + Math.sin(ang) * tw.len,
             };
             const tp1 = {
-                x: lerp(tp0.x, tp3.x, 0.38) + rand(-14, 14) * S,
-                y: lerp(tp0.y, tp3.y, 0.38) - rand(10, 20) * S,
+                x: lerp(tp0.x, tp3.x, 0.38) + rand(-14, 14) * S * plumScale,
+                y: lerp(tp0.y, tp3.y, 0.38) - rand(10, 20) * S * plumScale,
             };
             const tp2 = {
-                x: lerp(tp0.x, tp3.x, 0.74) + rand(-10, 10) * S,
-                y: lerp(tp0.y, tp3.y, 0.74) - rand(6, 14) * S,
+                x: lerp(tp0.x, tp3.x, 0.74) + rand(-10, 10) * S * plumScale,
+                y: lerp(tp0.y, tp3.y, 0.74) - rand(6, 14) * S * plumScale,
             };
             const ts = lerp(tw.parent.t0, tw.parent.t1, tw.u);
             const twig = sampleBranch(
@@ -1149,7 +1253,7 @@ export function generateBotanicalScene(
                     t1: ts + 0.24,
                     flexSpan: 0.52,
                     phase: 0.7 + ti * 0.8,
-                    wobble: 1.0 * S,
+                    wobble: 1.0 * S * plumScale,
                     parentRef: { branch: tw.parent, idx: pIdx },
                 },
                 rng,
@@ -1184,7 +1288,7 @@ export function generateBotanicalScene(
                     branch: twig,
                     idx: sIdx,
                     angleOffset: (si % 2 === 0 ? -1 : 1) * rand(0.42, 0.90),
-                    size: sp.sz * rand(0.94, 1.06) * S,
+                    size: sp.sz * rand(0.94, 1.06) * S * plumScale,
                     rotation: rand(0, 6.28),
                     tint: sp.tint,
                     profile: sp.profile,
@@ -1219,7 +1323,7 @@ export function generateBotanicalScene(
                 branch: sp.branch,
                 idx: sIdx,
                 angleOffset: si % 2 === 0 ? -0.55 : 0.65,
-                size: sp.sz * S,
+                size: sp.sz * S * plumScale,
                 rotation: rand(0, 6.28),
                 tint: sp.tint,
                 profile: sp.profile,
@@ -1231,8 +1335,12 @@ export function generateBotanicalScene(
             });
         });
     } else if (species === "fern") {
+        const fernScale = isNarrow ? 0.85 : 1;
         const configs = isNarrow
-            ? [{ ghost: false, len: 405, rx: 45, tx: 225, ty: 0.80, pairs: 20, t0: 0 }]
+            ? [
+                { ghost: true, len: 255, rx: 18, tx: 140, ty: 0.86, pairs: 13, t0: 0.10 },
+                { ghost: false, len: 315, rx: 6, tx: 248, ty: 0.72, pairs: 17, t0: 0.00 },
+            ]
             : [
                 { ghost: true, len: 520, rx: 145, tx: 180, ty: 0.88, pairs: 17, t0: 0.08 },
                 { ghost: false, len: 635, rx: 52, tx: 395, ty: 0.74, pairs: 24, t0: 0.00 },
@@ -1241,18 +1349,21 @@ export function generateBotanicalScene(
 
         configs.forEach((cfg, ci) => {
             const len = cfg.len * S;
-            const p0 = { x: rootX - cfg.rx * S, y: rootY + 14 * S };
+            const p0 = {
+                x: rootX - cfg.rx * S,
+                y: isNarrow ? rootY + 6 * S : rootY + 14 * S,
+            };
             const p3 = {
                 x: w - cfg.tx * S * rand(0.94, 1.06),
-                y: h - len * cfg.ty,
+                y: (isNarrow ? rootY : h) - len * cfg.ty,
             };
             const p1 = {
-                x: p0.x - rand(24, 56) * S,
+                x: p0.x - (isNarrow ? rand(16, 36) : rand(24, 56)) * S,
                 y: p0.y - len * 0.56,
             };
             const p2 = {
-                x: p3.x + rand(135, 190) * S,
-                y: p3.y - rand(36, 70) * S,
+                x: p3.x + (isNarrow ? rand(85, 120) : rand(135, 190)) * S,
+                y: p3.y - (isNarrow ? rand(22, 42) : rand(36, 70)) * S,
             };
 
             const frond = sampleBranch(
@@ -1269,7 +1380,7 @@ export function generateBotanicalScene(
                     flexSpan: 1.2,
                     phase: ci * 1.5,
                     ghost: cfg.ghost,
-                    wobble: 0.8 * S,
+                    wobble: 0.8 * S * fernScale,
                 },
                 rng,
             );
@@ -1279,7 +1390,10 @@ export function generateBotanicalScene(
                 const u = lerp(0.14, 0.96, i / cfg.pairs);
                 const idx = Math.round(u * (frond.points.length - 1));
                 const env = Math.sin(Math.pow(u, 0.72) * Math.PI);
-                const pinnaLen = (ci === 1 ? 82 : 60) * S * (0.14 + env * 0.95);
+                const pinnaBase = isNarrow
+                    ? (ci === 1 ? 56 : 42)
+                    : (ci === 1 ? 82 : 60);
+                const pinnaLen = pinnaBase * S * (0.14 + env * 0.95);
                 const ts = lerp(frond.t0, frond.t1, u) + 0.02;
                 const tint: TintRole = u > 0.82
                     ? "accent"
@@ -1315,7 +1429,7 @@ export function generateBotanicalScene(
                 branch: frond,
                 idx: frond.points.length - 1,
                 angleOffset: 0,
-                size: (cfg.ghost ? 7 : 10) * S,
+                size: (cfg.ghost ? 7 : 10) * S * fernScale,
                 tint: "accent",
                 profile: false,
                 t0: frond.t1 - 0.05,
