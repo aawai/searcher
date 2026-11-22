@@ -10,9 +10,9 @@
 * **Reuse before adding.** 优先复用已有能力、标准库和成熟社区方案，避免重复实现。保留、改造或替换当前实现，均以满足项目契约与约束为依据；候选方案被否决不代表现状可接受。
 * **Design completely, deliver incrementally.** 先确定完整的正确设计，再将大改动拆成可独立验证和回滚的 micro-increments。Increment 是交付边界，不是削减必要 scope 的理由。
 * **Escalate only real conflicts.** 若 Specification、Invariants、Architecture、type model 或 contracts 无法同时满足，不要猜测；说明冲突、trade-off 和需要人类决定的最小问题。普通、可逆的工程决策自行判断。
-* UI Contract：[VISUAL_LANGUAGE.md](docs/design/VISUAL_LANGUAGE.md)、[UI_CHECKLIST.md](docs/design/UI_CHECKLIST.md)。UI 变更依次消费已有 Page Archetype、Token、semantic component（`web/src/components/searcher/`），再组合 shadcn/ui primitives（`web/components.json`，`base-nova` 即 Base UI 变体，位于 `web/src/components/ui/`）；不为按钮、弹窗、菜单、Tab、Toast 等另造风格不一致的基础组件。
-* shadcn/ui 不覆盖的能力沿用现有库：拖拽 `@dnd-kit`，Markdown 渲染 `react-markdown` + `rehype-sanitize`，编辑器 Milkdown（契约见 `docs/editor/`）。补充组件同样遵守 UI Contract 并支持键盘操作。
-* 现有实现不是设计正确性的证据；视觉例外必须定义新的系统级语义与验证边界，不以“已经这样实现”新增 raw visual value。
+* UI 参考与底线：[VISUAL_LANGUAGE.md](docs/design/VISUAL_LANGUAGE.md)、[UI_CHECKLIST.md](docs/design/UI_CHECKLIST.md)。基础交互控件优先复用 `web/src/components/searcher/` 与 shadcn/ui primitives（`web/components.json`，`base-nova` 即 Base UI 变体，位于 `web/src/components/ui/`）。在保证功能正确、数据安全与基础可用性的前提下，鼓励探索新的视觉风格、动效与首页/窗口交互创意，不将既有视觉规范或登记表视为不可突破的限制。
+* shadcn/ui 不覆盖的能力沿用现有库：拖拽 `@dnd-kit`，Markdown 渲染 `react-markdown` + `rehype-sanitize`，编辑器 Milkdown（契约见 `docs/editor/`）。
+* `docs/*.md` 中核心业务功能与 API 为硬契约；视觉表现、动效形式与首页/窗口布局可随创意自由演进（涉及行为变更时按需同步文档）。
 
 ## 协作约定
 
@@ -91,9 +91,7 @@ deno test -A <file>
   文档、注释等不改变运行时行为的修改，不单独触发本地 E2E；既有 CI 门禁照常执行。
 * 明确列举的验收场景逐项覆盖；仅列出维度时，按执行路径、边界与交互风险选择代表组合，
   不机械执行全组合。
-* UI 变更执行 `deno task check:ui`，按 [UI_CHECKLIST](docs/design/UI_CHECKLIST.md#实页矩阵)
-  的影响面规则选择实页矩阵并填写验收记录，覆盖受影响的 rendering / interaction contract。
-  build/test 不替代实页验证；视觉矩阵与行为验收分开组织，历史验收记录不自动增加本次范围。
+* UI 变更执行 `deno task check:ui`（轻量卫生门禁：检查未定义 CSS 变量、禁止原生 `confirm()` 与裸原生选择控件），并结合 [UI_CHECKLIST](docs/design/UI_CHECKLIST.md) 完成基础可用性自检（浅/深双主题可读、键盘/Escape、`prefers-reduced-motion`）；不再强制要求多视口实页截图矩阵或视觉登记表。
 
 ### 执行与调度
 

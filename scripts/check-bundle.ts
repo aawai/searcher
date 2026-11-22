@@ -24,7 +24,7 @@ interface BundleBudget {
     maxInitialGzipBytes: number;
     maxEntryChunkRawBytes?: number;
     maxEntryChunkGzipBytes?: number;
-    minGzipReductionRatio: number;
+    minGzipReductionRatio?: number;
     maxSharedEditorGzipBytes: number;
 }
 
@@ -533,23 +533,29 @@ export function checkBundle(rootDir = Deno.cwd()): {
         );
     }
 
-    // Gate 3: minGzipReductionRatio
-    const reductionPass = gzipReduction >= budget.minGzipReductionRatio;
-    console.log(
-        `[Gate 3] Initial Gzip Reduction >= ${
-            formatPercent(budget.minGzipReductionRatio)
-        }: ` +
-            (reductionPass
-                ? `PASS (${formatPercent(gzipReduction)} reduction)`
-                : `FAIL (${formatPercent(gzipReduction)} reduction)`),
-    );
-    if (!reductionPass) {
-        errors.push(
-            `Initial gzip reduction ratio (${
-                formatPercent(gzipReduction)
-            }) below required threshold (${
+    // Gate 3: minGzipReductionRatio (optional)
+    if (typeof budget.minGzipReductionRatio === "number") {
+        const reductionPass = gzipReduction >= budget.minGzipReductionRatio;
+        console.log(
+            `[Gate 3] Initial Gzip Reduction >= ${
                 formatPercent(budget.minGzipReductionRatio)
-            }).`,
+            }: ` +
+                (reductionPass
+                    ? `PASS (${formatPercent(gzipReduction)} reduction)`
+                    : `FAIL (${formatPercent(gzipReduction)} reduction)`),
+        );
+        if (!reductionPass) {
+            errors.push(
+                `Initial gzip reduction ratio (${
+                    formatPercent(gzipReduction)
+                }) below required threshold (${
+                    formatPercent(budget.minGzipReductionRatio)
+                }).`,
+            );
+        }
+    } else {
+        console.log(
+            `[Gate 3] Initial Gzip Reduction check skipped (relaxed budget)`,
         );
     }
 

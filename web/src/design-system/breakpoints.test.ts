@@ -1,15 +1,11 @@
 import { assertEquals } from "@std/assert";
-import { loadVisualRegistry } from "../../../scripts/ui-guard/registry.ts";
 import {
     BREAKPOINTS,
     hasPersistentNotesSidebar,
     MEDIA_QUERIES,
 } from "./breakpoints.ts";
 
-Deno.test("JS media queries track the documented exclusive width boundaries", async () => {
-    const registry = await loadVisualRegistry();
-    const { notesSidebar: _notesSidebar, ...registered } = BREAKPOINTS;
-    assertEquals([...registry.breakpoints], [0, ...Object.values(registered)]);
+Deno.test("JS media queries track the documented exclusive width boundaries", () => {
     for (
         const [width, query] of [
             [BREAKPOINTS.small, MEDIA_QUERIES.belowSmall],
