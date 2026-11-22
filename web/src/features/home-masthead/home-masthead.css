@@ -5,39 +5,42 @@
     color: var(--foreground);
 }
 
-/* Every masthead state (wide column, collapsed narrow peek, expanded narrow
-   sheet) sits over the masthead veil and takes the veil-specific secondary and
-   accent tokens, hover and focus states included. Tokens derived at the root
+/* On the veil (wide column, expanded narrow sheet) secondary and accent text
+   take the veil-specific tokens, hover and focus states included. The
+   collapsed narrow peek is printed directly on the wallpaper with its own
+   stroke and halo and keeps the page tokens. Tokens derived at the root
    (--ring, --accent-soft) are already resolved and stay unchanged. */
-.home-masthead {
+.home-masthead:not([data-mode="narrow"][data-collapsed="true"]) {
     --muted: var(--masthead-muted);
     --accent: var(--masthead-accent-text);
 }
 
-/* Progressive veil on the chosen side: two statically blurred copies of the
-   wallpaper (soft mid-blur + primary heavy blur) under a translucent
-   --background wash, fading out past the column edge. Each blur stage fades
-   out ahead of the tint wash along an ease-out curve so the transition into
-   the sharp wallpaper stays free of double-exposure ghosting and clears the
-   central search box early. */
+/* Progressive veil on the chosen side: a blurred copy of the wallpaper (the
+   same image, focal point and readability mask) under a translucent
+   --background wash, fading out just inside the column's outer edge. A static
+   `filter` on the copy is rasterized once; a backdrop-filter would re-sample
+   the wallpaper whenever a window moves above the veil. It shares the
+   wallpaper's layer so the top bar, search box and windows paint above it.
+   The fade follows a smootherstep curve over --masthead-veil-fade-length: a
+   linear ramp leaves a visible edge where it starts and ends. */
 .home-masthead__veil {
     --masthead-veil-opaque-width: 100%;
     --masthead-veil-fade-length: var(--layout-masthead-veil-fade);
     --masthead-veil-ramp: var(--foreground) 0
         calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 76%, transparent)
+        color-mix(in srgb, var(--foreground) 98.4%, transparent)
         calc(100% - var(--masthead-veil-fade-length) * 0.875),
-        color-mix(in srgb, var(--foreground) 54%, transparent)
+        color-mix(in srgb, var(--foreground) 89.6%, transparent)
         calc(100% - var(--masthead-veil-fade-length) * 0.75),
-        color-mix(in srgb, var(--foreground) 35%, transparent)
+        color-mix(in srgb, var(--foreground) 72.5%, transparent)
         calc(100% - var(--masthead-veil-fade-length) * 0.625),
-        color-mix(in srgb, var(--foreground) 20%, transparent)
+        color-mix(in srgb, var(--foreground) 50%, transparent)
         calc(100% - var(--masthead-veil-fade-length) * 0.5),
-        color-mix(in srgb, var(--foreground) 9.5%, transparent)
+        color-mix(in srgb, var(--foreground) 27.5%, transparent)
         calc(100% - var(--masthead-veil-fade-length) * 0.375),
-        color-mix(in srgb, var(--foreground) 3.5%, transparent)
+        color-mix(in srgb, var(--foreground) 10.4%, transparent)
         calc(100% - var(--masthead-veil-fade-length) * 0.25),
-        color-mix(in srgb, var(--foreground) 0.8%, transparent)
+        color-mix(in srgb, var(--foreground) 1.6%, transparent)
         calc(100% - var(--masthead-veil-fade-length) * 0.125),
         transparent 100%;
     position: fixed;
@@ -57,96 +60,6 @@
     mask-image: linear-gradient(to left, var(--masthead-veil-ramp));
 }
 
-.home-masthead__veil-layer {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-}
-
-.home-masthead__veil-layer--primary {
-    -webkit-mask-image: linear-gradient(
-        to right,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 52%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.82),
-        color-mix(in srgb, var(--foreground) 14%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.65),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.5)
-    );
-    mask-image: linear-gradient(
-        to right,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 52%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.82),
-        color-mix(in srgb, var(--foreground) 14%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.65),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.5)
-    );
-}
-
-.home-masthead__veil-layer--soft {
-    -webkit-mask-image: linear-gradient(
-        to right,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 62%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.68),
-        color-mix(in srgb, var(--foreground) 18%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.4),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.2)
-    );
-    mask-image: linear-gradient(
-        to right,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 62%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.68),
-        color-mix(in srgb, var(--foreground) 18%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.4),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.2)
-    );
-}
-
-.home-masthead__veil[data-side="right"] .home-masthead__veil-layer--primary {
-    -webkit-mask-image: linear-gradient(
-        to left,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 52%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.82),
-        color-mix(in srgb, var(--foreground) 14%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.65),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.5)
-    );
-    mask-image: linear-gradient(
-        to left,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 52%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.82),
-        color-mix(in srgb, var(--foreground) 14%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.65),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.5)
-    );
-}
-
-.home-masthead__veil[data-side="right"] .home-masthead__veil-layer--soft {
-    -webkit-mask-image: linear-gradient(
-        to left,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 62%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.68),
-        color-mix(in srgb, var(--foreground) 18%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.4),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.2)
-    );
-    mask-image: linear-gradient(
-        to left,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 62%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.68),
-        color-mix(in srgb, var(--foreground) 18%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.4),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.2)
-    );
-}
-
 /* The copy spans the whole viewport (plus a blur's reach on every edge, so
    the blur never pulls in transparency) and stays aligned with the real
    wallpaper whichever side the veil is on. */
@@ -154,14 +67,7 @@
     inset: calc(-1 * var(--space-10)) auto;
     inset-inline-start: calc(-1 * var(--space-10));
     width: calc(100vw + 2 * var(--space-10));
-}
-
-.home-masthead__veil-layer--primary .home-masthead__veil-wallpaper.wallpaper-surface {
     filter: var(--masthead-veil-filter);
-}
-
-.home-masthead__veil-layer--soft .home-masthead__veil-wallpaper.wallpaper-surface {
-    filter: var(--masthead-veil-soft-filter);
 }
 
 .home-masthead__veil[data-side="right"] .home-masthead__veil-wallpaper {
@@ -173,7 +79,6 @@
     content: "";
     position: absolute;
     inset: 0;
-    z-index: var(--elevation-local-1);
     background: var(--masthead-veil);
 }
 
@@ -708,11 +613,15 @@
    No stacking context on the section: the veil must stay on the wallpaper
    layer, under the top bar, the docked search box and the Dock. */
 
-/* The veil spans the top of the home and uses the same 120px fade length in
-   both collapsed and expanded states so toggling never snaps the mask. */
+/* The veil spans the top of the home and covers the viewport while open,
+   fading over its last 20%. Collapsed it is hidden in translucent glass: the
+   peek reads as printed on the wallpaper, legible through its text halo when an
+   image wallpaper is active. Only the solid fallbacks (glass `off`, high
+   contrast, reduced transparency, no backdrop-filter) keep it behind the peek,
+   stopping 16px below it with a crisp 1px bottom rule. */
 .home-masthead__veil[data-side="top"] {
     --masthead-peek-height: 0px;
-    --masthead-veil-fade-length: var(--layout-masthead-peek-fade);
+    --masthead-veil-fade-length: 20%;
     inset-inline: 0;
     width: auto;
     height: 100%;
@@ -726,50 +635,9 @@
     height: calc(100dvh + 2 * var(--space-10));
 }
 
-.home-masthead__veil[data-side="top"] .home-masthead__veil-layer--primary {
-    -webkit-mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 52%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.8),
-        color-mix(in srgb, var(--foreground) 14%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.62),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.45)
-    );
-    mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 52%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.8),
-        color-mix(in srgb, var(--foreground) 14%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.62),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.45)
-    );
-}
-
-.home-masthead__veil[data-side="top"] .home-masthead__veil-layer--soft {
-    -webkit-mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 62%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.65),
-        color-mix(in srgb, var(--foreground) 18%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.35),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.15)
-    );
-    mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 62%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.65),
-        color-mix(in srgb, var(--foreground) 18%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.35),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.15)
-    );
-}
-
 .home-masthead__veil[data-side="top"][data-open="false"] {
-    height: calc(var(--masthead-peek-height, 0px) + var(--layout-masthead-peek-fade));
+    height: calc(var(--masthead-peek-height, 0px) + var(--space-4));
+    opacity: var(--masthead-peek-veil-opacity);
 }
 
 /* Under opaque veil conditions, side veils render as a crisp solid band with
@@ -778,15 +646,6 @@
    Placed after `[data-side="top"]` / `[data-side="right"]` so it wins for
    every veil orientation. */
 [data-glass="off"] .home-masthead__veil[data-side] {
-    -webkit-mask-image: none;
-    mask-image: none;
-}
-
-[data-glass="off"] .home-masthead__veil[data-side] .home-masthead__veil-layer--soft {
-    display: none;
-}
-
-[data-glass="off"] .home-masthead__veil[data-side] .home-masthead__veil-layer--primary {
     -webkit-mask-image: none;
     mask-image: none;
 }
@@ -802,21 +661,11 @@
 }
 
 [data-glass="off"] .home-masthead__veil[data-side="top"][data-open="false"] {
-    height: calc(var(--masthead-peek-height, 0px) + var(--space-4));
     border-block-end: 1px solid var(--border);
 }
 
 @media (forced-colors: none) {
     [data-contrast="more"] .home-masthead__veil[data-side] {
-        -webkit-mask-image: none;
-        mask-image: none;
-    }
-
-    [data-contrast="more"] .home-masthead__veil[data-side] .home-masthead__veil-layer--soft {
-        display: none;
-    }
-
-    [data-contrast="more"] .home-masthead__veil[data-side] .home-masthead__veil-layer--primary {
         -webkit-mask-image: none;
         mask-image: none;
     }
@@ -832,22 +681,12 @@
     }
 
     [data-contrast="more"] .home-masthead__veil[data-side="top"][data-open="false"] {
-        height: calc(var(--masthead-peek-height, 0px) + var(--space-4));
         border-block-end: 1px solid var(--border);
     }
 }
 
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
     .home-masthead__veil[data-side] {
-        -webkit-mask-image: none;
-        mask-image: none;
-    }
-
-    .home-masthead__veil[data-side] .home-masthead__veil-layer--soft {
-        display: none;
-    }
-
-    .home-masthead__veil[data-side] .home-masthead__veil-layer--primary {
         -webkit-mask-image: none;
         mask-image: none;
     }
@@ -863,7 +702,6 @@
     }
 
     .home-masthead__veil[data-side="top"][data-open="false"] {
-        height: calc(var(--masthead-peek-height, 0px) + var(--space-4));
         border-block-end: 1px solid var(--border);
     }
 }
@@ -875,15 +713,6 @@
         mask-image: none;
     }
 
-    .home-masthead__veil[data-side] .home-masthead__veil-layer--soft {
-        display: none;
-    }
-
-    .home-masthead__veil[data-side] .home-masthead__veil-layer--primary {
-        -webkit-mask-image: none;
-        mask-image: none;
-    }
-
     .home-masthead__veil:not([data-side="top"]) {
         max-width: var(--masthead-veil-opaque-width);
         border-inline-end: 1px solid var(--border);
@@ -895,7 +724,6 @@
     }
 
     .home-masthead__veil[data-side="top"][data-open="false"] {
-        height: calc(var(--masthead-peek-height, 0px) + var(--space-4));
         border-block-end: 1px solid var(--border);
     }
 }
@@ -905,6 +733,12 @@
 .home-masthead[data-mode="narrow"] {
     --font-masthead-day-size: 5.5rem;
     --font-masthead-day-line-height: 4.5rem;
+}
+
+.home-masthead[data-mode="narrow"][data-collapsed="true"][data-wallpaper-image="true"] :is(.home-masthead__header, .home-masthead__dek) {
+    -webkit-text-stroke: var(--masthead-text-stroke);
+    paint-order: stroke fill;
+    text-shadow: var(--masthead-text-halo);
 }
 
 .home-masthead__sheet {

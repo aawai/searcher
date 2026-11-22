@@ -8,7 +8,6 @@ import {
     MASTHEAD_MAX_WIDTH,
     MASTHEAD_MIN_WIDTH,
     MASTHEAD_PEEK_FADE_MAX,
-    MASTHEAD_PEEK_VEIL_TAIL,
     MASTHEAD_VEIL_TAIL,
     MASTHEAD_VW_RATIO,
     mastheadColumnWidth,
@@ -57,7 +56,7 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
         mode: "side",
         side: "left",
         column: { x: 52, y: 88, width: 296, height: 780 },
-        veilWidth: 52 + 296 + 320,
+        veilWidth: 52 + 296 + 600,
     });
 
     const focalRight = mastheadPlacement({
@@ -82,7 +81,7 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
         mode: "side",
         side: "right",
         column: { x: 1440 - 32 - 296 - 20, y: 88, width: 296, height: 780 },
-        veilWidth: 52 + 296 + 320,
+        veilWidth: 52 + 296 + 600,
     });
 });
 
@@ -238,8 +237,8 @@ Deno.test("mastheadPeekMetrics and mastheadSideOpaqueVeilWidth: keep collapsed p
     });
 
     // Opaque side veil stops at MASTHEAD_OPAQUE_VEIL_PADDING (24px) past column edge.
-    assertEquals(mastheadSideOpaqueVeilWidth(72 + 296 + 320), 72 + 296 + 24);
-    assertEquals(mastheadSideOpaqueVeilWidth(32 + 296 + 320), 32 + 296 + 24);
+    assertEquals(mastheadSideOpaqueVeilWidth(72 + 296 + 600), 72 + 296 + 24);
+    assertEquals(mastheadSideOpaqueVeilWidth(32 + 296 + 600), 32 + 296 + 24);
 });
 
 Deno.test("mastheadDateParts: formats day number, weekday, Chinese month name and 24h time", () => {
@@ -557,13 +556,7 @@ Deno.test("masthead layout constants mirror design tokens", async () => {
     );
     assertEquals(
         css.includes(
-            `--layout-masthead-veil-fade: ${MASTHEAD_VEIL_TAIL}px;`,
-        ),
-        true,
-    );
-    assertEquals(
-        css.includes(
-            `--layout-masthead-peek-fade: ${MASTHEAD_PEEK_VEIL_TAIL}px;`,
+            `--layout-masthead-veil-fade: ${MASTHEAD_VEIL_TAIL + 40}px;`,
         ),
         true,
     );

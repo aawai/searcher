@@ -9,8 +9,8 @@ export const MASTHEAD_SEARCH_GAP = 32;
 /** Extra breathing room between the page margin and the column, taken only from spare width. */
 export const MASTHEAD_EDGE_INSET_MAX = 48;
 /** The veil reaches this far past the column's outer edge, so its fade
- *  (`--layout-masthead-veil-fade`, 320px) starts right at the column edge. */
-export const MASTHEAD_VEIL_TAIL = 320;
+ *  (`--layout-masthead-veil-fade`, 640px) starts 40px inside the column. */
+export const MASTHEAD_VEIL_TAIL = 600;
 /** Padding past the column's outer edge for opaque side veils, keeping at
  *  least 8px clear of the search box even at the 1360px tightest fit. */
 export const MASTHEAD_OPAQUE_VEIL_PADDING = 24;
@@ -26,11 +26,8 @@ export const MASTHEAD_SHEET_SEARCH_GAP = 24;
 export const MASTHEAD_PEEK_SEARCH_GAP = 8;
 /** The collapsed narrow masthead shows only its first block (the date
  *  block, or the dek when the date and time are off); the peek reaches this
- *  far below it so the layout stays unclipped. */
+ *  far below it so the text halo is not clipped. */
 export const MASTHEAD_PEEK_HALO_ROOM = 24;
-/** In translucent glass the collapsed top veil extends this far below the peek,
- *  matching `--layout-masthead-peek-fade` (120px). */
-export const MASTHEAD_PEEK_VEIL_TAIL = 120;
 /** Maximum bottom fade length on the collapsed narrow sheet (`--space-4`). */
 export const MASTHEAD_PEEK_FADE_MAX = 16;
 /** Slack kept solid below the collapsed first block before the mask fades. */
