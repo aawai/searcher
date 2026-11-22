@@ -793,34 +793,43 @@
 }
 
 /* Home masthead veil: a translucent --background wash over a strongly blurred
-   wallpaper, so the wallpaper's colour still shows behind the column and the
-   collapsed narrow peek without harsh text strokes. The glass `off` tier and
-   the fallbacks below make the veil solid. */
+   wallpaper, so the wallpaper's colour still shows behind the column. The
+   collapsed narrow masthead (the peek) has no veil in translucent glass: it
+   reads as printed on the wallpaper and its text carries the wallpaper halo's
+   solid core in --background (--masthead-text-stroke) under
+   --masthead-text-halo when an image wallpaper is active. The glass `off` tier
+   and the fallbacks below make the veil solid and show it behind the peek too. */
 :root {
     --masthead-veil-light: 66%;
     --masthead-veil-dark: 50%;
-    --masthead-peek-veil-opacity: 1;
+    --masthead-peek-veil-opacity: 0;
     --masthead-veil-filter: blur(28px) saturate(1.35);
-    --masthead-peek-veil-filter: blur(18px) saturate(1.25);
-    --masthead-peek-soft-filter: blur(8px) saturate(1.2);
 }
 [data-glass="off"] {
     --masthead-veil-light: 100%;
     --masthead-veil-dark: 100%;
     --masthead-peek-veil-opacity: 1;
     --masthead-veil-filter: none;
-    --masthead-peek-veil-filter: none;
-    --masthead-peek-soft-filter: none;
 }
 :root,
 [data-theme],
 [data-glass] {
     --masthead-veil-mix: var(--masthead-veil-light);
     --masthead-veil: color-mix(in srgb, var(--background) var(--masthead-veil-mix), transparent);
+    --masthead-text-stroke: var(--wallpaper-text-core) var(--background);
+    --masthead-text-halo: 0 0 4px var(--background), 0 0 8px var(--background),
+        0 0 16px var(--background), 0 0 28px var(--background);
 }
 [data-theme="dark"],
 [data-theme="dark"] [data-glass] {
     --masthead-veil-mix: var(--masthead-veil-dark);
+}
+@media (forced-colors: active) {
+    :root,
+    [data-theme],
+    [data-glass] {
+        --masthead-text-halo: none;
+    }
 }
 
 /* Without backdrop-filter, or when the OS reduces transparency, every tier renders as `off`. */
@@ -842,8 +851,6 @@
         --masthead-veil-light: 100%;
         --masthead-veil-dark: 100%;
         --masthead-veil-filter: none;
-        --masthead-peek-veil-filter: none;
-        --masthead-peek-soft-filter: none;
         --masthead-peek-veil-opacity: 1;
     }
 }
@@ -866,8 +873,6 @@
         --masthead-veil-light: 100%;
         --masthead-veil-dark: 100%;
         --masthead-veil-filter: none;
-        --masthead-peek-veil-filter: none;
-        --masthead-peek-soft-filter: none;
         --masthead-peek-veil-opacity: 1;
     }
 }
@@ -889,8 +894,6 @@
     --masthead-veil-light: 100%;
     --masthead-veil-dark: 100%;
     --masthead-veil-filter: none;
-    --masthead-peek-veil-filter: none;
-    --masthead-peek-soft-filter: none;
     --masthead-peek-veil-opacity: 1;
 }
 

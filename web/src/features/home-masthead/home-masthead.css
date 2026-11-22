@@ -5,11 +5,12 @@
     color: var(--foreground);
 }
 
-/* Every masthead state (wide column, collapsed narrow peek, expanded narrow
-   sheet) sits over the masthead veil and takes the veil-specific secondary and
-   accent tokens, hover and focus states included. Tokens derived at the root
+/* On the veil (wide column, expanded narrow sheet) secondary and accent text
+   take the veil-specific tokens, hover and focus states included. The
+   collapsed narrow peek is printed directly on the wallpaper with its own
+   stroke and halo and keeps the page tokens. Tokens derived at the root
    (--ring, --accent-soft) are already resolved and stay unchanged. */
-.home-masthead {
+.home-masthead:not([data-mode="narrow"][data-collapsed="true"]) {
     --muted: var(--masthead-muted);
     --accent: var(--masthead-accent-text);
 }
@@ -83,36 +84,16 @@
 
 /* Under opaque veil conditions, constrain the side veil within
    MASTHEAD_SEARCH_GAP (32px) of the column's outer edge so it stops cleanly
-   before the central search box instead of extending across the wallpaper.
-   For the narrow top veil, drop the secondary blur layer and let the outer
-   mask drive a single solid fade. */
+   before the central search box instead of extending across the wallpaper. */
 [data-glass="off"] .home-masthead__veil:not([data-side="top"]) {
     max-width: var(--masthead-veil-opaque-width);
     --masthead-veil-fade-length: var(--space-6);
-}
-
-[data-glass="off"] .home-masthead__veil[data-side="top"] .home-masthead__veil-layer--soft {
-    display: none;
-}
-
-[data-glass="off"] .home-masthead__veil[data-side="top"][data-open="false"] .home-masthead__veil-layer--primary {
-    -webkit-mask-image: none;
-    mask-image: none;
 }
 
 @media (forced-colors: none) {
     [data-contrast="more"] .home-masthead__veil:not([data-side="top"]) {
         max-width: var(--masthead-veil-opaque-width);
         --masthead-veil-fade-length: var(--space-6);
-    }
-
-    [data-contrast="more"] .home-masthead__veil[data-side="top"] .home-masthead__veil-layer--soft {
-        display: none;
-    }
-
-    [data-contrast="more"] .home-masthead__veil[data-side="top"][data-open="false"] .home-masthead__veil-layer--primary {
-        -webkit-mask-image: none;
-        mask-image: none;
     }
 }
 
@@ -121,15 +102,6 @@
         max-width: var(--masthead-veil-opaque-width);
         --masthead-veil-fade-length: var(--space-6);
     }
-
-    .home-masthead__veil[data-side="top"] .home-masthead__veil-layer--soft {
-        display: none;
-    }
-
-    .home-masthead__veil[data-side="top"][data-open="false"] .home-masthead__veil-layer--primary {
-        -webkit-mask-image: none;
-        mask-image: none;
-    }
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter:
@@ -137,15 +109,6 @@
     .home-masthead__veil:not([data-side="top"]) {
         max-width: var(--masthead-veil-opaque-width);
         --masthead-veil-fade-length: var(--space-6);
-    }
-
-    .home-masthead__veil[data-side="top"] .home-masthead__veil-layer--soft {
-        display: none;
-    }
-
-    .home-masthead__veil[data-side="top"][data-open="false"] .home-masthead__veil-layer--primary {
-        -webkit-mask-image: none;
-        mask-image: none;
     }
 }
 
@@ -677,10 +640,11 @@
    layer, under the top bar, the docked search box and the Dock. */
 
 /* The veil spans the top of the home and covers the viewport while open,
-   fading over its last 20%. Collapsed, the top veil covers the peek plus a
-   4px solid buffer and fades over --layout-masthead-peek-fade (200px) with an
-   ease-out curve while decoupling the wash, primary blur and soft transition
-   blur so the wallpaper remains aligned and free of horizontal banding. */
+   fading over its last 20%. Collapsed it is hidden: the peek reads as printed
+   on the wallpaper, legible through its text halo when an image wallpaper is
+   active. Only the solid fallbacks (glass `off`, high contrast, reduced
+   transparency, no backdrop-filter) keep it behind the peek, reaching past it
+   (inline height) and fading over --layout-masthead-peek-fade. */
 .home-masthead__veil[data-side="top"] {
     --masthead-veil-fade-length: 20%;
     inset-inline: 0;
@@ -696,95 +660,9 @@
     height: calc(100dvh + 2 * var(--space-10));
 }
 
-.home-masthead__veil-layer {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-}
-
-.home-masthead__veil-layer--soft {
-    transition: opacity var(--motion-panel) var(--ease-out-expo);
-}
-
-.home-masthead__veil-layer--soft .home-masthead__veil-wallpaper.wallpaper-surface {
-    filter: var(--masthead-peek-soft-filter);
-}
-
-.home-masthead__veil[data-side="top"][data-open="true"] .home-masthead__veil-layer--soft {
-    opacity: 0;
-}
-
 .home-masthead__veil[data-side="top"][data-open="false"] {
     --masthead-veil-fade-length: var(--layout-masthead-peek-fade);
-    --masthead-peek-veil-ramp: var(--foreground) 0
-        calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 78%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.875),
-        color-mix(in srgb, var(--foreground) 56%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.75),
-        color-mix(in srgb, var(--foreground) 38%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.625),
-        color-mix(in srgb, var(--foreground) 24%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.5),
-        color-mix(in srgb, var(--foreground) 13%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.375),
-        color-mix(in srgb, var(--foreground) 6%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.25),
-        color-mix(in srgb, var(--foreground) 1.8%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.125),
-        transparent 100%;
     opacity: var(--masthead-peek-veil-opacity);
-    -webkit-mask-image: linear-gradient(
-        to bottom,
-        var(--masthead-peek-veil-ramp)
-    );
-    mask-image: linear-gradient(to bottom, var(--masthead-peek-veil-ramp));
-}
-
-.home-masthead__veil[data-side="top"][data-open="false"] .home-masthead__veil-layer--primary .home-masthead__veil-wallpaper.wallpaper-surface {
-    filter: var(--masthead-peek-veil-filter);
-}
-
-.home-masthead__veil[data-side="top"][data-open="false"] .home-masthead__veil-layer--primary {
-    -webkit-mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 55%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.82),
-        color-mix(in srgb, var(--foreground) 15%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.65),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.55)
-    );
-    mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 55%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.82),
-        color-mix(in srgb, var(--foreground) 15%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.65),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.55)
-    );
-}
-
-.home-masthead__veil[data-side="top"][data-open="false"] .home-masthead__veil-layer--soft {
-    -webkit-mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 65%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.72),
-        color-mix(in srgb, var(--foreground) 22%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.45),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.25)
-    );
-    mask-image: linear-gradient(
-        to bottom,
-        var(--foreground) 0 calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 65%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.72),
-        color-mix(in srgb, var(--foreground) 22%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.45),
-        transparent calc(100% - var(--masthead-veil-fade-length) * 0.25)
-    );
 }
 
 /* Narrow mode uses the compact day scale regardless of viewport width (e.g.
@@ -792,6 +670,12 @@
 .home-masthead[data-mode="narrow"] {
     --font-masthead-day-size: 5.5rem;
     --font-masthead-day-line-height: 4.5rem;
+}
+
+.home-masthead[data-mode="narrow"][data-collapsed="true"][data-wallpaper-image="true"] :is(.home-masthead__header, .home-masthead__dek) {
+    -webkit-text-stroke: var(--masthead-text-stroke);
+    paint-order: stroke fill;
+    text-shadow: var(--masthead-text-halo);
 }
 
 .home-masthead__sheet {
@@ -837,6 +721,7 @@
 }
 
 .home-masthead__sheet[data-open="false"] .home-masthead__scroll {
+    flex: 1 1 auto;
     overflow: hidden;
     -webkit-mask-image: none;
     mask-image: none;
@@ -982,7 +867,6 @@
     }
 
     .home-masthead__veil[data-side="top"],
-    .home-masthead__veil-layer--soft,
     .home-masthead__sheet,
     .home-masthead__sheet .home-masthead__content > * {
         transition: none;
