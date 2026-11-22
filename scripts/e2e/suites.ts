@@ -25,23 +25,16 @@ export const suites = {
         "icon-presentation",
         "ai-window",
         "apps-pinning",
-        "home-composition",
         "workspace-matrix",
-        "color-hierarchy",
         "workspace",
         "library-apps",
-        "home-calm",
         "home-launcher-density",
         "apps-interactions",
         "workspace-chrome-inset",
         "apps-ai-session",
         "apps-races",
         "workspace-contract",
-        "accent-contrast",
         "apps-ordering",
-        "touch-targets",
-        "forced-colors",
-        "high-contrast",
         "focus-recovery",
     ],
     routing: ["navigation", "auth", "share", "guest-ai-auth"],
@@ -65,7 +58,7 @@ export const suites = {
         "documents-ux",
         "documents-drawer-motion",
     ],
-    wallpaper: ["wallpaper-readability", "wallpaper", "wallpaper-accent"],
+    wallpaper: ["wallpaper", "wallpaper-accent"],
     bundle: [
         "route-style-stability",
         "route-style-admin-lab",
@@ -84,7 +77,6 @@ export const suites = {
         "inline-ai-answer",
         "ui-feedback",
         "omnibox-unified",
-        "ui-ownership",
         "shortcuts-documents-ask",
         "ask-accessibility-retry",
         "settings-shortcuts",
@@ -92,6 +84,14 @@ export const suites = {
         "markdown-editor-loading",
         "editable-pagination-spike",
         "markdown-editor-spike",
+    ],
+} as const;
+
+export const optionalSuites = {
+    "visual-optional": [
+        "high-contrast",
+        "accent-contrast",
+        "home-calm",
     ],
 } as const;
 
@@ -114,13 +114,10 @@ const workspaceShardB = new Set<string>([
     "desktop-windows",
     "ai-window",
     "apps-pinning",
-    "color-hierarchy",
-    "home-composition",
     "home-launcher-density",
     "apps-interactions",
     "workspace-contract",
     "apps-ai-session",
-    "accent-contrast",
 ]);
 
 export const workspacePartitions = {
@@ -137,6 +134,7 @@ const partitions: Record<string, readonly string[]> = {
 
 export type Suite =
     | keyof typeof suites
+    | keyof typeof optionalSuites
     | keyof typeof documentPartitions
     | keyof typeof workspacePartitions
     | "full"
@@ -145,6 +143,10 @@ export type Suite =
 
 export function isPartition(name: string): boolean {
     return Object.hasOwn(partitions, name);
+}
+
+export function isOptionalSuite(name: string): boolean {
+    return Object.hasOwn(optionalSuites, name);
 }
 
 export function suiteFiles(suite: Suite): string[] {
@@ -157,8 +159,10 @@ export function suiteFiles(suite: Suite): string[] {
         );
     } else if (suite === "layout") {
         names = suites.workspace.filter((name) =>
-            /^(workspace|home-launcher-|home-composition$)/.test(name)
+            /^(workspace|home-launcher-)/.test(name)
         );
+    } else if (isOptionalSuite(suite)) {
+        names = optionalSuites[suite as keyof typeof optionalSuites];
     } else if (isPartition(suite)) {
         names = partitions[suite];
     } else {
@@ -371,7 +375,12 @@ const DIRECT_CHROMIUM =
 
 export async function checkSuites(): Promise<void> {
     checkAffectedMappings();
-    const declared = new Set(suiteFiles("full"));
+    const declared = new Set([
+        ...suiteFiles("full"),
+        ...Object.keys(optionalSuites).flatMap((name) =>
+            suiteFiles(name as Suite)
+        ),
+    ]);
     const actual = new Set<string>();
     const directChromium: string[] = [];
     for await (const entry of walk("web/e2e", { includeDirs: false })) {
