@@ -115,7 +115,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             });
             await authenticateContext(context);
             const authGate = Promise.withResolvers<void>();
-            await page.route("**/api/auth/me", async (route) => {
+            await page.route("**/api/auth/session", async (route) => {
                 await authGate.promise;
                 await route.fulfill({
                     status: 503,
@@ -140,7 +140,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
                 false,
             );
             assertEquals(await page.locator(".sync-failed-badge").count(), 0);
-            await page.unroute("**/api/auth/me");
+            await page.unroute("**/api/auth/session");
             await banner.getByRole("button", { name: "重试" }).click();
             await banner.waitFor({ state: "hidden" });
             await page.getByRole("button", {

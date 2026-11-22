@@ -122,7 +122,19 @@ function itemBadge(item: OmniboxItem, engine: EngineId): string | null {
         case "online":
             return item.engine && item.engine !== engine ? item.engine : null;
         case "command":
-            return "快捷命令";
+            switch (item.command.target.type) {
+                case "engine":
+                    return "搜索引擎";
+                case "mode":
+                    return "AI";
+                case "theme":
+                    return "主题";
+                case "library":
+                case "apps":
+                    return "窗口";
+                case "route":
+                    return "页面";
+            }
     }
 }
 

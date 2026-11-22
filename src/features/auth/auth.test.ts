@@ -680,3 +680,59 @@ Deno.test({
         }
     },
 });
+
+Deno.test({
+    name:
+        "Auth Session Probe: returns 200 with null for guests and user when signed in",
+    fn: async () => {
+        const { app, store } = await setupTestApp();
+        try {
+            const guestRes = await app.request("/api/auth/session");
+            assertEquals(guestRes.status, STATUS_CODE.OK);
+            const guestBody = await guestRes.json();
+            assertEquals(guestBody.status, true);
+            assertEquals(guestBody.data.user, null);
+
+            const regRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                    origin: ORIGIN,
+                },
+                body: JSON.stringify({
+                    username: "session_probe_user",
+                    displayName: "Session Probe",
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(regRes.status, STATUS_CODE.OK);
+            const token = extractCookie(regRes, SESSION_COOKIE_NAME);
+            assertNotEquals(token, null);
+
+            const signedInRes = await app.request("/api/auth/session", {
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${token}` },
+            });
+            assertEquals(signedInRes.status, STATUS_CODE.OK);
+            const signedInBody = await signedInRes.json();
+            assertEquals(signedInBody.status, true);
+            assertEquals(signedInBody.data.user.username, "session_probe_user");
+
+            await app.request("/api/auth/logout", {
+                method: "POST",
+                headers: {
+                    origin: ORIGIN,
+                    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+                },
+            });
+
+            const afterLogoutRes = await app.request("/api/auth/session", {
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${token}` },
+            });
+            assertEquals(afterLogoutRes.status, STATUS_CODE.OK);
+            const afterLogoutBody = await afterLogoutRes.json();
+            assertEquals(afterLogoutBody.data.user, null);
+        } finally {
+            await store.close();
+        }
+    },
+});

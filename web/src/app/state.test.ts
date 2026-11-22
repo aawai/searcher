@@ -12,6 +12,16 @@ import {
     queueAppearanceSync,
 } from "./appearance-sync.ts";
 
+Deno.test("AppState: 200 session probe with null user results in anonymous user and NO connectionError", () => {
+    const initial = { user: null, connectionError: true };
+    const result = handleAuthCheckResult(initial, {
+        type: "success",
+        user: null,
+    });
+    assertEquals(result.user, null);
+    assertEquals(result.connectionError, false);
+});
+
 Deno.test("AppState: 401 error results in anonymous user and NO connectionError", () => {
     const initial = { user: null, connectionError: false };
     const result = handleAuthCheckResult(initial, {

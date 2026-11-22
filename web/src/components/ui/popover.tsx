@@ -78,6 +78,7 @@ interface PopoverContentProps extends PopoverPrimitive.Popup.Props {
     sideOffset?: number;
     align?: "start" | "center" | "end";
     alignOffset?: number;
+    collisionPadding?: PopoverPrimitive.Positioner.Props["collisionPadding"];
 }
 
 function PopoverContent({
@@ -87,6 +88,7 @@ function PopoverContent({
     sideOffset = 8,
     align = "start",
     alignOffset,
+    collisionPadding,
     ...props
 }: PopoverContentProps) {
     return (
@@ -96,6 +98,7 @@ function PopoverContent({
                 sideOffset={sideOffset}
                 align={align}
                 alignOffset={alignOffset}
+                collisionPadding={collisionPadding}
             >
                 <PopoverPopup className={className} {...props}>
                     {children}

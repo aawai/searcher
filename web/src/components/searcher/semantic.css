@@ -579,6 +579,24 @@
 .appearance-picker .theme-choices {
     justify-content: space-between;
 }
+@media (max-width: 639px) {
+    .appearance-picker .theme-choices {
+        gap: var(--space-1);
+    }
+    .appearance-picker [data-slot="radio-group"][data-variant="swatch"] {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: var(--space-2) 0;
+        width: 100%;
+    }
+    .appearance-picker .accent-swatch-set {
+        display: contents;
+    }
+    .appearance-picker [data-variant="swatch"] .radio-item {
+        width: 100%;
+        justify-content: center;
+    }
+}
 .appearance-picker-more {
     display: flex;
     align-items: center;
