@@ -122,6 +122,12 @@
     scrollbar-width: none;
 }
 
+/* Without a footer below it, let the scroll box fill the side column so
+   tall glyph ink (e.g. the day numeral) does not trigger a phantom overflow. */
+.home-masthead__column:not(.home-masthead__sheet):not(:has(.home-masthead__footer)) .home-masthead__scroll {
+    flex: 1 1 auto;
+}
+
 .home-masthead__scroll::-webkit-scrollbar {
     display: none;
 }

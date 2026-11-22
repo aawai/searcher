@@ -330,9 +330,12 @@ export function AppState({ children }: { children: ReactNode }) {
     const checkAuth = useCallback(async () => {
         const session = sessionRef.current!;
         try {
-            const { user } = await api<{ user: UserDto }>("/api/auth/me", {
-                signal: AbortSignal.timeout(5000),
-            });
+            const { user } = await api<{ user: UserDto | null }>(
+                "/api/auth/session",
+                {
+                    signal: AbortSignal.timeout(5000),
+                },
+            );
             if (sessionRef.current !== session) return;
             const next = handleAuthCheckResult(
                 { user: userRef.current, connectionError: false },
@@ -642,7 +645,7 @@ export function errorMessage(error: unknown) {
 export function handleAuthCheckResult(
     previous: { user: UserDto | null; connectionError: boolean },
     outcome:
-        | { type: "success"; user: UserDto }
+        | { type: "success"; user: UserDto | null }
         | { type: "error"; error: unknown },
 ): { user: UserDto | null; connectionError: boolean } {
     if (outcome.type === "success") {

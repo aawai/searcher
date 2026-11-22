@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import { preferences, sessions, users } from "../../db/schema.ts";
 import { getClientIp, InMemoryRateLimiter } from "./security.ts";
+import { parseCookie } from "./middleware.ts";
 import { SystemSettingsStore } from "../system/settings-store.ts";
 import {
     AUTH_CREDENTIAL_RULES,
@@ -318,7 +319,56 @@ export function registerAuthRoutes(
         },
     );
 
-    // 3. PROTECTED GET /api/auth/me
+    // 3. PUBLIC GET /api/auth/session (probe without 401 noise for guests)
+    routes.public.get("/api/auth/session", async (c) => {
+        const cookieName = auth.getSessionCookieName(
+            c.req.header("origin"),
+            c.req.header("host"),
+        );
+        const token = parseCookie(c.req.header("cookie"), cookieName);
+        if (!token) {
+            return c.success({ user: null });
+        }
+        const sessionUser = await auth.authenticateSessionToken(token, {
+            updateActivity: false,
+        });
+        if (!sessionUser) {
+            return c.success({ user: null });
+        }
+        const userRecord = await store.run(async (db) => {
+            const rows = await db
+                .select({
+                    id: users.id,
+                    username: users.username,
+                    email: users.email,
+                    displayName: users.displayName,
+                    role: users.role,
+                    mustChangePassword: users.mustChangePassword,
+                })
+                .from(users)
+                .where(eq(users.id, sessionUser.id))
+                .limit(1)
+                .all();
+            return rows[0] ?? null;
+        });
+
+        if (!userRecord) {
+            return c.success({ user: null });
+        }
+
+        return c.success({
+            user: {
+                id: userRecord.id,
+                username: userRecord.username,
+                email: userRecord.email ?? undefined,
+                displayName: userRecord.displayName,
+                role: userRecord.role,
+                mustChangePassword: Boolean(userRecord.mustChangePassword),
+            },
+        });
+    });
+
+    // 4. PROTECTED GET /api/auth/me
     routes.get("/api/auth/me", async (c) => {
         const sessionUser = c.get("user");
         const userRecord = await store.run(async (db) => {

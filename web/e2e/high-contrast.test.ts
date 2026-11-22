@@ -386,7 +386,7 @@ function response(page: Page, path: string, method = "GET") {
 /** Reloads and waits until the session check (and cloud load) has settled. */
 async function reloadRecording(page: Page, signedIn: boolean) {
     const loaded = Promise.all([
-        response(page, "/api/auth/me"),
+        response(page, "/api/auth/session"),
         signedIn ? response(page, "/api/preferences") : null,
     ]);
     await page.reload();
@@ -413,7 +413,7 @@ Deno.test("主题首帧：访客与账号载入时直接呈现所存主题，不
         });
         await context.addInitScript(RECORD_FIRST_FRAME);
         // A slow session check must not let the default theme show first.
-        await context.route("**/api/auth/me", async (route) => {
+        await context.route("**/api/auth/session", async (route) => {
             await new Promise((resolve) => setTimeout(resolve, 600));
             await route.continue();
         });

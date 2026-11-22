@@ -96,17 +96,17 @@ Deno.test("Notes window stays in the work area under shared chrome and preserves
     }).click();
     await page.getByRole("link", { name: "登录", exact: true }).waitFor();
 
-    await page.route("**/api/auth/me", (route) => route.abort());
+    await page.route("**/api/auth/session", (route) => route.abort());
     const authRequestFailed = page.waitForEvent(
         "requestfailed",
-        (request) => new URL(request.url()).pathname === "/api/auth/me",
+        (request) => new URL(request.url()).pathname === "/api/auth/session",
     );
     await page.reload();
     const failedRequest = await authRequestFailed;
-    assertEquals(new URL(failedRequest.url()).pathname, "/api/auth/me");
+    assertEquals(new URL(failedRequest.url()).pathname, "/api/auth/session");
     const banner = page.locator(".connection-banner");
     await banner.waitFor({ state: "visible" });
-    await page.unroute("**/api/auth/me");
+    await page.unroute("**/api/auth/session");
 
     await page.getByRole("link", { name: "登录", exact: true }).click();
     await page.waitForURL((url) => url.pathname === "/login");
@@ -199,7 +199,7 @@ Deno.test("Notes window stays in the work area under shared chrome and preserves
     );
 
     const recovered = page.waitForResponse((response) =>
-        new URL(response.url()).pathname === "/api/auth/me" &&
+        new URL(response.url()).pathname === "/api/auth/session" &&
         response.status() === 200
     );
     await retry.click();

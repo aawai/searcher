@@ -128,6 +128,7 @@ export function AppearancePicker(
                 className="appearance-picker"
                 side="bottom"
                 align="end"
+                collisionPadding={16}
             >
                 <PopoverTitle className="sr-only">外观</PopoverTitle>
                 <section className="appearance-picker-section">
