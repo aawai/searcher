@@ -4,48 +4,14 @@ import {
     type WallpaperComposition,
 } from "./wallpaper.ts";
 
-export type WallpaperReadability =
-    | "none"
-    | "clear"
-    | "balanced"
-    | "quiet"
-    | "focus";
-
-export interface PresetStage<T extends string> {
-    readonly id: T;
-    readonly label: string;
-    readonly detail?: string;
-}
-
 export interface WallpaperPresentation {
     composition: WallpaperComposition;
-    readability: WallpaperReadability;
 }
-
-export const WALLPAPER_READABILITY_STAGES: readonly PresetStage<
-    WallpaperReadability
->[] = Object.freeze([
-    { id: "none", label: "无", detail: "0%" },
-    { id: "clear", label: "清透", detail: "12%" },
-    { id: "balanced", label: "均衡", detail: "24%" },
-    { id: "quiet", label: "沉静", detail: "36%" },
-    { id: "focus", label: "专注", detail: "48%" },
-]);
 
 export const DEFAULT_WALLPAPER_PRESENTATION: WallpaperPresentation = Object
     .freeze({
         composition: DEFAULT_WALLPAPER_COMPOSITION,
-        readability: "balanced",
     });
-
-export const WALLPAPER_READABILITY_MASKS: Record<WallpaperReadability, number> =
-    {
-        none: 0,
-        clear: 0.12,
-        balanced: 0.24,
-        quiet: 0.36,
-        focus: 0.48,
-    };
 
 export const MAX_REMOTE_PRESENTATIONS = 24;
 const VALID_DATA_IMAGE_REGEX =
@@ -54,14 +20,6 @@ const VALID_DATA_IMAGE_REGEX =
 function isValidDataImageUrl(source: string): boolean {
     return VALID_DATA_IMAGE_REGEX.test(source);
 }
-
-const VALID_READABILITY: Record<WallpaperReadability, true> = {
-    none: true,
-    clear: true,
-    balanced: true,
-    quiet: true,
-    focus: true,
-};
 
 function normalizeComposition(raw: unknown): WallpaperComposition {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
@@ -86,37 +44,14 @@ export function normalizeWallpaperPresentation(
     const r = raw as Record<string, unknown>;
     return {
         composition: normalizeComposition(r.composition),
-        readability: typeof r.readability === "string" &&
-                Boolean(
-                    VALID_READABILITY[r.readability as WallpaperReadability],
-                )
-            ? (r.readability as WallpaperReadability)
-            : DEFAULT_WALLPAPER_PRESENTATION.readability,
     };
 }
 
 export function migrateLegacyWallpaperPresentation(
     raw: Record<string, unknown>,
 ): WallpaperPresentation {
-    const maskRaw = typeof raw.wallpaperMask === "number" &&
-            Number.isFinite(raw.wallpaperMask)
-        ? raw.wallpaperMask
-        : (typeof raw.mask === "number" && Number.isFinite(raw.mask)
-            ? raw.mask
-            : 0.24);
-
     return {
         composition: normalizeComposition(raw.composition),
-        readability:
-            raw.readability === "none" || raw.wallpaperReadability === "none"
-                ? "none"
-                : maskRaw <= 0.18
-                ? "clear"
-                : maskRaw <= 0.30
-                ? "balanced"
-                : maskRaw <= 0.42
-                ? "quiet"
-                : "focus",
     };
 }
 

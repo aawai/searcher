@@ -778,9 +778,9 @@
     --canvas-derived-mix: var(--canvas-derived-dark);
 }
 
-/* Dark themes dim the wallpaper image (not the readability mask above it), so
-   a bright wallpaper sits under dark surfaces the way a dark wallpaper would
-   and the masthead veil fades into it without a seam. */
+/* Dark themes dim the wallpaper image, so a bright wallpaper sits under dark
+   surfaces the way a dark wallpaper would and the masthead veil fades into it
+   without a seam. */
 :root,
 [data-theme] {
     --wallpaper-dim: none;

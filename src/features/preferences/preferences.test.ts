@@ -48,7 +48,6 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(initialData?.homeMastheadCollapsed, true);
         assertEquals(initialData?.showHomeAppPlate, true);
         assertEquals(initialData?.tabIcon, "editorial");
-        assertEquals(initialData?.illustrationStyle, "auto");
         const second = await register("appearance_b");
         const response = await app.request("/api/preferences", {
             method: "PATCH",
@@ -63,7 +62,6 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 searchShape: "pill",
                 glassIntensity: "clear",
                 tabIcon: "keycap",
-                illustrationStyle: "botanical",
                 defaultEngine: "google",
                 showHomeApps: true,
                 showHomeAppPlate: false,
@@ -81,7 +79,6 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.searchShape, "pill");
         assertEquals(saved.data?.glassIntensity, "clear");
         assertEquals(saved.data?.tabIcon, "keycap");
-        assertEquals(saved.data?.illustrationStyle, "botanical");
         assertEquals(saved.data?.showHomeApps, true);
         assertEquals(saved.data?.showHomeAppPlate, false);
         assertEquals(saved.data?.homeMastheadCollapsed, false);
@@ -241,13 +238,8 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { accent: "red" },
                 {
                     wallpaperPresentations: {
-                        "invalid-source": { readability: "clear" },
-                    },
-                },
-                {
-                    wallpaperPresentations: {
-                        "https://example.com/a.png": {
-                            readability: "invalid",
+                        "invalid-source": {
+                            composition: { focalX: 0.5, focalY: 0.5 },
                         },
                     },
                 },
@@ -280,7 +272,6 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { glassIntensity: "ultra" },
                 { glassIntensity: 0.5 },
                 { tabIcon: "glass" },
-                { illustrationStyle: "pixel" },
                 { showAppLabels: "not-a-bool" },
                 { accent: "neon_green" },
                 { theme: "high-contrast" },
@@ -425,7 +416,6 @@ Deno.test("preferences: subsequent partial updates preserve existing accent and 
                 accent: "emerald",
                 wallpaperPresentations: {
                     "https://example.com/wall-1.jpg": {
-                        readability: "focus",
                         composition: { focalX: 0.4, focalY: 0.6 },
                     },
                 },
@@ -437,8 +427,8 @@ Deno.test("preferences: subsequent partial updates preserve existing accent and 
         assertEquals(
             initBody.data
                 ?.wallpaperPresentations?.["https://example.com/wall-1.jpg"]
-                ?.readability,
-            "focus",
+                ?.composition,
+            { focalX: 0.4, focalY: 0.6 },
         );
 
         // Partial update: add presentation for a second wallpaper
@@ -448,7 +438,6 @@ Deno.test("preferences: subsequent partial updates preserve existing accent and 
             body: JSON.stringify({
                 wallpaperPresentations: {
                     "https://example.com/wall-2.jpg": {
-                        readability: "clear",
                         composition: { focalX: 0.5, focalY: 0.5 },
                     },
                 },
@@ -460,14 +449,14 @@ Deno.test("preferences: subsequent partial updates preserve existing accent and 
         assertEquals(
             patchBody.data
                 ?.wallpaperPresentations?.["https://example.com/wall-1.jpg"]
-                ?.readability,
-            "focus",
+                ?.composition,
+            { focalX: 0.4, focalY: 0.6 },
         );
         assertEquals(
             patchBody.data
                 ?.wallpaperPresentations?.["https://example.com/wall-2.jpg"]
-                ?.readability,
-            "clear",
+                ?.composition,
+            { focalX: 0.5, focalY: 0.5 },
         );
     } finally {
         await store.close();
@@ -496,7 +485,6 @@ Deno.test("preferences: legacy DB row with NULL wallpaper_presentations determin
             await db.insert(preferences).values({
                 userId: "legacy_user",
                 backgroundImage: "https://example.com/legacy.jpg",
-                wallpaperMask: 0.24,
                 wallpaperCompositions: JSON.stringify({
                     "https://example.com/legacy.jpg": {
                         focalX: 0.25,
@@ -521,7 +509,6 @@ Deno.test("preferences: legacy DB row with NULL wallpaper_presentations determin
         // Migrated presentation for legacy.jpg
         const pres = body.data?.wallpaperPresentations
             ?.["https://example.com/legacy.jpg"];
-        assertEquals(pres?.readability, "balanced"); // 0.24 -> balanced
         assertEquals(pres?.composition, { focalX: 0.25, focalY: 0.75 });
     } finally {
         await store.close();
@@ -554,7 +541,7 @@ Deno.test("preferences: clear backgroundImage deactivates wallpaper but retains 
                 backgroundImage: "https://example.com/to-clear.jpg",
                 wallpaperPresentations: {
                     "https://example.com/to-clear.jpg": {
-                        readability: "focus",
+                        composition: { focalX: 0.3, focalY: 0.7 },
                     },
                 },
             }),
@@ -574,8 +561,8 @@ Deno.test("preferences: clear backgroundImage deactivates wallpaper but retains 
         assertEquals(
             clearBody.data
                 ?.wallpaperPresentations?.["https://example.com/to-clear.jpg"]
-                ?.readability,
-            "focus",
+                ?.composition,
+            { focalX: 0.3, focalY: 0.7 },
         );
     } finally {
         await store.close();
@@ -604,7 +591,7 @@ Deno.test("preferences: remote LRU enforces max 24 limit and keeps the current b
         const presentations: Record<string, unknown> = {};
         for (let i = 1; i <= 26; i++) {
             presentations[`https://example.com/bg-${i}.jpg`] = {
-                readability: "balanced",
+                composition: { focalX: 0.5, focalY: 0.5 },
             };
         }
 
@@ -634,8 +621,8 @@ Deno.test("preferences: remote LRU enforces max 24 limit and keeps the current b
         assertEquals(
             body.data
                 ?.wallpaperPresentations?.["https://example.com/bg-26.jpg"]
-                ?.readability,
-            "balanced",
+                ?.composition,
+            { focalX: 0.5, focalY: 0.5 },
         );
     } finally {
         await store.close();

@@ -40,19 +40,14 @@
     pointer-events: none;
 }
 
-.wallpaper-surface__mask {
-    position: absolute;
-    inset: 0;
-    z-index: var(--elevation-local-1);
-    background: var(--surface-l0);
-    opacity: var(--wallpaper-mask);
-}
-
 .wallpaper-surface--derived .wallpaper-surface__image {
     inset: calc(-1 * var(--space-10));
 }
 
 .wallpaper-surface--derived .wallpaper-surface__mask {
+    position: absolute;
+    inset: 0;
+    z-index: var(--elevation-local-1);
     background: var(--canvas-derived);
     opacity: 1;
     -webkit-backdrop-filter: var(--canvas-derived-filter);

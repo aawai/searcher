@@ -74,18 +74,6 @@ Deno.test("AppState: Recovery after connectionError restores normal state", () =
     assertEquals(result.connectionError, false);
 });
 
-Deno.test("Appearance: old device preferences migrate wallpaper mask to semantic readability", () => {
-    const wallpaper = "https://example.com/bg.png";
-    const result = normalizeAppearance({
-        wallpaper,
-        mask: 0,
-        accent: "violet",
-    });
-    assertEquals(result.accent, "violet");
-    const pres = result.wallpaperPresentations[wallpaper];
-    assertEquals(pres.readability, "clear");
-});
-
 Deno.test("Appearance: device caches keep a valid glass tier and fall back for stale or unknown values", () => {
     assertEquals(
         normalizeAppearance({ glassIntensity: "clear" }).glassIntensity,
@@ -112,23 +100,6 @@ Deno.test("Appearance: device caches keep a valid tab icon and default older or 
     assertEquals(
         normalizeAppearance({ tabIcon: "glass" }).tabIcon,
         "editorial",
-    );
-});
-
-Deno.test("Appearance: device caches keep a valid illustration style and fall back to auto", () => {
-    assertEquals(
-        normalizeAppearance({ illustrationStyle: "glass" }).illustrationStyle,
-        "glass",
-    );
-    assertEquals(
-        normalizeAppearance({ illustrationStyle: "botanical" })
-            .illustrationStyle,
-        "botanical",
-    );
-    assertEquals(normalizeAppearance({}).illustrationStyle, "auto");
-    assertEquals(
-        normalizeAppearance({ illustrationStyle: "pixel" }).illustrationStyle,
-        "auto",
     );
 });
 
@@ -229,11 +200,9 @@ Deno.test("Appearance: switching cached wallpapers restores their own presentati
         wallpaperPresentations: {
             [first]: {
                 composition: { focalX: 0.2, focalY: 0.3 },
-                readability: "clear",
             },
             [second]: {
                 composition: { focalX: 0.8, focalY: 0.7 },
-                readability: "quiet",
             },
         },
     });
@@ -241,12 +210,10 @@ Deno.test("Appearance: switching cached wallpapers restores their own presentati
         focalX: 0.2,
         focalY: 0.3,
     });
-    assertEquals(result.wallpaperPresentations[first].readability, "clear");
     assertEquals(result.wallpaperPresentations[second].composition, {
         focalX: 0.8,
         focalY: 0.7,
     });
-    assertEquals(result.wallpaperPresentations[second].readability, "quiet");
 });
 
 Deno.test("Appearance: guest image cache keeps only the current local asset and rejects oversized images", () => {
@@ -257,11 +224,9 @@ Deno.test("Appearance: guest image cache keeps only the current local asset and 
         wallpaperPresentations: {
             [current]: {
                 composition: { focalX: 0.2, focalY: 0.3 },
-                readability: "clear",
             },
             [previous]: {
                 composition: { focalX: 0.8, focalY: 0.7 },
-                readability: "quiet",
             },
         },
     });
@@ -278,12 +243,12 @@ Deno.test("Appearance: malformed presentation records normalize to canonical def
         wallpaper: "https://example.com/test.png",
         wallpaperPresentations: {
             "https://example.com/test.png": {
-                readability: "invalid_readability",
+                composition: { focalX: "bad", focalY: null },
             },
         },
     });
     const pres = result.wallpaperPresentations["https://example.com/test.png"];
-    assertEquals(pres.readability, "balanced");
+    assertEquals(pres.composition, { focalX: 0.5, focalY: 0.5 });
 });
 
 Deno.test("Appearance sync: a failed patch remains queued for an explicit retry", async () => {
@@ -354,7 +319,6 @@ Deno.test("Appearance store: anonymous local upload waits for IndexedDB commit a
             wallpaperPresentations: {
                 [remoteWallpaper]: {
                     composition: { focalX: 0.5, focalY: 0.5 },
-                    readability: "balanced",
                 },
             },
         }),
@@ -397,11 +361,9 @@ Deno.test("Appearance store: anonymous local upload waits for IndexedDB commit a
         wallpaperPresentations: {
             [remoteWallpaper]: {
                 composition: { focalX: 0.5, focalY: 0.5 },
-                readability: "balanced",
             },
             [uploadedPng]: {
-                composition: { focalX: 0.5, focalY: 0.5 },
-                readability: "clear",
+                composition: { focalX: 0.2, focalY: 0.8 },
             },
         },
     }).then(() => {
@@ -446,8 +408,8 @@ Deno.test("Appearance store: anonymous local upload waits for IndexedDB commit a
     assertEquals(reloadedReady, true);
     assertEquals(reloadedRendered.wallpaper, uploadedPng);
     assertEquals(
-        reloadedRendered.wallpaperPresentations[uploadedPng]?.readability,
-        "clear",
+        reloadedRendered.wallpaperPresentations[uploadedPng]?.composition,
+        { focalX: 0.2, focalY: 0.8 },
     );
     assertEquals(writes.length, 1);
 });
@@ -487,7 +449,6 @@ Deno.test("Appearance store: early update during slow IndexedDB hydration merges
         wallpaperPresentations: {
             [uploadedPng]: {
                 composition: { focalX: 0.2, focalY: 0.3 },
-                readability: "quiet",
             },
         },
     }).then(() => {

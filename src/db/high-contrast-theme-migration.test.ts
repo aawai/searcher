@@ -26,7 +26,7 @@ async function migrationsAround(tag: string) {
     };
 }
 
-async function migrateFromLegacy(store: DatabaseStore) {
+async function migrateFromLegacy(store: DatabaseStore, applyRest = true) {
     const { before, rest } = await migrationsAround(TAG);
     await store.exclusiveNative(() => {
         for (const statements of before) store.migrate(statements);
@@ -45,7 +45,9 @@ async function migrateFromLegacy(store: DatabaseStore) {
         }
     });
     await store.exclusiveNative(() => {
-        for (const statements of rest) store.migrate(statements);
+        for (const statements of applyRest ? rest : [rest[0]]) {
+            store.migrate(statements);
+        }
         return Promise.resolve();
     });
 }
@@ -87,10 +89,15 @@ Deno.test("high-contrast theme migration keeps legacy themes and accepts both hi
 Deno.test("high-contrast rollback SQL maps both themes to their base scheme for the previous version", async () => {
     const store = openDatabase(":memory:");
     try {
-        await migrateFromLegacy(store);
-        const service = new PreferencesService(store);
-        await service.update("hc-light", { theme: "high-contrast-light" });
-        await service.update("hc-dark", { theme: "high-contrast-dark" });
+        await migrateFromLegacy(store, false);
+        await store.run(async (db) => {
+            await db.run(
+                "INSERT INTO preferences (user_id, theme, accent) VALUES ('hc-light', 'high-contrast-light', 'wallpaper')",
+            );
+            await db.run(
+                "INSERT INTO preferences (user_id, theme, accent) VALUES ('hc-dark', 'high-contrast-dark', 'wallpaper')",
+            );
+        });
         const rollback = await Deno.readTextFile(
             new URL(`../../drizzle/rollback/${TAG}.sql`, import.meta.url),
         );

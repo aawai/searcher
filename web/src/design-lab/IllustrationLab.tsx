@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-    type AccentId,
-    ACCENTS,
-    type IllustrationStyle,
-    resolveIllustrationStyle,
-} from "@shared/contracts.ts";
-import { useAppState } from "../app/state.tsx";
+import { type AccentId, ACCENTS } from "@shared/contracts.ts";
 import {
     Illustration,
     ILLUSTRATION_CATALOG,
@@ -23,70 +17,22 @@ import { Button } from "../components/ui/button.tsx";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
 import "./design-lab.css";
 
-const STYLE_LABELS: Record<IllustrationStyle, string> = {
-    auto: "自动",
-    glass: "玻璃光学",
-    botanical: "植物蓝图",
-};
-
 export default function IllustrationLab() {
-    const { appearance, setAppearance } = useAppState();
     const [size, setSize] = useState<"sm" | "md" | "lg">("md");
     const [previewAccent, setPreviewAccent] = useState<AccentId | "inherit">(
         "inherit",
-    );
-
-    const effective = resolveIllustrationStyle(
-        appearance.illustrationStyle,
-        appearance.botanicalScene,
     );
 
     return (
         <PageShell archetype="workbench" className="design-lab-page">
             <PageHeader
                 title="系统插画实验室"
-                description="对比「玻璃光学（B）」与「植物蓝图（C）」双风格在当前主题、强调色与三档尺寸下的实际 SVG 渲染效果。"
+                description="预览「植物蓝图」系统插画在当前主题、强调色与三档尺寸下的实际 SVG 渲染效果。"
                 actions={<Link to="/design-lab">返回设计实验室</Link>}
             />
 
-            <Section title="偏好与预览参数">
+            <Section title="预览参数">
                 <SettingsGroup>
-                    <SettingsRow
-                        title="当前系统插画偏好"
-                        description={`当前解析生效风格：${
-                            effective === "botanical" ? "植物蓝图" : "玻璃光学"
-                        }${
-                            appearance.illustrationStyle === "auto"
-                                ? `（自动联动内置植物壁纸：${
-                                    appearance.botanicalScene ?? "未启用"
-                                }）`
-                                : ""
-                        }`}
-                    >
-                        <RadioGroup
-                            variant="segmented"
-                            value={appearance.illustrationStyle}
-                            onValueChange={(value) => {
-                                if (
-                                    value === "auto" ||
-                                    value === "glass" ||
-                                    value === "botanical"
-                                ) {
-                                    void setAppearance({
-                                        illustrationStyle: value,
-                                    });
-                                }
-                            }}
-                        >
-                            {(["auto", "glass", "botanical"] as const).map((
-                                item,
-                            ) => (
-                                <RadioGroupItem key={item} value={item}>
-                                    {STYLE_LABELS[item]}
-                                </RadioGroupItem>
-                            ))}
-                        </RadioGroup>
-                    </SettingsRow>
                     <SettingsRow title="画布尺寸档位">
                         <RadioGroup
                             variant="segmented"
@@ -139,7 +85,7 @@ export default function IllustrationLab() {
                 </SettingsGroup>
             </Section>
 
-            <Section title="6 组核心场景双风格对照">
+            <Section title="6 组核心场景（植物蓝图）">
                 <div
                     data-accent={previewAccent === "inherit"
                         ? undefined
@@ -147,7 +93,7 @@ export default function IllustrationLab() {
                     style={{
                         display: "grid",
                         gridTemplateColumns:
-                            "repeat(auto-fit, minmax(320px, 1fr))",
+                            "repeat(auto-fit, minmax(280px, 1fr))",
                         gap: "var(--space-4)",
                     }}
                 >
@@ -183,63 +129,19 @@ export default function IllustrationLab() {
                             </div>
                             <div
                                 style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "1fr 1fr",
-                                    gap: "var(--space-3)",
+                                    background: "var(--background)",
+                                    borderRadius: "var(--radius-control)",
+                                    padding: "var(--space-3)",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: "var(--space-2)",
                                 }}
                             >
-                                <div
-                                    style={{
-                                        background: "var(--background)",
-                                        borderRadius: "var(--radius-control)",
-                                        padding: "var(--space-3)",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        gap: "var(--space-2)",
-                                    }}
-                                >
-                                    <Illustration
-                                        name={item.name}
-                                        size={size}
-                                        styleOverride="glass"
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize:
-                                                "var(--font-metadata-size)",
-                                            color: "var(--muted)",
-                                        }}
-                                    >
-                                        玻璃光学 (B)
-                                    </span>
-                                </div>
-                                <div
-                                    style={{
-                                        background: "var(--background)",
-                                        borderRadius: "var(--radius-control)",
-                                        padding: "var(--space-3)",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        gap: "var(--space-2)",
-                                    }}
-                                >
-                                    <Illustration
-                                        name={item.name}
-                                        size={size}
-                                        styleOverride="botanical"
-                                    />
-                                    <span
-                                        style={{
-                                            fontSize:
-                                                "var(--font-metadata-size)",
-                                            color: "var(--muted)",
-                                        }}
-                                    >
-                                        植物蓝图 (C)
-                                    </span>
-                                </div>
+                                <Illustration
+                                    name={item.name}
+                                    size={size}
+                                />
                             </div>
                         </div>
                     ))}

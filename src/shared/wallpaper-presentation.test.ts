@@ -14,7 +14,6 @@ import {
 Deno.test("wallpaper-presentation: normalizeWallpaperPresentation handles valid and fallback inputs", () => {
     const valid: WallpaperPresentation = {
         composition: { focalX: 0.2, focalY: 0.8 },
-        readability: "clear",
     };
     assertEquals(normalizeWallpaperPresentation(valid), valid);
 
@@ -32,88 +31,41 @@ Deno.test("wallpaper-presentation: normalizeWallpaperPresentation handles valid 
         DEFAULT_WALLPAPER_PRESENTATION,
     );
 
-    // Clamps focal composition and defaults invalid semantic IDs
+    // Clamps focal composition
     const malformed = {
         composition: { focalX: -5, focalY: 10 },
-        readability: "unknown",
     };
     assertEquals(normalizeWallpaperPresentation(malformed), {
         composition: { focalX: 0, focalY: 1 },
-        readability: "balanced",
     });
 
-    // Keys outside { composition, readability } are dropped
+    // Keys outside { composition } (including retired readability) are dropped
     assertEquals(
-        normalizeWallpaperPresentation({ ...valid, retiredKey: "legacy" }),
+        normalizeWallpaperPresentation({
+            ...valid,
+            readability: "clear",
+            retiredKey: "legacy",
+        }),
         valid,
     );
 });
 
-Deno.test("wallpaper-presentation: migrateLegacyWallpaperPresentation maps mask to readability and keeps composition", () => {
-    // 1. mask -> readability: <=0.18 clear, <=0.30 balanced, <=0.42 quiet, >0.42 focus
+Deno.test("wallpaper-presentation: migrateLegacyWallpaperPresentation keeps composition and drops mask/readability", () => {
     assertEquals(
-        migrateLegacyWallpaperPresentation({ wallpaperMask: 0.12 }).readability,
-        "clear",
-    );
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ wallpaperMask: 0.18 }).readability,
-        "clear",
-    );
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ wallpaperMask: 0.24 }).readability,
-        "balanced",
-    );
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ wallpaperMask: 0.30 }).readability,
-        "balanced",
-    );
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ wallpaperMask: 0.36 }).readability,
-        "quiet",
-    );
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ wallpaperMask: 0.42 }).readability,
-        "quiet",
-    );
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ wallpaperMask: 0.48 }).readability,
-        "focus",
-    );
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ wallpaperMask: 0.80 }).readability,
-        "focus",
+        migrateLegacyWallpaperPresentation({ wallpaperMask: 0.42 }),
+        DEFAULT_WALLPAPER_PRESENTATION,
     );
 
-    // Guest alias: mask
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ mask: 0.15 }).readability,
-        "clear",
-    );
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ mask: 0 }).readability,
-        "clear",
-    );
-    assertEquals(
-        migrateLegacyWallpaperPresentation({ readability: "none" }).readability,
-        "none",
-    );
-
-    // Missing mask uses the default 0.24, which maps to balanced
-    assertEquals(
-        migrateLegacyWallpaperPresentation({}).readability,
-        "balanced",
-    );
-
-    // 2. Source-specific composition passed via raw.composition
+    // Source-specific composition passed via raw.composition
     const withComp = migrateLegacyWallpaperPresentation({
+        wallpaperMask: 0.36,
         composition: { focalX: 0.25, focalY: 0.75 },
     });
-    assertEquals(withComp.composition, { focalX: 0.25, focalY: 0.75 });
+    assertEquals(withComp, { composition: { focalX: 0.25, focalY: 0.75 } });
 });
 
 Deno.test("wallpaper-presentation: migration idempotence", () => {
     const raw = {
-        wallpaperMask: 0.36,
         composition: { focalX: 0.4, focalY: 0.6 },
     };
     const migrated = migrateLegacyWallpaperPresentation(raw);
@@ -129,7 +81,6 @@ Deno.test("wallpaper-presentation: wallpaperPresentation lookup and defaults", (
     const records: Record<string, WallpaperPresentation> = {
         "https://images.example.com/photo.jpg": {
             composition: { focalX: 0.1, focalY: 0.9 },
-            readability: "quiet",
         },
     };
 
@@ -180,21 +131,18 @@ Deno.test("wallpaper-presentation: normalizeWallpaperPresentations migration and
     const newRecords = {
         "https://images.example.com/a.jpg": {
             composition: { focalX: 0.3, focalY: 0.7 },
-            readability: "clear",
         },
     };
     const normalized = normalizeWallpaperPresentations(newRecords, {
         currentSource: "https://images.example.com/a.jpg",
-        legacy: { wallpaperMask: 0.48 },
     });
     assertEquals(
-        normalized["https://images.example.com/a.jpg"].readability,
-        "clear",
+        normalized["https://images.example.com/a.jpg"].composition,
+        { focalX: 0.3, focalY: 0.7 },
     );
     // 2. Empty object new records precedence: does not resurrect legacy
     const emptyNewRecords = normalizeWallpaperPresentations({}, {
         currentSource: "https://images.example.com/legacy.jpg",
-        legacy: { wallpaperMask: 0.48 },
         legacyCompositions: {
             "https://images.example.com/legacy.jpg": {
                 focalX: 0.1,
@@ -210,12 +158,11 @@ Deno.test("wallpaper-presentation: normalizeWallpaperPresentations migration and
     };
     const migratedFromLegacy = normalizeWallpaperPresentations(null, {
         currentSource: "https://images.example.com/legacy.jpg",
-        legacy: { wallpaperMask: 0.36 },
         legacyCompositions,
     });
     assertEquals(
-        migratedFromLegacy["https://images.example.com/legacy.jpg"].readability,
-        "quiet",
+        migratedFromLegacy["https://images.example.com/legacy.jpg"].composition,
+        { focalX: 0.1, focalY: 0.2 },
     );
 
     // 4. Data URLs: only valid data image URL matching currentSource is preserved

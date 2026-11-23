@@ -1,5 +1,3 @@
-import type { ResolvedIllustrationStyle } from "@shared/contracts.ts";
-
 export const ILLUSTRATION_NAMES = [
     "empty-documents",
     "empty-apps",
@@ -59,5 +57,4 @@ export type IllustrationVariantProps = {
     name: IllustrationName;
     size?: "sm" | "md" | "lg";
     className?: string;
-    resolvedStyle?: ResolvedIllustrationStyle;
 };
