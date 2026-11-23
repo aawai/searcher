@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-- 重构系统插画体系，新增「玻璃光学（`glass`）」与「植物蓝图（`botanical`）」两套主题自适应 SVG 插画风格及「自动（`auto`）」联动模式（开启内置植物壁纸时自动切换为植物蓝图，其余场景为玻璃光学），在“设置 → 外观 → 系统插画”支持访客本地与账号云端同步切换，并接入文档、应用库、AI 问答、回收站、管理后台、未登录引导、404 与路由异常页（`EmptyState` 的 `inline` 行内密度保持无插画）；同时在 `/design-lab/illustrations` 提供双风格对比预览画廊。
+- 移除“设置 → 外观 → 壁纸”中的可读性遮罩配置项及对应遮罩层实现。
+
+- 重构系统插画体系，统一采用「植物蓝图」主题自适应 SVG 系统插画，并接入文档、应用库、AI 问答、回收站、管理后台、未登录引导、404 与路由异常页（`EmptyState` 的 `inline` 行内密度保持无插画）；同时在 `/design-lab/illustrations` 提供预览画廊。
 
 - 优化高对比度主题（`data-contrast="more"`、`forced-colors: active`）与不透明回退（`data-glass="off"`、`prefers-reduced-transparency: reduce`、不支持 `backdrop-filter`）下的首页刊头衬底边界：宽屏收束至列外缘外 `24px` 并以 `1px` 细线清晰分隔，窄屏收起态紧贴日期块下方 `16px` 以 `1px` 底边收口；非高对比常规玻璃主题继续保持 `600px / 640px` smootherstep 单层模糊渐隐与窄屏收起态无衬底光晕，并保留底栏淡入淡出过渡。
 

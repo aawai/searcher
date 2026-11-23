@@ -302,6 +302,20 @@
       "when": 1795404718123,
       "tag": "0042_smiling_hex",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "6",
+      "when": 1795420745903,
+      "tag": "0043_silly_princess_powerful",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "6",
+      "when": 1795421293818,
+      "tag": "0044_modern_shotgun",
+      "breakpoints": true
     }
   ]
 }

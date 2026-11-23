@@ -13,7 +13,6 @@ import {
 } from "@shared/wallpaper.ts";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
-    WALLPAPER_READABILITY_MASKS,
     type WallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 
@@ -71,9 +70,6 @@ export function WallpaperSurface({
     const focal = substrate === "canvas"
         ? { focalX: 0.5, focalY: 0.5 }
         : intent.composition;
-    const mask = substrate === "canvas"
-        ? 0
-        : WALLPAPER_READABILITY_MASKS[intent.readability];
     return (
         <div
             className={cn(
@@ -91,7 +87,6 @@ export function WallpaperSurface({
             style={{
                 ...style,
                 "--wallpaper-image": wallpaperCss,
-                "--wallpaper-mask": mask,
                 "--wallpaper-position": `${focal.focalX * 100}% ${
                     focal.focalY * 100
                 }%`,
@@ -104,7 +99,7 @@ export function WallpaperSurface({
                     data-testid={testId ? `${testId}-image` : undefined}
                 />
             )}
-            <div className="wallpaper-surface__mask" />
+            {derived && <div className="wallpaper-surface__mask" />}
             {botanicalSpecies && typeof window !== "undefined" && (
                 <Suspense fallback={null}>
                     <BotanicalSceneCanvas

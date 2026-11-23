@@ -83,4 +83,12 @@ Deno.test("WallpaperSurface: substrate classifies image and rejected sources", (
     assertNotMatch(disabledScene, /data-wallpaper-scene/);
     assertNotMatch(rejected, /wallpaper-surface__image/);
     assertNotMatch(gradient, /wallpaper-surface__image/);
+    assertNotMatch(image, /wallpaper-surface__mask/);
+    assertNotMatch(image, /--wallpaper-mask/);
+
+    const derivedSurface = renderToStaticMarkup(createElement(WallpaperSurface, {
+        source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
+        derived: true,
+    }));
+    assertMatch(derivedSurface, /wallpaper-surface__mask/);
 });

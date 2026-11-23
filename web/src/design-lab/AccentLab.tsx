@@ -341,7 +341,6 @@ export default function AccentLab() {
                         presentation={{
                             ...DEFAULT_WALLPAPER_PRESENTATION,
                             composition: point,
-                            readability: "none",
                         }}
                     />
                     <span

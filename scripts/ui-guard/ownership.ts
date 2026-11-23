@@ -40,8 +40,6 @@ export interface OwnershipCheckResult {
 export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
     "--wallpaper-image":
         "WallpaperSurface runtime owner: Validated source URL or CSS gradient",
-    "--wallpaper-mask":
-        "WallpaperSurface runtime owner: Shared resolver readability stage",
     "--wallpaper-position":
         "WallpaperSurface runtime owner: Normalized focal point",
     "--masthead-dock-shift":

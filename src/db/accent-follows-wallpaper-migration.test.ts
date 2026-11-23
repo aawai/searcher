@@ -84,11 +84,13 @@ Deno.test("accent rollback SQL turns 'follow wallpaper' back into blue for the p
     try {
         const rest = await seedLegacy(store);
         await store.exclusiveNative(() => {
-            for (const statements of rest) store.migrate(statements);
+            store.migrate(rest[0]);
             return Promise.resolve();
         });
-        await new PreferencesService(store).update("fresh", {
-            accent: "wallpaper",
+        await store.run(async (db) => {
+            await db.run(
+                "INSERT INTO preferences (user_id, accent) VALUES ('fresh', 'wallpaper')",
+            );
         });
         const rollback = await Deno.readTextFile(
             new URL(`../../drizzle/rollback/${TAG}.sql`, import.meta.url),

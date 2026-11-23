@@ -12,11 +12,9 @@ import {
     type AiGenerationDefaultsDto,
     DEFAULT_ACCENT,
     DEFAULT_GLASS_INTENSITY,
-    DEFAULT_ILLUSTRATION_STYLE,
     DEFAULT_TAB_ICON,
     normalizeBotanicalSpecies,
     normalizeGlassIntensity,
-    normalizeIllustrationStyle,
     normalizeTabIcon,
     normalizeWallpaperCompositions,
     type PreferencesDto,
@@ -71,7 +69,6 @@ const defaults: PreferencesDto = {
     searchShape: "rounded",
     glassIntensity: DEFAULT_GLASS_INTENSITY,
     tabIcon: DEFAULT_TAB_ICON,
-    illustrationStyle: DEFAULT_ILLUSTRATION_STYLE,
     backgroundImage: null,
     botanicalScene: null,
     searchTarget: "same",
@@ -189,9 +186,6 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
     );
     const presentations = normalizeWallpaperPresentations(rawPresentations, {
         currentSource: row.backgroundImage,
-        legacy: {
-            wallpaperMask: row.wallpaperMask,
-        },
         legacyCompositions: compositions,
     });
 
@@ -224,7 +218,6 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
         searchShape: row.searchShape ?? "rounded",
         glassIntensity: normalizeGlassIntensity(row.glassIntensity),
         tabIcon: normalizeTabIcon(row.tabIcon),
-        illustrationStyle: normalizeIllustrationStyle(row.illustrationStyle),
         backgroundImage: row.backgroundImage,
         botanicalScene: normalizeBotanicalSpecies(row.botanicalScene),
         wallpaperPresentations: presentations,
@@ -468,11 +461,6 @@ export class PreferencesService {
                     rawCurrentPres,
                     {
                         currentSource: existingRow?.backgroundImage,
-                        legacy: existingRow
-                            ? {
-                                wallpaperMask: existingRow.wallpaperMask,
-                            }
-                            : undefined,
                         legacyCompositions: currentComps,
                     },
                 );
@@ -595,10 +583,8 @@ export class PreferencesService {
                 searchShape: canonicalDefaults.searchShape,
                 glassIntensity: canonicalDefaults.glassIntensity,
                 tabIcon: canonicalDefaults.tabIcon,
-                illustrationStyle: canonicalDefaults.illustrationStyle,
                 backgroundImage: canonicalDefaults.backgroundImage,
                 botanicalScene: canonicalDefaults.botanicalScene,
-                wallpaperMask: 0.24,
                 searchTarget: canonicalDefaults.searchTarget,
                 searchHistoryEnabled: canonicalDefaults.searchHistoryEnabled ??
                     false,

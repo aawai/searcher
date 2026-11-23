@@ -2,13 +2,10 @@ import {
     type AccentPreference,
     DEFAULT_ACCENT,
     DEFAULT_GLASS_INTENSITY,
-    DEFAULT_ILLUSTRATION_STYLE,
     DEFAULT_TAB_ICON,
     DEFAULT_THEME,
     type GlassIntensity,
-    type IllustrationStyle,
     normalizeAccent,
-    normalizeIllustrationStyle,
     type PreferencesDto,
     type TabIcon,
     type ThemeId,
@@ -76,8 +73,6 @@ export type Appearance = {
     glassIntensity: GlassIntensity;
     /** 浏览器标签图标；安装图标不随此项变化。 */
     tabIcon: TabIcon;
-    /** 系统插画风格：自动联动、玻璃光学或植物蓝图。 */
-    illustrationStyle: IllustrationStyle;
     engine: EngineId;
     target: "current" | "new_tab";
     wallpaper: string;
@@ -102,7 +97,6 @@ const initial: Appearance = {
     shape: "rounded",
     glassIntensity: DEFAULT_GLASS_INTENSITY,
     tabIcon: DEFAULT_TAB_ICON,
-    illustrationStyle: DEFAULT_ILLUSTRATION_STYLE,
     engine: "bing",
     target: "current",
     wallpaper: "",
@@ -431,9 +425,6 @@ export function AppState({ children }: { children: ReactNode }) {
                     shape: prefs.searchShape,
                     glassIntensity: prefs.glassIntensity,
                     tabIcon: prefs.tabIcon,
-                    illustrationStyle: normalizeIllustrationStyle(
-                        prefs.illustrationStyle,
-                    ),
                     target: prefs.searchTarget === "new"
                         ? "new_tab"
                         : "current",
@@ -507,13 +498,11 @@ export function AppState({ children }: { children: ReactNode }) {
             accent: appearance.accent,
             shape: appearance.shape,
             glassIntensity: appearance.glassIntensity,
-            illustrationStyle: appearance.illustrationStyle,
         });
     }, [
         appearance.accent,
         appearance.shape,
         appearance.glassIntensity,
-        appearance.illustrationStyle,
     ]);
     useEffect(() => {
         applyTabIcon(document, appearance.tabIcon);
@@ -538,9 +527,6 @@ export function AppState({ children }: { children: ReactNode }) {
                 updates.glassIntensity = next.glassIntensity;
             }
             if (next.tabIcon !== undefined) updates.tabIcon = next.tabIcon;
-            if (next.illustrationStyle !== undefined) {
-                updates.illustrationStyle = next.illustrationStyle;
-            }
             if (next.engine !== undefined) updates.defaultEngine = next.engine;
             if (next.target !== undefined) {
                 updates.searchTarget = next.target === "new_tab"

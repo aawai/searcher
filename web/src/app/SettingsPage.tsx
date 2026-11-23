@@ -9,13 +9,9 @@ import {
     DEFAULT_WALLPAPER_PRESENTATION,
     purgeWallpaperPresentation,
     touchWallpaperPresentation,
-    WALLPAPER_READABILITY_MASKS,
-    WALLPAPER_READABILITY_STAGES,
     type WallpaperPresentation,
     wallpaperPresentation,
-    type WallpaperReadability,
 } from "@shared/wallpaper-presentation.ts";
-import { SettingsPresetSlider } from "../components/searcher/SettingsPresetSlider.tsx";
 import {
     Check,
     ChevronRight,
@@ -93,10 +89,6 @@ const GLASS_CHOICES = [
 ] as const satisfies readonly (readonly [GlassIntensity, string])[];
 
 const REDUCED_TRANSPARENCY_QUERY = "(prefers-reduced-transparency: reduce)";
-
-const DEFAULT_READABILITY_LABEL = WALLPAPER_READABILITY_STAGES.find((stage) =>
-    stage.id === DEFAULT_WALLPAPER_PRESENTATION.readability
-)?.label;
 
 /** OS 的「减少透明度」偏好；它优先于用户选择的玻璃档位。 */
 function useReducedTransparency(): boolean {
@@ -310,66 +302,6 @@ export function SettingsContent({ host }: { host: PageHost }) {
         return DEFAULT_WALLPAPER_PRESENTATION;
     }, [
         hasWallpaper,
-        appearance.wallpaper,
-        appearance.wallpaperPresentations,
-    ]);
-
-    const updatePresentation = useCallback(
-        (
-            diff: Partial<WallpaperPresentation>,
-            options?: { sync?: boolean; persist?: boolean },
-        ) => {
-            if (appearance.wallpaper) {
-                const current = wallpaperPresentation(
-                    appearance.wallpaper,
-                    appearance.wallpaperPresentations,
-                );
-                const nextPres: WallpaperPresentation = {
-                    ...current,
-                    ...diff,
-                };
-                const nextRecords = touchWallpaperPresentation(
-                    { ...appearance.wallpaperPresentations },
-                    appearance.wallpaper,
-                    nextPres,
-                );
-                void setAppearance(
-                    { wallpaperPresentations: nextRecords },
-                    options,
-                );
-            }
-        },
-        [
-            appearance.wallpaper,
-            appearance.wallpaperPresentations,
-            setAppearance,
-        ],
-    );
-
-    const [draftPresentation, setDraftPresentation] = useState<
-        WallpaperPresentation | null
-    >(null);
-
-    const effectivePresentation = useMemo<WallpaperPresentation>(() => {
-        if (hasWallpaper) {
-            return draftPresentation ?? currentPresentation;
-        }
-        return currentPresentation;
-    }, [
-        hasWallpaper,
-        draftPresentation,
-        currentPresentation,
-    ]);
-    // A6: the readability guarantee holds from the default stage up.
-    const readabilityBelowDefault =
-        WALLPAPER_READABILITY_MASKS[effectivePresentation.readability] <
-            WALLPAPER_READABILITY_MASKS[
-                DEFAULT_WALLPAPER_PRESENTATION.readability
-            ];
-
-    useEffect(() => {
-        setDraftPresentation(null);
-    }, [
         appearance.wallpaper,
         appearance.wallpaperPresentations,
     ]);
@@ -838,18 +770,6 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                 values={GLASS_CHOICES}
                                 select={(v) => set("glassIntensity", v)}
                             />
-                            <Choices
-                                title="系统插画"
-                                description="空状态与引导页的视觉风格；自动模式在开启内置植物插画壁纸时呈现植物蓝图，其余场景呈现玻璃光学。"
-                                control="segmented"
-                                value={appearance.illustrationStyle}
-                                values={[
-                                    ["auto", "自动"],
-                                    ["glass", "玻璃光学"],
-                                    ["botanical", "植物蓝图"],
-                                ] as const}
-                                select={(v) => set("illustrationStyle", v)}
-                            />
                         </SettingsGroup>
                         <SettingsGroup title="首页">
                             {user && (
@@ -1088,7 +1008,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                         .wallpaper}
                                                     botanicalScene={appearance
                                                         .botanicalScene}
-                                                    presentation={effectivePresentation}
+                                                    presentation={currentPresentation}
                                                     embedded
                                                     testId="wallpaper-current-preview"
                                                 />
@@ -1130,46 +1050,6 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                             )}
                                         </div>
                                     </SettingsRow>
-                                    {hasImageWallpaper && (
-                                        <SettingsRow
-                                            title="可读性"
-                                            description={readabilityBelowDefault
-                                                ? (
-                                                    <span data-testid="wallpaper-readability-note">
-                                                        低于“{DEFAULT_READABILITY_LABEL}”时，首页文字在部分壁纸上可能低于可读性标准
-                                                    </span>
-                                                )
-                                                : undefined}
-                                            className="settings-row--vertical"
-                                        >
-                                            <SettingsPresetSlider
-                                                stages={WALLPAPER_READABILITY_STAGES}
-                                                value={effectivePresentation
-                                                    .readability}
-                                                aria-label="可读性"
-                                                testId="wallpaper-readability-slider"
-                                                onChange={(v) => {
-                                                    setDraftPresentation(
-                                                        (prev) => ({
-                                                            ...(prev ??
-                                                                currentPresentation),
-                                                            readability:
-                                                                v as WallpaperReadability,
-                                                        }),
-                                                    );
-                                                }}
-                                                onCommit={(v) => {
-                                                    setDraftPresentation(
-                                                        null,
-                                                    );
-                                                    updatePresentation({
-                                                        readability:
-                                                            v as WallpaperReadability,
-                                                    });
-                                                }}
-                                            />
-                                        </SettingsRow>
-                                    )}
                                 </>
                             )}
                         </SettingsGroup>
