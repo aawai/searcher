@@ -147,6 +147,16 @@ Deno.test("EmptyState: renders illustration for default/compact and hides it for
     assertEquals(compactHtml.includes("empty-state__illustration"), true);
     assertEquals(compactHtml.includes('data-size="sm"'), true);
 
+    const customSizeHtml = ReactDOMServer.renderToString(
+        <EmptyState
+            density="compact"
+            illustration="empty-apps"
+            illustrationSize="md"
+            title="还没有应用"
+        />,
+    );
+    assertEquals(customSizeHtml.includes('data-size="md"'), true);
+
     const inlineHtml = ReactDOMServer.renderToString(
         <EmptyState
             density="inline"

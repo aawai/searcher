@@ -269,6 +269,7 @@ export function EmptyState(
         description,
         action,
         illustration,
+        illustrationSize,
         headingLevel = 2,
         density = "default",
         className,
@@ -278,17 +279,20 @@ export function EmptyState(
         description?: string;
         action?: ReactNode;
         illustration?: IllustrationName | ReactNode;
+        illustrationSize?: "sm" | "md" | "lg";
         headingLevel?: 2 | 3;
         density?: "default" | "compact" | "inline";
     },
 ) {
     const Heading = headingLevel === 3 ? "h3" : "h2";
+    const resolvedSize = illustrationSize ??
+        (density === "compact" ? "sm" : "md");
     const illustrationNode = density !== "inline" && illustration
         ? (isIllustrationName(illustration)
             ? (
                 <Illustration
                     name={illustration}
-                    size={density === "compact" ? "sm" : "md"}
+                    size={resolvedSize}
                 />
             )
             : illustration)

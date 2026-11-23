@@ -20,10 +20,15 @@
    share that content box. */
 .library-apps-scroll {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-bottom: var(--space-5);
+}
+.library-apps-scroll > .empty-state {
+    margin-block: auto;
 }
 .library-apps-section-heading {
     display: flex;

@@ -34,7 +34,11 @@ export function NotFoundContent(
     return (
         <PageShell archetype="utility">
             <div className="narrow-form">
-                <Illustration name="auth-or-error" size="md" />
+                <Illustration
+                    name="auth-or-error"
+                    size="md"
+                    className="system-illustration--utility"
+                />
                 <PageHeader
                     title="页面不存在"
                     description="链接可能有误，或页面已被移除。"

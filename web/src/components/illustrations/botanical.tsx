@@ -10,7 +10,7 @@ export function BotanicalIllustration(
     { name, className, size = "md" }: BotanicalSvgProps,
 ) {
     const commonProps = {
-        viewBox: "0 0 180 120",
+        viewBox: "24 10 132 100",
         fill: "none",
         xmlns: "http://www.w3.org/2000/svg",
         className,
@@ -28,8 +28,8 @@ export function BotanicalIllustration(
                     {/* Blueprint drafting grid */}
                     <g
                         stroke="var(--border)"
-                        strokeOpacity="0.7"
-                        strokeWidth="0.75"
+                        strokeOpacity="0.8"
+                        strokeWidth="0.9"
                     >
                         <line x1="44" y1="34" x2="136" y2="34" />
                         <line x1="44" y1="60" x2="136" y2="60" />
@@ -43,55 +43,55 @@ export function BotanicalIllustration(
                     <path
                         d="M64 22H100L114 36V96H64V22Z"
                         fill="var(--surface-solid)"
-                        fillOpacity="0.65"
+                        fillOpacity="0.72"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.72"
-                        strokeWidth="1.25"
+                        strokeOpacity="0.86"
+                        strokeWidth="1.5"
                         strokeLinejoin="round"
                     />
                     <path
                         d="M100 22V36H114"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.72"
-                        strokeWidth="1.25"
+                        strokeOpacity="0.86"
+                        strokeWidth="1.5"
                         strokeLinejoin="round"
                     />
                     {/* Crop marks */}
                     <path
                         d="M68 29H74M71 26V32"
                         stroke="var(--muted)"
-                        strokeOpacity="0.55"
-                        strokeWidth="1"
+                        strokeOpacity="0.65"
+                        strokeWidth="1.15"
                     />
                     <path
                         d="M68 89H74M71 86V92"
                         stroke="var(--muted)"
-                        strokeOpacity="0.55"
-                        strokeWidth="1"
+                        strokeOpacity="0.65"
+                        strokeWidth="1.15"
                     />
                     {/* Accent focal node */}
-                    <circle cx="90" cy="60" r="2.75" fill="var(--accent)" />
+                    <circle cx="90" cy="60" r="3" fill="var(--accent)" />
 
                     {/* Ginkgo leaf silhouette & veins */}
                     <g strokeLinecap="round" strokeLinejoin="round">
                         <path
                             d="M106 98C110 89 113 83 115 79"
                             stroke="var(--foreground)"
-                            strokeOpacity="0.78"
-                            strokeWidth="1.35"
+                            strokeOpacity="0.88"
+                            strokeWidth="1.55"
                         />
                         <path
                             d="M115 79C103 75 97 64 103 55C108 59 112 63 115 67C118 61 124 55 131 54C137 62 133 75 115 79Z"
                             fill="var(--accent-soft)"
                             stroke="var(--foreground)"
-                            strokeOpacity="0.82"
-                            strokeWidth="1.25"
+                            strokeOpacity="0.9"
+                            strokeWidth="1.45"
                         />
                         <path
                             d="M115 78L108 62M115 78L115 69M115 78L124 61"
                             stroke="var(--muted)"
-                            strokeOpacity="0.55"
-                            strokeWidth="0.9"
+                            strokeOpacity="0.65"
+                            strokeWidth="1.05"
                         />
                     </g>
                 </svg>
@@ -111,8 +111,8 @@ export function BotanicalIllustration(
                     {/* Blueprint grid lines */}
                     <g
                         stroke="var(--border)"
-                        strokeOpacity="0.7"
-                        strokeWidth="0.75"
+                        strokeOpacity="0.8"
+                        strokeWidth="0.9"
                     >
                         <line x1="40" y1="35" x2="140" y2="35" />
                         <line x1="40" y1="63" x2="140" y2="63" />
@@ -132,21 +132,21 @@ export function BotanicalIllustration(
                             fill={i === 0
                                 ? "var(--accent-soft)"
                                 : "var(--surface-solid)"}
-                            fillOpacity={i === 0 ? 0.8 : 0.45}
+                            fillOpacity={i === 0 ? 0.85 : 0.55}
                             stroke="var(--foreground)"
-                            strokeOpacity={i === 2 || i === 5 ? 0.72 : 0.4}
-                            strokeWidth="1.2"
+                            strokeOpacity={i === 2 || i === 5 ? 0.85 : 0.55}
+                            strokeWidth="1.45"
                         />
                     ))}
 
                     {/* Drafting crosshair + accent anchor in top-left tile */}
-                    <circle cx="63" cy="35" r="2.5" fill="var(--accent)" />
+                    <circle cx="63" cy="35" r="2.75" fill="var(--accent)" />
 
                     {/* Slender botanical sprig */}
                     <g
                         stroke="var(--foreground)"
-                        strokeOpacity="0.8"
-                        strokeWidth="1.2"
+                        strokeOpacity="0.9"
+                        strokeWidth="1.45"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                     >
@@ -179,10 +179,10 @@ export function BotanicalIllustration(
                     <path
                         d="M52 28H124C126.2 28 128 29.8 128 32V74C128 76.2 126.2 78 124 78H84L74 87V78H52C49.8 78 48 76.2 48 74V32C48 29.8 49.8 28 52 28Z"
                         fill="var(--surface-solid)"
-                        fillOpacity="0.55"
+                        fillOpacity="0.65"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.72"
-                        strokeWidth="1.25"
+                        strokeOpacity="0.86"
+                        strokeWidth="1.5"
                         strokeLinejoin="round"
                     />
                     <line
@@ -191,7 +191,7 @@ export function BotanicalIllustration(
                         x2="128"
                         y2="40"
                         stroke="var(--border)"
-                        strokeWidth="1"
+                        strokeWidth="1.1"
                     />
 
                     {/* Star compass */}
@@ -200,18 +200,18 @@ export function BotanicalIllustration(
                             d="M0 -14L3.2 -3.2L14 0L3.2 3.2L0 14L-3.2 3.2L-14 0L-3.2 -3.2Z"
                             fill="var(--accent-soft)"
                             stroke="var(--foreground)"
-                            strokeOpacity="0.82"
-                            strokeWidth="1.2"
+                            strokeOpacity="0.9"
+                            strokeWidth="1.4"
                             strokeLinejoin="round"
                         />
-                        <circle cx="0" cy="0" r="2.2" fill="var(--accent)" />
+                        <circle cx="0" cy="0" r="2.5" fill="var(--accent)" />
                     </g>
 
                     {/* Graceful fern sprig */}
                     <g
                         stroke="var(--foreground)"
-                        strokeOpacity="0.8"
-                        strokeWidth="1.15"
+                        strokeOpacity="0.88"
+                        strokeWidth="1.4"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                     >
@@ -246,8 +246,8 @@ export function BotanicalIllustration(
                     {/* Blueprint axis */}
                     <g
                         stroke="var(--border)"
-                        strokeOpacity="0.7"
-                        strokeWidth="0.75"
+                        strokeOpacity="0.8"
+                        strokeWidth="0.9"
                     >
                         <line x1="48" y1="94" x2="132" y2="94" />
                         <line
@@ -263,17 +263,17 @@ export function BotanicalIllustration(
                     <path
                         d="M58 34H122M78 34V27C78 25.3 79.3 24 81 24H99C100.7 24 102 25.3 102 27V34"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.78"
-                        strokeWidth="1.25"
+                        strokeOpacity="0.88"
+                        strokeWidth="1.5"
                         strokeLinecap="round"
                     />
                     <path
                         d="M64 40H116L111 94H69L64 40Z"
                         fill="var(--surface-solid)"
-                        fillOpacity="0.55"
+                        fillOpacity="0.65"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.78"
-                        strokeWidth="1.25"
+                        strokeOpacity="0.88"
+                        strokeWidth="1.5"
                         strokeLinejoin="round"
                     />
                     <line
@@ -282,8 +282,8 @@ export function BotanicalIllustration(
                         x2="80"
                         y2="84"
                         stroke="var(--muted)"
-                        strokeOpacity="0.45"
-                        strokeWidth="1.1"
+                        strokeOpacity="0.58"
+                        strokeWidth="1.35"
                         strokeLinecap="round"
                     />
                     <line
@@ -292,8 +292,8 @@ export function BotanicalIllustration(
                         x2="100"
                         y2="84"
                         stroke="var(--muted)"
-                        strokeOpacity="0.45"
-                        strokeWidth="1.1"
+                        strokeOpacity="0.58"
+                        strokeWidth="1.35"
                         strokeLinecap="round"
                     />
 
@@ -301,18 +301,18 @@ export function BotanicalIllustration(
                     <path
                         d="M116 94C121 82 128 73 136 68"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.78"
-                        strokeWidth="1.2"
+                        strokeOpacity="0.88"
+                        strokeWidth="1.45"
                         strokeLinecap="round"
                     />
                     <path
                         d="M126 79C124 72 128 65 135 64C137 70 133 77 126 79Z"
                         fill="var(--accent-soft)"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.8"
-                        strokeWidth="1.15"
+                        strokeOpacity="0.9"
+                        strokeWidth="1.4"
                     />
-                    <circle cx="90" cy="64" r="2.2" fill="var(--accent)" />
+                    <circle cx="90" cy="64" r="2.5" fill="var(--accent)" />
                 </svg>
             );
 
@@ -327,10 +327,10 @@ export function BotanicalIllustration(
                         height="62"
                         rx="6"
                         fill="var(--surface-solid)"
-                        fillOpacity="0.45"
+                        fillOpacity="0.55"
                         stroke="var(--muted)"
-                        strokeOpacity="0.55"
-                        strokeWidth="1.1"
+                        strokeOpacity="0.65"
+                        strokeWidth="1.35"
                         strokeDasharray="3.5 3.5"
                     />
                     {/* Lens wireframe with crosshair */}
@@ -339,10 +339,10 @@ export function BotanicalIllustration(
                         cy="60"
                         r="20"
                         fill="var(--surface-solid)"
-                        fillOpacity="0.7"
+                        fillOpacity="0.78"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.82"
-                        strokeWidth="1.25"
+                        strokeOpacity="0.9"
+                        strokeWidth="1.5"
                     />
                     <line
                         x1="96"
@@ -350,7 +350,7 @@ export function BotanicalIllustration(
                         x2="96"
                         y2="75"
                         stroke="var(--border)"
-                        strokeWidth="1"
+                        strokeWidth="1.1"
                     />
                     <line
                         x1="81"
@@ -358,17 +358,17 @@ export function BotanicalIllustration(
                         x2="111"
                         y2="60"
                         stroke="var(--border)"
-                        strokeWidth="1"
+                        strokeWidth="1.1"
                     />
-                    <circle cx="96" cy="60" r="2.5" fill="var(--accent)" />
+                    <circle cx="96" cy="60" r="2.75" fill="var(--accent)" />
                     <line
                         x1="110"
                         y1="74"
                         x2="124"
                         y2="88"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.82"
-                        strokeWidth="2"
+                        strokeOpacity="0.9"
+                        strokeWidth="2.4"
                         strokeLinecap="round"
                     />
 
@@ -376,16 +376,16 @@ export function BotanicalIllustration(
                     <path
                         d="M44 92C52 78 58 68 62 56"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.75"
-                        strokeWidth="1.2"
+                        strokeOpacity="0.86"
+                        strokeWidth="1.45"
                         strokeLinecap="round"
                     />
                     <path
                         d="M55 72C49 69 47 64 49 59C54 61 57 66 55 72Z"
                         fill="var(--accent-soft)"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.78"
-                        strokeWidth="1.1"
+                        strokeOpacity="0.88"
+                        strokeWidth="1.35"
                     />
                 </svg>
             );
@@ -396,8 +396,8 @@ export function BotanicalIllustration(
                     {/* Coordinate axes */}
                     <g
                         stroke="var(--border)"
-                        strokeOpacity="0.75"
-                        strokeWidth="0.75"
+                        strokeOpacity="0.85"
+                        strokeWidth="0.9"
                     >
                         <line x1="36" y1="60" x2="144" y2="60" />
                         <line x1="90" y1="16" x2="90" y2="104" />
@@ -411,10 +411,10 @@ export function BotanicalIllustration(
                         height="58"
                         rx="6"
                         fill="var(--surface-solid)"
-                        fillOpacity="0.65"
+                        fillOpacity="0.72"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.78"
-                        strokeWidth="1.25"
+                        strokeOpacity="0.88"
+                        strokeWidth="1.5"
                     />
                     <line
                         x1="52"
@@ -422,11 +422,11 @@ export function BotanicalIllustration(
                         x2="128"
                         y2="40"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.4"
-                        strokeWidth="1"
+                        strokeOpacity="0.5"
+                        strokeWidth="1.15"
                     />
-                    <circle cx="62" cy="34" r="1.5" fill="var(--muted)" />
-                    <circle cx="68" cy="34" r="1.5" fill="var(--muted)" />
+                    <circle cx="62" cy="34" r="1.75" fill="var(--muted)" />
+                    <circle cx="68" cy="34" r="1.75" fill="var(--muted)" />
 
                     {/* Compass anchor */}
                     <circle
@@ -435,25 +435,25 @@ export function BotanicalIllustration(
                         r="11"
                         fill="var(--accent-soft)"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.75"
-                        strokeWidth="1.15"
+                        strokeOpacity="0.85"
+                        strokeWidth="1.4"
                     />
-                    <circle cx="90" cy="60" r="2.75" fill="var(--accent)" />
+                    <circle cx="90" cy="60" r="3" fill="var(--accent)" />
 
                     {/* Leaf sprig on bottom-right */}
                     <path
                         d="M116 96C124 84 130 74 134 62"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.8"
-                        strokeWidth="1.2"
+                        strokeOpacity="0.88"
+                        strokeWidth="1.45"
                         strokeLinecap="round"
                     />
                     <path
                         d="M126 78C121 75 119 69 121 65C126 67 128 72 126 78Z"
                         fill="var(--accent-soft)"
                         stroke="var(--foreground)"
-                        strokeOpacity="0.8"
-                        strokeWidth="1.1"
+                        strokeOpacity="0.88"
+                        strokeWidth="1.35"
                     />
                 </svg>
             );

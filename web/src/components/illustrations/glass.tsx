@@ -14,7 +14,7 @@ export function GlassIllustration(
     const uid = rawId.replace(/:/g, "");
 
     const commonProps = {
-        viewBox: "0 0 180 120",
+        viewBox: "24 10 132 100",
         fill: "none",
         xmlns: "http://www.w3.org/2000/svg",
         className,
@@ -168,7 +168,7 @@ export function GlassIllustration(
                         d="M62 20H102L120 38V92C120 96.4183 116.418 100 112 100H62C57.5817 100 54 96.4183 54 92V28C54 23.5817 57.5817 20 62 20Z"
                         fill={`url(#${glassSheet})`}
                         stroke="var(--border)"
-                        strokeWidth="1"
+                        strokeWidth="1.25"
                     />
                     {/* 1px specular glass sheen along top edge */}
                     <path

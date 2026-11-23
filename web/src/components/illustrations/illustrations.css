@@ -1,6 +1,6 @@
 .system-illustration {
     display: block;
-    width: var(--illustration-width, 148px);
+    width: var(--illustration-width, 192px);
     height: auto;
     flex-shrink: 0;
     color: var(--foreground);
@@ -10,15 +10,19 @@
 }
 
 .system-illustration[data-size="sm"] {
-    --illustration-width: 112px;
+    --illustration-width: 140px;
 }
 
 .system-illustration[data-size="md"] {
-    --illustration-width: 148px;
+    --illustration-width: 192px;
 }
 
 .system-illustration[data-size="lg"] {
-    --illustration-width: 180px;
+    --illustration-width: 232px;
+}
+
+.system-illustration--utility {
+    margin-bottom: var(--space-4);
 }
 
 @media (prefers-reduced-motion: reduce) {

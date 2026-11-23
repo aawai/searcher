@@ -101,13 +101,13 @@ export default function IllustrationLab() {
                             }}
                         >
                             <RadioGroupItem value="sm">
-                                sm (112px)
+                                sm (140px)
                             </RadioGroupItem>
                             <RadioGroupItem value="md">
-                                md (148px)
+                                md (192px)
                             </RadioGroupItem>
                             <RadioGroupItem value="lg">
-                                lg (180px)
+                                lg (232px)
                             </RadioGroupItem>
                         </RadioGroup>
                     </SettingsRow>
@@ -250,14 +250,14 @@ export default function IllustrationLab() {
                 <SettingsGroup>
                     <EmptyState
                         illustration="empty-documents"
-                        title="default 默认密度（148px 插画）"
+                        title="default 默认密度（192px 插画）"
                         description="用于独立页面或主工作区空白引导。"
                         action={<Button size="sm">新建笔记</Button>}
                     />
                     <EmptyState
                         density="compact"
                         illustration="empty-apps"
-                        title="compact 紧凑密度（112px 插画）"
+                        title="compact 紧凑密度（140px 插画）"
                         description="用于弹窗、侧边栏或局部容器空状态。"
                         action={<Button size="sm">添加应用</Button>}
                     />

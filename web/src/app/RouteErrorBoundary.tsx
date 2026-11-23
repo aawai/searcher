@@ -65,7 +65,11 @@ export class RouteErrorBoundary extends React.Component<
                     aria-live="assertive"
                     data-testid="route-error-boundary"
                 >
-                    <Illustration name="auth-or-error" size="md" />
+                    <Illustration
+                        name="auth-or-error"
+                        size="md"
+                        className="system-illustration--utility"
+                    />
                     <PageHeader
                         title="页面加载失败"
                         description="页面未能加载，请重新加载页面或返回首页。"
