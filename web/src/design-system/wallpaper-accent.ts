@@ -1,11 +1,12 @@
 /**
- * Wallpaper-derived accent: pick the dominant hue of the wallpaper's focal
- * region, then solve a light and a dark accent palette in OKLCH whose
- * lightness meets the same contrast pairs as the nine preset accents, plus a
- * high contrast pair that holds the high contrast themes' 7:1 accent floor.
+ * Wallpaper-derived accent: pick the dominant hue of the full wallpaper with
+ * gentle centre weighting (decoupled from wallpaper composition focal point),
+ * then solve a light and a dark accent palette in OKLCH whose lightness meets
+ * the same contrast pairs as the nine preset accents, plus a high contrast
+ * pair that holds the high contrast themes' 7:1 accent floor.
  *
- * Pure and deterministic: identical pixels and focal point give an identical
- * palette, so every device that can read the wallpaper derives the same colour.
+ * Pure and deterministic: identical pixels give an identical palette, so every
+ * device that can read the wallpaper derives the same colour.
  */
 
 export interface WallpaperPixels {
@@ -13,11 +14,6 @@ export interface WallpaperPixels {
     readonly height: number;
     /** RGBA, row-major, as `ImageData.data`. */
     readonly data: ArrayLike<number>;
-}
-
-export interface FocalPoint {
-    readonly focalX: number;
-    readonly focalY: number;
 }
 
 /** OKLCH seed; `chroma` 0 means the wallpaper is neutral. */
@@ -136,13 +132,16 @@ export const HIGH_CONTRAST_ACCENT_CONTRAST = 7;
 /** The solver keeps this headroom for browser colour-mix rounding. */
 const CONTRAST_MARGIN = 0.1;
 
-/** Share of the focal window around the focal point, per axis. */
-const FOCAL_WINDOW = 0.5;
+/** Spatial weight floor at image corners; centre (0.5, 0.5) has weight 1.0. */
+const EDGE_SPATIAL_WEIGHT = 0.45;
+const CENTER_SPATIAL_SIGMA = 0.35;
+const CENTER_SPATIAL_DENOM = 2 * CENTER_SPATIAL_SIGMA * CENTER_SPATIAL_SIGMA;
+const CHROMA_EXPONENT = 0.75;
 const HUE_BINS = 24;
 /** Pixels below this OKLCH chroma read as grey and do not vote for a hue. */
 const COLORFUL_CHROMA = 0.04;
-/** A hue needs this share of the counted pixels; otherwise the wallpaper is neutral. */
-const MIN_HUE_SHARE = 0.04;
+/** A hue needs this share of the spatial weight; otherwise the wallpaper is neutral. */
+const MIN_HUE_SHARE = 0.02;
 const MIN_ACCENT_CHROMA = 0.08;
 const MAX_ACCENT_CHROMA = 0.2;
 const STATE_STEP = 0.07;
@@ -238,45 +237,32 @@ function hex(rgb: Rgb): string {
     return `#${rgb.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
-/** Pixel bounds of the focal window, or the whole image without a focal point. */
-function region(
-    { width, height }: WallpaperPixels,
-    focal: FocalPoint | undefined,
-): { x0: number; y0: number; x1: number; y1: number } {
-    if (!focal) return { x0: 0, y0: 0, x1: width, y1: height };
-    const w = Math.max(1, Math.round(width * FOCAL_WINDOW));
-    const h = Math.max(1, Math.round(height * FOCAL_WINDOW));
-    const clamp = (v: number, max: number) => Math.min(max, Math.max(0, v));
-    const x0 = clamp(Math.round(focal.focalX * width - w / 2), width - w);
-    const y0 = clamp(Math.round(focal.focalY * height - h / 2), height - h);
-    return { x0, y0, x1: x0 + w, y1: y0 + h };
-}
-
 /** Lightness weight: near-black and near-white pixels carry little hue. */
 function lightnessWeight(lightness: number): number {
     return Math.min(1, Math.max(0, (lightness - 0.1) / 0.2)) *
         Math.min(1, Math.max(0, (0.98 - lightness) / 0.15));
 }
 
-/** Dominant hue of the (focal) region, weighted by chroma; chroma 0 when neutral. */
-export function wallpaperAccentSeed(
-    pixels: WallpaperPixels,
-    focal?: FocalPoint,
-): AccentSeed {
+/** Dominant hue of the full image with centre soft weighting; chroma 0 when neutral. */
+export function wallpaperAccentSeed(pixels: WallpaperPixels): AccentSeed {
     const bins = Array.from({ length: HUE_BINS }, () => ({
         weight: 0,
-        count: 0,
+        spatialCount: 0,
         x: 0,
         y: 0,
         chroma: 0,
     }));
-    let counted = 0;
-    const { x0, y0, x1, y1 } = region(pixels, focal);
-    for (let y = y0; y < y1; y++) {
-        for (let x = x0; x < x1; x++) {
+    let totalSpatial = 0;
+    for (let y = 0; y < pixels.height; y++) {
+        for (let x = 0; x < pixels.width; x++) {
             const i = (y * pixels.width + x) * 4;
             if (pixels.data[i + 3] < 128) continue;
-            counted++;
+            const dx = (x + 0.5) / pixels.width - 0.5;
+            const dy = (y + 0.5) / pixels.height - 0.5;
+            const spatial = EDGE_SPATIAL_WEIGHT +
+                (1 - EDGE_SPATIAL_WEIGHT) *
+                    Math.exp(-(dx * dx + dy * dy) / CENTER_SPATIAL_DENOM);
+            totalSpatial += spatial;
             const [l, a, b] = oklab(
                 pixels.data[i],
                 pixels.data[i + 1],
@@ -284,12 +270,13 @@ export function wallpaperAccentSeed(
             );
             const chroma = Math.hypot(a, b);
             if (chroma < COLORFUL_CHROMA) continue;
-            const weight = chroma * lightnessWeight(l);
-            if (weight === 0) continue;
+            const lw = lightnessWeight(l);
+            if (lw === 0) continue;
+            const weight = spatial * (chroma ** CHROMA_EXPONENT) * lw;
             const hue = (Math.atan2(b, a) * 180 / Math.PI + 360) % 360;
             const bin = bins[Math.floor(hue / (360 / HUE_BINS)) % HUE_BINS];
             bin.weight += weight;
-            bin.count++;
+            bin.spatialCount += spatial;
             bin.x += weight * a / chroma;
             bin.y += weight * b / chroma;
             bin.chroma += weight * chroma;
@@ -306,12 +293,17 @@ export function wallpaperAccentSeed(
             bestScore = score;
         }
     }
-    if (best < 0) return { hue: 0, chroma: 0 };
+    if (best < 0 || totalSpatial === 0) return { hue: 0, chroma: 0 };
     const window = [best - 1, best, best + 1].map((i) =>
         bins[(i + HUE_BINS) % HUE_BINS]
     );
-    const count = window.reduce((sum, bin) => sum + bin.count, 0);
-    if (count < counted * MIN_HUE_SHARE) return { hue: 0, chroma: 0 };
+    const windowSpatial = window.reduce(
+        (sum, bin) => sum + bin.spatialCount,
+        0,
+    );
+    if (windowSpatial < totalSpatial * MIN_HUE_SHARE) {
+        return { hue: 0, chroma: 0 };
+    }
     const weight = window.reduce((sum, bin) => sum + bin.weight, 0);
     const hue = (Math.atan2(
                 window.reduce((sum, bin) => sum + bin.y, 0),
@@ -477,7 +469,9 @@ export function highContrastAccent(
     seed: AccentSeed,
     theme: "light" | "dark",
 ): HighContrastAccent {
-    const chroma = Math.min(MAX_ACCENT_CHROMA, seed.chroma);
+    const chroma = seed.chroma === 0
+        ? 0
+        : Math.min(MAX_ACCENT_CHROMA, Math.max(MIN_ACCENT_CHROMA, seed.chroma));
     const direction = theme === "light" ? -1 : 1;
     let lightness = theme === "light" ? 0.56 : 0.74;
     for (;;) {
@@ -505,9 +499,8 @@ export function highContrastAccent(
 
 export function deriveWallpaperAccent(
     pixels: WallpaperPixels,
-    focal?: FocalPoint,
 ): WallpaperAccent {
-    const seed = wallpaperAccentSeed(pixels, focal);
+    const seed = wallpaperAccentSeed(pixels);
     return {
         seed,
         light: accentPalette(seed, "light"),
