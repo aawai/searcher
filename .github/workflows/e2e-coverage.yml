@@ -42,7 +42,7 @@ jobs:
                   E2E_REPORT_DIR: artifacts/e2e/${{ matrix.suite }}
                   # Multi-file shards run in parallel; single-file pagination shards and short suites run serially.
                   E2E_SCHEDULE: ${{ (matrix.suite == 'documents-a' || matrix.suite == 'documents-b' || matrix.suite == 'workspace-a' || matrix.suite == 'workspace-b') && '--parallel' || '--serial' }}
-                  DENO_JOBS: "2"
+                  DENO_JOBS: "3"
               run: |
                   mkdir -p "$E2E_REPORT_DIR"
                   set -o pipefail

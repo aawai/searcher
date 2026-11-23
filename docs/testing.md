@@ -133,7 +133,7 @@ untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` �
 job 执行 `workspace-a`、`workspace-b`、`documents-a`、`documents-b`、`routing`、`supplemental`。
 `documents-a` 与 `documents-b` 无重无漏地组成完整 Documents。
 每个 job 通过 `deno run -A scripts/e2e/run.ts <suite>` 先构建一次：`documents-a`、`documents-b`
-与 `workspace-a`、`workspace-b` 以 `--parallel` 与 `DENO_JOBS=2` 执行；其余片以 `--serial`
+与 `workspace-a`、`workspace-b` 以 `--parallel` 与 `DENO_JOBS=3` 执行；其余片以 `--serial`
 执行。PR 上的 `workspace-acceptance.yml` 也会先计算 `Affected shards`，再按分片 matrix 并行执行。
 不设置 `E2E_TIMEOUT_MS`，保留测试 helper 的标准超时；job 上限为 60 分钟。
 matrix 不因其他集合失败而取消，测试失败通过 `pipefail` 保留非零退出码。

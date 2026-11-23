@@ -34,7 +34,7 @@ Documents 的执行分区选择器为 `documents-a`、`documents-b`，通过
 
 Coverage CI 以 `documents-a`、`documents-b` job 组成完整 Documents
 覆盖，再加 `workspace-a`、`workspace-b`、`routing`、`supplemental`，独立并行执行；
-`documents-a`/`documents-b` 与 `workspace-a`/`workspace-b` job 内以 `--parallel`、`DENO_JOBS=2` 执行，其余 job 内串行，不额外运行完整 documents。PR 的 `affected` CI 也会按 `Affected shards` 动态展开为并行 matrix job。
+`documents-a`/`documents-b` 与 `workspace-a`/`workspace-b` job 内以 `--parallel`、`DENO_JOBS=3` 执行，其余 job 内串行，不额外运行完整 documents。PR 的 `affected` CI 也会按 `Affected shards` 动态展开为并行 matrix job。
 JUnit、`timings.json`、stdout 和资源报告
 按 selector 存入 `artifacts/e2e/<selector>/`，artifact 名也携带 selector。
 
@@ -98,8 +98,8 @@ deno task test:e2e:full --parallel --no-fail-fast --timeout 5000
 
 调度完全委托给 Deno `--parallel` / `DENO_JOBS`，不拆分单文件内有状态的测试或
 `t.step`，不共享 Browser、Context、数据库或 session。未设置 `DENO_JOBS`
-时采用 4；Workspace CI 显式固定 `DENO_JOBS=2`；coverage CI 使用独立 job 并行，`documents-core` job 内
-以 `DENO_JOBS=2` 并行，其余 job 内串行。
+时采用 4；Workspace CI 显式固定 `DENO_JOBS=3`；coverage CI 使用独立 job 并行，`documents-a`/`documents-b` 与 `workspace-a`/`workspace-b` job 内
+以 `DENO_JOBS=3` 并行，其余 job 内串行。
 默认 Workspace 与 Workspace CI 均为并行，显式 `--serial` 会移除
 `--parallel`（而不是只把并发数设为 1）作为回退。full 与其他集合保持串行默认，显式 `--parallel` 可用于并发诊断；并发独有失败须单独隔离，不把单文件复查通过写成完整并发门禁通过。
 单独设置 `DENO_JOBS` 不会启用并行；以报告中的 `parallel` 与 `jobs` 为准。禁止用全局 retry 隐藏失败。
