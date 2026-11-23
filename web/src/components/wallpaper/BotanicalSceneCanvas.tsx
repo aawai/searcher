@@ -43,7 +43,7 @@ function isEditableElement(target: EventTarget | null): boolean {
     return tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable;
 }
 
-function readThemePalette(): {
+function readThemePalette(canvas: HTMLCanvasElement): {
     hidden: boolean;
     palette: BotanicalPalette;
 } {
@@ -51,9 +51,11 @@ function readThemePalette(): {
     const forcedColors = window.matchMedia("(forced-colors: active)").matches;
     const highContrast = root.dataset.contrast === "more";
     const isDark = root.dataset.theme === "dark";
-    const computed = getComputedStyle(root);
-    const accent = computed.getPropertyValue("--accent");
-    const foreground = computed.getPropertyValue("--foreground");
+    const computedRoot = getComputedStyle(root);
+    const computedCanvasColor = getComputedStyle(canvas).color;
+    const accent = computedCanvasColor ||
+        computedRoot.getPropertyValue("--accent");
+    const foreground = computedRoot.getPropertyValue("--foreground");
     return {
         hidden: forcedColors || highContrast,
         palette: buildBotanicalPalette(isDark, accent, foreground),
@@ -83,7 +85,7 @@ export default function BotanicalSceneCanvas({
         let dpr = Math.min(window.devicePixelRatio || 1, 2);
         let viewport = resolveBotanicalViewport(0, 0, embedded);
         let scene: BotanicalScene | null = null;
-        let paletteState = readThemePalette();
+        let paletteState = readThemePalette(canvas);
         let reducedMotion = reducedMotionQuery.matches;
         let pageHidden = document.hidden;
         let searchFocused = !embedded &&
@@ -223,7 +225,7 @@ export default function BotanicalSceneCanvas({
         };
 
         const refreshTheme = () => {
-            paletteState = readThemePalette();
+            paletteState = readThemePalette(canvas);
             if (paletteState.hidden) {
                 cancelLoop();
                 ctx.clearRect(0, 0, viewport.sceneWidth, viewport.sceneHeight);
