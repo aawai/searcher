@@ -367,54 +367,59 @@ export function buildBotanicalPalette(
     const fallbackInk: Rgb = isDark ? [232, 234, 240] : [28, 30, 34];
     const rawAccRgb = parseCssColorToRgb(accentCss, fallbackAccent, isDark);
     const accRgb = isDark
-        ? mixRgb(rawAccRgb, [225, 236, 250], 0.14)
-        : rawAccRgb;
-    const subRgb = shiftHueRgb(accRgb, -28);
+        ? mixRgb(rawAccRgb, [196, 190, 178], 0.18)
+        : mixRgb(rawAccRgb, [236, 232, 224], 0.12);
+    const shiftedSub = shiftHueRgb(accRgb, -12);
+    const subRgb = isDark
+        ? mixRgb(shiftedSub, [170, 166, 160], 0.24)
+        : mixRgb(shiftedSub, [244, 240, 234], 0.22);
     const baseInk = parseCssColorToRgb(foregroundCss, fallbackInk, isDark);
-    const warmInkBase: Rgb = isDark
-        ? mixRgb(baseInk, [226, 224, 218], 0.18)
-        : mixRgb(baseInk, [42, 39, 36], 0.18);
-    const inkRgb = mixRgb(warmInkBase, accRgb, isDark ? 0.08 : 0.07);
 
-    const highlightRgb: Rgb = isDark
-        ? mixRgb([242, 246, 252], accRgb, 0.14)
-        : [255, 252, 246];
+    // Warm pine-soot / aged-silver for trunks; cool misty-slate ink for leaves
+    const inkStrokeRgb = isDark
+        ? mixRgb(mixRgb(baseInk, [186, 180, 170], 0.45), accRgb, 0.05)
+        : mixRgb(mixRgb(baseInk, [44, 37, 31], 0.40), accRgb, 0.04);
+    const inkWashRgb = isDark
+        ? mixRgb(mixRgb(baseInk, [164, 172, 182], 0.46), accRgb, 0.07)
+        : mixRgb(mixRgb(baseInk, [52, 58, 66], 0.36), accRgb, 0.06);
 
-    const strokeA = isDark ? 0.31 : 0.30;
-    const veinA = isDark ? 0.18 : 0.175;
-    const fillA = isDark ? 0.055 : 0.042;
-    const accA = isDark ? 0.72 : 0.66;
-    const accFill = isDark ? 0.175 : 0.15;
-    const subA = isDark ? 0.54 : 0.49;
-    const subFill = isDark ? 0.13 : 0.115;
+    const highlightRgb: Rgb = isDark ? [18, 19, 22] : [250, 248, 243];
 
-    const accWash = isDark ? 0.27 : 0.23;
-    const subWash = isDark ? 0.20 : 0.17;
-    const inkWash = isDark ? 0.085 : 0.062;
+    const strokeA = isDark ? 0.46 : 0.62;
+    const veinA = isDark ? 0.26 : 0.34;
+    const fillA = isDark ? 0.12 : 0.135;
+    const accA = isDark ? 0.80 : 0.78;
+    const accFill = isDark ? 0.28 : 0.27;
+    const subA = isDark ? 0.64 : 0.64;
+    const subFill = isDark ? 0.22 : 0.21;
+
+    const accWash = isDark ? 0.40 : 0.40;
+    const subWash = isDark ? 0.31 : 0.29;
+    const inkWash = isDark ? 0.20 : 0.23;
 
     return {
         isDark,
         stroke: (tint, a = 1) => {
             if (tint === "accent") return rgba(accRgb, accA * a);
             if (tint === "sub") return rgba(subRgb, subA * a);
-            return rgba(inkRgb, strokeA * a);
+            return rgba(inkStrokeRgb, strokeA * a);
         },
         vein: (tint, a = 1) => {
-            if (tint === "accent") return rgba(accRgb, accA * 0.48 * a);
-            if (tint === "sub") return rgba(subRgb, subA * 0.48 * a);
-            return rgba(inkRgb, veinA * a);
+            if (tint === "accent") return rgba(accRgb, accA * 0.54 * a);
+            if (tint === "sub") return rgba(subRgb, subA * 0.54 * a);
+            return rgba(inkStrokeRgb, veinA * a);
         },
         fill: (tint, a = 1) => {
             if (tint === "accent") return rgba(accRgb, accFill * a);
             if (tint === "sub") return rgba(subRgb, subFill * a);
-            return rgba(inkRgb, fillA * a);
+            return rgba(inkWashRgb, fillA * a);
         },
         wash: (tint, a = 1) => {
             if (tint === "accent") return rgba(accRgb, accWash * a);
             if (tint === "sub") return rgba(subRgb, subWash * a);
-            return rgba(inkRgb, inkWash * a);
+            return rgba(inkWashRgb, inkWash * a);
         },
-        highlight: (a = 1) => rgba(highlightRgb, (isDark ? 0.34 : 0.42) * a),
+        highlight: (a = 1) => rgba(highlightRgb, 0.72 * a),
     };
 }
 
@@ -1560,7 +1565,7 @@ function computeBranchWorldPoints(
 function drawTaperedBranch(
     ctx: CanvasRenderingContext2D,
     branch: BranchData,
-    species: ConcreteBotanicalSpecies,
+    _species: ConcreteBotanicalSpecies,
     rawProgress: number,
     timeSec: number,
     reducedMotion: boolean,
@@ -1587,17 +1592,18 @@ function drawTaperedBranch(
     const maxFloat = bp * totalSegs;
     const maxIdx = Math.floor(maxFloat);
     const frac = maxFloat - maxIdx;
-    const layerA = branch.ghost ? 0.25 : 1.0;
+    const layerA = branch.ghost ? 0.22 : 1.0;
+    const widthBoost = branch.ghost ? 1.0 : branch.parentRef ? 1.32 : 1.65;
 
     const calcHalfWidth = (u: number): number => {
         const cadence = 1 +
-            0.10 * Math.sin(u * Math.PI * 5.2 + branch.phase * 1.9) *
+            0.24 * Math.sin(u * Math.PI * 4.5 + branch.phase * 2.1) *
                 Math.sin(u * Math.PI);
-        const tipTaper = u > 0.82 ? lerp(1, 0.56, (u - 0.82) / 0.18) : 1;
+        const tipTaper = u > 0.78 ? lerp(1, 0.22, (u - 0.78) / 0.22) : 1;
         return Math.max(
-            0.22,
-            lerp(branch.widthStart, branch.widthEnd, u) * cadence * tipTaper *
-                0.5,
+            0.25,
+            lerp(branch.widthStart, branch.widthEnd, u) * widthBoost * cadence *
+                tipTaper * 0.5,
         );
     };
 
@@ -1638,6 +1644,26 @@ function drawTaperedBranch(
         rightEdge.push({ x: p.x - nx * p.hw, y: p.y - ny * p.hw });
     }
 
+    // Layer A: Soft wet-ink bleed on Xuan paper
+    if (!branch.ghost) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(spine[0].x, spine[0].y);
+        for (let i = 1; i < spine.length; i++) {
+            ctx.lineTo(spine[i].x, spine[i].y);
+        }
+        ctx.strokeStyle = pal.wash("ink", 0.34);
+        ctx.lineWidth = Math.max(
+            1.6,
+            (branch.widthStart + branch.widthEnd) * 0.72 + 2.4 * scale,
+        );
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // Layer B: Expressive sumi-ink trunk body
     ctx.beginPath();
     ctx.moveTo(leftEdge[0].x, leftEdge[0].y);
     for (let i = 1; i < leftEdge.length; i++) {
@@ -1655,30 +1681,65 @@ function drawTaperedBranch(
     for (let i = rightEdge.length - 1; i >= 0; i--) {
         ctx.lineTo(rightEdge[i].x, rightEdge[i].y);
     }
+    const start = spine[0];
+    ctx.arc(
+        start.x,
+        start.y,
+        start.hw,
+        start.angle - Math.PI * 0.5,
+        start.angle + Math.PI * 0.5,
+        true,
+    );
     ctx.closePath();
     ctx.fillStyle = pal.stroke("ink", layerA);
     ctx.fill();
 
-    if (!branch.ghost && branch.widthStart > 2.4 * scale) {
-        ctx.beginPath();
-        for (let i = 0; i < spine.length; i++) {
-            const p = spine[i];
-            const nx = -Math.sin(p.angle);
-            const ny = Math.cos(p.angle);
-            const hx = p.x + nx * p.hw * 0.34;
-            const hy = p.y + ny * p.hw * 0.34;
-            if (i === 0) ctx.moveTo(hx, hy);
-            else ctx.lineTo(hx, hy);
-        }
-        ctx.strokeStyle = pal.highlight(0.22);
-        ctx.lineWidth = Math.max(0.45, 0.65 * scale);
+    // Layer C: True transparent dry-brush flying-white (feibai) streaks & moss dots
+    if (!branch.ghost && branch.widthStart > 1.8 * scale && spine.length > 6) {
+        const streakOffsets = [-0.26, 0.19];
+        ctx.save();
+        ctx.globalCompositeOperation = "destination-out";
         ctx.lineCap = "round";
-        ctx.stroke();
-    }
+        for (let sIdx = 0; sIdx < streakOffsets.length; sIdx++) {
+            const offRatio = streakOffsets[sIdx];
+            ctx.beginPath();
+            let started = false;
+            for (let i = 0; i < spine.length; i++) {
+                const p = spine[i];
+                if (p.u < 0.16 || p.u > 0.84) continue;
+                const nx = -Math.sin(p.angle);
+                const ny = Math.cos(p.angle);
+                const px = p.x + nx * p.hw * offRatio;
+                const py = p.y + ny * p.hw * offRatio;
+                if (!started) {
+                    ctx.moveTo(px, py);
+                    started = true;
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            if (started) {
+                const j1 = 7 + ((Math.round(branch.phase * 13) + sIdx * 5) % 9);
+                const j2 = 9 + ((Math.round(branch.phase * 7) + sIdx * 3) % 7);
+                const j3 = 4 + ((Math.round(branch.phase * 17) + sIdx * 2) % 6);
+                const j4 = 12 + ((Math.round(branch.phase * 11) + sIdx * 4) % 11);
+                ctx.setLineDash([
+                    j1 * scale,
+                    j2 * scale,
+                    j3 * scale,
+                    j4 * scale,
+                ]);
+                ctx.strokeStyle = "rgba(0,0,0,0.68)";
+                ctx.lineWidth = Math.max(0.5, 0.78 * scale);
+                ctx.stroke();
+            }
+        }
+        ctx.setLineDash([]);
+        ctx.restore();
 
-    if (species === "plum" && !branch.ghost && spine.length > 8) {
-        const knotTargets = [0.28, 0.54, 0.76];
-        ctx.fillStyle = pal.stroke("ink", 0.42);
+        // Horizontal moss dots (taidian) along main branch turns
+        const knotTargets = [0.24, 0.46, 0.68, 0.82];
+        ctx.fillStyle = pal.stroke("ink", 0.82);
         for (let k = 0; k < knotTargets.length; k++) {
             const targetU = knotTargets[k];
             if (bp < targetU + 0.05) continue;
@@ -1692,11 +1753,11 @@ function drawTaperedBranch(
             const ny = Math.cos(kp.angle) * side;
             ctx.beginPath();
             ctx.ellipse(
-                kp.x + nx * kp.hw * 0.75,
-                kp.y + ny * kp.hw * 0.75,
-                Math.max(0.65, kp.hw * 0.45),
-                Math.max(0.4, kp.hw * 0.28),
-                kp.angle,
+                kp.x + nx * kp.hw * 0.92,
+                kp.y + ny * kp.hw * 0.92,
+                Math.max(1.1, kp.hw * 0.68),
+                Math.max(0.65, kp.hw * 0.36),
+                kp.angle + 0.35 * side,
                 0,
                 Math.PI * 2,
             );
@@ -1707,7 +1768,7 @@ function drawTaperedBranch(
     if (!reducedMotion && !branch.ghost && bp > 0.02 && bp < 0.98) {
         const tipFade = Math.sin(bp * Math.PI);
         ctx.beginPath();
-        ctx.arc(tip.x, tip.y, 2.2, 0, Math.PI * 2);
+        ctx.arc(tip.x, tip.y, 2.6, 0, Math.PI * 2);
         ctx.fillStyle = pal.stroke("accent", 0.85 * tipFade);
         ctx.fill();
     }
@@ -1723,36 +1784,35 @@ function drawGinkgoLeaf(
     pal: BotanicalPalette,
     layerA: number,
 ): void {
-    const stemP = easeOutCubic(clamp(p / 0.22, 0, 1));
-    const outlineP = easeInOutQuad(clamp((p - 0.14) / 0.52, 0, 1));
-    const fillP = easeOutCubic(clamp((p - 0.44) / 0.42, 0, 1));
-    const detailP = easeOutCubic(clamp((p - 0.52) / 0.48, 0, 1));
+    const stemP = easeOutCubic(clamp(p / 0.24, 0, 1));
+    const washP = easeOutCubic(clamp((p - 0.14) / 0.58, 0, 1));
+    const detailP = easeOutCubic(clamp((p - 0.45) / 0.55, 0, 1));
     if (stemP <= 0.01) return;
 
     const s = o.size;
     const stem = o.stemLen * stemP;
-    const offScale = clamp(s / 44, 0.65, 1.15);
 
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
 
+    // Calligraphic stem
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(stem * 0.5, -stem * 0.12, stem, 0);
-    ctx.strokeStyle = pal.stroke(o.tint, 0.85 * layerA);
-    ctx.lineWidth = 0.9;
+    ctx.quadraticCurveTo(stem * 0.5, -stem * 0.14, stem, 0);
+    ctx.strokeStyle = pal.stroke("ink", 0.78 * layerA);
+    ctx.lineWidth = o.ghost ? 0.65 : 1.05;
     ctx.lineCap = "round";
     ctx.stroke();
 
-    if (outlineP <= 0.01) {
+    if (washP <= 0.01) {
         ctx.restore();
         return;
     }
     ctx.translate(o.stemLen, 0);
 
-    const spreadL = o.profile ? -0.52 : -0.90;
-    const spreadR = o.profile ? 0.76 : 0.90;
+    const spreadL = o.profile ? -0.54 : -0.92;
+    const spreadR = o.profile ? 0.78 : 0.92;
     const lx = Math.cos(spreadL) * s;
     const ly = Math.sin(spreadL) * s;
     const rx = Math.cos(spreadR) * s;
@@ -1760,141 +1820,63 @@ function drawGinkgoLeaf(
     const midX = s * (1 - o.notch);
     const midY = o.profile ? s * 0.08 : 0;
 
-    // Gentle organic scalloped margin along the two lobes
-    const asym = Math.sin(o.phase * 2.3) * 0.04;
-    const lMidAngle = spreadL * 0.52;
-    const rMidAngle = spreadR * 0.52;
-    const lCrestX = Math.cos(lMidAngle) * s * (1.03 + asym);
-    const lCrestY = Math.sin(lMidAngle) * s * (1.03 + asym);
-    const rCrestX = Math.cos(rMidAngle) * s * (1.03 - asym);
-    const rCrestY = Math.sin(rMidAngle) * s * (1.03 - asym);
-
     const traceFan = () => {
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.quadraticCurveTo(lx * 0.52, ly * 0.40, lx, ly);
-        ctx.quadraticCurveTo(
-            Math.cos(spreadL * 0.78) * s * 1.07,
-            Math.sin(spreadL * 0.78) * s * 1.07,
-            lCrestX,
-            lCrestY,
-        );
-        ctx.quadraticCurveTo(
-            Math.cos(spreadL * 0.24) * s * 1.06,
-            Math.sin(spreadL * 0.24) * s * 1.06,
-            midX,
-            midY,
-        );
-        ctx.quadraticCurveTo(
-            Math.cos(spreadR * 0.24) * s * 1.06,
-            Math.sin(spreadR * 0.24) * s * 1.06,
-            rCrestX,
-            rCrestY,
-        );
-        ctx.quadraticCurveTo(
-            Math.cos(spreadR * 0.78) * s * 1.07,
-            Math.sin(spreadR * 0.78) * s * 1.07,
-            rx,
-            ry,
-        );
-        ctx.quadraticCurveTo(rx * 0.52, ry * 0.40, 0, 0);
+        ctx.quadraticCurveTo(lx * 0.5, ly * 0.42, lx, ly);
+        ctx.bezierCurveTo(s * 0.95, ly * 0.9, s * 1.08, ly * 0.34, midX, midY);
+        ctx.bezierCurveTo(s * 1.08, ry * 0.34, s * 0.95, ry * 0.9, rx, ry);
+        ctx.quadraticCurveTo(rx * 0.5, ry * 0.42, 0, 0);
         ctx.closePath();
     };
 
-    if (fillP > 0.01) {
-        if (!o.ghost && o.tint !== "ink") {
-            ctx.save();
-            ctx.translate(1.6 * offScale, 1.4 * offScale);
-            traceFan();
-            ctx.fillStyle = pal.fill(o.tint, 0.92 * fillP * layerA);
-            ctx.fill();
-            ctx.restore();
-        }
+    // Boneless side-brush splash 1: rich base bleeding softly outward
+    const rOuter = Math.max(2, s * 1.15);
+    const grad = ctx.createRadialGradient(
+        s * 0.14,
+        0,
+        Math.max(1, s * 0.08),
+        s * 0.2,
+        0,
+        rOuter,
+    );
+    grad.addColorStop(0, pal.wash(o.tint, 1.32 * washP * layerA));
+    grad.addColorStop(0.55, pal.fill(o.tint, 1.08 * washP * layerA));
+    grad.addColorStop(1, pal.fill(o.tint, 0.12 * washP * layerA));
+    traceFan();
+    ctx.fillStyle = grad;
+    ctx.fill();
 
-        // Watercolor edge-bloom gradient: base tint -> airy center -> pigment-pooled rim
-        const rOuter = Math.max(2, s * 1.12);
-        const grad = ctx.createRadialGradient(
-            0,
-            0,
-            Math.max(1, s * 0.1),
-            0,
-            0,
-            rOuter,
-        );
-        grad.addColorStop(0, pal.wash(o.tint, 1.08 * fillP * layerA));
-        grad.addColorStop(0.45, pal.fill(o.tint, 0.52 * fillP * layerA));
-        grad.addColorStop(0.86, pal.wash(o.tint, 1.02 * fillP * layerA));
-        grad.addColorStop(1, pal.wash(o.tint, 1.12 * fillP * layerA));
+    // Boneless side-brush splash 2: slightly offset overlapping brushstroke
+    if (!o.ghost) {
+        ctx.save();
+        ctx.rotate(0.065 * Math.sin(o.phase * 2.1 + 0.7));
+        ctx.scale(0.92, 0.94);
         traceFan();
-        ctx.fillStyle = grad;
+        ctx.fillStyle = pal.wash(o.tint, 0.62 * washP * layerA);
         ctx.fill();
+        ctx.restore();
     }
 
-    traceFan();
-    ctx.strokeStyle = pal.stroke(o.tint, 0.92 * layerA);
-    ctx.lineWidth = o.ghost ? 0.72 : 0.92;
-    ctx.lineJoin = "round";
-    strokeProgressive(ctx, s * (o.profile ? 3.25 : 3.9), outlineP);
-
+    // Expressive dry-ink vein accents (no closed outline)
     if (detailP > 0.02) {
-        ctx.strokeStyle = pal.vein(o.tint, detailP * layerA);
-        ctx.lineWidth = 0.54;
-        const veins = o.profile ? 5 : 7;
+        const veins = o.profile ? 3 : 5;
+        ctx.strokeStyle = pal.stroke(o.tint === "ink" ? "ink" : "ink", 0.52 * detailP * layerA);
+        ctx.lineCap = "round";
         for (let i = 0; i < veins; i++) {
             const frac = i / (veins - 1);
-            const va = lerp(spreadL * 0.78, spreadR * 0.78, frac);
-            const dMid = Math.abs(frac * 2 - 1);
-            const rLen = s *
-                lerp(1 - o.notch - 0.08, 0.88, Math.pow(dMid, 0.5)) * detailP;
-            const mx = Math.cos(va) * rLen * 0.56;
-            const my = Math.sin(va) * rLen * 0.56;
+            const va = lerp(spreadL * 0.76, spreadR * 0.76, frac);
+            const rLen = s * (0.48 + 0.32 * Math.abs(Math.sin(o.phase + i * 1.4))) * detailP;
             ctx.beginPath();
-            ctx.moveTo(2, 0);
-            ctx.lineTo(mx, my);
-            if (!o.ghost && rLen > 14) {
-                ctx.lineTo(
-                    Math.cos(va - 0.05) * rLen,
-                    Math.sin(va - 0.05) * rLen,
-                );
-                ctx.moveTo(mx, my);
-                ctx.lineTo(
-                    Math.cos(va + 0.05) * rLen,
-                    Math.sin(va + 0.05) * rLen,
-                );
-            } else {
-                ctx.lineTo(Math.cos(va) * rLen, Math.sin(va) * rLen);
-            }
+            ctx.moveTo(1.5, 0);
+            ctx.quadraticCurveTo(
+                Math.cos(va + 0.04) * rLen * 0.5,
+                Math.sin(va + 0.04) * rLen * 0.5,
+                Math.cos(va) * rLen,
+                Math.sin(va) * rLen,
+            );
+            ctx.lineWidth = i % 2 === 0 ? 0.78 : 0.52;
             ctx.stroke();
-        }
-
-        if (!o.ghost) {
-            ctx.strokeStyle = pal.vein(o.tint, 0.72 * detailP * layerA);
-            ctx.lineWidth = 0.44;
-            ctx.beginPath();
-            for (let h = 0; h < 5; h++) {
-                const ha = lerp(spreadL * 0.65, spreadR * 0.65, h / 4);
-                ctx.moveTo(Math.cos(ha) * s * 0.14, Math.sin(ha) * s * 0.14);
-                ctx.lineTo(
-                    Math.cos(ha) * s * 0.32 * detailP,
-                    Math.sin(ha) * s * 0.32 * detailP,
-                );
-            }
-            ctx.stroke();
-
-            ctx.fillStyle = pal.stroke(o.tint, 0.44 * detailP * layerA);
-            for (let d = 0; d < 5; d++) {
-                const da = lerp(spreadL * 0.66, spreadR * 0.66, (d + 0.5) / 5);
-                const dr = s * (0.64 + (d % 2) * 0.11);
-                ctx.beginPath();
-                ctx.arc(
-                    Math.cos(da) * dr,
-                    Math.sin(da) * dr,
-                    0.55,
-                    0,
-                    Math.PI * 2,
-                );
-                ctx.fill();
-            }
         }
     }
     ctx.restore();
@@ -1911,15 +1893,13 @@ function drawEucalyptusLeaf(
     layerA: number,
 ): void {
     const stemP = easeOutCubic(clamp(p / 0.22, 0, 1));
-    const outlineP = easeInOutQuad(clamp((p - 0.12) / 0.54, 0, 1));
-    const fillP = easeOutCubic(clamp((p - 0.44) / 0.42, 0, 1));
-    const detailP = easeOutCubic(clamp((p - 0.50) / 0.50, 0, 1));
+    const washP = easeOutCubic(clamp((p - 0.14) / 0.56, 0, 1));
+    const detailP = easeOutCubic(clamp((p - 0.42) / 0.58, 0, 1));
     if (stemP <= 0.01) return;
 
     const rx = o.rx;
     const ry = o.ry;
     const stem = o.stemLen * stemP;
-    const offScale = clamp(rx / 24, 0.6, 1.1);
 
     ctx.save();
     ctx.translate(x, y);
@@ -1928,11 +1908,12 @@ function drawEucalyptusLeaf(
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(stem, 0);
-    ctx.strokeStyle = pal.stroke(o.tint, 0.82 * layerA);
-    ctx.lineWidth = 0.82;
+    ctx.strokeStyle = pal.stroke("ink", 0.72 * layerA);
+    ctx.lineWidth = o.ghost ? 0.65 : 0.95;
+    ctx.lineCap = "round";
     ctx.stroke();
 
-    if (outlineP <= 0.01) {
+    if (washP <= 0.01) {
         ctx.restore();
         return;
     }
@@ -1944,127 +1925,78 @@ function drawEucalyptusLeaf(
         if (o.profile) {
             ctx.bezierCurveTo(
                 rx * 0.28,
-                -ry * 1.35,
+                -ry * 1.38,
                 rx * 1.32,
-                -ry * 0.85,
+                -ry * 0.86,
                 rx * 1.66,
                 -ry * 0.18,
             );
-            ctx.bezierCurveTo(rx * 1.24, ry * 0.42, rx * 0.35, ry * 0.48, 0, 0);
+            ctx.bezierCurveTo(rx * 1.24, ry * 0.44, rx * 0.35, ry * 0.50, 0, 0);
         } else {
             ctx.bezierCurveTo(
                 rx * 0.12,
-                -ry * 1.05,
+                -ry * 1.08,
                 rx * 1.38,
-                -ry * 1.02,
+                -ry * 1.04,
                 rx * 1.68,
                 0,
             );
-            ctx.bezierCurveTo(rx * 1.38, ry * 1.02, rx * 0.12, ry * 1.05, 0, 0);
+            ctx.bezierCurveTo(rx * 1.38, ry * 1.04, rx * 0.12, ry * 1.08, 0, 0);
         }
         ctx.closePath();
     };
 
-    if (fillP > 0.01) {
-        if (!o.ghost && o.tint !== "ink") {
-            ctx.save();
-            ctx.translate(1.5 * offScale, 1.2 * offScale);
-            traceLeaf();
-            ctx.fillStyle = pal.fill(o.tint, 0.9 * fillP * layerA);
-            ctx.fill();
-            ctx.restore();
-        }
+    // Softly feathered two-layer ink/pigment wash (no hard-edged center spot)
+    const cx = rx * 0.66;
+    const cy = o.profile ? -ry * 0.24 : -ry * 0.08;
+    const grad = ctx.createRadialGradient(
+        cx,
+        cy,
+        Math.max(1, ry * 0.12),
+        rx * 0.84,
+        0,
+        Math.max(2, rx * 1.12),
+    );
+    grad.addColorStop(0, pal.wash(o.tint, 1.38 * washP * layerA));
+    grad.addColorStop(0.55, pal.fill(o.tint, 1.12 * washP * layerA));
+    grad.addColorStop(1, pal.fill(o.tint, 0.14 * washP * layerA));
+    traceLeaf();
+    ctx.fillStyle = grad;
+    ctx.fill();
 
-        // Folded-blade two-tone shading split by the midrib
-        if (o.profile) {
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.bezierCurveTo(
-                rx * 0.28,
-                -ry * 1.35,
-                rx * 1.32,
-                -ry * 0.85,
-                rx * 1.66,
-                -ry * 0.18,
-            );
-            ctx.quadraticCurveTo(rx * 0.72, -ry * 0.28, 0, 0);
-            ctx.closePath();
-            ctx.fillStyle = pal.fill(o.tint, 0.74 * fillP * layerA);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.quadraticCurveTo(rx * 0.72, -ry * 0.28, rx * 1.66, -ry * 0.18);
-            ctx.bezierCurveTo(rx * 1.24, ry * 0.42, rx * 0.35, ry * 0.48, 0, 0);
-            ctx.closePath();
-            ctx.fillStyle = pal.wash(o.tint, 1.06 * fillP * layerA);
-            ctx.fill();
-        } else {
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.bezierCurveTo(
-                rx * 0.12,
-                -ry * 1.05,
-                rx * 1.38,
-                -ry * 1.02,
-                rx * 1.68,
-                0,
-            );
-            ctx.closePath();
-            ctx.fillStyle = pal.fill(o.tint, 0.74 * fillP * layerA);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(rx * 1.68, 0);
-            ctx.bezierCurveTo(rx * 1.38, ry * 1.02, rx * 0.12, ry * 1.05, 0, 0);
-            ctx.closePath();
-            ctx.fillStyle = pal.wash(o.tint, 1.06 * fillP * layerA);
-            ctx.fill();
-        }
+    if (!o.ghost) {
+        const coreGrad = ctx.createRadialGradient(
+            rx * 0.56,
+            cy * 1.2,
+            0.5,
+            rx * 0.68,
+            cy * 0.5,
+            Math.max(2, rx * 0.72),
+        );
+        coreGrad.addColorStop(0, pal.wash(o.tint, 0.85 * washP * layerA));
+        coreGrad.addColorStop(0.6, pal.fill(o.tint, 0.45 * washP * layerA));
+        coreGrad.addColorStop(1, pal.fill(o.tint, 0));
+        traceLeaf();
+        ctx.fillStyle = coreGrad;
+        ctx.fill();
     }
 
-    traceLeaf();
-    ctx.strokeStyle = pal.stroke(o.tint, 0.9 * layerA);
-    ctx.lineWidth = o.ghost ? 0.7 : 0.88;
-    strokeProgressive(ctx, (rx + ry) * 3.1, outlineP);
-
+    // Crisp calligraphic midrib only
     if (detailP > 0.02) {
-        ctx.strokeStyle = pal.vein(o.tint, detailP * layerA);
-        ctx.lineWidth = 0.52;
+        ctx.strokeStyle = pal.stroke("ink", 0.58 * detailP * layerA);
+        ctx.lineWidth = o.ghost ? 0.45 : 0.78;
+        ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.moveTo(1.5, 0);
+        ctx.moveTo(1, 0);
         if (o.profile) {
             ctx.quadraticCurveTo(
                 rx * 0.72,
                 -ry * 0.28,
-                rx * 1.38 * detailP,
+                rx * 1.44 * detailP,
                 -ry * 0.16 * detailP,
             );
         } else {
-            ctx.lineTo(rx * 1.36 * detailP, 0);
-        }
-        if (!o.ghost) {
-            for (let k = 1; k <= 3; k++) {
-                const bx = rx * (0.28 + k * 0.28) * detailP;
-                const bl = ry * (0.46 - k * 0.08) * detailP;
-                ctx.moveTo(bx, 0);
-                ctx.quadraticCurveTo(
-                    bx + bl * 0.3,
-                    bl * 0.45,
-                    bx + bl * 0.58,
-                    bl,
-                );
-                if (!o.profile && k <= 2) {
-                    ctx.moveTo(bx, 0);
-                    ctx.quadraticCurveTo(
-                        bx + bl * 0.3,
-                        -bl * 0.45,
-                        bx + bl * 0.58,
-                        -bl,
-                    );
-                }
-            }
+            ctx.lineTo(rx * 1.42 * detailP, 0);
         }
         ctx.stroke();
     }
@@ -2081,150 +2013,76 @@ function drawPlumBlossom(
     pal: BotanicalPalette,
     layerA: number,
 ): void {
-    const outlineP = easeInOutQuad(clamp(p / 0.56, 0, 1));
-    const fillP = easeOutCubic(clamp((p - 0.36) / 0.42, 0, 1));
-    const stP = easeOutCubic(clamp((p - 0.46) / 0.54, 0, 1));
-    if (outlineP <= 0.01) return;
+    const washP = easeOutCubic(clamp(p / 0.65, 0, 1));
+    const stP = easeOutCubic(clamp((p - 0.36) / 0.64, 0, 1));
+    if (washP <= 0.01) return;
 
     const r = o.size;
-    const offScale = clamp(r / 18, 0.7, 1.25);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(o.rotation + angle * 0.2);
     if (o.profile) ctx.scale(1.0, 0.74);
 
-    const traceFivePetals = () => {
-        ctx.beginPath();
-        const n = 5;
-        const innerR = r * 0.30;
-        const outerR = r * 1.02;
-        for (let i = 0; i < n; i++) {
-            const a0 = (i / n) * Math.PI * 2;
-            const a1 = ((i + 1) / n) * Math.PI * 2;
-            const aMid = (a0 + a1) * 0.5;
-            const span = (a1 - a0) * 0.44;
-            const sx = Math.cos(a0) * innerR;
-            const sy = Math.sin(a0) * innerR;
-            const ex = Math.cos(a1) * innerR;
-            const ey = Math.sin(a1) * innerR;
-            const c1x = Math.cos(aMid - span) * outerR * 1.15;
-            const c1y = Math.sin(aMid - span) * outerR * 1.15;
-            const c2x = Math.cos(aMid + span) * outerR * 1.15;
-            const c2y = Math.sin(aMid + span) * outerR * 1.15;
-            if (i === 0) ctx.moveTo(sx, sy);
-            ctx.bezierCurveTo(c1x, c1y, c2x, c2y, ex, ey);
-        }
-        ctx.closePath();
-    };
-
-    if (fillP > 0.01) {
-        if (!o.ghost) {
-            ctx.save();
-            ctx.translate(2.0 * offScale, 1.8 * offScale);
-            traceFivePetals();
-            ctx.fillStyle = pal.fill(o.tint, 1.15 * fillP * layerA);
-            ctx.fill();
-            ctx.restore();
-        }
-
-        const petalGrad = ctx.createRadialGradient(
-            0,
-            0,
-            Math.max(1, r * 0.16),
-            0,
-            0,
-            Math.max(2, r * 1.08),
+    // Boneless 5-petal sumi-e dabs with side-brush ellipticity & pigment-edge bloom
+    for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2 + Math.sin(o.phase + i * 1.7) * 0.06;
+        const dist = r * (0.52 + Math.cos(o.phase * 1.4 + i) * 0.04) * washP;
+        const px = Math.cos(a) * dist;
+        const py = Math.sin(a) * dist;
+        const pr = Math.max(2, r * (0.52 + (i % 2) * 0.05) * washP);
+        const grad = ctx.createRadialGradient(
+            px * 0.82,
+            py * 0.82,
+            Math.max(0.5, pr * 0.08),
+            px,
+            py,
+            pr,
         );
-        petalGrad.addColorStop(0, pal.wash(o.tint, 1.15 * fillP * layerA));
-        petalGrad.addColorStop(0.65, pal.fill(o.tint, 0.98 * fillP * layerA));
-        petalGrad.addColorStop(1, pal.fill(o.tint, 0.55 * fillP * layerA));
-        traceFivePetals();
-        ctx.fillStyle = petalGrad;
+        grad.addColorStop(0, pal.wash(o.tint, 1.42 * washP * layerA));
+        grad.addColorStop(0.58, pal.fill(o.tint, 1.22 * washP * layerA));
+        grad.addColorStop(0.78, pal.wash(o.tint, 0.92 * washP * layerA));
+        grad.addColorStop(0.98, pal.fill(o.tint, 0));
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(
+            px,
+            py,
+            pr,
+            pr * 0.84,
+            a + Math.sin(o.phase * 2 + i) * 0.16,
+            0,
+            Math.PI * 2,
+        );
         ctx.fill();
     }
 
-    traceFivePetals();
-    ctx.strokeStyle = pal.stroke(o.tint, 0.92 * layerA);
-    ctx.lineWidth = o.ghost ? 0.7 : 0.92;
-    ctx.lineJoin = "round";
-    strokeProgressive(ctx, r * 11.2, outlineP);
-
     if (stP > 0.04) {
-        // Subtle short petal-fold arcs radiating from center without crossing
-        if (!o.ghost) {
-            ctx.strokeStyle = pal.vein(o.tint, 0.52 * stP * layerA);
-            ctx.lineWidth = 0.45;
-            ctx.beginPath();
-            for (let i = 0; i < 5; i++) {
-                const a = (i / 5) * Math.PI * 2 + 0.18;
-                const r0 = r * 0.22;
-                const r1 = r * 0.44 * stP;
-                if (r1 > r0) {
-                    ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0);
-                    ctx.quadraticCurveTo(
-                        Math.cos(a + 0.1) * (r0 + r1) * 0.5,
-                        Math.sin(a + 0.1) * (r0 + r1) * 0.5,
-                        Math.cos(a) * r1,
-                        Math.sin(a) * r1,
-                    );
-                }
-            }
-            ctx.stroke();
-        }
-
-        // Dark sumi-ink flower center dot
+        // Dark sumi-ink calyx center dot
         ctx.beginPath();
-        ctx.arc(0, 0, Math.max(0.8, r * 0.1 * stP), 0, Math.PI * 2);
-        ctx.fillStyle = pal.stroke("ink", 0.72 * stP * layerA);
+        ctx.arc(0, 0, Math.max(1.2, r * 0.14 * stP), 0, Math.PI * 2);
+        ctx.fillStyle = pal.stroke("ink", 0.9 * stP * layerA);
         ctx.fill();
-
-        if (!o.ghost && r >= 18) {
-            ctx.strokeStyle = pal.vein(o.tint, 0.65 * stP * layerA);
-            ctx.lineWidth = 0.45;
-            ctx.beginPath();
-            for (let i = 0; i < 5; i++) {
-                const a = ((i + 0.5) / 5) * Math.PI * 2;
-                ctx.moveTo(Math.cos(a) * r * 0.24, Math.sin(a) * r * 0.24);
-                ctx.lineTo(
-                    Math.cos(a) * r * 0.50 * stP,
-                    Math.sin(a) * r * 0.50 * stP,
-                );
-            }
-            ctx.stroke();
-        }
 
         const stamenCount = r >= 18 ? 7 : 5;
         for (let i = 0; i < stamenCount; i++) {
             const a = (i / stamenCount) * Math.PI * 2 + 0.25;
-            const len = r * (i % 2 === 0 ? 0.48 : 0.34) * stP;
+            const len = r * (i % 2 === 0 ? 0.52 : 0.36) * stP;
             const ex = Math.cos(a) * len;
             const ey = Math.sin(a) * len;
-            const cx = Math.cos(a + 0.14) * len * 0.52;
-            const cy = Math.sin(a + 0.14) * len * 0.52;
+            const cx = Math.cos(a + 0.18) * len * 0.54;
+            const cy = Math.sin(a + 0.18) * len * 0.54;
             ctx.beginPath();
             ctx.moveTo(0, 0);
             ctx.quadraticCurveTo(cx, cy, ex, ey);
-            ctx.strokeStyle = pal.stroke(o.tint, 0.82 * stP * layerA);
-            ctx.lineWidth = 0.58;
+            ctx.strokeStyle = pal.stroke("ink", 0.88 * stP * layerA);
+            ctx.lineWidth = 0.65;
+            ctx.lineCap = "round";
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(ex, ey, (r >= 18 ? 1.45 : 1.2) * stP, 0, Math.PI * 2);
-            ctx.fillStyle = pal.stroke(o.tint, 0.96 * stP * layerA);
+            ctx.arc(ex, ey, (r >= 18 ? 1.55 : 1.25) * stP, 0, Math.PI * 2);
+            ctx.fillStyle = pal.stroke("ink", 0.92 * stP * layerA);
             ctx.fill();
-
-            if (!o.ghost) {
-                ctx.beginPath();
-                ctx.arc(
-                    ex - 0.3,
-                    ey - 0.3,
-                    (r >= 18 ? 0.65 : 0.5) * stP,
-                    0,
-                    Math.PI * 2,
-                );
-                ctx.fillStyle = pal.highlight(0.72 * stP * layerA);
-                ctx.fill();
-            }
         }
     }
     ctx.restore();
@@ -2240,39 +2098,36 @@ function drawPlumBud(
     pal: BotanicalPalette,
     layerA: number,
 ): void {
-    const outlineP = easeOutCubic(clamp(p / 0.7, 0, 1));
-    const fillP = easeOutCubic(clamp((p - 0.3) / 0.7, 0, 1));
-    if (outlineP <= 0.02) return;
+    const washP = easeOutCubic(clamp(p / 0.72, 0, 1));
+    if (washP <= 0.02) return;
     const r = o.size;
 
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
-    ctx.beginPath();
-    ctx.ellipse(r * 0.9, 0, r * 1.1, r * 0.78, 0, 0, Math.PI * 2);
 
-    if (fillP > 0.01) {
-        const grad = ctx.createRadialGradient(
-            r * 0.4,
-            0,
-            Math.max(0.8, r * 0.15),
-            r * 0.9,
-            0,
-            Math.max(2, r * 1.15),
-        );
-        grad.addColorStop(0, pal.wash(o.tint, 1.32 * fillP * layerA));
-        grad.addColorStop(1, pal.fill(o.tint, 1.1 * fillP * layerA));
-        ctx.fillStyle = grad;
-        ctx.fill();
-    }
-    ctx.strokeStyle = pal.stroke(o.tint, 0.95 * layerA);
-    ctx.lineWidth = 0.85;
-    strokeProgressive(ctx, r * 6.2, outlineP);
-
+    const grad = ctx.createRadialGradient(
+        r * 0.6,
+        0,
+        Math.max(0.5, r * 0.12),
+        r * 0.85,
+        0,
+        Math.max(2, r * 1.15),
+    );
+    grad.addColorStop(0, pal.wash(o.tint, 1.45 * washP * layerA));
+    grad.addColorStop(0.65, pal.fill(o.tint, 1.15 * washP * layerA));
+    grad.addColorStop(1, pal.fill(o.tint, 0));
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(r * 0.15, 0, r * 0.55, -0.85, 0.85);
-    ctx.strokeStyle = pal.stroke("ink", 0.95 * outlineP * layerA);
-    ctx.lineWidth = 1.0;
+    ctx.ellipse(r * 0.85, 0, r * 1.12, r * 0.82, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Crisp sumi-ink calyx cup
+    ctx.beginPath();
+    ctx.arc(r * 0.15, 0, r * 0.56, -0.92, 0.92);
+    ctx.strokeStyle = pal.stroke("ink", 0.92 * washP * layerA);
+    ctx.lineWidth = 1.25;
+    ctx.lineCap = "round";
     ctx.stroke();
     ctx.restore();
 }
@@ -2287,20 +2142,35 @@ function drawFernPinna(
     pal: BotanicalPalette,
     layerA: number,
 ): void {
-    const outlineP = easeOutQuart(clamp(p / 0.66, 0, 1));
-    const fillP = easeOutCubic(clamp((p - 0.35) / 0.55, 0, 1));
-    if (outlineP <= 0.02) return;
+    const strokeP = easeOutQuart(clamp(p / 0.72, 0, 1));
+    const veinP = easeOutCubic(clamp((p - 0.3) / 0.65, 0, 1));
+    if (strokeP <= 0.02) return;
 
-    const len = o.len;
-    const w = o.width * 0.82;
+    const len = o.len * strokeP;
+    const w = o.width * 0.78;
     const tipX = len;
     const tipY = o.curve * len;
 
-    const tracePinna = () => {
+    // Orchid-leaf brush stroke (lan-ye-miao): plump start -> graceful taper
+    const traceBrushLeaf = () => {
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.quadraticCurveTo(len * 0.42, -w + tipY * 0.3, tipX, tipY);
-        ctx.quadraticCurveTo(len * 0.42, w + tipY * 0.3, 0, 0);
+        ctx.bezierCurveTo(
+            len * 0.25,
+            -w * 1.05,
+            len * 0.62,
+            -w * 0.52 + tipY * 0.35,
+            tipX,
+            tipY,
+        );
+        ctx.bezierCurveTo(
+            len * 0.58,
+            w * 0.52 + tipY * 0.35,
+            len * 0.25,
+            w * 1.05,
+            0,
+            0,
+        );
         ctx.closePath();
     };
 
@@ -2308,66 +2178,34 @@ function drawFernPinna(
     ctx.translate(x, y);
     ctx.rotate(angle);
 
-    if (fillP > 0.01) {
-        const grad = ctx.createLinearGradient(0, 0, Math.max(1, tipX), tipY);
-        if (o.tint === "ink") {
-            grad.addColorStop(0, pal.fill("ink", 1.15 * fillP * layerA));
-            grad.addColorStop(0.7, pal.fill("ink", 0.78 * fillP * layerA));
-            grad.addColorStop(1, pal.fill("ink", 0.32 * fillP * layerA));
-        } else {
-            grad.addColorStop(0, pal.wash(o.tint, 1.05 * fillP * layerA));
-            grad.addColorStop(0.65, pal.fill(o.tint, 0.92 * fillP * layerA));
-            grad.addColorStop(1, pal.fill(o.tint, 0.34 * fillP * layerA));
-        }
-        tracePinna();
-        ctx.fillStyle = grad;
-        ctx.fill();
+    const grad = ctx.createLinearGradient(0, 0, Math.max(1, tipX), tipY);
+    if (o.tint === "ink") {
+        grad.addColorStop(0, pal.wash("ink", 1.28 * strokeP * layerA));
+        grad.addColorStop(0.65, pal.fill("ink", 1.05 * strokeP * layerA));
+        grad.addColorStop(1, pal.fill("ink", 0.08 * strokeP * layerA));
+    } else {
+        grad.addColorStop(0, pal.wash(o.tint, 1.32 * strokeP * layerA));
+        grad.addColorStop(0.62, pal.fill(o.tint, 1.15 * strokeP * layerA));
+        grad.addColorStop(1, pal.fill(o.tint, 0.12 * strokeP * layerA));
     }
+    traceBrushLeaf();
+    ctx.fillStyle = grad;
+    ctx.fill();
 
-    tracePinna();
-    ctx.strokeStyle = pal.stroke(o.tint, 0.88 * layerA);
-    ctx.lineWidth = o.ghost ? 0.56 : 0.76;
-    ctx.lineJoin = "round";
-    strokeProgressive(ctx, len * 2.35, outlineP);
-
-    if (fillP > 0.02) {
+    // Single decisive sumi-ink spine stroke
+    if (veinP > 0.02) {
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.quadraticCurveTo(
             len * 0.45,
-            tipY * 0.3,
-            tipX * 0.88 * fillP,
-            tipY * 0.88 * fillP,
+            tipY * 0.32,
+            tipX * 0.84 * veinP,
+            tipY * 0.84 * veinP,
         );
-        if (!o.ghost && len > 42) {
-            for (let k = 1; k <= 4; k++) {
-                const t = 0.18 + k * 0.14;
-                const envW = 4 * t * (1 - t) * w * 0.48;
-                const bx = len * t;
-                const by = 2 * (1 - t) * t * (tipY * 0.3) + t * t * tipY;
-                ctx.moveTo(bx, by);
-                ctx.lineTo(bx + len * 0.06, by + envW * 0.56 * o.side);
-                ctx.moveTo(bx, by);
-                ctx.lineTo(bx + len * 0.055, by - envW * 0.52 * o.side);
-            }
-        }
-        ctx.strokeStyle = pal.vein(o.tint, 0.92 * fillP * layerA);
-        ctx.lineWidth = 0.44;
+        ctx.strokeStyle = pal.stroke("ink", 0.52 * veinP * layerA);
+        ctx.lineWidth = o.ghost ? 0.45 : 0.72;
+        ctx.lineCap = "round";
         ctx.stroke();
-
-        // Delicate spore dots (sori) along larger foreground pinnae
-        if (!o.ghost && len > 48 && o.tint !== "ink") {
-            ctx.fillStyle = pal.stroke(o.tint, 0.48 * fillP * layerA);
-            for (let k = 1; k <= 3; k++) {
-                const t = 0.26 + k * 0.15;
-                const bx = len * t;
-                const by = 2 * (1 - t) * t * (tipY * 0.3) + t * t * tipY;
-                const offset = 4 * t * (1 - t) * w * 0.36 * o.side;
-                ctx.beginPath();
-                ctx.arc(bx, by + offset, 0.7, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
     }
     ctx.restore();
 }
@@ -2401,18 +2239,17 @@ function drawFernSpiral(
         ctx.beginPath();
         ctx.moveTo(prevX, prevY);
         ctx.lineTo(sx, sy);
-        ctx.strokeStyle = pal.stroke("accent", (0.9 - t * 0.25) * layerA);
-        ctx.lineWidth = lerp(1.45, 0.45, t);
+        ctx.strokeStyle = pal.stroke("accent", (0.95 - t * 0.25) * layerA);
+        ctx.lineWidth = lerp(1.9, 0.55, t);
         ctx.lineCap = "round";
         ctx.stroke();
         prevX = sx;
         prevY = sy;
     }
 
-    // Soft tender bud aura at the spiral tip
     ctx.beginPath();
-    ctx.arc(prevX, prevY, Math.max(1.2, o.size * 0.16), 0, Math.PI * 2);
-    ctx.fillStyle = pal.wash("accent", 0.95 * grow * layerA);
+    ctx.arc(prevX, prevY, Math.max(1.5, o.size * 0.2), 0, Math.PI * 2);
+    ctx.fillStyle = pal.wash("accent", 1.15 * grow * layerA);
     ctx.fill();
     ctx.restore();
 }
@@ -2504,13 +2341,11 @@ function drawDrifters(
 
         const rGrad = Math.max(2, d.size);
         const grad = ctx.createRadialGradient(0, 0, 0.5, 0, 0, rGrad);
-        grad.addColorStop(0, pal.wash(d.tint, alpha * 1.25));
-        grad.addColorStop(1, pal.fill(d.tint, alpha * 0.9));
+        grad.addColorStop(0, pal.wash(d.tint, alpha * 1.3));
+        grad.addColorStop(0.65, pal.fill(d.tint, alpha * 0.9));
+        grad.addColorStop(1, pal.fill(d.tint, 0));
         ctx.fillStyle = grad;
         ctx.fill();
-        ctx.strokeStyle = pal.stroke(d.tint, alpha * 0.78);
-        ctx.lineWidth = 0.72;
-        ctx.stroke();
         ctx.restore();
     }
 }
@@ -2657,7 +2492,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 item.angle,
                 item.op,
                 palette,
-                0.25,
+                0.22,
             );
         }
     }
@@ -2696,7 +2531,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
         }
     }
 
-    // Layer 4: Subtle deterministic ink/accent specks near foreground branch tips
+    // Layer 4: Expressive ink & vermilion/accent splatter dots near foreground branch tips
     if (rawProgress > 0.72) {
         const speckFade = easeOutCubic(clamp((rawProgress - 0.72) / 0.28, 0, 1));
         const fgBranches = scene.branches.filter((b) => !b.ghost);
@@ -2710,20 +2545,20 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 scene.scale,
                 frameSeq,
             );
-            if (!pts.length) continue;
-            const tip = pts[pts.length - 1];
-            for (let k = 0; k < 3; k++) {
-                const seedAngle = b.phase * 3.1 + k * 2.09 + bi * 1.1;
-                const dist = (14 + k * 13) * scene.scale;
-                const sx = tip.x + Math.cos(seedAngle) * dist;
-                const sy = tip.y + Math.sin(seedAngle) * dist * 0.75;
-                const sr = (0.95 + (k % 2) * 0.55) * scene.scale;
+            if (pts.length < 3) continue;
+            const anchorIdx = Math.floor(pts.length * (bi === 0 ? 0.88 : 0.72));
+            const anchor = pts[anchorIdx];
+            for (let k = 0; k < 4; k++) {
+                const seedAngle = b.phase * 3.1 + k * 1.65 + bi * 1.2;
+                const dist = (14 + k * 14) * scene.scale;
+                const sx = anchor.x + Math.cos(seedAngle) * dist;
+                const sy = anchor.y + Math.sin(seedAngle) * dist * 0.78;
+                const sr = (1.1 + ((k + bi) % 3) * 0.9) * scene.scale;
                 ctx.beginPath();
                 ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-                ctx.fillStyle = palette.stroke(
-                    k === 0 ? "accent" : "sub",
-                    0.42 * speckFade,
-                );
+                ctx.fillStyle = k % 2 === 0
+                    ? palette.stroke("accent", 0.56 * speckFade)
+                    : palette.stroke("ink", 0.44 * speckFade);
                 ctx.fill();
             }
         }

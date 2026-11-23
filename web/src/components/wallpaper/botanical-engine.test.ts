@@ -165,6 +165,7 @@ function createMockCanvasContext(): {
         lineWidth: 1,
         lineCap: "butt",
         lineJoin: "miter",
+        globalCompositeOperation: "source-over",
         save: () => {},
         restore: () => {},
         translate: (x: number, y: number) => checkNums(x, y),
