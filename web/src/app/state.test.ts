@@ -115,6 +115,23 @@ Deno.test("Appearance: device caches keep a valid tab icon and default older or 
     );
 });
 
+Deno.test("Appearance: device caches keep a valid illustration style and fall back to auto", () => {
+    assertEquals(
+        normalizeAppearance({ illustrationStyle: "glass" }).illustrationStyle,
+        "glass",
+    );
+    assertEquals(
+        normalizeAppearance({ illustrationStyle: "botanical" })
+            .illustrationStyle,
+        "botanical",
+    );
+    assertEquals(normalizeAppearance({}).illustrationStyle, "auto");
+    assertEquals(
+        normalizeAppearance({ illustrationStyle: "pixel" }).illustrationStyle,
+        "auto",
+    );
+});
+
 Deno.test("Appearance: device caches keep every theme choice and default unknown values to system", () => {
     for (
         const theme of [

@@ -129,6 +129,7 @@ function TrashSection(
             >
                 {loading ? <LoadingState /> : (
                     <EmptyState
+                        illustration="empty-trash"
                         className="trash-empty-state"
                         title={emptyTitle}
                     />
@@ -410,6 +411,7 @@ export function TrashContent({ host }: { host: PageHost }) {
             >
                 <PageHeader title="回收站" />
                 <EmptyState
+                    illustration="auth-or-error"
                     className="trash-empty-state"
                     title="未登录"
                     action={

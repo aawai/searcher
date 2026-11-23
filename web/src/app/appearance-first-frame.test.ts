@@ -50,6 +50,7 @@ Deno.test("First frame: each owner paints its own snapshot and the last confirme
             shape: "pill",
             glassIntensity: "off",
             tabIcon: "keycap",
+            illustrationStyle: "botanical",
         }),
     );
 
@@ -63,6 +64,7 @@ Deno.test("First frame: each owner paints its own snapshot and the last confirme
         shape: "pill",
         glassIntensity: "off",
         tabIcon: "keycap",
+        illustrationStyle: "botanical",
     });
     // An account never seen on this device starts from the defaults, not
     // from another owner's snapshot.
@@ -91,6 +93,7 @@ Deno.test("First frame: corrupt, missing or unwritable storage falls back to the
         shape: "rounded",
         glassIntensity: "regular",
         tabIcon: "editorial",
+        illustrationStyle: "auto",
     });
     assertEquals(readFirstFrame(null, null).theme, "system");
 

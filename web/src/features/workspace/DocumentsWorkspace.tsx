@@ -407,6 +407,7 @@ export function DocumentsWorkspace(props: DocumentsWorkspaceProps) {
                                 </div>
                             )}
                             <EmptyState
+                                illustration="empty-documents"
                                 title="选择或新建笔记"
                                 headingLevel={3}
                                 density="compact"

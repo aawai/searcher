@@ -4,7 +4,12 @@ import { Button } from "../ui/button.tsx";
 import { DialogFooter } from "../ui/dialog.tsx";
 import { Input } from "../ui/input.tsx";
 import { Switch } from "../ui/switch.tsx";
-import { FormField, SearchField, SecretInput } from "./semantic.tsx";
+import {
+    EmptyState,
+    FormField,
+    SearchField,
+    SecretInput,
+} from "./semantic.tsx";
 
 Deno.test("SearchField: renders clear button only when non-empty and enabled", () => {
     const emptyHtml = ReactDOMServer.renderToString(
@@ -89,7 +94,11 @@ Deno.test("FormField: renders label, trailing accessory, hint and alert error wi
             hint="字母或数字"
             messageId="u-hint"
         >
-            <Input id="u-input" placeholder="输入用户名" aria-describedby="u-hint" />
+            <Input
+                id="u-input"
+                placeholder="输入用户名"
+                aria-describedby="u-hint"
+            />
         </FormField>,
     );
     assertEquals(hintHtml.includes('for="u-input"'), true);
@@ -115,4 +124,35 @@ Deno.test("FormField: renders label, trailing accessory, hint and alert error wi
     assertEquals(errorHtml.includes('role="alert"'), true);
     assertEquals(errorHtml.includes('data-tone="danger"'), true);
     assertEquals(errorHtml.includes("密码过短"), true);
+});
+
+Deno.test("EmptyState: renders illustration for default/compact and hides it for inline", () => {
+    const defaultHtml = ReactDOMServer.renderToString(
+        <EmptyState illustration="empty-documents" title="暂无文档" />,
+    );
+    assertEquals(defaultHtml.includes("empty-state__illustration"), true);
+    assertEquals(
+        defaultHtml.includes('data-illustration="empty-documents"'),
+        true,
+    );
+    assertEquals(defaultHtml.includes('data-size="md"'), true);
+
+    const compactHtml = ReactDOMServer.renderToString(
+        <EmptyState
+            density="compact"
+            illustration="empty-apps"
+            title="还没有应用"
+        />,
+    );
+    assertEquals(compactHtml.includes("empty-state__illustration"), true);
+    assertEquals(compactHtml.includes('data-size="sm"'), true);
+
+    const inlineHtml = ReactDOMServer.renderToString(
+        <EmptyState
+            density="inline"
+            illustration="no-results"
+            title="暂无记录"
+        />,
+    );
+    assertEquals(inlineHtml.includes("empty-state__illustration"), false);
 });

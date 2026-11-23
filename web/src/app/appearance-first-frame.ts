@@ -1,8 +1,10 @@
 import {
     type AccentPreference,
     type GlassIntensity,
+    type IllustrationStyle,
     normalizeAccent,
     normalizeGlassIntensity,
+    normalizeIllustrationStyle,
     normalizeTabIcon,
     normalizeTheme,
     type SearchShape,
@@ -28,6 +30,7 @@ export type FirstFrameAppearance = {
     shape: SearchShape;
     glassIntensity: GlassIntensity;
     tabIcon: TabIcon;
+    illustrationStyle: IllustrationStyle;
 };
 
 const OWNER_KEY = "first-frame:owner";
@@ -45,6 +48,7 @@ export function normalizeFirstFrame(
         shape: saved.shape === "pill" ? "pill" : "rounded",
         glassIntensity: normalizeGlassIntensity(saved.glassIntensity),
         tabIcon: normalizeTabIcon(saved.tabIcon),
+        illustrationStyle: normalizeIllustrationStyle(saved.illustrationStyle),
     };
 }
 
@@ -104,6 +108,7 @@ export function writeFirstFrame(
             shape: appearance.shape,
             glassIntensity: appearance.glassIntensity,
             tabIcon: appearance.tabIcon,
+            illustrationStyle: appearance.illustrationStyle,
         } satisfies FirstFrameAppearance,
     );
 }
@@ -134,12 +139,13 @@ export function applyStyleAttributes(
     root: HTMLElement,
     appearance: Pick<
         FirstFrameAppearance,
-        "accent" | "shape" | "glassIntensity"
+        "accent" | "shape" | "glassIntensity" | "illustrationStyle"
     >,
 ): void {
     root.dataset.accent = appearance.accent;
     root.dataset.shape = appearance.shape;
     root.dataset.glass = appearance.glassIntensity;
+    root.dataset.illustrationStyle = appearance.illustrationStyle;
 }
 
 export function applyTabIcon(doc: Document, tabIcon: TabIcon): void {

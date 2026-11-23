@@ -177,6 +177,7 @@ export function DesignLab() {
                 <Link to="/design-lab/motion">共享元素动效实验</Link>
                 <Link to="/design-lab/accent">壁纸取色</Link>
                 <Link to="/design-lab/palette">中性色与浅染</Link>
+                <Link to="/design-lab/illustrations">系统插画</Link>
             </Section>
 
             <Section title="首页构图：31% / 38%">
@@ -556,7 +557,10 @@ export function DesignLab() {
                                 if (next !== null) setEngine(next);
                             }}
                         >
-                            <SelectTrigger size="sm" aria-label="默认引擎（列表）">
+                            <SelectTrigger
+                                size="sm"
+                                aria-label="默认引擎（列表）"
+                            >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

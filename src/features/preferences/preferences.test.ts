@@ -48,6 +48,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(initialData?.homeMastheadCollapsed, true);
         assertEquals(initialData?.showHomeAppPlate, true);
         assertEquals(initialData?.tabIcon, "editorial");
+        assertEquals(initialData?.illustrationStyle, "auto");
         const second = await register("appearance_b");
         const response = await app.request("/api/preferences", {
             method: "PATCH",
@@ -62,6 +63,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
                 searchShape: "pill",
                 glassIntensity: "clear",
                 tabIcon: "keycap",
+                illustrationStyle: "botanical",
                 defaultEngine: "google",
                 showHomeApps: true,
                 showHomeAppPlate: false,
@@ -79,6 +81,7 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(saved.data?.searchShape, "pill");
         assertEquals(saved.data?.glassIntensity, "clear");
         assertEquals(saved.data?.tabIcon, "keycap");
+        assertEquals(saved.data?.illustrationStyle, "botanical");
         assertEquals(saved.data?.showHomeApps, true);
         assertEquals(saved.data?.showHomeAppPlate, false);
         assertEquals(saved.data?.homeMastheadCollapsed, false);
@@ -277,6 +280,7 @@ Deno.test("preferences: invalid wallpaper and appearance values are rejected", a
                 { glassIntensity: "ultra" },
                 { glassIntensity: 0.5 },
                 { tabIcon: "glass" },
+                { illustrationStyle: "pixel" },
                 { showAppLabels: "not-a-bool" },
                 { accent: "neon_green" },
                 { theme: "high-contrast" },

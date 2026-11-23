@@ -99,6 +99,7 @@ const MotionLab = lazy(() => import("./design-lab/MotionLab.tsx"));
 const AccentLab = lazy(() => import("./design-lab/AccentLab.tsx"));
 const PaletteLab = lazy(() => import("./design-lab/PaletteLab.tsx"));
 const WindowLab = lazy(() => import("./design-lab/WindowLab.tsx"));
+const IllustrationLab = lazy(() => import("./design-lab/IllustrationLab.tsx"));
 const MarkdownEditorSpike = lazy(() =>
     import("./spikes/markdown-editor/MarkdownEditorSpike.tsx")
 );
@@ -665,6 +666,10 @@ export function App() {
                     { path: "/design-lab/windows", element: <WindowLab /> },
                     { path: "/design-lab/accent", element: <AccentLab /> },
                     { path: "/design-lab/palette", element: <PaletteLab /> },
+                    {
+                        path: "/design-lab/illustrations",
+                        element: <IllustrationLab />,
+                    },
                     { path: routes.login, element: <AuthPage kind="login" /> },
                     {
                         path: routes.register,

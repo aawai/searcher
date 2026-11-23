@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { ActionGroup } from "../components/searcher/semantic.tsx";
+import { Illustration } from "../components/illustrations/Illustration.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { routes } from "./routes.ts";
 import type { PageHost } from "./page-host.tsx";
@@ -33,6 +34,7 @@ export function NotFoundContent(
     return (
         <PageShell archetype="utility">
             <div className="narrow-form">
+                <Illustration name="auth-or-error" size="md" />
                 <PageHeader
                     title="页面不存在"
                     description="链接可能有误，或页面已被移除。"

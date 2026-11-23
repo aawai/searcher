@@ -78,6 +78,9 @@ export const preferences = sqliteTable("preferences", {
     }).notNull().default("regular"),
     tabIcon: text("tab_icon", { enum: ["editorial", "keycap"] })
         .notNull().default("editorial"),
+    illustrationStyle: text("illustration_style", {
+        enum: ["auto", "glass", "botanical"],
+    }).notNull().default("auto"),
     backgroundImage: text("background_image"),
     botanicalScene: text("botanical_scene"),
     wallpaperMask: real("wallpaper_mask").notNull().default(0.36),
@@ -130,6 +133,10 @@ export const preferences = sqliteTable("preferences", {
     check(
         "preferences_tab_icon_check",
         sql`${t.tabIcon} in ('editorial','keycap')`,
+    ),
+    check(
+        "preferences_illustration_style_check",
+        sql`${t.illustrationStyle} in ('auto','glass','botanical')`,
     ),
     check(
         "preferences_search_target_check",

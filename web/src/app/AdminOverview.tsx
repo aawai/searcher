@@ -138,6 +138,7 @@ export function AdminOverview() {
                     ? <LoadingState>正在加载系统概览…</LoadingState>
                     : (
                         <EmptyState
+                            illustration="auth-or-error"
                             title="无法加载系统概览"
                             description={error}
                             action={
@@ -268,7 +269,9 @@ export function AdminOverview() {
                             <SettingsRow
                                 key={log.id}
                                 title={action.label}
-                                description={`${formatActor(log)} → ${target.label}`}
+                                description={`${
+                                    formatActor(log)
+                                } → ${target.label}`}
                             >
                                 <time className="admin-audit-time">
                                     {formatRecentTime(log.createdAt)}

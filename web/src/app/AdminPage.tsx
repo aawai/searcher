@@ -667,6 +667,7 @@ export function AdminPage() {
             <PageShell archetype="management">
                 <PageHeader title="管理后台" />
                 <EmptyState
+                    illustration="auth-or-error"
                     title="无权访问"
                     description="管理后台仅限管理员访问。"
                     action={currentUser
@@ -805,6 +806,7 @@ export function AdminPage() {
                         : userError && users.length === 0
                         ? (
                             <EmptyState
+                                illustration="auth-or-error"
                                 title="无法加载用户列表"
                                 action={
                                     <Button
@@ -824,6 +826,7 @@ export function AdminPage() {
                         : users.length === 0
                         ? (
                             <EmptyState
+                                illustration="no-results"
                                 title={submittedSearch
                                     ? `没有匹配「${submittedSearch}」的用户`
                                     : "暂无用户"}
@@ -1346,6 +1349,7 @@ export function AdminPage() {
                         : auditError && auditLogs.length === 0
                         ? (
                             <EmptyState
+                                illustration="auth-or-error"
                                 title="无法加载审计日志"
                                 action={
                                     <Button
@@ -1366,6 +1370,7 @@ export function AdminPage() {
                         : auditLogs.length === 0
                         ? (
                             <EmptyState
+                                illustration="no-results"
                                 title={auditActionFilter || submittedAuditSearch
                                     ? "没有匹配的审计记录"
                                     : "暂无审计记录"}

@@ -392,6 +392,7 @@ export function AccountContent({ host }: { host: PageHost }) {
         return (
             <SettingsShell current="account" host={host}>
                 <EmptyState
+                    illustration="auth-or-error"
                     title="未登录"
                     action={
                         <Link

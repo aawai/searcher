@@ -725,6 +725,12 @@
     gap: var(--space-3);
     text-align: center;
 }
+.empty-state__illustration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-1);
+}
 .empty-state h2,
 .empty-state h3 {
     margin: 0;
