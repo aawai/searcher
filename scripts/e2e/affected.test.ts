@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { collectAffectedPaths } from "./affected.ts";
-import { selectAffected, suiteFiles } from "./suites.ts";
+import { expandExecutionShards, selectAffected, suiteFiles } from "./suites.ts";
 
 Deno.test("affected: empty paths select no tests", () => {
     assertEquals(selectAffected([]), {
@@ -197,4 +197,29 @@ Deno.test("affected: git intake includes committed, staged, unstaged, renamed, d
     } finally {
         await Deno.remove(cwd, { recursive: true });
     }
+});
+
+Deno.test("expandExecutionShards: expands workspace, documents, full and deduplicates", () => {
+    assertEquals(expandExecutionShards([]), []);
+    assertEquals(expandExecutionShards(["routing"]), ["routing"]);
+    assertEquals(expandExecutionShards(["workspace", "documents", "routing"]), [
+        "workspace-a",
+        "workspace-b",
+        "documents-a",
+        "documents-b",
+        "pagination-mixed",
+        "routing",
+    ]);
+    assertEquals(expandExecutionShards(["routing", "full"]), [
+        "workspace-a",
+        "workspace-b",
+        "documents-a",
+        "documents-b",
+        "pagination-mixed",
+        "routing",
+        "supplemental",
+        "wallpaper",
+        "home-masthead",
+        "bundle",
+    ]);
 });

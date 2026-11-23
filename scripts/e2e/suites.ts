@@ -71,10 +71,22 @@ export const suites = {
 
 const paginationFiles = new Set<string>(Object.values(paginationSuites).flat());
 
+const documentsShardA = new Set<string>([
+    "document-vertical-layout",
+    "documents-window-prefs",
+    "documents-tree",
+    "document-host-boundaries",
+    "documents-focus",
+    "documents-ux",
+]);
+
 // Execution partitions, not new affected business domains.
 export const documentPartitions = {
-    "documents-core": suites.documents.filter((name) =>
-        !paginationFiles.has(name)
+    "documents-a": suites.documents.filter((name) =>
+        !paginationFiles.has(name) && documentsShardA.has(name)
+    ),
+    "documents-b": suites.documents.filter((name) =>
+        !paginationFiles.has(name) && !documentsShardA.has(name)
     ),
     ...paginationSuites,
 } as const;
@@ -300,6 +312,46 @@ export function selectAffected(paths: readonly string[]): AffectedSelection {
         files: [...new Set(ordered.flatMap(suiteFiles))],
         reason: "Mapped changed paths and direct E2E owners",
     };
+}
+
+const FULL_EXECUTION_SHARDS: readonly Suite[] = [
+    "workspace-a",
+    "workspace-b",
+    "documents-a",
+    "documents-b",
+    "pagination-mixed",
+    "routing",
+    "supplemental",
+    "wallpaper",
+    "home-masthead",
+    "bundle",
+];
+
+/** Expands selected affected suites into balanced CI execution shards. */
+export function expandExecutionShards(selected: readonly Suite[]): Suite[] {
+    if (!selected.length) return [];
+    if (selected.includes("full")) return [...FULL_EXECUTION_SHARDS];
+    const shards: Suite[] = [];
+    const seen = new Set<Suite>();
+    const push = (suite: Suite) => {
+        if (!seen.has(suite)) {
+            seen.add(suite);
+            shards.push(suite);
+        }
+    };
+    for (const suite of selected) {
+        if (suite === "workspace") {
+            push("workspace-a");
+            push("workspace-b");
+        } else if (suite === "documents") {
+            push("documents-a");
+            push("documents-b");
+            push("pagination-mixed");
+        } else {
+            push(suite);
+        }
+    }
+    return shards;
 }
 
 function checkAffectedMappings(): void {
