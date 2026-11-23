@@ -15,7 +15,6 @@ import type { EngineId } from "@shared/engines.ts";
 import {
     normalizeWallpaperPresentations,
     type WallpaperPresentation,
-    wallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
 import {
     type BotanicalSpecies,
@@ -486,13 +485,7 @@ export function AppState({ children }: { children: ReactNode }) {
     }, [appearance.theme]);
 
     // Derived even under a manual accent so "跟随壁纸" previews the wallpaper colour.
-    const wallpaperAccent = useWallpaperAccent(
-        appearance.wallpaper,
-        wallpaperPresentation(
-            appearance.wallpaper,
-            appearance.wallpaperPresentations,
-        ).composition,
-    );
+    const wallpaperAccent = useWallpaperAccent(appearance.wallpaper);
     useEffect(() => {
         applyStyleAttributes(document.documentElement, {
             accent: appearance.accent,

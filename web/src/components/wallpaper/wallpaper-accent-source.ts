@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import type { WallpaperComposition } from "@shared/wallpaper.ts";
 import {
     deriveWallpaperAccent,
     type WallpaperAccent,
@@ -59,12 +58,11 @@ export async function sampleWallpaper(
 }
 
 /**
- * Accent derived from a wallpaper and its focal point. Re-samples only when the
- * source changes; moving the focal point re-derives from the cached pixels.
+ * Accent derived from the full wallpaper (decoupled from composition focal
+ * point). Re-samples and re-derives only when the wallpaper source changes.
  */
 export function useWallpaperAccent(
     source: string,
-    composition: WallpaperComposition,
 ): WallpaperAccent | null {
     const [sample, setSample] = useState<
         { source: string; value: WallpaperSample | null } | null
@@ -80,13 +78,9 @@ export function useWallpaperAccent(
         };
     }, [source]);
     const current = sample?.source === source ? sample.value : null;
-    const { focalX, focalY } = composition;
     return useMemo(
-        () =>
-            current
-                ? deriveWallpaperAccent(current.pixels, { focalX, focalY })
-                : null,
-        [current, focalX, focalY],
+        () => current ? deriveWallpaperAccent(current.pixels) : null,
+        [current],
     );
 }
 

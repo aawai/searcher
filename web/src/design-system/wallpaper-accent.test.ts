@@ -343,12 +343,73 @@ Deno.test("wallpaper accent: a mostly blue sky photo yields a blue accent", () =
     assert(hueDistance(hueOf(derived.light.accent), hueOf("#6ea5e1")) <= 20);
 });
 
-Deno.test("wallpaper accent: the focal region decides between competing hues", () => {
-    const pixels = split([220, 30, 30], [30, 60, 220]);
-    const left = deriveWallpaperAccent(pixels, { focalX: 0, focalY: 0.5 });
-    const right = deriveWallpaperAccent(pixels, { focalX: 1, focalY: 0.5 });
-    assert(hueDistance(hueOf(left.light.accent), hueOf("#dc1e1e")) <= 20);
-    assert(hueDistance(hueOf(right.light.accent), hueOf("#1e3cdc")) <= 20);
+Deno.test("wallpaper accent: centre-grey frame with coloured border still picks the border hue", () => {
+    const width = 40;
+    const height = 40;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const inCenter = x >= width * 0.25 && x < width * 0.75 &&
+                y >= height * 0.25 && y < height * 0.75;
+            data.set(
+                inCenter ? [140, 140, 140, 255] : [40, 110, 210, 255],
+                (y * width + x) * 4,
+            );
+        }
+    }
+    const derived = deriveWallpaperAccent({ width, height, data });
+    assert(hueDistance(hueOf(derived.light.accent), hueOf("#286ed2")) <= 20);
+});
+
+Deno.test("wallpaper accent: mostly white wallpaper with small edge red accents picks red", () => {
+    const width = 50;
+    const height = 50;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            // ~4% red accent along the top-right corner; rest is pure white.
+            const isRed = x >= width - 10 && y < 10;
+            data.set(
+                isRed ? [220, 40, 40, 255] : [255, 255, 255, 255],
+                (y * width + x) * 4,
+            );
+        }
+    }
+    const derived = deriveWallpaperAccent({ width, height, data });
+    assert(hueDistance(hueOf(derived.light.accent), hueOf("#dc2828")) <= 20);
+});
+
+Deno.test("wallpaper accent: centre soft-weighting favours centre subject over equal-area border", () => {
+    const width = 40;
+    const height = 40;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            // Centre ~50% area (28x28 = 784px) is blue; outer ~50% (816px) is red.
+            const inCenter = x >= 6 && x < 34 && y >= 6 && y < 34;
+            data.set(
+                inCenter ? [35, 90, 215, 255] : [215, 45, 45, 255],
+                (y * width + x) * 4,
+            );
+        }
+    }
+    const derived = deriveWallpaperAccent({ width, height, data });
+    assert(hueDistance(hueOf(derived.light.accent), hueOf("#235ad7")) <= 20);
+});
+
+Deno.test("wallpaper accent: large muted slate-blue backdrop resists small saturated red accent", () => {
+    const width = 40;
+    const height = 40;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let i = 0; i < width * height; i++) {
+        // 85% muted slate-blue (low chroma ~0.06), 15% saturated red noise.
+        data.set(
+            i % 20 < 3 ? [230, 30, 30, 255] : [115, 130, 155, 255],
+            i * 4,
+        );
+    }
+    const derived = deriveWallpaperAccent({ width, height, data });
+    assert(hueDistance(hueOf(derived.light.accent), hueOf("#73829b")) <= 20);
 });
 
 Deno.test("wallpaper accent: black, white and grey wallpapers yield a neutral accent", () => {

@@ -1,15 +1,11 @@
 import {
     type ChangeEvent,
-    type KeyboardEvent,
-    type PointerEvent,
     useEffect,
     useRef,
     useState,
 } from "react";
 import { Link } from "react-router-dom";
 import { type AccentPreference, ACCENTS } from "@shared/contracts.ts";
-import type { WallpaperComposition } from "@shared/wallpaper.ts";
-import { DEFAULT_WALLPAPER_PRESENTATION } from "@shared/wallpaper-presentation.ts";
 import { type Appearance, useAppState } from "../app/state.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
@@ -161,7 +157,7 @@ function PaletteTable(
     );
 }
 
-/** Prototype for #241 S: the accent follows the wallpaper's focal region. */
+/** Prototype for #241 S: the accent follows the full wallpaper with centre weighting. */
 export default function AccentLab() {
     const { appearance: saved } = useAppState();
     const [theme, setTheme] = useState<Appearance["theme"]>(saved.theme);
@@ -170,13 +166,10 @@ export default function AccentLab() {
     >([]);
     const [source, setSource] = useState("");
     const [remote, setRemote] = useState("");
-    const [point, setPoint] = useState<WallpaperComposition>(
-        DEFAULT_WALLPAPER_PRESENTATION.composition,
-    );
     const [choice, setChoice] = useState<AccentPreference>("wallpaper");
     const [checked, setChecked] = useState(true);
     const fileInput = useRef<HTMLInputElement>(null);
-    const derived = useWallpaperAccent(source, point);
+    const derived = useWallpaperAccent(source);
 
     useEffect(() => {
         const painted = PAINTED.map((sample) => ({
@@ -219,33 +212,6 @@ export default function AccentLab() {
         applyWallpaperAccent(root, derived);
     }, [theme, choice, derived]);
 
-    const moveFocal = (event: PointerEvent<HTMLDivElement>) => {
-        const box = event.currentTarget.getBoundingClientRect();
-        setPoint({
-            focalX: Math.min(
-                1,
-                Math.max(0, (event.clientX - box.left) / box.width),
-            ),
-            focalY: Math.min(
-                1,
-                Math.max(0, (event.clientY - box.top) / box.height),
-            ),
-        });
-    };
-    const nudgeFocal = (event: KeyboardEvent<HTMLDivElement>) => {
-        const step = {
-            ArrowLeft: [-0.05, 0],
-            ArrowRight: [0.05, 0],
-            ArrowUp: [0, -0.05],
-            ArrowDown: [0, 0.05],
-        }[event.key];
-        if (!step) return;
-        event.preventDefault();
-        setPoint((current) => ({
-            focalX: Math.min(1, Math.max(0, current.focalX + step[0])),
-            focalY: Math.min(1, Math.max(0, current.focalY + step[1])),
-        }));
-    };
     const pickFile = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.currentTarget.files?.[0];
         if (!file) return;
@@ -268,7 +234,7 @@ export default function AccentLab() {
         <PageShell archetype="workbench" className="design-lab-page accent-lab">
             <PageHeader title="壁纸取色" />
             <p>
-                原型：强调色取自壁纸焦点区域的主色，按浅色 /
+                原型：强调色基于整张壁纸主色（以画面中心平滑软加权、与构图焦点解耦），按浅色 /
                 深色分别校正对比度；手选强调色作为覆盖。
                 <Link to="/design-lab">返回设计实验室</Link>
             </p>
@@ -324,32 +290,10 @@ export default function AccentLab() {
                         移除壁纸
                     </Button>
                 </div>
-                <div
-                    className="accent-lab-stage"
-                    role="slider"
-                    tabIndex={0}
-                    aria-label="取色焦点"
-                    aria-valuetext={`横向 ${
-                        Math.round(point.focalX * 100)
-                    }%，纵向 ${Math.round(point.focalY * 100)}%`}
-                    onPointerDown={moveFocal}
-                    onKeyDown={nudgeFocal}
-                >
+                <div className="accent-lab-stage">
                     <WallpaperSurface
                         embedded
                         source={source}
-                        presentation={{
-                            ...DEFAULT_WALLPAPER_PRESENTATION,
-                            composition: point,
-                        }}
-                    />
-                    <span
-                        className="accent-lab-focal"
-                        aria-hidden="true"
-                        style={{
-                            left: `${point.focalX * 100}%`,
-                            top: `${point.focalY * 100}%`,
-                        }}
                     />
                 </div>
                 <p
