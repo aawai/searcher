@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowDown } from "lucide-react";
 import { usePageHost } from "../../app/page-host.tsx";
 import { Button } from "../../components/ui/button.tsx";
+import { Illustration } from "../../components/illustrations/Illustration.tsx";
 import type {
     AiMessageDto,
     AiModelDto,
@@ -128,6 +129,11 @@ export function SearcherThread({
                 <div className="ask-empty-layout">
                     <div className="ask-empty-centered-unit">
                         <div className="ask-empty-hero">
+                            <Illustration
+                                name="empty-ask"
+                                size="sm"
+                                className="ask-empty-hero__illustration"
+                            />
                             <h2 className="ask-empty-hero__title">
                                 {selectedModelId
                                     ? "有什么可以帮你的？"

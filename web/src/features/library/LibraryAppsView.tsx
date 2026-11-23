@@ -549,6 +549,8 @@ export function LibraryAppsView({
                                 {!matchedFolders.length &&
                                     !matchedApps.length && (
                                     <EmptyState
+                                        illustration="no-results"
+                                        illustrationSize="md"
                                         headingLevel={3}
                                         density="compact"
                                         title="未找到匹配内容"
@@ -599,6 +601,8 @@ export function LibraryAppsView({
                             )
                             : (
                                 <EmptyState
+                                    illustration="empty-apps"
+                                    illustrationSize="md"
                                     headingLevel={3}
                                     density="compact"
                                     title="文件夹中还没有应用"
@@ -638,6 +642,8 @@ export function LibraryAppsView({
                         )
                         : (
                             <EmptyState
+                                illustration="empty-apps"
+                                illustrationSize="md"
                                 headingLevel={3}
                                 density="compact"
                                 title="还没有应用"

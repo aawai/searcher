@@ -697,6 +697,7 @@ function AskWorkspaceContent(
                             </header>
                             <div className="ask-workspace__empty">
                                 <EmptyState
+                                    illustration="empty-ask"
                                     title="暂无可用 AI 模型"
                                     description={user.role === "admin"
                                         ? "请前往 AI 设置添加服务商或启用模型。"

@@ -82,6 +82,30 @@ export function normalizeTabIcon(raw: unknown): TabIcon {
     return DEFAULT_TAB_ICON;
 }
 
+/** 系统插画风格：自动联动（默认）、玻璃光学或植物蓝图。 */
+export const ILLUSTRATION_STYLES = ["auto", "glass", "botanical"] as const;
+export type IllustrationStyle = (typeof ILLUSTRATION_STYLES)[number];
+export type ResolvedIllustrationStyle = "glass" | "botanical";
+export const DEFAULT_ILLUSTRATION_STYLE: IllustrationStyle = "auto";
+
+export function normalizeIllustrationStyle(raw: unknown): IllustrationStyle {
+    if (
+        typeof raw === "string" &&
+        (ILLUSTRATION_STYLES as readonly string[]).includes(raw)
+    ) {
+        return raw as IllustrationStyle;
+    }
+    return DEFAULT_ILLUSTRATION_STYLE;
+}
+
+export function resolveIllustrationStyle(
+    style: IllustrationStyle,
+    botanicalScene: BotanicalSpecies | null,
+): ResolvedIllustrationStyle {
+    if (style === "glass" || style === "botanical") return style;
+    return botanicalScene ? "botanical" : "glass";
+}
+
 export interface AccentMeta {
     readonly id: AccentId;
     readonly label: string;
@@ -255,6 +279,7 @@ export interface PreferencesDto {
     searchShape: SearchShape;
     glassIntensity: GlassIntensity;
     tabIcon: TabIcon;
+    illustrationStyle: IllustrationStyle;
     backgroundImage: string | null;
     botanicalScene: BotanicalSpecies | null;
     wallpaperPresentations: Record<string, WallpaperPresentation>;

@@ -15,6 +15,11 @@ import { Eye, EyeOff, Search, X } from "lucide-react";
 import { Table, TableCaption } from "../ui/table.tsx";
 import { usePresence } from "../ui/presence.ts";
 import { cn } from "../../lib/utils.ts";
+import {
+    Illustration,
+    type IllustrationName,
+    isIllustrationName,
+} from "../illustrations/Illustration.tsx";
 
 type SectionProps = ComponentProps<"section"> & {
     title?: string;
@@ -238,9 +243,7 @@ export function FormField(
                         </label>
                     )
                     : <span className="form-field-label">{label}</span>}
-                {labelEnd && (
-                    <span className="form-field-end">{labelEnd}</span>
-                )}
+                {labelEnd && <span className="form-field-end">{labelEnd}</span>}
             </div>
             {children}
             {message && (
@@ -265,6 +268,8 @@ export function EmptyState(
         title,
         description,
         action,
+        illustration,
+        illustrationSize,
         headingLevel = 2,
         density = "default",
         className,
@@ -273,17 +278,36 @@ export function EmptyState(
         title?: string;
         description?: string;
         action?: ReactNode;
+        illustration?: IllustrationName | ReactNode;
+        illustrationSize?: "sm" | "md" | "lg";
         headingLevel?: 2 | 3;
         density?: "default" | "compact" | "inline";
     },
 ) {
     const Heading = headingLevel === 3 ? "h3" : "h2";
+    const resolvedSize = illustrationSize ??
+        (density === "compact" ? "sm" : "md");
+    const illustrationNode = density !== "inline" && illustration
+        ? (isIllustrationName(illustration)
+            ? (
+                <Illustration
+                    name={illustration}
+                    size={resolvedSize}
+                />
+            )
+            : illustration)
+        : null;
     return (
         <div
             className={cn("empty-state", className)}
             data-density={density}
             {...props}
         >
+            {illustrationNode && (
+                <div className="empty-state__illustration">
+                    {illustrationNode}
+                </div>
+            )}
             {title && <Heading>{title}</Heading>}
             {description && <p>{description}</p>}
             {action && <ActionGroup>{action}</ActionGroup>}

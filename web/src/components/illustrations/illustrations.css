@@ -1,0 +1,40 @@
+.system-illustration {
+    display: block;
+    width: var(--illustration-width, 192px);
+    height: auto;
+    flex-shrink: 0;
+    color: var(--foreground);
+    user-select: none;
+    pointer-events: none;
+    transition: opacity 160ms ease-out;
+}
+
+.system-illustration[data-size="sm"] {
+    --illustration-width: 140px;
+}
+
+.system-illustration[data-size="md"] {
+    --illustration-width: 192px;
+}
+
+.system-illustration[data-size="lg"] {
+    --illustration-width: 232px;
+}
+
+.system-illustration--utility {
+    margin-bottom: var(--space-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .system-illustration,
+    .system-illustration * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+@media (forced-colors: active) {
+    .system-illustration {
+        color: CanvasText;
+    }
+}

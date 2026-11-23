@@ -838,6 +838,18 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                 values={GLASS_CHOICES}
                                 select={(v) => set("glassIntensity", v)}
                             />
+                            <Choices
+                                title="系统插画"
+                                description="空状态与引导页的视觉风格；自动模式在开启内置植物插画壁纸时呈现植物蓝图，其余场景呈现玻璃光学。"
+                                control="segmented"
+                                value={appearance.illustrationStyle}
+                                values={[
+                                    ["auto", "自动"],
+                                    ["glass", "玻璃光学"],
+                                    ["botanical", "植物蓝图"],
+                                ] as const}
+                                select={(v) => set("illustrationStyle", v)}
+                            />
                         </SettingsGroup>
                         <SettingsGroup title="首页">
                             {user && (

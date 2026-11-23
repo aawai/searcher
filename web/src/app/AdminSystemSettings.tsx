@@ -51,7 +51,9 @@ export function AdminSystemSettings() {
         defaultTheme: "system",
         defaultSearchTarget: "same",
     });
-    const [savedSettings, setSavedSettings] = useState<SystemSettingsDto | null>(null);
+    const [savedSettings, setSavedSettings] = useState<
+        SystemSettingsDto | null
+    >(null);
     // The field keeps what was typed; an empty or out-of-range value is an
     // error of the field, never silently replaced.
     const [retentionInput, setRetentionInput] = useState("90");
@@ -138,6 +140,7 @@ export function AdminSystemSettings() {
                     ? <LoadingState>正在加载系统设置…</LoadingState>
                     : (
                         <EmptyState
+                            illustration="auth-or-error"
                             title="无法加载系统设置"
                             description={error}
                             action={

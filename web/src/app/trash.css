@@ -25,6 +25,7 @@
 .trash-empty-state {
     align-items: center;
     text-align: center;
+    padding-block: var(--space-10) var(--space-8);
 }
 
 .trash-empty-state :is(h2, h3) {

@@ -17,6 +17,7 @@ import "./components/searcher/conflict-dialog.css";
 import "./components/searcher/launcher.css";
 import "./components/searcher/pane-resize-handle.css";
 import "./components/searcher/semantic.css";
+import "./components/illustrations/illustrations.css";
 installScrollActivity();
 installFocusRecovery();
 const root = document.getElementById("root");
