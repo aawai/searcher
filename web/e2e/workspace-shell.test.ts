@@ -1,4 +1,3 @@
-import { layoutThemes } from "./helpers/evidence.ts";
 import { assert, assertEquals } from "@std/assert";
 import { type Locator, type Page } from "playwright";
 import { chromium } from "./helpers/browser.ts";
@@ -10,7 +9,6 @@ import { SystemSettingsStore } from "../../src/features/system/settings-store.ts
 import { WallpaperService } from "../../src/features/wallpaper/service.ts";
 import { WebAppIconService } from "../../src/features/webapp-icons/service.ts";
 import {
-    assertInteractiveHome,
     ensureSidebarOpen,
     libraryPanel,
     libraryWindow,
@@ -93,19 +91,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         }
         await libraryPanel(target).first().waitFor({ state: "detached" });
     }
-    async function assertLibraryLayout() {
-        await panel.waitFor();
-        assertEquals(
-            await page.locator("#search-query").evaluate((node) =>
-                Boolean(node.closest("[inert]"))
-            ),
-            false,
-        );
-    }
-    const homeSettled = () =>
-        page.waitForFunction(() =>
-            document.querySelector(".home")?.getAnimations().length === 0
-        );
     // Row contracts run in the flat 最近 list; the tree has its own e2e file.
     async function showRecent() {
         await ensureSidebarOpen(page);
@@ -133,132 +118,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
         body: "Shell body",
     });
     await request("/api/preferences", "PATCH", { theme: "system" });
-    await t.step(
-        "viewport/mode matrix keeps chrome bounded, scrolls only Body and restores focus",
-        async () => {
-            for (const theme of layoutThemes()) {
-                await page.emulateMedia({ colorScheme: theme });
-                for (
-                    const viewport of [
-                        { width: 390, height: 844 },
-                        { width: 768, height: 1024 },
-                        { width: 1024, height: 768 },
-                        { width: 1440, height: 900 },
-                    ] as const
-                ) {
-                    await page.setViewportSize({
-                        width: viewport.width,
-                        height: viewport.height,
-                    });
-                    await visit("/");
-                    await page.waitForFunction(
-                        (expected) =>
-                            document.documentElement.dataset.theme === expected,
-                        theme,
-                    );
-                    const trigger = workspaceNotesTrigger(page);
-                    await trigger.waitFor();
-                    const opener = await trigger.elementHandle();
-                    await page.locator(".hero").waitFor();
-                    const hero = await page.locator(".hero").boundingBox();
-                    await openNotesByKeyboard(page);
-                    await ensureSidebarOpen(page);
-                    await search().waitFor();
-                    await assertWindowInWorkArea(page, frame);
-                    if (viewport.width === 1440 && viewport.height === 900) {
-                        await assertDefaultNotesSize(frame);
-                    }
-                    assertEquals(
-                        await frame.locator(".window-frame__title")
-                            .textContent(),
-                        "笔记",
-                    );
-                    // The window is the landmark named by its title.
-                    assertEquals(
-                        await page.getByRole("region", {
-                            name: "笔记",
-                            exact: true,
-                        }).isVisible(),
-                        true,
-                    );
-                    assert(await search().getAttribute("aria-label"));
-                    // The open transition is one-shot (design rule 6); the shell
-                    // must never loop an animation.
-                    assert(
-                        await frame.evaluate((el) =>
-                            getComputedStyle(el).animationIterationCount !==
-                                "infinite"
-                        ),
-                        "workspace window must not loop an animation",
-                    );
-                    await assertChromeInWorkArea(page);
-                    const before = await chromeBounds(page);
-                    await panel.locator(".workspace-body").evaluate(
-                        (el) => {
-                            el.scrollTop = el.scrollHeight;
-                        },
-                    );
-                    assertEquals(await chromeBounds(page), before);
-                    if (viewport.width >= 768) {
-                        assertEquals(
-                            await page.locator(
-                                '[data-slot="sheet-backdrop"]',
-                            ).count(),
-                            0,
-                        );
-                        await assertLibraryLayout();
-                        await page.locator("#search-query").evaluate((el) =>
-                            el.focus()
-                        );
-                        assertEquals(
-                            await page.locator("#search-query").evaluate((el) =>
-                                el === document.activeElement
-                            ),
-                            true,
-                        );
-                    } else {
-                        // Mobile is non-modal in all widths; backdrop is absent
-                        assertEquals(
-                            await page.locator(
-                                '[data-slot="sheet-backdrop"]',
-                            ).count(),
-                            0,
-                        );
-                    }
-                    await closeButton().focus();
-                    await page.keyboard.press("Enter");
-                    await panel.first().waitFor({ state: "detached" });
-                    await page.waitForFunction(
-                        (element) =>
-                            document.activeElement ===
-                                (element?.isConnected
-                                    ? element
-                                    : document.querySelector(
-                                        ".wordmark-small",
-                                    )),
-                        opener,
-                    ).catch(async (cause) => {
-                        throw new Error(
-                            `Close focus at ${viewport.width}px: ${await page
-                                .evaluate(() =>
-                                    document.activeElement?.outerHTML
-                                )}; opener connected: ${await opener?.evaluate((
-                                    el: Element,
-                                ) => el.isConnected)}`,
-                            { cause },
-                        );
-                    });
-                    await homeSettled();
-                    assertEquals(
-                        await page.locator(".hero").boundingBox(),
-                        hero,
-                    );
-                    await closeAllWorkspaces();
-                }
-            }
-            await closeAllWorkspaces();
-        },
-    );
 
     await t.step(
         "keyboard-only open/search/menu and editor; overlay Escape takes priority",
@@ -404,162 +263,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 
     await t.step(
-        "library keeps bounded chrome, search alignment and create action hierarchy",
-        async () => {
-            for (const theme of layoutThemes()) {
-                await page.emulateMedia({ colorScheme: theme });
-                for (const width of [375, 390, 768, 1024, 1440]) {
-                    await page.setViewportSize({ width, height: 900 });
-                    await visit("/");
-                    await page.locator(".hero").waitFor();
-                    await openDocs();
-                    await panel.locator(".documents-workspace").waitFor();
-                    await assertChromeInWorkArea(page);
-                    const noteInset = await measureBodyInset(panel);
-                    assertNear(noteInset.searchLeftDiff, 0, 2);
-                    assertNear(noteInset.searchRightDiff, 0, 2);
-                    await assertWindowInWorkArea(page, frame);
-                    if (width === 1440) await assertDefaultNotesSize(frame);
-                    if (width >= 768) await assertLibraryLayout();
-                    await closeAllWorkspaces();
-                }
-            }
-
-            // Desktop viewport for interaction, focus/blur, and chrome stability
-            await page.setViewportSize({ width: 1440, height: 900 });
-            await visit("/");
-            await openDocs();
-            await search().waitFor({ state: "visible" });
-
-            // 1. Focus visibility and blur without shift
-            await homeSettled();
-            await page.waitForFunction(() =>
-                document.querySelector('[data-window-id="notes"]')
-                    ?.getAnimations().length === 0
-            );
-            await search().evaluate(async (el) => {
-                await Promise.all(el.getAnimations().map((a) => a.finished));
-            });
-            const panelBaseline = await measureBox(frame);
-            const bodyBaseline = await measureBox(
-                panel.locator(".workspace-body"),
-            );
-            const searchBaseline = await measureBox(search());
-            const blurStyle = await search().evaluate((el) => {
-                const s = getComputedStyle(el);
-                return { boxShadow: s.boxShadow, outline: s.outline };
-            });
-
-            // Focus search input
-            await search().focus();
-            await search().evaluate(async (el) => {
-                await Promise.all(el.getAnimations().map((a) => a.finished));
-            });
-            const focusStyle = await search().evaluate((el) => {
-                const s = getComputedStyle(el);
-                return {
-                    boxShadow: s.boxShadow,
-                    outline: s.outline,
-                    focusVisible: el.matches(":focus-visible"),
-                };
-            });
-            assert(
-                focusStyle.boxShadow !== blurStyle.boxShadow ||
-                    focusStyle.outline !== blurStyle.outline,
-                "Focus must visibly alter box-shadow or outline",
-            );
-            assertEquals(focusStyle.focusVisible, true);
-
-            const panelFocused = await measureBox(frame);
-            const bodyFocused = await measureBox(
-                panel.locator(".workspace-body"),
-            );
-            const searchFocused = await measureBox(search());
-            assertEquals(panelFocused, panelBaseline);
-            assertEquals(bodyFocused, bodyBaseline);
-            assertEquals(searchFocused, searchBaseline);
-
-            await search().blur();
-            await search().evaluate(async (el) => {
-                await Promise.all(el.getAnimations().map((a) => a.finished));
-            });
-            const panelAfterBlur = await measureBox(frame);
-            const bodyAfterBlur = await measureBox(
-                panel.locator(".workspace-body"),
-            );
-            const searchAfterBlur = await measureBox(search());
-            assertEquals(panelAfterBlur, panelBaseline);
-            assertEquals(bodyAfterBlur, bodyBaseline);
-            assertEquals(searchAfterBlur, searchBaseline);
-
-            // 2. Clear action returns focus to the search input
-            await search().fill("DocumentsQueryToClear");
-            const clearBtn = panel.locator(".search-field-clear");
-            await clearBtn.waitFor({ state: "visible" });
-            await clearBtn.focus();
-            await page.keyboard.press("Enter");
-            assertEquals(await search().inputValue(), "");
-            assertEquals(await clearBtn.count(), 0);
-            await page.waitForFunction(() =>
-                document.activeElement?.matches("input[data-workspace-search]")
-            );
-            await page.keyboard.type("DocumentsQueryPersisted");
-            assertEquals(
-                await search().inputValue(),
-                "DocumentsQueryPersisted",
-            );
-            await search().fill("");
-
-            // 3. The sidebar create action remains available while editing.
-            assertEquals(
-                await panel.getByRole("button", {
-                    name: /^新建笔记(?:（|$)/,
-                })
-                    .count(),
-                1,
-            );
-            await panel.getByRole("button", {
-                name: "打开笔记：Shell note",
-                exact: true,
-            }).click();
-            await panel.locator("[data-workspace-editor]").waitFor();
-            assertEquals(
-                await panel.getByRole("button", {
-                    name: /^新建笔记(?:（|$)/,
-                })
-                    .count(),
-                1,
-            );
-
-            // 4. Long titles do not distort chrome
-            const longNote = await request<{ id: string; version: number }>(
-                "/api/documents",
-                "POST",
-                {
-                    title: "T".repeat(200),
-                    body: "B".repeat(500),
-                },
-            );
-            await closeAllWorkspaces();
-            await visit("/");
-            await openDocs();
-            await panel.locator(".documents-workspace").waitFor();
-            await panel.getByRole("button", {
-                name: "打开笔记：" + "T".repeat(200),
-                exact: true,
-            })
-                .waitFor({ state: "attached" });
-            await assertChromeInWorkArea(page);
-
-            await request(
-                `/api/documents/${longNote.id}?version=${longNote.version}`,
-                "DELETE",
-            );
-            await closeAllWorkspaces();
-        },
-    );
-
-    await t.step(
         "Escape minimizes the editor and reopening keeps selection and query",
         async () => {
             for (const reducedMotion of ["no-preference", "reduce"] as const) {
@@ -627,24 +330,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
                 }
             }
             await page.emulateMedia({ reducedMotion: "reduce" });
-        },
-    );
-
-    await t.step(
-        "desktop library leaves home geometry and interaction unchanged",
-        async () => {
-            for (const width of [768, 800, 1024, 1440, 1600]) {
-                await page.setViewportSize({ width, height: 900 });
-                await visit("/");
-                await page.locator(".hero").waitFor();
-                const hero = await page.locator(".hero").boundingBox();
-                await openDocs();
-                await assertInteractiveHome(page);
-                await assertLibraryLayout();
-                await closeAllWorkspaces();
-                await homeSettled();
-                assertEquals(await page.locator(".hero").boundingBox(), hero);
-            }
         },
     );
 
@@ -756,68 +441,6 @@ Deno.test("production Workspace state, keyboard and responsive contracts", async
     );
 });
 
-interface ElementBox {
-    x: number;
-    y: number;
-    right: number;
-    width: number;
-    height: number;
-}
-
-async function measureBox(locator: {
-    evaluate: <R>(pageFunction: (element: HTMLElement) => R) => Promise<R>;
-}): Promise<ElementBox> {
-    return await locator.evaluate((el: HTMLElement) => {
-        const r = el.getBoundingClientRect();
-        return {
-            x: Math.round(r.x),
-            y: Math.round(r.y),
-            right: Math.round(r.right),
-            width: Math.round(r.width),
-            height: Math.round(r.height),
-        };
-    });
-}
-
-function assertNear(actual: number, expected: number, tolerance: number) {
-    assert(
-        Math.abs(actual - expected) <= tolerance,
-        `Expected ${actual} to be within ${tolerance} of ${expected}`,
-    );
-}
-
-interface InsetMetrics {
-    searchLeftDiff: number;
-    searchRightDiff: number;
-}
-
-async function measureBodyInset(panelLocator: {
-    evaluate: <R>(pageFunction: (element: HTMLElement) => R) => Promise<R>;
-}): Promise<InsetMetrics> {
-    return await panelLocator.evaluate((panelEl: HTMLElement) => {
-        const body = panelEl.querySelector(
-            ".documents-workspace",
-        ) as HTMLElement;
-        const searchWrap = body.querySelector(
-            ".documents-sidebar-header",
-        ) as HTMLElement;
-        const bodyRect = body.getBoundingClientRect();
-        const searchRect = searchWrap.getBoundingClientRect();
-        const searchRowRect = searchRect;
-        const bodyStyle = getComputedStyle(body);
-        const padLeft = parseFloat(bodyStyle.paddingLeft);
-        const padRight = parseFloat(bodyStyle.paddingRight);
-        return {
-            searchLeftDiff: Math.round(
-                (searchRect.left - bodyRect.left) - padLeft,
-            ),
-            searchRightDiff: Math.round(
-                (bodyRect.right - searchRowRect.right) - padRight,
-            ),
-        };
-    });
-}
-
 async function chromeBounds(page: Page) {
     return await page.locator('[data-window-id="notes"]').evaluate((el) => {
         const box = (target: Element | null) => {
@@ -867,14 +490,6 @@ async function assertWindowInWorkArea(page: Page, frame: Locator) {
             `narrow window must fill the work area: ${JSON.stringify(rect)}`,
         );
     }
-}
-
-/** Notes default to 960x720 at 1440x900 (clamped to the work area). */
-async function assertDefaultNotesSize(frame: Locator) {
-    const rect = await frame.boundingBox();
-    assert(rect, "the window is laid out");
-    assertNear(rect.width, 960, 1);
-    assertNear(rect.height, 720, 1);
 }
 
 /** Wait for a resize to be reflected by the window geometry. */

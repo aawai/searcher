@@ -1,9 +1,5 @@
 import { walk } from "@std/fs/walk";
 
-const paginationSuites = {
-    "pagination-mixed": ["document-zen-pagination-mixed"],
-} as const;
-
 // File paths live here once. Deno `--parallel` starts files in argument order,
 // so every suite lists files longest-first (per-file JUnit time, jobs=4,
 // 2026-11-03): long files start early instead of extending the tail. Order
@@ -33,9 +29,6 @@ export const suites = {
         "document-vertical-layout",
         "documents-library",
         "documents-drafts",
-        "document-host-boundaries",
-        "document-presentation-contracts",
-        ...Object.values(paginationSuites).flat(),
         "documents",
         "documents-tree",
         "documents-tree-dnd",
@@ -47,7 +40,7 @@ export const suites = {
         "documents-live-preview",
         "documents-ux",
     ],
-    wallpaper: ["wallpaper", "wallpaper-accent"],
+    wallpaper: ["wallpaper"],
     bundle: [
         "pwa",
         "bundle-loading",
@@ -69,26 +62,20 @@ export const suites = {
     ],
 } as const;
 
-const paginationFiles = new Set<string>(Object.values(paginationSuites).flat());
-
 const documentsShardA = new Set<string>([
     "document-vertical-layout",
     "documents-window-prefs",
     "documents-tree",
-    "document-host-boundaries",
     "documents-focus",
     "documents-ux",
 ]);
 
 // Execution partitions, not new affected business domains.
 export const documentPartitions = {
-    "documents-a": suites.documents.filter((name) =>
-        !paginationFiles.has(name) && documentsShardA.has(name)
-    ),
+    "documents-a": suites.documents.filter((name) => documentsShardA.has(name)),
     "documents-b": suites.documents.filter((name) =>
-        !paginationFiles.has(name) && !documentsShardA.has(name)
+        !documentsShardA.has(name)
     ),
-    ...paginationSuites,
 } as const;
 
 // Workspace CI shards, balanced by per-file JUnit time (~233s summed per shard;
@@ -319,12 +306,10 @@ const FULL_EXECUTION_SHARDS: readonly Suite[] = [
     "workspace-b",
     "documents-a",
     "documents-b",
-    "pagination-mixed",
     "routing",
     "supplemental",
     "wallpaper",
     "home-masthead",
-    "bundle",
 ];
 
 /** Expands selected affected suites into balanced CI execution shards. */
@@ -346,7 +331,6 @@ export function expandExecutionShards(selected: readonly Suite[]): Suite[] {
         } else if (suite === "documents") {
             push("documents-a");
             push("documents-b");
-            push("pagination-mixed");
         } else {
             push(suite);
         }

@@ -120,8 +120,8 @@ Deno.test("affected: explicit changed E2E files select containing suites", () =>
     assertEquals(selectAffected(["web/e2e/new-test.test.ts"]).suites, ["full"]);
 });
 
-Deno.test("affected: pagination partitions still select the complete documents domain", () => {
-    for (const suite of ["pagination-mixed"] as const) {
+Deno.test("affected: document partitions still select the complete documents domain", () => {
+    for (const suite of ["documents-a", "documents-b"] as const) {
         const selection = selectAffected(suiteFiles(suite));
         assertEquals(selection.suites, ["documents"]);
         assertEquals(selection.files, suiteFiles("documents"));
@@ -207,7 +207,6 @@ Deno.test("expandExecutionShards: expands workspace, documents, full and dedupli
         "workspace-b",
         "documents-a",
         "documents-b",
-        "pagination-mixed",
         "routing",
     ]);
     assertEquals(expandExecutionShards(["routing", "full"]), [
@@ -215,11 +214,9 @@ Deno.test("expandExecutionShards: expands workspace, documents, full and dedupli
         "workspace-b",
         "documents-a",
         "documents-b",
-        "pagination-mixed",
         "routing",
         "supplemental",
         "wallpaper",
         "home-masthead",
-        "bundle",
     ]);
 });

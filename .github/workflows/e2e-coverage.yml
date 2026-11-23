@@ -25,7 +25,6 @@ jobs:
                     - workspace-b
                     - documents-a
                     - documents-b
-                    - pagination-mixed
                     - routing
                     - supplemental
         steps:

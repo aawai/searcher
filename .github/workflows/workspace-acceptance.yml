@@ -91,7 +91,7 @@ jobs:
             - name: Run affected ${{ matrix.suite }} production E2E
               env:
                   E2E_REPORT_DIR: artifacts/e2e/${{ matrix.suite }}
-                  E2E_SCHEDULE: ${{ matrix.suite == 'pagination-mixed' && '--serial' || '--parallel' }}
+                  E2E_SCHEDULE: --parallel
                   DENO_JOBS: "2"
               run: |
                   mkdir -p "$E2E_REPORT_DIR"

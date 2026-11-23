@@ -28,17 +28,11 @@ Markdown editor/pagination 独立场景。新增 E2E 必须登记；任何执行
 裁剪合并门禁；局部选择不能证明生产 React 构建的完整浏览器覆盖。当前 revision 的 CI
 已完整覆盖各 suite 时，可复用该完整并集，不重复本地 full。
 
-Documents 的执行分区选择器为 `documents-a`、`documents-b`、`pagination-mixed`，通过
+Documents 的执行分区选择器为 `documents-a`、`documents-b`，通过
 `deno run -A scripts/e2e/run.ts <selector>` 运行；它们不是新的 affected 业务域。
-`documents-a` 与 `documents-b` 排除分页入口；分页入口独占 fixture（HTTP 服务、
-内存数据库、资源目录、Browser 和 Context），串行观察 6 个场景：5 种视口
-（1440×900、1024×768、768×1024、390×844、1024×1552）× 默认动效，外加 1440×900
-的 reduced motion。版面不随亮 / 暗主题变化，故不再按主题重复（规则见
-[测试 · 主题维度](../../docs/testing.md#主题维度)）；`initial` 的 5 秒采样仅在
-`E2E_EVIDENCE_DIR` 证据模式下执行。空闲观察窗与断言不变，不重复运行。
-`test:documents` 仍包含各分片，full 仍执行全部文件的去重并集。
+`test:documents` 仍包含全部分片，full 仍执行全部文件的去重并集。
 
-Coverage CI 以 `documents-a`、`documents-b` + `pagination-mixed` job 组成完整 Documents
+Coverage CI 以 `documents-a`、`documents-b` job 组成完整 Documents
 覆盖，再加 `workspace-a`、`workspace-b`、`routing`、`supplemental`，独立并行执行；
 `documents-a`/`documents-b` 与 `workspace-a`/`workspace-b` job 内以 `--parallel`、`DENO_JOBS=2` 执行，其余 job 内串行，不额外运行完整 documents。PR 的 `affected` CI 也会按 `Affected shards` 动态展开为并行 matrix job。
 JUnit、`timings.json`、stdout 和资源报告
