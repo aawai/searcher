@@ -1,9 +1,6 @@
 import { walk } from "@std/fs/walk";
 
 const paginationSuites = {
-    "pagination-short": ["document-zen-pagination-short"],
-    "pagination-manual": ["document-zen-pagination-manual"],
-    "pagination-consecutive": ["document-zen-pagination-consecutive"],
     "pagination-mixed": ["document-zen-pagination-mixed"],
 } as const;
 

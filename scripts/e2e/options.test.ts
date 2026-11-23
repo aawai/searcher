@@ -21,9 +21,6 @@ Deno.test("defaults keep the merge gates: workspace parallel, full serial fail-f
 
 const documentPartitionNames = [
     "documents-core",
-    "pagination-short",
-    "pagination-manual",
-    "pagination-consecutive",
     "pagination-mixed",
 ] as const;
 

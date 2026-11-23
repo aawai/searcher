@@ -24,9 +24,6 @@ jobs:
                     - workspace-a
                     - workspace-b
                     - documents-core
-                    - pagination-short
-                    - pagination-manual
-                    - pagination-consecutive
                     - pagination-mixed
                     - routing
                     - supplemental

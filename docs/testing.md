@@ -129,16 +129,15 @@ untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` �
 `documents-focus.test.ts`。这些文件仅覆盖 Documents 集合的一部分；
 完整 `documents`、`routing` 和 `supplemental` 集合当时尚未接入 CI。
 
-现在 `.github/workflows/e2e-coverage.yml` 在 PR/main 上以七个独立 matrix
-job 执行 `documents-core`、`pagination-short`、`pagination-manual`、
-`pagination-consecutive`、`pagination-mixed`、`routing`、`supplemental`。
-前五片无重无漏地组成完整 Documents：core 排除四个分页入口，每个分页片
+现在 `.github/workflows/e2e-coverage.yml` 在 PR/main 上以四个独立 matrix
+job 执行 `documents-core`、`pagination-mixed`、`routing`、`supplemental`。
+前两片无重无漏地组成完整 Documents：core 排除分页入口，分页片
 独占服务/内存数据库/资源目录/Browser/Context，串行执行 6 个场景（5 种视口 ×
-默认动效，加 1440×900 reduced motion），四片合计 24 场景；版面与主题无关（见
+默认动效，加 1440×900 reduced motion）；版面与主题无关（见
 [主题维度](#主题维度)），空闲观察窗与断言不变。
 每个 job 通过 `deno run -A scripts/e2e/run.ts <suite>` 先构建一次：`documents-core`
-含 17 个相互隔离的文件，以 `--parallel` 与 `DENO_JOBS=2` 执行；其余六片以 `--serial`
-执行。七个 job 可独立并行，不另跑完整 documents。
+含 15 个相互隔离的文件，以 `--parallel` 与 `DENO_JOBS=2` 执行；其余三片以 `--serial`
+执行。四个 job 可独立并行，不另跑完整 documents。
 不设置 `E2E_TIMEOUT_MS`，保留测试 helper 的标准超时；job 上限为 60 分钟。
 matrix 不因其他集合失败而取消，测试失败通过 `pipefail` 保留非零退出码。
 无论成功或失败均尝试上传 `artifacts/e2e/<suite>/` 中的 JUnit、
@@ -146,7 +145,7 @@ matrix 不因其他集合失败而取消，测试失败通过 `pipefail` 保留�
 JUnit，已有诊断仍保留。
 
 原 Bundle 与 Notes workflow 中上述五个 Documents 文件的直接执行步骤已移除，
-由上述 Documents core + 四个分页 job 完整覆盖，避免重复执行；原 Bundle、Home papers、
+由上述 Documents core + 分页 job 完整覆盖，避免重复执行；原 Bundle、Home papers、
 Wallpaper 的 job 名称保持不变；Workspace 门禁改为 `workspace-a` /
 `workspace-b` 两个并行 matrix job（job 名带 shard 后缀），并集等于完整 `workspace`。
 

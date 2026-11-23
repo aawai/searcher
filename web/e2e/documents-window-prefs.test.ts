@@ -30,461 +30,478 @@ async function closeNotes(page: Page) {
     await frame(page).waitFor({ state: "hidden" });
 }
 
-Deno.test("笔记窗口跨设备恢复、优先级及最小化", async () => {
+Deno.test("documents window prefs contracts", async (t) => {
     await using cleanup = new AsyncDisposableStack();
     const app = await startProductionApp();
     cleanup.defer(() => app.close());
-    const user = await app.seedAskFixtureUser();
     const browser = await chromium.launch({
+        handleSIGTERM: false,
         headless: true,
         args: ["--no-sandbox"],
     });
     cleanup.defer(() => browser.close());
-    const a = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-    const b = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-    await loginAndVisit(a, app.origin, "/", user);
-    await loginAndVisit(b, app.origin, "/", user);
-    const previous = await createHomeNote(a, {
-        title: "之前打开",
-        body: "正文",
-        isHomeFixed: false,
-    });
-    const latest = await createHomeNote(a, {
-        title: "最后打开",
-        body: "正文",
-        isHomeFixed: false,
-    });
-    await a.reload();
-    let opened = a.waitForResponse((r) =>
-        r.url().endsWith(`/${previous.id}/opened`) &&
-        r.request().method() === "PUT" && r.ok()
-    );
-    await openRow(a, previous.id);
-    await opened;
-    opened = a.waitForResponse((r) =>
-        r.url().endsWith(`/${latest.id}/opened`) &&
-        r.request().method() === "PUT" && r.ok()
-    );
-    await openRow(a, latest.id);
-    await opened;
-    await b.locator('[data-dock-id="notes"]').click();
-    await expectTitle(b, "最后打开");
 
-    let restoreRequests = 0;
-    b.on("request", (request) => {
-        if (request.url().endsWith("/api/documents/last-opened")) {
-            restoreRequests++;
-        }
-    });
-    await frame(b).getByRole("button", { name: "最小化笔记" }).click();
-    await frame(b).waitFor({ state: "hidden" });
-    await b.locator('[data-dock-id="notes"]').click();
-    await expectTitle(b, "最后打开");
-    assertEquals(restoreRequests, 0);
-    await closeNotes(b);
-    const deleted = await a.request.delete(
-        `${app.origin}/api/documents/${latest.id}?version=${latest.version}`,
-        { headers: { Origin: app.origin } },
-    );
-    assert(deleted.ok(), `trash: ${deleted.status()}`);
-    await b.locator('[data-dock-id="notes"]').click();
-    await expectTitle(b, "之前打开");
-    assertEquals(restoreRequests, 1);
-    await closeNotes(b);
+    await t.step("笔记窗口跨设备恢复、优先级及最小化", async () => {
+        await using stepCleanup = new AsyncDisposableStack();
+        const user = await app.seedAskFixtureUser({ username: "dwp_step_1" });
+        const contextA = await browser.newContext({
+            viewport: { width: 1440, height: 900 },
+        });
+        stepCleanup.defer(() => contextA.close());
+        const contextB = await browser.newContext({
+            viewport: { width: 1440, height: 900 },
+        });
+        stepCleanup.defer(() => contextB.close());
+        const a = await contextA.newPage();
+        const b = await contextB.newPage();
+        await loginAndVisit(a, app.origin, "/", user);
+        await loginAndVisit(b, app.origin, "/", user);
+        const previous = await createHomeNote(a, {
+            title: "之前打开",
+            body: "正文",
+            isHomeFixed: false,
+        });
+        const latest = await createHomeNote(a, {
+            title: "最后打开",
+            body: "正文",
+            isHomeFixed: false,
+        });
+        await a.reload();
+        let opened = a.waitForResponse((r) =>
+            r.url().endsWith(`/${previous.id}/opened`) &&
+            r.request().method() === "PUT" && r.ok()
+        );
+        await openRow(a, previous.id);
+        await opened;
+        opened = a.waitForResponse((r) =>
+            r.url().endsWith(`/${latest.id}/opened`) &&
+            r.request().method() === "PUT" && r.ok()
+        );
+        await openRow(a, latest.id);
+        await opened;
+        await b.locator('[data-dock-id="notes"]').click();
+        await expectTitle(b, "最后打开");
 
-    // Hold the restore response after taking its server snapshot. A manual
-    // selection must remain authoritative even when that old response arrives.
-    const started = Promise.withResolvers<void>();
-    const release = Promise.withResolvers<void>();
-    await b.route("**/api/documents/last-opened", async (route) => {
-        const response = await route.fetch();
-        started.resolve();
-        await release.promise;
-        await route.fulfill({ response });
-    });
-    const other = await createHomeNote(a, {
-        title: "手动选择",
-        body: "正文",
-        isHomeFixed: false,
-    });
-    await b.locator('[data-dock-id="notes"]').click();
-    await started.promise;
-    await openRow(b, other.id);
-    await expectTitle(b, "手动选择");
-    const restoreResponse = b.waitForResponse((r) =>
-        r.url().endsWith("/api/documents/last-opened")
-    );
-    release.resolve();
-    await restoreResponse;
-    await expectTitle(b, "手动选择");
-    await b.unroute("**/api/documents/last-opened");
+        let restoreRequests = 0;
+        b.on("request", (request) => {
+            if (request.url().endsWith("/api/documents/last-opened")) {
+                restoreRequests++;
+            }
+        });
+        await frame(b).getByRole("button", { name: "最小化笔记" }).click();
+        await frame(b).waitFor({ state: "hidden" });
+        await b.locator('[data-dock-id="notes"]').click();
+        await expectTitle(b, "最后打开");
+        assertEquals(restoreRequests, 0);
+        await closeNotes(b);
+        const deleted = await a.request.delete(
+            `${app.origin}/api/documents/${latest.id}?version=${latest.version}`,
+            { headers: { Origin: app.origin } },
+        );
+        assert(deleted.ok(), `trash: ${deleted.status()}`);
+        await b.locator('[data-dock-id="notes"]').click();
+        await expectTitle(b, "之前打开");
+        assertEquals(restoreRequests, 1);
+        await closeNotes(b);
 
-    // React Router's location state is the same deep-link entry used by sources.
-    const deep = await browser.newPage({
-        viewport: { width: 1440, height: 900 },
-    });
-    await loginAndVisit(deep, app.origin, "/", user);
-    await deep.addInitScript((id) => {
-        history.replaceState({
-            usr: { openDocumentId: id },
-            key: "restore-link",
-            idx: 0,
-        }, "");
-    }, previous.id);
-    await deep.reload();
-    await expectTitle(deep, "之前打开");
-});
+        // Hold the restore response after taking its server snapshot. A manual
+        // selection must remain authoritative even when that old response arrives.
+        const started = Promise.withResolvers<void>();
+        const release = Promise.withResolvers<void>();
+        await b.route("**/api/documents/last-opened", async (route) => {
+            const response = await route.fetch();
+            started.resolve();
+            await release.promise;
+            await route.fulfill({ response });
+        });
+        const other = await createHomeNote(a, {
+            title: "手动选择",
+            body: "正文",
+            isHomeFixed: false,
+        });
+        await b.locator('[data-dock-id="notes"]').click();
+        await started.promise;
+        await openRow(b, other.id);
+        await expectTitle(b, "手动选择");
+        const restoreResponse = b.waitForResponse((r) =>
+            r.url().endsWith("/api/documents/last-opened")
+        );
+        release.resolve();
+        await restoreResponse;
+        await expectTitle(b, "手动选择");
+        await b.unroute("**/api/documents/last-opened");
 
-Deno.test("窄窗口恢复结果决定是否打开笔记抽屉", async () => {
-    await using cleanup = new AsyncDisposableStack();
-    const app = await startProductionApp();
-    cleanup.defer(() => app.close());
-    const user = await app.seedAskFixtureUser();
-    const browser = await chromium.launch({
-        headless: true,
-        args: ["--no-sandbox"],
+        // React Router's location state is the same deep-link entry used by sources.
+        const deepContext = await browser.newContext({
+            viewport: { width: 1440, height: 900 },
+        });
+        stepCleanup.defer(() => deepContext.close());
+        const deep = await deepContext.newPage();
+        await loginAndVisit(deep, app.origin, "/", user);
+        await deep.addInitScript((id) => {
+            history.replaceState({
+                usr: { openDocumentId: id },
+                key: "restore-link",
+                idx: 0,
+            }, "");
+        }, previous.id);
+        await deep.reload();
+        await expectTitle(deep, "之前打开");
     });
-    cleanup.defer(() => browser.close());
-    const page = await browser.newPage({
-        viewport: { width: 390, height: 844 },
-    });
-    await loginAndVisit(page, app.origin, "/", user);
-    const started = Promise.withResolvers<void>();
-    const release = Promise.withResolvers<void>();
-    await page.route("**/api/documents/last-opened", async (route) => {
-        const response = await route.fetch();
-        started.resolve();
-        await release.promise;
-        await route.fulfill({ response });
-    });
-    await page.locator('[data-dock-id="notes"]').click();
-    await started.promise;
-    await frame(page).locator(".documents-layout").waitFor();
-    assertEquals(
+
+    await t.step("窄窗口恢复结果决定是否打开笔记抽屉", async () => {
+        await using stepCleanup = new AsyncDisposableStack();
+        const user = await app.seedAskFixtureUser({ username: "dwp_step_2" });
+        const context = await browser.newContext({
+            viewport: { width: 390, height: 844 },
+        });
+        stepCleanup.defer(() => context.close());
+        const page = await context.newPage();
+        await loginAndVisit(page, app.origin, "/", user);
+        const started = Promise.withResolvers<void>();
+        const release = Promise.withResolvers<void>();
+        await page.route("**/api/documents/last-opened", async (route) => {
+            const response = await route.fetch();
+            started.resolve();
+            await release.promise;
+            await route.fulfill({ response });
+        });
+        await page.locator('[data-dock-id="notes"]').click();
+        await started.promise;
+        await frame(page).locator(".documents-layout").waitFor();
+        assertEquals(
+            await frame(page).locator('.documents-layout[data-drawer="open"]')
+                .count(),
+            0,
+        );
+        release.resolve();
         await frame(page).locator('.documents-layout[data-drawer="open"]')
-            .count(),
-        0,
-    );
-    release.resolve();
-    await frame(page).locator('.documents-layout[data-drawer="open"]')
-        .waitFor();
-    await page.unroute("**/api/documents/last-opened");
-    const note = await createHomeNote(page, {
-        title: "窄屏恢复",
-        body: "正文",
-        isHomeFixed: false,
+            .waitFor();
+        await page.unroute("**/api/documents/last-opened");
+        const note = await createHomeNote(page, {
+            title: "窄屏恢复",
+            body: "正文",
+            isHomeFixed: false,
+        });
+        await closeNotes(page);
+        const marked = await page.request.put(
+            `${app.origin}/api/documents/${note.id}/opened`,
+            { headers: { Origin: app.origin } },
+        );
+        assert(marked.ok());
+        await page.locator('[data-dock-id="notes"]').click();
+        await expectTitle(page, "窄屏恢复");
+        assertEquals(
+            await frame(page).locator('.documents-layout[data-drawer="open"]')
+                .count(),
+            0,
+        );
     });
-    await closeNotes(page);
-    const marked = await page.request.put(
-        `${app.origin}/api/documents/${note.id}/opened`,
-        { headers: { Origin: app.origin } },
-    );
-    assert(marked.ok());
-    await page.locator('[data-dock-id="notes"]').click();
-    await expectTitle(page, "窄屏恢复");
-    assertEquals(
-        await frame(page).locator('.documents-layout[data-drawer="open"]')
-            .count(),
-        0,
-    );
-});
 
-Deno.test("侧栏和大纲宽度拖拽、键盘调整后按设备保存", async () => {
-    await using cleanup = new AsyncDisposableStack();
-    const app = await startProductionApp();
-    cleanup.defer(() => app.close());
-    const user = await app.seedAskFixtureUser();
-    const browser = await chromium.launch({
-        headless: true,
-        args: ["--no-sandbox"],
-    });
-    cleanup.defer(() => browser.close());
-    const page = await browser.newPage({
-        viewport: { width: 1600, height: 900 },
-    });
-    await loginAndVisit(page, app.origin, "/", user);
-    const note = await createHomeNote(page, {
-        title: "宽度偏好",
-        body: "# 正文",
-        isHomeFixed: false,
-    });
-    await page.reload();
-    await openRow(page, note.id);
-    await expectTitle(page, "宽度偏好");
-    // Expand the host so the sidebar can grow beyond its default width.
-    await frame(page).getByRole("button", { name: "笔记窗口菜单" }).click();
-    await page.getByRole("menuitem", { name: "调整左边" }).click();
-    for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowLeft");
-    await page.keyboard.press("Enter");
-    const sidebar = frame(page).getByRole("separator", {
-        name: "调整侧栏宽度",
-    });
-    await sidebar.waitFor();
-    const before = Number(await sidebar.getAttribute("aria-valuenow"));
-    const box = await sidebar.boundingBox();
-    assert(box);
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(box.x + box.width / 2 + 32, box.y + box.height / 2);
-    await page.mouse.up();
-    await page.waitForFunction(
-        (width) =>
-            Number(
-                document.querySelector('[aria-label="调整侧栏宽度"]')
-                    ?.getAttribute("aria-valuenow"),
-            ) > width,
-        before,
-    );
-    const dragged = Number(await sidebar.getAttribute("aria-valuenow"));
-    await sidebar.focus();
-    await page.keyboard.press("ArrowRight");
-    const sidebarWidth = Number(await sidebar.getAttribute("aria-valuenow"));
-    assertEquals(sidebarWidth, dragged + 16);
-    await frame(page).getByRole("button", { name: "大纲", exact: true })
-        .click();
-    const outline = frame(page).getByRole("separator", {
-        name: "调整大纲宽度",
-    });
-    await outline.waitFor();
-    const outlineBefore = Number(await outline.getAttribute("aria-valuenow"));
-    await outline.focus();
-    await page.keyboard.press("ArrowLeft");
-    const outlineWidth = Number(await outline.getAttribute("aria-valuenow"));
-    assert(outlineWidth !== outlineBefore);
-    await page.reload();
-    await expectTitle(page, "宽度偏好");
-    // Reload reconstructs the default window geometry, not the expanded host.
-    await frame(page).getByRole("button", { name: "笔记窗口菜单" }).click();
-    await page.getByRole("menuitem", { name: "调整左边" }).click();
-    for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowLeft");
-    await page.keyboard.press("Enter");
-    await sidebar.waitFor();
-    assertEquals(
-        Number(await sidebar.getAttribute("aria-valuenow")),
-        sidebarWidth,
-    );
-    await outline.waitFor();
-    await page.waitForFunction(
-        (width) =>
-            Number(
-                document.querySelector('[aria-label="调整大纲宽度"]')
-                    ?.getAttribute("aria-valuenow"),
-            ) === width,
-        outlineWidth,
-    );
-    // Narrow the host with a maximum saved width; expanding it again must
-    // restore that preference instead of persisting the temporary clamp.
-    await sidebar.focus();
-    await page.keyboard.press("End");
-    const maximum = Number(await sidebar.getAttribute("aria-valuenow"));
-    await frame(page).getByRole("button", { name: "笔记窗口菜单" }).click();
-    await page.getByRole("menuitem", { name: "调整左边" }).click();
-    for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowRight");
-    await page.keyboard.press("Enter");
-    // The clamp follows the host's ResizeObserver, so wait for it to settle.
-    await page.waitForFunction(() =>
-        (document.querySelector(
-            '[data-window-id="notes"] .documents-editor-pane',
-        )
-            ?.getBoundingClientRect().width ?? 0) >= 718
-    );
-    const clampedBox = await frame(page).locator(".documents-sidebar")
-        .boundingBox();
-    assert(
-        clampedBox && clampedBox.width < maximum,
-        `sidebar width: ${clampedBox?.width}`,
-    );
-    await frame(page).getByRole("button", { name: "笔记窗口菜单" }).click();
-    await page.getByRole("menuitem", { name: "调整左边" }).click();
-    for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowLeft");
-    await page.keyboard.press("Enter");
-    await sidebar.waitFor();
-    assertEquals(Number(await sidebar.getAttribute("aria-valuenow")), maximum);
-    await page.setViewportSize({ width: 700, height: 900 });
-    await frame(page).getByRole("button", { name: "笔记侧栏" }).click();
-    const drawer = frame(page).locator(".documents-sidebar--drawer");
-    await drawer.waitFor();
-    assertEquals(
-        await drawer.evaluate((element) =>
-            getComputedStyle(element).getPropertyValue("--notes-sidebar-width")
-                .trim()
-        ),
-        "240px",
-    );
-});
-
-Deno.test("侧栏和大纲预设支持指针、键盘与触屏并保留宽度", async () => {
-    await using cleanup = new AsyncDisposableStack();
-    const app = await startProductionApp();
-    cleanup.defer(() => app.close());
-    const user = await app.seedAskFixtureUser();
-    const browser = await chromium.launch({
-        headless: true,
-        args: ["--no-sandbox"],
-    });
-    cleanup.defer(() => browser.close());
-
-    for (const touch of [false, true]) {
+    await t.step("侧栏和大纲宽度拖拽、键盘调整后按设备保存", async () => {
+        await using stepCleanup = new AsyncDisposableStack();
+        const user = await app.seedAskFixtureUser({ username: "dwp_step_3" });
         const context = await browser.newContext({
             viewport: { width: 1600, height: 900 },
-            hasTouch: touch,
         });
+        stepCleanup.defer(() => context.close());
         const page = await context.newPage();
         await loginAndVisit(page, app.origin, "/", user);
         const note = await createHomeNote(page, {
-            title: touch ? "触屏预设" : "指针预设",
+            title: "宽度偏好",
             body: "# 正文",
             isHomeFixed: false,
         });
         await page.reload();
         await openRow(page, note.id);
-        await expectTitle(page, touch ? "触屏预设" : "指针预设");
-        // Each edge: enter keyboard resize from the window menu, wait for its
-        // hint, step, and confirm; the next menu opens only after it ends.
-        const hint = frame(page).getByText("拖动标题栏调整所选边");
-        const resizeEdge = async (
-            edge: "调整左边" | "调整右边",
-            key: "ArrowLeft" | "ArrowRight",
-        ) => {
-            const menuTrigger = frame(page).getByRole("button", {
-                name: "笔记窗口菜单",
-            });
-            await menuTrigger.click();
-            await page.getByRole("menuitem", { name: edge }).click();
-            await hint.waitFor();
-            // Base UI returns focus to the trigger after selection. Enter must
-            // commit the resize rather than reopen that focused menu.
-            await page.waitForFunction(() =>
-                document.activeElement?.getAttribute("aria-label") ===
-                    "笔记窗口菜单"
-            );
-            for (let i = 0; i < 18; i++) await page.keyboard.press(key);
-            await page.keyboard.press("Enter");
-            assertEquals(await menuTrigger.getAttribute("aria-expanded"), "false");
-            await hint.waitFor({ state: "hidden" });
-        };
-        const resizeHost = async (key: "ArrowLeft" | "ArrowRight") => {
-            await resizeEdge("调整左边", key);
-            await resizeEdge(
-                "调整右边",
-                key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft",
-            );
-        };
-        await resizeHost("ArrowLeft");
+        await expectTitle(page, "宽度偏好");
+        // Expand the host so the sidebar can grow beyond its default width.
+        await frame(page).getByRole("button", { name: "笔记窗口菜单" }).click();
+        await page.getByRole("menuitem", { name: "调整左边" }).click();
+        for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowLeft");
+        await page.keyboard.press("Enter");
         const sidebar = frame(page).getByRole("separator", {
             name: "调整侧栏宽度",
         });
         await sidebar.waitFor();
+        const before = Number(await sidebar.getAttribute("aria-valuenow"));
+        const box = await sidebar.boundingBox();
+        assert(box);
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(
+            box.x + box.width / 2 + 32,
+            box.y + box.height / 2,
+        );
+        await page.mouse.up();
+        await page.waitForFunction(
+            (width) =>
+                Number(
+                    document.querySelector('[aria-label="调整侧栏宽度"]')
+                        ?.getAttribute("aria-valuenow"),
+                ) > width,
+            before,
+        );
+        const dragged = Number(await sidebar.getAttribute("aria-valuenow"));
+        await sidebar.focus();
+        await page.keyboard.press("ArrowRight");
+        const sidebarWidth = Number(
+            await sidebar.getAttribute("aria-valuenow"),
+        );
+        assertEquals(sidebarWidth, dragged + 16);
         await frame(page).getByRole("button", { name: "大纲", exact: true })
             .click();
         const outline = frame(page).getByRole("separator", {
             name: "调整大纲宽度",
         });
         await outline.waitFor();
-        const cdp = touch ? await context.newCDPSession(page) : null;
-        for (
-            const [handle, label, defaultWidth] of [
-                [sidebar, "调整侧栏宽度", 240],
-                [outline, "调整大纲宽度", 260],
-            ] as const
-        ) {
-            const menu = page.getByRole("menu", { name: `${label}预设` });
+        const outlineBefore = Number(
+            await outline.getAttribute("aria-valuenow"),
+        );
+        await outline.focus();
+        await page.keyboard.press("ArrowLeft");
+        const outlineWidth = Number(
+            await outline.getAttribute("aria-valuenow"),
+        );
+        assert(outlineWidth !== outlineBefore);
+        await page.reload();
+        await expectTitle(page, "宽度偏好");
+        // Reload reconstructs the default window geometry, not the expanded host.
+        await frame(page).getByRole("button", { name: "笔记窗口菜单" }).click();
+        await page.getByRole("menuitem", { name: "调整左边" }).click();
+        for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowLeft");
+        await page.keyboard.press("Enter");
+        await sidebar.waitFor();
+        assertEquals(
+            Number(await sidebar.getAttribute("aria-valuenow")),
+            sidebarWidth,
+        );
+        await outline.waitFor();
+        await page.waitForFunction(
+            (width) =>
+                Number(
+                    document.querySelector('[aria-label="调整大纲宽度"]')
+                        ?.getAttribute("aria-valuenow"),
+                ) === width,
+            outlineWidth,
+        );
+        // Narrow the host with a maximum saved width; expanding it again must
+        // restore that preference instead of persisting the temporary clamp.
+        await sidebar.focus();
+        await page.keyboard.press("End");
+        const maximum = Number(await sidebar.getAttribute("aria-valuenow"));
+        await frame(page).getByRole("button", { name: "笔记窗口菜单" }).click();
+        await page.getByRole("menuitem", { name: "调整左边" }).click();
+        for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowRight");
+        await page.keyboard.press("Enter");
+        // The clamp follows the host's ResizeObserver, so wait for it to settle.
+        await page.waitForFunction(() =>
+            (document.querySelector(
+                '[data-window-id="notes"] .documents-editor-pane',
+            )
+                ?.getBoundingClientRect().width ?? 0) >= 718
+        );
+        const clampedBox = await frame(page).locator(".documents-sidebar")
+            .boundingBox();
+        assert(
+            clampedBox && clampedBox.width < maximum,
+            `sidebar width: ${clampedBox?.width}`,
+        );
+        await frame(page).getByRole("button", { name: "笔记窗口菜单" }).click();
+        await page.getByRole("menuitem", { name: "调整左边" }).click();
+        for (let i = 0; i < 18; i++) await page.keyboard.press("ArrowLeft");
+        await page.keyboard.press("Enter");
+        await sidebar.waitFor();
+        assertEquals(
+            Number(await sidebar.getAttribute("aria-valuenow")),
+            maximum,
+        );
+        await page.setViewportSize({ width: 700, height: 900 });
+        await frame(page).getByRole("button", { name: "笔记侧栏" }).click();
+        const drawer = frame(page).locator(".documents-sidebar--drawer");
+        await drawer.waitFor();
+        assertEquals(
+            await drawer.evaluate((element) =>
+                getComputedStyle(element).getPropertyValue(
+                    "--notes-sidebar-width",
+                )
+                    .trim()
+            ),
+            "240px",
+        );
+    });
+
+    await t.step("侧栏和大纲预设支持指针、键盘与触屏并保留宽度", async () => {
+        const user = await app.seedAskFixtureUser({ username: "dwp_step_4" });
+
+        for (const touch of [false, true]) {
+            const context = await browser.newContext({
+                viewport: { width: 1600, height: 900 },
+                hasTouch: touch,
+            });
+            const page = await context.newPage();
+            await loginAndVisit(page, app.origin, "/", user);
+            const note = await createHomeNote(page, {
+                title: touch ? "触屏预设" : "指针预设",
+                body: "# 正文",
+                isHomeFixed: false,
+            });
+            await page.reload();
+            await openRow(page, note.id);
+            await expectTitle(page, touch ? "触屏预设" : "指针预设");
+            // Each edge: enter keyboard resize from the window menu, wait for its
+            // hint, step, and confirm; the next menu opens only after it ends.
+            const hint = frame(page).getByText("拖动标题栏调整所选边");
+            const resizeEdge = async (
+                edge: "调整左边" | "调整右边",
+                key: "ArrowLeft" | "ArrowRight",
+            ) => {
+                const menuTrigger = frame(page).getByRole("button", {
+                    name: "笔记窗口菜单",
+                });
+                await menuTrigger.click();
+                await page.getByRole("menuitem", { name: edge }).click();
+                await hint.waitFor();
+                // Base UI returns focus to the trigger after selection. Enter must
+                // commit the resize rather than reopen that focused menu.
+                await page.waitForFunction(() =>
+                    document.activeElement?.getAttribute("aria-label") ===
+                        "笔记窗口菜单"
+                );
+                for (let i = 0; i < 18; i++) await page.keyboard.press(key);
+                await page.keyboard.press("Enter");
+                assertEquals(
+                    await menuTrigger.getAttribute("aria-expanded"),
+                    "false",
+                );
+                await hint.waitFor({ state: "hidden" });
+            };
+            const resizeHost = async (key: "ArrowLeft" | "ArrowRight") => {
+                await resizeEdge("调整左边", key);
+                await resizeEdge(
+                    "调整右边",
+                    key === "ArrowLeft" ? "ArrowRight" : "ArrowLeft",
+                );
+            };
+            await resizeHost("ArrowLeft");
+            const sidebar = frame(page).getByRole("separator", {
+                name: "调整侧栏宽度",
+            });
+            await sidebar.waitFor();
+            await frame(page).getByRole("button", { name: "大纲", exact: true })
+                .click();
+            const outline = frame(page).getByRole("separator", {
+                name: "调整大纲宽度",
+            });
+            await outline.waitFor();
+            const cdp = touch ? await context.newCDPSession(page) : null;
             for (
-                const [name, width] of [
-                    ["窄", 180],
-                    ["默认", defaultWidth],
-                    ["宽", 400],
+                const [handle, label, defaultWidth] of [
+                    [sidebar, "调整侧栏宽度", 240],
+                    [outline, "调整大纲宽度", 260],
                 ] as const
             ) {
-                if (cdp) {
-                    const box = await handle.boundingBox();
-                    assert(box);
-                    await cdp.send("Input.dispatchTouchEvent", {
-                        type: "touchStart",
-                        touchPoints: [{
-                            x: box.x + box.width / 2,
-                            y: box.y + box.height / 2,
-                            id: 1,
-                        }],
-                    });
-                    // A held long press, as in the notes tree test.
-                    await page.waitForTimeout(700);
-                    await cdp.send("Input.dispatchTouchEvent", {
-                        type: "touchEnd",
-                        touchPoints: [],
-                    });
-                    await menu.waitFor();
-                    // The release's delayed compatibility click must not
-                    // close the menu.
-                    await page.waitForTimeout(400);
-                    await menu.waitFor();
-                } else {
-                    await handle.click({ button: "right" });
+                const menu = page.getByRole("menu", { name: `${label}预设` });
+                for (
+                    const [name, width] of [
+                        ["窄", 180],
+                        ["默认", defaultWidth],
+                        ["宽", 400],
+                    ] as const
+                ) {
+                    if (cdp) {
+                        const box = await handle.boundingBox();
+                        assert(box);
+                        await cdp.send("Input.dispatchTouchEvent", {
+                            type: "touchStart",
+                            touchPoints: [{
+                                x: box.x + box.width / 2,
+                                y: box.y + box.height / 2,
+                                id: 1,
+                            }],
+                        });
+                        // A held long press, as in the notes tree test.
+                        await page.waitForTimeout(700);
+                        await cdp.send("Input.dispatchTouchEvent", {
+                            type: "touchEnd",
+                            touchPoints: [],
+                        });
+                        await menu.waitFor();
+                        // The release's delayed compatibility click must not
+                        // close the menu.
+                        await page.waitForTimeout(400);
+                        await menu.waitFor();
+                    } else {
+                        await handle.click({ button: "right" });
+                    }
+                    await menu.getByRole("menuitemradio", { name, exact: true })
+                        .click();
+                    await page.waitForFunction(
+                        ({ label, width }) =>
+                            Number(
+                                document.querySelector(
+                                    `[aria-label="${label}"]`,
+                                )
+                                    ?.getAttribute("aria-valuenow"),
+                            ) === width,
+                        { label, width },
+                    );
+                    await menu.waitFor({ state: "hidden" });
                 }
-                await menu.getByRole("menuitemradio", { name, exact: true })
-                    .click();
+                await handle.focus();
+                await page.keyboard.press(
+                    label === "调整侧栏宽度" ? "Shift+F10" : "ContextMenu",
+                );
+                assertEquals(
+                    await menu.getByRole("menuitemradio", {
+                        name: "宽",
+                        exact: true,
+                    }).getAttribute("aria-checked"),
+                    "true",
+                );
+                await page.keyboard.press("Escape");
+                await menu.waitFor({ state: "hidden" });
+            }
+            await resizeHost("ArrowRight");
+            await page.waitForFunction(() =>
+                Number(
+                        document.querySelector('[aria-label="调整侧栏宽度"]')
+                            ?.getAttribute("aria-valuenow"),
+                    ) < 400 &&
+                Number(
+                        document.querySelector('[aria-label="调整大纲宽度"]')
+                            ?.getAttribute("aria-valuenow"),
+                    ) < 400
+            );
+            // Selecting while constrained must retain the requested width.
+            for (
+                const [handle, label] of [
+                    [sidebar, "调整侧栏宽度"],
+                    [outline, "调整大纲宽度"],
+                ] as const
+            ) {
+                for (const name of ["窄", "宽"]) {
+                    await handle.click({ button: "right" });
+                    await page.getByRole("menu", { name: `${label}预设` })
+                        .getByRole("menuitemradio", { name, exact: true })
+                        .click();
+                }
+            }
+            await page.reload();
+            await expectTitle(page, touch ? "触屏预设" : "指针预设");
+            await resizeHost("ArrowLeft");
+            for (const handle of [sidebar, outline]) {
+                await handle.waitFor();
                 await page.waitForFunction(
-                    ({ label, width }) =>
+                    (label) =>
                         Number(
                             document.querySelector(`[aria-label="${label}"]`)
                                 ?.getAttribute("aria-valuenow"),
-                        ) === width,
-                    { label, width },
+                        ) === 400,
+                    await handle.getAttribute("aria-label"),
                 );
-                await menu.waitFor({ state: "hidden" });
             }
-            await handle.focus();
-            await page.keyboard.press(
-                label === "调整侧栏宽度" ? "Shift+F10" : "ContextMenu",
-            );
-            assertEquals(
-                await menu.getByRole("menuitemradio", {
-                    name: "宽",
-                    exact: true,
-                }).getAttribute("aria-checked"),
-                "true",
-            );
-            await page.keyboard.press("Escape");
-            await menu.waitFor({ state: "hidden" });
+            await context.close();
         }
-        await resizeHost("ArrowRight");
-        await page.waitForFunction(() =>
-            Number(
-                    document.querySelector('[aria-label="调整侧栏宽度"]')
-                        ?.getAttribute("aria-valuenow"),
-                ) < 400 &&
-            Number(
-                    document.querySelector('[aria-label="调整大纲宽度"]')
-                        ?.getAttribute("aria-valuenow"),
-                ) < 400
-        );
-        // Selecting while constrained must retain the requested width.
-        for (
-            const [handle, label] of [
-                [sidebar, "调整侧栏宽度"],
-                [outline, "调整大纲宽度"],
-            ] as const
-        ) {
-            for (const name of ["窄", "宽"]) {
-                await handle.click({ button: "right" });
-                await page.getByRole("menu", { name: `${label}预设` })
-                    .getByRole("menuitemradio", { name, exact: true }).click();
-            }
-        }
-        await page.reload();
-        await expectTitle(page, touch ? "触屏预设" : "指针预设");
-        await resizeHost("ArrowLeft");
-        for (const handle of [sidebar, outline]) {
-            await handle.waitFor();
-            await page.waitForFunction(
-                (label) =>
-                    Number(
-                        document.querySelector(`[aria-label="${label}"]`)
-                            ?.getAttribute("aria-valuenow"),
-                    ) === 400,
-                await handle.getAttribute("aria-label"),
-            );
-        }
-        await context.close();
-    }
+    });
 });

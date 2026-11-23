@@ -121,14 +121,7 @@ Deno.test("affected: explicit changed E2E files select containing suites", () =>
 });
 
 Deno.test("affected: pagination partitions still select the complete documents domain", () => {
-    for (
-        const suite of [
-            "pagination-short",
-            "pagination-manual",
-            "pagination-consecutive",
-            "pagination-mixed",
-        ] as const
-    ) {
+    for (const suite of ["pagination-mixed"] as const) {
         const selection = selectAffected(suiteFiles(suite));
         assertEquals(selection.suites, ["documents"]);
         assertEquals(selection.files, suiteFiles("documents"));
