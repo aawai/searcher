@@ -1,6 +1,26 @@
-import { type SubmitEvent, useEffect, useRef, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import {
+    type ChangeEvent,
+    type SubmitEvent,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+import {
+    ChevronDown,
+    Crop,
+    ExternalLink,
+    RefreshCw,
+    Trash2,
+    Upload,
+} from "lucide-react";
 import { AUTH_CREDENTIAL_RULES, type UserDto } from "@shared/contracts.ts";
+import {
+    AVATAR_ALLOWED_MIME_TYPES,
+    AVATAR_UPLOAD_MAX_BYTES,
+    AVATAR_UPLOAD_MAX_MIB,
+    type AvatarCrop,
+    type AvatarMetaDto,
+} from "@shared/avatar.ts";
 import { Badge } from "../components/ui/badge.tsx";
 import { Button, buttonVariants } from "../components/ui/button.tsx";
 import {
@@ -13,6 +33,13 @@ import {
     DialogPortal,
     DialogTitle,
 } from "../components/ui/dialog.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu.tsx";
 import { Input } from "../components/ui/input.tsx";
 import {
     AlertDialog,
@@ -39,6 +66,8 @@ import { cn } from "../lib/utils.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { authPath, routes } from "./routes.ts";
 import { SettingsShell } from "./SettingsShell.tsx";
+import { AvatarCropDialog } from "../components/searcher/AvatarCropDialog.tsx";
+import { UserAvatar } from "../components/searcher/UserAvatar.tsx";
 import "./account.css";
 import { type PageHost, usePagePresenter } from "./page-host.tsx";
 
@@ -154,6 +183,20 @@ export function AccountContent({ host }: { host: PageHost }) {
     const [profileSuccess, setProfileSuccess] = useState("");
     const [profileError, setProfileError] = useState("");
 
+    // Avatar state
+    const avatarInputRef = useRef<HTMLInputElement>(null);
+    const [avatarMeta, setAvatarMeta] = useState<AvatarMetaDto | null>(null);
+    const [avatarActionError, setAvatarActionError] = useState("");
+    const [avatarActionSuccess, setAvatarActionSuccess] = useState("");
+    const [cropDialogOpen, setCropDialogOpen] = useState(false);
+    const [cropMode, setCropMode] = useState<"upload" | "recrop">("upload");
+    const [cropFile, setCropFile] = useState<File | null>(null);
+    const [cropPreviewUrl, setCropPreviewUrl] = useState<string | null>(null);
+    const [avatarSaving, setAvatarSaving] = useState(false);
+    const [avatarDialogError, setAvatarDialogError] = useState("");
+    const [removeAvatarOpen, setRemoveAvatarOpen] = useState(false);
+    const [removeAvatarPending, setRemoveAvatarPending] = useState(false);
+
     // Password change state
     const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
     const [currentPassword, setCurrentPassword] = useState("");
@@ -219,6 +262,151 @@ export function AccountContent({ host }: { host: PageHost }) {
             void loadDevices();
         }
     }, [authSession, user?.id]);
+
+    // Load avatar metadata (for recrop & original image access)
+    useEffect(() => {
+        if (!user) {
+            setAvatarMeta(null);
+            return;
+        }
+        let cancelled = false;
+        void api<{ avatar: AvatarMetaDto | null }>("/api/account/avatar")
+            .then((res) => {
+                if (!cancelled && isCurrent()) {
+                    setAvatarMeta(res.avatar);
+                }
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, [authSession, user?.id]);
+
+    useEffect(() => {
+        return () => {
+            if (cropPreviewUrl && cropPreviewUrl.startsWith("blob:")) {
+                URL.revokeObjectURL(cropPreviewUrl);
+            }
+        };
+    }, [cropPreviewUrl]);
+
+    const closeCropDialog = () => {
+        if (avatarSaving) return;
+        setCropDialogOpen(false);
+        setCropFile(null);
+        setAvatarDialogError("");
+        setCropPreviewUrl((prev) => {
+            if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+            return null;
+        });
+    };
+
+    const handleAvatarFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+        setAvatarActionError("");
+        setAvatarActionSuccess("");
+        if (
+            !(AVATAR_ALLOWED_MIME_TYPES as readonly string[]).includes(
+                file.type,
+            )
+        ) {
+            setAvatarActionError(
+                "仅支持 PNG、JPEG、WebP 或 AVIF 格式图片",
+            );
+            return;
+        }
+        if (file.size < 1 || file.size > AVATAR_UPLOAD_MAX_BYTES) {
+            setAvatarActionError(
+                `头像图片大小不能超过 ${AVATAR_UPLOAD_MAX_MIB} MiB`,
+            );
+            return;
+        }
+        const objectUrl = URL.createObjectURL(file);
+        setCropMode("upload");
+        setCropFile(file);
+        setCropPreviewUrl(objectUrl);
+        setAvatarDialogError("");
+        setCropDialogOpen(true);
+    };
+
+    const handleOpenRecrop = () => {
+        if (!avatarMeta) return;
+        setAvatarActionError("");
+        setAvatarActionSuccess("");
+        setCropMode("recrop");
+        setCropFile(null);
+        setCropPreviewUrl(avatarMeta.originalUrl);
+        setAvatarDialogError("");
+        setCropDialogOpen(true);
+    };
+
+    const handleConfirmAvatarCrop = async (crop: AvatarCrop) => {
+        if (!user) return;
+        setAvatarSaving(true);
+        setAvatarDialogError("");
+        try {
+            let res: { avatar: AvatarMetaDto; avatarUrl: string };
+            if (cropMode === "upload") {
+                if (!cropFile) return;
+                const form = new FormData();
+                form.append("avatar", cropFile);
+                form.append("cropX", String(crop.x));
+                form.append("cropY", String(crop.y));
+                form.append("cropSize", String(crop.size));
+                res = await api<{ avatar: AvatarMetaDto; avatarUrl: string }>(
+                    "/api/account/avatar",
+                    { method: "POST", body: form },
+                );
+            } else {
+                res = await api<{ avatar: AvatarMetaDto; avatarUrl: string }>(
+                    "/api/account/avatar/crop",
+                    json("PATCH", crop),
+                );
+            }
+            if (!isCurrent()) return;
+            setAvatarMeta(res.avatar);
+            updateProfile({ ...user, avatarUrl: res.avatarUrl });
+            setAvatarActionSuccess(
+                cropMode === "recrop" ? "头像裁剪已更新" : "头像已更新",
+            );
+            setCropDialogOpen(false);
+            setCropFile(null);
+            setCropPreviewUrl((prev) => {
+                if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+                return null;
+            });
+        } catch (err) {
+            if (isCurrent()) setAvatarDialogError(errorMessage(err));
+        } finally {
+            if (isCurrent()) setAvatarSaving(false);
+        }
+    };
+
+    const handleConfirmRemoveAvatar = async () => {
+        if (!user) return;
+        setRemoveAvatarPending(true);
+        setAvatarActionError("");
+        setAvatarActionSuccess("");
+        try {
+            await api<{ avatarUrl: null }>("/api/account/avatar", {
+                method: "DELETE",
+            });
+            if (!isCurrent()) return;
+            setAvatarMeta(null);
+            updateProfile({ ...user, avatarUrl: null });
+            setRemoveAvatarOpen(false);
+            setAvatarActionSuccess("头像已移除");
+        } catch (err) {
+            if (isCurrent()) {
+                setAvatarActionError(errorMessage(err));
+                setRemoveAvatarOpen(false);
+            }
+        } finally {
+            if (isCurrent()) setRemoveAvatarPending(false);
+        }
+    };
 
     // Save profile
     const handleSaveProfile = async (e: SubmitEvent<HTMLFormElement>) => {
@@ -446,19 +634,134 @@ export function AccountContent({ host }: { host: PageHost }) {
                 )}
 
                 <div className="account-identity">
-                    <span className="account-avatar" aria-hidden="true">
-                        {(user.displayName || user.username).slice(0, 1)
-                            .toUpperCase()}
-                    </span>
-                    <div className="account-identity-text">
-                        <p className="account-identity-name">
-                            {user.displayName}
-                        </p>
-                        <p className="account-identity-meta">
-                            @{user.username} · {roleLabel}
-                        </p>
+                    <div className="account-identity-main">
+                        <span className="account-avatar" aria-hidden="true">
+                            <UserAvatar user={user} />
+                        </span>
+                        <div className="account-identity-text">
+                            <p className="account-identity-name">
+                                {user.displayName}
+                            </p>
+                            <p className="account-identity-meta">
+                                @{user.username} · {roleLabel}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="account-identity-actions">
+                        <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept={AVATAR_ALLOWED_MIME_TYPES.join(",")}
+                            className="sr-only"
+                            aria-hidden="true"
+                            tabIndex={-1}
+                            onChange={handleAvatarFileChange}
+                        />
+                        {user.avatarUrl || avatarMeta
+                            ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger
+                                        className={buttonVariants({
+                                            variant: "outline",
+                                            size: "sm",
+                                        })}
+                                    >
+                                        <span>编辑头像</span>
+                                        <ChevronDown
+                                            size="1em"
+                                            className="icon-sm"
+                                            aria-hidden="true"
+                                        />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent sideOffset={6}>
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                avatarInputRef.current?.click()}
+                                        >
+                                            <Upload
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
+                                            <span>更换头像</span>
+                                        </DropdownMenuItem>
+                                        {avatarMeta && (
+                                            <>
+                                                <DropdownMenuItem
+                                                    onClick={handleOpenRecrop}
+                                                >
+                                                    <Crop
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                        aria-hidden="true"
+                                                    />
+                                                    <span>调整裁剪</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    render={
+                                                        <a
+                                                            href={avatarMeta
+                                                                .originalUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        />
+                                                    }
+                                                >
+                                                    <ExternalLink
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                        aria-hidden="true"
+                                                    />
+                                                    <span>查看原图</span>
+                                                </DropdownMenuItem>
+                                            </>
+                                        )}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            variant="destructive"
+                                            onClick={() =>
+                                                setRemoveAvatarOpen(true)}
+                                        >
+                                            <Trash2
+                                                size="1em"
+                                                className="icon-sm"
+                                                aria-hidden="true"
+                                            />
+                                            <span>移除头像</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )
+                            : (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        avatarInputRef.current?.click()}
+                                >
+                                    上传头像
+                                </Button>
+                            )}
                     </div>
                 </div>
+
+                {avatarActionSuccess && (
+                    <StatusBanner
+                        tone="success"
+                        className="account-forced-banner"
+                    >
+                        {avatarActionSuccess}
+                    </StatusBanner>
+                )}
+                {avatarActionError && (
+                    <StatusBanner
+                        tone="error"
+                        className="account-forced-banner"
+                    >
+                        {avatarActionError}
+                    </StatusBanner>
+                )}
 
                 <form className="account-profile" onSubmit={handleSaveProfile}>
                     <SettingsGroup
@@ -835,6 +1138,49 @@ export function AccountContent({ host }: { host: PageHost }) {
                 onCancel={() => setRevokeOthersOpen(false)}
                 onConfirm={handleConfirmRevokeOthers}
             />
+
+            <AvatarCropDialog
+                open={host.active && cropDialogOpen}
+                mode={cropMode}
+                imageUrl={cropPreviewUrl}
+                initialCrop={cropMode === "recrop" ? avatarMeta?.crop : null}
+                saving={avatarSaving}
+                error={avatarDialogError}
+                onOpenChange={(next) => {
+                    if (!next) closeCropDialog();
+                }}
+                onConfirm={handleConfirmAvatarCrop}
+            />
+
+            <AlertDialog
+                open={host.active && removeAvatarOpen}
+                onOpenChange={(next) => {
+                    if (!next && !removeAvatarPending) {
+                        setRemoveAvatarOpen(false);
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>移除头像</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            确定要移除当前头像吗？保留的原始头像图片也会一并删除。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={removeAvatarPending}>
+                            取消
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            variant="destructive"
+                            disabled={removeAvatarPending}
+                            onClick={handleConfirmRemoveAvatar}
+                        >
+                            {removeAvatarPending ? "移除中…" : "确认移除"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

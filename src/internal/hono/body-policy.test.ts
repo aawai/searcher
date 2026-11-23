@@ -465,3 +465,28 @@ Deno.test("Contract: streamed AI body above 32 MiB is rejected without Content-L
         await ctx.cleanup();
     }
 });
+
+Deno.test("Contract: POST /api/account/avatar enforces 10 MiB + 64 KiB upload limit", async () => {
+    const ctx = await setupTestContext();
+    try {
+        const oversized = new Uint8Array(10 * 1024 * 1024 + 65 * 1024);
+        const res = await ctx.app.request(`${ORIGIN}/api/account/avatar`, {
+            method: "POST",
+            headers: {
+                origin: ORIGIN,
+                "content-type": "multipart/form-data; boundary=----test",
+                cookie: ctx.cookieHeader,
+                "content-length": String(oversized.length),
+            },
+            body: oversized,
+        });
+        assertEquals(res.status, 413);
+        assertEquals(await res.json(), {
+            code: 413,
+            message: "头像图片超过 10 MiB 上限",
+            status: false,
+        });
+    } finally {
+        await ctx.cleanup();
+    }
+});

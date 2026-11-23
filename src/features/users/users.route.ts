@@ -8,9 +8,10 @@ import {
     type AdminUserDto,
     AUTH_CREDENTIAL_RULES,
     AUTH_USERNAME_PATTERN,
+    avatarDisplayUrl,
 } from "@shared/contracts.ts";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
-import { preferences, sessions, users } from "../../db/schema.ts";
+import { preferences, sessions, userAvatars, users } from "../../db/schema.ts";
 import { AuditService } from "../audit/service.ts";
 import { SystemSettingsStore } from "../system/settings-store.ts";
 const usernameRules = AUTH_CREDENTIAL_RULES.username;
@@ -31,7 +32,10 @@ const limitSchema = v.pipe(
     v.regex(/^[1-9]\d*$/, "条数必须为正整数"),
     v.transform((value) => Math.min(50, Number(value))),
 );
-const filterSchema = v.optional(v.picklist(["all", "admin", "disabled"]), "all");
+const filterSchema = v.optional(
+    v.picklist(["all", "admin", "disabled"]),
+    "all",
+);
 
 const searchSchema = v.optional(
     v.pipe(
@@ -131,8 +135,12 @@ export function registerUserRoutes(
                 const whereClause = and(
                     notDeleted,
                     searchCondition,
-                    data.filter === "admin" ? eq(users.role, "admin") : undefined,
-                    data.filter === "disabled" ? eq(users.disabled, true) : undefined,
+                    data.filter === "admin"
+                        ? eq(users.role, "admin")
+                        : undefined,
+                    data.filter === "disabled"
+                        ? eq(users.disabled, true)
+                        : undefined,
                 );
 
                 const countQuery = db
@@ -152,8 +160,10 @@ export function registerUserRoutes(
                         disabled: users.disabled,
                         mustChangePassword: users.mustChangePassword,
                         createdAt: users.createdAt,
+                        avatarId: userAvatars.avatarId,
                     })
-                    .from(users);
+                    .from(users)
+                    .leftJoin(userAvatars, eq(users.id, userAvatars.userId));
 
                 const rows = await baseQuery
                     .where(whereClause)
@@ -171,6 +181,7 @@ export function registerUserRoutes(
                     email: r.email ?? undefined,
                     displayName: r.displayName,
                     role: r.role,
+                    avatarUrl: r.avatarId ? avatarDisplayUrl(r.avatarId) : null,
                     disabled: r.disabled,
                     mustChangePassword: Boolean(r.mustChangePassword),
                     createdAt: r.createdAt,

@@ -235,6 +235,23 @@ a {
 .top-actions .topbar-link--active {
     background: var(--surface-soft);
 }
+.topbar-icon-chip {
+    display: inline-grid;
+    place-items: center;
+    width: var(--icon-lg);
+    height: var(--icon-lg);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface-solid));
+    box-shadow: inset 0 0 0 var(--space-hairline) var(--accent-border);
+    color: var(--accent);
+}
+@media (forced-colors: active) {
+    .topbar-icon-chip {
+        background: Canvas;
+        color: ButtonText;
+        box-shadow: inset 0 0 0 var(--space-hairline) ButtonBorder;
+    }
+}
 /* Appearance controls | identity. Outranks the primitive's stretch. The wide
    margin keeps the small accent dot visibly in the appearance group rather
    than reading as a status badge on the avatar beside it. */
@@ -264,8 +281,10 @@ a {
 .user-avatar-badge {
     width: var(--space-6);
     height: var(--space-6);
+    overflow: hidden;
     border-radius: var(--radius-pill);
     background: var(--surface-soft);
+    box-shadow: var(--shadow-avatar-edge);
     color: var(--foreground);
     font-weight: var(--font-title-weight);
     font-size: var(--font-metadata-size);
@@ -292,9 +311,6 @@ a {
     -webkit-text-stroke: var(--wallpaper-text-stroke);
     paint-order: stroke fill;
     text-shadow: var(--wallpaper-text-halo);
-}
-.app-shell[data-home][data-wallpaper-image="true"] .top-actions :is(a:not(.sync-failed-badge), button) > svg {
-    filter: var(--wallpaper-icon-halo);
 }
 .app-shell[data-home][data-wallpaper-image="true"] .top-actions-separator {
     background: var(--border-on-wallpaper);

@@ -8,6 +8,7 @@ import { errorResponse, notFoundResponse } from "@internal/hono/error.ts";
 import { createSessionMiddleware } from "./features/auth/middleware.ts";
 import { createApiSecurityMiddleware } from "./features/auth/security.ts";
 import { registerAuthRoutes } from "./features/auth/auth.route.ts";
+import { registerAvatarRoutes } from "./features/avatar/avatar.route.ts";
 import { registerUserRoutes } from "./features/users/users.route.ts";
 import { registerBookmarksRoutes } from "./features/bookmarks/bookmarks.route.ts";
 import { registerDocumentsRoutes } from "./features/documents/documents.route.ts";
@@ -158,6 +159,7 @@ export function createApp(
 
     const routes = new Routes<AppEnv>();
     registerAuthRoutes(routes, sharedDeps);
+    registerAvatarRoutes(routes, sharedDeps);
     registerUserRoutes(routes, sharedDeps);
     registerBookmarksRoutes(routes, deps);
     registerDocumentsRoutes(routes, deps);

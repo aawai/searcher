@@ -40,6 +40,7 @@ enforcement。反向代理的请求体上限不应低于下表最大值。
 | -------------------------- | -------------------------------- |
 | 普通 API                   | 64 KiB                           |
 | 应用图标上传               | 2 MiB + 64 KiB                   |
+| 头像上传                   | 10 MiB + 64 KiB                  |
 | 笔记 create/update JSON    | 8 MiB                            |
 | 笔记图片上传               | 10 MiB + 64 KiB                  |
 | `POST /api/ai/chat/stream` | 32 MiB（容纳多模态 base64 附件） |

@@ -1,9 +1,11 @@
 import { assertEquals } from "@std/assert";
 import ReactDOMServer from "react-dom/server";
+import { THEME_IDS } from "@shared/contracts.ts";
 import { Button } from "../ui/button.tsx";
 import { DialogFooter } from "../ui/dialog.tsx";
 import { Input } from "../ui/input.tsx";
 import { Switch } from "../ui/switch.tsx";
+import { ThemeCelestialIcon } from "./ThemeCelestialIcon.tsx";
 import {
     EmptyState,
     FormField,
@@ -165,4 +167,15 @@ Deno.test("EmptyState: renders illustration for default/compact and hides it for
         />,
     );
     assertEquals(inlineHtml.includes("empty-state__illustration"), false);
+});
+
+Deno.test("ThemeCelestialIcon: renders dual-tone hidden svg for all theme ids", () => {
+    for (const theme of THEME_IDS) {
+        const html = ReactDOMServer.renderToString(
+            <ThemeCelestialIcon theme={theme} />,
+        );
+        assertEquals(html.includes('class="theme-celestial-icon"'), true);
+        assertEquals(html.includes('aria-hidden="true"'), true);
+        assertEquals(html.includes("var(--accent)"), true);
+    }
 });

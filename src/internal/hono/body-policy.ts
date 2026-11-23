@@ -5,6 +5,7 @@ import {
     DOCUMENT_ASSET_MAX_BYTES,
     DOCUMENT_JSON_MAX_BYTES,
 } from "../../shared/documents.ts";
+import { AVATAR_UPLOAD_MAX_BYTES } from "../../shared/avatar.ts";
 import { WEBAPP_ICON_UPLOAD_MAX_BYTES } from "../../shared/webapp-icon-limits.ts";
 
 export type BodyType = "json" | "multipart";
@@ -17,7 +18,8 @@ export interface BodyPolicy {
 
 export const JSON_DEFAULT_MAX_SIZE = 64 * 1024; // 64 KiB
 export const AI_CHAT_STREAM_MAX_SIZE = 32 * 1024 * 1024; // 32 MiB
-export const WEBAPP_ICON_UPLOAD_MAX_SIZE = WEBAPP_ICON_UPLOAD_MAX_BYTES + 64 * 1024;
+export const WEBAPP_ICON_UPLOAD_MAX_SIZE = WEBAPP_ICON_UPLOAD_MAX_BYTES +
+    64 * 1024;
 export const UPLOAD_LARGE_MAX_SIZE = 50 * 1024 * 1024; // 50 MiB
 
 export const MSG_JSON_LIMIT = "请求体超过 64 KiB 上限";
@@ -58,6 +60,11 @@ export const DOCUMENT_ASSET_UPLOAD_POLICY: BodyPolicy = {
     limitMessage: "笔记图片超过 10 MiB 上限",
     bodyType: "multipart",
 };
+export const AVATAR_UPLOAD_POLICY: BodyPolicy = {
+    maxSize: AVATAR_UPLOAD_MAX_BYTES + JSON_DEFAULT_MAX_SIZE,
+    limitMessage: "头像图片超过 10 MiB 上限",
+    bodyType: "multipart",
+};
 
 /**
  * Resolve the body policy for a given HTTP request.
@@ -85,6 +92,9 @@ export function resolveBodyPolicy(method: string, path: string): BodyPolicy {
         }
         if (cleanPath === "/api/webapp-icons/upload") {
             return WEBAPP_ICON_UPLOAD_POLICY;
+        }
+        if (cleanPath === "/api/account/avatar") {
+            return AVATAR_UPLOAD_POLICY;
         }
         if (
             cleanPath === "/api/wallpaper" ||
