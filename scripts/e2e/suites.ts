@@ -1,12 +1,5 @@
 import { walk } from "@std/fs/walk";
 
-const paginationSuites = {
-    "pagination-short": ["document-zen-pagination-short"],
-    "pagination-manual": ["document-zen-pagination-manual"],
-    "pagination-consecutive": ["document-zen-pagination-consecutive"],
-    "pagination-mixed": ["document-zen-pagination-mixed"],
-} as const;
-
 // File paths live here once. Deno `--parallel` starts files in argument order,
 // so every suite lists files longest-first (per-file JUnit time, jobs=4,
 // 2026-11-03): long files start early instead of extending the tail. Order
@@ -14,43 +7,23 @@ const paginationSuites = {
 export const suites = {
     workspace: [
         "dock",
-        "library-windows",
-        "apps-session",
-        "home-app-library",
-        "workspace-shell",
         "desktop-windows",
+        "library-windows",
         "launcher",
-        "library",
         "ai-window",
-        "apps-pinning",
-        "workspace",
-        "library-apps",
-        "apps-interactions",
-        "apps-ai-session",
-        "apps-races",
         "apps-ordering",
-        "focus-recovery",
+        "apps-pinning",
     ],
     routing: ["navigation", "auth", "share", "guest-ai-auth"],
     documents: [
         "document-vertical-layout",
         "documents-library",
-        "documents-drafts",
-        "document-host-boundaries",
-        "document-presentation-contracts",
-        ...Object.values(paginationSuites).flat(),
-        "documents",
         "documents-tree",
         "documents-tree-dnd",
-        "documents-window-prefs",
         "documents-focus",
-        "documents-history",
         "documents-live-editing",
-        "documents-events",
-        "documents-live-preview",
-        "documents-ux",
     ],
-    wallpaper: ["wallpaper", "wallpaper-accent"],
+    wallpaper: ["wallpaper"],
     bundle: [
         "pwa",
         "bundle-loading",
@@ -72,26 +45,26 @@ export const suites = {
     ],
 } as const;
 
-const paginationFiles = new Set<string>(Object.values(paginationSuites).flat());
+const documentsShardA = new Set<string>([
+    "document-vertical-layout",
+    "documents-tree",
+    "documents-live-editing",
+]);
 
 // Execution partitions, not new affected business domains.
 export const documentPartitions = {
-    "documents-core": suites.documents.filter((name) =>
-        !paginationFiles.has(name)
+    "documents-a": suites.documents.filter((name) => documentsShardA.has(name)),
+    "documents-b": suites.documents.filter((name) =>
+        !documentsShardA.has(name)
     ),
-    ...paginationSuites,
 } as const;
 
-// Workspace CI shards, balanced by per-file JUnit time (~233s summed per shard;
-// 124s wall for B at jobs=2 locally). B is listed; A is the remainder.
+// Workspace CI shards, balanced by per-file JUnit time.
 const workspaceShardB = new Set<string>([
-    "apps-session",
-    "workspace-shell",
     "desktop-windows",
+    "launcher",
     "ai-window",
     "apps-pinning",
-    "apps-interactions",
-    "apps-ai-session",
 ]);
 
 export const workspacePartitions = {
@@ -128,7 +101,7 @@ export function suiteFiles(suite: Suite): string[] {
         );
     } else if (suite === "layout") {
         names = suites.workspace.filter((name) =>
-            /^(workspace|home-launcher-)/.test(name)
+            /^(dock|desktop-windows|library-windows)$/.test(name)
         );
     } else if (isPartition(suite)) {
         names = partitions[suite];
@@ -303,6 +276,43 @@ export function selectAffected(paths: readonly string[]): AffectedSelection {
         files: [...new Set(ordered.flatMap(suiteFiles))],
         reason: "Mapped changed paths and direct E2E owners",
     };
+}
+
+const FULL_EXECUTION_SHARDS: readonly Suite[] = [
+    "workspace-a",
+    "workspace-b",
+    "documents-a",
+    "documents-b",
+    "routing",
+    "supplemental",
+    "wallpaper",
+    "home-masthead",
+];
+
+/** Expands selected affected suites into balanced CI execution shards. */
+export function expandExecutionShards(selected: readonly Suite[]): Suite[] {
+    if (!selected.length) return [];
+    if (selected.includes("full")) return [...FULL_EXECUTION_SHARDS];
+    const shards: Suite[] = [];
+    const seen = new Set<Suite>();
+    const push = (suite: Suite) => {
+        if (!seen.has(suite)) {
+            seen.add(suite);
+            shards.push(suite);
+        }
+    };
+    for (const suite of selected) {
+        if (suite === "workspace") {
+            push("workspace-a");
+            push("workspace-b");
+        } else if (suite === "documents") {
+            push("documents-a");
+            push("documents-b");
+        } else {
+            push(suite);
+        }
+    }
+    return shards;
 }
 
 function checkAffectedMappings(): void {

@@ -35,10 +35,13 @@ jobs:
                   web/src/features/app-library/
                   web/src/components/searcher/launcher.css
 
-    affected-e2e:
-        name: Affected production E2E
-        runs-on: ubuntu-24.04
-        timeout-minutes: 60
+    plan-affected-e2e:
+        name: Plan affected production E2E shards
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        outputs:
+            run_e2e: ${{ steps.affected.outputs.run_e2e }}
+            suites: ${{ steps.affected.outputs.suites }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -50,25 +53,45 @@ jobs:
               run: deno install
             - name: Verify E2E runner option contracts
               run: deno test -A scripts/e2e/
-            - name: Determine affected E2E suites
+            - name: Determine affected E2E shards
               id: affected
               run: |
                   set -o pipefail
                   LIST_OUTPUT=$(deno run -A scripts/e2e/run.ts affected --base "origin/${{ github.base_ref }}" --list)
                   echo "$LIST_OUTPUT"
-                  if echo "$LIST_OUTPUT" | grep -q "^Affected suites: none$"; then
+                  SHARDS_JSON=$(echo "$LIST_OUTPUT" | sed -n 's/^Affected shards: //p' | tail -n 1)
+                  if [ -z "$SHARDS_JSON" ] || [ "$SHARDS_JSON" = "[]" ]; then
                     echo "run_e2e=false" >> "$GITHUB_OUTPUT"
+                    echo "suites=[\"none\"]" >> "$GITHUB_OUTPUT"
                   else
                     echo "run_e2e=true" >> "$GITHUB_OUTPUT"
+                    echo "suites=$SHARDS_JSON" >> "$GITHUB_OUTPUT"
                   fi
+
+    affected-e2e:
+        name: Affected production ${{ matrix.suite }} E2E
+        needs: plan-affected-e2e
+        if: needs.plan-affected-e2e.outputs.run_e2e == 'true'
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+        strategy:
+            fail-fast: false
+            matrix:
+                suite: ${{ fromJson(needs.plan-affected-e2e.outputs.suites) }}
+        steps:
+            - uses: actions/checkout@v4
+            - uses: denoland/setup-deno@v2
+              with:
+                  deno-version: v2.9.7
+            - name: Install dependencies
+              run: deno install
             - name: Install Chromium
-              if: steps.affected.outputs.run_e2e == 'true'
               timeout-minutes: 12
               uses: ./.github/actions/install-chromium
-            - name: Run affected production E2E
-              if: steps.affected.outputs.run_e2e == 'true'
+            - name: Run affected ${{ matrix.suite }} production E2E
               env:
-                  E2E_REPORT_DIR: artifacts/e2e/affected
+                  E2E_REPORT_DIR: artifacts/e2e/${{ matrix.suite }}
+                  E2E_SCHEDULE: --parallel
                   DENO_JOBS: "2"
               run: |
                   mkdir -p "$E2E_REPORT_DIR"
@@ -76,13 +99,13 @@ jobs:
                   { deno --version; uname -a; lscpu; free -m; } \
                     | tee "$E2E_REPORT_DIR/environment.txt"
                   /usr/bin/time -v -o "$E2E_REPORT_DIR/resources.txt" \
-                    deno run -A scripts/e2e/run.ts affected --base "origin/${{ github.base_ref }}" --parallel --no-fail-fast \
+                    deno run -A scripts/e2e/run.ts ${{ matrix.suite }} "$E2E_SCHEDULE" \
                     2>&1 | tee "$E2E_REPORT_DIR/stdout.log"
-            - name: Upload affected E2E reports
-              if: always() && steps.affected.outputs.run_e2e == 'true'
+            - name: Upload ${{ matrix.suite }} E2E reports
+              if: always()
               uses: actions/upload-artifact@v4
               with:
-                  name: affected-e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
-                  path: artifacts/e2e/affected/
+                  name: affected-${{ matrix.suite }}-e2e-report-${{ github.run_id }}-${{ github.run_attempt }}
+                  path: artifacts/e2e/${{ matrix.suite }}/
                   retention-days: 14
                   if-no-files-found: warn

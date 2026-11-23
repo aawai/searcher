@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import { collectAffectedPaths } from "./affected.ts";
-import { selectAffected, suiteFiles } from "./suites.ts";
+import { expandExecutionShards, selectAffected, suiteFiles } from "./suites.ts";
 
 Deno.test("affected: empty paths select no tests", () => {
     assertEquals(selectAffected([]), {
@@ -109,7 +109,7 @@ Deno.test("affected: library includes documents and other known consumers withou
 
 Deno.test("affected: explicit changed E2E files select containing suites", () => {
     const selection = selectAffected([
-        "web/e2e/documents-history.test.ts",
+        "web/e2e/documents-focus.test.ts",
         "web/e2e/auth.test.ts",
     ]);
     assertEquals(selection.suites, ["routing", "documents"]);
@@ -120,15 +120,8 @@ Deno.test("affected: explicit changed E2E files select containing suites", () =>
     assertEquals(selectAffected(["web/e2e/new-test.test.ts"]).suites, ["full"]);
 });
 
-Deno.test("affected: pagination partitions still select the complete documents domain", () => {
-    for (
-        const suite of [
-            "pagination-short",
-            "pagination-manual",
-            "pagination-consecutive",
-            "pagination-mixed",
-        ] as const
-    ) {
+Deno.test("affected: document partitions still select the complete documents domain", () => {
+    for (const suite of ["documents-a", "documents-b"] as const) {
         const selection = selectAffected(suiteFiles(suite));
         assertEquals(selection.suites, ["documents"]);
         assertEquals(selection.files, suiteFiles("documents"));
@@ -204,4 +197,26 @@ Deno.test("affected: git intake includes committed, staged, unstaged, renamed, d
     } finally {
         await Deno.remove(cwd, { recursive: true });
     }
+});
+
+Deno.test("expandExecutionShards: expands workspace, documents, full and deduplicates", () => {
+    assertEquals(expandExecutionShards([]), []);
+    assertEquals(expandExecutionShards(["routing"]), ["routing"]);
+    assertEquals(expandExecutionShards(["workspace", "documents", "routing"]), [
+        "workspace-a",
+        "workspace-b",
+        "documents-a",
+        "documents-b",
+        "routing",
+    ]);
+    assertEquals(expandExecutionShards(["routing", "full"]), [
+        "workspace-a",
+        "workspace-b",
+        "documents-a",
+        "documents-b",
+        "routing",
+        "supplemental",
+        "wallpaper",
+        "home-masthead",
+    ]);
 });

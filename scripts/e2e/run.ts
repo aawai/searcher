@@ -1,4 +1,9 @@
-import { checkSuites, selectAffected, suiteFiles } from "./suites.ts";
+import {
+    checkSuites,
+    expandExecutionShards,
+    selectAffected,
+    suiteFiles,
+} from "./suites.ts";
 import { parseRunOptions } from "./options.ts";
 import { collectAffectedPaths } from "./affected.ts";
 import { summarizeJunit, triageAdvice } from "./junit-summary.ts";
@@ -15,10 +20,11 @@ const changes = suite === "affected"
     ? await collectAffectedPaths(options.base)
     : null;
 const selection = changes ? selectAffected(changes.paths) : null;
+const shards = selection ? expandExecutionShards(selection.suites) : null;
 const files = selection
     ? selection.files
     : suiteFiles(suite as Exclude<typeof suite, "affected">);
-if (selection && changes) {
+if (selection && changes && shards) {
     console.log(
         `Affected base: ${
             JSON.stringify(changes.base)
@@ -26,6 +32,7 @@ if (selection && changes) {
     );
     console.log(`Affected reason: ${selection.reason}`);
     console.log(`Affected suites: ${selection.suites.join(", ") || "none"}`);
+    console.log(`Affected shards: ${JSON.stringify(shards)}`);
     console.log(`Affected paths: ${JSON.stringify(selection.paths)}`);
     console.log(`Affected files: ${JSON.stringify(files)}`);
     console.log(
@@ -56,6 +63,7 @@ const timings: Record<string, number | string | boolean | string[] | null> = {
             base: changes.base,
             mergeBase: changes.mergeBase,
             selectedSuites: selection.suites,
+            selectedShards: shards ?? [],
             selectionReason: selection.reason,
             list: options.list ?? false,
         }

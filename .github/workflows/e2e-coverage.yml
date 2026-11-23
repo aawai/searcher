@@ -23,11 +23,8 @@ jobs:
                 suite:
                     - workspace-a
                     - workspace-b
-                    - documents-core
-                    - pagination-short
-                    - pagination-manual
-                    - pagination-consecutive
-                    - pagination-mixed
+                    - documents-a
+                    - documents-b
                     - routing
                     - supplemental
         steps:
@@ -44,7 +41,7 @@ jobs:
               env:
                   E2E_REPORT_DIR: artifacts/e2e/${{ matrix.suite }}
                   # Multi-file shards run in parallel; single-file pagination shards and short suites run serially.
-                  E2E_SCHEDULE: ${{ (matrix.suite == 'documents-core' || matrix.suite == 'workspace-a' || matrix.suite == 'workspace-b') && '--parallel' || '--serial' }}
+                  E2E_SCHEDULE: ${{ (matrix.suite == 'documents-a' || matrix.suite == 'documents-b' || matrix.suite == 'workspace-a' || matrix.suite == 'workspace-b') && '--parallel' || '--serial' }}
                   DENO_JOBS: "2"
               run: |
                   mkdir -p "$E2E_REPORT_DIR"

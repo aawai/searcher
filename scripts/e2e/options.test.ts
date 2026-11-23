@@ -20,11 +20,8 @@ Deno.test("defaults keep the merge gates: workspace parallel, full serial fail-f
 });
 
 const documentPartitionNames = [
-    "documents-core",
-    "pagination-short",
-    "pagination-manual",
-    "pagination-consecutive",
-    "pagination-mixed",
+    "documents-a",
+    "documents-b",
 ] as const;
 
 Deno.test("document partition selectors preserve execution defaults and allow explicit parallelism", () => {
@@ -39,9 +36,8 @@ Deno.test("document partition selectors preserve execution defaults and allow ex
 
 Deno.test("document partitions cover documents exactly once and full retains every file once", () => {
     const partitions = documentPartitionNames.map(suiteFiles);
-    for (const pagination of partitions.slice(1)) {
-        assertEquals(pagination.length, 1);
-    }
+    assertEquals(partitions[0].length > 0, true);
+    assertEquals(partitions[1].length > 0, true);
     const files = partitions.flat();
     assertEquals(files.length, new Set(files).size);
     assertEquals(files.toSorted(), suiteFiles("documents").toSorted());
