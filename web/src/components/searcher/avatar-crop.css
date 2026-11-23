@@ -1,0 +1,113 @@
+.avatar-crop-dialog {
+    max-width: 440px;
+}
+
+.avatar-crop-workspace {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    margin-block: var(--space-4);
+}
+
+.avatar-crop-stage {
+    position: relative;
+    width: min(280px, 100%);
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--surface-soft);
+    box-shadow: var(--shadow-avatar-edge);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    outline: none;
+}
+
+.avatar-crop-stage[data-dragging="true"] {
+    cursor: grabbing;
+}
+
+.avatar-crop-stage:focus-visible {
+    box-shadow: 0 0 0 2px var(--ring);
+}
+
+.avatar-crop-image {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    max-width: none;
+    max-height: none;
+    pointer-events: none;
+    user-select: none;
+}
+
+.avatar-crop-mask {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: var(--radius-pill);
+    box-shadow: 0 0 0 999px var(--surface-scrim);
+    border: var(--space-hairline) solid var(--border);
+}
+
+.avatar-crop-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: 100%;
+}
+
+.avatar-crop-preview-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    background: var(--surface-soft);
+}
+
+.avatar-crop-preview {
+    position: relative;
+    flex: none;
+    width: 56px;
+    height: 56px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    box-shadow: var(--shadow-avatar-edge);
+}
+
+.avatar-crop-preview-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-half);
+    min-width: 0;
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+}
+
+.avatar-crop-preview-text > span:first-child {
+    color: var(--foreground);
+    font-size: var(--font-body-size);
+    font-weight: var(--font-label-weight);
+}
+
+.avatar-crop-zoom-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.avatar-crop-zoom-row .slider {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}

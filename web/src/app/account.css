@@ -5,9 +5,23 @@
 .account-identity {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--space-4);
     min-width: 0;
     margin-bottom: var(--space-6);
+}
+
+.account-identity-main {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.account-identity-actions {
+    display: flex;
+    flex: none;
+    align-items: center;
 }
 
 .account-avatar {
@@ -17,8 +31,10 @@
     justify-content: center;
     width: var(--space-9);
     height: var(--space-9);
+    overflow: hidden;
     border-radius: var(--radius-pill);
     background: var(--surface-soft);
+    box-shadow: var(--shadow-avatar-edge);
     color: var(--foreground);
     font-size: var(--font-title-size);
     font-weight: var(--font-title-weight);

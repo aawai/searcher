@@ -4,13 +4,14 @@ import type { Routes } from "@internal/hono/routes.ts";
 import { failResponse } from "@internal/hono/middleware/response.ts";
 import { eq } from "drizzle-orm";
 import type { AppDeps, AppEnv } from "../../serve/env.ts";
-import { preferences, sessions, users } from "../../db/schema.ts";
+import { preferences, sessions, userAvatars, users } from "../../db/schema.ts";
 import { getClientIp, InMemoryRateLimiter } from "./security.ts";
 import { parseCookie } from "./middleware.ts";
 import { SystemSettingsStore } from "../system/settings-store.ts";
 import {
     AUTH_CREDENTIAL_RULES,
     AUTH_USERNAME_PATTERN,
+    avatarDisplayUrl,
 } from "@shared/contracts.ts";
 
 const usernameRules = AUTH_CREDENTIAL_RULES.username;
@@ -184,6 +185,7 @@ export function registerAuthRoutes(
                             email: normalizedEmail ?? undefined,
                             displayName: data.displayName,
                             role: "user" as const,
+                            avatarUrl: null,
                             mustChangePassword: false,
                         },
                     };
@@ -247,20 +249,25 @@ export function registerAuthRoutes(
                 return failResponse(c, 429, "请求过于频繁，请稍后重试");
             }
 
-            const foundUser = await store.run(async (db) => {
+            const foundRow = await store.run(async (db) => {
                 const isEmail = identifier.includes("@");
                 const condition = isEmail
                     ? eq(users.email, identifier)
                     : eq(users.username, identifier);
 
                 const rows = await db
-                    .select()
+                    .select({
+                        user: users,
+                        avatarId: userAvatars.avatarId,
+                    })
                     .from(users)
+                    .leftJoin(userAvatars, eq(users.id, userAvatars.userId))
                     .where(condition)
                     .limit(1)
                     .all();
                 return rows[0] ?? null;
             });
+            const foundUser = foundRow?.user ?? null;
 
             let isValidPassword = false;
             if (foundUser) {
@@ -313,6 +320,9 @@ export function registerAuthRoutes(
                     email: foundUser.email ?? undefined,
                     displayName: foundUser.displayName,
                     role: foundUser.role,
+                    avatarUrl: foundRow?.avatarId
+                        ? avatarDisplayUrl(foundRow.avatarId)
+                        : null,
                     mustChangePassword: Boolean(foundUser.mustChangePassword),
                 },
             });
@@ -344,8 +354,10 @@ export function registerAuthRoutes(
                     displayName: users.displayName,
                     role: users.role,
                     mustChangePassword: users.mustChangePassword,
+                    avatarId: userAvatars.avatarId,
                 })
                 .from(users)
+                .leftJoin(userAvatars, eq(users.id, userAvatars.userId))
                 .where(eq(users.id, sessionUser.id))
                 .limit(1)
                 .all();
@@ -363,6 +375,9 @@ export function registerAuthRoutes(
                 email: userRecord.email ?? undefined,
                 displayName: userRecord.displayName,
                 role: userRecord.role,
+                avatarUrl: userRecord.avatarId
+                    ? avatarDisplayUrl(userRecord.avatarId)
+                    : null,
                 mustChangePassword: Boolean(userRecord.mustChangePassword),
             },
         });
@@ -380,8 +395,10 @@ export function registerAuthRoutes(
                     displayName: users.displayName,
                     role: users.role,
                     mustChangePassword: users.mustChangePassword,
+                    avatarId: userAvatars.avatarId,
                 })
                 .from(users)
+                .leftJoin(userAvatars, eq(users.id, userAvatars.userId))
                 .where(eq(users.id, sessionUser.id))
                 .limit(1)
                 .all();
@@ -399,6 +416,9 @@ export function registerAuthRoutes(
                 email: userRecord.email ?? undefined,
                 displayName: userRecord.displayName,
                 role: userRecord.role,
+                avatarUrl: userRecord.avatarId
+                    ? avatarDisplayUrl(userRecord.avatarId)
+                    : null,
                 mustChangePassword: Boolean(userRecord.mustChangePassword),
             },
         });
@@ -527,8 +547,10 @@ export function registerAuthRoutes(
                             email: users.email,
                             displayName: users.displayName,
                             role: users.role,
+                            avatarId: userAvatars.avatarId,
                         })
                         .from(users)
+                        .leftJoin(userAvatars, eq(users.id, userAvatars.userId))
                         .where(eq(users.id, user.id))
                         .limit(1)
                         .all();
@@ -548,6 +570,9 @@ export function registerAuthRoutes(
                     email: updateResult.user.email ?? undefined,
                     displayName: updateResult.user.displayName,
                     role: updateResult.user.role,
+                    avatarUrl: updateResult.user.avatarId
+                        ? avatarDisplayUrl(updateResult.user.avatarId)
+                        : null,
                 },
             });
         },

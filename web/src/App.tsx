@@ -19,6 +19,7 @@ import {
     UserRound,
 } from "lucide-react";
 import { AppState, useAppState } from "./app/state.tsx";
+import { UserAvatar } from "./components/searcher/UserAvatar.tsx";
 import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
 import { parseWallpaperSource } from "@shared/wallpaper.ts";
 import {
@@ -199,7 +200,9 @@ function AiTopbarLink({ pathname }: { pathname: string }) {
                     />
                 }
             >
-                <Sparkles size="1em" className="icon-lg" aria-hidden="true" />
+                <span className="topbar-icon-chip" aria-hidden="true">
+                    <Sparkles size="1em" className="icon-sm" />
+                </span>
             </TooltipTrigger>
             <TooltipContent>AI 问答</TooltipContent>
         </Tooltip>
@@ -360,10 +363,20 @@ function Layout() {
                         <AppearancePicker
                             theme={appearance.theme}
                             accent={appearance.accent}
+                            botanicalScene={appearance.botanicalScene}
+                            wallpaper={appearance.wallpaper}
+                            wallpaperPresentations={appearance
+                                .wallpaperPresentations}
+                            canLoadWallpaperHistory={Boolean(user)}
+                            historyOwnerKey={user?.id ?? null}
                             onThemeChange={(theme) =>
                                 void setAppearance({ theme })}
                             onAccentChange={(accent) =>
                                 void setAppearance({ accent })}
+                            onBotanicalSceneChange={(botanicalScene) =>
+                                void setAppearance({ botanicalScene })}
+                            onWallpaperChange={(patch) =>
+                                void setAppearance(patch)}
                         />
                         {!desktopTopbar && (
                             <Tooltip>
@@ -379,11 +392,15 @@ function Layout() {
                                         />
                                     }
                                 >
-                                    <Settings
-                                        size="1em"
-                                        className="icon-lg"
+                                    <span
+                                        className="topbar-icon-chip"
                                         aria-hidden="true"
-                                    />
+                                    >
+                                        <Settings
+                                            size="1em"
+                                            className="icon-sm"
+                                        />
+                                    </span>
                                 </TooltipTrigger>
                                 <TooltipContent>设置</TooltipContent>
                             </Tooltip>
@@ -419,8 +436,7 @@ function Layout() {
                                         aria-label={`用户菜单：${user.displayName}`}
                                     >
                                         <span className="user-avatar-badge">
-                                            {(user.displayName || user.username)
-                                                .slice(0, 1)}
+                                            <UserAvatar user={user} />
                                         </span>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent sideOffset={8}>

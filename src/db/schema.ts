@@ -405,3 +405,48 @@ export const documentAssets = sqliteTable("document_assets", {
         sql`${t.byteSize} between 1 and 10485760`,
     ),
 ]);
+
+export const userAvatars = sqliteTable("user_avatars", {
+    userId: text("user_id").primaryKey().references(() => users.id, {
+        onDelete: "cascade",
+    }),
+    avatarId: text("avatar_id").notNull().unique(),
+    originalMimeType: text("original_mime_type", {
+        enum: ["image/png", "image/jpeg", "image/webp", "image/avif"],
+    }).notNull(),
+    originalByteSize: integer("original_byte_size").notNull(),
+    originalWidth: integer("original_width").notNull(),
+    originalHeight: integer("original_height").notNull(),
+    originalData: blob("original_data", { mode: "buffer" }).notNull(),
+    displayMimeType: text("display_mime_type", {
+        enum: ["image/webp", "image/png"],
+    }).notNull(),
+    displayByteSize: integer("display_byte_size").notNull(),
+    displaySize: integer("display_size").notNull(),
+    displayData: blob("display_data", { mode: "buffer" }).notNull(),
+    cropX: real("crop_x").notNull(),
+    cropY: real("crop_y").notNull(),
+    cropSize: real("crop_size").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+}, (t) => [
+    check(
+        "user_avatars_original_mime_check",
+        sql`${t.originalMimeType} in ('image/png','image/jpeg','image/webp','image/avif')`,
+    ),
+    check(
+        "user_avatars_display_mime_check",
+        sql`${t.displayMimeType} in ('image/webp','image/png')`,
+    ),
+    check(
+        "user_avatars_original_size_check",
+        sql`${t.originalByteSize} between 1 and 10485760`,
+    ),
+    check(
+        "user_avatars_display_size_check",
+        sql`${t.displayByteSize} between 1 and 1048576`,
+    ),
+    check(
+        "user_avatars_crop_check",
+        sql`${t.cropX} >= 0 and ${t.cropY} >= 0 and ${t.cropSize} > 0 and ${t.cropSize} <= 1`,
+    ),
+]);

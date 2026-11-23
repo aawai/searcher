@@ -26,7 +26,6 @@ import { isHighContrastTheme } from "../design-system/theme.ts";
 import {
     type PointerEvent as ReactPointerEvent,
     type ReactNode,
-    useCallback,
     useEffect,
     useMemo,
     useRef,
@@ -71,6 +70,12 @@ import { Switch } from "../components/ui/switch.tsx";
 import { WallpaperCompositionDialog } from "../components/wallpaper/WallpaperCompositionDialog.tsx";
 import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperStageContextPreview.tsx";
+import {
+    BOTANICAL_SCENE_CHOICES,
+    buildWallpaperSelectionPatch,
+    type WallpaperHistoryRecord,
+} from "../components/wallpaper/wallpaper-choices.ts";
+export type { WallpaperHistoryRecord };
 import { api } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
 import { AiSettings } from "./AiSettings.tsx";
@@ -188,23 +193,6 @@ function Choices<T extends string>(
             {input}
         </SettingsRow>
     );
-}
-
-const BOTANICAL_SCENE_CHOICES: ReadonlyArray<
-    readonly [BotanicalSpecies, string]
-> = [
-    ["auto", "每日"],
-    ["ginkgo", "银杏"],
-    ["eucalyptus", "尤加利"],
-    ["plum", "寒梅"],
-    ["fern", "蕨类"],
-];
-
-export interface WallpaperHistoryRecord {
-    id: string;
-    url: string;
-    focalX?: number;
-    focalY?: number;
 }
 
 export function SettingsPage() {
@@ -473,27 +461,12 @@ export function SettingsContent({ host }: { host: PageHost }) {
 
     async function handleSetCurrentFromHistory(record: WallpaperHistoryRecord) {
         try {
-            const existingPres = wallpaperPresentation(
-                record.url,
-                appearance.wallpaperPresentations,
+            await setAppearance(
+                buildWallpaperSelectionPatch(
+                    record,
+                    appearance.wallpaperPresentations,
+                ),
             );
-            const focal = {
-                focalX: record.focalX ?? existingPres.composition.focalX ?? 0.5,
-                focalY: record.focalY ?? existingPres.composition.focalY ?? 0.5,
-            };
-            const nextPres: WallpaperPresentation = {
-                ...existingPres,
-                composition: focal,
-            };
-            const nextRecords = touchWallpaperPresentation(
-                { ...appearance.wallpaperPresentations },
-                record.url,
-                nextPres,
-            );
-            await setAppearance({
-                wallpaper: record.url,
-                wallpaperPresentations: nextRecords,
-            });
             showToast("已设为当前壁纸");
         } catch (error) {
             showToast(

@@ -1,5 +1,6 @@
 export * from "./wallpaper.ts";
 export * from "./dock.ts";
+export * from "./avatar.ts";
 import type { DockPreferences } from "./dock.ts";
 import type { WallpaperPresentation } from "./wallpaper-presentation.ts";
 export type { WallpaperPresentation };
@@ -163,6 +164,7 @@ export interface UserDto {
     displayName: string;
     role: UserRole;
     email?: string | null;
+    avatarUrl?: string | null;
     mustChangePassword?: boolean;
 }
 export interface AdminUserDto extends UserDto {
