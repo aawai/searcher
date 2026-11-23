@@ -109,7 +109,7 @@ Deno.test("affected: library includes documents and other known consumers withou
 
 Deno.test("affected: explicit changed E2E files select containing suites", () => {
     const selection = selectAffected([
-        "web/e2e/documents-history.test.ts",
+        "web/e2e/documents-focus.test.ts",
         "web/e2e/auth.test.ts",
     ]);
     assertEquals(selection.suites, ["routing", "documents"]);

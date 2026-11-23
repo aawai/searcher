@@ -7,38 +7,21 @@ import { walk } from "@std/fs/walk";
 export const suites = {
     workspace: [
         "dock",
-        "library-windows",
-        "apps-session",
-        "home-app-library",
-        "workspace-shell",
         "desktop-windows",
+        "library-windows",
         "launcher",
-        "library",
         "ai-window",
-        "apps-pinning",
-        "workspace",
-        "library-apps",
-        "apps-interactions",
-        "apps-ai-session",
-        "apps-races",
         "apps-ordering",
-        "focus-recovery",
+        "apps-pinning",
     ],
     routing: ["navigation", "auth", "share", "guest-ai-auth"],
     documents: [
         "document-vertical-layout",
         "documents-library",
-        "documents-drafts",
-        "documents",
         "documents-tree",
         "documents-tree-dnd",
-        "documents-window-prefs",
         "documents-focus",
-        "documents-history",
         "documents-live-editing",
-        "documents-events",
-        "documents-live-preview",
-        "documents-ux",
     ],
     wallpaper: ["wallpaper"],
     bundle: [
@@ -64,10 +47,8 @@ export const suites = {
 
 const documentsShardA = new Set<string>([
     "document-vertical-layout",
-    "documents-window-prefs",
     "documents-tree",
-    "documents-focus",
-    "documents-ux",
+    "documents-live-editing",
 ]);
 
 // Execution partitions, not new affected business domains.
@@ -78,16 +59,12 @@ export const documentPartitions = {
     ),
 } as const;
 
-// Workspace CI shards, balanced by per-file JUnit time (~233s summed per shard;
-// 124s wall for B at jobs=2 locally). B is listed; A is the remainder.
+// Workspace CI shards, balanced by per-file JUnit time.
 const workspaceShardB = new Set<string>([
-    "apps-session",
-    "workspace-shell",
     "desktop-windows",
+    "launcher",
     "ai-window",
     "apps-pinning",
-    "apps-interactions",
-    "apps-ai-session",
 ]);
 
 export const workspacePartitions = {
@@ -124,7 +101,7 @@ export function suiteFiles(suite: Suite): string[] {
         );
     } else if (suite === "layout") {
         names = suites.workspace.filter((name) =>
-            /^(workspace|home-launcher-)/.test(name)
+            /^(dock|desktop-windows|library-windows)$/.test(name)
         );
     } else if (isPartition(suite)) {
         names = partitions[suite];
