@@ -1615,6 +1615,9 @@ export function DesktopHost(
         : "";
     const wallpaper = {
         source: activeMastheadSource,
+        nativeDarkTone: activeMastheadSource
+            ? effectiveWallpaper.nativeDarkTone
+            : undefined,
         presentation: activeMastheadSource
             ? wallpaperPresentation(
                 activeMastheadSource,

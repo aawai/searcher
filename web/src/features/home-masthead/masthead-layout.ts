@@ -8,6 +8,12 @@ export const MASTHEAD_VW_RATIO = 0.19;
 export const MASTHEAD_SEARCH_GAP = 32;
 /** Extra breathing room between the page margin and the column, taken only from spare width. */
 export const MASTHEAD_EDGE_INSET_MAX = 48;
+/** The veil reaches this far past the column's outer edge, so its fade
+ *  (`--layout-masthead-veil-fade`, 640px) starts 40px inside the column. */
+export const MASTHEAD_VEIL_TAIL = 600;
+/** Padding past the column's outer edge for opaque side veils, keeping at
+ *  least 8px clear of the search box even at the 1360px tightest fit. */
+export const MASTHEAD_OPAQUE_VEIL_PADDING = 24;
 export const MASTHEAD_SWIPE_THRESHOLD = 48;
 
 export type MastheadSide = "left" | "right";
@@ -32,6 +38,7 @@ export type MastheadPlacement =
         mode: "side";
         side: MastheadSide;
         column: SafeRect;
+        veilWidth: number;
     }
     | {
         mode: "narrow";
@@ -192,11 +199,16 @@ export function mastheadPlacement(
         width: columnWidth,
         height: availableRect.height,
     };
+    const outerEdge = side === "left"
+        ? column.x + column.width
+        : Math.max(0, viewportWidth - column.x);
+    const veilWidth = outerEdge + MASTHEAD_VEIL_TAIL;
 
     return {
         mode: "side",
         side,
         column,
+        veilWidth,
     };
 }
 
@@ -239,6 +251,18 @@ export function mastheadPeekMetrics(
         fadeTail,
         hidden: boundedAvailable < measuredBlock,
     };
+}
+
+/**
+ * Side veil width under opaque veil conditions (`data-contrast="more"`,
+ * `data-glass="off"`, reduced transparency, or forced colors): stops at
+ * `MASTHEAD_OPAQUE_VEIL_PADDING` (24px) past the column's outer edge with a
+ * crisp 1px border instead of spanning across the center wallpaper.
+ */
+export function mastheadSideOpaqueVeilWidth(veilWidth: number): number {
+    if (!Number.isFinite(veilWidth)) return MASTHEAD_OPAQUE_VEIL_PADDING;
+    const outerEdge = Math.max(0, veilWidth - MASTHEAD_VEIL_TAIL);
+    return outerEdge + MASTHEAD_OPAQUE_VEIL_PADDING;
 }
 
 /** Splits a local `Date` into the typographic parts shown by the masthead. */

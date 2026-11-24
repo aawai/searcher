@@ -262,6 +262,7 @@
     --layout-search-max: 640px;
     --layout-home-content-max: 640px;
     --layout-masthead-col: clamp(296px, 19vw, 372px);
+    --layout-masthead-veil-fade: 640px;
     --layout-masthead-panel-max: var(--layout-home-content-max);
     /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
     --home-grid-wide-cell: 76px;
@@ -342,7 +343,6 @@
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
     --surface-code-well: var(--surface-soft);
-    --surface-editor-paper: var(--surface-l3);
 }
 
 [data-theme="dark"] {
@@ -357,7 +357,6 @@
     --surface-l3: var(--surface-solid);
     --surface-grouped-canvas: #121216;
     --surface-code-well: #0E0E13;
-    --surface-editor-paper: #17171C;
     --muted: #A1A1AA;
     --masthead-muted: #D4D4D8;
     --masthead-display-ink: #EFECE6;
@@ -599,7 +598,6 @@
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
     --surface-code-well: var(--surface-soft);
-    --surface-editor-paper: var(--surface-l3);
 }
 [data-theme="dark"][data-contrast="more"] {
     --background: #000000;
@@ -654,7 +652,6 @@
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
     --surface-code-well: var(--surface-soft);
-    --surface-editor-paper: var(--surface-l3);
 }
 
 /* High contrast accent: on <html> and on every nested `data-accent` scope (the
@@ -1019,10 +1016,10 @@
         );
 }
 
-/* Narrow-mode masthead veil: a translucent --background wash over a blurred
-   copy of the wallpaper when expanded into a sheet. Collapsed narrow peek and
-   wide-mode date/dek typography read directly on the wallpaper via
-   --masthead-text-stroke / --masthead-text-halo (and --masthead-direct-*). */
+/* Home masthead veil: a translucent --background wash over a blurred copy of
+   the wallpaper (used by the wide side veil over image wallpapers and the
+   narrow expanded sheet). Collapsed narrow peek reads directly on the wallpaper
+   via --masthead-text-stroke / --masthead-text-halo (and --masthead-direct-*). */
 :root {
     --masthead-veil-light: 66%;
     --masthead-veil-dark: 50%;
