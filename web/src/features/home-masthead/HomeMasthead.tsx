@@ -27,6 +27,7 @@ import {
     mastheadDateParts,
     mastheadPeekMetrics,
     mastheadPlacement,
+    mastheadSideOpaqueVeilWidth,
     resolveMastheadSwipe,
 } from "./masthead-layout.ts";
 import "./home-masthead.css";
@@ -41,6 +42,7 @@ const MastheadSections = lazy(() =>
 export interface MastheadWallpaper {
     /** Empty when the home has no wallpaper. */
     source: string;
+    nativeDarkTone?: boolean;
     presentation: WallpaperPresentation;
 }
 
@@ -113,6 +115,18 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const focalX = wallpaper.source
         ? wallpaper.presentation.composition.focalX
         : 0.5;
+    // A statically filtered copy of the wallpaper: rasterized once, unlike a
+    // backdrop-filter that re-samples whenever a window moves above it.
+    const veilWallpaper = (
+        <WallpaperSurface
+            embedded
+            disableScene
+            source={wallpaper.source}
+            nativeDarkTone={wallpaper.nativeDarkTone}
+            presentation={wallpaper.presentation}
+            className="home-masthead__veil-wallpaper"
+        />
+    );
     const placement = useMemo(
         () =>
             mastheadPlacement({
@@ -147,6 +161,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
+    const sideVeilRef = useRef<HTMLDivElement>(null);
     const topVeilRef = useRef<HTMLDivElement>(null);
     const sheetRef = useRef<HTMLDivElement>(null);
     const peekRef = useRef<HTMLButtonElement>(null);
@@ -211,6 +226,18 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         observer.observe(block);
         return () => observer.disconnect();
     }, [isNarrow, showDate, showTime, showContinue, notes.length]);
+
+    const sideOpaqueVeilWidth = placement.mode === "side"
+        ? mastheadSideOpaqueVeilWidth(placement.veilWidth)
+        : null;
+    useLayoutEffect(() => {
+        const veil = sideVeilRef.current;
+        if (!veil || sideOpaqueVeilWidth === null) return;
+        veil.style.setProperty(
+            "--masthead-veil-opaque-width",
+            `${sideOpaqueVeilWidth}px`,
+        );
+    }, [sideOpaqueVeilWidth, wallpaper.source]);
 
     const peekMetrics = placement.mode === "narrow"
         ? mastheadPeekMetrics(placement.peek.height, peekBlockHeight)
@@ -385,135 +412,145 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     );
 
     const showDek = !isGuest && hasSignedInContent;
-    const leadContent = (hasHeader || showDek)
-        ? (
-            <>
-                {hasHeader && (
-                    <header className="home-masthead__header">
-                        <time
-                            className="home-masthead__clock"
-                            dateTime={calmDateTimeAttribute(now, showTime)}
-                        >
-                            {showDate
-                                ? (
-                                    <>
-                                        <span className="home-masthead__day">
-                                            {dateParts.day}
-                                        </span>
-                                        <span className="home-masthead__date-side">
-                                            <span className="home-masthead__weekday">
-                                                {dateParts.weekday}
-                                            </span>
-                                            <span className="home-masthead__month">
-                                                {dateParts.month}
-                                            </span>
-                                            {(showTime || peekTasks) && (
-                                                <span className="home-masthead__time">
-                                                    {showTime && dateParts.time}
-                                                    {showTime && peekSeparator}
-                                                    {peekTasks}
-                                                </span>
-                                            )}
-                                        </span>
-                                    </>
-                                )
-                                : (
-                                    <span className="home-masthead__time home-masthead__time--solo">
-                                        {dateParts.time}
-                                        {peekSeparator}
-                                        {peekTasks}
+    const bodyContent = (
+        <>
+            {hasHeader && (
+                <header className="home-masthead__header">
+                    <time
+                        className="home-masthead__clock"
+                        dateTime={calmDateTimeAttribute(now, showTime)}
+                    >
+                        {showDate
+                            ? (
+                                <>
+                                    <span className="home-masthead__day">
+                                        {dateParts.day}
                                     </span>
-                                )}
-                        </time>
-                    </header>
-                )}
-
-                {showDek && (
-                    <div className="home-masthead__dek">
-                        <div className="home-masthead__dek-row">
-                            {continueList.length > 0
-                                ? (
-                                    <nav
-                                        className="home-masthead__continue"
-                                        aria-label="继续"
-                                    >
-                                        {continueList.map((entry) =>
-                                            entry.kind === "conversation"
-                                                ? (
-                                                    <Link
-                                                        key={`conversation:${entry.id}`}
-                                                        className="home-masthead__continue-item touch-target"
-                                                        to={routes
-                                                            .askConversation(
-                                                                entry.id,
-                                                            )}
-                                                        viewTransition
-                                                    >
-                                                        <span className="home-masthead__continue-verb">
-                                                            继续对话
-                                                        </span>{" "}
-                                                        <span className="home-masthead__continue-title">
-                                                            {entry.title}
-                                                        </span>
-                                                    </Link>
-                                                )
-                                                : (
-                                                    <Button
-                                                        key={`document:${entry.id}`}
-                                                        type="button"
-                                                        variant="link"
-                                                        className="home-masthead__continue-item touch-target"
-                                                        onClick={() =>
-                                                            onOpenDocument(
-                                                                entry.id,
-                                                            )}
-                                                    >
-                                                        <span className="home-masthead__continue-verb">
-                                                            继续编辑
-                                                        </span>{" "}
-                                                        <span className="home-masthead__continue-title">
-                                                            {entry.title}
-                                                        </span>
-                                                    </Button>
-                                                )
+                                    <span className="home-masthead__date-side">
+                                        <span className="home-masthead__weekday">
+                                            {dateParts.weekday}
+                                        </span>
+                                        <span className="home-masthead__month">
+                                            {dateParts.month}
+                                        </span>
+                                        {(showTime || peekTasks) && (
+                                            <span className="home-masthead__time">
+                                                {showTime && dateParts.time}
+                                                {showTime && peekSeparator}
+                                                {peekTasks}
+                                            </span>
                                         )}
-                                    </nav>
-                                )
-                                : (
-                                    <span className="home-masthead__dek-label">
-                                        今日
                                     </span>
-                                )}
-                            {hasNotes && (
-                                <span className="home-masthead__dek-status">
-                                    {openTaskCount > 0 &&
-                                        `${openTaskCount} 项待办 · `}
-                                    {notes.length} 篇固定笔记
+                                </>
+                            )
+                            : (
+                                <span className="home-masthead__time home-masthead__time--solo">
+                                    {dateParts.time}
+                                    {peekSeparator}
+                                    {peekTasks}
                                 </span>
                             )}
-                        </div>
-                    </div>
-                )}
-            </>
-        )
-        : null;
+                    </time>
+                </header>
+            )}
 
-    const sectionsContent = hasNotes
-        ? (
-            <Suspense fallback={null}>
-                <MastheadSections
-                    notes={notes}
-                    now={now}
-                    onOpenNote={onOpenNote}
-                    onToggleTask={onToggleTask}
-                    onUnpin={onUnpin}
-                    onDelete={onDelete}
-                    onReorder={onReorder}
-                    onOpenTaskCountChange={setOpenTaskCount}
-                />
-            </Suspense>
-        )
-        : null;
+            {showDek && (
+                <div className="home-masthead__dek">
+                    <div className="home-masthead__dek-row">
+                        {continueList.length > 0
+                            ? (
+                                <nav
+                                    className="home-masthead__continue"
+                                    aria-label="继续"
+                                >
+                                    {continueList.map((entry) =>
+                                        entry.kind === "conversation"
+                                            ? (
+                                                <Link
+                                                    key={`conversation:${entry.id}`}
+                                                    className="home-masthead__continue-item touch-target"
+                                                    to={routes.askConversation(
+                                                        entry.id,
+                                                    )}
+                                                    viewTransition
+                                                >
+                                                    <span className="home-masthead__continue-verb">
+                                                        继续对话
+                                                    </span>{" "}
+                                                    <span className="home-masthead__continue-title">
+                                                        {entry.title}
+                                                    </span>
+                                                </Link>
+                                            )
+                                            : (
+                                                <Button
+                                                    key={`document:${entry.id}`}
+                                                    type="button"
+                                                    variant="link"
+                                                    className="home-masthead__continue-item touch-target"
+                                                    onClick={() =>
+                                                        onOpenDocument(
+                                                            entry.id,
+                                                        )}
+                                                >
+                                                    <span className="home-masthead__continue-verb">
+                                                        继续编辑
+                                                    </span>{" "}
+                                                    <span className="home-masthead__continue-title">
+                                                        {entry.title}
+                                                    </span>
+                                                </Button>
+                                            )
+                                    )}
+                                </nav>
+                            )
+                            : (
+                                <span className="home-masthead__dek-label">
+                                    今日
+                                </span>
+                            )}
+                        {hasNotes && (
+                            <span className="home-masthead__dek-status">
+                                {openTaskCount > 0 &&
+                                    `${openTaskCount} 项待办 · `}
+                                {notes.length} 篇固定笔记
+                            </span>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {hasNotes && (
+                <Suspense fallback={null}>
+                    <MastheadSections
+                        notes={notes}
+                        now={now}
+                        onOpenNote={onOpenNote}
+                        onToggleTask={onToggleTask}
+                        onUnpin={onUnpin}
+                        onDelete={onDelete}
+                        onReorder={onReorder}
+                        onOpenTaskCountChange={setOpenTaskCount}
+                    />
+                </Suspense>
+            )}
+        </>
+    );
+
+    // Only the body scrolls; 全部笔记 stays below it so a long list never
+    // hides the way to the notes library.
+    const scrollArea = (
+        <div
+            ref={scrollRef}
+            className="home-masthead__scroll"
+            data-overflow-bottom={overflowBottom ? "true" : undefined}
+            onScroll={updateOverflow}
+        >
+            <div ref={contentRef} className="home-masthead__content">
+                {bodyContent}
+            </div>
+        </div>
+    );
 
     const allNotesButton = hasNotes && (
         <Button
@@ -535,46 +572,33 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 data-mode="side"
                 data-side={placement.side}
                 data-collapsed="false"
-                data-has-notes={hasNotes ? "true" : undefined}
                 data-wallpaper-image={wallpaper.source ? "true" : undefined}
             >
+                {wallpaper.source && (
+                    <div
+                        ref={sideVeilRef}
+                        className="home-masthead__veil"
+                        data-side={placement.side}
+                        aria-hidden="true"
+                        style={{ width: placement.veilWidth }}
+                    >
+                        {veilWallpaper}
+                    </div>
+                )}
                 <div
                     className="home-masthead__column"
                     style={{
                         left: placement.column.x,
                         top: placement.column.y,
                         width: placement.column.width,
-                        maxHeight: placement.column.height,
+                        height: placement.column.height,
                     }}
                 >
-                    {leadContent && (
-                        <div className="home-masthead__lead">
-                            {leadContent}
-                        </div>
-                    )}
-                    {hasNotes && (
-                        <div className="home-masthead__notes-panel">
-                            <div
-                                ref={scrollRef}
-                                className="home-masthead__scroll"
-                                data-overflow-bottom={overflowBottom
-                                    ? "true"
-                                    : undefined}
-                                onScroll={updateOverflow}
-                            >
-                                <div
-                                    ref={contentRef}
-                                    className="home-masthead__content"
-                                >
-                                    {sectionsContent}
-                                </div>
-                            </div>
-                            {allNotesButton && (
-                                <footer className="home-masthead__footer">
-                                    {allNotesButton}
-                                </footer>
-                            )}
-                        </div>
+                    {scrollArea}
+                    {allNotesButton && (
+                        <footer className="home-masthead__footer">
+                            {allNotesButton}
+                        </footer>
                     )}
                 </div>
             </section>
@@ -585,30 +609,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     if (isGuest && !hasHeader) {
         return null;
     }
-
-    // Statically filtered copy of the wallpaper for the narrow expanded sheet.
-    const veilWallpaper = (
-        <WallpaperSurface
-            embedded
-            disableScene
-            source={wallpaper.source}
-            presentation={wallpaper.presentation}
-            className="home-masthead__veil-wallpaper"
-        />
-    );
-    const scrollArea = (
-        <div
-            ref={scrollRef}
-            className="home-masthead__scroll"
-            data-overflow-bottom={overflowBottom ? "true" : undefined}
-            onScroll={updateOverflow}
-        >
-            <div ref={contentRef} className="home-masthead__content">
-                {leadContent}
-                {sectionsContent}
-            </div>
-        </div>
-    );
 
     const peekLabel = peekTaskCount > 0
         ? `展开首页刊头，${peekTaskCount} 项待办`

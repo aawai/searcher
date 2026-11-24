@@ -22,11 +22,15 @@
     --accent: var(--masthead-accent-text);
 }
 
-/* Narrow-mode sheet veil: a blurred copy of the wallpaper under a translucent
-   --background wash when the narrow masthead expands. Wide mode renders the
-   date/dek directly on the wallpaper and places notes in a scoped glass panel. */
+/* Progressive veil on the chosen side (or top in narrow mode): a blurred copy
+   of the wallpaper under a translucent --background wash, fading out past the
+   column's outer edge. A static `filter` on the copy is rasterized once; a
+   backdrop-filter would re-sample the wallpaper whenever a window moves above
+   the veil. It shares the wallpaper's layer so the top bar, search box and
+   windows paint above it. */
 .home-masthead__veil {
-    --masthead-veil-fade-length: 20%;
+    --masthead-veil-opaque-width: 100%;
+    --masthead-veil-fade-length: var(--layout-masthead-veil-fade);
     --masthead-veil-ramp: var(--foreground) 0
         calc(100% - var(--masthead-veil-fade-length)),
         color-mix(in srgb, var(--foreground) 98.4%, transparent)
@@ -45,24 +49,36 @@
         calc(100% - var(--masthead-veil-fade-length) * 0.125),
         transparent 100%;
     position: fixed;
-    inset: 0;
+    inset-block: 0;
+    inset-inline-start: 0;
     overflow: hidden;
     pointer-events: none;
     z-index: var(--elevation-wallpaper);
-    -webkit-mask-image: linear-gradient(to bottom, var(--masthead-veil-ramp));
-    mask-image: linear-gradient(to bottom, var(--masthead-veil-ramp));
+    -webkit-mask-image: linear-gradient(to right, var(--masthead-veil-ramp));
+    mask-image: linear-gradient(to right, var(--masthead-veil-ramp));
+}
+
+.home-masthead__veil[data-side="right"] {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+    -webkit-mask-image: linear-gradient(to left, var(--masthead-veil-ramp));
+    mask-image: linear-gradient(to left, var(--masthead-veil-ramp));
 }
 
 /* The copy spans the whole viewport (plus a blur's reach on every edge, so
    the blur never pulls in transparency) and stays aligned with the real
-   wallpaper. Suppress its ambient shade ::before so dark themes do not double-darken. */
+   wallpaper whichever side the veil is on. Suppress its ambient shade ::before
+   so dark themes do not double-darken. */
 .home-masthead__veil-wallpaper.wallpaper-surface {
     inset: calc(-1 * var(--space-10)) auto;
     inset-inline-start: calc(-1 * var(--space-10));
     width: calc(100vw + 2 * var(--space-10));
-    height: calc(100vh + 2 * var(--space-10));
-    height: calc(100dvh + 2 * var(--space-10));
     filter: var(--masthead-veil-filter);
+}
+
+.home-masthead__veil[data-side="right"] .home-masthead__veil-wallpaper {
+    inset-inline-start: auto;
+    inset-inline-end: calc(-1 * var(--space-10));
 }
 
 .home-masthead__veil-wallpaper.wallpaper-surface::before {
@@ -74,38 +90,6 @@
     position: absolute;
     inset: 0;
     background: var(--masthead-veil);
-}
-
-/* Wide mode: date and dek read directly on the wallpaper; pinned tasks and
-   notes live in a content-hugging Material glass panel below them. */
-.home-masthead[data-mode="side"] .home-masthead__lead {
-    flex-shrink: 0;
-}
-
-.home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__lead {
-    -webkit-text-stroke: var(--masthead-direct-stroke);
-    paint-order: stroke fill;
-    text-shadow: var(--masthead-direct-shadow);
-}
-
-.home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__dek {
-    position: relative;
-    border-block-start: 0;
-}
-
-.home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__dek::before {
-    content: "";
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline: 0;
-    height: 1px;
-    background: linear-gradient(
-        to right,
-        color-mix(in srgb, var(--foreground) 48%, transparent),
-        color-mix(in srgb, var(--foreground) 22%, transparent) 55%,
-        transparent 100%
-    );
-    pointer-events: none;
 }
 
 @media (forced-colors: none) {
@@ -185,47 +169,6 @@
             transparent 100%
         );
         pointer-events: none;
-    }
-}
-
-.home-masthead[data-mode="side"] .home-masthead__notes-panel {
-    flex: 0 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    background: var(--material-regular-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-regular-filter);
-    backdrop-filter: var(--material-regular-filter);
-    border-radius: var(--shape-plate-radius);
-    box-shadow: var(--shadow-elevation-material);
-    overflow: hidden;
-}
-
-.home-masthead[data-mode="side"] .home-masthead__lead + .home-masthead__notes-panel {
-    margin-block-start: var(--space-4);
-}
-
-.home-masthead[data-mode="side"] .home-masthead__notes-panel .home-masthead__scroll {
-    padding: var(--space-4);
-}
-
-.home-masthead[data-mode="side"] .home-masthead__notes-panel .home-masthead__section:first-child {
-    margin-block-start: 0;
-}
-
-.home-masthead[data-mode="side"] .home-masthead__notes-panel .home-masthead__footer {
-    margin-block-start: 0;
-    padding: var(--space-3) var(--space-4);
-    border-block-start: 1px solid var(--border-subtle);
-}
-
-.home-masthead[data-mode="side"] .home-masthead__notes-panel .home-masthead__entry:focus-within::before {
-    inset-inline-start: calc(-1 * var(--space-3));
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .home-masthead[data-mode="side"] .home-masthead__notes-panel .home-masthead__entry:hover::before {
-        inset-inline-start: calc(-1 * var(--space-3));
     }
 }
 
@@ -768,6 +711,18 @@
    stopping 16px below it with a crisp 1px bottom rule. */
 .home-masthead__veil[data-side="top"] {
     --masthead-peek-height: 0px;
+    --masthead-veil-fade-length: 20%;
+    inset-inline: 0;
+    width: auto;
+    height: 100%;
+    -webkit-mask-image: linear-gradient(to bottom, var(--masthead-veil-ramp));
+    mask-image: linear-gradient(to bottom, var(--masthead-veil-ramp));
+}
+
+.home-masthead__veil[data-side="top"] .home-masthead__veil-wallpaper.wallpaper-surface {
+    bottom: auto;
+    height: calc(100vh + 2 * var(--space-10));
+    height: calc(100dvh + 2 * var(--space-10));
 }
 
 .home-masthead__veil[data-side="top"][data-open="false"] {
@@ -775,12 +730,24 @@
     opacity: var(--masthead-peek-veil-opacity);
 }
 
-/* Under opaque veil conditions, top veils stop 16px below the peek with a 1px
-   bottom rule instead of a soft fade, and wide-mode notes panels / high-contrast
-   lead cards use solid surfaces. */
+/* Under opaque veil conditions, side veils render as a crisp solid band with
+   a 1px border (24px past the column edge, clearing the search box) and top
+   veils stop 16px below the peek with a 1px bottom rule instead of a soft fade.
+   Placed after `[data-side="top"]` / `[data-side="right"]` so it wins for
+   every veil orientation. */
 [data-glass="off"] .home-masthead__veil[data-side] {
     -webkit-mask-image: none;
     mask-image: none;
+}
+
+[data-glass="off"] .home-masthead__veil:not([data-side="top"]) {
+    max-width: var(--masthead-veil-opaque-width);
+    border-inline-end: 1px solid var(--border);
+}
+
+[data-glass="off"] .home-masthead__veil[data-side="right"] {
+    border-inline-end: 0;
+    border-inline-start: 1px solid var(--border);
 }
 
 [data-glass="off"] .home-masthead__veil[data-side="top"][data-open="false"] {
@@ -793,31 +760,18 @@
         mask-image: none;
     }
 
+    [data-contrast="more"] .home-masthead__veil:not([data-side="top"]) {
+        max-width: var(--masthead-veil-opaque-width);
+        border-inline-end: 1px solid var(--border);
+    }
+
+    [data-contrast="more"] .home-masthead__veil[data-side="right"] {
+        border-inline-end: 0;
+        border-inline-start: 1px solid var(--border);
+    }
+
     [data-contrast="more"] .home-masthead__veil[data-side="top"][data-open="false"] {
         border-block-end: 1px solid var(--border);
-    }
-
-    [data-contrast="more"] .home-masthead[data-mode="side"] .home-masthead__notes-panel {
-        background: var(--surface-l3);
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-    }
-
-    [data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__lead {
-        padding: var(--space-3) var(--space-4);
-        border-radius: var(--shape-plate-radius);
-        background: var(--surface-l3);
-        box-shadow: var(--shadow-l2);
-        -webkit-text-stroke: 0px transparent;
-        text-shadow: none;
-    }
-
-    [data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__dek {
-        border-block-start: 2px solid var(--foreground);
-    }
-
-    [data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__dek::before {
-        display: none;
     }
 }
 
@@ -827,38 +781,18 @@
         mask-image: none;
     }
 
+    .home-masthead__veil:not([data-side="top"]) {
+        max-width: var(--masthead-veil-opaque-width);
+        border-inline-end: 1px solid var(--border);
+    }
+
+    .home-masthead__veil[data-side="right"] {
+        border-inline-end: 0;
+        border-inline-start: 1px solid var(--border);
+    }
+
     .home-masthead__veil[data-side="top"][data-open="false"] {
         border-block-end: 1px solid var(--border);
-    }
-
-    .home-masthead[data-mode="side"] .home-masthead__notes-panel {
-        background: var(--surface-l3);
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-    }
-
-    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__lead {
-        padding: var(--space-3) var(--space-4);
-        border-radius: var(--shape-plate-radius);
-        background: var(--surface-l3);
-        box-shadow: var(--shadow-l2);
-        -webkit-text-stroke: 0px transparent;
-        text-shadow: none;
-    }
-
-    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__dek {
-        border-block-start: 2px solid var(--foreground);
-    }
-
-    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__dek::before {
-        display: none;
-    }
-}
-
-@media (forced-colors: active) {
-    .home-masthead[data-mode="side"] .home-masthead__notes-panel,
-    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__lead {
-        outline: 1px solid CanvasText;
     }
 }
 
@@ -869,14 +803,18 @@
         mask-image: none;
     }
 
-    .home-masthead__veil[data-side="top"][data-open="false"] {
-        border-block-end: 1px solid var(--border);
+    .home-masthead__veil:not([data-side="top"]) {
+        max-width: var(--masthead-veil-opaque-width);
+        border-inline-end: 1px solid var(--border);
     }
 
-    .home-masthead[data-mode="side"] .home-masthead__notes-panel {
-        background: var(--surface-l3);
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
+    .home-masthead__veil[data-side="right"] {
+        border-inline-end: 0;
+        border-inline-start: 1px solid var(--border);
+    }
+
+    .home-masthead__veil[data-side="top"][data-open="false"] {
+        border-block-end: 1px solid var(--border);
     }
 }
 

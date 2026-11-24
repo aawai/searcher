@@ -153,16 +153,6 @@
     min-height: 0;
     overflow: hidden;
 }
-@media (forced-colors: none) {
-    [data-theme="dark"]:not([data-contrast="more"]) .documents-sidebar:not(.documents-sidebar--drawer) {
-        --documents-sidebar-bg: var(--surface-grouped-canvas);
-        border-inline-end-color: color-mix(in oklab, var(--foreground) 6%, transparent);
-    }
-
-    [data-theme="dark"]:not([data-contrast="more"]) .documents-editor-pane {
-        background: var(--surface-editor-paper);
-    }
-}
 /* The empty state lives in the shell chunk; the editor chunk is not loaded yet. */
 .documents-editor-empty {
     position: relative;
