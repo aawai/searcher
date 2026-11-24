@@ -262,7 +262,6 @@
     --layout-search-max: 640px;
     --layout-home-content-max: 640px;
     --layout-masthead-col: clamp(296px, 19vw, 372px);
-    --layout-masthead-veil-fade: 640px;
     --layout-masthead-panel-max: var(--layout-home-content-max);
     /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
     --home-grid-wide-cell: 76px;
@@ -297,23 +296,74 @@
     --notes-sidebar-width-max: 400px;
     --editor-min-content-height: 240px;
     --workspace-top-inset: calc(var(--control-height) + var(--space-6));
+
+    /* Dark-mode refinement & wallpaper-direct typography defaults. */
+    --search-placeholder: var(--muted);
+    --appearance-chip-surface: var(--surface-solid);
+    --wallpaper-glyph-shadow: drop-shadow(0 1px 2px color-mix(in srgb, var(--surface-solid) 65%, transparent));
+    --masthead-direct-stroke: 2px color-mix(in srgb, var(--background) 80%, transparent);
+    --masthead-direct-shadow: 0 0 8px color-mix(in srgb, var(--background) 85%, transparent),
+        0 1px 3px color-mix(in srgb, var(--background) 92%, transparent);
+    --wallpaper-dark-dim: contrast(1.08) saturate(1.14) brightness(0.62);
+    --wallpaper-dark-center-mix: 16%;
+    --wallpaper-dark-edge-mix: 44%;
+    --wallpaper-dark-top-mix: 22%;
+    --material-dark-base: #17171C;
+    --wallpaper-shade-base: var(--background);
+    --wallpaper-ambient-glaze: none;
+    --wallpaper-ambient-primary: transparent;
+    --wallpaper-ambient-secondary: transparent;
+    --wallpaper-custom-dark-dim: none;
+    --wallpaper-custom-shade: none;
+    --wallpaper-canvas-ambient: radial-gradient(
+            ellipse 72% 60% at 84% 10%,
+            rgb(255 255 255 / 0.82) 0%,
+            rgb(255 254 250 / 0.36) 42%,
+            transparent 76%
+        ),
+        radial-gradient(
+            ellipse 42% 38% at 82% 76%,
+            color-mix(in oklab, var(--accent) 3.5%, transparent) 0%,
+            transparent 70%
+        );
+    --masthead-display-ink: var(--foreground);
+    --search-specular-top: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.45) 18%, rgb(255 255 255 / 0.96) 56%, color-mix(in oklab, var(--accent) 18%, #ffffff) 82%, transparent 100%);
+    --search-specular-top-focus: linear-gradient(90deg, transparent 0%, color-mix(in oklab, var(--accent) 34%, rgb(255 255 255 / 0.62)) 18%, rgb(255 255 255 / 0.98) 54%, color-mix(in oklab, var(--accent) 44%, #ffffff) 82%, transparent 100%);
+    --search-focus-halo: 0 12px 32px -12px color-mix(in oklab, var(--accent) 22%, transparent);
+    --search-frame-light-shadow: inset 0 1px 0 rgb(255 255 255 / 0.94), inset 0 0 0 1px rgb(255 255 255 / 0.54), inset 0 -1px 0 rgb(0 0 0 / 0.06), 0 0 0 1px rgb(29 29 31 / 0.08), 0 14px 36px -14px rgb(15 23 42 / 0.14), 0 2px 8px -2px rgb(15 23 42 / 0.06);
+    --search-frame-light-hover-shadow: inset 0 1px 0 rgb(255 255 255 / 0.98), inset 0 0 0 1px rgb(255 255 255 / 0.66), inset 0 -1px 0 rgb(0 0 0 / 0.07), 0 0 0 1px color-mix(in oklab, var(--accent) 18%, rgb(29 29 31 / 0.12)), 0 18px 42px -14px rgb(15 23 42 / 0.18), 0 3px 10px -2px rgb(15 23 42 / 0.08);
+    --search-frame-light-focus-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 56%, transparent), 0 0 0 1px color-mix(in oklab, var(--accent) 44%, rgb(0 0 0 / 0.10)), inset 0 1px 0 rgb(255 255 255 / 0.96), 0 18px 44px -14px rgb(15 23 42 / 0.18), var(--search-focus-halo);
+    --search-frame-light-focus-within-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 34%, rgb(255 255 255 / 0.64)), 0 0 0 1px color-mix(in oklab, var(--accent) 28%, rgb(0 0 0 / 0.09)), inset 0 1px 0 rgb(255 255 255 / 0.96), 0 16px 40px -14px rgb(15 23 42 / 0.16), var(--search-focus-halo);
+    --search-frame-dark-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-hover-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
+    --search-frame-dark-focus-within-shadow: var(--shadow-elevation-material);
+    --wallpaper-grain-opacity: 0;
+    --wallpaper-focus-scrim: 0;
+    --dock-active-glow: none;
+    --surface-code-well: var(--surface-soft);
+    --surface-editor-paper: var(--surface-l3);
 }
 
 [data-theme="dark"] {
     color-scheme: dark;
-    --background: #111113;
+    --background: #07080C;
     --foreground: #F5F5F7;
-    --surface: #1F1F23;
-    --surface-solid: #1F1F23;
-    --surface-soft: #2A2A2E;
+    --surface: #1A1A1F;
+    --surface-solid: #1A1A1F;
+    --surface-soft: #25252B;
     --surface-highlight: rgb(255 255 255 / 0.10);
     --surface-control-thumb: #636366;
     --surface-l3: var(--surface-solid);
-    --surface-grouped-canvas: #161619;
-    --muted: #A1A1A6;
-    --masthead-muted: #c6c6cb;
-    --border: rgb(255 255 255 / 0.10);
-    --border-subtle: rgb(255 255 255 / 0.06);
+    --surface-grouped-canvas: #121216;
+    --surface-code-well: #0E0E13;
+    --surface-editor-paper: #17171C;
+    --muted: #A1A1AA;
+    --masthead-muted: #D4D4D8;
+    --masthead-display-ink: #EFECE6;
+    --search-placeholder: #9C9CA8;
+    --border: rgb(255 255 255 / 0.09);
+    --border-subtle: rgb(255 255 255 / 0.055);
     --border-control: #747479;
     --field-border: rgb(255 255 255 / 0.14);
     --field-border-hover: rgb(255 255 255 / 0.26);
@@ -328,17 +378,31 @@
     --accent-mono-subtle-mix: 16%;
     --accent-mono-border-mix: 30%;
     --surface-scrim: rgb(0 0 0 / 0.5);
-    --shadow-l2: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 8px 24px -6px rgb(0 0 0 / 0.5);
-    --shadow-l3: 0 0 0 0.5px rgb(255 255 255 / 0.10), 0 24px 56px -12px rgb(0 0 0 / 0.65);
+    --shadow-l2: 0 0 0 1px rgb(0 0 0 / 0.42), inset 0 1px 0 color-mix(in oklab, var(--foreground) 9%, transparent), 0 16px 40px -10px rgb(0 0 0 / 0.68), 0 3px 10px -2px rgb(0 0 0 / 0.46);
+    --shadow-l3: 0 0 0 0.5px rgb(255 255 255 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.06), 0 28px 64px -12px rgb(0 0 0 / 0.72);
     --shadow-control-thumb: 0 0 0 0.5px rgb(0 0 0 / 0.2), 0 1px 3px rgb(0 0 0 / 0.4);
     --shadow-document-paper: 0 0 0 0.5px rgb(255 255 255 / 0.06), 0 2px 8px -2px rgb(0 0 0 / 0.4);
-    /* Dark materials lift from the soft surface so they read against the canvas. */
-    --material-solid: var(--surface-soft);
-    --glass-edge-top: rgb(255 255 255 / 0.32);
-    --glass-edge-ring: rgb(255 255 255 / 0.12);
-    --glass-edge-bottom: rgb(0 0 0 / 0.35);
+    /* Dark materials sink to an obsidian base lightly tinted by the active accent. */
+    --material-solid: var(--material-dark-base);
+    --glass-edge-top: rgb(255 255 255 / 0.13);
+    --glass-edge-ring: rgb(255 255 255 / 0.08);
+    --glass-edge-bottom: rgb(0 0 0 / 0.65);
     --glyph-edge: rgb(255 255 255 / 0.14);
-    --glass-sheen-peak: 6%;
+    --glass-sheen-peak: 13%;
+    --wallpaper-glyph-shadow: drop-shadow(0 1px 2px rgb(0 0 0 / 0.50)) drop-shadow(0 0 6px rgb(0 0 0 / 0.30));
+    --masthead-direct-stroke: 0px transparent;
+    --masthead-direct-shadow: 0 1px 2px rgb(10 6 4 / 0.86),
+        0 2px 12px rgb(10 6 4 / 0.56);
+    --search-specular-top: linear-gradient(90deg, transparent 0%, rgb(255 252 245 / 0.18) 20%, rgb(255 252 245 / 0.62) 64%, color-mix(in oklab, var(--accent) 44%, rgb(255 252 245 / 0.42)) 84%, transparent 100%);
+    --search-specular-top-focus: linear-gradient(90deg, transparent 0%, color-mix(in oklab, var(--accent) 42%, rgb(255 252 245 / 0.38)) 18%, rgb(255 252 245 / 0.90) 56%, color-mix(in oklab, var(--accent) 78%, #f7f5ef) 82%, transparent 100%);
+    --search-focus-halo: 0 12px 40px -14px color-mix(in oklab, var(--accent) 20%, transparent);
+    --search-frame-dark-shadow: inset 0 1px 0 rgb(255 252 246 / 0.13), inset 0 0 0 1px rgb(255 252 246 / 0.075), inset 0 -1px 0 rgb(0 0 0 / 0.62), 0 0 0 1px rgb(0 0 0 / 0.54), 0 28px 72px -20px rgb(0 0 0 / 0.74);
+    --search-frame-dark-hover-shadow: inset 0 1px 0 rgb(255 252 246 / 0.17), inset 0 0 0 1px color-mix(in oklab, var(--accent) 18%, rgb(255 252 246 / 0.10)), inset 0 -1px 0 rgb(0 0 0 / 0.64), 0 0 0 1px rgb(0 0 0 / 0.56), 0 30px 76px -20px rgb(0 0 0 / 0.78);
+    --search-frame-dark-focus-shadow: inset 0 1px 0 rgb(255 252 246 / 0.16), inset 0 0 0 1px color-mix(in oklab, var(--accent) 50%, rgb(240 237 230 / 0.24)), inset 0 8px 18px -12px color-mix(in oklab, var(--accent) 34%, transparent), inset 0 -1px 0 rgb(0 0 0 / 0.68), 0 0 0 1px rgb(0 0 0 / 0.62), 0 32px 84px -16px rgb(0 0 0 / 0.88), var(--search-focus-halo);
+    --search-frame-dark-focus-within-shadow: inset 0 1px 0 rgb(255 252 246 / 0.15), inset 0 0 0 1px color-mix(in oklab, var(--accent) 26%, rgb(240 237 230 / 0.13)), inset 0 8px 18px -12px color-mix(in oklab, var(--accent) 34%, transparent), inset 0 -1px 0 rgb(0 0 0 / 0.68), 0 0 0 1px rgb(0 0 0 / 0.60), 0 32px 84px -16px rgb(0 0 0 / 0.86), var(--search-focus-halo);
+    --wallpaper-grain-opacity: 0.052;
+    --wallpaper-focus-scrim: 0.46;
+    --dock-active-glow: 0 0 7px color-mix(in oklab, var(--accent) 55%, transparent);
 }
 
 /* Each palette owns both themes; color-scheme selects the light-dark pair.
@@ -484,6 +548,8 @@
     --surface-grouped-canvas: #F2F2F2;
     --muted: #3D3D40;
     --masthead-muted: var(--muted);
+    --search-placeholder: var(--muted);
+    --appearance-chip-surface: var(--surface-solid);
     --border: #6E6E73;
     --border-subtle: #A1A1A6;
     --border-control: #000000;
@@ -511,6 +577,29 @@
     --glass-edge-bottom: transparent;
     --glass-sheen-peak: 0%;
     --glyph-edge: rgb(0 0 0 / 0.6);
+    --wallpaper-glyph-shadow: none;
+    --masthead-direct-stroke: 0px transparent;
+    --masthead-direct-shadow: none;
+    --masthead-display-ink: var(--foreground);
+    --wallpaper-custom-dark-dim: none;
+    --wallpaper-custom-shade: none;
+    --wallpaper-canvas-ambient: none;
+    --search-specular-top: none;
+    --search-specular-top-focus: none;
+    --search-focus-halo: none;
+    --search-frame-light-shadow: var(--shadow-elevation-material);
+    --search-frame-light-hover-shadow: var(--shadow-elevation-material);
+    --search-frame-light-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
+    --search-frame-light-focus-within-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-hover-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
+    --search-frame-dark-focus-within-shadow: var(--shadow-elevation-material);
+    --wallpaper-grain-opacity: 0;
+    --wallpaper-focus-scrim: 0;
+    --dock-active-glow: none;
+    --surface-code-well: var(--surface-soft);
+    --surface-editor-paper: var(--surface-l3);
 }
 [data-theme="dark"][data-contrast="more"] {
     --background: #000000;
@@ -524,6 +613,9 @@
     --surface-grouped-canvas: #141414;
     --muted: #C7C7CC;
     --masthead-muted: var(--muted);
+    --search-placeholder: var(--muted);
+    --appearance-chip-surface: var(--surface-solid);
+    --material-solid: var(--surface-solid);
     --border: #8E8E93;
     --border-subtle: #48484A;
     --border-control: #FFFFFF;
@@ -540,6 +632,29 @@
     --shadow-l2: var(--shadow-frame), 0 4px 12px -6px rgb(0 0 0 / 0.6);
     --shadow-l3: var(--shadow-frame), 0 12px 28px -12px rgb(0 0 0 / 0.7);
     --glyph-edge: rgb(255 255 255 / 0.6);
+    --wallpaper-glyph-shadow: none;
+    --masthead-direct-stroke: 0px transparent;
+    --masthead-direct-shadow: none;
+    --masthead-display-ink: var(--foreground);
+    --wallpaper-custom-dark-dim: none;
+    --wallpaper-custom-shade: none;
+    --wallpaper-canvas-ambient: none;
+    --search-specular-top: none;
+    --search-specular-top-focus: none;
+    --search-focus-halo: none;
+    --search-frame-light-shadow: var(--shadow-elevation-material);
+    --search-frame-light-hover-shadow: var(--shadow-elevation-material);
+    --search-frame-light-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
+    --search-frame-light-focus-within-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-hover-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
+    --search-frame-dark-focus-within-shadow: var(--shadow-elevation-material);
+    --wallpaper-grain-opacity: 0;
+    --wallpaper-focus-scrim: 0;
+    --dock-active-glow: none;
+    --surface-code-well: var(--surface-soft);
+    --surface-editor-paper: var(--surface-l3);
 }
 
 /* High contrast accent: on <html> and on every nested `data-accent` scope (the
@@ -566,9 +681,16 @@
     --accent-subtle: color-mix(in srgb, var(--accent) var(--accent-subtle-mix), var(--surface-soft));
     --accent-border: color-mix(in srgb, var(--accent) var(--accent-border-mix), var(--border));
     --surface-hover: color-mix(in srgb, var(--foreground) 6%, transparent);
+    --material-dark-base: color-mix(in srgb, var(--accent) 4%, #17171C);
+    --wallpaper-shade-base: color-mix(in srgb, var(--accent) 4%, var(--background));
     --shadow-field-focus: inset 0 0 0 1px var(--ring);
     --shadow-field-invalid-focus: inset 0 0 0 1px var(--danger);
     --shadow-swatch-selected: 0 0 0 2px var(--surface-solid), 0 0 0 4px var(--accent);
+}
+[data-contrast="more"],
+[data-contrast="more"] [data-theme],
+[data-contrast="more"] [data-accent] {
+    --wallpaper-shade-base: var(--background);
 }
 
 /* Theme preview tiles (ThemeChoices): colour samples of each theme, readable
@@ -580,8 +702,8 @@
     --theme-preview-light-surface: #FFFFFF;
     --theme-preview-light-line: #86868B;
     --theme-preview-light-edge: rgb(0 0 0 / 0.09);
-    --theme-preview-dark-canvas: #111113;
-    --theme-preview-dark-surface: #1F1F23;
+    --theme-preview-dark-canvas: #07080C;
+    --theme-preview-dark-surface: #1A1A1F;
     --theme-preview-dark-line: #747479;
     --theme-preview-dark-edge: rgb(255 255 255 / 0.10);
     --theme-preview-high-contrast-light-canvas: #FFFFFF;
@@ -642,57 +764,77 @@
  * The `:root` values are `regular`, the no-attribute default.
  */
 :root {
-    --glass-regular-light: 78%;
-    --glass-regular-dark: 84%;
-    --glass-thick-light: 86%;
-    --glass-thick-dark: 90%;
-    --material-regular-sheen-scale: 1;
-    --material-thick-sheen-scale: 1;
-    --material-regular-filter: blur(20px) saturate(2);
-    --material-thick-filter: blur(20px) saturate(2);
+    --glass-regular-light: 56%;
+    --glass-regular-dark: 62%;
+    --glass-thick-light: 88%;
+    --glass-thick-dark: 86%;
+    --glass-regular-filter-light: blur(20px) saturate(1.8);
+    --glass-regular-filter-dark: blur(22px) saturate(1.75);
+    --material-regular-sheen-scale: 0.85;
+    --material-thick-sheen-scale: 0.85;
+    --material-regular-filter: blur(20px) saturate(1.8);
+    --material-thick-filter: blur(20px) saturate(1.8);
 }
 [data-glass="regular"] {
-    --glass-regular-light: 78%;
-    --glass-regular-dark: 84%;
-    --glass-thick-light: 86%;
-    --glass-thick-dark: 90%;
-    --material-regular-sheen-scale: 1;
-    --material-thick-sheen-scale: 1;
-    --material-regular-filter: blur(20px) saturate(2);
-    --material-thick-filter: blur(20px) saturate(2);
+    --glass-regular-light: 56%;
+    --glass-regular-dark: 62%;
+    --glass-thick-light: 88%;
+    --glass-thick-dark: 86%;
+    --glass-regular-filter-light: blur(20px) saturate(1.8);
+    --glass-regular-filter-dark: blur(22px) saturate(1.75);
+    --material-regular-sheen-scale: 0.85;
+    --material-thick-sheen-scale: 0.85;
+    --material-regular-filter: blur(20px) saturate(1.8);
+    --material-thick-filter: blur(20px) saturate(1.8);
 }
 [data-glass="off"] {
     --glass-regular-light: 100%;
     --glass-regular-dark: 100%;
     --glass-thick-light: 100%;
     --glass-thick-dark: 100%;
+    --glass-regular-filter-light: none;
+    --glass-regular-filter-dark: none;
     --material-regular-sheen-scale: 0;
     --material-thick-sheen-scale: 0;
     --material-regular-filter: none;
     --material-thick-filter: none;
 }
 [data-glass="soft"] {
-    --glass-regular-light: 90%;
-    --glass-regular-dark: 92%;
-    --glass-thick-light: 95%;
-    --glass-thick-dark: 95%;
-    --material-regular-sheen-scale: 0.6;
-    --material-thick-sheen-scale: 0.6;
-    --material-regular-filter: blur(16px) saturate(1.6);
-    --material-thick-filter: blur(16px) saturate(1.6);
+    --glass-regular-light: 72%;
+    --glass-regular-dark: 78%;
+    --glass-thick-light: 92%;
+    --glass-thick-dark: 92%;
+    --glass-regular-filter-light: blur(24px) saturate(1.4);
+    --glass-regular-filter-dark: blur(24px) saturate(1.4);
+    --material-regular-sheen-scale: 0.5;
+    --material-thick-sheen-scale: 0.5;
+    --material-regular-filter: blur(24px) saturate(1.4);
+    --material-thick-filter: blur(20px) saturate(1.5);
 }
 [data-glass="clear"] {
-    --glass-regular-light: 30%;
-    --glass-regular-dark: 40%;
+    --glass-regular-light: 38%;
+    --glass-regular-dark: 48%;
     /* Floating carries readable text: with the weaker sheen it needs more fill
        than regular. --muted in top-bar menus over black measured 3.8:1 at 76%
        and 4.49:1 at 86% (#394 2.2). */
     --glass-thick-light: 90%;
-    --glass-thick-dark: 84%;
-    --material-regular-sheen-scale: 0.1;
-    --material-thick-sheen-scale: 0.25;
-    --material-regular-filter: blur(6px) saturate(1.6);
-    --material-thick-filter: blur(8px) saturate(1.8);
+    --glass-thick-dark: 86%;
+    --glass-regular-filter-light: blur(12px) saturate(1.85);
+    --glass-regular-filter-dark: blur(18px) saturate(1.9);
+    --material-regular-sheen-scale: 0.55;
+    --material-thick-sheen-scale: 0.5;
+    --material-regular-filter: blur(12px) saturate(1.85);
+    --material-thick-filter: blur(14px) saturate(1.8);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    @media (prefers-reduced-transparency: no-preference) and (forced-colors: none) {
+        [data-theme="dark"]:not([data-contrast="more"])[data-glass="clear"],
+        [data-theme="dark"]:not([data-contrast="more"]) [data-glass="clear"] {
+            --material-regular-sheen-scale: 0.80;
+            --material-thick-sheen-scale: 0.65;
+        }
+    }
 }
 
 /* Pick the active theme's fills. */
@@ -700,11 +842,13 @@
 [data-glass] {
     --glass-fill-regular: var(--glass-regular-light);
     --glass-fill-thick: var(--glass-thick-light);
+    --material-regular-filter: var(--glass-regular-filter-light);
 }
 [data-theme="dark"],
 [data-theme="dark"] [data-glass] {
     --glass-fill-regular: var(--glass-regular-dark);
     --glass-fill-thick: var(--glass-thick-dark);
+    --material-regular-filter: var(--glass-regular-filter-dark);
 }
 
 /* Derived once per scope. Floating (thick) keeps its own base so the dark menu colour does not shift; the edge layers with --shadow-l2 on every Material and Floating surface. */
@@ -737,7 +881,7 @@
    colour, filling the letters in, so the core is dropped there; the system
    palette owns contrast (A7). */
 :root {
-    --wallpaper-text-core: 5px;
+    --wallpaper-text-core: 2.5px;
 }
 :root,
 [data-theme] {
@@ -752,12 +896,22 @@
     /* Hairline divider between top-bar groups on the wallpaper. */
     --border-on-wallpaper: color-mix(in srgb, var(--foreground) 28%, transparent);
 }
+[data-theme="dark"] {
+    --wallpaper-text-core: 0px;
+    --wallpaper-text-stroke: 0px transparent;
+    --wallpaper-text-halo: 0 1px 3px rgb(0 0 0 / 0.65),
+        0 2px 10px rgb(0 0 0 / 0.45);
+}
 @media (forced-colors: active) {
     :root,
     [data-theme] {
         --wallpaper-text-core: 0px;
+        --wallpaper-text-stroke: 0px transparent;
         --wallpaper-text-halo: none;
         --wallpaper-icon-halo: none;
+        --wallpaper-glyph-shadow: none;
+        --masthead-direct-stroke: 0px transparent;
+        --masthead-direct-shadow: none;
     }
 }
 
@@ -778,25 +932,97 @@
     --canvas-derived-mix: var(--canvas-derived-dark);
 }
 
-/* Dark themes dim the wallpaper image, so a bright wallpaper sits under dark
-   surfaces the way a dark wallpaper would and the masthead veil fades into it
-   without a seam. */
+/* Dark themes adaptively tone the wallpaper image (brightness, contrast and
+   saturation from perceptual lightness) and layer a symmetrical ambient
+   vignette over it so bright wallpapers sit comfortably under dark surfaces. */
 :root,
 [data-theme] {
     --wallpaper-dim: none;
+    --wallpaper-thumb-dim: none;
+    --wallpaper-shade: none;
+    --wallpaper-ambient-glaze: none;
 }
 [data-theme="dark"] {
-    --wallpaper-dim: brightness(0.55);
+    --wallpaper-dim: var(--wallpaper-dark-dim);
+    --wallpaper-thumb-dim: contrast(1.06) saturate(1.10) brightness(0.68);
+    --wallpaper-shade: linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--wallpaper-shade-base) var(--wallpaper-dark-top-mix), transparent) 0%,
+            color-mix(in srgb, var(--wallpaper-shade-base) calc(var(--wallpaper-dark-top-mix) * 0.55), transparent) 9%,
+            color-mix(in srgb, var(--wallpaper-shade-base) calc(var(--wallpaper-dark-top-mix) * 0.16), transparent) 19%,
+            transparent 30%
+        ),
+        radial-gradient(
+            ellipse 78% 76% at 50% 48%,
+            color-mix(in srgb, var(--wallpaper-shade-base) var(--wallpaper-dark-center-mix), transparent) 0%,
+            color-mix(in srgb, var(--wallpaper-shade-base) calc((var(--wallpaper-dark-center-mix) + var(--wallpaper-dark-edge-mix)) / 2), transparent) 64%,
+            color-mix(in srgb, var(--wallpaper-shade-base) var(--wallpaper-dark-edge-mix), transparent) 100%
+        );
+    --wallpaper-custom-shade: linear-gradient(
+            180deg,
+            rgb(8 8 11 / 0.36) 0%,
+            rgb(8 8 11 / 0.14) 10%,
+            transparent 22%
+        ),
+        radial-gradient(
+            ellipse 86% 82% at 50% 48%,
+            transparent 48%,
+            rgb(8 8 11 / 0.28) 100%
+        );
+    --wallpaper-ambient-glaze: radial-gradient(
+            ellipse 64% 54% at 80% 18%,
+            color-mix(in oklab, var(--wallpaper-ambient-primary) 52%, transparent) 0%,
+            color-mix(in oklab, var(--wallpaper-ambient-primary) 18%, transparent) 44%,
+            transparent 72%
+        ),
+        radial-gradient(
+            ellipse 68% 58% at 16% 84%,
+            color-mix(in oklab, var(--wallpaper-ambient-secondary) 58%, transparent) 0%,
+            color-mix(in oklab, var(--wallpaper-ambient-secondary) 22%, transparent) 46%,
+            transparent 74%
+        ),
+        radial-gradient(
+            ellipse 48% 42% at 50% 40%,
+            rgb(206 202 222 / 0.04) 0%,
+            transparent 70%
+        ),
+        radial-gradient(
+            ellipse 92% 88% at 50% 48%,
+            rgb(7 8 12 / 0.24) 0%,
+            rgb(7 8 12 / 0.56) 66%,
+            rgb(7 8 12 / 0.80) 100%
+        );
+    --wallpaper-canvas-ambient: radial-gradient(
+            ellipse 76% 66% at 84% 12%,
+            rgb(224 228 242 / 0.095) 0%,
+            rgb(196 202 224 / 0.044) 36%,
+            rgb(164 172 204 / 0.014) 62%,
+            transparent 82%
+        ),
+        radial-gradient(
+            ellipse 42% 38% at 82% 72%,
+            color-mix(in oklab, var(--accent) 6%, transparent) 0%,
+            color-mix(in oklab, var(--accent) 2%, transparent) 46%,
+            transparent 72%
+        ),
+        radial-gradient(
+            ellipse 56% 52% at 50% 40%,
+            rgb(236 232 224 / 0.024) 0%,
+            rgb(236 232 224 / 0.008) 46%,
+            transparent 72%
+        ),
+        radial-gradient(
+            ellipse 90% 86% at 50% 48%,
+            transparent 46%,
+            rgb(3 4 7 / 0.32) 76%,
+            rgb(3 4 7 / 0.64) 100%
+        );
 }
 
-/* Home masthead veil: a translucent --background wash over a strongly blurred
-   wallpaper, so the wallpaper's colour still shows behind the column. The
-   collapsed narrow masthead (the peek) has no veil in translucent glass: it
-   reads as printed on the wallpaper and its text carries the wallpaper halo's
-   solid core in --background (--masthead-text-stroke) under
-   --masthead-text-halo when an image wallpaper is active. The glass `off` tier
-   and the fallbacks below make the veil solid and show it behind the peek
-   with a crisp 1px border. */
+/* Narrow-mode masthead veil: a translucent --background wash over a blurred
+   copy of the wallpaper when expanded into a sheet. Collapsed narrow peek and
+   wide-mode date/dek typography read directly on the wallpaper via
+   --masthead-text-stroke / --masthead-text-halo (and --masthead-direct-*). */
 :root {
     --masthead-veil-light: 66%;
     --masthead-veil-dark: 50%;
@@ -814,9 +1040,8 @@
 [data-glass] {
     --masthead-veil-mix: var(--masthead-veil-light);
     --masthead-veil: color-mix(in srgb, var(--background) var(--masthead-veil-mix), transparent);
-    --masthead-text-stroke: var(--wallpaper-text-core) var(--background);
-    --masthead-text-halo: 0 0 4px var(--background), 0 0 8px var(--background),
-        0 0 16px var(--background), 0 0 28px var(--background);
+    --masthead-text-stroke: var(--masthead-direct-stroke);
+    --masthead-text-halo: var(--masthead-direct-shadow);
 }
 [data-theme="dark"],
 [data-theme="dark"] [data-glass] {
@@ -839,6 +1064,8 @@
         --glass-regular-dark: 100%;
         --glass-thick-light: 100%;
         --glass-thick-dark: 100%;
+        --glass-regular-filter-light: none;
+        --glass-regular-filter-dark: none;
         --material-regular-sheen-scale: 0;
         --material-thick-sheen-scale: 0;
         --material-regular-filter: none;
@@ -861,6 +1088,8 @@
         --glass-regular-dark: 100%;
         --glass-thick-light: 100%;
         --glass-thick-dark: 100%;
+        --glass-regular-filter-light: none;
+        --glass-regular-filter-dark: none;
         --material-regular-sheen-scale: 0;
         --material-thick-sheen-scale: 0;
         --material-regular-filter: none;
@@ -882,6 +1111,8 @@
     --glass-regular-dark: 100%;
     --glass-thick-light: 100%;
     --glass-thick-dark: 100%;
+    --glass-regular-filter-light: none;
+    --glass-regular-filter-dark: none;
     --material-regular-sheen-scale: 0;
     --material-thick-sheen-scale: 0;
     --material-regular-filter: none;

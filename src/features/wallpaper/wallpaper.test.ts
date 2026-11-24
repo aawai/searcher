@@ -1915,3 +1915,101 @@ Deno.test({
         }
     },
 });
+
+Deno.test({
+    name:
+        "wallpaper: deleteWallpaper and quota eviction clear darkBackgroundImage when referenced",
+    async fn() {
+        const tempDir = await Deno.makeTempDir({
+            prefix: "wallpaper-dark-slot-cleanup-",
+        });
+        try {
+            let tick = 1_700_000_000_000;
+            const { store, app } = await setupTestApp(tempDir, 2, () => ++tick);
+            const user = await createTestUser(app, "dark_cleanup_user");
+            const cookie = `${SESSION_COOKIE_NAME}=${user.token}`;
+
+            const upload = async (name: string, seed: number) => {
+                const form = new FormData();
+                form.append(
+                    "image",
+                    new Blob([new Uint8Array([...PNG_HEADER, seed])], {
+                        type: "image/png",
+                    }),
+                    name,
+                );
+                const res = await app.request("/api/wallpaper", {
+                    method: "POST",
+                    headers: { origin: ORIGIN, cookie },
+                    body: form,
+                });
+                assertEquals(res.status, STATUS_CODE.OK);
+                return (await res.json() as Envelope<
+                    { id: string; url: string }
+                >)
+                    .data!;
+            };
+
+            // Upload w1 and w2; set w1 as darkBackgroundImage and w2 as backgroundImage
+            const w1 = await upload("w1.png", 1);
+            const w2 = await upload("w2.png", 2);
+            const patchRes = await app.request("/api/preferences", {
+                method: "PATCH",
+                headers: {
+                    origin: ORIGIN,
+                    cookie,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    backgroundImage: w2.url,
+                    darkWallpaperMode: "custom",
+                    darkBackgroundImage: w1.url,
+                }),
+            });
+            assertEquals(patchRes.status, STATUS_CODE.OK);
+
+            // Upload w3 -> evicts oldest w1; darkBackgroundImage must clear, backgroundImage stays w2
+            const w3 = await upload("w3.png", 3);
+            const afterEvict = await app.request("/api/preferences", {
+                headers: { cookie },
+            });
+            const afterEvictData =
+                (await afterEvict.json() as Envelope<PreferencesDto>).data;
+            assertEquals(afterEvictData?.darkBackgroundImage, null);
+            assertEquals(afterEvictData?.backgroundImage, w2.url);
+
+            // Set w2 as darkBackgroundImage and delete w2 explicitly
+            const patchRes2 = await app.request("/api/preferences", {
+                method: "PATCH",
+                headers: {
+                    origin: ORIGIN,
+                    cookie,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    backgroundImage: w3.url,
+                    darkBackgroundImage: w2.url,
+                }),
+            });
+            assertEquals(patchRes2.status, STATUS_CODE.OK);
+
+            const delRes = await app.request(`/api/wallpaper/${w2.id}`, {
+                method: "DELETE",
+                headers: { origin: ORIGIN, cookie },
+            });
+            assertEquals(delRes.status, STATUS_CODE.OK);
+
+            const afterDelete = await app.request("/api/preferences", {
+                headers: { cookie },
+            });
+            const afterDeleteData =
+                (await afterDelete.json() as Envelope<PreferencesDto>).data;
+            assertEquals(afterDeleteData?.darkBackgroundImage, null);
+            assertEquals(afterDeleteData?.backgroundImage, w3.url);
+
+            await store.close();
+        } finally {
+            await Deno.remove(tempDir, { recursive: true }).catch(() => {});
+        }
+    },
+});

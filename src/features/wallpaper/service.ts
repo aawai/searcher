@@ -459,6 +459,7 @@ export class WallpaperService {
             // Step C: DB operations - clear reference & compositions for evicted items (canonical matching)
             let dbRollbackState: {
                 backgroundImage: string | null;
+                darkBackgroundImage: string | null;
                 wallpaperCompositions: string | null;
                 wallpaperPresentations: string | null;
             } | null = null;
@@ -473,6 +474,8 @@ export class WallpaperService {
                     await this.#store.run(async (db) => {
                         const rows = await db.select({
                             backgroundImage: preferences.backgroundImage,
+                            darkBackgroundImage:
+                                preferences.darkBackgroundImage,
                             wallpaperCompositions:
                                 preferences.wallpaperCompositions,
                             wallpaperPresentations:
@@ -485,26 +488,33 @@ export class WallpaperService {
 
                         if (rows[0]) {
                             const curBg = rows[0].backgroundImage;
+                            const curDarkBg = rows[0].darkBackgroundImage;
                             const curCompsRaw = rows[0].wallpaperCompositions;
                             let needsUpdate = false;
                             let newBg = curBg;
+                            let newDarkBg = curDarkBg;
 
-                            if (curBg) {
-                                const s = parseWallpaperSource(curBg);
+                            const matchesEvicted = (value: string | null) => {
+                                if (!value) return false;
+                                const s = parseWallpaperSource(value);
                                 if (
                                     s?.type === "uploaded" &&
                                     canonicalEvictedSet.has(s.value)
                                 ) {
-                                    newBg = null;
-                                    needsUpdate = true;
-                                } else if (
-                                    canonicalEvictedSet.has(
-                                        curBg.trim().toLowerCase(),
-                                    )
-                                ) {
-                                    newBg = null;
-                                    needsUpdate = true;
+                                    return true;
                                 }
+                                return canonicalEvictedSet.has(
+                                    value.trim().toLowerCase(),
+                                );
+                            };
+
+                            if (matchesEvicted(curBg)) {
+                                newBg = null;
+                                needsUpdate = true;
+                            }
+                            if (matchesEvicted(curDarkBg)) {
+                                newDarkBg = null;
+                                needsUpdate = true;
                             }
 
                             let comps: Record<string, WallpaperComposition> =
@@ -571,12 +581,14 @@ export class WallpaperService {
                             if (needsUpdate) {
                                 dbRollbackState = {
                                     backgroundImage: curBg,
+                                    darkBackgroundImage: curDarkBg,
                                     wallpaperCompositions: curCompsRaw,
                                     wallpaperPresentations: curPresRaw,
                                 };
                                 await db.update(preferences)
                                     .set({
                                         backgroundImage: newBg,
+                                        darkBackgroundImage: newDarkBg,
                                         wallpaperCompositions: JSON.stringify(
                                             comps,
                                         ),
@@ -761,6 +773,7 @@ export class WallpaperService {
             // Step B: DB Queue - check if preference references this wallpaper and clear (canonical matching)
             let dbRollbackState: {
                 backgroundImage: string | null;
+                darkBackgroundImage: string | null;
                 wallpaperCompositions: string | null;
                 wallpaperPresentations: string | null;
             } | null = null;
@@ -770,6 +783,8 @@ export class WallpaperService {
                     await this.#store.run(async (db) => {
                         const rows = await db.select({
                             backgroundImage: preferences.backgroundImage,
+                            darkBackgroundImage:
+                                preferences.darkBackgroundImage,
                             wallpaperCompositions:
                                 preferences.wallpaperCompositions,
                             wallpaperPresentations:
@@ -782,25 +797,32 @@ export class WallpaperService {
 
                         if (rows[0]) {
                             const curBg = rows[0].backgroundImage;
+                            const curDarkBg = rows[0].darkBackgroundImage;
                             const curCompsRaw = rows[0].wallpaperCompositions;
                             let needsUpdate = false;
                             let newBg = curBg;
+                            let newDarkBg = curDarkBg;
 
-                            if (curBg) {
-                                const s = parseWallpaperSource(curBg);
+                            const matchesDeleted = (value: string | null) => {
+                                if (!value) return false;
+                                const s = parseWallpaperSource(value);
                                 if (
                                     s?.type === "uploaded" &&
                                     s.value === canonicalTarget
                                 ) {
-                                    newBg = null;
-                                    needsUpdate = true;
-                                } else if (
-                                    curBg.trim().toLowerCase() ===
-                                        canonicalTarget
-                                ) {
-                                    newBg = null;
-                                    needsUpdate = true;
+                                    return true;
                                 }
+                                return value.trim().toLowerCase() ===
+                                    canonicalTarget;
+                            };
+
+                            if (matchesDeleted(curBg)) {
+                                newBg = null;
+                                needsUpdate = true;
+                            }
+                            if (matchesDeleted(curDarkBg)) {
+                                newDarkBg = null;
+                                needsUpdate = true;
                             }
 
                             let comps: Record<string, WallpaperComposition> =
@@ -862,12 +884,14 @@ export class WallpaperService {
                             if (needsUpdate) {
                                 dbRollbackState = {
                                     backgroundImage: curBg,
+                                    darkBackgroundImage: curDarkBg,
                                     wallpaperCompositions: curCompsRaw,
                                     wallpaperPresentations: curPresRaw,
                                 };
                                 await db.update(preferences)
                                     .set({
                                         backgroundImage: newBg,
+                                        darkBackgroundImage: newDarkBg,
                                         wallpaperCompositions: JSON.stringify(
                                             comps,
                                         ),

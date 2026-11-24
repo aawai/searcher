@@ -3,6 +3,7 @@ import {
     type AccentPalette,
     deriveWallpaperAccent,
     type HighContrastAccent,
+    wallpaperDarkTone,
     type WallpaperPixels,
 } from "./wallpaper-accent.ts";
 
@@ -443,4 +444,157 @@ Deno.test("wallpaper accent: transparent pixels do not vote", () => {
     for (let i = 0; i < 40; i++) data.set([255, 0, 0, 0], i * 4);
     const derived = deriveWallpaperAccent({ ...pixels, data });
     assert(hueDistance(hueOf(derived.light.accent), hueOf("#1ea03c")) <= 20);
+});
+
+function brightnessValue(filter: string): number {
+    const match = filter.match(/brightness\(([\d.]+)\)/);
+    assert(match, `expected brightness() in filter: ${filter}`);
+    return Number(match[1]);
+}
+
+function contrastValue(filter: string): number {
+    const match = filter.match(/contrast\(([\d.]+)\)/);
+    assert(match, `expected contrast() in filter: ${filter}`);
+    return Number(match[1]);
+}
+
+function saturateValue(filter: string): number {
+    const match = filter.match(/saturate\(([\d.]+)\)/);
+    assert(match, `expected saturate() in filter: ${filter}`);
+    return Number(match[1]);
+}
+
+Deno.test("wallpaper darkTone: bright wallpapers dim further with stronger contrast and vignette than dark wallpapers", () => {
+    const bright = wallpaperDarkTone(solid([250, 250, 250]));
+    const dark = wallpaperDarkTone(solid([18, 20, 24]));
+
+    assert(bright.lightness > 0.9);
+    assert(dark.lightness < 0.25);
+
+    assert(brightnessValue(bright.filter) < brightnessValue(dark.filter));
+    assert(brightnessValue(dark.filter) >= 0.85);
+    assert(contrastValue(bright.filter) > contrastValue(dark.filter));
+    assert(saturateValue(bright.filter) > saturateValue(dark.filter));
+
+    assert(bright.centerMix > dark.centerMix);
+    assert(bright.edgeMix > dark.edgeMix);
+    assert(bright.topMix > dark.topMix);
+});
+
+Deno.test("wallpaper darkTone: fully transparent images fall back to balanced defaults and remain deterministic", () => {
+    const empty = {
+        width: 4,
+        height: 4,
+        data: new Uint8ClampedArray(4 * 4 * 4),
+    };
+    const tone = wallpaperDarkTone(empty);
+    assertEquals(tone, {
+        lightness: 0.5,
+        filter: "contrast(1.08) saturate(1.14) brightness(0.62)",
+        customFilter: "none",
+        centerMix: 16,
+        edgeMix: 44,
+        topMix: 22,
+        ambientPrimary: "#262d42",
+        ambientSecondary: "#1b1d2e",
+    });
+    assertEquals(
+        deriveWallpaperAccent(landscape()).darkTone,
+        deriveWallpaperAccent(landscape()).darkTone,
+    );
+});
+
+Deno.test("wallpaper darkTone: dual-color wallpaper extracts distinct ambientPrimary and ambientSecondary hues", () => {
+    const width = 12;
+    const height = 8;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            const left = x < width / 2;
+            data[i] = left ? 225 : 42;
+            data[i + 1] = left ? 58 : 112;
+            data[i + 2] = left ? 82 : 228;
+            data[i + 3] = 255;
+        }
+    }
+    const tone = wallpaperDarkTone({ width, height, data });
+    assert(/^#[0-9a-f]{6}$/.test(tone.ambientPrimary));
+    assert(/^#[0-9a-f]{6}$/.test(tone.ambientSecondary));
+    assert(tone.ambientPrimary !== tone.ambientSecondary);
+});
+
+Deno.test("wallpaper accent: pale white-backdrop illustration with ~2.5% pastel rose blush extracts rose hue instead of neutral grey", () => {
+    const width = 40;
+    const height = 40;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            // ~2.5% centered subtle rose blush ([245, 212, 216], OKLCH C ≈ 0.032)
+            const inBlush = x >= 18 && x < 26 && y >= 18 && y < 23;
+            data.set(
+                inBlush ? [245, 212, 216, 255] : [252, 252, 252, 255],
+                i,
+            );
+        }
+    }
+    const derived = deriveWallpaperAccent({ width, height, data });
+    assert(
+        derived.seed.chroma > 0,
+        `expected pastel blush to avoid neutral collapse, got seed=${
+            JSON.stringify(derived.seed)
+        }`,
+    );
+    assert(
+        hueDistance(hueOf(derived.dark.accent), hueOf("#f5d4d8")) <= 25,
+        `expected rose hue near #f5d4d8, got ${derived.dark.accent}`,
+    );
+});
+
+Deno.test("wallpaper darkTone: customFilter preserves native colour on dark/mid-tone art and dims only glaring bright uploads", () => {
+    const sunset = wallpaperDarkTone(solid([190, 110, 20]));
+    const darkNavy = wallpaperDarkTone(solid([18, 22, 34]));
+    const brightWhite = wallpaperDarkTone(solid([250, 250, 250]));
+
+    assertEquals(sunset.customFilter, "none");
+    assertEquals(darkNavy.customFilter, "none");
+    assert(
+        brightWhite.customFilter !== "none" &&
+            brightnessValue(brightWhite.customFilter) < 0.9,
+    );
+});
+
+Deno.test("wallpaper darkTone: rose portrait with faint warm-skin secondary synthesizes cool deep counterweight instead of muddy brown", () => {
+    const width = 40;
+    const height = 40;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            const inBlush = x >= 15 && x < 25 && y >= 15 && y < 23;
+            const inWarmSkin = x >= 25 && x < 31 && y >= 18 && y < 24;
+            const color: Rgb = inBlush
+                ? [238, 178, 186]
+                : inWarmSkin
+                ? [226, 188, 148]
+                : [252, 252, 252];
+            data.set([...color, 255], i);
+        }
+    }
+    const tone = wallpaperDarkTone({ width, height, data });
+    const secondaryHue = hueOf(tone.ambientSecondary);
+    assert(
+        secondaryHue >= 195 && secondaryHue <= 295,
+        `expected cool midnight indigo-slate counterweight, got ${tone.ambientSecondary} (hue=${
+            secondaryHue.toFixed(1)
+        }°)`,
+    );
+    const primaryHue = hueOf(tone.ambientPrimary);
+    assert(
+        primaryHue < 45 || primaryHue >= 310,
+        `expected hushed rose primary, got ${tone.ambientPrimary} (hue=${
+            primaryHue.toFixed(1)
+        }°)`,
+    );
 });

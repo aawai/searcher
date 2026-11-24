@@ -8,9 +8,74 @@ import { formatWallpaperCss } from "./WallpaperSurface.tsx";
 
 /** Longest side of the downsampled image; enough for a hue histogram. */
 const SAMPLE_SIZE = 64;
+const ACCENT_CACHE_KEY = "searcher:wallpaper-accent-cache-v3";
+const ACCENT_CACHE_MAX = 12;
 
 export interface WallpaperSample {
     readonly pixels: WallpaperPixels;
+}
+
+function hashSourceKey(source: string): string {
+    let hash = 2166136261;
+    for (let i = 0; i < source.length; i++) {
+        hash ^= source.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+    }
+    return `${source.length}:${(hash >>> 0).toString(36)}`;
+}
+
+function readAccentCacheMap(): Record<string, WallpaperAccent> {
+    try {
+        const storage = globalThis.localStorage;
+        if (!storage) return {};
+        const raw = storage.getItem(ACCENT_CACHE_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed as Record<string, WallpaperAccent>
+            : {};
+    } catch {
+        return {};
+    }
+}
+
+function readCachedWallpaperAccent(source: string): WallpaperAccent | null {
+    if (!source) return null;
+    const key = hashSourceKey(source);
+    const hit = readAccentCacheMap()[key];
+    if (
+        !hit || typeof hit !== "object" ||
+        typeof hit.darkTone?.lightness !== "number" ||
+        typeof hit.darkTone?.ambientPrimary !== "string" ||
+        typeof hit.darkTone?.customFilter !== "string"
+    ) {
+        return null;
+    }
+    return hit;
+}
+
+function writeCachedWallpaperAccent(
+    source: string,
+    accent: WallpaperAccent,
+): void {
+    if (!source) return;
+    try {
+        const storage = globalThis.localStorage;
+        if (!storage) return;
+        const key = hashSourceKey(source);
+        const existing = readAccentCacheMap();
+        delete existing[key];
+        existing[key] = accent;
+        const keys = Object.keys(existing);
+        if (keys.length > ACCENT_CACHE_MAX) {
+            for (const stale of keys.slice(0, keys.length - ACCENT_CACHE_MAX)) {
+                delete existing[stale];
+            }
+        }
+        storage.setItem(ACCENT_CACHE_KEY, JSON.stringify(existing));
+    } catch {
+        // Ignore quota or disabled localStorage.
+    }
 }
 
 function context2d(width: number, height: number) {
@@ -59,29 +124,36 @@ export async function sampleWallpaper(
 
 /**
  * Accent derived from the full wallpaper (decoupled from composition focal
- * point). Re-samples and re-derives only when the wallpaper source changes.
+ * point). Reads synchronously from a lightweight local summary cache so
+ * page reloads do not flash an unsampled light frame, then verifies in
+ * background when needed.
  */
 export function useWallpaperAccent(
     source: string,
 ): WallpaperAccent | null {
-    const [sample, setSample] = useState<
-        { source: string; value: WallpaperSample | null } | null
+    const cached = useMemo(
+        () => (source ? readCachedWallpaperAccent(source) : null),
+        [source],
+    );
+    const [resolved, setResolved] = useState<
+        { source: string; accent: WallpaperAccent | null } | null
     >(null);
     useEffect(() => {
         if (!source) return;
         let alive = true;
         void sampleWallpaper(source).then((value) => {
-            if (alive) setSample({ source, value });
+            if (!alive) return;
+            const derived = value ? deriveWallpaperAccent(value.pixels) : null;
+            if (derived) writeCachedWallpaperAccent(source, derived);
+            setResolved({ source, accent: derived });
         });
         return () => {
             alive = false;
         };
     }, [source]);
-    const current = sample?.source === source ? sample.value : null;
-    return useMemo(
-        () => current ? deriveWallpaperAccent(current.pixels) : null,
-        [current],
-    );
+    if (!source) return null;
+    if (resolved?.source === source) return resolved.accent;
+    return cached;
 }
 
 /** Runtime custom properties `[data-accent="wallpaper"]` reads, per palette slot. */
@@ -129,5 +201,43 @@ export function applyWallpaperAccent(
                 `light-dark(${light[key]}, ${dark[key]})`,
             );
         } else element.style.removeProperty(property);
+    }
+    if (accent) {
+        element.style.setProperty(
+            "--wallpaper-dark-dim",
+            accent.darkTone.filter,
+        );
+        element.style.setProperty(
+            "--wallpaper-custom-dark-dim",
+            accent.darkTone.customFilter,
+        );
+        element.style.setProperty(
+            "--wallpaper-dark-center-mix",
+            `${accent.darkTone.centerMix}%`,
+        );
+        element.style.setProperty(
+            "--wallpaper-dark-edge-mix",
+            `${accent.darkTone.edgeMix}%`,
+        );
+        element.style.setProperty(
+            "--wallpaper-dark-top-mix",
+            `${accent.darkTone.topMix}%`,
+        );
+        element.style.setProperty(
+            "--wallpaper-ambient-primary",
+            accent.darkTone.ambientPrimary,
+        );
+        element.style.setProperty(
+            "--wallpaper-ambient-secondary",
+            accent.darkTone.ambientSecondary,
+        );
+    } else {
+        element.style.removeProperty("--wallpaper-dark-dim");
+        element.style.removeProperty("--wallpaper-custom-dark-dim");
+        element.style.removeProperty("--wallpaper-dark-center-mix");
+        element.style.removeProperty("--wallpaper-dark-edge-mix");
+        element.style.removeProperty("--wallpaper-dark-top-mix");
+        element.style.removeProperty("--wallpaper-ambient-primary");
+        element.style.removeProperty("--wallpaper-ambient-secondary");
     }
 }

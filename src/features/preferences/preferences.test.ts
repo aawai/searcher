@@ -10,6 +10,7 @@ import { migrateDatabase } from "../../db/migrate.ts";
 import { preferences, users } from "../../db/schema.ts";
 import { AuthService, SESSION_COOKIE_NAME } from "../auth/service.ts";
 import { SystemSettingsStore } from "../system/settings-store.ts";
+import { WallpaperService } from "../wallpaper/service.ts";
 const origin = "http://localhost:8000";
 
 Deno.test("preferences: authenticated appearance sync is isolated and partial updates preserve fields", async () => {
@@ -626,5 +627,181 @@ Deno.test("preferences: remote LRU enforces max 24 limit and keeps the current b
         );
     } finally {
         await store.close();
+    }
+});
+
+Deno.test("preferences: darkWallpaperMode and darkBackgroundImage sync, validate, and protect dual slots", async () => {
+    const store = openDatabase(":memory:");
+    const tempDir = await Deno.makeTempDir({ prefix: "pref-dark-wp-" });
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const wallpaper = new WallpaperService(tempDir);
+        const app = createApp({ store, auth, origin, wallpaper });
+
+        const register = async (username: string) => {
+            const response = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: { origin, "content-type": "application/json" },
+                body: JSON.stringify({
+                    username,
+                    displayName: username,
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(response.status, 200);
+            const body = await response.json() as Envelope<{
+                user: { id: string };
+            }>;
+            return {
+                cookie: response.headers.get("set-cookie")?.split(";")[0] ?? "",
+                userId: body.data!.user.id,
+            };
+        };
+
+        const alice = await register("dark_pref_alice");
+        const bob = await register("dark_pref_bob");
+        const aliceCookie = alice.cookie;
+
+        const pngBytes = new Uint8Array([
+            0x89,
+            0x50,
+            0x4e,
+            0x47,
+            0x0d,
+            0x0a,
+            0x1a,
+            0x0a,
+            0x00,
+            0x00,
+            0x00,
+            0x0d,
+        ]);
+        const aliceAsset = await wallpaper.saveWallpaper(
+            alice.userId,
+            pngBytes,
+        );
+        const bobAsset = await wallpaper.saveWallpaper(
+            bob.userId,
+            pngBytes,
+        );
+        const aliceUrl = `/api/wallpaper/${aliceAsset.id}`;
+        const bobUrl = `/api/wallpaper/${bobAsset.id}`;
+
+        // Default values
+        const initialRes = await app.request("/api/preferences", {
+            headers: { cookie: aliceCookie },
+        });
+        const initialBody = await initialRes.json() as Envelope<PreferencesDto>;
+        assertEquals(initialBody.data?.darkWallpaperMode, "auto");
+        assertEquals(initialBody.data?.darkBackgroundImage, null);
+
+        // Reject invalid darkWallpaperMode
+        const invalidModeRes = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: aliceCookie,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ darkWallpaperMode: "sepia" }),
+        });
+        assertEquals(invalidModeRes.status, 400);
+
+        // Reject cross-user darkBackgroundImage
+        const crossUserRes = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: aliceCookie,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ darkBackgroundImage: bobUrl }),
+        });
+        assertEquals(crossUserRes.status, 404);
+
+        // Save valid modes & both light and dark wallpapers, and check remote LRU keeps both active slots
+        const presentations: Record<string, unknown> = {
+            "https://example.com/light-active.jpg": {
+                composition: { focalX: 0.25, focalY: 0.35 },
+            },
+        };
+        for (let i = 1; i <= 25; i++) {
+            presentations[`https://example.com/fill-${i}.jpg`] = {
+                composition: { focalX: 0.5, focalY: 0.5 },
+            };
+        }
+
+        for (
+            const mode of [
+                "ambient",
+                "canvas",
+                "custom",
+                "follow",
+                "auto",
+            ] as const
+        ) {
+            const res = await app.request("/api/preferences", {
+                method: "PATCH",
+                headers: {
+                    origin,
+                    cookie: aliceCookie,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({ darkWallpaperMode: mode }),
+            });
+            assertEquals(res.status, 200);
+            const body = await res.json() as Envelope<PreferencesDto>;
+            assertEquals(body.data?.darkWallpaperMode, mode);
+        }
+
+        const updateRes = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: aliceCookie,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                backgroundImage: "https://example.com/light-active.jpg",
+                darkWallpaperMode: "custom",
+                darkBackgroundImage: aliceUrl,
+                wallpaperPresentations: presentations,
+            }),
+        });
+        assertEquals(updateRes.status, 200);
+        const updated = await updateRes.json() as Envelope<PreferencesDto>;
+        assertEquals(
+            updated.data?.backgroundImage,
+            "https://example.com/light-active.jpg",
+        );
+        assertEquals(updated.data?.darkWallpaperMode, "custom");
+        assertEquals(updated.data?.darkBackgroundImage, aliceUrl);
+        assertEquals(
+            updated.data
+                ?.wallpaperPresentations?.[
+                    "https://example.com/light-active.jpg"
+                ]
+                ?.composition,
+            { focalX: 0.25, focalY: 0.35 },
+        );
+
+        // Clear darkBackgroundImage back to null
+        const clearRes = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: {
+                origin,
+                cookie: aliceCookie,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ darkBackgroundImage: null }),
+        });
+        assertEquals(clearRes.status, 200);
+        const cleared = await clearRes.json() as Envelope<PreferencesDto>;
+        assertEquals(cleared.data?.darkBackgroundImage, null);
+        assertEquals(cleared.data?.darkWallpaperMode, "custom");
+    } finally {
+        await store.close();
+        await Deno.remove(tempDir, { recursive: true }).catch(() => {});
     }
 });

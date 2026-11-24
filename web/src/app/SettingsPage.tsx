@@ -1,4 +1,4 @@
-import type { GlassIntensity } from "@shared/contracts.ts";
+import type { DarkWallpaperMode, GlassIntensity } from "@shared/contracts.ts";
 import { type EngineId, SEARCH_ENGINES } from "@shared/engines.ts";
 import {
     type BotanicalSpecies,
@@ -72,7 +72,9 @@ import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperStageContextPreview.tsx";
 import {
     BOTANICAL_SCENE_CHOICES,
+    buildDarkWallpaperSelectionPatch,
     buildWallpaperSelectionPatch,
+    DARK_WALLPAPER_MODE_CHOICES,
     type WallpaperHistoryRecord,
 } from "../components/wallpaper/wallpaper-choices.ts";
 export type { WallpaperHistoryRecord };
@@ -88,8 +90,8 @@ import { type PageHost, usePagePresenter } from "./page-host.tsx";
 
 const GLASS_CHOICES = [
     ["off", "关闭"],
-    ["soft", "轻"],
-    ["regular", "标准"],
+    ["soft", "雾面"],
+    ["regular", "磨砂"],
     ["clear", "通透"],
 ] as const satisfies readonly (readonly [GlassIntensity, string])[];
 
@@ -203,6 +205,8 @@ export function SettingsContent({ host }: { host: PageHost }) {
     const { location, Link } = host;
     const {
         appearance,
+        resolvedScheme,
+        effectiveWallpaper,
         setAppearance,
         user,
         authSession,
@@ -223,8 +227,36 @@ export function SettingsContent({ host }: { host: PageHost }) {
         WallpaperHistoryRecord[]
     >([]);
     const [uploadingWallpaper, setUploadingWallpaper] = useState(false);
-    const currentWallpaperSource = parseWallpaperSource(appearance.wallpaper);
-    const hasImageWallpaper = Boolean(appearance.wallpaper);
+    const isCustomDarkMode = appearance.darkWallpaperMode === "custom";
+    const [editingSlot, setEditingSlot] = useState<"light" | "dark">(
+        resolvedScheme,
+    );
+    const activeSlot: "light" | "dark" = isCustomDarkMode
+        ? editingSlot
+        : "light";
+    const slotWallpaper = activeSlot === "dark"
+        ? appearance.darkWallpaper
+        : appearance.wallpaper;
+    const protectedSlots = [appearance.wallpaper, appearance.darkWallpaper];
+    const slotPatch = (
+        nextUrl: string,
+        presentations?: Record<string, WallpaperPresentation>,
+    ): Partial<Appearance> =>
+        activeSlot === "dark"
+            ? {
+                darkWallpaper: nextUrl,
+                ...(presentations
+                    ? { wallpaperPresentations: presentations }
+                    : {}),
+            }
+            : {
+                wallpaper: nextUrl,
+                ...(presentations
+                    ? { wallpaperPresentations: presentations }
+                    : {}),
+            };
+    const currentWallpaperSource = parseWallpaperSource(slotWallpaper);
+    const hasImageWallpaper = Boolean(slotWallpaper);
     const hasBotanicalScene = appearance.botanicalScene !== null;
     const [lastBotanicalSpecies, setLastBotanicalSpecies] = useState<
         BotanicalSpecies
@@ -235,9 +267,9 @@ export function SettingsContent({ host }: { host: PageHost }) {
         }
     }, [appearance.botanicalScene]);
     const currentSourceHidden = currentWallpaperSource?.type === "uploaded" ||
-        appearance.wallpaper.startsWith("data:");
+        slotWallpaper.startsWith("data:");
     const [wallpaperDraft, setWallpaperDraft] = useState<string>(
-        currentSourceHidden ? "" : appearance.wallpaper,
+        currentSourceHidden ? "" : slotWallpaper,
     );
     const [draftError, setDraftError] = useState<string | null>(null);
     const [isApplyingDraft, setIsApplyingDraft] = useState(false);
@@ -271,26 +303,34 @@ export function SettingsContent({ host }: { host: PageHost }) {
     }, []);
 
     useEffect(() => {
-        if (parseWallpaperSource(appearance.wallpaper)?.type === "remote") {
-            setWallpaperDraft(appearance.wallpaper);
+        if (parseWallpaperSource(slotWallpaper)?.type === "remote") {
+            setWallpaperDraft(slotWallpaper);
         } else {
             setWallpaperDraft("");
         }
         setDraftError(null);
-    }, [appearance.wallpaper]);
+    }, [slotWallpaper]);
 
-    const hasWallpaper = Boolean(appearance.wallpaper);
+    const stageSource = isCustomDarkMode
+        ? slotWallpaper
+        : resolvedScheme === "dark"
+        ? effectiveWallpaper.source
+        : appearance.wallpaper;
+    const stageMode: "image" | "ambient" | "canvas" = isCustomDarkMode
+        ? (slotWallpaper ? "image" : "canvas")
+        : resolvedScheme === "dark"
+        ? effectiveWallpaper.renderMode
+        : (appearance.wallpaper ? "image" : "canvas");
     const currentPresentation = useMemo<WallpaperPresentation>(() => {
-        if (hasWallpaper) {
+        if (stageSource) {
             return wallpaperPresentation(
-                appearance.wallpaper,
+                stageSource,
                 appearance.wallpaperPresentations,
             );
         }
         return DEFAULT_WALLPAPER_PRESENTATION;
     }, [
-        hasWallpaper,
-        appearance.wallpaper,
+        stageSource,
         appearance.wallpaperPresentations,
     ]);
 
@@ -365,11 +405,9 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 { ...appearance.wallpaperPresentations },
                 url,
                 nextPres,
+                protectedSlots,
             );
-            await setAppearance({
-                wallpaper: url,
-                wallpaperPresentations: nextRecords,
-            });
+            await setAppearance(slotPatch(url, nextRecords));
             if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((current) =>
                 [
@@ -389,7 +427,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
 
     async function handleApplyDraft() {
         const trimmed = wallpaperDraft.trim();
-        if (!trimmed || trimmed === appearance.wallpaper || isApplyingDraft) {
+        if (!trimmed || trimmed === slotWallpaper || isApplyingDraft) {
             return;
         }
         const parsed = parseWallpaperSource(trimmed);
@@ -405,11 +443,10 @@ export function SettingsContent({ host }: { host: PageHost }) {
             const nextRecords = touchWallpaperPresentation(
                 { ...appearance.wallpaperPresentations },
                 parsed.value,
+                undefined,
+                protectedSlots,
             );
-            await setAppearance({
-                wallpaper: parsed.value,
-                wallpaperPresentations: nextRecords,
-            });
+            await setAppearance(slotPatch(parsed.value, nextRecords));
             showToast("壁纸已更新");
         } catch {
             if (authSession.isCurrent()) setDraftError("同步壁纸失败，请重试");
@@ -450,7 +487,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
 
     async function handleClearCurrentWallpaper() {
         try {
-            await setAppearance({ wallpaper: "" });
+            await setAppearance(slotPatch(""));
             showToast("已停用当前壁纸");
         } catch (error) {
             showToast(
@@ -459,13 +496,23 @@ export function SettingsContent({ host }: { host: PageHost }) {
         }
     }
 
-    async function handleSetCurrentFromHistory(record: WallpaperHistoryRecord) {
+    async function handleSetCurrentFromHistory(
+        record: WallpaperHistoryRecord,
+        targetSlot: "light" | "dark" = activeSlot,
+    ) {
         try {
             await setAppearance(
-                buildWallpaperSelectionPatch(
-                    record,
-                    appearance.wallpaperPresentations,
-                ),
+                targetSlot === "dark"
+                    ? buildDarkWallpaperSelectionPatch(
+                        record,
+                        appearance.wallpaperPresentations,
+                        [appearance.wallpaper],
+                    )
+                    : buildWallpaperSelectionPatch(
+                        record,
+                        appearance.wallpaperPresentations,
+                        [appearance.darkWallpaper],
+                    ),
             );
             showToast("已设为当前壁纸");
         } catch (error) {
@@ -493,6 +540,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 { ...appearance.wallpaperPresentations },
                 target.url,
                 nextPres,
+                protectedSlots,
             );
             if (isUploadedAsset) {
                 await settleAppearanceSync();
@@ -512,7 +560,8 @@ export function SettingsContent({ host }: { host: PageHost }) {
                     { sync: false },
                 );
             } else {
-                const isCurrent = appearance.wallpaper === target.url;
+                const isCurrent = appearance.wallpaper === target.url ||
+                    appearance.darkWallpaper === target.url;
                 await setAppearance(
                     { wallpaperPresentations: nextRecords },
                     { sync: isCurrent },
@@ -571,11 +620,9 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 { ...appearance.wallpaperPresentations },
                 target.url,
                 nextPres,
+                protectedSlots,
             );
-            await setAppearance({
-                wallpaper: target.url,
-                wallpaperPresentations: nextRecords,
-            });
+            await setAppearance(slotPatch(target.url, nextRecords));
             if (!mounted.current || !authSession.isCurrent()) return;
             setWallpaperHistory((prev) =>
                 prev.map((item) =>
@@ -602,7 +649,9 @@ export function SettingsContent({ host }: { host: PageHost }) {
         const target = deleteTarget;
         setIsDeleting(true);
         try {
-            const isCurrent = appearance.wallpaper === target.url;
+            const isLightCurrent = appearance.wallpaper === target.url;
+            const isDarkCurrent = appearance.darkWallpaper === target.url;
+            const isCurrent = isLightCurrent || isDarkCurrent;
             const parsed = parseWallpaperSource(target.url);
             if (user && parsed?.type === "uploaded") {
                 await settleAppearanceSync();
@@ -617,7 +666,11 @@ export function SettingsContent({ host }: { host: PageHost }) {
             );
             if (isCurrent) {
                 await setAppearance(
-                    { wallpaper: "", wallpaperPresentations: nextRecords },
+                    {
+                        ...(isLightCurrent ? { wallpaper: "" } : {}),
+                        ...(isDarkCurrent ? { darkWallpaper: "" } : {}),
+                        wallpaperPresentations: nextRecords,
+                    },
                     { sync: false },
                 );
                 showToast("壁纸已删除，已恢复默认背景");
@@ -732,12 +785,12 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     : appearance.glassIntensity === "clear"
                                     ? (
                                         <>
-                                            通透会透出壁纸，首页文字可读性随壁纸变化
+                                            通透会明显透出壁纸，首页文字可读性随壁纸变化
                                             <br />
-                                            通透主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。
+                                            主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。
                                         </>
                                     )
-                                    : "通透主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。"}
+                                    : "主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。"}
                                 control="segmented"
                                 value={appearance.glassIntensity}
                                 values={GLASS_CHOICES}
@@ -829,6 +882,85 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                 )}
                         >
                             <SettingsRow
+                                title="深色模式壁纸"
+                                description={appearance.darkWallpaperMode ===
+                                        "auto"
+                                    ? resolvedScheme === "dark" &&
+                                            effectiveWallpaper.autoResolved ===
+                                                "ambient"
+                                        ? "当前壁纸画面偏亮，深色下已自动启用氛围流光"
+                                        : resolvedScheme === "dark" &&
+                                                effectiveWallpaper
+                                                        .autoResolved ===
+                                                    "image"
+                                        ? "当前壁纸偏暗或无亮度信息，深色下保留原图细节"
+                                        : "亮图自动柔化为氛围流光，暗图保留清晰原图"
+                                    : appearance.darkWallpaperMode === "follow"
+                                    ? "深色模式下继续展示同一张壁纸，并按亮度自动压暗与添加氛围暗角"
+                                    : appearance.darkWallpaperMode === "ambient"
+                                    ? "将浅底或亮色壁纸转化为双色深邃流光氛围"
+                                    : appearance.darkWallpaperMode === "canvas"
+                                    ? "深色模式下隐藏图片壁纸，仅展示纯黑画布与内置插画"
+                                    : "为浅色与深色模式分别配置壁纸与构图"}
+                            >
+                                <RadioGroup
+                                    variant="segmented"
+                                    className="settings-dark-mode-group"
+                                    value={appearance.darkWallpaperMode}
+                                    onValueChange={(next) => {
+                                        const mode = next as DarkWallpaperMode;
+                                        if (mode === "custom") {
+                                            setEditingSlot(resolvedScheme);
+                                        }
+                                        set("darkWallpaperMode", mode);
+                                    }}
+                                    aria-label="深色模式壁纸"
+                                    data-testid="wallpaper-dark-mode-group"
+                                >
+                                    {DARK_WALLPAPER_MODE_CHOICES.map((
+                                        [id, fullLabel, shortLabel],
+                                    ) => (
+                                        <RadioGroupItem
+                                            key={id}
+                                            value={id}
+                                            aria-label={fullLabel}
+                                            data-testid={`wallpaper-dark-mode-${id}`}
+                                        >
+                                            {shortLabel}
+                                        </RadioGroupItem>
+                                    ))}
+                                </RadioGroup>
+                            </SettingsRow>
+                            {isCustomDarkMode && (
+                                <SettingsRow title="正在编辑">
+                                    <RadioGroup
+                                        variant="segmented"
+                                        value={editingSlot}
+                                        onValueChange={(next) =>
+                                            setEditingSlot(
+                                                next === "dark"
+                                                    ? "dark"
+                                                    : "light",
+                                            )}
+                                        aria-label="壁纸编辑目标"
+                                        data-testid="wallpaper-slot-group"
+                                    >
+                                        <RadioGroupItem
+                                            value="light"
+                                            data-testid="wallpaper-slot-light"
+                                        >
+                                            浅色壁纸
+                                        </RadioGroupItem>
+                                        <RadioGroupItem
+                                            value="dark"
+                                            data-testid="wallpaper-slot-dark"
+                                        >
+                                            深色壁纸
+                                        </RadioGroupItem>
+                                    </RadioGroup>
+                                </SettingsRow>
+                            )}
+                            <SettingsRow
                                 title="壁纸来源"
                                 className="settings-row--vertical"
                             >
@@ -907,8 +1039,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                 .trim() ||
                                             wallpaperDraft
                                                     .trim() ===
-                                                appearance
-                                                    .wallpaper}
+                                                slotWallpaper}
                                         data-testid="wallpaper-apply-btn"
                                     >
                                         应用
@@ -965,66 +1096,86 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     )}
                                 </RadioGroup>
                             </SettingsRow>
-                            {(hasImageWallpaper || hasBotanicalScene) && (
-                                <>
-                                    <SettingsRow
-                                        title="当前背景"
-                                        className="settings-row--vertical"
-                                    >
-                                        <div className="wallpaper-current">
-                                            <div
-                                                className="wallpaper-stage"
-                                                data-testid="wallpaper-stage"
-                                            >
-                                                <WallpaperSurface
-                                                    source={appearance
-                                                        .wallpaper}
-                                                    botanicalScene={appearance
-                                                        .botanicalScene}
-                                                    presentation={currentPresentation}
-                                                    embedded
-                                                    testId="wallpaper-current-preview"
-                                                />
-                                                <WallpaperStageContextPreview />
+                            {(Boolean(stageSource) || hasBotanicalScene ||
+                                (resolvedScheme === "dark" &&
+                                    appearance.darkWallpaperMode !== "follow" &&
+                                    appearance.darkWallpaperMode !== "auto")) &&
+                                (
+                                    <>
+                                        <SettingsRow
+                                            title="当前背景"
+                                            className="settings-row--vertical"
+                                        >
+                                            <div className="wallpaper-current">
+                                                <div
+                                                    className="wallpaper-stage"
+                                                    data-testid="wallpaper-stage"
+                                                    data-theme={isCustomDarkMode
+                                                        ? activeSlot
+                                                        : undefined}
+                                                >
+                                                    <WallpaperSurface
+                                                        source={stageSource}
+                                                        mode={stageMode}
+                                                        nativeDarkTone={isCustomDarkMode
+                                                            ? activeSlot ===
+                                                                    "dark" &&
+                                                                Boolean(
+                                                                    slotWallpaper,
+                                                                )
+                                                            : effectiveWallpaper
+                                                                .nativeDarkTone}
+                                                        botanicalScene={appearance
+                                                            .botanicalScene}
+                                                        presentation={currentPresentation}
+                                                        embedded
+                                                        testId="wallpaper-current-preview"
+                                                    />
+                                                    <WallpaperStageContextPreview />
+                                                </div>
+                                                {hasImageWallpaper && (
+                                                    <ActionGroup>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() => {
+                                                                const slotPres =
+                                                                    wallpaperPresentation(
+                                                                        slotWallpaper,
+                                                                        appearance
+                                                                            .wallpaperPresentations,
+                                                                    );
+                                                                const focal =
+                                                                    slotPres
+                                                                        .composition;
+                                                                setCompositionTarget(
+                                                                    {
+                                                                        id: "current",
+                                                                        url: slotWallpaper,
+                                                                        ...focal,
+                                                                    },
+                                                                );
+                                                            }}
+                                                            data-testid="wallpaper-current-adjust-focal-btn"
+                                                        >
+                                                            调整构图
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            onClick={() =>
+                                                                void handleClearCurrentWallpaper()}
+                                                            aria-label="停用当前壁纸"
+                                                            data-testid="wallpaper-clear-btn"
+                                                        >
+                                                            停用壁纸
+                                                        </Button>
+                                                    </ActionGroup>
+                                                )}
                                             </div>
-                                            {hasImageWallpaper && (
-                                                <ActionGroup>
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        onClick={() => {
-                                                            const focal =
-                                                                currentPresentation
-                                                                    .composition;
-                                                            setCompositionTarget(
-                                                                {
-                                                                    id: "current",
-                                                                    url: appearance
-                                                                        .wallpaper,
-                                                                    ...focal,
-                                                                },
-                                                            );
-                                                        }}
-                                                        data-testid="wallpaper-current-adjust-focal-btn"
-                                                    >
-                                                        调整构图
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        onClick={() =>
-                                                            void handleClearCurrentWallpaper()}
-                                                        aria-label="停用当前壁纸"
-                                                        data-testid="wallpaper-clear-btn"
-                                                    >
-                                                        停用壁纸
-                                                    </Button>
-                                                </ActionGroup>
-                                            )}
-                                        </div>
-                                    </SettingsRow>
-                                </>
-                            )}
+                                        </SettingsRow>
+                                    </>
+                                )}
                         </SettingsGroup>
                         {wallpaperHistory.length > 0 && (
                             <SettingsGroup
@@ -1042,9 +1193,24 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     <div className="wallpaper-history__grid">
                                         {wallpaperHistory.map(
                                             (record, index) => {
-                                                const isCurrent = appearance
-                                                    .wallpaper ===
-                                                    record.url;
+                                                const isLight =
+                                                    appearance.wallpaper ===
+                                                        record.url;
+                                                const isDark =
+                                                    appearance.darkWallpaper ===
+                                                        record.url;
+                                                const isCurrent =
+                                                    isCustomDarkMode
+                                                        ? (isLight || isDark)
+                                                        : isLight;
+                                                const badgeText =
+                                                    isCustomDarkMode
+                                                        ? (isLight && isDark
+                                                            ? "双主题使用"
+                                                            : isLight
+                                                            ? "浅色当前"
+                                                            : "深色当前")
+                                                        : "当前壁纸";
                                                 return (
                                                     <div
                                                         key={record
@@ -1075,7 +1241,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                 1
                                                             }${
                                                                 isCurrent
-                                                                    ? "（当前壁纸）"
+                                                                    ? `（${badgeText}）`
                                                                     : ""
                                                             }`}
                                                             data-testid={`wallpaper-card-preview-btn-${record.id}`}
@@ -1104,7 +1270,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                         className="icon-sm shrink-0"
                                                                     />
                                                                     <span>
-                                                                        当前壁纸
+                                                                        {badgeText}
                                                                     </span>
                                                                 </div>
                                                             )}
@@ -1124,7 +1290,58 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                     />
                                                                 </DropdownMenuTrigger>
                                                                 <DropdownMenuContent>
-                                                                    {isCurrent
+                                                                    {isCustomDarkMode
+                                                                        ? (
+                                                                            <>
+                                                                                <DropdownMenuItem
+                                                                                    disabled={isLight}
+                                                                                    onClick={() =>
+                                                                                        void handleSetCurrentFromHistory(
+                                                                                            record,
+                                                                                            "light",
+                                                                                        )}
+                                                                                    data-testid={activeSlot ===
+                                                                                            "light"
+                                                                                        ? "wallpaper-menu-set-current"
+                                                                                        : "wallpaper-menu-set-light"}
+                                                                                >
+                                                                                    <Check
+                                                                                        size="1em"
+                                                                                        className="icon-sm"
+                                                                                        aria-hidden="true"
+                                                                                    />
+                                                                                    <span>
+                                                                                        {isLight
+                                                                                            ? "浅色正在使用"
+                                                                                            : "设为浅色壁纸"}
+                                                                                    </span>
+                                                                                </DropdownMenuItem>
+                                                                                <DropdownMenuItem
+                                                                                    disabled={isDark}
+                                                                                    onClick={() =>
+                                                                                        void handleSetCurrentFromHistory(
+                                                                                            record,
+                                                                                            "dark",
+                                                                                        )}
+                                                                                    data-testid={activeSlot ===
+                                                                                            "dark"
+                                                                                        ? "wallpaper-menu-set-current"
+                                                                                        : "wallpaper-menu-set-dark"}
+                                                                                >
+                                                                                    <Check
+                                                                                        size="1em"
+                                                                                        className="icon-sm"
+                                                                                        aria-hidden="true"
+                                                                                    />
+                                                                                    <span>
+                                                                                        {isDark
+                                                                                            ? "深色正在使用"
+                                                                                            : "设为深色壁纸"}
+                                                                                    </span>
+                                                                                </DropdownMenuItem>
+                                                                            </>
+                                                                        )
+                                                                        : isLight
                                                                         ? (
                                                                             <DropdownMenuItem
                                                                                 disabled
@@ -1314,7 +1531,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
                     )
                     : null}
                 isCurrent={compositionTarget
-                    ? appearance.wallpaper === compositionTarget.url
+                    ? slotWallpaper === compositionTarget.url
                     : false}
                 onSaveComposition={handleSaveComposition}
                 onSetAsCurrent={handleSetCurrentWithFocal}
@@ -1329,13 +1546,19 @@ export function SettingsContent({ host }: { host: PageHost }) {
                     <AlertDialogHeader>
                         <AlertDialogTitle>
                             {deleteTarget &&
-                                    appearance.wallpaper === deleteTarget.url
+                                    (appearance.wallpaper ===
+                                            deleteTarget.url ||
+                                        appearance.darkWallpaper ===
+                                            deleteTarget.url)
                                 ? "删除当前壁纸？"
                                 : "删除壁纸？"}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                             {deleteTarget &&
-                                    appearance.wallpaper === deleteTarget.url
+                                    (appearance.wallpaper ===
+                                            deleteTarget.url ||
+                                        appearance.darkWallpaper ===
+                                            deleteTarget.url)
                                 ? "该图片正在使用。删除后将恢复默认背景，图片也会从最近上传中永久删除。"
                                 : "该图片将从最近上传中永久删除。此操作无法撤销。"}
                         </AlertDialogDescription>

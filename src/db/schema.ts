@@ -10,7 +10,7 @@ import {
     text,
     uniqueIndex,
 } from "drizzle-orm/sqlite-core";
-import { THEME_IDS } from "../shared/contracts.ts";
+import { DARK_WALLPAPER_MODES, THEME_IDS } from "../shared/contracts.ts";
 
 export const users = sqliteTable("users", {
     id: text("id").primaryKey(),
@@ -79,6 +79,10 @@ export const preferences = sqliteTable("preferences", {
     tabIcon: text("tab_icon", { enum: ["editorial", "keycap"] })
         .notNull().default("editorial"),
     backgroundImage: text("background_image"),
+    darkWallpaperMode: text("dark_wallpaper_mode", {
+        enum: DARK_WALLPAPER_MODES,
+    }).notNull().default("auto"),
+    darkBackgroundImage: text("dark_background_image"),
     botanicalScene: text("botanical_scene"),
     searchTarget: text("search_target", { enum: ["same", "new"] })
         .notNull().default("same"),
@@ -133,6 +137,10 @@ export const preferences = sqliteTable("preferences", {
     check(
         "preferences_search_target_check",
         sql`${t.searchTarget} in ('same','new')`,
+    ),
+    check(
+        "preferences_dark_wallpaper_mode_check",
+        sql`${t.darkWallpaperMode} in ('follow','ambient','canvas','custom')`,
     ),
 ]);
 

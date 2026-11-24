@@ -602,3 +602,39 @@ Deno.test("Appearance store: hydration without a device cache keeps the first-fr
     await store.hydrate();
     assertEquals(changes.map((next) => next.theme), ["high-contrast-dark"]);
 });
+
+Deno.test("Appearance: normalizes darkWallpaperMode, darkWallpaper, and preserves dual light/dark data assets", () => {
+    const lightData = "data:image/png;base64,bGlnaHQ=";
+    const darkData = "data:image/png;base64,ZGFyaw==";
+    const staleData = "data:image/png;base64,c3RhbGU=";
+
+    const normalized = normalizeAppearance({
+        wallpaper: lightData,
+        darkWallpaperMode: "ambient",
+        darkWallpaper: darkData,
+        wallpaperPresentations: {
+            [lightData]: { composition: { focalX: 0.2, focalY: 0.4 } },
+            [darkData]: { composition: { focalX: 0.7, focalY: 0.8 } },
+            [staleData]: { composition: { focalX: 0.1, focalY: 0.1 } },
+        },
+    });
+    assertEquals(normalized.darkWallpaperMode, "ambient");
+    assertEquals(normalized.wallpaper, lightData);
+    assertEquals(normalized.darkWallpaper, darkData);
+    assertEquals(
+        normalized.wallpaperPresentations[lightData]?.composition,
+        { focalX: 0.2, focalY: 0.4 },
+    );
+    assertEquals(
+        normalized.wallpaperPresentations[darkData]?.composition,
+        { focalX: 0.7, focalY: 0.8 },
+    );
+    assertEquals(normalized.wallpaperPresentations[staleData], undefined);
+
+    const invalid = normalizeAppearance({
+        darkWallpaperMode: "unknown" as unknown as "auto",
+        darkWallpaper: "http://insecure.example.com/bg.jpg",
+    });
+    assertEquals(invalid.darkWallpaperMode, "auto");
+    assertEquals(invalid.darkWallpaper, "");
+});

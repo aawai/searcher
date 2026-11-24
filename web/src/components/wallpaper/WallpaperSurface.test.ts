@@ -86,9 +86,51 @@ Deno.test("WallpaperSurface: substrate classifies image and rejected sources", (
     assertNotMatch(image, /wallpaper-surface__mask/);
     assertNotMatch(image, /--wallpaper-mask/);
 
-    const derivedSurface = renderToStaticMarkup(createElement(WallpaperSurface, {
-        source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
-        derived: true,
-    }));
+    const derivedSurface = renderToStaticMarkup(
+        createElement(WallpaperSurface, {
+            source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
+            derived: true,
+        }),
+    );
     assertMatch(derivedSurface, /wallpaper-surface__mask/);
+
+    const ambientSurface = renderToStaticMarkup(
+        createElement(WallpaperSurface, {
+            source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
+            mode: "ambient",
+        }),
+    );
+    assertMatch(ambientSurface, /data-substrate="image"/);
+    assertMatch(ambientSurface, /data-wallpaper-mode="ambient"/);
+    assertMatch(ambientSurface, /wallpaper-surface__image/);
+
+    const canvasSurface = renderToStaticMarkup(createElement(WallpaperSurface, {
+        source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
+        mode: "canvas",
+        nativeDarkTone: true,
+        botanicalScene: "plum",
+    }));
+    assertMatch(canvasSurface, /data-wallpaper-mode="canvas"/);
+    assertMatch(canvasSurface, /data-substrate="canvas"/);
+    assertMatch(canvasSurface, /data-wallpaper-scene="plum"/);
+    assertNotMatch(canvasSurface, /wallpaper-surface__image/);
+    assertNotMatch(canvasSurface, /data-native-dark/);
+
+    const nativeDarkSurface = renderToStaticMarkup(
+        createElement(WallpaperSurface, {
+            source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
+            mode: "image",
+            nativeDarkTone: true,
+        }),
+    );
+    assertMatch(nativeDarkSurface, /data-native-dark="true"/);
+
+    const ambientNativeSurface = renderToStaticMarkup(
+        createElement(WallpaperSurface, {
+            source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
+            mode: "ambient",
+            nativeDarkTone: true,
+        }),
+    );
+    assertNotMatch(ambientNativeSurface, /data-native-dark/);
 });

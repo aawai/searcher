@@ -94,8 +94,22 @@ export function wallpaperPresentation(
 
 export interface NormalizeWallpaperPresentationsOptions {
     currentSource?: string | null;
+    additionalSources?: readonly (string | null | undefined)[];
     legacy?: Record<string, unknown>;
     legacyCompositions?: Record<string, WallpaperComposition>;
+}
+
+function toProtectedSet(
+    sources?: string | null | readonly (string | null | undefined)[],
+): Set<string> {
+    const list = typeof sources === "string" ? [sources] : (sources ?? []);
+    const set = new Set<string>();
+    for (const item of list) {
+        if (typeof item === "string" && item.length > 0) {
+            set.add(item);
+        }
+    }
+    return set;
 }
 
 export function normalizeWallpaperPresentations(
@@ -103,6 +117,10 @@ export function normalizeWallpaperPresentations(
     options?: NormalizeWallpaperPresentationsOptions,
 ): Record<string, WallpaperPresentation> {
     const records: Record<string, WallpaperPresentation> = {};
+    const protectedSources = toProtectedSet([
+        options?.currentSource,
+        ...(options?.additionalSources ?? []),
+    ]);
 
     // New records precedence even if empty object (raw is an object, not null/undefined/array)
     const hasNewRecords = raw !== null &&
@@ -115,9 +133,9 @@ export function normalizeWallpaperPresentations(
             const [key, value] of Object.entries(raw as Record<string, unknown>)
         ) {
             if (key.startsWith("data:")) {
-                // Retain only valid data image URL matching currentSource
+                // Retain only valid data image URL matching any active slot
                 if (
-                    key === options?.currentSource &&
+                    protectedSources.has(key) &&
                     isValidDataImageUrl(key)
                 ) {
                     records[key] = normalizeWallpaperPresentation(value);
@@ -137,7 +155,7 @@ export function normalizeWallpaperPresentations(
             ) {
                 if (key.startsWith("data:")) {
                     if (
-                        key !== options?.currentSource ||
+                        !protectedSources.has(key) ||
                         !isValidDataImageUrl(key)
                     ) {
                         continue;
@@ -157,13 +175,12 @@ export function normalizeWallpaperPresentations(
                 });
             }
         }
-        if (options?.currentSource && !records[options.currentSource]) {
-            const cs = options.currentSource;
+        for (const cs of protectedSources) {
             if (cs.startsWith("data:")) {
-                if (isValidDataImageUrl(cs)) {
+                if (!records[cs] && isValidDataImageUrl(cs)) {
                     records[cs] = migrateLegacyWallpaperPresentation({
-                        ...(options.legacy ?? {}),
-                        composition: options.legacyCompositions?.[cs],
+                        ...(options?.legacy ?? {}),
+                        composition: options?.legacyCompositions?.[cs],
                     });
                 }
             } else if (cs !== "__base__") {
@@ -173,10 +190,10 @@ export function normalizeWallpaperPresentations(
                     !records[parsed.value]
                 ) {
                     records[parsed.value] = migrateLegacyWallpaperPresentation({
-                        ...(options.legacy ?? {}),
+                        ...(options?.legacy ?? {}),
                         composition:
-                            options.legacyCompositions?.[parsed.value] ??
-                                options.legacyCompositions?.[cs],
+                            options?.legacyCompositions?.[parsed.value] ??
+                                options?.legacyCompositions?.[cs],
                     });
                 }
             }
@@ -184,19 +201,20 @@ export function normalizeWallpaperPresentations(
     }
 
     // Retention enforcement: max 24 remote entries
-    enforcePresentationRetention(records, options?.currentSource);
+    enforcePresentationRetention(records, [...protectedSources]);
 
     return records;
 }
 
 function enforcePresentationRetention(
     records: Record<string, WallpaperPresentation>,
-    currentSource?: string | null,
+    protectedSources?: string | null | readonly (string | null | undefined)[],
 ): void {
+    const protectedSet = toProtectedSet(protectedSources);
     // 1. Purge non-current data URLs
     for (const key of Object.keys(records)) {
         if (key.startsWith("data:")) {
-            if (key !== currentSource || !isValidDataImageUrl(key)) {
+            if (!protectedSet.has(key) || !isValidDataImageUrl(key)) {
                 delete records[key];
             }
         }
@@ -213,10 +231,10 @@ function enforcePresentationRetention(
     if (remoteKeys.length > MAX_REMOTE_PRESENTATIONS) {
         const excess = remoteKeys.length - MAX_REMOTE_PRESENTATIONS;
         let removed = 0;
-        // Evict oldest first (iteration order) skipping currentSource
+        // Evict oldest first (iteration order) skipping protected active slots
         for (const key of remoteKeys) {
             if (removed >= excess) break;
-            if (key === currentSource) continue;
+            if (protectedSet.has(key)) continue;
             delete records[key];
             removed++;
         }
@@ -227,6 +245,7 @@ export function touchWallpaperPresentation(
     records: Record<string, WallpaperPresentation>,
     source: string,
     presentation?: WallpaperPresentation,
+    protectedSources?: readonly (string | null | undefined)[],
 ): Record<string, WallpaperPresentation> {
     const trimmed = source.trim();
     if (!trimmed || trimmed === "__base__") return records;
@@ -254,7 +273,10 @@ export function touchWallpaperPresentation(
     delete records[trimmed];
     records[canonicalKey] = normalized;
 
-    enforcePresentationRetention(records, canonicalKey);
+    enforcePresentationRetention(records, [
+        canonicalKey,
+        ...(protectedSources ?? []),
+    ]);
     return records;
 }
 

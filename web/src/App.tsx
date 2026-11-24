@@ -21,7 +21,6 @@ import {
 import { AppState, useAppState } from "./app/state.tsx";
 import { UserAvatar } from "./components/searcher/UserAvatar.tsx";
 import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
-import { parseWallpaperSource } from "@shared/wallpaper.ts";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
     wallpaperPresentation,
@@ -224,6 +223,8 @@ function Layout() {
         authSession,
         ready,
         appearance,
+        resolvedScheme,
+        effectiveWallpaper,
         setAppearance,
         logout,
         syncFailed,
@@ -310,13 +311,9 @@ function Layout() {
             });
         });
     }
-    const imageSource = appearance.wallpaper.startsWith("data:image/") ||
-        ["uploaded", "remote"].includes(
-            parseWallpaperSource(appearance.wallpaper)?.type ?? "",
-        );
-    const presentation = appearance.wallpaper
+    const presentation = effectiveWallpaper.source
         ? wallpaperPresentation(
-            appearance.wallpaper,
+            effectiveWallpaper.source,
             appearance.wallpaperPresentations,
         )
         : DEFAULT_WALLPAPER_PRESENTATION;
@@ -325,13 +322,16 @@ function Layout() {
             <div
                 className="app-shell"
                 data-home={hasVisibleDesktop ? "true" : undefined}
-                data-wallpaper-image={hasVisibleDesktop && imageSource
+                data-wallpaper-image={hasVisibleDesktop &&
+                        effectiveWallpaper.hasImageOverlay
                     ? "true"
                     : undefined}
             >
                 {showWallpaper && (
                     <WallpaperSurface
-                        source={appearance.wallpaper}
+                        source={effectiveWallpaper.source}
+                        mode={effectiveWallpaper.renderMode}
+                        nativeDarkTone={effectiveWallpaper.nativeDarkTone}
                         botanicalScene={appearance.botanicalScene}
                         presentation={presentation}
                         derived={!hasVisibleDesktop && isAuthPage}
@@ -362,9 +362,12 @@ function Layout() {
                         />
                         <AppearancePicker
                             theme={appearance.theme}
+                            resolvedScheme={resolvedScheme}
                             accent={appearance.accent}
                             botanicalScene={appearance.botanicalScene}
                             wallpaper={appearance.wallpaper}
+                            darkWallpaperMode={appearance.darkWallpaperMode}
+                            darkWallpaper={appearance.darkWallpaper}
                             wallpaperPresentations={appearance
                                 .wallpaperPresentations}
                             canLoadWallpaperHistory={Boolean(user)}
@@ -376,6 +379,10 @@ function Layout() {
                             onBotanicalSceneChange={(botanicalScene) =>
                                 void setAppearance({ botanicalScene })}
                             onWallpaperChange={(patch) =>
+                                void setAppearance(patch)}
+                            onDarkWallpaperModeChange={(darkWallpaperMode) =>
+                                void setAppearance({ darkWallpaperMode })}
+                            onDarkWallpaperChange={(patch) =>
                                 void setAppearance(patch)}
                         />
                         {!desktopTopbar && (

@@ -928,6 +928,14 @@
     overflow-wrap: anywhere;
 }
 
+@media (forced-colors: none) {
+    [data-theme="dark"]:not([data-contrast="more"]) .ask-user-msg-bubble {
+        background: color-mix(in oklab, var(--accent) 14%, var(--surface));
+        box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 8%, transparent),
+            inset 0 0 0 1px color-mix(in oklab, var(--accent) 16%, transparent);
+    }
+}
+
 .ask-user-msg-bubble.is-editing {
     width: 100%;
     max-width: 100%;

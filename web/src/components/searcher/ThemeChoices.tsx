@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { THEME_IDS, type ThemeId } from "@shared/contracts.ts";
 import { THEME_LABELS } from "../../design-system/theme.ts";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
@@ -31,19 +32,34 @@ function ThemeScene({ scene }: { scene: Scene }) {
  * with a short caption. Tiles wrap whole on narrow hosts (1.4.10).
  */
 export function ThemeChoices(
-    { value, onValueChange, label = "主题" }: {
+    { value, onValueChange, onSelectWithOrigin, label = "主题" }: {
         value: ThemeId;
         onValueChange: (next: ThemeId) => void;
+        onSelectWithOrigin?: (
+            next: ThemeId,
+            origin: HTMLElement | null,
+        ) => void;
         label?: string;
     },
 ) {
+    const pointerOriginRef = useRef<HTMLElement | null>(null);
     return (
         <RadioGroup
             className="theme-choices"
             value={value}
             onValueChange={(next) => {
                 const id = THEME_IDS.find((item) => item === next);
-                if (id) onValueChange(id);
+                if (!id) return;
+                const origin = pointerOriginRef.current ??
+                    (document.activeElement instanceof HTMLElement
+                        ? document.activeElement
+                        : null);
+                pointerOriginRef.current = null;
+                if (onSelectWithOrigin) {
+                    onSelectWithOrigin(id, origin);
+                } else {
+                    onValueChange(id);
+                }
             }}
             aria-label={label}
         >
@@ -52,6 +68,9 @@ export function ThemeChoices(
                     key={id}
                     value={id}
                     className="theme-choice"
+                    onClick={(e) => {
+                        pointerOriginRef.current = e.currentTarget;
+                    }}
                     aria-label={THEME_LABELS[id]}
                     title={THEME_LABELS[id]}
                 >

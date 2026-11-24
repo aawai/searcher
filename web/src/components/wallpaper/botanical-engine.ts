@@ -151,6 +151,7 @@ export function resolveBotanicalViewport(
 
 export interface BotanicalPalette {
     isDark: boolean;
+    overPhoto: boolean;
     stroke: (tint: TintRole, alpha?: number) => string;
     vein: (tint: TintRole, alpha?: number) => string;
     fill: (tint: TintRole, alpha?: number) => string;
@@ -287,7 +288,9 @@ function parseCssColorToRgb(
             const r = parseInt(hex[0] + hex[0], 16);
             const g = parseInt(hex[1] + hex[1], 16);
             const b = parseInt(hex[2] + hex[2], 16);
-            if (Number.isFinite(r) && Number.isFinite(g) && Number.isFinite(b)) {
+            if (
+                Number.isFinite(r) && Number.isFinite(g) && Number.isFinite(b)
+            ) {
                 return [r, g, b];
             }
         }
@@ -362,43 +365,46 @@ export function buildBotanicalPalette(
     isDark: boolean,
     accentCss: string,
     foregroundCss: string,
+    overPhoto = false,
 ): BotanicalPalette {
     const fallbackAccent: Rgb = isDark ? [93, 169, 255] : [10, 102, 194];
     const fallbackInk: Rgb = isDark ? [232, 234, 240] : [28, 30, 34];
     const rawAccRgb = parseCssColorToRgb(accentCss, fallbackAccent, isDark);
     const accRgb = isDark
-        ? mixRgb(rawAccRgb, [196, 190, 178], 0.18)
+        ? mixRgb(rawAccRgb, [212, 214, 224], 0.10)
         : mixRgb(rawAccRgb, [236, 232, 224], 0.12);
     const shiftedSub = shiftHueRgb(accRgb, -12);
     const subRgb = isDark
-        ? mixRgb(shiftedSub, [170, 166, 160], 0.24)
+        ? mixRgb(shiftedSub, [186, 192, 206], 0.18)
         : mixRgb(shiftedSub, [244, 240, 234], 0.22);
     const baseInk = parseCssColorToRgb(foregroundCss, fallbackInk, isDark);
 
-    // Warm pine-soot / aged-silver for trunks; cool misty-slate ink for leaves
+    // Moonlight silver-slate ink in dark mode; warm pine-soot ink in light mode
     const inkStrokeRgb = isDark
-        ? mixRgb(mixRgb(baseInk, [186, 180, 170], 0.45), accRgb, 0.05)
+        ? mixRgb(mixRgb(baseInk, [194, 200, 212], 0.52), accRgb, 0.06)
         : mixRgb(mixRgb(baseInk, [44, 37, 31], 0.40), accRgb, 0.04);
     const inkWashRgb = isDark
-        ? mixRgb(mixRgb(baseInk, [164, 172, 182], 0.46), accRgb, 0.07)
+        ? mixRgb(mixRgb(baseInk, [168, 178, 194], 0.50), accRgb, 0.08)
         : mixRgb(mixRgb(baseInk, [52, 58, 66], 0.36), accRgb, 0.06);
 
     const highlightRgb: Rgb = isDark ? [18, 19, 22] : [250, 248, 243];
+    const harmony = isDark && overPhoto ? 0.52 : 1;
 
-    const strokeA = isDark ? 0.46 : 0.62;
-    const veinA = isDark ? 0.26 : 0.34;
-    const fillA = isDark ? 0.12 : 0.135;
-    const accA = isDark ? 0.80 : 0.78;
-    const accFill = isDark ? 0.28 : 0.27;
-    const subA = isDark ? 0.64 : 0.64;
-    const subFill = isDark ? 0.22 : 0.21;
+    const strokeA = (isDark ? 0.46 : 0.62) * harmony;
+    const veinA = (isDark ? 0.28 : 0.34) * harmony;
+    const fillA = (isDark ? 0.125 : 0.135) * harmony;
+    const accA = (isDark ? 0.82 : 0.78) * harmony;
+    const accFill = (isDark ? 0.30 : 0.27) * harmony;
+    const subA = (isDark ? 0.66 : 0.64) * harmony;
+    const subFill = (isDark ? 0.23 : 0.21) * harmony;
 
-    const accWash = isDark ? 0.40 : 0.40;
-    const subWash = isDark ? 0.31 : 0.29;
-    const inkWash = isDark ? 0.20 : 0.23;
+    const accWash = (isDark ? 0.42 : 0.40) * harmony;
+    const subWash = (isDark ? 0.32 : 0.29) * harmony;
+    const inkWash = (isDark ? 0.21 : 0.23) * harmony;
 
     return {
         isDark,
+        overPhoto,
         stroke: (tint, a = 1) => {
             if (tint === "accent") return rgba(accRgb, accA * a);
             if (tint === "sub") return rgba(subRgb, subA * a);
@@ -657,9 +663,27 @@ export function generateBotanicalScene(
                 ang: number;
                 tint: TintRole;
             }> = [
-                { u: 0.44, kind: "plumBlossom", sz: 16, ang: 0.65, tint: "sub" },
-                { u: 0.74, kind: "plumBlossom", sz: 13, ang: -0.55, tint: "accent" },
-                { u: 0.96, kind: "plumBud", sz: 4.8, ang: 0.15, tint: "accent" },
+                {
+                    u: 0.44,
+                    kind: "plumBlossom",
+                    sz: 16,
+                    ang: 0.65,
+                    tint: "sub",
+                },
+                {
+                    u: 0.74,
+                    kind: "plumBlossom",
+                    sz: 13,
+                    ang: -0.55,
+                    tint: "accent",
+                },
+                {
+                    u: 0.96,
+                    kind: "plumBud",
+                    sz: 4.8,
+                    ang: 0.15,
+                    tint: "accent",
+                },
             ];
             for (const sp of echoPlums) {
                 const idx = Math.round(sp.u * (echo.points.length - 1));
@@ -824,8 +848,8 @@ export function generateBotanicalScene(
                 { u: 0.66, dir: -1, len: 168 * S, lift: 85 * S },
                 { u: 0.82, dir: 1, len: 118 * S, lift: 72 * S },
             ];
-        const subTints: readonly (readonly [TintRole, TintRole, TintRole, TintRole])[] =
-            [
+        const subTints:
+            readonly (readonly [TintRole, TintRole, TintRole, TintRole])[] = [
                 ["accent", "ink", "sub", "ink"],
                 ["ink", "ink", "sub", "ink"],
                 ["ink", "ink", "accent", "ink"],
@@ -961,13 +985,53 @@ export function generateBotanicalScene(
         const eucLeafScale = isNarrow ? 0.86 : 1;
         const configs = isNarrow
             ? [
-                { ghost: true, len: 255, rx: 4, tx: 135, ty: 0.86, count: 6, t0: 0.12 },
-                { ghost: false, len: 310, rx: 14, tx: 255, ty: 0.72, count: 8, t0: 0.00 },
+                {
+                    ghost: true,
+                    len: 255,
+                    rx: 4,
+                    tx: 135,
+                    ty: 0.86,
+                    count: 6,
+                    t0: 0.12,
+                },
+                {
+                    ghost: false,
+                    len: 310,
+                    rx: 14,
+                    tx: 255,
+                    ty: 0.72,
+                    count: 8,
+                    t0: 0.00,
+                },
             ]
             : [
-                { ghost: true, len: 460, rx: 14, tx: 130, ty: 0.92, count: 8, t0: 0.10 },
-                { ghost: false, len: 645, rx: 98, tx: 445, ty: 0.72, count: 10, t0: 0.00 },
-                { ghost: false, len: 500, rx: 26, tx: 225, ty: 0.88, count: 8, t0: 0.14 },
+                {
+                    ghost: true,
+                    len: 460,
+                    rx: 14,
+                    tx: 130,
+                    ty: 0.92,
+                    count: 8,
+                    t0: 0.10,
+                },
+                {
+                    ghost: false,
+                    len: 645,
+                    rx: 98,
+                    tx: 445,
+                    ty: 0.72,
+                    count: 10,
+                    t0: 0.00,
+                },
+                {
+                    ghost: false,
+                    len: 500,
+                    rx: 26,
+                    tx: 225,
+                    ty: 0.88,
+                    count: 8,
+                    t0: 0.14,
+                },
             ];
 
         configs.forEach((cfg, ci) => {
@@ -1015,7 +1079,8 @@ export function generateBotanicalScene(
                 const u = lerp(0.18, 0.94, easedT);
                 const idx = Math.round(u * (stem.points.length - 1));
                 const env = Math.sin(u * Math.PI * 0.82 + 0.25);
-                const sz = lerp(29, 12.5, Math.pow(u, 1.15)) * S * eucLeafScale *
+                const sz = lerp(29, 12.5, Math.pow(u, 1.15)) * S *
+                    eucLeafScale *
                     (0.86 + env * 0.24);
 
                 for (const side of [-1, 1] as const) {
@@ -1041,7 +1106,8 @@ export function generateBotanicalScene(
                         idx: jIdx,
                         angleOffset: side * rand(0.68, 1.08),
                         rx: sz * rand(0.90, 1.10),
-                        ry: sz * (isProfile ? rand(0.42, 0.54) : rand(0.78, 0.96)),
+                        ry: sz *
+                            (isProfile ? rand(0.42, 0.54) : rand(0.78, 0.96)),
                         stemLen: rand(5, 9) * S * eucLeafScale,
                         tint,
                         profile: isProfile,
@@ -1325,15 +1391,57 @@ export function generateBotanicalScene(
                 profile: boolean;
             }> = ti % 2 === 0
                 ? [
-                    { u: 0.46, kind: "plumBlossom", sz: 22, tint: "accent", profile: false },
-                    { u: 0.74, kind: "plumBlossom", sz: 13.5, tint: "sub", profile: true },
-                    { u: 0.96, kind: "plumBud", sz: 5.0, tint: "accent", profile: false },
+                    {
+                        u: 0.46,
+                        kind: "plumBlossom",
+                        sz: 22,
+                        tint: "accent",
+                        profile: false,
+                    },
+                    {
+                        u: 0.74,
+                        kind: "plumBlossom",
+                        sz: 13.5,
+                        tint: "sub",
+                        profile: true,
+                    },
+                    {
+                        u: 0.96,
+                        kind: "plumBud",
+                        sz: 5.0,
+                        tint: "accent",
+                        profile: false,
+                    },
                 ]
                 : [
-                    { u: 0.38, kind: "plumBud", sz: 5.4, tint: "accent", profile: false },
-                    { u: 0.66, kind: "plumBlossom", sz: 16, tint: "accent", profile: false },
-                    { u: 0.86, kind: "plumBud", sz: 4.5, tint: "sub", profile: false },
-                    { u: 0.97, kind: "plumBud", sz: 3.8, tint: "accent", profile: false },
+                    {
+                        u: 0.38,
+                        kind: "plumBud",
+                        sz: 5.4,
+                        tint: "accent",
+                        profile: false,
+                    },
+                    {
+                        u: 0.66,
+                        kind: "plumBlossom",
+                        sz: 16,
+                        tint: "accent",
+                        profile: false,
+                    },
+                    {
+                        u: 0.86,
+                        kind: "plumBud",
+                        sz: 4.5,
+                        tint: "sub",
+                        profile: false,
+                    },
+                    {
+                        u: 0.97,
+                        kind: "plumBud",
+                        sz: 3.8,
+                        tint: "accent",
+                        profile: false,
+                    },
                 ];
 
             spots.forEach((sp, si) => {
@@ -1366,10 +1474,38 @@ export function generateBotanicalScene(
             tint: TintRole;
             profile: boolean;
         }> = [
-            { branch: seg2, u: 0.72, kind: "plumBlossom", sz: 24, tint: "accent", profile: false },
-            { branch: seg3, u: 0.40, kind: "plumBud", sz: 5.2, tint: "accent", profile: false },
-            { branch: seg3, u: 0.80, kind: "plumBlossom", sz: 15, tint: "sub", profile: true },
-            { branch: seg3, u: 0.98, kind: "plumBud", sz: 4.4, tint: "accent", profile: false },
+            {
+                branch: seg2,
+                u: 0.72,
+                kind: "plumBlossom",
+                sz: 24,
+                tint: "accent",
+                profile: false,
+            },
+            {
+                branch: seg3,
+                u: 0.40,
+                kind: "plumBud",
+                sz: 5.2,
+                tint: "accent",
+                profile: false,
+            },
+            {
+                branch: seg3,
+                u: 0.80,
+                kind: "plumBlossom",
+                sz: 15,
+                tint: "sub",
+                profile: true,
+            },
+            {
+                branch: seg3,
+                u: 0.98,
+                kind: "plumBud",
+                sz: 4.4,
+                tint: "accent",
+                profile: false,
+            },
         ];
         mainPlums.forEach((sp, si) => {
             const sIdx = Math.round(sp.u * (sp.branch.points.length - 1));
@@ -1395,13 +1531,53 @@ export function generateBotanicalScene(
         const fernScale = isNarrow ? 0.85 : 1;
         const configs = isNarrow
             ? [
-                { ghost: true, len: 255, rx: 18, tx: 140, ty: 0.86, pairs: 13, t0: 0.10 },
-                { ghost: false, len: 315, rx: 6, tx: 248, ty: 0.72, pairs: 17, t0: 0.00 },
+                {
+                    ghost: true,
+                    len: 255,
+                    rx: 18,
+                    tx: 140,
+                    ty: 0.86,
+                    pairs: 13,
+                    t0: 0.10,
+                },
+                {
+                    ghost: false,
+                    len: 315,
+                    rx: 6,
+                    tx: 248,
+                    ty: 0.72,
+                    pairs: 17,
+                    t0: 0.00,
+                },
             ]
             : [
-                { ghost: true, len: 520, rx: 145, tx: 180, ty: 0.88, pairs: 17, t0: 0.08 },
-                { ghost: false, len: 635, rx: 52, tx: 395, ty: 0.74, pairs: 24, t0: 0.00 },
-                { ghost: false, len: 455, rx: 112, tx: 235, ty: 0.84, pairs: 18, t0: 0.14 },
+                {
+                    ghost: true,
+                    len: 520,
+                    rx: 145,
+                    tx: 180,
+                    ty: 0.88,
+                    pairs: 17,
+                    t0: 0.08,
+                },
+                {
+                    ghost: false,
+                    len: 635,
+                    rx: 52,
+                    tx: 395,
+                    ty: 0.74,
+                    pairs: 24,
+                    t0: 0.00,
+                },
+                {
+                    ghost: false,
+                    len: 455,
+                    rx: 112,
+                    tx: 235,
+                    ty: 0.84,
+                    pairs: 18,
+                    t0: 0.14,
+                },
             ];
 
         configs.forEach((cfg, ci) => {
@@ -1722,7 +1898,8 @@ function drawTaperedBranch(
                 const j1 = 7 + ((Math.round(branch.phase * 13) + sIdx * 5) % 9);
                 const j2 = 9 + ((Math.round(branch.phase * 7) + sIdx * 3) % 7);
                 const j3 = 4 + ((Math.round(branch.phase * 17) + sIdx * 2) % 6);
-                const j4 = 12 + ((Math.round(branch.phase * 11) + sIdx * 4) % 11);
+                const j4 = 12 +
+                    ((Math.round(branch.phase * 11) + sIdx * 4) % 11);
                 ctx.setLineDash([
                     j1 * scale,
                     j2 * scale,
@@ -1861,12 +2038,16 @@ function drawGinkgoLeaf(
     // Expressive dry-ink vein accents (no closed outline)
     if (detailP > 0.02) {
         const veins = o.profile ? 3 : 5;
-        ctx.strokeStyle = pal.stroke(o.tint === "ink" ? "ink" : "ink", 0.52 * detailP * layerA);
+        ctx.strokeStyle = pal.stroke(
+            o.tint === "ink" ? "ink" : "ink",
+            0.52 * detailP * layerA,
+        );
         ctx.lineCap = "round";
         for (let i = 0; i < veins; i++) {
             const frac = i / (veins - 1);
             const va = lerp(spreadL * 0.76, spreadR * 0.76, frac);
-            const rLen = s * (0.48 + 0.32 * Math.abs(Math.sin(o.phase + i * 1.4))) * detailP;
+            const rLen = s *
+                (0.48 + 0.32 * Math.abs(Math.sin(o.phase + i * 1.4))) * detailP;
             ctx.beginPath();
             ctx.moveTo(1.5, 0);
             ctx.quadraticCurveTo(
@@ -2518,6 +2699,36 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
     // Layer 3: Foreground botanical ornaments
     for (const item of activeOrns) {
         if (!item.o.ghost) {
+            if (
+                palette.isDark &&
+                !embedded &&
+                !palette.overPhoto &&
+                item.o.tint === "accent"
+            ) {
+                const haloRadius = ("size" in item.o ? item.o.size : 24) * 1.75;
+                const glow = ctx.createRadialGradient(
+                    item.wx,
+                    item.wy,
+                    0,
+                    item.wx,
+                    item.wy,
+                    haloRadius,
+                );
+                glow.addColorStop(0, palette.wash("accent", 0.24 * item.op));
+                glow.addColorStop(0.34, palette.wash("accent", 0.10 * item.op));
+                glow.addColorStop(
+                    0.68,
+                    palette.wash("accent", 0.024 * item.op),
+                );
+                glow.addColorStop(1, palette.wash("accent", 0));
+                ctx.save();
+                ctx.globalCompositeOperation = "screen";
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(item.wx, item.wy, haloRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
             renderOrnamentItem(
                 ctx,
                 item.o,
@@ -2533,7 +2744,9 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
 
     // Layer 4: Expressive ink & vermilion/accent splatter dots near foreground branch tips
     if (rawProgress > 0.72) {
-        const speckFade = easeOutCubic(clamp((rawProgress - 0.72) / 0.28, 0, 1));
+        const speckFade = easeOutCubic(
+            clamp((rawProgress - 0.72) / 0.28, 0, 1),
+        );
         const fgBranches = scene.branches.filter((b) => !b.ghost);
         for (let bi = 0; bi < Math.min(2, fgBranches.length); bi++) {
             const b = fgBranches[bi];
