@@ -174,34 +174,51 @@ export function validateBackupConsistency(
         )
         .all();
     if (tableExists.length > 0) {
-        // Check background_image column
+        // Check background_image and dark_background_image columns
+        const prefCols = db
+            .prepare("PRAGMA table_info(preferences)")
+            .all() as Array<{ name: string }>;
+        const hasDarkBgCol = prefCols.some(
+            (c) => c.name === "dark_background_image",
+        );
         const prefRows = db
             .prepare(
-                "SELECT user_id AS userId, background_image AS backgroundImage FROM preferences WHERE background_image IS NOT NULL",
+                hasDarkBgCol
+                    ? "SELECT user_id AS userId, background_image AS backgroundImage, dark_background_image AS darkBackgroundImage FROM preferences WHERE background_image IS NOT NULL OR dark_background_image IS NOT NULL"
+                    : "SELECT user_id AS userId, background_image AS backgroundImage, NULL AS darkBackgroundImage FROM preferences WHERE background_image IS NOT NULL",
             )
-            .all() as Array<{ userId: string; backgroundImage: string | null }>;
+            .all() as Array<{
+                userId: string;
+                backgroundImage: string | null;
+                darkBackgroundImage: string | null;
+            }>;
 
         for (const row of prefRows) {
-            if (!row.backgroundImage) continue;
-            if (row.backgroundImage.startsWith("/api/wallpaper/")) {
-                const refId = row.backgroundImage.slice(
-                    "/api/wallpaper/".length,
-                );
-                if (!UUID_REGEX.test(refId)) {
-                    throw new BackupValidationError(
-                        `用户偏好引用的壁纸 ID 格式非法: ${refId}`,
-                    );
-                }
-                const wallpaper = wallpaperMap.get(refId);
-                if (!wallpaper) {
-                    throw new BackupValidationError(
-                        `用户偏好引用的本地壁纸不存在: ${refId}`,
-                    );
-                }
-                if (wallpaper.userId !== row.userId) {
-                    throw new BackupValidationError(
-                        `用户偏好引用的本地壁纸不属于该用户: ${refId}`,
-                    );
+            for (
+                const imageRef of [
+                    row.backgroundImage,
+                    row.darkBackgroundImage,
+                ]
+            ) {
+                if (!imageRef) continue;
+                if (imageRef.startsWith("/api/wallpaper/")) {
+                    const refId = imageRef.slice("/api/wallpaper/".length);
+                    if (!UUID_REGEX.test(refId)) {
+                        throw new BackupValidationError(
+                            `用户偏好引用的壁纸 ID 格式非法: ${refId}`,
+                        );
+                    }
+                    const wallpaper = wallpaperMap.get(refId);
+                    if (!wallpaper) {
+                        throw new BackupValidationError(
+                            `用户偏好引用的本地壁纸不存在: ${refId}`,
+                        );
+                    }
+                    if (wallpaper.userId !== row.userId) {
+                        throw new BackupValidationError(
+                            `用户偏好引用的本地壁纸不属于该用户: ${refId}`,
+                        );
+                    }
                 }
             }
         }

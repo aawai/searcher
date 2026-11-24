@@ -9,6 +9,7 @@ import { parseCookie } from "../auth/middleware.ts";
 import {
     ACCENT_PREFERENCES,
     CANONICAL_REASONING_EFFORTS,
+    DARK_WALLPAPER_MODES,
     GLASS_INTENSITIES,
     TAB_ICONS,
     THEME_IDS,
@@ -66,6 +67,9 @@ const BackgroundImage = v.optional(v.nullable(v.pipe(
         return parseWallpaperSource(value) !== null;
     }, "壁纸必须是 HTTPS 地址或本人上传的壁纸"),
 )));
+const DarkWallpaperMode = v.optional(
+    v.picklist(DARK_WALLPAPER_MODES, "深色壁纸模式无效"),
+);
 const BotanicalScene = v.optional(
     v.nullable(v.picklist(BOTANICAL_SPECIES, "内置插画种类无效")),
 );
@@ -220,6 +224,8 @@ export function registerPreferencesRoutes(
             showHomeContinue: json(ShowHomeContinue),
             homeMastheadCollapsed: json(HomeMastheadCollapsed),
             backgroundImage: json(BackgroundImage),
+            darkWallpaperMode: json(DarkWallpaperMode),
+            darkBackgroundImage: json(BackgroundImage),
             botanicalScene: json(BotanicalScene),
             wallpaperPresentations: json(WallpaperPresentations),
             aiGenerationDefaults: json(AiGenerationDefaults),
@@ -232,11 +238,15 @@ export function registerPreferencesRoutes(
             ) return c.fail(STATUS_CODE.BadRequest, "至少修改一项偏好");
             const user = c.get("user");
             return await wallpaper.withLock(async () => {
-                if (
-                    data.backgroundImage !== undefined &&
-                    data.backgroundImage !== null
+                for (
+                    const field of [
+                        "backgroundImage",
+                        "darkBackgroundImage",
+                    ] as const
                 ) {
-                    const source = parseWallpaperSource(data.backgroundImage);
+                    const value = data[field];
+                    if (value === undefined || value === null) continue;
+                    const source = parseWallpaperSource(value);
                     if (!source) {
                         return c.fail(
                             STATUS_CODE.BadRequest,
@@ -252,7 +262,7 @@ export function registerPreferencesRoutes(
                             );
                         }
                     }
-                    data.backgroundImage = source.value;
+                    data[field] = source.value;
                 }
 
                 const uploadedFocalsToSync: Array<{

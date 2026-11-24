@@ -49,6 +49,7 @@
 
 /* The dock bar */
 .dock-bar {
+    --dock-rest-opacity: 1;
     --dock-travel-x: 0px;
     --dock-travel-y: var(--space-2);
     pointer-events: auto;
@@ -63,6 +64,7 @@
     border-radius: var(--shape-dock-radius);
     padding: var(--space-1);
     gap: var(--space-1);
+    opacity: var(--dock-rest-opacity);
     user-select: none;
     -webkit-user-select: none;
     touch-action: pan-x pan-y;
@@ -325,6 +327,55 @@
    fill over the translucent Dock glass. */
 .dock-item[data-active="true"] {
     color: var(--accent);
+}
+
+/* Hushed translucent lacquer Dock on ordinary dark home: recedes until approached. */
+@media (forced-colors: none) {
+    [data-theme="dark"]:not([data-contrast="more"]) .dock-bar {
+        box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.12),
+            inset 0 0 0 1px rgb(255 252 246 / 0.075),
+            inset 0 -1px 0 rgb(0 0 0 / 0.58),
+            0 0 0 1px rgb(0 0 0 / 0.48),
+            0 18px 46px -10px rgb(0 0 0 / 0.78);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:not(:has(.search-frame:focus-within)) .dock-bar {
+        --dock-rest-opacity: 0.58;
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"][data-wallpaper-image="true"]:not(:has(.search-frame:focus-within)) .dock-bar {
+        --dock-rest-opacity: 0.76;
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"] .dock-bar:is(:hover, :focus-within) {
+        --dock-rest-opacity: 1;
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .dock-item:not([data-active="true"]) {
+        color: color-mix(in oklab, var(--foreground) 72%, transparent);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .dock-item:not([data-active="true"]):focus-visible {
+        color: var(--foreground);
+    }
+
+    @media (hover: hover) {
+        [data-theme="dark"]:not([data-contrast="more"]) .dock-item:not([data-active="true"]):hover {
+            color: var(--foreground);
+        }
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .dock-item[data-active="true"] {
+        background: radial-gradient(
+            circle at 50% 50%,
+            color-mix(in oklab, var(--accent) 14%, transparent) 0%,
+            transparent 74%
+        );
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .dock-item[data-active="true"]::after {
+        box-shadow: var(--dock-active-glow);
+    }
 }
 
 /* One bar under (beside, on a side Dock) the icon carries the window state, as

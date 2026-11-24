@@ -527,6 +527,36 @@ Deno.test("backup prevalidation: enforces preference local refs exist AND are ow
             externalZip,
         );
         assertEquals(externalCheck.valid, true);
+
+        // Case 4: Alice references dangling darkBackgroundImage
+        await store.run(async (db) => {
+            await db.update(preferences)
+                .set({
+                    backgroundImage: `/api/wallpaper/${aliceWallpaperId}`,
+                    darkWallpaperMode: "custom",
+                    darkBackgroundImage: `/api/wallpaper/${danglingId}`,
+                });
+        });
+        const danglingDarkZip = await systemService.createFullBackupZip();
+        const danglingDarkCheck = await systemService.validateBackupZip(
+            danglingDarkZip,
+        );
+        assertEquals(danglingDarkCheck.valid, false);
+        assertMatch(danglingDarkCheck.error ?? "", /不存在/);
+
+        // Case 5: Alice references Bob's wallpaper in darkBackgroundImage
+        await store.run(async (db) => {
+            await db.update(preferences)
+                .set({
+                    darkBackgroundImage: `/api/wallpaper/${bobWallpaperId}`,
+                });
+        });
+        const unownedDarkZip = await systemService.createFullBackupZip();
+        const unownedDarkCheck = await systemService.validateBackupZip(
+            unownedDarkZip,
+        );
+        assertEquals(unownedDarkCheck.valid, false);
+        assertMatch(unownedDarkCheck.error ?? "", /不属于该用户/);
     } finally {
         await store.close();
         await Deno.remove(dir, { recursive: true });

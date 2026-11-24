@@ -86,6 +86,7 @@ export default defineConfig({
     root: fileURLToPath(new URL(".", import.meta.url)),
     resolve: {
         alias: {
+            "@shared": fileURLToPath(new URL("../src/shared", import.meta.url)),
             "@": fileURLToPath(new URL("./src", import.meta.url)),
             "assistant-cloud/ai-sdk": fileURLToPath(
                 new URL(
@@ -223,6 +224,9 @@ export default defineConfig({
         host: "127.0.0.1",
         port: 5173,
         strictPort: true,
+        fs: {
+            allow: [fileURLToPath(new URL("..", import.meta.url))],
+        },
         proxy: {
             "/api": { target: "http://127.0.0.1:34567", changeOrigin: false },
         },

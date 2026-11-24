@@ -144,6 +144,10 @@
     paint-order: stroke fill;
     text-shadow: var(--wallpaper-text-halo);
 }
+.app-shell:not([data-wallpaper-image="true"]) .launcher-plate[data-plate="hidden"] :is(.webapp-name, .launcher-folder-name) {
+    -webkit-text-stroke: 0px transparent;
+    text-shadow: none;
+}
 
 /* Grid metrics are the single presentation source for both CSS and ResizeObserver.
    [INVARIANT] Square Cell Grid System:

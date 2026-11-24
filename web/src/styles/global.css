@@ -336,6 +336,48 @@ a {
         outline: 1px solid CanvasText;
     }
 }
+
+/* Home Focus Breathing & Dark Focus Theater: when the search box holds focus,
+   light mode yields a whisper-soft peripheral breath (no dark scrim); dark mode
+   adds the nocturnal focus veil and deeper peripheral dimming. */
+@media (prefers-reduced-motion: no-preference) {
+    :root:not([data-contrast="more"]) .app-shell[data-home="true"] :is(.home-masthead, .dock-container, .launcher-plate, .topbar, .wallpaper-surface__scene) {
+        transition: opacity var(--motion-base) var(--ease-standard);
+    }
+}
+@media (forced-colors: none) {
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead, .launcher-plate) {
+        opacity: 0.78;
+    }
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.dock-container, .wallpaper-surface__scene) {
+        opacity: 0.76;
+    }
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) > .topbar {
+        opacity: 0.80;
+    }
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead, .dock-container, .launcher-plate, .topbar):is(:hover, :focus-within) {
+        opacity: 1;
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .wallpaper-surface:not(.wallpaper-surface--derived):not(.wallpaper-surface--embedded)::after {
+        opacity: var(--wallpaper-focus-scrim);
+    }
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .wallpaper-surface__scene {
+        opacity: 0.55;
+    }
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead, .launcher-plate) {
+        opacity: 0.40;
+    }
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .dock-container {
+        opacity: 0.36;
+    }
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) > .topbar {
+        opacity: 0.48;
+    }
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead, .dock-container, .launcher-plate, .topbar):is(:hover, :focus-within) {
+        opacity: 1;
+    }
+}
 .user-menu-identity {
     display: grid;
     gap: var(--space-half);
@@ -433,4 +475,15 @@ a {
     :root.shared-element-transition::view-transition-image-pair(*) {
         animation: none;
     }
+}
+
+/* Theme iris transition (runThemeIrisTransition): circular reveal driven via
+   WAAPI clip-path on ::view-transition-new(root); suppress default root crossfade. */
+:root.theme-iris-transition::view-transition-old(root),
+:root.theme-iris-transition::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+:root.theme-iris-transition::view-transition-new(root) {
+    z-index: 1;
 }

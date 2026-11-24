@@ -1,11 +1,14 @@
 import {
     type AccentPreference,
+    type DarkWallpaperMode,
     DEFAULT_ACCENT,
+    DEFAULT_DARK_WALLPAPER_MODE,
     DEFAULT_GLASS_INTENSITY,
     DEFAULT_TAB_ICON,
     DEFAULT_THEME,
     type GlassIntensity,
     normalizeAccent,
+    normalizeDarkWallpaperMode,
     type PreferencesDto,
     type TabIcon,
     type ThemeId,
@@ -44,6 +47,11 @@ import {
     applyWallpaperAccent,
     useWallpaperAccent,
 } from "../components/wallpaper/wallpaper-accent-source.ts";
+import {
+    type EffectiveWallpaper,
+    resolveEffectiveWallpaper,
+} from "../components/wallpaper/wallpaper-choices.ts";
+import { type ColorScheme, resolveTheme } from "../design-system/theme.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
 import {
@@ -75,6 +83,8 @@ export type Appearance = {
     engine: EngineId;
     target: "current" | "new_tab";
     wallpaper: string;
+    darkWallpaperMode: DarkWallpaperMode;
+    darkWallpaper: string;
     botanicalScene: BotanicalSpecies | null;
     wallpaperPresentations: Record<string, WallpaperPresentation>;
     showAppLabels: boolean;
@@ -99,6 +109,8 @@ const initial: Appearance = {
     engine: "bing",
     target: "current",
     wallpaper: "",
+    darkWallpaperMode: DEFAULT_DARK_WALLPAPER_MODE,
+    darkWallpaper: "",
     botanicalScene: null,
     wallpaperPresentations: {},
     showAppLabels: true,
@@ -109,6 +121,29 @@ const initial: Appearance = {
     showHomeContinue: true,
     homeMastheadCollapsed: true,
 };
+
+function normalizeImageDataOrUrl(raw: unknown): string {
+    const source = typeof raw === "string" ? raw : "";
+    if (!source) return "";
+    if (source.startsWith("data:")) {
+        const comma = source.indexOf(",");
+        const encodedLength = source.length - comma - 1;
+        const padding = source.endsWith("==")
+            ? 2
+            : source.endsWith("=")
+            ? 1
+            : 0;
+        if (
+            /^data:image\/(png|jpeg|webp|avif);base64,/.test(source) &&
+            encodedLength % 4 === 0 &&
+            encodedLength / 4 * 3 - padding <= 5 * 1024 * 1024
+        ) {
+            return source;
+        }
+        return "";
+    }
+    return parseWallpaperSource(source)?.value ?? "";
+}
 
 /** 旧设备缓存和旧 API 响应缺少字段时，仍生成有效的背景参数。 */
 export function normalizeAppearance(raw: unknown): Appearance {
@@ -125,33 +160,23 @@ export function normalizeAppearance(raw: unknown): Appearance {
     }
     result.botanicalScene = normalizeBotanicalSpecies(saved.botanicalScene);
     const source = typeof saved.wallpaper === "string" ? saved.wallpaper : "";
-    if (source.startsWith("data:")) {
-        const comma = source.indexOf(",");
-        const encodedLength = source.length - comma - 1;
-        const padding = source.endsWith("==")
-            ? 2
-            : source.endsWith("=")
-            ? 1
-            : 0;
-        if (
-            /^data:image\/(png|jpeg|webp|avif);base64,/.test(source) &&
-            encodedLength % 4 === 0 &&
-            encodedLength / 4 * 3 - padding <= 5 * 1024 * 1024
-        ) {
-            result.wallpaper = source;
-        }
+    const legacyScene = !source.startsWith("data:")
+        ? parseBotanicalSceneSource(source)
+        : null;
+    if (legacyScene) {
+        result.botanicalScene ??= legacyScene;
     } else {
-        const legacyScene = parseBotanicalSceneSource(source);
-        if (legacyScene) {
-            result.botanicalScene ??= legacyScene;
-        } else {
-            result.wallpaper = parseWallpaperSource(source)?.value ?? "";
-        }
+        result.wallpaper = normalizeImageDataOrUrl(source);
     }
+    result.darkWallpaperMode = normalizeDarkWallpaperMode(
+        saved.darkWallpaperMode,
+    );
+    result.darkWallpaper = normalizeImageDataOrUrl(saved.darkWallpaper);
     result.wallpaperPresentations = normalizeWallpaperPresentations(
         saved.wallpaperPresentations,
         {
             currentSource: result.wallpaper,
+            additionalSources: [result.darkWallpaper],
             legacy: saved,
             legacyCompositions: saved.wallpaperCompositions as
                 | Record<string, WallpaperComposition>
@@ -198,6 +223,8 @@ type State = {
     connectionError: boolean;
     retryConnection: () => Promise<void>;
     appearance: Appearance;
+    resolvedScheme: ColorScheme;
+    effectiveWallpaper: EffectiveWallpaper;
     setAppearance: (
         next: Partial<Appearance>,
         options?: { sync?: boolean },
@@ -428,6 +455,10 @@ export function AppState({ children }: { children: ReactNode }) {
                         ? "new_tab"
                         : "current",
                     wallpaper: prefs.backgroundImage ?? "",
+                    darkWallpaperMode: normalizeDarkWallpaperMode(
+                        prefs.darkWallpaperMode,
+                    ),
+                    darkWallpaper: prefs.darkBackgroundImage ?? "",
                     botanicalScene: prefs.botanicalScene ?? null,
                     wallpaperPresentations: prefs.wallpaperPresentations,
                     showAppLabels: prefs.showAppLabels,
@@ -471,21 +502,44 @@ export function AppState({ children }: { children: ReactNode }) {
             globalThis.removeEventListener("searcher:auth-expired", expired);
     }, [updateUser]);
 
+    const [prefersDark, setPrefersDark] = useState(() =>
+        typeof globalThis.matchMedia === "function"
+            ? globalThis.matchMedia("(prefers-color-scheme: dark)").matches
+            : false
+    );
     useEffect(() => {
         const media = matchMedia("(prefers-color-scheme: dark)");
-        const apply = () =>
+        const apply = () => {
+            setPrefersDark(media.matches);
             applyTheme(
                 document.documentElement,
                 appearance.theme,
                 media.matches,
             );
+        };
         apply();
         media.addEventListener("change", apply);
         return () => media.removeEventListener("change", apply);
     }, [appearance.theme]);
 
-    // Derived even under a manual accent so "跟随壁纸" previews the wallpaper colour.
-    const wallpaperAccent = useWallpaperAccent(appearance.wallpaper);
+    const resolvedScheme = resolveTheme(appearance.theme, prefersDark).scheme;
+    const accentSampleSource = resolvedScheme === "dark" &&
+            appearance.darkWallpaperMode === "custom"
+        ? appearance.darkWallpaper
+        : resolvedScheme === "dark" &&
+                appearance.darkWallpaperMode === "canvas"
+        ? ""
+        : appearance.wallpaper;
+    // Derived even under a manual accent so "跟随壁纸" previews the active wallpaper colour
+    // and luminance-aware `auto` dark mode decides before paint from cached summary.
+    const wallpaperAccent = useWallpaperAccent(accentSampleSource);
+    const effectiveWallpaper = resolveEffectiveWallpaper({
+        scheme: resolvedScheme,
+        wallpaper: appearance.wallpaper,
+        darkWallpaper: appearance.darkWallpaper,
+        darkWallpaperMode: appearance.darkWallpaperMode,
+        wallpaperLightness: wallpaperAccent?.darkTone.lightness ?? null,
+    });
     useEffect(() => {
         applyStyleAttributes(document.documentElement, {
             accent: appearance.accent,
@@ -528,6 +582,12 @@ export function AppState({ children }: { children: ReactNode }) {
             }
             if (next.wallpaper !== undefined) {
                 updates.backgroundImage = next.wallpaper || null;
+            }
+            if (next.darkWallpaperMode !== undefined) {
+                updates.darkWallpaperMode = next.darkWallpaperMode;
+            }
+            if (next.darkWallpaper !== undefined) {
+                updates.darkBackgroundImage = next.darkWallpaper || null;
             }
             if (next.botanicalScene !== undefined) {
                 updates.botanicalScene = next.botanicalScene;
@@ -619,6 +679,8 @@ export function AppState({ children }: { children: ReactNode }) {
                 connectionError: authConnectionError,
                 retryConnection,
                 appearance,
+                resolvedScheme,
+                effectiveWallpaper,
                 setAppearance,
                 settleAppearanceSync: () =>
                     Promise.all([

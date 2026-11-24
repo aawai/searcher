@@ -1,22 +1,34 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, ImageOff } from "lucide-react";
-import type { AccentPreference, ThemeId } from "@shared/contracts.ts";
+import {
+    type AccentPreference,
+    type DarkWallpaperMode,
+    normalizeDarkWallpaperMode,
+    type ThemeId,
+} from "@shared/contracts.ts";
 import {
     type BotanicalSpecies,
     normalizeBotanicalSpecies,
 } from "@shared/wallpaper.ts";
 import { wallpaperPresentation } from "@shared/wallpaper-presentation.ts";
 import { routes } from "../../app/routes.ts";
-import { THEME_LABELS, toggleThemeScheme } from "../../design-system/theme.ts";
+import {
+    type ColorScheme,
+    THEME_LABELS,
+    toggleThemeScheme,
+} from "../../design-system/theme.ts";
+import { runThemeIrisTransition } from "../../design-system/theme-transition.ts";
 import { api } from "../../lib/api.ts";
 import { ThemeCelestialIcon } from "./ThemeCelestialIcon.tsx";
 import { accentLabel, AccentSwatches } from "./AccentSwatches.tsx";
 import { ThemeChoices } from "./ThemeChoices.tsx";
 import {
     BOTANICAL_SCENE_CHOICES,
+    buildDarkWallpaperSelectionPatch,
     buildWallpaperHistoryItems,
     buildWallpaperSelectionPatch,
+    DARK_WALLPAPER_MODE_CHOICES,
     type WallpaperHistoryRecord,
     type WallpaperPresentationMap,
 } from "../wallpaper/wallpaper-choices.ts";
@@ -67,7 +79,13 @@ export function ThemeToggle(
                         variant="ghost"
                         size="icon"
                         className="appearance-toggle"
-                        onClick={() => onValueChange(next)}
+                        onClick={(event) => {
+                            const origin = event.currentTarget;
+                            void runThemeIrisTransition(
+                                origin,
+                                () => onValueChange(next),
+                            );
+                        }}
                         aria-label={label}
                     />
                 }
@@ -87,9 +105,12 @@ export function ThemeToggle(
 export function AppearancePicker(
     {
         theme,
+        resolvedScheme,
         accent,
         botanicalScene,
         wallpaper,
+        darkWallpaperMode,
+        darkWallpaper,
         wallpaperPresentations,
         canLoadWallpaperHistory,
         historyOwnerKey,
@@ -97,11 +118,16 @@ export function AppearancePicker(
         onAccentChange,
         onBotanicalSceneChange,
         onWallpaperChange,
+        onDarkWallpaperModeChange,
+        onDarkWallpaperChange,
     }: {
         theme: ThemeId;
+        resolvedScheme: ColorScheme;
         accent: AccentPreference;
         botanicalScene: BotanicalSpecies | null;
         wallpaper: string;
+        darkWallpaperMode: DarkWallpaperMode;
+        darkWallpaper: string;
         wallpaperPresentations: WallpaperPresentationMap;
         canLoadWallpaperHistory: boolean;
         historyOwnerKey: string | null;
@@ -110,6 +136,11 @@ export function AppearancePicker(
         onBotanicalSceneChange: (next: BotanicalSpecies | null) => void;
         onWallpaperChange: (next: {
             wallpaper: string;
+            wallpaperPresentations?: WallpaperPresentationMap;
+        }) => void;
+        onDarkWallpaperModeChange: (next: DarkWallpaperMode) => void;
+        onDarkWallpaperChange: (next: {
+            darkWallpaper: string;
             wallpaperPresentations?: WallpaperPresentationMap;
         }) => void;
     },
@@ -146,10 +177,27 @@ export function AppearancePicker(
         };
     }, [open, canLoadWallpaperHistory, historyOwnerKey]);
 
+    const isDark = resolvedScheme === "dark";
+    const isCustomDarkSlot = isDark && darkWallpaperMode === "custom";
+    const activeSlotWallpaper = isCustomDarkSlot ? darkWallpaper : wallpaper;
     const quickWallpapers = buildWallpaperHistoryItems(
-        wallpaper,
+        activeSlotWallpaper,
         recentWallpapers,
     );
+    const showWallpaperSection = quickWallpapers.length > 0 ||
+        (isDark && darkWallpaperMode !== "follow" &&
+            darkWallpaperMode !== "auto");
+    const wallpaperStatusLabel = isDark
+        ? darkWallpaperMode === "auto"
+            ? (wallpaper ? "智能" : "未设置")
+            : darkWallpaperMode === "canvas"
+            ? "深黑画布"
+            : darkWallpaperMode === "ambient"
+            ? (wallpaper ? "氛围流光" : "未设置")
+            : darkWallpaperMode === "custom"
+            ? (darkWallpaper ? "深色独立" : "未设置")
+            : (wallpaper ? "已启用" : "已停用")
+        : (wallpaper ? "已启用" : "已停用");
     const label = `外观：${THEME_LABELS[theme]}，${accentLabel(accent)}`;
 
     return (
@@ -206,7 +254,16 @@ export function AppearancePicker(
                     <p className="appearance-picker-heading" aria-hidden="true">
                         主题
                     </p>
-                    <ThemeChoices value={theme} onValueChange={onThemeChange} />
+                    <ThemeChoices
+                        value={theme}
+                        onValueChange={onThemeChange}
+                        onSelectWithOrigin={(next, origin) => {
+                            void runThemeIrisTransition(
+                                origin,
+                                () => onThemeChange(next),
+                            );
+                        }}
+                    />
                 </section>
                 <section className="appearance-picker-section">
                     <p className="appearance-picker-heading" aria-hidden="true">
@@ -258,87 +315,150 @@ export function AppearancePicker(
                         ))}
                     </RadioGroup>
                 </section>
-                {quickWallpapers.length > 0 && (
+                {showWallpaperSection && (
                     <section className="appearance-picker-section">
                         <p
                             className="appearance-picker-heading"
                             aria-hidden="true"
                         >
                             壁纸
-                            <span>{wallpaper ? "已启用" : "已停用"}</span>
+                            <span>{wallpaperStatusLabel}</span>
                         </p>
-                        <RadioGroup
-                            className="appearance-picker-wallpapers"
-                            value={wallpaper}
-                            onValueChange={(next) => {
-                                if (next === "") {
-                                    if (wallpaper !== "") {
-                                        onWallpaperChange({ wallpaper: "" });
-                                    }
-                                    return;
-                                }
-                                const record = quickWallpapers.find((item) =>
-                                    item.url === next
-                                );
-                                if (!record || record.url === wallpaper) return;
-                                onWallpaperChange(
-                                    buildWallpaperSelectionPatch(
-                                        record,
-                                        wallpaperPresentations,
-                                    ),
-                                );
-                            }}
-                            aria-label="快捷壁纸"
-                        >
-                            <RadioGroupItem
-                                value=""
-                                className="appearance-picker-wallpaper-item appearance-picker-wallpaper-item--none"
-                                aria-label="不使用壁纸"
-                                title="不使用壁纸"
-                                data-testid="appearance-picker-wallpaper-none"
+                        {isDark && (
+                            <RadioGroup
+                                variant="segmented"
+                                className="appearance-picker-dark-mode"
+                                value={darkWallpaperMode}
+                                onValueChange={(next) => {
+                                    onDarkWallpaperModeChange(
+                                        normalizeDarkWallpaperMode(next),
+                                    );
+                                }}
+                                aria-label="深色模式壁纸"
                             >
-                                <ImageOff
-                                    size="1em"
-                                    className="icon-sm"
-                                    aria-hidden="true"
-                                />
-                            </RadioGroupItem>
-                            {quickWallpapers.map((record, index) => {
-                                const pres = wallpaperPresentation(
-                                    record.url,
-                                    wallpaperPresentations,
-                                );
-                                const focalX = record.focalX ??
-                                    pres.composition.focalX ?? 0.5;
-                                const focalY = record.focalY ??
-                                    pres.composition.focalY ?? 0.5;
-                                const itemLabel = `壁纸 ${index + 1}`;
-                                return (
+                                {DARK_WALLPAPER_MODE_CHOICES.map((
+                                    [id, fullLabel, shortLabel],
+                                ) => (
                                     <RadioGroupItem
-                                        key={record.id}
-                                        value={record.url}
-                                        className="appearance-picker-wallpaper-item"
-                                        aria-label={itemLabel}
-                                        title={itemLabel}
-                                        data-testid={`appearance-picker-wallpaper-${record.id}`}
+                                        key={id}
+                                        value={id}
+                                        aria-label={fullLabel}
+                                        data-testid={`appearance-picker-dark-mode-${id}`}
                                     >
-                                        <img
-                                            className="appearance-picker-wallpaper-thumb"
-                                            src={record.url}
-                                            alt=""
-                                            loading="lazy"
-                                            style={{
-                                                objectPosition: `${
-                                                    (focalX * 100).toFixed(1)
-                                                }% ${
-                                                    (focalY * 100).toFixed(1)
-                                                }%`,
-                                            }}
-                                        />
+                                        {shortLabel}
                                     </RadioGroupItem>
-                                );
-                            })}
-                        </RadioGroup>
+                                ))}
+                            </RadioGroup>
+                        )}
+                        {quickWallpapers.length > 0 &&
+                            (!isDark || darkWallpaperMode !== "canvas") && (
+                            <RadioGroup
+                                className="appearance-picker-wallpapers"
+                                value={activeSlotWallpaper}
+                                onValueChange={(next) => {
+                                    if (isCustomDarkSlot) {
+                                        if (next === "") {
+                                            if (darkWallpaper !== "") {
+                                                onDarkWallpaperChange({
+                                                    darkWallpaper: "",
+                                                });
+                                            }
+                                            return;
+                                        }
+                                        const record = quickWallpapers.find(
+                                            (item) => item.url === next,
+                                        );
+                                        if (
+                                            !record ||
+                                            record.url === darkWallpaper
+                                        ) return;
+                                        onDarkWallpaperChange(
+                                            buildDarkWallpaperSelectionPatch(
+                                                record,
+                                                wallpaperPresentations,
+                                                [wallpaper],
+                                            ),
+                                        );
+                                        return;
+                                    }
+                                    if (next === "") {
+                                        if (wallpaper !== "") {
+                                            onWallpaperChange({
+                                                wallpaper: "",
+                                            });
+                                        }
+                                        return;
+                                    }
+                                    const record = quickWallpapers.find(
+                                        (item) => item.url === next,
+                                    );
+                                    if (!record || record.url === wallpaper) {
+                                        return;
+                                    }
+                                    onWallpaperChange(
+                                        buildWallpaperSelectionPatch(
+                                            record,
+                                            wallpaperPresentations,
+                                            [darkWallpaper],
+                                        ),
+                                    );
+                                }}
+                                aria-label="快捷壁纸"
+                            >
+                                <RadioGroupItem
+                                    value=""
+                                    className="appearance-picker-wallpaper-item appearance-picker-wallpaper-item--none"
+                                    aria-label="不使用壁纸"
+                                    title="不使用壁纸"
+                                    data-testid="appearance-picker-wallpaper-none"
+                                >
+                                    <ImageOff
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                </RadioGroupItem>
+                                {quickWallpapers.map((record, index) => {
+                                    const pres = wallpaperPresentation(
+                                        record.url,
+                                        wallpaperPresentations,
+                                    );
+                                    const focalX = record.focalX ??
+                                        pres.composition.focalX ?? 0.5;
+                                    const focalY = record.focalY ??
+                                        pres.composition.focalY ?? 0.5;
+                                    const itemLabel = `壁纸 ${index + 1}`;
+                                    return (
+                                        <RadioGroupItem
+                                            key={record.id}
+                                            value={record.url}
+                                            className="appearance-picker-wallpaper-item"
+                                            aria-label={itemLabel}
+                                            title={itemLabel}
+                                            data-testid={`appearance-picker-wallpaper-${record.id}`}
+                                        >
+                                            <img
+                                                className="appearance-picker-wallpaper-thumb"
+                                                src={record.url}
+                                                alt=""
+                                                loading="lazy"
+                                                style={{
+                                                    objectPosition: `${
+                                                        (focalX * 100).toFixed(
+                                                            1,
+                                                        )
+                                                    }% ${
+                                                        (focalY * 100).toFixed(
+                                                            1,
+                                                        )
+                                                    }%`,
+                                                }}
+                                            />
+                                        </RadioGroupItem>
+                                    );
+                                })}
+                            </RadioGroup>
+                        )}
                     </section>
                 )}
                 <section className="appearance-picker-section">

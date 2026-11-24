@@ -236,7 +236,13 @@ export function DesktopHost(
     { host, libraryWindows, aiModels }: DesktopHostProps,
 ) {
     const { location, navigate, Link, active } = host;
-    const { user, appearance, authSession, setAppearance } = useAppState();
+    const {
+        user,
+        appearance,
+        effectiveWallpaper,
+        authSession,
+        setAppearance,
+    } = useAppState();
     const aiAvailable = aiModels.length > 0;
     const inlineAnswer = useInlineAnswer({ user, models: aiModels, active });
     const overlayActive = useEscapeLayerActive("overlay");
@@ -1603,12 +1609,15 @@ export function DesktopHost(
             navigate("/?view=apps");
         }
     }
-    // The same presentation the home wallpaper surface renders (App.tsx).
+    // The same active image overlay the home wallpaper surface renders (App.tsx).
+    const activeMastheadSource = effectiveWallpaper.hasImageOverlay
+        ? effectiveWallpaper.source
+        : "";
     const wallpaper = {
-        source: appearance.wallpaper,
-        presentation: appearance.wallpaper
+        source: activeMastheadSource,
+        presentation: activeMastheadSource
             ? wallpaperPresentation(
-                appearance.wallpaper,
+                activeMastheadSource,
                 appearance.wallpaperPresentations,
             )
             : DEFAULT_WALLPAPER_PRESENTATION,

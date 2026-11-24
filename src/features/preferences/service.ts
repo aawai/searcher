@@ -11,9 +11,11 @@ import {
 import {
     type AiGenerationDefaultsDto,
     DEFAULT_ACCENT,
+    DEFAULT_DARK_WALLPAPER_MODE,
     DEFAULT_GLASS_INTENSITY,
     DEFAULT_TAB_ICON,
     normalizeBotanicalSpecies,
+    normalizeDarkWallpaperMode,
     normalizeGlassIntensity,
     normalizeTabIcon,
     normalizeWallpaperCompositions,
@@ -70,6 +72,8 @@ const defaults: PreferencesDto = {
     glassIntensity: DEFAULT_GLASS_INTENSITY,
     tabIcon: DEFAULT_TAB_ICON,
     backgroundImage: null,
+    darkWallpaperMode: DEFAULT_DARK_WALLPAPER_MODE,
+    darkBackgroundImage: null,
     botanicalScene: null,
     searchTarget: "same",
     searchHistoryEnabled: false,
@@ -186,12 +190,14 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
     );
     const presentations = normalizeWallpaperPresentations(rawPresentations, {
         currentSource: row.backgroundImage,
+        additionalSources: [row.darkBackgroundImage],
         legacyCompositions: compositions,
     });
 
-    if (row.backgroundImage) {
-        const parsedBg = parseWallpaperSource(row.backgroundImage);
-        const canonicalBg = parsedBg ? parsedBg.value : row.backgroundImage;
+    for (const activeSource of [row.backgroundImage, row.darkBackgroundImage]) {
+        if (!activeSource) continue;
+        const parsedBg = parseWallpaperSource(activeSource);
+        const canonicalBg = parsedBg ? parsedBg.value : activeSource;
         if (!presentations[canonicalBg]) {
             presentations[canonicalBg] = wallpaperPresentation(
                 canonicalBg,
@@ -219,6 +225,8 @@ function toDto(row: typeof preferences.$inferSelect): PreferencesDto {
         glassIntensity: normalizeGlassIntensity(row.glassIntensity),
         tabIcon: normalizeTabIcon(row.tabIcon),
         backgroundImage: row.backgroundImage,
+        darkWallpaperMode: normalizeDarkWallpaperMode(row.darkWallpaperMode),
+        darkBackgroundImage: row.darkBackgroundImage,
         botanicalScene: normalizeBotanicalSpecies(row.botanicalScene),
         wallpaperPresentations: presentations,
         searchTarget: row.searchTarget,
@@ -446,10 +454,19 @@ export class PreferencesService {
             if (
                 wallpaperPresentations !== undefined ||
                 wallpaperCompositions !== undefined ||
-                rest.backgroundImage !== undefined
+                rest.backgroundImage !== undefined ||
+                rest.darkBackgroundImage !== undefined
             ) {
                 const [existingRow] = await db.select().from(preferences)
                     .where(eq(preferences.userId, userId)).limit(1).all();
+
+                const nextBg = rest.backgroundImage !== undefined
+                    ? rest.backgroundImage
+                    : existingRow?.backgroundImage;
+                const nextDarkBg = rest.darkBackgroundImage !== undefined
+                    ? rest.darkBackgroundImage
+                    : existingRow?.darkBackgroundImage;
+                const protectedSlots = [nextBg, nextDarkBg];
 
                 const currentComps = parseWallpaperCompositions(
                     existingRow?.wallpaperCompositions,
@@ -461,6 +478,7 @@ export class PreferencesService {
                     rawCurrentPres,
                     {
                         currentSource: existingRow?.backgroundImage,
+                        additionalSources: [existingRow?.darkBackgroundImage],
                         legacyCompositions: currentComps,
                     },
                 );
@@ -479,6 +497,7 @@ export class PreferencesService {
                             mergedPres,
                             canonicalKey,
                             normalizeWallpaperPresentation(pres),
+                            protectedSlots,
                         );
                     }
                 }
@@ -504,12 +523,10 @@ export class PreferencesService {
                     }
                 }
 
-                const nextBg = rest.backgroundImage !== undefined
-                    ? rest.backgroundImage
-                    : existingRow?.backgroundImage;
-                if (nextBg) {
-                    const s = parseWallpaperSource(nextBg);
-                    const bgKey = s ? s.value : nextBg;
+                for (const activeSource of protectedSlots) {
+                    if (!activeSource) continue;
+                    const s = parseWallpaperSource(activeSource);
+                    const bgKey = s ? s.value : activeSource;
                     if (!mergedPres[bgKey]) {
                         mergedPres[bgKey] = wallpaperPresentation(
                             bgKey,
@@ -520,6 +537,7 @@ export class PreferencesService {
                         mergedPres,
                         bgKey,
                         mergedPres[bgKey],
+                        protectedSlots,
                     );
                 }
 
@@ -533,7 +551,8 @@ export class PreferencesService {
                 if (
                     wallpaperPresentations !== undefined ||
                     wallpaperCompositions !== undefined ||
-                    rest.backgroundImage !== undefined
+                    rest.backgroundImage !== undefined ||
+                    rest.darkBackgroundImage !== undefined
                 ) {
                     serializedWallpaperPresentations = JSON.stringify(
                         mergedPres,
@@ -584,6 +603,8 @@ export class PreferencesService {
                 glassIntensity: canonicalDefaults.glassIntensity,
                 tabIcon: canonicalDefaults.tabIcon,
                 backgroundImage: canonicalDefaults.backgroundImage,
+                darkWallpaperMode: canonicalDefaults.darkWallpaperMode,
+                darkBackgroundImage: canonicalDefaults.darkBackgroundImage,
                 botanicalScene: canonicalDefaults.botanicalScene,
                 searchTarget: canonicalDefaults.searchTarget,
                 searchHistoryEnabled: canonicalDefaults.searchHistoryEnabled ??

@@ -38,6 +38,25 @@ export interface HighContrastAccent {
     readonly active: string;
 }
 
+export interface WallpaperDarkTone {
+    /** Mean OKLab perceptual lightness (0 = black, 1 = white) across opaque pixels. */
+    readonly lightness: number;
+    /** CSS filter applied to `.wallpaper-surface__image` under `[data-theme="dark"]`. */
+    readonly filter: string;
+    /** CSS filter for user-chosen `custom` dark wallpapers (preserves native colour on dark/mid-tone art). */
+    readonly customFilter: string;
+    /** Centre ambient shade mix percentage (0-100). */
+    readonly centerMix: number;
+    /** Outer vignette shade mix percentage (0-100). */
+    readonly edgeMix: number;
+    /** Gentle top-edge cradle mix percentage (0-100). */
+    readonly topMix: number;
+    /** Primary deep ambient glow hex for dark `ambient` mode. */
+    readonly ambientPrimary: string;
+    /** Secondary contrasting/harmonic ambient glow hex for dark `ambient` mode. */
+    readonly ambientSecondary: string;
+}
+
 export interface WallpaperAccent {
     readonly seed: AccentSeed;
     readonly light: AccentPalette;
@@ -46,6 +65,7 @@ export interface WallpaperAccent {
         readonly light: HighContrastAccent;
         readonly dark: HighContrastAccent;
     };
+    readonly darkTone: WallpaperDarkTone;
 }
 
 type Rgb = readonly [number, number, number];
@@ -63,9 +83,9 @@ const SURFACES = {
         softMix: 0.09,
     },
     dark: {
-        background: [0x11, 0x11, 0x13],
-        surface: [0x1c, 0x1c, 0x1f],
-        surfaceSoft: [0x2a, 0x2a, 0x2e],
+        background: [0x07, 0x08, 0x0c],
+        surface: [0x1a, 0x1a, 0x1f],
+        surfaceSoft: [0x25, 0x25, 0x2b],
         softMix: 0.12,
     },
 } as const satisfies Record<
@@ -139,9 +159,9 @@ const CENTER_SPATIAL_DENOM = 2 * CENTER_SPATIAL_SIGMA * CENTER_SPATIAL_SIGMA;
 const CHROMA_EXPONENT = 0.75;
 const HUE_BINS = 24;
 /** Pixels below this OKLCH chroma read as grey and do not vote for a hue. */
-const COLORFUL_CHROMA = 0.04;
+const COLORFUL_CHROMA = 0.022;
 /** A hue needs this share of the spatial weight; otherwise the wallpaper is neutral. */
-const MIN_HUE_SHARE = 0.02;
+const MIN_HUE_SHARE = 0.012;
 const MIN_ACCENT_CHROMA = 0.08;
 const MAX_ACCENT_CHROMA = 0.2;
 const STATE_STEP = 0.07;
@@ -243,9 +263,23 @@ function lightnessWeight(lightness: number): number {
         Math.min(1, Math.max(0, (0.98 - lightness) / 0.15));
 }
 
-/** Dominant hue of the full image with centre soft weighting; chroma 0 when neutral. */
-export function wallpaperAccentSeed(pixels: WallpaperPixels): AccentSeed {
-    const bins = Array.from({ length: HUE_BINS }, () => ({
+interface HueBin {
+    weight: number;
+    spatialCount: number;
+    x: number;
+    y: number;
+    chroma: number;
+}
+
+interface PixelSummary {
+    bins: HueBin[];
+    totalSpatial: number;
+    meanL: number;
+    opaqueCount: number;
+}
+
+function summarizePixels(pixels: WallpaperPixels): PixelSummary {
+    const bins: HueBin[] = Array.from({ length: HUE_BINS }, () => ({
         weight: 0,
         spatialCount: 0,
         x: 0,
@@ -253,6 +287,8 @@ export function wallpaperAccentSeed(pixels: WallpaperPixels): AccentSeed {
         chroma: 0,
     }));
     let totalSpatial = 0;
+    let totalL = 0;
+    let opaqueCount = 0;
     for (let y = 0; y < pixels.height; y++) {
         for (let x = 0; x < pixels.width; x++) {
             const i = (y * pixels.width + x) * 4;
@@ -268,6 +304,8 @@ export function wallpaperAccentSeed(pixels: WallpaperPixels): AccentSeed {
                 pixels.data[i + 1],
                 pixels.data[i + 2],
             );
+            totalL += l;
+            opaqueCount++;
             const chroma = Math.hypot(a, b);
             if (chroma < COLORFUL_CHROMA) continue;
             const lw = lightnessWeight(l);
@@ -282,19 +320,20 @@ export function wallpaperAccentSeed(pixels: WallpaperPixels): AccentSeed {
             bin.chroma += weight * chroma;
         }
     }
-    let best = -1;
-    let bestScore = 0;
-    for (let i = 0; i < HUE_BINS; i++) {
-        const score = bins[i].weight +
-            0.5 * (bins[(i + HUE_BINS - 1) % HUE_BINS].weight +
-                    bins[(i + 1) % HUE_BINS].weight);
-        if (score > bestScore) {
-            best = i;
-            bestScore = score;
-        }
-    }
-    if (best < 0 || totalSpatial === 0) return { hue: 0, chroma: 0 };
-    const window = [best - 1, best, best + 1].map((i) =>
+    return {
+        bins,
+        totalSpatial,
+        meanL: opaqueCount > 0 ? totalL / opaqueCount : 0.5,
+        opaqueCount,
+    };
+}
+
+function seedFromWindow(
+    bins: HueBin[],
+    centerIdx: number,
+    totalSpatial: number,
+): AccentSeed {
+    const window = [centerIdx - 1, centerIdx, centerIdx + 1].map((i) =>
         bins[(i + HUE_BINS) % HUE_BINS]
     );
     const windowSpatial = window.reduce(
@@ -305,16 +344,77 @@ export function wallpaperAccentSeed(pixels: WallpaperPixels): AccentSeed {
         return { hue: 0, chroma: 0 };
     }
     const weight = window.reduce((sum, bin) => sum + bin.weight, 0);
+    if (weight === 0) return { hue: 0, chroma: 0 };
     const hue = (Math.atan2(
                 window.reduce((sum, bin) => sum + bin.y, 0),
                 window.reduce((sum, bin) => sum + bin.x, 0),
             ) * 180 / Math.PI + 360) % 360;
     const chroma = window.reduce((sum, bin) => sum + bin.chroma, 0) / weight;
-    // Rounded so imperceptible decoding differences settle on one seed.
     return {
         hue: Math.round(hue) % 360,
         chroma: Math.round(chroma * 200) / 200,
     };
+}
+
+function resolveSeedFromSummary(
+    summary: PixelSummary,
+): { primary: AccentSeed; secondary: AccentSeed } {
+    const { bins, totalSpatial } = summary;
+    if (totalSpatial === 0) {
+        return {
+            primary: { hue: 0, chroma: 0 },
+            secondary: { hue: 0, chroma: 0 },
+        };
+    }
+    const scores = bins.map((bin, i) =>
+        bin.weight +
+        0.5 * (bins[(i + HUE_BINS - 1) % HUE_BINS].weight +
+                bins[(i + 1) % HUE_BINS].weight)
+    );
+    let best = -1;
+    let bestScore = 0;
+    for (let i = 0; i < HUE_BINS; i++) {
+        if (scores[i] > bestScore) {
+            best = i;
+            bestScore = scores[i];
+        }
+    }
+    if (best < 0) {
+        return {
+            primary: { hue: 0, chroma: 0 },
+            secondary: { hue: 0, chroma: 0 },
+        };
+    }
+    const primary = seedFromWindow(bins, best, totalSpatial);
+    if (primary.chroma === 0) {
+        return { primary, secondary: { hue: 0, chroma: 0 } };
+    }
+    let secondBest = -1;
+    let secondBestScore = 0;
+    for (let i = 0; i < HUE_BINS; i++) {
+        const binDeg = (i + 0.5) * (360 / HUE_BINS);
+        const diff = Math.abs(((binDeg - primary.hue + 540) % 360) - 180);
+        if (diff < 45) continue;
+        if (scores[i] > secondBestScore) {
+            secondBest = i;
+            secondBestScore = scores[i];
+        }
+    }
+    if (secondBest >= 0) {
+        const candidate = seedFromWindow(bins, secondBest, totalSpatial);
+        if (candidate.chroma > 0) {
+            return { primary, secondary: candidate };
+        }
+    }
+    return {
+        primary,
+        secondary: { hue: 0, chroma: 0 },
+    };
+}
+
+/** Dominant hue of the full image with centre soft weighting; chroma 0 when neutral. */
+export function wallpaperAccentSeed(pixels: WallpaperPixels): AccentSeed {
+    return resolveSeedFromSummary(summarizePixels(pixels)).primary;
 }
 
 export interface AccentContrast {
@@ -497,17 +597,111 @@ export function highContrastAccent(
     }
 }
 
+const DEFAULT_DARK_TONE: WallpaperDarkTone = {
+    lightness: 0.5,
+    filter: "contrast(1.08) saturate(1.14) brightness(0.62)",
+    customFilter: "none",
+    centerMix: 16,
+    edgeMix: 44,
+    topMix: 22,
+    ambientPrimary: "#262d42",
+    ambientSecondary: "#1b1d2e",
+};
+
+function solveAmbientGlowPair(
+    primary: AccentSeed,
+    secondary: AccentSeed,
+): { ambientPrimary: string; ambientSecondary: string } {
+    if (primary.chroma === 0) {
+        return {
+            ambientPrimary: "#262d42",
+            ambientSecondary: "#1b1d2e",
+        };
+    }
+    const pChroma = Math.min(0.145, Math.max(0.095, primary.chroma * 1.15));
+    const isWarmRose = primary.hue < 38 || primary.hue >= 315;
+    const secondaryIsWarmBrown = secondary.chroma > 0 &&
+        secondary.hue >= 20 && secondary.hue <= 95;
+    if (isWarmRose && (secondary.chroma === 0 || secondaryIsWarmBrown)) {
+        const counterHue = (primary.hue + 228) % 360;
+        const counterChroma = Math.min(
+            0.11,
+            Math.max(0.065, primary.chroma * 1.4),
+        );
+        return {
+            ambientPrimary: hex(toSrgb(0.39, pChroma, primary.hue)),
+            ambientSecondary: hex(toSrgb(0.30, counterChroma, counterHue)),
+        };
+    }
+    const fallbackCounterHue = primary.hue >= 185 && primary.hue <= 285
+        ? (primary.hue + 44) % 360
+        : (primary.hue + 225) % 360;
+    const sBase = secondary.chroma > 0 ? secondary : {
+        hue: fallbackCounterHue,
+        chroma: primary.chroma,
+    };
+    const sChroma = Math.min(0.135, Math.max(0.075, sBase.chroma * 0.92));
+    return {
+        ambientPrimary: hex(toSrgb(0.39, pChroma, primary.hue)),
+        ambientSecondary: hex(toSrgb(0.32, sChroma, sBase.hue)),
+    };
+}
+
+function darkToneFromSummary(summary: PixelSummary): WallpaperDarkTone {
+    if (summary.opaqueCount === 0) return DEFAULT_DARK_TONE;
+
+    const { meanL } = summary;
+    const t = Math.min(1, Math.max(0, (meanL - 0.22) / (0.85 - 0.22)));
+    const lerp = (a: number, b: number) => a + (b - a) * t;
+
+    const contrastValue = lerp(1.03, 1.14);
+    const saturate = lerp(1.06, 1.20);
+    const brightness = lerp(0.88, 0.50);
+    let customFilter = "none";
+    if (meanL > 0.68) {
+        const ct = Math.min(1, (meanL - 0.68) / (0.95 - 0.68));
+        customFilter = `contrast(${(1 + 0.05 * ct).toFixed(2)}) brightness(${
+            (0.95 - 0.13 * ct).toFixed(2)
+        })`;
+    }
+    const { primary, secondary } = resolveSeedFromSummary(summary);
+    const glow = solveAmbientGlowPair(primary, secondary);
+
+    return {
+        lightness: Math.round(meanL * 1000) / 1000,
+        filter: `contrast(${contrastValue.toFixed(2)}) saturate(${
+            saturate.toFixed(2)
+        }) brightness(${brightness.toFixed(2)})`,
+        customFilter,
+        centerMix: Math.round(lerp(4, 24)),
+        edgeMix: Math.round(lerp(18, 56)),
+        topMix: Math.round(lerp(10, 30)),
+        ambientPrimary: glow.ambientPrimary,
+        ambientSecondary: glow.ambientSecondary,
+    };
+}
+
+/**
+ * Derive adaptive dark-mode wallpaper dimming, contrast compensation and
+ * vignette strength from the image's mean OKLab perceptual lightness.
+ */
+export function wallpaperDarkTone(pixels: WallpaperPixels): WallpaperDarkTone {
+    return darkToneFromSummary(summarizePixels(pixels));
+}
+
 export function deriveWallpaperAccent(
     pixels: WallpaperPixels,
 ): WallpaperAccent {
-    const seed = wallpaperAccentSeed(pixels);
+    const summary = summarizePixels(pixels);
+    const { primary } = resolveSeedFromSummary(summary);
     return {
-        seed,
-        light: accentPalette(seed, "light"),
-        dark: accentPalette(seed, "dark"),
+        seed: primary,
+        light: accentPalette(primary, "light"),
+        dark: accentPalette(primary, "dark"),
         highContrast: {
-            light: highContrastAccent(seed, "light"),
-            dark: highContrastAccent(seed, "dark"),
+            light: highContrastAccent(primary, "light"),
+            dark: highContrastAccent(primary, "dark"),
         },
+        darkTone: darkToneFromSummary(summary),
     };
 }

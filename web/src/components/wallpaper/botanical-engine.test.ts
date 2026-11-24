@@ -88,7 +88,10 @@ Deno.test("generateBotanicalScene: embedded 16:9 preview preserves top-right ech
         const echoBranch = scene.branches.find((b) =>
             b.ghost && b.points.some((p) => p.y < 260)
         );
-        assert(echoBranch, `${species}: expected echo branch in embedded preview`);
+        assert(
+            echoBranch,
+            `${species}: expected echo branch in embedded preview`,
+        );
         for (const b of scene.branches) {
             for (const p of b.points) {
                 assert(
@@ -145,6 +148,19 @@ Deno.test("buildBotanicalPalette: emits valid rgba strings for all roles in ligh
     );
     const [dr, , db] = parseRgba(darkRose.stroke("accent"));
     assert(dr > db, `Expected dark rose r (${dr}) > b (${db})`);
+
+    const darkRoseOverPhoto = buildBotanicalPalette(
+        true,
+        "light-dark(#be123c, #fb7185)",
+        "#f5f5f7",
+        true,
+    );
+    const alphaOf = (s: string) => Number(s.match(/,([^,)]+)\)$/)?.[1] ?? "0");
+    assert(
+        alphaOf(darkRoseOverPhoto.stroke("ink")) <
+            alphaOf(darkRose.stroke("ink")),
+        "Expected Scene Harmony to soften ink alpha over photo wallpapers in dark mode",
+    );
 });
 
 function createMockCanvasContext(): {
@@ -201,7 +217,12 @@ function createMockCanvasContext(): {
         fill: () => {},
         stroke: () => {},
         setLineDash: () => {},
-        createLinearGradient: (x0: number, y0: number, x1: number, y1: number) => {
+        createLinearGradient: (
+            x0: number,
+            y0: number,
+            x1: number,
+            y1: number,
+        ) => {
             checkNums(x0, y0, x1, y1);
             return mockGradient;
         },
@@ -214,7 +235,10 @@ function createMockCanvasContext(): {
             r1: number,
         ) => {
             checkNums(x0, y0, r0, x1, y1, r1);
-            assert(r0 >= 0 && r1 > 0, `Invalid radial gradient radii: ${r0}, ${r1}`);
+            assert(
+                r0 >= 0 && r1 > 0,
+                `Invalid radial gradient radii: ${r0}, ${r1}`,
+            );
             return mockGradient;
         },
     } as unknown as CanvasRenderingContext2D;
@@ -223,7 +247,10 @@ function createMockCanvasContext(): {
         ctx,
         assertFiniteCoords: () => {
             for (const n of coords) {
-                assert(Number.isFinite(n), `Non-finite canvas coordinate: ${n}`);
+                assert(
+                    Number.isFinite(n),
+                    `Non-finite canvas coordinate: ${n}`,
+                );
             }
         },
     };

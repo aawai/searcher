@@ -16,6 +16,12 @@
     top: var(--space-section);
     min-width: 0;
 }
+@media (forced-colors: none) {
+    [data-theme="dark"]:not([data-contrast="more"]) .settings-layout:not([data-host-narrow="true"]) .settings-nav {
+        padding-inline-end: var(--space-4);
+        border-inline-end: 1px solid color-mix(in oklab, var(--foreground) 5%, transparent);
+    }
+}
 .settings-nav-title,
 .settings-back {
     display: none;

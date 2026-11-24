@@ -7,6 +7,7 @@
 
 /* Search is a material over the wallpaper: translucent fill, one shadow, no stroke. */
 .search-frame {
+    position: relative;
     display: flex;
     align-items: center;
     width: 100%;
@@ -22,13 +23,127 @@
         box-shadow var(--motion-fast) var(--ease-standard);
 }
 
+.search-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0 8% auto 8%;
+    height: 1px;
+    border-radius: var(--radius-pill);
+    background: var(--search-specular-top);
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .search-frame::before {
+        transition: inset var(--motion-base) var(--ease-standard),
+            opacity var(--motion-base) var(--ease-standard);
+    }
+}
+
+@media (hover: hover) {
+    .search-frame:not(:has(input:focus-visible)):hover {
+        box-shadow: inset 0 1px 0 var(--glass-edge-top),
+            inset 0 0 0 1px color-mix(in oklab, var(--foreground) 12%, var(--glass-edge-ring)),
+            inset 0 -1px 0 var(--glass-edge-bottom),
+            var(--shadow-l2);
+    }
+}
+
 /* Focus lifts the fill to the thick material so typing stays legible over any wallpaper. */
 .search-frame:has(input:focus-visible) {
     background: var(--material-thick-sheen), var(--material-thick);
     -webkit-backdrop-filter: var(--material-thick-filter);
     backdrop-filter: var(--material-thick-filter);
     box-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge),
-        var(--shadow-l2);
+        var(--shadow-l2), var(--search-focus-halo);
+}
+
+.search-frame:focus-within:not(:has(input:focus-visible)) {
+    box-shadow: var(--shadow-elevation-material), var(--search-focus-halo);
+}
+
+/* Daylight Sanctuary light optics: crystal glass rim, white-jade top filament, and precision dual-hairline focus. */
+@media (forced-colors: none) {
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .search-frame {
+        box-shadow: var(--search-frame-light-shadow);
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]):not([data-glass="off"]) .search-frame {
+        background: var(--material-regular-sheen),
+            linear-gradient(180deg, rgb(255 255 255 / 0.05) 0%, transparent 48%, rgb(15 23 42 / 0.025) 100%),
+            var(--material-regular);
+    }
+
+    @media (hover: hover) {
+        :root:not([data-theme="dark"]):not([data-contrast="more"]) .search-frame:not(:has(input:focus-visible)):hover {
+            box-shadow: var(--search-frame-light-hover-shadow);
+        }
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .search-frame:has(input:focus-visible) {
+        box-shadow: var(--search-frame-light-focus-shadow);
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]):not([data-glass="off"]) .search-frame:focus-within {
+        background: var(--material-thick-sheen),
+            linear-gradient(180deg, rgb(255 255 255 / 0.08) 0%, transparent 46%, rgb(15 23 42 / 0.02) 100%),
+            var(--material-thick);
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .search-frame:focus-within:not(:has(input:focus-visible)) {
+        box-shadow: var(--search-frame-light-focus-within-shadow);
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .search-frame:focus-within::before {
+        inset: 0 4% auto 4%;
+        background: var(--search-specular-top-focus);
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .search-frame input {
+        caret-color: var(--accent);
+    }
+}
+
+/* Moonlit Sanctuary dark optics: smoked velvet glass, razor directional moonlight filament, and quiet focus stage. */
+@media (forced-colors: none) {
+    [data-theme="dark"]:not([data-contrast="more"]) .search-frame {
+        box-shadow: var(--search-frame-dark-shadow);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .search-frame {
+        background: var(--material-regular-sheen),
+            linear-gradient(180deg, rgb(255 255 255 / 0.048) 0%, rgb(255 255 255 / 0.01) 46%, rgb(0 0 0 / 0.22) 100%),
+            var(--material-regular);
+    }
+
+    @media (hover: hover) {
+        [data-theme="dark"]:not([data-contrast="more"]) .search-frame:not(:has(input:focus-visible)):hover {
+            box-shadow: var(--search-frame-dark-hover-shadow);
+        }
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .search-frame:has(input:focus-visible) {
+        box-shadow: var(--search-frame-dark-focus-shadow);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .search-frame:focus-within {
+        background: var(--material-thick-sheen),
+            linear-gradient(180deg, rgb(255 255 255 / 0.054) 0%, rgb(255 255 255 / 0.01) 44%, rgb(0 0 0 / 0.24) 100%),
+            var(--material-thick);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .search-frame:focus-within:not(:has(input:focus-visible)) {
+        box-shadow: var(--search-frame-dark-focus-within-shadow);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .search-frame:focus-within::before {
+        inset: 0 4% auto 4%;
+        background: var(--search-specular-top-focus);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .search-frame input {
+        caret-color: var(--accent);
+    }
 }
 
 /* Forced colours drop the shadows that edge the frame and the suggestion
@@ -53,7 +168,7 @@
     border: 0;
     border-radius: var(--radius-search-inner);
     background: transparent;
-    color: var(--muted);
+    color: var(--search-placeholder);
     flex-shrink: 0;
     cursor: pointer;
     transition: background var(--motion-fast) var(--ease-standard);
@@ -94,7 +209,13 @@
 }
 
 .search-frame input::placeholder {
-    color: var(--muted);
+    color: var(--search-placeholder);
+    letter-spacing: 0.01em;
+}
+
+.search-frame .search-submit:disabled {
+    color: var(--search-placeholder);
+    opacity: 0.72;
 }
 
 .search-submit-tooltip {

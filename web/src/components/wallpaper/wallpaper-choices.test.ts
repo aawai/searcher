@@ -1,8 +1,10 @@
 import { assertEquals } from "@std/assert";
 import { DEFAULT_WALLPAPER_PRESENTATION } from "@shared/wallpaper-presentation.ts";
 import {
+    buildDarkWallpaperSelectionPatch,
     buildWallpaperHistoryItems,
     buildWallpaperSelectionPatch,
+    resolveEffectiveWallpaper,
     type WallpaperHistoryRecord,
 } from "./wallpaper-choices.ts";
 
@@ -83,5 +85,164 @@ Deno.test("buildWallpaperSelectionPatch: merges focal composition with fallback"
     assertEquals(
         patchDefault.wallpaperPresentations[url3]?.composition,
         { focalX: 0.5, focalY: 0.5 },
+    );
+});
+
+Deno.test("resolveEffectiveWallpaper: resolves light/dark slots across all 4 darkWallpaperMode options", () => {
+    const lightUrl = "https://example.com/light.jpg";
+    const darkUrl = "https://example.com/dark.jpg";
+
+    // Light scheme ignores darkWallpaperMode and uses light wallpaper
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "light",
+            wallpaper: lightUrl,
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "canvas",
+        }),
+        { source: lightUrl, renderMode: "image", hasImageOverlay: true },
+    );
+
+    // Dark auto: bright image resolves to ambient; dark or unsampled (null) keeps image; empty -> canvas
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: lightUrl,
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "auto",
+            wallpaperLightness: 0.78,
+        }),
+        {
+            source: lightUrl,
+            renderMode: "ambient",
+            hasImageOverlay: false,
+            autoResolved: "ambient",
+        },
+    );
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: lightUrl,
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "auto",
+            wallpaperLightness: 0.35,
+        }),
+        {
+            source: lightUrl,
+            renderMode: "image",
+            hasImageOverlay: true,
+            autoResolved: "image",
+        },
+    );
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: lightUrl,
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "auto",
+            wallpaperLightness: null,
+        }),
+        {
+            source: lightUrl,
+            renderMode: "image",
+            hasImageOverlay: true,
+            autoResolved: "image",
+        },
+    );
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: "",
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "auto",
+        }),
+        { source: "", renderMode: "canvas", hasImageOverlay: false },
+    );
+
+    // Dark follow
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: lightUrl,
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "follow",
+        }),
+        { source: lightUrl, renderMode: "image", hasImageOverlay: true },
+    );
+
+    // Dark ambient (no image overlay stroke on foreground typography)
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: lightUrl,
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "ambient",
+        }),
+        { source: lightUrl, renderMode: "ambient", hasImageOverlay: false },
+    );
+
+    // Dark canvas hides wallpaper completely
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: lightUrl,
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "canvas",
+        }),
+        { source: "", renderMode: "canvas", hasImageOverlay: false },
+    );
+
+    // Dark custom uses dedicated dark wallpaper (does not fall back to light image)
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: lightUrl,
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "custom",
+        }),
+        {
+            source: darkUrl,
+            renderMode: "image",
+            hasImageOverlay: true,
+            nativeDarkTone: true,
+        },
+    );
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: lightUrl,
+            darkWallpaper: "",
+            darkWallpaperMode: "custom",
+        }),
+        {
+            source: "",
+            renderMode: "canvas",
+            hasImageOverlay: false,
+            nativeDarkTone: undefined,
+        },
+    );
+});
+
+Deno.test("buildDarkWallpaperSelectionPatch: sets darkWallpaper while protecting active light data URL", () => {
+    const lightData = "data:image/png;base64,bGlnaHQ=";
+    const darkUrl = "/api/wallpaper/00000000-0000-4000-8000-000000000009";
+    const patch = buildDarkWallpaperSelectionPatch(
+        { id: "dark-1", url: darkUrl, focalX: 0.6, focalY: 0.4 },
+        {
+            [lightData]: {
+                ...DEFAULT_WALLPAPER_PRESENTATION,
+                composition: { focalX: 0.3, focalY: 0.7 },
+            },
+        },
+        [lightData, darkUrl],
+    );
+    assertEquals(patch.darkWallpaper, darkUrl);
+    assertEquals(
+        patch.wallpaperPresentations[lightData]?.composition,
+        { focalX: 0.3, focalY: 0.7 },
+    );
+    assertEquals(
+        patch.wallpaperPresentations[darkUrl]?.composition,
+        { focalX: 0.6, focalY: 0.4 },
     );
 });

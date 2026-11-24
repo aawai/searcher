@@ -1,9 +1,4 @@
-import {
-    type CSSProperties,
-    lazy,
-    type ReactNode,
-    Suspense,
-} from "react";
+import { type CSSProperties, lazy, type ReactNode, Suspense } from "react";
 import { cn } from "../../lib/utils.ts";
 import {
     type BotanicalSpecies,
@@ -22,6 +17,8 @@ export interface WallpaperSurfaceProps {
     source?: string | null;
     botanicalScene?: BotanicalSpecies | null;
     presentation?: WallpaperPresentation | null;
+    mode?: "image" | "ambient" | "canvas";
+    nativeDarkTone?: boolean;
     className?: string;
     style?: CSSProperties;
     embedded?: boolean;
@@ -52,6 +49,8 @@ export function WallpaperSurface({
     source,
     botanicalScene,
     presentation,
+    mode,
+    nativeDarkTone = false,
     className,
     style,
     embedded = false,
@@ -65,7 +64,13 @@ export function WallpaperSurface({
             parseBotanicalSceneSource(source))
         : null;
     const wallpaperCss = formatWallpaperCss(source);
-    const substrate = wallpaperCss === "none" ? "canvas" : "image";
+    const hasImage = wallpaperCss !== "none" && mode !== "canvas";
+    const substrate = hasImage ? "image" : "canvas";
+    const effectiveMode = !hasImage
+        ? "canvas"
+        : mode === "ambient"
+        ? "ambient"
+        : "image";
     const intent = presentation ?? DEFAULT_WALLPAPER_PRESENTATION;
     const focal = substrate === "canvas"
         ? { focalX: 0.5, focalY: 0.5 }
@@ -79,25 +84,30 @@ export function WallpaperSurface({
                 className,
             )}
             data-substrate={substrate}
-            data-wallpaper-image={wallpaperCss.startsWith("url(")
+            data-wallpaper-mode={effectiveMode}
+            data-native-dark={nativeDarkTone && effectiveMode === "image"
                 ? "true"
                 : undefined}
+            data-wallpaper-image={hasImage ? "true" : undefined}
             data-wallpaper-scene={botanicalSpecies ?? undefined}
             data-testid={testId}
             style={{
                 ...style,
-                "--wallpaper-image": wallpaperCss,
+                "--wallpaper-image": hasImage ? wallpaperCss : "none",
                 "--wallpaper-position": `${focal.focalX * 100}% ${
                     focal.focalY * 100
                 }%`,
             } as CSSProperties}
             aria-hidden={!children}
         >
-            {wallpaperCss !== "none" && (
+            {hasImage && (
                 <div
                     className="wallpaper-surface__image"
                     data-testid={testId ? `${testId}-image` : undefined}
                 />
+            )}
+            {!derived && !embedded && (
+                <div className="wallpaper-surface__grain" aria-hidden="true" />
             )}
             {derived && <div className="wallpaper-surface__mask" />}
             {botanicalSpecies && typeof window !== "undefined" && (
@@ -105,6 +115,7 @@ export function WallpaperSurface({
                     <BotanicalSceneCanvas
                         species={botanicalSpecies}
                         embedded={embedded}
+                        overPhoto={effectiveMode === "image"}
                         testId={testId}
                     />
                 </Suspense>
