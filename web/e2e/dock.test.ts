@@ -1032,9 +1032,12 @@ Deno.test("workspace dock contracts", async (t) => {
                         `floating ball must include --material-regular-sheen gradient, got: ${ballStyles.bgImage}`,
                     );
                     assert(
-                        ballStyles.backdropFilter.includes("blur(12px)") &&
+                        ballStyles.backdropFilter.includes("blur(6px)") &&
                             ballStyles.backdropFilter.includes(
-                                "saturate(1.85)",
+                                "saturate(1.9)",
+                            ) &&
+                            ballStyles.backdropFilter.includes(
+                                "brightness(1.03)",
                             ),
                         `floating ball in clear tier must keep Material regular filter, got: ${ballStyles.backdropFilter}`,
                     );
