@@ -71,7 +71,13 @@ for (const scheme of SCHEMES) {
         const fg = hex(resolve(tokens, "--foreground"));
         const muted = hex(resolve(tokens, "--muted"));
 
-        for (const surfaceToken of ["--background", "--surface", "--surface-soft"]) {
+        for (
+            const surfaceToken of [
+                "--background",
+                "--surface",
+                "--surface-soft",
+            ]
+        ) {
             const bg = hex(resolve(tokens, surfaceToken));
             const fgRatio = contrast(fg, bg);
             const mutedRatio = contrast(muted, bg);
@@ -91,3 +97,128 @@ for (const scheme of SCHEMES) {
         }
     });
 }
+
+function parsePercentage(value: string): number {
+    const match = value.match(/^(-?\d+(?:\.\d+)?)%$/);
+    if (!match) throw new Error(`expected percentage, got ${value}`);
+    return Number(match[1]);
+}
+
+function parseBlurPx(value: string): number {
+    if (value === "none") return 0;
+    const match = value.match(/blur\((\d+(?:\.\d+)?)px\)/);
+    if (!match) throw new Error(`expected blur(Npx), got ${value}`);
+    return Number(match[1]);
+}
+
+Deno.test("glass tiers form a monotonic, clearly separated progression with translucent clear material and readable floating", () => {
+    const rootTokens = declarations(":root");
+    const lightSheenPeak = parsePercentage(
+        resolve(rootTokens, "--glass-sheen-peak"),
+    ) / 100;
+
+    const order = ["off", "soft", "regular", "clear"] as const;
+    const tiers = Object.fromEntries(
+        order.map((tier) => {
+            const d = declarations(`[data-glass="${tier}"]`);
+            const regularLight = parsePercentage(
+                d.get("--glass-regular-light")!,
+            );
+            const regularDark = parsePercentage(d.get("--glass-regular-dark")!);
+            const stampDark = parsePercentage(
+                d.get("--masthead-stamp-dark-fill")!,
+            );
+            const thickLight = parsePercentage(d.get("--glass-thick-light")!);
+            const thickDark = parsePercentage(d.get("--glass-thick-dark")!);
+            const sheenScale = Number(
+                d.get("--material-regular-sheen-scale")!,
+            );
+            const blurLight = parseBlurPx(
+                d.get("--glass-regular-filter-light")!,
+            );
+            const blurDark = parseBlurPx(
+                d.get("--glass-regular-filter-dark")!,
+            );
+            // Composite white opacity at top edge: 1 - (1 - sheen) * (1 - fill)
+            const topWhiteLightPct = (1 -
+                (1 - lightSheenPeak * sheenScale) * (1 - regularLight / 100)) *
+                100;
+            return [
+                tier,
+                {
+                    regularLight,
+                    regularDark,
+                    stampDark,
+                    thickLight,
+                    thickDark,
+                    blurLight,
+                    blurDark,
+                    topWhiteLightPct,
+                },
+            ];
+        }),
+    ) as Record<
+        (typeof order)[number],
+        {
+            regularLight: number;
+            regularDark: number;
+            stampDark: number;
+            thickLight: number;
+            thickDark: number;
+            blurLight: number;
+            blurDark: number;
+            topWhiteLightPct: number;
+        }
+    >;
+
+    for (let i = 0; i < order.length - 1; i++) {
+        const hi = tiers[order[i]];
+        const lo = tiers[order[i + 1]];
+        assert(
+            hi.regularLight > lo.regularLight,
+            `expected ${order[i]} light fill (${hi.regularLight}%) > ${
+                order[i + 1]
+            } (${lo.regularLight}%)`,
+        );
+        assert(
+            hi.regularDark > lo.regularDark,
+            `expected ${order[i]} dark fill (${hi.regularDark}%) > ${
+                order[i + 1]
+            } (${lo.regularDark}%)`,
+        );
+        assert(
+            hi.stampDark > lo.stampDark,
+            `expected ${order[i]} stamp dark fill (${hi.stampDark}%) > ${
+                order[i + 1]
+            } (${lo.stampDark}%)`,
+        );
+        assert(
+            hi.topWhiteLightPct - lo.topWhiteLightPct >= 10,
+            `expected >=10pp light top-edge gap between ${order[i]} (${
+                hi.topWhiteLightPct.toFixed(1)
+            }%) and ${order[i + 1]} (${lo.topWhiteLightPct.toFixed(1)}%)`,
+        );
+    }
+
+    assert(tiers.clear.regularLight <= 20);
+    assert(tiers.clear.regularDark <= 25);
+    assert(tiers.clear.topWhiteLightPct <= 30);
+
+    assert(tiers.off.blurLight === 0 && tiers.off.blurDark === 0);
+    assert(
+        tiers.soft.blurLight > tiers.regular.blurLight &&
+            tiers.regular.blurLight > tiers.clear.blurLight,
+    );
+    assert(
+        tiers.soft.blurDark > tiers.regular.blurDark &&
+            tiers.regular.blurDark > tiers.clear.blurDark,
+    );
+    assert(tiers.clear.blurLight <= 8 && tiers.clear.blurDark <= 8);
+
+    for (const tier of order) {
+        assert(
+            tiers[tier].thickLight >= 85 && tiers[tier].thickDark >= 85,
+            `floating tier ${tier} must stay >=85% opaque`,
+        );
+    }
+});

@@ -804,29 +804,29 @@
  * The `:root` values are `regular`, the no-attribute default.
  */
 :root {
-    --glass-regular-light: 56%;
-    --glass-regular-dark: 62%;
+    --glass-regular-light: 48%;
+    --glass-regular-dark: 50%;
     --glass-thick-light: 88%;
     --glass-thick-dark: 86%;
-    --masthead-stamp-dark-fill: 58%;
-    --glass-regular-filter-light: blur(20px) saturate(1.8);
-    --glass-regular-filter-dark: blur(24px) saturate(1.25) brightness(0.88);
-    --material-regular-sheen-scale: 0.85;
-    --material-thick-sheen-scale: 0.85;
-    --material-regular-filter: blur(20px) saturate(1.8);
+    --masthead-stamp-dark-fill: 48%;
+    --glass-regular-filter-light: blur(18px) saturate(1.75);
+    --glass-regular-filter-dark: blur(18px) saturate(1.35) brightness(0.94);
+    --material-regular-sheen-scale: 0.45;
+    --material-thick-sheen-scale: 0.55;
+    --material-regular-filter: blur(18px) saturate(1.75);
     --material-thick-filter: blur(20px) saturate(1.8);
 }
 [data-glass="regular"] {
-    --glass-regular-light: 56%;
-    --glass-regular-dark: 62%;
+    --glass-regular-light: 48%;
+    --glass-regular-dark: 50%;
     --glass-thick-light: 88%;
     --glass-thick-dark: 86%;
-    --masthead-stamp-dark-fill: 58%;
-    --glass-regular-filter-light: blur(20px) saturate(1.8);
-    --glass-regular-filter-dark: blur(24px) saturate(1.25) brightness(0.88);
-    --material-regular-sheen-scale: 0.85;
-    --material-thick-sheen-scale: 0.85;
-    --material-regular-filter: blur(20px) saturate(1.8);
+    --masthead-stamp-dark-fill: 48%;
+    --glass-regular-filter-light: blur(18px) saturate(1.75);
+    --glass-regular-filter-dark: blur(18px) saturate(1.35) brightness(0.94);
+    --material-regular-sheen-scale: 0.45;
+    --material-thick-sheen-scale: 0.55;
+    --material-regular-filter: blur(18px) saturate(1.75);
     --material-thick-filter: blur(20px) saturate(1.8);
 }
 [data-glass="off"] {
@@ -843,41 +843,84 @@
     --material-thick-filter: none;
 }
 [data-glass="soft"] {
-    --glass-regular-light: 72%;
+    --glass-regular-light: 76%;
     --glass-regular-dark: 78%;
     --glass-thick-light: 92%;
     --glass-thick-dark: 92%;
-    --masthead-stamp-dark-fill: 72%;
-    --glass-regular-filter-light: blur(24px) saturate(1.4);
-    --glass-regular-filter-dark: blur(28px) saturate(1.15) brightness(0.86);
-    --material-regular-sheen-scale: 0.5;
-    --material-thick-sheen-scale: 0.5;
-    --material-regular-filter: blur(24px) saturate(1.4);
+    --masthead-stamp-dark-fill: 74%;
+    --glass-regular-filter-light: blur(28px) saturate(1.35);
+    --glass-regular-filter-dark: blur(28px) saturate(1.15) brightness(0.84);
+    --material-regular-sheen-scale: 0.35;
+    --material-thick-sheen-scale: 0.4;
+    --material-regular-filter: blur(28px) saturate(1.35);
     --material-thick-filter: blur(20px) saturate(1.5);
 }
 [data-glass="clear"] {
-    --glass-regular-light: 38%;
-    --glass-regular-dark: 48%;
+    --glass-regular-light: 14%;
+    --glass-regular-dark: 18%;
     /* Floating carries readable text: with the weaker sheen it needs more fill
        than regular. --muted in top-bar menus over black measured 3.8:1 at 76%
        and 4.49:1 at 86% (#394 2.2). */
     --glass-thick-light: 90%;
     --glass-thick-dark: 86%;
-    --masthead-stamp-dark-fill: 44%;
-    --glass-regular-filter-light: blur(12px) saturate(1.85);
-    --glass-regular-filter-dark: blur(18px) saturate(1.3) brightness(0.92);
-    --material-regular-sheen-scale: 0.55;
-    --material-thick-sheen-scale: 0.5;
-    --material-regular-filter: blur(12px) saturate(1.85);
+    --masthead-stamp-dark-fill: 20%;
+    --glass-regular-filter-light: blur(6px) saturate(1.9) brightness(1.03);
+    --glass-regular-filter-dark: blur(8px) saturate(1.65) brightness(1.04);
+    --material-regular-sheen-scale: 0.2;
+    --material-thick-sheen-scale: 0.35;
+    --material-regular-filter: blur(6px) saturate(1.9) brightness(1.03);
     --material-thick-filter: blur(14px) saturate(1.8);
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     @media (prefers-reduced-transparency: no-preference) and (forced-colors: none) {
+        :root:not([data-theme="dark"]):not([data-contrast="more"])[data-glass="clear"],
+        :root:not([data-theme="dark"]):not([data-contrast="more"]) [data-glass="clear"] {
+            --glass-edge-top: rgb(255 255 255 / 1);
+            --glass-edge-ring: rgb(255 255 255 / 0.82);
+            --glass-edge-bottom: rgb(0 0 0 / 0.11);
+            --search-frame-light-shadow: inset 0 1px 0 rgb(255 255 255 / 0.98),
+                inset 0 0 0 1px rgb(255 255 255 / 0.78),
+                inset 0 -1px 0 rgb(0 0 0 / 0.10),
+                0 0 0 1px rgb(29 29 31 / 0.10),
+                0 14px 36px -14px rgb(15 23 42 / 0.16),
+                0 2px 8px -2px rgb(15 23 42 / 0.07);
+            --search-frame-light-hover-shadow: inset 0 1px 0 rgb(255 255 255 / 1),
+                inset 0 0 0 1px rgb(255 255 255 / 0.88),
+                inset 0 -1px 0 rgb(0 0 0 / 0.11),
+                0 0 0 1px color-mix(in oklab, var(--accent) 22%, rgb(29 29 31 / 0.14)),
+                0 18px 42px -14px rgb(15 23 42 / 0.20),
+                0 3px 10px -2px rgb(15 23 42 / 0.09);
+        }
+
         [data-theme="dark"]:not([data-contrast="more"])[data-glass="clear"],
         [data-theme="dark"]:not([data-contrast="more"]) [data-glass="clear"] {
-            --material-regular-sheen-scale: 0.80;
-            --material-thick-sheen-scale: 0.65;
+            --material-regular-sheen-scale: 0.65;
+            --material-thick-sheen-scale: 0.55;
+            --glass-edge-top: rgb(255 255 255 / 0.24);
+            --glass-edge-ring: rgb(255 255 255 / 0.15);
+            --glass-edge-bottom: rgb(0 0 0 / 0.45);
+            --search-frame-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22),
+                inset 0 1px 0 rgb(255 255 255 / 0.26),
+                0 8px 28px -8px rgb(0 0 0 / 0.30),
+                0 2px 8px -2px rgb(0 0 0 / 0.16);
+            --search-frame-dark-wallpaper-hover-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.30),
+                inset 0 1px 0 rgb(255 255 255 / 0.36),
+                0 10px 32px -8px rgb(0 0 0 / 0.36),
+                0 2px 10px -2px rgb(0 0 0 / 0.20);
+            --dock-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.20),
+                inset 0 1px 0 rgb(255 255 255 / 0.22),
+                0 8px 26px -8px rgb(0 0 0 / 0.30),
+                0 2px 8px -2px rgb(0 0 0 / 0.16);
+            --launcher-plate-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18),
+                inset 0 1px 0 rgb(255 255 255 / 0.20),
+                0 10px 32px -10px rgb(0 0 0 / 0.32);
+            --masthead-stamp-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18),
+                inset 0 1px 0 rgb(255 255 255 / 0.20),
+                0 4px 16px -6px rgb(0 0 0 / 0.22);
+            --masthead-stamp-dark-wallpaper-hover-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28),
+                inset 0 1px 0 rgb(255 255 255 / 0.30),
+                0 6px 20px -6px rgb(0 0 0 / 0.28);
         }
     }
 }

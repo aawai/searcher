@@ -344,18 +344,20 @@
             background: var(--material-regular);
             box-shadow: var(--dock-dark-wallpaper-shadow);
         }
-    }
 
-    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:not(:has(.search-frame:focus-within)) .dock-bar {
-        --dock-rest-opacity: 0.58;
-    }
+        @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+            [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"]:not(:has(.search-frame:focus-within)) .dock-bar:not(:hover, :focus-within) {
+                --dock-rest-opacity: 0.58;
+            }
 
-    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"][data-wallpaper-image="true"]:not(:has(.search-frame:focus-within)) .dock-bar {
-        --dock-rest-opacity: 0.76;
-    }
+            [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"][data-wallpaper-image="true"]:not(:has(.search-frame:focus-within)) .dock-bar:not(:hover, :focus-within) {
+                --dock-rest-opacity: 0.76;
+            }
 
-    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"] .dock-bar:is(:hover, :focus-within) {
-        --dock-rest-opacity: 1;
+            [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"] .dock-bar:is(:hover, :focus-within) {
+                --dock-rest-opacity: 1;
+            }
+        }
     }
 
     [data-theme="dark"]:not([data-contrast="more"]) .dock-item:not([data-active="true"]) {
@@ -589,6 +591,7 @@
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
     .dock-bar,
     .dock-ball {
+        --dock-rest-opacity: 1;
         background: var(--surface-l3);
         -webkit-backdrop-filter: none;
         backdrop-filter: none;

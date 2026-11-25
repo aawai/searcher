@@ -813,7 +813,7 @@ Deno.test("masthead layout constants and frameless ambient cushion tokens mirror
         true,
     );
     assertEquals(
-        css.includes("--masthead-stamp-dark-fill: 58%;"),
+        css.includes("--masthead-stamp-dark-fill: 48%;"),
         true,
     );
     assertEquals(MASTHEAD_PEEK_FADE_MAX, 16);

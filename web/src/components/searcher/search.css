@@ -41,7 +41,7 @@
 }
 
 @media (hover: hover) {
-    .search-frame:not(:has(input:focus-visible)):hover {
+    .search-frame:not(:focus-within):hover {
         box-shadow: inset 0 1px 0 var(--glass-edge-top),
             inset 0 0 0 1px color-mix(in oklab, var(--foreground) 12%, var(--glass-edge-ring)),
             inset 0 -1px 0 var(--glass-edge-bottom),
@@ -49,11 +49,14 @@
     }
 }
 
-/* Focus lifts the fill to the thick material so typing stays legible over any wallpaper. */
-.search-frame:has(input:focus-visible) {
+/* Focus anywhere inside the frame lifts the material to thick so controls and typing stay legible over any wallpaper. */
+.search-frame:focus-within {
     background: var(--material-thick-sheen), var(--material-thick);
     -webkit-backdrop-filter: var(--material-thick-filter);
     backdrop-filter: var(--material-thick-filter);
+}
+
+.search-frame:has(input:focus-visible) {
     box-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge),
         var(--shadow-l2), var(--search-focus-halo);
 }
@@ -75,7 +78,7 @@
     }
 
     @media (hover: hover) {
-        :root:not([data-theme="dark"]):not([data-contrast="more"]) .search-frame:not(:has(input:focus-visible)):hover {
+        :root:not([data-theme="dark"]):not([data-contrast="more"]) .search-frame:not(:focus-within):hover {
             box-shadow: var(--search-frame-light-hover-shadow);
         }
     }
@@ -117,7 +120,7 @@
     }
 
     @media (hover: hover) {
-        [data-theme="dark"]:not([data-contrast="more"]) .search-frame:not(:has(input:focus-visible)):hover {
+        [data-theme="dark"]:not([data-contrast="more"]) .search-frame:not(:focus-within):hover {
             box-shadow: var(--search-frame-dark-hover-shadow);
         }
     }
@@ -158,12 +161,12 @@
     }
 
     @media (hover: hover) {
-        [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"] .search-frame:not(:has(input:focus-visible)):hover {
+        [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"] .search-frame:not(:focus-within):hover {
             background: color-mix(in oklab, var(--material-regular) 95%, white);
             box-shadow: var(--search-frame-dark-wallpaper-hover-shadow);
         }
 
-        [data-theme="dark"]:not([data-contrast="more"])[data-glass="off"] .app-shell[data-wallpaper-image="true"] .search-frame:not(:has(input:focus-visible)):hover {
+        [data-theme="dark"]:not([data-contrast="more"])[data-glass="off"] .app-shell[data-wallpaper-image="true"] .search-frame:not(:focus-within):hover {
             box-shadow: var(--search-frame-dark-wallpaper-hover-shadow);
         }
     }
