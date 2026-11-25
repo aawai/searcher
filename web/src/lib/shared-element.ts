@@ -1,3 +1,5 @@
+import { createRandomId } from "./random-id.ts";
+
 /** Root class that scopes the shared-element rules in styles/global.css. */
 export const SHARED_ELEMENT_CLASS = "shared-element-transition";
 
@@ -42,7 +44,7 @@ function browserEnv(): SharedElementEnv {
         startViewTransition: typeof document.startViewTransition === "function"
             ? (update) => document.startViewTransition(update)
             : undefined,
-        uniqueId: () => crypto.randomUUID(),
+        uniqueId: () => createRandomId(),
         waitForElement,
     };
 }

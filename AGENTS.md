@@ -52,13 +52,14 @@ Searcher 是单进程、同源部署的搜索主页，使用 Deno + Hono、React
 | 安装依赖 | `deno install` |
 | 开发 API | `APP_ORIGIN=http://localhost:5173 deno task dev:api` |
 | 开发前端（另一个终端） | `deno task dev`，浏览器访问 `http://localhost:5173` |
+| 局域网开发 API / 前端 | `deno task dev:api:lan` / `deno task dev:lan`（自动注入本机私网 IPv4 并监听 `0.0.0.0`） |
 | 构建前端 | `deno task build` |
 | 生产启动 | `NODE_ENV=production APP_ORIGIN=https://实际域名 ENCRYPTION_KEY=<固定随机密钥> deno task start` |
 | 生成 / 执行迁移 | `deno task db:generate` / `deno task db:migrate` |
 | 创建管理员 / 重置密码 | `deno task admin:create -- <username>` / `deno task admin:reset -- <username>` |
 | 检查本文件引用 | `deno task check:agents` |
 
-Vite 将 `/api` 代理至 `127.0.0.1:34567`。`PORT` 默认 `34567`，`DATABASE_PATH` 默认 `./data/searcher.sqlite`；`dev:api` 内置开发用 `ENCRYPTION_KEY`，生产须提供固定值，否则已存的 AI Provider Key 无法解密。其余环境变量（如 `SEARXNG_URL`）与 Docker 部署见 README 和 `docs/deployment.md`。修改 schema 后生成并提交迁移；管理员命令须在真实终端隐藏输入并确认密码，禁止通过命令行传密码。`data/`、`.env*`（除 `.env.example`）、`node_modules/`、`web/dist/` 不提交。
+Vite 将 `/api` 代理至 `127.0.0.1:34567`。`PORT` 默认 `34567`，`DATABASE_PATH` 默认 `./data/searcher.sqlite`；`dev:api` 与 `dev:api:lan` 内置开发用 `ENCRYPTION_KEY`，生产须提供固定值，否则已存的 AI Provider Key 无法解密。非生产环境 `APP_ORIGIN` 允许私网局域网 HTTP origin，生产环境仍强制非回环必须 HTTPS。其余环境变量（如 `SEARXNG_URL`）与 Docker 部署见 README 和 `docs/deployment.md`。修改 schema 后生成并提交迁移；管理员命令须在真实终端隐藏输入并确认密码，禁止通过命令行传密码。`data/`、`.env*`（除 `.env.example`）、`node_modules/`、`web/dist/` 不提交。
 
 ## 代码约定与常用模式
 

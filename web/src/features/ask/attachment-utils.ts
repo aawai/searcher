@@ -1,4 +1,5 @@
 import type { AttachmentItem } from "./types.ts";
+import { createRandomId } from "../../lib/random-id.ts";
 
 export const ATTACHMENT_LIMITS = {
     maxFiles: 4,
@@ -81,7 +82,7 @@ export function processFileToAttachment(
     file: File,
     type: "image" | "text",
 ): Promise<AttachmentItem> {
-    const id = "att-" + crypto.randomUUID();
+    const id = "att-" + createRandomId();
     const mimeType = file.type ||
         (type === "image" ? "image/png" : "text/plain");
 

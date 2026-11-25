@@ -19,6 +19,7 @@ import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { SEARCH_QUICK_COMMANDS } from "../features/shortcuts/shortcut-catalog.ts";
+import { createRandomId } from "../lib/random-id.ts";
 import "./omnibox-lab.css";
 
 type Group = "AI" | "我的" | "应用" | "网页" | "命令";
@@ -185,7 +186,7 @@ export function OmniboxLab() {
         ) {
             if (!loggedIn || !text) return;
             const note: MockNote = {
-                id: crypto.randomUUID(),
+                id: createRandomId(),
                 body: text,
                 pinned: false,
                 favorite: false,

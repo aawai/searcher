@@ -56,13 +56,23 @@ deno task dev
 打开 `http://localhost:5173`；Vite 将 `/api` 代理到 `127.0.0.1:34567`。
 `dev:api` 内置开发用 `ENCRYPTION_KEY`；生产须单独提供固定密钥，不能沿用开发值。
 
+局域网内其他设备调试时，可直接使用自动探测本机私网 IPv4 的局域网开发命令：
+
+```sh
+deno task dev:api:lan
+# 另开终端
+deno task dev:lan
+```
+
+或手动在 `APP_ORIGIN` 中列出实际访问的精确 origin（如 `APP_ORIGIN=http://localhost:5173,http://192.168.1.20:5173 deno task dev:api`）。注意局域网 HTTP 属于浏览器非安全上下文，`navigator.clipboard` 等仅限安全上下文的接口不可用。
+
 ## 配置
 
 环境变量示例见 [`.env.example`](.env.example)。
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `APP_ORIGIN` | 非生产为 `http://localhost:34567` | 浏览器访问的精确 origin，多个用逗号分隔；生产必填。非 loopback 必须为 HTTPS，TLS 由部署环境终止 |
+| `APP_ORIGIN` | 非生产为 `http://localhost:34567` | 浏览器访问的精确 origin，多个用逗号分隔；生产必填。生产环境非 loopback 必须为 HTTPS（TLS 由部署环境终止）；非生产环境允许私网局域网 HTTP origin 用于开发调试 |
 | `PORT` | `34567` | 监听端口 |
 | `DATABASE_PATH` | `./data/searcher.sqlite` | SQLite 路径；壁纸文件存于数据库旁的 `wallpapers/` |
 | `NODE_ENV` | — | `production` 时要求设置 `APP_ORIGIN` 且已构建 `web/dist` |
@@ -75,6 +85,7 @@ deno task dev
 | --- | --- |
 | 安装依赖 | `deno install` |
 | 开发 API / 前端 | `APP_ORIGIN=http://localhost:5173 deno task dev:api` / `deno task dev` |
+| 局域网开发 API / 前端 | `deno task dev:api:lan` / `deno task dev:lan` |
 | 构建前端 | `deno task build` |
 | 生产启动 | `NODE_ENV=production APP_ORIGIN=https://example.com deno task start` |
 | 生成 / 执行迁移 | `deno task db:generate` / `deno task db:migrate`（服务启动时也会自动迁移） |

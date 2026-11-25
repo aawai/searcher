@@ -5,11 +5,43 @@ import { migrateDatabase } from "./db/migrate.ts";
 import { AuthService } from "./features/auth/service.ts";
 import { AiService } from "./features/ai/service.ts";
 
-function appOrigin(): string {
-    const value = Deno.env.get("APP_ORIGIN") ??
-        (Deno.env.get("NODE_ENV") === "production"
-            ? undefined
-            : "http://localhost:34567");
+export function isLoopbackOriginHost(hostname: string): boolean {
+    return ["localhost", "127.0.0.1", "[::1]"].includes(hostname);
+}
+
+export function isPrivateLanOriginHost(hostname: string): boolean {
+    const normalized = hostname.trim().toLowerCase();
+    if (!normalized) return false;
+
+    const ipv4Parts = normalized.split(".");
+    if (ipv4Parts.length === 4 && ipv4Parts.every((p) => /^\d+$/.test(p))) {
+        const nums = ipv4Parts.map(Number);
+        if (nums.some((n) => n < 0 || n > 255)) return false;
+        const [a, b] = nums;
+        if (a === 10) return true;
+        if (a === 172 && b >= 16 && b <= 31) return true;
+        if (a === 192 && b === 168) return true;
+        if (a === 100 && b >= 64 && b <= 127) return true;
+        if (a === 169 && b === 254) return true;
+        return false;
+    }
+
+    if (normalized.startsWith("[") && normalized.endsWith("]")) {
+        const ipv6 = normalized.slice(1, -1);
+        return /^f[cd][0-9a-f]{0,2}:/.test(ipv6) ||
+            /^fe[89ab][0-9a-f]?:/.test(ipv6);
+    }
+
+    return /\.(localhost|local|lan|internal)$/.test(normalized);
+}
+
+export function parseAppOrigin(
+    rawValue: string | undefined,
+    nodeEnv: string | undefined,
+): string {
+    const isProduction = nodeEnv === "production";
+    const value = rawValue ??
+        (isProduction ? undefined : "http://localhost:34567");
     if (!value) throw new Error("APP_ORIGIN is required in production");
     const origins = value.split(",").map((entry) => entry.trim());
     for (const entry of origins) {
@@ -27,12 +59,23 @@ function appOrigin(): string {
         }
         if (
             origin.protocol === "http:" &&
-            !["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname)
+            !isLoopbackOriginHost(origin.hostname)
         ) {
-            throw new Error("APP_ORIGIN requires HTTPS outside loopback");
+            if (isProduction) {
+                throw new Error("APP_ORIGIN requires HTTPS outside loopback");
+            }
+            if (!isPrivateLanOriginHost(origin.hostname)) {
+                throw new Error(
+                    "APP_ORIGIN requires HTTPS outside loopback or private LAN in development",
+                );
+            }
         }
     }
     return origins.join(",");
+}
+
+function appOrigin(): string {
+    return parseAppOrigin(Deno.env.get("APP_ORIGIN"), Deno.env.get("NODE_ENV"));
 }
 
 if (import.meta.main) {
