@@ -8,61 +8,109 @@ import { THEME_LABELS } from "../design-system/theme.ts";
 
 type AuditActionGroup = "用户" | "系统" | "AI";
 
+export type AuditCategory = "" | "user" | "system" | "ai";
+
+export type AuditCategoryKind = "user" | "system" | "ai" | "other";
+
 interface AuditActionMeta {
     label: string;
     group: AuditActionGroup;
+    category: Exclude<AuditCategory, "">;
     /** Overwrites or removes data that cannot be recovered from the log. */
     danger: boolean;
 }
 
 const AUDIT_ACTION_META: Record<AuditAction, AuditActionMeta> = {
-    "admin.user.create": { label: "创建用户", group: "用户", danger: false },
-    "admin.user.disable": { label: "禁用用户", group: "用户", danger: false },
-    "admin.user.enable": { label: "启用用户", group: "用户", danger: false },
+    "admin.user.create": {
+        label: "创建用户",
+        group: "用户",
+        category: "user",
+        danger: false,
+    },
+    "admin.user.disable": {
+        label: "禁用用户",
+        group: "用户",
+        category: "user",
+        danger: false,
+    },
+    "admin.user.enable": {
+        label: "启用用户",
+        group: "用户",
+        category: "user",
+        danger: false,
+    },
     "admin.user.reset_password": {
         label: "重置密码",
         group: "用户",
+        category: "user",
         danger: false,
     },
-    "admin.user.delete": { label: "删除用户", group: "用户", danger: true },
+    "admin.user.delete": {
+        label: "删除用户",
+        group: "用户",
+        category: "user",
+        danger: true,
+    },
     "admin.system.settings_update": {
         label: "修改系统设置",
         group: "系统",
+        category: "system",
         danger: false,
     },
     "admin.system.config_export": {
         label: "导出配置",
         group: "系统",
+        category: "system",
         danger: false,
     },
     "admin.system.config_import": {
         label: "导入配置",
         group: "系统",
+        category: "system",
         danger: true,
     },
-    "admin.backup.create": { label: "创建备份", group: "系统", danger: false },
-    "admin.backup.restore": { label: "还原备份", group: "系统", danger: true },
+    "admin.backup.create": {
+        label: "创建备份",
+        group: "系统",
+        category: "system",
+        danger: false,
+    },
+    "admin.backup.restore": {
+        label: "还原备份",
+        group: "系统",
+        category: "system",
+        danger: true,
+    },
     "ai.provider.create": {
         label: "添加 AI 服务商",
         group: "AI",
+        category: "ai",
         danger: false,
     },
     "ai.provider.update": {
         label: "修改 AI 服务商",
         group: "AI",
+        category: "ai",
         danger: false,
     },
     "ai.provider.delete": {
         label: "删除 AI 服务商",
         group: "AI",
+        category: "ai",
         danger: true,
     },
     "ai.provider.refresh": {
         label: "刷新模型列表",
         group: "AI",
+        category: "ai",
         danger: false,
     },
-    "ai.model.update": { label: "修改模型", group: "AI", danger: false },
+    "ai.model.update": {
+        label: "修改模型",
+        group: "AI",
+        category: "ai",
+        danger: false,
+    },
 };
 
 function isAuditAction(action: string): action is AuditAction {
@@ -85,6 +133,27 @@ export const AUDIT_ACTION_GROUPS: readonly {
 
 export function parseAuditActionFilter(value: string): AuditAction | "" {
     return isAuditAction(value) ? value : "";
+}
+
+/** Maps an audit action to its top-level category for filtering and visual grouping. */
+export function describeAuditCategory(action: string): AuditCategoryKind {
+    if (isAuditAction(action)) {
+        return AUDIT_ACTION_META[action].category;
+    }
+    if (action.startsWith("admin.user.")) return "user";
+    if (
+        action.startsWith("admin.system.") ||
+        action.startsWith("admin.backup.")
+    ) {
+        return "system";
+    }
+    if (action.startsWith("ai.")) return "ai";
+    return "other";
+}
+
+/** Whether an audit action overwrites or removes data that cannot be recovered from the log. */
+export function isDestructiveAuditAction(action: string): boolean {
+    return isAuditAction(action) ? AUDIT_ACTION_META[action].danger : false;
 }
 
 /** Rows from before an action existed in the contract keep their raw key as a hint. */
@@ -144,6 +213,13 @@ function formatTimestamp(value: number): string {
 const yesNo = (value: unknown) =>
     value === true ? "是" : value === false ? "否" : String(value);
 
+const formatRole = (value: unknown) =>
+    value === "admin"
+        ? "管理员"
+        : value === "user"
+        ? "普通用户"
+        : String(value);
+
 /** Label and value formatter of every metadata key the server records. */
 const METADATA_FIELDS: Readonly<
     Record<string, { label: string; format?: (value: unknown) => string }>
@@ -182,6 +258,18 @@ const METADATA_FIELDS: Readonly<
         label: "导入服务商",
         format: (value) => `${String(value)} 个`,
     },
+    createdProvidersCount: {
+        label: "新建服务商",
+        format: (value) => `${String(value)} 个`,
+    },
+    updatedProvidersCount: {
+        label: "更新服务商",
+        format: (value) => `${String(value)} 个`,
+    },
+    importedModelsCount: {
+        label: "同步模型",
+        format: (value) => `${String(value)} 个`,
+    },
     manifestCreatedAt: {
         label: "备份生成于",
         format: (value) =>
@@ -189,10 +277,43 @@ const METADATA_FIELDS: Readonly<
     },
     snapshotCreated: { label: "已保存还原前快照", format: yesNo },
     snapshotPath: { label: "快照位置" },
+    users: {
+        label: "用户数",
+        format: (value) => `${String(value)} 位`,
+    },
+    documents: {
+        label: "笔记数",
+        format: (value) => `${String(value)} 篇`,
+    },
+    webapps: {
+        label: "应用数",
+        format: (value) => `${String(value)} 个`,
+    },
+    name: { label: "名称" },
+    modelsEnabled: {
+        label: "启用模型",
+        format: (value) =>
+            typeof value === "boolean" ? yesNo(value) : `${String(value)} 个`,
+    },
+    role: { label: "角色", format: formatRole },
+    version: { label: "版本" },
+    providerName: { label: "服务商" },
+    modelId: { label: "模型 ID" },
 };
 
 /** Keys already expressed by the action or target columns. */
 const METADATA_SHOWN_ELSEWHERE = new Set(["username", "disabled"]);
+
+function formatFallbackValue(value: unknown): string {
+    if (typeof value === "object" && value !== null) {
+        try {
+            return JSON.stringify(value);
+        } catch {
+            return String(value);
+        }
+    }
+    return String(value);
+}
 
 export function describeAuditMetadata(
     metadata: Record<string, unknown> | null,
@@ -207,7 +328,9 @@ export function describeAuditMetadata(
             const field = METADATA_FIELDS[key];
             return {
                 label: field?.label ?? key,
-                value: field?.format ? field.format(value) : String(value),
+                value: field?.format
+                    ? field.format(value)
+                    : formatFallbackValue(value),
             };
         });
 }

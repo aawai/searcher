@@ -1,4 +1,4 @@
-import { type ReactNode, useLayoutEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
     ArrowLeft,
@@ -6,12 +6,14 @@ import {
     HardDriveDownload,
     LayoutDashboard,
     type LucideIcon,
+    Shield,
     SlidersHorizontal,
     Users,
 } from "lucide-react";
 import { ActionGroup } from "../components/searcher/semantic.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { type AdminTab, routes } from "./routes.ts";
+import { useAppState } from "./state.tsx";
 import "./admin.css";
 
 interface AdminNavItem {
@@ -19,7 +21,6 @@ interface AdminNavItem {
     label: string;
     icon: LucideIcon;
     to: string;
-    panelWidth: "narrow" | "wide";
 }
 
 const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
@@ -28,52 +29,56 @@ const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
         label: "概览",
         icon: LayoutDashboard,
         to: routes.admin("overview"),
-        panelWidth: "narrow",
     },
     {
         id: "users",
         label: "用户",
         icon: Users,
         to: routes.admin("users"),
-        panelWidth: "wide",
     },
     {
         id: "settings",
         label: "设置",
         icon: SlidersHorizontal,
         to: routes.admin("settings"),
-        panelWidth: "narrow",
     },
     {
         id: "audit",
         label: "审计",
         icon: FileClock,
         to: routes.admin("audit"),
-        panelWidth: "wide",
     },
     {
         id: "backup",
         label: "备份",
         icon: HardDriveDownload,
         to: routes.admin("backup"),
-        panelWidth: "narrow",
     },
 ];
 
-export function AdminPanelHeader({
-    title,
-    meta,
-    actions,
-}: {
+export interface AdminPanelHeaderProps {
     title: string;
+    description?: string;
     meta?: ReactNode;
     actions?: ReactNode;
-}) {
+}
+
+export function AdminPanelHeader({
+    title,
+    description,
+    meta,
+    actions,
+}: AdminPanelHeaderProps) {
     return (
         <header className="admin-panel-header">
-            <div className="admin-panel-heading">
-                <h2 className="admin-panel-title">{title}</h2>
-                {meta && <span className="admin-panel-meta">{meta}</span>}
+            <div className="admin-panel-heading-block">
+                <div className="admin-panel-heading">
+                    <h2 className="admin-panel-title">{title}</h2>
+                    {meta && <span className="admin-panel-meta">{meta}</span>}
+                </div>
+                {description && (
+                    <p className="admin-panel-description">{description}</p>
+                )}
             </div>
             {actions && <ActionGroup>{actions}</ActionGroup>}
         </header>
@@ -87,59 +92,45 @@ export function AdminShell({
     activeTab: AdminTab;
     children: ReactNode;
 }) {
-    const navRef = useRef<HTMLElement>(null);
-    const currentItem = ADMIN_NAV_ITEMS.find((item) => item.id === activeTab) ??
-        ADMIN_NAV_ITEMS[0];
-
-    useLayoutEffect(() => {
-        const nav = navRef.current;
-        if (!nav) return;
-
-        const markEdges = () => {
-            if (nav.scrollWidth <= nav.clientWidth + 1) {
-                nav.removeAttribute("data-overflow-start");
-                nav.removeAttribute("data-overflow-end");
-                return;
-            }
-            const end = nav.scrollWidth - nav.clientWidth;
-            nav.toggleAttribute("data-overflow-start", nav.scrollLeft > 1);
-            nav.toggleAttribute("data-overflow-end", nav.scrollLeft < end - 1);
-        };
-
-        const revealActive = () => {
-            const active = nav.querySelector<HTMLElement>(
-                "[aria-current=page]",
-            );
-            if (active && nav.scrollWidth > nav.clientWidth + 1) {
-                const bounds = nav.getBoundingClientRect();
-                const item = active.getBoundingClientRect();
-                if (item.left < bounds.left) {
-                    nav.scrollLeft += item.left - bounds.left;
-                } else if (item.right > bounds.right) {
-                    nav.scrollLeft += item.right - bounds.right;
-                }
-            }
-            markEdges();
-        };
-
-        revealActive();
-        const observer = new ResizeObserver(revealActive);
-        observer.observe(nav);
-        for (const link of nav.children) observer.observe(link);
-        nav.addEventListener("scroll", markEdges, { passive: true });
-        return () => {
-            observer.disconnect();
-            nav.removeEventListener("scroll", markEdges);
-        };
-    }, [activeTab]);
+    const { user } = useAppState();
 
     return (
         <PageShell archetype="management">
-            <div className="admin-layout">
+            <div className="admin-layout admin-shell">
                 <aside className="admin-sidebar">
-                    <h1 className="page-title admin-sidebar-title">管理后台</h1>
+                    <div className="admin-brand-row">
+                        <div className="admin-brand">
+                            <span
+                                className="admin-brand-emblem"
+                                aria-hidden="true"
+                            >
+                                <Shield size="1em" className="icon-md" />
+                            </span>
+                            <div className="admin-brand-text">
+                                <h1 className="page-title admin-sidebar-title">
+                                    管理后台
+                                </h1>
+                                {user && (
+                                    <span className="admin-brand-caption">
+                                        @{user.username} · 管理员
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <Link
+                            to={routes.home}
+                            className="admin-back-link admin-back-link--mobile"
+                        >
+                            <ArrowLeft
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                            <span>返回首页</span>
+                        </Link>
+                    </div>
+
                     <nav
-                        ref={navRef}
                         className="admin-nav"
                         aria-label="管理后台主导航"
                     >
@@ -167,21 +158,19 @@ export function AdminShell({
                             );
                         })}
                     </nav>
-                    <Link to={routes.home} className="admin-back-link">
-                        <ArrowLeft
-                            size="1em"
-                            className="icon-md"
-                            aria-hidden="true"
-                        />
-                        <span>返回首页</span>
-                    </Link>
+
+                    <div className="admin-sidebar-footer">
+                        <Link to={routes.home} className="admin-back-link">
+                            <ArrowLeft
+                                size="1em"
+                                className="icon-md"
+                                aria-hidden="true"
+                            />
+                            <span>返回首页</span>
+                        </Link>
+                    </div>
                 </aside>
-                <section
-                    className="admin-panel"
-                    data-panel-width={currentItem.panelWidth}
-                >
-                    {children}
-                </section>
+                <section className="admin-panel">{children}</section>
             </div>
         </PageShell>
     );
