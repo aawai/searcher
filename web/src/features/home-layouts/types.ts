@@ -77,9 +77,11 @@ export interface HomeLayoutProps {
     showHomeAppPlate: boolean;
     /** appearance.homeMastheadCollapsed — initial state in narrow mode. */
     homeMastheadCollapsed: boolean;
+    /** Active resolved theme polarity (`"light"` or `"dark"`). */
+    scheme: "light" | "dark";
     /**
-     * The home wallpaper: the masthead picks its side by the composition's
-     * focal point and blurs a copy of it for its veil.
+     * The home wallpaper: its focal point picks the side, and local edge band
+     * lightness/variance drives adaptive masthead cushion and ink hierarchy.
      */
     wallpaper: MastheadWallpaper;
     /** The calm layer above the search box: date, time and 继续. */

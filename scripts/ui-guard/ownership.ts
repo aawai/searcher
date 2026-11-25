@@ -44,6 +44,8 @@ export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
         "WallpaperSurface runtime owner: Normalized focal point",
     "--masthead-dock-shift":
         "ZenLayout runtime owner: measured vertical distance from the search box's anchor to its dock above the open narrow masthead sheet",
+    "--masthead-edge-gap":
+        "HomeMasthead runtime owner: measured outer distance from the inset side column to the viewport edge so the ambient cushion joins flush with the screen edge",
     "--page-width":
         "DocumentPagination layout owner: physical paper metrics and measured vertical page flow",
     "--page-height":
@@ -60,8 +62,7 @@ export const RUNTIME_CSS_VARIABLE_REGISTRY: Record<string, string> = {
         "DocumentPagination layout owner: physical paper margins",
     "--page-margin-left":
         "DocumentPagination layout owner: physical paper margins",
-    "--page-gap":
-        "DocumentPagination layout owner: measured semantic page gap",
+    "--page-gap": "DocumentPagination layout owner: measured semantic page gap",
     "--page-pitch":
         "DocumentPagination layout owner: physical paper height plus measured semantic gap",
     "--transform-origin":

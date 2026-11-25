@@ -8,7 +8,7 @@ import { formatWallpaperCss } from "./WallpaperSurface.tsx";
 
 /** Longest side of the downsampled image; enough for a hue histogram. */
 const SAMPLE_SIZE = 64;
-const ACCENT_CACHE_KEY = "searcher:wallpaper-accent-cache-v3";
+const ACCENT_CACHE_KEY = "searcher:wallpaper-accent-cache-v4";
 const ACCENT_CACHE_MAX = 12;
 
 export interface WallpaperSample {
@@ -39,6 +39,14 @@ function readAccentCacheMap(): Record<string, WallpaperAccent> {
     }
 }
 
+function isValidBandTone(band: unknown): boolean {
+    if (!band || typeof band !== "object") return false;
+    const record = band as Record<string, unknown>;
+    return typeof record.lightness === "number" &&
+        Number.isFinite(record.lightness) &&
+        typeof record.spread === "number" && Number.isFinite(record.spread);
+}
+
 function readCachedWallpaperAccent(source: string): WallpaperAccent | null {
     if (!source) return null;
     const key = hashSourceKey(source);
@@ -47,7 +55,9 @@ function readCachedWallpaperAccent(source: string): WallpaperAccent | null {
         !hit || typeof hit !== "object" ||
         typeof hit.darkTone?.lightness !== "number" ||
         typeof hit.darkTone?.ambientPrimary !== "string" ||
-        typeof hit.darkTone?.customFilter !== "string"
+        typeof hit.darkTone?.customFilter !== "string" ||
+        !isValidBandTone(hit.mastheadBands?.left) ||
+        !isValidBandTone(hit.mastheadBands?.right)
     ) {
         return null;
     }

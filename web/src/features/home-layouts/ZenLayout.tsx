@@ -213,6 +213,7 @@ export function ZenLayout(
                 showContinue={props.calm.showContinue}
                 continueCandidates={props.calm.candidates}
                 collapsedByDefault={props.homeMastheadCollapsed}
+                scheme={props.scheme}
                 wallpaper={props.wallpaper}
                 viewportWidth={props.viewportWidth}
                 availableRect={props.availableRect}

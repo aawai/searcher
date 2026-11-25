@@ -1,9 +1,33 @@
-/* Home Masthead: typographic column for date/time, continue, tasks and pinned notes.
-   Contract: docs/design/VISUAL_LANGUAGE.md#首页刊头home-masthead */
+/* Home Masthead: frameless editorial typography column with local-backdrop
+   adaptive cushion (`clean` / `textured` / `contrast`), four-step ink hierarchy,
+   collapsible wide date stamp, and narrow rounded thick-glass sheet.
+   Contract: docs/design/VISUAL_LANGUAGE.md */
+
+/* Regular (400) Latin subset for slender editorial display numerals (`25`,
+   `01`–`09`), scoped strictly to Basic Latin so CJK glyphs keep the bundled
+   600 weight cleanly without bloating dist. */
+@font-face {
+    font-family: "Noto Serif SC";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 400;
+    src: url("@fontsource/noto-serif-sc/files/noto-serif-sc-latin-400-normal.woff2")
+        format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+        U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191,
+        U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 .home-masthead {
     --masthead-in-oklab: ;
+    --masthead-summary-mix: 72%;
+    --masthead-task-source-opacity: 0.78;
+    --masthead-done-task-mix: 46%;
+    --masthead-divider: var(--masthead-border-clean);
     color: var(--foreground);
+    font-kerning: normal;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "palt";
 }
 
 @supports (background: linear-gradient(in oklab, white, black)) {
@@ -12,93 +36,56 @@
     }
 }
 
-/* On the veil (wide column, expanded narrow sheet) secondary and accent text
-   take the veil-specific tokens, hover and focus states included. The
-   collapsed narrow peek is printed directly on the wallpaper with its own
-   stroke and halo and keeps the page tokens. Tokens derived at the root
-   (--ring, --accent-soft) are already resolved and stay unchanged. */
-.home-masthead:not([data-mode="narrow"][data-collapsed="true"]) {
+/* Three-tier adaptive ink & hairline calibration for translucent wide image
+   wallpapers (`glass != off`, standard contrast):
+   - `clean` (and frameless canvas / opaque solid fallbacks): keeps standard
+     --muted and --accent, zero cushion, zero text shadow, crisp 4-step ink.
+   - `textured`: mid-step muted ink + light separable cushion.
+   - `contrast`: reinforced high-contrast muted/accent ink + standard cushion. */
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="textured"] {
+    --muted: var(--masthead-textured-muted);
+    --masthead-summary-mix: 76%;
+    --masthead-task-source-opacity: 0.82;
+    --masthead-divider: var(--masthead-border-textured);
+}
+
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="contrast"] {
+    --muted: var(--masthead-muted);
+    --accent: var(--masthead-accent-text);
+    --masthead-summary-mix: 84%;
+    --masthead-task-source-opacity: 0.88;
+    --masthead-done-task-mix: 58%;
+    --masthead-divider: var(--masthead-border-contrast);
+}
+
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])[data-glass="clear"], :root:not([data-glass="off"]):not([data-contrast="more"]) [data-glass="clear"]) .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="contrast"] {
+    --muted: var(--masthead-clear-muted);
+    --masthead-summary-mix: 88%;
+}
+
+/* Collapsed wide stamp (over --material-regular glass) and expanded narrow
+   sheet (over --material-thick glass) use high-contrast masthead ink while
+   translucent; opaque solid fallbacks keep standard 4-step ink. */
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp,
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="narrow"][data-collapsed="false"] {
     --muted: var(--masthead-muted);
     --accent: var(--masthead-accent-text);
 }
 
-/* Progressive veil on the chosen side (or top in narrow mode): a blurred copy
-   of the wallpaper under a translucent --background wash, fading out past the
-   column's outer edge. A static `filter` on the copy is rasterized once; a
-   backdrop-filter would re-sample the wallpaper whenever a window moves above
-   the veil. It shares the wallpaper's layer so the top bar, search box and
-   windows paint above it. */
-.home-masthead__veil {
-    --masthead-veil-opaque-width: 100%;
-    --masthead-veil-fade-length: var(--layout-masthead-veil-fade);
-    --masthead-veil-ramp: var(--foreground) 0
-        calc(100% - var(--masthead-veil-fade-length)),
-        color-mix(in srgb, var(--foreground) 98.4%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.875),
-        color-mix(in srgb, var(--foreground) 89.6%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.75),
-        color-mix(in srgb, var(--foreground) 72.5%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.625),
-        color-mix(in srgb, var(--foreground) 50%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.5),
-        color-mix(in srgb, var(--foreground) 27.5%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.375),
-        color-mix(in srgb, var(--foreground) 10.4%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.25),
-        color-mix(in srgb, var(--foreground) 1.6%, transparent)
-        calc(100% - var(--masthead-veil-fade-length) * 0.125),
-        transparent 100%;
-    position: fixed;
-    inset-block: 0;
-    inset-inline-start: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: var(--elevation-wallpaper);
-    -webkit-mask-image: linear-gradient(to right, var(--masthead-veil-ramp));
-    mask-image: linear-gradient(to right, var(--masthead-veil-ramp));
-}
-
-.home-masthead__veil[data-side="right"] {
-    inset-inline-start: auto;
-    inset-inline-end: 0;
-    -webkit-mask-image: linear-gradient(to left, var(--masthead-veil-ramp));
-    mask-image: linear-gradient(to left, var(--masthead-veil-ramp));
-}
-
-/* The copy spans the whole viewport (plus a blur's reach on every edge, so
-   the blur never pulls in transparency) and stays aligned with the real
-   wallpaper whichever side the veil is on. Suppress its ambient shade ::before
-   so dark themes do not double-darken. */
-.home-masthead__veil-wallpaper.wallpaper-surface {
-    inset: calc(-1 * var(--space-10)) auto;
-    inset-inline-start: calc(-1 * var(--space-10));
-    width: calc(100vw + 2 * var(--space-10));
-    filter: var(--masthead-veil-filter);
-}
-
-.home-masthead__veil[data-side="right"] .home-masthead__veil-wallpaper {
-    inset-inline-start: auto;
-    inset-inline-end: calc(-1 * var(--space-10));
-}
-
-.home-masthead__veil-wallpaper.wallpaper-surface::before {
-    display: none;
-}
-
-.home-masthead__veil::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: var(--masthead-veil);
+[data-contrast="more"] .home-masthead {
+    --masthead-summary-mix: 100%;
+    --masthead-task-source-opacity: 1;
+    --masthead-done-task-mix: 100%;
+    --masthead-divider: var(--border);
 }
 
 @media (forced-colors: none) {
-    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead[data-mode="side"] .home-masthead__dek {
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek {
         position: relative;
         border-block-start: 0;
     }
 
-    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead[data-mode="side"] .home-masthead__dek::before {
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek::before {
         content: "";
         position: absolute;
         inset-block-start: 0;
@@ -114,48 +101,54 @@
         pointer-events: none;
     }
 
-    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__weekday {
-        letter-spacing: 0.16em;
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead__day {
+        color: var(--masthead-display-ink);
     }
 
     :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__time {
-        color: color-mix(in oklab, var(--accent) 34%, var(--foreground));
+        color: color-mix(in oklab, var(--accent) 30%, color-mix(in oklab, var(--foreground) 78%, transparent));
     }
 
     [data-theme="dark"]:not([data-contrast="more"]) .home-masthead__day {
         color: var(--masthead-display-ink);
     }
 
-    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__day {
+    /* Warm ivory vertical gradient on frameless canvas and `clean` dark
+       backdrops (zero shadow conflict); `textured` and `contrast` keep solid
+       --masthead-display-ink so optical text shadows render cleanly.
+       Tight display leading + negative tracking causes curved serif numeral
+       overshoots to extend past the border-box; bleed padding + equal negative
+       margins expand the background-clip paint box without shifting layout. */
+    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__day,
+    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead[data-mode="side"][data-backdrop-tone="clean"] .home-masthead__day {
+        padding-block-end: 0.12em;
+        margin-block-end: -0.12em;
+        padding-inline-end: 0.08em;
+        margin-inline-end: -0.08em;
         background: linear-gradient(
             180deg var(--masthead-in-oklab),
-            #F7F5EF 14%,
-            color-mix(in oklab, #EFECE6 62%, var(--accent) 8%) 100%
+            #FAF8F3 14%,
+            #E6E2D8 100%
         );
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
     }
 
-    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__weekday {
-        color: color-mix(in oklab, var(--masthead-display-ink) 58%, transparent);
-        letter-spacing: 0.16em;
-    }
-
     [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__month {
-        color: color-mix(in oklab, var(--masthead-display-ink) 88%, transparent);
+        color: color-mix(in oklab, var(--masthead-display-ink) 92%, transparent);
     }
 
     [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__time {
-        color: color-mix(in oklab, var(--accent) 32%, var(--masthead-display-ink));
+        color: color-mix(in oklab, var(--accent) 28%, color-mix(in oklab, var(--masthead-display-ink) 78%, transparent));
     }
 
-    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead[data-mode="side"] .home-masthead__dek {
+    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek {
         position: relative;
         border-block-start: 0;
     }
 
-    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead[data-mode="side"] .home-masthead__dek::before {
+    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek::before {
         content: "";
         position: absolute;
         inset-block-start: 0;
@@ -172,25 +165,208 @@
     }
 }
 
-/* Only the body scrolls; it shrinks to fit the column so the footer below it
-   stays visible. The inline padding keeps the hover rule inside the clip. */
+/* Column shell: wide mode stays completely frameless (no card box, no blur,
+   no drop shadow) under soft / regular / clear so typography floats directly
+   over the wallpaper while Search & Dock remain the tactile glass instruments. */
+.home-masthead__column {
+    position: fixed;
+    z-index: var(--elevation-canvas);
+    display: flex;
+    flex-direction: column;
+}
+
+.home-masthead[data-mode="side"] .home-masthead__column {
+    height: auto;
+    isolation: isolate;
+}
+
+.home-masthead[data-mode="side"] .home-masthead__column:focus:not(:focus-visible) {
+    outline: none;
+}
+
+.home-masthead[data-mode="side"][data-compact="true"] .home-masthead__column {
+    width: fit-content;
+    min-width: var(--layout-masthead-compact-min);
+}
+
+/* Zero-blur, content-hugging ambient cushion: active ONLY on `textured` and
+   `contrast` image wallpapers (`clean` and canvas modes emit no cushion at all).
+   Full column uses a single pure tonal fill shaped by orthogonal separable
+   S-curve horizontal × top/bottom vertical masks (`mask-composite: intersect`),
+   so peak opacity never compounds and all four corners dissolve organically.
+   Outer edge expands by `--masthead-edge-gap` to join flush with the viewport
+   margin even when the frontispiece column insets inward. */
+.home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="textured"] .home-masthead__column {
+    --cushion-peak: var(--masthead-cushion-textured-peak);
+    --cushion-compact-scale: var(--masthead-cushion-textured-compact-scale);
+}
+
+.home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="contrast"] .home-masthead__column {
+    --cushion-peak: var(--masthead-cushion-contrast-peak);
+    --cushion-compact-scale: var(--masthead-cushion-contrast-compact-scale);
+}
+
+.home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__column::before {
+    --cushion-dir: to right;
+    --cushion-h-mask: linear-gradient(
+        var(--cushion-dir),
+        rgb(0 0 0 / 1) 0%,
+        rgb(0 0 0 / 0.96) 52%,
+        rgb(0 0 0 / 0.82) 68%,
+        rgb(0 0 0 / 0.50) 80%,
+        rgb(0 0 0 / 0.18) 90%,
+        rgb(0 0 0 / 0.04) 96%,
+        transparent 100%
+    );
+    --cushion-v-mask: linear-gradient(
+        to bottom,
+        transparent 0px,
+        rgb(0 0 0 / 0.36) 16px,
+        rgb(0 0 0 / 0.82) 36px,
+        rgb(0 0 0 / 1) 52px,
+        rgb(0 0 0 / 1) calc(100% - 76px),
+        rgb(0 0 0 / 0.62) calc(100% - 48px),
+        rgb(0 0 0 / 0.20) calc(100% - 22px),
+        transparent 100%
+    );
+    content: "";
+    position: absolute;
+    inset-block-start: -32px;
+    inset-block-end: -88px;
+    inset-inline-start: calc(-1 * var(--masthead-edge-gap, 32px));
+    inset-inline-end: -104px;
+    z-index: -1;
+    pointer-events: none;
+    background-color: color-mix(
+        in oklab,
+        var(--masthead-cushion-base) var(--cushion-peak),
+        transparent
+    );
+    -webkit-mask-image: var(--cushion-h-mask), var(--cushion-v-mask);
+    -webkit-mask-composite: source-in;
+    mask-image: var(--cushion-h-mask), var(--cushion-v-mask);
+    mask-composite: intersect;
+}
+
+.home-masthead[data-mode="side"][data-side="right"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__column::before {
+    --cushion-dir: to left;
+    inset-inline-start: -104px;
+    inset-inline-end: calc(-1 * var(--masthead-edge-gap, 32px));
+}
+
+@supports not ((mask-composite: intersect) or (-webkit-mask-composite:
+    source-in)) {
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__column::before {
+        --cushion-fallback-x: 34%;
+        background-color: transparent;
+        background-image: radial-gradient(
+            ellipse 66% 50% at var(--cushion-fallback-x) 50%,
+            color-mix(in oklab, var(--masthead-cushion-base) var(--cushion-peak), transparent) 0%,
+            color-mix(in oklab, var(--masthead-cushion-base) calc(var(--cushion-peak) * 0.82), transparent) 30%,
+            color-mix(in oklab, var(--masthead-cushion-base) calc(var(--cushion-peak) * 0.56), transparent) 52%,
+            color-mix(in oklab, var(--masthead-cushion-base) calc(var(--cushion-peak) * 0.28), transparent) 72%,
+            color-mix(in oklab, var(--masthead-cushion-base) calc(var(--cushion-peak) * 0.08), transparent) 88%,
+            transparent 100%
+        );
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+
+    .home-masthead[data-mode="side"][data-side="right"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__column::before {
+        --cushion-fallback-x: 66%;
+    }
+}
+
+/* Compact date-only mode (`textured` / `contrast` only): pure bell-curve corner
+   aura (no flat top, gentler peak, wide feathering) so large sculptural
+   numerals float organically with zero oval silhouette. */
+.home-masthead[data-mode="side"][data-compact="true"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__column::before {
+    --cushion-x: 35%;
+    --cushion-compact-peak: calc(
+        var(--cushion-peak) * var(--cushion-compact-scale)
+    );
+    inset-block-start: -44px;
+    inset-block-end: -76px;
+    inset-inline-start: calc(-1 * var(--masthead-edge-gap, 32px));
+    inset-inline-end: -168px;
+    background-color: transparent;
+    -webkit-mask-image: none;
+    mask-image: none;
+    background-image: radial-gradient(
+        ellipse 64% 48% at var(--cushion-x) 48%,
+        color-mix(in oklab, var(--masthead-cushion-base) var(--cushion-compact-peak), transparent) 0%,
+        color-mix(in oklab, var(--masthead-cushion-base) calc(var(--cushion-compact-peak) * 0.82), transparent) 18%,
+        color-mix(in oklab, var(--masthead-cushion-base) calc(var(--cushion-compact-peak) * 0.56), transparent) 38%,
+        color-mix(in oklab, var(--masthead-cushion-base) calc(var(--cushion-compact-peak) * 0.30), transparent) 58%,
+        color-mix(in oklab, var(--masthead-cushion-base) calc(var(--cushion-compact-peak) * 0.11), transparent) 78%,
+        color-mix(in oklab, var(--masthead-cushion-base) calc(var(--cushion-compact-peak) * 0.03), transparent) 92%,
+        transparent 100%
+    );
+}
+
+.home-masthead[data-mode="side"][data-side="right"][data-compact="true"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__column::before {
+    --cushion-x: 65%;
+    inset-inline-start: -168px;
+    inset-inline-end: calc(-1 * var(--masthead-edge-gap, 32px));
+}
+
+/* Tier-specific optical text soft shadows (`clean` has zero text shadow). */
+.home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="textured"] .home-masthead__column {
+    text-shadow: var(--masthead-textured-text-shadow);
+}
+
+.home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="textured"] .home-masthead__day {
+    text-shadow: var(--masthead-textured-day-text-shadow);
+}
+
+.home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="contrast"] .home-masthead__column {
+    text-shadow: var(--masthead-contrast-text-shadow);
+}
+
+.home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="contrast"] .home-masthead__day {
+    text-shadow: var(--masthead-contrast-day-text-shadow);
+}
+
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) [data-slot="button"].home-masthead__side-collapse svg {
+    filter: var(--masthead-icon-shadow);
+}
+
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) [data-slot="checkbox"] {
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.20);
+}
+
+:where([data-theme="dark"]:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) [data-slot="checkbox"] {
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.44);
+}
+
+/* Scroll region: fits content height up to max-height; fades softly at bottom
+   only when overflowing. Balanced negative-margin buffer keeps body text
+   aligned with the column origin while preventing clip of single-row hover
+   pills, focus outlines, coarse touch targets and tall serif ink. */
 .home-masthead__scroll {
     flex: 0 1 auto;
     min-height: 0;
-    padding-inline-start: var(--space-4);
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;
 }
 
-/* Without a footer below it, let the scroll box fill the side column so
-   tall glyph ink (e.g. the day numeral) does not trigger a phantom overflow. */
-.home-masthead__column:not(.home-masthead__sheet):not(:has(.home-masthead__footer)) .home-masthead__scroll {
-    flex: 1 1 auto;
-}
-
 .home-masthead__scroll::-webkit-scrollbar {
     display: none;
+}
+
+.home-masthead[data-mode="side"] .home-masthead__scroll {
+    padding: 10px var(--space-4);
+    margin: -10px calc(-1 * var(--space-4));
+}
+
+/* Pure date/time compact mode never needs internal scrolling: keep overflow
+   visible and suppress the scroll-fade mask so tall serif numerals (7.25rem /
+   8rem) never trigger phantom scroll or get faded along their baseline. */
+.home-masthead[data-mode="side"][data-compact="true"] .home-masthead__scroll {
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
 }
 
 .home-masthead__scroll[data-overflow-bottom="true"] {
@@ -210,16 +386,13 @@
     );
 }
 
-.home-masthead__column {
-    position: fixed;
-    z-index: var(--elevation-canvas);
-    display: flex;
-    flex-direction: column;
-}
-
-/* 1. Masthead date / time header */
+/* 1. Masthead date / time header & wide-mode collapse button */
 .home-masthead__header {
     margin: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
 }
 
 .home-masthead__clock {
@@ -227,14 +400,15 @@
     grid-template-columns: auto 1fr;
     column-gap: var(--space-4);
     align-items: end;
+    min-width: 0;
 }
 
 .home-masthead__day {
     font-family: var(--font-serif);
     font-size: var(--font-masthead-day-size);
     line-height: var(--font-masthead-day-line-height);
-    font-weight: var(--font-title-weight);
-    letter-spacing: -0.04em;
+    font-weight: var(--font-body-weight);
+    letter-spacing: -0.05em;
     font-variant-numeric: tabular-nums;
 }
 
@@ -248,47 +422,320 @@
 .home-masthead__weekday {
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-body-weight);
     color: var(--muted);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
 }
 
 .home-masthead__month {
     font-family: var(--font-serif);
     font-size: var(--font-masthead-month-size);
     line-height: var(--font-masthead-month-line-height);
-    font-weight: var(--font-title-weight);
+    font-weight: var(--font-label-weight);
 }
 
 .home-masthead__time {
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
-    font-weight: var(--font-title-weight);
+    font-weight: var(--font-label-weight);
     font-variant-numeric: tabular-nums;
+    color: color-mix(in oklab, var(--foreground) 78%, transparent);
+}
+
+[data-contrast="more"] .home-masthead__time {
     color: var(--foreground);
 }
 
 .home-masthead__time--solo {
     font-size: var(--font-title-size);
     line-height: var(--font-title-line-height);
+    color: var(--foreground);
 }
 
-/* 2. Thick rule + dek: continue (or “今日”) on the left, today's counts on the right */
+/* Wide-mode collapse icon button: sits optically beside the weekday line;
+   invisible on fine hover pointers until the masthead is hovered or focused. */
+[data-slot="button"].home-masthead__side-collapse {
+    flex-shrink: 0;
+    width: var(--control-compact-height);
+    height: var(--control-compact-height);
+    min-width: var(--control-compact-height);
+    min-height: var(--control-compact-height);
+    margin-block-start: var(--space-2);
+    padding: 0;
+    border: 0;
+    border-radius: var(--shape-button-radius);
+    background: transparent;
+    color: var(--muted);
+    opacity: 0.72;
+    transition: opacity var(--motion-fast) var(--ease-standard),
+        background-color var(--motion-fast) var(--ease-standard),
+        color var(--motion-fast) var(--ease-standard);
+}
+
+.home-masthead__dek [data-slot="button"].home-masthead__side-collapse {
+    margin-block-start: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    /* On fine hover pointers, remove the invisible collapse trigger from flex
+       flow in compact date-only mode so the resting layout stays pure. */
+    .home-masthead[data-mode="side"][data-compact="true"] .home-masthead__header {
+        position: relative;
+    }
+
+    .home-masthead[data-mode="side"][data-compact="true"] [data-slot="button"].home-masthead__side-collapse {
+        position: absolute;
+        inset-block-start: var(--space-2);
+        inset-inline-end: -10px;
+        margin-block-start: 0;
+    }
+
+    [data-slot="button"].home-masthead__side-collapse {
+        opacity: 0;
+    }
+
+    .home-masthead__column:hover [data-slot="button"].home-masthead__side-collapse,
+    .home-masthead__column:has(:focus-visible) [data-slot="button"].home-masthead__side-collapse,
+    [data-slot="button"].home-masthead__side-collapse:focus-visible {
+        opacity: 0.85;
+    }
+
+    [data-slot="button"].home-masthead__side-collapse:hover,
+    [data-slot="button"].home-masthead__side-collapse:focus-visible {
+        opacity: 1;
+        background-color: var(--surface-hover);
+        color: var(--foreground);
+    }
+
+    :where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) [data-slot="button"].home-masthead__side-collapse:hover,
+    :where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) [data-slot="button"].home-masthead__side-collapse:focus-visible {
+        background-color: var(--masthead-collapse-hover);
+    }
+}
+
+[data-slot="button"].home-masthead__side-collapse:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+/* Collapsed wide-mode date stamp: compact tactile instrument strictly anchored
+   to `availableRect` (32px flush with s., or right margin / Dock edge), sharing
+   --material-regular glass with Search & Dock. */
+.home-masthead__stamp {
+    position: fixed;
+    z-index: var(--elevation-canvas);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--control-height);
+    width: fit-content;
+    max-width: var(--layout-masthead-stamp-max);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--shape-dock-radius);
+    background-color: var(--surface-soft);
+    color: var(--foreground);
+    font-size: var(--font-metadata-size);
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background-color var(--motion-base) var(--ease-standard),
+        border-color var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-base) var(--ease-standard);
+}
+
+[data-shape="pill"] .home-masthead__stamp {
+    padding-inline: 14px;
+}
+
+@media (hover: hover) {
+    .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__stamp:hover {
+        background-color: color-mix(in oklab, var(--foreground) 5%, var(--surface-soft));
+        border-color: var(--field-border-hover);
+    }
+}
+
+[data-contrast="more"] .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__stamp {
+    background-color: var(--surface-solid);
+    border-color: var(--border-control);
+}
+
+.home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+    border: 0;
+    background-color: var(--material-regular);
+    background-image: var(--material-regular-sheen);
+    -webkit-backdrop-filter: var(--material-regular-filter);
+    backdrop-filter: var(--material-regular-filter);
+    box-shadow: var(--shadow-elevation-material);
+}
+
+@media (hover: hover) {
+    .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp:hover {
+        background-color: var(--material-thick);
+        background-image: var(--material-thick-sheen);
+    }
+}
+
+.home-masthead[data-wallpaper-image="true"] .home-masthead__stamp:focus-visible {
+    background-color: var(--material-thick);
+    background-image: var(--material-thick-sheen);
+}
+
+.home-masthead__stamp:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+[data-glass="off"] .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+    background-image: none;
+    box-shadow: 0 0 0 1px var(--border), var(--shadow-l2);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+        background-image: none;
+        box-shadow: 0 0 0 1px var(--border), var(--shadow-l2);
+    }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter:
+    blur(1px))) {
+    .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+        background-image: none;
+        box-shadow: 0 0 0 1px var(--border), var(--shadow-l2);
+    }
+}
+
+[data-contrast="more"] .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+    background-image: none;
+    box-shadow: var(--shadow-l2);
+}
+
+@media (forced-colors: active) {
+    .home-masthead__stamp,
+    .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+        background-image: none;
+        box-shadow: none;
+        border: 1px solid CanvasText;
+    }
+}
+
+.home-masthead__stamp-primary {
+    flex-shrink: 0;
+    font-family: var(--font-serif);
+    font-size: 0.9375rem;
+    line-height: 1;
+    font-weight: var(--font-title-weight);
+    font-variant-numeric: tabular-nums;
+    color: var(--masthead-display-ink);
+}
+
+.home-masthead__stamp-primary[data-kind="time"] {
+    font-family: var(--font-sans);
+    font-size: var(--font-body-size);
+}
+
+.home-masthead__stamp-primary[data-kind="fallback"] {
+    font-family: var(--font-sans);
+    font-size: var(--font-code-size);
+    letter-spacing: 0.06em;
+}
+
+.home-masthead__stamp-sep {
+    flex-shrink: 0;
+    color: var(--muted);
+    opacity: 0.65;
+}
+
+.home-masthead__stamp-meta {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+}
+
+.home-masthead__stamp-time {
+    flex-shrink: 0;
+    color: var(--foreground);
+    font-size: var(--font-metadata-size);
+    font-weight: var(--font-label-weight);
+    font-variant-numeric: tabular-nums;
+}
+
+.home-masthead__stamp-tasks {
+    flex-shrink: 0;
+    color: var(--accent);
+    font-size: var(--font-metadata-size);
+    font-weight: var(--font-title-weight);
+    font-variant-numeric: tabular-nums;
+}
+
+.home-masthead__stamp-notes {
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Entrance transitions on user-triggered wide collapse / expand only. */
+@media (prefers-reduced-motion: no-preference) {
+    .home-masthead[data-mode="side"] .home-masthead__column[data-animate="true"] {
+        animation: masthead-folio-enter var(--motion-base) var(--ease-out-expo) backwards;
+    }
+
+    .home-masthead__stamp[data-animate="true"] {
+        animation: masthead-stamp-enter var(--motion-fast) var(--ease-out-expo) backwards;
+    }
+}
+
+@keyframes masthead-folio-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.985);
+    }
+}
+
+@keyframes masthead-stamp-enter {
+    from {
+        opacity: 0;
+        transform: translateY(3px);
+    }
+}
+
+/* 2. Rule + dek: continue (or “今日”) on the left, today's counts on the right */
 .home-masthead__dek {
     margin-block-start: var(--space-4);
     border-block-start: 2px solid var(--foreground);
+}
+
+.home-masthead__dek:first-child {
+    margin-block-start: 0;
+    border-block-start: 0;
+}
+
+.home-masthead__dek:first-child::before {
+    display: none;
 }
 
 .home-masthead__dek-row {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--space-3);
+    gap: var(--space-2);
     padding-block-start: var(--space-3);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
 }
 
+.home-masthead__dek:first-child .home-masthead__dek-row {
+    align-items: center;
+    padding-block-start: 0;
+}
+
 .home-masthead__dek-label {
+    color: var(--muted);
     letter-spacing: 0.14em;
 }
 
@@ -352,7 +799,7 @@
     font-weight: var(--font-label-weight);
 }
 
-/* 3. Section headings (待办 / 置顶) */
+/* 3. Section headings (待办 / 固定笔记) */
 .home-masthead__section {
     margin-block-start: var(--space-6);
 }
@@ -372,7 +819,7 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--border);
+    background: var(--masthead-divider);
     transform: translateY(-4px);
 }
 
@@ -383,7 +830,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* 4. Tasks list */
+/* 4. Tasks list (L1 open tasks, L3 de-noised source & recessed completed rows) */
 .home-masthead__tasks {
     margin: var(--space-2) 0 0;
     padding: 0;
@@ -415,8 +862,17 @@
 }
 
 .home-masthead__task[data-checked="true"] .home-masthead__task-text {
-    color: var(--muted);
+    color: color-mix(
+        in oklab,
+        var(--foreground) var(--masthead-done-task-mix),
+        transparent
+    );
     text-decoration: line-through;
+    text-decoration-color: color-mix(in srgb, currentColor 58%, transparent);
+}
+
+[data-contrast="more"] .home-masthead__task[data-checked="true"] .home-masthead__task-text {
+    color: var(--muted);
     text-decoration-color: var(--muted);
 }
 
@@ -428,7 +884,9 @@
     white-space: nowrap;
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-body-weight);
     color: var(--muted);
+    opacity: var(--masthead-task-source-opacity);
 }
 
 /* 5. Pinned note entries */
@@ -439,7 +897,13 @@
 }
 
 .home-masthead__entry-item + .home-masthead__entry-item {
-    border-block-start: 1px solid var(--border);
+    border-block-start: 1px solid var(--masthead-divider);
+    transition: border-color var(--motion-fast) var(--ease-standard);
+}
+
+.home-masthead__entry-item:has(.home-masthead__entry:focus-within),
+.home-masthead__entry-item:has(.home-masthead__entry:focus-within) + .home-masthead__entry-item {
+    border-block-start-color: transparent;
 }
 
 .home-masthead__entry-item[data-dragging="true"] {
@@ -451,10 +915,12 @@
     position: relative;
     display: grid;
     grid-template-columns: 30px 1fr;
-    padding-block: var(--space-3);
-    border-radius: var(--radius-sm);
+    margin-inline: -12px;
+    padding: 14px var(--space-3);
+    border-radius: var(--control-radius);
     cursor: pointer;
     outline: none;
+    transition: background-color var(--motion-fast) var(--ease-standard);
 }
 
 .home-masthead__entry:focus-visible {
@@ -462,23 +928,38 @@
     outline-offset: 2px;
 }
 
-/* Hover states only for fine hover-capable pointers: a tap on touch screens
-   leaves a sticky :hover on whatever entry ends up under the finger. */
+/* Inset 2px rounded accent bar + airy single-row translucent hover pill on
+   keyboard focus or fine hover pointer (touch taps never leave sticky hover). */
+.home-masthead__entry:focus-within {
+    background-color: var(--surface-hover);
+}
+
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__entry:focus-within {
+    background-color: var(--masthead-entry-hover);
+}
+
 .home-masthead__entry:focus-within::before {
     content: "";
     position: absolute;
-    inset-inline-start: calc(-1 * var(--space-4));
-    inset-block: var(--space-4);
-    width: 0;
-    border-inline-start: 2px solid var(--accent);
+    inset-inline-start: var(--space-1);
+    inset-block: 10px;
+    width: 2px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
 }
 
+/* L4 restrained editorial ordinal: slender 400 serif + desaturated mix aligned optically with title baseline. */
 .home-masthead__entry-no {
+    padding-block-start: var(--space-1);
     font-family: var(--font-serif);
     font-size: var(--font-metadata-size);
-    line-height: var(--font-masthead-entry-line-height);
-    font-weight: var(--font-title-weight);
+    line-height: 1.25rem;
+    font-weight: var(--font-body-weight);
     font-variant-numeric: tabular-nums;
+    color: color-mix(in oklab, var(--accent) 72%, var(--muted));
+}
+
+[data-contrast="more"] .home-masthead__entry-no {
     color: var(--accent);
 }
 
@@ -499,18 +980,23 @@
     font-size: var(--font-masthead-entry-size);
     line-height: var(--font-masthead-entry-line-height);
     font-weight: var(--font-title-weight);
+    letter-spacing: -0.01em;
     overflow-wrap: anywhere;
     transition: transform var(--motion-fast) var(--ease-standard);
 }
 
 .home-masthead__entry:focus-within .home-masthead__entry-title {
-    transform: translateX(4px);
+    transform: translateX(3px);
 }
 
 .home-masthead__entry:focus-within .home-masthead__entry-title::after {
-    content: " ↗";
+    content: "↗";
+    display: inline-block;
+    margin-inline-start: 0.25em;
     font-family: var(--font-sans);
     font-size: var(--font-body-size);
+    line-height: 0;
+    vertical-align: baseline;
     color: var(--accent);
 }
 
@@ -532,28 +1018,52 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+    .home-masthead__entry-item:has(.home-masthead__entry:hover),
+    .home-masthead__entry-item:has(.home-masthead__entry:hover) + .home-masthead__entry-item {
+        border-block-start-color: transparent;
+    }
+
+    .home-masthead__entry:hover {
+        background-color: var(--surface-hover);
+    }
+
+    :where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__entry:hover {
+        background-color: var(--masthead-entry-hover);
+    }
+
     .home-masthead__entry:hover::before {
         content: "";
         position: absolute;
-        inset-inline-start: calc(-1 * var(--space-4));
-        inset-block: var(--space-4);
-        width: 0;
-        border-inline-start: 2px solid var(--accent);
+        inset-inline-start: var(--space-1);
+        inset-block: 10px;
+        width: 2px;
+        border-radius: var(--radius-pill);
+        background: var(--accent);
     }
 
     .home-masthead__entry:hover .home-masthead__entry-title {
-        transform: translateX(4px);
+        transform: translateX(3px);
     }
 
     .home-masthead__entry:hover .home-masthead__entry-title::after {
-        content: " ↗";
+        content: "↗";
+        display: inline-block;
+        margin-inline-start: 0.25em;
         font-family: var(--font-sans);
         font-size: var(--font-body-size);
+        line-height: 0;
+        vertical-align: baseline;
         color: var(--accent);
     }
 
     .home-masthead__entry:hover .home-masthead__entry-actions {
         opacity: 1;
+    }
+}
+
+@media (forced-colors: active) {
+    .home-masthead__entry:is(:hover, :focus-within)::before {
+        background: Highlight;
     }
 }
 
@@ -583,11 +1093,16 @@
     outline-offset: 2px;
 }
 
+/* L2 companion body summary: clearly recessed below L1 titles across all tiers. */
 .home-masthead__entry-summary {
-    margin: var(--space-half) 0 0;
+    margin: 5px 0 0;
     font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
-    color: color-mix(in srgb, var(--foreground) 76%, transparent);
+    line-height: 1.56;
+    color: color-mix(
+        in oklab,
+        var(--foreground) var(--masthead-summary-mix),
+        transparent
+    );
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -611,7 +1126,7 @@
 }
 
 .home-masthead__entry-meta {
-    margin-block-start: var(--space-1);
+    margin-block-start: 6px;
     display: flex;
     align-items: center;
     gap: var(--space-3);
@@ -658,7 +1173,6 @@
 .home-masthead__footer {
     flex-shrink: 0;
     margin-block-start: var(--space-3);
-    padding-inline-start: var(--space-4);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -699,130 +1213,137 @@
     outline-offset: 2px;
 }
 
-/* 7. Narrow mode: the masthead peeks at the top and expands into a sheet.
-   No stacking context on the section: the veil must stay on the wallpaper
-   layer, under the top bar, the docked search box and the Dock. */
-
-/* The veil spans the top of the home and covers the viewport while open,
-   fading over its last 20%. Collapsed it is hidden in translucent glass: the
-   peek reads as printed on the wallpaper, legible through its text halo when an
-   image wallpaper is active. Only the solid fallbacks (glass `off`, high
-   contrast, reduced transparency, no backdrop-filter) keep it behind the peek,
-   stopping 16px below it with a crisp 1px bottom rule. */
-.home-masthead__veil[data-side="top"] {
-    --masthead-peek-height: 0px;
-    --masthead-veil-fade-length: 20%;
-    inset-inline: 0;
-    width: auto;
-    height: 100%;
-    -webkit-mask-image: linear-gradient(to bottom, var(--masthead-veil-ramp));
-    mask-image: linear-gradient(to bottom, var(--masthead-veil-ramp));
+/* Opaque accessibility fallback for wide mode over image wallpapers: ONLY when
+   glass is explicitly off, high contrast is active, reduced transparency is
+   requested, or forced colors are active. */
+[data-glass="off"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column,
+[data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column {
+    --font-masthead-day-size: 5.5rem;
+    --font-masthead-day-line-height: 4.5rem;
+    border-radius: var(--shape-plate-radius);
+    background-color: var(--surface-solid);
+    box-shadow: 0 0 0 1px var(--border), 0 8px 24px -12px rgb(0 0 0 / 0.16);
+    text-shadow: none;
 }
 
-.home-masthead__veil[data-side="top"] .home-masthead__veil-wallpaper.wallpaper-surface {
-    bottom: auto;
-    height: calc(100vh + 2 * var(--space-10));
-    height: calc(100dvh + 2 * var(--space-10));
+[data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column {
+    box-shadow: var(--shadow-frame);
 }
 
-.home-masthead__veil[data-side="top"][data-open="false"] {
-    height: calc(var(--masthead-peek-height, 0px) + var(--space-4));
-    opacity: var(--masthead-peek-veil-opacity);
+[data-glass="off"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column::before,
+[data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column::before {
+    display: none;
 }
 
-/* Under opaque veil conditions, side veils render as a crisp solid band with
-   a 1px border (24px past the column edge, clearing the search box) and top
-   veils stop 16px below the peek with a 1px bottom rule instead of a soft fade.
-   Placed after `[data-side="top"]` / `[data-side="right"]` so it wins for
-   every veil orientation. */
-[data-glass="off"] .home-masthead__veil[data-side] {
-    -webkit-mask-image: none;
-    mask-image: none;
+[data-glass="off"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__day,
+[data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__day {
+    text-shadow: none;
 }
 
-[data-glass="off"] .home-masthead__veil:not([data-side="top"]) {
-    max-width: var(--masthead-veil-opaque-width);
-    border-inline-end: 1px solid var(--border);
+[data-glass="off"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__scroll,
+[data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__scroll {
+    padding: var(--space-5) var(--space-5) var(--space-1);
+    margin: 0;
 }
 
-[data-glass="off"] .home-masthead__veil[data-side="right"] {
-    border-inline-end: 0;
-    border-inline-start: 1px solid var(--border);
+[data-glass="off"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column:not(:has(.home-masthead__footer)) .home-masthead__scroll,
+[data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column:not(:has(.home-masthead__footer)) .home-masthead__scroll {
+    padding: var(--space-5) var(--space-5) 18px;
 }
 
-[data-glass="off"] .home-masthead__veil[data-side="top"][data-open="false"] {
-    border-block-end: 1px solid var(--border);
+[data-glass="off"] .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-compact="true"] .home-masthead__scroll,
+[data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-compact="true"] .home-masthead__scroll {
+    padding: var(--space-4) var(--space-5);
 }
 
-@media (forced-colors: none) {
-    [data-contrast="more"] .home-masthead__veil[data-side] {
-        -webkit-mask-image: none;
-        mask-image: none;
-    }
+[data-glass="off"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__footer,
+[data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__footer {
+    margin-block-start: 0;
+    padding: var(--space-3) var(--space-5) 18px;
+}
 
-    [data-contrast="more"] .home-masthead__veil:not([data-side="top"]) {
-        max-width: var(--masthead-veil-opaque-width);
-        border-inline-end: 1px solid var(--border);
-    }
-
-    [data-contrast="more"] .home-masthead__veil[data-side="right"] {
-        border-inline-end: 0;
-        border-inline-start: 1px solid var(--border);
-    }
-
-    [data-contrast="more"] .home-masthead__veil[data-side="top"][data-open="false"] {
-        border-block-end: 1px solid var(--border);
-    }
+[data-glass="off"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__entry:is(:hover, :focus-within),
+[data-contrast="more"] .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__entry:is(:hover, :focus-within) {
+    background-color: var(--surface-hover);
 }
 
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
-    .home-masthead__veil[data-side] {
-        -webkit-mask-image: none;
-        mask-image: none;
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) {
+        --muted: unset;
+        --accent: unset;
+        --masthead-summary-mix: 72%;
+        --masthead-task-source-opacity: 0.78;
+        --masthead-done-task-mix: 46%;
+        --masthead-divider: var(--masthead-border-clean);
     }
 
-    .home-masthead__veil:not([data-side="top"]) {
-        max-width: var(--masthead-veil-opaque-width);
-        border-inline-end: 1px solid var(--border);
+    .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp,
+    .home-masthead[data-mode="narrow"][data-collapsed="false"] {
+        --muted: unset;
+        --accent: unset;
     }
 
-    .home-masthead__veil[data-side="right"] {
-        border-inline-end: 0;
-        border-inline-start: 1px solid var(--border);
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column {
+        --font-masthead-day-size: 5.5rem;
+        --font-masthead-day-line-height: 4.5rem;
+        border-radius: var(--shape-plate-radius);
+        background-color: var(--surface-solid);
+        box-shadow: 0 0 0 1px var(--border), 0 8px 24px -12px rgb(0 0 0 / 0.16);
+        text-shadow: none;
     }
 
-    .home-masthead__veil[data-side="top"][data-open="false"] {
-        border-block-end: 1px solid var(--border);
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] [data-slot="checkbox"] {
+        box-shadow: none;
+    }
+
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column::before {
+        display: none;
+    }
+
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__day {
+        text-shadow: none;
+    }
+
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__scroll {
+        padding: var(--space-5) var(--space-5) var(--space-1);
+        margin: 0;
+    }
+
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column:not(:has(.home-masthead__footer)) .home-masthead__scroll {
+        padding: var(--space-5) var(--space-5) 18px;
+    }
+
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-compact="true"] .home-masthead__scroll {
+        padding: var(--space-4) var(--space-5);
+    }
+
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__footer {
+        margin-block-start: 0;
+        padding: var(--space-3) var(--space-5) 18px;
+    }
+
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__entry:is(:hover, :focus-within) {
+        background-color: var(--surface-hover);
+    }
+
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] [data-slot="button"].home-masthead__side-collapse:is(:hover, :focus-visible) {
+        background-color: var(--surface-hover);
     }
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter:
-    blur(1px))) {
-    .home-masthead__veil[data-side] {
-        -webkit-mask-image: none;
-        mask-image: none;
-    }
-
-    .home-masthead__veil:not([data-side="top"]) {
-        max-width: var(--masthead-veil-opaque-width);
-        border-inline-end: 1px solid var(--border);
-    }
-
-    .home-masthead__veil[data-side="right"] {
-        border-inline-end: 0;
-        border-inline-start: 1px solid var(--border);
-    }
-
-    .home-masthead__veil[data-side="top"][data-open="false"] {
-        border-block-end: 1px solid var(--border);
+@media (forced-colors: active) {
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"] .home-masthead__column {
+        box-shadow: none;
+        outline: 1px solid CanvasText;
     }
 }
 
-/* Narrow mode uses the compact day scale regardless of viewport width (e.g.
-   >=768px with a side Dock or insufficient column clearance). */
+/* 7. Narrow mode: collapsed peek sits directly over the wallpaper; expanded
+   sheet renders as a rounded thick-glass floating layer above the docked search box. */
 .home-masthead[data-mode="narrow"] {
     --font-masthead-day-size: 5.5rem;
     --font-masthead-day-line-height: 4.5rem;
+    --masthead-divider: var(--border);
 }
 
 .home-masthead[data-mode="narrow"][data-collapsed="true"][data-wallpaper-image="true"] :is(.home-masthead__header, .home-masthead__dek) {
@@ -832,20 +1353,81 @@
 }
 
 .home-masthead__sheet {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.home-masthead__sheet[data-open="true"] {
+    padding: var(--space-5);
     padding-inline: max(
-        0px,
+        var(--space-5),
         calc((100% - var(--layout-masthead-panel-max)) / 2)
     );
+    border-radius: var(--radius-sheet);
+    background-color: var(--material-thick);
+    background-image: var(--material-thick-sheen);
+    -webkit-backdrop-filter: var(--material-thick-filter);
+    backdrop-filter: var(--material-thick-filter);
+    box-shadow: var(--shadow-elevation-floating);
 }
 
-.home-masthead__sheet .home-masthead__scroll {
-    padding-inline-start: 0;
+.home-masthead__sheet[data-open="true"] .home-masthead__scroll {
+    padding: var(--space-1) var(--space-3);
+    margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-3));
 }
 
-.home-masthead__veil[data-side="top"],
-.home-masthead__sheet {
-    transition: height var(--motion-panel) var(--ease-out-expo),
-        opacity var(--motion-panel) var(--ease-out-expo);
+/* Solid fallbacks for the expanded narrow sheet: opaque fill with a crisp 1px border. */
+[data-glass="off"] .home-masthead__sheet[data-open="true"] {
+    background-image: none;
+    box-shadow: 0 0 0 1px var(--border), var(--shadow-l2);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .home-masthead__sheet[data-open="true"] {
+        background-image: none;
+        box-shadow: 0 0 0 1px var(--border), var(--shadow-l2);
+    }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter:
+    blur(1px))) {
+    .home-masthead__sheet[data-open="true"] {
+        background-image: none;
+        box-shadow: 0 0 0 1px var(--border), var(--shadow-l2);
+    }
+}
+
+[data-contrast="more"] .home-masthead__sheet[data-open="true"] {
+    background-image: none;
+    box-shadow: var(--shadow-l2);
+}
+
+@media (forced-colors: active) {
+    .home-masthead__sheet[data-open="true"] {
+        background-image: none;
+        box-shadow: none;
+        outline: 1px solid CanvasText;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .home-masthead__sheet {
+        transition: height var(--motion-panel) var(--ease-out-expo),
+            opacity var(--motion-panel) var(--ease-out-expo),
+            background-color var(--motion-base) var(--ease-standard),
+            box-shadow var(--motion-base) var(--ease-standard),
+            border-radius var(--motion-panel) var(--ease-out-expo);
+    }
+
+    .home-masthead__sheet .home-masthead__content > * {
+        transition: opacity var(--motion-panel) var(--ease-out-expo);
+    }
+
+    .home-masthead__sheet-bar {
+        transition: opacity var(--motion-panel) var(--ease-out-expo),
+            visibility var(--motion-panel) var(--ease-out-expo);
+    }
 }
 
 /* Collapsed: only the first block (the date block, or the dek without a date
@@ -855,7 +1437,14 @@
    viewports never fade into the day glyph baseline. */
 .home-masthead__sheet[data-open="false"] {
     --peek-fade-tail: var(--space-4);
+    padding-inline: max(
+        0px,
+        calc((100% - var(--layout-masthead-panel-max)) / 2)
+    );
     pointer-events: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
     -webkit-mask-image: linear-gradient(
         to bottom,
         var(--foreground) 0 calc(100% - var(--peek-fade-tail)),
@@ -868,20 +1457,17 @@
     );
 }
 
-.home-masthead[data-peek-hidden="true"] .home-masthead__sheet[data-open="false"],
-.home-masthead[data-peek-hidden="true"] .home-masthead__veil[data-side="top"][data-open="false"] {
+.home-masthead[data-peek-hidden="true"] .home-masthead__sheet[data-open="false"] {
     opacity: 0;
 }
 
 .home-masthead__sheet[data-open="false"] .home-masthead__scroll {
     flex: 1 1 auto;
+    padding: 0;
+    margin: 0;
     overflow: hidden;
     -webkit-mask-image: none;
     mask-image: none;
-}
-
-.home-masthead__sheet .home-masthead__content > * {
-    transition: opacity var(--motion-panel) var(--ease-out-expo);
 }
 
 .home-masthead__sheet[data-open="false"] .home-masthead__content > :not(:first-child) {
@@ -902,8 +1488,6 @@
     padding-block-start: var(--space-4);
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
-    transition: opacity var(--motion-panel) var(--ease-out-expo),
-        visibility var(--motion-panel) var(--ease-out-expo);
 }
 
 .home-masthead__sheet[data-open="false"] .home-masthead__sheet-bar {
@@ -940,8 +1524,6 @@
 .home-masthead__peek-tasks {
     color: var(--accent);
 }
-
-/* 全部笔记 on the left, 收起 on the right, below the scrolling body. */
 
 /* While the sheet is open the search box slides down above the bottom edge
    (ZenLayout's --masthead-dock-shift, re-measured from the box's untranslated
@@ -984,7 +1566,7 @@
     outline-offset: 2px;
 }
 
-/* Coarse pointer: >=44px hit areas and always-visible menu button */
+/* Coarse pointer: >=44px hit areas and always-visible controls */
 @media (any-pointer: coarse), (hover: none) {
     :is(.home-masthead__continue-item, [data-slot="button"].home-masthead__continue-item),
     [data-slot="button"].home-masthead__copy-btn,
@@ -996,6 +1578,20 @@
     [data-slot="button"].home-masthead__copy-btn,
     [data-slot="button"].home-masthead__all-notes,
     [data-slot="button"].home-masthead__collapse {
+        min-height: var(--control-touch-target);
+    }
+
+    [data-slot="button"].home-masthead__side-collapse {
+        width: var(--control-touch-target);
+        height: var(--control-touch-target);
+        min-width: var(--control-touch-target);
+        min-height: var(--control-touch-target);
+        margin-block-start: 0;
+        opacity: 0.72;
+    }
+
+    .home-masthead__stamp {
+        height: var(--control-touch-target);
         min-height: var(--control-touch-target);
     }
 
@@ -1017,7 +1613,7 @@
     }
 }
 
-/* Reduced motion: no translation on hover or for the narrow sheet */
+/* Reduced motion: no translation on hover or for the narrow sheet / search dock */
 @media (prefers-reduced-motion: reduce) {
     .home-masthead__entry-title {
         transition: none;
@@ -1025,13 +1621,6 @@
 
     .home-masthead__entry:is(:hover, :focus-within) .home-masthead__entry-title {
         transform: none;
-    }
-
-    .home-masthead__veil[data-side="top"],
-    .home-masthead__sheet,
-    .home-masthead__sheet .home-masthead__content > *,
-    .home-masthead__sheet-bar {
-        transition: none;
     }
 
     /* The search box still docks, without sliding. */

@@ -17,8 +17,11 @@
     /* Thumb of switches, segmented selection, tabs and sliders: lighter than its track in both themes. */
     --surface-control-thumb: #FFFFFF;
     --muted: #66666B;
-    /* Measured worst case on the veil (black wallpaper, 1440): #444448 read 4.47:1. */
-    --masthead-muted: #3D3D40;
+    /* Transitional muted ink for `textured` wallpapers; high-contrast muted ink for `contrast` wallpapers & glass. */
+    --masthead-textured-muted: #4D4D54;
+    --masthead-muted: #2F2F34;
+    /* Reinforced muted ink for `clear` glass over `contrast` dark wallpaper detail. */
+    --masthead-clear-muted: #222226;
     --border: rgb(0 0 0 / 0.09);
     --border-subtle: rgb(0 0 0 / 0.05);
     /* Graphic control boundary (checkbox, radio, switch): >=3:1 against surface and background. */
@@ -144,12 +147,12 @@
     --font-markdown-title-size: 1.35em;
     --font-markdown-section-size: 1.2em;
     --font-markdown-subsection-size: 1.1em;
-    --font-masthead-day-size: 8rem;
-    --font-masthead-day-line-height: 6.5rem;
+    --font-masthead-day-size: 7.25rem;
+    --font-masthead-day-line-height: 5.9rem;
     --font-masthead-month-size: 1.25rem;
     --font-masthead-month-line-height: 1.75rem;
     --font-masthead-entry-size: 1.25rem;
-    --font-masthead-entry-line-height: 1.75rem;
+    --font-masthead-entry-line-height: 1.65rem;
 
     /* Spacing: 4px grid. */
     /* Grid-gap hairline dividers between cells sharing one surface. */
@@ -262,7 +265,8 @@
     --layout-search-max: 640px;
     --layout-home-content-max: 640px;
     --layout-masthead-col: clamp(296px, 19vw, 372px);
-    --layout-masthead-veil-fade: 640px;
+    --layout-masthead-compact-min: 196px;
+    --layout-masthead-stamp-max: 280px;
     --layout-masthead-panel-max: var(--layout-home-content-max);
     /* Home grid source; numeric mirrors in home-grid.ts are unit-tested. */
     --home-grid-wide-cell: 76px;
@@ -327,7 +331,7 @@
             color-mix(in oklab, var(--accent) 3.5%, transparent) 0%,
             transparent 70%
         );
-    --masthead-display-ink: var(--foreground);
+    --masthead-display-ink: #18181B;
     --search-specular-top: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.45) 18%, rgb(255 255 255 / 0.96) 56%, color-mix(in oklab, var(--accent) 18%, #ffffff) 82%, transparent 100%);
     --search-specular-top-focus: linear-gradient(90deg, transparent 0%, color-mix(in oklab, var(--accent) 34%, rgb(255 255 255 / 0.62)) 18%, rgb(255 255 255 / 0.98) 54%, color-mix(in oklab, var(--accent) 44%, #ffffff) 82%, transparent 100%);
     --search-focus-halo: 0 12px 32px -12px color-mix(in oklab, var(--accent) 22%, transparent);
@@ -358,7 +362,9 @@
     --surface-grouped-canvas: #121216;
     --surface-code-well: #0E0E13;
     --muted: #A1A1AA;
+    --masthead-textured-muted: #BEBEC6;
     --masthead-muted: #D4D4D8;
+    --masthead-clear-muted: #E4E4E9;
     --masthead-display-ink: #EFECE6;
     --search-placeholder: #9C9CA8;
     --border: rgb(255 255 255 / 0.09);
@@ -546,7 +552,9 @@
     --surface-l3: #FFFFFF;
     --surface-grouped-canvas: #F2F2F2;
     --muted: #3D3D40;
+    --masthead-textured-muted: var(--muted);
     --masthead-muted: var(--muted);
+    --masthead-clear-muted: var(--muted);
     --search-placeholder: var(--muted);
     --appearance-chip-surface: var(--surface-solid);
     --border: #6E6E73;
@@ -610,7 +618,9 @@
     --surface-l3: #000000;
     --surface-grouped-canvas: #141414;
     --muted: #C7C7CC;
+    --masthead-textured-muted: var(--muted);
     --masthead-muted: var(--muted);
+    --masthead-clear-muted: var(--muted);
     --search-placeholder: var(--muted);
     --appearance-chip-surface: var(--surface-solid);
     --material-solid: var(--surface-solid);
@@ -1016,39 +1026,103 @@
         );
 }
 
-/* Home masthead veil: a translucent --background wash over a blurred copy of
-   the wallpaper (used by the wide side veil over image wallpapers and the
-   narrow expanded sheet). Collapsed narrow peek reads directly on the wallpaper
-   via --masthead-text-stroke / --masthead-text-halo (and --masthead-direct-*). */
+/* Home masthead adaptive ambient cushion & editorial typography tokens:
+   three local wallpaper tiers (`clean` / `textured` / `contrast`) keep
+   same-polarity clean wallpapers 100% cushion-free and shadow-free, while
+   `textured` and `contrast` apply calibrated zero-blur orthogonal separable
+   cushions linked to `data-glass`. `off`, high contrast, reduced transparency
+   and forced colors fall back to an opaque 1px-bordered box. */
 :root {
-    --masthead-veil-light: 66%;
-    --masthead-veil-dark: 50%;
-    --masthead-peek-veil-opacity: 0;
-    --masthead-veil-filter: blur(28px) saturate(1.35);
+    --masthead-cushion-base: #F8F8FA;
+    --masthead-cushion-textured-light: 36%;
+    --masthead-cushion-textured-dark: 28%;
+    --masthead-cushion-contrast-light: 54%;
+    --masthead-cushion-contrast-dark: 40%;
+    --masthead-cushion-textured-compact-scale: 0.70;
+    --masthead-cushion-contrast-compact-scale: 0.84;
+    --masthead-textured-text-shadow: none;
+    --masthead-textured-day-text-shadow: none;
+    --masthead-contrast-text-shadow: 0 0 8px rgb(255 255 255 / 0.56),
+        0 1px 16px rgb(255 255 255 / 0.44);
+    --masthead-contrast-day-text-shadow: 0 0 14px rgb(255 255 255 / 0.52),
+        0 2px 22px rgb(255 255 255 / 0.36);
+    --masthead-icon-shadow: drop-shadow(0 0 6px rgb(255 255 255 / 0.65));
+    --masthead-entry-hover: rgb(255 255 255 / 0.30);
+    --masthead-collapse-hover: rgb(255 255 255 / 0.38);
+    --masthead-border-clean: rgb(0 0 0 / 0.06);
+    --masthead-border-textured: rgb(15 23 42 / 0.11);
+    --masthead-border-contrast: rgb(15 23 42 / 0.15);
+}
+[data-theme="dark"] {
+    --masthead-cushion-base: var(--wallpaper-shade-base);
+    --masthead-cushion-textured-compact-scale: 0.56;
+    --masthead-cushion-contrast-compact-scale: 0.60;
+    --masthead-textured-text-shadow: 0 1px 2px rgb(6 7 10 / 0.44);
+    --masthead-textured-day-text-shadow: 0 2px 10px rgb(6 7 10 / 0.30);
+    --masthead-contrast-text-shadow: 0 1px 2px rgb(6 7 10 / 0.62),
+        0 2px 12px rgb(6 7 10 / 0.36);
+    --masthead-contrast-day-text-shadow: 0 1px 2px rgb(6 7 10 / 0.56),
+        0 2px 16px rgb(6 7 10 / 0.38);
+    --masthead-icon-shadow: drop-shadow(0 1px 3px rgb(6 7 10 / 0.55));
+    --masthead-entry-hover: rgb(255 255 255 / 0.08);
+    --masthead-collapse-hover: rgb(255 255 255 / 0.10);
+    --masthead-border-clean: rgb(255 255 255 / 0.08);
+    --masthead-border-textured: rgb(245 245 247 / 0.12);
+    --masthead-border-contrast: rgb(245 245 247 / 0.15);
+}
+[data-glass="regular"] {
+    --masthead-cushion-textured-light: 36%;
+    --masthead-cushion-textured-dark: 28%;
+    --masthead-cushion-contrast-light: 54%;
+    --masthead-cushion-contrast-dark: 40%;
+}
+[data-glass="soft"] {
+    --masthead-cushion-textured-light: 48%;
+    --masthead-cushion-textured-dark: 40%;
+    --masthead-cushion-contrast-light: 66%;
+    --masthead-cushion-contrast-dark: 52%;
+}
+[data-glass="clear"] {
+    --masthead-cushion-textured-light: 20%;
+    --masthead-cushion-textured-dark: 14%;
+    --masthead-cushion-contrast-light: 42%;
+    --masthead-cushion-contrast-dark: 24%;
 }
 [data-glass="off"] {
-    --masthead-veil-light: 100%;
-    --masthead-veil-dark: 100%;
-    --masthead-peek-veil-opacity: 1;
-    --masthead-veil-filter: none;
+    --masthead-cushion-textured-light: 0%;
+    --masthead-cushion-textured-dark: 0%;
+    --masthead-cushion-contrast-light: 0%;
+    --masthead-cushion-contrast-dark: 0%;
+    --masthead-icon-shadow: none;
 }
 :root,
-[data-theme],
 [data-glass] {
-    --masthead-veil-mix: var(--masthead-veil-light);
-    --masthead-veil: color-mix(in srgb, var(--background) var(--masthead-veil-mix), transparent);
-    --masthead-text-stroke: var(--masthead-direct-stroke);
-    --masthead-text-halo: var(--masthead-direct-shadow);
+    --masthead-cushion-textured-peak: var(--masthead-cushion-textured-light);
+    --masthead-cushion-contrast-peak: var(--masthead-cushion-contrast-light);
 }
 [data-theme="dark"],
 [data-theme="dark"] [data-glass] {
-    --masthead-veil-mix: var(--masthead-veil-dark);
+    --masthead-cushion-textured-peak: var(--masthead-cushion-textured-dark);
+    --masthead-cushion-contrast-peak: var(--masthead-cushion-contrast-dark);
+}
+:root,
+[data-theme],
+[data-glass],
+[data-accent],
+[data-contrast] {
+    --masthead-text-stroke: var(--masthead-direct-stroke);
+    --masthead-text-halo: var(--masthead-direct-shadow);
 }
 @media (forced-colors: active) {
     :root,
     [data-theme],
     [data-glass] {
         --masthead-text-halo: none;
+        --masthead-textured-text-shadow: none;
+        --masthead-textured-day-text-shadow: none;
+        --masthead-contrast-text-shadow: none;
+        --masthead-contrast-day-text-shadow: none;
+        --masthead-icon-shadow: none;
     }
 }
 
@@ -1070,10 +1144,6 @@
         --canvas-derived-light: 100%;
         --canvas-derived-dark: 100%;
         --canvas-derived-filter: none;
-        --masthead-veil-light: 100%;
-        --masthead-veil-dark: 100%;
-        --masthead-veil-filter: none;
-        --masthead-peek-veil-opacity: 1;
     }
 }
 /* Forced colours keep a background's alpha while repainting it Canvas, so a
@@ -1094,10 +1164,15 @@
         --canvas-derived-light: 100%;
         --canvas-derived-dark: 100%;
         --canvas-derived-filter: none;
-        --masthead-veil-light: 100%;
-        --masthead-veil-dark: 100%;
-        --masthead-veil-filter: none;
-        --masthead-peek-veil-opacity: 1;
+        --masthead-cushion-textured-light: 0%;
+        --masthead-cushion-textured-dark: 0%;
+        --masthead-cushion-contrast-light: 0%;
+        --masthead-cushion-contrast-dark: 0%;
+        --masthead-textured-text-shadow: none;
+        --masthead-textured-day-text-shadow: none;
+        --masthead-contrast-text-shadow: none;
+        --masthead-contrast-day-text-shadow: none;
+        --masthead-icon-shadow: none;
     }
 }
 /* High contrast theme: the same opaque path. A system palette still wins; the
@@ -1117,10 +1192,15 @@
     --canvas-derived-light: 100%;
     --canvas-derived-dark: 100%;
     --canvas-derived-filter: none;
-    --masthead-veil-light: 100%;
-    --masthead-veil-dark: 100%;
-    --masthead-veil-filter: none;
-    --masthead-peek-veil-opacity: 1;
+    --masthead-cushion-textured-light: 0%;
+    --masthead-cushion-textured-dark: 0%;
+    --masthead-cushion-contrast-light: 0%;
+    --masthead-cushion-contrast-dark: 0%;
+    --masthead-textured-text-shadow: none;
+    --masthead-textured-day-text-shadow: none;
+    --masthead-contrast-text-shadow: none;
+    --masthead-contrast-day-text-shadow: none;
+    --masthead-icon-shadow: none;
 }
 
 /* Wide home: the search box and plate grow with the viewport while the cell
@@ -1128,6 +1208,13 @@
 @media (min-width: 1024px) {
     :root {
         --layout-home-content-max: clamp(640px, 40vw, 880px);
+    }
+}
+
+@media (min-width: 1600px) {
+    :root {
+        --font-masthead-day-size: 8rem;
+        --font-masthead-day-line-height: 6.5rem;
     }
 }
 

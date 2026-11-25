@@ -341,12 +341,17 @@ a {
    light mode yields a whisper-soft peripheral breath (no dark scrim); dark mode
    adds the nocturnal focus veil and deeper peripheral dimming. */
 @media (prefers-reduced-motion: no-preference) {
-    :root:not([data-contrast="more"]) .app-shell[data-home="true"] :is(.home-masthead__column, .dock-container, .launcher-plate, .topbar, .wallpaper-surface__scene) {
+    :root:not([data-contrast="more"]) .app-shell[data-home="true"] :is(.dock-container, .launcher-plate, .topbar, .wallpaper-surface__scene) {
         transition: opacity var(--motion-base) var(--ease-standard);
+    }
+    :root:not([data-contrast="more"]) .app-shell[data-home="true"] :is(.home-masthead__column:not(.home-masthead__sheet), .home-masthead__stamp) {
+        transition: opacity var(--motion-base) var(--ease-standard),
+            background-color var(--motion-base) var(--ease-standard),
+            box-shadow var(--motion-base) var(--ease-standard);
     }
 }
 @media (forced-colors: none) {
-    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .launcher-plate) {
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .home-masthead__stamp, .launcher-plate) {
         opacity: 0.78;
     }
     :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.dock-container, .wallpaper-surface__scene) {
@@ -355,7 +360,7 @@ a {
     :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) > .topbar {
         opacity: 0.80;
     }
-    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .dock-container, .launcher-plate, .topbar):is(:hover, :focus-within) {
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .home-masthead__stamp, .dock-container, .launcher-plate, .topbar):is(:hover, :focus-within) {
         opacity: 1;
     }
 
@@ -365,7 +370,7 @@ a {
     [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .wallpaper-surface__scene {
         opacity: 0.55;
     }
-    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .launcher-plate) {
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .home-masthead__stamp, .launcher-plate) {
         opacity: 0.40;
     }
     [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .dock-container {
@@ -374,7 +379,7 @@ a {
     [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) > .topbar {
         opacity: 0.48;
     }
-    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .dock-container, .launcher-plate, .topbar):is(:hover, :focus-within) {
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .home-masthead__stamp, .dock-container, .launcher-plate, .topbar):is(:hover, :focus-within) {
         opacity: 1;
     }
 }

@@ -1,5 +1,6 @@
 import { ChevronUp } from "lucide-react";
 import {
+    type CSSProperties,
     type JSX,
     lazy,
     Suspense,
@@ -17,18 +18,26 @@ import { routes } from "../../app/routes.ts";
 import { Button } from "../../components/ui/button.tsx";
 import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
 import { focusContainer } from "../../components/ui/focus-recovery.ts";
-import { WallpaperSurface } from "../../components/wallpaper/WallpaperSurface.tsx";
+import {
+    classifyMastheadBackdrop,
+    type MastheadBackdropTone,
+    type MastheadBands,
+} from "../../design-system/wallpaper-accent.ts";
 import { calmDateTimeAttribute } from "../home-calm/calm-clock.ts";
 import { continueEntries } from "../home-calm/continue-line.ts";
 import { useCalmClock } from "../home-calm/useHomeCalm.ts";
 import type { HomeNoteItem } from "../home-layouts/home-notes.ts";
 import type { SafeRect } from "../home-layouts/home-viewport.ts";
 import {
+    buildMastheadStamp,
     mastheadDateParts,
     mastheadPeekMetrics,
     mastheadPlacement,
-    mastheadSideOpaqueVeilWidth,
+    mastheadSideAnchor,
+    type MastheadStorage,
+    readMastheadSideCollapsed,
     resolveMastheadSwipe,
+    writeMastheadSideCollapsed,
 } from "./masthead-layout.ts";
 import "./home-masthead.css";
 
@@ -40,9 +49,10 @@ const MastheadSections = lazy(() =>
 
 /** The home wallpaper as the wallpaper surface renders it. */
 export interface MastheadWallpaper {
-    /** Empty when the home has no wallpaper. */
+    /** Empty when the home has no image wallpaper overlay. */
     source: string;
     nativeDarkTone?: boolean;
+    mastheadBands?: MastheadBands | null;
     presentation: WallpaperPresentation;
 }
 
@@ -57,9 +67,11 @@ export interface HomeMastheadProps {
     continueCandidates: HomeContinueDto | null;
     /** appearance.homeMastheadCollapsed — initial state in narrow mode. */
     collapsedByDefault: boolean;
+    /** Active resolved theme polarity (`"light"` or `"dark"`). */
+    scheme: "light" | "dark";
     /**
-     * The home wallpaper: its focal point picks the side, and a blurred copy
-     * of it (not a backdrop-filter) forms the veil.
+     * The home wallpaper: its focal point picks the side, and an active image
+     * enables the zero-blur ambient cushion and optical text soft shadows.
      */
     wallpaper: MastheadWallpaper;
     viewportWidth: number;
@@ -84,6 +96,14 @@ export interface HomeMastheadProps {
 const SWIPE_IGNORE_SELECTOR =
     "input, textarea, select, button, a, [role='dialog'], [role='menu'], [role='listbox'], .window-frame";
 
+function browserLocalStorage(): MastheadStorage | null {
+    try {
+        return typeof localStorage === "undefined" ? null : localStorage;
+    } catch {
+        return null;
+    }
+}
+
 export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const {
         user,
@@ -94,6 +114,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         showContinue,
         continueCandidates,
         collapsedByDefault,
+        scheme,
         wallpaper,
         viewportWidth,
         availableRect,
@@ -115,18 +136,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const focalX = wallpaper.source
         ? wallpaper.presentation.composition.focalX
         : 0.5;
-    // A statically filtered copy of the wallpaper: rasterized once, unlike a
-    // backdrop-filter that re-samples whenever a window moves above it.
-    const veilWallpaper = (
-        <WallpaperSurface
-            embedded
-            disableScene
-            source={wallpaper.source}
-            nativeDarkTone={wallpaper.nativeDarkTone}
-            presentation={wallpaper.presentation}
-            className="home-masthead__veil-wallpaper"
-        />
-    );
     const placement = useMemo(
         () =>
             mastheadPlacement({
@@ -138,17 +147,78 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         [viewportWidth, availableRect, searchRect, focalX],
     );
 
+    // Narrow mode collapse follows cloud preference (`appearance.homeMastheadCollapsed`).
     const [collapsed, setCollapsed] = useState(collapsedByDefault);
     useEffect(() => {
         setCollapsed(collapsedByDefault);
     }, [collapsedByDefault]);
 
+    // Wide side mode collapse is device-local, isolated by user identity (`user?.id ?? "guest"`).
+    const identityId = user?.id ?? null;
+    const [sideCollapsed, setSideCollapsed] = useState(() =>
+        readMastheadSideCollapsed(browserLocalStorage(), identityId)
+    );
+    const [sideMotion, setSideMotion] = useState(false);
+    useEffect(() => {
+        setSideMotion(false);
+        setSideCollapsed(
+            readMastheadSideCollapsed(browserLocalStorage(), identityId),
+        );
+    }, [identityId]);
+
+    const sideFocusIntentRef = useRef<"stamp" | "column" | null>(null);
+    const sideStampRef = useRef<HTMLButtonElement>(null);
+    const sideCollapseRef = useRef<HTMLButtonElement>(null);
+    const sideColumnRef = useRef<HTMLDivElement>(null);
+
+    const handleSideCollapse = useCallback(() => {
+        sideFocusIntentRef.current = "stamp";
+        setSideMotion(true);
+        setSideCollapsed(true);
+        writeMastheadSideCollapsed(browserLocalStorage(), identityId, true);
+    }, [identityId]);
+
+    const handleSideExpand = useCallback(() => {
+        sideFocusIntentRef.current = "column";
+        setSideMotion(true);
+        setSideCollapsed(false);
+        writeMastheadSideCollapsed(browserLocalStorage(), identityId, false);
+    }, [identityId]);
+
+    useEffect(() => {
+        if (placement.mode !== "side") return;
+        const intent = sideFocusIntentRef.current;
+        if (!intent) return;
+        if (sideCollapsed && intent === "stamp") {
+            sideFocusIntentRef.current = null;
+            sideStampRef.current?.focus();
+        } else if (!sideCollapsed && intent === "column") {
+            sideFocusIntentRef.current = null;
+            (sideCollapseRef.current ?? sideColumnRef.current)?.focus();
+        }
+    }, [placement.mode, sideCollapsed]);
+
     const [openTaskCount, setOpenTaskCount] = useState(0);
     useEffect(() => {
         if (!user || notes.length === 0) {
             setOpenTaskCount(0);
+            return;
         }
-    }, [user, notes.length]);
+        // When collapsed in wide mode, MastheadSections is unmounted; lazily
+        // count open tasks so the collapsed date stamp stays accurate on reload.
+        if (!(placement.mode === "side" && sideCollapsed)) return;
+        let cancelled = false;
+        void import("./masthead-notes.ts").then(
+            ({ aggregateMastheadTasks }) => {
+                if (!cancelled) {
+                    setOpenTaskCount(aggregateMastheadTasks(notes).open);
+                }
+            },
+        ).catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, [user, notes, placement.mode, sideCollapsed]);
 
     const continueList = useMemo(
         () => user && showContinue ? continueEntries(continueCandidates) : [],
@@ -158,28 +228,27 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const hasNotes = Boolean(user) && !notesLoading && notes.length > 0;
     const hasSignedInContent = Boolean(user) &&
         (continueList.length > 0 || hasNotes);
+    const isCompactSide = placement.mode === "side" && !hasSignedInContent;
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
-    const sideVeilRef = useRef<HTMLDivElement>(null);
-    const topVeilRef = useRef<HTMLDivElement>(null);
     const sheetRef = useRef<HTMLDivElement>(null);
     const peekRef = useRef<HTMLButtonElement>(null);
     const [overflowBottom, setOverflowBottom] = useState(false);
 
     const updateOverflow = useCallback(() => {
         const element = scrollRef.current;
-        if (!element) {
+        if (!element || isCompactSide) {
             setOverflowBottom(false);
             return;
         }
-        const hasOverflow = element.scrollHeight > element.clientHeight + 1 &&
-            element.scrollTop + element.clientHeight < element.scrollHeight - 1;
+        const hasOverflow = element.scrollHeight > element.clientHeight + 2 &&
+            element.scrollTop + element.clientHeight < element.scrollHeight - 2;
         setOverflowBottom(hasOverflow);
-    }, []);
+    }, [isCompactSide]);
 
-    // The scroll box has a fixed height; what changes is its content (lazy
-    // sections, tasks, web fonts), so watch both.
+    // Watch both scroll container and inner content (lazy sections, tasks, web
+    // fonts, and height transitions) to drive the bottom scroll-fade mask.
     useLayoutEffect(() => {
         updateOverflow();
         const element = scrollRef.current;
@@ -192,6 +261,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         updateOverflow,
         placement.mode,
         collapsed,
+        sideCollapsed,
         hasNotes,
         notes.length,
         showDate,
@@ -227,18 +297,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         return () => observer.disconnect();
     }, [isNarrow, showDate, showTime, showContinue, notes.length]);
 
-    const sideOpaqueVeilWidth = placement.mode === "side"
-        ? mastheadSideOpaqueVeilWidth(placement.veilWidth)
-        : null;
-    useLayoutEffect(() => {
-        const veil = sideVeilRef.current;
-        if (!veil || sideOpaqueVeilWidth === null) return;
-        veil.style.setProperty(
-            "--masthead-veil-opaque-width",
-            `${sideOpaqueVeilWidth}px`,
-        );
-    }, [sideOpaqueVeilWidth, wallpaper.source]);
-
     const peekMetrics = placement.mode === "narrow"
         ? mastheadPeekMetrics(placement.peek.height, peekBlockHeight)
         : null;
@@ -257,18 +315,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             sheet.style.removeProperty("--peek-fade-tail");
         }
     }, [isNarrow, effectiveCollapsed, peekFadeTail]);
-
-    const narrowPeekBottom = placement.mode === "narrow"
-        ? placement.peek.y + peekHeight
-        : null;
-    useLayoutEffect(() => {
-        const topVeil = topVeilRef.current;
-        if (!topVeil || narrowPeekBottom === null) return;
-        topVeil.style.setProperty(
-            "--masthead-peek-height",
-            `${narrowPeekBottom}px`,
-        );
-    }, [narrowPeekBottom]);
 
     useEffect(() => {
         onSearchDockChange(searchDock);
@@ -411,6 +457,21 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         </span>
     );
 
+    const sideCollapseButton = placement.mode === "side" && (
+        <Button
+            ref={sideCollapseRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="home-masthead__side-collapse"
+            aria-label="收起首页刊头"
+            aria-expanded="true"
+            onClick={handleSideCollapse}
+        >
+            <ChevronUp size="1em" className="icon-sm" aria-hidden="true" />
+        </Button>
+    );
+
     const showDek = !isGuest && hasSignedInContent;
     const bodyContent = (
         <>
@@ -451,6 +512,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                                 </span>
                             )}
                     </time>
+                    {sideCollapseButton}
                 </header>
             )}
 
@@ -516,6 +578,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                                 {notes.length} 篇固定笔记
                             </span>
                         )}
+                        {!hasHeader && sideCollapseButton}
                     </div>
                 </div>
             )}
@@ -564,6 +627,40 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     );
 
     if (placement.mode === "side") {
+        const columnAnchorStyle = mastheadSideAnchor(
+            viewportWidth,
+            placement.column,
+            placement.side,
+        );
+        const sideColumnStyle: CSSProperties & {
+            "--masthead-edge-gap": string;
+        } = {
+            ...columnAnchorStyle,
+            width: isCompactSide ? undefined : placement.column.width,
+            maxWidth: placement.column.width,
+            maxHeight: placement.column.height,
+            "--masthead-edge-gap": `${placement.edgeGap}px`,
+        };
+        const backdropTone: MastheadBackdropTone | undefined = wallpaper.source
+            ? classifyMastheadBackdrop({
+                scheme,
+                band: wallpaper.mastheadBands
+                    ? wallpaper.mastheadBands[placement.side]
+                    : null,
+                nativeDarkTone: wallpaper.nativeDarkTone,
+            })
+            : undefined;
+        const stamp = sideCollapsed
+            ? buildMastheadStamp({
+                dateParts,
+                showDate,
+                showTime,
+                signedIn: Boolean(user),
+                openTaskCount,
+                notesCount: hasNotes ? notes.length : 0,
+            })
+            : null;
+
         return (
             <section
                 className="home-masthead"
@@ -571,36 +668,112 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 {...focusContainer}
                 data-mode="side"
                 data-side={placement.side}
-                data-collapsed="false"
+                data-collapsed={sideCollapsed ? "true" : "false"}
+                data-compact={isCompactSide ? "true" : undefined}
                 data-wallpaper-image={wallpaper.source ? "true" : undefined}
+                data-backdrop-tone={backdropTone}
             >
-                {wallpaper.source && (
-                    <div
-                        ref={sideVeilRef}
-                        className="home-masthead__veil"
-                        data-side={placement.side}
-                        aria-hidden="true"
-                        style={{ width: placement.veilWidth }}
-                    >
-                        {veilWallpaper}
-                    </div>
-                )}
-                <div
-                    className="home-masthead__column"
-                    style={{
-                        left: placement.column.x,
-                        top: placement.column.y,
-                        width: placement.column.width,
-                        height: placement.column.height,
-                    }}
-                >
-                    {scrollArea}
-                    {allNotesButton && (
-                        <footer className="home-masthead__footer">
-                            {allNotesButton}
-                        </footer>
+                {sideCollapsed && stamp
+                    ? (
+                        <button
+                            ref={sideStampRef}
+                            type="button"
+                            className="home-masthead__stamp"
+                            aria-expanded="false"
+                            aria-label={stamp.ariaLabel}
+                            data-animate={sideMotion ? "true" : undefined}
+                            style={placement.stampAnchor}
+                            onClick={handleSideExpand}
+                        >
+                            <span
+                                className="home-masthead__stamp-primary"
+                                data-kind={stamp.primaryKind}
+                                aria-hidden="true"
+                            >
+                                {stamp.primary}
+                            </span>
+                            {stamp.dateMeta && (
+                                <>
+                                    <span
+                                        className="home-masthead__stamp-sep"
+                                        aria-hidden="true"
+                                    >
+                                        ·
+                                    </span>
+                                    <span
+                                        className="home-masthead__stamp-meta"
+                                        aria-hidden="true"
+                                    >
+                                        {stamp.dateMeta}
+                                    </span>
+                                </>
+                            )}
+                            {stamp.time && (
+                                <>
+                                    <span
+                                        className="home-masthead__stamp-sep"
+                                        aria-hidden="true"
+                                    >
+                                        ·
+                                    </span>
+                                    <span
+                                        className="home-masthead__stamp-time"
+                                        aria-hidden="true"
+                                    >
+                                        {stamp.time}
+                                    </span>
+                                </>
+                            )}
+                            {stamp.tasksLabel && (
+                                <>
+                                    <span
+                                        className="home-masthead__stamp-sep"
+                                        aria-hidden="true"
+                                    >
+                                        ·
+                                    </span>
+                                    <span
+                                        className="home-masthead__stamp-tasks"
+                                        aria-hidden="true"
+                                    >
+                                        {stamp.tasksLabel}
+                                    </span>
+                                </>
+                            )}
+                            {stamp.notesLabel && (
+                                <>
+                                    <span
+                                        className="home-masthead__stamp-sep"
+                                        aria-hidden="true"
+                                    >
+                                        ·
+                                    </span>
+                                    <span
+                                        className="home-masthead__stamp-notes"
+                                        aria-hidden="true"
+                                    >
+                                        {stamp.notesLabel}
+                                    </span>
+                                </>
+                            )}
+                        </button>
+                    )
+                    : (
+                        <div
+                            ref={sideColumnRef}
+                            tabIndex={-1}
+                            className="home-masthead__column"
+                            data-animate={sideMotion ? "true" : undefined}
+                            style={sideColumnStyle}
+                        >
+                            {scrollArea}
+                            {allNotesButton && (
+                                <footer className="home-masthead__footer">
+                                    {allNotesButton}
+                                </footer>
+                            )}
+                        </div>
                     )}
-                </div>
             </section>
         );
     }
@@ -623,21 +796,6 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             data-peek-hidden={peekHidden ? "true" : undefined}
             data-wallpaper-image={wallpaper.source ? "true" : undefined}
         >
-            {
-                /* Collapsed, the sheet shrinks to the peek (the first block)
-                and the veil is hidden except in the solid fallbacks (where it
-                stops 16px below the peek with a 1px rule); open, both cover
-                the home down to the docked search box. */
-            }
-            <div
-                ref={topVeilRef}
-                className="home-masthead__veil"
-                data-side="top"
-                data-open={!effectiveCollapsed ? "true" : "false"}
-                aria-hidden="true"
-            >
-                {veilWallpaper}
-            </div>
             <div
                 ref={sheetRef}
                 className="home-masthead__column home-masthead__sheet"
