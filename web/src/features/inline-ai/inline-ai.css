@@ -2,7 +2,7 @@
    the suggestion list. The answer text and code blocks come from ask-answer.css. */
 .inline-ai-card {
     width: 100%;
-    max-width: var(--layout-home-content-max);
+    max-width: var(--layout-home-search-max);
     margin-top: var(--space-3);
     padding: var(--space-3) var(--space-4) var(--space-4);
     display: flex;

@@ -799,7 +799,21 @@ Deno.test("masthead layout constants and frameless ambient cushion tokens mirror
         true,
     );
     assertEquals(
-        css.includes(`--topbar-height: ${MASTHEAD_DEFAULT_SEARCH_HEIGHT}px;`),
+        css.includes(`--search-height: ${MASTHEAD_DEFAULT_SEARCH_HEIGHT}px;`),
+        true,
+    );
+    assertEquals(
+        css.includes("--layout-home-search-max: 580px;"),
+        true,
+    );
+    assertEquals(
+        css.includes(
+            "--layout-home-search-max: clamp(580px, 32vw, 620px);",
+        ),
+        true,
+    );
+    assertEquals(
+        css.includes("--masthead-stamp-dark-fill: 58%;"),
         true,
     );
     assertEquals(MASTHEAD_PEEK_FADE_MAX, 16);
@@ -863,5 +877,46 @@ Deno.test("masthead layout constants and frameless ambient cushion tokens mirror
             true,
             `missing token: ${expected}`,
         );
+    }
+});
+
+Deno.test("mastheadPlacement: defaultSearchRect mirrors tightened home search width and 52px height", () => {
+    const { availableRect: wide1440 } = homeViewport(1440, 900, 56, 32);
+    const placed1440 = mastheadPlacement({
+        viewportWidth: 1440,
+        availableRect: wide1440,
+        searchRect: null,
+        focalX: 0.5,
+    });
+    assertEquals(placed1440.mode, "side");
+    if (placed1440.mode === "side") {
+        // defaultSearchRect(1440): width = 580 -> x = 430; slack = 430 - 32 - (32 + 296) = 70 -> inset = 28 -> column.x = 60.
+        assertEquals(placed1440.column.x, 60);
+    }
+
+    const { availableRect: wide1920 } = homeViewport(1920, 1080, 56, 32);
+    const placed1920 = mastheadPlacement({
+        viewportWidth: 1920,
+        availableRect: wide1920,
+        searchRect: null,
+        focalX: 0.5,
+    });
+    assertEquals(placed1920.mode, "side");
+    if (placed1920.mode === "side") {
+        // defaultSearchRect(1920): width = clamp(580, 1920 * 0.32, 620) = 614.4 -> x = 652.8;
+        // slack = 652.8 - 32 - (32 + 364.8) = 224 -> inset capped at MASTHEAD_EDGE_INSET_MAX (36).
+        assertEquals(placed1920.column.x, 32 + MASTHEAD_EDGE_INSET_MAX);
+    }
+
+    const { availableRect: mobileRect } = homeViewport(390, 844, 56, 16);
+    const mobile = mastheadPlacement({
+        viewportWidth: 390,
+        availableRect: mobileRect,
+        searchRect: null,
+        focalX: 0.5,
+    });
+    assertEquals(mobile.mode, "narrow");
+    if (mobile.mode === "narrow") {
+        assertEquals(mobile.searchDock.height, 52);
     }
 });

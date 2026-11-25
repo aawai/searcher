@@ -522,12 +522,13 @@
    to `availableRect` (32px flush with s., or right margin / Dock edge), sharing
    --material-regular glass with Search & Dock. */
 .home-masthead__stamp {
+    --stamp-rest-opacity: 1;
     position: fixed;
     z-index: var(--elevation-canvas);
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: var(--control-height);
+    height: var(--space-7);
     width: fit-content;
     max-width: var(--layout-masthead-stamp-max);
     padding: 0 var(--space-3);
@@ -539,14 +540,16 @@
     line-height: 1;
     white-space: nowrap;
     overflow: hidden;
+    opacity: var(--stamp-rest-opacity);
     cursor: pointer;
-    transition: background-color var(--motion-base) var(--ease-standard),
+    transition: opacity var(--motion-base) var(--ease-standard),
+        background-color var(--motion-base) var(--ease-standard),
         border-color var(--motion-fast) var(--ease-standard),
         box-shadow var(--motion-base) var(--ease-standard);
 }
 
 [data-shape="pill"] .home-masthead__stamp {
-    padding-inline: 14px;
+    padding-inline: var(--space-3);
 }
 
 @media (hover: hover) {
@@ -582,6 +585,38 @@
     background-image: var(--material-thick-sheen);
 }
 
+/* Dark mode over wallpaper image: whisper-flat smoked glass micro-chip
+   without glossy top sheen, black outer stroke, or heavy drop shadow. */
+@media (forced-colors: none) and (prefers-reduced-transparency: no-preference) {
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+        background-color: var(--masthead-stamp-dark-bg);
+        background-image: none;
+        box-shadow: var(--masthead-stamp-dark-wallpaper-shadow);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"][data-wallpaper-image="true"]:not(:has(.search-frame:focus-within)) .home-masthead__stamp {
+        --stamp-rest-opacity: 0.84;
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"][data-wallpaper-image="true"] .home-masthead__stamp:is(:hover, :focus-visible) {
+        --stamp-rest-opacity: 1;
+    }
+
+    @media (hover: hover) {
+        [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp:hover {
+            background-color: var(--material-thick);
+            background-image: none;
+            box-shadow: var(--masthead-stamp-dark-wallpaper-hover-shadow);
+        }
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp:focus-visible {
+        background-color: var(--material-thick);
+        background-image: none;
+        box-shadow: var(--masthead-stamp-dark-wallpaper-hover-shadow);
+    }
+}
+
 .home-masthead__stamp:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
@@ -594,6 +629,7 @@
 
 @media (prefers-reduced-transparency: reduce) {
     .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+        --stamp-rest-opacity: 1;
         background-image: none;
         box-shadow: 0 0 0 1px var(--border), var(--shadow-l2);
     }
@@ -624,7 +660,7 @@
 .home-masthead__stamp-primary {
     flex-shrink: 0;
     font-family: var(--font-serif);
-    font-size: 0.9375rem;
+    font-size: var(--font-body-size);
     line-height: 1;
     font-weight: var(--font-title-weight);
     font-variant-numeric: tabular-nums;
@@ -645,7 +681,7 @@
 .home-masthead__stamp-sep {
     flex-shrink: 0;
     color: var(--muted);
-    opacity: 0.65;
+    opacity: 0.45;
 }
 
 .home-masthead__stamp-meta {
@@ -668,7 +704,7 @@
     flex-shrink: 0;
     color: var(--accent);
     font-size: var(--font-metadata-size);
-    font-weight: var(--font-title-weight);
+    font-weight: var(--font-label-weight);
     font-variant-numeric: tabular-nums;
 }
 

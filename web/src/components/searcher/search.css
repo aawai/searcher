@@ -1,7 +1,7 @@
 .search-form-wrap,
 .search-form {
     width: 100%;
-    max-width: var(--layout-home-content-max);
+    max-width: var(--layout-home-search-max);
     position: relative;
 }
 
@@ -11,7 +11,7 @@
     display: flex;
     align-items: center;
     width: 100%;
-    height: 56px;
+    height: var(--search-height);
     gap: 0;
     padding: var(--space-search-inset-block) var(--space-search-inset-inline);
     background: var(--material-regular-sheen), var(--material-regular);
@@ -112,7 +112,7 @@
 
     [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .search-frame {
         background: var(--material-regular-sheen),
-            linear-gradient(180deg, rgb(255 255 255 / 0.048) 0%, rgb(255 255 255 / 0.01) 46%, rgb(0 0 0 / 0.22) 100%),
+            linear-gradient(180deg, rgb(255 255 255 / 0.04) 0%, rgb(255 255 255 / 0.01) 46%, rgb(0 0 0 / 0.12) 100%),
             var(--material-regular);
     }
 
@@ -128,7 +128,7 @@
 
     [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .search-frame:focus-within {
         background: var(--material-thick-sheen),
-            linear-gradient(180deg, rgb(255 255 255 / 0.054) 0%, rgb(255 255 255 / 0.01) 44%, rgb(0 0 0 / 0.24) 100%),
+            linear-gradient(180deg, rgb(255 255 255 / 0.048) 0%, rgb(255 255 255 / 0.01) 44%, rgb(0 0 0 / 0.14) 100%),
             var(--material-thick);
     }
 
@@ -143,6 +143,43 @@
 
     [data-theme="dark"]:not([data-contrast="more"]) .search-frame input {
         caret-color: var(--accent);
+    }
+
+    /* Dark mode over wallpaper image: flat smoked frosted glass with a crisp
+       light hairline rim and gentle ambient shadow — no glossy top-to-bottom
+       bevel, no bright top filament, and no black outer stroke. */
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"] .search-frame {
+        background: var(--material-regular);
+        box-shadow: var(--search-frame-dark-wallpaper-shadow);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"] .search-frame::before {
+        display: none;
+    }
+
+    @media (hover: hover) {
+        [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"] .search-frame:not(:has(input:focus-visible)):hover {
+            background: color-mix(in oklab, var(--material-regular) 95%, white);
+            box-shadow: var(--search-frame-dark-wallpaper-hover-shadow);
+        }
+
+        [data-theme="dark"]:not([data-contrast="more"])[data-glass="off"] .app-shell[data-wallpaper-image="true"] .search-frame:not(:has(input:focus-visible)):hover {
+            box-shadow: var(--search-frame-dark-wallpaper-hover-shadow);
+        }
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"] .search-frame:focus-within {
+        background: var(--material-thick);
+        -webkit-backdrop-filter: var(--material-thick-filter);
+        backdrop-filter: var(--material-thick-filter);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"] .search-frame:has(input:focus-visible) {
+        box-shadow: var(--search-frame-dark-wallpaper-focus-shadow);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"] .search-frame:focus-within:not(:has(input:focus-visible)) {
+        box-shadow: var(--search-frame-dark-wallpaper-focus-within-shadow);
     }
 }
 
@@ -449,10 +486,6 @@
 }
 
 @media (max-width: 767px) {
-    .search-frame {
-        height: 52px;
-    }
-
     .model-pill {
         max-width: 96px;
     }
