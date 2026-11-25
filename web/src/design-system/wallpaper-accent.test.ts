@@ -1,6 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import {
     type AccentPalette,
+    classifyMastheadBackdrop,
     deriveWallpaperAccent,
     type HighContrastAccent,
     wallpaperDarkTone,
@@ -596,5 +597,140 @@ Deno.test("wallpaper darkTone: rose portrait with faint warm-skin secondary synt
         `expected hushed rose primary, got ${tone.ambientPrimary} (hue=${
             primaryHue.toFixed(1)
         }°)`,
+    );
+});
+
+Deno.test("mastheadBands: measures left and right 34% band lightness and texture spread independently", () => {
+    // Left half clean near-white, right half dark midnight blue.
+    const splitLightDark = deriveWallpaperAccent(
+        split([248, 248, 250], [10, 14, 24], 30, 10),
+    );
+    assert(splitLightDark.mastheadBands.left.lightness > 0.95);
+    assertEquals(splitLightDark.mastheadBands.left.spread, 0);
+    assert(splitLightDark.mastheadBands.right.lightness < 0.2);
+    assertEquals(splitLightDark.mastheadBands.right.spread, 0);
+
+    // High-contrast checkerboard on the left 34% produces high spread (> 0.14),
+    // while the right 34% stays flat bright white (spread = 0).
+    const width = 30;
+    const height = 10;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const isLeft = x < 10;
+            const bright = !isLeft || (x + y) % 2 === 0;
+            const v = bright ? 245 : 30;
+            data.set([v, v, v, 255], (y * width + x) * 4);
+        }
+    }
+    const noisyLeft = deriveWallpaperAccent({ width, height, data });
+    assert(noisyLeft.mastheadBands.left.spread > 0.3);
+    assertEquals(noisyLeft.mastheadBands.right.spread, 0);
+    assert(noisyLeft.mastheadBands.right.lightness > 0.95);
+
+    // Fully transparent image falls back cleanly to neutral 0.5 / 0 spread.
+    const empty = deriveWallpaperAccent({
+        width: 4,
+        height: 4,
+        data: new Uint8ClampedArray(4 * 4 * 4),
+    });
+    assertEquals(empty.mastheadBands, {
+        left: { lightness: 0.5, spread: 0 },
+        right: { lightness: 0.5, spread: 0 },
+    });
+});
+
+Deno.test("classifyMastheadBackdrop: classifies clean, textured and contrast boundaries for light and dark schemes", () => {
+    // Missing/unreadable band (e.g. remote image without CORS) defaults safely to textured.
+    assertEquals(
+        classifyMastheadBackdrop({ scheme: "light", band: null }),
+        "textured",
+    );
+    assertEquals(
+        classifyMastheadBackdrop({ scheme: "dark", band: null }),
+        "textured",
+    );
+
+    // Light scheme boundaries:
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "light",
+            band: { lightness: 0.78, spread: 0.14 },
+        }),
+        "clean",
+    );
+    // High lightness but busy texture -> textured (not clean).
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "light",
+            band: { lightness: 0.85, spread: 0.15 },
+        }),
+        "textured",
+    );
+    // Mid-tone grey -> textured.
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "light",
+            band: { lightness: 0.77, spread: 0.02 },
+        }),
+        "textured",
+    );
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "light",
+            band: { lightness: 0.48, spread: 0.05 },
+        }),
+        "textured",
+    );
+    // Dark night sky under light theme -> contrast.
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "light",
+            band: { lightness: 0.47, spread: 0.04 },
+        }),
+        "contrast",
+    );
+
+    // Dark scheme boundaries:
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "dark",
+            band: { lightness: 0.32, spread: 0.14 },
+        }),
+        "clean",
+    );
+    // Dark average but noisy texture -> textured.
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "dark",
+            band: { lightness: 0.25, spread: 0.18 },
+        }),
+        "textured",
+    );
+    // Follow-mode dimmed bright wallpaper (nativeDarkTone falsy) -> textured.
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "dark",
+            band: { lightness: 0.92, spread: 0.03 },
+            nativeDarkTone: false,
+        }),
+        "textured",
+    );
+    // Custom dark slot with very bright undimmed wallpaper -> contrast.
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "dark",
+            band: { lightness: 0.73, spread: 0.03 },
+            nativeDarkTone: true,
+        }),
+        "contrast",
+    );
+    assertEquals(
+        classifyMastheadBackdrop({
+            scheme: "dark",
+            band: { lightness: 0.72, spread: 0.03 },
+            nativeDarkTone: true,
+        }),
+        "textured",
     );
 });

@@ -52,6 +52,7 @@ import {
     resolveEffectiveWallpaper,
 } from "../components/wallpaper/wallpaper-choices.ts";
 import { type ColorScheme, resolveTheme } from "../design-system/theme.ts";
+import type { MastheadBands } from "../design-system/wallpaper-accent.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
 import {
@@ -225,6 +226,7 @@ type State = {
     appearance: Appearance;
     resolvedScheme: ColorScheme;
     effectiveWallpaper: EffectiveWallpaper;
+    wallpaperMastheadBands: MastheadBands | null;
     setAppearance: (
         next: Partial<Appearance>,
         options?: { sync?: boolean },
@@ -681,6 +683,7 @@ export function AppState({ children }: { children: ReactNode }) {
                 appearance,
                 resolvedScheme,
                 effectiveWallpaper,
+                wallpaperMastheadBands: wallpaperAccent?.mastheadBands ?? null,
                 setAppearance,
                 settleAppearanceSync: () =>
                     Promise.all([

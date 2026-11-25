@@ -239,7 +239,9 @@ export function DesktopHost(
     const {
         user,
         appearance,
+        resolvedScheme,
         effectiveWallpaper,
+        wallpaperMastheadBands,
         authSession,
         setAppearance,
     } = useAppState();
@@ -1618,6 +1620,7 @@ export function DesktopHost(
         nativeDarkTone: activeMastheadSource
             ? effectiveWallpaper.nativeDarkTone
             : undefined,
+        mastheadBands: activeMastheadSource ? wallpaperMastheadBands : null,
         presentation: activeMastheadSource
             ? wallpaperPresentation(
                 activeMastheadSource,
@@ -1672,6 +1675,7 @@ export function DesktopHost(
         showHomeApps: appearance.showHomeApps,
         showHomeAppPlate: appearance.showHomeAppPlate,
         homeMastheadCollapsed: appearance.homeMastheadCollapsed,
+        scheme: resolvedScheme,
         wallpaper,
         calm: {
             showDate: appearance.showHomeDate,

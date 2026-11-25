@@ -6,14 +6,12 @@ export const MASTHEAD_MIN_WIDTH = 296;
 export const MASTHEAD_MAX_WIDTH = 372;
 export const MASTHEAD_VW_RATIO = 0.19;
 export const MASTHEAD_SEARCH_GAP = 32;
-/** Extra breathing room between the page margin and the column, taken only from spare width. */
-export const MASTHEAD_EDGE_INSET_MAX = 48;
-/** The veil reaches this far past the column's outer edge, so its fade
- *  (`--layout-masthead-veil-fade`, 640px) starts 40px inside the column. */
-export const MASTHEAD_VEIL_TAIL = 600;
-/** Padding past the column's outer edge for opaque side veils, keeping at
- *  least 8px clear of the search box even at the 1360px tightest fit. */
-export const MASTHEAD_OPAQUE_VEIL_PADDING = 24;
+/** Restrained frontispiece inset between the page margin and the expanded side column, taken only from spare width. */
+export const MASTHEAD_EDGE_INSET_MAX = 36;
+/** Minimum width for a date/time-only folio card (`--layout-masthead-compact-min`). */
+export const MASTHEAD_COMPACT_MIN_WIDTH = 196;
+/** Maximum width for the collapsed wide date stamp (`--layout-masthead-stamp-max`). */
+export const MASTHEAD_STAMP_MAX_WIDTH = 280;
 export const MASTHEAD_SWIPE_THRESHOLD = 48;
 
 export type MastheadSide = "left" | "right";
@@ -38,7 +36,10 @@ export type MastheadPlacement =
         mode: "side";
         side: MastheadSide;
         column: SafeRect;
-        veilWidth: number;
+        /** Distance from the expanded column's outer edge to the viewport edge (`--masthead-edge-gap`). */
+        edgeGap: number;
+        /** Un-inset outer corner anchor flush with `availableRect` for the collapsed date stamp. */
+        stampAnchor: MastheadSideAnchor;
     }
     | {
         mode: "narrow";
@@ -57,6 +58,10 @@ export interface MastheadPlacementInput {
     searchRect: SafeRect | null;
     focalX?: number;
 }
+
+export type MastheadSideAnchor =
+    | { left: number; top: number }
+    | { right: number; top: number };
 
 const WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"] as const;
 const CHINESE_MONTHS = [
@@ -79,6 +84,36 @@ export interface MastheadDateParts {
     weekday: string;
     month: string;
     time: string;
+}
+
+export interface MastheadStorage {
+    getItem(key: string): string | null;
+    setItem(key: string, value: string): void;
+}
+
+export interface MastheadStampInput {
+    dateParts: MastheadDateParts;
+    showDate: boolean;
+    showTime: boolean;
+    signedIn: boolean;
+    openTaskCount: number;
+    notesCount: number;
+}
+
+export interface MastheadStampModel {
+    /** Primary emphasis text: day numeral, solo time, or "今日". */
+    primary: string;
+    primaryKind: "day" | "time" | "fallback";
+    /** Secondary date metadata (e.g. "十一月 星期三") when showDate is on. */
+    dateMeta: string | null;
+    /** Tabular time shown alongside date when both showDate and showTime are on. */
+    time: string | null;
+    /** Accent badge text when signed in with open tasks (e.g. "2 待办"). */
+    tasksLabel: string | null;
+    /** Muted pinned notes count shown in fallback mode when date & time are both off. */
+    notesLabel: string | null;
+    /** Full accessible label for the collapsed date stamp button. */
+    ariaLabel: string;
 }
 
 /** Clamp column width to `clamp(296px, 19vw, 372px)`. */
@@ -107,8 +142,9 @@ function defaultSearchRect(viewportWidth: number): SafeRect {
 /**
  * Pure placement for the home masthead.
  * `availableRect` is already bounded by topbar, Dock and the 32px page margin.
- * The column sits on the `availableRect` edge of the chosen side and keeps at
- * least 32px from the search box outer edge.
+ * The side column aligns flush with the chosen `availableRect` outer edge
+ * (aligning with the top-left `s.` wordmark on the left, or the right margin /
+ * Dock clearance on the right) and keeps at least 32px from the search box.
  */
 export function mastheadPlacement(
     input: MastheadPlacementInput,
@@ -188,10 +224,9 @@ export function mastheadPlacement(
     const slack = side === "left"
         ? search.x - MASTHEAD_SEARCH_GAP - (leftX + columnWidth)
         : rightX - (search.x + search.width + MASTHEAD_SEARCH_GAP);
-    const inset = Math.min(
-        MASTHEAD_EDGE_INSET_MAX,
-        Math.max(0, Math.round(slack / 2)),
-    );
+    const inset = slack > 0
+        ? Math.min(MASTHEAD_EDGE_INSET_MAX, Math.round(slack * 0.4))
+        : 0;
     const x = side === "left" ? leftX + inset : rightX - inset;
     const column: SafeRect = {
         x,
@@ -199,16 +234,153 @@ export function mastheadPlacement(
         width: columnWidth,
         height: availableRect.height,
     };
-    const outerEdge = side === "left"
-        ? column.x + column.width
-        : Math.max(0, viewportWidth - column.x);
-    const veilWidth = outerEdge + MASTHEAD_VEIL_TAIL;
+    const edgeGap = side === "left"
+        ? Math.max(0, column.x)
+        : Math.max(0, viewportWidth - (column.x + column.width));
+    const stampAnchor: MastheadSideAnchor = side === "left"
+        ? { left: availableRect.x, top: availableRect.y }
+        : {
+            right: Math.max(
+                0,
+                viewportWidth - (availableRect.x + availableRect.width),
+            ),
+            top: availableRect.y,
+        };
 
     return {
         mode: "side",
         side,
         column,
-        veilWidth,
+        edgeGap,
+        stampAnchor,
+    };
+}
+
+/**
+ * Corner anchor shared by the expanded folio column, compact date-only card and
+ * collapsed date stamp. Left mode pins to `column.x`; right mode pins to the
+ * right inset so narrower cards and stamps keep their right edge aligned.
+ */
+export function mastheadSideAnchor(
+    viewportWidth: number,
+    column: SafeRect,
+    side: MastheadSide,
+): MastheadSideAnchor {
+    if (side === "right") {
+        return {
+            right: Math.max(0, viewportWidth - (column.x + column.width)),
+            top: column.y,
+        };
+    }
+    return {
+        left: column.x,
+        top: column.y,
+    };
+}
+
+/** Identity-scoped localStorage key for wide-mode masthead collapse state. */
+export function mastheadSideCollapsedKey(
+    userId: string | null | undefined,
+): string {
+    const identity = userId && userId.trim().length > 0 ? userId : "guest";
+    return `home:masthead:sideCollapsed:${encodeURIComponent(identity)}`;
+}
+
+/** Reads per-identity wide-mode collapse state; defaults to false on missing/invalid/restricted storage. */
+export function readMastheadSideCollapsed(
+    storage: MastheadStorage | null | undefined,
+    userId: string | null | undefined,
+): boolean {
+    try {
+        return storage?.getItem(mastheadSideCollapsedKey(userId)) === "true";
+    } catch {
+        return false;
+    }
+}
+
+/** Persists per-identity wide-mode collapse state; ignores storage exceptions quietly. */
+export function writeMastheadSideCollapsed(
+    storage: MastheadStorage | null | undefined,
+    userId: string | null | undefined,
+    collapsed: boolean,
+): void {
+    try {
+        storage?.setItem(
+            mastheadSideCollapsedKey(userId),
+            collapsed ? "true" : "false",
+        );
+    } catch {
+        // Keep in-memory toggle usable when storage is unavailable or restricted.
+    }
+}
+
+/**
+ * Builds structured display segments and accessible name for the collapsed wide
+ * date stamp, guaranteeing a non-empty fallback when both date and time are off.
+ */
+export function buildMastheadStamp(
+    input: MastheadStampInput,
+): MastheadStampModel {
+    const {
+        dateParts,
+        showDate,
+        showTime,
+        signedIn,
+        openTaskCount,
+        notesCount,
+    } = input;
+    const tasksLabel = signedIn && openTaskCount > 0
+        ? `${openTaskCount} 待办`
+        : null;
+
+    if (showDate) {
+        const dateMeta = `${dateParts.month} ${dateParts.weekday}`;
+        const time = showTime ? dateParts.time : null;
+        const spokenParts = [
+            `${dateParts.day} ${dateMeta}`,
+            time,
+            tasksLabel,
+        ].filter((part): part is string => Boolean(part));
+        return {
+            primary: dateParts.day,
+            primaryKind: "day",
+            dateMeta,
+            time,
+            tasksLabel,
+            notesLabel: null,
+            ariaLabel: `展开首页刊头，${spokenParts.join("，")}`,
+        };
+    }
+
+    if (showTime) {
+        const spokenParts = [dateParts.time, tasksLabel].filter(
+            (part): part is string => Boolean(part),
+        );
+        return {
+            primary: dateParts.time,
+            primaryKind: "time",
+            dateMeta: null,
+            time: null,
+            tasksLabel,
+            notesLabel: null,
+            ariaLabel: `展开首页刊头，${spokenParts.join("，")}`,
+        };
+    }
+
+    const notesLabel = signedIn && notesCount > 0
+        ? `${notesCount} 篇笔记`
+        : null;
+    const spokenParts = ["今日", tasksLabel, notesLabel].filter(
+        (part): part is string => Boolean(part),
+    );
+    return {
+        primary: "今日",
+        primaryKind: "fallback",
+        dateMeta: null,
+        time: null,
+        tasksLabel,
+        notesLabel,
+        ariaLabel: `展开首页刊头，${spokenParts.join("，")}`,
     };
 }
 
@@ -251,18 +423,6 @@ export function mastheadPeekMetrics(
         fadeTail,
         hidden: boundedAvailable < measuredBlock,
     };
-}
-
-/**
- * Side veil width under opaque veil conditions (`data-contrast="more"`,
- * `data-glass="off"`, reduced transparency, or forced colors): stops at
- * `MASTHEAD_OPAQUE_VEIL_PADDING` (24px) past the column's outer edge with a
- * crisp 1px border instead of spanning across the center wallpaper.
- */
-export function mastheadSideOpaqueVeilWidth(veilWidth: number): number {
-    if (!Number.isFinite(veilWidth)) return MASTHEAD_OPAQUE_VEIL_PADDING;
-    const outerEdge = Math.max(0, veilWidth - MASTHEAD_VEIL_TAIL);
-    return outerEdge + MASTHEAD_OPAQUE_VEIL_PADDING;
 }
 
 /** Splits a local `Date` into the typographic parts shown by the masthead. */

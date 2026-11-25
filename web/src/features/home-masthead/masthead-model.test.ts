@@ -3,19 +3,26 @@ import type { HomeNoteItem } from "../home-layouts/home-notes.ts";
 import { homeViewport } from "../home-layouts/home-viewport.ts";
 import { setTaskChecked } from "../home-layouts/note-tasks.ts";
 import {
+    buildMastheadStamp,
     formatRelativeNoteTime,
+    MASTHEAD_COMPACT_MIN_WIDTH,
     MASTHEAD_DEFAULT_SEARCH_HEIGHT,
+    MASTHEAD_EDGE_INSET_MAX,
     MASTHEAD_MAX_WIDTH,
     MASTHEAD_MIN_WIDTH,
     MASTHEAD_PEEK_FADE_MAX,
-    MASTHEAD_VEIL_TAIL,
+    MASTHEAD_STAMP_MAX_WIDTH,
     MASTHEAD_VW_RATIO,
     mastheadColumnWidth,
     mastheadDateParts,
     mastheadPeekMetrics,
     mastheadPlacement,
-    mastheadSideOpaqueVeilWidth,
+    mastheadSideAnchor,
+    mastheadSideCollapsedKey,
+    type MastheadStorage,
+    readMastheadSideCollapsed,
     resolveMastheadSwipe,
+    writeMastheadSideCollapsed,
 } from "./masthead-layout.ts";
 import {
     aggregateMastheadTasks,
@@ -41,7 +48,7 @@ function noteFixture(overrides: Partial<HomeNoteItem> = {}): HomeNoteItem {
     };
 }
 
-Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 to left", () => {
+Deno.test("mastheadPlacement: applies restrained frontispiece inset while keeping stamp flush with availableRect", () => {
     const { availableRect } = homeViewport(1440, 900, 56, 32);
     const searchRect = { x: 400, y: 314, width: 640, height: 56 };
 
@@ -51,13 +58,21 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
         searchRect,
         focalX: 0.5,
     });
-    // 40px of spare width is split evenly between the outer margin and search gap.
+    // 40px of spare width -> inset = round(40 * 0.4) = 16px -> x = 48, edgeGap = 48,
+    // while collapsed stamp stays strictly aligned to availableRect.x (32px, flush with s.).
     assertEquals(atHalf, {
         mode: "side",
         side: "left",
-        column: { x: 52, y: 88, width: 296, height: 780 },
-        veilWidth: 52 + 296 + 600,
+        column: { x: 48, y: 88, width: 296, height: 780 },
+        edgeGap: 48,
+        stampAnchor: { left: 32, top: 88 },
     });
+    if (atHalf.mode === "side") {
+        assertEquals(
+            mastheadSideAnchor(1440, atHalf.column, atHalf.side),
+            { left: 48, top: 88 },
+        );
+    }
 
     const focalRight = mastheadPlacement({
         viewportWidth: 1440,
@@ -68,7 +83,9 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
     assertEquals(focalRight.mode, "side");
     if (focalRight.mode === "side") {
         assertEquals(focalRight.side, "left");
-        assertEquals(focalRight.column.x, 52);
+        assertEquals(focalRight.column.x, 48);
+        assertEquals(focalRight.edgeGap, 48);
+        assertEquals(focalRight.stampAnchor, { left: 32, top: 88 });
     }
 
     const focalLeft = mastheadPlacement({
@@ -80,9 +97,31 @@ Deno.test("mastheadPlacement: selects side by focalX and defaults focalX = 0.5 t
     assertEquals(focalLeft, {
         mode: "side",
         side: "right",
-        column: { x: 1440 - 32 - 296 - 20, y: 88, width: 296, height: 780 },
-        veilWidth: 52 + 296 + 600,
+        column: { x: 1440 - 32 - 296 - 16, y: 88, width: 296, height: 780 },
+        edgeGap: 48,
+        stampAnchor: { right: 32, top: 88 },
     });
+    if (focalLeft.mode === "side") {
+        assertEquals(
+            mastheadSideAnchor(1440, focalLeft.column, focalLeft.side),
+            { right: 48, top: 88 },
+        );
+    }
+
+    // Ultra-wide viewport caps frontispiece inset at MASTHEAD_EDGE_INSET_MAX (36px).
+    const { availableRect: wideRect } = homeViewport(1920, 1080, 56, 32);
+    const ultraWide = mastheadPlacement({
+        viewportWidth: 1920,
+        availableRect: wideRect,
+        searchRect: { x: 576, y: 360, width: 768, height: 56 },
+        focalX: 0.5,
+    });
+    assertEquals(ultraWide.mode, "side");
+    if (ultraWide.mode === "side") {
+        assertEquals(ultraWide.column.x, 32 + MASTHEAD_EDGE_INSET_MAX);
+        assertEquals(ultraWide.edgeGap, 32 + MASTHEAD_EDGE_INSET_MAX);
+        assertEquals(ultraWide.stampAnchor, { left: 32, top: 88 });
+    }
 });
 
 Deno.test("mastheadPlacement: falls back to opposite side when dock or search blocks preferred side", () => {
@@ -102,7 +141,13 @@ Deno.test("mastheadPlacement: falls back to opposite side when dock or search bl
     assertEquals(fallbackRight.mode, "side");
     if (fallbackRight.mode === "side") {
         assertEquals(fallbackRight.side, "right");
-        assertEquals(fallbackRight.column.x, 1440 - 32 - 296 - 20);
+        assertEquals(fallbackRight.column.x, 1440 - 32 - 296 - 16);
+        assertEquals(fallbackRight.edgeGap, 48);
+        assertEquals(fallbackRight.stampAnchor, { right: 32, top: 88 });
+        assertEquals(
+            mastheadSideAnchor(1440, fallbackRight.column, fallbackRight.side),
+            { right: 48, top: 88 },
+        );
     }
 
     // Dock on right (68px) with focalX < 0.5 (preferring right): falls back to left.
@@ -118,7 +163,36 @@ Deno.test("mastheadPlacement: falls back to opposite side when dock or search bl
     assertEquals(fallbackLeft.mode, "side");
     if (fallbackLeft.mode === "side") {
         assertEquals(fallbackLeft.side, "left");
-        assertEquals(fallbackLeft.column.x, 52);
+        assertEquals(fallbackLeft.column.x, 48);
+        assertEquals(fallbackLeft.stampAnchor, { left: 32, top: 88 });
+    }
+
+    // Wide viewport with right dock (68px) where right side still fits: stamp clears Dock + margin,
+    // while column insets gently from the dock clearance and reports total outer edgeGap.
+    const { availableRect: wideRightDockRect } = homeViewport(
+        1920,
+        1080,
+        56,
+        32,
+        { right: 68 },
+    );
+    const wideRight = mastheadPlacement({
+        viewportWidth: 1920,
+        availableRect: wideRightDockRect,
+        searchRect: { x: 576, y: 360, width: 768, height: 56 },
+        focalX: 0.2,
+    });
+    assertEquals(wideRight.mode, "side");
+    if (wideRight.mode === "side") {
+        assertEquals(wideRight.side, "right");
+        assertEquals(wideRight.stampAnchor, { right: 100, top: 88 });
+        // columnWidth = 364.8, rightX = 1920 - 100 - 364.8 = 1455.2,
+        // search right + gap = 1376 -> slack = 79.2 -> inset = round(79.2 * 0.4) = 32.
+        assertEquals(wideRight.edgeGap, 132);
+        assertEquals(
+            mastheadSideAnchor(1920, wideRight.column, wideRight.side),
+            { right: 132, top: 88 },
+        );
     }
 });
 
@@ -204,7 +278,7 @@ Deno.test("mastheadPlacement: exact fit width boundary and narrow fallback when 
     assertEquals(tabletNarrow.mode, "narrow");
 });
 
-Deno.test("mastheadPeekMetrics and mastheadSideOpaqueVeilWidth: keep collapsed peek glyph unclipped and constrain opaque veil within search gap", () => {
+Deno.test("mastheadPeekMetrics: keeps collapsed peek glyph unclipped and hides on ultra-short viewports", () => {
     assertEquals(mastheadPeekMetrics(200, null), {
         height: 200,
         fadeTail: 16,
@@ -235,10 +309,168 @@ Deno.test("mastheadPeekMetrics and mastheadSideOpaqueVeilWidth: keep collapsed p
         fadeTail: 0,
         hidden: true,
     });
+});
 
-    // Opaque side veil stops at MASTHEAD_OPAQUE_VEIL_PADDING (24px) past column edge.
-    assertEquals(mastheadSideOpaqueVeilWidth(72 + 296 + 600), 72 + 296 + 24);
-    assertEquals(mastheadSideOpaqueVeilWidth(32 + 296 + 600), 32 + 296 + 24);
+Deno.test("wide-mode side collapse storage: isolates per user identity and tolerates storage errors", () => {
+    const map = new Map<string, string>();
+    const memoryStorage: MastheadStorage = {
+        getItem: (key) => map.get(key) ?? null,
+        setItem: (key, value) => {
+            map.set(key, value);
+        },
+    };
+
+    assertEquals(
+        mastheadSideCollapsedKey(null),
+        "home:masthead:sideCollapsed:guest",
+    );
+    assertEquals(
+        mastheadSideCollapsedKey(""),
+        "home:masthead:sideCollapsed:guest",
+    );
+    assertEquals(
+        mastheadSideCollapsedKey("user/1"),
+        "home:masthead:sideCollapsed:user%2F1",
+    );
+
+    // Defaults to false for every identity.
+    assertEquals(readMastheadSideCollapsed(memoryStorage, null), false);
+    assertEquals(readMastheadSideCollapsed(memoryStorage, "u-1"), false);
+
+    // Guest and signed-in accounts do not leak into one another.
+    writeMastheadSideCollapsed(memoryStorage, null, true);
+    assertEquals(readMastheadSideCollapsed(memoryStorage, null), true);
+    assertEquals(readMastheadSideCollapsed(memoryStorage, "u-1"), false);
+
+    writeMastheadSideCollapsed(memoryStorage, "u-1", true);
+    writeMastheadSideCollapsed(memoryStorage, "u-2", false);
+    assertEquals(readMastheadSideCollapsed(memoryStorage, "u-1"), true);
+    assertEquals(readMastheadSideCollapsed(memoryStorage, "u-2"), false);
+
+    // Non-"true" values read safely as false.
+    map.set(mastheadSideCollapsedKey("u-2"), "1");
+    assertEquals(readMastheadSideCollapsed(memoryStorage, "u-2"), false);
+
+    // Restricted / throwing storage never throws.
+    const brokenStorage: MastheadStorage = {
+        getItem: () => {
+            throw new Error("SecurityError");
+        },
+        setItem: () => {
+            throw new Error("QuotaExceededError");
+        },
+    };
+    assertEquals(readMastheadSideCollapsed(brokenStorage, "u-1"), false);
+    assertEquals(readMastheadSideCollapsed(null, "u-1"), false);
+    writeMastheadSideCollapsed(brokenStorage, "u-1", true);
+});
+
+Deno.test("buildMastheadStamp: formats date/time/tasks combinations and never yields an empty stamp", () => {
+    const dateParts = mastheadDateParts(new Date(2026, 10, 25, 11, 14));
+
+    assertEquals(
+        buildMastheadStamp({
+            dateParts,
+            showDate: true,
+            showTime: true,
+            signedIn: true,
+            openTaskCount: 2,
+            notesCount: 3,
+        }),
+        {
+            primary: "25",
+            primaryKind: "day",
+            dateMeta: "十一月 星期三",
+            time: "11:14",
+            tasksLabel: "2 待办",
+            notesLabel: null,
+            ariaLabel: "展开首页刊头，25 十一月 星期三，11:14，2 待办",
+        },
+    );
+
+    // Guest mode suppresses signed-in task counts even if a stale count is passed.
+    assertEquals(
+        buildMastheadStamp({
+            dateParts,
+            showDate: true,
+            showTime: false,
+            signedIn: false,
+            openTaskCount: 4,
+            notesCount: 2,
+        }),
+        {
+            primary: "25",
+            primaryKind: "day",
+            dateMeta: "十一月 星期三",
+            time: null,
+            tasksLabel: null,
+            notesLabel: null,
+            ariaLabel: "展开首页刊头，25 十一月 星期三",
+        },
+    );
+
+    // Time-only mode.
+    assertEquals(
+        buildMastheadStamp({
+            dateParts,
+            showDate: false,
+            showTime: true,
+            signedIn: true,
+            openTaskCount: 1,
+            notesCount: 2,
+        }),
+        {
+            primary: "11:14",
+            primaryKind: "time",
+            dateMeta: null,
+            time: null,
+            tasksLabel: "1 待办",
+            notesLabel: null,
+            ariaLabel: "展开首页刊头，11:14，1 待办",
+        },
+    );
+
+    // Date and time both off: falls back to "今日" + tasks / notes counts.
+    assertEquals(
+        buildMastheadStamp({
+            dateParts,
+            showDate: false,
+            showTime: false,
+            signedIn: true,
+            openTaskCount: 2,
+            notesCount: 3,
+        }),
+        {
+            primary: "今日",
+            primaryKind: "fallback",
+            dateMeta: null,
+            time: null,
+            tasksLabel: "2 待办",
+            notesLabel: "3 篇笔记",
+            ariaLabel: "展开首页刊头，今日，2 待办，3 篇笔记",
+        },
+    );
+
+    // Date and time both off with zero tasks and zero notes still shows "今日".
+    assertEquals(
+        buildMastheadStamp({
+            dateParts,
+            showDate: false,
+            showTime: false,
+            signedIn: true,
+            openTaskCount: 0,
+            notesCount: 0,
+        }),
+        {
+            primary: "今日",
+            primaryKind: "fallback",
+            dateMeta: null,
+            time: null,
+            tasksLabel: null,
+            notesLabel: null,
+            ariaLabel: "展开首页刊头，今日",
+        },
+    );
 });
 
 Deno.test("mastheadDateParts: formats day number, weekday, Chinese month name and 24h time", () => {
@@ -543,7 +775,7 @@ Deno.test("formatRelativeNoteTime and resolveMastheadSwipe cover time labels and
     );
 });
 
-Deno.test("masthead layout constants mirror design tokens", async () => {
+Deno.test("masthead layout constants and frameless ambient cushion tokens mirror design tokens", async () => {
     const css = await Deno.readTextFile(
         new URL("../../design-system/tokens.css", import.meta.url),
     );
@@ -556,7 +788,13 @@ Deno.test("masthead layout constants mirror design tokens", async () => {
     );
     assertEquals(
         css.includes(
-            `--layout-masthead-veil-fade: ${MASTHEAD_VEIL_TAIL + 40}px;`,
+            `--layout-masthead-compact-min: ${MASTHEAD_COMPACT_MIN_WIDTH}px;`,
+        ),
+        true,
+    );
+    assertEquals(
+        css.includes(
+            `--layout-masthead-stamp-max: ${MASTHEAD_STAMP_MAX_WIDTH}px;`,
         ),
         true,
     );
@@ -565,4 +803,65 @@ Deno.test("masthead layout constants mirror design tokens", async () => {
         true,
     );
     assertEquals(MASTHEAD_PEEK_FADE_MAX, 16);
+
+    // Legacy veil and removed folio-card tokens are completely absent.
+    for (
+        const removed of [
+            "--layout-masthead-veil-fade",
+            "--masthead-veil-light",
+            "--masthead-veil-dark",
+            "--masthead-veil-filter",
+            "--masthead-peek-veil-opacity",
+            "--masthead-folio-fill",
+            "--masthead-folio-filter",
+            "--font-masthead-folio-day-size",
+            "--shape-masthead-radius",
+        ]
+    ) {
+        assertEquals(css.includes(removed), false, `stale token: ${removed}`);
+    }
+
+    // Frameless editorial typography & three-tier adaptive cushion tokens exist.
+    for (
+        const expected of [
+            "--font-masthead-day-size: 7.25rem;",
+            "--font-masthead-day-line-height: 5.9rem;",
+            "--font-masthead-day-size: 8rem;",
+            "--font-masthead-day-line-height: 6.5rem;",
+            "--font-masthead-entry-size: 1.25rem;",
+            "--font-masthead-entry-line-height: 1.65rem;",
+            "--masthead-display-ink: #18181B;",
+            "--masthead-textured-muted: #4D4D54;",
+            "--masthead-textured-muted: #BEBEC6;",
+            "--masthead-muted: #2F2F34;",
+            "--masthead-muted: #D4D4D8;",
+            "--masthead-cushion-textured-light: 36%;",
+            "--masthead-cushion-textured-dark: 28%;",
+            "--masthead-cushion-textured-light: 48%;",
+            "--masthead-cushion-textured-dark: 40%;",
+            "--masthead-cushion-textured-light: 20%;",
+            "--masthead-cushion-textured-dark: 14%;",
+            "--masthead-cushion-contrast-light: 54%;",
+            "--masthead-cushion-contrast-dark: 40%;",
+            "--masthead-cushion-contrast-light: 66%;",
+            "--masthead-cushion-contrast-dark: 52%;",
+            "--masthead-cushion-contrast-light: 42%;",
+            "--masthead-cushion-contrast-dark: 24%;",
+            "--masthead-cushion-textured-compact-scale: 0.70;",
+            "--masthead-cushion-textured-compact-scale: 0.56;",
+            "--masthead-cushion-contrast-compact-scale: 0.84;",
+            "--masthead-cushion-contrast-compact-scale: 0.60;",
+            "--masthead-textured-text-shadow:",
+            "--masthead-contrast-text-shadow:",
+            "--masthead-icon-shadow:",
+            "--masthead-entry-hover: rgb(255 255 255 / 0.30);",
+            "--masthead-collapse-hover: rgb(255 255 255 / 0.38);",
+        ]
+    ) {
+        assertEquals(
+            css.includes(expected),
+            true,
+            `missing token: ${expected}`,
+        );
+    }
 });
