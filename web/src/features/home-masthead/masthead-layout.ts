@@ -17,7 +17,7 @@ export const MASTHEAD_SWIPE_THRESHOLD = 48;
 export type MastheadSide = "left" | "right";
 
 /** Search box height before it has been measured. */
-export const MASTHEAD_DEFAULT_SEARCH_HEIGHT = 56;
+export const MASTHEAD_DEFAULT_SEARCH_HEIGHT = 52;
 /** Space kept between the open narrow sheet and the search box docked below it. */
 export const MASTHEAD_SHEET_SEARCH_GAP = 24;
 /** Space kept between the collapsed narrow masthead's peek and the search box. */
@@ -129,8 +129,8 @@ export function mastheadColumnWidth(viewportWidth: number): number {
 
 function defaultSearchRect(viewportWidth: number): SafeRect {
     const width = viewportWidth >= BREAKPOINTS.wide
-        ? Math.min(880, Math.max(640, viewportWidth * 0.4))
-        : Math.min(640, Math.max(0, viewportWidth - 32));
+        ? Math.min(620, Math.max(580, viewportWidth * 0.32))
+        : Math.min(580, Math.max(0, viewportWidth - 32));
     return {
         x: (viewportWidth - width) / 2,
         y: 0,

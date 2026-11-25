@@ -119,6 +119,12 @@
     backdrop-filter: var(--material-regular-filter);
     box-shadow: var(--shadow-elevation-material);
 }
+@media (prefers-reduced-transparency: no-preference) and (forced-colors: none) {
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"] .launcher-plate:not([data-plate="hidden"]) {
+        background: var(--material-regular);
+        box-shadow: var(--launcher-plate-dark-wallpaper-shadow);
+    }
+}
 @media (max-width: 767px) {
     .launcher-plate {
         padding: var(--space-2);

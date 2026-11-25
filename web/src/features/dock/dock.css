@@ -339,6 +339,13 @@
             0 18px 46px -10px rgb(0 0 0 / 0.78);
     }
 
+    @media (prefers-reduced-transparency: no-preference) {
+        [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"] .dock-bar {
+            background: var(--material-regular);
+            box-shadow: var(--dock-dark-wallpaper-shadow);
+        }
+    }
+
     [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:not(:has(.search-frame:focus-within)) .dock-bar {
         --dock-rest-opacity: 0.58;
     }

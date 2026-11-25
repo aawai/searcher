@@ -134,7 +134,7 @@
     --font-title-line-height: 1.5rem;
     --font-page-title-size: 1.5rem;
     --font-page-title-line-height: 2rem;
-    --font-search-input-size: 1.0625rem;
+    --font-search-input-size: 1rem;
     /* iOS zooms focused fields below 1rem (16px) on touch devices. */
     --font-input-touch-size: 1rem;
     --font-code-size: 0.8125rem;
@@ -205,6 +205,7 @@
 
     /* Sizes. */
     --topbar-height: 56px;
+    --search-height: 52px;
     --control-height: 36px;
     --control-input-height: 36px;
     --control-compact-height: 28px;
@@ -263,6 +264,7 @@
     --dialog-width-md: 480px;
     --dialog-width-lg: var(--layout-form-max);
     --layout-search-max: 640px;
+    --layout-home-search-max: 580px;
     --layout-home-content-max: 640px;
     --layout-masthead-col: clamp(296px, 19vw, 372px);
     --layout-masthead-compact-min: 196px;
@@ -285,9 +287,8 @@
     --home-grid-inline-start: calc(var(--home-grid-axis) - var(--home-grid-content-width) / 2);
     --home-grid-inline-end: calc(var(--home-grid-axis) + var(--home-grid-content-width) / 2);
     --home-grid-block-start: calc(var(--topbar-height) + var(--home-hero-inset));
-    /* ≥768px: 38% viewport centre minus topbar (56px) and half search height
-       (28px). Phones override it below. */
-    --home-hero-inset: max(80px, calc(38dvh - var(--topbar-height) - 28px));
+    /* ≥768px: 38% viewport centre minus topbar (56px) and half search height. */
+    --home-hero-inset: max(80px, calc(38dvh - var(--topbar-height) - var(--search-height) / 2));
     --home-hero-inset-engaged: var(--home-hero-inset);
     --layout-sheet-max: 960px;
     --sheet-width: min(65vw, var(--layout-sheet-max));
@@ -343,6 +344,14 @@
     --search-frame-dark-hover-shadow: var(--shadow-elevation-material);
     --search-frame-dark-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
     --search-frame-dark-focus-within-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-wallpaper-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
+    --search-frame-dark-wallpaper-focus-within-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
+    --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --wallpaper-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
@@ -366,7 +375,7 @@
     --masthead-muted: #D4D4D8;
     --masthead-clear-muted: #E4E4E9;
     --masthead-display-ink: #EFECE6;
-    --search-placeholder: #9C9CA8;
+    --search-placeholder: #AEAEB8;
     --border: rgb(255 255 255 / 0.09);
     --border-subtle: rgb(255 255 255 / 0.055);
     --border-control: #747479;
@@ -405,6 +414,14 @@
     --search-frame-dark-hover-shadow: inset 0 1px 0 rgb(255 252 246 / 0.17), inset 0 0 0 1px color-mix(in oklab, var(--accent) 18%, rgb(255 252 246 / 0.10)), inset 0 -1px 0 rgb(0 0 0 / 0.64), 0 0 0 1px rgb(0 0 0 / 0.56), 0 30px 76px -20px rgb(0 0 0 / 0.78);
     --search-frame-dark-focus-shadow: inset 0 1px 0 rgb(255 252 246 / 0.16), inset 0 0 0 1px color-mix(in oklab, var(--accent) 50%, rgb(240 237 230 / 0.24)), inset 0 8px 18px -12px color-mix(in oklab, var(--accent) 34%, transparent), inset 0 -1px 0 rgb(0 0 0 / 0.68), 0 0 0 1px rgb(0 0 0 / 0.62), 0 32px 84px -16px rgb(0 0 0 / 0.88), var(--search-focus-halo);
     --search-frame-dark-focus-within-shadow: inset 0 1px 0 rgb(255 252 246 / 0.15), inset 0 0 0 1px color-mix(in oklab, var(--accent) 26%, rgb(240 237 230 / 0.13)), inset 0 8px 18px -12px color-mix(in oklab, var(--accent) 34%, transparent), inset 0 -1px 0 rgb(0 0 0 / 0.68), 0 0 0 1px rgb(0 0 0 / 0.60), 0 32px 84px -16px rgb(0 0 0 / 0.86), var(--search-focus-halo);
+    --search-frame-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13), inset 0 1px 0 rgb(255 255 255 / 0.08), 0 8px 28px -8px rgb(0 0 0 / 0.34), 0 2px 8px -2px rgb(0 0 0 / 0.18);
+    --search-frame-dark-wallpaper-hover-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.20), inset 0 1px 0 rgb(255 255 255 / 0.12), 0 10px 32px -8px rgb(0 0 0 / 0.40), 0 2px 10px -2px rgb(0 0 0 / 0.22);
+    --search-frame-dark-wallpaper-focus-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 62%, rgb(255 255 255 / 0.24)), 0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent), 0 12px 36px -10px rgb(0 0 0 / 0.46), 0 2px 10px -2px rgb(0 0 0 / 0.24);
+    --search-frame-dark-wallpaper-focus-within-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 36%, rgb(255 255 255 / 0.18)), 0 10px 32px -10px rgb(0 0 0 / 0.42), 0 2px 10px -2px rgb(0 0 0 / 0.22);
+    --masthead-stamp-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.11), 0 4px 16px -6px rgb(0 0 0 / 0.24);
+    --masthead-stamp-dark-wallpaper-hover-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.20), 0 6px 20px -6px rgb(0 0 0 / 0.30);
+    --dock-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), 0 8px 26px -8px rgb(0 0 0 / 0.34), 0 2px 8px -2px rgb(0 0 0 / 0.18);
+    --launcher-plate-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.11), 0 10px 32px -10px rgb(0 0 0 / 0.36);
     --wallpaper-grain-opacity: 0.052;
     --wallpaper-focus-scrim: 0.46;
     --dock-active-glow: 0 0 7px color-mix(in oklab, var(--accent) 55%, transparent);
@@ -602,6 +619,14 @@
     --search-frame-dark-hover-shadow: var(--shadow-elevation-material);
     --search-frame-dark-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
     --search-frame-dark-focus-within-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-wallpaper-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
+    --search-frame-dark-wallpaper-focus-within-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
+    --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --wallpaper-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
@@ -658,6 +683,14 @@
     --search-frame-dark-hover-shadow: var(--shadow-elevation-material);
     --search-frame-dark-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
     --search-frame-dark-focus-within-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
+    --search-frame-dark-wallpaper-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
+    --search-frame-dark-wallpaper-focus-within-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
+    --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --wallpaper-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
@@ -757,7 +790,7 @@
     --shape-dock-radius: var(--radius-pill);
     --shape-dock-inner-radius: var(--radius-pill);
     --shape-plate-radius: var(--radius-lg);
-    --space-search-inset-inline: 10px;
+    --space-search-inset-inline: 8px;
 }
 
 /*
@@ -775,8 +808,9 @@
     --glass-regular-dark: 62%;
     --glass-thick-light: 88%;
     --glass-thick-dark: 86%;
+    --masthead-stamp-dark-fill: 58%;
     --glass-regular-filter-light: blur(20px) saturate(1.8);
-    --glass-regular-filter-dark: blur(22px) saturate(1.75);
+    --glass-regular-filter-dark: blur(24px) saturate(1.25) brightness(0.88);
     --material-regular-sheen-scale: 0.85;
     --material-thick-sheen-scale: 0.85;
     --material-regular-filter: blur(20px) saturate(1.8);
@@ -787,8 +821,9 @@
     --glass-regular-dark: 62%;
     --glass-thick-light: 88%;
     --glass-thick-dark: 86%;
+    --masthead-stamp-dark-fill: 58%;
     --glass-regular-filter-light: blur(20px) saturate(1.8);
-    --glass-regular-filter-dark: blur(22px) saturate(1.75);
+    --glass-regular-filter-dark: blur(24px) saturate(1.25) brightness(0.88);
     --material-regular-sheen-scale: 0.85;
     --material-thick-sheen-scale: 0.85;
     --material-regular-filter: blur(20px) saturate(1.8);
@@ -799,6 +834,7 @@
     --glass-regular-dark: 100%;
     --glass-thick-light: 100%;
     --glass-thick-dark: 100%;
+    --masthead-stamp-dark-fill: 100%;
     --glass-regular-filter-light: none;
     --glass-regular-filter-dark: none;
     --material-regular-sheen-scale: 0;
@@ -811,8 +847,9 @@
     --glass-regular-dark: 78%;
     --glass-thick-light: 92%;
     --glass-thick-dark: 92%;
+    --masthead-stamp-dark-fill: 72%;
     --glass-regular-filter-light: blur(24px) saturate(1.4);
-    --glass-regular-filter-dark: blur(24px) saturate(1.4);
+    --glass-regular-filter-dark: blur(28px) saturate(1.15) brightness(0.86);
     --material-regular-sheen-scale: 0.5;
     --material-thick-sheen-scale: 0.5;
     --material-regular-filter: blur(24px) saturate(1.4);
@@ -826,8 +863,9 @@
        and 4.49:1 at 86% (#394 2.2). */
     --glass-thick-light: 90%;
     --glass-thick-dark: 86%;
+    --masthead-stamp-dark-fill: 44%;
     --glass-regular-filter-light: blur(12px) saturate(1.85);
-    --glass-regular-filter-dark: blur(18px) saturate(1.9);
+    --glass-regular-filter-dark: blur(18px) saturate(1.3) brightness(0.92);
     --material-regular-sheen-scale: 0.55;
     --material-thick-sheen-scale: 0.5;
     --material-regular-filter: blur(12px) saturate(1.85);
@@ -864,6 +902,7 @@
 [data-glass] {
     --material-regular: color-mix(in srgb, var(--material-solid) var(--glass-fill-regular), transparent);
     --material-thick: color-mix(in srgb, var(--surface-l3) var(--glass-fill-thick), transparent);
+    --masthead-stamp-dark-bg: color-mix(in oklab, var(--material-solid) var(--masthead-stamp-dark-fill), transparent);
     --shadow-material-edge: inset 0 1px 0 var(--glass-edge-top), inset 0 0 0 1px var(--glass-edge-ring), inset 0 -1px 0 var(--glass-edge-bottom);
     --shadow-material-glyph: 0 var(--space-hairline) var(--space-half) var(--glass-edge-bottom);
     --shadow-glyph-edge: inset 0 0 0 var(--space-hairline) var(--glyph-edge);
@@ -1135,6 +1174,7 @@
         --glass-regular-dark: 100%;
         --glass-thick-light: 100%;
         --glass-thick-dark: 100%;
+        --masthead-stamp-dark-fill: 100%;
         --glass-regular-filter-light: none;
         --glass-regular-filter-dark: none;
         --material-regular-sheen-scale: 0;
@@ -1155,6 +1195,7 @@
         --glass-regular-dark: 100%;
         --glass-thick-light: 100%;
         --glass-thick-dark: 100%;
+        --masthead-stamp-dark-fill: 100%;
         --glass-regular-filter-light: none;
         --glass-regular-filter-dark: none;
         --material-regular-sheen-scale: 0;
@@ -1183,6 +1224,7 @@
     --glass-regular-dark: 100%;
     --glass-thick-light: 100%;
     --glass-thick-dark: 100%;
+    --masthead-stamp-dark-fill: 100%;
     --glass-regular-filter-light: none;
     --glass-regular-filter-dark: none;
     --material-regular-sheen-scale: 0;
@@ -1203,10 +1245,11 @@
     --masthead-icon-shadow: none;
 }
 
-/* Wide home: the search box and plate grow with the viewport while the cell
-   grid, icons and row pitch stay fixed. 40vw reaches 640px at 1600px. */
+/* Wide home: search box tightens to Spotlight-like proportions (580–620px)
+   while the app plate grows with the viewport (640–880px). */
 @media (min-width: 1024px) {
     :root {
+        --layout-home-search-max: clamp(580px, 32vw, 620px);
         --layout-home-content-max: clamp(640px, 40vw, 880px);
     }
 }
@@ -1224,10 +1267,11 @@
         --home-grid-cell: var(--home-grid-narrow-cell);
         --home-grid-gap: var(--home-grid-narrow-gap);
         --space-page-block: var(--space-5);
+        --search-height: 50px;
         /* Centre of the free area between the top bar and the Dock (about
            48% of the viewport); while the search box is in use it rises to
            --home-hero-inset-engaged so suggestions clear the soft keyboard. */
-        --home-hero-inset: max(64px, calc(48dvh - var(--topbar-height) - 28px));
+        --home-hero-inset: max(64px, calc(48dvh - var(--topbar-height) - var(--search-height) / 2));
         --home-hero-inset-engaged: clamp(64px, 16dvh, 140px);
         --space-search-inset-block: var(--space-1);
         --space-search-inset-inline: 6px;
