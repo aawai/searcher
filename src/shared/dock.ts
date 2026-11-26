@@ -28,6 +28,7 @@ export interface DockLayout {
     collapsed: boolean;
     ballSide: DockBallSide;
     ballY: number;
+    autoHide: boolean;
 }
 
 export const DEFAULT_DOCK_LAYOUT: DockLayout = {
@@ -35,6 +36,7 @@ export const DEFAULT_DOCK_LAYOUT: DockLayout = {
     collapsed: false,
     ballSide: "left",
     ballY: 0.5,
+    autoHide: false,
 };
 
 export function isValidDockSystemId(id: unknown): id is DockSystemId {
@@ -124,11 +126,15 @@ export function normalizeDockLayout(raw: unknown): DockLayout {
         : DEFAULT_DOCK_LAYOUT.ballY;
     if (ballY < 0) ballY = 0;
     if (ballY > 1) ballY = 1;
+    const autoHide = typeof r.autoHide === "boolean"
+        ? r.autoHide
+        : DEFAULT_DOCK_LAYOUT.autoHide;
 
     return {
         edge,
         collapsed,
         ballSide,
         ballY,
+        autoHide,
     };
 }

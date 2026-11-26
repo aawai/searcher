@@ -561,10 +561,15 @@ Deno.test("DockProvider: migrates legacy fixed/collapsible layouts and isolates 
             collapsed: false,
             ballSide: "left",
             ballY: 0.5,
+            autoHide: false,
         });
 
         await act(async () => {
-            latestDock?.setLayout({ collapsed: true, edge: "top" });
+            latestDock?.setLayout({
+                collapsed: true,
+                edge: "top",
+                autoHide: true,
+            });
             await flushAsync();
         });
 
@@ -573,12 +578,14 @@ Deno.test("DockProvider: migrates legacy fixed/collapsible layouts and isolates 
             collapsed: true,
             ballSide: "left",
             ballY: 0.5,
+            autoHide: true,
         });
         assertEquals(await getLocal(freshKey), {
             edge: "top",
             collapsed: true,
             ballSide: "left",
             ballY: 0.5,
+            autoHide: true,
         });
 
         // 2. Legacy fixed account with stale collapsed=true stays expanded
@@ -600,6 +607,7 @@ Deno.test("DockProvider: migrates legacy fixed/collapsible layouts and isolates 
             collapsed: false,
             ballSide: "right",
             ballY: 0.3,
+            autoHide: false,
         });
 
         // 3. Legacy collapsible account preserves collapsed=true and ball placement
@@ -621,6 +629,7 @@ Deno.test("DockProvider: migrates legacy fixed/collapsible layouts and isolates 
             collapsed: true,
             ballSide: "right",
             ballY: 0.8,
+            autoHide: false,
         });
 
         // Verify fresh user's persisted layout remained isolated
@@ -629,6 +638,7 @@ Deno.test("DockProvider: migrates legacy fixed/collapsible layouts and isolates 
             collapsed: true,
             ballSide: "left",
             ballY: 0.5,
+            autoHide: true,
         });
     } finally {
         await act(async () => {

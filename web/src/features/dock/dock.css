@@ -6,6 +6,14 @@
     box-sizing: border-box;
 }
 
+.dock-container[data-auto-hide="true"] {
+    z-index: var(--elevation-dock-overlay);
+}
+
+.dock-container[data-auto-hide="true"]:not([data-auto-hidden="true"]) {
+    pointer-events: auto;
+}
+
 /* Position from the effective edge supplied by WorkspaceDock. */
 .dock-container[data-edge="bottom"] {
     bottom: max(var(--space-3), env(safe-area-inset-bottom, var(--space-3)));
@@ -35,6 +43,45 @@
     right: max(var(--space-3), env(safe-area-inset-right, var(--space-3)));
     top: 50%;
     transform: translateY(-50%);
+}
+
+/* Auto-hide edge bridge padding (desktop only) */
+@media (min-width: 768px) {
+    .dock-container[data-edge="bottom"][data-auto-hide="true"] {
+        bottom: 0;
+        padding-bottom: max(
+            var(--space-3),
+            env(safe-area-inset-bottom, var(--space-3))
+        );
+        padding-top: var(--space-2);
+    }
+
+    .dock-container[data-edge="top"][data-auto-hide="true"] {
+        top: 0;
+        padding-top: max(
+            calc((var(--topbar-height) - var(--dock-size)) / 2),
+            env(safe-area-inset-top, 0px)
+        );
+        padding-bottom: var(--space-2);
+    }
+
+    .dock-container[data-edge="left"][data-auto-hide="true"] {
+        left: 0;
+        padding-left: max(
+            var(--space-3),
+            env(safe-area-inset-left, var(--space-3))
+        );
+        padding-right: var(--space-2);
+    }
+
+    .dock-container[data-edge="right"][data-auto-hide="true"] {
+        right: 0;
+        padding-right: max(
+            var(--space-3),
+            env(safe-area-inset-right, var(--space-3))
+        );
+        padding-left: var(--space-2);
+    }
 }
 
 /* Mobile bottom spacing and width preserve the safe area and touch targets. */
@@ -68,8 +115,10 @@
     user-select: none;
     -webkit-user-select: none;
     touch-action: pan-x pan-y;
-    transition: opacity var(--motion-base) var(--ease-standard),
-        translate var(--motion-base) var(--ease-standard);
+    transition: opacity var(--motion-base) var(--ease-out-expo),
+        translate 220ms var(--ease-out-expo),
+        background var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard);
 }
 
 .dock-container[data-edge="top"] .dock-bar {
@@ -99,6 +148,7 @@
     opacity: 0;
     translate: var(--dock-travel-x) var(--dock-travel-y);
 }
+
 .dock-container[data-edge="bottom"] .dock-bar,
 .dock-container[data-edge="top"] .dock-bar {
     flex-direction: row;
@@ -126,6 +176,79 @@
     .dock-bar {
         min-height: var(--dock-size);
         max-width: 100%;
+    }
+}
+
+/* Edge trigger and peek handle for auto-hide */
+.dock-edge-trigger {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-base) var(--ease-standard);
+}
+
+.dock-edge-trigger[data-visible="true"] {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.dock-container[data-edge="right"] .dock-edge-trigger {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: min(44vh, 220px);
+}
+
+.dock-container[data-edge="left"] .dock-edge-trigger {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: min(44vh, 220px);
+}
+
+.dock-container[data-edge="bottom"] .dock-edge-trigger {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 14px;
+    width: min(44vw, 240px);
+}
+
+.dock-container[data-edge="top"] .dock-edge-trigger {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 14px;
+    width: min(44vw, 240px);
+}
+
+.dock-peek-handle {
+    display: block;
+    border-radius: var(--radius-pill);
+    background: var(--dock-peek-bg);
+    box-shadow: 0 0 0 0.5px var(--dock-peek-edge);
+    transition: background var(--motion-fast) var(--ease-standard),
+        transform var(--motion-fast) var(--ease-standard);
+}
+
+.dock-container:is([data-edge="left"], [data-edge="right"]) .dock-peek-handle {
+    width: 3px;
+    height: 48px;
+}
+
+.dock-container:is([data-edge="top"], [data-edge="bottom"]) .dock-peek-handle {
+    width: 48px;
+    height: 3px;
+}
+
+@media (hover: hover) {
+    .dock-edge-trigger:hover .dock-peek-handle {
+        background: var(--dock-peek-bg-hover);
     }
 }
 
@@ -263,22 +386,29 @@
 
 /* Divider between groups */
 .dock-divider {
-    background: var(--border);
+    background: color-mix(in oklab, var(--foreground) 14%, transparent);
+    border-radius: var(--radius-pill);
     flex-shrink: 0;
 }
 
 .dock-container[data-edge="bottom"] .dock-divider,
 .dock-container[data-edge="top"] .dock-divider {
     width: var(--space-hairline);
-    height: var(--space-4);
+    height: 18px;
     margin: 0 var(--space-1);
 }
 
 .dock-container[data-edge="left"] .dock-divider,
 .dock-container[data-edge="right"] .dock-divider {
     height: var(--space-hairline);
-    width: var(--space-4);
+    width: 18px;
     margin: var(--space-1) 0;
+}
+
+@media (forced-colors: active) {
+    .dock-divider {
+        background: CanvasText;
+    }
 }
 
 /* Dock items */
@@ -308,6 +438,11 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+.dock-item > svg,
+.dock-item > .dock-glyph {
+    transition: transform 160ms var(--ease-out-expo);
+}
+
 .dock-item:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
@@ -317,20 +452,57 @@
     .dock-item:hover {
         background: var(--surface-highlight);
     }
+
+    .dock-item:hover > svg,
+    .dock-item:hover > .dock-glyph {
+        transform: scale(1.1);
+    }
 }
 
 .dock-item:active {
     transform: scale(0.94);
 }
 
-/* Active system entry: accent glyph + long length bar below/beside, no opaque
-   fill over the translucent Dock glass. */
+.dock-item:active > svg,
+.dock-item:active > .dock-glyph {
+    transform: scale(0.92);
+}
+
+/* Active system entry: accent glyph + long length bar below/beside. */
 .dock-item[data-active="true"] {
     color: var(--accent);
 }
 
-/* Hushed translucent lacquer Dock on ordinary dark home: recedes until approached. */
+/* Light & Dark glass refinements and adaptive wallpaper polarity */
 @media (forced-colors: none) {
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .dock-bar {
+        box-shadow: var(--dock-light-shadow);
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .dock-item--system:not([data-active="true"]) {
+        color: color-mix(in oklab, var(--foreground) 76%, transparent);
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .dock-item--system:not([data-active="true"]):focus-visible {
+        color: var(--foreground);
+    }
+
+    @media (hover: hover) {
+        :root:not([data-theme="dark"]):not([data-contrast="more"]) .dock-item--system:not([data-active="true"]):hover {
+            color: var(--foreground);
+        }
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .dock-item[data-active="true"] {
+        background: color-mix(in oklab, var(--accent) 10%, transparent);
+    }
+
+    @media (hover: hover) {
+        :root:not([data-theme="dark"]):not([data-contrast="more"]) .dock-item[data-active="true"]:hover {
+            background: color-mix(in oklab, var(--accent) 14%, transparent);
+        }
+    }
+
     [data-theme="dark"]:not([data-contrast="more"]) .dock-bar {
         box-shadow: inset 0 1px 0 rgb(255 252 246 / 0.12),
             inset 0 0 0 1px rgb(255 252 246 / 0.075),
@@ -410,10 +582,33 @@
     }
 }
 
-/* One bar under (beside, on a side Dock) the icon carries the window state, as
-   on a Windows taskbar. Length rather than colour tells the states apart: a
-   long bar is the focused entry, a short bar an open window, a shorter one a
-   minimized window. */
+/* Auto-hidden slide out (after rest opacity rules so it always wins) */
+.dock-container[data-auto-hidden="true"] .dock-bar,
+[data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"] .dock-container[data-auto-hidden="true"] .dock-bar {
+    --dock-rest-opacity: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dock-container[data-edge="right"][data-auto-hidden="true"] .dock-bar {
+    translate: calc(100% + var(--space-3)) 0;
+}
+
+.dock-container[data-edge="left"][data-auto-hidden="true"] .dock-bar {
+    translate: calc(-1 * (100% + var(--space-3))) 0;
+}
+
+.dock-container[data-edge="bottom"][data-auto-hidden="true"] .dock-bar {
+    translate: 0 calc(100% + var(--space-3));
+}
+
+.dock-container[data-edge="top"][data-auto-hidden="true"] .dock-bar {
+    translate: 0 calc(-1 * (100% + var(--space-3)));
+}
+
+/* One bar under (beside, on a side Dock) the icon carries the window state.
+   Length rather than colour tells the states apart: 14px active, 8px open,
+   4px minimized. */
 .dock-item[data-window-status],
 .dock-item[data-active="true"] {
     --dock-mark-length: var(--space-2);
@@ -424,35 +619,40 @@
 }
 
 .dock-item[data-active="true"] {
-    --dock-mark-length: var(--space-3);
+    --dock-mark-length: 14px;
 }
 
 .dock-item[data-window-status]::after,
 .dock-item[data-active="true"]::after {
     content: "";
     position: absolute;
-    bottom: var(--space-half);
+    bottom: 1px;
     width: var(--dock-mark-length);
-    height: var(--space-half);
+    height: 2.5px;
     border-radius: var(--radius-pill);
     background: currentColor;
     transition: width var(--motion-fast) var(--ease-standard),
         height var(--motion-fast) var(--ease-standard);
 }
 
+.dock-container[data-edge="top"] .dock-item:is([data-window-status], [data-active="true"])::after {
+    bottom: auto;
+    top: 1px;
+}
+
 .dock-container:is([data-edge="left"], [data-edge="right"]) .dock-item:is([data-window-status], [data-active="true"])::after {
     bottom: auto;
     top: calc(50% - var(--dock-mark-length) / 2);
-    width: var(--space-half);
+    width: 2.5px;
     height: var(--dock-mark-length);
 }
 
 .dock-container[data-edge="left"] .dock-item:is([data-window-status], [data-active="true"])::after {
-    right: var(--space-half);
+    left: 1px;
 }
 
 .dock-container[data-edge="right"] .dock-item:is([data-window-status], [data-active="true"])::after {
-    left: var(--space-half);
+    right: 1px;
 }
 
 /* Forced colours repaint a currentColor background Canvas, erasing the bar (A7). */
@@ -492,7 +692,12 @@
     height: var(--dock-glyph-size);
     font-size: var(--font-body-size);
     border-radius: var(--radius-dock-glyph);
-    box-shadow: var(--shadow-glyph-edge), var(--shadow-elevation-glyph);
+    background: transparent;
+    box-shadow: var(--dock-light-glyph-edge);
+}
+
+[data-theme="dark"] .dock-glyph {
+    box-shadow: var(--dock-dark-glyph-edge);
 }
 
 .dock-item.is-dragging {
@@ -514,6 +719,11 @@
     flex-shrink: 0;
 }
 
+.dock-item--action:is([aria-expanded="true"], [data-popup-open]) {
+    background: var(--surface-highlight);
+    color: var(--foreground);
+}
+
 .dock-item--error {
     color: var(--danger);
 }
@@ -524,7 +734,6 @@
     }
 }
 
-/* Actions button hover state */
 /* Floating Ball when collapsed */
 .dock-ball {
     --dock-ball-inset-top: max(
@@ -605,6 +814,7 @@
 }
 
 .dock-container[data-modal-active="true"] .dock-bar,
+.dock-container[data-modal-active="true"] .dock-edge-trigger,
 .dock-ball[data-modal-active="true"] {
     pointer-events: none;
     opacity: 0.5;
@@ -649,6 +859,10 @@
         transition: opacity var(--motion-base) var(--ease-standard);
     }
 
+    .dock-container[data-edge][data-auto-hidden="true"] .dock-bar {
+        translate: 0 0;
+    }
+
     .dock-ball,
     .dock-ball[data-ball-side="left"],
     .dock-ball[data-ball-side="right"] {
@@ -658,11 +872,17 @@
 
     .dock-ball:hover,
     .dock-ball:active,
-    .dock-item:active {
+    .dock-item:active,
+    .dock-item:hover > svg,
+    .dock-item:hover > .dock-glyph,
+    .dock-item:active > svg,
+    .dock-item:active > .dock-glyph {
         transform: none;
     }
 
-    .dock-item {
+    .dock-item,
+    .dock-item > svg,
+    .dock-item > .dock-glyph {
         transition: none;
         animation: none;
     }
@@ -703,6 +923,175 @@
 .dock-options-menu {
     max-height: calc(100dvh - var(--space-7));
     overflow-y: auto;
+}
+
+.dock-options-menu,
+.dock-context-menu {
+    transition: opacity 150ms var(--ease-out-expo),
+        transform 180ms var(--ease-out-expo);
+}
+
+:root:not([data-theme="dark"]):not([data-contrast="more"]) :is(.dock-options-menu, .dock-context-menu) {
+    box-shadow: var(--dock-popover-light-shadow);
+}
+
+[data-theme="dark"]:not([data-contrast="more"]) :is(.dock-options-menu, .dock-context-menu) {
+    box-shadow: var(--dock-popover-dark-shadow);
+}
+
+:is(.dock-options-menu, .dock-context-menu)[data-side="left"]:is([data-starting-style], [data-ending-style]) {
+    opacity: 0;
+    transform: translateX(8px) scale(0.96);
+}
+
+:is(.dock-options-menu, .dock-context-menu)[data-side="right"]:is([data-starting-style], [data-ending-style]) {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.96);
+}
+
+:is(.dock-options-menu, .dock-context-menu)[data-side="top"]:is([data-starting-style], [data-ending-style]) {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+}
+
+:is(.dock-options-menu, .dock-context-menu)[data-side="bottom"]:is([data-starting-style], [data-ending-style]) {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :is(.dock-options-menu, .dock-context-menu):is([data-starting-style], [data-ending-style]) {
+        transform: none;
+    }
+}
+
+.dock-options-menu.dock-control-popover {
+    width: 224px;
+    min-width: 224px;
+    padding: 6px;
+    border-radius: var(--radius);
+}
+
+@media (max-width: 767px) {
+    .dock-options-menu.dock-control-popover {
+        width: auto;
+        min-width: 168px;
+    }
+}
+
+.dock-context-menu {
+    min-width: 176px;
+    padding: 6px;
+}
+
+.dock-control-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-1) var(--space-2);
+}
+
+.dock-control-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-1);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-label-weight);
+    color: var(--muted);
+}
+
+.dock-control-value {
+    font-weight: var(--font-body-weight);
+    color: var(--foreground);
+    opacity: 0.78;
+}
+
+.dock-edge-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 3px;
+    padding: 3px;
+    border-radius: calc(var(--control-radius) + 2px);
+    background: color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+
+.dock-edge-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    border: none;
+    border-radius: calc(var(--control-radius) - 1px);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0;
+    transition: background var(--motion-fast) var(--ease-standard),
+        color var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.dock-edge-btn:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+
+@media (hover: hover) {
+    .dock-edge-btn:hover {
+        color: var(--foreground);
+        background: color-mix(in oklab, var(--foreground) 6%, transparent);
+    }
+}
+
+.dock-edge-btn[data-active="true"] {
+    background: var(--surface-solid);
+    color: var(--accent);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08),
+        0 0 0 0.5px var(--border);
+}
+
+@media (forced-colors: active) {
+    .dock-edge-btn[data-active="true"] {
+        outline: 1px solid Highlight;
+        color: Highlight;
+    }
+}
+
+[data-contrast="more"] .dock-edge-btn[data-active="true"] {
+    outline: 1px solid var(--border-control);
+}
+
+.dock-control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-height: 32px;
+    padding: 0 var(--space-1);
+}
+
+.dock-control-row-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-body-size);
+    color: var(--foreground);
+}
+
+.dock-control-row-label > svg {
+    color: var(--muted);
+}
+
+.dock-menu-item-text {
+    flex: 1;
+}
+
+.dock-menu-item-trailing {
+    margin-inline-start: auto;
+    color: var(--muted);
+    opacity: 0.7;
 }
 
 .dock-overflow-name {
