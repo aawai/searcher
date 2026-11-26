@@ -71,6 +71,15 @@ type Operation = {
     startedAt: number;
 };
 
+type FocusVisibleOptions = FocusOptions & { focusVisible?: boolean };
+
+function focusElement(element: HTMLElement, focusVisible: boolean) {
+    const options: FocusVisibleOptions = focusVisible
+        ? {}
+        : { focusVisible: false };
+    element.focus(options);
+}
+
 const PRESETS: readonly (readonly [WindowPreset, string, string])[] = [
     ["center", "居中", "窗口已居中"],
     ["left", "左半屏", "窗口已移到左半屏"],
@@ -124,21 +133,22 @@ export function WindowFrame(
     // Frames mount with the window session, so focus placed before any input
     // reaches the document is a page load restoring the window. Sticky user
     // activation cannot tell: Chromium keeps it across reload and same-origin
-    // navigation.
-    const inputSeen = useRef(false);
+    // navigation. Track the latest input modality so pointer-activated window
+    // switches restore focus without flashing `:focus-visible`.
+    const lastInputModality = useRef<"keyboard" | "pointer" | null>(null);
     useEffect(() => {
-        const types = ["pointerdown", "keydown"] as const;
-        const stop = () => {
-            for (const type of types) {
-                document.removeEventListener(type, seen, true);
-            }
+        const onPointerDown = () => {
+            lastInputModality.current = "pointer";
         };
-        const seen = () => {
-            inputSeen.current = true;
-            stop();
+        const onKeyDown = () => {
+            lastInputModality.current = "keyboard";
         };
-        for (const type of types) document.addEventListener(type, seen, true);
-        return stop;
+        document.addEventListener("pointerdown", onPointerDown, true);
+        document.addEventListener("keydown", onKeyDown, true);
+        return () => {
+            document.removeEventListener("pointerdown", onPointerDown, true);
+            document.removeEventListener("keydown", onKeyDown, true);
+        };
     }, []);
     const drag = useRef<
         | {
@@ -169,6 +179,7 @@ export function WindowFrame(
             const token = (name: string) =>
                 parseFloat(css.getPropertyValue(name)) || 0;
             const gap = token("--window-margin");
+            const topbarGap = token("--space-2");
             let left = parseFloat(css.paddingLeft) + gap,
                 right = innerWidth - parseFloat(css.paddingRight) - gap;
             let top = parseFloat(css.paddingTop) + gap,
@@ -179,25 +190,32 @@ export function WindowFrame(
             const ball = document.querySelector<HTMLElement>(
                 ".dock-ball:not([inert])",
             );
-            const reserve = (element: HTMLElement, edge: string) => {
+            const reserve = (
+                element: HTMLElement,
+                edge: string,
+                margin = gap,
+            ) => {
                 const rect = element.getBoundingClientRect();
                 if (
                     !rect.width || !rect.height ||
                     getComputedStyle(element).visibility === "hidden"
                 ) return;
                 if (edge === "left") {
-                    left = Math.max(left, rect.right + gap);
+                    left = Math.max(left, rect.right + margin);
                 }
                 if (edge === "right") {
-                    right = Math.min(right, rect.left - gap);
+                    right = Math.min(right, rect.left - margin);
                 }
                 if (edge === "top") {
-                    top = Math.max(top, rect.bottom + gap);
+                    top = Math.max(top, rect.bottom + margin);
                 }
                 if (edge === "bottom") {
-                    bottom = Math.min(bottom, rect.top - gap);
+                    bottom = Math.min(bottom, rect.top - margin);
                 }
             };
+            // Keep window chrome below the global topbar utility controls.
+            const topbar = document.querySelector<HTMLElement>(".topbar");
+            if (topbar) reserve(topbar, "top", topbarGap);
             if (dock) reserve(dock, dock.dataset.edge ?? "bottom");
             if (ball) reserve(ball, ball.dataset.ballSide ?? "left");
             // A connection banner is chrome with its own action; keep it usable.
@@ -275,7 +293,7 @@ export function WindowFrame(
         const observeDock = () => {
             resizeObserver.disconnect();
             document.querySelectorAll(
-                ".dock-container, .dock-ball, .connection-banner",
+                ".topbar, .dock-container, .dock-ball, .connection-banner",
             ).forEach((node) => resizeObserver.observe(node));
             measure();
         };
@@ -331,20 +349,45 @@ export function WindowFrame(
         if (!active || !open || minimized) return;
         const node = frame.current;
         const target = lastFocus.current;
+        let restoreCleanup: (() => void) | undefined;
         const raf = requestAnimationFrame(() => {
             if (!node || node.contains(document.activeElement)) return;
-            if (target && node.contains(target)) target.focus();
+            const wantsVisibleFocus = lastInputModality.current === "keyboard";
+            if (target && node.contains(target)) {
+                const suppressRing = !wantsVisibleFocus &&
+                    !isEditableShortcutTarget(target);
+                if (suppressRing) {
+                    target.dataset.focusOrigin = "restore";
+                    const clearOrigin = () => {
+                        if (target.dataset.focusOrigin === "restore") {
+                            delete target.dataset.focusOrigin;
+                        }
+                        target.removeEventListener("blur", clearOrigin);
+                        node.removeEventListener("keydown", clearOrigin, true);
+                        restoreCleanup = undefined;
+                    };
+                    target.addEventListener("blur", clearOrigin);
+                    node.addEventListener("keydown", clearOrigin, true);
+                    restoreCleanup = clearOrigin;
+                } else if (target.dataset.focusOrigin === "restore") {
+                    delete target.dataset.focusOrigin;
+                }
+                focusElement(target, wantsVisibleFocus);
+            }
             if (!node.contains(document.activeElement)) {
                 const landing = titlebar.current ?? node;
-                landing.focus();
-                // Without any input yet the browser would ring this
-                // programmatic focus, though no keyboard led here.
-                if (landing === titlebar.current && !inputSeen.current) {
-                    setRestoredFocus(true);
+                focusElement(landing, wantsVisibleFocus);
+                // Without keyboard input leading here, keep this programmatic
+                // focus ringless until a key press (T8).
+                if (landing === titlebar.current) {
+                    setRestoredFocus(!wantsVisibleFocus);
                 }
             }
         });
-        return () => cancelAnimationFrame(raf);
+        return () => {
+            cancelAnimationFrame(raf);
+            restoreCleanup?.();
+        };
     }, [active, open, minimized]);
 
     useEscapeLayer(Boolean(operation && active && open && !minimized), () => {
@@ -540,7 +583,7 @@ export function WindowFrame(
                 tabIndex={-1}
                 className="window-frame"
                 data-window-id={id}
-                data-active={active || undefined}
+                data-active={active ? "true" : "false"}
                 {...backgroundLayer(inBackground)}
                 data-library={open ? libraryView : undefined}
                 hidden={!open || minimized || !rect ||

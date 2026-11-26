@@ -440,12 +440,19 @@
 .launcher-folder-item--small .launcher-folder-mini-glyph {
     font-size: var(--font-launcher-micro);
 }
-/* Large, all pointers: 3 x 3 slots (the 9th cell may be the remainder). */
+/* Large, all pointers: 3 x 3 slots (the 9th cell may be the remainder);
+   folders with 1–4 items step up to a balanced 2 x 2 grid. */
 .launcher-folder-item--large .launcher-folder-preview {
     grid-template-columns: repeat(3, var(--launcher-mini-size));
     grid-template-rows: repeat(3, var(--launcher-mini-size));
     gap: var(--space-1);
     padding: var(--space-3);
+}
+.launcher-folder-item--large .launcher-folder-preview:not(.launcher-folder-preview--empty):not(:has(> :nth-child(5))) {
+    --launcher-mini-size: min(var(--launcher-icon), calc((var(--launcher-surface-size) - 2 * var(--space-3) - var(--space-2)) / 2));
+    grid-template-columns: repeat(2, var(--launcher-mini-size));
+    grid-template-rows: repeat(2, var(--launcher-mini-size));
+    gap: var(--space-2);
 }
 .launcher-folder-item--small .launcher-folder-preview--empty {
     grid-template-columns: 1fr;
@@ -757,6 +764,11 @@
     grid-template-columns: repeat(auto-fill, var(--launcher-col-w));
     grid-auto-flow: row dense;
     justify-content: center;
+}
+@media (max-width: 639px) {
+    .launcher-grid--library {
+        justify-content: space-between;
+    }
 }
 .launcher-grid--library > .launcher-folder-item--large {
     grid-column: span 2;

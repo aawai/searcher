@@ -9,7 +9,7 @@ import {
     Sparkles,
     UserRound,
 } from "lucide-react";
-import { type ReactNode } from "react";
+import { type ReactNode, useLayoutEffect, useRef } from "react";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { routes, type SettingsTab } from "./routes.ts";
@@ -56,6 +56,20 @@ export function SettingsShell(
 ) {
     const { user } = useAppState();
     const { location, narrow: mobile, Link } = host;
+    const layoutRef = useRef<HTMLDivElement>(null);
+
+    useLayoutEffect(() => {
+        if (host.inWindow) {
+            const scrollContainer = layoutRef.current?.closest<HTMLElement>(
+                ".window-frame__content",
+            );
+            if (scrollContainer) {
+                scrollContainer.scrollTop = 0;
+                return;
+            }
+        }
+        globalThis.scrollTo?.(0, 0);
+    }, [location.pathname, current, host.inWindow]);
 
     const items = (Object.keys(sections) as SettingsSection[]).filter(
         (id) => id !== "account" || user,
@@ -64,6 +78,7 @@ export function SettingsShell(
     return (
         <PageShell as={host.inWindow ? "section" : "main"} archetype="utility">
             <div
+                ref={layoutRef}
                 className="settings-layout"
                 data-host-narrow={mobile ? "true" : undefined}
                 data-host-window={host.inWindow ? "true" : undefined}

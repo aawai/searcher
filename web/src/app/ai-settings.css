@@ -1,0 +1,401 @@
+/* Dedicated styles for AI Settings: compact provider cards, inline model filter,
+   batch actions, clear disabled badges, and container-responsive controls. */
+
+.ai-settings-root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+    min-width: 0;
+}
+
+.ai-settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+    padding-inline: var(--space-1);
+    min-width: 0;
+}
+
+.ai-settings-header-main {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    min-width: 0;
+}
+
+.ai-settings-heading {
+    margin: 0;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-title-weight);
+    color: var(--foreground);
+}
+
+.ai-settings-heading:focus {
+    outline: none;
+}
+
+.ai-settings-heading:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.ai-settings-summary {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.ai-top-error {
+    margin: 0;
+}
+
+.ai-provider-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.ai-provider-section[data-disabled="true"] .ai-provider-card {
+    opacity: 0.92;
+}
+
+.ai-provider-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding-inline: var(--space-1);
+    min-width: 0;
+}
+
+.ai-provider-collapse-btn {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: var(--control-compact-height);
+    padding: var(--space-1) var(--space-2);
+    margin-inline-start: calc(-1 * var(--space-2));
+    border: 0;
+    border-radius: var(--control-radius);
+    background: transparent;
+    color: var(--foreground);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background var(--motion-fast) var(--ease-standard);
+}
+
+@media (hover: hover) {
+    .ai-provider-collapse-btn:hover {
+        background: var(--surface-hover);
+    }
+}
+
+.ai-provider-collapse-btn:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+
+@media (any-pointer: coarse) {
+    .ai-provider-collapse-btn {
+        min-height: var(--control-touch-target);
+    }
+}
+
+.ai-provider-chevron {
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: transform var(--motion-fast) var(--ease-standard);
+}
+
+.ai-provider-title {
+    margin: 0;
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-title-weight);
+    overflow-wrap: anywhere;
+}
+
+.ai-provider-badges {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+}
+
+.ai-provider-count {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.ai-provider-menu-btn {
+    flex-shrink: 0;
+}
+
+.ai-provider-disabled-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-card-padding);
+    background: var(--warning-soft);
+    color: var(--foreground);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    border-bottom: 1px solid var(--border);
+}
+
+.ai-provider-disabled-banner-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+/* Search & batch toolbar for providers with >5 models */
+.ai-model-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-card-padding);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.ai-model-search {
+    flex: 1 1 180px;
+    min-width: 0;
+}
+
+.search-field.ai-model-search > .cn-input.search-field-input {
+    height: var(--control-compact-height);
+    min-height: var(--control-compact-height);
+}
+
+.search-field.ai-model-search > .search-field-clear {
+    width: calc(var(--control-compact-height) - var(--space-1));
+    height: calc(var(--control-compact-height) - var(--space-1));
+}
+
+.ai-model-batch-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-shrink: 0;
+}
+
+/* Compact model row */
+.ai-model-row {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-card-padding);
+    min-width: 0;
+    transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.ai-model-row[data-pending="true"] {
+    opacity: var(--opacity-disabled);
+}
+
+.ai-model-row[data-inactive="true"] .ai-model-name {
+    color: var(--muted);
+}
+
+.ai-model-row + .ai-model-row::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: var(--space-card-padding) 0;
+    height: 1px;
+    background: var(--border);
+}
+
+.ai-model-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-3);
+    min-width: 0;
+}
+
+.ai-model-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.ai-model-title-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    min-width: 0;
+}
+
+.ai-model-name {
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
+    color: var(--foreground);
+    overflow-wrap: anywhere;
+}
+
+.ai-model-subid {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-family: var(--font-mono);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+
+.ai-model-meta {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+.ai-model-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--space-1) var(--space-3);
+    width: 100%;
+    min-width: 0;
+}
+
+.ai-model-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-compact-height);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--foreground);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.ai-model-toggle[data-disabled="true"] {
+    color: var(--muted);
+    opacity: var(--opacity-disabled);
+    cursor: not-allowed;
+}
+
+.ai-model-default-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-compact-height);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    white-space: nowrap;
+}
+
+.ai-model-reasoning-btn {
+    margin-inline-start: auto;
+    flex-shrink: 0;
+}
+
+@container settings-panel (max-width: 519px) {
+    .ai-model-controls {
+        gap: var(--space-2) var(--space-3);
+    }
+}
+
+@media (any-pointer: coarse), (hover: none) {
+    .search-field.ai-model-search > .cn-input.search-field-input {
+        height: auto;
+        min-height: var(--control-touch-target);
+    }
+
+    .search-field.ai-model-search > .search-field-clear {
+        width: var(--control-touch-target);
+        height: var(--control-touch-target);
+    }
+}
+
+@media (any-pointer: coarse) {
+    .ai-model-toggle,
+    .ai-model-default-radio {
+        min-height: var(--control-touch-target);
+    }
+}
+
+/* Inset focus ring safeguard if a full-width card button is ever used inside overflow:hidden */
+.ai-settings-root .settings-add-row:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
+
+.ai-provider-enable-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--field-border);
+    border-radius: var(--control-radius);
+    background: var(--surface-soft);
+}
+
+.ai-provider-enable-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ai-provider-enable-label {
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    font-weight: var(--font-label-weight);
+    color: var(--foreground);
+    cursor: pointer;
+}
+
+.ai-provider-enable-hint {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+}
+
+.ai-empty-row {
+    padding: var(--space-3) var(--space-card-padding);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    color: var(--muted);
+    font-size: var(--font-body-size);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ai-provider-collapse-btn,
+    .ai-provider-chevron,
+    .ai-model-row {
+        transition: none;
+    }
+}

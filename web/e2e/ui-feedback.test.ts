@@ -683,7 +683,7 @@ Deno.test("UI feedback, confirmation dialogs, and undo contracts", async (t) => 
             await visit("/settings/ai", aiPage);
 
             const provGroup = aiPage.locator(
-                ".settings-group:has-text('Test AI Provider')",
+                ".ai-provider-section:has-text('Test AI Provider')",
             );
             await provGroup.waitFor({ state: "visible" });
             const provMenuBtn = provGroup.getByRole("button", {

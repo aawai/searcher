@@ -131,6 +131,13 @@
         calc(var(--documents-drawer-width) + var(--documents-drawer-gap))
     );
 }
+/* Narrow hosts slide the full-width editor card aside instead of crushing it
+   into a sliver; `.documents-layout { overflow: hidden }` clips the off-screen edge. */
+@container (max-width: 560px) {
+    .documents-layout[data-drawer="open"] > .documents-editor-pane {
+        flex: 0 0 100%;
+    }
+}
 .documents-layout[data-outline-drawer="open"] > .documents-editor-pane {
     flex: 0 0 calc(
         100% - var(--documents-outline-drawer-width) -
@@ -290,7 +297,7 @@
     --tree-level: 1;
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-1);
     min-width: 0;
     min-height: var(--control-compact-height);
     padding-block: var(--space-1);
@@ -298,7 +305,7 @@
     /* Level 1 starts on the sidebar's content line (--space-3 inside the box
        edge), the same inset as the search box glyph and the entries. */
     padding-inline-start: calc(var(--space-3) + (var(--tree-level) - 1) *
-        var(--space-4));
+        var(--space-3));
     border-radius: var(--control-radius);
     cursor: pointer;
     user-select: none;

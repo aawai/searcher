@@ -334,6 +334,22 @@ export class AiService {
         let encryptedApiKey = existing.encryptedApiKey;
         let discovered: DiscoveredModelWithCapabilities[] = [];
         if (
+            input.enabled === true &&
+            !existing.enabled &&
+            input.apiKey === undefined
+        ) {
+            const existingKey = (await decryptApiKey(
+                existing.encryptedApiKey,
+                this.#encryptionKey,
+            )).trim();
+            if (!existingKey) {
+                throw new AiServiceError(
+                    "请先在编辑中配置 API Key 后再启用服务商",
+                    400,
+                );
+            }
+        }
+        if (
             input.apiKey !== undefined ||
             input.baseUrl !== undefined ||
             input.discoveryMode !== undefined
@@ -602,27 +618,38 @@ export class AiService {
                 const rows = await query.where(
                     eq(aiModels.providerId, providerId),
                 ).all();
-                return this.#filterModels(rows, isAdmin);
+                return this.#filterModels(rows, providerMap, userId, isAdmin);
             }
 
             const allRows = await query.all();
             const validRows = allRows.filter((r) =>
                 providerMap.has(r.providerId)
             );
-            return this.#filterModels(validRows, isAdmin);
+            return this.#filterModels(validRows, providerMap, userId, isAdmin);
         });
     }
 
     #filterModels(
         rows: typeof aiModels.$inferSelect[],
+        providerMap: Map<string, typeof aiProviders.$inferSelect>,
+        userId: string,
         isAdmin: boolean,
     ): AiModelDto[] {
         return rows
             .filter((r) => {
+                const provider = providerMap.get(r.providerId);
+                if (!provider) return false;
                 if (isAdmin) return true;
-                return r.enabled && r.visibleToUsers;
+                if (
+                    provider.scope === "user" &&
+                    provider.ownerUserId === userId
+                ) {
+                    return true;
+                }
+                return provider.enabled && r.enabled && r.visibleToUsers;
             })
             .map((r) => {
+                const provider = providerMap.get(r.providerId);
                 const caps = populateModelDtoCapabilities(r);
                 return {
                     id: r.id,
@@ -632,6 +659,7 @@ export class AiService {
                     enabled: r.enabled,
                     visibleToUsers: r.visibleToUsers,
                     isDefault: r.isDefault,
+                    providerEnabled: provider?.enabled ?? true,
                     supportsText: r.supportsText,
                     supportsVision: r.supportsVision,
                     supportsTools: r.supportsTools,
@@ -687,8 +715,28 @@ export class AiService {
             }
 
             const now = this.#now();
+            const nextEnabled = input.enabled ?? model.enabled;
+            const nextVisibleToUsers = input.visibleToUsers !== undefined
+                ? input.visibleToUsers
+                : provider.scope === "user" && input.enabled !== undefined
+                ? nextEnabled
+                : model.visibleToUsers;
+            const isUsable = nextEnabled && nextVisibleToUsers;
 
-            if (input.isDefault) {
+            if (input.isDefault === true && !isUsable) {
+                throw new AiServiceError(
+                    provider.scope === "system"
+                        ? "只能将已启用且对用户可见的模型设为默认"
+                        : "只能将已启用的模型设为默认",
+                    400,
+                );
+            }
+
+            const nextIsDefault = isUsable
+                ? (input.isDefault ?? model.isDefault)
+                : false;
+
+            if (nextIsDefault && input.isDefault) {
                 // 如果当前设为默认，取消该 Provider 其他模型的默认状态
                 await db.update(aiModels)
                     .set({ isDefault: false, updatedAt: now })
@@ -709,10 +757,9 @@ export class AiService {
             await db.update(aiModels)
                 .set({
                     displayName: input.displayName ?? model.displayName,
-                    enabled: input.enabled ?? model.enabled,
-                    visibleToUsers: input.visibleToUsers ??
-                        model.visibleToUsers,
-                    isDefault: input.isDefault ?? model.isDefault,
+                    enabled: nextEnabled,
+                    visibleToUsers: nextVisibleToUsers,
+                    isDefault: nextIsDefault,
                     metadataJson: updatedMetadata,
                     updatedAt: now,
                 })
@@ -738,6 +785,7 @@ export class AiService {
                 enabled: currentRecord.enabled,
                 visibleToUsers: currentRecord.visibleToUsers,
                 isDefault: currentRecord.isDefault,
+                providerEnabled: provider.enabled,
                 supportsText: currentRecord.supportsText,
                 supportsVision: currentRecord.supportsVision,
                 supportsTools: currentRecord.supportsTools,
@@ -2301,7 +2349,9 @@ export class AiService {
                 finalStatus = signal?.aborted ? "interrupted" : "failed";
                 yield {
                     event: "error",
-                    data: signal?.aborted ? "请求已中断" : "回答生成失败，请重试。",
+                    data: signal?.aborted
+                        ? "请求已中断"
+                        : "回答生成失败，请重试。",
                 };
             } finally {
                 const finishedNow = this.#now();

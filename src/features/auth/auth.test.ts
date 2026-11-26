@@ -736,3 +736,118 @@ Deno.test({
         }
     },
 });
+
+Deno.test({
+    name:
+        "auth contract: PATCH /api/account preserves omitted email, clears email with null or empty string, and rejects invalid email",
+    async fn() {
+        const { store, app } = await setupTestApp();
+        try {
+            const regRes = await app.request("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    origin: ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: "email_clear_user",
+                    email: "initial@example.com",
+                    displayName: "Initial Name",
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(regRes.status, STATUS_CODE.OK);
+            const token = extractCookie(regRes, SESSION_COOKIE_NAME);
+            assertNotEquals(token, null);
+            const authHeaders = {
+                origin: ORIGIN,
+                "content-type": "application/json",
+                cookie: `${SESSION_COOKIE_NAME}=${token}`,
+            };
+
+            // 1. Omitting email preserves existing email
+            const preserveRes = await app.request("/api/account", {
+                method: "PATCH",
+                headers: authHeaders,
+                body: JSON.stringify({ displayName: "Updated Name" }),
+            });
+            assertEquals(preserveRes.status, STATUS_CODE.OK);
+            const preserveBody = await preserveRes.json() as Envelope<
+                { user: UserDto }
+            >;
+            assertEquals(preserveBody.data?.user.displayName, "Updated Name");
+            assertEquals(preserveBody.data?.user.email, "initial@example.com");
+
+            // 2. Sending null clears email
+            const clearNullRes = await app.request("/api/account", {
+                method: "PATCH",
+                headers: authHeaders,
+                body: JSON.stringify({
+                    displayName: "Updated Name",
+                    email: null,
+                }),
+            });
+            assertEquals(clearNullRes.status, STATUS_CODE.OK);
+            const clearNullBody = await clearNullRes.json() as Envelope<
+                { user: UserDto }
+            >;
+            assertEquals(clearNullBody.data?.user.email, undefined);
+
+            const meAfterNullRes = await app.request("/api/auth/me", {
+                headers: { cookie: `${SESSION_COOKIE_NAME}=${token}` },
+            });
+            assertEquals(meAfterNullRes.status, STATUS_CODE.OK);
+            const meAfterNullBody = await meAfterNullRes.json() as Envelope<
+                { user: UserDto }
+            >;
+            assertEquals(meAfterNullBody.data?.user.email, undefined);
+
+            // Old email can no longer be used to log in
+            const oldEmailLoginRes = await app.request("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    origin: ORIGIN,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                    account: "initial@example.com",
+                    password: "Password123456!",
+                }),
+            });
+            assertEquals(oldEmailLoginRes.status, STATUS_CODE.BadRequest);
+
+            // 3. Re-add email, then clear with empty/whitespace string
+            const readdRes = await app.request("/api/account", {
+                method: "PATCH",
+                headers: authHeaders,
+                body: JSON.stringify({ email: "  ReAdded@Example.COM " }),
+            });
+            assertEquals(readdRes.status, STATUS_CODE.OK);
+            const readdBody = await readdRes.json() as Envelope<
+                { user: UserDto }
+            >;
+            assertEquals(readdBody.data?.user.email, "readded@example.com");
+
+            const clearEmptyRes = await app.request("/api/account", {
+                method: "PATCH",
+                headers: authHeaders,
+                body: JSON.stringify({ email: "   " }),
+            });
+            assertEquals(clearEmptyRes.status, STATUS_CODE.OK);
+            const clearEmptyBody = await clearEmptyRes.json() as Envelope<
+                { user: UserDto }
+            >;
+            assertEquals(clearEmptyBody.data?.user.email, undefined);
+
+            // 4. Invalid email is still rejected with 400
+            const invalidRes = await app.request("/api/account", {
+                method: "PATCH",
+                headers: authHeaders,
+                body: JSON.stringify({ email: "not-an-email" }),
+            });
+            assertEquals(invalidRes.status, STATUS_CODE.BadRequest);
+        } finally {
+            await store.close();
+        }
+    },
+});

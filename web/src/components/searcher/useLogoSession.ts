@@ -124,7 +124,8 @@ export function useLogoSession(options: LogoSessionOptions) {
             if (!isCurrent(sessionKey)) return;
             setProviders(availableProviders);
             const available = items.filter((item) =>
-                item.enabled && item.visibleToUsers
+                item.enabled && item.visibleToUsers &&
+                item.providerEnabled !== false
             );
             setModels(available);
             initialModelId.current = available[0]?.id || "";

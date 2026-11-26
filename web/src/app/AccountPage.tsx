@@ -1,5 +1,7 @@
 import {
     type ChangeEvent,
+    type KeyboardEvent,
+    type ReactNode,
     type SubmitEvent,
     useEffect,
     useRef,
@@ -73,6 +75,52 @@ import { type PageHost, usePagePresenter } from "./page-host.tsx";
 const passwordRules = AUTH_CREDENTIAL_RULES.password;
 const passwordRule =
     `密码长度须为 ${passwordRules.minLength}–${passwordRules.maxLength} 个字符`;
+const DIALOG_TABBABLE_SELECTOR =
+    'a[href], area[href], button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+
+function handleDialogTabWrap(event: KeyboardEvent<HTMLElement>) {
+    if (
+        event.key !== "Tab" ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey
+    ) {
+        return;
+    }
+    const candidates = Array.from(
+        event.currentTarget.querySelectorAll<HTMLElement>(
+            DIALOG_TABBABLE_SELECTOR,
+        ),
+    ).filter((el) =>
+        el.tabIndex >= 0 &&
+        !el.matches(":disabled") &&
+        !el.hasAttribute("data-disabled") &&
+        !el.hasAttribute("inert") &&
+        !el.hasAttribute("data-base-ui-focus-guard") &&
+        !el.hasAttribute("data-floating-ui-focus-guard") &&
+        el.getAttribute("aria-hidden") !== "true" &&
+        !el.closest('[aria-hidden="true"], [inert]') &&
+        el.getAttribute("aria-disabled") !== "true" &&
+        el.getClientRects().length > 0
+    );
+    if (candidates.length === 0) return;
+    const first = candidates[0];
+    const last = candidates[candidates.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey) {
+        if (
+            active === first ||
+            active === event.currentTarget ||
+            !event.currentTarget.contains(active)
+        ) {
+            event.preventDefault();
+            last.focus();
+        }
+    } else if (active === last || !event.currentTarget.contains(active)) {
+        event.preventDefault();
+        first.focus();
+    }
+}
 
 interface SessionDevice {
     id: string;
@@ -159,12 +207,40 @@ function SessionConfirmDialog(
     );
 }
 
+export function useAccountHeaderActions(host: PageHost): ReactNode {
+    const { user } = useAppState();
+    const { Link } = host;
+    if (user?.role !== "admin") return undefined;
+    return (
+        <Link
+            to={routes.admin()}
+            viewTransition
+            className={buttonVariants({
+                variant: "outline",
+                size: "sm",
+            })}
+        >
+            管理后台
+        </Link>
+    );
+}
+
 export function AccountPage() {
     return <AccountContent host={usePagePresenter()} />;
 }
 
-export function AccountContent({ host }: { host: PageHost }) {
+export function AccountPanel({ host }: { host: PageHost }) {
+    return <AccountContent host={host} embeddedInShell />;
+}
+
+export function AccountContent(
+    { host, embeddedInShell = false }: {
+        host: PageHost;
+        embeddedInShell?: boolean;
+    },
+) {
     const { user, authSession, updateProfile, logout } = useAppState();
+    const headerActions = useAccountHeaderActions(host);
     const { navigate, location, Link } = host;
     const mounted = useRef(true);
     useEffect(() => {
@@ -209,6 +285,7 @@ export function AccountContent({ host }: { host: PageHost }) {
     const [passwordFieldError, setPasswordFieldError] = useState<
         { field: "new" | "confirm"; message: string } | null
     >(null);
+    const passwordTriggerRef = useRef<HTMLButtonElement>(null);
     const newPasswordRef = useRef<HTMLInputElement>(null);
     const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
@@ -414,11 +491,12 @@ export function AccountContent({ host }: { host: PageHost }) {
         setProfileSuccess("");
         setProfileSaving(true);
         try {
+            const trimmedEmail = email.trim();
             const res = await api<{ user: UserDto }>(
                 "/api/account",
                 json("PATCH", {
                     displayName: displayName.trim(),
-                    email: email.trim() || undefined,
+                    email: trimmedEmail === "" ? null : trimmedEmail,
                 }),
             );
             if (!isCurrent()) return;
@@ -576,25 +654,30 @@ export function AccountContent({ host }: { host: PageHost }) {
     };
 
     if (!user) {
-        return (
-            <SettingsShell current="account" host={host}>
-                <EmptyState
-                    illustration="auth-or-error"
-                    title="未登录"
-                    action={
-                        <Link
-                            to={authPath("login", location)}
-                            viewTransition
-                            className={buttonVariants({
-                                variant: "default",
-                            })}
-                        >
-                            前往登录
-                        </Link>
-                    }
-                />
-            </SettingsShell>
+        const emptyContent = (
+            <EmptyState
+                illustration="auth-or-error"
+                title="未登录"
+                action={
+                    <Link
+                        to={authPath("login", location)}
+                        viewTransition
+                        className={buttonVariants({
+                            variant: "default",
+                        })}
+                    >
+                        前往登录
+                    </Link>
+                }
+            />
         );
+        return embeddedInShell
+            ? emptyContent
+            : (
+                <SettingsShell current="account" host={host}>
+                    {emptyContent}
+                </SettingsShell>
+            );
     }
 
     const isForcedReset = user.mustChangePassword;
@@ -603,363 +686,364 @@ export function AccountContent({ host }: { host: PageHost }) {
     const profileUnchanged = displayName === user.displayName &&
         email === (user.email ?? "");
 
-    return (
+    const accountBody = (
         <>
-            <SettingsShell
-                host={host}
-                current="account"
-                actions={user.role === "admin"
-                    ? (
-                        <Link
-                            to={routes.admin()}
-                            viewTransition
-                            className={buttonVariants({
-                                variant: "outline",
-                                size: "sm",
-                            })}
-                        >
-                            管理后台
-                        </Link>
-                    )
-                    : undefined}
-            >
-                {isForcedReset && (
-                    <StatusBanner
-                        tone="warning"
-                        className="account-forced-banner"
-                    >
-                        管理员已重置密码，请先设置新密码。
-                    </StatusBanner>
-                )}
+            {isForcedReset && (
+                <StatusBanner
+                    tone="warning"
+                    className="account-forced-banner"
+                >
+                    管理员已重置密码，请先设置新密码。
+                </StatusBanner>
+            )}
 
-                <div className="account-identity">
-                    <div className="account-identity-main">
-                        <span className="account-avatar" aria-hidden="true">
-                            <UserAvatar user={user} />
-                        </span>
-                        <div className="account-identity-text">
-                            <p className="account-identity-name">
-                                {user.displayName}
-                            </p>
-                            <p className="account-identity-meta">
-                                @{user.username} · {roleLabel}
-                            </p>
-                        </div>
+            <div className="account-identity">
+                <div className="account-identity-main">
+                    <span className="account-avatar" aria-hidden="true">
+                        <UserAvatar user={user} />
+                    </span>
+                    <div className="account-identity-text">
+                        <p className="account-identity-name">
+                            {user.displayName}
+                        </p>
+                        <p className="account-identity-meta">
+                            @{user.username} · {roleLabel}
+                        </p>
                     </div>
-                    <div className="account-identity-actions">
-                        <input
-                            ref={avatarInputRef}
-                            type="file"
-                            accept={AVATAR_ALLOWED_MIME_TYPES.join(",")}
-                            className="sr-only"
-                            aria-hidden="true"
-                            tabIndex={-1}
-                            onChange={handleAvatarFileChange}
-                        />
-                        {user.avatarUrl || avatarMeta
-                            ? (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger
-                                        className={buttonVariants({
-                                            variant: "outline",
-                                            size: "sm",
-                                        })}
+                </div>
+                <div className="account-identity-actions">
+                    <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept={AVATAR_ALLOWED_MIME_TYPES.join(",")}
+                        className="sr-only"
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        onChange={handleAvatarFileChange}
+                    />
+                    {user.avatarUrl || avatarMeta
+                        ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger
+                                    className={buttonVariants({
+                                        variant: "outline",
+                                        size: "sm",
+                                    })}
+                                >
+                                    <span>编辑头像</span>
+                                    <ChevronDown
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent sideOffset={6}>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            avatarInputRef.current?.click()}
                                     >
-                                        <span>编辑头像</span>
-                                        <ChevronDown
+                                        <Upload
                                             size="1em"
                                             className="icon-sm"
                                             aria-hidden="true"
                                         />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent sideOffset={6}>
-                                        <DropdownMenuItem
-                                            onClick={() =>
-                                                avatarInputRef.current?.click()}
-                                        >
-                                            <Upload
-                                                size="1em"
-                                                className="icon-sm"
-                                                aria-hidden="true"
-                                            />
-                                            <span>更换头像</span>
-                                        </DropdownMenuItem>
-                                        {avatarMeta && (
-                                            <>
-                                                <DropdownMenuItem
-                                                    onClick={handleOpenRecrop}
-                                                >
-                                                    <Crop
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                        aria-hidden="true"
+                                        <span>更换头像</span>
+                                    </DropdownMenuItem>
+                                    {avatarMeta && (
+                                        <>
+                                            <DropdownMenuItem
+                                                onClick={handleOpenRecrop}
+                                            >
+                                                <Crop
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                    aria-hidden="true"
+                                                />
+                                                <span>调整裁剪</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                render={
+                                                    <a
+                                                        href={avatarMeta
+                                                            .originalUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
                                                     />
-                                                    <span>调整裁剪</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    render={
-                                                        <a
-                                                            href={avatarMeta
-                                                                .originalUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        />
-                                                    }
-                                                >
-                                                    <ExternalLink
-                                                        size="1em"
-                                                        className="icon-sm"
-                                                        aria-hidden="true"
-                                                    />
-                                                    <span>查看原图</span>
-                                                </DropdownMenuItem>
-                                            </>
-                                        )}
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            variant="destructive"
-                                            onClick={() =>
-                                                setRemoveAvatarOpen(true)}
-                                        >
-                                            <Trash2
-                                                size="1em"
-                                                className="icon-sm"
-                                                aria-hidden="true"
-                                            />
-                                            <span>移除头像</span>
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            )
-                            : (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                        avatarInputRef.current?.click()}
-                                >
-                                    上传头像
-                                </Button>
-                            )}
-                    </div>
-                </div>
-
-                {avatarActionSuccess && (
-                    <StatusBanner
-                        tone="success"
-                        className="account-forced-banner"
-                    >
-                        {avatarActionSuccess}
-                    </StatusBanner>
-                )}
-                {avatarActionError && (
-                    <StatusBanner
-                        tone="error"
-                        className="account-forced-banner"
-                    >
-                        {avatarActionError}
-                    </StatusBanner>
-                )}
-
-                <form className="account-profile" onSubmit={handleSaveProfile}>
-                    <SettingsGroup
-                        title="个人资料"
-                        actions={
-                            <Button
-                                type="submit"
-                                variant="default"
-                                size="sm"
-                                disabled={profileSaving || profileUnchanged}
-                            >
-                                {profileSaving ? "保存中…" : "保存资料"}
-                            </Button>
-                        }
-                    >
-                        <SettingsRow title="用户名">
-                            <span>{user.username}</span>
-                        </SettingsRow>
-                        <SettingsRow
-                            title="显示名称"
-                            labelFor="account-display-name"
-                            className="settings-row--vertical"
-                        >
-                            <Input
-                                id="account-display-name"
-                                name="displayName"
-                                placeholder="输入显示名称"
-                                type="text"
-                                autoComplete="name"
-                                required
-                                maxLength={40}
-                                value={displayName}
-                                onChange={(e) => setDisplayName(e.target.value)}
-                            />
-                        </SettingsRow>
-                        <SettingsRow
-                            title="邮箱"
-                            labelFor="account-email"
-                            className="settings-row--vertical"
-                        >
-                            <Input
-                                id="account-email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                spellCheck={false}
-                                placeholder="name@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </SettingsRow>
-                    </SettingsGroup>
-                    {profileSuccess && (
-                        <StatusBanner tone="success">
-                            {profileSuccess}
-                        </StatusBanner>
-                    )}
-                    {profileError && (
-                        <StatusBanner tone="error">{profileError}</StatusBanner>
-                    )}
-                </form>
-
-                <SettingsGroup title="安全">
-                    <SettingsRow title="密码">
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant={isForcedReset ? "default" : "outline"}
-                            onClick={() => setPasswordDialogOpen(true)}
-                        >
-                            {isForcedReset ? "重置密码" : "修改密码"}
-                        </Button>
-                    </SettingsRow>
-                </SettingsGroup>
-
-                <SettingsGroup
-                    title="登录设备"
-                    actions={
-                        <>
-                            {hasOtherDevices && (
-                                <Button
-                                    type="button"
-                                    variant="ghost-danger"
-                                    size="sm"
-                                    disabled={devicesLoading ||
-                                        revokeDevicePending ||
-                                        revokeOthersPending ||
-                                        logoutCurrentPending}
-                                    onClick={() => setRevokeOthersOpen(true)}
-                                >
-                                    退出其他所有设备
-                                </Button>
-                            )}
+                                                }
+                                            >
+                                                <ExternalLink
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                    aria-hidden="true"
+                                                />
+                                                <span>查看原图</span>
+                                            </DropdownMenuItem>
+                                        </>
+                                    )}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        variant="destructive"
+                                        onClick={() =>
+                                            setRemoveAvatarOpen(true)}
+                                    >
+                                        <Trash2
+                                            size="1em"
+                                            className="icon-sm"
+                                            aria-hidden="true"
+                                        />
+                                        <span>移除头像</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )
+                        : (
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                aria-label="刷新设备列表"
-                                title="刷新设备列表"
-                                disabled={devicesLoading}
-                                onClick={() => void loadDevices()}
+                                onClick={() => avatarInputRef.current?.click()}
                             >
-                                <RefreshCw
-                                    size="1em"
-                                    className={cn(
-                                        "icon-sm",
-                                        devicesLoading && "animate-spin",
-                                    )}
-                                />
-                                <span>
-                                    {devicesLoading ? "刷新中…" : "刷新"}
-                                </span>
+                                上传头像
                             </Button>
-                        </>
-                    }
+                        )}
+                </div>
+            </div>
+
+            {avatarActionSuccess && (
+                <StatusBanner
+                    tone="success"
+                    className="account-forced-banner"
                 >
-                    {devicesLoading && devices.length === 0
-                        ? (
-                            <LoadingState
-                                density="compact"
-                                className="account-device-empty"
+                    {avatarActionSuccess}
+                </StatusBanner>
+            )}
+            {avatarActionError && (
+                <StatusBanner
+                    tone="error"
+                    className="account-forced-banner"
+                >
+                    {avatarActionError}
+                </StatusBanner>
+            )}
+
+            <form className="account-profile" onSubmit={handleSaveProfile}>
+                <SettingsGroup title="个人资料">
+                    <SettingsRow title="用户名">
+                        <span>{user.username}</span>
+                    </SettingsRow>
+                    <SettingsRow
+                        title="显示名称"
+                        labelFor="account-display-name"
+                        className="settings-row--vertical"
+                    >
+                        <Input
+                            id="account-display-name"
+                            name="displayName"
+                            placeholder="输入显示名称"
+                            type="text"
+                            autoComplete="name"
+                            required
+                            maxLength={40}
+                            value={displayName}
+                            onChange={(e) => {
+                                setDisplayName(e.target.value);
+                                if (profileSuccess) setProfileSuccess("");
+                                if (profileError) setProfileError("");
+                            }}
+                        />
+                    </SettingsRow>
+                    <SettingsRow
+                        title="邮箱"
+                        labelFor="account-email"
+                        className="settings-row--vertical"
+                    >
+                        <Input
+                            id="account-email"
+                            name="email"
+                            type="email"
+                            autoComplete="email"
+                            spellCheck={false}
+                            placeholder="name@example.com"
+                            value={email}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                if (profileSuccess) setProfileSuccess("");
+                                if (profileError) setProfileError("");
+                            }}
+                        />
+                    </SettingsRow>
+                </SettingsGroup>
+                {profileSuccess && (
+                    <StatusBanner tone="success">
+                        {profileSuccess}
+                    </StatusBanner>
+                )}
+                {profileError && (
+                    <StatusBanner tone="error">{profileError}</StatusBanner>
+                )}
+                <div className="account-profile-actions">
+                    <Button
+                        type="submit"
+                        variant="default"
+                        size="sm"
+                        disabled={profileSaving || profileUnchanged}
+                    >
+                        {profileSaving ? "保存中…" : "保存资料"}
+                    </Button>
+                </div>
+            </form>
+
+            <SettingsGroup title="安全">
+                <SettingsRow title="密码">
+                    <Button
+                        ref={passwordTriggerRef}
+                        type="button"
+                        size="sm"
+                        variant={isForcedReset ? "default" : "outline"}
+                        onClick={() => setPasswordDialogOpen(true)}
+                    >
+                        {isForcedReset ? "重置密码" : "修改密码"}
+                    </Button>
+                </SettingsRow>
+            </SettingsGroup>
+
+            <SettingsGroup
+                title="登录设备"
+                actions={
+                    <>
+                        {hasOtherDevices && (
+                            <Button
+                                type="button"
+                                variant="ghost-danger"
+                                size="sm"
+                                disabled={devicesLoading ||
+                                    revokeDevicePending ||
+                                    revokeOthersPending ||
+                                    logoutCurrentPending}
+                                onClick={() => setRevokeOthersOpen(true)}
                             >
-                                正在加载登录设备…
-                            </LoadingState>
-                        )
-                        : devices.length === 0
-                        ? (
-                            <EmptyState
-                                density="inline"
-                                headingLevel={3}
-                                title="暂无活跃设备记录"
-                                className="account-device-empty"
+                                退出其他所有设备
+                            </Button>
+                        )}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            aria-label="刷新设备列表"
+                            title="刷新设备列表"
+                            disabled={devicesLoading}
+                            onClick={() => void loadDevices()}
+                        >
+                            <RefreshCw
+                                size="1em"
+                                className={cn(
+                                    "icon-sm account-refresh-icon",
+                                    devicesLoading && "animate-spin",
+                                )}
                             />
-                        )
-                        : (
-                            <div className="account-device-list">
-                                {devices.map((device) => (
-                                    <SettingsRow
-                                        key={device.id}
-                                        className="account-device-item"
-                                        title={describeDevice(
-                                            device.userAgent,
-                                        )}
-                                        description={
-                                            <span className="account-device-meta">
-                                                {device.isCurrent && (
-                                                    <span className="account-device-current">
-                                                        当前设备
-                                                    </span>
-                                                )}
-                                                <span>
-                                                    {device.ip || "未知 IP"}
+                            <span>
+                                {devicesLoading ? "刷新中…" : "刷新"}
+                            </span>
+                        </Button>
+                    </>
+                }
+            >
+                {devicesLoading && devices.length === 0
+                    ? (
+                        <LoadingState
+                            density="compact"
+                            className="account-device-empty"
+                        >
+                            正在加载登录设备…
+                        </LoadingState>
+                    )
+                    : devices.length === 0
+                    ? (
+                        <EmptyState
+                            density="inline"
+                            headingLevel={3}
+                            title="暂无活跃设备记录"
+                            className="account-device-empty"
+                        />
+                    )
+                    : (
+                        <div className="account-device-list">
+                            {devices.map((device) => (
+                                <SettingsRow
+                                    key={device.id}
+                                    className="account-device-item"
+                                    title={describeDevice(
+                                        device.userAgent,
+                                    )}
+                                    description={
+                                        <span className="account-device-meta">
+                                            {device.isCurrent && (
+                                                <span className="account-device-current">
+                                                    当前设备
                                                 </span>
-                                                <span>
-                                                    登录于 {formatTime(
-                                                        device.createdAt,
-                                                    )}
-                                                </span>
-                                                {device.lastActiveAt && (
-                                                    <span>
-                                                        最近活动 {formatTime(
-                                                            device
-                                                                .lastActiveAt,
-                                                        )}
-                                                    </span>
+                                            )}
+                                            <span>
+                                                {device.ip || "未知 IP"}
+                                            </span>
+                                            <span>
+                                                登录于 {formatTime(
+                                                    device.createdAt,
                                                 )}
                                             </span>
-                                        }
+                                            {device.lastActiveAt && (
+                                                <span>
+                                                    最近活动 {formatTime(
+                                                        device
+                                                            .lastActiveAt,
+                                                    )}
+                                                </span>
+                                            )}
+                                        </span>
+                                    }
+                                >
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost-danger"
+                                        disabled={devicesLoading ||
+                                            revokeDevicePending ||
+                                            logoutCurrentPending ||
+                                            revokeOthersPending}
+                                        onClick={() =>
+                                            handleRevokeDevice(device)}
                                     >
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant="ghost-danger"
-                                            disabled={devicesLoading ||
-                                                revokeDevicePending ||
-                                                logoutCurrentPending ||
-                                                revokeOthersPending}
-                                            onClick={() =>
-                                                handleRevokeDevice(device)}
-                                        >
-                                            退出
-                                        </Button>
-                                    </SettingsRow>
-                                ))}
-                            </div>
-                        )}
-                </SettingsGroup>
+                                        退出
+                                    </Button>
+                                </SettingsRow>
+                            ))}
+                        </div>
+                    )}
+            </SettingsGroup>
 
-                {devicesActionMsg && (
-                    <StatusBanner tone="success" className="account-status">
-                        {devicesActionMsg}
-                    </StatusBanner>
-                )}
-                {devicesError && (
-                    <StatusBanner tone="error" className="account-status">
-                        {devicesError}
-                    </StatusBanner>
-                )}
-            </SettingsShell>
+            {devicesActionMsg && (
+                <StatusBanner tone="success" className="account-status">
+                    {devicesActionMsg}
+                </StatusBanner>
+            )}
+            {devicesError && (
+                <StatusBanner tone="error" className="account-status">
+                    {devicesError}
+                </StatusBanner>
+            )}
+        </>
+    );
+
+    return (
+        <>
+            {embeddedInShell ? accountBody : (
+                <SettingsShell
+                    host={host}
+                    current="account"
+                    actions={headerActions}
+                >
+                    {accountBody}
+                </SettingsShell>
+            )}
 
             <Dialog
                 open={host.active && passwordDialogOpen}
@@ -967,7 +1051,11 @@ export function AccountContent({ host }: { host: PageHost }) {
             >
                 <DialogPortal>
                     <DialogBackdrop />
-                    <DialogPopup className="account-password-dialog">
+                    <DialogPopup
+                        className="account-password-dialog"
+                        finalFocus={passwordTriggerRef}
+                        onKeyDown={handleDialogTabWrap}
+                    >
                         <form
                             className="account-password-form"
                             onSubmit={handleChangePassword}

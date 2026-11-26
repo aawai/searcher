@@ -257,7 +257,7 @@
 }
 
 .admin-ua-audit-target-col {
-    min-width: 132px;
+    min-width: 156px;
 }
 
 .admin-ua-audit-target {
@@ -265,7 +265,7 @@
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
     color: var(--foreground);
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 .admin-ua-audit-id {
@@ -374,6 +374,11 @@
     min-width: 0;
 }
 
+.admin-inspector-hero .admin-pill[data-tone="neutral"] {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+}
+
 .admin-inspector-identity {
     display: flex;
     flex-direction: column;
@@ -414,7 +419,7 @@
 
 .admin-inspector-row {
     display: grid;
-    grid-template-columns: minmax(84px, 112px) minmax(0, 1fr);
+    grid-template-columns: minmax(96px, 140px) minmax(0, 1fr);
     align-items: center;
     gap: var(--space-3);
     padding: var(--space-2) var(--space-3);
@@ -428,9 +433,11 @@
 
 .admin-inspector-row dt {
     margin: 0;
+    min-width: 0;
     color: var(--muted);
     font-size: var(--font-metadata-size);
     font-weight: var(--font-label-weight);
+    overflow-wrap: anywhere;
 }
 
 .admin-inspector-row dd {
@@ -709,6 +716,11 @@
     gap: var(--space-2);
 }
 
+.admin-ua-audit-card-foot .admin-ua-detail-btn {
+    margin-inline-start: auto;
+    margin-inline-end: calc(-1 * var(--space-2));
+}
+
 .admin-ua-user-date-inline,
 .admin-ua-audit-tablet-time {
     display: none;
@@ -757,6 +769,17 @@
     .admin-ua-audit-controls {
         width: 100%;
     }
+    .admin-ua-toolbar [data-slot="radio-group"][data-variant="segmented"] {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+    }
+    .admin-ua-toolbar [data-slot="radio-group"][data-variant="segmented"] .radio-item {
+        min-width: 0;
+        padding-inline: var(--space-2);
+    }
     [data-slot="select-trigger"].admin-ua-toolbar-select {
         flex: 1 1 140px;
         max-width: none;
@@ -779,6 +802,7 @@
     [data-contrast="more"] .admin-user-avatar,
     [data-contrast="more"] .admin-actor-chip,
     [data-contrast="more"] .admin-meta-chip,
+    [data-contrast="more"] .admin-inspector-hero .admin-pill[data-tone="neutral"],
     [data-contrast="more"] .admin-inspector-list,
     [data-contrast="more"] .admin-protected-notice,
     [data-contrast="more"] .admin-raw-json {

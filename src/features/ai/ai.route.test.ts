@@ -1609,3 +1609,106 @@ Deno.test("temporary lease routes enforce ownership and protect another holder f
         await store.close();
     }
 });
+
+Deno.test("AI Route: PUT /api/ai/providers/:id toggles enabled and PATCH /api/ai/models/:id enforces default & personal visibility", async () => {
+    const normalUser: UserDto = {
+        id: "user-1",
+        username: "testuser",
+        displayName: "Test User",
+        role: "user",
+    };
+
+    const mockFetch: typeof fetch = (input) => {
+        if (String(input).endsWith("/models")) {
+            return Promise.resolve(
+                Response.json({
+                    data: [{ id: "u-model-1" }, { id: "u-model-2" }],
+                }),
+            );
+        }
+        return Promise.resolve(new Response("Not Found", { status: 404 }));
+    };
+
+    const { app, store } = setupTestApp(normalUser, mockFetch);
+    try {
+        const createRes = await app.request("/api/ai/providers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: "User Provider",
+                baseUrl: "https://user.example.com/v1",
+                apiKey: "sk-user-route-key",
+                scope: "user",
+            }),
+        });
+        assertEquals(createRes.status, 200);
+        const providerId = (await createRes.json()).data.id as string;
+
+        // Toggle provider enabled -> false, then true via PUT /api/ai/providers/:id
+        const disableProvRes = await app.request(
+            `/api/ai/providers/${providerId}`,
+            {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ enabled: false }),
+            },
+        );
+        assertEquals(disableProvRes.status, 200);
+        assertEquals((await disableProvRes.json()).data.enabled, false);
+
+        // Models include providerEnabled: false
+        const listWhileDisabled = await app.request("/api/ai/models");
+        assertEquals(listWhileDisabled.status, 200);
+        const disabledModels = (await listWhileDisabled.json()).data as Array<{
+            id: string;
+            enabled: boolean;
+            isDefault: boolean;
+            providerEnabled?: boolean;
+        }>;
+        assertEquals(disabledModels.length, 2);
+        assertEquals(disabledModels[0].providerEnabled, false);
+
+        const enableProvRes = await app.request(
+            `/api/ai/providers/${providerId}`,
+            {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ enabled: true }),
+            },
+        );
+        assertEquals(enableProvRes.status, 200);
+        assertEquals((await enableProvRes.json()).data.enabled, true);
+
+        const firstModelId = disabledModels[0].id;
+        // Disable default personal model -> stays listed for owner and clears isDefault
+        const disableModelRes = await app.request(
+            `/api/ai/models/${firstModelId}`,
+            {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ enabled: false }),
+            },
+        );
+        assertEquals(disableModelRes.status, 200);
+        const disabledModel = (await disableModelRes.json()).data;
+        assertEquals(disabledModel.enabled, false);
+        assertEquals(disabledModel.visibleToUsers, false);
+        assertEquals(disabledModel.isDefault, false);
+
+        const listAfterDisable = await app.request("/api/ai/models");
+        assertEquals((await listAfterDisable.json()).data.length, 2);
+
+        // Setting disabled model as default returns 400
+        const badDefaultRes = await app.request(
+            `/api/ai/models/${firstModelId}`,
+            {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isDefault: true }),
+            },
+        );
+        assertEquals(badDefaultRes.status, 400);
+    } finally {
+        await store.close();
+    }
+});

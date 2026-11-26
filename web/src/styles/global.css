@@ -79,6 +79,24 @@ a {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
+/* Programmatic window re-activation from pointer/load keeps focus ringless
+   until the next keyboard interaction. */
+.window-frame [data-focus-origin="restore"]:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+@media (forced-colors: none) {
+    /* Dark off-state switch thumb holds crisp contrast against its track, and
+       disabled primary buttons stay legible without muddy black-on-dim-accent. */
+    [data-theme="dark"]:not([data-contrast="more"]) .switch:not([data-checked]) .switch-thumb {
+        background: color-mix(in srgb, var(--foreground) 68%, var(--surface-soft));
+    }
+    [data-theme="dark"]:not([data-contrast="more"]) .button--primary:is(:disabled, [data-disabled]) {
+        opacity: 1;
+        background: color-mix(in srgb, var(--accent) 24%, var(--surface-soft));
+        color: color-mix(in srgb, var(--foreground) 76%, transparent);
+    }
+}
 .sr-only:where(:not(:focus-within, :active)) {
     position: absolute;
     width: 1px;

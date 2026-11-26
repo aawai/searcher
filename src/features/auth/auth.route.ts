@@ -28,12 +28,26 @@ const usernameSchema = v.pipe(
     v.regex(usernamePattern, usernameLengthMessage),
 );
 
-const emailSchema = v.optional(
-    v.pipe(
-        v.string("邮箱必须是字符串"),
-        v.trim(),
-        v.toLowerCase(),
-        v.email("邮箱格式不正确"),
+const validEmailSchema = v.pipe(
+    v.string("邮箱必须是字符串"),
+    v.trim(),
+    v.toLowerCase(),
+    v.email("邮箱格式不正确"),
+);
+
+const emailSchema = v.optional(validEmailSchema);
+
+const accountEmailSchema = v.optional(
+    v.nullable(
+        v.pipe(
+            v.string("邮箱必须是字符串"),
+            v.trim(),
+            v.toLowerCase(),
+            v.union(
+                [v.literal(""), v.pipe(v.string(), v.email("邮箱格式不正确"))],
+                "邮箱格式不正确",
+            ),
+        ),
     ),
 );
 
@@ -499,14 +513,16 @@ export function registerAuthRoutes(
         "/api/account",
         validator({
             displayName: json(v.optional(displayNameSchema)),
-            email: json(emailSchema),
+            email: json(accountEmailSchema),
         }),
         async (c, data) => {
             const user = c.get("user");
             const currentTime = now();
-            const normalizedEmail = data.email && data.email.length > 0
-                ? data.email
-                : (data.email === "" ? null : undefined);
+            const normalizedEmail = data.email === undefined
+                ? undefined
+                : (data.email === null || data.email === ""
+                    ? null
+                    : data.email);
 
             const updateResult = await store.run(async (db) => {
                 return await db.transaction(async (tx) => {

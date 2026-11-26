@@ -89,14 +89,20 @@
 
 [data-slot="button"].ask-sidebar__new-btn {
     width: 100%;
-    background: var(--surface-solid);
-    border: var(--space-hairline) solid var(--field-border);
+    min-height: var(--control-input-height);
+    border-radius: var(--shape-field-radius);
+    background: var(--surface-soft);
+    border: var(--space-hairline) solid transparent;
+    color: var(--foreground);
+}
+
+[data-contrast="more"] [data-slot="button"].ask-sidebar__new-btn {
+    border-color: var(--field-border);
 }
 
 @media (hover: hover) {
     [data-slot="button"].ask-sidebar__new-btn:hover {
-        background: var(--surface-hover);
-        border-color: var(--field-border-hover);
+        background: color-mix(in srgb, var(--foreground) 10%, var(--surface-soft));
     }
 }
 
@@ -265,10 +271,10 @@
     justify-content: space-between;
     gap: var(--space-3);
     min-height: var(--space-9);
-    width: calc(100% - var(--space-4) * 2);
+    width: 100%;
     max-width: var(--layout-ask-composer-max);
     margin-inline: auto;
-    padding: 0;
+    padding: 0 var(--space-3);
 }
 
 .ask-header__left {
@@ -529,8 +535,29 @@
     flex-direction: column;
     gap: var(--space-1);
     padding: var(--space-2) var(--space-3);
+    border: 1px solid transparent;
     border-radius: var(--radius-lg);
     background: var(--surface-l3);
+    box-shadow: var(--shadow-l2);
+    transition: border-color var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ask-composer-surface {
+        transition: none;
+    }
+}
+
+.ask-composer-surface:has(.ask-composer__textarea:focus-visible) {
+    border-color: color-mix(in oklab, var(--ring) 70%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 14%, transparent),
+        var(--shadow-l2);
+}
+
+[data-contrast="more"] .ask-composer-surface:has(.ask-composer__textarea:focus-visible) {
+    border-color: transparent;
+    outline: 2px solid var(--ring);
     box-shadow: var(--shadow-l2);
 }
 
@@ -538,10 +565,10 @@
     .ask-composer-surface {
         outline: 1px solid CanvasText;
     }
-}
 
-.ask-composer-surface:has(.ask-composer__textarea:focus-visible) {
-    outline: 2px solid var(--ring);
+    .ask-composer-surface:has(.ask-composer__textarea:focus-visible) {
+        outline: 2px solid Highlight;
+    }
 }
 
 .ask-composer__textarea {
@@ -716,6 +743,10 @@
 :is([data-slot="button"], [data-slot="popover-trigger"]).ask-composer__icon-btn {
     position: relative;
     flex-shrink: 0;
+    width: var(--space-7);
+    min-width: var(--space-7);
+    height: var(--space-7);
+    min-height: var(--space-7);
     color: var(--muted);
 }
 
@@ -735,23 +766,30 @@
 
 .ask-composer__active-dot {
     position: absolute;
-    top: var(--space-2);
-    right: var(--space-2);
+    top: 5px;
+    right: 5px;
     width: 6px;
     height: 6px;
     border-radius: var(--radius-pill);
     background: var(--accent);
+    box-shadow: 0 0 0 1.5px var(--surface-l3);
 }
 
 [data-slot="button"].ask-composer__send-btn {
     flex-shrink: 0;
+    width: var(--space-7);
+    min-width: var(--space-7);
+    height: var(--space-7);
+    min-height: var(--space-7);
     border-radius: var(--shape-button-radius);
 }
 
-/* The model selector is owned elsewhere; it only needs to shrink inside the toolbar. */
+/* The model selector is owned elsewhere; it only needs to shrink and match toolbar height. */
 .ask-composer-surface .model-trigger {
     min-width: 0;
     max-width: min(160px, 40vw);
+    height: var(--space-7);
+    min-height: var(--space-7);
 }
 
 .ask-composer__disclaimer {
@@ -1582,6 +1620,7 @@
     }
 
     .ask-composer-surface .model-trigger {
+        height: var(--control-touch-target);
         min-height: var(--control-touch-target);
     }
 
@@ -1597,6 +1636,7 @@
     .ask-sidebar__item [data-slot="dropdown-menu-trigger"].ask-sidebar__item-menu-btn {
         width: var(--control-touch-target);
         min-width: var(--control-touch-target);
+        height: var(--control-touch-target);
         min-height: var(--control-touch-target);
     }
 
@@ -1629,6 +1669,15 @@
 }
 
 @media (max-width: 639px) {
+    .window-frame__content > .ask-page-shell {
+        padding-inline: var(--space-2);
+    }
+
+    .ask-header {
+        padding-inline: var(--space-1);
+        gap: var(--space-2);
+    }
+
     .ask-thread__viewport {
         padding-right: var(--space-3);
         padding-left: var(--space-3);

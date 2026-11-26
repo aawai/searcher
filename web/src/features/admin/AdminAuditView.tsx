@@ -597,6 +597,7 @@ function AuditEventCard({
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="admin-ua-detail-btn"
                     onClick={(event) => onInspect(log, event.currentTarget)}
                 >
                     查看详情

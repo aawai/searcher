@@ -78,11 +78,11 @@ import {
     type WallpaperHistoryRecord,
 } from "../components/wallpaper/wallpaper-choices.ts";
 export type { WallpaperHistoryRecord };
-import { api } from "../lib/api.ts";
+import { api, ApiError } from "../lib/api.ts";
 import { ShortcutsSettings } from "../features/shortcuts/ShortcutsSettings.tsx";
 import { AiSettings } from "./AiSettings.tsx";
 import { NotFoundContent } from "./NotFoundPage.tsx";
-import { routes, settingsTab } from "./routes.ts";
+import { routes, type SettingsTab, settingsTab } from "./routes.ts";
 import { SettingsShell } from "./SettingsShell.tsx";
 import "./settings.css";
 import { type Appearance, useAppState } from "./state.tsx";
@@ -164,7 +164,7 @@ function Choices<T extends string>(
                     <SelectTrigger aria-label={title}>
                         <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent align="end">
                         {values.map(([id, label]) => (
                             <SelectItem key={id} value={id}>
                                 {label}
@@ -197,11 +197,42 @@ function Choices<T extends string>(
     );
 }
 
+function toastErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof ApiError) return error.message;
+    if (error instanceof Error && /[\u4e00-\u9fff]/.test(error.message)) {
+        return error.message;
+    }
+    return fallback;
+}
+
+export interface SettingsPanelProps {
+    host: PageHost;
+    tab?: SettingsTab;
+}
+
 export function SettingsPage() {
     return <SettingsContent host={usePagePresenter()} />;
 }
 
 export function SettingsContent({ host }: { host: PageHost }) {
+    const tab = settingsTab(host.location.pathname);
+    if (!tab) {
+        return (
+            <NotFoundContent
+                parent={{ label: "设置", to: routes.settings() }}
+                location={host.location}
+                Link={host.Link}
+            />
+        );
+    }
+    return (
+        <SettingsShell current={tab} host={host}>
+            <SettingsPanel host={host} tab={tab} />
+        </SettingsShell>
+    );
+}
+
+export function SettingsPanel({ host, tab: tabProp }: SettingsPanelProps) {
     const { location, Link } = host;
     const {
         appearance,
@@ -281,20 +312,32 @@ export function SettingsContent({ host }: { host: PageHost }) {
     >(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const cardHover = useDismissibleCardHover();
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [toast, setToast] = useState<
+        { message: string; tone: "success" | "error" } | null
+    >(null);
     const toastTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
         undefined,
     );
+    const tab = tabProp ?? settingsTab(location.pathname);
 
-    const showToast = (msg: string) => {
+    const showToast = (
+        message: string,
+        tone: "success" | "error" = "success",
+    ) => {
         if (!mounted.current || !authSession.isCurrent()) return;
         clearTimeout(toastTimerRef.current);
-        setToastMessage(msg);
+        setToast({ message, tone });
         toastTimerRef.current = setTimeout(() => {
-            setToastMessage(null);
+            setToast(null);
             toastTimerRef.current = undefined;
-        }, 3000);
+        }, tone === "error" ? 4500 : 3000);
     };
+
+    useEffect(() => {
+        clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = undefined;
+        setToast(null);
+    }, [tab]);
 
     useEffect(() => {
         return () => {
@@ -352,7 +395,7 @@ export function SettingsContent({ host }: { host: PageHost }) {
 
     async function handleWallpaperUpload(file: File) {
         if (file.size > 5 * 1024 * 1024) {
-            showToast("壁纸文件大小不能超过 5 MiB");
+            showToast("壁纸文件大小不能超过 5 MiB", "error");
             return;
         }
         setUploadingWallpaper(true);
@@ -417,9 +460,9 @@ export function SettingsContent({ host }: { host: PageHost }) {
                     ),
                 ].slice(0, 5)
             );
-            showToast("壁纸已上传并设为当前背景");
+            showToast("壁纸已上传并设为当前背景", "success");
         } catch (error) {
-            showToast(error instanceof Error ? error.message : "上传壁纸失败");
+            showToast(toastErrorMessage(error, "上传壁纸失败"), "error");
         } finally {
             if (authSession.isCurrent()) setUploadingWallpaper(false);
         }
@@ -460,12 +503,11 @@ export function SettingsContent({ host }: { host: PageHost }) {
         if (nextScene === appearance.botanicalScene) return;
         try {
             await setAppearance({ botanicalScene: nextScene });
-            showToast(enabled ? "已启用内置插画" : "已停用内置插画");
+            showToast(enabled ? "已启用内置插画" : "已停用内置插画", "success");
         } catch (error) {
             showToast(
-                error instanceof Error
-                    ? error.message
-                    : "切换内置插画失败，请重试",
+                toastErrorMessage(error, "切换内置插画失败，请重试"),
+                "error",
             );
         }
     }
@@ -475,12 +517,11 @@ export function SettingsContent({ host }: { host: PageHost }) {
         if (species === appearance.botanicalScene) return;
         try {
             await setAppearance({ botanicalScene: species });
-            showToast("已应用内置插画");
+            showToast("已应用内置插画", "success");
         } catch (error) {
             showToast(
-                error instanceof Error
-                    ? error.message
-                    : "设置内置插画失败，请重试",
+                toastErrorMessage(error, "设置内置插画失败，请重试"),
+                "error",
             );
         }
     }
@@ -488,10 +529,11 @@ export function SettingsContent({ host }: { host: PageHost }) {
     async function handleClearCurrentWallpaper() {
         try {
             await setAppearance(slotPatch(""));
-            showToast("已停用当前壁纸");
+            showToast("已停用当前壁纸", "success");
         } catch (error) {
             showToast(
-                error instanceof Error ? error.message : "停用壁纸失败，请重试",
+                toastErrorMessage(error, "停用壁纸失败，请重试"),
+                "error",
             );
         }
     }
@@ -514,10 +556,11 @@ export function SettingsContent({ host }: { host: PageHost }) {
                         [appearance.darkWallpaper],
                     ),
             );
-            showToast("已设为当前壁纸");
+            showToast("已设为当前壁纸", "success");
         } catch (error) {
             showToast(
-                error instanceof Error ? error.message : "切换壁纸失败，请重试",
+                toastErrorMessage(error, "切换壁纸失败，请重试"),
+                "error",
             );
         }
     }
@@ -579,10 +622,11 @@ export function SettingsContent({ host }: { host: PageHost }) {
                         : item
                 )
             );
-            showToast("构图已保存");
+            showToast("构图已保存", "success");
         } catch (error) {
             showToast(
-                error instanceof Error ? error.message : "保存构图失败，请重试",
+                toastErrorMessage(error, "保存构图失败，请重试"),
+                "error",
             );
             throw error; // Rethrow so composition dialog stays open
         }
@@ -635,10 +679,11 @@ export function SettingsContent({ host }: { host: PageHost }) {
                         : item
                 )
             );
-            showToast("已设为当前壁纸并保存构图");
+            showToast("已设为当前壁纸并保存构图", "success");
         } catch (error) {
             showToast(
-                error instanceof Error ? error.message : "设置壁纸失败，请重试",
+                toastErrorMessage(error, "设置壁纸失败，请重试"),
+                "error",
             );
             throw error; // Rethrow so dialog stays open
         }
@@ -688,17 +733,21 @@ export function SettingsContent({ host }: { host: PageHost }) {
             setDeleteTarget(null);
         } catch (error) {
             showToast(
-                error instanceof Error ? error.message : "删除壁纸失败，请重试",
+                toastErrorMessage(error, "删除壁纸失败，请重试"),
+                "error",
             );
         } finally {
             if (authSession.isCurrent()) setIsDeleting(false);
         }
     }
 
-    const tab = settingsTab(location.pathname);
-
     function set<K extends keyof Appearance>(key: K, value: Appearance[K]) {
-        void setAppearance({ [key]: value });
+        void setAppearance({ [key]: value }).catch((error: unknown) => {
+            showToast(
+                toastErrorMessage(error, "保存设置失败，请重试"),
+                "error",
+            );
+        });
     }
 
     if (!tab) {
@@ -713,115 +762,118 @@ export function SettingsContent({ host }: { host: PageHost }) {
 
     return (
         <>
-            <SettingsShell current={tab} host={host}>
-                {tab === "search" && (
+            {tab === "search" && (
+                <SettingsGroup>
+                    <Choices
+                        title="默认搜索引擎"
+                        value={appearance.engine}
+                        control="select"
+                        values={SEARCH_ENGINES.map((e) =>
+                            [e.id, e.label] as const
+                        )}
+                        select={(v) => set("engine", v as EngineId)}
+                    />
+                    <Choices
+                        title="结果打开方式"
+                        value={appearance.target}
+                        control="segmented"
+                        values={[
+                            ["current", "当前标签页"],
+                            ["new_tab", "新标签页"],
+                        ] as const}
+                        select={(v) => set("target", v)}
+                    />
+                </SettingsGroup>
+            )}
+            {tab === "appearance" && (
+                <>
                     <SettingsGroup>
+                        <SettingsRow
+                            title="主题"
+                            className="settings-row--vertical"
+                        >
+                            <ThemeChoices
+                                value={appearance.theme}
+                                onValueChange={(v) => set("theme", v)}
+                            />
+                        </SettingsRow>
+                        <SettingsRow title="强调色">
+                            <AccentSwatches
+                                value={appearance.accent}
+                                onValueChange={(v) => set("accent", v)}
+                            />
+                        </SettingsRow>
                         <Choices
-                            title="默认搜索引擎"
-                            value={appearance.engine}
-                            control="select"
-                            values={SEARCH_ENGINES.map((e) =>
-                                [e.id, e.label] as const
-                            )}
-                            select={(v) => set("engine", v as EngineId)}
+                            title="标签图标"
+                            description="只改变浏览器标签上的图标；已安装应用与主屏幕图标保持“刊头”"
+                            control="segmented"
+                            value={appearance.tabIcon}
+                            values={[
+                                ["editorial", "刊头 s."],
+                                ["keycap", "键帽 /"],
+                            ] as const}
+                            select={(v) => set("tabIcon", v)}
                         />
                         <Choices
-                            title="结果打开方式"
-                            value={appearance.target}
+                            title="控件形状"
                             control="segmented"
+                            value={appearance.shape}
                             values={[
-                                ["current", "当前标签页"],
-                                ["new_tab", "新标签页"],
+                                ["rounded", "利落"],
+                                ["pill", "胶囊"],
                             ] as const}
-                            select={(v) => set("target", v)}
+                            select={(v) => set("shape", v)}
+                        />
+                        <Choices
+                            title="玻璃效果"
+                            description={reducedTransparency
+                                ? "系统已开启「减少透明度」，玻璃效果暂以实色显示"
+                                : highContrast
+                                ? "高对比主题下玻璃效果以实色显示，切换回其他主题即恢复"
+                                : appearance.glassIntensity === "clear"
+                                ? (
+                                    <>
+                                        通透会明显透出壁纸，首页文字可读性随壁纸变化
+                                        <br />
+                                        主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。
+                                    </>
+                                )
+                                : "主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。"}
+                            control="segmented"
+                            value={appearance.glassIntensity}
+                            values={GLASS_CHOICES}
+                            select={(v) => set("glassIntensity", v)}
                         />
                     </SettingsGroup>
-                )}
-                {tab === "appearance" && (
-                    <>
-                        <SettingsGroup>
+                    <SettingsGroup title="首页">
+                        {user && (
+                            <SettingsRow title="在首页显示应用">
+                                <Switch
+                                    checked={appearance.showHomeApps}
+                                    onCheckedChange={(checked) =>
+                                        set("showHomeApps", checked)}
+                                    aria-label="在首页显示应用"
+                                />
+                            </SettingsRow>
+                        )}
+                        {user && appearance.showHomeApps && (
+                            <SettingsRow title="显示应用底板">
+                                <Switch
+                                    checked={appearance.showHomeAppPlate}
+                                    onCheckedChange={(checked) =>
+                                        set(
+                                            "showHomeAppPlate",
+                                            checked,
+                                        )}
+                                    aria-label="显示应用底板"
+                                />
+                            </SettingsRow>
+                        )}
+                        {user && (
                             <SettingsRow
-                                title="主题"
-                                className="settings-row--vertical"
+                                title="显示应用名称"
+                                description="同时作用于首页与应用窗口"
                             >
-                                <ThemeChoices
-                                    value={appearance.theme}
-                                    onValueChange={(v) => set("theme", v)}
-                                />
-                            </SettingsRow>
-                            <SettingsRow title="强调色">
-                                <AccentSwatches
-                                    value={appearance.accent}
-                                    onValueChange={(v) => set("accent", v)}
-                                />
-                            </SettingsRow>
-                            <Choices
-                                title="标签图标"
-                                description="只改变浏览器标签上的图标；已安装应用与主屏幕图标保持“刊头”"
-                                control="segmented"
-                                value={appearance.tabIcon}
-                                values={[
-                                    ["editorial", "刊头 s."],
-                                    ["keycap", "键帽 /"],
-                                ] as const}
-                                select={(v) => set("tabIcon", v)}
-                            />
-                            <Choices
-                                title="控件形状"
-                                control="segmented"
-                                value={appearance.shape}
-                                values={[
-                                    ["rounded", "利落"],
-                                    ["pill", "胶囊"],
-                                ] as const}
-                                select={(v) => set("shape", v)}
-                            />
-                            <Choices
-                                title="玻璃效果"
-                                description={reducedTransparency
-                                    ? "系统已开启「减少透明度」，玻璃效果暂以实色显示"
-                                    : highContrast
-                                    ? "高对比主题下玻璃效果以实色显示，切换回其他主题即恢复"
-                                    : appearance.glassIntensity === "clear"
-                                    ? (
-                                        <>
-                                            通透会明显透出壁纸，首页文字可读性随壁纸变化
-                                            <br />
-                                            主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。
-                                        </>
-                                    )
-                                    : "主要影响首页搜索框、应用底板与任务栏；输入聚焦时及菜单等浮层优先保证可读性。"}
-                                control="segmented"
-                                value={appearance.glassIntensity}
-                                values={GLASS_CHOICES}
-                                select={(v) => set("glassIntensity", v)}
-                            />
-                        </SettingsGroup>
-                        <SettingsGroup title="首页">
-                            {user && (
-                                <SettingsRow title="在首页显示应用">
-                                    <Switch
-                                        checked={appearance.showHomeApps}
-                                        onCheckedChange={(checked) =>
-                                            set("showHomeApps", checked)}
-                                        aria-label="在首页显示应用"
-                                    />
-                                </SettingsRow>
-                            )}
-                            {user && appearance.showHomeApps && (
-                                <SettingsRow title="显示应用底板">
-                                    <Switch
-                                        checked={appearance.showHomeAppPlate}
-                                        onCheckedChange={(checked) =>
-                                            set(
-                                                "showHomeAppPlate",
-                                                checked,
-                                            )}
-                                        aria-label="显示应用底板"
-                                    />
-                                </SettingsRow>
-                            )}
-                            <SettingsRow title="显示应用名称">
                                 <Switch
                                     checked={appearance.showAppLabels}
                                     onCheckedChange={(checked) =>
@@ -829,246 +881,246 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     aria-label="显示应用名称"
                                 />
                             </SettingsRow>
-                            <SettingsRow title="显示日期">
-                                <Switch
-                                    checked={appearance.showHomeDate}
-                                    onCheckedChange={(checked) =>
-                                        set("showHomeDate", checked)}
-                                    aria-label="显示日期"
-                                />
-                            </SettingsRow>
-                            <SettingsRow title="显示时间">
-                                <Switch
-                                    checked={appearance.showHomeTime}
-                                    onCheckedChange={(checked) =>
-                                        set("showHomeTime", checked)}
-                                    aria-label="显示时间"
-                                />
-                            </SettingsRow>
-                            {user && (
-                                <SettingsRow
-                                    title="显示“继续”"
-                                    description="最近编辑的笔记、未完成的 AI 对话与首页待办"
-                                >
-                                    <Switch
-                                        checked={appearance.showHomeContinue}
-                                        onCheckedChange={(checked) =>
-                                            set("showHomeContinue", checked)}
-                                        aria-label="显示“继续”"
-                                    />
-                                </SettingsRow>
-                            )}
+                        )}
+                        <SettingsRow title="显示日期">
+                            <Switch
+                                checked={appearance.showHomeDate}
+                                onCheckedChange={(checked) =>
+                                    set("showHomeDate", checked)}
+                                aria-label="显示日期"
+                            />
+                        </SettingsRow>
+                        <SettingsRow title="显示时间">
+                            <Switch
+                                checked={appearance.showHomeTime}
+                                onCheckedChange={(checked) =>
+                                    set("showHomeTime", checked)}
+                                aria-label="显示时间"
+                            />
+                        </SettingsRow>
+                        {user && (
                             <SettingsRow
-                                title="窄屏默认收起刊头"
-                                description="手机和窄窗口上默认只显示一行日期，下滑展开"
+                                title="显示“继续”"
+                                description="最近编辑的笔记、未完成的 AI 对话与首页待办"
                             >
                                 <Switch
-                                    checked={appearance.homeMastheadCollapsed}
+                                    checked={appearance.showHomeContinue}
                                     onCheckedChange={(checked) =>
-                                        set("homeMastheadCollapsed", checked)}
-                                    aria-label="窄屏默认收起刊头"
+                                        set("showHomeContinue", checked)}
+                                    aria-label="显示“继续”"
                                 />
                             </SettingsRow>
-                        </SettingsGroup>
-                        <SettingsGroup
-                            title="壁纸"
-                            footer={user
-                                ? "单张壁纸不超过 5 MiB。"
-                                : (
-                                    <span data-testid="wallpaper-guest-notice">
-                                        设置仅保存在此设备；登录后新上传的壁纸会同步到云端。单张壁纸不超过
-                                        5 MiB。
-                                    </span>
-                                )}
+                        )}
+                        <SettingsRow
+                            title="窄屏默认收起刊头"
+                            description="手机和窄窗口上默认只显示一行日期，下滑展开"
                         >
-                            <SettingsRow
-                                title="深色模式壁纸"
-                                description={appearance.darkWallpaperMode ===
-                                        "auto"
-                                    ? resolvedScheme === "dark" &&
-                                            effectiveWallpaper.autoResolved ===
-                                                "ambient"
-                                        ? "当前壁纸画面偏亮，深色下已自动启用氛围流光"
-                                        : resolvedScheme === "dark" &&
-                                                effectiveWallpaper
-                                                        .autoResolved ===
-                                                    "image"
-                                        ? "当前壁纸偏暗或无亮度信息，深色下保留原图细节"
-                                        : "亮图自动柔化为氛围流光，暗图保留清晰原图"
-                                    : appearance.darkWallpaperMode === "follow"
-                                    ? "深色模式下继续展示同一张壁纸，并按亮度自动压暗与添加氛围暗角"
-                                    : appearance.darkWallpaperMode === "ambient"
-                                    ? "将浅底或亮色壁纸转化为双色深邃流光氛围"
-                                    : appearance.darkWallpaperMode === "canvas"
-                                    ? "深色模式下隐藏图片壁纸，仅展示纯黑画布与内置插画"
-                                    : "为浅色与深色模式分别配置壁纸与构图"}
+                            <Switch
+                                checked={appearance.homeMastheadCollapsed}
+                                onCheckedChange={(checked) =>
+                                    set("homeMastheadCollapsed", checked)}
+                                aria-label="窄屏默认收起刊头"
+                            />
+                        </SettingsRow>
+                    </SettingsGroup>
+                    <SettingsGroup
+                        title="壁纸"
+                        footer={user
+                            ? "单张壁纸不超过 5 MiB。"
+                            : (
+                                <span data-testid="wallpaper-guest-notice">
+                                    设置仅保存在此设备；登录后新上传的壁纸会同步到云端。单张壁纸不超过
+                                    5 MiB。
+                                </span>
+                            )}
+                    >
+                        <SettingsRow
+                            title="深色模式壁纸"
+                            description={appearance.darkWallpaperMode ===
+                                    "auto"
+                                ? resolvedScheme === "dark" &&
+                                        effectiveWallpaper.autoResolved ===
+                                            "ambient"
+                                    ? "当前壁纸画面偏亮，深色下已自动启用氛围流光"
+                                    : resolvedScheme === "dark" &&
+                                            effectiveWallpaper
+                                                    .autoResolved ===
+                                                "image"
+                                    ? "当前壁纸偏暗或无亮度信息，深色下保留原图细节"
+                                    : "亮图自动柔化为氛围流光，暗图保留清晰原图"
+                                : appearance.darkWallpaperMode === "follow"
+                                ? "深色模式下继续展示同一张壁纸，并按亮度自动压暗与添加氛围暗角"
+                                : appearance.darkWallpaperMode === "ambient"
+                                ? "将浅底或亮色壁纸转化为双色深邃流光氛围"
+                                : appearance.darkWallpaperMode === "canvas"
+                                ? "深色模式下隐藏图片壁纸，仅展示纯黑画布与内置插画"
+                                : "为浅色与深色模式分别配置壁纸与构图"}
+                        >
+                            <RadioGroup
+                                variant="segmented"
+                                className="settings-dark-mode-group"
+                                value={appearance.darkWallpaperMode}
+                                onValueChange={(next) => {
+                                    const mode = next as DarkWallpaperMode;
+                                    if (mode === "custom") {
+                                        setEditingSlot(resolvedScheme);
+                                    }
+                                    set("darkWallpaperMode", mode);
+                                }}
+                                aria-label="深色模式壁纸"
+                                data-testid="wallpaper-dark-mode-group"
                             >
+                                {DARK_WALLPAPER_MODE_CHOICES.map((
+                                    [id, fullLabel, shortLabel],
+                                ) => (
+                                    <RadioGroupItem
+                                        key={id}
+                                        value={id}
+                                        aria-label={fullLabel}
+                                        data-testid={`wallpaper-dark-mode-${id}`}
+                                    >
+                                        {shortLabel}
+                                    </RadioGroupItem>
+                                ))}
+                            </RadioGroup>
+                        </SettingsRow>
+                        {isCustomDarkMode && (
+                            <SettingsRow title="正在编辑">
                                 <RadioGroup
                                     variant="segmented"
-                                    className="settings-dark-mode-group"
-                                    value={appearance.darkWallpaperMode}
-                                    onValueChange={(next) => {
-                                        const mode = next as DarkWallpaperMode;
-                                        if (mode === "custom") {
-                                            setEditingSlot(resolvedScheme);
-                                        }
-                                        set("darkWallpaperMode", mode);
-                                    }}
-                                    aria-label="深色模式壁纸"
-                                    data-testid="wallpaper-dark-mode-group"
+                                    value={editingSlot}
+                                    onValueChange={(next) =>
+                                        setEditingSlot(
+                                            next === "dark" ? "dark" : "light",
+                                        )}
+                                    aria-label="壁纸编辑目标"
+                                    data-testid="wallpaper-slot-group"
                                 >
-                                    {DARK_WALLPAPER_MODE_CHOICES.map((
-                                        [id, fullLabel, shortLabel],
-                                    ) => (
-                                        <RadioGroupItem
-                                            key={id}
-                                            value={id}
-                                            aria-label={fullLabel}
-                                            data-testid={`wallpaper-dark-mode-${id}`}
-                                        >
-                                            {shortLabel}
-                                        </RadioGroupItem>
-                                    ))}
+                                    <RadioGroupItem
+                                        value="light"
+                                        data-testid="wallpaper-slot-light"
+                                    >
+                                        浅色壁纸
+                                    </RadioGroupItem>
+                                    <RadioGroupItem
+                                        value="dark"
+                                        data-testid="wallpaper-slot-dark"
+                                    >
+                                        深色壁纸
+                                    </RadioGroupItem>
                                 </RadioGroup>
                             </SettingsRow>
-                            {isCustomDarkMode && (
-                                <SettingsRow title="正在编辑">
-                                    <RadioGroup
-                                        variant="segmented"
-                                        value={editingSlot}
-                                        onValueChange={(next) =>
-                                            setEditingSlot(
-                                                next === "dark"
-                                                    ? "dark"
-                                                    : "light",
-                                            )}
-                                        aria-label="壁纸编辑目标"
-                                        data-testid="wallpaper-slot-group"
-                                    >
-                                        <RadioGroupItem
-                                            value="light"
-                                            data-testid="wallpaper-slot-light"
-                                        >
-                                            浅色壁纸
-                                        </RadioGroupItem>
-                                        <RadioGroupItem
-                                            value="dark"
-                                            data-testid="wallpaper-slot-dark"
-                                        >
-                                            深色壁纸
-                                        </RadioGroupItem>
-                                    </RadioGroup>
-                                </SettingsRow>
-                            )}
-                            <SettingsRow
-                                title="壁纸来源"
-                                className="settings-row--vertical"
-                            >
-                                <div className="wallpaper-source-editor">
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        className="hidden"
-                                        accept="image/png,image/jpeg,image/webp,image/avif"
-                                        data-testid="wallpaper-file-input"
-                                        onChange={(e) => {
-                                            const file = e.target
-                                                .files?.[0];
-                                            if (file) {
-                                                void handleWallpaperUpload(
-                                                    file,
-                                                );
-                                            }
-                                            e.target.value = "";
-                                        }}
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() =>
-                                            fileInputRef.current
-                                                ?.click()}
-                                        disabled={uploadingWallpaper}
-                                        title="上传本地图片"
-                                        aria-label="上传本地图片"
-                                        data-testid="wallpaper-upload-btn"
-                                    >
-                                        <Upload
-                                            size="1em"
-                                            className="icon-md"
-                                        />
-                                    </Button>
-                                    <Input
-                                        id="wallpaper-input"
-                                        data-testid="wallpaper-input"
-                                        aria-label="壁纸来源"
-                                        aria-invalid={!!draftError}
-                                        aria-describedby={draftError
-                                            ? "wallpaper-source-error"
-                                            : undefined}
-                                        placeholder={currentSourceHidden
-                                            ? "替换为图片链接"
-                                            : "图片链接（https）"}
-                                        value={wallpaperDraft}
-                                        onChange={(e) => {
-                                            setWallpaperDraft(
-                                                e.target.value,
+                        )}
+                        <SettingsRow
+                            title="壁纸来源"
+                            className="settings-row--vertical"
+                        >
+                            <div className="wallpaper-source-editor">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/png,image/jpeg,image/webp,image/avif"
+                                    data-testid="wallpaper-file-input"
+                                    onChange={(e) => {
+                                        const file = e.target
+                                            .files?.[0];
+                                        if (file) {
+                                            void handleWallpaperUpload(
+                                                file,
                                             );
-                                            setDraftError(null);
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                if (
-                                                    e.nativeEvent.isComposing ||
-                                                    e.keyCode === 229
-                                                ) {
-                                                    return;
-                                                }
-                                                e.preventDefault();
-                                                void handleApplyDraft();
-                                            }
-                                        }}
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => void handleApplyDraft()}
-                                        disabled={isApplyingDraft ||
-                                            !wallpaperDraft
-                                                .trim() ||
-                                            wallpaperDraft
-                                                    .trim() ===
-                                                slotWallpaper}
-                                        data-testid="wallpaper-apply-btn"
-                                    >
-                                        应用
-                                    </Button>
-                                    {draftError && (
-                                        <p
-                                            id="wallpaper-source-error"
-                                            className="wallpaper-input-error"
-                                            role="alert"
-                                        >
-                                            {draftError}
-                                        </p>
-                                    )}
-                                </div>
-                            </SettingsRow>
-                            <SettingsRow
-                                title="内置插画"
-                                description="每日一枝植物墨线，可与壁纸叠加使用；高对比主题与系统强制颜色下自动隐藏，减少动效下静态呈现。"
-                            >
-                                <Switch
-                                    checked={hasBotanicalScene}
-                                    onCheckedChange={(checked) =>
-                                        void handleToggleBotanicalScene(
-                                            checked,
-                                        )}
-                                    aria-label="启用内置插画"
-                                    data-testid="wallpaper-scene-switch"
+                                        }
+                                        e.target.value = "";
+                                    }}
                                 />
-                            </SettingsRow>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() =>
+                                        fileInputRef.current
+                                            ?.click()}
+                                    disabled={uploadingWallpaper}
+                                    title="上传本地图片"
+                                    aria-label="上传本地图片"
+                                    data-testid="wallpaper-upload-btn"
+                                >
+                                    <Upload
+                                        size="1em"
+                                        className="icon-md"
+                                    />
+                                </Button>
+                                <Input
+                                    id="wallpaper-input"
+                                    data-testid="wallpaper-input"
+                                    aria-label="壁纸来源"
+                                    aria-invalid={!!draftError}
+                                    aria-describedby={draftError
+                                        ? "wallpaper-source-error"
+                                        : undefined}
+                                    placeholder={currentSourceHidden
+                                        ? "替换为图片链接"
+                                        : "图片链接（https）"}
+                                    value={wallpaperDraft}
+                                    onChange={(e) => {
+                                        setWallpaperDraft(
+                                            e.target.value,
+                                        );
+                                        setDraftError(null);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            if (
+                                                e.nativeEvent.isComposing ||
+                                                e.keyCode === 229
+                                            ) {
+                                                return;
+                                            }
+                                            e.preventDefault();
+                                            void handleApplyDraft();
+                                        }
+                                    }}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => void handleApplyDraft()}
+                                    disabled={isApplyingDraft ||
+                                        !wallpaperDraft
+                                            .trim() ||
+                                        wallpaperDraft
+                                                .trim() ===
+                                            slotWallpaper}
+                                    data-testid="wallpaper-apply-btn"
+                                >
+                                    应用
+                                </Button>
+                                {draftError && (
+                                    <p
+                                        id="wallpaper-source-error"
+                                        className="wallpaper-input-error"
+                                        role="alert"
+                                    >
+                                        {draftError}
+                                    </p>
+                                )}
+                            </div>
+                        </SettingsRow>
+                        <SettingsRow
+                            title="内置插画"
+                            description="每日一枝植物墨线，可与壁纸叠加使用；高对比主题与系统强制颜色下自动隐藏，减少动效下静态呈现。"
+                        >
+                            <Switch
+                                checked={hasBotanicalScene}
+                                onCheckedChange={(checked) =>
+                                    void handleToggleBotanicalScene(
+                                        checked,
+                                    )}
+                                aria-label="启用内置插画"
+                                data-testid="wallpaper-scene-switch"
+                            />
+                        </SettingsRow>
+                        {hasBotanicalScene && (
                             <SettingsRow
                                 title="插画枝型"
                                 className="settings-row--vertical"
@@ -1096,274 +1148,213 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                     )}
                                 </RadioGroup>
                             </SettingsRow>
-                            {(Boolean(stageSource) || hasBotanicalScene ||
-                                (resolvedScheme === "dark" &&
-                                    appearance.darkWallpaperMode !== "follow" &&
-                                    appearance.darkWallpaperMode !== "auto")) &&
-                                (
-                                    <>
-                                        <SettingsRow
-                                            title="当前背景"
-                                            className="settings-row--vertical"
-                                        >
-                                            <div className="wallpaper-current">
-                                                <div
-                                                    className="wallpaper-stage"
-                                                    data-testid="wallpaper-stage"
-                                                    data-theme={isCustomDarkMode
-                                                        ? activeSlot
-                                                        : undefined}
-                                                >
-                                                    <WallpaperSurface
-                                                        source={stageSource}
-                                                        mode={stageMode}
-                                                        nativeDarkTone={isCustomDarkMode
-                                                            ? activeSlot ===
-                                                                    "dark" &&
-                                                                Boolean(
-                                                                    slotWallpaper,
-                                                                )
-                                                            : effectiveWallpaper
-                                                                .nativeDarkTone}
-                                                        botanicalScene={appearance
-                                                            .botanicalScene}
-                                                        presentation={currentPresentation}
-                                                        embedded
-                                                        testId="wallpaper-current-preview"
-                                                    />
-                                                    <WallpaperStageContextPreview />
-                                                </div>
-                                                {hasImageWallpaper && (
-                                                    <ActionGroup>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            onClick={() => {
-                                                                const slotPres =
-                                                                    wallpaperPresentation(
-                                                                        slotWallpaper,
-                                                                        appearance
-                                                                            .wallpaperPresentations,
-                                                                    );
-                                                                const focal =
-                                                                    slotPres
-                                                                        .composition;
-                                                                setCompositionTarget(
-                                                                    {
-                                                                        id: "current",
-                                                                        url: slotWallpaper,
-                                                                        ...focal,
-                                                                    },
-                                                                );
-                                                            }}
-                                                            data-testid="wallpaper-current-adjust-focal-btn"
-                                                        >
-                                                            调整构图
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            onClick={() =>
-                                                                void handleClearCurrentWallpaper()}
-                                                            aria-label="停用当前壁纸"
-                                                            data-testid="wallpaper-clear-btn"
-                                                        >
-                                                            停用壁纸
-                                                        </Button>
-                                                    </ActionGroup>
-                                                )}
+                        )}
+                        {(Boolean(stageSource) || hasBotanicalScene ||
+                            (resolvedScheme === "dark" &&
+                                appearance.darkWallpaperMode !== "follow" &&
+                                appearance.darkWallpaperMode !== "auto")) &&
+                            (
+                                <>
+                                    <SettingsRow
+                                        title="当前背景"
+                                        className="settings-row--vertical"
+                                    >
+                                        <div className="wallpaper-current">
+                                            <div
+                                                className="wallpaper-stage"
+                                                data-testid="wallpaper-stage"
+                                                data-theme={isCustomDarkMode
+                                                    ? activeSlot
+                                                    : undefined}
+                                            >
+                                                <WallpaperSurface
+                                                    source={stageSource}
+                                                    mode={stageMode}
+                                                    nativeDarkTone={isCustomDarkMode
+                                                        ? activeSlot ===
+                                                                "dark" &&
+                                                            Boolean(
+                                                                slotWallpaper,
+                                                            )
+                                                        : effectiveWallpaper
+                                                            .nativeDarkTone}
+                                                    botanicalScene={appearance
+                                                        .botanicalScene}
+                                                    presentation={currentPresentation}
+                                                    embedded
+                                                    testId="wallpaper-current-preview"
+                                                />
+                                                <WallpaperStageContextPreview />
                                             </div>
-                                        </SettingsRow>
-                                    </>
-                                )}
-                        </SettingsGroup>
-                        {wallpaperHistory.length > 0 && (
-                            <SettingsGroup
-                                title="最近上传"
-                                footer="最多保留 5 张。"
-                                padded
-                            >
-                                <div
-                                    className="wallpaper-history"
-                                    data-testid="wallpaper-history"
-                                    role="group"
-                                    aria-label="最近上传的图片"
-                                    {...focusContainer}
-                                >
-                                    <div className="wallpaper-history__grid">
-                                        {wallpaperHistory.map(
-                                            (record, index) => {
-                                                const isLight =
-                                                    appearance.wallpaper ===
-                                                        record.url;
-                                                const isDark =
-                                                    appearance.darkWallpaper ===
-                                                        record.url;
-                                                const isCurrent =
-                                                    isCustomDarkMode
-                                                        ? (isLight || isDark)
-                                                        : isLight;
-                                                const badgeText =
-                                                    isCustomDarkMode
-                                                        ? (isLight && isDark
-                                                            ? "双主题使用"
-                                                            : isLight
-                                                            ? "浅色当前"
-                                                            : "深色当前")
-                                                        : "当前壁纸";
-                                                return (
-                                                    <div
-                                                        key={record
-                                                            .id}
-                                                        className="wallpaper-card"
-                                                        data-current={isCurrent
-                                                            ? "true"
-                                                            : undefined}
-                                                        data-hover-dismissed={cardHover
-                                                            .isDismissed(
-                                                                record.id,
-                                                            ) ||
-                                                            undefined}
-                                                        {...cardHover.handlers(
-                                                            record.id,
-                                                        )}
-                                                        data-testid={`wallpaper-history-item-${record.id}`}
+                                            {hasImageWallpaper && (
+                                                <ActionGroup>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            const slotPres =
+                                                                wallpaperPresentation(
+                                                                    slotWallpaper,
+                                                                    appearance
+                                                                        .wallpaperPresentations,
+                                                                );
+                                                            const focal =
+                                                                slotPres
+                                                                    .composition;
+                                                            setCompositionTarget(
+                                                                {
+                                                                    id: "current",
+                                                                    url: slotWallpaper,
+                                                                    ...focal,
+                                                                },
+                                                            );
+                                                        }}
+                                                        data-testid="wallpaper-current-adjust-focal-btn"
                                                     >
-                                                        <button
-                                                            type="button"
-                                                            className="wallpaper-card__main"
-                                                            onClick={() =>
-                                                                setCompositionTarget(
-                                                                    record,
-                                                                )}
-                                                            aria-label={`预览与调整构图：壁纸 ${
+                                                        调整构图
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            void handleClearCurrentWallpaper()}
+                                                        aria-label="停用当前壁纸"
+                                                        data-testid="wallpaper-clear-btn"
+                                                    >
+                                                        停用壁纸
+                                                    </Button>
+                                                </ActionGroup>
+                                            )}
+                                        </div>
+                                    </SettingsRow>
+                                </>
+                            )}
+                    </SettingsGroup>
+                    {wallpaperHistory.length > 0 && (
+                        <SettingsGroup
+                            title="最近上传"
+                            footer="最多保留 5 张。"
+                            padded
+                        >
+                            <div
+                                className="wallpaper-history"
+                                data-testid="wallpaper-history"
+                                role="group"
+                                aria-label="最近上传的图片"
+                                {...focusContainer}
+                            >
+                                <div className="wallpaper-history__grid">
+                                    {wallpaperHistory.map(
+                                        (record, index) => {
+                                            const isLight =
+                                                appearance.wallpaper ===
+                                                    record.url;
+                                            const isDark =
+                                                appearance.darkWallpaper ===
+                                                    record.url;
+                                            const isCurrent = isCustomDarkMode
+                                                ? (isLight || isDark)
+                                                : isLight;
+                                            const badgeText = isCustomDarkMode
+                                                ? (isLight && isDark
+                                                    ? "双主题使用"
+                                                    : isLight
+                                                    ? "浅色当前"
+                                                    : "深色当前")
+                                                : "当前壁纸";
+                                            return (
+                                                <div
+                                                    key={record
+                                                        .id}
+                                                    className="wallpaper-card"
+                                                    data-current={isCurrent
+                                                        ? "true"
+                                                        : undefined}
+                                                    data-hover-dismissed={cardHover
+                                                        .isDismissed(
+                                                            record.id,
+                                                        ) ||
+                                                        undefined}
+                                                    {...cardHover.handlers(
+                                                        record.id,
+                                                    )}
+                                                    data-testid={`wallpaper-history-item-${record.id}`}
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        className="wallpaper-card__main"
+                                                        onClick={() =>
+                                                            setCompositionTarget(
+                                                                record,
+                                                            )}
+                                                        aria-label={`预览与调整构图：壁纸 ${
+                                                            index +
+                                                            1
+                                                        }${
+                                                            isCurrent
+                                                                ? `（${badgeText}）`
+                                                                : ""
+                                                        }`}
+                                                        data-testid={`wallpaper-card-preview-btn-${record.id}`}
+                                                    >
+                                                        <img
+                                                            className="wallpaper-card__thumbnail"
+                                                            src={record
+                                                                .url}
+                                                            alt={`壁纸 ${
                                                                 index +
                                                                 1
-                                                            }${
-                                                                isCurrent
-                                                                    ? `（${badgeText}）`
-                                                                    : ""
                                                             }`}
-                                                            data-testid={`wallpaper-card-preview-btn-${record.id}`}
-                                                        >
-                                                            <img
-                                                                className="wallpaper-card__thumbnail"
-                                                                src={record
-                                                                    .url}
-                                                                alt={`壁纸 ${
+                                                            width={160}
+                                                            height={160}
+                                                            loading="lazy"
+                                                        />
+                                                    </button>
+                                                    {isCurrent &&
+                                                        (
+                                                            <div
+                                                                className="wallpaper-card__current-badge"
+                                                                data-testid="wallpaper-current-badge"
+                                                            >
+                                                                <Check
+                                                                    size="1em"
+                                                                    className="icon-sm shrink-0"
+                                                                />
+                                                                <span>
+                                                                    {badgeText}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    <div className="wallpaper-card__actions">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger
+                                                                className="wallpaper-card__menu-trigger"
+                                                                aria-label={`壁纸操作菜单：壁纸 ${
                                                                     index +
                                                                     1
                                                                 }`}
-                                                                width={160}
-                                                                height={160}
-                                                                loading="lazy"
-                                                            />
-                                                        </button>
-                                                        {isCurrent &&
-                                                            (
-                                                                <div
-                                                                    className="wallpaper-card__current-badge"
-                                                                    data-testid="wallpaper-current-badge"
-                                                                >
-                                                                    <Check
-                                                                        size="1em"
-                                                                        className="icon-sm shrink-0"
-                                                                    />
-                                                                    <span>
-                                                                        {badgeText}
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                        <div className="wallpaper-card__actions">
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger
-                                                                    className="wallpaper-card__menu-trigger"
-                                                                    aria-label={`壁纸操作菜单：壁纸 ${
-                                                                        index +
-                                                                        1
-                                                                    }`}
-                                                                    data-testid={`wallpaper-menu-trigger-${record.id}`}
-                                                                >
-                                                                    <MoreHorizontal
-                                                                        size="1em"
-                                                                        className="icon-md"
-                                                                    />
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent>
-                                                                    {isCustomDarkMode
-                                                                        ? (
-                                                                            <>
-                                                                                <DropdownMenuItem
-                                                                                    disabled={isLight}
-                                                                                    onClick={() =>
-                                                                                        void handleSetCurrentFromHistory(
-                                                                                            record,
-                                                                                            "light",
-                                                                                        )}
-                                                                                    data-testid={activeSlot ===
-                                                                                            "light"
-                                                                                        ? "wallpaper-menu-set-current"
-                                                                                        : "wallpaper-menu-set-light"}
-                                                                                >
-                                                                                    <Check
-                                                                                        size="1em"
-                                                                                        className="icon-sm"
-                                                                                        aria-hidden="true"
-                                                                                    />
-                                                                                    <span>
-                                                                                        {isLight
-                                                                                            ? "浅色正在使用"
-                                                                                            : "设为浅色壁纸"}
-                                                                                    </span>
-                                                                                </DropdownMenuItem>
-                                                                                <DropdownMenuItem
-                                                                                    disabled={isDark}
-                                                                                    onClick={() =>
-                                                                                        void handleSetCurrentFromHistory(
-                                                                                            record,
-                                                                                            "dark",
-                                                                                        )}
-                                                                                    data-testid={activeSlot ===
-                                                                                            "dark"
-                                                                                        ? "wallpaper-menu-set-current"
-                                                                                        : "wallpaper-menu-set-dark"}
-                                                                                >
-                                                                                    <Check
-                                                                                        size="1em"
-                                                                                        className="icon-sm"
-                                                                                        aria-hidden="true"
-                                                                                    />
-                                                                                    <span>
-                                                                                        {isDark
-                                                                                            ? "深色正在使用"
-                                                                                            : "设为深色壁纸"}
-                                                                                    </span>
-                                                                                </DropdownMenuItem>
-                                                                            </>
-                                                                        )
-                                                                        : isLight
-                                                                        ? (
+                                                                data-testid={`wallpaper-menu-trigger-${record.id}`}
+                                                            >
+                                                                <MoreHorizontal
+                                                                    size="1em"
+                                                                    className="icon-md"
+                                                                />
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent>
+                                                                {isCustomDarkMode
+                                                                    ? (
+                                                                        <>
                                                                             <DropdownMenuItem
-                                                                                disabled
-                                                                                data-testid="wallpaper-menu-set-current"
-                                                                            >
-                                                                                <Check
-                                                                                    size="1em"
-                                                                                    className="icon-sm"
-                                                                                    aria-hidden="true"
-                                                                                />
-                                                                                <span>
-                                                                                    当前正在使用
-                                                                                </span>
-                                                                            </DropdownMenuItem>
-                                                                        )
-                                                                        : (
-                                                                            <DropdownMenuItem
+                                                                                disabled={isLight}
                                                                                 onClick={() =>
                                                                                     void handleSetCurrentFromHistory(
                                                                                         record,
+                                                                                        "light",
                                                                                     )}
-                                                                                data-testid="wallpaper-menu-set-current"
+                                                                                data-testid={activeSlot ===
+                                                                                        "light"
+                                                                                    ? "wallpaper-menu-set-current"
+                                                                                    : "wallpaper-menu-set-light"}
                                                                             >
                                                                                 <Check
                                                                                     size="1em"
@@ -1371,58 +1362,119 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                                                                     aria-hidden="true"
                                                                                 />
                                                                                 <span>
-                                                                                    设为当前壁纸
+                                                                                    {isLight
+                                                                                        ? "浅色正在使用"
+                                                                                        : "设为浅色壁纸"}
                                                                                 </span>
                                                                             </DropdownMenuItem>
+                                                                            <DropdownMenuItem
+                                                                                disabled={isDark}
+                                                                                onClick={() =>
+                                                                                    void handleSetCurrentFromHistory(
+                                                                                        record,
+                                                                                        "dark",
+                                                                                    )}
+                                                                                data-testid={activeSlot ===
+                                                                                        "dark"
+                                                                                    ? "wallpaper-menu-set-current"
+                                                                                    : "wallpaper-menu-set-dark"}
+                                                                            >
+                                                                                <Check
+                                                                                    size="1em"
+                                                                                    className="icon-sm"
+                                                                                    aria-hidden="true"
+                                                                                />
+                                                                                <span>
+                                                                                    {isDark
+                                                                                        ? "深色正在使用"
+                                                                                        : "设为深色壁纸"}
+                                                                                </span>
+                                                                            </DropdownMenuItem>
+                                                                        </>
+                                                                    )
+                                                                    : isLight
+                                                                    ? (
+                                                                        <DropdownMenuItem
+                                                                            disabled
+                                                                            data-testid="wallpaper-menu-set-current"
+                                                                        >
+                                                                            <Check
+                                                                                size="1em"
+                                                                                className="icon-sm"
+                                                                                aria-hidden="true"
+                                                                            />
+                                                                            <span>
+                                                                                当前正在使用
+                                                                            </span>
+                                                                        </DropdownMenuItem>
+                                                                    )
+                                                                    : (
+                                                                        <DropdownMenuItem
+                                                                            onClick={() =>
+                                                                                void handleSetCurrentFromHistory(
+                                                                                    record,
+                                                                                )}
+                                                                            data-testid="wallpaper-menu-set-current"
+                                                                        >
+                                                                            <Check
+                                                                                size="1em"
+                                                                                className="icon-sm"
+                                                                                aria-hidden="true"
+                                                                            />
+                                                                            <span>
+                                                                                设为当前壁纸
+                                                                            </span>
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        setCompositionTarget(
+                                                                            record,
                                                                         )}
-                                                                    <DropdownMenuItem
-                                                                        onClick={() =>
-                                                                            setCompositionTarget(
-                                                                                record,
-                                                                            )}
-                                                                        data-testid="wallpaper-menu-adjust-focal"
-                                                                    >
-                                                                        <Crop
-                                                                            size="1em"
-                                                                            className="icon-sm"
-                                                                            aria-hidden="true"
-                                                                        />
-                                                                        <span>
-                                                                            调整构图
-                                                                        </span>
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        variant="destructive"
-                                                                        onClick={() =>
-                                                                            setDeleteTarget(
-                                                                                record,
-                                                                            )}
-                                                                        data-testid="wallpaper-menu-delete"
-                                                                    >
-                                                                        <Trash2
-                                                                            size="1em"
-                                                                            className="icon-sm"
-                                                                            aria-hidden="true"
-                                                                        />
-                                                                        <span>
-                                                                            删除
-                                                                        </span>
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        </div>
+                                                                    data-testid="wallpaper-menu-adjust-focal"
+                                                                >
+                                                                    <Crop
+                                                                        size="1em"
+                                                                        className="icon-sm"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                    <span>
+                                                                        调整构图
+                                                                    </span>
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    variant="destructive"
+                                                                    onClick={() =>
+                                                                        setDeleteTarget(
+                                                                            record,
+                                                                        )}
+                                                                    data-testid="wallpaper-menu-delete"
+                                                                >
+                                                                    <Trash2
+                                                                        size="1em"
+                                                                        className="icon-sm"
+                                                                        aria-hidden="true"
+                                                                    />
+                                                                    <span>
+                                                                        删除
+                                                                    </span>
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </div>
-                                                );
-                                            },
-                                        )}
-                                    </div>
+                                                </div>
+                                            );
+                                        },
+                                    )}
                                 </div>
-                            </SettingsGroup>
-                        )}
-                    </>
-                )}
-                {tab === "ai" && (
-                    <>
+                            </div>
+                        </SettingsGroup>
+                    )}
+                </>
+            )}
+            {tab === "ai" && (
+                <>
+                    {user && (
                         <SettingsGroup>
                             <SettingsRow title="对话页面">
                                 <Button
@@ -1444,74 +1496,124 @@ export function SettingsContent({ host }: { host: PageHost }) {
                                 </Button>
                             </SettingsRow>
                         </SettingsGroup>
-                        <AiSettings host={host} />
-                    </>
-                )}
-                {tab === "data" && (
-                    <>
+                    )}
+                    <AiSettings host={host} />
+                </>
+            )}
+            {tab === "data" && (
+                <>
+                    <SettingsGroup
+                        title="同步"
+                        footer={user
+                            ? "偏好设置、应用与笔记保存在账户中；任务栏位置等设备布局只保存在当前设备。"
+                            : "访客外观仅保存在当前设备；登录后可使用账户中的应用、笔记和偏好设置。"}
+                    >
+                        <SettingsRow title="账户">
+                            {user ? user.displayName : "本地访客模式"}
+                        </SettingsRow>
+                    </SettingsGroup>
+                    {user && (
                         <SettingsGroup
-                            title="同步"
-                            footer={user
-                                ? "偏好设置、应用与笔记保存在账户中；任务栏位置等设备布局只保存在当前设备。"
-                                : "访客外观仅保存在当前设备；登录后可使用账户中的应用、笔记和偏好设置。"}
+                            title="数据管理"
+                            footer="已删除的应用和笔记保留在回收站，可恢复或彻底删除。"
                         >
-                            <SettingsRow title="账户">
-                                {user ? user.displayName : "本地访客模式"}
+                            <SettingsRow title="回收站">
+                                <Button
+                                    variant="ghost"
+                                    aria-label="打开回收站"
+                                    render={
+                                        <Link
+                                            to={routes.trash}
+                                            viewTransition
+                                        />
+                                    }
+                                >
+                                    打开
+                                    <ChevronRight
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
                             </SettingsRow>
                         </SettingsGroup>
-                        {user && (
-                            <SettingsGroup
-                                title="数据管理"
-                                footer="已删除的应用和笔记保留在回收站，可恢复或彻底删除。"
+                    )}
+                    {isAdmin && (
+                        <SettingsGroup
+                            title="管理员工具"
+                            footer="仅管理员可见，用于系统配置备份与界面组件调试。"
+                        >
+                            <SettingsRow
+                                title="管理后台"
+                                description="系统设置、用户管理与数据备份还原"
                             >
-                                <SettingsRow title="回收站">
-                                    <Button
-                                        variant="ghost"
-                                        aria-label="打开回收站"
-                                        render={
-                                            <Link
-                                                to={routes.trash}
-                                                viewTransition
-                                            />
-                                        }
-                                    >
-                                        打开
-                                        <ChevronRight
-                                            size="1em"
-                                            className="icon-sm"
-                                            aria-hidden="true"
+                                <Button
+                                    variant="ghost"
+                                    aria-label="打开管理后台"
+                                    render={
+                                        <Link
+                                            to={routes.admin()}
+                                            viewTransition
                                         />
-                                    </Button>
-                                </SettingsRow>
-                            </SettingsGroup>
-                        )}
-                        {isAdmin && (
-                            <SettingsGroup>
-                                <SettingsRow title="设计实验室">
-                                    <Button
-                                        variant="ghost"
-                                        aria-label="打开设计实验室"
-                                        render={
-                                            <Link
-                                                to={routes.designLab}
-                                                viewTransition
-                                            />
-                                        }
-                                    >
-                                        打开
-                                        <ChevronRight
-                                            size="1em"
-                                            className="icon-sm"
-                                            aria-hidden="true"
+                                    }
+                                >
+                                    打开
+                                    <ChevronRight
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
+                            </SettingsRow>
+                            <SettingsRow
+                                title="备份与还原"
+                                description="导出完整数据快照或导入系统配置"
+                            >
+                                <Button
+                                    variant="ghost"
+                                    aria-label="打开备份与还原"
+                                    render={
+                                        <Link
+                                            to={routes.admin("backup")}
+                                            viewTransition
                                         />
-                                    </Button>
-                                </SettingsRow>
-                            </SettingsGroup>
-                        )}
-                    </>
-                )}
-                {tab === "shortcuts" && <ShortcutsSettings />}
-            </SettingsShell>
+                                    }
+                                >
+                                    打开
+                                    <ChevronRight
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
+                            </SettingsRow>
+                            <SettingsRow
+                                title="设计实验室"
+                                description="预览主题配色、材质与交互组件状态"
+                            >
+                                <Button
+                                    variant="ghost"
+                                    aria-label="打开设计实验室"
+                                    render={
+                                        <Link
+                                            to={routes.designLab}
+                                            viewTransition
+                                        />
+                                    }
+                                >
+                                    打开
+                                    <ChevronRight
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
+                            </SettingsRow>
+                        </SettingsGroup>
+                    )}
+                </>
+            )}
+            {tab === "shortcuts" && <ShortcutsSettings />}
             <WallpaperCompositionDialog
                 open={host.active && compositionTarget !== null}
                 onOpenChange={(open) => {
@@ -1582,12 +1684,13 @@ export function SettingsContent({ host }: { host: PageHost }) {
                 </AlertDialogContent>
             </AlertDialog>
             <StatusBanner
-                tone="success"
+                tone={toast?.tone ?? "success"}
                 presentation="floating"
-                open={host.active && toastMessage !== null}
+                className="settings-toast"
+                open={host.active && toast !== null}
                 data-testid="wallpaper-toast"
             >
-                {toastMessage}
+                {toast?.message}
             </StatusBanner>
         </>
     );

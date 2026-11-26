@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
 import { api } from "../../lib/api.ts";
 
-/** A model the signed-in user can actually ask: enabled and text-capable. */
+/** A model the signed-in user can actually ask: enabled, visible, text-capable, and from an enabled provider. */
 function isUsableModel(model: AiModelDto): boolean {
-    return model.enabled && model.supportsText;
+    return model.enabled &&
+        model.visibleToUsers &&
+        model.supportsText &&
+        model.providerEnabled !== false;
 }
 
 export function usableModels(models: readonly AiModelDto[]): AiModelDto[] {

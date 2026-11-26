@@ -183,7 +183,8 @@ export function AdminBackupRestore() {
             try {
                 config = JSON.parse(await file.text());
             } catch {
-                throw new Error("无法解析 JSON 文件，格式不正确");
+                setConfigError("无法解析 JSON 文件，格式不正确");
+                return;
             }
             const preview = await api<ConfigImportPreviewDto>(
                 "/api/admin/system/config/preview",

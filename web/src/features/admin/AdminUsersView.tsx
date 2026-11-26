@@ -160,7 +160,7 @@ function UserRowActions({
             <div className="admin-ua-row-actions">
                 <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={(event) =>
                         onResetPassword(user, event.currentTarget)}

@@ -246,6 +246,11 @@
     min-width: 0;
 }
 
+.admin-panel-header > .action-group {
+    min-height: var(--font-page-title-line-height);
+    align-items: center;
+}
+
 .admin-panel-heading-block {
     display: flex;
     flex-direction: column;

@@ -67,14 +67,30 @@ function SelectPositioner(props: SelectPrimitive.Positioner.Props) {
     );
 }
 
+const SELECT_POPUP_WIDTH_STYLE = {
+    minWidth: "max(200px, var(--anchor-width, 200px))",
+    maxWidth:
+        "min(calc(100vw - var(--space-6)), max(320px, var(--anchor-width, 320px)))",
+} as const;
+
 function SelectPopup({
     className,
+    style,
     ...props
 }: SelectPrimitive.Popup.Props) {
     return (
         <SelectPrimitive.Popup
             data-slot="select-popup"
             className={cn("menu-popup select-popup", className)}
+            style={typeof style === "function"
+                ? (state) => ({
+                    ...SELECT_POPUP_WIDTH_STYLE,
+                    ...style(state),
+                })
+                : {
+                    ...SELECT_POPUP_WIDTH_STYLE,
+                    ...style,
+                }}
             {...props}
         />
     );
@@ -97,16 +113,19 @@ function SelectContent({
     children,
     className,
     sideOffset = 6,
+    align = "start",
     alignItemWithTrigger = false,
     ...props
 }: SelectPrimitive.Popup.Props & {
     sideOffset?: number;
+    align?: SelectPrimitive.Positioner.Props["align"];
     alignItemWithTrigger?: boolean;
 }) {
     return (
         <SelectPortal>
             <SelectPositioner
                 sideOffset={sideOffset}
+                align={align}
                 alignItemWithTrigger={alignItemWithTrigger}
             >
                 <SelectPopup className={className} {...props}>

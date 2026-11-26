@@ -6,6 +6,9 @@
     max-width: var(--layout-page-max);
     margin: var(--space-page-block) auto var(--space-10);
 }
+.page-shell:has(> .settings-layout[data-host-narrow="true"]) {
+    margin-block: var(--space-page-block) var(--space-9);
+}
 .page-shell[data-archetype="search"] {
     width: 100%;
     max-width: none;
@@ -284,11 +287,14 @@
 .settings-row-message[data-tone="danger"] {
     color: var(--danger);
 }
-@media (max-width: 639px) {
+/* Settings panel responsive stacking: follows the panel container width rather
+   than viewport width so narrow desktop windows stack like mobile. */
+@container settings-panel (max-width: 480px) {
     .settings-row:has([data-variant="swatch"]),
     .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) {
         flex-direction: column;
         align-items: stretch;
+        padding-block: var(--space-3);
     }
 
     .settings-row:has([data-variant="swatch"]) .settings-row-label,
@@ -296,13 +302,128 @@
         flex: none;
     }
 
-    .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) .settings-row-control {
-        justify-content: flex-start;
+    .settings-row:has([data-slot="radio-group"][data-variant="segmented"]) .settings-row-control {
+        width: 100%;
+        justify-content: stretch;
         margin-inline-start: 0;
     }
 
-    .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) [data-slot="radio-group"][data-variant="segmented"] {
+    .settings-row:has([data-slot="radio-group"][data-variant="segmented"]) [data-slot="radio-group"][data-variant="segmented"] {
+        display: grid;
+        width: 100%;
         margin-block: 0;
+    }
+
+    .settings-row .settings-row-control [data-slot="radio-group"][data-variant="segmented"] .radio-item {
+        flex: 1;
+        min-width: 0;
+        padding-inline: var(--space-2);
+    }
+
+    .settings-row-control:has([data-variant="swatch"]) {
+        width: 100%;
+    }
+
+    .settings-row [data-slot="radio-group"][data-variant="swatch"] {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: var(--space-2) 0;
+        width: 100%;
+    }
+
+    /* The two swatch sets dissolve into the row's five-column grid. */
+    .settings-row .accent-swatch-set {
+        display: contents;
+    }
+
+    .settings-row [data-variant="swatch"] .radio-item {
+        width: 100%;
+        min-height: var(--control-touch-target);
+        justify-content: center;
+    }
+}
+@container settings-panel (max-width: 608px) {
+    .settings-layout[data-host-narrow="true"] .settings-row:has([data-variant="swatch"]),
+    .settings-layout[data-host-narrow="true"] .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) {
+        flex-direction: column;
+        align-items: stretch;
+        padding-block: var(--space-3);
+    }
+
+    .settings-layout[data-host-narrow="true"] .settings-row:has([data-variant="swatch"]) .settings-row-label,
+    .settings-layout[data-host-narrow="true"] .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) .settings-row-label {
+        flex: none;
+    }
+
+    .settings-layout[data-host-narrow="true"] .settings-row:has([data-slot="radio-group"][data-variant="segmented"]) .settings-row-control {
+        width: 100%;
+        justify-content: stretch;
+        margin-inline-start: 0;
+    }
+
+    .settings-layout[data-host-narrow="true"] .settings-row:has([data-slot="radio-group"][data-variant="segmented"]) [data-slot="radio-group"][data-variant="segmented"] {
+        display: grid;
+        width: 100%;
+        margin-block: 0;
+    }
+
+    .settings-layout[data-host-narrow="true"] .settings-row .settings-row-control [data-slot="radio-group"][data-variant="segmented"] .radio-item {
+        flex: 1;
+        min-width: 0;
+        padding-inline: var(--space-2);
+    }
+
+    .settings-layout[data-host-narrow="true"] .settings-row-control:has([data-variant="swatch"]) {
+        width: 100%;
+    }
+
+    .settings-layout[data-host-narrow="true"] .settings-row [data-slot="radio-group"][data-variant="swatch"] {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: var(--space-2) 0;
+        width: 100%;
+    }
+
+    .settings-layout[data-host-narrow="true"] .settings-row .accent-swatch-set {
+        display: contents;
+    }
+
+    .settings-layout[data-host-narrow="true"] .settings-row [data-variant="swatch"] .radio-item {
+        width: 100%;
+        min-height: var(--control-touch-target);
+        justify-content: center;
+    }
+}
+/* Fallback for grouped lists rendered outside `.settings-panel`. */
+@media (max-width: 639px) {
+    .settings-row:has([data-variant="swatch"]),
+    .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) {
+        flex-direction: column;
+        align-items: stretch;
+        padding-block: var(--space-3);
+    }
+
+    .settings-row:has([data-variant="swatch"]) .settings-row-label,
+    .settings-row:not(.settings-row--vertical):has([data-slot="radio-group"][data-variant="segmented"]) .settings-row-label {
+        flex: none;
+    }
+
+    .settings-row:has([data-slot="radio-group"][data-variant="segmented"]) .settings-row-control {
+        width: 100%;
+        justify-content: stretch;
+        margin-inline-start: 0;
+    }
+
+    .settings-row:has([data-slot="radio-group"][data-variant="segmented"]) [data-slot="radio-group"][data-variant="segmented"] {
+        display: grid;
+        width: 100%;
+        margin-block: 0;
+    }
+
+    .settings-row .settings-row-control [data-slot="radio-group"][data-variant="segmented"] .radio-item {
+        flex: 1;
+        min-width: 0;
+        padding-inline: var(--space-2);
     }
 
     .settings-row-control:has([data-variant="swatch"]) {
@@ -965,6 +1086,17 @@
 }
 .status-banner[data-presentation="floating"] {
     padding: var(--space-2) var(--space-4);
+}
+.status-banner[data-presentation="floating"][data-tone="error"] {
+    color: var(--danger);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 32%, transparent),
+        var(--shadow-elevation-floating);
+}
+.status-banner[data-presentation="floating"][data-tone="success"] {
+    color: var(--success);
+}
+.status-banner[data-presentation="floating"][data-tone="warning"] {
+    color: var(--warning);
 }
 /* Toast buttons sit on the --space-1 inset: concentric with --radius-lg. */
 .undo-toast .button {

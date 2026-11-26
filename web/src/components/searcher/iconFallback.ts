@@ -1,5 +1,5 @@
-/** Website identity colour, independent of path, display name, or theme.
- * Its pale canvas and fixed dark ink keep every hue above WCAG AA. */
+/** Website identity colour, independent of path or display name.
+ * Light and dark pairs keep every hue above WCAG AA. */
 export function iconFallback(
     url: string,
 ): { background: string; color: string } {
@@ -13,8 +13,9 @@ export function iconFallback(
     for (const char of domain) {
         hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
     }
+    const hue = (hash >>> 0) % 360;
     return {
-        background: `hsl(${(hash >>> 0) % 360} 45% 90%)`,
-        color: "#1d1d1f",
+        background: `light-dark(hsl(${hue} 45% 90%), hsl(${hue} 28% 24%))`,
+        color: `light-dark(#1d1d1f, hsl(${hue} 40% 88%))`,
     };
 }

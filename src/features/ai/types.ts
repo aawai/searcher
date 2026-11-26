@@ -55,6 +55,7 @@ export interface AiModelDto {
     enabled: boolean;
     visibleToUsers: boolean;
     isDefault: boolean;
+    providerEnabled?: boolean;
     supportsText: boolean;
     supportsVision: boolean;
     supportsTools: boolean;
