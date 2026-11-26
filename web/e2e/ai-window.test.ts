@@ -733,7 +733,11 @@ Deno.test("AI 输入框聚焦环上缘不被消息区渐隐遮挡", async () => 
             user,
         );
         const surface = page.locator(".ask-composer-surface");
+        const textarea = page.locator(".ask-composer__textarea");
+        await surface.waitFor({ state: "visible" });
+        await textarea.waitFor({ state: "visible" });
         const box = (await surface.boundingBox())!;
+        assert(box);
         const readStripPixels = async (clipY: number) => {
             const strip = await page.screenshot({
                 clip: {
@@ -767,7 +771,6 @@ Deno.test("AI 输入框聚焦环上缘不被消息区渐隐遮挡", async () => 
 
         // Default theme: the 3px focus glow paints above the composer top edge
         // over the dock fade rather than being occluded by it.
-        const textarea = page.locator(".ask-composer__textarea");
         await textarea.evaluate((el) => (el as HTMLElement).blur());
         await page.waitForFunction(() =>
             getComputedStyle(document.querySelector(".ask-composer-surface")!)
