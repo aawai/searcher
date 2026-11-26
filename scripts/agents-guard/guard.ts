@@ -264,6 +264,15 @@ export async function checkLinks(
     return problems;
 }
 
+/** Active Markdown docs checked for outbound links alongside `AGENTS.md`. */
+export function isActiveDocPath(path: string): boolean {
+    if (path === "README.md" || path === "scripts/e2e/README.md") return true;
+    return path.startsWith("docs/") &&
+        path.endsWith(".md") &&
+        !path.startsWith("docs/plans/") &&
+        !path.startsWith("docs/audits/");
+}
+
 /** Repo-relative path of `target` as linked from repo-relative `from`. */
 export function resolveRelative(from: string, target: string): string {
     if (target.startsWith("/")) return target.replace(/^\/+/, "");

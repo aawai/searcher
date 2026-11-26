@@ -2,6 +2,7 @@ import { assertEquals } from "@std/assert";
 import {
     checkGuide,
     checkLinks,
+    isActiveDocPath,
     parseMarkdown,
     type RepoFacts,
 } from "./guard.ts";
@@ -128,6 +129,42 @@ Deno.test("links to missing files or anchors are reported; external and valid li
             file: "docs/testing.md",
             line: 1,
             message: "anchor not found: ../AGENTS.md#执行与调度",
+        }],
+    );
+});
+
+Deno.test("isActiveDocPath includes active docs and excludes plans, audits and changelog", () => {
+    assertEquals(isActiveDocPath("README.md"), true);
+    assertEquals(isActiveDocPath("scripts/e2e/README.md"), true);
+    assertEquals(isActiveDocPath("docs/frontend.md"), true);
+    assertEquals(isActiveDocPath("docs/design/UI_CHECKLIST.md"), true);
+    assertEquals(isActiveDocPath("docs/plans/README.md"), false);
+    assertEquals(isActiveDocPath("docs/audits/issue-403/report.md"), false);
+    assertEquals(isActiveDocPath("CHANGELOG.md"), false);
+});
+
+Deno.test("checkLinks catches broken anchor between active docs", async () => {
+    const links = parseMarkdown(
+        "[底线](design/VISUAL_LANGUAGE.md#一底线)",
+    ).links;
+    assertEquals(
+        await checkLinks(
+            "docs/frontend.md",
+            links,
+            [],
+            facts({
+                anchorsOf: (path) =>
+                    Promise.resolve(
+                        path === "docs/design/VISUAL_LANGUAGE.md"
+                            ? ["一基础可用性底线"]
+                            : null,
+                    ),
+            }),
+        ),
+        [{
+            file: "docs/frontend.md",
+            line: 1,
+            message: "anchor not found: design/VISUAL_LANGUAGE.md#一底线",
         }],
     );
 });
