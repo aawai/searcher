@@ -83,16 +83,15 @@ export function normalizeTabIcon(raw: unknown): TabIcon {
     return DEFAULT_TAB_ICON;
 }
 
-/** 深色模式下的壁纸呈现方式：智能切换 / 跟随原图 / 氛围流光 / 深黑画布 / 独立壁纸。 */
+/** 深色模式下的壁纸呈现方式：跟随浅色 / 氛围流光 / 深黑画布 / 独立壁纸。 */
 export const DARK_WALLPAPER_MODES = [
-    "auto",
     "follow",
     "ambient",
     "canvas",
     "custom",
 ] as const;
 export type DarkWallpaperMode = (typeof DARK_WALLPAPER_MODES)[number];
-export const DEFAULT_DARK_WALLPAPER_MODE: DarkWallpaperMode = "auto";
+export const DEFAULT_DARK_WALLPAPER_MODE: DarkWallpaperMode = "follow";
 
 export function normalizeDarkWallpaperMode(raw: unknown): DarkWallpaperMode {
     if (

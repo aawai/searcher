@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { BotanicalSpecies } from "@shared/wallpaper.ts";
+import type { BackdropPolarity } from "../../design-system/wallpaper-accent.ts";
 import { THEME_SYNC_EVENT } from "../../design-system/theme-transition.ts";
 import {
     type BotanicalPalette,
@@ -17,6 +18,7 @@ export interface BotanicalSceneCanvasProps {
     species: BotanicalSpecies;
     embedded?: boolean;
     overPhoto?: boolean;
+    backdropPolarity?: BackdropPolarity;
     testId?: string;
 }
 
@@ -48,6 +50,7 @@ function isEditableElement(target: EventTarget | null): boolean {
 function readThemePalette(
     canvas: HTMLCanvasElement,
     overPhoto = false,
+    backdropPolarity?: BackdropPolarity,
 ): {
     hidden: boolean;
     palette: BotanicalPalette;
@@ -55,7 +58,9 @@ function readThemePalette(
     const root = document.documentElement;
     const forcedColors = window.matchMedia("(forced-colors: active)").matches;
     const highContrast = root.dataset.contrast === "more";
-    const isDark = root.dataset.theme === "dark";
+    const isDark = backdropPolarity
+        ? backdropPolarity === "dark"
+        : root.dataset.theme === "dark";
     const computedRoot = getComputedStyle(root);
     const computedCanvasColor = getComputedStyle(canvas).color;
     const accent = computedCanvasColor ||
@@ -71,16 +76,19 @@ export default function BotanicalSceneCanvas({
     species,
     embedded = false,
     overPhoto = false,
+    backdropPolarity,
     testId,
 }: BotanicalSceneCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const overPhotoRef = useRef(overPhoto);
     overPhotoRef.current = overPhoto;
+    const backdropPolarityRef = useRef(backdropPolarity);
+    backdropPolarityRef.current = backdropPolarity;
     const refreshThemeRef = useRef<(() => void) | null>(null);
 
     useEffect(() => {
         refreshThemeRef.current?.();
-    }, [overPhoto]);
+    }, [overPhoto, backdropPolarity]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -98,7 +106,11 @@ export default function BotanicalSceneCanvas({
         let dpr = Math.min(window.devicePixelRatio || 1, 2);
         let viewport = resolveBotanicalViewport(0, 0, embedded);
         let scene: BotanicalScene | null = null;
-        let paletteState = readThemePalette(canvas, overPhotoRef.current);
+        let paletteState = readThemePalette(
+            canvas,
+            overPhotoRef.current,
+            backdropPolarityRef.current,
+        );
         let reducedMotion = reducedMotionQuery.matches;
         let pageHidden = document.hidden;
         let searchFocused = !embedded &&
@@ -236,7 +248,11 @@ export default function BotanicalSceneCanvas({
         };
 
         const refreshTheme = () => {
-            paletteState = readThemePalette(canvas, overPhotoRef.current);
+            paletteState = readThemePalette(
+                canvas,
+                overPhotoRef.current,
+                backdropPolarityRef.current,
+            );
             if (paletteState.hidden) {
                 cancelLoop();
                 ctx.clearRect(0, 0, viewport.sceneWidth, viewport.sceneHeight);
@@ -247,7 +263,11 @@ export default function BotanicalSceneCanvas({
         refreshThemeRef.current = refreshTheme;
 
         const onThemeSync = () => {
-            paletteState = readThemePalette(canvas, overPhotoRef.current);
+            paletteState = readThemePalette(
+                canvas,
+                overPhotoRef.current,
+                backdropPolarityRef.current,
+            );
             cancelLoop();
             if (paletteState.hidden) {
                 ctx.clearRect(0, 0, viewport.sceneWidth, viewport.sceneHeight);
@@ -364,6 +384,7 @@ export default function BotanicalSceneCanvas({
             className="wallpaper-surface__scene"
             data-testid={testId ? `${testId}-scene` : undefined}
             data-botanical-species={species}
+            data-ink-polarity={backdropPolarity}
             aria-hidden="true"
         />
     );

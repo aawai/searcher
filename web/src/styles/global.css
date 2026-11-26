@@ -335,19 +335,19 @@ a {
 }
 @media (hover: hover) {
     .app-shell[data-home][data-wallpaper-image="true"] :is(.wordmark-small, .top-actions a, .top-actions button):hover {
-        background: var(--material-regular-sheen), var(--material-regular);
-        -webkit-backdrop-filter: var(--material-regular-filter);
-        backdrop-filter: var(--material-regular-filter);
-        box-shadow: var(--shadow-material-edge);
+        background: var(--topbar-adaptive-hover-bg);
+        -webkit-backdrop-filter: var(--topbar-adaptive-hover-filter);
+        backdrop-filter: var(--topbar-adaptive-hover-filter);
+        box-shadow: var(--topbar-adaptive-hover-shadow);
     }
 }
 .app-shell[data-home][data-wallpaper-image="true"] :is(.wordmark-small, .top-actions a, .top-actions button):is(:focus-visible, [data-popup-open]),
 .app-shell[data-home][data-wallpaper-image="true"] .top-actions .topbar-link--active,
 .app-shell[data-home][data-wallpaper-image="true"] .top-actions .sync-failed-badge {
-    background: var(--material-regular-sheen), var(--material-regular);
-    -webkit-backdrop-filter: var(--material-regular-filter);
-    backdrop-filter: var(--material-regular-filter);
-    box-shadow: var(--shadow-material-edge);
+    background: var(--topbar-adaptive-hover-bg);
+    -webkit-backdrop-filter: var(--topbar-adaptive-hover-filter);
+    backdrop-filter: var(--topbar-adaptive-hover-filter);
+    box-shadow: var(--topbar-adaptive-hover-shadow);
 }
 @media (forced-colors: active) {
     .app-shell[data-home][data-wallpaper-image="true"] .top-actions .sync-failed-badge:not(:focus-visible) {
@@ -391,17 +391,29 @@ a {
     [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .wallpaper-surface:not(.wallpaper-surface--derived):not(.wallpaper-surface--embedded)::after {
         opacity: var(--wallpaper-focus-scrim);
     }
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"][data-wallpaper-image="true"][data-wallpaper-polarity="light"]:has(.search-frame:focus-within) .wallpaper-surface:not(.wallpaper-surface--derived):not(.wallpaper-surface--embedded)::after {
+        opacity: 0;
+    }
     [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .wallpaper-surface__scene {
         opacity: 0.55;
     }
     [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .home-masthead__stamp, .launcher-plate) {
         opacity: 0.40;
     }
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"][data-wallpaper-image="true"][data-wallpaper-polarity="light"]:has(.search-frame:focus-within) :is(.home-masthead__column, .home-masthead__stamp, .launcher-plate) {
+        opacity: 0.78;
+    }
     [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .dock-bar {
         --dock-rest-opacity: 0.36;
     }
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"][data-wallpaper-image="true"][data-wallpaper-polarity="light"]:has(.search-frame:focus-within) .dock-bar {
+        --dock-rest-opacity: 0.80;
+    }
     [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) > .topbar {
         opacity: 0.48;
+    }
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"][data-wallpaper-image="true"][data-wallpaper-polarity="light"]:has(.search-frame:focus-within) > .topbar {
+        opacity: 0.82;
     }
     [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .home-masthead__stamp, .launcher-plate, .topbar):is(:hover, :focus-within) {
         opacity: 1;

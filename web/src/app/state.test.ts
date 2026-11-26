@@ -631,10 +631,15 @@ Deno.test("Appearance: normalizes darkWallpaperMode, darkWallpaper, and preserve
     );
     assertEquals(normalized.wallpaperPresentations[staleData], undefined);
 
+    const legacyAuto = normalizeAppearance({
+        darkWallpaperMode: "auto" as unknown as "follow",
+    });
+    assertEquals(legacyAuto.darkWallpaperMode, "follow");
+
     const invalid = normalizeAppearance({
-        darkWallpaperMode: "unknown" as unknown as "auto",
+        darkWallpaperMode: "unknown" as unknown as "follow",
         darkWallpaper: "http://insecure.example.com/bg.jpg",
     });
-    assertEquals(invalid.darkWallpaperMode, "auto");
+    assertEquals(invalid.darkWallpaperMode, "follow");
     assertEquals(invalid.darkWallpaper, "");
 });

@@ -124,6 +124,19 @@
         background: var(--material-regular);
         box-shadow: var(--launcher-plate-dark-wallpaper-shadow);
     }
+
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="light"] .launcher-plate:not([data-plate="hidden"]) {
+        background: var(--material-obsidian-regular);
+        -webkit-backdrop-filter: var(--material-obsidian-filter);
+        backdrop-filter: var(--material-obsidian-filter);
+        box-shadow: var(--launcher-plate-obsidian-shadow);
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="dark"] .launcher-plate:not([data-plate="hidden"]) {
+        background: var(--material-pearl-regular);
+        -webkit-backdrop-filter: var(--material-pearl-filter);
+        backdrop-filter: var(--material-pearl-filter);
+    }
 }
 @media (max-width: 767px) {
     .launcher-plate {
@@ -153,6 +166,22 @@
 .app-shell:not([data-wallpaper-image="true"]) .launcher-plate[data-plate="hidden"] :is(.webapp-name, .launcher-folder-name) {
     -webkit-text-stroke: 0px transparent;
     text-shadow: none;
+}
+
+@media (forced-colors: none) {
+    :root:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="light"] .launcher-plate[data-plate="hidden"] :is(.webapp-name, .launcher-folder-name) {
+        color: #1D1D1F;
+        -webkit-text-stroke: 2.5px #FFFFFF;
+        text-shadow: 0 0 var(--space-2) rgb(255 255 255 / 0.90),
+            0 1px 1px rgb(255 255 255 / 0.70);
+    }
+
+    :root:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="dark"] .launcher-plate[data-plate="hidden"] :is(.webapp-name, .launcher-folder-name) {
+        color: #F5F5F7;
+        -webkit-text-stroke: 0px transparent;
+        text-shadow: 0 1px 3px rgb(0 0 0 / 0.65),
+            0 2px 10px rgb(0 0 0 / 0.45);
+    }
 }
 
 /* Grid metrics are the single presentation source for both CSS and ResizeObserver.

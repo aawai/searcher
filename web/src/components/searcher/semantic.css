@@ -763,7 +763,7 @@
     width: 100%;
     min-width: 0;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .appearance-picker [data-slot="radio-group"][data-variant="segmented"].appearance-picker-dark-mode .radio-item {
     min-width: 0;
@@ -818,7 +818,6 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    filter: var(--wallpaper-thumb-dim);
 }
 @media (prefers-reduced-motion: reduce) {
     .appearance-picker-wallpaper-item {

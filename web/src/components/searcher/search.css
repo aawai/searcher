@@ -184,6 +184,35 @@
     [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-wallpaper-image="true"] .search-frame:focus-within:not(:has(input:focus-visible)) {
         box-shadow: var(--search-frame-dark-wallpaper-focus-within-shadow);
     }
+
+    @media (prefers-reduced-transparency: no-preference) {
+        [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="light"] .search-frame {
+            --search-placeholder: #C6C6D0;
+            background: var(--material-obsidian-regular);
+            -webkit-backdrop-filter: var(--material-obsidian-filter);
+            backdrop-filter: var(--material-obsidian-filter);
+            box-shadow: var(--search-frame-obsidian-shadow);
+        }
+
+        @media (hover: hover) {
+            [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="light"] .search-frame:not(:focus-within):hover {
+                background: color-mix(in oklab, var(--material-dark-base) calc(var(--glass-obsidian-fill) + 8%), transparent);
+                box-shadow: var(--search-frame-obsidian-hover-shadow);
+            }
+        }
+
+        [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="light"] .search-frame:focus-within {
+            background: var(--material-thick);
+            -webkit-backdrop-filter: var(--material-obsidian-thick-filter);
+            backdrop-filter: var(--material-obsidian-thick-filter);
+        }
+
+        :root:not([data-theme="dark"]):not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="dark"] .search-frame {
+            background: var(--material-pearl-regular);
+            -webkit-backdrop-filter: var(--material-pearl-filter);
+            backdrop-filter: var(--material-pearl-filter);
+        }
+    }
 }
 
 /* Forced colours drop the shadows that edge the frame and the suggestion

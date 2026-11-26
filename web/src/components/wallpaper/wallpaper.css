@@ -27,23 +27,6 @@
     background-position: var(--wallpaper-position);
     background-size: cover;
     background-repeat: no-repeat;
-    filter: var(--wallpaper-dim);
-    transition: filter var(--motion-base) var(--ease-standard);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .wallpaper-surface__image {
-        transition: none;
-    }
-}
-
-.wallpaper-surface[data-substrate="image"]:not(.wallpaper-surface--derived)::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: var(--elevation-local-1);
-    background: var(--wallpaper-shade);
-    pointer-events: none;
 }
 
 .wallpaper-surface[data-wallpaper-mode="ambient"] .wallpaper-surface__image {
@@ -61,15 +44,12 @@
 }
 
 .wallpaper-surface[data-wallpaper-mode="ambient"]:not(.wallpaper-surface--derived)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: var(--elevation-local-1);
     background: var(--wallpaper-ambient-glaze);
-}
-
-[data-theme="dark"] .wallpaper-surface[data-native-dark="true"] .wallpaper-surface__image {
-    filter: var(--wallpaper-custom-dark-dim);
-}
-
-[data-theme="dark"] .wallpaper-surface[data-native-dark="true"]:not(.wallpaper-surface--derived)::before {
-    background: var(--wallpaper-custom-shade);
+    pointer-events: none;
 }
 
 .wallpaper-surface[data-wallpaper-mode="canvas"]:not(.wallpaper-surface--derived)::before {
@@ -86,11 +66,15 @@
     inset: 0;
     z-index: var(--elevation-local-1);
     pointer-events: none;
-    opacity: var(--wallpaper-grain-opacity);
+    opacity: 0;
     mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.85'/%3E%3C/svg%3E");
     background-repeat: repeat;
     background-size: 120px 120px;
+}
+
+.wallpaper-surface:is([data-wallpaper-mode="ambient"], [data-wallpaper-mode="canvas"]) .wallpaper-surface__grain {
+    opacity: var(--wallpaper-grain-opacity);
 }
 
 .wallpaper-surface:not(.wallpaper-surface--derived):not(.wallpaper-surface--embedded)::after {
@@ -117,8 +101,7 @@
     }
 
     .wallpaper-surface[data-wallpaper-mode="ambient"]:not(.wallpaper-surface--derived)::before,
-    .wallpaper-surface[data-wallpaper-mode="canvas"]:not(.wallpaper-surface--derived)::before,
-    [data-theme="dark"] .wallpaper-surface[data-native-dark="true"]:not(.wallpaper-surface--derived)::before {
+    .wallpaper-surface[data-wallpaper-mode="canvas"]:not(.wallpaper-surface--derived)::before {
         background: none;
     }
 }
@@ -131,8 +114,7 @@
     }
 
     [data-contrast="more"] .wallpaper-surface[data-wallpaper-mode="ambient"]:not(.wallpaper-surface--derived)::before,
-    [data-contrast="more"] .wallpaper-surface[data-wallpaper-mode="canvas"]:not(.wallpaper-surface--derived)::before,
-    [data-theme="dark"][data-contrast="more"] .wallpaper-surface[data-native-dark="true"]:not(.wallpaper-surface--derived)::before {
+    [data-contrast="more"] .wallpaper-surface[data-wallpaper-mode="canvas"]:not(.wallpaper-surface--derived)::before {
         background: none;
     }
 }
@@ -188,6 +170,22 @@
     backdrop-filter: var(--material-regular-filter);
     box-shadow: var(--shadow-l2);
     color: var(--muted);
+}
+
+@media (forced-colors: none) and (prefers-reduced-transparency: no-preference) {
+    [data-theme="dark"]:not([data-contrast="more"]) .wallpaper-stage[data-wallpaper-polarity="light"] .wallpaper-stage-context-preview__search-bar {
+        background: var(--material-obsidian-regular);
+        -webkit-backdrop-filter: var(--material-obsidian-filter);
+        backdrop-filter: var(--material-obsidian-filter);
+        box-shadow: var(--search-frame-obsidian-shadow);
+        color: #C6C6D0;
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .wallpaper-stage[data-wallpaper-polarity="dark"] .wallpaper-stage-context-preview__search-bar {
+        background: var(--material-pearl-regular);
+        -webkit-backdrop-filter: var(--material-pearl-filter);
+        backdrop-filter: var(--material-pearl-filter);
+    }
 }
 
 .wallpaper-stage-context-preview__placeholder {

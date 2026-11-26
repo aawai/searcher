@@ -870,6 +870,10 @@ Deno.test("masthead layout constants and frameless ambient cushion tokens mirror
             "--masthead-icon-shadow:",
             "--masthead-entry-hover: rgb(255 255 255 / 0.30);",
             "--masthead-collapse-hover: rgb(255 255 255 / 0.38);",
+            "--glass-obsidian-fill: 76%;",
+            "--glass-pearl-fill: 72%;",
+            '[data-ink-polarity="light"]',
+            '[data-ink-polarity="dark"]',
         ]
     ) {
         assertEquals(

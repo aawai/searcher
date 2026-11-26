@@ -19,9 +19,11 @@ import { Button } from "../../components/ui/button.tsx";
 import { useEscapeLayer } from "../../components/ui/escape-layer-stack.tsx";
 import { focusContainer } from "../../components/ui/focus-recovery.ts";
 import {
-    classifyMastheadBackdrop,
-    type MastheadBackdropTone,
+    type BackdropPolarity,
     type MastheadBands,
+    type MastheadBandTone,
+    resolveBackdropPolarity,
+    resolveMastheadBackdrop,
 } from "../../design-system/wallpaper-accent.ts";
 import { calmDateTimeAttribute } from "../home-calm/calm-clock.ts";
 import { continueEntries } from "../home-calm/continue-line.ts";
@@ -51,8 +53,9 @@ const MastheadSections = lazy(() =>
 export interface MastheadWallpaper {
     /** Empty when the home has no image wallpaper overlay. */
     source: string;
-    nativeDarkTone?: boolean;
     mastheadBands?: MastheadBands | null;
+    topBand?: MastheadBandTone | null;
+    lightness?: number | null;
     presentation: WallpaperPresentation;
 }
 
@@ -641,15 +644,17 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
             maxHeight: placement.column.height,
             "--masthead-edge-gap": `${placement.edgeGap}px`,
         };
-        const backdropTone: MastheadBackdropTone | undefined = wallpaper.source
-            ? classifyMastheadBackdrop({
+        const backdrop = wallpaper.source
+            ? resolveMastheadBackdrop({
                 scheme,
                 band: wallpaper.mastheadBands
                     ? wallpaper.mastheadBands[placement.side]
                     : null,
-                nativeDarkTone: wallpaper.nativeDarkTone,
             })
-            : undefined;
+            : null;
+        const backdropTone = backdrop?.tone;
+        const sideInkPolarity: BackdropPolarity | undefined = backdrop
+            ?.polarity;
         const stamp = sideCollapsed
             ? buildMastheadStamp({
                 dateParts,
@@ -763,6 +768,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                             ref={sideColumnRef}
                             tabIndex={-1}
                             className="home-masthead__column"
+                            data-ink-polarity={sideInkPolarity}
                             data-animate={sideMotion ? "true" : undefined}
                             style={sideColumnStyle}
                         >
@@ -783,6 +789,13 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         return null;
     }
 
+    const narrowPeekPolarity: BackdropPolarity | undefined =
+        wallpaper.source && effectiveCollapsed
+            ? resolveBackdropPolarity({
+                scheme,
+                lightness: wallpaper.topBand?.lightness ?? wallpaper.lightness,
+            })
+            : undefined;
     const peekLabel = peekTaskCount > 0
         ? `展开首页刊头，${peekTaskCount} 项待办`
         : "展开首页刊头";
@@ -800,6 +813,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 ref={sheetRef}
                 className="home-masthead__column home-masthead__sheet"
                 data-open={!effectiveCollapsed ? "true" : "false"}
+                data-ink-polarity={narrowPeekPolarity}
                 inert={effectiveCollapsed}
                 style={{
                     left: placement.sheet.x,

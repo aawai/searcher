@@ -52,7 +52,10 @@ import {
     resolveEffectiveWallpaper,
 } from "../components/wallpaper/wallpaper-choices.ts";
 import { type ColorScheme, resolveTheme } from "../design-system/theme.ts";
-import type { MastheadBands } from "../design-system/wallpaper-accent.ts";
+import type {
+    MastheadBands,
+    MastheadBandTone,
+} from "../design-system/wallpaper-accent.ts";
 import { api, ApiError, json } from "../lib/api.ts";
 import { deleteLocal, getLocal, setLocal } from "../lib/local.ts";
 import {
@@ -227,6 +230,8 @@ type State = {
     resolvedScheme: ColorScheme;
     effectiveWallpaper: EffectiveWallpaper;
     wallpaperMastheadBands: MastheadBands | null;
+    wallpaperLightness: number | null;
+    wallpaperTopBand: MastheadBandTone | null;
     setAppearance: (
         next: Partial<Appearance>,
         options?: { sync?: boolean },
@@ -533,14 +538,13 @@ export function AppState({ children }: { children: ReactNode }) {
         ? ""
         : appearance.wallpaper;
     // Derived even under a manual accent so "跟随壁纸" previews the active wallpaper colour
-    // and luminance-aware `auto` dark mode decides before paint from cached summary.
+    // and adaptive backdrop polarity / ambient palette resolve before paint from cached summary.
     const wallpaperAccent = useWallpaperAccent(accentSampleSource);
     const effectiveWallpaper = resolveEffectiveWallpaper({
         scheme: resolvedScheme,
         wallpaper: appearance.wallpaper,
         darkWallpaper: appearance.darkWallpaper,
         darkWallpaperMode: appearance.darkWallpaperMode,
-        wallpaperLightness: wallpaperAccent?.darkTone.lightness ?? null,
     });
     useEffect(() => {
         applyStyleAttributes(document.documentElement, {
@@ -684,6 +688,8 @@ export function AppState({ children }: { children: ReactNode }) {
                 resolvedScheme,
                 effectiveWallpaper,
                 wallpaperMastheadBands: wallpaperAccent?.mastheadBands ?? null,
+                wallpaperLightness: wallpaperAccent?.darkTone.lightness ?? null,
+                wallpaperTopBand: wallpaperAccent?.topBand ?? null,
                 setAppearance,
                 settleAppearanceSync: () =>
                     Promise.all([

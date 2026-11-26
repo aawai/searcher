@@ -107,7 +107,7 @@ Deno.test("WallpaperSurface: substrate classifies image and rejected sources", (
     const canvasSurface = renderToStaticMarkup(createElement(WallpaperSurface, {
         source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
         mode: "canvas",
-        nativeDarkTone: true,
+        backdropPolarity: "light",
         botanicalScene: "plum",
     }));
     assertMatch(canvasSurface, /data-wallpaper-mode="canvas"/);
@@ -116,21 +116,13 @@ Deno.test("WallpaperSurface: substrate classifies image and rejected sources", (
     assertNotMatch(canvasSurface, /wallpaper-surface__image/);
     assertNotMatch(canvasSurface, /data-native-dark/);
 
-    const nativeDarkSurface = renderToStaticMarkup(
+    const imagePolaritySurface = renderToStaticMarkup(
         createElement(WallpaperSurface, {
             source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
             mode: "image",
-            nativeDarkTone: true,
+            backdropPolarity: "light",
         }),
     );
-    assertMatch(nativeDarkSurface, /data-native-dark="true"/);
-
-    const ambientNativeSurface = renderToStaticMarkup(
-        createElement(WallpaperSurface, {
-            source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
-            mode: "ambient",
-            nativeDarkTone: true,
-        }),
-    );
-    assertNotMatch(ambientNativeSurface, /data-native-dark/);
+    assertMatch(imagePolaritySurface, /data-substrate="image"/);
+    assertNotMatch(imagePolaritySurface, /data-native-dark/);
 });
