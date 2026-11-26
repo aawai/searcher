@@ -1320,3 +1320,15 @@
     opacity: var(--opacity-disabled);
     pointer-events: none;
 }
+
+.route-error-fallback {
+    width: 100%;
+    max-width: var(--layout-auth-max);
+    min-width: 0;
+    margin-inline: auto;
+}
+@media (min-width: 768px) {
+    .route-error-fallback {
+        padding-block-start: clamp(var(--space-5), 10dvh, var(--space-10));
+    }
+}

@@ -7,7 +7,6 @@ import {
 } from "../components/searcher/semantic.tsx";
 import { Illustration } from "../components/illustrations/Illustration.tsx";
 import { Button } from "../components/ui/button.tsx";
-import "./narrow-form.css";
 
 export interface RouteErrorBoundaryProps {
     children: ReactNode;
@@ -69,7 +68,7 @@ export class RouteErrorBoundary extends React.Component<
                     aria-live="assertive"
                     data-testid="route-error-boundary"
                 >
-                    <div className="narrow-form">
+                    <div className="route-error-fallback">
                         <Illustration
                             name="auth-or-error"
                             size="md"
