@@ -2,7 +2,6 @@ import { lazy, Suspense, useRef, useState } from "react";
 import { usePageHost } from "../../app/page-host.tsx";
 import { ExternalLink, Maximize2, X } from "lucide-react";
 import { routes } from "../../app/routes.ts";
-import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
     Tooltip,
@@ -172,12 +171,9 @@ export function InlineAnswerCard(
                                                     source.documentId,
                                                 )}
                                         >
-                                            <Badge
-                                                variant="secondary"
-                                                className="inline-ai-source-kind"
-                                            >
+                                            <span className="inline-ai-source-kind">
                                                 笔记
-                                            </Badge>
+                                            </span>
                                             <span className="inline-ai-source-title">
                                                 {source.title}
                                             </span>
@@ -195,12 +191,9 @@ export function InlineAnswerCard(
                                                 />
                                             }
                                         >
-                                            <Badge
-                                                variant="secondary"
-                                                className="inline-ai-source-kind"
-                                            >
+                                            <span className="inline-ai-source-kind">
                                                 网页
-                                            </Badge>
+                                            </span>
                                             <span className="inline-ai-source-title">
                                                 {source.title || source.url}
                                             </span>

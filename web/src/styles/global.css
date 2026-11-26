@@ -443,6 +443,12 @@ a {
     }
 }
 @media (prefers-reduced-motion: reduce) {
+    .wordmark-small,
+    .top-actions a,
+    .top-actions button {
+        transition: none;
+    }
+
     ::view-transition-old(root),
     ::view-transition-new(root) {
         animation: none;

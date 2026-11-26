@@ -583,6 +583,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                                     type="button"
                                                     variant="ghost"
                                                     size="sm"
+                                                    className="ai-model-reasoning-btn"
                                                     onClick={() =>
                                                         openModelConfig(model)}
                                                 >

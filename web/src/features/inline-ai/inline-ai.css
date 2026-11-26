@@ -135,6 +135,10 @@
 
 .inline-ai-source-kind {
     flex-shrink: 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-label-weight);
 }
 
 .inline-ai-source-title {
@@ -143,6 +147,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inline-ai-card,
+    [data-slot="button"].inline-ai-source {
+        transition: none;
+    }
 }
 
 @media (any-pointer: coarse), (hover: none) {

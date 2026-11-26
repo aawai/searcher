@@ -253,12 +253,29 @@
 .wallpaper-history {
     width: 100%;
     min-width: 0;
+    container-type: inline-size;
 }
 .wallpaper-history__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%,
-        calc(var(--control-touch-target) * 2 + var(--space-row-gap))), 1fr));
-    gap: var(--space-3);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-2);
+}
+@container (max-width: 419px) {
+    .wallpaper-history__grid {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: calc(var(--control-touch-target) * 2 + var(--space-2));
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x proximity;
+        padding: var(--space-1);
+        margin: calc(-1 * var(--space-1));
+        scroll-padding-inline: var(--space-1);
+        scrollbar-width: thin;
+    }
+    .wallpaper-card {
+        scroll-snap-align: start;
+    }
 }
 .wallpaper-card {
     position: relative;
@@ -298,15 +315,22 @@
     position: absolute;
     inset-block-end: var(--space-1);
     inset-inline-start: var(--space-1);
+    max-width: calc(100% - var(--space-2));
     display: flex;
     align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--control-radius);
+    gap: var(--space-half);
+    padding: var(--space-half) calc(var(--space-1) + var(--space-half));
+    border-radius: var(--radius-sm);
     color: var(--foreground);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
+    white-space: nowrap;
     pointer-events: none;
+}
+.wallpaper-card__current-badge > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .wallpaper-card__actions {
     position: absolute;
@@ -365,6 +389,7 @@
 .ai-model-meta,
 .ai-provider-meta {
     overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
 }
 .ai-error {
     margin-top: var(--space-4);
@@ -374,7 +399,13 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
-    gap: var(--space-1) var(--space-4);
+    gap: var(--space-2) var(--space-4);
+    width: 100%;
+}
+@media (min-width: 640px) {
+    .ai-model-reasoning-btn {
+        margin-inline-start: auto;
+    }
 }
 .ai-model-toggle {
     display: inline-flex;
@@ -463,4 +494,10 @@
 }
 .settings-shortcut-arg {
     color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+    .settings-nav-item,
+    .wallpaper-card__menu-trigger {
+        transition: none;
+    }
 }

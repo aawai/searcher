@@ -340,38 +340,30 @@ export function AdminSystemSettings() {
                                             </span>
                                         </div>
 
-                                        <div
-                                            className="admin-ops-preset-group"
-                                            role="group"
+                                        <RadioGroup
+                                            variant="segmented"
                                             aria-label="审计日志保留期限快捷选项"
+                                            disabled={saving}
+                                            value={RETENTION_PRESETS.map(String)
+                                                    .includes(
+                                                        retentionInput.trim(),
+                                                    )
+                                                ? retentionInput.trim()
+                                                : ""}
+                                            onValueChange={(next) => {
+                                                setRetentionInput(String(next));
+                                                setRetentionError("");
+                                            }}
                                         >
-                                            {RETENTION_PRESETS.map((days) => {
-                                                const active =
-                                                    retentionInput.trim() ===
-                                                        String(days);
-                                                return (
-                                                    <Button
-                                                        key={days}
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        disabled={saving}
-                                                        aria-pressed={active}
-                                                        className="admin-ops-preset-chip"
-                                                        onClick={() => {
-                                                            setRetentionInput(
-                                                                String(days),
-                                                            );
-                                                            setRetentionError(
-                                                                "",
-                                                            );
-                                                        }}
-                                                    >
-                                                        {days} 天
-                                                    </Button>
-                                                );
-                                            })}
-                                        </div>
+                                            {RETENTION_PRESETS.map((days) => (
+                                                <RadioGroupItem
+                                                    key={days}
+                                                    value={String(days)}
+                                                >
+                                                    {days} 天
+                                                </RadioGroupItem>
+                                            ))}
+                                        </RadioGroup>
                                     </div>
 
                                     {retentionError
@@ -407,6 +399,7 @@ export function AdminSystemSettings() {
                             <div className="admin-ops-card-head-main">
                                 <span
                                     className="admin-ops-icon-chip"
+                                    data-tone="neutral"
                                     aria-hidden="true"
                                 >
                                     <SlidersHorizontal size="1.05em" />
@@ -590,7 +583,7 @@ export function AdminSystemSettings() {
                             </h3>
                             <p className="admin-ops-card-desc">
                                 {isDirty
-                                    ? "预览待保存的新策略值"
+                                    ? `已修改 ${changedCount} 项，保存后生效`
                                     : "当前实例生效配置"}
                             </p>
                         </div>

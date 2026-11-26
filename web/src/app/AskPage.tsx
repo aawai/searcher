@@ -631,13 +631,19 @@ function AskWorkspaceContent(
             <PageShell archetype="workbench" className="ask-page-shell">
                 <PageHeader title="AI 问答" />
                 <div className="ask-guest__content">
-                    <p>AI 问答需要登录账号。</p>
-                    <Button
-                        variant="default"
-                        render={<Link to={authPath("login", location)} />}
-                    >
-                        登录后提问
-                    </Button>
+                    <EmptyState
+                        illustration="empty-ask"
+                        title="AI 问答需要登录账号"
+                        description="登录账号后即可向 AI 提问、检索个人笔记与保存历史对话。"
+                        action={
+                            <Button
+                                variant="default"
+                                render={<Link to={authPath("login", location)} />}
+                            >
+                                登录后提问
+                            </Button>
+                        }
+                    />
                 </div>
             </PageShell>
         );

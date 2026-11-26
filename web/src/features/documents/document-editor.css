@@ -166,6 +166,7 @@
     gap: var(--space-3);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
+    font-variant-numeric: tabular-nums;
     color: var(--muted);
     user-select: none;
 }
@@ -904,6 +905,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
+    font-variant-numeric: tabular-nums;
 }
 
 .document-history-reason,
@@ -912,6 +914,10 @@
     line-height: var(--font-metadata-line-height);
     font-weight: var(--font-body-weight);
     color: var(--muted);
+}
+
+.document-history-date {
+    font-variant-numeric: tabular-nums;
 }
 
 .document-history-preview-head {
@@ -939,6 +945,7 @@
 .document-history-preview-meta {
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
+    font-variant-numeric: tabular-nums;
     color: var(--muted);
 }
 

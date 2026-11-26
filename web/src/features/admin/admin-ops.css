@@ -56,14 +56,6 @@
     min-width: 0;
 }
 
-.admin-ops-card-head-main {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    min-width: 0;
-    flex: 1;
-}
-
 .admin-ops-card-titles {
     display: flex;
     flex-direction: column;
@@ -273,18 +265,6 @@
     font-size: var(--font-body-size);
     line-height: var(--font-body-line-height);
     color: var(--muted);
-}
-
-.admin-ops-preset-group {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-}
-
-.admin-ops-preset-chip {
-    font-variant-numeric: tabular-nums;
-    font-size: var(--font-metadata-size);
 }
 
 .admin-ops-field-message {
@@ -629,6 +609,17 @@
     font-weight: var(--font-label-weight);
 }
 
+@media (forced-colors: active) {
+    .admin-ops-step {
+        border: 1px solid CanvasText;
+    }
+
+    .admin-ops-step[data-state="active"],
+    .admin-ops-step[data-state="done"] {
+        border-color: Highlight;
+    }
+}
+
 .admin-ops-step-num {
     display: inline-flex;
     align-items: center;
@@ -737,6 +728,11 @@
     border: 1px solid var(--border);
     background: var(--surface-soft);
     min-width: 0;
+}
+
+.admin-ops-file-icon {
+    flex-shrink: 0;
+    color: var(--muted);
 }
 
 .admin-ops-file-info {

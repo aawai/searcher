@@ -87,6 +87,12 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-1) var(--space-3);
+    font-variant-numeric: tabular-nums;
+}
+
+.account-device-current {
+    color: var(--accent);
+    font-weight: var(--font-label-weight);
 }
 
 .account-device-empty {

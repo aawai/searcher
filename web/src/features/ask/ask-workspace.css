@@ -329,8 +329,12 @@
     opacity: 1;
 }
 
-.ask-header__temp-badge {
+.ask-header__temp-note {
     flex-shrink: 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    white-space: nowrap;
 }
 
 .ask-header__right {
@@ -500,6 +504,7 @@
     font-size: var(--font-page-title-size);
     line-height: var(--font-page-title-line-height);
     font-weight: var(--font-title-weight);
+    letter-spacing: -0.025em;
 }
 
 [data-slot="button"][data-slot="button"].ask-empty-hero__cta {
@@ -643,6 +648,46 @@
     align-items: center;
     gap: var(--space-1);
     padding: var(--space-1) var(--space-2) 0;
+}
+
+.ask-composer__tool-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--control-compact-height);
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--surface-soft);
+    color: var(--foreground);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-label-weight);
+    cursor: pointer;
+    transition: background-color var(--motion-fast) var(--ease-standard);
+}
+
+@media (hover: hover) {
+    .ask-composer__tool-chip:hover {
+        background: var(--surface-hover);
+    }
+}
+
+.ask-composer__tool-chip:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+
+@media (any-pointer: coarse), (hover: none) {
+    .ask-composer__tool-chip {
+        min-height: var(--control-touch-target);
+    }
+}
+
+@media (forced-colors: active) {
+    .ask-composer__tool-chip {
+        border: 1px solid ButtonText;
+    }
 }
 
 .ask-composer__toolbar {
@@ -824,7 +869,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ask-generation-settings__chevron {
+    .ask-generation-settings__chevron,
+    .ask-composer__tool-chip {
         transition: none;
     }
 }
@@ -1087,6 +1133,10 @@
 
 .ask-source-card__kind {
     flex-shrink: 0;
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    font-weight: var(--font-label-weight);
 }
 
 .ask-source-card__icon {

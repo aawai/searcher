@@ -18,6 +18,10 @@
     gap: 0;
 }
 
+.trash-tabs [role="tab"] {
+    font-variant-numeric: tabular-nums;
+}
+
 .trash-status {
     margin-block-end: var(--space-4);
 }
@@ -54,6 +58,7 @@
     color: var(--muted);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 

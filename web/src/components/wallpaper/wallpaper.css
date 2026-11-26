@@ -224,9 +224,9 @@
 }
 
 .wallpaper-composition-readout code {
-    font-family: var(--font-mono);
-    font-size: var(--font-code-size);
-    line-height: var(--font-code-line-height);
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-label-weight);
 }
 
 .wallpaper-composition-previews {

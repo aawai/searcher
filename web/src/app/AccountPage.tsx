@@ -21,7 +21,6 @@ import {
     type AvatarCrop,
     type AvatarMetaDto,
 } from "@shared/avatar.ts";
-import { Badge } from "../components/ui/badge.tsx";
 import { Button, buttonVariants } from "../components/ui/button.tsx";
 import {
     Dialog,
@@ -108,7 +107,7 @@ function describeDevice(userAgent: string | null): string {
 }
 
 function formatTime(timestamp: number | null | undefined): string {
-    if (!timestamp) return "—";
+    if (!timestamp) return "-";
     return new Date(timestamp).toLocaleString("zh-CN", {
         year: "numeric",
         month: "2-digit",
@@ -908,9 +907,9 @@ export function AccountContent({ host }: { host: PageHost }) {
                                         description={
                                             <span className="account-device-meta">
                                                 {device.isCurrent && (
-                                                    <Badge variant="secondary">
+                                                    <span className="account-device-current">
                                                         当前设备
-                                                    </Badge>
+                                                    </span>
                                                 )}
                                                 <span>
                                                     {device.ip || "未知 IP"}
