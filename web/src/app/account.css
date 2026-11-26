@@ -74,6 +74,13 @@
     margin-bottom: var(--space-6);
 }
 
+.account-profile-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
 .account-status {
     margin-top: var(--space-3);
 }
@@ -109,4 +116,10 @@
     flex-direction: column;
     gap: var(--space-4);
     min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .account-refresh-icon.animate-spin {
+        animation: none;
+    }
 }

@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import {
     SettingsGroup,
     SettingsRow,
@@ -31,22 +32,86 @@ const SHORTCUT_SECTIONS: readonly ShortcutSectionConfig[] = [
     { id: "documents", title: "笔记编辑" },
 ];
 
+interface GroupedShortcutRow {
+    key: string;
+    action: string;
+    context: string;
+    description?: string;
+    items: KeyboardShortcutDefinition[];
+}
+
+function groupSectionShortcuts(
+    items: readonly KeyboardShortcutDefinition[],
+): GroupedShortcutRow[] {
+    const groups: GroupedShortcutRow[] = [];
+    for (const item of items) {
+        const existing = groups.find(
+            (group) =>
+                group.action === item.action && group.context === item.context,
+        );
+        if (existing) {
+            existing.items.push(item);
+            if (
+                item.description &&
+                (!existing.description ||
+                    item.description.length > existing.description.length)
+            ) {
+                existing.description = item.description;
+            }
+        } else {
+            groups.push({
+                key: item.id,
+                action: item.action,
+                context: item.context,
+                description: item.description,
+                items: [item],
+            });
+        }
+    }
+    return groups;
+}
+
 function ShortcutRow({
-    item,
+    row,
     platform,
+    showContext,
 }: {
-    item: KeyboardShortcutDefinition;
+    row: GroupedShortcutRow;
     platform: ShortcutPlatform;
+    showContext: boolean;
 }) {
+    const description = showContext
+        ? (row.description
+            ? `${row.context} · ${row.description}`
+            : row.context)
+        : row.description;
     return (
-        <SettingsRow title={item.action} description={item.description}>
+        <SettingsRow title={row.action} description={description}>
             <span className="settings-shortcut-keycap-group">
-                <kbd className="settings-shortcut-keycap" aria-hidden="true">
-                    {formatShortcut(item.binding, platform)}
-                </kbd>
-                <span className="sr-only">
-                    快捷键：{formatShortcutAccessible(item.binding, platform)}
-                </span>
+                {row.items.map((item, index) => (
+                    <Fragment key={item.id}>
+                        {index > 0 && (
+                            <span
+                                className="settings-shortcut-arg"
+                                aria-hidden="true"
+                            >
+                                或
+                            </span>
+                        )}
+                        <kbd
+                            className="settings-shortcut-keycap"
+                            aria-hidden="true"
+                        >
+                            {formatShortcut(item.binding, platform)}
+                        </kbd>
+                        <span className="sr-only">
+                            快捷键：{formatShortcutAccessible(
+                                item.binding,
+                                platform,
+                            )}
+                        </span>
+                    </Fragment>
+                ))}
             </span>
         </SettingsRow>
     );
@@ -84,21 +149,31 @@ export function ShortcutsSettings(
                 const sectionItems = KEYBOARD_SHORTCUTS.filter(
                     (s: KeyboardShortcutDefinition) => s.section === section.id,
                 );
-                const scope = [...new Set(sectionItems.map((s) => s.context))]
-                    .join(" · ");
+                const rows = groupSectionShortcuts(sectionItems);
+                const contexts = [...new Set(rows.map((r) => r.context))];
+                const mixedContext = contexts.length > 1;
+                const loginRequiredRows = rows.filter((r) =>
+                    r.context.includes("需要登录")
+                );
+                const footer = !mixedContext
+                    ? contexts[0]
+                    : loginRequiredRows.length > 0
+                    ? `仅「${
+                        loginRequiredRows.map((r) => r.action).join("」「")
+                    }」需要登录；其余快捷键访客可用。`
+                    : undefined;
                 return (
                     <SettingsGroup
                         key={section.id}
                         title={section.title}
-                        footer={scope || undefined}
+                        footer={footer}
                     >
-                        {sectionItems.map((
-                            item: KeyboardShortcutDefinition,
-                        ) => (
+                        {rows.map((row) => (
                             <ShortcutRow
-                                key={item.id}
-                                item={item}
+                                key={row.key}
+                                row={row}
                                 platform={platform}
+                                showContext={mixedContext}
                             />
                         ))}
                     </SettingsGroup>

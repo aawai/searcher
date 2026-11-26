@@ -1,5 +1,15 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ShieldCheck, SlidersHorizontal } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "../components/ui/alert-dialog.tsx";
 import { Button } from "../components/ui/button.tsx";
 import { Input } from "../components/ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group.tsx";
@@ -22,16 +32,18 @@ import { api, json } from "../lib/api.ts";
 import { errorMessage } from "./state.tsx";
 import type { SystemSettingsDto } from "./AdminOverview.tsx";
 import { normalizeTheme } from "@shared/contracts.ts";
+import { SEARCH_ENGINES } from "@shared/engines.ts";
 import { AdminPanelHeader } from "./AdminShell.tsx";
+import {
+    DESTRUCTIVE_ACTION_KEY,
+    useNavigationGuard,
+} from "./navigation-guards.tsx";
 import "../features/admin/admin-ops.css";
 
 const DEFAULT_ENGINE_ITEMS: Record<SystemSettingsDto["defaultEngine"], string> =
-    {
-        bing: "Bing (必应)",
-        google: "Google (谷歌)",
-        baidu: "Baidu (百度)",
-        duckduckgo: "DuckDuckGo",
-    };
+    Object.fromEntries(
+        SEARCH_ENGINES.map((engine) => [engine.id, engine.label]),
+    ) as Record<SystemSettingsDto["defaultEngine"], string>;
 
 const RETENTION_MIN = 1;
 const RETENTION_MAX = 3650;
@@ -86,6 +98,16 @@ export function AdminSystemSettings() {
     ].filter(Boolean).length;
     const isDirty = changedCount > 0;
     const parsedRetention = parseRetentionDays(retentionInput);
+
+    const blocked = useNavigationGuard({
+        blocks: (intent) => {
+            if (!isDirty) return false;
+            if (intent.nextLocation.key === DESTRUCTIVE_ACTION_KEY) return true;
+            return intent.nextLocation.pathname !==
+                intent.currentLocation.pathname;
+        },
+        warnOnUnload: () => isDirty,
+    });
 
     useEffect(() => {
         if (savedAt === null) return;
@@ -452,18 +474,14 @@ export function AdminSystemSettings() {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="bing">
-                                                Bing (必应)
-                                            </SelectItem>
-                                            <SelectItem value="google">
-                                                Google (谷歌)
-                                            </SelectItem>
-                                            <SelectItem value="baidu">
-                                                Baidu (百度)
-                                            </SelectItem>
-                                            <SelectItem value="duckduckgo">
-                                                DuckDuckGo
-                                            </SelectItem>
+                                            {SEARCH_ENGINES.map((engine) => (
+                                                <SelectItem
+                                                    key={engine.id}
+                                                    value={engine.id}
+                                                >
+                                                    {engine.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -713,6 +731,35 @@ export function AdminSystemSettings() {
                     </footer>
                 </aside>
             </div>
+
+            <AlertDialog
+                open={blocked !== null}
+                onOpenChange={(open) => {
+                    if (!open) blocked?.reset();
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            放弃未保存的设置更改？
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            当前有 {changedCount}{" "}
+                            项系统设置修改尚未保存，离开后这些更改将会丢失。
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>继续编辑</AlertDialogCancel>
+                        <AlertDialogAction
+                            type="button"
+                            variant="destructive"
+                            onClick={() => blocked?.proceed()}
+                        >
+                            放弃并离开
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </form>
     );
 }

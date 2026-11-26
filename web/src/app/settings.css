@@ -17,9 +17,14 @@
     min-width: 0;
 }
 @media (forced-colors: none) {
-    [data-theme="dark"]:not([data-contrast="more"]) .settings-layout:not([data-host-narrow="true"]) .settings-nav {
-        padding-inline-end: var(--space-4);
-        border-inline-end: 1px solid color-mix(in oklab, var(--foreground) 5%, transparent);
+    [data-theme="dark"]:not([data-contrast="more"]) .settings-layout:not([data-host-narrow="true"]) .settings-nav::after {
+        content: "";
+        position: absolute;
+        inset-block: 0;
+        inset-inline-end: calc(-1 * var(--space-4));
+        width: 1px;
+        background: color-mix(in oklab, var(--foreground) 6%, transparent);
+        pointer-events: none;
     }
 }
 .settings-nav-title,
@@ -66,7 +71,7 @@
 }
 .settings-nav-item:focus-visible {
     outline: 2px solid var(--ring);
-    outline-offset: 2px;
+    outline-offset: -2px;
 }
 /* The current item also takes the title weight: the fill and icon tint alone
    are colour cues (1.4.1), and forced colours erase them (A7). */
@@ -78,7 +83,7 @@
     color: var(--accent);
 }
 /* A Highlight fill under text opts out of adjustment, or the text backplate
-   paints Canvas over it; the focus ring then names its system colour. */
+   paints Canvas over it; the inset focus ring takes HighlightText inside it. */
 @media (forced-colors: active) {
     .settings-nav-item[aria-current="page"] {
         forced-color-adjust: none;
@@ -86,7 +91,7 @@
         color: HighlightText;
     }
     .settings-nav-item[aria-current="page"]:focus-visible {
-        outline-color: CanvasText;
+        outline-color: HighlightText;
     }
     .settings-nav-item[aria-current="page"] > svg:first-child {
         color: HighlightText;
@@ -100,7 +105,7 @@
         color: var(--accent-foreground);
     }
     [data-contrast="more"] .settings-layout:not([data-host-narrow="true"]) .settings-nav-item[aria-current="page"]:focus-visible {
-        outline-color: var(--foreground);
+        outline-color: var(--accent-foreground);
     }
     [data-contrast="more"] .settings-layout:not([data-host-narrow="true"]) .settings-nav-item[aria-current="page"] > svg:first-child {
         color: var(--accent-foreground);
@@ -137,7 +142,7 @@
     display: block;
 }
 .settings-layout[data-host-narrow="true"] .settings-nav {
-    position: static;
+    position: relative;
 }
 .settings-layout[data-host-narrow="true"] .settings-nav-title {
     display: block;
@@ -145,6 +150,18 @@
     font-size: var(--font-page-title-size);
     line-height: var(--font-page-title-line-height);
     font-weight: var(--font-title-weight);
+}
+/* In a narrow window the title bar already reads "设置"; keep the h1 for SR. */
+.settings-layout[data-host-narrow="true"][data-host-window="true"] .settings-nav-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: var(--space-visually-hidden-offset);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
 }
 .settings-layout[data-host-narrow="true"] .settings-nav-list {
     gap: 0;
@@ -157,6 +174,18 @@
     padding-inline: var(--space-card-padding);
     border-radius: 0;
     font-weight: var(--font-body-weight);
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-list li:first-child .settings-nav-item {
+    border-start-start-radius: var(--radius);
+    border-start-end-radius: var(--radius);
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-list li:last-child .settings-nav-item {
+    border-end-start-radius: var(--radius);
+    border-end-end-radius: var(--radius);
+}
+.settings-layout[data-host-narrow="true"] .settings-nav-item:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
 }
 .settings-layout[data-host-narrow="true"] .settings-nav-list li + li .settings-nav-item::before {
     content: "";
@@ -202,8 +231,32 @@
 
 /* Row controls: select and accent dots */
 .settings-choice-select {
-    width: calc(var(--control-height) * 4 + var(--space-5));
+    display: flex;
+    justify-content: flex-end;
     max-width: 100%;
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control .settings-choice-select [data-slot="select-trigger"]:not([data-field="standalone"]) {
+    width: auto;
+    min-width: calc(var(--control-height) * 4 + var(--space-2));
+    max-width: 100%;
+    margin-inline-end: 0;
+    padding-inline: var(--space-3) var(--space-2);
+    border-color: var(--field-border);
+    background: var(--surface-solid);
+    text-align: start;
+}
+@media (hover: hover) {
+    .settings-row:not(.settings-row--vertical) .settings-row-control .settings-choice-select [data-slot="select-trigger"]:not([data-field="standalone"]):hover:not(:disabled, [data-disabled], :focus-visible, [aria-invalid="true"]) {
+        border-color: var(--field-border-hover);
+        background: var(--surface-soft);
+    }
+}
+.settings-row:not(.settings-row--vertical) .settings-row-control .settings-choice-select [data-slot="select-trigger"]:not([data-field="standalone"]):focus-visible {
+    border-color: var(--ring);
+}
+.settings-toast[data-presentation="floating"] {
+    inset-block-end: calc(var(--space-4) + var(--dock-inset-bottom, 0px));
+    pointer-events: none;
 }
 
 /* Wallpaper source and current preview */
@@ -386,39 +439,22 @@
     border-radius: 0;
     color: var(--accent);
 }
-.ai-model-meta,
+.settings-add-row:first-child {
+    border-start-start-radius: var(--radius);
+    border-start-end-radius: var(--radius);
+}
+.settings-add-row:last-child {
+    border-end-start-radius: var(--radius);
+    border-end-end-radius: var(--radius);
+}
+[data-slot="button"].settings-add-row:focus-visible,
+.settings-add-row:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+}
 .ai-provider-meta {
     overflow-wrap: anywhere;
     font-variant-numeric: tabular-nums;
-}
-.ai-error {
-    margin-top: var(--space-4);
-}
-.ai-model-controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--space-2) var(--space-4);
-    width: 100%;
-}
-@media (min-width: 640px) {
-    .ai-model-reasoning-btn {
-        margin-inline-start: auto;
-    }
-}
-.ai-model-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: var(--control-compact-height);
-    white-space: nowrap;
-    cursor: pointer;
-}
-@media (any-pointer: coarse) {
-    .ai-model-toggle {
-        min-height: var(--control-touch-target);
-    }
 }
 .ai-provider-form {
     display: grid;
@@ -468,6 +504,9 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
+}
+.model-config-actions > .button--ghost:first-child {
+    margin-inline-start: calc(-1 * var(--space-3));
 }
 
 /* Shortcuts */

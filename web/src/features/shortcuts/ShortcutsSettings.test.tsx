@@ -23,10 +23,8 @@ Deno.test("ShortcutsSettings: renders every catalog shortcut action and quick co
     for (const item of KEYBOARD_SHORTCUTS) {
         assertStringIncludes(html, item.action);
         assertStringIncludes(html, item.context);
-        if (item.description) {
-            assertStringIncludes(html, item.description);
-        }
     }
+    assertStringIncludes(html, "笔记正文中由插入链接优先处理");
 
     for (const cmd of SEARCH_QUICK_COMMANDS) {
         assertStringIncludes(html, cmd.action);
@@ -35,6 +33,27 @@ Deno.test("ShortcutsSettings: renders every catalog shortcut action and quick co
             assertStringIncludes(html, `${cmd.prefix} 关键词`);
         }
     }
+});
+
+Deno.test("ShortcutsSettings: deduplicates focus-search bindings and clarifies login scope", () => {
+    const html = ReactDOMServer.renderToString(
+        <ShortcutsSettings platform="other" />,
+    );
+
+    // `/` and `Ctrl + K` share a single "聚焦主搜索框" row instead of repeating it.
+    const focusTitleMatches =
+        html.match(/class="settings-row-title"[^>]*>聚焦主搜索框</g) ?? [];
+    assertEquals(focusTitleMatches.length, 1);
+    assertStringIncludes(html, ">/<");
+    assertStringIncludes(html, ">Ctrl + K<");
+    assertStringIncludes(html, ">或<");
+
+    // Mixed-context global group clarifies that only toggle-dock requires login.
+    assertStringIncludes(
+        html,
+        "仅「展开并聚焦任务栏」需要登录；其余快捷键访客可用。",
+    );
+    assertEquals(html.includes("首页非可编辑区域 · 全局，需要登录"), false);
 });
 
 Deno.test("ShortcutsSettings: macOS keycaps and screen reader text format correctly", () => {
