@@ -733,45 +733,75 @@ Deno.test("AI 输入框聚焦环上缘不被消息区渐隐遮挡", async () => 
             user,
         );
         const surface = page.locator(".ask-composer-surface");
-        await page.locator(".ask-composer__textarea").focus();
+        const box = (await surface.boundingBox())!;
+        const readStripPixels = async (clipY: number) => {
+            const strip = await page.screenshot({
+                clip: {
+                    x: box.x + box.width / 4,
+                    y: clipY,
+                    width: box.width / 2,
+                    height: 1,
+                },
+            });
+            return await page.evaluate(async (base64) => {
+                const bytes = Uint8Array.from(
+                    atob(base64),
+                    (c) => c.charCodeAt(0),
+                );
+                const image = await createImageBitmap(
+                    new Blob([bytes], { type: "image/png" }),
+                );
+                const canvas = new OffscreenCanvas(image.width, image.height);
+                const ctx = canvas.getContext("2d")!;
+                ctx.drawImage(image, 0, 0);
+                const data = ctx.getImageData(0, 0, image.width, 1).data;
+                const pixels = new Set<string>();
+                for (let index = 0; index < data.length; index += 4) {
+                    pixels.add(
+                        `${data[index]},${data[index + 1]},${data[index + 2]}`,
+                    );
+                }
+                return [...pixels];
+            }, strip.toString("base64"));
+        };
+
+        // Default theme: the 3px focus glow paints above the composer top edge
+        // over the dock fade rather than being occluded by it.
+        const textarea = page.locator(".ask-composer__textarea");
+        await textarea.evaluate((el) => (el as HTMLElement).blur());
+        await page.waitForFunction(() =>
+            getComputedStyle(document.querySelector(".ask-composer-surface")!)
+                .borderTopColor === "rgba(0, 0, 0, 0)"
+        );
+        const unfocusedTopEdge = await readStripPixels(box.y - 2);
+        await textarea.focus();
+        await page.waitForFunction(() =>
+            getComputedStyle(document.querySelector(".ask-composer-surface")!)
+                .borderTopColor !== "rgba(0, 0, 0, 0)"
+        );
+        const focusedTopEdge = await readStripPixels(box.y - 2);
+        assertNotEquals(focusedTopEdge, unfocusedTopEdge);
+
+        // High-contrast theme: the 2px solid outline's upper row matches --ring
+        // cleanly without being washed out by the dock fade.
+        await page.evaluate(() => {
+            document.documentElement.dataset.contrast = "more";
+        });
         await page.waitForFunction(() =>
             getComputedStyle(document.querySelector(".ask-composer-surface")!)
                 .outlineStyle === "solid"
         );
-        const box = (await surface.boundingBox())!;
-        // The 2px outline's upper row, away from the rounded corners.
-        const strip = await page.screenshot({
-            clip: {
-                x: box.x + box.width / 4,
-                y: box.y - 2,
-                width: box.width / 2,
-                height: 1,
-            },
-        });
-        const { pixels, ring } = await page.evaluate(async (base64) => {
-            const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-            const image = await createImageBitmap(
-                new Blob([bytes], { type: "image/png" }),
-            );
-            const canvas = new OffscreenCanvas(image.width, image.height);
-            const ctx = canvas.getContext("2d")!;
-            ctx.drawImage(image, 0, 0);
-            const data = ctx.getImageData(0, 0, image.width, 1).data;
-            const pixels = new Set<string>();
-            for (let index = 0; index < data.length; index += 4) {
-                pixels.add(
-                    `${data[index]},${data[index + 1]},${data[index + 2]}`,
-                );
-            }
+        const hcPixels = await readStripPixels(box.y - 2);
+        const ring = await page.evaluate(() => {
             const probe = document.createElement("canvas").getContext("2d")!;
             probe.fillStyle = getComputedStyle(
                 document.querySelector(".ask-composer-surface")!,
             ).outlineColor;
             probe.fillRect(0, 0, 1, 1);
             const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
-            return { pixels: [...pixels], ring: `${r},${g},${b}` };
-        }, strip.toString("base64"));
-        assertEquals(pixels, [ring]);
+            return `${r},${g},${b}`;
+        });
+        assertEquals(hcPixels, [ring]);
         await context.close();
     } finally {
         await browser.close();

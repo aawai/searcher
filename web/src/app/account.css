@@ -117,9 +117,3 @@
     gap: var(--space-4);
     min-width: 0;
 }
-
-@media (prefers-reduced-motion: reduce) {
-    .account-refresh-icon.animate-spin {
-        animation: none;
-    }
-}

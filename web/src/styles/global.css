@@ -461,10 +461,6 @@ a {
     }
 }
 @media (prefers-reduced-motion: reduce) {
-    .animate-spin {
-        animation: none;
-    }
-
     .wordmark-small,
     .top-actions a,
     .top-actions button {

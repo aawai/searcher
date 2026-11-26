@@ -32,6 +32,7 @@ import { useAskStream } from "../features/ask/useAskStream.ts";
 import { TemporaryLeaseOwner } from "../features/ask/temporary-lease.ts";
 import { api, json } from "../lib/api.ts";
 import type { ExpandedAnswerState } from "../features/inline-ai/inline-answer.ts";
+import { usableModels } from "../features/omnibox/useAiModels.ts";
 import { askConversationId, authPath, routes } from "./routes.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import {
@@ -304,18 +305,19 @@ function AskWorkspaceContent(
         ])
             .then(([p, m, h, caps, preferences]) => {
                 if (!alive) return;
+                const usable = usableModels(m);
                 setProviders(p);
-                setModels(m);
+                setModels(usable);
                 setHistory(h);
                 setCapabilities(caps);
                 setLoaded(true);
 
                 const defaults = preferences.aiGenerationDefaults ?? {};
                 setUserDefaults(defaults);
-                const def = m.find((model) => model.isDefault)?.id ??
-                    m[0]?.id ?? null;
+                const def = usable.find((model) => model.isDefault)?.id ??
+                    usable[0]?.id ?? null;
                 setSelectedModelId(def);
-                const activeModel = m.find((item) => item.id === def);
+                const activeModel = usable.find((item) => item.id === def);
                 if (activeModel) {
                     setGenerationConfig(
                         resolveModelSwitchGenerationConfig({
