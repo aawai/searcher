@@ -18,7 +18,8 @@ function CodeBlock({
     const [copyError, setCopyError] = useState(false);
     const match = /language-(\w+)/.exec(className || "");
     const lang = match ? match[1] : "";
-    const rawCode = String(children).replace(/\n$/, "");
+    const rawText = String(children ?? "");
+    const rawCode = rawText.replace(/\n$/, "");
 
     async function handleCopy() {
         setCopyError(false);
@@ -31,7 +32,7 @@ function CodeBlock({
         }
     }
 
-    if (!match && !rawCode.includes("\n")) {
+    if (!match && !rawText.includes("\n")) {
         return <code className="ask-inline-code">{children}</code>;
     }
 
@@ -94,6 +95,7 @@ export function AssistantMarkdown({ text }: { text: string }) {
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeSanitize]}
                 components={{
+                    pre: ({ children }) => <>{children}</>,
                     code: CodeBlock,
                     table: ({ children }) => (
                         <div

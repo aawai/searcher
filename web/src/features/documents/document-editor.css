@@ -52,8 +52,22 @@
     min-width: 0;
 }
 @container (max-width: 639px) {
+    .document-editor-header {
+        padding: var(--space-2) var(--space-3);
+        row-gap: var(--space-1);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .document-title-wrapper {
+        margin: 0;
+    }
+
     .document-editor-header-main {
-        margin-inline-start: auto;
+        flex: 1 1 100%;
+    }
+
+    .document-editor-header-actions {
+        margin-left: 0;
     }
 }
 
@@ -164,6 +178,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    min-width: 0;
+    min-height: var(--control-compact-height);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     font-variant-numeric: tabular-nums;
@@ -171,32 +187,20 @@
     user-select: none;
 }
 
-/* No strip of its own: the mode switch and the document stats are pinned to the
-   bottom corners of the editor and the text scrolls beneath them. The row uses
-   the sidebar footer's inset (`documents-workspace.css`) and, like the sidebar's
-   entries, is compact only for a fine primary pointer, so all three share one
-   centre line on hybrid touch laptops too. */
+/* Dedicated static footer strip below the scroll viewport so content never
+   scrolls underneath or collides with the mode switch and metadata stats. */
 .document-editor-status-bar {
-    position: absolute;
-    inset-inline: var(--space-4);
-    inset-block-end: var(--space-2);
+    position: relative;
+    flex-shrink: 0;
     z-index: var(--elevation-local-10);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-control-gap);
-    block-size: var(--document-mode-target);
-    pointer-events: none;
-}
-
-[data-slot="radio-group"][data-variant="segmented"].document-mode-switch,
-.document-metadata-bar {
-    pointer-events: auto;
-    background: color-mix(in srgb, var(--surface-l3) 88%, transparent);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--border);
-    border-radius: var(--control-radius);
+    min-block-size: var(--document-mode-target);
+    padding: var(--space-2) var(--space-4);
+    border-top: 1px solid var(--border-subtle);
+    background: var(--surface-l3);
 }
 
 [data-slot="radio-group"][data-variant="segmented"].document-mode-switch {
@@ -219,43 +223,27 @@
     font-weight: var(--font-title-weight);
 }
 
-@media (prefers-reduced-transparency: reduce) {
-    [data-slot="radio-group"][data-variant="segmented"].document-mode-switch,
-    .document-metadata-bar {
-        background: var(--surface-l3);
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-    }
-}
-
-[data-contrast="more"] [data-slot="radio-group"][data-variant="segmented"].document-mode-switch,
-[data-contrast="more"] .document-metadata-bar {
-    background: var(--surface-l3);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-}
-
-.document-metadata-bar {
-    padding-inline: var(--space-2);
-    min-height: var(--control-compact-height);
-}
-
 @container (max-width: 432px) {
     .document-mode-switch .icon-sm {
         display: none;
     }
 
     .document-editor-status-bar {
-        block-size: auto;
-        min-block-size: var(--document-mode-target);
+        padding-inline: var(--space-3);
     }
 
     .document-metadata-bar {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: flex-end;
-        gap: 0 var(--space-2);
-        text-align: end;
+        gap: var(--space-2);
         min-inline-size: 0;
+        white-space: nowrap;
+    }
+
+    .document-metadata-bar > :first-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
@@ -411,13 +399,9 @@
 
 /* Editor Scroll & Readable Container */
 .document-editor-scroll-area {
-    /* Room beneath the text for the status overlay pinned to the corners; the
-       text owns it (the readable wrapper shrinks to the viewport, so padding
-       on this box would not extend the scroll range). Follows the status
-       bar's row height and inset. */
-    --document-status-clearance: calc(
-        var(--document-mode-track-height) + var(--space-2) + var(--space-3)
-    );
+    /* Comfortable bottom breathing room below the last paragraph above the
+       static status footer. */
+    --document-status-clearance: var(--space-6);
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -428,17 +412,7 @@
     scroll-behavior: smooth;
 }
 
-@container (max-width: 432px) {
-    .document-editor-scroll-area {
-        --document-status-clearance: calc(
-            max(var(--document-mode-track-height), 3 * var(--font-metadata-line-height) + 2 * var(--space-hairline)) +
-                var(--space-2) + var(--space-3)
-        );
-    }
-}
-
-/* Page view: the sheets are not part of the text flow, so the scroll area itself
-   ends below the last sheet, clear of the corner overlay. */
+/* Page view: keep bottom breathing room below the last sheet. */
 .document-editor-scroll-area:has(.pagination-viewport[data-mode="page"][data-scroll-owner="outer"]) {
     padding-block-end: calc(var(--space-4) + var(--document-status-clearance));
 }

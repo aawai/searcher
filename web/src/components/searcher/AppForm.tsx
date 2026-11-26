@@ -1,7 +1,6 @@
 import { useAppSessionContext } from "./AppSessionProvider.tsx";
 import { Check, Loader2, RefreshCw, Upload } from "lucide-react";
 import { Button } from "../ui/button.tsx";
-import { Checkbox } from "../ui/checkbox.tsx";
 import { Input } from "../ui/input.tsx";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group.tsx";
 import {
@@ -11,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../ui/select.tsx";
+import { Switch } from "../ui/switch.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.tsx";
 import { LogoCandidatePicker } from "./LogoCandidatePicker.tsx";
 import { SettingsGroup, SettingsRow, StatusBanner } from "./semantic.tsx";
@@ -206,6 +206,9 @@ export function AppForm() {
                             </SelectContent>
                         </Select>
                     </SettingsRow>
+                </SettingsGroup>
+
+                <SettingsGroup title="行为" headingLevel={3}>
                     {!editingApp && (
                         <SettingsRow
                             title="固定到首页"
@@ -214,7 +217,7 @@ export function AppForm() {
                                 ? "文件夹成员随文件夹显示，固定状态由文件夹决定"
                                 : "只影响首页呈现，应用始终保留在应用窗口"}
                         >
-                            <Checkbox
+                            <Switch
                                 id="app-home-fixed"
                                 aria-label="固定到首页"
                                 checked={appGroupId ? false : appHomeFixed}
@@ -223,9 +226,6 @@ export function AppForm() {
                             />
                         </SettingsRow>
                     )}
-                </SettingsGroup>
-
-                <SettingsGroup>
                     <SettingsRow
                         title="打开方式"
                         description={appOpenMode === "global"
@@ -392,8 +392,10 @@ export function AppForm() {
                                                 : "上传图片"}
                                         </span>
                                         <span className="app-upload-hint">
-                                            支持 PNG、JPEG、WebP、AVIF、SVG、ICO，
-                                            文件不超过 {WEBAPP_ICON_UPLOAD_MAX_MIB} MiB
+                                            支持
+                                            PNG、JPEG、WebP、AVIF、SVG、ICO，
+                                            文件不超过{" "}
+                                            {WEBAPP_ICON_UPLOAD_MAX_MIB} MiB
                                         </span>
                                         <input
                                             type="file"

@@ -7,25 +7,33 @@ import { hitSize } from "./helpers/touch-target.ts";
 
 type Box = { x: number; y: number; width: number; height: number };
 
-/** The free-window work area: viewport minus `--window-margin` and the Dock. */
+/** The free-window work area: viewport minus `--window-margin`, topbar and the Dock. */
 function workArea(page: Page): Promise<Box & { margin: number }> {
     return page.evaluate(() => {
-        const margin = parseFloat(
-            getComputedStyle(document.documentElement).getPropertyValue(
-                "--window-margin",
-            ),
-        );
+        const styles = getComputedStyle(document.documentElement);
+        const margin = parseFloat(styles.getPropertyValue("--window-margin"));
+        const topbarGap = parseFloat(styles.getPropertyValue("--space-2"));
         let left = margin, right = innerWidth - margin;
         let top = margin, bottom = innerHeight - margin;
+        const topbar = document.querySelector<HTMLElement>(".topbar");
+        if (topbar) {
+            const topbarRect = topbar.getBoundingClientRect();
+            if (
+                topbarRect.width && topbarRect.height &&
+                getComputedStyle(topbar).visibility !== "hidden"
+            ) {
+                top = Math.max(top, topbarRect.bottom + topbarGap);
+            }
+        }
         const dock = document.querySelector<HTMLElement>(
             ".dock-container:not([inert])",
         )!;
         const rect = dock.getBoundingClientRect();
         const edge = dock.dataset.edge;
-        if (edge === "left") left = rect.right + margin;
-        if (edge === "right") right = rect.left - margin;
-        if (edge === "top") top = rect.bottom + margin;
-        if (edge === "bottom") bottom = rect.top - margin;
+        if (edge === "left") left = Math.max(left, rect.right + margin);
+        if (edge === "right") right = Math.min(right, rect.left - margin);
+        if (edge === "top") top = Math.max(top, rect.bottom + margin);
+        if (edge === "bottom") bottom = Math.min(bottom, rect.top - margin);
         return {
             margin,
             x: left,

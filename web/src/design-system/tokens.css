@@ -366,7 +366,7 @@
     --surface-solid: #1A1A1F;
     --surface-soft: #25252B;
     --surface-highlight: rgb(255 255 255 / 0.10);
-    --surface-control-thumb: #636366;
+    --surface-control-thumb: #707075;
     --surface-l3: var(--surface-solid);
     --surface-grouped-canvas: #121216;
     --surface-code-well: #0E0E13;
@@ -412,8 +412,8 @@
     --search-focus-halo: 0 12px 40px -14px color-mix(in oklab, var(--accent) 20%, transparent);
     --search-frame-dark-shadow: inset 0 1px 0 rgb(255 252 246 / 0.13), inset 0 0 0 1px rgb(255 252 246 / 0.075), inset 0 -1px 0 rgb(0 0 0 / 0.62), 0 0 0 1px rgb(0 0 0 / 0.54), 0 28px 72px -20px rgb(0 0 0 / 0.74);
     --search-frame-dark-hover-shadow: inset 0 1px 0 rgb(255 252 246 / 0.17), inset 0 0 0 1px color-mix(in oklab, var(--accent) 18%, rgb(255 252 246 / 0.10)), inset 0 -1px 0 rgb(0 0 0 / 0.64), 0 0 0 1px rgb(0 0 0 / 0.56), 0 30px 76px -20px rgb(0 0 0 / 0.78);
-    --search-frame-dark-focus-shadow: inset 0 1px 0 rgb(255 252 246 / 0.16), inset 0 0 0 1px color-mix(in oklab, var(--accent) 50%, rgb(240 237 230 / 0.24)), inset 0 8px 18px -12px color-mix(in oklab, var(--accent) 34%, transparent), inset 0 -1px 0 rgb(0 0 0 / 0.68), 0 0 0 1px rgb(0 0 0 / 0.62), 0 32px 84px -16px rgb(0 0 0 / 0.88), var(--search-focus-halo);
-    --search-frame-dark-focus-within-shadow: inset 0 1px 0 rgb(255 252 246 / 0.15), inset 0 0 0 1px color-mix(in oklab, var(--accent) 26%, rgb(240 237 230 / 0.13)), inset 0 8px 18px -12px color-mix(in oklab, var(--accent) 34%, transparent), inset 0 -1px 0 rgb(0 0 0 / 0.68), 0 0 0 1px rgb(0 0 0 / 0.60), 0 32px 84px -16px rgb(0 0 0 / 0.86), var(--search-focus-halo);
+    --search-frame-dark-focus-shadow: inset 0 1px 0 rgb(255 252 246 / 0.16), inset 0 0 0 1px color-mix(in oklab, var(--accent) 50%, rgb(240 237 230 / 0.24)), inset 0 8px 18px -12px color-mix(in oklab, var(--accent) 10%, transparent), inset 0 -1px 0 rgb(0 0 0 / 0.68), 0 0 0 1px rgb(0 0 0 / 0.62), 0 32px 84px -16px rgb(0 0 0 / 0.88), var(--search-focus-halo);
+    --search-frame-dark-focus-within-shadow: inset 0 1px 0 rgb(255 252 246 / 0.15), inset 0 0 0 1px color-mix(in oklab, var(--accent) 26%, rgb(240 237 230 / 0.13)), inset 0 8px 18px -12px color-mix(in oklab, var(--accent) 10%, transparent), inset 0 -1px 0 rgb(0 0 0 / 0.68), 0 0 0 1px rgb(0 0 0 / 0.60), 0 32px 84px -16px rgb(0 0 0 / 0.86), var(--search-focus-halo);
     --search-frame-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13), inset 0 1px 0 rgb(255 255 255 / 0.08), 0 8px 28px -8px rgb(0 0 0 / 0.34), 0 2px 8px -2px rgb(0 0 0 / 0.18);
     --search-frame-dark-wallpaper-hover-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.20), inset 0 1px 0 rgb(255 255 255 / 0.12), 0 10px 32px -8px rgb(0 0 0 / 0.40), 0 2px 10px -2px rgb(0 0 0 / 0.22);
     --search-frame-dark-wallpaper-focus-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 62%, rgb(255 255 255 / 0.24)), 0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent), 0 12px 36px -10px rgb(0 0 0 / 0.46), 0 2px 10px -2px rgb(0 0 0 / 0.24);
@@ -1328,6 +1328,12 @@
     [data-shape="pill"] {
         --space-search-inset-inline: var(--space-2);
     }
+}
+
+/* Narrow settings windows respond to their own host width, not the viewport. */
+.page-shell:has(> .settings-layout[data-host-narrow="true"]) {
+    --space-page-inline: var(--space-4);
+    --space-page-block: var(--space-5);
 }
 
 /* Phones inset their windows by one gap on every side, the same distance that
