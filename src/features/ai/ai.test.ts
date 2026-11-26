@@ -1702,3 +1702,236 @@ Deno.test("pending releases survive restart, while a new holder or history conve
         await store.close();
     }
 });
+
+Deno.test("AI Service: personal owner retains disabled models, visibility stays synced, and default invariants hold", async () => {
+    const store = createInMemoryStore();
+    try {
+        const mockFetch: typeof fetch = (input) => {
+            const url = parseUrl(input);
+            if (url.endsWith("/models")) {
+                return Promise.resolve(
+                    jsonResponse({
+                        data: [
+                            { id: "m1" },
+                            { id: "m2" },
+                        ],
+                    }),
+                );
+            }
+            if (url.endsWith("/chat/completions")) {
+                return Promise.resolve(
+                    sseResponse([makeChunk("ok"), makeDoneChunk()]),
+                );
+            }
+            return Promise.resolve(new Response("Not Found", { status: 404 }));
+        };
+
+        const service = new AiService({
+            store,
+            encryptionKey: TEST_KEY,
+            fetchFn: mockFetch,
+        });
+
+        // 1. Personal provider created by normal user
+        const userProvider = await service.createProvider("user-1", {
+            name: "My Personal AI",
+            baseUrl: "https://personal.example.com/v1",
+            apiKey: "sk-personal-key-1234",
+            scope: "user",
+        }, false);
+
+        const initialUserModels = await service.listModels(
+            "user-1",
+            userProvider.id,
+            false,
+        );
+        assertEquals(initialUserModels.length, 2);
+        const [m1, m2] = initialUserModels;
+        assertEquals(m1.isDefault, true);
+        assertEquals(m1.providerEnabled, true);
+
+        // Disabling default personal model must NOT make it vanish for owner,
+        // and must automatically clear isDefault & sync visibleToUsers = false.
+        const disabledM1 = await service.updateModel("user-1", m1.id, {
+            enabled: false,
+        }, false);
+        assertEquals(disabledM1.enabled, false);
+        assertEquals(disabledM1.visibleToUsers, false);
+        assertEquals(disabledM1.isDefault, false);
+
+        const afterDisableList = await service.listModels(
+            "user-1",
+            userProvider.id,
+            false,
+        );
+        assertEquals(afterDisableList.length, 2);
+        assertEquals(
+            afterDisableList.find((m) => m.id === m1.id)?.enabled,
+            false,
+        );
+
+        // Cannot set disabled model as default
+        const setDefaultErr = await assertRejects(
+            () =>
+                service.updateModel("user-1", m1.id, {
+                    isDefault: true,
+                }, false),
+            AiServiceError,
+        );
+        assertEquals(setDefaultErr.statusCode, 400);
+
+        // Re-enabling personal model restores visibleToUsers = true so chat works
+        const reEnabledM1 = await service.updateModel("user-1", m1.id, {
+            enabled: true,
+        }, false);
+        assertEquals(reEnabledM1.enabled, true);
+        assertEquals(reEnabledM1.visibleToUsers, true);
+
+        const resolved = await service.resolveTargetModel(
+            "user-1",
+            userProvider.id,
+            "m1",
+        );
+        assertEquals(resolved.model.id, m1.id);
+
+        // 2. System provider created by admin
+        const sysProvider = await service.createProvider("admin-1", {
+            name: "Shared System AI",
+            baseUrl: "https://system.example.com/v1",
+            apiKey: "sk-system-key-1234",
+            scope: "system",
+        }, true);
+
+        const adminSysModels = await service.listModels(
+            "admin-1",
+            sysProvider.id,
+            true,
+        );
+        const [sysM1, sysM2] = adminSysModels;
+        assertEquals(sysM1.isDefault, true);
+
+        // Hiding default system model from users clears isDefault and hides from regular user
+        const hiddenSysM1 = await service.updateModel("admin-1", sysM1.id, {
+            visibleToUsers: false,
+        }, true);
+        assertEquals(hiddenSysM1.enabled, true);
+        assertEquals(hiddenSysM1.visibleToUsers, false);
+        assertEquals(hiddenSysM1.isDefault, false);
+
+        // Cannot set hidden system model as default
+        const hiddenDefaultErr = await assertRejects(
+            () =>
+                service.updateModel("admin-1", sysM1.id, {
+                    isDefault: true,
+                }, true),
+            AiServiceError,
+        );
+        assertEquals(hiddenDefaultErr.statusCode, 400);
+
+        // Regular user only sees enabled + visible models of enabled system provider
+        const userVisibleSysModels = await service.listModels(
+            "user-1",
+            sysProvider.id,
+            false,
+        );
+        assertEquals(userVisibleSysModels.map((m) => m.id), [sysM2.id]);
+
+        // Disabling system provider hides its models from regular user listModels,
+        // while admin still sees them with providerEnabled = false
+        await service.updateProvider("admin-1", sysProvider.id, {
+            enabled: false,
+        }, true);
+        assertEquals(
+            await service.listModels("user-1", sysProvider.id, false),
+            [],
+        );
+        const adminDisabledSysModels = await service.listModels(
+            "admin-1",
+            sysProvider.id,
+            true,
+        );
+        assertEquals(adminDisabledSysModels.length, 2);
+        assertEquals(adminDisabledSysModels[0].providerEnabled, false);
+        assertEquals(m2.enabled, true);
+    } finally {
+        await store.close();
+    }
+});
+
+Deno.test("AI Service: updateProvider toggles enabled and blocks enabling imported provider with empty API key", async () => {
+    const store = createInMemoryStore();
+    try {
+        const mockFetch: typeof fetch = (input) => {
+            if (parseUrl(input).endsWith("/models")) {
+                return Promise.resolve(
+                    jsonResponse({ data: [{ id: "imported-model" }] }),
+                );
+            }
+            return Promise.resolve(new Response("Not Found", { status: 404 }));
+        };
+        const service = new AiService({
+            store,
+            encryptionKey: TEST_KEY,
+            fetchFn: mockFetch,
+        });
+
+        // Simulate a disabled system provider imported via JSON backup with empty API key
+        const emptyCipher = await encryptApiKey("", TEST_KEY);
+        const importedId = "imported-provider-1";
+        await store.run(async (db) => {
+            await db.insert(aiProviders).values({
+                id: importedId,
+                ownerUserId: null,
+                scope: "system",
+                name: "Imported Provider",
+                baseUrl: "https://imported.example.com/v1",
+                encryptedApiKey: emptyCipher,
+                discoveryMode: "auto",
+                enabled: false,
+                createdAt: 1000,
+                updatedAt: 1000,
+            }).run();
+        });
+
+        // Enabling without configuring an API key must fail with 400
+        const err = await assertRejects(
+            () =>
+                service.updateProvider(
+                    "admin-1",
+                    importedId,
+                    { enabled: true },
+                    true,
+                ),
+            AiServiceError,
+        );
+        assertEquals(err.statusCode, 400);
+
+        // Configuring API key + enabled: true succeeds and discovers models
+        const enabledProvider = await service.updateProvider(
+            "admin-1",
+            importedId,
+            { apiKey: "sk-real-imported-key", enabled: true },
+            true,
+        );
+        assertEquals(enabledProvider.enabled, true);
+
+        // Disabling and re-enabling now succeeds without re-entering key
+        const disabledAgain = await service.updateProvider(
+            "admin-1",
+            importedId,
+            { enabled: false },
+            true,
+        );
+        assertEquals(disabledAgain.enabled, false);
+
+        const enabledAgain = await service.updateProvider(
+            "admin-1",
+            importedId,
+            { enabled: true },
+            true,
+        );
+        assertEquals(enabledAgain.enabled, true);
+    } finally {
+        await store.close();
+    }
+});

@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import type { PageHost } from "./page-host.tsx";
 import {
+    ChevronDown,
+    ChevronRight,
     MoreHorizontal,
     Pencil,
     Plus,
+    Power,
+    PowerOff,
     RefreshCw,
     RotateCcw,
+    SlidersHorizontal,
     Trash2,
 } from "lucide-react";
 import type {
@@ -21,6 +26,7 @@ import {
     type ReasoningOverride,
     resolveEffectiveCapability,
 } from "../../../src/features/ai/model-capabilities.ts";
+import { Badge } from "../components/ui/badge.tsx";
 import { Button, buttonVariants } from "../components/ui/button.tsx";
 import { Switch } from "../components/ui/switch.tsx";
 import { Checkbox } from "../components/ui/checkbox.tsx";
@@ -62,10 +68,13 @@ import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { authPath } from "./routes.ts";
 import "./settings.css";
+import "./ai-settings.css";
 import {
     FormField,
     FormFields,
+    SearchField,
     SecretInput,
+    SettingsCard,
     SettingsGroup,
     SettingsRow,
     StatusBanner,
@@ -76,6 +85,8 @@ const DISCOVERY_MODE_ITEMS: Record<DiscoveryMode, string> = {
     "openai-compatible": "OpenAI 兼容",
     cliproxyapi: "CLIProxyAPIHome",
 };
+
+const MODEL_FILTER_THRESHOLD = 5;
 
 function getCapabilitySourceLabel(source: string | undefined): string {
     switch (source) {
@@ -133,6 +144,14 @@ function describeReasoning(
     return { label: "推理未知", title: "服务商未声明推理支持状态" };
 }
 
+function isModelUsable(model: AiModelDto): boolean {
+    return model.enabled && model.visibleToUsers;
+}
+
+type ChangeModelResult =
+    | { ok: true }
+    | { ok: false; message: string };
+
 export function AiSettings({ host }: { host: PageHost }) {
     const { user } = useAppState();
     const { location, Link } = host;
@@ -143,6 +162,8 @@ export function AiSettings({ host }: { host: PageHost }) {
     const [apiKey, setApiKey] = useState("");
     const [scope, setScope] = useState<"user" | "system">("user");
     const [editing, setEditing] = useState<string | null>(null);
+    const [providerEnabled, setProviderEnabled] = useState(true);
+    const [providerEnabledTouched, setProviderEnabledTouched] = useState(false);
     const [discoveryMode, setDiscoveryMode] = useState<DiscoveryMode>("auto");
     const [configuringModel, setConfiguringModel] = useState<AiModelDto | null>(
         null,
@@ -153,10 +174,24 @@ export function AiSettings({ host }: { host: PageHost }) {
         "medium",
         "high",
     ]);
-    const [defaultLevel, setDefaultLevel] = useState<ReasoningEffort>("medium");
+    const [defaultLevel, setDefaultLevel] = useState<ReasoningEffort | null>(
+        "medium",
+    );
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [working, setWorking] = useState(false);
+    const [pendingModelIds, setPendingModelIds] = useState<Set<string>>(
+        () => new Set(),
+    );
+    const [batchProviderId, setBatchProviderId] = useState<string | null>(null);
+    const [collapsedProviders, setCollapsedProviders] = useState<Set<string>>(
+        () => new Set(),
+    );
+    const [modelFilters, setModelFilters] = useState<Record<string, string>>(
+        {},
+    );
     const [error, setError] = useState("");
+    const [providerFormError, setProviderFormError] = useState("");
+    const [modelConfigError, setModelConfigError] = useState("");
     const [status, setStatus] = useState("");
     const [deleteTarget, setDeleteTarget] = useState<AiProviderDto | null>(
         null,
@@ -164,10 +199,13 @@ export function AiSettings({ host }: { host: PageHost }) {
     const [isDeleting, setIsDeleting] = useState(false);
     const deleteTriggerRef = useRef<HTMLElement | null>(null);
     const lastDeleteTargetRef = useRef<AiProviderDto | null>(null);
+    const addButtonRef = useRef<HTMLButtonElement | null>(null);
+    const headerHeadingRef = useRef<HTMLHeadingElement | null>(null);
     if (deleteTarget) {
         lastDeleteTargetRef.current = deleteTarget;
     }
     const activeDeleteTarget = deleteTarget ?? lastDeleteTargetRef.current;
+
     async function load() {
         const [p, m] = await Promise.all([
             api<AiProviderDto[]>("/api/ai/providers"),
@@ -176,15 +214,18 @@ export function AiSettings({ host }: { host: PageHost }) {
         setProviders(p);
         setModels(m);
     }
+
     useEffect(() => {
         if (!user) return;
         void load().catch((e) => setError(errorMessage(e)));
     }, [user?.id]);
+
     useEffect(() => {
         if (!status) return;
         const timer = setTimeout(() => setStatus(""), 4000);
         return () => clearTimeout(timer);
     }, [status]);
+
     if (!user) {
         return (
             <SettingsGroup>
@@ -199,13 +240,17 @@ export function AiSettings({ host }: { host: PageHost }) {
             </SettingsGroup>
         );
     }
+
     function openAdd() {
         setEditing(null);
         setName("");
         setBaseUrl("");
         setApiKey("");
+        setScope("user");
+        setProviderEnabled(true);
+        setProviderEnabledTouched(false);
         setDiscoveryMode("auto");
-        setError("");
+        setProviderFormError("");
         setIsModalOpen(true);
     }
 
@@ -214,12 +259,17 @@ export function AiSettings({ host }: { host: PageHost }) {
         setName(provider.name);
         setBaseUrl(provider.baseUrl);
         setApiKey("");
-        setDiscoveryMode(
-            (provider as { discoveryMode?: DiscoveryMode }).discoveryMode ??
-                "auto",
-        );
-        setError("");
+        setProviderEnabled(provider.enabled);
+        setProviderEnabledTouched(false);
+        setDiscoveryMode(provider.discoveryMode ?? "auto");
+        setProviderFormError("");
         setIsModalOpen(true);
+    }
+
+    function closeProviderModal() {
+        if (working) return;
+        setIsModalOpen(false);
+        setProviderFormError("");
     }
 
     function openModelConfig(model: AiModelDto) {
@@ -230,71 +280,153 @@ export function AiSettings({ host }: { host: PageHost }) {
             model.modelId,
         );
         setConfiguringModel(model);
+        setModelConfigError("");
         if (override) {
             setManualReasoningEnabled(override.enabled);
-            setSelectedLevels(
+            const nextLevels: ReasoningEffort[] =
                 Array.isArray(override.levels) && override.levels.length > 0
                     ? override.levels
                     : (cap.levels.length > 0
                         ? cap.levels
-                        : ["low", "medium", "high"]),
-            );
+                        : ["low", "medium", "high"]);
+            setSelectedLevels(nextLevels);
+            const nextDefault = override.defaultLevel ?? cap.defaultLevel ??
+                nextLevels[0] ?? null;
             setDefaultLevel(
-                override.defaultLevel ?? (cap.defaultLevel || "medium"),
+                nextDefault && nextLevels.includes(nextDefault)
+                    ? nextDefault
+                    : nextLevels[0] ?? null,
             );
         } else {
             const isSupported = cap.status === "supported";
+            const nextLevels: ReasoningEffort[] = cap.levels.length > 0
+                ? cap.levels
+                : ["low", "medium", "high"];
             setManualReasoningEnabled(isSupported);
-            setSelectedLevels(
-                cap.levels.length > 0 ? cap.levels : ["low", "medium", "high"],
-            );
+            setSelectedLevels(nextLevels);
+            const nextDefault = cap.defaultLevel ?? nextLevels[0] ?? null;
             setDefaultLevel(
-                cap.defaultLevel ||
-                    (cap.levels.length > 0 ? cap.levels[0] : "medium"),
+                nextDefault && nextLevels.includes(nextDefault)
+                    ? nextDefault
+                    : nextLevels[0] ?? null,
             );
         }
     }
+
+    function closeModelConfig() {
+        if (working) return;
+        setConfiguringModel(null);
+        setModelConfigError("");
+    }
+
     function toggleLevel(level: ReasoningEffort) {
         setSelectedLevels((prev) => {
-            let updated: ReasoningEffort[];
-            if (prev.includes(level)) {
-                updated = prev.filter((l) => l !== level);
-            } else {
-                updated = [...prev, level];
-            }
-            if (!updated.includes(defaultLevel) && updated.length > 0) {
+            const updated = prev.includes(level)
+                ? prev.filter((l) => l !== level)
+                : [...prev, level];
+            if (updated.length === 0) {
+                setDefaultLevel(null);
+            } else if (!defaultLevel || !updated.includes(defaultLevel)) {
                 setDefaultLevel(updated[0]);
             }
             return updated;
         });
     }
 
+    async function changeModel(
+        id: string,
+        patch: Record<string, unknown>,
+        options?: { showPageError?: boolean; reload?: boolean },
+    ): Promise<ChangeModelResult> {
+        const showPageError = options?.showPageError ?? true;
+        const reload = options?.reload ?? true;
+        if (showPageError) setError("");
+        setPendingModelIds((prev) => {
+            const next = new Set(prev);
+            next.add(id);
+            return next;
+        });
+        try {
+            await api(
+                "/api/ai/models/" + encodeURIComponent(id),
+                json("PATCH", patch),
+            );
+            if (reload) await load();
+            return { ok: true };
+        } catch (e) {
+            const message = errorMessage(e);
+            if (showPageError) setError(message);
+            return { ok: false, message };
+        } finally {
+            setPendingModelIds((prev) => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+            });
+        }
+    }
+
     async function saveModelConfig() {
-        if (!configuringModel) return;
+        if (!configuringModel || working) return;
+        const effectiveDefault = manualReasoningEnabled && defaultLevel &&
+                selectedLevels.includes(defaultLevel)
+            ? defaultLevel
+            : manualReasoningEnabled
+            ? selectedLevels[0]
+            : undefined;
         const override: ReasoningOverride = {
             enabled: manualReasoningEnabled,
             levels: manualReasoningEnabled ? selectedLevels : [],
-            defaultLevel: manualReasoningEnabled ? defaultLevel : undefined,
+            defaultLevel: effectiveDefault,
         };
-        await changeModel(configuringModel.id, {
-            reasoningOverride: override,
-        });
-        setConfiguringModel(null);
-        setStatus("模型推理配置已保存");
+        setWorking(true);
+        setModelConfigError("");
+        setStatus("");
+        try {
+            const result = await changeModel(
+                configuringModel.id,
+                { reasoningOverride: override },
+                { showPageError: false },
+            );
+            if (!result.ok) {
+                setModelConfigError(result.message);
+                return;
+            }
+            setConfiguringModel(null);
+            setModelConfigError("");
+            setStatus("模型推理配置已保存");
+        } finally {
+            setWorking(false);
+        }
     }
 
     async function revertModelConfig() {
-        if (!configuringModel) return;
-        await changeModel(configuringModel.id, {
-            reasoningOverride: null,
-        });
-        setConfiguringModel(null);
-        setStatus("已恢复该模型的自动发现能力");
+        if (!configuringModel || working) return;
+        setWorking(true);
+        setModelConfigError("");
+        setStatus("");
+        try {
+            const result = await changeModel(
+                configuringModel.id,
+                { reasoningOverride: null },
+                { showPageError: false },
+            );
+            if (!result.ok) {
+                setModelConfigError(result.message);
+                return;
+            }
+            setConfiguringModel(null);
+            setModelConfigError("");
+            setStatus("已恢复该模型的自动发现能力");
+        } finally {
+            setWorking(false);
+        }
     }
 
     async function save(event: React.FormEvent) {
         event.preventDefault();
-        setError("");
+        if (working) return;
+        setProviderFormError("");
         setStatus("");
         setWorking(true);
         try {
@@ -308,8 +440,9 @@ export function AiSettings({ host }: { host: PageHost }) {
                         ? {
                             name,
                             baseUrl,
-                            ...(apiKey ? { apiKey } : {}),
+                            ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
                             discoveryMode,
+                            enabled: providerEnabled,
                         }
                         : { name, baseUrl, apiKey, scope, discoveryMode },
                 ),
@@ -320,26 +453,119 @@ export function AiSettings({ host }: { host: PageHost }) {
             setBaseUrl("");
             setApiKey("");
             setIsModalOpen(false);
-            setStatus("服务商和模型已同步");
+            setProviderFormError("");
+            setStatus(editing ? "服务商配置已保存" : "服务商和模型已同步");
+        } catch (e) {
+            setProviderFormError(errorMessage(e));
+        } finally {
+            setWorking(false);
+        }
+    }
+
+    async function toggleProviderEnabled(provider: AiProviderDto) {
+        if (working) return;
+        const nextEnabled = !provider.enabled;
+        setWorking(true);
+        setError("");
+        setStatus("");
+        try {
+            await api(
+                "/api/ai/providers/" + encodeURIComponent(provider.id),
+                json("PUT", { enabled: nextEnabled }),
+            );
+            await load();
+            setStatus(
+                nextEnabled
+                    ? `已启用服务商“${provider.name}”`
+                    : `已禁用服务商“${provider.name}”`,
+            );
         } catch (e) {
             setError(errorMessage(e));
         } finally {
             setWorking(false);
         }
     }
-    async function changeModel(id: string, patch: Record<string, unknown>) {
-        setError("");
-        try {
-            await api(
-                "/api/ai/models/" + encodeURIComponent(id),
-                json("PATCH", patch),
-            );
-            await load();
-        } catch (e) {
-            setError(errorMessage(e));
+
+    async function handleToggleModelEnabled(
+        provider: AiProviderDto,
+        model: AiModelDto,
+        checked: boolean,
+    ) {
+        const wasDefault = model.isDefault;
+        const patch: Record<string, unknown> = provider.scope === "user"
+            ? { enabled: checked, visibleToUsers: checked }
+            : { enabled: checked };
+        const result = await changeModel(model.id, patch);
+        if (result.ok && !checked && wasDefault) {
+            setStatus("已停用原默认模型，本服务商默认标记已清除");
         }
     }
+
+    async function handleToggleModelVisible(
+        model: AiModelDto,
+        checked: boolean,
+    ) {
+        const wasDefault = model.isDefault;
+        const result = await changeModel(model.id, {
+            visibleToUsers: checked,
+        });
+        if (result.ok && !checked && wasDefault) {
+            setStatus("已取消该模型的用户可见状态，本服务商默认标记已清除");
+        }
+    }
+
+    async function batchToggleModels(
+        provider: AiProviderDto,
+        targetModels: AiModelDto[],
+        enable: boolean,
+    ) {
+        if (working || batchProviderId) return;
+        const candidates = targetModels.filter((m) => {
+            if (provider.scope === "user") {
+                const currentlyOn = m.enabled && m.visibleToUsers;
+                return enable ? !currentlyOn : currentlyOn;
+            }
+            return enable ? !m.enabled : m.enabled;
+        });
+        if (candidates.length === 0) return;
+
+        setBatchProviderId(provider.id);
+        setError("");
+        setStatus("");
+        let changed = 0;
+        let firstError = "";
+        try {
+            for (const model of candidates) {
+                const patch: Record<string, unknown> = provider.scope === "user"
+                    ? { enabled: enable, visibleToUsers: enable }
+                    : { enabled: enable };
+                const result = await changeModel(model.id, patch, {
+                    showPageError: false,
+                    reload: false,
+                });
+                if (result.ok) {
+                    changed++;
+                } else if (!firstError) {
+                    firstError = result.message;
+                }
+            }
+            await load();
+            if (firstError) {
+                setError(firstError);
+            } else if (changed > 0) {
+                setStatus(
+                    enable
+                        ? `已启用 ${changed} 个模型`
+                        : `已停用 ${changed} 个模型`,
+                );
+            }
+        } finally {
+            setBatchProviderId(null);
+        }
+    }
+
     async function refresh(id: string) {
+        if (working) return;
         setWorking(true);
         setError("");
         try {
@@ -355,12 +581,23 @@ export function AiSettings({ host }: { host: PageHost }) {
             setWorking(false);
         }
     }
+
+    function toggleProviderCollapse(id: string) {
+        setCollapsedProviders((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    }
+
     function openDelete(provider: AiProviderDto) {
         deleteTriggerRef.current =
             document.getElementById("provider-menu-" + provider.id) ??
                 (document.activeElement as HTMLElement | null);
         setDeleteTarget(provider);
     }
+
     function handleCloseDelete() {
         if (isDeleting) return;
         setDeleteTarget(null);
@@ -368,6 +605,7 @@ export function AiSettings({ host }: { host: PageHost }) {
             deleteTriggerRef.current?.focus();
         });
     }
+
     async function handleConfirmDelete() {
         if (!deleteTarget || isDeleting) return;
         setIsDeleting(true);
@@ -376,13 +614,14 @@ export function AiSettings({ host }: { host: PageHost }) {
         try {
             await api(
                 "/api/ai/providers/" + encodeURIComponent(deleteTarget.id),
-                {
-                    method: "DELETE",
-                },
+                { method: "DELETE" },
             );
             setDeleteTarget(null);
             await load();
             setStatus("服务商已删除");
+            requestAnimationFrame(() => {
+                (addButtonRef.current ?? headerHeadingRef.current)?.focus();
+            });
         } catch (e) {
             setError(errorMessage(e));
         } finally {
@@ -390,6 +629,10 @@ export function AiSettings({ host }: { host: PageHost }) {
             setWorking(false);
         }
     }
+
+    const editingProvider = editing
+        ? providers.find((p) => p.id === editing) ?? null
+        : null;
     const configuringSource = configuringModel
         ? getCapabilitySourceLabel(
             resolveEffectiveCapability(
@@ -398,38 +641,289 @@ export function AiSettings({ host }: { host: PageHost }) {
             ).source,
         )
         : "";
+    const totalUsableModels = models.filter((model) => {
+        const provider = providers.find((p) => p.id === model.providerId);
+        return Boolean(provider?.enabled) && isModelUsable(model);
+    }).length;
+
     return (
-        <>
+        <div className="ai-settings-root">
+            <header className="ai-settings-header">
+                <div className="ai-settings-header-main">
+                    <h2
+                        ref={headerHeadingRef}
+                        tabIndex={-1}
+                        className="ai-settings-heading"
+                    >
+                        服务商与模型
+                    </h2>
+                    {providers.length > 0 && (
+                        <span className="ai-settings-summary">
+                            {`${providers.length} 个服务商 · ${totalUsableModels} 个可用模型`}
+                        </span>
+                    )}
+                </div>
+                <Button
+                    ref={addButtonRef}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={working}
+                    onClick={openAdd}
+                >
+                    <Plus size="1em" className="icon-sm" aria-hidden="true" />
+                    <span>添加 AI 服务商</span>
+                </Button>
+            </header>
+
+            <StatusBanner
+                open={Boolean(error) && !isModalOpen && !configuringModel}
+                tone="error"
+                className="ai-top-error"
+            >
+                {error}
+            </StatusBanner>
+
+            {providers.length === 0 && (
+                <SettingsGroup footer="添加 OpenAI 兼容服务商并启用模型后即可在首页或对话页发起 AI 问答。">
+                    <SettingsRow title="尚未添加 AI 服务商">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={working}
+                            onClick={openAdd}
+                        >
+                            <Plus
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                            <span>添加服务商</span>
+                        </Button>
+                    </SettingsRow>
+                </SettingsGroup>
+            )}
+
             {providers.map((provider) => {
                 const manageable = provider.ownerUserId === user.id ||
                     user.role === "admin";
                 const providerModels = models.filter((model) =>
                     model.providerId === provider.id
                 );
+                const usableCount = providerModels.filter(isModelUsable).length;
+                const collapsed = collapsedProviders.has(provider.id);
+                const filterText = (modelFilters[provider.id] ?? "").trim();
+                const showToolbar = providerModels.length >
+                    MODEL_FILTER_THRESHOLD;
+                const filteredModels = filterText
+                    ? providerModels.filter((model) => {
+                        const q = filterText.toLowerCase();
+                        return model.displayName.toLowerCase().includes(q) ||
+                            model.modelId.toLowerCase().includes(q);
+                    })
+                    : providerModels;
+                const isBatchBusy = batchProviderId === provider.id;
+                const panelId = `ai-provider-panel-${provider.id}`;
+                const activeDefaultId = providerModels.find((model) =>
+                    model.isDefault && isModelUsable(model)
+                )?.id ?? null;
+
+                const renderModelRow = (model: AiModelDto) => {
+                    const reasoning = describeReasoning(
+                        resolveEffectiveCapability(
+                            model.metadataJson,
+                            model.modelId,
+                        ),
+                    );
+                    const modelPending = pendingModelIds.has(model.id) ||
+                        isBatchBusy;
+                    const usable = isModelUsable(model);
+                    const effectiveEnabled = provider.scope === "user"
+                        ? model.enabled && model.visibleToUsers
+                        : model.enabled;
+                    const summary = [
+                        model.supportsText ? "文本" : null,
+                        model.supportsVision ? "视觉" : null,
+                        model.supportsTools ? "工具" : null,
+                        model.supportsStreaming ? "流式" : null,
+                    ].filter(Boolean).join(" · ");
+
+                    return (
+                        <div
+                            key={model.id}
+                            className="ai-model-row"
+                            data-pending={modelPending || undefined}
+                            data-inactive={!usable || !provider.enabled ||
+                                undefined}
+                        >
+                            <div className="ai-model-head">
+                                <div className="ai-model-identity">
+                                    <div className="ai-model-title-line">
+                                        <span className="ai-model-name">
+                                            {model.displayName}
+                                        </span>
+                                        {model.displayName !== model.modelId &&
+                                            (
+                                                <span className="ai-model-subid">
+                                                    {model.modelId}
+                                                </span>
+                                            )}
+                                        {!manageable && model.isDefault && (
+                                            <Badge variant="secondary">
+                                                默认
+                                            </Badge>
+                                        )}
+                                        {manageable &&
+                                            provider.scope === "system" &&
+                                            model.enabled &&
+                                            !model.visibleToUsers && (
+                                            <Badge variant="secondary">
+                                                未对用户开放
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="ai-model-meta">
+                                        {summary}
+                                        {summary && " · "}
+                                        <span title={reasoning.title}>
+                                            {reasoning.label}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {manageable && (
+                                <div className="ai-model-controls">
+                                    <label
+                                        className="ai-model-toggle"
+                                        data-disabled={modelPending ||
+                                            undefined}
+                                    >
+                                        <Switch
+                                            aria-label={`启用 ${model.displayName}`}
+                                            checked={effectiveEnabled}
+                                            disabled={modelPending || working}
+                                            onCheckedChange={(checked) =>
+                                                void handleToggleModelEnabled(
+                                                    provider,
+                                                    model,
+                                                    checked,
+                                                )}
+                                        />
+                                        <span>启用</span>
+                                    </label>
+                                    {provider.scope === "system" && (
+                                        <label
+                                            className="ai-model-toggle"
+                                            data-disabled={modelPending ||
+                                                undefined}
+                                        >
+                                            <Switch
+                                                aria-label={`对用户可见 ${model.displayName}`}
+                                                checked={model.visibleToUsers}
+                                                disabled={modelPending ||
+                                                    working}
+                                                onCheckedChange={(checked) =>
+                                                    void handleToggleModelVisible(
+                                                        model,
+                                                        checked,
+                                                    )}
+                                            />
+                                            <span>对用户可见</span>
+                                        </label>
+                                    )}
+                                    <RadioGroupItem
+                                        value={model.id}
+                                        disabled={!usable || modelPending ||
+                                            working}
+                                        className="ai-model-default-radio"
+                                        aria-label={`设为本服务商默认 ${model.displayName}`}
+                                    >
+                                        默认（本服务商）
+                                    </RadioGroupItem>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="ai-model-reasoning-btn"
+                                        disabled={modelPending || working}
+                                        onClick={() =>
+                                            openModelConfig(model)}
+                                    >
+                                        <SlidersHorizontal
+                                            size="1em"
+                                            className="icon-sm"
+                                            aria-hidden="true"
+                                        />
+                                        <span>推理设置</span>
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    );
+                };
+
                 return (
-                    <SettingsGroup
+                    <section
                         key={provider.id}
-                        title={provider.name}
-                        footer={
-                            <span className="ai-provider-meta">
-                                {`${
-                                    provider.scope === "system"
-                                        ? "系统共享"
-                                        : "个人"
-                                } · ${provider.baseUrl} · Key ${provider.apiKeyMasked}`}
-                            </span>
-                        }
-                        actions={manageable
-                            ? (
+                        className="ai-provider-section"
+                        data-disabled={!provider.enabled || undefined}
+                    >
+                        <header className="ai-provider-header">
+                            <button
+                                type="button"
+                                className="ai-provider-collapse-btn"
+                                aria-expanded={!collapsed}
+                                aria-controls={panelId}
+                                onClick={() =>
+                                    toggleProviderCollapse(provider.id)}
+                            >
+                                {collapsed
+                                    ? (
+                                        <ChevronRight
+                                            size="1em"
+                                            className="icon-sm ai-provider-chevron"
+                                            aria-hidden="true"
+                                        />
+                                    )
+                                    : (
+                                        <ChevronDown
+                                            size="1em"
+                                            className="icon-sm ai-provider-chevron"
+                                            aria-hidden="true"
+                                        />
+                                    )}
+                                <h3 className="ai-provider-title">
+                                    {provider.name}
+                                </h3>
+                                <span className="ai-provider-badges">
+                                    <Badge variant="secondary">
+                                        {provider.scope === "system"
+                                            ? "系统共享"
+                                            : "个人"}
+                                    </Badge>
+                                    {!provider.enabled && (
+                                        <Badge variant="destructive">
+                                            已禁用
+                                        </Badge>
+                                    )}
+                                </span>
+                                <span className="ai-provider-count">
+                                    {`${usableCount} / ${providerModels.length} 可用`}
+                                </span>
+                            </button>
+
+                            {manageable && (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger
                                         id={"provider-menu-" + provider.id}
                                         className={buttonVariants({
                                             variant: "ghost",
                                             size: "icon",
+                                            className: "ai-provider-menu-btn",
                                         })}
                                         aria-label={`服务商操作：${provider.name}`}
-                                        disabled={working}
+                                        disabled={working || isBatchBusy}
                                     >
                                         <MoreHorizontal
                                             size="1em"
@@ -446,6 +940,34 @@ export function AiSettings({ host }: { host: PageHost }) {
                                                 aria-hidden="true"
                                             />
                                             <span>编辑</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            disabled={working}
+                                            onClick={() =>
+                                                void toggleProviderEnabled(
+                                                    provider,
+                                                )}
+                                        >
+                                            {provider.enabled
+                                                ? (
+                                                    <PowerOff
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                        aria-hidden="true"
+                                                    />
+                                                )
+                                                : (
+                                                    <Power
+                                                        size="1em"
+                                                        className="icon-sm"
+                                                        aria-hidden="true"
+                                                    />
+                                                )}
+                                            <span>
+                                                {provider.enabled
+                                                    ? "禁用服务商"
+                                                    : "启用服务商"}
+                                            </span>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             disabled={working}
@@ -474,146 +996,181 @@ export function AiSettings({ host }: { host: PageHost }) {
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
-                            )
-                            : undefined}
-                    >
-                        {providerModels.length === 0 && (
-                            <SettingsRow title="暂无模型">
-                                {manageable && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={working}
-                                        onClick={() =>
-                                            void refresh(provider.id)}
-                                    >
-                                        刷新
-                                    </Button>
-                                )}
-                            </SettingsRow>
-                        )}
-                        <RadioGroup
-                            variant="rows"
-                            aria-label="默认模型"
-                            value={providerModels.find((model) =>
-                                model.isDefault
-                            )?.id ?? null}
-                            onValueChange={(modelId) =>
-                                void changeModel(String(modelId), {
-                                    isDefault: true,
-                                })}
-                        >
-                            {providerModels.map((model) => {
-                                const reasoning = describeReasoning(
-                                    resolveEffectiveCapability(
-                                        model.metadataJson,
-                                        model.modelId,
-                                    ),
-                                );
-                                const summary = [
-                                    model.displayName !== model.modelId
-                                        ? model.modelId
-                                        : null,
-                                    model.supportsText ? "文本" : null,
-                                    model.supportsVision ? "视觉" : null,
-                                    model.supportsTools ? "工具" : null,
-                                    model.supportsStreaming ? "流式" : null,
-                                ].filter(Boolean).join(" · ");
-                                return (
-                                    <SettingsRow
-                                        key={model.id}
-                                        className={manageable
-                                            ? "settings-row--vertical"
-                                            : undefined}
-                                        title={model.displayName}
-                                        description={
-                                            <span className="ai-model-meta">
-                                                {summary}
-                                                {summary && " · "}
-                                                <span title={reasoning.title}>
-                                                    {reasoning.label}
-                                                </span>
-                                            </span>
-                                        }
-                                    >
+                            )}
+                        </header>
+
+                        {!collapsed && (
+                            <SettingsCard
+                                id={panelId}
+                                className="ai-provider-card"
+                            >
+                                {!provider.enabled && (
+                                    <div className="ai-provider-disabled-banner">
+                                        <span>
+                                            该服务商已禁用，旗下模型暂不可用于对话。
+                                        </span>
                                         {manageable && (
-                                            <div className="ai-model-controls">
-                                                <label className="ai-model-toggle">
-                                                    <Switch
-                                                        aria-label={`启用 ${model.displayName}`}
-                                                        checked={model.enabled}
-                                                        onCheckedChange={(
-                                                            checked,
-                                                        ) => void changeModel(
-                                                            model.id,
-                                                            {
-                                                                enabled:
-                                                                    checked,
-                                                            },
-                                                        )}
-                                                    />
-                                                    启用
-                                                </label>
-                                                <label className="ai-model-toggle">
-                                                    <Switch
-                                                        aria-label={`可见 ${model.displayName}`}
-                                                        checked={model
-                                                            .visibleToUsers}
-                                                        onCheckedChange={(
-                                                            checked,
-                                                        ) => void changeModel(
-                                                            model.id,
-                                                            {
-                                                                visibleToUsers:
-                                                                    checked,
-                                                            },
-                                                        )}
-                                                    />
-                                                    可见
-                                                </label>
-                                                <RadioGroupItem
-                                                    value={model.id}
-                                                    className="ai-model-toggle"
-                                                    aria-label={`设为默认 ${model.displayName}`}
-                                                >
-                                                    默认
-                                                </RadioGroupItem>
+                                            <div className="ai-provider-disabled-banner-actions">
                                                 <Button
                                                     type="button"
-                                                    variant="ghost"
+                                                    variant="outline"
                                                     size="sm"
-                                                    className="ai-model-reasoning-btn"
+                                                    disabled={working}
                                                     onClick={() =>
-                                                        openModelConfig(model)}
+                                                        openEdit(provider)}
                                                 >
-                                                    推理设置
+                                                    编辑并配置
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="default"
+                                                    size="sm"
+                                                    disabled={working}
+                                                    onClick={() =>
+                                                        void toggleProviderEnabled(
+                                                            provider,
+                                                        )}
+                                                >
+                                                    立即启用
                                                 </Button>
                                             </div>
                                         )}
-                                    </SettingsRow>
-                                );
-                            })}
-                        </RadioGroup>
-                    </SettingsGroup>
+                                    </div>
+                                )}
+
+                                {showToolbar && (
+                                    <div className="ai-model-toolbar">
+                                        <SearchField
+                                            wrapperClassName="ai-model-search"
+                                            value={modelFilters[provider.id] ??
+                                                ""}
+                                            onValueChange={(value) =>
+                                                setModelFilters((prev) => ({
+                                                    ...prev,
+                                                    [provider.id]: value,
+                                                }))}
+                                            placeholder="筛选模型名称或 ID…"
+                                            aria-label={`筛选 ${provider.name} 的模型`}
+                                            clearLabel={`清除 ${provider.name} 的筛选`}
+                                        />
+                                        {manageable && (
+                                            <div className="ai-model-batch-actions">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    disabled={working ||
+                                                        isBatchBusy ||
+                                                        filteredModels
+                                                                .length ===
+                                                            0}
+                                                    onClick={() =>
+                                                        void batchToggleModels(
+                                                            provider,
+                                                            filteredModels,
+                                                            true,
+                                                        )}
+                                                >
+                                                    全部启用
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    disabled={working ||
+                                                        isBatchBusy ||
+                                                        filteredModels
+                                                                .length ===
+                                                            0}
+                                                    onClick={() =>
+                                                        void batchToggleModels(
+                                                            provider,
+                                                            filteredModels,
+                                                            false,
+                                                        )}
+                                                >
+                                                    全部停用
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {providerModels.length === 0
+                                    ? (
+                                        <SettingsRow title="暂无模型">
+                                            {manageable && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    disabled={working}
+                                                    onClick={() =>
+                                                        void refresh(
+                                                            provider.id,
+                                                        )}
+                                                >
+                                                    刷新
+                                                </Button>
+                                            )}
+                                        </SettingsRow>
+                                    )
+                                    : filteredModels.length === 0
+                                    ? (
+                                        <div className="ai-empty-row">
+                                            <span>没有匹配的模型</span>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    setModelFilters((prev) => ({
+                                                        ...prev,
+                                                        [provider.id]: "",
+                                                    }))}
+                                            >
+                                                清除筛选
+                                            </Button>
+                                        </div>
+                                    )
+                                    : manageable
+                                    ? (
+                                        <RadioGroup
+                                            variant="rows"
+                                            aria-label={`${provider.name} 默认模型（本服务商）`}
+                                            value={activeDefaultId}
+                                            onValueChange={(modelId) =>
+                                                void changeModel(
+                                                    String(modelId),
+                                                    { isDefault: true },
+                                                )}
+                                        >
+                                            {filteredModels.map(renderModelRow)}
+                                        </RadioGroup>
+                                    )
+                                    : (
+                                        <div>
+                                            {filteredModels.map(renderModelRow)}
+                                        </div>
+                                    )}
+                            </SettingsCard>
+                        )}
+
+                        <p className="settings-group-footer">
+                            <span className="ai-provider-meta">
+                                {`${provider.baseUrl} · Key ${provider.apiKeyMasked}`}
+                            </span>
+                        </p>
+                    </section>
                 );
             })}
-            <SettingsGroup
-                footer={providers.length === 0
-                    ? "尚未添加 AI 服务商，请添加服务商并启用模型。"
-                    : undefined}
+
+            <Dialog
+                open={host.active && isModalOpen}
+                onOpenChange={(open) => {
+                    if (!open) closeProviderModal();
+                }}
             >
-                <Button
-                    type="button"
-                    variant="ghost"
-                    className="settings-add-row"
-                    onClick={openAdd}
-                >
-                    <Plus size="1em" className="icon-md" />
-                    <span>添加 AI 服务商</span>
-                </Button>
-            </SettingsGroup>
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent
                     aria-label={editing ? "编辑 AI 服务商" : "添加 AI 服务商"}
                 >
@@ -632,6 +1189,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                     id="ai-provider-name"
                                     required
                                     maxLength={100}
+                                    disabled={working}
                                     value={name}
                                     placeholder="例如：OpenAI、DeepSeek、Ollama"
                                     onChange={(e) => setName(e.target.value)}
@@ -645,6 +1203,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                     id="ai-provider-base-url"
                                     required
                                     type="url"
+                                    disabled={working}
                                     placeholder="https://api.openai.com/v1"
                                     value={baseUrl}
                                     onChange={(e) => setBaseUrl(e.target.value)}
@@ -657,6 +1216,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                 <Select
                                     items={DISCOVERY_MODE_ITEMS}
                                     value={discoveryMode}
+                                    disabled={working}
                                     onValueChange={(next) => {
                                         if (next !== null) {
                                             setDiscoveryMode(
@@ -687,17 +1247,33 @@ export function AiSettings({ host }: { host: PageHost }) {
                             <FormField
                                 label="API Key"
                                 labelFor="ai-api-key"
-                                hint="加密保存在服务端。"
+                                hint={editing && editingProvider &&
+                                        !editingProvider.enabled
+                                    ? "加密保存在服务端；填写有效 API Key 后将自动勾选启用。"
+                                    : "加密保存在服务端。"}
                                 messageId="ai-api-key-hint"
                             >
                                 <SecretInput
                                     key={`${editing ?? "new"}-${isModalOpen}`}
                                     id="ai-api-key"
                                     required={!editing}
+                                    disabled={working}
                                     autoComplete="off"
                                     aria-describedby="ai-api-key-hint"
                                     value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
+                                    onChange={(e) => {
+                                        const nextVal = e.target.value;
+                                        setApiKey(nextVal);
+                                        if (
+                                            editing &&
+                                            editingProvider &&
+                                            !editingProvider.enabled &&
+                                            !providerEnabledTouched &&
+                                            nextVal.trim().length > 0
+                                        ) {
+                                            setProviderEnabled(true);
+                                        }
+                                    }}
                                     placeholder={editing
                                         ? "留空保持现有 Key"
                                         : "输入 API Key"}
@@ -705,12 +1281,38 @@ export function AiSettings({ host }: { host: PageHost }) {
                                     hideLabel="隐藏 API Key"
                                 />
                             </FormField>
+                            {editing && (
+                                <div className="ai-provider-enable-row">
+                                    <div className="ai-provider-enable-copy">
+                                        <label
+                                            htmlFor="ai-provider-enabled-switch"
+                                            className="ai-provider-enable-label"
+                                        >
+                                            启用该服务商
+                                        </label>
+                                        <span className="ai-provider-enable-hint">
+                                            禁用后该服务商下所有模型均不可用于对话。
+                                        </span>
+                                    </div>
+                                    <Switch
+                                        id="ai-provider-enabled-switch"
+                                        aria-label="启用该服务商"
+                                        checked={providerEnabled}
+                                        disabled={working}
+                                        onCheckedChange={(checked) => {
+                                            setProviderEnabled(checked);
+                                            setProviderEnabledTouched(true);
+                                        }}
+                                    />
+                                </div>
+                            )}
                             {!editing && user.role === "admin" && (
                                 <FormField label="范围">
                                     <RadioGroup
                                         variant="segmented"
                                         aria-label="范围"
                                         value={scope}
+                                        disabled={working}
                                         onValueChange={(next) =>
                                             setScope(
                                                 next as "user" | "system",
@@ -726,14 +1328,17 @@ export function AiSettings({ host }: { host: PageHost }) {
                                 </FormField>
                             )}
                         </FormFields>
-                        {error && (
-                            <StatusBanner tone="error">{error}</StatusBanner>
+                        {providerFormError && (
+                            <StatusBanner tone="error">
+                                {providerFormError}
+                            </StatusBanner>
                         )}
                         <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setIsModalOpen(false)}
+                                disabled={working}
+                                onClick={closeProviderModal}
                             >
                                 取消
                             </Button>
@@ -752,9 +1357,12 @@ export function AiSettings({ host }: { host: PageHost }) {
                     </form>
                 </DialogContent>
             </Dialog>
+
             <Dialog
-                open={!!configuringModel}
-                onOpenChange={(open) => !open && setConfiguringModel(null)}
+                open={host.active && configuringModel !== null}
+                onOpenChange={(open) => {
+                    if (!open) closeModelConfig();
+                }}
             >
                 <DialogContent aria-label="推理设置">
                     <DialogHeader>
@@ -771,6 +1379,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                 <Checkbox
                                     id="manual-reasoning-toggle"
                                     checked={manualReasoningEnabled}
+                                    disabled={working}
                                     aria-label="开启该模型的推理能力"
                                     onCheckedChange={setManualReasoningEnabled}
                                 />
@@ -803,6 +1412,7 @@ export function AiSettings({ host }: { host: PageHost }) {
                                                                 .includes(
                                                                     effort,
                                                                 )}
+                                                            disabled={working}
                                                             onCheckedChange={() =>
                                                                 toggleLevel(
                                                                     effort,
@@ -831,9 +1441,11 @@ export function AiSettings({ host }: { host: PageHost }) {
                                                     ),
                                                 ]),
                                             )}
-                                            value={defaultLevel}
-                                            disabled={selectedLevels.length ===
-                                                0}
+                                            value={selectedLevels.length > 0
+                                                ? defaultLevel
+                                                : null}
+                                            disabled={working ||
+                                                selectedLevels.length === 0}
                                             onValueChange={(next) => {
                                                 if (next !== null) {
                                                     setDefaultLevel(
@@ -846,7 +1458,19 @@ export function AiSettings({ host }: { host: PageHost }) {
                                                 id="ai-reasoning-default-level"
                                                 aria-label="默认强度"
                                             >
-                                                <SelectValue />
+                                                <SelectValue>
+                                                    {(
+                                                        value:
+                                                            | ReasoningEffort
+                                                            | null,
+                                                    ) => value &&
+                                                            selectedLevels
+                                                                .includes(value)
+                                                        ? getReasoningEffortLabel(
+                                                            value,
+                                                        )
+                                                        : "请先选择支持的强度"}
+                                                </SelectValue>
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {selectedLevels.map((lvl) => (
@@ -864,11 +1488,17 @@ export function AiSettings({ host }: { host: PageHost }) {
                                     </FormField>
                                 </FormFields>
                             )}
+                            {modelConfigError && (
+                                <StatusBanner tone="error">
+                                    {modelConfigError}
+                                </StatusBanner>
+                            )}
                             <div className="model-config-actions">
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    onClick={revertModelConfig}
+                                    disabled={working}
+                                    onClick={() => void revertModelConfig()}
                                 >
                                     <RotateCcw size="1em" className="icon-sm" />
                                     <span>恢复自动发现</span>
@@ -877,19 +1507,20 @@ export function AiSettings({ host }: { host: PageHost }) {
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        onClick={() =>
-                                            setConfiguringModel(null)}
+                                        disabled={working}
+                                        onClick={closeModelConfig}
                                     >
                                         取消
                                     </Button>
                                     <Button
                                         type="button"
                                         variant="default"
-                                        onClick={saveModelConfig}
-                                        disabled={manualReasoningEnabled &&
-                                            selectedLevels.length === 0}
+                                        onClick={() => void saveModelConfig()}
+                                        disabled={working ||
+                                            (manualReasoningEnabled &&
+                                                selectedLevels.length === 0)}
                                     >
-                                        保存
+                                        {working ? "保存中…" : "保存"}
                                     </Button>
                                 </div>
                             </div>
@@ -897,8 +1528,9 @@ export function AiSettings({ host }: { host: PageHost }) {
                     )}
                 </DialogContent>
             </Dialog>
+
             <AlertDialog
-                open={deleteTarget !== null}
+                open={host.active && deleteTarget !== null}
                 onOpenChange={(open) => {
                     if (!open) {
                         handleCloseDelete();
@@ -915,36 +1547,27 @@ export function AiSettings({ host }: { host: PageHost }) {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel
-                            disabled={isDeleting}
-                            onClick={handleCloseDelete}
-                        >
+                        <AlertDialogCancel disabled={isDeleting}>
                             取消
                         </AlertDialogCancel>
                         <AlertDialogAction
                             variant="destructive"
                             disabled={isDeleting}
-                            onClick={handleConfirmDelete}
+                            onClick={() => void handleConfirmDelete()}
                         >
                             {isDeleting ? "正在删除…" : "删除"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
             <StatusBanner
                 tone="success"
                 presentation="floating"
-                open={status !== ""}
+                open={host.active && status !== ""}
             >
                 {status}
             </StatusBanner>
-            <StatusBanner
-                open={Boolean(error) && !isModalOpen}
-                tone="error"
-                className="ai-error"
-            >
-                {error}
-            </StatusBanner>
-        </>
+        </div>
     );
 }
