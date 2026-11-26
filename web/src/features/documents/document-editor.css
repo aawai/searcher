@@ -19,9 +19,6 @@
     isolation: isolate;
     box-sizing: border-box;
     --document-mode-target: var(--control-touch-target);
-    --document-mode-track-height: calc(
-        var(--document-mode-target) + 2 * (var(--space-half) + var(--space-hairline))
-    );
 }
 
 @media (hover: hover) and (pointer: fine) and (min-width: 640px) {
@@ -199,35 +196,51 @@
     gap: var(--space-control-gap);
     min-block-size: var(--document-mode-target);
     padding: var(--space-2) var(--space-4);
-    border-top: 1px solid var(--border-subtle);
+    border-top: var(--space-hairline) solid var(--border-subtle);
     background: var(--surface-l3);
 }
 
-[data-slot="radio-group"][data-variant="segmented"].document-mode-switch {
+.document-mode-switch {
+    display: flex;
+    align-items: center;
     flex: none;
     min-width: 0;
-    border-radius: var(--shape-segment-radius);
 }
 
-[data-slot="radio-group"][data-variant="segmented"].document-mode-switch .radio-item {
+.document-mode-trigger.button {
     position: relative;
-    --touch-target-size: var(--control-touch-target);
+    width: var(--document-mode-target);
+    min-width: var(--document-mode-target);
+    height: var(--document-mode-target);
     min-height: var(--document-mode-target);
-    padding-inline: var(--space-2);
-    gap: var(--space-1);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
+    padding: 0;
+    border-radius: var(--control-radius);
+    color: var(--muted);
 }
 
-[data-slot="radio-group"][data-variant="segmented"].document-mode-switch .radio-item[data-checked] {
-    font-weight: var(--font-title-weight);
+@media (hover: hover) and (pointer: fine) and (min-width: 640px) {
+    .document-mode-trigger.button {
+        --touch-target-size: var(--control-touch-target);
+    }
+}
+
+@media (hover: hover) {
+    .document-mode-trigger.button:hover {
+        color: var(--foreground);
+        background: var(--surface-soft);
+    }
+}
+
+.document-mode-trigger.button[data-popup-open] {
+    color: var(--foreground);
+    background: var(--surface-soft);
+}
+
+.document-view-switch.menu-popup {
+    min-width: 168px;
 }
 
 @container (max-width: 432px) {
-    .document-mode-switch .icon-sm {
-        display: none;
-    }
-
     .document-editor-status-bar {
         padding-inline: var(--space-3);
     }

@@ -91,12 +91,22 @@ function DropdownMenuSeparator(
 function DropdownMenuContent({
     children,
     className,
+    side,
+    align,
     sideOffset = 8,
     ...props
-}: MenuPrimitive.Popup.Props & { sideOffset?: number }) {
+}: MenuPrimitive.Popup.Props & {
+    side?: MenuPrimitive.Positioner.Props["side"];
+    align?: MenuPrimitive.Positioner.Props["align"];
+    sideOffset?: number;
+}) {
     return (
         <DropdownMenuPortal>
-            <DropdownMenuPositioner sideOffset={sideOffset}>
+            <DropdownMenuPositioner
+                side={side}
+                align={align}
+                sideOffset={sideOffset}
+            >
                 <DropdownMenuPopup className={className} {...props}>
                     {children}
                 </DropdownMenuPopup>

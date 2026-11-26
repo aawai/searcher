@@ -1863,8 +1863,11 @@ export function DocumentEditor({
                 <DocumentModeSwitch
                     mode={viewMode}
                     pageDisabled={snapshot.loading}
+                    editorOwner={documentEditorOwner}
                     hasRichEditorFocus={() =>
                         editorHandleRef.current?.view.hasFocus() ?? false}
+                    getRichEditorElement={() =>
+                        editorHandleRef.current?.view.dom ?? null}
                     onChange={handleViewChange}
                 />
                 <div className="document-metadata-bar">
