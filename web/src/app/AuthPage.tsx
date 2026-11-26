@@ -228,6 +228,11 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
                 <div className="auth-panel">
                     <header className="auth-header">
                         <h1 className="auth-title">{pageTitles[kind]}</h1>
+                        <p className="auth-subtitle">
+                            {kind === "login"
+                                ? "使用你的账户同步应用、笔记与 AI 对话"
+                                : "创建账户以保存个人工作台"}
+                        </p>
                     </header>
                     <div className="auth-body">
                         {kind === "register" &&

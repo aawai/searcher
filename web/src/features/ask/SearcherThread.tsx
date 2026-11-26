@@ -136,7 +136,7 @@ export function SearcherThread({
                             />
                             <h2 className="ask-empty-hero__title">
                                 {selectedModelId
-                                    ? "有什么可以帮你的？"
+                                    ? "开始新的问答"
                                     : "配置模型后即可开始提问。"}
                             </h2>
                             {!selectedModelId && (

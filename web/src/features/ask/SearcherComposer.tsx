@@ -28,7 +28,6 @@ import {
     TooltipTrigger,
 } from "../../components/ui/tooltip.tsx";
 import { Switch } from "../../components/ui/switch.tsx";
-import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
 import type {
@@ -150,17 +149,25 @@ export function SearcherComposer({
         }
     };
 
-    const activeTools = [
+    const activeTools: Array<{
+        key: "documents" | "apps" | "webSearch";
+        label: string;
+    }> = [];
+    if (
         supportsTools && toolsConfig.documents &&
-            capabilities?.tools.documents !== false
-            ? "搜索笔记"
-            : undefined,
-        supportsTools && toolsConfig.apps ? "搜索应用" : undefined,
+        capabilities?.tools.documents !== false
+    ) {
+        activeTools.push({ key: "documents", label: "搜索笔记" });
+    }
+    if (supportsTools && toolsConfig.apps) {
+        activeTools.push({ key: "apps", label: "搜索应用" });
+    }
+    if (
         supportsTools && toolsConfig.webSearch &&
-            capabilities?.tools.webSearch !== false
-            ? "联网搜索"
-            : undefined,
-    ].filter((tool): tool is string => tool !== undefined);
+        capabilities?.tools.webSearch !== false
+    ) {
+        activeTools.push({ key: "webSearch", label: "联网搜索" });
+    }
     const hasActiveTools = activeTools.length > 0;
     const hasCustomGeneration = generationConfig.temperature !== undefined ||
         generationConfig.topP !== undefined ||
@@ -189,12 +196,24 @@ export function SearcherComposer({
                         aria-label="已启用的检索工具"
                     >
                         {activeTools.map((tool) => (
-                            <Badge
-                                key={tool}
-                                variant="secondary"
+                            <button
+                                key={tool.key}
+                                type="button"
+                                className="ask-composer__tool-chip"
+                                aria-label={`关闭${tool.label}`}
+                                onClick={() =>
+                                    onChangeToolsConfig({
+                                        ...toolsConfig,
+                                        [tool.key]: false,
+                                    })}
                             >
-                                {tool}
-                            </Badge>
+                                <span>{tool.label}</span>
+                                <X
+                                    size="1em"
+                                    className="icon-sm"
+                                    aria-hidden="true"
+                                />
+                            </button>
                         ))}
                     </div>
                 )}

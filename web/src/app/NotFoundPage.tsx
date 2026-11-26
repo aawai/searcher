@@ -52,7 +52,7 @@ export function NotFoundContent(
                     </Button>
                     {workspace && (
                         <Button
-                            variant="outline"
+                            variant="ghost"
                             render={<Link to={workspace.to} viewTransition />}
                         >
                             返回{workspace.label}

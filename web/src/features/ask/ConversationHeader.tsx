@@ -11,7 +11,6 @@ import {
     SlidersHorizontal,
     Trash2,
 } from "lucide-react";
-import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
     DropdownMenu,
@@ -142,13 +141,12 @@ export function ConversationHeader({
                     </h1>
 
                     {isTemporary && (
-                        <Badge
-                            variant="secondary"
-                            className="ask-header__temp-badge"
+                        <span
+                            className="ask-header__temp-note"
                             title="临时对话：切换或离开后不会保存"
                         >
-                            临时对话
-                        </Badge>
+                            · 临时对话
+                        </span>
                     )}
                 </div>
             </div>

@@ -72,7 +72,7 @@ interface TrashRowData {
 }
 
 function formatDate(ts?: number | null) {
-    if (!ts) return "—";
+    if (!ts) return "-";
     return new Date(ts).toLocaleString("zh-CN", {
         year: "numeric",
         month: "2-digit",

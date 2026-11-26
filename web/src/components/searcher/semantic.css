@@ -72,6 +72,7 @@
     font-size: var(--font-page-title-size);
     line-height: var(--font-page-title-line-height);
     font-weight: var(--font-title-weight);
+    letter-spacing: -0.025em;
     overflow-wrap: anywhere;
 }
 .page-description {

@@ -1,9 +1,13 @@
 import React, { type ReactNode } from "react";
 import { PageShell } from "../components/searcher/PageShell.tsx";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
-import { LoadingState } from "../components/searcher/semantic.tsx";
+import {
+    ActionGroup,
+    LoadingState,
+} from "../components/searcher/semantic.tsx";
 import { Illustration } from "../components/illustrations/Illustration.tsx";
 import { Button } from "../components/ui/button.tsx";
+import "./narrow-form.css";
 
 export interface RouteErrorBoundaryProps {
     children: ReactNode;
@@ -65,36 +69,36 @@ export class RouteErrorBoundary extends React.Component<
                     aria-live="assertive"
                     data-testid="route-error-boundary"
                 >
-                    <Illustration
-                        name="auth-or-error"
-                        size="md"
-                        className="system-illustration--utility"
-                    />
-                    <PageHeader
-                        title="页面加载失败"
-                        description="页面未能加载，请重新加载页面或返回首页。"
-                        actions={
-                            <>
-                                <Button
-                                    type="button"
-                                    variant="default"
-                                    onClick={this.handleRetry}
-                                    data-testid="route-retry-button"
-                                >
-                                    重新加载页面
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        globalThis.location.href = "/";
-                                    }}
-                                >
-                                    返回首页
-                                </Button>
-                            </>
-                        }
-                    />
+                    <div className="narrow-form">
+                        <Illustration
+                            name="auth-or-error"
+                            size="md"
+                            className="system-illustration--utility"
+                        />
+                        <PageHeader
+                            title="页面加载失败"
+                            description="页面未能加载，请重新加载页面或返回首页。"
+                        />
+                        <ActionGroup>
+                            <Button
+                                type="button"
+                                variant="default"
+                                onClick={this.handleRetry}
+                                data-testid="route-retry-button"
+                            >
+                                重新加载页面
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => {
+                                    globalThis.location.href = "/";
+                                }}
+                            >
+                                返回首页
+                            </Button>
+                        </ActionGroup>
+                    </div>
                 </PageShell>
             );
         }

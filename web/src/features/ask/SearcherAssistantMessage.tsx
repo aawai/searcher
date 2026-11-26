@@ -21,7 +21,6 @@ import {
     Terminal,
     Wrench,
 } from "lucide-react";
-import { Badge } from "../../components/ui/badge.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import {
     Tooltip,
@@ -109,12 +108,9 @@ export function SearcherAssistantMessage() {
                                         {source.type === "document"
                                             ? (
                                                 <>
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="ask-source-card__kind"
-                                                    >
+                                                    <span className="ask-source-card__kind">
                                                         笔记
-                                                    </Badge>
+                                                    </span>
                                                     <ArrowRight
                                                         size="1em"
                                                         className="icon-sm ask-source-card__icon"
