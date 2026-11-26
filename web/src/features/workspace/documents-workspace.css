@@ -21,8 +21,8 @@
 }
 .documents-sidebar > nav {
     height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
+    min-height: 0;
+    overflow: hidden;
 }
 /* Drawer: the editor becomes a card that makes room for the drawer — it
    narrows by the drawer width plus a fixed gap (the left drawer also slides it
@@ -81,7 +81,7 @@
     background: var(--documents-sidebar-bg);
 }
 /* The card's gap is the drawer's trailing inset; no second inset inside. */
-.documents-sidebar--drawer .documents-workspace {
+.documents-sidebar--drawer :is(.documents-sidebar-header, .documents-sidebar-scroll, .documents-sidebar-footer) {
     padding-inline-end: 0;
 }
 /* On the grouped canvas the current entry keeps the card's surface, the same
@@ -177,15 +177,22 @@
     left: 0;
 }
 
-/* The library's notes view: one navigation row, one search row, flat rows. */
+/* Sidebar: pinned search header, independently scrolling directory list (scrollbar
+   hidden), and pinned trash footer aligned with the editor's status bar. */
 .documents-workspace {
-    gap: var(--space-4);
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    gap: var(--space-2);
 }
 .documents-sidebar-header {
     display: flex;
+    flex: none;
     align-items: center;
     width: 100%;
     min-width: 0;
+    padding-inline-end: var(--space-4);
+    background: var(--documents-sidebar-bg);
 }
 .documents-sidebar-header .documents-list-toolbar {
     flex: 1;
@@ -195,27 +202,21 @@
 .documents-sidebar-header > [data-slot="button"] {
     flex: none;
 }
-
-/* Sidebar: search + create row, fixed entries, notebook area, trash entry.
-   The navigation scrolls as a whole: the header sticks, the trash entry rests
-   at the bottom of short content and follows long content, so very short
-   windows keep every entry reachable. */
-.documents-workspace {
-    min-height: 100%;
-    gap: var(--space-2);
-    padding-inline-end: var(--space-4);
-}
-.documents-sidebar-header {
-    position: sticky;
-    top: 0;
-    z-index: var(--elevation-local-1);
-    background: var(--documents-sidebar-bg);
-}
 .documents-sidebar-scroll {
     display: flex;
-    flex: 1 0 auto;
+    flex: 1 1 0;
+    min-height: 0;
     flex-direction: column;
     gap: var(--space-2);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-inline-end: var(--space-4);
+    padding-block-end: var(--space-2);
+    scrollbar-width: none;
+}
+.documents-sidebar-scroll::-webkit-scrollbar {
+    display: none;
 }
 .documents-fixed-entries,
 .documents-notebook-area {
@@ -270,12 +271,12 @@
     color: inherit;
 }
 /* Equal space above and below the entry; the editor's status bar sits on the
-   same inset so the trash entry, mode switch and stats share one centre line. */
+   same inset and hairline so the trash entry, mode switch and stats align. */
 .documents-sidebar-footer {
     flex: none;
-    margin-top: auto;
     padding-block: var(--space-2);
-    border-top: var(--space-hairline) solid var(--border);
+    padding-inline-end: var(--space-4);
+    border-top: var(--space-hairline) solid var(--border-subtle);
 }
 /* A coarse pointer's resize zone overlays the editor's leading edge; it stops
    above the footer row so the editor's mode switch stays reachable there. */
@@ -300,7 +301,7 @@
     gap: var(--space-1);
     min-width: 0;
     min-height: var(--control-compact-height);
-    padding-block: var(--space-1);
+    padding-block: 0;
     padding-inline-end: var(--space-1);
     /* Level 1 starts on the sidebar's content line (--space-3 inside the box
        edge), the same inset as the search box glyph and the entries. */

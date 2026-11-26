@@ -14,15 +14,23 @@ export function workspaceAppsTrigger(page: Page): Locator {
     return workspaceDock(page).locator('[data-dock-id="apps"]');
 }
 
-export type DocumentModeLabel = "编辑" | "分页" | "Markdown 源码";
+export type DocumentModeLabel = "连续" | "分页" | "Markdown 源码";
 
 export async function switchDocumentMode(
     scope: Page | Locator,
     mode: DocumentModeLabel,
 ): Promise<void> {
-    const option = scope.getByRole("radiogroup", { name: "视图模式" })
-        .getByRole("radio", { name: mode, exact: true });
-    if (!await option.isChecked()) await option.click();
+    const trigger = scope.getByRole("button", { name: /^视图模式，当前：/ });
+    const short = mode === "Markdown 源码" ? "源码" : mode;
+    const label = await trigger.getAttribute("aria-label");
+    if (label?.endsWith(`当前：${short}`)) return;
+    const page = "page" in scope ? scope.page() : scope;
+    const menu = page.getByRole("menu", { name: "视图模式" });
+    if (!await menu.isVisible()) {
+        await trigger.click();
+        await menu.waitFor({ state: "visible" });
+    }
+    await menu.getByRole("menuitemradio", { name: mode, exact: true }).click();
 }
 
 async function waitForEditorFocusBarrier(target: Locator): Promise<void> {

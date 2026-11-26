@@ -8,6 +8,7 @@ import { join } from "@std/path/join";
 import {
     checkGuide,
     checkLinks,
+    isActiveDocPath,
     parseMarkdown,
     pinnedDenoVersions,
     type Problem,
@@ -107,14 +108,34 @@ async function loadFacts(root: string): Promise<RepoFacts> {
     };
 }
 
-/** Links from other Markdown files into the guide must keep resolving. */
+/** Checks all relative links and anchors inside active documentation files. */
+async function checkActiveDocLinks(
+    root: string,
+    facts: RepoFacts,
+    mdFiles: readonly string[],
+): Promise<Problem[]> {
+    const problems: Problem[] = [];
+    for (const file of mdFiles) {
+        if (!isActiveDocPath(file)) continue;
+        const text = await readOrNull(join(root, file));
+        if (text === null) continue;
+        const refs = parseMarkdown(text);
+        problems.push(
+            ...await checkLinks(file, refs.links, refs.anchors, facts),
+        );
+    }
+    return problems;
+}
+
+/** Links from non-active Markdown files into the guide must keep resolving. */
 async function checkInboundLinks(
     root: string,
     facts: RepoFacts,
+    mdFiles: readonly string[],
 ): Promise<Problem[]> {
     const problems: Problem[] = [];
-    for (const file of await listFiles(root, ["*.md"])) {
-        if (file === GUIDE) continue;
+    for (const file of mdFiles) {
+        if (file === GUIDE || isActiveDocPath(file)) continue;
         const text = await readOrNull(join(root, file));
         if (text === null) continue;
         const refs = parseMarkdown(text);
@@ -133,9 +154,11 @@ if (import.meta.main) {
     const root = Deno.cwd();
     const facts = await loadFacts(root);
     const guide = await Deno.readTextFile(join(root, GUIDE));
+    const mdFiles = await listFiles(root, ["*.md"]);
     const problems = [
         ...await checkGuide(GUIDE, guide, facts),
-        ...await checkInboundLinks(root, facts),
+        ...await checkActiveDocLinks(root, facts, mdFiles),
+        ...await checkInboundLinks(root, facts, mdFiles),
     ];
     for (const { file, line, message } of problems) {
         console.error(`${file}:${line}: ${message}`);
@@ -146,5 +169,5 @@ if (import.meta.main) {
         );
         Deno.exit(1);
     }
-    console.log(`${GUIDE} references match the repository.`);
+    console.log(`${GUIDE} and active doc references match the repository.`);
 }

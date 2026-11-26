@@ -204,7 +204,7 @@ docker exec -it searcher deno run -A --cached-only src/commands/admin.ts reset <
 
 ## 贡献
 
-1. 从 `main` 创建分支，按 [AGENTS.md](AGENTS.md) 的工程约定与[测试策略](docs/testing.md#验证策略)实现改动。
+1. 从 `main` 创建分支，按 [AGENTS.md](AGENTS.md) 的工程约定与[测试调度](docs/testing.md#验证调度)实现改动。
 2. 提交前至少运行与改动相关的测试；涉及 UI 时运行 `deno task check:ui`，并按 [UI 验收清单](docs/design/UI_CHECKLIST.md) 在 PR 描述中逐项填写。
 3. 修改 schema 后执行 `deno task db:generate` 并提交迁移。
 4. 用户可观察的行为变化同步更新 `docs/` 中对应文档，并记录在 [CHANGELOG.md](CHANGELOG.md) 的 `## [Unreleased]` 下。

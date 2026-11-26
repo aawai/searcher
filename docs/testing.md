@@ -15,10 +15,6 @@ E2E 入口清单、并行/串行回退、JUnit 与资源报告、证据目录和
 deno run -A npm:playwright@1.56.1 install chromium
 ```
 
-`editable-pagination-spike` 的超限段落夹具混合中文与 Latin 文本，确保缺少 CJK
-fallback 字体的 Linux 环境中也实际超过 A4 单页高度；不通过安装中文字体或放宽
-跨页断言来满足夹具前置条件。段落、代码和表格的跨页断言失败时输出实际页分布与图片几何。
-
 ## 常用入口
 
 | 命令                                          | 覆盖                                                                                                   |
@@ -71,9 +67,21 @@ untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` �
 
 ### 验证调度
 
-验证范围、失败处理、证据复用与完成报告遵循
-[仓库指南 · 测试与验证](../AGENTS.md#测试与验证)；执行或修改 E2E、组织浏览器验收时遵循本节操作规范。
-上表提供本地执行入口；affected 仅辅助局部选择，完整 CI 分工见下节。
+验证范围、失败处理、证据复用与完成报告以本节及
+[仓库指南 · 测试与验证](../AGENTS.md#测试与验证) 为准；执行或修改 E2E、组织浏览器验收时遵循以下操作规范。
+
+#### E2E 准入与覆盖边界
+
+- 禁止用 E2E 断言像素与视觉细节（精确 `px` 坐标、颜色值、间距/圆角、多视口像素矩阵或过渡动画细节）；视觉与动效改动通过 `deno task check:ui` 与 [UI 验收清单](design/UI_CHECKLIST.md) 确认。
+- 能由单元测试或 API 契约测试覆盖的逻辑（状态转换、权限校验、数据模型、纯布局计算），统一写入 `deno task test`，不新增 E2E。
+- 禁止为实验原型、Spike 或 `/design-lab` 新增常驻 E2E。
+- 确需补充真实浏览器交互回归（登录、保存、拖拽、焦点/Escape）时，按业务域归并到已有 E2E 文件并登记至 `scripts/e2e/suites.ts`。
+
+#### 失败归类与证据复用
+
+- Bug 修复尽量保留修复前失败、修复后通过的 regression test，不为通过测试改变验收契约。
+- 失败先依据已有证据区分产品、脚本或环境原因，再定向复查；不因单点失败自动重跑全部；共享行为变化或影响面不确定时扩大复查。
+- 复用前确认相关实现、测试脚本、共享 fixture、构建产物、环境与覆盖范围仍有效；只重跑已失效或尚缺的验证，不重复仍有效的已通过检查。筛选运行与失败后未执行的场景不能作为完整门禁通过证据。
 
 #### 并发与隔离
 
@@ -113,12 +121,10 @@ untracked 文件。删除使用旧名，重命名包含新旧名。`suites.ts` �
 
 #### 主题维度
 
-- E2E 的几何与行为断言（布局、溢出、命中区、焦点位置、保存与版本）与主题无关，只在 light
-  下执行；主题相关的颜色、对比度、焦点环、材质由专项断言在两种主题下覆盖（如
-  `accent-contrast`、`workspace-matrix` Matrix A、认证切换链接、管理页语义色）。
+- E2E 的行为与几何断言默认只在 `light` 下执行；与主题切换相关的行为由对应测试覆盖。
 - 矩阵循环统一使用 `layoutThemes()`（`web/e2e/helpers/evidence.ts`）：设置
-  `E2E_EVIDENCE_DIR` 时追加 dark，仅为留存截图供人工审阅；light/dark 视觉验收仍按
-  [UI 验收清单](design/UI_CHECKLIST.md#实页矩阵)执行。
+  `E2E_EVIDENCE_DIR` 时追加 `dark`，仅为留存截图供人工审阅；双主题基础可用性与截图自检按
+  [UI 验收清单](design/UI_CHECKLIST.md) 执行。
 
 ## CI 覆盖
 
@@ -167,25 +173,14 @@ Wallpaper 的 job 名称保持不变；Workspace 门禁改为 `workspace-a` /
 
 ### Workspace
 
-覆盖 Workspace、Shell、Desk、Unified Launcher、应用交互与会话、
-workspace-contract、workspace-matrix、颜色层级与对比度、强制颜色模式等完整 Workspace
+覆盖 Workspace、Shell、Desk、Launcher、应用交互与会话及 AI 窗口等完整 Workspace
 集合。Documents 的 Library、Live/Source 编辑、历史、草稿与分页回归属于
 独立的 `documents` 集合，不由 `test:workspace` 替代；完整文件列表以
 `scripts/e2e/suites.ts` 为准。
 
 ### 玻璃效果
 
-数值契约由 `deno task test` 内的 `glass-contrast.test.ts` 和迁移测试覆盖（Floating 4 档按 `--material-thick-sheen-scale`、
-Material off / soft / regular × 亮 / 暗按 `--material-regular-sheen-scale` 合成校验对比度下限，`clear` 的 Material 不承诺对比度；
-`search_opacity` 的 `1`、`0.72`、`0.5`、`0.1` 边界）。实页验收不做档位 × 视口 × 主题 × 背景的全组合：
-
-- 默认档位：390 / 768 / 1440 × light/dark，无壁纸（纯色主题背景），共 6 张。
-- 档位差异：设计实验室每档重复同一高对比夹具背景并排比较四档 Material 与 Floating，1440 × light/dark，共 2 张。
-- 照片与纹理壁纸：首页 1440 × light/dark，在固定构图与默认均衡遮罩下用浅色照片、深色照片与高频纹理对照相邻档位（含标准与通透），检查常态搜索框、聚焦态搜索框（整组切到 Floating 厚材质，失焦恢复）与应用底板。
-- `prefers-reduced-transparency` / 高对比 / 强制颜色：断言 Material 与 Floating 表面 fill
-  均为实色、`--material-regular-filter` 与 `--material-thick-filter` 为 `none`、顶光缩放为 `0`、`--shadow-material-edge` 仍在。
-- 行为与控件形状：`ui-ownership`
-  验证顶部外观分组中的“玻璃效果”与“控件形状”：切换到“通透”断言保存请求、`data-glass`、`--material-regular-filter` / `--material-thick-filter`、聚焦搜索框厚材质切换、可读性说明与刷新后保持；切换到“胶囊”（`data-shape="pill"`）断言 `--shape-button-radius`、`--shape-field-radius`、`--shape-segment-radius`、`--shape-segment-inner-radius` 实际作用于代表性普通按钮、独立单行字段与分段控件 / 默认 Tab，搜索框内部同心关系及横向设置行内字段、图标按钮、多行输入等排除项不退化，且切换不丢焦点、不改值、不产生布局跳动。
+数值对比度契约由 `deno task test` 内的 `glass-contrast.test.ts` 和迁移测试覆盖；其余交互与可读性按 [UI 验收清单](design/UI_CHECKLIST.md) 实页核验。
 
 ### Documents
 
@@ -202,19 +197,4 @@ Host/主题/视图的实页截图；每次执行在父目录下
 
 ### Wallpaper
 
-偏左/偏右主体构图、双视口裁切、刷新与新设备登录、历史切换、删除及失败保留、URL
-草稿、同步故障恢复、匿名持久化、reduced-motion 与可读性低于默认档的就近提示。
-`wallpaper-readability` 是 A6 的机检：七张合成极值壁纸 × light / dark / 高对比浅色 / 高对比深色 × 390 / 1440 ×
-登录 / 访客，在真实 Chromium 中逐个文字元素取字形外 2px 的背景像素，最不利的 5% 分位须满足
-1.4.3（取样方法见 [VISUAL_LANGUAGE · 验证与已知缺口](design/VISUAL_LANGUAGE.md#验证与已知缺口)）；
-1440 下一并取样宽屏刊头衬底上的文字。同一文件另以该方法实测 Floating 上的 `--muted`（头像菜单、文件夹计数、
-搜索建议分组标题 × `off` / `soft` / `regular` / `clear` 四档），并打印各元素最差值。普通浅 / 深主题覆盖所选壁纸；
-高对比浅 / 深主题的 Floating 所有档位均为不透明实色（`glass-contrast.test.ts` 验证），
-因此每档只测纯白壁纸，仍逐一实测三个浮层。
-取样前等待两帧截图一致，取样期间背景像素变化即失败，不重试。
-本地 `deno task test:wallpaper` 默认运行完整七壁纸矩阵；
-`WALLPAPER_READABILITY_MATRIX=fast deno task test:wallpaper` 仅选纯白、纯黑与棋盘纹理，
-其余主题、视口、身份、玻璃档位、浮层与断言不变。PR CI 使用快速矩阵；
-main push 与手动触发使用完整矩阵。快速矩阵不覆盖灰色及高饱和红 / 绿 / 蓝，
-因此通过不代表完整矩阵通过；完整验收仍需针对当前 revision 运行完整矩阵。
-两种模式均运行整个壁纸功能集合，`deno task test` 在同一 CI job 中执行。
+`web/e2e/wallpaper.test.ts` 覆盖壁纸上传、偏左/偏右主体构图与双视口裁切、刷新与新设备登录、历史切换、删除及失败保留、URL 草稿、同步故障恢复、匿名持久化与 `prefers-reduced-motion` 等功能链路。

@@ -354,7 +354,7 @@ Deno.test("笔记本树拖拽：触屏快速滑动节点滚动侧栏而不拖拽
         await ensureSidebarOpen(page);
         const ui = tree(page);
         await ui.item("滑动笔记本0").waitFor();
-        const scroll = ui.frame.locator(".documents-sidebar > nav");
+        const scroll = ui.frame.locator(".documents-sidebar-scroll");
         const initial = await scroll.evaluate((el) => el.scrollTop);
         let moves = 0;
         page.on("request", (request) => {
@@ -383,7 +383,7 @@ Deno.test("笔记本树拖拽：触屏快速滑动节点滚动侧栏而不拖拽
         });
         await page.waitForFunction(({ start }) => {
             const scroll = document.querySelector(
-                '[data-window-id="notes"] .documents-sidebar > nav',
+                '[data-window-id="notes"] .documents-sidebar-scroll',
             );
             return scroll !== null && scroll.scrollTop > start;
         }, { start: initial });

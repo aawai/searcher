@@ -10,8 +10,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
 - 业务组合组件位于 `web/src/components/searcher/`；页面复用
   `PageShell`、`PageHeader` 和 Searcher semantic components。
 - `/design-lab`
-  用于检查正式组件、交互状态、主题与响应式预览，不替代真实业务页面验收；设置中的入口仅对管理员显示。`/design-lab/*`
-  是 [实验通道](design/VISUAL_LANGUAGE.md#实验通道)：原型进入生产前须经对应契约子任务。
+  用于检查正式组件、交互状态、主题与响应式预览，不替代真实业务页面验收；设置中的入口仅对管理员显示；创意改造不强制先走 `/design-lab`（见 [Visual Language](design/VISUAL_LANGUAGE.md)）。
 - `/design-lab/markdown-editor` 是 M0A
   编辑技术验证入口，仅本地演示，不保存或替换笔记。验证结论、bundle 口径和 #110
   输入约束见 [M0A 报告](editor/MARKDOWN_EDITOR_M0A.md)。
@@ -39,9 +38,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   登录态对话工作区以 `ConversationHeader` 的会话标题作为唯一 `h1`。
   已知待单独修复的差距：登录用户无可用模型时 Ask 渲染空状态，但不渲染页面 `h1`
   （`AskPage.tsx`）。这些现状不改变上述标题层级要求。
-- 图标使用 Lucide，`size` 只允许 14、16、20（`check:ui` 强制）。语义映射：应用
-  `AppWindow`、笔记 `NotebookPen`、总览 `LayoutGrid`、文件夹
-  `Folder`。
+- 图标使用 Lucide；语义映射：应用 `AppWindow`、笔记 `NotebookPen`、总览 `LayoutGrid`、文件夹 `Folder`。
 - 用户可见文案（应用 / 网站 / 网址、笔记 / 首页刊头、删除与恢复动词、版本冲突选项）以 Visual Language 文案为准；代码与 API
   保持 canonical 英文命名。
 
@@ -66,7 +63,7 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
   排版、磨砂衬底与窄屏展开在 `home-masthead.css`；衬线字体 `--font-serif` 来自自托管的
   `@fontsource/noto-serif-sc`（只打包 600 字重），只在刊头使用。构建时 `web/vite.config.ts` 的
   `woff2OnlyFontsPlugin` 去掉 Fontsource 的 WOFF 备用源，`dist` 只输出 WOFF2 切片。
-- 稳定布局与交互状态使用语义 class 或 Tailwind 布局 / 状态 utility；视觉尺度（字重、间距、圆角、无阴影、图标尺寸）只使用 [Visual Language](design/VISUAL_LANGUAGE.md) 登记并在 `tokens.css` 以 `@utility` 绑定正式 Token 的工具类，响应式前缀只使用已登记的 `sm:` / `md:` / `lg:`。字号与行高统一由语义 CSS 消费登记 Token，不使用 `text-xs`、`text-sm`、`text-xl` 等默认文字尺度。壁纸、拖拽变换等 runtime 值保留 inline style。图标尺寸和 Launcher 方格等组件内部几何由组件维护。
+- 常规样式优先消费 `web/src/design-system/tokens.css` 的默认变量；壁纸、拖拽变换等 runtime 值保留 inline style；创意迭代可按 [Visual Language](design/VISUAL_LANGUAGE.md) 自由调整或突破默认参考。
 - 样式调整后构建前端，实页检查首页、设置、登录和笔记窗口的浅深色与壁纸组合。
 
 ## UI 门禁
@@ -74,51 +71,18 @@ UI 视觉规则以 [Visual Language](design/VISUAL_LANGUAGE.md) 为准，实页�
 ```sh
 deno task check:ui
 deno test -A scripts/ui-guard/
-# 迁移旧样式后，仅删除已经解决的历史 allowance
-deno task check:ui --update
 ```
 
-- 门禁按文件、rule 和具体值计数；新加的 raw color / spacing / font / shadow / radius、
-  arbitrary Tailwind 或 inline presentation 同样失败。`raw-color` 检查颜色语义位置，
-  包含渐变、阴影和 `var()` fallback；字符串和 URL 不按颜色扫描。领域色例外按具体
-  owner、属性、选择器和值限制；运行时几何例外见 `scripts/ui-guard/exceptions.ts`。
-- TSX 的 className 支持字符串、括号 / as / satisfies 包装、条件与短路表达式、
-  模板中边界完整的静态 class，以及已知 `cn` / `clsx` 的参数、数组成员和对象类名键。
-  对象值只决定 truthiness，不作为 class 扫描；模板不跨 `${...}` 拼造 class。
-- style 支持静态对象、条件 / 短路分支和静态对象展开，按后写覆盖前写处理；
-  其他视觉规则与 runtime 例外仍接收完整 initializer；颜色规则另外复用抽取器检查
-  其中可确定的字符串分支。同文件 `const` 按词法绑定解析；检测到赋值、成员修改、
-  未知调用逃逸及其直接别名时停止解析。
-  `let` / 参数、跨模块值、任意函数返回值、动态键和无法静态确定的 spread 均为未知边界。
-  未知 spread 可能覆盖此前属性，因此只保留其后可确定的属性。
-- 抽取器记录未知 AST 节点，不执行 JS；每个入口限制 64 层递归、4096 次节点展开和
-  64 个对象展开组合，并检测循环引用。未知不是“已验证安全”，门禁通过不代表 runtime
-  输入经过完整求值。诊断定位静态值来源；同一来源复用只报告一次，不合并不同来源的同值违规。
-- 语义规则读取 [Visual Language](design/VISUAL_LANGUAGE.md) 的登记表（解析见
-  `scripts/ui-guard/registry.ts`）：`font-size` / `border-radius` 只能引用已登记
-  Token，`--font-*` / 圆角 Token 的定义必须已登记，`var(--accent)` 作为
-  background / fill 必须在已登记的文件与选择器中；TSX `className` 的视觉尺度工具类
-  与响应式前缀只能使用已登记项（未登记项拒绝为 `unregistered-tailwind-visual`）。
-  `tokens.css` 的登记 `@utility` 与断点必须与表中的 Token / 断点匹配；缺失、重复或
-  不匹配会被门禁拒绝。登记表缺失或格式错误时门禁失败。
-  新增 Token、强调色填充或 Tailwind 视觉工具类先改 Visual Language，再改实现。
-- CSS `@media` 宽度须使用登记边界的 `min-width: Npx` / `max-width: N-1px`，
-  拒绝未登记数值、错配边界与其他宽度写法；TS / TSX 中散落的数字媒体查询同样失败。
-  允许值由 `registry.ts` 从断点表解析，新增档位先修改契约与验证矩阵。
-- `--update` 不接受新增或数量增加的违规；CI 运行检查和门禁回归测试。
-- baseline 通过不表示历史样式债务、focus
-  语义或所有业务流程已清零。实页矩阵与交互证据按
-  [UI 验收清单](design/UI_CHECKLIST.md#实页矩阵) 的影响面规则选择并人工验收。
-- 门禁的 ownership 规则（feature selector 不进入 `global.css`、legacy `.page`
-  几何、未定义 Token、native confirm、已废止 class、CSS 前缀归属）不能通过
-  baseline、`--update` 或 initialize 豁免。
-- 既有 UI 计划（[docs/plans/](plans/README.md)）是历史设计资料；当前规则以
-  [Visual Language](design/VISUAL_LANGUAGE.md) 为准。
+- `check:ui`（`scripts/check-ui.ts` 与 `scripts/ui-guard/ownership.ts`）只执行 3 条防 Bug 卫生规则：
+  - `undefined-css-token`：CSS 与 TSX `style` 中引用的 `var(--*)` 必须在 `tokens.css`、当前作用域或 `RUNTIME_CSS_VARIABLE_REGISTRY`（`scripts/ui-guard/ownership.ts`）中定义。
+  - `native-destructive-confirm`：UI 代码禁止调用原生 `confirm()` / `window.confirm()` / `globalThis.confirm()`，改用 `AlertDialog`。
+  - `native-form-control`：`components/ui/` 与 `NoteMarkdown.tsx` 之外禁止裸用 `<input type="checkbox|radio|range">`。
+- 其余可用性检查见 [UI 验收清单](design/UI_CHECKLIST.md) 与 [Visual Language](design/VISUAL_LANGUAGE.md)；既有 UI 计划（[docs/plans/](plans/README.md)）仅作历史设计背景。
 
 ## 可访问性契约
 
-可访问性底线（WCAG 2.2 AA 基准与项目附加条目）见
-[Visual Language](design/VISUAL_LANGUAGE.md#一底线)。以下为代码必须保持的行为：
+可访问性底线（浅/深双主题可读、键盘与 Escape、减少动效、确认弹窗）见
+[Visual Language](design/VISUAL_LANGUAGE.md#一基础可用性底线)。以下为代码必须保持的行为：
 
 - Escape 由 `components/ui/escape-layer-stack.tsx` 统一裁决，每次只消费最上层；笔记窗口依次处理菜单 / 弹窗、焦点在内的大纲 Overlay、窗口内抽屉、全屏和窗口最小化。输入法合成中不分发；注销层不得穿透到 window。关闭后焦点回到触发控件。
 - 删除、覆盖、放弃未保存修改等不可逆操作使用 AlertDialog。取消与 Escape
