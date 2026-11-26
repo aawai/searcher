@@ -1,4 +1,4 @@
-import { ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import {
     type CSSProperties,
     type JSX,
@@ -275,6 +275,8 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
     const isNarrow = placement.mode === "narrow";
     const isGuest = user === null;
     const effectiveCollapsed = isNarrow ? (isGuest ? true : collapsed) : false;
+    const canSideCollapse = placement.mode === "side" && hasSignedInContent;
+    const effectiveSideCollapsed = canSideCollapse && sideCollapsed;
     const sheetOpen = isNarrow && !effectiveCollapsed;
     const searchDock = placement.mode === "narrow" && sheetOpen
         ? placement.searchDock
@@ -444,11 +446,12 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         return null;
     }
 
-    // Collapsed narrow masthead: the open task count rides on the time line.
-    // Visual only; the peek button's name carries it for assistive tech.
-    const peekTaskCount = isNarrow && effectiveCollapsed && user
-        ? openTaskCount
-        : 0;
+    // Collapsed masthead (narrow or wide): the open task count rides on the time line.
+    // Visual only; the expand button's accessible name carries it for assistive tech.
+    const peekTaskCount =
+        user && (isNarrow ? effectiveCollapsed : effectiveSideCollapsed)
+            ? openTaskCount
+            : 0;
     const peekTasks = peekTaskCount > 0 && (
         <span className="home-masthead__peek-tasks" aria-hidden="true">
             {peekTaskCount} 项待办
@@ -460,7 +463,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         </span>
     );
 
-    const sideCollapseButton = placement.mode === "side" && (
+    const sideCollapseButton = canSideCollapse && !effectiveSideCollapsed && (
         <Button
             ref={sideCollapseRef}
             type="button"
@@ -475,46 +478,50 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         </Button>
     );
 
-    const showDek = !isGuest && hasSignedInContent;
-    const bodyContent = (
-        <>
-            {hasHeader && (
-                <header className="home-masthead__header">
-                    <time
-                        className="home-masthead__clock"
-                        dateTime={calmDateTimeAttribute(now, showTime)}
-                    >
-                        {showDate
-                            ? (
-                                <>
-                                    <span className="home-masthead__day">
-                                        {dateParts.day}
-                                    </span>
-                                    <span className="home-masthead__date-side">
-                                        <span className="home-masthead__weekday">
-                                            {dateParts.weekday}
-                                        </span>
-                                        <span className="home-masthead__month">
-                                            {dateParts.month}
-                                        </span>
-                                        {(showTime || peekTasks) && (
-                                            <span className="home-masthead__time">
-                                                {showTime && dateParts.time}
-                                                {showTime && peekSeparator}
-                                                {peekTasks}
-                                            </span>
-                                        )}
-                                    </span>
-                                </>
-                            )
-                            : (
-                                <span className="home-masthead__time home-masthead__time--solo">
-                                    {dateParts.time}
-                                    {peekSeparator}
+    const clockElement = hasHeader && (
+        <time
+            className="home-masthead__clock"
+            dateTime={calmDateTimeAttribute(now, showTime)}
+        >
+            {showDate
+                ? (
+                    <>
+                        <span className="home-masthead__day">
+                            {dateParts.day}
+                        </span>
+                        <span className="home-masthead__date-side">
+                            <span className="home-masthead__weekday">
+                                {dateParts.weekday}
+                            </span>
+                            <span className="home-masthead__month">
+                                {dateParts.month}
+                            </span>
+                            {(showTime || peekTasks) && (
+                                <span className="home-masthead__time">
+                                    {showTime && dateParts.time}
+                                    {showTime && peekSeparator}
                                     {peekTasks}
                                 </span>
                             )}
-                    </time>
+                        </span>
+                    </>
+                )
+                : (
+                    <span className="home-masthead__time home-masthead__time--solo">
+                        {dateParts.time}
+                        {peekSeparator}
+                        {peekTasks}
+                    </span>
+                )}
+        </time>
+    );
+
+    const showDek = !isGuest && hasSignedInContent;
+    const bodyContent = (
+        <>
+            {clockElement && (
+                <header className="home-masthead__header">
+                    {clockElement}
                     {sideCollapseButton}
                 </header>
             )}
@@ -655,7 +662,7 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         const backdropTone = backdrop?.tone;
         const sideInkPolarity: BackdropPolarity | undefined = backdrop
             ?.polarity;
-        const stamp = sideCollapsed
+        const stamp = effectiveSideCollapsed
             ? buildMastheadStamp({
                 dateParts,
                 showDate,
@@ -673,95 +680,104 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                 {...focusContainer}
                 data-mode="side"
                 data-side={placement.side}
-                data-collapsed={sideCollapsed ? "true" : "false"}
-                data-compact={isCompactSide ? "true" : undefined}
+                data-collapsed={effectiveSideCollapsed ? "true" : "false"}
+                data-compact={isCompactSide ||
+                        (effectiveSideCollapsed && hasHeader)
+                    ? "true"
+                    : undefined}
                 data-wallpaper-image={wallpaper.source ? "true" : undefined}
                 data-backdrop-tone={backdropTone}
             >
-                {sideCollapsed && stamp
+                {effectiveSideCollapsed && stamp && !hasHeader
                     ? (
                         <button
                             ref={sideStampRef}
                             type="button"
                             className="home-masthead__stamp"
+                            data-ink-polarity={sideInkPolarity}
                             aria-expanded="false"
                             aria-label={stamp.ariaLabel}
                             data-animate={sideMotion ? "true" : undefined}
-                            style={placement.stampAnchor}
+                            style={columnAnchorStyle}
                             onClick={handleSideExpand}
                         >
                             <span
                                 className="home-masthead__stamp-primary"
-                                data-kind={stamp.primaryKind}
+                                data-kind="fallback"
                                 aria-hidden="true"
                             >
                                 {stamp.primary}
                             </span>
-                            {stamp.dateMeta && (
-                                <>
-                                    <span
-                                        className="home-masthead__stamp-sep"
-                                        aria-hidden="true"
-                                    >
-                                        ·
-                                    </span>
-                                    <span
-                                        className="home-masthead__stamp-meta"
-                                        aria-hidden="true"
-                                    >
-                                        {stamp.dateMeta}
-                                    </span>
-                                </>
+                            {(stamp.tasksLabel || stamp.notesLabel) && (
+                                <span
+                                    className="home-masthead__stamp-sub"
+                                    aria-hidden="true"
+                                >
+                                    {stamp.tasksLabel && (
+                                        <span className="home-masthead__stamp-tasks">
+                                            {stamp.tasksLabel}
+                                        </span>
+                                    )}
+                                    {stamp.tasksLabel && stamp.notesLabel && (
+                                        <span className="home-masthead__stamp-sep">
+                                            ·
+                                        </span>
+                                    )}
+                                    {stamp.notesLabel && (
+                                        <span className="home-masthead__stamp-notes">
+                                            {stamp.notesLabel}
+                                        </span>
+                                    )}
+                                </span>
                             )}
-                            {stamp.time && (
-                                <>
-                                    <span
-                                        className="home-masthead__stamp-sep"
-                                        aria-hidden="true"
-                                    >
-                                        ·
-                                    </span>
-                                    <span
-                                        className="home-masthead__stamp-time"
-                                        aria-hidden="true"
-                                    >
-                                        {stamp.time}
-                                    </span>
-                                </>
-                            )}
-                            {stamp.tasksLabel && (
-                                <>
-                                    <span
-                                        className="home-masthead__stamp-sep"
-                                        aria-hidden="true"
-                                    >
-                                        ·
-                                    </span>
-                                    <span
-                                        className="home-masthead__stamp-tasks"
-                                        aria-hidden="true"
-                                    >
-                                        {stamp.tasksLabel}
-                                    </span>
-                                </>
-                            )}
-                            {stamp.notesLabel && (
-                                <>
-                                    <span
-                                        className="home-masthead__stamp-sep"
-                                        aria-hidden="true"
-                                    >
-                                        ·
-                                    </span>
-                                    <span
-                                        className="home-masthead__stamp-notes"
-                                        aria-hidden="true"
-                                    >
-                                        {stamp.notesLabel}
-                                    </span>
-                                </>
-                            )}
+                            <ChevronDown
+                                size={14}
+                                className="home-masthead__stamp-chevron"
+                                aria-hidden="true"
+                            />
                         </button>
+                    )
+                    : effectiveSideCollapsed && stamp && clockElement
+                    ? (
+                        <div
+                            ref={sideColumnRef}
+                            tabIndex={-1}
+                            className="home-masthead__column"
+                            data-ink-polarity={sideInkPolarity}
+                            style={sideColumnStyle}
+                        >
+                            <div
+                                ref={scrollRef}
+                                className="home-masthead__scroll"
+                            >
+                                <div
+                                    ref={contentRef}
+                                    className="home-masthead__content"
+                                >
+                                    <header className="home-masthead__header">
+                                        <button
+                                            ref={sideStampRef}
+                                            type="button"
+                                            className="home-masthead__stamp-header"
+                                            aria-expanded="false"
+                                            aria-label={stamp.ariaLabel}
+                                            onClick={handleSideExpand}
+                                        >
+                                            {clockElement}
+                                            <span
+                                                className="home-masthead__stamp-toggle"
+                                                aria-hidden="true"
+                                            >
+                                                <ChevronDown
+                                                    size="1em"
+                                                    className="icon-sm"
+                                                />
+                                            </span>
+                                        </button>
+                                    </header>
+                                </div>
+                            </div>
+                        </div>
                     )
                     : (
                         <div
@@ -769,7 +785,9 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
                             tabIndex={-1}
                             className="home-masthead__column"
                             data-ink-polarity={sideInkPolarity}
-                            data-animate={sideMotion ? "true" : undefined}
+                            data-animate={sideMotion
+                                ? (hasHeader ? "body" : "true")
+                                : undefined}
                             style={sideColumnStyle}
                         >
                             {scrollArea}

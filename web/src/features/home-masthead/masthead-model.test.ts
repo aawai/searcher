@@ -812,10 +812,6 @@ Deno.test("masthead layout constants and frameless ambient cushion tokens mirror
         ),
         true,
     );
-    assertEquals(
-        css.includes("--masthead-stamp-dark-fill: 48%;"),
-        true,
-    );
     assertEquals(MASTHEAD_PEEK_FADE_MAX, 16);
 
     // Legacy veil and removed folio-card tokens are completely absent.
@@ -830,6 +826,8 @@ Deno.test("masthead layout constants and frameless ambient cushion tokens mirror
             "--masthead-folio-filter",
             "--font-masthead-folio-day-size",
             "--shape-masthead-radius",
+            "--masthead-stamp-dark-fill",
+            "--masthead-stamp-dark-bg",
         ]
     ) {
         assertEquals(css.includes(removed), false, `stale token: ${removed}`);

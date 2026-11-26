@@ -345,8 +345,6 @@
     --search-frame-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
     --search-frame-dark-wallpaper-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
     --search-frame-dark-wallpaper-focus-within-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-dark-wallpaper-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
     --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.24),
@@ -363,12 +361,6 @@
         inset 0 0 0 1px rgb(255 255 255 / 0.13),
         0 10px 26px -10px rgb(0 0 0 / 0.24),
         0 2px 8px -2px rgb(0 0 0 / 0.14);
-    --masthead-stamp-obsidian-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.22),
-        inset 0 0 0 1px rgb(255 255 255 / 0.12),
-        0 6px 18px -8px rgb(0 0 0 / 0.22);
-    --masthead-stamp-obsidian-hover-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.28),
-        inset 0 0 0 1px rgb(255 255 255 / 0.20),
-        0 8px 22px -8px rgb(0 0 0 / 0.28);
     --launcher-plate-obsidian-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.20),
         inset 0 0 0 1px rgb(255 255 255 / 0.12),
         0 12px 32px -12px rgb(0 0 0 / 0.26);
@@ -467,8 +459,6 @@
     --search-frame-dark-wallpaper-hover-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.20), inset 0 1px 0 rgb(255 255 255 / 0.12), 0 10px 32px -8px rgb(0 0 0 / 0.40), 0 2px 10px -2px rgb(0 0 0 / 0.22);
     --search-frame-dark-wallpaper-focus-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 62%, rgb(255 255 255 / 0.24)), 0 0 0 3px color-mix(in oklab, var(--accent) 16%, transparent), 0 12px 36px -10px rgb(0 0 0 / 0.46), 0 2px 10px -2px rgb(0 0 0 / 0.24);
     --search-frame-dark-wallpaper-focus-within-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 36%, rgb(255 255 255 / 0.18)), 0 10px 32px -10px rgb(0 0 0 / 0.42), 0 2px 10px -2px rgb(0 0 0 / 0.22);
-    --masthead-stamp-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.11), 0 4px 16px -6px rgb(0 0 0 / 0.24);
-    --masthead-stamp-dark-wallpaper-hover-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.20), 0 6px 20px -6px rgb(0 0 0 / 0.30);
     --dock-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), 0 8px 26px -8px rgb(0 0 0 / 0.34), 0 2px 8px -2px rgb(0 0 0 / 0.18);
     --launcher-plate-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.11), 0 10px 32px -10px rgb(0 0 0 / 0.36);
     --wallpaper-grain-opacity: 0.052;
@@ -780,15 +770,11 @@
     --search-frame-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
     --search-frame-dark-wallpaper-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
     --search-frame-dark-wallpaper-focus-within-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-dark-wallpaper-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
     --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-hover-shadow: var(--shadow-elevation-material);
     --dock-obsidian-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-obsidian-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-obsidian-hover-shadow: var(--shadow-elevation-material);
     --launcher-plate-obsidian-shadow: var(--shadow-elevation-material);
     --topbar-adaptive-hover-filter: none;
     --wallpaper-grain-opacity: 0;
@@ -849,15 +835,11 @@
     --search-frame-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
     --search-frame-dark-wallpaper-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
     --search-frame-dark-wallpaper-focus-within-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-dark-wallpaper-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
     --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-hover-shadow: var(--shadow-elevation-material);
     --dock-obsidian-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-obsidian-shadow: var(--shadow-elevation-material);
-    --masthead-stamp-obsidian-hover-shadow: var(--shadow-elevation-material);
     --launcher-plate-obsidian-shadow: var(--shadow-elevation-material);
     --topbar-adaptive-hover-filter: none;
     --wallpaper-grain-opacity: 0;
@@ -978,7 +960,6 @@
     --glass-regular-dark: 50%;
     --glass-thick-light: 88%;
     --glass-thick-dark: 86%;
-    --masthead-stamp-dark-fill: 48%;
     --glass-regular-filter-light: blur(18px) saturate(1.75);
     --glass-regular-filter-dark: blur(18px) saturate(1.35) brightness(0.94);
     --material-regular-sheen-scale: 0.45;
@@ -996,7 +977,6 @@
     --glass-regular-dark: 50%;
     --glass-thick-light: 88%;
     --glass-thick-dark: 86%;
-    --masthead-stamp-dark-fill: 48%;
     --glass-regular-filter-light: blur(18px) saturate(1.75);
     --glass-regular-filter-dark: blur(18px) saturate(1.35) brightness(0.94);
     --material-regular-sheen-scale: 0.45;
@@ -1014,7 +994,6 @@
     --glass-regular-dark: 100%;
     --glass-thick-light: 100%;
     --glass-thick-dark: 100%;
-    --masthead-stamp-dark-fill: 100%;
     --glass-regular-filter-light: none;
     --glass-regular-filter-dark: none;
     --material-regular-sheen-scale: 0;
@@ -1033,7 +1012,6 @@
     --glass-regular-dark: 78%;
     --glass-thick-light: 92%;
     --glass-thick-dark: 92%;
-    --masthead-stamp-dark-fill: 74%;
     --glass-regular-filter-light: blur(28px) saturate(1.35);
     --glass-regular-filter-dark: blur(28px) saturate(1.15) brightness(0.84);
     --material-regular-sheen-scale: 0.35;
@@ -1054,7 +1032,6 @@
        and 4.49:1 at 86% (#394 2.2). */
     --glass-thick-light: 90%;
     --glass-thick-dark: 86%;
-    --masthead-stamp-dark-fill: 20%;
     --glass-regular-filter-light: blur(6px) saturate(1.9) brightness(1.03);
     --glass-regular-filter-dark: blur(8px) saturate(1.65) brightness(1.04);
     --material-regular-sheen-scale: 0.2;
@@ -1111,12 +1088,6 @@
             --launcher-plate-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18),
                 inset 0 1px 0 rgb(255 255 255 / 0.20),
                 0 10px 32px -10px rgb(0 0 0 / 0.32);
-            --masthead-stamp-dark-wallpaper-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18),
-                inset 0 1px 0 rgb(255 255 255 / 0.20),
-                0 4px 16px -6px rgb(0 0 0 / 0.22);
-            --masthead-stamp-dark-wallpaper-hover-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.28),
-                inset 0 1px 0 rgb(255 255 255 / 0.30),
-                0 6px 20px -6px rgb(0 0 0 / 0.28);
         }
     }
 }
@@ -1145,7 +1116,6 @@
     --material-obsidian-filter: var(--glass-obsidian-filter);
     --material-pearl-regular: color-mix(in srgb, #FFFFFF var(--glass-pearl-fill), transparent);
     --material-pearl-filter: var(--glass-pearl-filter);
-    --masthead-stamp-dark-bg: color-mix(in oklab, var(--material-solid) var(--masthead-stamp-dark-fill), transparent);
     --shadow-material-edge: inset 0 1px 0 var(--glass-edge-top), inset 0 0 0 1px var(--glass-edge-ring), inset 0 -1px 0 var(--glass-edge-bottom);
     --shadow-material-glyph: 0 var(--space-hairline) var(--space-half) var(--glass-edge-bottom);
     --shadow-glyph-edge: inset 0 0 0 var(--space-hairline) var(--glyph-edge);
@@ -1415,7 +1385,6 @@
         --glass-regular-dark: 100%;
         --glass-thick-light: 100%;
         --glass-thick-dark: 100%;
-        --masthead-stamp-dark-fill: 100%;
         --glass-regular-filter-light: none;
         --glass-regular-filter-dark: none;
         --material-regular-sheen-scale: 0;
@@ -1442,7 +1411,6 @@
         --glass-regular-dark: 100%;
         --glass-thick-light: 100%;
         --glass-thick-dark: 100%;
-        --masthead-stamp-dark-fill: 100%;
         --glass-regular-filter-light: none;
         --glass-regular-filter-dark: none;
         --material-regular-sheen-scale: 0;
@@ -1477,7 +1445,6 @@
     --glass-regular-dark: 100%;
     --glass-thick-light: 100%;
     --glass-thick-dark: 100%;
-    --masthead-stamp-dark-fill: 100%;
     --glass-regular-filter-light: none;
     --glass-regular-filter-dark: none;
     --material-regular-sheen-scale: 0;
@@ -1580,7 +1547,7 @@
 }
 
 @media (forced-colors: none) and (prefers-reduced-transparency: no-preference) {
-    :root:not([data-glass="off"]):not([data-contrast="more"]) :is(.home-masthead__column, .home-masthead__sheet)[data-ink-polarity="light"] {
+    :root:not([data-glass="off"]):not([data-contrast="more"]) :is(.home-masthead__column, .home-masthead__sheet, .home-masthead__stamp)[data-ink-polarity="light"] {
         color-scheme: light;
         color: var(--foreground);
         --foreground: #1D1D1F;
@@ -1619,7 +1586,7 @@
         --border-control: #86868B;
     }
 
-    :root:not([data-glass="off"]):not([data-contrast="more"]) :is(.home-masthead__column, .home-masthead__sheet)[data-ink-polarity="dark"] {
+    :root:not([data-glass="off"]):not([data-contrast="more"]) :is(.home-masthead__column, .home-masthead__sheet, .home-masthead__stamp)[data-ink-polarity="dark"] {
         color-scheme: dark;
         color: var(--foreground);
         --foreground: #F5F5F7;

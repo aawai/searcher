@@ -125,9 +125,6 @@ Deno.test("glass tiers form a monotonic, clearly separated progression with tran
                 d.get("--glass-regular-light")!,
             );
             const regularDark = parsePercentage(d.get("--glass-regular-dark")!);
-            const stampDark = parsePercentage(
-                d.get("--masthead-stamp-dark-fill")!,
-            );
             const thickLight = parsePercentage(d.get("--glass-thick-light")!);
             const thickDark = parsePercentage(d.get("--glass-thick-dark")!);
             const sheenScale = Number(
@@ -148,7 +145,6 @@ Deno.test("glass tiers form a monotonic, clearly separated progression with tran
                 {
                     regularLight,
                     regularDark,
-                    stampDark,
                     thickLight,
                     thickDark,
                     blurLight,
@@ -162,7 +158,6 @@ Deno.test("glass tiers form a monotonic, clearly separated progression with tran
         {
             regularLight: number;
             regularDark: number;
-            stampDark: number;
             thickLight: number;
             thickDark: number;
             blurLight: number;
@@ -185,12 +180,6 @@ Deno.test("glass tiers form a monotonic, clearly separated progression with tran
             `expected ${order[i]} dark fill (${hi.regularDark}%) > ${
                 order[i + 1]
             } (${lo.regularDark}%)`,
-        );
-        assert(
-            hi.stampDark > lo.stampDark,
-            `expected ${order[i]} stamp dark fill (${hi.stampDark}%) > ${
-                order[i + 1]
-            } (${lo.stampDark}%)`,
         );
         assert(
             hi.topWhiteLightPct - lo.topWhiteLightPct >= 10,
