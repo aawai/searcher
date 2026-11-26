@@ -18,11 +18,16 @@ import {
     ArrowLeft,
     ArrowRight,
     ArrowUp,
+    ChevronRight,
     ExternalLink,
+    EyeOff,
     type Home,
     Minimize2,
     MoreHorizontal,
     PanelBottom,
+    PanelLeft,
+    PanelRight,
+    PanelTop,
     PinOff,
     Settings2,
     SquareArrowOutUpRight,
@@ -110,6 +115,17 @@ const COMPAT_MOUSE_WINDOW_MS = 500;
 /** One arrow press moves the collapsed ball this share of its vertical range. */
 const BALL_KEY_STEP = 0.05;
 
+const DOCK_EDGE_OPTIONS: ReadonlyArray<{
+    edge: DockEdge;
+    label: string;
+    icon: typeof PanelBottom;
+}> = [
+    { edge: "bottom", label: "底部", icon: PanelBottom },
+    { edge: "top", label: "顶部", icon: PanelTop },
+    { edge: "left", label: "左侧", icon: PanelLeft },
+    { edge: "right", label: "右侧", icon: PanelRight },
+];
+
 function mayComeFromTouch(event: MouseEvent): boolean {
     const capabilities = "sourceCapabilities" in event
         ? event.sourceCapabilities
@@ -131,6 +147,7 @@ function SortableSystemItem({
     isActive,
     windowStatus,
     aiDisabled,
+    tooltipSide,
     onClick,
     onContextMenu,
 }: {
@@ -140,6 +157,7 @@ function SortableSystemItem({
     isActive: boolean;
     windowStatus?: "visible" | "minimized";
     aiDisabled: boolean;
+    tooltipSide: "top" | "bottom" | "left" | "right";
     onClick: () => void;
     onContextMenu: (event: ReactMouseEvent<HTMLButtonElement>) => void;
 }) {
@@ -192,6 +210,7 @@ function SortableSystemItem({
                     >
                         <Icon
                             size="1em"
+                            strokeWidth={1.75}
                             className="icon-lg"
                             aria-hidden="true"
                         />
@@ -199,17 +218,21 @@ function SortableSystemItem({
                     </button>
                 }
             />
-            <TooltipContent>{tooltipText}</TooltipContent>
+            <TooltipContent side={tooltipSide} sideOffset={10}>
+                {tooltipText}
+            </TooltipContent>
         </Tooltip>
     );
 }
 
 function SortableAppItem({
     app,
+    tooltipSide,
     onOpen,
     onContextMenu,
 }: {
     app: ExtendedWebApp;
+    tooltipSide: "top" | "bottom" | "left" | "right";
     onOpen: (app: ExtendedWebApp) => void;
     onContextMenu: (event: ReactMouseEvent<HTMLButtonElement>) => void;
 }) {
@@ -250,7 +273,9 @@ function SortableAppItem({
                     </button>
                 }
             />
-            <TooltipContent>{app.name}</TooltipContent>
+            <TooltipContent side={tooltipSide} sideOffset={10}>
+                {app.name}
+            </TooltipContent>
         </Tooltip>
     );
 }
@@ -279,10 +304,16 @@ export function WorkspaceDock(
     const modalActive = useEscapeLayerActive("overlay");
     const [keyboardOpen, setKeyboardOpen] = useState(false);
     const [managementOpen, setManagementOpen] = useState(false);
+    const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+    const [isDraggingItem, setIsDraggingItem] = useState(false);
     const [appsOverflowing, setAppsOverflowing] = useState(false);
     const [itemMenu, setItemMenu] = useState<DockItemMenu | null>(null);
     const [ballMenuOpen, setBallMenuOpen] = useState(false);
+    const [autoHidden, setAutoHidden] = useState(false);
     const optionsRef = useRef<HTMLButtonElement | null>(null);
+    const dockHoveredRef = useRef(false);
+    const dockFocusedRef = useRef(false);
+    const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const touchActiveRef = useRef(false);
     const multipleTouchRef = useRef(false);
     const touchContextDeadlineRef = useRef(0);
@@ -383,12 +414,71 @@ export function WorkspaceDock(
 
     const effectiveEdge: DockEdge = isMobile ? "bottom" : layout.edge;
     const isCollapsed = layout.collapsed;
+    const effectiveAutoHide = !isMobile && layout.autoHide && !isCollapsed;
+    const keepDockRevealed = optionsMenuOpen || Boolean(itemMenu) ||
+        managementOpen || isDraggingItem || Boolean(error);
     const barPresence = usePresence<HTMLElement>(isMounted && !isCollapsed);
     const ballPresence = usePresence<HTMLButtonElement>(
         isMounted && isCollapsed,
     );
     const systemGroupRef = useRef<HTMLDivElement | null>(null);
     const appsGroupRef = useRef<HTMLDivElement | null>(null);
+
+    const clearHideTimer = useCallback(() => {
+        if (hideTimerRef.current !== null) {
+            clearTimeout(hideTimerRef.current);
+            hideTimerRef.current = null;
+        }
+    }, []);
+
+    const revealDock = useCallback(() => {
+        clearHideTimer();
+        setAutoHidden(false);
+    }, [clearHideTimer]);
+
+    const scheduleHide = useCallback((delay = 320) => {
+        clearHideTimer();
+        if (
+            !effectiveAutoHide ||
+            keepDockRevealed ||
+            dockHoveredRef.current ||
+            dockFocusedRef.current
+        ) {
+            return;
+        }
+        hideTimerRef.current = setTimeout(() => {
+            hideTimerRef.current = null;
+            if (
+                effectiveAutoHide &&
+                !keepDockRevealed &&
+                !dockHoveredRef.current &&
+                !dockFocusedRef.current
+            ) {
+                setAutoHidden(true);
+            }
+        }, delay);
+    }, [clearHideTimer, effectiveAutoHide, keepDockRevealed]);
+
+    useEffect(() => {
+        if (!effectiveAutoHide) {
+            clearHideTimer();
+            setAutoHidden(false);
+            return;
+        }
+        if (keepDockRevealed) {
+            revealDock();
+        } else if (!dockHoveredRef.current && !dockFocusedRef.current) {
+            scheduleHide(400);
+        }
+    }, [
+        effectiveAutoHide,
+        keepDockRevealed,
+        clearHideTimer,
+        revealDock,
+        scheduleHide,
+    ]);
+
+    useEffect(() => () => clearHideTimer(), [clearHideTimer]);
 
     // Visible system items in configured order
     const visibleSystemIds = useMemo(
@@ -422,7 +512,9 @@ export function WorkspaceDock(
         if (!group) return;
         const isVertical = effectiveEdge === "left" ||
             effectiveEdge === "right";
-        if (!barPresence.mounted || visibleSystemIds.length === 0 || isVertical) {
+        if (
+            !barPresence.mounted || visibleSystemIds.length === 0 || isVertical
+        ) {
             group.removeAttribute("data-overflow-start");
             group.removeAttribute("data-overflow-end");
             return;
@@ -440,10 +532,25 @@ export function WorkspaceDock(
         for (const child of group.children) {
             observer.observe(child);
         }
+        const onWheel = (event: WheelEvent) => {
+            if (
+                Math.abs(event.deltaY) > Math.abs(event.deltaX) &&
+                group.scrollWidth > group.clientWidth
+            ) {
+                event.preventDefault();
+                group.scrollLeft += event.deltaY;
+            }
+        };
+        if (!isVertical) {
+            group.addEventListener("wheel", onWheel, { passive: false });
+        }
         group.addEventListener("scroll", markEdges, { passive: true });
         return () => {
             observer.disconnect();
             group.removeEventListener("scroll", markEdges);
+            if (!isVertical) {
+                group.removeEventListener("wheel", onWheel);
+            }
         };
     }, [barPresence.mounted, visibleSystemIds.length, effectiveEdge]);
 
@@ -478,10 +585,25 @@ export function WorkspaceDock(
         for (const child of group.children) {
             observer.observe(child);
         }
+        const onWheel = (event: WheelEvent) => {
+            if (
+                Math.abs(event.deltaY) > Math.abs(event.deltaX) &&
+                group.scrollWidth > group.clientWidth
+            ) {
+                event.preventDefault();
+                group.scrollLeft += event.deltaY;
+            }
+        };
+        if (!isVertical) {
+            group.addEventListener("wheel", onWheel, { passive: false });
+        }
         group.addEventListener("scroll", markEdges, { passive: true });
         return () => {
             observer.disconnect();
             group.removeEventListener("scroll", markEdges);
+            if (!isVertical) {
+                group.removeEventListener("wheel", onWheel);
+            }
         };
     }, [barPresence.mounted, pinnedApps.length, effectiveEdge]);
 
@@ -505,6 +627,13 @@ export function WorkspaceDock(
         );
         if (!container) return clear;
         const measure = () => {
+            if (effectiveAutoHide) {
+                for (const edge of edges) {
+                    root.style.setProperty(`--dock-inset-${edge}`, "0px");
+                }
+                shell?.setAttribute("data-dock-edge", effectiveEdge);
+                return;
+            }
             const rect = container.getBoundingClientRect();
             const insets = {
                 top: rect.bottom,
@@ -533,7 +662,13 @@ export function WorkspaceDock(
             globalThis.removeEventListener("resize", measure);
             clear();
         };
-    }, [isMounted, isCollapsed, barPresence.mounted, effectiveEdge]);
+    }, [
+        isMounted,
+        isCollapsed,
+        barPresence.mounted,
+        effectiveEdge,
+        effectiveAutoHide,
+    ]);
 
     // Mod+. global keyboard shortcut
     useEffect(() => {
@@ -563,6 +698,7 @@ export function WorkspaceDock(
             if (layout.collapsed) {
                 setLayout({ collapsed: false });
             }
+            revealDock();
             requestAnimationFrame(() => {
                 const dockNav = document.querySelector<HTMLElement>(
                     "nav[aria-label='工作区任务栏']",
@@ -589,6 +725,7 @@ export function WorkspaceDock(
         modalActive,
         layout.collapsed,
         setLayout,
+        revealDock,
     ]);
 
     // dnd-kit sensors configuration
@@ -945,6 +1082,13 @@ export function WorkspaceDock(
         : "left";
     const PreviousIcon = vertical ? ArrowUp : ArrowLeft;
     const NextIcon = vertical ? ArrowDown : ArrowRight;
+    const BallIcon = layout.edge === "left"
+        ? PanelLeft
+        : layout.edge === "right"
+        ? PanelRight
+        : layout.edge === "top"
+        ? PanelTop
+        : PanelBottom;
 
     return (
         <>
@@ -986,7 +1130,7 @@ export function WorkspaceDock(
                         setLayout({ collapsed: false });
                     }}
                 >
-                    <PanelBottom
+                    <BallIcon
                         size="1em"
                         className="icon-lg"
                         aria-hidden="true"
@@ -1015,9 +1159,12 @@ export function WorkspaceDock(
                         <DropdownMenuPositioner
                             anchor={ballPresence.ref}
                             side={layout.ballSide === "left" ? "right" : "left"}
-                            sideOffset={8}
+                            sideOffset={12}
                         >
-                            <DropdownMenuPopup aria-label="悬浮球位置">
+                            <DropdownMenuPopup
+                                aria-label="悬浮球位置"
+                                className="dock-context-menu"
+                            >
                                 <DropdownMenuRadioGroup
                                     aria-label="停靠侧"
                                     value={layout.ballSide}
@@ -1078,16 +1225,54 @@ export function WorkspaceDock(
                 <aside
                     className="dock-container"
                     data-edge={effectiveEdge}
+                    data-auto-hide={effectiveAutoHide ? "true" : undefined}
+                    data-auto-hidden={effectiveAutoHide && autoHidden
+                        ? "true"
+                        : undefined}
                     data-modal-active={modalActive ? "true" : undefined}
                     aria-hidden={modalActive ? "true" : undefined}
                     inert={barPresence.ending || undefined}
+                    onPointerEnter={() => {
+                        dockHoveredRef.current = true;
+                        if (effectiveAutoHide) revealDock();
+                    }}
+                    onPointerLeave={() => {
+                        dockHoveredRef.current = false;
+                        if (effectiveAutoHide) scheduleHide();
+                    }}
+                    onFocusCapture={() => {
+                        dockFocusedRef.current = true;
+                        if (effectiveAutoHide) revealDock();
+                    }}
+                    onBlurCapture={(event) => {
+                        if (
+                            event.relatedTarget instanceof Node &&
+                            event.currentTarget.contains(event.relatedTarget)
+                        ) {
+                            return;
+                        }
+                        dockFocusedRef.current = false;
+                        if (effectiveAutoHide) scheduleHide();
+                    }}
                 >
+                    {effectiveAutoHide && (
+                        <div
+                            className="dock-edge-trigger"
+                            data-visible={autoHidden ? "true" : undefined}
+                            onPointerEnter={revealDock}
+                            onClick={revealDock}
+                            aria-hidden="true"
+                        >
+                            <span className="dock-peek-handle" />
+                        </div>
+                    )}
                     <DndContext
                         accessibility={keyboardDragAccessibility}
                         sensors={sensors}
                         collisionDetection={closestCenter}
                         onDragStart={() => {
                             touchMovedRef.current = false;
+                            setIsDraggingItem(true);
                         }}
                         onDragMove={(event) => {
                             if (
@@ -1097,7 +1282,13 @@ export function WorkspaceDock(
                                 touchMovedRef.current = true;
                             }
                         }}
-                        onDragEnd={handleDragEnd}
+                        onDragCancel={() => {
+                            setIsDraggingItem(false);
+                        }}
+                        onDragEnd={(event) => {
+                            setIsDraggingItem(false);
+                            handleDragEnd(event);
+                        }}
                     >
                         <nav
                             ref={barPresence.ref}
@@ -1164,6 +1355,7 @@ export function WorkspaceDock(
                                                         : undefined}
                                                     aiDisabled={id === "ai" &&
                                                         !aiAvailable}
+                                                    tooltipSide={menuSide}
                                                     onClick={() =>
                                                         handleSystemNavigate(
                                                             id,
@@ -1205,6 +1397,7 @@ export function WorkspaceDock(
                                             <SortableAppItem
                                                 key={app.id}
                                                 app={app}
+                                                tooltipSide={menuSide}
                                                 onOpen={handleOpenApp}
                                                 onContextMenu={(event) =>
                                                     openItemContextMenu(event, {
@@ -1224,7 +1417,10 @@ export function WorkspaceDock(
                             )}
 
                             {/* Options / Management dropdown menu */}
-                            <DropdownMenu>
+                            <DropdownMenu
+                                open={optionsMenuOpen}
+                                onOpenChange={setOptionsMenuOpen}
+                            >
                                 <DropdownMenuTrigger
                                     render={
                                         <button
@@ -1243,9 +1439,98 @@ export function WorkspaceDock(
                                     }
                                 />
                                 <DropdownMenuContent
-                                    sideOffset={8}
-                                    className="dock-options-menu"
+                                    side={menuSide}
+                                    align="end"
+                                    sideOffset={12}
+                                    className="dock-options-menu dock-control-popover"
                                 >
+                                    {!isMobile && (
+                                        <>
+                                            <div
+                                                className="dock-control-section"
+                                                onClick={(e) =>
+                                                    e.stopPropagation()}
+                                            >
+                                                <div className="dock-control-heading">
+                                                    <span>停靠位置</span>
+                                                    <span className="dock-control-value">
+                                                        {DOCK_EDGE_OPTIONS
+                                                            .find((
+                                                                item,
+                                                            ) => item
+                                                                .edge ===
+                                                                layout.edge
+                                                            )?.label ??
+                                                            "底部"}
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    className="dock-edge-grid"
+                                                    role="group"
+                                                    aria-label="停靠位置"
+                                                >
+                                                    {DOCK_EDGE_OPTIONS.map((
+                                                        {
+                                                            edge,
+                                                            label,
+                                                            icon: EdgeIcon,
+                                                        },
+                                                    ) => (
+                                                        <button
+                                                            key={edge}
+                                                            type="button"
+                                                            className="dock-edge-btn"
+                                                            data-active={layout
+                                                                    .edge ===
+                                                                    edge
+                                                                ? "true"
+                                                                : undefined}
+                                                            data-dock-quick-edge={edge}
+                                                            aria-label={`停靠${label}`}
+                                                            aria-pressed={layout
+                                                                .edge ===
+                                                                edge}
+                                                            title={label}
+                                                            onClick={() =>
+                                                                setLayout({
+                                                                    edge,
+                                                                })}
+                                                        >
+                                                            <EdgeIcon
+                                                                size="1em"
+                                                                strokeWidth={1.75}
+                                                                className="icon-md"
+                                                                aria-hidden="true"
+                                                            />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <div className="dock-control-row">
+                                                    <span className="dock-control-row-label">
+                                                        <EyeOff
+                                                            size="1em"
+                                                            className="icon-sm"
+                                                            aria-hidden="true"
+                                                        />
+                                                        自动隐退
+                                                    </span>
+                                                    <Switch
+                                                        size="sm"
+                                                        checked={layout
+                                                            .autoHide}
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) => setLayout({
+                                                            autoHide: checked,
+                                                        })}
+                                                        aria-label="自动隐退任务栏"
+                                                        data-dock-quick-auto-hide
+                                                    />
+                                                </div>
+                                            </div>
+                                            <DropdownMenuSeparator />
+                                        </>
+                                    )}
                                     <DropdownMenuItem
                                         aria-label="管理任务栏"
                                         onClick={() => setManagementOpen(true)}
@@ -1255,7 +1540,14 @@ export function WorkspaceDock(
                                             className="icon-sm"
                                             aria-hidden="true"
                                         />
-                                        管理
+                                        <span className="dock-menu-item-text">
+                                            自定义入口
+                                        </span>
+                                        <ChevronRight
+                                            size="1em"
+                                            className="icon-sm dock-menu-item-trailing"
+                                            aria-hidden="true"
+                                        />
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         aria-label="收起任务栏"
@@ -1268,7 +1560,7 @@ export function WorkspaceDock(
                                             className="icon-sm"
                                             aria-hidden="true"
                                         />
-                                        收起
+                                        收起为悬浮球
                                     </DropdownMenuItem>
                                     {appsOverflowing &&
                                         pinnedApps.length > 0 && (
@@ -1395,7 +1687,10 @@ export function WorkspaceDock(
                                             </button>
                                         }
                                     />
-                                    <TooltipContent>
+                                    <TooltipContent
+                                        side={menuSide}
+                                        sideOffset={10}
+                                    >
                                         同步提示：{error}（可重试）
                                     </TooltipContent>
                                 </Tooltip>
@@ -1426,10 +1721,11 @@ export function WorkspaceDock(
                         <DropdownMenuPositioner
                             anchor={itemMenu.anchor}
                             side={menuSide}
-                            sideOffset={8}
+                            sideOffset={12}
                         >
                             <DropdownMenuPopup
                                 aria-label={`${menuLabel} 的操作`}
+                                className="dock-context-menu"
                                 data-dock-item-menu
                             >
                                 <div className="menu-label dock-item-menu-label">
@@ -1584,6 +1880,18 @@ export function WorkspaceDock(
                                             右侧
                                         </RadioGroupItem>
                                     </RadioGroup>
+                                </SettingsRow>
+                                <SettingsRow
+                                    title="自动隐退"
+                                    description="空闲时贴边隐藏，移近边缘或按快捷键唤出"
+                                >
+                                    <Switch
+                                        checked={layout.autoHide}
+                                        onCheckedChange={(checked) =>
+                                            setLayout({ autoHide: checked })}
+                                        aria-label="自动隐退任务栏"
+                                        data-dock-auto-hide-toggle
+                                    />
                                 </SettingsRow>
                             </SettingsGroup>
                         )}

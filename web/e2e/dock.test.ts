@@ -736,7 +736,16 @@ Deno.test("workspace dock contracts", async (t) => {
                         .click();
                     const modal = dockManagementModal(page);
                     await modal.waitFor({ state: "visible" });
-                    assertEquals(await modal.getByRole("switch").count(), 6);
+                    assertEquals(
+                        await modal.locator("[data-dock-system-toggle]")
+                            .count(),
+                        6,
+                    );
+                    assertEquals(
+                        await modal.locator("[data-dock-auto-hide-toggle]")
+                            .count(),
+                        1,
+                    );
                     assertEquals(
                         await modal.getByRole("radiogroup", {
                             name: "任务栏位置",

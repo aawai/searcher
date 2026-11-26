@@ -96,6 +96,7 @@
     --elevation-wallpaper: -1;
     --elevation-canvas: 10;
     --elevation-dock: 30;
+    --elevation-dock-overlay: 45;
     --elevation-workspace: 40;
     --elevation-sheet-backdrop: 49;
     --elevation-sheet: 50;
@@ -219,7 +220,7 @@
     /* Dock geometry and layout insets: compact on fine pointers, 44px targets on coarse. */
     --dock-size: 44px;
     --dock-item-size: 36px;
-    --dock-glyph-size: var(--space-6);
+    --dock-glyph-size: 22px;
     --dock-ball-size: 44px;
     --dock-inset-top: 0px;
     --dock-inset-bottom: 0px;
@@ -346,6 +347,26 @@
     --search-frame-dark-wallpaper-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
     --search-frame-dark-wallpaper-focus-within-shadow: var(--shadow-elevation-material);
     --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --dock-light-shadow: inset 0 1px 0 rgb(255 255 255 / 0.92),
+        inset 0 0 0 1px rgb(255 255 255 / 0.56),
+        0 0 0 0.5px rgb(29 29 31 / 0.08),
+        0 10px 28px -10px rgb(15 23 42 / 0.14),
+        0 2px 6px -2px rgb(15 23 42 / 0.06);
+    --dock-light-glyph-edge: inset 0 0 0 0.5px rgb(0 0 0 / 0.07);
+    --dock-dark-glyph-edge: inset 0 0 0 0.5px rgb(255 255 255 / 0.12);
+    --dock-peek-bg: rgb(29 29 31 / 0.24);
+    --dock-peek-bg-hover: rgb(29 29 31 / 0.44);
+    --dock-peek-edge: rgb(255 255 255 / 0.72);
+    --dock-popover-light-shadow: inset 0 1px 0 rgb(255 255 255 / 0.94),
+        inset 0 0 0 1px rgb(255 255 255 / 0.58),
+        0 0 0 0.5px rgb(29 29 31 / 0.10),
+        0 16px 40px -12px rgb(15 23 42 / 0.18),
+        0 3px 10px -2px rgb(15 23 42 / 0.08);
+    --dock-popover-dark-shadow: inset 0 1px 0 rgb(255 252 246 / 0.14),
+        inset 0 0 0 1px rgb(255 252 246 / 0.08),
+        0 0 0 1px rgb(0 0 0 / 0.52),
+        0 18px 46px -12px rgb(0 0 0 / 0.76),
+        0 4px 12px -2px rgb(0 0 0 / 0.45);
     --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.24),
         inset 0 0 0 1px rgb(255 255 255 / 0.14),
@@ -464,6 +485,9 @@
     --wallpaper-grain-opacity: 0.052;
     --wallpaper-focus-scrim: 0.46;
     --dock-active-glow: 0 0 7px color-mix(in oklab, var(--accent) 55%, transparent);
+    --dock-peek-bg: rgb(255 255 255 / 0.26);
+    --dock-peek-bg-hover: rgb(255 255 255 / 0.52);
+    --dock-peek-edge: rgb(0 0 0 / 0.45);
 }
 
 /* Each palette owns both themes; color-scheme selects the light-dark pair.
@@ -771,6 +795,26 @@
     --search-frame-dark-wallpaper-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
     --search-frame-dark-wallpaper-focus-within-shadow: var(--shadow-elevation-material);
     --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --dock-light-shadow: inset 0 1px 0 rgb(255 255 255 / 0.92),
+        inset 0 0 0 1px rgb(255 255 255 / 0.56),
+        0 0 0 0.5px rgb(29 29 31 / 0.08),
+        0 10px 28px -10px rgb(15 23 42 / 0.14),
+        0 2px 6px -2px rgb(15 23 42 / 0.06);
+    --dock-light-glyph-edge: inset 0 0 0 0.5px rgb(0 0 0 / 0.07);
+    --dock-dark-glyph-edge: inset 0 0 0 0.5px rgb(255 255 255 / 0.12);
+    --dock-peek-bg: rgb(29 29 31 / 0.24);
+    --dock-peek-bg-hover: rgb(29 29 31 / 0.44);
+    --dock-peek-edge: rgb(255 255 255 / 0.72);
+    --dock-popover-light-shadow: inset 0 1px 0 rgb(255 255 255 / 0.94),
+        inset 0 0 0 1px rgb(255 255 255 / 0.58),
+        0 0 0 0.5px rgb(29 29 31 / 0.10),
+        0 16px 40px -12px rgb(15 23 42 / 0.18),
+        0 3px 10px -2px rgb(15 23 42 / 0.08);
+    --dock-popover-dark-shadow: inset 0 1px 0 rgb(255 252 246 / 0.14),
+        inset 0 0 0 1px rgb(255 252 246 / 0.08),
+        0 0 0 1px rgb(0 0 0 / 0.52),
+        0 18px 46px -12px rgb(0 0 0 / 0.76),
+        0 4px 12px -2px rgb(0 0 0 / 0.45);
     --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-hover-shadow: var(--shadow-elevation-material);
@@ -780,6 +824,12 @@
     --wallpaper-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
+    --dock-light-shadow: var(--shadow-elevation-material);
+    --dock-peek-bg: var(--foreground);
+    --dock-peek-bg-hover: var(--foreground);
+    --dock-peek-edge: var(--background);
+    --dock-popover-light-shadow: var(--shadow-elevation-floating);
+    --dock-popover-dark-shadow: var(--shadow-elevation-floating);
     --surface-code-well: var(--surface-soft);
 }
 [data-theme="dark"][data-contrast="more"] {
@@ -836,6 +886,26 @@
     --search-frame-dark-wallpaper-focus-shadow: 0 0 0 2px var(--ring), var(--shadow-material-edge), var(--shadow-l2);
     --search-frame-dark-wallpaper-focus-within-shadow: var(--shadow-elevation-material);
     --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --dock-light-shadow: inset 0 1px 0 rgb(255 255 255 / 0.92),
+        inset 0 0 0 1px rgb(255 255 255 / 0.56),
+        0 0 0 0.5px rgb(29 29 31 / 0.08),
+        0 10px 28px -10px rgb(15 23 42 / 0.14),
+        0 2px 6px -2px rgb(15 23 42 / 0.06);
+    --dock-light-glyph-edge: inset 0 0 0 0.5px rgb(0 0 0 / 0.07);
+    --dock-dark-glyph-edge: inset 0 0 0 0.5px rgb(255 255 255 / 0.12);
+    --dock-peek-bg: rgb(29 29 31 / 0.24);
+    --dock-peek-bg-hover: rgb(29 29 31 / 0.44);
+    --dock-peek-edge: rgb(255 255 255 / 0.72);
+    --dock-popover-light-shadow: inset 0 1px 0 rgb(255 255 255 / 0.94),
+        inset 0 0 0 1px rgb(255 255 255 / 0.58),
+        0 0 0 0.5px rgb(29 29 31 / 0.10),
+        0 16px 40px -12px rgb(15 23 42 / 0.18),
+        0 3px 10px -2px rgb(15 23 42 / 0.08);
+    --dock-popover-dark-shadow: inset 0 1px 0 rgb(255 252 246 / 0.14),
+        inset 0 0 0 1px rgb(255 252 246 / 0.08),
+        0 0 0 1px rgb(0 0 0 / 0.52),
+        0 18px 46px -12px rgb(0 0 0 / 0.76),
+        0 4px 12px -2px rgb(0 0 0 / 0.45);
     --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-shadow: var(--shadow-elevation-material);
     --search-frame-obsidian-hover-shadow: var(--shadow-elevation-material);
@@ -845,6 +915,12 @@
     --wallpaper-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
+    --dock-light-shadow: var(--shadow-elevation-material);
+    --dock-peek-bg: var(--foreground);
+    --dock-peek-bg-hover: var(--foreground);
+    --dock-peek-edge: var(--background);
+    --dock-popover-light-shadow: var(--shadow-elevation-floating);
+    --dock-popover-dark-shadow: var(--shadow-elevation-floating);
     --surface-code-well: var(--surface-soft);
 }
 
@@ -941,6 +1017,7 @@
     --shape-suggestions-inner-radius: calc(var(--shape-suggestions-radius) - var(--space-1));
     --shape-dock-radius: var(--radius-pill);
     --shape-dock-inner-radius: var(--radius-pill);
+    --radius-dock-glyph: calc(var(--dock-glyph-size) * 0.32);
     --shape-plate-radius: var(--radius-lg);
     --space-search-inset-inline: 8px;
 }

@@ -63,6 +63,7 @@ Deno.test("shared/dock: normalizeDockLayout migrates legacy collapsible, preserv
         collapsed: true,
         ballSide: "right",
         ballY: 0.75,
+        autoHide: false,
     });
 
     const modernCollapsed = normalizeDockLayout({
@@ -70,12 +71,14 @@ Deno.test("shared/dock: normalizeDockLayout migrates legacy collapsible, preserv
         collapsed: true,
         ballSide: "left",
         ballY: 0.25,
+        autoHide: true,
     });
     assertEquals(modernCollapsed, {
         edge: "left",
         collapsed: true,
         ballSide: "left",
         ballY: 0.25,
+        autoHide: true,
     });
 
     // Out of bounds ballY clamped
@@ -91,6 +94,7 @@ Deno.test("shared/dock: normalizeDockLayout migrates legacy collapsible, preserv
         collapsed: "yes",
         ballSide: "center",
         ballY: Number.NaN,
+        autoHide: "yes",
     });
     assertEquals(fallback, DEFAULT_DOCK_LAYOUT);
 });
@@ -108,4 +112,5 @@ Deno.test("shared/dock: legacy fixed layout remains expanded after migration", (
     assertEquals(restored.edge, "right");
     assertEquals(restored.ballSide, "right");
     assertEquals(restored.ballY, 0.75);
+    assertEquals(restored.autoHide, false);
 });

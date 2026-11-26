@@ -216,7 +216,9 @@ export function WindowFrame(
             // Keep window chrome below the global topbar utility controls.
             const topbar = document.querySelector<HTMLElement>(".topbar");
             if (topbar) reserve(topbar, "top", topbarGap);
-            if (dock) reserve(dock, dock.dataset.edge ?? "bottom");
+            if (dock && dock.dataset.autoHide !== "true") {
+                reserve(dock, dock.dataset.edge ?? "bottom");
+            }
             if (ball) reserve(ball, ball.dataset.ballSide ?? "left");
             // A connection banner is chrome with its own action; keep it usable.
             const banner = document.querySelector<HTMLElement>(
@@ -303,7 +305,13 @@ export function WindowFrame(
             childList: true,
             subtree: true,
             attributes: true,
-            attributeFilter: ["data-edge", "data-ball-side", "inert", "style"],
+            attributeFilter: [
+                "data-edge",
+                "data-auto-hide",
+                "data-ball-side",
+                "inert",
+                "style",
+            ],
         });
         return () => {
             globalThis.removeEventListener("resize", measure);
