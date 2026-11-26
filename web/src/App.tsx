@@ -21,6 +21,7 @@ import {
 import { AppState, useAppState } from "./app/state.tsx";
 import { UserAvatar } from "./components/searcher/UserAvatar.tsx";
 import { WallpaperSurface } from "./components/wallpaper/WallpaperSurface.tsx";
+import { resolveBackdropPolarity } from "./design-system/wallpaper-accent.ts";
 import {
     DEFAULT_WALLPAPER_PRESENTATION,
     wallpaperPresentation,
@@ -225,6 +226,8 @@ function Layout() {
         appearance,
         resolvedScheme,
         effectiveWallpaper,
+        wallpaperLightness,
+        wallpaperTopBand,
         setAppearance,
         logout,
         syncFailed,
@@ -317,6 +320,18 @@ function Layout() {
             appearance.wallpaperPresentations,
         )
         : DEFAULT_WALLPAPER_PRESENTATION;
+    const wallpaperPolarity = effectiveWallpaper.hasImageOverlay
+        ? resolveBackdropPolarity({
+            scheme: resolvedScheme,
+            lightness: wallpaperLightness,
+        })
+        : undefined;
+    const topBarPolarity = effectiveWallpaper.hasImageOverlay
+        ? resolveBackdropPolarity({
+            scheme: resolvedScheme,
+            lightness: wallpaperTopBand?.lightness ?? wallpaperLightness,
+        })
+        : undefined;
     return (
         <DesktopCoordinator aiModels={aiModels}>
             <div
@@ -326,12 +341,15 @@ function Layout() {
                         effectiveWallpaper.hasImageOverlay
                     ? "true"
                     : undefined}
+                data-wallpaper-polarity={hasVisibleDesktop
+                    ? wallpaperPolarity
+                    : undefined}
             >
                 {showWallpaper && (
                     <WallpaperSurface
                         source={effectiveWallpaper.source}
                         mode={effectiveWallpaper.renderMode}
-                        nativeDarkTone={effectiveWallpaper.nativeDarkTone}
+                        backdropPolarity={wallpaperPolarity}
                         botanicalScene={appearance.botanicalScene}
                         presentation={presentation}
                         derived={!hasVisibleDesktop && isAuthPage}
@@ -343,7 +361,12 @@ function Layout() {
                 <a href="#main-content" className="skip-link">
                     跳到主要内容
                 </a>
-                <header className="topbar">
+                <header
+                    className="topbar"
+                    data-ink-polarity={hasVisibleDesktop
+                        ? topBarPolarity
+                        : undefined}
+                >
                     <Link
                         className="wordmark-small"
                         to={routes.home}
@@ -442,7 +465,10 @@ function Layout() {
                                         className="user-avatar-trigger"
                                         aria-label={`用户菜单：${user.displayName}`}
                                     >
-                                        <span className="user-avatar-badge">
+                                        <span
+                                            className="user-avatar-badge"
+                                            data-theme={resolvedScheme}
+                                        >
                                             <UserAvatar user={user} />
                                         </span>
                                     </DropdownMenuTrigger>

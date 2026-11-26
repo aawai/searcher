@@ -41,16 +41,6 @@ export interface HighContrastAccent {
 export interface WallpaperDarkTone {
     /** Mean OKLab perceptual lightness (0 = black, 1 = white) across opaque pixels. */
     readonly lightness: number;
-    /** CSS filter applied to `.wallpaper-surface__image` under `[data-theme="dark"]`. */
-    readonly filter: string;
-    /** CSS filter for user-chosen `custom` dark wallpapers (preserves native colour on dark/mid-tone art). */
-    readonly customFilter: string;
-    /** Centre ambient shade mix percentage (0-100). */
-    readonly centerMix: number;
-    /** Outer vignette shade mix percentage (0-100). */
-    readonly edgeMix: number;
-    /** Gentle top-edge cradle mix percentage (0-100). */
-    readonly topMix: number;
     /** Primary deep ambient glow hex for dark `ambient` mode. */
     readonly ambientPrimary: string;
     /** Secondary contrasting/harmonic ambient glow hex for dark `ambient` mode. */
@@ -69,7 +59,14 @@ export interface MastheadBands {
     readonly right: MastheadBandTone;
 }
 
+export type BackdropPolarity = "light" | "dark";
+
 export type MastheadBackdropTone = "clean" | "textured" | "contrast";
+
+export interface MastheadBackdropClassification {
+    readonly polarity: BackdropPolarity;
+    readonly tone: MastheadBackdropTone;
+}
 
 export interface WallpaperAccent {
     readonly seed: AccentSeed;
@@ -81,6 +78,7 @@ export interface WallpaperAccent {
     };
     readonly darkTone: WallpaperDarkTone;
     readonly mastheadBands: MastheadBands;
+    readonly topBand: MastheadBandTone;
 }
 
 type Rgb = readonly [number, number, number];
@@ -292,9 +290,11 @@ interface PixelSummary {
     meanL: number;
     opaqueCount: number;
     mastheadBands: MastheadBands;
+    topBand: MastheadBandTone;
 }
 
 const MASTHEAD_BAND_SHARE = 0.34;
+const TOP_BAND_SHARE = 0.16;
 const DEFAULT_BAND_TONE: MastheadBandTone = { lightness: 0.5, spread: 0 };
 
 function computeBandTone(
@@ -330,9 +330,14 @@ function summarizePixels(pixels: WallpaperPixels): PixelSummary {
     let rightL = 0;
     let rightL2 = 0;
     let rightCount = 0;
+    let topL = 0;
+    let topL2 = 0;
+    let topCount = 0;
     const leftEdge = pixels.width * MASTHEAD_BAND_SHARE;
     const rightEdge = pixels.width * (1 - MASTHEAD_BAND_SHARE);
+    const topEdge = pixels.height * TOP_BAND_SHARE;
     for (let y = 0; y < pixels.height; y++) {
+        const isTop = y < topEdge;
         for (let x = 0; x < pixels.width; x++) {
             const i = (y * pixels.width + x) * 4;
             if (pixels.data[i + 3] < 128) continue;
@@ -360,6 +365,11 @@ function summarizePixels(pixels: WallpaperPixels): PixelSummary {
                 rightL += l;
                 rightL2 += l2;
                 rightCount++;
+            }
+            if (isTop) {
+                topL += l;
+                topL2 += l2;
+                topCount++;
             }
             const chroma = Math.hypot(a, b);
             if (chroma < COLORFUL_CHROMA) continue;
@@ -390,38 +400,72 @@ function summarizePixels(pixels: WallpaperPixels): PixelSummary {
             left: computeBandTone(leftL, leftL2, leftCount, overallTone),
             right: computeBandTone(rightL, rightL2, rightCount, overallTone),
         },
+        topBand: computeBandTone(topL, topL2, topCount, overallTone),
     };
 }
 
 /**
- * Classifies the local wallpaper band behind the home masthead into three
- * adaptive visual tiers:
- * - `clean`: same-polarity calm backdrop -> zero cushion, zero text shadow,
- *   laser-crisp editorial ink;
- * - `textured`: mid-tone or busy texture -> light cushion & gentle contrast;
- * - `contrast`: opposite-polarity clash (e.g. light theme on dark night sky) ->
- *   standard cushion, soft glow and reinforced high-contrast ink.
+ * Resolves the foreground ink polarity (`"light"` = dark ink on bright art,
+ * `"dark"` = light ink on dark art) for elements set directly on the wallpaper.
  */
-export function classifyMastheadBackdrop(input: {
+export function resolveBackdropPolarity(input: {
+    scheme: "light" | "dark";
+    lightness?: number | null;
+}): BackdropPolarity {
+    const { scheme, lightness } = input;
+    if (lightness == null || !Number.isFinite(lightness)) return scheme;
+    if (scheme === "dark") {
+        return lightness >= 0.58 ? "light" : "dark";
+    }
+    return lightness <= 0.50 ? "dark" : "light";
+}
+
+/**
+ * Classifies the local wallpaper band behind the home masthead into foreground
+ * ink polarity and adaptive backdrop cushion tier:
+ * - `clean`: calm same-polarity backdrop -> zero cushion, zero text shadow,
+ *   laser-crisp editorial ink;
+ * - `textured`: mid-tone or gentle texture -> light same-polarity cushion;
+ * - `contrast`: busy/high-clutter texture -> reinforced cushion & ink.
+ */
+export function resolveMastheadBackdrop(input: {
     scheme: "light" | "dark";
     band: MastheadBandTone | null;
-    nativeDarkTone?: boolean;
-}): MastheadBackdropTone {
-    const { scheme, band, nativeDarkTone } = input;
+}): MastheadBackdropClassification {
+    const { scheme, band } = input;
     if (
         !band || !Number.isFinite(band.lightness) ||
         !Number.isFinite(band.spread)
     ) {
-        return "textured";
+        return { polarity: scheme, tone: "textured" };
     }
-    if (scheme === "light") {
-        if (band.lightness >= 0.78 && band.spread <= 0.14) return "clean";
-        if (band.lightness >= 0.48) return "textured";
-        return "contrast";
+    const polarity = resolveBackdropPolarity({
+        scheme,
+        lightness: band.lightness,
+    });
+    if (polarity === "light") {
+        if (band.lightness >= 0.74 && band.spread <= 0.14) {
+            return { polarity, tone: "clean" };
+        }
+        if (band.spread > 0.22 && band.lightness < 0.68) {
+            return { polarity, tone: "contrast" };
+        }
+        return { polarity, tone: "textured" };
     }
-    if (band.lightness <= 0.32 && band.spread <= 0.14) return "clean";
-    if (nativeDarkTone && band.lightness > 0.72) return "contrast";
-    return "textured";
+    if (band.lightness <= 0.34 && band.spread <= 0.14) {
+        return { polarity, tone: "clean" };
+    }
+    if (band.spread > 0.22 && band.lightness > 0.40) {
+        return { polarity, tone: "contrast" };
+    }
+    return { polarity, tone: "textured" };
+}
+
+export function classifyMastheadBackdrop(input: {
+    scheme: "light" | "dark";
+    band: MastheadBandTone | null;
+}): MastheadBackdropTone {
+    return resolveMastheadBackdrop(input).tone;
 }
 
 function seedFromWindow(
@@ -695,11 +739,6 @@ export function highContrastAccent(
 
 const DEFAULT_DARK_TONE: WallpaperDarkTone = {
     lightness: 0.5,
-    filter: "contrast(1.08) saturate(1.14) brightness(0.62)",
-    customFilter: "none",
-    centerMix: 16,
-    edgeMix: 44,
-    topMix: 22,
     ambientPrimary: "#262d42",
     ambientSecondary: "#1b1d2e",
 };
@@ -747,39 +786,18 @@ function darkToneFromSummary(summary: PixelSummary): WallpaperDarkTone {
     if (summary.opaqueCount === 0) return DEFAULT_DARK_TONE;
 
     const { meanL } = summary;
-    const t = Math.min(1, Math.max(0, (meanL - 0.22) / (0.85 - 0.22)));
-    const lerp = (a: number, b: number) => a + (b - a) * t;
-
-    const contrastValue = lerp(1.03, 1.14);
-    const saturate = lerp(1.06, 1.20);
-    const brightness = lerp(0.88, 0.50);
-    let customFilter = "none";
-    if (meanL > 0.68) {
-        const ct = Math.min(1, (meanL - 0.68) / (0.95 - 0.68));
-        customFilter = `contrast(${(1 + 0.05 * ct).toFixed(2)}) brightness(${
-            (0.95 - 0.13 * ct).toFixed(2)
-        })`;
-    }
     const { primary, secondary } = resolveSeedFromSummary(summary);
     const glow = solveAmbientGlowPair(primary, secondary);
 
     return {
         lightness: Math.round(meanL * 1000) / 1000,
-        filter: `contrast(${contrastValue.toFixed(2)}) saturate(${
-            saturate.toFixed(2)
-        }) brightness(${brightness.toFixed(2)})`,
-        customFilter,
-        centerMix: Math.round(lerp(4, 24)),
-        edgeMix: Math.round(lerp(18, 56)),
-        topMix: Math.round(lerp(10, 30)),
         ambientPrimary: glow.ambientPrimary,
         ambientSecondary: glow.ambientSecondary,
     };
 }
 
 /**
- * Derive adaptive dark-mode wallpaper dimming, contrast compensation and
- * vignette strength from the image's mean OKLab perceptual lightness.
+ * Derive wallpaper mean OKLab perceptual lightness and dual-tone ambient glow pair.
  */
 export function wallpaperDarkTone(pixels: WallpaperPixels): WallpaperDarkTone {
     return darkToneFromSummary(summarizePixels(pixels));
@@ -800,5 +818,6 @@ export function deriveWallpaperAccent(
         },
         darkTone: darkToneFromSummary(summary),
         mastheadBands: summary.mastheadBands,
+        topBand: summary.topBand,
     };
 }

@@ -350,13 +350,36 @@
                 --dock-rest-opacity: 0.58;
             }
 
-            [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"][data-wallpaper-image="true"]:not(:has(.search-frame:focus-within)) .dock-bar:not(:hover, :focus-within) {
+            [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"][data-wallpaper-image="true"]:not([data-wallpaper-polarity="light"]):not(:has(.search-frame:focus-within)) .dock-bar:not(:hover, :focus-within) {
                 --dock-rest-opacity: 0.76;
             }
 
             [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"] .dock-bar:is(:hover, :focus-within) {
                 --dock-rest-opacity: 1;
             }
+
+            [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="light"] .dock-bar {
+                background: var(--material-obsidian-regular);
+                -webkit-backdrop-filter: var(--material-obsidian-filter);
+                backdrop-filter: var(--material-obsidian-filter);
+                box-shadow: var(--dock-obsidian-shadow);
+            }
+
+            [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"][data-wallpaper-image="true"][data-wallpaper-polarity="light"] .dock-bar:not(:hover, :focus-within) {
+                --dock-rest-opacity: 1;
+            }
+
+            [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="light"] .dock-item:not([data-active="true"]) {
+                color: color-mix(in oklab, var(--foreground) 86%, transparent);
+            }
+        }
+    }
+
+    @media (prefers-reduced-transparency: no-preference) {
+        :root:not([data-theme="dark"]):not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-image="true"][data-wallpaper-polarity="dark"] .dock-bar {
+            background: var(--material-pearl-regular);
+            -webkit-backdrop-filter: var(--material-pearl-filter);
+            backdrop-filter: var(--material-pearl-filter);
         }
     }
 

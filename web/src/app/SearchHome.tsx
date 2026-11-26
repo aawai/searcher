@@ -242,6 +242,8 @@ export function DesktopHost(
         resolvedScheme,
         effectiveWallpaper,
         wallpaperMastheadBands,
+        wallpaperLightness,
+        wallpaperTopBand,
         authSession,
         setAppearance,
     } = useAppState();
@@ -1617,10 +1619,9 @@ export function DesktopHost(
         : "";
     const wallpaper = {
         source: activeMastheadSource,
-        nativeDarkTone: activeMastheadSource
-            ? effectiveWallpaper.nativeDarkTone
-            : undefined,
         mastheadBands: activeMastheadSource ? wallpaperMastheadBands : null,
+        topBand: activeMastheadSource ? wallpaperTopBand : null,
+        lightness: activeMastheadSource ? wallpaperLightness : null,
         presentation: activeMastheadSource
             ? wallpaperPresentation(
                 activeMastheadSource,

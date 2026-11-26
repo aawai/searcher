@@ -310,17 +310,14 @@
     --masthead-direct-stroke: 2px color-mix(in srgb, var(--background) 80%, transparent);
     --masthead-direct-shadow: 0 0 8px color-mix(in srgb, var(--background) 85%, transparent),
         0 1px 3px color-mix(in srgb, var(--background) 92%, transparent);
-    --wallpaper-dark-dim: contrast(1.08) saturate(1.14) brightness(0.62);
-    --wallpaper-dark-center-mix: 16%;
-    --wallpaper-dark-edge-mix: 44%;
-    --wallpaper-dark-top-mix: 22%;
+    --topbar-adaptive-hover-bg: var(--material-regular);
+    --topbar-adaptive-hover-filter: blur(12px) saturate(1.4);
+    --topbar-adaptive-hover-shadow: var(--shadow-material-edge);
     --material-dark-base: #17171C;
     --wallpaper-shade-base: var(--background);
     --wallpaper-ambient-glaze: none;
     --wallpaper-ambient-primary: transparent;
     --wallpaper-ambient-secondary: transparent;
-    --wallpaper-custom-dark-dim: none;
-    --wallpaper-custom-shade: none;
     --wallpaper-canvas-ambient: radial-gradient(
             ellipse 72% 60% at 84% 10%,
             rgb(255 255 255 / 0.82) 0%,
@@ -352,10 +349,62 @@
     --masthead-stamp-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
     --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --search-frame-obsidian-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.24),
+        inset 0 0 0 1px rgb(255 255 255 / 0.14),
+        inset 0 1px 0 rgb(255 255 255 / 0.12),
+        0 10px 28px -10px rgb(0 0 0 / 0.24),
+        0 2px 8px -2px rgb(0 0 0 / 0.14);
+    --search-frame-obsidian-hover-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.28),
+        inset 0 0 0 1px rgb(255 255 255 / 0.22),
+        inset 0 1px 0 rgb(255 255 255 / 0.16),
+        0 12px 32px -10px rgb(0 0 0 / 0.28),
+        0 3px 10px -2px rgb(0 0 0 / 0.16);
+    --dock-obsidian-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.22),
+        inset 0 0 0 1px rgb(255 255 255 / 0.13),
+        0 10px 26px -10px rgb(0 0 0 / 0.24),
+        0 2px 8px -2px rgb(0 0 0 / 0.14);
+    --masthead-stamp-obsidian-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.22),
+        inset 0 0 0 1px rgb(255 255 255 / 0.12),
+        0 6px 18px -8px rgb(0 0 0 / 0.22);
+    --masthead-stamp-obsidian-hover-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.28),
+        inset 0 0 0 1px rgb(255 255 255 / 0.20),
+        0 8px 22px -8px rgb(0 0 0 / 0.28);
+    --launcher-plate-obsidian-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.20),
+        inset 0 0 0 1px rgb(255 255 255 / 0.12),
+        0 12px 32px -12px rgb(0 0 0 / 0.26);
+    --topbar-adaptive-hover-filter: blur(12px) saturate(1.4);
     --wallpaper-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
     --surface-code-well: var(--surface-soft);
+}
+
+[data-theme="light"] {
+    color-scheme: light;
+    --background: #F4F4F5;
+    --foreground: #1D1D1F;
+    --surface: #FFFFFF;
+    --surface-solid: #FFFFFF;
+    --surface-soft: #EBEBEE;
+    --surface-highlight: rgb(0 0 0 / 0.08);
+    --surface-control-thumb: #FFFFFF;
+    --surface-l3: var(--surface-solid);
+    --surface-grouped-canvas: var(--background);
+    --surface-code-well: var(--surface-soft);
+    --muted: #66666B;
+    --masthead-textured-muted: #4D4D54;
+    --masthead-muted: #2F2F34;
+    --masthead-clear-muted: #222226;
+    --masthead-display-ink: #18181B;
+    --search-placeholder: var(--muted);
+    --appearance-chip-surface: var(--surface-solid);
+    --border: rgb(0 0 0 / 0.09);
+    --border-subtle: rgb(0 0 0 / 0.05);
+    --border-control: #86868B;
+    --field-border: rgb(0 0 0 / 0.13);
+    --field-border-hover: rgb(0 0 0 / 0.24);
+    --material-solid: var(--surface-solid);
+    --shadow-avatar-edge: inset 0 0 0 var(--space-hairline) var(--border);
 }
 
 [data-theme="dark"] {
@@ -437,6 +486,16 @@
     --accent-active: light-dark(#172554, #bfdbfe);
     --accent-foreground: light-dark(#ffffff, #090d16);
     --masthead-accent-text: light-dark(#112f82, #90c0fc);
+    --accent-pair-light: #1d4ed8;
+    --accent-pair-dark: #60a5fa;
+    --accent-hover-pair-light: #1e40af;
+    --accent-hover-pair-dark: #93c5fd;
+    --accent-active-pair-light: #172554;
+    --accent-active-pair-dark: #bfdbfe;
+    --accent-foreground-pair-light: #ffffff;
+    --accent-foreground-pair-dark: #090d16;
+    --masthead-accent-pair-light: #112f82;
+    --masthead-accent-pair-dark: #90c0fc;
     --accent-hc: light-dark(#0d36b2, #99c6ff);
     --accent-hc-hover: light-dark(#021b9b, #c0dcff);
     --accent-hc-active: light-dark(#01007c, #e7f1ff);
@@ -447,6 +506,16 @@
     --accent-active: light-dark(#164e63, #a5f3fc);
     --accent-foreground: light-dark(#ffffff, #042f2e);
     --masthead-accent-text: light-dark(#084656, #64e0f3);
+    --accent-pair-light: #0e7490;
+    --accent-pair-dark: #22d3ee;
+    --accent-hover-pair-light: #155e75;
+    --accent-hover-pair-dark: #67e8f9;
+    --accent-active-pair-light: #164e63;
+    --accent-active-pair-dark: #a5f3fc;
+    --accent-foreground-pair-light: #ffffff;
+    --accent-foreground-pair-dark: #042f2e;
+    --masthead-accent-pair-light: #084656;
+    --masthead-accent-pair-dark: #64e0f3;
     --accent-hc: light-dark(#004d61, #28d6f1);
     --accent-hc-hover: light-dark(#003949, #76e9ff);
     --accent-hc-active: light-dark(#002632, #caf6ff);
@@ -457,6 +526,16 @@
     --accent-active: light-dark(#134e4a, #99f6e4);
     --accent-foreground: light-dark(#ffffff, #042f2e);
     --masthead-accent-text: light-dark(#094742, #6ce1d2);
+    --accent-pair-light: #0f766e;
+    --accent-pair-dark: #2dd4bf;
+    --accent-hover-pair-light: #115e59;
+    --accent-hover-pair-dark: #5eead4;
+    --accent-active-pair-light: #134e4a;
+    --accent-active-pair-dark: #99f6e4;
+    --accent-foreground-pair-light: #ffffff;
+    --accent-foreground-pair-dark: #042f2e;
+    --masthead-accent-pair-light: #094742;
+    --masthead-accent-pair-dark: #6ce1d2;
     --accent-hc: light-dark(#004f49, #36d9c4);
     --accent-hc-hover: light-dark(#003a36, #56f0db);
     --accent-hc-active: light-dark(#002724, #a7ffef);
@@ -467,6 +546,16 @@
     --accent-active: light-dark(#4c1d95, #ddd6fe);
     --accent-foreground: light-dark(#ffffff, #1e1035);
     --masthead-accent-text: light-dark(#411882, #c1aefc);
+    --accent-pair-light: #6d28d9;
+    --accent-pair-dark: #a78bfa;
+    --accent-hover-pair-light: #5b21b6;
+    --accent-hover-pair-dark: #c4b5fd;
+    --accent-active-pair-light: #4c1d95;
+    --accent-active-pair-dark: #ddd6fe;
+    --accent-foreground-pair-light: #ffffff;
+    --accent-foreground-pair-dark: #1e1035;
+    --masthead-accent-pair-light: #411882;
+    --masthead-accent-pair-dark: #c1aefc;
     --accent-hc: light-dark(#5722ad, #c8baff);
     --accent-hc-hover: light-dark(#450094, #ddd6ff);
     --accent-hc-active: light-dark(#31006d, #f4f1ff);
@@ -477,6 +566,16 @@
     --accent-active: light-dark(#7c2d12, #fed7aa);
     --accent-foreground: light-dark(#ffffff, #2a1205);
     --masthead-accent-text: light-dark(#742707, #fcb377);
+    --accent-pair-light: #c2410c;
+    --accent-pair-dark: #fb923c;
+    --accent-hover-pair-light: #9a3412;
+    --accent-hover-pair-dark: #fdba74;
+    --accent-active-pair-light: #7c2d12;
+    --accent-active-pair-dark: #fed7aa;
+    --accent-foreground-pair-light: #ffffff;
+    --accent-foreground-pair-dark: #2a1205;
+    --masthead-accent-pair-light: #742707;
+    --masthead-accent-pair-dark: #fcb377;
     --accent-hc: light-dark(#802500, #ffb27b);
     --accent-hc-hover: light-dark(#621a00, #ffd2b3);
     --accent-hc-active: light-dark(#461000, #fff0e7);
@@ -487,6 +586,16 @@
     --accent-active: light-dark(#881337, #fecdd3);
     --accent-foreground: light-dark(#ffffff, #2f0510);
     --masthead-accent-text: light-dark(#720b24, #fc9caa);
+    --accent-pair-light: #be123c;
+    --accent-pair-dark: #fb7185;
+    --accent-hover-pair-light: #9f1239;
+    --accent-hover-pair-dark: #fda4af;
+    --accent-active-pair-light: #881337;
+    --accent-active-pair-dark: #fecdd3;
+    --accent-foreground-pair-light: #ffffff;
+    --accent-foreground-pair-dark: #2f0510;
+    --masthead-accent-pair-light: #720b24;
+    --masthead-accent-pair-dark: #fc9caa;
     --accent-hc: light-dark(#900029, #ffaeb5);
     --accent-hc-hover: light-dark(#70001e, #ffd0d4);
     --accent-hc-active: light-dark(#510013, #fff1f2);
@@ -497,6 +606,16 @@
     --accent-active: light-dark(#14532d, #bbf7d0);
     --accent-foreground: light-dark(#ffffff, #052e16);
     --masthead-accent-text: light-dark(#0d4c25, #80e8a6);
+    --accent-pair-light: #157e3d;
+    --accent-pair-dark: #4ade80;
+    --accent-hover-pair-light: #166534;
+    --accent-hover-pair-dark: #86efac;
+    --accent-active-pair-light: #14532d;
+    --accent-active-pair-dark: #bbf7d0;
+    --accent-foreground-pair-light: #ffffff;
+    --accent-foreground-pair-dark: #052e16;
+    --masthead-accent-pair-light: #0d4c25;
+    --masthead-accent-pair-dark: #80e8a6;
     --accent-hc: light-dark(#005223, #48dc7e);
     --accent-hc-hover: light-dark(#003d18, #64f494);
     --accent-hc-active: light-dark(#00290e, #b2ffc5);
@@ -507,6 +626,16 @@
     --accent-active: light-dark(#78350f, #fde68a);
     --accent-foreground: light-dark(#ffffff, #2e1905);
     --masthead-accent-text: light-dark(#6b3105, #fcd266);
+    --accent-pair-light: #b25209;
+    --accent-pair-dark: #fbbf24;
+    --accent-hover-pair-light: #92400e;
+    --accent-hover-pair-dark: #fcd34d;
+    --accent-active-pair-light: #78350f;
+    --accent-active-pair-dark: #fde68a;
+    --accent-foreground-pair-light: #ffffff;
+    --accent-foreground-pair-dark: #2e1905;
+    --masthead-accent-pair-light: #6b3105;
+    --masthead-accent-pair-dark: #fcd266;
     --accent-hc: light-dark(#763200, #f5ba17);
     --accent-hc-hover: light-dark(#5a2500, #ffd57c);
     --accent-hc-active: light-dark(#401800, #fff0d3);
@@ -517,6 +646,16 @@
     --accent-active: light-dark(#09090b, #ffffff);
     --accent-foreground: light-dark(#ffffff, #18181b);
     --masthead-accent-text: light-dark(#171719, #ececee);
+    --accent-pair-light: #27272a;
+    --accent-pair-dark: #e4e4e7;
+    --accent-hover-pair-light: #18181b;
+    --accent-hover-pair-dark: #f4f4f5;
+    --accent-active-pair-light: #09090b;
+    --accent-active-pair-dark: #ffffff;
+    --accent-foreground-pair-light: #ffffff;
+    --accent-foreground-pair-dark: #18181b;
+    --masthead-accent-pair-light: #171719;
+    --masthead-accent-pair-dark: #ececee;
     --accent-hc: light-dark(#464646, #c4c4c4);
     --accent-hc-hover: light-dark(#343434, #dbdbdb);
     --accent-hc-active: light-dark(#232323, #f2f2f2);
@@ -534,6 +673,16 @@
     --wallpaper-accent-active: light-dark(#172554, #bfdbfe);
     --wallpaper-accent-foreground: light-dark(#ffffff, #090d16);
     --wallpaper-accent-masthead: light-dark(#112f82, #90c0fc);
+    --wallpaper-accent-light: #1d4ed8;
+    --wallpaper-accent-dark: #60a5fa;
+    --wallpaper-accent-hover-light: #1e40af;
+    --wallpaper-accent-hover-dark: #93c5fd;
+    --wallpaper-accent-active-light: #172554;
+    --wallpaper-accent-active-dark: #bfdbfe;
+    --wallpaper-accent-foreground-light: #ffffff;
+    --wallpaper-accent-foreground-dark: #090d16;
+    --wallpaper-accent-masthead-light: #112f82;
+    --wallpaper-accent-masthead-dark: #90c0fc;
     --wallpaper-accent-hc: light-dark(#0d36b2, #99c6ff);
     --wallpaper-accent-hc-hover: light-dark(#021b9b, #c0dcff);
     --wallpaper-accent-hc-active: light-dark(#01007c, #e7f1ff);
@@ -544,6 +693,16 @@
     --accent-active: var(--wallpaper-accent-active);
     --accent-foreground: var(--wallpaper-accent-foreground);
     --masthead-accent-text: var(--wallpaper-accent-masthead);
+    --accent-pair-light: var(--wallpaper-accent-light);
+    --accent-pair-dark: var(--wallpaper-accent-dark);
+    --accent-hover-pair-light: var(--wallpaper-accent-hover-light);
+    --accent-hover-pair-dark: var(--wallpaper-accent-hover-dark);
+    --accent-active-pair-light: var(--wallpaper-accent-active-light);
+    --accent-active-pair-dark: var(--wallpaper-accent-active-dark);
+    --accent-foreground-pair-light: var(--wallpaper-accent-foreground-light);
+    --accent-foreground-pair-dark: var(--wallpaper-accent-foreground-dark);
+    --masthead-accent-pair-light: var(--wallpaper-accent-masthead-light);
+    --masthead-accent-pair-dark: var(--wallpaper-accent-masthead-dark);
     --accent-hc: var(--wallpaper-accent-hc);
     --accent-hc-hover: var(--wallpaper-accent-hc-hover);
     --accent-hc-active: var(--wallpaper-accent-hc-active);
@@ -605,8 +764,6 @@
     --masthead-direct-stroke: 0px transparent;
     --masthead-direct-shadow: none;
     --masthead-display-ink: var(--foreground);
-    --wallpaper-custom-dark-dim: none;
-    --wallpaper-custom-shade: none;
     --wallpaper-canvas-ambient: none;
     --search-specular-top: none;
     --search-specular-top-focus: none;
@@ -627,6 +784,13 @@
     --masthead-stamp-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
     --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --search-frame-obsidian-shadow: var(--shadow-elevation-material);
+    --search-frame-obsidian-hover-shadow: var(--shadow-elevation-material);
+    --dock-obsidian-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-obsidian-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-obsidian-hover-shadow: var(--shadow-elevation-material);
+    --launcher-plate-obsidian-shadow: var(--shadow-elevation-material);
+    --topbar-adaptive-hover-filter: none;
     --wallpaper-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
@@ -669,8 +833,6 @@
     --masthead-direct-stroke: 0px transparent;
     --masthead-direct-shadow: none;
     --masthead-display-ink: var(--foreground);
-    --wallpaper-custom-dark-dim: none;
-    --wallpaper-custom-shade: none;
     --wallpaper-canvas-ambient: none;
     --search-specular-top: none;
     --search-specular-top-focus: none;
@@ -691,6 +853,13 @@
     --masthead-stamp-dark-wallpaper-hover-shadow: var(--shadow-elevation-material);
     --dock-dark-wallpaper-shadow: var(--shadow-elevation-material);
     --launcher-plate-dark-wallpaper-shadow: var(--shadow-elevation-material);
+    --search-frame-obsidian-shadow: var(--shadow-elevation-material);
+    --search-frame-obsidian-hover-shadow: var(--shadow-elevation-material);
+    --dock-obsidian-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-obsidian-shadow: var(--shadow-elevation-material);
+    --masthead-stamp-obsidian-hover-shadow: var(--shadow-elevation-material);
+    --launcher-plate-obsidian-shadow: var(--shadow-elevation-material);
+    --topbar-adaptive-hover-filter: none;
     --wallpaper-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
@@ -714,7 +883,8 @@
 :root,
 [data-theme],
 [data-accent],
-[data-contrast] {
+[data-contrast],
+[data-ink-polarity] {
     --warning-soft: color-mix(in srgb, var(--warning) 12%, var(--surface));
     --ring: var(--accent);
     --accent-soft: color-mix(in srgb, var(--accent) var(--accent-soft-mix), var(--surface));
@@ -815,6 +985,11 @@
     --material-thick-sheen-scale: 0.55;
     --material-regular-filter: blur(18px) saturate(1.75);
     --material-thick-filter: blur(20px) saturate(1.8);
+    --glass-obsidian-fill: 76%;
+    --glass-obsidian-filter: blur(20px) saturate(1.3) brightness(0.58);
+    --material-obsidian-thick-filter: blur(20px) saturate(1.35) brightness(0.55);
+    --glass-pearl-fill: 72%;
+    --glass-pearl-filter: blur(20px) saturate(1.5);
 }
 [data-glass="regular"] {
     --glass-regular-light: 48%;
@@ -828,6 +1003,11 @@
     --material-thick-sheen-scale: 0.55;
     --material-regular-filter: blur(18px) saturate(1.75);
     --material-thick-filter: blur(20px) saturate(1.8);
+    --glass-obsidian-fill: 76%;
+    --glass-obsidian-filter: blur(20px) saturate(1.3) brightness(0.58);
+    --material-obsidian-thick-filter: blur(20px) saturate(1.35) brightness(0.55);
+    --glass-pearl-fill: 72%;
+    --glass-pearl-filter: blur(20px) saturate(1.5);
 }
 [data-glass="off"] {
     --glass-regular-light: 100%;
@@ -841,6 +1021,12 @@
     --material-thick-sheen-scale: 0;
     --material-regular-filter: none;
     --material-thick-filter: none;
+    --glass-obsidian-fill: 100%;
+    --glass-obsidian-filter: none;
+    --material-obsidian-thick-filter: none;
+    --glass-pearl-fill: 100%;
+    --glass-pearl-filter: none;
+    --topbar-adaptive-hover-filter: none;
 }
 [data-glass="soft"] {
     --glass-regular-light: 76%;
@@ -854,6 +1040,11 @@
     --material-thick-sheen-scale: 0.4;
     --material-regular-filter: blur(28px) saturate(1.35);
     --material-thick-filter: blur(20px) saturate(1.5);
+    --glass-obsidian-fill: 86%;
+    --glass-obsidian-filter: blur(28px) saturate(1.2) brightness(0.55);
+    --material-obsidian-thick-filter: blur(20px) saturate(1.35) brightness(0.55);
+    --glass-pearl-fill: 84%;
+    --glass-pearl-filter: blur(28px) saturate(1.3);
 }
 [data-glass="clear"] {
     --glass-regular-light: 14%;
@@ -870,6 +1061,11 @@
     --material-thick-sheen-scale: 0.35;
     --material-regular-filter: blur(6px) saturate(1.9) brightness(1.03);
     --material-thick-filter: blur(14px) saturate(1.8);
+    --glass-obsidian-fill: 62%;
+    --glass-obsidian-filter: blur(12px) saturate(1.35) brightness(0.56);
+    --material-obsidian-thick-filter: blur(20px) saturate(1.35) brightness(0.55);
+    --glass-pearl-fill: 58%;
+    --glass-pearl-filter: blur(10px) saturate(1.65);
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -945,6 +1141,10 @@
 [data-glass] {
     --material-regular: color-mix(in srgb, var(--material-solid) var(--glass-fill-regular), transparent);
     --material-thick: color-mix(in srgb, var(--surface-l3) var(--glass-fill-thick), transparent);
+    --material-obsidian-regular: color-mix(in srgb, var(--material-dark-base) var(--glass-obsidian-fill), transparent);
+    --material-obsidian-filter: var(--glass-obsidian-filter);
+    --material-pearl-regular: color-mix(in srgb, #FFFFFF var(--glass-pearl-fill), transparent);
+    --material-pearl-filter: var(--glass-pearl-filter);
     --masthead-stamp-dark-bg: color-mix(in oklab, var(--material-solid) var(--masthead-stamp-dark-fill), transparent);
     --shadow-material-edge: inset 0 1px 0 var(--glass-edge-top), inset 0 0 0 1px var(--glass-edge-ring), inset 0 -1px 0 var(--glass-edge-bottom);
     --shadow-material-glyph: 0 var(--space-hairline) var(--space-half) var(--glass-edge-bottom);
@@ -1021,43 +1221,12 @@
     --canvas-derived-mix: var(--canvas-derived-dark);
 }
 
-/* Dark themes adaptively tone the wallpaper image (brightness, contrast and
-   saturation from perceptual lightness) and layer a symmetrical ambient
-   vignette over it so bright wallpapers sit comfortably under dark surfaces. */
+/* Dark theme ambient glaze and obsidian canvas substrate. */
 :root,
 [data-theme] {
-    --wallpaper-dim: none;
-    --wallpaper-thumb-dim: none;
-    --wallpaper-shade: none;
     --wallpaper-ambient-glaze: none;
 }
 [data-theme="dark"] {
-    --wallpaper-dim: var(--wallpaper-dark-dim);
-    --wallpaper-thumb-dim: contrast(1.06) saturate(1.10) brightness(0.68);
-    --wallpaper-shade: linear-gradient(
-            180deg,
-            color-mix(in srgb, var(--wallpaper-shade-base) var(--wallpaper-dark-top-mix), transparent) 0%,
-            color-mix(in srgb, var(--wallpaper-shade-base) calc(var(--wallpaper-dark-top-mix) * 0.55), transparent) 9%,
-            color-mix(in srgb, var(--wallpaper-shade-base) calc(var(--wallpaper-dark-top-mix) * 0.16), transparent) 19%,
-            transparent 30%
-        ),
-        radial-gradient(
-            ellipse 78% 76% at 50% 48%,
-            color-mix(in srgb, var(--wallpaper-shade-base) var(--wallpaper-dark-center-mix), transparent) 0%,
-            color-mix(in srgb, var(--wallpaper-shade-base) calc((var(--wallpaper-dark-center-mix) + var(--wallpaper-dark-edge-mix)) / 2), transparent) 64%,
-            color-mix(in srgb, var(--wallpaper-shade-base) var(--wallpaper-dark-edge-mix), transparent) 100%
-        );
-    --wallpaper-custom-shade: linear-gradient(
-            180deg,
-            rgb(8 8 11 / 0.36) 0%,
-            rgb(8 8 11 / 0.14) 10%,
-            transparent 22%
-        ),
-        radial-gradient(
-            ellipse 86% 82% at 50% 48%,
-            transparent 48%,
-            rgb(8 8 11 / 0.28) 100%
-        );
     --wallpaper-ambient-glaze: radial-gradient(
             ellipse 64% 54% at 80% 18%,
             color-mix(in oklab, var(--wallpaper-ambient-primary) 52%, transparent) 0%,
@@ -1135,6 +1304,34 @@
     --masthead-border-textured: rgb(15 23 42 / 0.11);
     --masthead-border-contrast: rgb(15 23 42 / 0.15);
 }
+[data-theme="light"] {
+    color-scheme: light;
+    --background: #F4F4F5;
+    --foreground: #1D1D1F;
+    --surface: #FFFFFF;
+    --surface-solid: #FFFFFF;
+    --surface-soft: #EBEBEE;
+    --surface-highlight: rgb(0 0 0 / 0.08);
+    --surface-control-thumb: #FFFFFF;
+    --surface-l3: var(--surface-solid);
+    --surface-grouped-canvas: var(--background);
+    --surface-code-well: var(--surface-soft);
+    --muted: #66666B;
+    --masthead-textured-muted: #4D4D54;
+    --masthead-muted: #2F2F34;
+    --masthead-clear-muted: #222226;
+    --masthead-display-ink: #18181B;
+    --search-placeholder: var(--muted);
+    --appearance-chip-surface: var(--surface-solid);
+    --border: rgb(0 0 0 / 0.09);
+    --border-subtle: rgb(0 0 0 / 0.05);
+    --border-control: #86868B;
+    --field-border: rgb(0 0 0 / 0.13);
+    --field-border-hover: rgb(0 0 0 / 0.24);
+    --material-solid: var(--surface-solid);
+    --shadow-avatar-edge: inset 0 0 0 var(--space-hairline) var(--border);
+}
+
 [data-theme="dark"] {
     --masthead-cushion-base: var(--wallpaper-shade-base);
     --masthead-cushion-textured-compact-scale: 0.56;
@@ -1191,7 +1388,8 @@
 [data-theme],
 [data-glass],
 [data-accent],
-[data-contrast] {
+[data-contrast],
+[data-ink-polarity] {
     --masthead-text-stroke: var(--masthead-direct-stroke);
     --masthead-text-halo: var(--masthead-direct-shadow);
 }
@@ -1224,6 +1422,12 @@
         --material-thick-sheen-scale: 0;
         --material-regular-filter: none;
         --material-thick-filter: none;
+        --glass-obsidian-fill: 100%;
+        --glass-obsidian-filter: none;
+        --material-obsidian-thick-filter: none;
+        --glass-pearl-fill: 100%;
+        --glass-pearl-filter: none;
+        --topbar-adaptive-hover-filter: none;
         --canvas-derived-light: 100%;
         --canvas-derived-dark: 100%;
         --canvas-derived-filter: none;
@@ -1245,6 +1449,12 @@
         --material-thick-sheen-scale: 0;
         --material-regular-filter: none;
         --material-thick-filter: none;
+        --glass-obsidian-fill: 100%;
+        --glass-obsidian-filter: none;
+        --material-obsidian-thick-filter: none;
+        --glass-pearl-fill: 100%;
+        --glass-pearl-filter: none;
+        --topbar-adaptive-hover-filter: none;
         --canvas-derived-light: 100%;
         --canvas-derived-dark: 100%;
         --canvas-derived-filter: none;
@@ -1274,6 +1484,12 @@
     --material-thick-sheen-scale: 0;
     --material-regular-filter: none;
     --material-thick-filter: none;
+    --glass-obsidian-fill: 100%;
+    --glass-obsidian-filter: none;
+    --material-obsidian-thick-filter: none;
+    --glass-pearl-fill: 100%;
+    --glass-pearl-filter: none;
+    --topbar-adaptive-hover-filter: none;
     --canvas-derived-light: 100%;
     --canvas-derived-dark: 100%;
     --canvas-derived-filter: none;
@@ -1286,6 +1502,161 @@
     --masthead-contrast-text-shadow: none;
     --masthead-contrast-day-text-shadow: none;
     --masthead-icon-shadow: none;
+}
+
+/* Bidirectional adaptive foreground ink polarity for frameless elements over
+   wallpaper images (`light` = dark ink on bright art; `dark` = light ink on
+   dark art). Masthead columns only inherit polarity when translucent glass is
+   active so solid accessibility fallbacks always follow the app theme. */
+@media (forced-colors: none) {
+    :root:not([data-contrast="more"]) :not(:root)[data-theme="light"] {
+        --accent: var(--accent-pair-light);
+        --accent-hover: var(--accent-hover-pair-light);
+        --accent-active: var(--accent-active-pair-light);
+        --accent-foreground: var(--accent-foreground-pair-light);
+        --masthead-accent-text: var(--masthead-accent-pair-light);
+    }
+
+    :root:not([data-contrast="more"]) :not(:root)[data-theme="dark"] {
+        --accent: var(--accent-pair-dark);
+        --accent-hover: var(--accent-hover-pair-dark);
+        --accent-active: var(--accent-active-pair-dark);
+        --accent-foreground: var(--accent-foreground-pair-dark);
+        --masthead-accent-text: var(--masthead-accent-pair-dark);
+    }
+
+    :root:not([data-contrast="more"]) :is(.topbar, .wallpaper-surface__scene)[data-ink-polarity="light"] {
+        color-scheme: light;
+        --foreground: #1D1D1F;
+        --surface-solid: #FFFFFF;
+        --muted: #66666B;
+        --accent: var(--accent-pair-light);
+        --accent-hover: var(--accent-hover-pair-light);
+        --accent-active: var(--accent-active-pair-light);
+        --accent-foreground: var(--accent-foreground-pair-light);
+        --masthead-accent-text: var(--masthead-accent-pair-light);
+        --wallpaper-text-core: 2.5px;
+        --wallpaper-text-stroke: var(--wallpaper-text-core) var(--surface-solid);
+        --wallpaper-text-halo: 0 0 var(--space-2) color-mix(in srgb, var(--surface-solid) 90%, transparent),
+            0 1px 1px color-mix(in srgb, var(--surface-solid) 70%, transparent);
+        --wallpaper-glyph-shadow: drop-shadow(0 1px 2px color-mix(in srgb, var(--surface-solid) 65%, transparent));
+        --border-on-wallpaper: color-mix(in srgb, var(--foreground) 28%, transparent);
+        --topbar-adaptive-hover-bg: rgb(255 255 255 / 0.56);
+        --topbar-adaptive-hover-shadow: inset 0 1px 0 rgb(255 255 255 / 0.85),
+            inset 0 0 0 1px rgb(255 255 255 / 0.55),
+            0 4px 14px -4px rgb(15 23 42 / 0.14);
+    }
+
+    :root:not([data-contrast="more"]) :is(.topbar, .wallpaper-surface__scene)[data-ink-polarity="dark"] {
+        color-scheme: dark;
+        --foreground: #F5F5F7;
+        --surface-solid: #1A1A1F;
+        --muted: #A1A1AA;
+        --accent: var(--accent-pair-dark);
+        --accent-hover: var(--accent-hover-pair-dark);
+        --accent-active: var(--accent-active-pair-dark);
+        --accent-foreground: var(--accent-foreground-pair-dark);
+        --masthead-accent-text: var(--masthead-accent-pair-dark);
+        --wallpaper-text-core: 0px;
+        --wallpaper-text-stroke: 0px transparent;
+        --wallpaper-text-halo: 0 1px 3px rgb(0 0 0 / 0.65),
+            0 2px 10px rgb(0 0 0 / 0.45);
+        --wallpaper-glyph-shadow: drop-shadow(0 1px 2px rgb(0 0 0 / 0.50)) drop-shadow(0 0 6px rgb(0 0 0 / 0.30));
+        --border-on-wallpaper: color-mix(in srgb, var(--foreground) 28%, transparent);
+        --topbar-adaptive-hover-bg: rgb(23 23 28 / 0.64);
+        --topbar-adaptive-hover-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14),
+            0 4px 16px -4px rgb(0 0 0 / 0.36);
+    }
+
+    :root[data-glass="off"]:not([data-contrast="more"]) .topbar[data-ink-polarity="light"] {
+        --topbar-adaptive-hover-bg: #FFFFFF;
+        --topbar-adaptive-hover-shadow: 0 0 0 1px rgb(0 0 0 / 0.09), 0 4px 12px -4px rgb(0 0 0 / 0.12);
+    }
+
+    :root[data-glass="off"]:not([data-contrast="more"]) .topbar[data-ink-polarity="dark"] {
+        --topbar-adaptive-hover-bg: #1A1A1F;
+        --topbar-adaptive-hover-shadow: 0 0 0 1px rgb(255 255 255 / 0.12), 0 4px 12px -4px rgb(0 0 0 / 0.45);
+    }
+}
+
+@media (forced-colors: none) and (prefers-reduced-transparency: no-preference) {
+    :root:not([data-glass="off"]):not([data-contrast="more"]) :is(.home-masthead__column, .home-masthead__sheet)[data-ink-polarity="light"] {
+        color-scheme: light;
+        color: var(--foreground);
+        --foreground: #1D1D1F;
+        --surface-solid: #FFFFFF;
+        --surface-soft: #EBEBEE;
+        --muted: #66666B;
+        --accent: var(--accent-pair-light);
+        --accent-hover: var(--accent-hover-pair-light);
+        --accent-active: var(--accent-active-pair-light);
+        --accent-foreground: var(--accent-foreground-pair-light);
+        --masthead-accent-text: var(--masthead-accent-pair-light);
+        --masthead-textured-muted: #4D4D54;
+        --masthead-muted: #2F2F34;
+        --masthead-clear-muted: #222226;
+        --masthead-display-ink: #18181B;
+        --masthead-cushion-base: #F8F8FA;
+        --masthead-cushion-textured-peak: var(--masthead-cushion-textured-light);
+        --masthead-cushion-contrast-peak: var(--masthead-cushion-contrast-light);
+        --masthead-cushion-textured-compact-scale: 0.70;
+        --masthead-cushion-contrast-compact-scale: 0.84;
+        --masthead-textured-text-shadow: none;
+        --masthead-textured-day-text-shadow: none;
+        --masthead-contrast-text-shadow: 0 0 8px rgb(255 255 255 / 0.56),
+            0 1px 16px rgb(255 255 255 / 0.44);
+        --masthead-contrast-day-text-shadow: 0 0 14px rgb(255 255 255 / 0.52),
+            0 2px 22px rgb(255 255 255 / 0.36);
+        --masthead-icon-shadow: drop-shadow(0 0 6px rgb(255 255 255 / 0.65));
+        --masthead-entry-hover: rgb(255 255 255 / 0.38);
+        --masthead-collapse-hover: rgb(255 255 255 / 0.44);
+        --masthead-border-clean: rgb(0 0 0 / 0.06);
+        --masthead-border-textured: rgb(15 23 42 / 0.11);
+        --masthead-border-contrast: rgb(15 23 42 / 0.15);
+        --masthead-direct-stroke: 2px color-mix(in srgb, #F4F4F5 80%, transparent);
+        --masthead-direct-shadow: 0 0 8px color-mix(in srgb, #F4F4F5 85%, transparent),
+            0 1px 3px color-mix(in srgb, #F4F4F5 92%, transparent);
+        --border-control: #86868B;
+    }
+
+    :root:not([data-glass="off"]):not([data-contrast="more"]) :is(.home-masthead__column, .home-masthead__sheet)[data-ink-polarity="dark"] {
+        color-scheme: dark;
+        color: var(--foreground);
+        --foreground: #F5F5F7;
+        --surface-solid: #1A1A1F;
+        --surface-soft: #25252B;
+        --muted: #A1A1AA;
+        --accent: var(--accent-pair-dark);
+        --accent-hover: var(--accent-hover-pair-dark);
+        --accent-active: var(--accent-active-pair-dark);
+        --accent-foreground: var(--accent-foreground-pair-dark);
+        --masthead-accent-text: var(--masthead-accent-pair-dark);
+        --masthead-textured-muted: #BEBEC6;
+        --masthead-muted: #D4D4D8;
+        --masthead-clear-muted: #E4E4E9;
+        --masthead-display-ink: #EFECE6;
+        --masthead-cushion-base: #07080C;
+        --masthead-cushion-textured-peak: var(--masthead-cushion-textured-dark);
+        --masthead-cushion-contrast-peak: var(--masthead-cushion-contrast-dark);
+        --masthead-cushion-textured-compact-scale: 0.56;
+        --masthead-cushion-contrast-compact-scale: 0.60;
+        --masthead-textured-text-shadow: 0 1px 2px rgb(6 7 10 / 0.44);
+        --masthead-textured-day-text-shadow: 0 2px 10px rgb(6 7 10 / 0.30);
+        --masthead-contrast-text-shadow: 0 1px 2px rgb(6 7 10 / 0.62),
+            0 2px 12px rgb(6 7 10 / 0.36);
+        --masthead-contrast-day-text-shadow: 0 1px 2px rgb(6 7 10 / 0.56),
+            0 2px 16px rgb(6 7 10 / 0.38);
+        --masthead-icon-shadow: drop-shadow(0 1px 3px rgb(6 7 10 / 0.55));
+        --masthead-entry-hover: rgb(255 255 255 / 0.08);
+        --masthead-collapse-hover: rgb(255 255 255 / 0.10);
+        --masthead-border-clean: rgb(255 255 255 / 0.08);
+        --masthead-border-textured: rgb(245 245 247 / 0.12);
+        --masthead-border-contrast: rgb(245 245 247 / 0.15);
+        --masthead-direct-stroke: 0px transparent;
+        --masthead-direct-shadow: 0 1px 2px rgb(10 6 4 / 0.86),
+            0 2px 12px rgb(10 6 4 / 0.56);
+        --border-control: #747479;
+    }
 }
 
 /* Wide home: search box tightens to Spotlight-like proportions (580–620px)

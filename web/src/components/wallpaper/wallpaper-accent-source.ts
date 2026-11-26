@@ -8,7 +8,7 @@ import { formatWallpaperCss } from "./WallpaperSurface.tsx";
 
 /** Longest side of the downsampled image; enough for a hue histogram. */
 const SAMPLE_SIZE = 64;
-const ACCENT_CACHE_KEY = "searcher:wallpaper-accent-cache-v4";
+const ACCENT_CACHE_KEY = "searcher:wallpaper-accent-cache-v5";
 const ACCENT_CACHE_MAX = 12;
 
 export interface WallpaperSample {
@@ -55,9 +55,9 @@ function readCachedWallpaperAccent(source: string): WallpaperAccent | null {
         !hit || typeof hit !== "object" ||
         typeof hit.darkTone?.lightness !== "number" ||
         typeof hit.darkTone?.ambientPrimary !== "string" ||
-        typeof hit.darkTone?.customFilter !== "string" ||
         !isValidBandTone(hit.mastheadBands?.left) ||
-        !isValidBandTone(hit.mastheadBands?.right)
+        !isValidBandTone(hit.mastheadBands?.right) ||
+        !isValidBandTone(hit.topBand)
     ) {
         return null;
     }
@@ -196,7 +196,13 @@ export function applyWallpaperAccent(
                 property,
                 `light-dark(${accent.light[key]}, ${accent.dark[key]})`,
             );
-        } else element.style.removeProperty(property);
+            element.style.setProperty(`${property}-light`, accent.light[key]);
+            element.style.setProperty(`${property}-dark`, accent.dark[key]);
+        } else {
+            element.style.removeProperty(property);
+            element.style.removeProperty(`${property}-light`);
+            element.style.removeProperty(`${property}-dark`);
+        }
     }
     for (
         const [slot, property] of Object.entries(
@@ -214,26 +220,6 @@ export function applyWallpaperAccent(
     }
     if (accent) {
         element.style.setProperty(
-            "--wallpaper-dark-dim",
-            accent.darkTone.filter,
-        );
-        element.style.setProperty(
-            "--wallpaper-custom-dark-dim",
-            accent.darkTone.customFilter,
-        );
-        element.style.setProperty(
-            "--wallpaper-dark-center-mix",
-            `${accent.darkTone.centerMix}%`,
-        );
-        element.style.setProperty(
-            "--wallpaper-dark-edge-mix",
-            `${accent.darkTone.edgeMix}%`,
-        );
-        element.style.setProperty(
-            "--wallpaper-dark-top-mix",
-            `${accent.darkTone.topMix}%`,
-        );
-        element.style.setProperty(
             "--wallpaper-ambient-primary",
             accent.darkTone.ambientPrimary,
         );
@@ -242,11 +228,6 @@ export function applyWallpaperAccent(
             accent.darkTone.ambientSecondary,
         );
     } else {
-        element.style.removeProperty("--wallpaper-dark-dim");
-        element.style.removeProperty("--wallpaper-custom-dark-dim");
-        element.style.removeProperty("--wallpaper-dark-center-mix");
-        element.style.removeProperty("--wallpaper-dark-edge-mix");
-        element.style.removeProperty("--wallpaper-dark-top-mix");
         element.style.removeProperty("--wallpaper-ambient-primary");
         element.style.removeProperty("--wallpaper-ambient-secondary");
     }

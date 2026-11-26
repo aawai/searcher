@@ -10,6 +10,7 @@ import {
     DEFAULT_WALLPAPER_PRESENTATION,
     type WallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
+import type { BackdropPolarity } from "../../design-system/wallpaper-accent.ts";
 
 const BotanicalSceneCanvas = lazy(() => import("./BotanicalSceneCanvas.tsx"));
 
@@ -18,7 +19,7 @@ export interface WallpaperSurfaceProps {
     botanicalScene?: BotanicalSpecies | null;
     presentation?: WallpaperPresentation | null;
     mode?: "image" | "ambient" | "canvas";
-    nativeDarkTone?: boolean;
+    backdropPolarity?: BackdropPolarity;
     className?: string;
     style?: CSSProperties;
     embedded?: boolean;
@@ -50,7 +51,7 @@ export function WallpaperSurface({
     botanicalScene,
     presentation,
     mode,
-    nativeDarkTone = false,
+    backdropPolarity,
     className,
     style,
     embedded = false,
@@ -85,9 +86,6 @@ export function WallpaperSurface({
             )}
             data-substrate={substrate}
             data-wallpaper-mode={effectiveMode}
-            data-native-dark={nativeDarkTone && effectiveMode === "image"
-                ? "true"
-                : undefined}
             data-wallpaper-image={hasImage ? "true" : undefined}
             data-wallpaper-scene={botanicalSpecies ?? undefined}
             data-testid={testId}
@@ -116,6 +114,9 @@ export function WallpaperSurface({
                         species={botanicalSpecies}
                         embedded={embedded}
                         overPhoto={effectiveMode === "image"}
+                        backdropPolarity={effectiveMode === "image"
+                            ? backdropPolarity
+                            : undefined}
                         testId={testId}
                     />
                 </Suspense>

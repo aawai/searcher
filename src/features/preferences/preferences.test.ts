@@ -693,20 +693,22 @@ Deno.test("preferences: darkWallpaperMode and darkBackgroundImage sync, validate
             headers: { cookie: aliceCookie },
         });
         const initialBody = await initialRes.json() as Envelope<PreferencesDto>;
-        assertEquals(initialBody.data?.darkWallpaperMode, "auto");
+        assertEquals(initialBody.data?.darkWallpaperMode, "follow");
         assertEquals(initialBody.data?.darkBackgroundImage, null);
 
-        // Reject invalid darkWallpaperMode
-        const invalidModeRes = await app.request("/api/preferences", {
-            method: "PATCH",
-            headers: {
-                origin,
-                cookie: aliceCookie,
-                "content-type": "application/json",
-            },
-            body: JSON.stringify({ darkWallpaperMode: "sepia" }),
-        });
-        assertEquals(invalidModeRes.status, 400);
+        // Reject invalid or removed darkWallpaperMode
+        for (const badMode of ["sepia", "auto"]) {
+            const invalidModeRes = await app.request("/api/preferences", {
+                method: "PATCH",
+                headers: {
+                    origin,
+                    cookie: aliceCookie,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({ darkWallpaperMode: badMode }),
+            });
+            assertEquals(invalidModeRes.status, 400);
+        }
 
         // Reject cross-user darkBackgroundImage
         const crossUserRes = await app.request("/api/preferences", {
@@ -738,7 +740,6 @@ Deno.test("preferences: darkWallpaperMode and darkBackgroundImage sync, validate
                 "canvas",
                 "custom",
                 "follow",
-                "auto",
             ] as const
         ) {
             const res = await app.request("/api/preferences", {

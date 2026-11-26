@@ -185,18 +185,15 @@ export function AppearancePicker(
         recentWallpapers,
     );
     const showWallpaperSection = quickWallpapers.length > 0 ||
-        (isDark && darkWallpaperMode !== "follow" &&
-            darkWallpaperMode !== "auto");
+        (isDark && darkWallpaperMode !== "follow");
     const wallpaperStatusLabel = isDark
-        ? darkWallpaperMode === "auto"
-            ? (wallpaper ? "智能" : "未设置")
-            : darkWallpaperMode === "canvas"
+        ? darkWallpaperMode === "canvas"
             ? "深黑画布"
             : darkWallpaperMode === "ambient"
             ? (wallpaper ? "氛围流光" : "未设置")
             : darkWallpaperMode === "custom"
             ? (darkWallpaper ? "深色独立" : "未设置")
-            : (wallpaper ? "已启用" : "已停用")
+            : (wallpaper ? "跟随浅色" : "未设置")
         : (wallpaper ? "已启用" : "已停用");
     const label = `外观：${THEME_LABELS[theme]}，${accentLabel(accent)}`;
 
@@ -220,6 +217,7 @@ export function AppearancePicker(
                 >
                     <span
                         className="appearance-picker-chip"
+                        data-theme={resolvedScheme}
                         data-accent={accent}
                         aria-hidden="true"
                     >

@@ -81,7 +81,7 @@ export const preferences = sqliteTable("preferences", {
     backgroundImage: text("background_image"),
     darkWallpaperMode: text("dark_wallpaper_mode", {
         enum: DARK_WALLPAPER_MODES,
-    }).notNull().default("auto"),
+    }).notNull().default("follow"),
     darkBackgroundImage: text("dark_background_image"),
     botanicalScene: text("botanical_scene"),
     searchTarget: text("search_target", { enum: ["same", "new"] })

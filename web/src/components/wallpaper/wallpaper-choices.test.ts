@@ -4,6 +4,7 @@ import {
     buildDarkWallpaperSelectionPatch,
     buildWallpaperHistoryItems,
     buildWallpaperSelectionPatch,
+    DARK_WALLPAPER_MODE_CHOICES,
     resolveEffectiveWallpaper,
     type WallpaperHistoryRecord,
 } from "./wallpaper-choices.ts";
@@ -88,6 +89,15 @@ Deno.test("buildWallpaperSelectionPatch: merges focal composition with fallback"
     );
 });
 
+Deno.test("DARK_WALLPAPER_MODE_CHOICES: exposes 4 orthogonal modes led by follow (跟随)", () => {
+    assertEquals(DARK_WALLPAPER_MODE_CHOICES, [
+        ["follow", "跟随浅色", "跟随"],
+        ["ambient", "氛围流光", "流光"],
+        ["canvas", "深黑画布", "纯黑"],
+        ["custom", "独立壁纸", "独立"],
+    ]);
+});
+
 Deno.test("resolveEffectiveWallpaper: resolves light/dark slots across all 4 darkWallpaperMode options", () => {
     const lightUrl = "https://example.com/light.jpg";
     const darkUrl = "https://example.com/dark.jpg";
@@ -103,62 +113,6 @@ Deno.test("resolveEffectiveWallpaper: resolves light/dark slots across all 4 dar
         { source: lightUrl, renderMode: "image", hasImageOverlay: true },
     );
 
-    // Dark auto: bright image resolves to ambient; dark or unsampled (null) keeps image; empty -> canvas
-    assertEquals(
-        resolveEffectiveWallpaper({
-            scheme: "dark",
-            wallpaper: lightUrl,
-            darkWallpaper: darkUrl,
-            darkWallpaperMode: "auto",
-            wallpaperLightness: 0.78,
-        }),
-        {
-            source: lightUrl,
-            renderMode: "ambient",
-            hasImageOverlay: false,
-            autoResolved: "ambient",
-        },
-    );
-    assertEquals(
-        resolveEffectiveWallpaper({
-            scheme: "dark",
-            wallpaper: lightUrl,
-            darkWallpaper: darkUrl,
-            darkWallpaperMode: "auto",
-            wallpaperLightness: 0.35,
-        }),
-        {
-            source: lightUrl,
-            renderMode: "image",
-            hasImageOverlay: true,
-            autoResolved: "image",
-        },
-    );
-    assertEquals(
-        resolveEffectiveWallpaper({
-            scheme: "dark",
-            wallpaper: lightUrl,
-            darkWallpaper: darkUrl,
-            darkWallpaperMode: "auto",
-            wallpaperLightness: null,
-        }),
-        {
-            source: lightUrl,
-            renderMode: "image",
-            hasImageOverlay: true,
-            autoResolved: "image",
-        },
-    );
-    assertEquals(
-        resolveEffectiveWallpaper({
-            scheme: "dark",
-            wallpaper: "",
-            darkWallpaper: darkUrl,
-            darkWallpaperMode: "auto",
-        }),
-        { source: "", renderMode: "canvas", hasImageOverlay: false },
-    );
-
     // Dark follow
     assertEquals(
         resolveEffectiveWallpaper({
@@ -168,6 +122,15 @@ Deno.test("resolveEffectiveWallpaper: resolves light/dark slots across all 4 dar
             darkWallpaperMode: "follow",
         }),
         { source: lightUrl, renderMode: "image", hasImageOverlay: true },
+    );
+    assertEquals(
+        resolveEffectiveWallpaper({
+            scheme: "dark",
+            wallpaper: "",
+            darkWallpaper: darkUrl,
+            darkWallpaperMode: "follow",
+        }),
+        { source: "", renderMode: "canvas", hasImageOverlay: false },
     );
 
     // Dark ambient (no image overlay stroke on foreground typography)
@@ -204,7 +167,6 @@ Deno.test("resolveEffectiveWallpaper: resolves light/dark slots across all 4 dar
             source: darkUrl,
             renderMode: "image",
             hasImageOverlay: true,
-            nativeDarkTone: true,
         },
     );
     assertEquals(
@@ -218,7 +180,6 @@ Deno.test("resolveEffectiveWallpaper: resolves light/dark slots across all 4 dar
             source: "",
             renderMode: "canvas",
             hasImageOverlay: false,
-            nativeDarkTone: undefined,
         },
     );
 });

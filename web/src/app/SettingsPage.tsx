@@ -70,6 +70,8 @@ import { Switch } from "../components/ui/switch.tsx";
 import { WallpaperCompositionDialog } from "../components/wallpaper/WallpaperCompositionDialog.tsx";
 import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperStageContextPreview.tsx";
+import { useWallpaperAccent } from "../components/wallpaper/wallpaper-accent-source.ts";
+import { resolveBackdropPolarity } from "../design-system/wallpaper-accent.ts";
 import {
     BOTANICAL_SCENE_CHOICES,
     buildDarkWallpaperSelectionPatch,
@@ -364,6 +366,15 @@ export function SettingsPanel({ host, tab: tabProp }: SettingsPanelProps) {
         : resolvedScheme === "dark"
         ? effectiveWallpaper.renderMode
         : (appearance.wallpaper ? "image" : "canvas");
+    const stageAccent = useWallpaperAccent(
+        stageMode === "image" ? stageSource : "",
+    );
+    const stagePolarity = stageMode === "image" && stageSource
+        ? resolveBackdropPolarity({
+            scheme: isCustomDarkMode ? activeSlot : resolvedScheme,
+            lightness: stageAccent?.darkTone.lightness ?? null,
+        })
+        : undefined;
     const currentPresentation = useMemo<WallpaperPresentation>(() => {
         if (stageSource) {
             return wallpaperPresentation(
@@ -937,24 +948,13 @@ export function SettingsPanel({ host, tab: tabProp }: SettingsPanelProps) {
                         <SettingsRow
                             title="深色模式壁纸"
                             description={appearance.darkWallpaperMode ===
-                                    "auto"
-                                ? resolvedScheme === "dark" &&
-                                        effectiveWallpaper.autoResolved ===
-                                            "ambient"
-                                    ? "当前壁纸画面偏亮，深色下已自动启用氛围流光"
-                                    : resolvedScheme === "dark" &&
-                                            effectiveWallpaper
-                                                    .autoResolved ===
-                                                "image"
-                                    ? "当前壁纸偏暗或无亮度信息，深色下保留原图细节"
-                                    : "亮图自动柔化为氛围流光，暗图保留清晰原图"
-                                : appearance.darkWallpaperMode === "follow"
-                                ? "深色模式下继续展示同一张壁纸，并按亮度自动压暗与添加氛围暗角"
+                                    "follow"
+                                ? "深色模式下跟随浅色壁纸并原样展示，首页前景按壁纸明暗自适应"
                                 : appearance.darkWallpaperMode === "ambient"
-                                ? "将浅底或亮色壁纸转化为双色深邃流光氛围"
+                                ? "将壁纸柔化为双色深邃流光氛围"
                                 : appearance.darkWallpaperMode === "canvas"
                                 ? "深色模式下隐藏图片壁纸，仅展示纯黑画布与内置插画"
-                                : "为浅色与深色模式分别配置壁纸与构图"}
+                                : "为浅色与深色模式分别配置壁纸与构图，首页前景按壁纸明暗自适应"}
                         >
                             <RadioGroup
                                 variant="segmented"
@@ -1151,8 +1151,7 @@ export function SettingsPanel({ host, tab: tabProp }: SettingsPanelProps) {
                         )}
                         {(Boolean(stageSource) || hasBotanicalScene ||
                             (resolvedScheme === "dark" &&
-                                appearance.darkWallpaperMode !== "follow" &&
-                                appearance.darkWallpaperMode !== "auto")) &&
+                                appearance.darkWallpaperMode !== "follow")) &&
                             (
                                 <>
                                     <SettingsRow
@@ -1166,18 +1165,12 @@ export function SettingsPanel({ host, tab: tabProp }: SettingsPanelProps) {
                                                 data-theme={isCustomDarkMode
                                                     ? activeSlot
                                                     : undefined}
+                                                data-wallpaper-polarity={stagePolarity}
                                             >
                                                 <WallpaperSurface
                                                     source={stageSource}
                                                     mode={stageMode}
-                                                    nativeDarkTone={isCustomDarkMode
-                                                        ? activeSlot ===
-                                                                "dark" &&
-                                                            Boolean(
-                                                                slotWallpaper,
-                                                            )
-                                                        : effectiveWallpaper
-                                                            .nativeDarkTone}
+                                                    backdropPolarity={stagePolarity}
                                                     botanicalScene={appearance
                                                         .botanicalScene}
                                                     presentation={currentPresentation}

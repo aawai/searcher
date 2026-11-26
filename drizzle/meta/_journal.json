@@ -337,6 +337,13 @@
       "when": 1795500357386,
       "tag": "0047_bright_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "6",
+      "when": 1795682933941,
+      "tag": "0048_slippery_talos",
+      "breakpoints": true
     }
   ]
 }

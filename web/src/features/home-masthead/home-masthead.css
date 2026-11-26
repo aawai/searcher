@@ -42,14 +42,14 @@
      --muted and --accent, zero cushion, zero text shadow, crisp 4-step ink.
    - `textured`: mid-step muted ink + light separable cushion.
    - `contrast`: reinforced high-contrast muted/accent ink + standard cushion. */
-:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="textured"] {
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="textured"] .home-masthead__column {
     --muted: var(--masthead-textured-muted);
     --masthead-summary-mix: 76%;
     --masthead-task-source-opacity: 0.82;
     --masthead-divider: var(--masthead-border-textured);
 }
 
-:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="contrast"] {
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="contrast"] .home-masthead__column {
     --muted: var(--masthead-muted);
     --accent: var(--masthead-accent-text);
     --masthead-summary-mix: 84%;
@@ -58,7 +58,7 @@
     --masthead-divider: var(--masthead-border-contrast);
 }
 
-:where(:root:not([data-glass="off"]):not([data-contrast="more"])[data-glass="clear"], :root:not([data-glass="off"]):not([data-contrast="more"]) [data-glass="clear"]) .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="contrast"] {
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])[data-glass="clear"], :root:not([data-glass="off"]):not([data-contrast="more"]) [data-glass="clear"]) .home-masthead[data-mode="side"][data-wallpaper-image="true"][data-backdrop-tone="contrast"] .home-masthead__column {
     --muted: var(--masthead-clear-muted);
     --masthead-summary-mix: 88%;
 }
@@ -80,12 +80,15 @@
 }
 
 @media (forced-colors: none) {
-    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek {
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek,
+    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek {
         position: relative;
         border-block-start: 0;
     }
 
-    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek::before {
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]):is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek::before,
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead[data-mode="narrow"][data-collapsed="false"] .home-masthead__dek::before,
+    :root:not([data-theme="dark"])[data-glass="off"]:not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek::before {
         content: "";
         position: absolute;
         inset-block-start: 0;
@@ -101,7 +104,7 @@
         pointer-events: none;
     }
 
-    :root:not([data-theme="dark"]):not([data-contrast="more"]) .home-masthead__day {
+    :root:not([data-contrast="more"]) .home-masthead__day {
         color: var(--masthead-display-ink);
     }
 
@@ -109,18 +112,7 @@
         color: color-mix(in oklab, var(--accent) 30%, color-mix(in oklab, var(--foreground) 78%, transparent));
     }
 
-    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead__day {
-        color: var(--masthead-display-ink);
-    }
-
-    /* Warm ivory vertical gradient on frameless canvas and `clean` dark
-       backdrops (zero shadow conflict); `textured` and `contrast` keep solid
-       --masthead-display-ink so optical text shadows render cleanly.
-       Tight display leading + negative tracking causes curved serif numeral
-       overshoots to extend past the border-box; bleed padding + equal negative
-       margins expand the background-clip paint box without shifting layout. */
-    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__day,
-    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead[data-mode="side"][data-backdrop-tone="clean"] .home-masthead__day {
+    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]) .home-masthead__day {
         padding-block-end: 0.12em;
         margin-block-end: -0.12em;
         padding-inline-end: 0.08em;
@@ -143,12 +135,9 @@
         color: color-mix(in oklab, var(--accent) 28%, color-mix(in oklab, var(--masthead-display-ink) 78%, transparent));
     }
 
-    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek {
-        position: relative;
-        border-block-start: 0;
-    }
-
-    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek::before {
+    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead:not([data-wallpaper-image="true"]):is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek::before,
+    [data-theme="dark"]:not([data-contrast="more"]) .home-masthead[data-mode="narrow"][data-collapsed="false"] .home-masthead__dek::before,
+    [data-theme="dark"][data-glass="off"]:not([data-contrast="more"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__dek::before {
         content: "";
         position: absolute;
         inset-block-start: 0;
@@ -165,6 +154,56 @@
     }
 }
 
+@media (forced-colors: none) and (prefers-reduced-transparency: no-preference) {
+    :root:not([data-contrast="more"]):not([data-glass="off"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__column[data-ink-polarity="light"] .home-masthead__dek::before {
+        content: "";
+        position: absolute;
+        inset-block-start: 0;
+        inset-inline: 0;
+        height: 1px;
+        background: linear-gradient(
+            90deg,
+            color-mix(in oklab, var(--accent) 48%, var(--foreground)) 0%,
+            color-mix(in oklab, var(--foreground) 22%, transparent) 38%,
+            color-mix(in oklab, var(--foreground) 8%, transparent) 72%,
+            transparent 100%
+        );
+        pointer-events: none;
+    }
+
+    :root:not([data-contrast="more"]):not([data-glass="off"]) .home-masthead:is([data-mode="side"], [data-mode="narrow"][data-collapsed="false"]) .home-masthead__column[data-ink-polarity="dark"] .home-masthead__dek::before {
+        content: "";
+        position: absolute;
+        inset-block-start: 0;
+        inset-inline: 0;
+        height: 1px;
+        background: linear-gradient(
+            90deg,
+            color-mix(in oklab, var(--accent) 42%, #f7f5ef) 0%,
+            rgb(240 237 230 / 0.18) 32%,
+            rgb(240 237 230 / 0.08) 68%,
+            transparent 100%
+        );
+        pointer-events: none;
+    }
+
+    /* Warm ivory vertical gradient on `clean` dark-polarity backdrops (zero shadow conflict). */
+    :root:not([data-contrast="more"]):not([data-glass="off"]) .home-masthead[data-mode="side"][data-backdrop-tone="clean"] .home-masthead__column[data-ink-polarity="dark"] .home-masthead__day {
+        padding-block-end: 0.12em;
+        margin-block-end: -0.12em;
+        padding-inline-end: 0.08em;
+        margin-inline-end: -0.08em;
+        background: linear-gradient(
+            180deg var(--masthead-in-oklab),
+            #FAF8F3 14%,
+            #E6E2D8 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+}
+
 /* Column shell: wide mode stays completely frameless (no card box, no blur,
    no drop shadow) under soft / regular / clear so typography floats directly
    over the wallpaper while Search & Dock remain the tactile glass instruments. */
@@ -173,6 +212,7 @@
     z-index: var(--elevation-canvas);
     display: flex;
     flex-direction: column;
+    color: var(--foreground);
 }
 
 .home-masthead[data-mode="side"] .home-masthead__column {
@@ -335,7 +375,7 @@
     box-shadow: 0 1px 3px rgb(0 0 0 / 0.20);
 }
 
-:where([data-theme="dark"]:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) [data-slot="checkbox"] {
+:where(:root:not([data-glass="off"]):not([data-contrast="more"])) .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__column[data-ink-polarity="dark"] [data-slot="checkbox"] {
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.44);
 }
 
@@ -614,6 +654,37 @@
         background-color: var(--material-thick);
         background-image: none;
         box-shadow: var(--masthead-stamp-dark-wallpaper-hover-shadow);
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-polarity="light"] .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+        --stamp-rest-opacity: 1;
+        background-color: var(--material-obsidian-regular);
+        background-image: none;
+        -webkit-backdrop-filter: var(--material-obsidian-filter);
+        backdrop-filter: var(--material-obsidian-filter);
+        box-shadow: var(--masthead-stamp-obsidian-shadow);
+    }
+
+    @media (hover: hover) {
+        [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-polarity="light"] .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp:hover {
+            background-color: var(--material-thick);
+            -webkit-backdrop-filter: var(--material-obsidian-thick-filter);
+            backdrop-filter: var(--material-obsidian-thick-filter);
+            box-shadow: var(--masthead-stamp-obsidian-hover-shadow);
+        }
+    }
+
+    [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-polarity="light"] .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp:focus-visible {
+        background-color: var(--material-thick);
+        -webkit-backdrop-filter: var(--material-obsidian-thick-filter);
+        backdrop-filter: var(--material-obsidian-thick-filter);
+        box-shadow: var(--masthead-stamp-obsidian-hover-shadow);
+    }
+
+    :root:not([data-theme="dark"]):not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-wallpaper-polarity="dark"] .home-masthead[data-wallpaper-image="true"] .home-masthead__stamp {
+        background-color: var(--material-pearl-regular);
+        -webkit-backdrop-filter: var(--material-pearl-filter);
+        backdrop-filter: var(--material-pearl-filter);
     }
 }
 
@@ -1304,7 +1375,7 @@
 }
 
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
-    .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) {
+    .home-masthead[data-mode="side"][data-wallpaper-image="true"]:is([data-backdrop-tone="textured"], [data-backdrop-tone="contrast"]) .home-masthead__column {
         --muted: unset;
         --accent: unset;
         --masthead-summary-mix: 72%;

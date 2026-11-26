@@ -9,13 +9,10 @@ import type { ColorScheme } from "../../design-system/theme.ts";
 
 export type WallpaperPresentationMap = Record<string, WallpaperPresentation>;
 
-export const AUTO_AMBIENT_LIGHTNESS_THRESHOLD = 0.62;
-
 export const DARK_WALLPAPER_MODE_CHOICES: ReadonlyArray<
     readonly [DarkWallpaperMode, string, string]
 > = [
-    ["auto", "智能切换", "智能"],
-    ["follow", "跟随原图", "原图"],
+    ["follow", "跟随浅色", "跟随"],
     ["ambient", "氛围流光", "流光"],
     ["canvas", "深黑画布", "纯黑"],
     ["custom", "独立壁纸", "独立"],
@@ -25,8 +22,6 @@ export interface EffectiveWallpaper {
     readonly source: string;
     readonly renderMode: "image" | "ambient" | "canvas";
     readonly hasImageOverlay: boolean;
-    readonly autoResolved?: "ambient" | "image";
-    readonly nativeDarkTone?: boolean;
 }
 
 export function resolveEffectiveWallpaper(input: {
@@ -34,7 +29,6 @@ export function resolveEffectiveWallpaper(input: {
     wallpaper: string;
     darkWallpaper: string;
     darkWallpaperMode: DarkWallpaperMode;
-    wallpaperLightness?: number | null;
 }): EffectiveWallpaper {
     if (input.scheme === "light") {
         return {
@@ -44,30 +38,6 @@ export function resolveEffectiveWallpaper(input: {
         };
     }
     switch (input.darkWallpaperMode) {
-        case "auto": {
-            if (!input.wallpaper) {
-                return {
-                    source: "",
-                    renderMode: "canvas",
-                    hasImageOverlay: false,
-                };
-            }
-            const isBright = input.wallpaperLightness != null &&
-                input.wallpaperLightness >= AUTO_AMBIENT_LIGHTNESS_THRESHOLD;
-            return isBright
-                ? {
-                    source: input.wallpaper,
-                    renderMode: "ambient",
-                    hasImageOverlay: false,
-                    autoResolved: "ambient",
-                }
-                : {
-                    source: input.wallpaper,
-                    renderMode: "image",
-                    hasImageOverlay: true,
-                    autoResolved: "image",
-                };
-        }
         case "canvas":
             return {
                 source: "",
@@ -79,7 +49,6 @@ export function resolveEffectiveWallpaper(input: {
                 source: input.darkWallpaper,
                 renderMode: input.darkWallpaper ? "image" : "canvas",
                 hasImageOverlay: Boolean(input.darkWallpaper),
-                nativeDarkTone: Boolean(input.darkWallpaper) || undefined,
             };
         case "ambient":
             return {
