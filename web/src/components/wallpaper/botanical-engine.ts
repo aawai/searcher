@@ -7683,269 +7683,63 @@ function drawAtmosphericStage(
 
     const isNarrow = !embedded && width < 720;
 
-    if (!pal.isDark) {
-        // 浅色极简冷灰白：仅在生长侧远景铺设宋画冷墨远岫与晴岚白雾，保持 #F4F4F5 纯净底色
-        const ridge1Top = (isNarrow ? 195 : 118) * scale;
-        const ridge1Base = ridge1Top + 108 * scale;
-        const x1Left = width - (isNarrow ? 210 : 410) * scale;
-        const x1Peak = width - (isNarrow ? 112 : 225) * scale;
+    // 宋元折枝「计白当黑 · 无痕烘染」：去除具象远山与月轮轮廓，仅在生长侧远近两处铺设极微无边气韵微晕
+    const bokashiZones = [
+        {
+            x: width - (isNarrow ? 88 : 165) * scale,
+            y: (isNarrow ? 132 : 112) * scale,
+            rx: (isNarrow ? 190 : 420) * scale,
+            ry: (isNarrow ? 120 : 240) * scale,
+            lightInkA: 0.028,
+            lightPaperA: 0.24,
+            darkAirA: 0.022,
+            darkSubA: 0.010,
+        },
+        {
+            x: width - (isNarrow ? 96 : 190) * scale,
+            y: height - (isNarrow ? 120 : 145) * scale,
+            rx: (isNarrow ? 195 : 440) * scale,
+            ry: (isNarrow ? 125 : 250) * scale,
+            lightInkA: 0.022,
+            lightPaperA: 0.18,
+            darkAirA: 0.016,
+            darkSubA: 0.014,
+        },
+    ];
 
+    for (const z of bokashiZones) {
         ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(x1Left, ridge1Base);
-        ctx.bezierCurveTo(
-            lerp(x1Left, x1Peak, 0.45),
-            ridge1Top + 34 * scale,
-            lerp(x1Left, x1Peak, 0.82),
-            ridge1Top,
-            x1Peak,
-            ridge1Top,
-        );
-        ctx.bezierCurveTo(
-            lerp(x1Peak, width, 0.42),
-            ridge1Top + 10 * scale,
-            lerp(x1Peak, width, 0.78),
-            ridge1Top + 48 * scale,
-            width + 16 * scale,
-            ridge1Top + 62 * scale,
-        );
-        ctx.lineTo(width + 16 * scale, ridge1Base);
-        ctx.closePath();
-
-        const g1 = ctx.createLinearGradient(0, ridge1Top, 0, ridge1Base);
-        g1.addColorStop(0, pal.inkGrade("qing", 0.20 * stageFade));
-        g1.addColorStop(0.68, pal.inkGrade("qing", 0.08 * stageFade));
-        g1.addColorStop(1, pal.inkGrade("qing", 0));
-        ctx.fillStyle = g1;
-        ctx.fill();
-
-        // 远岫二：偏右低峰
-        const ridge2Top = (isNarrow ? 235 : 168) * scale;
-        const ridge2Base = ridge2Top + 96 * scale;
-        const x2Left = width - (isNarrow ? 148 : 265) * scale;
-        const x2Peak = width - (isNarrow ? 58 : 115) * scale;
-
-        ctx.beginPath();
-        ctx.moveTo(x2Left, ridge2Base);
-        ctx.quadraticCurveTo(
-            lerp(x2Left, x2Peak, 0.6),
-            ridge2Top + 6 * scale,
-            x2Peak,
-            ridge2Top,
-        );
-        ctx.quadraticCurveTo(
-            lerp(x2Peak, width + 16 * scale, 0.55),
-            ridge2Top + 18 * scale,
-            width + 16 * scale,
-            ridge2Top + 36 * scale,
-        );
-        ctx.lineTo(width + 16 * scale, ridge2Base);
-        ctx.closePath();
-
-        const g2 = ctx.createLinearGradient(0, ridge2Top, 0, ridge2Base);
-        g2.addColorStop(0, pal.inkGrade("dan", 0.13 * stageFade));
-        g2.addColorStop(1, pal.inkGrade("dan", 0));
-        ctx.fillStyle = g2;
-        ctx.fill();
-
-        // 山腰断云晴岚白雾
-        const mistBands = [
-            {
-                x: width - (isNarrow ? 120 : 215) * scale,
-                y: ridge1Top + 62 * scale,
-                rx: (isNarrow ? 95 : 175) * scale,
-                ry: 24 * scale,
-                a: 0.72,
-            },
-            {
-                x: width - (isNarrow ? 65 : 120) * scale,
-                y: ridge2Top + 56 * scale,
-                rx: (isNarrow ? 75 : 135) * scale,
-                ry: 20 * scale,
-                a: 0.62,
-            },
-        ];
-        for (const m of mistBands) {
-            ctx.save();
-            ctx.translate(m.x, m.y);
-            ctx.scale(1, m.ry / Math.max(1, m.rx));
-            const mg = ctx.createRadialGradient(
-                0,
-                0,
-                1,
-                0,
-                0,
-                Math.max(2, m.rx),
-            );
-            mg.addColorStop(0, pal.highlight(m.a * stageFade));
-            mg.addColorStop(0.55, pal.highlight(m.a * 0.42 * stageFade));
-            mg.addColorStop(1, pal.highlight(0));
-            ctx.fillStyle = mg;
-            ctx.beginPath();
-            ctx.arc(0, 0, m.rx, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
+        if (pal.isDark) {
+            ctx.globalCompositeOperation = "screen";
         }
-        ctx.restore();
-        return;
-    }
-
-    // 深色模式：川濑巴水式清朗圆月 · 纤长平刷夜岚流云
-    const moonX = width - (isNarrow ? 112 : 242) * scale;
-    const moonY = (isNarrow ? 182 : embedded ? 148 : 158) * scale;
-    const moonR = (isNarrow ? 32 : embedded ? 44 : 56) * scale;
-    const haloR = Math.max(4, moonR * 3.8);
-
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    const haloGrad = ctx.createRadialGradient(
-        moonX,
-        moonY,
-        Math.max(1, moonR * 0.2),
-        moonX,
-        moonY,
-        haloR,
-    );
-    haloGrad.addColorStop(
-        0,
-        `rgba(222,232,248,${(0.09 * stageFade).toFixed(4)})`,
-    );
-    haloGrad.addColorStop(0.36, pal.wash("sub", 0.03 * stageFade));
-    haloGrad.addColorStop(1, "rgba(222,232,248,0)");
-    ctx.fillStyle = haloGrad;
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, haloR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // 月轮外缘微羽化晕 + 上半弧清朗木版 Bokashi 拭擦月面
-    const featherR = Math.max(2, moonR * 1.05);
-    const featherGrad = ctx.createRadialGradient(
-        moonX,
-        moonY,
-        Math.max(1, moonR * 0.82),
-        moonX,
-        moonY,
-        featherR,
-    );
-    featherGrad.addColorStop(
-        0,
-        `rgba(224,234,248,${(0.045 * stageFade).toFixed(4)})`,
-    );
-    featherGrad.addColorStop(1, "rgba(224,234,248,0)");
-    ctx.fillStyle = featherGrad;
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, featherR, 0, Math.PI * 2);
-    ctx.fill();
-
-    const moonGrad = ctx.createLinearGradient(
-        moonX - moonR * 0.35,
-        moonY - moonR,
-        moonX + moonR * 0.25,
-        moonY + moonR,
-    );
-    moonGrad.addColorStop(
-        0,
-        `rgba(244,247,254,${(0.24 * stageFade).toFixed(4)})`,
-    );
-    moonGrad.addColorStop(
-        0.52,
-        `rgba(224,232,248,${(0.15 * stageFade).toFixed(4)})`,
-    );
-    moonGrad.addColorStop(
-        0.86,
-        `rgba(198,210,234,${(0.045 * stageFade).toFixed(4)})`,
-    );
-    moonGrad.addColorStop(1, "rgba(198,210,234,0)");
-    ctx.fillStyle = moonGrad;
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 3 条纤长平刷东方流云丝带（柳叶长弧，两端尖收归零，彻底消除椭圆洞）
-    const drawCloudRibbon = (
-        cx: number,
-        cy: number,
-        halfLen: number,
-        halfThick: number,
-        isVeilDark: boolean,
-        peakAlpha: number,
-    ) => {
-        const xL = cx - halfLen;
-        const xR = cx + halfLen;
-        ctx.beginPath();
-        ctx.moveTo(xL, cy);
-        ctx.bezierCurveTo(
-            lerp(xL, cx, 0.45),
-            cy - halfThick * 1.15,
-            lerp(cx, xR, 0.55),
-            cy - halfThick * 0.85,
-            xR,
-            cy,
+        ctx.translate(z.x, z.y);
+        ctx.scale(1, z.ry / Math.max(1, z.rx));
+        const g = ctx.createRadialGradient(
+            0,
+            0,
+            1,
+            0,
+            0,
+            Math.max(2, z.rx),
         );
-        ctx.bezierCurveTo(
-            lerp(cx, xR, 0.55),
-            cy + halfThick * 0.95,
-            lerp(xL, cx, 0.45),
-            cy + halfThick * 1.05,
-            xL,
-            cy,
-        );
-        ctx.closePath();
-
-        const cg = ctx.createLinearGradient(xL, cy, xR, cy);
-        if (isVeilDark) {
-            cg.addColorStop(0, "rgba(7,8,12,0)");
-            cg.addColorStop(
-                0.28,
-                `rgba(7,8,12,${(peakAlpha * stageFade).toFixed(4)})`,
+        if (pal.isDark) {
+            g.addColorStop(
+                0,
+                `rgba(214,226,246,${(z.darkAirA * stageFade).toFixed(4)})`,
             );
-            cg.addColorStop(
-                0.72,
-                `rgba(7,8,12,${(peakAlpha * stageFade).toFixed(4)})`,
-            );
-            cg.addColorStop(1, "rgba(7,8,12,0)");
+            g.addColorStop(0.48, pal.wash("sub", z.darkSubA * stageFade));
+            g.addColorStop(1, "rgba(214,226,246,0)");
         } else {
-            cg.addColorStop(0, "rgba(220,230,246,0)");
-            cg.addColorStop(
-                0.45,
-                `rgba(220,230,246,${(peakAlpha * stageFade).toFixed(4)})`,
-            );
-            cg.addColorStop(1, "rgba(220,230,246,0)");
+            g.addColorStop(0, pal.inkGrade("qing", z.lightInkA * stageFade));
+            g.addColorStop(0.52, pal.highlight(z.lightPaperA * stageFade));
+            g.addColorStop(1, pal.highlight(0));
         }
-        ctx.fillStyle = cg;
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(0, 0, z.rx, 0, Math.PI * 2);
         ctx.fill();
-    };
-
-    // 第一条暗夜云带轻掩月脚下 1/3
-    drawCloudRibbon(
-        moonX + moonR * 0.16,
-        moonY + moonR * 0.56,
-        moonR * 1.9,
-        5.8 * scale,
-        true,
-        0.62,
-    );
-    // 紧贴上缘与右下的两道纤薄月白银雾丝带
-    drawCloudRibbon(
-        moonX - moonR * 0.24,
-        moonY + moonR * 0.42,
-        moonR * 1.65,
-        3.2 * scale,
-        false,
-        0.075,
-    );
-    drawCloudRibbon(
-        moonX + moonR * 0.58,
-        moonY + moonR * 0.78,
-        moonR * 2.15,
-        3.8 * scale,
-        false,
-        0.055,
-    );
-
-    // 避免未使用参数警告
-    void height;
+        ctx.restore();
+    }
 }
 
 export function renderBotanicalFrame(params: BotanicalRenderParams): number {

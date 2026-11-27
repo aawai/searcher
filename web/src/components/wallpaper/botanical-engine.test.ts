@@ -1159,3 +1159,171 @@ Deno.test("museum polish: intrinsic species color harmony, maple search clearanc
         }
     }
 });
+
+Deno.test("minimalist折枝 atmosphere: renders contourless air washes with zero moon disc or mountain ridge curves", () => {
+    const captureAtmosphereCalls = (
+        width: number,
+        height: number,
+        embedded: boolean,
+        overPhoto: boolean,
+        isDark: boolean,
+    ) => {
+        const { ctx, assertFiniteCoords } = createMockCanvasContext();
+        const stack: Array<[number, number]> = [[1, 1]];
+        const origSave = ctx.save;
+        const origRestore = ctx.restore;
+        const origScale = ctx.scale;
+        const origArc = ctx.arc;
+
+        const arcCalls: Array<{
+            r: number;
+            scaleX: number;
+            scaleY: number;
+        }> = [];
+        let curveCalls = 0;
+
+        ctx.save = () => {
+            const top = stack[stack.length - 1];
+            stack.push([top[0], top[1]]);
+            origSave();
+        };
+        ctx.restore = () => {
+            if (stack.length > 1) stack.pop();
+            origRestore();
+        };
+        ctx.scale = (x: number, y: number) => {
+            const top = stack[stack.length - 1];
+            top[0] *= x;
+            top[1] *= y;
+            origScale(x, y);
+        };
+        ctx.arc = (
+            x: number,
+            y: number,
+            r: number,
+            s: number,
+            e: number,
+        ) => {
+            const top = stack[stack.length - 1];
+            arcCalls.push({ r, scaleX: top[0], scaleY: top[1] });
+            origArc(x, y, r, s, e);
+        };
+        const origBezier = ctx.bezierCurveTo;
+        const origQuad = ctx.quadraticCurveTo;
+        ctx.bezierCurveTo = (
+            c1x: number,
+            c1y: number,
+            c2x: number,
+            c2y: number,
+            x: number,
+            y: number,
+        ) => {
+            curveCalls++;
+            origBezier(c1x, c1y, c2x, c2y, x, y);
+        };
+        ctx.quadraticCurveTo = (
+            cx: number,
+            cy: number,
+            x: number,
+            y: number,
+        ) => {
+            curveCalls++;
+            origQuad(cx, cy, x, y);
+        };
+
+        const palette = buildBotanicalPalette(
+            isDark,
+            isDark ? "#fb7185" : "#be123c",
+            isDark ? "#f5f5f7" : "#1d1d1f",
+            overPhoto,
+        );
+        const scene = generateBotanicalScene(
+            "plum",
+            width,
+            height,
+            "2026-11-22",
+            embedded,
+        );
+        renderBotanicalFrame({
+            ctx,
+            scene,
+            width,
+            height,
+            timeSec: 12,
+            dt: 0.016,
+            rawProgress: 1,
+            reducedMotion: true,
+            windCalm: 1,
+            searchFocused: false,
+            embedded,
+            palette,
+            pointer: {
+                x: -9999,
+                y: -9999,
+                vx: 0,
+                vy: 0,
+                lastT: 0,
+                lastRustleSpawn: 0,
+            },
+            drifters: [],
+            lastDriftSpawn: 0,
+            frameSeq: 1,
+        });
+        assertFiniteCoords();
+        return { arcCalls, curveCalls };
+    };
+
+    for (const isDark of [false, true]) {
+        for (
+            const [width, height, embedded] of [
+                [1440, 900, false],
+                [390, 844, false],
+                [1440, 810, true],
+            ] as const
+        ) {
+            const plain = captureAtmosphereCalls(
+                width,
+                height,
+                embedded,
+                false,
+                isDark,
+            );
+            const overPhoto = captureAtmosphereCalls(
+                width,
+                height,
+                embedded,
+                true,
+                isDark,
+            );
+
+            assertEquals(
+                plain.curveCalls,
+                overPhoto.curveCalls,
+                `${width}x${height} (dark=${isDark}, embedded=${embedded}): expected zero mountain ridge or cloud ribbon curves in drawAtmosphericStage`,
+            );
+
+            const circularLargeArcs = plain.arcCalls.filter((a) => {
+                const ratio = Math.abs(a.scaleY / a.scaleX);
+                return Math.abs(ratio - 1) < 0.05 && a.r >= 52;
+            });
+            assertEquals(
+                circularLargeArcs.length,
+                0,
+                `${width}x${height} (dark=${isDark}, embedded=${embedded}): expected no circular moon disc or circular halo arcs`,
+            );
+
+            const plainEllipses = plain.arcCalls.filter((a) => {
+                const ratio = Math.abs(a.scaleY / a.scaleX);
+                return ratio < 0.75 && a.r >= 120;
+            }).length;
+            const photoEllipses = overPhoto.arcCalls.filter((a) => {
+                const ratio = Math.abs(a.scaleY / a.scaleX);
+                return ratio < 0.75 && a.r >= 120;
+            }).length;
+            assert(
+                plainEllipses >= photoEllipses + 2,
+                `${width}x${height} (dark=${isDark}, embedded=${embedded}): expected >=2 contourless air washes (${plainEllipses} vs ${photoEllipses})`,
+            );
+        }
+    }
+});
