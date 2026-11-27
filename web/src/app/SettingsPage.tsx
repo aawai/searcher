@@ -74,6 +74,7 @@ import { useWallpaperAccent } from "../components/wallpaper/wallpaper-accent-sou
 import { resolveBackdropPolarity } from "../design-system/wallpaper-accent.ts";
 import {
     BOTANICAL_SCENE_CHOICES,
+    BOTANICAL_SPECIES_NOTES,
     buildDarkWallpaperSelectionPatch,
     buildWallpaperSelectionPatch,
     DARK_WALLPAPER_MODE_CHOICES,
@@ -1123,10 +1124,16 @@ export function SettingsPanel({ host, tab: tabProp }: SettingsPanelProps) {
                         {hasBotanicalScene && (
                             <SettingsRow
                                 title="插画枝型"
+                                description={appearance.botanicalScene
+                                    ? BOTANICAL_SPECIES_NOTES[
+                                        appearance.botanicalScene
+                                    ]
+                                    : undefined}
                                 className="settings-row--vertical"
                             >
                                 <RadioGroup
                                     variant="segmented"
+                                    className="settings-botanical-group"
                                     value={appearance.botanicalScene ?? ""}
                                     onValueChange={(next) =>
                                         void handleSelectBotanicalScene(
@@ -1140,6 +1147,9 @@ export function SettingsPanel({ host, tab: tabProp }: SettingsPanelProps) {
                                             <RadioGroupItem
                                                 key={id}
                                                 value={id}
+                                                title={BOTANICAL_SPECIES_NOTES[
+                                                    id
+                                                ]}
                                                 data-testid={`wallpaper-scene-${id}`}
                                             >
                                                 {label}

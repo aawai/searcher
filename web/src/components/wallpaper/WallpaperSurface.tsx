@@ -76,6 +76,10 @@ export function WallpaperSurface({
     const focal = substrate === "canvas"
         ? { focalX: 0.5, focalY: 0.5 }
         : intent.composition;
+    const sceneSide: "left" | "right" = !embedded && hasImage &&
+            focal.focalX < 0.5
+        ? "left"
+        : "right";
     return (
         <div
             className={cn(
@@ -117,6 +121,7 @@ export function WallpaperSurface({
                         backdropPolarity={effectiveMode === "image"
                             ? backdropPolarity
                             : undefined}
+                        sceneSide={sceneSide}
                         testId={testId}
                     />
                 </Suspense>

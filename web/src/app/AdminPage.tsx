@@ -30,7 +30,7 @@ export function AdminPage() {
             <PageShell archetype="management">
                 <PageHeader title="管理后台" />
                 <EmptyState
-                    illustration="auth-or-error"
+                    illustration="auth-required"
                     title="无权访问"
                     description="管理后台仅限管理员访问。"
                     action={currentUser

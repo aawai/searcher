@@ -411,7 +411,7 @@ export function TrashContent({ host }: { host: PageHost }) {
             >
                 <PageHeader title="回收站" />
                 <EmptyState
-                    illustration="auth-or-error"
+                    illustration="auth-required"
                     className="trash-empty-state"
                     title="未登录"
                     action={

@@ -863,7 +863,7 @@ export function AdminAuditView() {
                 ? (
                     <div className="admin-surface admin-ua-state-card">
                         <EmptyState
-                            illustration="auth-or-error"
+                            illustration="load-error"
                             title="无法加载审计日志"
                             action={
                                 <Button

@@ -187,7 +187,7 @@ export function AdminSystemSettings() {
                     ? <LoadingState>正在加载系统设置…</LoadingState>
                     : (
                         <EmptyState
-                            illustration="auth-or-error"
+                            illustration="load-error"
                             title="无法加载系统设置"
                             description={error}
                             action={

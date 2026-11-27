@@ -650,11 +650,19 @@ Deno.test("Appearance: anonymous guests default to rose accent and plum botanica
     assertEquals(guestDefaults.botanicalScene, "plum");
 
     const invalidGuest = normalizeAppearance(
-        { accent: "neon", botanicalScene: "bamboo" },
+        { accent: "neon", botanicalScene: "cactus" },
         { guest: true },
     );
     assertEquals(invalidGuest.accent, "rose");
     assertEquals(invalidGuest.botanicalScene, "plum");
+
+    for (const sp of ["orchid", "bamboo", "maple"] as const) {
+        const accepted = normalizeAppearance(
+            { botanicalScene: sp },
+            { guest: true },
+        );
+        assertEquals(accepted.botanicalScene, sp);
+    }
 
     const explicitOff = normalizeAppearance(
         { accent: "wallpaper", botanicalScene: null },

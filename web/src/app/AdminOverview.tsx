@@ -172,7 +172,7 @@ export function AdminOverview() {
                     ? <LoadingState>正在加载系统概览…</LoadingState>
                     : (
                         <EmptyState
-                            illustration="auth-or-error"
+                            illustration="load-error"
                             title="无法加载系统概览"
                             description={error}
                             action={

@@ -13,7 +13,10 @@ export const DEFAULT_WALLPAPER_COMPOSITION: WallpaperComposition = Object
 
 export const BOTANICAL_SPECIES = [
     "auto",
+    "orchid",
+    "bamboo",
     "ginkgo",
+    "maple",
     "eucalyptus",
     "plum",
     "fern",

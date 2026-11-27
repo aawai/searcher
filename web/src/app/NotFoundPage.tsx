@@ -35,7 +35,7 @@ export function NotFoundContent(
         <PageShell archetype="utility">
             <div className="narrow-form">
                 <Illustration
-                    name="auth-or-error"
+                    name="not-found"
                     size="md"
                     className="system-illustration--utility"
                 />
@@ -46,6 +46,7 @@ export function NotFoundContent(
                 <ActionGroup>
                     <Button
                         variant="default"
+                        data-compass-target="home"
                         render={<Link to={routes.home} viewTransition />}
                     >
                         返回首页
